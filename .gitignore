@@ -1,0 +1,5 @@
+build
+*.iml
+.idea/dictionaries
+cmake-build-*
+.idea/workspace.xml
