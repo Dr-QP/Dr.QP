@@ -4,34 +4,41 @@
 
 #include "SerialRecordingProxy.h"
 
-SerialRecordingProxy::SerialRecordingProxy(const std::string& filename)
-    : _file(filename, std::ios_base::out | std::ios_base::trunc)
+namespace RecordingProxy
+{
+
+SerialRecordingProxy::SerialRecordingProxy(SerialProtocol &decorated, const std::string &filename)
+    : SerialDecorator(decorated)
+    , _file(filename, std::ios_base::out | std::ios_base::trunc)
 {
 
 }
 
 void SerialRecordingProxy::begin(const unsigned long baudRate, const uint8_t transferConfig)
 {
-
+    super::begin(baudRate, transferConfig);
 }
 
 size_t SerialRecordingProxy::write(uint8_t byte)
 {
+    size_t result = super::write(byte);
     _file << byte;
-    return 1;
+    _file << result;
+    return result;
 }
 
 bool SerialRecordingProxy::available()
 {
-    return false;
+    return super::available();
 }
 
 uint8_t SerialRecordingProxy::peek()
 {
-    return kNoData;
+    return super::peek();
 }
 
 uint8_t SerialRecordingProxy::read()
 {
-    return kNoData;
+    return super::read();
+}
 }

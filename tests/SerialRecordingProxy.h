@@ -5,13 +5,21 @@
 #pragma once 
 
 #include <string>
-#import <fstream>
+#include <fstream>
+#include "SerialDecorator.h"
 #include "SerialProtocol.h"
+#import "RecordingProxy.h"
 
-class SerialRecordingProxy: SerialProtocol
+namespace RecordingProxy
+{
+// The SerialRecordingProxy works for master-slave UART setup only
+// Each communication starts on the master side with write command followed by multiple available/read/peak commands
+// This type of communication is similar to HTTP request/response model, except that response is read in multiple calls
+class SerialRecordingProxy: public SerialDecorator
 {
 public:
-    SerialRecordingProxy(const std::string& filename);
+    typedef SerialDecorator super;
+    SerialRecordingProxy(SerialProtocol &decorated, const std::string& filename);
 
     void begin(const unsigned long baudRate, const uint8_t transferConfig) override;
     size_t write(uint8_t byte) override;
@@ -20,7 +28,9 @@ public:
     uint8_t read() override;
 
 private:
+
+    std::vector<Record> _records;
+
     std::ofstream _file;
 };
-
-
+}

@@ -6,12 +6,19 @@
 
 #include "SerialProtocol.h"
 
-class SerialDecorator : SerialProtocol
+class SerialDecorator : public SerialProtocol
 {
 public:
+    SerialDecorator(SerialProtocol &decorated);
+
+    void begin(const unsigned long baudRate, const uint8_t transferConfig) override;
+    size_t write(uint8_t byte) override;
+    bool available() override;
+    uint8_t peek() override;
+    uint8_t read() override;
 
 private:
-    SerialProtocol *_other;
+    SerialProtocol &_decorated;
 };
 
 

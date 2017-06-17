@@ -6,7 +6,7 @@
 
 #include "SerialProtocol.h"
 
-class SerialPlayer: SerialProtocol
+class SerialPlayer: public SerialProtocol
 {
 public:
     void begin(const unsigned long baudRate, const uint8_t transferConfig) override;
