@@ -18,7 +18,7 @@ public:
     uint8_t read() override;
 
 private:
-    SerialProtocol &_decorated;
+    SerialProtocol &decorated_;
 };
 
 

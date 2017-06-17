@@ -10,3 +10,6 @@ add_executable(${PROJECT_NAME} ${ALL_CODE_HDRS} ${ALL_CODE_SRCS} ${SOURCE_FILES}
 
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(${PROJECT_NAME} BOLIDE_Player)
+
+find_package(Boost 1.63 REQUIRED serialization system)
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})

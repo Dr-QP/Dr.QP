@@ -20,6 +20,7 @@ class SerialRecordingProxy: public SerialDecorator
 public:
     typedef SerialDecorator super;
     SerialRecordingProxy(SerialProtocol &decorated, const std::string& filename);
+    ~SerialRecordingProxy();
 
     void begin(const unsigned long baudRate, const uint8_t transferConfig) override;
     size_t write(uint8_t byte) override;
@@ -28,9 +29,17 @@ public:
     uint8_t read() override;
 
 private:
+    Record currentRecord_;
+    enum class OperationType
+    {
+        kRead,
+        kWrite
+    } lastOperation_;
+    std::vector<Record> records_;
 
-    std::vector<Record> _records;
+    std::string fileName_;
 
-    std::ofstream _file;
+    void startNewRecordIfNeeded();
+    void save();
 };
 }

@@ -12,6 +12,7 @@ namespace RecordingProxy
 struct Request
 {
     std::vector<uint8_t> bytes;
+    size_t writeMatchPosition;
 
     template<class Archive>
     void serialize(Archive &ar, const unsigned int version)
@@ -23,6 +24,7 @@ struct Request
 struct Response
 {
     std::vector<uint8_t> bytes;
+    size_t readMatchPosition;
 
     template<class Archive>
     void serialize(Archive &ar, const unsigned int version)
