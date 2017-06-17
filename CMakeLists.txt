@@ -12,7 +12,8 @@ include_directories(${LIBS_FOLDER}/HAL)
 add_subdirectory(${LIBS_FOLDER}/HAL HAL)
 add_subdirectory(${LIBS_FOLDER}/BOLIDE_Player BOLIDE_Player)
 
-add_subdirectory(tests tests)
+add_subdirectory(tests)
+add_subdirectory(UnixHAL)
 
 add_executable(DrQP ${ALL_CODE_HDRS} ${ALL_CODE_SRCS} ${SOURCE_FILES})
 

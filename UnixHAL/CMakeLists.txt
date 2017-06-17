@@ -1,17 +1,14 @@
 cmake_minimum_required(VERSION 3.5)
 
-set(PROJECT_NAME TestDrQP)
+set(PROJECT_NAME UnixHAL)
 project(${PROJECT_NAME})
-
-find_package(Boost 1.63 REQUIRED thread serialization system)
 
 file(GLOB_RECURSE ALL_CODE_HDRS ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
 file(GLOB_RECURSE ALL_CODE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-include_directories(../UnixHAL)
-
-add_executable(${PROJECT_NAME} ${ALL_CODE_HDRS} ${ALL_CODE_SRCS} ${SOURCE_FILES})
+add_library(${PROJECT_NAME} ${ALL_CODE_HDRS} ${ALL_CODE_SRCS} ${SOURCE_FILES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(${PROJECT_NAME} BOLIDE_Player UnixHAL)
+
+find_package(Boost 1.63 REQUIRED thread system)
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
