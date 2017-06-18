@@ -8,7 +8,8 @@
 
 void testSerialPort()
 {
-    UnixSerial unixSerial("/dev/cu.SLAB_USBtoUART");
+    UnixSerial unixSerial("/dev/ttys002");
+//    UnixSerial unixSerial("/dev/cu.SLAB_USBtoUART");
     unixSerial.begin(115200);
 
     unixSerial.write('a');
