@@ -20,11 +20,13 @@ void testSerialPort()
     unixSerial.write('g');
     unixSerial.write('\n');
 
-    while (unixSerial.peek() != '\n')
+    uint8_t lastRead = 0;
+    while (lastRead != '\n')
     {
         if (unixSerial.available())
         {
-            std::cout << unixSerial.read();
+            lastRead = unixSerial.read();
+            std::cout << lastRead;
             std::cout.flush();
         }
 
