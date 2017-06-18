@@ -29,26 +29,8 @@ std::size_t get_bytes_available(
     }
 #else // defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
 
-    int fd = serial_port.lowest_layer().native_handle();
-    fd_set fds;
-    FD_ZERO(&fds);
-    FD_SET(fd, &fds);
-    timeval timeout = { 0, 0 }; /* 0 seconds */
-
-    int ret = ::select(fd + 1, &fds, NULL, NULL, &timeout);
-    if (ret < 0)
-    {
+    if (::ioctl(serial_port.lowest_layer().native_handle(), FIONREAD, &value) < 0) {
         error = boost::system::error_code(errno, boost::asio::error::get_system_category());
-    }
-    else if (ret == 0)
-    {
-        // Timeout
-    }
-    else
-    {
-        if (::ioctl(fd, FIONREAD, &value) < 0) {
-            error = boost::system::error_code(errno, boost::asio::error::get_system_category());
-        }
     }
 
 #endif // defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
