@@ -20,17 +20,17 @@ void testSerialPort()
     unixSerial.write('g');
     unixSerial.write('\n');
 
-//    using namespace boost::asio;
-//    io_service portService;
-//    serial_port serial(portService, "/dev/cu.SLAB_USBtoUART");
-//
-//    serial.set_option(serial_port_base::baud_rate(115200));
-//
-//    std::string s = "abcdefg\n";
-//    boost::asio::async_write(serial, boost::asio::buffer(s.c_str(), s.size()), transfer_all());
-//
-//
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    while (unixSerial.peek() != '\n')
+    {
+        if (unixSerial.available())
+        {
+            std::cout << unixSerial.read();
+            std::cout.flush();
+        }
+
+        boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    }
+
 }
 
 int main()

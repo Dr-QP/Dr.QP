@@ -13,46 +13,57 @@
 /// @brief Returns the number of bytes available for reading from a serial
 ///        port without blocking.
 std::size_t get_bytes_available(
-    boost::asio::serial_port& serial_port,
-    boost::system::error_code& error)
+    boost::asio::serial_port &serial_port,
+    boost::system::error_code &error)
 {
     error = boost::system::error_code();
     int value = 0;
 #if defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
     COMSTAT status;
-  if (0 != ::ClearCommError(serial_port.lowest_layer().native_handle(),
-                            NULL, &status))
-  {
-    value = status.cbInQue;
-  }
-  // On error, set the error code.
-  else
-  {
-    error = boost::system::error_code(::GetLastError(),
-       boost::asio::error::get_system_category());
-  }
-#else // defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
-    if (0 == ::ioctl(serial_port.lowest_layer().native_handle(),
-                     FIONREAD, &value))
-    {
-        error = boost::system::error_code(errno,
-                                          boost::asio::error::get_system_category());
+    if (0 != ::ClearCommError(serial_port.lowest_layer().native_handle(), NULL, &status)) {
+        value = status.cbInQue;
     }
+        // On error, set the error code.
+    else {
+        error = boost::system::error_code(::GetLastError(), boost::asio::error::get_system_category());
+    }
+#else // defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
+
+    int fd = serial_port.lowest_layer().native_handle();
+    fd_set fds;
+    FD_ZERO(&fds);
+    FD_SET(fd, &fds);
+    timeval timeout = { 0, 0 }; /* 0 seconds */
+
+    int ret = ::select(fd + 1, &fds, NULL, NULL, &timeout);
+    if (ret < 0)
+    {
+        error = boost::system::error_code(errno, boost::asio::error::get_system_category());
+    }
+    else if (ret == 0)
+    {
+        // Timeout
+    }
+    else
+    {
+        if (::ioctl(fd, FIONREAD, &value) < 0) {
+            error = boost::system::error_code(errno, boost::asio::error::get_system_category());
+        }
+    }
+
 #endif // defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
 
     return error ? static_cast<std::size_t>(0)
                  : static_cast<size_t>(value);
-
 }
 
 /// @brief Returns the number of bytes available for reading from a serial
 ///        port without blocking.  Throws on error.
-std::size_t get_bytes_available(boost::asio::serial_port& serial_port)
+std::size_t get_bytes_available(boost::asio::serial_port &serial_port)
 {
     boost::system::error_code error;
     std::size_t bytes_available = get_bytes_available(serial_port, error);
-    if (error)
-    {
+    if (error) {
         boost::throw_exception((boost::system::system_error(error)));
     }
     return bytes_available;
@@ -95,8 +106,7 @@ uint8_t UnixSerial::peek()
 
 uint8_t UnixSerial::read()
 {
-    if (!available())
-    {
+    if (!available()) {
         return kNoData;
     }
     everRead_ = true;
