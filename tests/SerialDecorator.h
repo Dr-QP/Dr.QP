@@ -9,8 +9,10 @@
 class SerialDecorator : public SerialProtocol
 {
 public:
+    typedef SerialProtocol super;
     SerialDecorator(SerialProtocol &decorated);
 
+    using super::begin;
     void begin(const unsigned long baudRate, const uint8_t transferConfig) override;
     size_t write(uint8_t byte) override;
     bool available() override;

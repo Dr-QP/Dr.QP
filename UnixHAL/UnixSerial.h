@@ -13,7 +13,7 @@ class UnixSerial: public SerialProtocol
 public:
     UnixSerial(const std::string& fileName);
 
-    void begin(const unsigned long baudRate, const uint8_t transferConfig = SERIAL_8N1) override;
+    void begin(const unsigned long baudRate, const uint8_t transferConfig) override;
     size_t write(uint8_t byte) override;
     bool available() override;
     uint8_t peek() override;
