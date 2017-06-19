@@ -16,7 +16,7 @@ void SerialPlayer::begin(const unsigned long baudRate, const uint8_t transferCon
 
 size_t SerialPlayer::write(uint8_t byte)
 {
-    Record current = currentRecord();
+    Record& current = currentRecord();
     BOOST_TEST(current.request.bytes.front() == byte);
     current.request.bytes.pop_front();
     return 1;
