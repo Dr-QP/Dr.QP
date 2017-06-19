@@ -5,7 +5,11 @@
 #pragma once 
 
 #include "SerialProtocol.h"
+#include <deque>
+#import "RecordingProxy.h"
 
+namespace RecordingProxy
+{
 class SerialPlayer: public SerialProtocol
 {
 public:
@@ -14,6 +18,12 @@ public:
     bool available() override;
     uint8_t peek() override;
     uint8_t read() override;
-};
 
+private:
+    Record currentRecord_;
+    OperationType lastOperation_;
+    std::deque<Record> records_;
+    Record &currentRecord();
+};
+}
 

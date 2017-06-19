@@ -6,6 +6,7 @@
 
 #include <string>
 #include <fstream>
+#include <deque>
 #include "SerialDecorator.h"
 #include "SerialProtocol.h"
 #import "RecordingProxy.h"
@@ -32,7 +33,7 @@ public:
 private:
     Record currentRecord_;
     OperationType lastOperation_;
-    std::vector<Record> records_;
+    std::deque<Record> records_;
 
     std::string fileName_;
 

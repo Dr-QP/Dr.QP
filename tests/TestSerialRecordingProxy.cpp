@@ -6,7 +6,6 @@
 
 #include "UnixSerial.h"
 #include "SerialRecordingProxy.h"
-//#include <boost/asio.hpp>
 #include <boost/thread.hpp>
 
 BOOST_AUTO_TEST_CASE(testSerialPort)
