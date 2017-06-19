@@ -31,12 +31,7 @@ public:
 
 private:
     Record currentRecord_;
-    enum class OperationType
-    {
-        kUndefined,
-        kRead,
-        kWrite
-    } lastOperation_;
+    OperationType lastOperation_;
     std::vector<Record> records_;
 
     std::string fileName_;

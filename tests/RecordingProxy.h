@@ -9,6 +9,13 @@
 
 namespace RecordingProxy
 {
+enum class OperationType
+{
+    kUndefined,
+    kRead,
+    kWrite
+};
+
 struct Request
 {
     std::vector<uint8_t> bytes;
