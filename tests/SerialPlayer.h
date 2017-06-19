@@ -19,6 +19,7 @@ public:
     uint8_t peek() override;
     uint8_t read() override;
 
+    void load(const std::string &fileName);
 private:
     Record currentRecord_;
     OperationType lastOperation_;

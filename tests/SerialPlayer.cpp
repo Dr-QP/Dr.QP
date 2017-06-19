@@ -3,7 +3,9 @@
 //
 
 #include "SerialPlayer.h"
+#include <fstream>
 #include <boost/test/unit_test.hpp>
+#include <boost/archive/text_iarchive.hpp>
 
 namespace RecordingProxy
 {
@@ -46,5 +48,13 @@ Record &SerialPlayer::currentRecord()
         records_.pop_front();
     }
     return currentRecord_;
+}
+
+void SerialPlayer::load(const std::string& fileName)
+{
+    std::ifstream file(fileName);
+    boost::archive::text_iarchive archive(file);
+
+    archive & records_;
 }
 }

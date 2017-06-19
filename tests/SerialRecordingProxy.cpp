@@ -50,9 +50,9 @@ void SerialRecordingProxy::save()
     startNewRecordIfNeeded(); // flush current record
 
     std::ofstream file(fileName_, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
-    boost::archive::text_oarchive outArchive(file);
+    boost::archive::text_oarchive archive(file);
 
-    outArchive & records_;
+    archive & records_;
 }
 
 bool SerialRecordingProxy::available()
