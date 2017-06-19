@@ -7,7 +7,12 @@
 //#include <boost/asio.hpp>
 #include <boost/thread.hpp>
 
-void testSerialPort()
+
+//#define BOOST_TEST_MODULE MoreSerialTests
+
+#include <boost/test/unit_test.hpp>
+
+BOOST_AUTO_TEST_CASE(testSerialPort)
 {
     UnixSerial unixSerial("/dev/ttys002");
 //    UnixSerial unixSerial("/dev/cu.SLAB_USBtoUART");
@@ -39,9 +44,3 @@ void testSerialPort()
 
 }
 
-int main()
-{
-    testSerialPort();
-
-    return 0;
-}
