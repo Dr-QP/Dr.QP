@@ -33,6 +33,7 @@ private:
     Record currentRecord_;
     enum class OperationType
     {
+        kUndefined,
         kRead,
         kWrite
     } lastOperation_;

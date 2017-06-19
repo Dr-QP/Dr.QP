@@ -11,6 +11,7 @@ namespace RecordingProxy
 SerialRecordingProxy::SerialRecordingProxy(SerialProtocol &decorated, const std::string &filename)
     : SerialDecorator(decorated)
     , fileName_(filename)
+    , lastOperation_(OperationType::kUndefined)
 {
 
 }
@@ -46,6 +47,8 @@ void SerialRecordingProxy::startNewRecordIfNeeded()
 
 void SerialRecordingProxy::save()
 {
+    startNewRecordIfNeeded(); // flush current record
+
     std::ofstream file(fileName_, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
     boost::archive::text_oarchive outArchive(file);
 
