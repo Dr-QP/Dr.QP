@@ -9,6 +9,7 @@
 #include "SerialRecordingProxy.h"
 #include <boost/thread.hpp>
 
+BOOST_AUTO_TEST_SUITE(test_serial_recording_proxy);
 
 static const char *const kSerialRecordingFileName = "serialRecording.txt";
 
@@ -41,8 +42,8 @@ void simpleSerialTest(SerialProtocol &serial)
     }
     BOOST_TEST(read.str() == "hello\n");
 }
-//
-//BOOST_AUTO_TEST_CASE(testSerialPortRecord)
+
+//BOOST_AUTO_TEST_CASE(test_recording)
 //{
 //    UnixSerial unixSerial("/dev/ttys002");
 ////    UnixSerial unixSerial("/dev/cu.SLAB_USBtoUART");
@@ -51,9 +52,11 @@ void simpleSerialTest(SerialProtocol &serial)
 //    simpleSerialTest(serial);
 //}
 
-BOOST_AUTO_TEST_CASE(testSerialPlayback)
+BOOST_AUTO_TEST_CASE(test_playback)
 {
     RecordingProxy::SerialPlayer serial;
     serial.load(kSerialRecordingFileName);
     simpleSerialTest(serial);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
