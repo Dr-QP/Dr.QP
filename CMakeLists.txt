@@ -1,25 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
-
-include("cmake/HunterGate.cmake")
-
-# 1. Try to detect hunter by:
-#   * cmake variable
-#   * environment variable
-#   * in HOME (`.hunter` directory)
-#   * in SYSTEMDRIVE (`.hunter` directory, windows only)
-#   * in USERPROFILE (`.hunter` directory, windows only)
-# 2. if failed, download it
-# 3. set HUNTER_GATE_* variables
-# 4. include master file: 'include(${HUNTER_SELF}/cmake/Hunter)
-HunterGate(
-    URL "https://github.com/ruslo/hunter/archive/v0.18.12.tar.gz"
-    SHA1 "7e8c74787e08c476484d3e5106524fe7a5a0cc56"
-)
-
 project(Dr_QP)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-hunter_add_package(Boost COMPONENTS thread serialization system unit_test_framework)
 
 file(GLOB_RECURSE ALL_CODE_HDRS src/*.h)
 file(GLOB_RECURSE ALL_CODE_SRCS src/*.cpp)
