@@ -18,5 +18,6 @@ target_link_libraries(${PROJECT_NAME} BOLIDE_Player UnixHAL)
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 
 enable_testing()
-add_test(${PROJECT_NAME} ${PROJECT_NAME})
 
+include(BoostTestHelpers.cmake)
+add_boost_tests(${PROJECT_NAME})
