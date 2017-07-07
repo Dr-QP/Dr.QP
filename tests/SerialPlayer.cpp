@@ -4,7 +4,7 @@
 
 #include "SerialPlayer.h"
 #include <fstream>
-#include <boost/test/unit_test.hpp>
+#include <catch.hpp>
 #include <boost/archive/text_iarchive.hpp>
 
 namespace RecordingProxy
@@ -17,7 +17,7 @@ void SerialPlayer::begin(const unsigned long baudRate, const uint8_t transferCon
 size_t SerialPlayer::write(uint8_t byte)
 {
     Record& current = currentRecord();
-    BOOST_TEST(current.request.bytes.front() == byte);
+    REQUIRE(current.request.bytes.front() == byte);
     current.request.bytes.pop_front();
     return 1;
 }
@@ -42,7 +42,7 @@ uint8_t SerialPlayer::read()
 Record &SerialPlayer::currentRecord()
 {
     if (currentRecord_.empty()) {
-        BOOST_TEST(records_.size() != 0);
+        REQUIRE(records_.size() != 0);
 
         currentRecord_ = records_.front();
         records_.pop_front();
