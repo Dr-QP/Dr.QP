@@ -11,7 +11,7 @@
 
 BOOST_AUTO_TEST_SUITE(test_serial_recording_proxy);
 
-static const char *const kSerialRecordingFileName = "serialRecording.txt";
+static const char *const kSerialRecordingFileName = "test_data/serial_recording.txt";
 
 void simpleSerialTest(SerialProtocol &serial)
 {
@@ -45,7 +45,7 @@ void simpleSerialTest(SerialProtocol &serial)
 
 //BOOST_AUTO_TEST_CASE(test_recording)
 //{
-//    UnixSerial unixSerial("/dev/ttys002");
+//    UnixSerial unixSerial("/dev/ttys000");
 ////    UnixSerial unixSerial("/dev/cu.SLAB_USBtoUART");
 //
 //    RecordingProxy::SerialRecordingProxy serial(unixSerial, kSerialRecordingFileName);

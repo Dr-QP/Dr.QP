@@ -15,9 +15,12 @@ add_definitions(-DBOOST_TEST_DYN_LINK)
 add_executable(${PROJECT_NAME} ${ALL_CODE_HDRS} ${ALL_CODE_SRCS} ${SOURCE_FILES})
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(${PROJECT_NAME} BOLIDE_Player UnixHAL)
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} boost_unit_test_framework boost_serialization)
+
+file(INSTALL ${CMAKE_CURRENT_SOURCE_DIR}/test_data
+        DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/)
+
 
 enable_testing()
-
 include(BoostTestHelpers.cmake)
 add_boost_tests(${PROJECT_NAME})
