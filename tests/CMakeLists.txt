@@ -3,8 +3,6 @@ cmake_minimum_required(VERSION 3.5)
 set(PROJECT_NAME TestDrQP)
 project(${PROJECT_NAME})
 
-find_package(Boost 1.63 REQUIRED thread serialization system unit_test_framework)
-
 file(GLOB_RECURSE ALL_CODE_HDRS ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
 file(GLOB_RECURSE ALL_CODE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
@@ -19,8 +17,3 @@ target_link_libraries(${PROJECT_NAME} boost_unit_test_framework boost_serializat
 
 file(INSTALL ${CMAKE_CURRENT_SOURCE_DIR}/test_data
         DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/)
-
-
-enable_testing()
-include(BoostTestHelpers.cmake)
-add_boost_tests(${PROJECT_NAME})
