@@ -22,17 +22,17 @@ void simpleSerialTest(SerialProtocol &serial)
     REQUIRE(serial.write('g') == 1);
     REQUIRE(serial.write('\n') == 1);
 
-    std::stringstream read;
+    std::string read;
     uint8_t lastRead = 0;
     while (lastRead != '\n') {
         if (serial.available()) {
             lastRead = serial.read();
-            read << lastRead;
+            read += lastRead;
         } else {
             boost::this_thread::sleep(boost::posix_time::milliseconds(100));
         }
     }
-    REQUIRE(read.str() == "hello\n");
+    REQUIRE(read == "hello\n");
 }
 
 SCENARIO("test unix serial with serial proxy", "[serial_proxy], [unix_serial]")
