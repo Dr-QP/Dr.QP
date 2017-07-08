@@ -8,8 +8,6 @@ file(GLOB_RECURSE ALL_CODE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 include_directories(../UnixHAL)
 
-add_definitions(-DBOOST_TEST_DYN_LINK)
-
 add_executable(${PROJECT_NAME} ${ALL_CODE_HDRS} ${ALL_CODE_SRCS} ${SOURCE_FILES})
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(${PROJECT_NAME} BOLIDE_Player UnixHAL)
