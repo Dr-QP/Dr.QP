@@ -1,0 +1,4 @@
+[submodule "deps/HAL"]
+	path = deps/HAL
+	url = git@github.com:Dr-QP/HAL.git
+	branch = develop
