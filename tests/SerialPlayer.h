@@ -4,6 +4,7 @@
 
 #pragma once 
 
+#include <cstddef>
 #include "SerialProtocol.h"
 #include <deque>
 #import "RecordingProxy.h"
