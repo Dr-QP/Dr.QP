@@ -1,5 +1,5 @@
 [requires]
-Boost/1.64.0@anton-matosov/stable
+boost/1.69.0@conan/stable
 Catch/1.9.6@uilianries/stable
 
 HALUnix/develop@anton-matosov/dev
