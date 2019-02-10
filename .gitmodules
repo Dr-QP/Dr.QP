@@ -2,7 +2,3 @@
 	path = deps/HAL
 	url = git@github.com:Dr-QP/HAL.git
 	branch = develop
-[submodule "deps/HALUnix"]
-	path = deps/HALUnix
-	url = git@github.com:Dr-QP/HALUnix.git
-	branch = develop
