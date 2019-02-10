@@ -6,7 +6,3 @@
 	path = deps/HALUnix
 	url = git@github.com:Dr-QP/HALUnix.git
 	branch = develop
-[submodule "deps/HALArduino"]
-	path = deps/HALArduino
-	url = git@github.com:Dr-QP/HALArduino.git
-	branch = develop
