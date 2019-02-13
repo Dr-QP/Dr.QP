@@ -2,7 +2,7 @@
 boost/1.69.0@conan/stable
 Catch/1.9.6@uilianries/stable
 
-HALUnix/develop@anton-matosov/dev
+HAL/develop@anton-matosov/dev
 BOLIDE_Player/develop@anton-matosov/dev
 
 # conan remote add anton https://api.bintray.com/conan/anton-matosov/general
@@ -10,7 +10,7 @@ BOLIDE_Player/develop@anton-matosov/dev
 
 [options]
 Boost:shared=True
-HALUnix:shared=True
+HAL:shared=True
 BOLIDE_Player:shared=True
 
 [generators]
