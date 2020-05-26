@@ -58,3 +58,9 @@ dtparam=spi=on
 start_x=1
 gpu_mem=128
 enable_uart=1
+
+# Dr.QP: enable i2c
+dtparam=i2c_arm=on
+
+# Dr.QP: UART via I2C devices. addr is different according to status of A0/A1, default 0X48
+dtoverlay=sc16is752-i2c,int_pin=24,addr=0x48
