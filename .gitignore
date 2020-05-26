@@ -1,5 +1,6 @@
-build
+build/
 *.iml
+*.log
 .idea/dictionaries
 cmake-build-*
 .idea/workspace.xml
