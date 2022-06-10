@@ -7,7 +7,7 @@
 #include <cstddef>
 #include "SerialProtocol.h"
 #include <deque>
-#import "RecordingProxy.h"
+#include "RecordingProxy.h"
 
 namespace RecordingProxy
 {
