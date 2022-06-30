@@ -18,9 +18,10 @@ int main() {
       if (servo.getLastError()) {
         std::cerr << legNameForServo(servoId) << " servo: " << servoId
                   << " error reading status: " << servo.getLastError() << "\n";
+      } else {
+        std::cout << legNameForServo(servoId) << "\tservo: " << servoId << ":\t"
+                  << (int)status.position << "\n";
       }
-      std::cout << legNameForServo(servoId) << "\tservo: " << servoId
-                << ":\t" << (int)status.position << "\n";
     }
     std::cout << "\n";
   }
