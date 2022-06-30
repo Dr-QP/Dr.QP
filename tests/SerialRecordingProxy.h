@@ -9,7 +9,7 @@
 #include <deque>
 #include "SerialDecorator.h"
 #include "SerialProtocol.h"
-#import "RecordingProxy.h"
+#include "RecordingProxy.h"
 
 namespace RecordingProxy
 {
