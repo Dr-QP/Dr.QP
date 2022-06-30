@@ -5,6 +5,8 @@
 
 #include "DrQp.h"
 
+#include <iostream>
+
 int main() {
   TcpSerial servoSerial("192.168.1.136", 2022);
 
