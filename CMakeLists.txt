@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.8)
-project(Dr_QP)
+cmake_minimum_required(VERSION 3.11)
+project(Dr_QP CXX C)
 
 if(NOT EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
   message(
@@ -13,9 +13,11 @@ endif()
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
-file(GLOB_RECURSE ALL_CODE_HDRS src/*.h)
-file(GLOB_RECURSE ALL_CODE_SRCS src/*.cpp)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_compile_options(-Werror)
+
+add_subdirectory(src)
 add_subdirectory(tests)
 
-add_executable(DrQP ${ALL_CODE_HDRS} ${ALL_CODE_SRCS} ${SOURCE_FILES})

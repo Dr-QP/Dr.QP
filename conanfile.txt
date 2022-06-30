@@ -1,17 +1,9 @@
 [requires]
-boost/1.69.0@conan/stable
-Catch/1.9.6@uilianries/stable
-
-HAL/develop@anton-matosov/dev
-BOLIDE_Player/develop@anton-matosov/dev
-
-# conan remote add anton https://api.bintray.com/conan/anton-matosov/general
-# conan remote add uilianries https://api.bintray.com/conan/uilianries/conan
+boost/1.79.0
+catch2/3.0.1
 
 [options]
-Boost:shared=True
-HAL:shared=True
-BOLIDE_Player:shared=True
+boost:shared=False
 
 [generators]
 cmake
