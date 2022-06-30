@@ -6,7 +6,7 @@ catch2/3.0.1
 boost:shared=False
 
 [generators]
-cmake
+cmake_find_package
 
 [imports]
 bin, *.dll -> ./bin # Copies all dll files from packages bin folder to my local "bin" folder

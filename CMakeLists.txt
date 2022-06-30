@@ -6,12 +6,12 @@ if(NOT EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
     WARNING
       "The file conanbuildinfo.cmake doesn't exist.\nRunning 'conan install' first..."
     )
-  execute_process(COMMAND conan install "${CMAKE_CURRENT_SOURCE_DIR}"
+  execute_process(COMMAND conda run -n dr.qp conan install "${CMAKE_CURRENT_SOURCE_DIR}"
                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 endif()
 
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
