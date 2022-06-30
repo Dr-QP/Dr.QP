@@ -6,9 +6,9 @@ services:
       context: .
       dockerfile: ser2net.dockerfile
     volumes:
-      - ./ser2net.yml:/etc/ser2net.yml
+      - ./ser2net.conf:/etc/ser2net.conf
 
-    # Ports and devices, same as in ser2net.yml
+    # Ports and devices, same as in ser2net.conf
     ports:
       - 2022:2022
     devices:
