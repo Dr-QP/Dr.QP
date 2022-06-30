@@ -35,7 +35,7 @@ ServoIdsArray servoIdsRange() {
   return result;
 }
 
-using LegServoIdsArray = std::array<int, kServosPerLeg>;
+using LegServoIdsArray = std::array<ServoId, kServosPerLeg>;
 using AllLegsServoIdsArray = std::array<LegServoIdsArray, kLegIdCount>;
 
 const AllLegsServoIdsArray kAllLegServoIds = []() {
@@ -85,3 +85,38 @@ std::string legNameForServo(ServoId id)
 {
   return kAllLegsNames[kServoIdToLeg[id]];
 }
+
+// Leg joins in the straight line
+// front-right     servo: 2:       516 // Coxa
+// front-right     servo: 4:       554 // Femur
+// front-right     servo: 6:       592 // Tibia
+
+// front-left      servo: 1:       517
+// front-left      servo: 3:       451
+// front-left      servo: 5:       429
+
+//          Left              Right
+// Coxa     512               512
+// Femur    512 - 61 = 451    512 + 42 = 554
+// Tibia    512 - 83 = 429    512 + 80 = 592
+
+using ServoPosition = uint16_t;
+using LegServoPositionsArray = std::array<ServoPosition, kServosPerLeg>;
+using Pose = std::array<LegServoPositionsArray, kLegIdCount>;
+
+const Pose kNeutralPose = []() {
+  Pose legs;
+  const uint16_t kBase = 512;
+
+  const uint16_t kCoxaOffset = 0;
+  const uint16_t kFemurOffset = 50;
+  const uint16_t kTibiaOffset = 80;
+
+  const int16_t kRight = 1;
+  const int16_t kLeft = -1;
+
+  legs[kFrontRightLegId] = legs[kMiddleRightLegId] = legs[kBackRightLegId] = {kBase + kCoxaOffset, kBase + kRight * kFemurOffset, kBase + kRight * kTibiaOffset};
+  legs[kFrontLeftLegId] = legs[kMiddleLeftLegId] = legs[kBackLeftLegId] = {kBase + kCoxaOffset, kBase + kLeft * kFemurOffset, kBase + kLeft * kTibiaOffset};
+
+  return legs;
+}();
