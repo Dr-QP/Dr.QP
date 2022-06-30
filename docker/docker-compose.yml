@@ -12,5 +12,5 @@ services:
     ports:
       - 2022:2022
     devices:
-      - /dev/ttyAMA0
+      - /dev/ttySC0
 
