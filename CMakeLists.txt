@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.11)
 project(Dr_QP CXX C)
 
-if(NOT EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+if(NOT EXISTS ${CMAKE_BINARY_DIR}/conaninfo.txt)
   message(
     WARNING
       "The file conanbuildinfo.cmake doesn't exist.\nRunning 'conan install' first..."
