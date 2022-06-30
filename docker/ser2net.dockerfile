@@ -5,4 +5,4 @@ RUN apt-get update && \
         ser2net && \
     rm -rf /var/lib/apt/lists/*
 
-CMD echo -n "Starting " && ser2net -v && ls "/dev/tty*" && ser2net -d -c /etc/ser2net.conf
+CMD echo -n "Starting " && ser2net -v && ls /dev/tty* && ser2net -d -c /etc/ser2net.conf
