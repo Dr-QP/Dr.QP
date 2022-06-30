@@ -2,8 +2,8 @@
 // prints it to the serial monitor.
 
 #include "servo/XYZrobotServo.h"
-#include "UnixSerial.h"
-#include "TcpSerial.h"
+#include "servo/UnixSerial.h"
+#include "servo/TcpSerial.h"
 
 #include <iostream>
 #include <thread>

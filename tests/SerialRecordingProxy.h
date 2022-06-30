@@ -8,7 +8,7 @@
 #include <fstream>
 #include <deque>
 #include "SerialDecorator.h"
-#include "SerialProtocol.h"
+#include "servo/SerialProtocol.h"
 #include "RecordingProxy.h"
 
 namespace RecordingProxy

@@ -1,5 +1,5 @@
 
-add_library(LibServo STATIC
+add_library(servo STATIC
     include/servo/SerialProtocol.h
     include/servo/Stream.h
     include/servo/TcpSerial.h
@@ -12,6 +12,6 @@ add_library(LibServo STATIC
 )
 find_package(Boost REQUIRED system)
 
-target_include_directories(LibServo PUBLIC include)
-target_link_libraries(LibServo PUBLIC Boost::boost ${Boost_LIBRARIES})
+target_include_directories(servo PUBLIC include)
+target_link_libraries(servo PUBLIC Boost::system)
 

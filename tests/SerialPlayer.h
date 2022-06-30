@@ -5,7 +5,7 @@
 #pragma once 
 
 #include <cstddef>
-#include "SerialProtocol.h"
+#include "servo/SerialProtocol.h"
 #include <deque>
 #include "RecordingProxy.h"
 
@@ -19,6 +19,9 @@ public:
     bool available() override;
     uint8_t peek() override;
     uint8_t read() override;
+    void flushRead() override;
+    size_t write(const uint8_t *data, size_t size) override;
+    size_t readBytes(uint8_t *buffer, size_t size) override;
 
     void load(const std::string &fileName);
 private:

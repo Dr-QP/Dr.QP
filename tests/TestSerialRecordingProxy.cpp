@@ -2,9 +2,9 @@
 // Created by Anton Matosov on 6/19/17.
 //
 
-#include <catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
-#include "UnixSerial.h"
+#include "servo/UnixSerial.h"
 #include "SerialPlayer.h"
 #include "SerialRecordingProxy.h"
 #include <boost/thread.hpp>

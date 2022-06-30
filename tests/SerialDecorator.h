@@ -5,7 +5,7 @@
 #pragma once 
 
 #include <cstddef>
-#include "SerialProtocol.h"
+#include "servo/SerialProtocol.h"
 
 class SerialDecorator : public SerialProtocol
 {

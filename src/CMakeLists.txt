@@ -6,4 +6,4 @@ add_executable(DrQP main.cpp)
 
 
 add_executable(Relax Relax.cpp)
-target_link_libraries(Relax PRIVATE LibServo)
+target_link_libraries(Relax PRIVATE servo)
