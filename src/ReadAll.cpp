@@ -10,16 +10,19 @@
 int main() {
   TcpSerial servoSerial("192.168.1.136", 2022);
 
-  for (const auto servoId : servoIdsRange())
-  {
-    XYZrobotServo servo(servoSerial, servoId);
+  for (const auto &leg : kAllLegServoIds) {
+    for (const auto servoId : leg) {
+      XYZrobotServo servo(servoSerial, servoId);
 
-    XYZrobotServoStatus status = servo.readStatus();
-    if (servo.getLastError())
-    {
-      std::cerr << "Servo: " << servoId << " error reading status: " << servo.getLastError() << "\n";
+      XYZrobotServoStatus status = servo.readStatus();
+      if (servo.getLastError()) {
+        std::cerr << legNameForServo(servoId) << " servo: " << servoId
+                  << " error reading status: " << servo.getLastError() << "\n";
+      }
+      std::cout << legNameForServo(servoId) << "\tservo: " << servoId
+                << ":\t" << (int)status.position << "\n";
     }
-    std::cout << "Servo: " << servoId << " position: " << (int)status.position << "\n";
+    std::cout << "\n";
   }
 
   return 0;

@@ -3,20 +3,10 @@
 #include <array>
 #include <inttypes.h>
 #include <numeric>
+#include <string>
 #include <ranges>
 
 using ServoId = uint8_t;
-constexpr const ServoId kServoMinId = 1;
-constexpr const ServoId kServoMaxId = 18;
-
-using ServoIdsArray = std::array<ServoId, kServoMaxId - kServoMinId>;
-
-ServoIdsArray servoIdsRange() {
-  ServoIdsArray result;
-  std::iota(std::begin(result), std::end(result), kServoMinId);
-  return result;
-}
-
 enum LegId {
   // Head is at 12 o'clock
 
@@ -34,6 +24,17 @@ enum LegId {
 };
 
 constexpr size_t kServosPerLeg = 3;
+constexpr const ServoId kServoMinId = 1;
+constexpr const ServoId kServoMaxId = kServoMinId + kServosPerLeg * kLegIdCount;
+
+using ServoIdsArray = std::array<ServoId, kServoMaxId - kServoMinId>;
+
+ServoIdsArray servoIdsRange() {
+  ServoIdsArray result;
+  std::iota(std::begin(result), std::end(result), kServoMinId);
+  return result;
+}
+
 using LegServoIdsArray = std::array<int, kServosPerLeg>;
 using AllLegsServoIdsArray = std::array<LegServoIdsArray, kLegIdCount>;
 
@@ -51,7 +52,7 @@ const AllLegsServoIdsArray kAllLegServoIds = []() {
   return legs;
 }();
 
-using ServoIdToLegArray = std::array<ServoId, kLegIdCount>;
+using ServoIdToLegArray = std::array<ServoId, kServoMaxId>;
 
 const ServoIdToLegArray kServoIdToLeg = []() {
   ServoIdToLegArray mappings;
@@ -79,3 +80,8 @@ const AllLegsNamesArray kAllLegsNames = []() {
 
   return legs;
 }();
+
+std::string legNameForServo(ServoId id)
+{
+  return kAllLegsNames[kServoIdToLeg[id]];
+}
