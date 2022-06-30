@@ -6,7 +6,7 @@
 #include <inttypes.h>
 #include <memory>
 
-#include "Stream.h"
+#include "servo/Stream.h"
 
 /// The possible communication errors that can happen when reading the
 /// acknowledgment packet from a servo.

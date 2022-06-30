@@ -1,6 +1,6 @@
 #pragma once 
 
-#include "SerialProtocol.h"
+#include "servo/SerialProtocol.h"
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/serial_port.hpp>
 

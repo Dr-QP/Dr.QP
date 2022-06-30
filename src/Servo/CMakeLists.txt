@@ -1,15 +1,17 @@
 
 add_library(LibServo STATIC
-    SerialProtocol.h
-    Stream.h
-    TcpSerial.h
-    UnixSerial.h
-    XYZrobotServo.h
+    include/servo/SerialProtocol.h
+    include/servo/Stream.h
+    include/servo/TcpSerial.h
+    include/servo/UnixSerial.h
+    include/servo/XYZrobotServo.h
 
-    TcpSerial.cpp
-    UnixSerial.cpp
-    XYZrobotServo.cpp
+    src/TcpSerial.cpp
+    src/UnixSerial.cpp
+    src/XYZrobotServo.cpp
 )
 find_package(Boost REQUIRED system)
+
+target_include_directories(LibServo PUBLIC include)
 target_link_libraries(LibServo PUBLIC Boost::boost ${Boost_LIBRARIES})
 

@@ -1,7 +1,7 @@
-#include "XYZrobotServo.h"
+#include "servo/XYZrobotServo.h"
 
-#include "TcpSerial.h"
-#include "UnixSerial.h"
+#include "servo/TcpSerial.h"
+#include "servo/UnixSerial.h"
 
 int main() {
   const uint8_t servoId = 5;

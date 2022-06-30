@@ -1,4 +1,4 @@
-#include "XYZrobotServo.h"
+#include "servo/XYZrobotServo.h"
 
 #define CMD_EEPROM_WRITE 0x01
 #define CMD_EEPROM_READ  0x02

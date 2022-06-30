@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SerialProtocol.h"
+#include "servo/SerialProtocol.h"
 #include <boost/asio.hpp>
 
 using tcp = boost::asio::ip::tcp;
