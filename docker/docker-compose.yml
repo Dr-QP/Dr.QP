@@ -1,0 +1,12 @@
+version: '3.4'
+services:
+  ser2net:
+    image: danrue/ser2net:3.5
+    # build: 
+    #   context: .
+    #   dockerfile: ser2net.dockerfile
+    volumes:
+      - ./ser2net.conf:/etc/ser2net.conf
+    devices:
+      - /dev/ttyAMA0 # change in ser2net.conf as well
+
