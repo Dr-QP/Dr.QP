@@ -65,6 +65,13 @@ rosdep init  # note: do not use sudo!
 rosdep update
 ```
 
+### Recommended conda config
+
+To avoid pontential conflicts it is recommended to use `strict` channel priority. Read more [here](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-channels.html#strict-channel-priority)
+```
+conda config --set channel_priority strict
+```
+
 ## Activating
 
 In order to activate ROS2 shell 2 things need to be done:
