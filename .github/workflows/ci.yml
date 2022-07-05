@@ -70,15 +70,19 @@ jobs:
     container:
       image: ${{ needs.build-image.outputs.image }}
       options: --user 1001:121
-      env:
-        HOME: /home/mambauser
     defaults:
       run:
         shell: bash -l {0}
+    env:
+      HOME: /home/mambauser
     steps:
       - uses: actions/checkout@v3
       - run: |
           env | sort
+          echo ################################################
+          export HOME=/home/mambauser
           source ~/.profile
-          # source /usr/local/bin/_activate_current_env.sh
+          env | sort
+          echo ################################################
+          source /usr/local/bin/_activate_current_env.sh
           scripts/rebuild.sh
