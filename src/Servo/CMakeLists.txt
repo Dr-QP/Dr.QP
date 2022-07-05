@@ -13,5 +13,8 @@ add_library(servo STATIC
 find_package(Boost REQUIRED system)
 
 target_include_directories(servo PUBLIC include)
-target_link_libraries(servo PUBLIC Boost::system)
+target_link_libraries(servo PUBLIC Boost::system rt)
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(servo PRIVATE Threads::Threads)
