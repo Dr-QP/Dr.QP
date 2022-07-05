@@ -31,7 +31,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: 
-            ghcr.io/dr-qp/ros-base:latest
+            ghcr.io/dr-qp/ros-base
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
@@ -44,7 +44,7 @@ jobs:
 
       - uses: addnab/docker-run-action@v3
         with:
-          image: ghcr.io/dr-qp/ros-base:latest
+          image: ${{ steps.meta.outputs.tags }}
           run: ros2 pkg list
 
   #   steps:
