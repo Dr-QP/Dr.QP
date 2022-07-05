@@ -58,17 +58,23 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  info:
+    runs-on: ubuntu-20.04
+    steps:
+      - run: id --user
+      - run: id --group
+
   test-cpp:
     needs: [build-image]
     runs-on: ubuntu-20.04
     container:
       image: ${{ needs.build-image.outputs.image }}
-      options: --user root
+      options: --user 1001 --group 115
     defaults:
       run:
         shell: bash
     steps:
       - uses: actions/checkout@v3
       - run: |
-          source /usr/local/bin/_activate_current_env.sh
+          # source /usr/local/bin/_activate_current_env.sh
           scripts/rebuild.sh
