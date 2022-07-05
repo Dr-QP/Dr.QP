@@ -2,6 +2,8 @@ name: ci
 
 on:
   push:
+  release:
+    types: [published]
 
 env:
   REGISTRY: ghcr.io
@@ -28,18 +30,22 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: 
-            ghcr.io/dr-qp/ros-base
+            ghcr.io/dr-qp/ros-base:latest
 
-      # - name: Build and push Docker image
-      #   uses: docker/build-push-action@v3
-      #   with:
-      #     context: .
-      #     push: true
-      #     tags: ${{ steps.meta.outputs.tags }}
-      #     labels: ${{ steps.meta.outputs.labels }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: docker/ros-base.dockerfile
+          push: ${{ github.event.release.tag_name != '' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
-  # ci:
-  #   runs-on: ubuntu-latest
+      - uses: addnab/docker-run-action@v3
+        with:
+          image: ghcr.io/dr-qp/ros-base:latest
+          run: ros2 pkg list
+
   #   steps:
   #     - uses: actions/checkout@v3
   #     - name: Install ROS2 conda environment
