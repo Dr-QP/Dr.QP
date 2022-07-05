@@ -44,6 +44,7 @@ jobs:
       - uses: addnab/docker-run-action@v3
         with:
           image: ${{ steps.meta.outputs.tags }}
+          shell: bash
           run: ros2 pkg list
 
   #   steps:
