@@ -1,0 +1,14 @@
+name: ci
+
+on:
+  push:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install ROS2 conda environment
+        uses: mamba-org/provision-with-micromamba@main
+        with:
+          environment-file: scripts/ros/ros_env.yml
