@@ -58,7 +58,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - run: docker run --rm -v $PWD:/app:z ${{ steps.meta.outputs.tags }} --workdir /app /app/scripts/rebuild.sh
+      - run: docker run --rm -v $PWD:/app:z  --workdir /app ${{ steps.meta.outputs.tags }} /app/scripts/rebuild.sh
         shell: bash
 
   test-cpp:
