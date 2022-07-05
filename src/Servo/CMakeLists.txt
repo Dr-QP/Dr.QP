@@ -14,10 +14,7 @@ find_package(Boost REQUIRED system)
 
 target_include_directories(servo PUBLIC include)
 target_link_libraries(servo PUBLIC Boost::system)
-if (LINUX)
-    target_link_libraries(servo PRIVATE rt)
-endif()
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-target_link_libraries(servo PRIVATE Threads::Threads)
+target_link_libraries(servo PRIVATE Threads::Threads $<$<PLATFORM_ID:Linux>:rt>)
