@@ -32,6 +32,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           images: 
             ${{ env.REGISTRY }}/dr-qp/ros-base
 
