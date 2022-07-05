@@ -1,4 +1,5 @@
-FROM mambaorg/micromamba:0.24-jammy 
+FROM mambaorg/micromamba:0.24
+# FROM mambaorg/micromamba:0.24-jammy 
 # ubuntu:jammy - 22.04
 
 COPY --chown=$MAMBA_USER:$MAMBA_USER scripts/ros/ros-base.yml /tmp/env.yaml
