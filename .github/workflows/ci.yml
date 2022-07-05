@@ -41,11 +41,13 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - uses: addnab/docker-run-action@v3
-        with:
-          image: ${{ steps.meta.outputs.tags }}
-          shell: bash
-          run: ros2 pkg list
+      - run: docker run --rm -it ${{ steps.meta.outputs.tags }} "ros2 pkg list"
+        shell: bash
+      # - uses: addnab/docker-run-action@v3
+      #   with:
+      #     image: ${{ steps.meta.outputs.tags }}
+      #     shell: bash
+      #     run: ros2 pkg list
 
   #   steps:
   #     - uses: actions/checkout@v3
