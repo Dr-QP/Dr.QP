@@ -7,7 +7,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }} # Dr-QP/Dr.QP
 
 jobs:
   build-and-push-docker-image:
@@ -31,7 +30,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: 
-            ghcr.io/dr-qp/ros-base
+            ${{ env.REGISTRY }}/dr-qp/ros-base
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
