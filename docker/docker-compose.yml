@@ -15,3 +15,14 @@ services:
     devices:
       - /dev/ttySC0
 
+  micromamba-ubuntu:
+    build: 
+      context: .
+      dockerfile: micromamba-ubuntu.dockerfile
+
+  ros-base:
+    build: 
+      context: .
+      dockerfile: ros-base.dockerfile
+    depends_on:
+      - micromamba-ubuntu
