@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-20.04
     container:
       image: ${{ needs.build-image.outputs.image }}
-      options: --user 1001 --group 121
+      options: --user 1001:121
     defaults:
       run:
         shell: bash
