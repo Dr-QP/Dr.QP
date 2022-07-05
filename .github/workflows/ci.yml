@@ -65,5 +65,6 @@ jobs:
       image: ${{ needs.build-image.outputs.image }}
       options: --user 1000
     steps:
+      - run: chown -R 1000 .
       - uses: actions/checkout@v3
       - run: /app/scripts/rebuild.sh
