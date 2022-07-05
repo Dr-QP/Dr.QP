@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# The script below adds the branch name automatically to
+# every one of your commit messages.
+
+# Find current branch name
+BRANCH_NAME=$(git symbolic-ref --short HEAD)
+
+if [[ -z "$BRANCH_NAME" ]]; then
+    echo "No branch name... "
+    exit 1
+fi
+
+ALREADY_IN_MSG=$(grep -c "$BRANCH_NAME" $1)
+
+if [[ ! $ALREADY_IN_MSG -eq 1 ]]; then
+    echo "$BRANCH_NAME" $(cat "$1") > "$1"
+fi
