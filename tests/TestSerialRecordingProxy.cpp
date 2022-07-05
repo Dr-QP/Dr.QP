@@ -2,7 +2,7 @@
 // Created by Anton Matosov on 6/19/17.
 //
 
-#include <catch2/catch_test_macros.hpp>
+#include <doctest/doctest.h>
 
 #include "servo/UnixSerial.h"
 #include "SerialPlayer.h"
@@ -35,9 +35,9 @@ void simpleSerialTest(SerialProtocol &serial)
     REQUIRE(read == "hello\n");
 }
 
-SCENARIO("test unix serial with serial proxy", "[serial_proxy], [unix_serial]")
+SCENARIO("test unix serial with serial proxy")
 {
-    static const char *const kSerialRecordingFileName = "test_data/serial_recording.txt";
+    static const char *const kSerialRecordingFileName = "tests/test_data/serial_recording.txt";
 
     WHEN("recording does not exists") {
         THEN("record it") {

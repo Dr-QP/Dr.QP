@@ -1,6 +1,6 @@
 [requires]
 boost/1.79.0
-catch2/3.0.1
+doctest/2.4.8
 
 [options]
 boost:shared=False

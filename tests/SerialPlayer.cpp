@@ -5,7 +5,7 @@
 #include "SerialPlayer.h"
 #include <cassert>
 #include <fstream>
-#include <catch2/catch_test_macros.hpp>
+#include <doctest/doctest.h>
 #include <boost/archive/text_iarchive.hpp>
 
 namespace RecordingProxy
