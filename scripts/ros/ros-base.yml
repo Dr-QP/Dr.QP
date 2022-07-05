@@ -7,7 +7,7 @@ channels:
   - defaults
 dependencies:
   - python=3.9
-  - ros-humble-base
+  - ros-humble-ros-base
   - compilers
   - cmake
   - pkg-config

@@ -21,3 +21,10 @@ services:
       context: ..
       dockerfile: docker/ros-base.dockerfile
 
+  ros-full:
+    image: dr-qp/ros-full
+    build:
+      context: ..
+      dockerfile: docker/ros-desktop.dockerfile
+    depends_on:
+      - ros-base
