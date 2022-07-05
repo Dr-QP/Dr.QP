@@ -47,19 +47,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - run: docker run --rm ${{ steps.meta.outputs.tags }} ros2 pkg list
+      - run: docker run --rm -v $PWD:/app ${{ steps.meta.outputs.tags }} /app/scripts/rebuild.sh
         shell: bash
 
-  test:
-    needs: [build-and-push-docker-image]
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/dr-qp/ros-base
-    steps:
-      - uses: actions/checkout@v3
-      - shell: bash
-        run: |
-          mkdir build
-          cd build
-          cmake -G Ninja ..
-          ninja
