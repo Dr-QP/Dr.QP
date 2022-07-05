@@ -5,7 +5,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ${{ github.repository }} # Dr-QP/Dr.QP
 
 jobs:
   build-and-push-docker-image:
@@ -30,9 +30,9 @@ jobs:
           images: 
             ghcr.io/dr-qp/ros-base
 
-      - run: echo ${{ steps.meta.outputs.tags }}
-      - run: echo ${{ steps.meta.outputs.labels }}
-      - run: echo ${{ steps.meta.outputs }}
+      - run: echo "${{ steps.meta.outputs.tags }}"
+      - run: echo "${{ steps.meta.outputs.labels }}"
+      - run: echo "${{ steps.meta.outputs }}"
 
       # - name: Build and push Docker image
       #   uses: docker/build-push-action@v3
