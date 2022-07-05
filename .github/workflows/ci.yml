@@ -18,9 +18,11 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-  build-and-push-docker-image:
+  build-image:
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.meta.outputs.tags }}
     permissions:
       contents: read
       packages: write
@@ -59,3 +61,11 @@ jobs:
       - run: docker run --rm -v $PWD:/app:z ${{ steps.meta.outputs.tags }} /app/scripts/rebuild.sh
         shell: bash
 
+  test-cpp:
+    needs: [build-image]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.build-image.outputs.image }}
+    steps:
+      - uses: actions/checkout@v3
+      - run: /app/scripts/rebuild.sh
