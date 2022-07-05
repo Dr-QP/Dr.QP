@@ -10,9 +10,11 @@ dependencies:
   - ros-humble-ros-base
   - compilers
   - cmake
+  - ninja
+  - boost
+  - doctest
   - pkg-config
   - make
-  - ninja
   - colcon-common-extensions
   - ca-certificates
   - certifi
