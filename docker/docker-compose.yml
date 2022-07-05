@@ -17,5 +17,6 @@ services:
 
   ros-base:
     build: 
-      context: .
-      dockerfile: ros-base.dockerfile
+      context: ..
+      dockerfile: docker/ros-base.dockerfile
+
