@@ -3,12 +3,50 @@ name: ci
 on:
   push:
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
-  ci:
+  build-and-push-docker-image:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
-      - uses: actions/checkout@v2
-      - name: Install ROS2 conda environment
-        uses: mamba-org/provision-with-micromamba@main
+      - uses: actions/checkout@v3
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
         with:
-          environment-file: scripts/ros/ros_env.yml
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: env | sort
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: 
+            ghcr.io/dr-qp/ros-base
+
+      - run: echo ${{ steps.meta.outputs.tags }}
+      - run: echo ${{ steps.meta.outputs.labels }}
+      - run: echo ${{ steps.meta.outputs }}
+
+      # - name: Build and push Docker image
+      #   uses: docker/build-push-action@v3
+      #   with:
+      #     context: .
+      #     push: true
+      #     tags: ${{ steps.meta.outputs.tags }}
+      #     labels: ${{ steps.meta.outputs.labels }}
+
+  # ci:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - name: Install ROS2 conda environment
+  #       uses: mamba-org/provision-with-micromamba@main
+  #       with:
+  #         environment-file: scripts/ros/ros_env.yml
