@@ -66,4 +66,4 @@ jobs:
       options: --user root
     steps:
       - uses: actions/checkout@v3
-      - run: /app/scripts/rebuild.sh
+      - run: scripts/rebuild.sh
