@@ -10,6 +10,7 @@ dependencies:
   - ros-humble-ros-base
   - compilers
   - cmake
+  - git
   - ninja
   - boost
   - doctest
