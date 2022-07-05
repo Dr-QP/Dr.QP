@@ -1,17 +1,5 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.21)
 project(Dr_QP CXX C)
-
-if(NOT EXISTS ${CMAKE_BINARY_DIR}/conaninfo.txt)
-  message(
-    WARNING
-      "The file conanbuildinfo.cmake doesn't exist.\nRunning 'conan install' first..."
-    )
-  execute_process(COMMAND conda run -n dr.qp conan install "${CMAKE_CURRENT_SOURCE_DIR}" --build=missing
-                  WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-endif()
-
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
-list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
