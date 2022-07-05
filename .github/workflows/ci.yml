@@ -72,10 +72,10 @@ jobs:
       options: --user 1001:121
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash
     steps:
       - uses: actions/checkout@v3
       - run: |
-          # source ~/.profile
+          source ~/.profile
           # source /usr/local/bin/_activate_current_env.sh
           scripts/rebuild.sh
