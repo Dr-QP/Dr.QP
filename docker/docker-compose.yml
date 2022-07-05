@@ -16,7 +16,8 @@ services:
       - /dev/ttySC0
 
   ros-base:
-    build: 
+    image: dr-qp/ros-base
+    build:
       context: ..
       dockerfile: docker/ros-base.dockerfile
 
