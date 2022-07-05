@@ -6,3 +6,4 @@ bin/
 cmake-build-*
 .idea/workspace.xml
 .vscode/settings.json
+.history
