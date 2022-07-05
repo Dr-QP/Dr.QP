@@ -16,13 +16,13 @@ services:
       - /dev/ttySC0
 
   ros-base:
-    image: dr-qp/ros-base
+    image: ghcr.io/dr-qp/ros-base
     build:
       context: ..
       dockerfile: docker/ros-base.dockerfile
 
   ros-desktop:
-    image: dr-qp/ros-desktop
+    image: ghcr.io/dr-qp/ros-desktop
     build:
       context: ..
       dockerfile: docker/ros-desktop.dockerfile
