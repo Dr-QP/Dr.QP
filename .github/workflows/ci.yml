@@ -30,10 +30,6 @@ jobs:
           images: 
             ghcr.io/dr-qp/ros-base
 
-      - run: echo "${{ steps.meta.outputs.tags }}"
-      - run: echo "${{ steps.meta.outputs.labels }}"
-      - run: echo "${{ steps.meta.outputs }}"
-
       # - name: Build and push Docker image
       #   uses: docker/build-push-action@v3
       #   with:
