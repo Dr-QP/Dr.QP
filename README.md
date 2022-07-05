@@ -3,15 +3,15 @@
 ## Bootstrap
 
 1. Follow `scripts/ros/Install-ros.md` to install ROS2 via conda
-2. Configure `"cmake.cmakePath"` in `.vscode/settings` of your workspace:
+2. Open VSCOde from the terminal with activated `ros_env`
 
 ```
+cd DR.QP
 conda activate ros_env
-which cmake
+code .
 ```
-and put this path into
-```
-{
-  "cmake.cmakePath": "/Users/antonmatosov/opt/miniconda3/envs/ros_env/bin/cmake"
-}
-```
+
+3. Open VSCode command pallet and run `CMake: Scan for kits` to add compilers from ros env
+
+<!-- 4. Add `"environmentSetupScript": "/Users/antonmatosov/opt/miniconda3/etc/conda.sh\" ; conda activate ros_env\""` to ros compilers in `CMake: Edit User-Local CMake Kits` -->
+
