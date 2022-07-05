@@ -70,5 +70,5 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          source /home/mambauser/.profile
+          source /home/mambauser/.bashrc
           scripts/rebuild.sh
