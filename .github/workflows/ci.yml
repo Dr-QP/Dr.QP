@@ -41,7 +41,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - run: docker run --rm -it ${{ steps.meta.outputs.tags }} "ros2 pkg list"
+      - run: docker run --rm ${{ steps.meta.outputs.tags }} ros2 pkg list
         shell: bash
       # - uses: addnab/docker-run-action@v3
       #   with:
