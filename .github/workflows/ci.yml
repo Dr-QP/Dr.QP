@@ -64,7 +64,9 @@ jobs:
     container:
       image: ${{ needs.build-image.outputs.image }}
       options: --user root
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
       - uses: actions/checkout@v3
       - run: scripts/rebuild.sh
-        shell: bash
