@@ -73,16 +73,12 @@ jobs:
     defaults:
       run:
         shell: bash -l {0}
-    env:
-      HOME: /home/mambauser
     steps:
+      - name: Recover HOME env # https://github.com/actions/runner/issues/863
+        run: 'echo HOME=/home/mambauser | sudo tee -a $GITHUB_ENV'
+
+      - name: Recover PATH with updated sourced profile
+        run: 'echo PATH=$PATH | sudo tee -a $GITHUB_ENV'
+          
       - uses: actions/checkout@v3
-      - run: |
-          env | sort
-          echo ################################################
-          export HOME=/home/mambauser
-          source ~/.profile
-          env | sort
-          echo ################################################
-          source /usr/local/bin/_activate_current_env.sh
-          scripts/rebuild.sh
+      - run: scripts/rebuild.sh
