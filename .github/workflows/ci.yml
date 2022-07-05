@@ -63,8 +63,7 @@ jobs:
     runs-on: ubuntu-20.04
     container:
       image: ${{ needs.build-image.outputs.image }}
-      options: --user 1000
+      options: --user root
     steps:
-      - run: sudo chown -R 1000 .
       - uses: actions/checkout@v3
       - run: /app/scripts/rebuild.sh
