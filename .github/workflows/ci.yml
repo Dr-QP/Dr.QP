@@ -72,11 +72,8 @@ jobs:
       options: --user 1001:121
     defaults:
       run:
-        shell: bash -l {0}
+        shell: env HOME=/home/mambauser bash -l -e -o pipefail {0}
     steps:
-      - name: Recover HOME env # https://github.com/actions/runner/issues/863
-        run: echo HOME=/home/mambauser >> $GITHUB_ENV
-
       - name: Recover PATH with updated sourced profile
         run: echo PATH=$PATH >> $GITHUB_ENV
           
