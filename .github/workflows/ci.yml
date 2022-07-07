@@ -76,6 +76,11 @@ jobs:
     steps:
       - name: Recover PATH with updated sourced profile
         run: echo PATH=$PATH >> $GITHUB_ENV
-          
+      - run: cat ~/.profile | true
+      - run: cat ~/.bashrc | true
+      - run: cat ~/.bash_profile | true
+      - run: cat /usr/local/bin/_activate_current_env.sh | true
       - uses: actions/checkout@v3
-      - run: scripts/rebuild.sh
+      - run: |
+          source /usr/local/bin/_activate_current_env.sh
+          scripts/rebuild.sh
