@@ -69,7 +69,8 @@ jobs:
     # needs: [build-image]
     runs-on: ubuntu-20.04
     container:
-      image: ${{ needs.build-image.outputs.image }}
+      # image: ${{ needs.build-image.outputs.image }}
+      image: ghcr.io/dr-qp/ros-base:pr-2
       options: --user 1001:121
     defaults:
       run:
