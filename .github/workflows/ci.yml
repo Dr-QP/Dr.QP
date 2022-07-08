@@ -1,0 +1,72 @@
+name: ci
+
+on:
+  release:
+    types: 
+      - published
+  push:
+    branches:
+      - 'develop'
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - 'develop'
+      - 'v*'
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build-image:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.meta.outputs.tags }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          images: 
+            ${{ env.REGISTRY }}/dr-qp/ros-base
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: docker/ros-base.dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  test-cpp:
+    needs: [build-image]
+    runs-on: ubuntu-20.04
+    container:
+      image: ${{ needs.build-image.outputs.image }}
+      options: --user 1001:121 # Mandatory 1.0. Sets user:group matching the one of the runner, allowing access to mounted paths
+    steps:
+      - name: Set all the sourced environment as default for all the actions
+        run: env >> $GITHUB_ENV
+        shell: bash --login -e -o pipefail {0} # Mandatory 2.0. replaces --noprofile with --login to properly source conda env
+      - uses: actions/checkout@v3
+      - run: scripts/rebuild.sh

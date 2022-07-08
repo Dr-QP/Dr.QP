@@ -1,8 +1,13 @@
 build/
+build.vscode/
 bin/
 *.iml
 *.log
 .idea/dictionaries
 cmake-build-*
 .idea/workspace.xml
+
+.history
+
+!.vscode/*
 .vscode/settings.json

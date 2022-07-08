@@ -7,12 +7,15 @@ channels:
   - defaults
 dependencies:
   - python=3.9
-  - ros-humble-desktop-full
+  - ros-humble-ros-base
   - compilers
   - cmake
+  - git
+  - ninja
+  - boost
+  - doctest
   - pkg-config
   - make
-  - ninja
   - colcon-common-extensions
   - ca-certificates
   - certifi

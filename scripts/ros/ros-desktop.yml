@@ -1,0 +1,11 @@
+name: ros_env
+channels:
+  - robostack-humble
+  - robostack
+  - robostack-experimental
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - ros-humble-desktop-full
+prefix: /Users/antonmatosov/opt/miniconda3/envs/ros_env
