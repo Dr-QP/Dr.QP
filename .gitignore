@@ -6,5 +6,8 @@ bin/
 .idea/dictionaries
 cmake-build-*
 .idea/workspace.xml
-.vscode/settings.json
+
 .history
+
+!.vscode/*
+.vscode/settings.json
