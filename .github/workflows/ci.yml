@@ -64,11 +64,9 @@ jobs:
     container:
       image: ${{ needs.build-image.outputs.image }}
       options: --user 1001:121 # Mandatory 1.0. Sets user:group matching the one of the runner, allowing access to mounted paths
-    defaults:
-      run:
-        shell: bash --login -e -o pipefail {0} # Mandatory 2.0. replaces --noprofile with --login to properly source conda env
     steps:
-      - name: Recover PATH with updated sourced profile
-        run: echo PATH=$PATH >> $GITHUB_ENV
+      - name: Set all the sourced environment as default for all the actions
+        run: env >> $GITHUB_ENV
+        shell: bash --login -e -o pipefail {0} # Mandatory 2.0. replaces --noprofile with --login to properly source conda env
       - uses: actions/checkout@v3
       - run: scripts/rebuild.sh
