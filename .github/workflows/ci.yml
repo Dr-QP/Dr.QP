@@ -19,7 +19,6 @@ env:
 
 jobs:
   build-image:
-    # if: ${{ 0 }}
     timeout-minutes: 15
     runs-on: ubuntu-latest
     outputs:
@@ -64,14 +63,10 @@ jobs:
     runs-on: ubuntu-20.04
     container:
       image: ${{ needs.build-image.outputs.image }}
-      # image: ghcr.io/dr-qp/ros-base:pr-2
       options: --user 1001:121
     defaults:
       run:
         shell: bash -l -e -o pipefail {0}
     steps:
-      - run: echo explore what is sourced BASH_VERSION=$BASH_VERSION
-        shell: bash -l -e -x -o pipefail {0}
-
       - uses: actions/checkout@v3
       - run: scripts/rebuild.sh
