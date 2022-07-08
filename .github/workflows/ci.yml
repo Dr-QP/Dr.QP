@@ -68,18 +68,10 @@ jobs:
       options: --user 1001:121
     defaults:
       run:
-        shell: env HOME=/home/mambauser bash -l -e -o pipefail {0}
+        shell: bash -l -e -o pipefail {0}
     steps:
-      - name: Recover PATH with updated sourced profile
-        run: echo PATH=$PATH >> $GITHUB_ENV
       - run: echo explore what is sourced BASH_VERSION=$BASH_VERSION
-        shell: env HOME=/home/mambauser bash -l -e -x -o pipefail {0}
+        shell: bash -l -e -x -o pipefail {0}
 
-      - run: cat $HOME/.profile || true
-      - run: cat $HOME/.bash_profile || true
-      - run: cat $HOME/.bashrc
-      - run: cat /usr/local/bin/_activate_current_env.sh
       - uses: actions/checkout@v3
-      - run: |
-          source /usr/local/bin/_activate_current_env.sh
-          scripts/rebuild.sh
+      - run: scripts/rebuild.sh
