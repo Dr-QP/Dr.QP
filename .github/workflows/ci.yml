@@ -19,7 +19,7 @@ env:
 
 jobs:
   build-image:
-    if: ${{ 0 }}
+    # if: ${{ 0 }}
     timeout-minutes: 15
     runs-on: ubuntu-latest
     outputs:
@@ -60,11 +60,11 @@ jobs:
           cache-to: type=gha,mode=max
 
   test-cpp:
-    # needs: [build-image]
+    needs: [build-image]
     runs-on: ubuntu-20.04
     container:
-      # image: ${{ needs.build-image.outputs.image }}
-      image: ghcr.io/dr-qp/ros-base:pr-2
+      image: ${{ needs.build-image.outputs.image }}
+      # image: ghcr.io/dr-qp/ros-base:pr-2
       options: --user 1001:121
     defaults:
       run:
