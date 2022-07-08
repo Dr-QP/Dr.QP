@@ -6,6 +6,8 @@ USER root
 RUN cp /usr/local/bin/_activate_current_env.sh /etc/profile.d/100-activate_current_env.sh
 
 RUN apt-get -yqq update && \
+    apt-get install -yq --no-install-recommends software-properties-common && \
+    add-apt-repository ppa:git-core/ppa && \
     apt-get install -yq --no-install-recommends git git-lfs && \
     apt-get autoremove -y && \
     apt-get clean -y
