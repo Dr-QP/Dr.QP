@@ -63,12 +63,10 @@ jobs:
     runs-on: ubuntu-20.04
     container:
       image: ${{ needs.build-image.outputs.image }}
-      options: --user 1001:121
+      options: --user 1001:121 # Mandatory 1.0. Sets user:group matching the one of the runner, allowing access to mounted paths
     defaults:
       run:
-        shell: bash -l -e -o pipefail {0}
+        shell: bash --login -e -o pipefail {0} # Mandatory 2.0. replaces --noprofile with --login to properly source conda env
     steps:
       - uses: actions/checkout@v3
       - run: scripts/rebuild.sh
-      - run: scripts/rebuild.sh
-        shell: sh
