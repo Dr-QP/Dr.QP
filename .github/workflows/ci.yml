@@ -70,3 +70,5 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: scripts/rebuild.sh
+      - run: scripts/rebuild.sh
+        shell: sh
