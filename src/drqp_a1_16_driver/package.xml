@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>drqp-a1-16-driver</name>
+  <name>drqp_a1_16_driver</name>
   <version>1.0.0</version>
-  <description>Driver for A1-16 servo</description>
+  <description>Driver for A1-16 servo used in Dr.QP robot project</description>
   <maintainer email="anton.matosov@gmail.com">antonmatosov</maintainer>
   <license>Apache-2.0</license>
 
