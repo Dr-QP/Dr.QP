@@ -9,11 +9,6 @@ dependencies:
   - python=3.9
   - ros-humble-ros-base
   - compilers
-  - cmake
-  - git
-  - ninja
-  - boost
-  - doctest
   - pkg-config
   - make
   - colcon-common-extensions
@@ -31,4 +26,12 @@ dependencies:
   - ruamel
   - ruamel.yaml
   - boa
+
+  # App specific
+  - cmake
+  - git
+  - ninja
+  - boost
+  - pip:
+    - conan>=1.50
 prefix: /Users/antonmatosov/opt/miniconda3/envs/ros_env
