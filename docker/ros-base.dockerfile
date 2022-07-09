@@ -11,4 +11,5 @@ COPY --chown=$MAMBA_USER:$MAMBA_USER scripts/ros/ros-base.yml /tmp/env.yaml
 RUN --mount=type=cache,target=/opt/conda/pkgs micromamba install -y -n base -f /tmp/env.yaml && \
     micromamba install -y -n base mamba
 
-ARG MAMBA_DOCKERFILE_ACTIVATE=1
+# Uncomment to enable Conda env in the dockerfile RUN blocks
+# ENV MAMBA_DOCKERFILE_ACTIVATE=1
