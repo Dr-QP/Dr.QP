@@ -105,4 +105,4 @@ Traceback (most recent call last):
 ImportError: dlopen(/Users/antonmatosov/opt/miniconda3/envs/ros_env/lib/python3.9/site-packages/qt_gui_cpp/libqt_gui_cpp_sip.cpython-39-darwin.so, 0x0002): symbol not found in flat namespace '__ZN10qt_gui_cpp12PluginBridge16staticMetaObjectE'
 ```
 
-Rebuilding https://github.com/ros-visualization/qt_gui_core/tree/humble from source might help
+Rebuilding https://github.com/ros-visualization/qt_gui_core/tree/humble from source might help, but build currently fails...
