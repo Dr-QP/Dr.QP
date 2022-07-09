@@ -13,7 +13,6 @@ dependencies:
   - git
   - ninja
   - boost
-  - doctest
   - pkg-config
   - make
   - colcon-common-extensions
