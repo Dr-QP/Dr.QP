@@ -5,7 +5,7 @@ export MAMBA_NO_BANNER=1
 
 function ros2_activate
 {
-  export ROS_DOMAIN_ID=58
+  export ROS_DOMAIN_ID=3
   conda activate ros_env
   source $CONDA_PREFIX/setup.bash
 }

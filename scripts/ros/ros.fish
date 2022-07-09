@@ -5,7 +5,7 @@
 set -gx MAMBA_NO_BANNER 1
 
 function ros2_activate
-    set -gx ROS_DOMAIN_ID 58
+    set -gx ROS_DOMAIN_ID 3
     conda activate ros_env
     bass source $CONDA_PREFIX/setup.bash
 
