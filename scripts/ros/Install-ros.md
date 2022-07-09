@@ -17,6 +17,7 @@ In order to make ROS2 setup via conda properly work you need to remove these var
 
 ## Remaining issues: https://github.com/RoboStack/ros-humble/issues/3
 
+### Manually
 The macOS installation is using RoboStack
 https://robostack.github.io/GettingStarted.html
 
@@ -54,7 +55,6 @@ mamba install vs2019_win-64
 conda deactivate
 conda activate ros_env
 
-
 ## This was required to avoid sudo for rosdep
 sudo mkdir /etc/ros
 sudo chown -R (whoami) /etc/ros
@@ -65,12 +65,10 @@ rosdep init  # note: do not use sudo!
 rosdep update
 ```
 
-### Recommended conda config
+### From env file
 
-To avoid pontential conflicts it is recommended to use `strict` channel priority. Read more [here](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-channels.html#strict-channel-priority)
-```
-conda config --set channel_priority strict
-```
+`mamba env create -f ./scripts/ros/ros-base.yml`
+
 
 ## Activating
 
@@ -84,13 +82,12 @@ Below are a convenient functions for `fish` shell to source ROS2 environment
 NOTE: it makes use of [`bass`](https://github.com/edc/bass) plugin that allows to source bash scripts in fish
 
 ```
-function ros2_activate
-    conda activate ros_env
-    bass source $CONDA_PREFIX/setup.bash
-end
+# Install fisher
+curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher
 
-function ros2_ws
-    ros2_activate
-    bass source setup.bash
-end
+# Install bass
+fisher install edc/bass
 ```
+
+Fish helpers are in [ros.fish](./ros.fish)
+Bash helpers are in [ros.fish](./ros.sh)
