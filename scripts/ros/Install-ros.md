@@ -91,3 +91,18 @@ fisher install edc/bass
 
 Fish helpers are in [ros.fish](./ros.fish)
 Bash helpers are in [ros.fish](./ros.sh)
+
+
+
+## Rqt on Mac
+
+Running `rqt` works, but produces the following error, suggesting that `qt_gui_cpp` is faulty
+```
+Could not import "pyqt" bindings of qt_gui_cpp library - so C++ plugins will not be available:
+Traceback (most recent call last):
+  File "/Users/antonmatosov/opt/miniconda3/envs/ros_env/lib/python3.9/site-packages/qt_gui_cpp/cpp_binding_helper.py", line 43, in <module>
+    from . import libqt_gui_cpp_sip
+ImportError: dlopen(/Users/antonmatosov/opt/miniconda3/envs/ros_env/lib/python3.9/site-packages/qt_gui_cpp/libqt_gui_cpp_sip.cpython-39-darwin.so, 0x0002): symbol not found in flat namespace '__ZN10qt_gui_cpp12PluginBridge16staticMetaObjectE'
+```
+
+Rebuilding https://github.com/ros-visualization/qt_gui_core/tree/humble from source might help
