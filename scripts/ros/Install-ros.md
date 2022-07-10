@@ -105,4 +105,14 @@ Traceback (most recent call last):
 ImportError: dlopen(/Users/antonmatosov/opt/miniconda3/envs/ros_env/lib/python3.9/site-packages/qt_gui_cpp/libqt_gui_cpp_sip.cpython-39-darwin.so, 0x0002): symbol not found in flat namespace '__ZN10qt_gui_cpp12PluginBridge16staticMetaObjectE'
 ```
 
-Rebuilding https://github.com/ros-visualization/qt_gui_core/tree/humble from source might help, but build currently fails...
+Rebuilding `git clone https://github.com/ros-visualization/qt_gui_core/ -b humble` from source might help, but build currently fails...
+
+
+## ROS2 VSCode extension 
+
+1. activate ros_env
+2. cd into workspace
+3. run `code .`
+
+This will provide access to all ROS bins for VSCode extension to function
+**!!! NOTE: This will break vscode embedded terminal, due to the way conda is activated** 
