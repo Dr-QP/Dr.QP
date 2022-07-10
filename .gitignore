@@ -13,7 +13,9 @@ cmake-build-*
 
 .history
 
-!.vscode/*
-.vscode/settings.json
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+
 src/crab_description
 src/urdf_tutorial
