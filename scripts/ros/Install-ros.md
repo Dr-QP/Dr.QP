@@ -105,7 +105,7 @@ Traceback (most recent call last):
 ImportError: dlopen(/Users/antonmatosov/opt/miniconda3/envs/ros_env/lib/python3.9/site-packages/qt_gui_cpp/libqt_gui_cpp_sip.cpython-39-darwin.so, 0x0002): symbol not found in flat namespace '__ZN10qt_gui_cpp12PluginBridge16staticMetaObjectE'
 ```
 
-Rebuilding `git clone https://github.com/ros-visualization/qt_gui_core/ -b humble` from source might help, but build currently fails...
+Rebuilding `git clone https://github.com/ros-visualization/qt_gui_core/ -b humble` from source might help, but build currently fails... see [log](https://gist.github.com/anton-matosov/432e48b644cc25b5aab1501757be0ce2)
 
 
 ## ROS2 VSCode extension 
