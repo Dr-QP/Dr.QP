@@ -14,7 +14,7 @@
     		<visual>
       			<origin	xyz="0 0 0" rpy="0 0 0" />
       			<geometry>
-				<mesh filename="package://crab_description/meshes/thorax.STL" />
+				<mesh filename="package://drqp_description/meshes/thorax.STL" />
       			</geometry>
      			<material name="grey">
         			<color rgba="0.5 0.5 0.5 1" />
@@ -52,7 +52,7 @@
     		<visual>
       			<origin xyz="0 0 0" rpy="0 0 0" />
       			<geometry>
-        			<mesh filename="package://crab_description/meshes/coxa_${side}.STL" />
+        			<mesh filename="package://drqp_description/meshes/coxa_${side}.STL" />
       			</geometry>
       			<material name="">
         			<color rgba="0.7 0.7 0 1" />
@@ -72,7 +72,7 @@
     		<visual>
       			<origin xyz="0 0 0" rpy="0 0 0" />
       			<geometry>
-        			<mesh filename="package://crab_description/meshes/femur_${side}.STL" />
+        			<mesh filename="package://drqp_description/meshes/femur_${side}.STL" />
       			</geometry>
       			<material name="">
         			<color rgba="0 0.7 0.7 1" />
@@ -92,7 +92,7 @@
     		<visual>
       			<origin xyz="0 0 0" rpy="0 0 0.06" />
       			<geometry>
-       				<mesh filename="package://crab_description/meshes/tibia_${side}.STL" />
+       				<mesh filename="package://drqp_description/meshes/tibia_${side}.STL" />
       			</geometry>
       			<material name="">
         			<color rgba="0.7 0 0.7 1" />
