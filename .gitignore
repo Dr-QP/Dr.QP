@@ -1,4 +1,8 @@
+#ros2 colcon
 build/
+install/
+log/
+
 build.vscode/
 bin/
 *.iml
@@ -11,3 +15,4 @@ cmake-build-*
 
 !.vscode/*
 .vscode/settings.json
+src/crab_description
