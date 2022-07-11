@@ -14,7 +14,7 @@
     		<visual>
       			<origin	xyz="0 0 0" rpy="0 0 0" />
       			<geometry>
-				<mesh filename="package://drqp_description/meshes/thorax.STL" />
+				<mesh filename="package://drqp_description/meshes/body.stl" />
       			</geometry>
      			<material name="grey">
         			<color rgba="0.5 0.5 0.5 1" />
