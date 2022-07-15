@@ -10,14 +10,31 @@
 		<origin xyz="0 0 0" rpy="0 0 0" />
 	</joint>
 
+	<joint name="base_joint" type="fixed">
+		<parent link="base_link" />
+		<child link="thorax-with-servos" />
+		<origin xyz="0 0 0" rpy="0 0 0" />
+	</joint>
+
+	<link name="thorax-with-servos">
+		<visual>
+			<origin xyz="0 0 0" rpy="${pi/2} 0 0" />
+			<geometry>
+				<mesh filename="package://drqp_description/meshes/body-with-servos.stl" />
+			</geometry>
+			<material name="grey">
+				<color rgba="0.5 0.5 0.5 0.2" />
+			</material>
+		</visual>
+	</link>
 	<link name="thorax">
 		<visual>
-			<origin xyz="0 0 0" rpy="0 0 0" />
+			<origin xyz="0 0 0" rpy="${pi/2} 0 0" />
 			<geometry>
 				<mesh filename="package://drqp_description/meshes/body.stl" />
 			</geometry>
 			<material name="grey">
-				<color rgba="0.5 0.5 0.5 1" />
+				<color rgba="0.5 0.5 0.5 0.2" />
 			</material>
 		</visual>
 	</link>
@@ -39,7 +56,7 @@
 		</joint>
 
 		<link name="leg_center_${side}${num}" />
-
+<!-- 
 		<joint name="coxa_joint_${side}${num}" type="revolute">
 			<origin xyz="0 0 0" rpy="0 0 ${angle}" />
 			<parent link="leg_center_${side}${num}" />
@@ -106,7 +123,7 @@
 			<child link="tibia_foot_${side}${num}" />
 		</joint>
 
-		<link name="tibia_foot_${side}${num}" />
+		<link name="tibia_foot_${side}${num}" /> -->
 	</xacro:macro>
 
 	<!-- Build robot model -->
