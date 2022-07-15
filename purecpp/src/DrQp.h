@@ -4,7 +4,6 @@
 #include <inttypes.h>
 #include <numeric>
 #include <string>
-#include <ranges>
 
 using ServoId = uint8_t;
 enum LegId {
@@ -31,7 +30,10 @@ using ServoIdsArray = std::array<ServoId, kServoMaxId - kServoMinId>;
 
 ServoIdsArray servoIdsRange() {
   ServoIdsArray result;
-  std::iota(std::begin(result), std::end(result), kServoMinId);
+  size_t i = 0;
+  for (ServoId id = kServoMinId; id < kServoMaxId; ++id, ++i) {
+    result[i] = id;
+  }
   return result;
 }
 

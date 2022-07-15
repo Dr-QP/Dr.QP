@@ -13,7 +13,7 @@ add_executable(${PROJECT_NAME}
      ${ALL_CODE_HDRS}
      ${ALL_CODE_SRCS}
      ${SOURCE_FILES})
-set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+
 target_link_libraries(${PROJECT_NAME} PRIVATE servo Boost::thread Boost::serialization Boost::system doctest::doctest)
 
 file(INSTALL ${CMAKE_CURRENT_SOURCE_DIR}/test_data
