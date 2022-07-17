@@ -10,14 +10,22 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
     drqp_description_path = get_package_share_path('drqp_description')
-    default_model_path = drqp_description_path / 'urdf/dr_qp.xacro'
+    default_model_path = drqp_description_path / 'urdf/dr_qp.urdf.xacro'
     default_rviz_config_path = drqp_description_path / 'rviz/drqp_description.rviz'
 
     gui_arg = DeclareLaunchArgument(name='gui', default_value='true', choices=['true', 'false'],
                                     description='Flag to enable joint_state_publisher_gui')
     model_arg = DeclareLaunchArgument(name='model', default_value=str(default_model_path),
                                       description='Absolute path to robot urdf file')
-    rviz_arg = DeclareLaunchArgument(name='rvizconfig', default_value=str(default_rviz_config_path),
+    external_urdf_loc_arg = DeclareLaunchArgument(name='external_urdf_loc', default_value="",
+                                      description='Absolute path additional urdf file to include in the model')
+    
+    
+    rviz_frame_arg = DeclareLaunchArgument(name='rviz_frame', default_value='dr_qp/base_link',
+                                    description='Base model frame in rviz')
+    rviz_arg = DeclareLaunchArgument(name='rviz', default_value='true', choices=['true', 'false'],
+                                    description='Flag to enable rviz')
+    rvizconfig_arg = DeclareLaunchArgument(name='rvizconfig', default_value=str(default_rviz_config_path),
                                      description='Absolute path to rviz config file')
 
     robot_description = ParameterValue(Command(['xacro ', LaunchConfiguration('model')]),
@@ -47,13 +55,17 @@ def generate_launch_description():
         executable='rviz2',
         name='rviz2',
         output='screen',
-        arguments=['-d', LaunchConfiguration('rvizconfig')],
+        arguments=['-d', LaunchConfiguration('rvizconfig'), '-f', LaunchConfiguration('rviz_frame')],
+        condition=IfCondition(LaunchConfiguration('rviz'))
     )
 
     return LaunchDescription([
         gui_arg,
         model_arg,
         rviz_arg,
+        rvizconfig_arg,
+        rviz_frame_arg,
+        external_urdf_loc_arg,
         joint_state_publisher_node,
         joint_state_publisher_gui_node,
         robot_state_publisher_node,
