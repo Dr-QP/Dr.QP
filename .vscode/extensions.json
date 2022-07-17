@@ -19,6 +19,7 @@
     "redhat.vscode-yaml",
     "ms-vscode.cpptools",
     "twxs.cmake",
-    "ms-vscode.cmake-tools"
+    "ms-vscode.cmake-tools",
+    "redhat.vscode-xml"
   ]
 }
