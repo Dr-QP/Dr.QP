@@ -22,11 +22,6 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 ######################################################################################################################################################
 
-
-# if(COMMAND cmake_policy)
-#   cmake_policy(SET CMP0003 NEW)
-# endif(COMMAND cmake_policy)
-
 if(UNIX AND NOT APPLE)
   set(LINUX TRUE)
 endif()
