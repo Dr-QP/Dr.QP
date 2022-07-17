@@ -21,7 +21,7 @@ def generate_launch_description():
                                       description='Absolute path additional urdf file to include in the model')
     
     
-    rviz_frame_arg = DeclareLaunchArgument(name='rviz_frame', default_value='dr_qp/base_link',
+    rviz_frame_arg = DeclareLaunchArgument(name='rviz_frame', default_value='dr_qp/base_bottom_link',
                                     description='Base model frame in rviz')
     rviz_arg = DeclareLaunchArgument(name='rviz', default_value='true', choices=['true', 'false'],
                                     description='Flag to enable rviz')
