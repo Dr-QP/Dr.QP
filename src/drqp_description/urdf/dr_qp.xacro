@@ -1,137 +1,191 @@
 <?xml version="1.0"?>
-<robot xmlns:xacro="http://ros.org/wiki/xacro" name="dr_qp">
+<robot name="dr_qp" xmlns:xacro="http://ros.org/wiki/xacro">
 
-	<!-- Build the body frame -->
-	<link name="base_link" />
+  <xacro:arg name="robot_name" default = "dr_qp"/>
+  <xacro:arg name="external_urdf_loc" default=""/>
+  <xacro:arg name="load_gazebo_configs" default="false"/>
 
-	<joint name="base_joint" type="fixed">
-		<parent link="base_link" />
-		<child link="thorax" />
-		<origin xyz="0 0 0" rpy="0 0 0" />
-	</joint>
+  <xacro:property name="urdf_loc" value="$(arg external_urdf_loc)"/>
 
-	<joint name="base_joint" type="fixed">
-		<parent link="base_link" />
-		<child link="thorax-with-servos" />
-		<origin xyz="0 0 0" rpy="0 0 0" />
-	</joint>
+  <xacro:if value="$(arg load_gazebo_configs)">
+    <xacro:include filename="$(find drqp_gazebo)/config/drqp_texture.gazebo"/>
+  </xacro:if>
 
-	<link name="thorax-with-servos">
-		<visual>
-			<origin xyz="0 0 0" rpy="${pi/2} 0 0" />
-			<geometry>
-				<mesh filename="package://drqp_description/meshes/body-with-servos.stl" />
-			</geometry>
-			<material name="grey">
-				<color rgba="0.5 0.5 0.5 0.2" />
-			</material>
-		</visual>
-	</link>
-	<link name="thorax">
-		<visual>
-			<origin xyz="0 0 0" rpy="${pi/2} 0 0" />
-			<geometry>
-				<mesh filename="package://drqp_description/meshes/body.stl" />
-			</geometry>
-			<material name="grey">
-				<color rgba="0.5 0.5 0.5 0.2" />
-			</material>
-		</visual>
-	</link>
+  <material name="drqp_black">
+    <texture filename="package://drqp_descriptions/meshes/drqp_black.png"/>
+  </material>
 
-	<!-- Joint properties -->
-	<xacro:property name="joint_lower_limit" value="-${1.5}" />
-	<xacro:property name="joint_upper_limit" value="${1.5}" />
-	<xacro:property name="joint_effort" value="10000" />
-	<xacro:property name="joint_velocity" value="100" />
+  <xacro:macro name="leg" params="robot_name prefix x y yaw">
 
-	<!-- Leg macros -->
-	<xacro:macro name="leg" params="side num x y angle">
+    <joint name="${prefix}_coxa" type="revolute">
+      <axis xyz="0 0 1"/>
+      <limit effort="3" lower="${radians(-55)}" upper="${radians(55)}" velocity="${pi}"/>
+      <origin rpy="0 0 ${yaw}" xyz="${x} ${y} 0"/>
+      <parent link="${robot_name}/base_link"/>
+      <child link="${robot_name}/${prefix}_coxa_link"/>
+      <dynamics friction="0.5"/>
+    </joint>
 
-		<!-- Build leg -->
-		<joint name="leg_center_joint_${side}${num}" type="fixed">
-			<origin xyz="${x} ${y} 0" rpy="0 0 0" />
-			<parent link="thorax" />
-			<child link="leg_center_${side}${num}" />
-		</joint>
+    <transmission name="trans_${prefix}_coxa">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${prefix}_coxa">
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="${prefix}_coxa_motor">
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
 
-		<link name="leg_center_${side}${num}" />
-<!-- 
-		<joint name="coxa_joint_${side}${num}" type="revolute">
-			<origin xyz="0 0 0" rpy="0 0 ${angle}" />
-			<parent link="leg_center_${side}${num}" />
-			<child link="coxa_${side}${num}" />
-			<axis xyz="0 0 -1" />
-			<limit lower="${joint_lower_limit}" upper="${joint_upper_limit}" effort="${joint_effort}" velocity="${joint_velocity}" />
-		</joint>
+    <link name="${robot_name}/${prefix}_coxa_link">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://drqp_descriptions/meshes/dr_qp_meshes/dr_qp_coxa_link.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="drqp_black"/>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://drqp_descriptions/meshes/dr_qp_meshes/dr_qp_coxa_link.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin rpy="0 0 0" xyz="0.019066 -0.000002 0.006577"/>
+        <mass value="0.02471" />
+        <inertia ixx="0.0000215400" iyy="0.00002657000" izz="0.00002925000" ixy="-0.00000000122" ixz="-0.00000192741" iyz="-0.00000000001" />
+      </inertial>
+    </link>
 
-		<link name="coxa_${side}${num}">
-			<visual>
-				<origin xyz="0 0 0" rpy="0 0 0" />
-				<geometry>
-					<mesh filename="package://drqp_description/meshes/coxa_${side}.STL" />
-				</geometry>
-				<material name="">
-					<color rgba="0.7 0.7 0 1" />
-				</material>
-			</visual>
-		</link>
+    <joint name="${prefix}_femur" type="revolute">
+      <axis xyz="0 1 0"/>
+      <limit effort="3" lower="${radians(-98)}" upper="${radians(90)}" velocity="${pi}"/>
+      <origin rpy="0 0 0" xyz="0.052907539 0 0"/>
+      <parent link="${robot_name}/${prefix}_coxa_link"/>
+      <child link="${robot_name}/${prefix}_femur_link"/>
+      <dynamics friction="0.5"/>
+    </joint>
 
-		<joint name="femur_joint_${side}${num}" type="revolute">
-			<origin xyz="0.0294 0 0" rpy="-${pi/2} 0 0" />
-			<parent link="coxa_${side}${num}" />
-			<child link="femur_${side}${num}" />
-			<axis xyz="0 0 -1" />
-			<limit lower="${joint_lower_limit}" upper="${joint_upper_limit}" effort="${joint_effort}" velocity="${joint_velocity}" />
-		</joint>
+    <transmission name="trans_${prefix}_femur">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${prefix}_femur">
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="${prefix}_femur_motor">
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
 
-		<link name="femur_${side}${num}">
-			<visual>
-				<origin xyz="0 0 0" rpy="0 0 0" />
-				<geometry>
-					<mesh filename="package://drqp_description/meshes/femur_${side}.STL" />
-				</geometry>
-				<material name="">
-					<color rgba="0 0.7 0.7 1" />
-				</material>
-			</visual>
-		</link>
+    <link name="${robot_name}/${prefix}_femur_link">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://drqp_descriptions/meshes/dr_qp_meshes/dr_qp_femur_link.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="drqp_black"/>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://drqp_descriptions/meshes/dr_qp_meshes/dr_qp_femur_link.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin rpy="0 0 0" xyz="0.020226 -0.00029 -0.00063"/>
+        <mass value="0.085834" />
+        <inertia ixx="0.0000288700" iyy="0.0000750200" izz="0.0000867200" ixy="0.0000002419" ixz="0.0000048494" iyz="0.0000000003" />
+      </inertial>
+    </link>
 
-		<joint name="tibia_joint_${side}${num}" type="revolute">
-			<origin xyz="0.08 0 0" rpy="${pi} 0 ${pi/2}" />
-			<parent link="femur_${side}${num}" />
-			<child link="tibia_${side}${num}" />
-			<axis xyz="0 0 1" />
-			<limit lower="${joint_lower_limit}" upper="${joint_upper_limit}" effort="${joint_effort}" velocity="${joint_velocity}" />
-		</joint>
+    <joint name="${prefix}_tibia" type="revolute">
+      <axis xyz="0 1 0"/>
+      <limit effort="3" lower="${radians(-45)}" upper="${radians(125)}" velocity="${pi}"/>
+      <origin rpy="0 0 0" xyz="0.06 0 -0.015"/>
+      <parent link="${robot_name}/${prefix}_femur_link"/>
+      <child link="${robot_name}/${prefix}_tibia_link"/>
+      <dynamics friction="0.5"/>
+    </joint>
 
-		<link name="tibia_${side}${num}">
-			<visual>
-				<origin xyz="0 0 0" rpy="0 0 0.06" />
-				<geometry>
-					<mesh filename="package://drqp_description/meshes/tibia_${side}.STL" />
-				</geometry>
-				<material name="">
-					<color rgba="0.7 0 0.7 1" />
-				</material>
-			</visual>
-		</link>
+    <transmission name="trans_${prefix}_tibia">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${prefix}_tibia">
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="${prefix}_tibia_motor">
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
 
-		<joint name="tibia_foot_joint_${side}${num}" type="fixed">
-			<origin xyz="0.117 0 0" rpy="0 0 0" />
-			<parent link="tibia_${side}${num}" />
-			<child link="tibia_foot_${side}${num}" />
-		</joint>
+    <link name="${robot_name}/${prefix}_tibia_link">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://drqp_descriptions/meshes/dr_qp_meshes/dr_qp_tibia_link.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="drqp_black"/>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://drqp_descriptions/meshes/dr_qp_meshes/dr_qp_tibia_link.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin rpy="0 0 0" xyz="0.036797 0.000054 -0.011991"/>
+        <mass value="0.171825" />
+        <inertia ixx="0.0001762000" iyy="0.0005158000" izz="0.0003768000" ixy="-0.0000014522" ixz="0.0001789000" iyz="0.0000006181" />
+      </inertial>
+    </link>
 
-		<link name="tibia_foot_${side}${num}" /> -->
-	</xacro:macro>
+    <joint name="${prefix}_foot" type="fixed">
+      <origin rpy="0 0 0" xyz="0.095 0 -0.09"/>
+      <parent link="${robot_name}/${prefix}_tibia_link"/>
+      <child link="${robot_name}/${prefix}_foot_link"/>
+    </joint>
 
-	<!-- Build robot model -->
-	<xacro:leg side="r" num="1" x="0.087598" y="-0.050575" angle="-${pi/3}" />
-	<xacro:leg side="r" num="2" x="0" y="-0.06985" angle="-${pi/2}" />
-	<xacro:leg side="r" num="3" x="-0.087598" y="-0.050575" angle="-${pi*2/3}" />
-	<xacro:leg side="l" num="1" x="0.087598" y="0.050575" angle="${pi/3}" />
-	<xacro:leg side="l" num="2" x="0" y="0.06985" angle="${pi/2}" />
-	<xacro:leg side="l" num="3" x="-0.087598" y="0.050575" angle="${pi*2/3}" />
+    <link name="${robot_name}/${prefix}_foot_link"/>
+
+  </xacro:macro>
+
+  <link name="$(arg robot_name)/base_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://drqp_descriptions/meshes/dr_qp_meshes/dr_qp_base_link.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="drqp_black"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://drqp_descriptions/meshes/dr_qp_meshes/dr_qp_base_link.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.001522 0.000302 0.015345"/>
+      <mass value="1.522054" />
+      <inertia ixx="0.0044660000" iyy="0.0084890000" izz="0.0092020000" ixy="0.0000076888" ixz="-0.0001245000" iyz="0.0000050996" />
+    </inertial>
+  </link>
+
+  <joint name="base_bottom" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 -0.033"/>
+    <parent link="$(arg robot_name)/base_link"/>
+    <child link="$(arg robot_name)/base_bottom_link"/>
+  </joint>
+
+  <link name="$(arg robot_name)/base_bottom_link">
+  </link>
+
+  <xacro:leg robot_name="$(arg robot_name)" prefix="right_front" x="0.125" y="-0.065" yaw="${-pi/4}"/>
+  <xacro:leg robot_name="$(arg robot_name)" prefix="right_middle" x="0" y="-0.1" yaw="${-pi/2}"/>
+  <xacro:leg robot_name="$(arg robot_name)" prefix="right_back" x="-0.125" y="-0.065" yaw="${-3*pi/4}"/>
+  <xacro:leg robot_name="$(arg robot_name)" prefix="left_front" x="0.125" y="0.065" yaw="${pi/4}"/>
+  <xacro:leg robot_name="$(arg robot_name)" prefix="left_middle" x="0" y="0.1" yaw="${pi/2}"/>
+  <xacro:leg robot_name="$(arg robot_name)" prefix="left_back" x="-0.125" y="0.065" yaw="${3*pi/4}"/>
+
+  <xacro:if value="${urdf_loc != ''}">
+    <xacro:include filename="${urdf_loc}"/>
+  </xacro:if>
 
 </robot>
