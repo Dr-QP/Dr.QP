@@ -11,7 +11,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 def generate_launch_description():
     drqp_description_path = get_package_share_path('drqp_description')
     default_model_path = drqp_description_path / 'urdf/dr_qp.xacro'
-    default_rviz_config_path = drqp_description_path / 'rviz/urdf.rviz'
+    default_rviz_config_path = drqp_description_path / 'rviz/drqp_description.rviz'
 
     gui_arg = DeclareLaunchArgument(name='gui', default_value='true', choices=['true', 'false'],
                                     description='Flag to enable joint_state_publisher_gui')

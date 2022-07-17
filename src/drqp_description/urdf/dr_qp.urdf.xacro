@@ -12,7 +12,7 @@
   </xacro:if>
 
   <material name="drqp_black">
-    <texture filename="package://drqp_descriptions/meshes/drqp_black.png"/>
+    <texture filename="package://drqp_description/meshes/drqp_black.png"/>
   </material>
 
   <xacro:macro name="leg" params="robot_name prefix x y yaw">
@@ -40,14 +40,14 @@
       <visual>
         <origin rpy="0 0 0" xyz="0 0 0"/>
         <geometry>
-          <mesh filename="package://drqp_descriptions/meshes/dr_qp_meshes/dr_qp_coxa_link.stl" scale="0.001 0.001 0.001"/>
+          <mesh filename="package://drqp_description/meshes/dr_qp_meshes/dr_qp_coxa_link.stl" scale="0.001 0.001 0.001"/>
         </geometry>
         <material name="drqp_black"/>
       </visual>
       <collision>
         <origin rpy="0 0 0" xyz="0 0 0"/>
         <geometry>
-          <mesh filename="package://drqp_descriptions/meshes/dr_qp_meshes/dr_qp_coxa_link.stl" scale="0.001 0.001 0.001"/>
+          <mesh filename="package://drqp_description/meshes/dr_qp_meshes/dr_qp_coxa_link.stl" scale="0.001 0.001 0.001"/>
         </geometry>
       </collision>
       <inertial>
@@ -80,14 +80,14 @@
       <visual>
         <origin rpy="0 0 0" xyz="0 0 0"/>
         <geometry>
-          <mesh filename="package://drqp_descriptions/meshes/dr_qp_meshes/dr_qp_femur_link.stl" scale="0.001 0.001 0.001"/>
+          <mesh filename="package://drqp_description/meshes/dr_qp_meshes/dr_qp_femur_link.stl" scale="0.001 0.001 0.001"/>
         </geometry>
         <material name="drqp_black"/>
       </visual>
       <collision>
         <origin rpy="0 0 0" xyz="0 0 0"/>
         <geometry>
-          <mesh filename="package://drqp_descriptions/meshes/dr_qp_meshes/dr_qp_femur_link.stl" scale="0.001 0.001 0.001"/>
+          <mesh filename="package://drqp_description/meshes/dr_qp_meshes/dr_qp_femur_link.stl" scale="0.001 0.001 0.001"/>
         </geometry>
       </collision>
       <inertial>
@@ -120,14 +120,14 @@
       <visual>
         <origin rpy="0 0 0" xyz="0 0 0"/>
         <geometry>
-          <mesh filename="package://drqp_descriptions/meshes/dr_qp_meshes/dr_qp_tibia_link.stl" scale="0.001 0.001 0.001"/>
+          <mesh filename="package://drqp_description/meshes/dr_qp_meshes/dr_qp_tibia_link.stl" scale="0.001 0.001 0.001"/>
         </geometry>
         <material name="drqp_black"/>
       </visual>
       <collision>
         <origin rpy="0 0 0" xyz="0 0 0"/>
         <geometry>
-          <mesh filename="package://drqp_descriptions/meshes/dr_qp_meshes/dr_qp_tibia_link.stl" scale="0.001 0.001 0.001"/>
+          <mesh filename="package://drqp_description/meshes/dr_qp_meshes/dr_qp_tibia_link.stl" scale="0.001 0.001 0.001"/>
         </geometry>
       </collision>
       <inertial>
@@ -151,14 +151,14 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://drqp_descriptions/meshes/dr_qp_meshes/dr_qp_base_link.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://drqp_description/meshes/dr_qp_meshes/dr_qp_base_link.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="drqp_black"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://drqp_descriptions/meshes/dr_qp_meshes/dr_qp_base_link.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://drqp_description/meshes/dr_qp_meshes/dr_qp_base_link.stl" scale="0.001 0.001 0.001"/>
       </geometry>
     </collision>
     <inertial>

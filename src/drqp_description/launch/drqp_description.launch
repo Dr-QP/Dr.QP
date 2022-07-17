@@ -1,48 +1,39 @@
 <launch>
 
   <arg name="robot_model"                       default="dr_qp"/>
-  <arg name="robot_name"                        default="$(arg robot_model)"/>
+  <arg name="robot_name"                        default="$(var robot_model)"/>
   <arg name="external_urdf_loc"                 default=""/>
   <arg name="load_gazebo_configs"               default="false"/>
   <arg name="use_joint_pub"                     default="true"/>
   <arg name="use_joint_pub_gui"                 default="false"/>
   <arg name="use_rviz"                          default="true"/>
-  <arg name="rviz_frame"                        default="$(arg robot_name)/base_bottom_link"/>
-  <arg name="rvizconfig"                        default="$(find drqp_descriptions)/rviz/drqp_description.rviz" />
-  <arg name="model"                             default="$(find drqp_descriptions)/urdf/$(arg robot_model).urdf.xacro
-                                                         robot_name:=$(arg robot_name)
-                                                         external_urdf_loc:=$(arg external_urdf_loc)
-                                                         load_gazebo_configs:=$(arg load_gazebo_configs)"/>
+  <arg name="rviz_frame"                        default="$(var robot_name)/base_bottom_link"/>
+  <arg name="rvizconfig"                        default="$(find-pkg-share drqp_description)/rviz/drqp_description.rviz" />
+  <arg name="model"                             default="$(find-pkg-share drqp_description)/urdf/$(var robot_model).urdf.xacro
+                                                         robot_name:=$(var robot_name)
+                                                         external_urdf_loc:=$(var external_urdf_loc)
+                                                         load_gazebo_configs:=$(var load_gazebo_configs)"/>
 
   
 
-  <node if="$(arg use_joint_pub)"
-    name="joint_state_publisher"
-    pkg="joint_state_publisher"
-    type="joint_state_publisher"
-    ns="$(arg robot_name)">
-  </node>
+  <node if="$(var use_joint_pub)"
+    exec="joint_state_publisher"
+    pkg="joint_state_publisher" /> 
 
-  <node if="$(arg use_joint_pub_gui)"
-    name="joint_state_publisher_gui"
+  <node if="$(var use_joint_pub_gui)"
+    exec="joint_state_publisher_gui"
     pkg="joint_state_publisher_gui"
-    type="joint_state_publisher_gui"
-    ns="$(arg robot_name)">
-  </node>
-
+    />
   <node
-    name="robot_state_publisher"
-    pkg="robot_state_publisher"
-    type="robot_state_publisher"
-    ns="$(arg robot_name)">
-    <param name="robot_description" command="$(find xacro)/xacro $(arg model)" />
+    exec="robot_state_publisher"
+    pkg="robot_state_publisher">
+    <param name="robot_description" command="$(find-pkg-prefix xacro)/xacro $(var model)" />
   </node>
 
-  <node if="$(arg use_rviz)"
-    name="rviz"
+  <node if="$(var use_rviz)"
+    exec="rviz"
     pkg="rviz"
-    type="rviz"
-    args="-f $(arg rviz_frame) -d $(arg rvizconfig)"
-    ns="$(arg robot_name)"/>
+    args="-f $(var rviz_frame) -d $(var rvizconfig)"
+    />
 
 </launch>
