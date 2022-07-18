@@ -20,11 +20,39 @@
 
   <xacro:macro name="leg" params="robot_name prefix x y yaw">
 
+    <joint name="${prefix}_coxa_servo" type="fixed">
+      <origin rpy="0 0 ${yaw}" xyz="${x} ${y} 0"/>
+      <parent link="${robot_name}/base_center_link"/>
+      <child link="${robot_name}/${prefix}_coxa_servo"/>
+    </joint>
+    
+    <link name="${robot_name}/${prefix}_coxa_servo">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 ${-pi/2}" />
+        <geometry>
+          <mesh filename="package://drqp_description/meshes/servo.stl" />
+        </geometry>
+        <material name="drqp_black"/>
+      </visual>
+      <!-- TODO: Define later -->
+      <!-- <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://drqp_description/meshes/servo.stl" />
+        </geometry>
+      </collision>
+      <inertial>
+        <origin rpy="0 0 0" xyz="0.019066 -0.000002 0.006577"/>
+        <mass value="0.02471" />
+        <inertia ixx="0.0000215400" iyy="0.00002657000" izz="0.00002925000" ixy="-0.00000000122" ixz="-0.00000192741" iyz="-0.00000000001" />
+      </inertial> -->
+    </link>
+
+  
     <joint name="${prefix}_coxa" type="revolute">
       <axis xyz="0 0 1"/>
       <limit effort="3" lower="${radians(-55)}" upper="${radians(55)}" velocity="${pi}"/>
-      <origin rpy="0 0 ${yaw}" xyz="${x} ${y} 0"/>
-      <parent link="${robot_name}/base_center_link"/>
+      <parent link="${robot_name}/${prefix}_coxa_servo"/>
       <child link="${robot_name}/${prefix}_coxa_link"/>
       <dynamics friction="0.5"/>
     </joint>
@@ -149,10 +177,12 @@
     <link name="${robot_name}/${prefix}_foot_link"/> -->
 
   </xacro:macro>
+  
+  <xacro:property name="body_height" value="0.037" />
 
   <link name="$(arg robot_name)/base_center_link">
     <visual>
-      <origin xyz="0 0 0" rpy="${pi/2} 0 ${pi}" />
+      <origin xyz="0 0 -${body_height/2}" rpy="${pi/2} 0 ${pi}" />
       <geometry>
         <mesh filename="package://drqp_description/meshes/body-simple.stl" />
       </geometry>
@@ -175,7 +205,7 @@
   </link>
 
   <joint name="base_bottom" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 0.033"/>
+    <origin rpy="0 0 0" xyz="0 0 ${body_height/2}"/>
     <child link="$(arg robot_name)/base_center_link"/>
     <parent link="$(arg robot_name)/base_bottom_link"/>
   </joint>
