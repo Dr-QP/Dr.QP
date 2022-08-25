@@ -120,9 +120,9 @@
     </link>
 
     <joint name="${prefix}_femur" type="revolute">
-      <axis xyz="0 1 0"/>
+      <axis xyz="0 0 1"/>
       <limit effort="3" lower="${radians(-98)}" upper="${radians(90)}" velocity="${pi}"/>
-      <origin rpy="0 0 0" xyz="0.052907539 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <parent link="${robot_name}/${prefix}_coxa_f2_link_2"/>
       <child link="${robot_name}/${prefix}_femur_link"/>
       <dynamics friction="0.5"/>
