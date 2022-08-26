@@ -77,10 +77,16 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        dr_qp/left_back_femur_link_f1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         dr_qp/left_back_femur_link_f3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         dr_qp/left_back_femur_servo:
           Alpha: 1
           Show Axes: false
@@ -101,10 +107,16 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        dr_qp/left_front_femur_link_f1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         dr_qp/left_front_femur_link_f3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         dr_qp/left_front_femur_servo:
           Alpha: 1
           Show Axes: false
@@ -125,10 +137,16 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        dr_qp/left_middle_femur_link_f1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         dr_qp/left_middle_femur_link_f3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         dr_qp/left_middle_femur_servo:
           Alpha: 1
           Show Axes: false
@@ -149,10 +167,16 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        dr_qp/right_back_femur_link_f1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         dr_qp/right_back_femur_link_f3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         dr_qp/right_back_femur_servo:
           Alpha: 1
           Show Axes: false
@@ -173,10 +197,16 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        dr_qp/right_front_femur_link_f1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         dr_qp/right_front_femur_link_f3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         dr_qp/right_front_femur_servo:
           Alpha: 1
           Show Axes: false
@@ -197,10 +227,16 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        dr_qp/right_middle_femur_link_f1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         dr_qp/right_middle_femur_link_f3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         dr_qp/right_middle_femur_servo:
           Alpha: 1
           Show Axes: false
@@ -226,6 +262,8 @@ Visualization Manager:
           Value: true
         dr_qp/left_back_coxa_servo:
           Value: true
+        dr_qp/left_back_femur_link_f1:
+          Value: true
         dr_qp/left_back_femur_link_f3:
           Value: true
         dr_qp/left_back_femur_servo:
@@ -235,6 +273,8 @@ Visualization Manager:
         dr_qp/left_front_coxa_f2_link_2:
           Value: true
         dr_qp/left_front_coxa_servo:
+          Value: true
+        dr_qp/left_front_femur_link_f1:
           Value: true
         dr_qp/left_front_femur_link_f3:
           Value: true
@@ -246,6 +286,8 @@ Visualization Manager:
           Value: true
         dr_qp/left_middle_coxa_servo:
           Value: true
+        dr_qp/left_middle_femur_link_f1:
+          Value: true
         dr_qp/left_middle_femur_link_f3:
           Value: true
         dr_qp/left_middle_femur_servo:
@@ -255,6 +297,8 @@ Visualization Manager:
         dr_qp/right_back_coxa_f2_link_2:
           Value: true
         dr_qp/right_back_coxa_servo:
+          Value: true
+        dr_qp/right_back_femur_link_f1:
           Value: true
         dr_qp/right_back_femur_link_f3:
           Value: true
@@ -266,6 +310,8 @@ Visualization Manager:
           Value: true
         dr_qp/right_front_coxa_servo:
           Value: true
+        dr_qp/right_front_femur_link_f1:
+          Value: true
         dr_qp/right_front_femur_link_f3:
           Value: true
         dr_qp/right_front_femur_servo:
@@ -275,6 +321,8 @@ Visualization Manager:
         dr_qp/right_middle_coxa_f2_link_2:
           Value: true
         dr_qp/right_middle_coxa_servo:
+          Value: true
+        dr_qp/right_middle_femur_link_f1:
           Value: true
         dr_qp/right_middle_femur_link_f3:
           Value: true
@@ -293,37 +341,43 @@ Visualization Manager:
                 dr_qp/left_back_coxa_f2_link_2:
                   dr_qp/left_back_femur_servo:
                     dr_qp/left_back_femur_link_f3:
-                      {}
+                      dr_qp/left_back_femur_link_f1:
+                        {}
             dr_qp/left_front_coxa_servo:
               dr_qp/left_front_coxa_f2_link_1:
                 dr_qp/left_front_coxa_f2_link_2:
                   dr_qp/left_front_femur_servo:
                     dr_qp/left_front_femur_link_f3:
-                      {}
+                      dr_qp/left_front_femur_link_f1:
+                        {}
             dr_qp/left_middle_coxa_servo:
               dr_qp/left_middle_coxa_f2_link_1:
                 dr_qp/left_middle_coxa_f2_link_2:
                   dr_qp/left_middle_femur_servo:
                     dr_qp/left_middle_femur_link_f3:
-                      {}
+                      dr_qp/left_middle_femur_link_f1:
+                        {}
             dr_qp/right_back_coxa_servo:
               dr_qp/right_back_coxa_f2_link_1:
                 dr_qp/right_back_coxa_f2_link_2:
                   dr_qp/right_back_femur_servo:
                     dr_qp/right_back_femur_link_f3:
-                      {}
+                      dr_qp/right_back_femur_link_f1:
+                        {}
             dr_qp/right_front_coxa_servo:
               dr_qp/right_front_coxa_f2_link_1:
                 dr_qp/right_front_coxa_f2_link_2:
                   dr_qp/right_front_femur_servo:
                     dr_qp/right_front_femur_link_f3:
-                      {}
+                      dr_qp/right_front_femur_link_f1:
+                        {}
             dr_qp/right_middle_coxa_servo:
               dr_qp/right_middle_coxa_f2_link_1:
                 dr_qp/right_middle_coxa_f2_link_2:
                   dr_qp/right_middle_femur_servo:
                     dr_qp/right_middle_femur_link_f3:
-                      {}
+                      dr_qp/right_middle_femur_link_f1:
+                        {}
       Update Interval: 0
       Value: true
   Enabled: true
@@ -341,25 +395,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 0.6440235376358032
+      Distance: 0.3181183934211731
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.14116525650024414
-        Y: -0.08764449506998062
-        Z: -0.04969681426882744
+        X: 0.09526306390762329
+        Y: -0.0578414611518383
+        Z: -0.022747844457626343
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.9197998046875
+      Pitch: 0.34980013966560364
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.14995811879634857
+      Yaw: 5.118165493011475
     Saved: ~
 Window Geometry:
   Displays:
