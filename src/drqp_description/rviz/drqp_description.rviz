@@ -8,7 +8,7 @@ Panels:
         - /TF1
         - /TF1/Frames1
       Splitter Ratio: 0.6455398797988892
-    Tree Height: 465
+    Tree Height: 495
   - Class: rviz_common/Views
     Expanded:
       - /Current View1
@@ -77,7 +77,7 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/left_back_femur_link:
+        dr_qp/left_back_femur_link_f3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -101,7 +101,7 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/left_front_femur_link:
+        dr_qp/left_front_femur_link_f3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -125,7 +125,7 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/left_middle_femur_link:
+        dr_qp/left_middle_femur_link_f3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -149,7 +149,7 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/right_back_femur_link:
+        dr_qp/right_back_femur_link_f3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -173,7 +173,7 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/right_front_femur_link:
+        dr_qp/right_front_femur_link_f3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -197,7 +197,7 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/right_middle_femur_link:
+        dr_qp/right_middle_femur_link_f3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -226,7 +226,7 @@ Visualization Manager:
           Value: true
         dr_qp/left_back_coxa_servo:
           Value: true
-        dr_qp/left_back_femur_link:
+        dr_qp/left_back_femur_link_f3:
           Value: true
         dr_qp/left_back_femur_servo:
           Value: true
@@ -236,7 +236,7 @@ Visualization Manager:
           Value: true
         dr_qp/left_front_coxa_servo:
           Value: true
-        dr_qp/left_front_femur_link:
+        dr_qp/left_front_femur_link_f3:
           Value: true
         dr_qp/left_front_femur_servo:
           Value: true
@@ -246,7 +246,7 @@ Visualization Manager:
           Value: true
         dr_qp/left_middle_coxa_servo:
           Value: true
-        dr_qp/left_middle_femur_link:
+        dr_qp/left_middle_femur_link_f3:
           Value: true
         dr_qp/left_middle_femur_servo:
           Value: true
@@ -256,7 +256,7 @@ Visualization Manager:
           Value: true
         dr_qp/right_back_coxa_servo:
           Value: true
-        dr_qp/right_back_femur_link:
+        dr_qp/right_back_femur_link_f3:
           Value: true
         dr_qp/right_back_femur_servo:
           Value: true
@@ -266,7 +266,7 @@ Visualization Manager:
           Value: true
         dr_qp/right_front_coxa_servo:
           Value: true
-        dr_qp/right_front_femur_link:
+        dr_qp/right_front_femur_link_f3:
           Value: true
         dr_qp/right_front_femur_servo:
           Value: true
@@ -276,7 +276,7 @@ Visualization Manager:
           Value: true
         dr_qp/right_middle_coxa_servo:
           Value: true
-        dr_qp/right_middle_femur_link:
+        dr_qp/right_middle_femur_link_f3:
           Value: true
         dr_qp/right_middle_femur_servo:
           Value: true
@@ -292,37 +292,37 @@ Visualization Manager:
               dr_qp/left_back_coxa_f2_link_1:
                 dr_qp/left_back_coxa_f2_link_2:
                   dr_qp/left_back_femur_servo:
-                    dr_qp/left_back_femur_link:
+                    dr_qp/left_back_femur_link_f3:
                       {}
             dr_qp/left_front_coxa_servo:
               dr_qp/left_front_coxa_f2_link_1:
                 dr_qp/left_front_coxa_f2_link_2:
                   dr_qp/left_front_femur_servo:
-                    dr_qp/left_front_femur_link:
+                    dr_qp/left_front_femur_link_f3:
                       {}
             dr_qp/left_middle_coxa_servo:
               dr_qp/left_middle_coxa_f2_link_1:
                 dr_qp/left_middle_coxa_f2_link_2:
                   dr_qp/left_middle_femur_servo:
-                    dr_qp/left_middle_femur_link:
+                    dr_qp/left_middle_femur_link_f3:
                       {}
             dr_qp/right_back_coxa_servo:
               dr_qp/right_back_coxa_f2_link_1:
                 dr_qp/right_back_coxa_f2_link_2:
                   dr_qp/right_back_femur_servo:
-                    dr_qp/right_back_femur_link:
+                    dr_qp/right_back_femur_link_f3:
                       {}
             dr_qp/right_front_coxa_servo:
               dr_qp/right_front_coxa_f2_link_1:
                 dr_qp/right_front_coxa_f2_link_2:
                   dr_qp/right_front_femur_servo:
-                    dr_qp/right_front_femur_link:
+                    dr_qp/right_front_femur_link_f3:
                       {}
             dr_qp/right_middle_coxa_servo:
               dr_qp/right_middle_coxa_f2_link_1:
                 dr_qp/right_middle_coxa_f2_link_2:
                   dr_qp/right_middle_femur_servo:
-                    dr_qp/right_middle_femur_link:
+                    dr_qp/right_middle_femur_link_f3:
                       {}
       Update Interval: 0
       Value: true
@@ -341,35 +341,35 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 0.25038740038871765
+      Distance: 0.6440235376358032
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.13696539402008057
-        Y: -0.08537176996469498
-        Z: -0.048806678503751755
+        X: 0.14116525650024414
+        Y: -0.08764449506998062
+        Z: -0.04969681426882744
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.0547997951507568
+      Pitch: 0.9197998046875
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.7399601340293884
+      Yaw: 0.14995811879634857
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1376
+  Height: 1272
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd0000000100000000000001f7000004c4fc0200000002fb000000100044006900730070006c006100790073010000006e000002c90000018200fffffffb0000000a005600690065007700730100000343000001ef0000013200ffffff000007b5000004c400000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000100000000000001f70000049efc0200000002fb000000100044006900730070006c006100790073010000003d000002b6000000c900fffffffb0000000a0056006900650077007301000002f9000001e2000000a400ffffff000007bb0000049e00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
   Width: 2488
-  X: 756
-  Y: 92
+  X: 72
+  Y: 27

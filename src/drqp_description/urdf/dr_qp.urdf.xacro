@@ -142,6 +142,10 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 ${pi/2}" />
         <geometry>
+          <!-- 
+            Origin is at the actuator center
+            36mm - distance from actuator center to the center of the holes on the back
+           -->
           <mesh filename="package://drqp_description/meshes/servo.stl" />
         </geometry>
         <material name="drqp_black"/>
@@ -161,26 +165,32 @@
     </link>
     
     <joint name="${prefix}_femurinner" type="fixed">
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="${0.036 + 0.0055} 0 0"/>
       <parent link="${robot_name}/${prefix}_femur_servo"/>
-      <child link="${robot_name}/${prefix}_femur_link"/>
+      <child link="${robot_name}/${prefix}_femur_link_f3"/>
     </joint>
 
-    <link name="${robot_name}/${prefix}_femur_link">
+    <link name="${robot_name}/${prefix}_femur_link_f3">
       <visual>
-        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <origin rpy="0 0 ${pi/2}" xyz="0 0 0"/>
         <geometry>
-          <mesh filename="package://drqp_description/meshes/femur_link.stl" />
+          <!-- 
+            Origin is at the center of the flat plane
+            5.5mm - distance from origin to center of the side mounting holes
+           -->
+          <mesh filename="package://drqp_description/meshes/F3.stl" />
         </geometry>
         <material name="drqp_black"/>
       </visual>
-      <!-- TODO: Define later -->
-      <!-- <collision>
-        <origin rpy="0 0 0" xyz="0 0 0"/>
+      <collision>
+        <origin rpy="0 0 ${pi/2}" xyz="0 0 0"/>
         <geometry>
-          <mesh filename="package://drqp_description/meshes/femur_link.stl" />
+          <mesh filename="package://drqp_description/meshes/F3.stl" />
         </geometry>
       </collision>
+      
+      <!-- TODO: Define later -->
+      <!--
       <inertial>
         <origin rpy="0 0 0" xyz="0.020226 -0.00029 -0.00063"/>
         <mass value="0.085834" />
