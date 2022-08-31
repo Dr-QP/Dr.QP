@@ -233,13 +233,12 @@
       </inertial> -->
     </link>
 
-<!-- 
     <joint name="${prefix}_tibia" type="revolute">
-      <axis xyz="0 1 0"/>
-      <limit effort="3" lower="${radians(-45)}" upper="${radians(125)}" velocity="${pi}"/>
-      <origin rpy="0 0 0" xyz="0.06 0 -0.015"/>
-      <parent link="${robot_name}/${prefix}_femur_link"/>
-      <child link="${robot_name}/${prefix}_tibia_link"/>
+      <axis xyz="0 0 1"/>
+      <limit effort="3" lower="${radians(-125)}" upper="${radians(80)}" velocity="${pi}"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <parent link="${robot_name}/${prefix}_femur_link_f1"/>
+      <child link="${robot_name}/${prefix}_tibia_servo"/>
       <dynamics friction="0.5"/>
     </joint>
 
@@ -253,18 +252,21 @@
       </actuator>
     </transmission>
 
-    <link name="${robot_name}/${prefix}_tibia_link">
+    <link name="${robot_name}/${prefix}_tibia_servo">
       <visual>
-        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <origin xyz="0 0 0" rpy="0 0 ${pi/2}" />
         <geometry>
-          <mesh filename="package://drqp_description/meshes/tibia_link.stl" />
+          <mesh filename="package://drqp_description/meshes/servo.stl" />
         </geometry>
         <material name="drqp_black"/>
       </visual>
+      
+      <!-- TODO: Define later -->
+      <!--
       <collision>
-        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <origin xyz="0 0 0" rpy="0 0 ${pi/2}" />
         <geometry>
-          <mesh filename="package://drqp_description/meshes/tibia_link.stl" />
+          <mesh filename="package://drqp_description/meshes/servo.stl" />
         </geometry>
       </collision>
       <inertial>
@@ -272,11 +274,13 @@
         <mass value="0.171825" />
         <inertia ixx="0.0001762000" iyy="0.0005158000" izz="0.0003768000" ixy="-0.0000014522" ixz="0.0001789000" iyz="0.0000006181" />
       </inertial>
+      -->
     </link>
 
+<!-- 
     <joint name="${prefix}_foot" type="fixed">
       <origin rpy="0 0 0" xyz="0.095 0 -0.09"/>
-      <parent link="${robot_name}/${prefix}_tibia_link"/>
+      <parent link="${robot_name}/${prefix}_tibia_servo"/>
       <child link="${robot_name}/${prefix}_foot_link"/>
     </joint>
 
