@@ -172,7 +172,7 @@
 
     <link name="${robot_name}/${prefix}_femur_link_f3">
       <visual>
-        <origin rpy="0 0 ${pi/2}" xyz="0 0 0"/>
+        <origin rpy="0 ${pi/2} ${pi/2}" xyz="0 0 0"/>
         <geometry>
           <!-- 
             Origin is at the center of the flat plane
@@ -183,7 +183,7 @@
         <material name="drqp_black"/>
       </visual>
       <collision>
-        <origin rpy="0 0 ${pi/2}" xyz="0 0 0"/>
+        <origin rpy="0 ${pi/2} ${pi/2}" xyz="0 0 0"/>
         <geometry>
           <mesh filename="package://drqp_description/meshes/F3.stl" />
         </geometry>
@@ -199,14 +199,14 @@
     </link>
     
     <joint name="${prefix}_femur_inner_2" type="fixed">
-      <origin rpy="0 0 0" xyz="0.023 -0.015 0"/>
+      <origin rpy="0 0 0" xyz="0.023 0 -0.015"/>
       <parent link="${robot_name}/${prefix}_femur_link_f3"/>
       <child link="${robot_name}/${prefix}_femur_link_f1"/>
     </joint>
 
     <link name="${robot_name}/${prefix}_femur_link_f1">
       <visual>
-        <origin rpy="${pi} 0 ${pi/2}" xyz="0 0 0"/>
+        <origin rpy="${pi} ${-pi/2} ${pi/2}" xyz="0 0 0"/>
         <geometry>
           <!-- 
             Origin is at the servo mount/pivot
@@ -218,7 +218,7 @@
         <material name="drqp_black"/>
       </visual>
       <collision>
-        <origin rpy="${pi} 0 ${pi/2}" xyz="0 0 0"/>
+        <origin rpy="${pi} ${-pi/2} ${pi/2}" xyz="0 0 0"/>
         <geometry>
           <mesh filename="package://drqp_description/meshes/F1.stl" />
         </geometry>
