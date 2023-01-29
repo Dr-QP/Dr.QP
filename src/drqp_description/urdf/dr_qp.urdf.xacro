@@ -309,14 +309,14 @@
         <inertia ixx="0.0000288700" iyy="0.0000750200" izz="0.0000867200" ixy="0.0000002419" ixz="0.0000048494" iyz="0.0000000003" />
       </inertial> -->
     </link>
-<!-- 
+
     <joint name="${prefix}_foot" type="fixed">
-      <origin rpy="0 0 0" xyz="0.095 0 -0.09"/>
-      <parent link="${robot_name}/${prefix}_tibia_servo"/>
+      <origin rpy="0 0 0" xyz="0.052797 0 -0.088395"/>
+      <parent link="${robot_name}/${prefix}_tibia_leg"/>
       <child link="${robot_name}/${prefix}_foot_link"/>
     </joint>
 
-    <link name="${robot_name}/${prefix}_foot_link"/> -->
+    <link name="${robot_name}/${prefix}_foot_link"/>
 
   </xacro:macro>
   
