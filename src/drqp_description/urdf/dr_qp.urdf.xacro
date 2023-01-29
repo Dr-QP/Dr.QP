@@ -348,10 +348,19 @@
 
   <joint name="base_bottom" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 ${body_height/2}"/>
-    <child link="$(arg robot_name)/base_center_link"/>
     <parent link="$(arg robot_name)/base_bottom_link"/>
+    <child link="$(arg robot_name)/base_center_link"/>
   </joint>
 
+
+  <joint name="base_bottom_to_camera" type="fixed">
+    <origin rpy="0 0 0" xyz="0.132 0 0.019"/>
+    <parent link="$(arg robot_name)/base_bottom_link"/>
+    <child link="$(arg robot_name)/camera"/>
+  </joint>
+
+  <link name="$(arg robot_name)/camera">
+  </link>
 
   <xacro:leg robot_name="$(arg robot_name)" prefix="right_front" x="0.11692" y="-0.06387" yaw="${-pi/4}"/>
   <xacro:leg robot_name="$(arg robot_name)" prefix="right_middle" x="0" y="-0.103" yaw="${-pi/2}"/>
