@@ -254,7 +254,7 @@
 
     <link name="${robot_name}/${prefix}_tibia_servo">
       <visual>
-        <origin xyz="0 0 0" rpy="0 0 ${pi/2}" />
+        <origin rpy="0 ${pi/2} ${pi/2}" xyz="0 0 0" />
         <geometry>
           <mesh filename="package://drqp_description/meshes/servo.stl" />
         </geometry>
@@ -264,7 +264,7 @@
       <!-- TODO: Define later -->
       <!--
       <collision>
-        <origin xyz="0 0 0" rpy="0 0 ${pi/2}" />
+        <origin rpy="0 ${pi/2} ${pi/2}" xyz="0 0 0"" />
         <geometry>
           <mesh filename="package://drqp_description/meshes/servo.stl" />
         </geometry>
