@@ -354,11 +354,11 @@
 
 
   <xacro:leg robot_name="$(arg robot_name)" prefix="right_front" x="0.11692" y="-0.06387" yaw="${-pi/4}"/>
-  <!-- <xacro:leg robot_name="$(arg robot_name)" prefix="right_middle" x="0" y="-0.103" yaw="${-pi/2}"/>
+  <xacro:leg robot_name="$(arg robot_name)" prefix="right_middle" x="0" y="-0.103" yaw="${-pi/2}"/>
   <xacro:leg robot_name="$(arg robot_name)" prefix="right_back" x="-0.11692" y="-0.06387" yaw="${-3*pi/4}"/>
   <xacro:leg robot_name="$(arg robot_name)" prefix="left_front" x="0.11692" y="0.06387" yaw="${pi/4}"/>
   <xacro:leg robot_name="$(arg robot_name)" prefix="left_middle" x="0" y="0.103" yaw="${pi/2}"/>
-  <xacro:leg robot_name="$(arg robot_name)" prefix="left_back" x="-0.11692" y="0.06387" yaw="${3*pi/4}"/> -->
+  <xacro:leg robot_name="$(arg robot_name)" prefix="left_back" x="-0.11692" y="0.06387" yaw="${3*pi/4}"/>
 
   <xacro:if value="${urdf_loc != ''}">
     <xacro:include filename="${urdf_loc}"/>
