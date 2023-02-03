@@ -7,7 +7,7 @@
   <arg name="use_joint_pub"                     default="true"/>
   <arg name="use_joint_pub_gui"                 default="false"/>
   <arg name="use_rviz"                          default="true"/>
-  <arg name="rviz_frame"                        default="$(var robot_name)/base_bottom_link"/>
+  <arg name="rviz_frame"                        default="$(var robot_name)/base_link"/>
   <arg name="rvizconfig"                        default="$(find-pkg-share drqp_description)/rviz/drqp_description.rviz" />
   <arg name="model"                             default="$(find-pkg-share drqp_description)/urdf/$(var robot_model).urdf.xacro
                                                          robot_name:=$(var robot_name)

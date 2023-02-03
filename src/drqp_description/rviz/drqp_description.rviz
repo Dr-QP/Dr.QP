@@ -53,7 +53,7 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        dr_qp/base_bottom_link:
+        dr_qp/base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -252,7 +252,7 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        dr_qp/base_bottom_link:
+        dr_qp/base_link:
           Value: true
         dr_qp/base_center_link:
           Value: true
@@ -334,7 +334,7 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-        dr_qp/base_bottom_link:
+        dr_qp/base_link:
           dr_qp/base_center_link:
             dr_qp/left_back_coxa_servo:
               dr_qp/left_back_coxa_f2_link_1:
@@ -383,7 +383,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: dr_qp/base_bottom_link
+    Fixed Frame: dr_qp/base_link
     Frame Rate: 30
   Name: root
   Tools:
