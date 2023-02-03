@@ -1,118 +1,22 @@
-# Ros Humble
+# Installing ROS
 
-Dr.QP project is using ROS2 Humble version
-Requires Ubuntu 22.04, python 3.9
+## Development machine
 
-# Installation through Conda
+For the development machine use Ubuntu 20.04 and install ros using ros-2-prep.sh. At the end script will print installation instruction for base or desktop distro.
+Run the base or desktop installation manually
 
-## Cleanup old environment variables
+Update your `~/.bashrc` with the following snippet that adds couple alises for easy activation of ros1 and 2 globally or in workspace
 
-If you have ever attempted to install ROS2 manually, you probable have some environment variables in
- - .bashrc
- - .bash_profile
- - .config/fish/config.fish
- - or other RC/config file for your shell
+```bash
+#################################################################
+if [ -z "$ROS_IP" ]; then
+	export ROS_IP=127.0.0.1
+fi
 
-In order to make ROS2 setup via conda properly work you need to remove these variables from the global scope
+alias ros1_activate="source /opt/ros/noetic/setup.bash"
+alias ros1_ws="source ./devel/setup.bash"
 
-## Remaining issues: https://github.com/RoboStack/ros-humble/issues/3
-
-### Manually
-The macOS installation is using RoboStack
-https://robostack.github.io/GettingStarted.html
+alias ros2_activate="source /opt/ros/foxy/setup.bash"
+alias ros2_ws="source ./install/setup.bash"
 
 ```
-# if you don't have mamba yet, install it first (not needed when using mambaforge):
-conda install mamba -c conda-forge
-
-# now create a new environment
-mamba create -n ros_env python=3.9
-conda activate ros_env
-
-# this adds the conda-forge channel to the new created environment configuration 
-conda config --env --add channels conda-forge
-# and the robostack channels
-conda config --env --add channels robostack-experimental
-conda config --env --add channels robostack
-conda config --env --add channels robostack-humble
-
-# Install the version of ROS you are interested in:
-mamba install ros-humble-desktop-full
-
-# optionally, install some compiler packages if you want to e.g. build packages in a colcon_ws:
-mamba install compilers cmake pkg-config make ninja colcon-common-extensions
-
-# on Windows, install Visual Studio 2017 or 2019 with C++ support 
-# see https://docs.microsoft.com/en-us/cpp/build/vscpp-step-0-installation?view=msvc-160
-
-# on Windows, install the Visual Studio command prompt:
-mamba install vs2019_win-64
-
-# note that in this case, you should also install the necessary dependencies with conda/mamba, if possible
-
-# reload environment to activate required scripts before running anything
-# on Windows, please restart the Anaconda Prompt / Command Prompt!
-conda deactivate
-conda activate ros_env
-
-## This was required to avoid sudo for rosdep
-sudo mkdir /etc/ros
-sudo chown -R (whoami) /etc/ros
-
-# if you want to use rosdep, also do:
-mamba install rosdep
-rosdep init  # note: do not use sudo!
-rosdep update
-```
-
-### From env file
-
-`mamba env create -f ./scripts/ros/ros-base.yml`
-
-
-## Activating
-
-In order to activate ROS2 shell 2 things need to be done:
- - `conda activate ros_env` - activate conda environment 
- - `source $CONDA_PREFIX/setup.bash` - source ROS2 specific environment variables 
-
-### Fish convenient function
-
-Below are a convenient functions for `fish` shell to source ROS2 environment
-NOTE: it makes use of [`bass`](https://github.com/edc/bass) plugin that allows to source bash scripts in fish
-
-```
-# Install fisher
-curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher
-
-# Install bass
-fisher install edc/bass
-```
-
-Fish helpers are in [ros.fish](./ros.fish)
-Bash helpers are in [ros.fish](./ros.sh)
-
-
-
-## Rqt on Mac
-
-Running `rqt` works, but produces the following error, suggesting that `qt_gui_cpp` is faulty
-```
-Could not import "pyqt" bindings of qt_gui_cpp library - so C++ plugins will not be available:
-Traceback (most recent call last):
-  File "/Users/antonmatosov/opt/miniconda3/envs/ros_env/lib/python3.9/site-packages/qt_gui_cpp/cpp_binding_helper.py", line 43, in <module>
-    from . import libqt_gui_cpp_sip
-ImportError: dlopen(/Users/antonmatosov/opt/miniconda3/envs/ros_env/lib/python3.9/site-packages/qt_gui_cpp/libqt_gui_cpp_sip.cpython-39-darwin.so, 0x0002): symbol not found in flat namespace '__ZN10qt_gui_cpp12PluginBridge16staticMetaObjectE'
-```
-
-Rebuilding `git clone https://github.com/ros-visualization/qt_gui_core/ -b humble` from source might help, but build currently fails... see [log](https://gist.github.com/anton-matosov/432e48b644cc25b5aab1501757be0ce2)
-
-
-## ROS2 VSCode extension 
-
-1. activate ros_env
-2. cd into workspace
-3. run `code .`
-
-This will provide access to all ROS bins for VSCode extension to function
-**!!! NOTE: This will break vscode embedded terminal, due to the way conda is activated** 

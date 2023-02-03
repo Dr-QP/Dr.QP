@@ -7,8 +7,8 @@
 
 ```
 cd DR.QP
-conda activate ros_env
-code .
+ros2_ws
+rosdep install --from-paths src --ignore-src
 ```
 
 3. Open VSCode command pallet and run `CMake: Scan for kits` to add compilers from ros env
