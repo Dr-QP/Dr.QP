@@ -343,7 +343,7 @@
     </inertial>
   </link>
 
-  <link name="$(arg robot_name)/base_bottom_link">
+  <link name="$(arg robot_name)/base_bottom_link"> <!-- AKA World -->
   </link>
 
   <joint name="base_bottom" type="fixed">
@@ -354,8 +354,8 @@
 
 
   <joint name="base_bottom_to_camera" type="fixed">
-    <origin rpy="0 0 0" xyz="0.132 0 0.019"/>
-    <parent link="$(arg robot_name)/base_bottom_link"/>
+    <origin rpy="0 0 0" xyz="0.132 0 0"/>
+    <parent link="$(arg robot_name)/base_center_link"/>
     <child link="$(arg robot_name)/camera"/>
   </joint>
 
