@@ -12,7 +12,7 @@
       <material name="drqp_black"/>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="${pi/2} 0 ${pi}" />
+      <origin xyz="0 0 -${body_height/2}" rpy="${pi/2} 0 ${pi}" />
       <geometry>
         <mesh filename="package://drqp_description/meshes/body-simple.stl" />
       </geometry>
