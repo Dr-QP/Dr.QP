@@ -10,13 +10,10 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
     drqp_description_path = get_package_share_path('drqp_description')
-    default_model_path = drqp_description_path / 'urdf/dr_qp.urdf.xacro'
     default_rviz_config_path = drqp_description_path / 'rviz/drqp_description.rviz'
 
     gui_arg = DeclareLaunchArgument(name='gui', default_value='true', choices=['true', 'false'],
                                     description='Flag to enable joint_state_publisher_gui')
-    model_arg = DeclareLaunchArgument(name='model', default_value=str(default_model_path),
-                                      description='Absolute path to robot urdf file')
     external_urdf_loc_arg = DeclareLaunchArgument(name='external_urdf_loc', default_value="",
                                       description='Absolute path additional urdf file to include in the model')
     
@@ -27,15 +24,6 @@ def generate_launch_description():
                                     description='Flag to enable rviz')
     rvizconfig_arg = DeclareLaunchArgument(name='rvizconfig', default_value=str(default_rviz_config_path),
                                      description='Absolute path to rviz config file')
-
-    # robot_description = ParameterValue(Command(['xacro ', LaunchConfiguration('model')]),
-    #                                    value_type=str)
-
-    # robot_state_publisher_node = Node(
-    #     package='robot_state_publisher',
-    #     executable='robot_state_publisher',
-    #     parameters=[{'robot_description': robot_description}]
-    # )
 
     # Depending on gui parameter, either launch joint_state_publisher or joint_state_publisher_gui
     joint_state_publisher_node = Node(
@@ -61,7 +49,6 @@ def generate_launch_description():
 
     return LaunchDescription([
         gui_arg,
-        model_arg,
         rviz_arg,
         rvizconfig_arg,
         rviz_frame_arg,

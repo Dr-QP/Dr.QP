@@ -2,15 +2,12 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>drqp_description</name>
-  <version>0.0.0</version>
+  <version>0.1.0</version>
   <description>Dr.QP robot URDF</description>
   <maintainer email="anton.matosov@gmail.com">antonmatosov</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-  <build_depend>gazebo_ros</build_depend>
-  <build_export_depend>gazebo_ros</build_export_depend>
-  <exec_depend>gazebo_ros</exec_depend>
   <exec_depend>joint_state_publisher</exec_depend>
   <exec_depend>joint_state_publisher_gui</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
@@ -24,23 +21,6 @@
   <export>
     <build_type>ament_cmake</build_type>
     <gazebo_ros gazebo_model_path="${prefix}/.."/> <!-- This adds package path GAZEBO_MODEL_PATH which is required to load meshes with package_to_model conversion-->
-    <!-- ros2 run gazebo_ros spawn_entity.py -package_to_model -topic robot_description -entity bot -->
-    <gazebo_ros gazebo_media_path="${prefix}/models"/>
-    <gazebo_ros plugin_path="${prefix}/plugin"/>
-
-    <!-- model, plugin, media = GazeboRosPaths.get_paths()
-
-    if 'GAZEBO_MODEL_PATH' in environ:
-        model += pathsep+environ['GAZEBO_MODEL_PATH']
-    if 'GAZEBO_PLUGIN_PATH' in environ:
-        plugin += pathsep+environ['GAZEBO_PLUGIN_PATH']
-    if 'GAZEBO_RESOURCE_PATH' in environ:
-        media += pathsep+environ['GAZEBO_RESOURCE_PATH']
-
-    env = {
-        'GAZEBO_MODEL_PATH': model,
-        'GAZEBO_PLUGIN_PATH': plugin,
-        'GAZEBO_RESOURCE_PATH': media,
-    } -->
+    <gazebo_ros gazebo_media_path="${prefix}/.."/>
   </export>
 </package>
