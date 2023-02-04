@@ -16,8 +16,8 @@ def generate_launch_description():
             get_package_share_directory(
                 'drqp_description'), 'launch', 'rsp.launch.py'
         )]), launch_arguments={
-            'use_sim_time': True,
-            'use_ros2_control': True,
+            'use_sim_time': 'True',
+            'use_ros2_control': 'True',
         }.items()
     )
 
@@ -29,17 +29,18 @@ def generate_launch_description():
         PythonLaunchDescriptionSource([os.path.join(
             get_package_share_directory('gazebo_ros'), 'launch', 'gazebo.launch.py')]),
         launch_arguments={
+            'verbose': 'true',
             'extra_gazebo_args': '--ros-args --params-file ' + gazebo_params_file,
-            'gui_required': True  # Set "true" to shut down launch script when GUI is terminated
+            'gui_required': 'True'  # Set "true" to shut down launch script when GUI is terminated
         }.items()
     )
 
+    entity_name = 'dr_qp'
     # Run the spawner node from the gazebo_ros package. The entity name doesn't really matter if you only have a single robot.
     spawn_entity = Node(package='gazebo_ros', executable='spawn_entity.py',
                         arguments=['-topic', 'robot_description',
-                                   '-entity', 'dr_qp'
+                                   '-entity', entity_name,
                                    '-package_to_model',  # convert mesh paths to work as gazebo models. description package.xml should have proper <export><gazebo_ros gazebo_model_path=""/> tags
-                                   '-wait',  # Wait for entity to exist
                                    '-z', '.5',  # initial Z possition
                                    ],
                         output='screen')

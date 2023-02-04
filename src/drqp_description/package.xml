@@ -21,6 +21,5 @@
   <export>
     <build_type>ament_cmake</build_type>
     <gazebo_ros gazebo_model_path="${prefix}/.."/> <!-- This adds package path GAZEBO_MODEL_PATH which is required to load meshes with package_to_model conversion-->
-    <gazebo_ros gazebo_media_path="${prefix}/.."/>
   </export>
 </package>
