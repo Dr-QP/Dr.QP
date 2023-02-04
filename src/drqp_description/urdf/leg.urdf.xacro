@@ -3,7 +3,7 @@
     
   <xacro:include filename="$(find drqp_description)/urdf/inertial_macros.xacro"/>
   <xacro:macro name="inertial_stub" params="">
-    <xacro:property name="tiny_value" value="0.0001"/>
+    <xacro:property name="tiny_value" value="0.01"/>
     <xacro:inertial_box mass="${tiny_value}" x="${tiny_value}" y="${tiny_value}" z="${tiny_value}">
       <origin xyz="0 0 0" rpy="0 0 0"/>
     </xacro:inertial_box>
@@ -16,6 +16,9 @@
     <parent link="${robot_name}/base_center_link"/>
     <child link="${robot_name}/${prefix}_coxa_servo"/>
   </joint>
+  <gazebo reference='${prefix}_coxa_servo'>
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
   
   <link name="${robot_name}/${prefix}_coxa_servo">
     <visual>
@@ -78,6 +81,9 @@
     <parent link="${robot_name}/${prefix}_coxa_f2_link_1"/>
     <child link="${robot_name}/${prefix}_coxa_f2_link_2"/>
   </joint>
+  <gazebo reference='${prefix}_coxa_inner'>
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
   
   
   <link name="${robot_name}/${prefix}_coxa_f2_link_2">
@@ -146,6 +152,9 @@
     <parent link="${robot_name}/${prefix}_femur_servo"/>
     <child link="${robot_name}/${prefix}_femur_link_f3"/>
   </joint>
+  <gazebo reference='${prefix}_femur_inner_1'>
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
 
   <link name="${robot_name}/${prefix}_femur_link_f3">
     <visual>
@@ -173,6 +182,9 @@
     <parent link="${robot_name}/${prefix}_femur_link_f3"/>
     <child link="${robot_name}/${prefix}_femur_link_f1"/>
   </joint>
+  <gazebo reference='${prefix}_femur_inner_2'>
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
 
   <link name="${robot_name}/${prefix}_femur_link_f1">
     <visual>
@@ -241,6 +253,9 @@
     <parent link="${robot_name}/${prefix}_tibia_servo"/>
     <child link="${robot_name}/${prefix}_tibia_leg"/>
   </joint>
+  <gazebo reference='${prefix}_tibia_leg'>
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
 
   <link name="${robot_name}/${prefix}_tibia_leg">
     <visual>
@@ -267,6 +282,10 @@
     <parent link="${robot_name}/${prefix}_tibia_leg"/>
     <child link="${robot_name}/${prefix}_foot_link"/>
   </joint>
+  <gazebo reference='${prefix}_foot'>
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+
 
   <link name="${robot_name}/${prefix}_foot_link"/>
 
