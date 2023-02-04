@@ -8,6 +8,7 @@ from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
+
 def generate_launch_description():
     drqp_description_path = get_package_share_path('drqp_description')
     default_rviz_config_path = drqp_description_path / 'rviz/drqp_description.rviz'
@@ -15,15 +16,14 @@ def generate_launch_description():
     gui_arg = DeclareLaunchArgument(name='gui', default_value='true', choices=['true', 'false'],
                                     description='Flag to enable joint_state_publisher_gui')
     external_urdf_loc_arg = DeclareLaunchArgument(name='external_urdf_loc', default_value="",
-                                      description='Absolute path additional urdf file to include in the model')
-    
-    
+                                                  description='Absolute path additional urdf file to include in the model')
+
     rviz_frame_arg = DeclareLaunchArgument(name='rviz_frame', default_value='dr_qp/base_link',
-                                    description='Base model frame in rviz')
+                                           description='Base model frame in rviz')
     rviz_arg = DeclareLaunchArgument(name='rviz', default_value='true', choices=['true', 'false'],
-                                    description='Flag to enable rviz')
+                                     description='Flag to enable rviz')
     rvizconfig_arg = DeclareLaunchArgument(name='rvizconfig', default_value=str(default_rviz_config_path),
-                                     description='Absolute path to rviz config file')
+                                           description='Absolute path to rviz config file')
 
     # Depending on gui parameter, either launch joint_state_publisher or joint_state_publisher_gui
     joint_state_publisher_node = Node(
@@ -43,7 +43,8 @@ def generate_launch_description():
         executable='rviz2',
         name='rviz2',
         output='screen',
-        arguments=['-d', LaunchConfiguration('rvizconfig'), '-f', LaunchConfiguration('rviz_frame')],
+        arguments=[
+            '-d', LaunchConfiguration('rvizconfig'), '-f', LaunchConfiguration('rviz_frame')],
         condition=IfCondition(LaunchConfiguration('rviz'))
     )
 
