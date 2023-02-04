@@ -1,6 +1,14 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
     
+  <xacro:include filename="$(find drqp_description)/urdf/inertial_macros.xacro"/>
+  <xacro:macro name="inertial_stub" params="">
+    <xacro:property name="tiny_value" value="0.0001"/>
+    <xacro:inertial_box mass="${tiny_value}" x="${tiny_value}" y="${tiny_value}" z="${tiny_value}">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:inertial_box>
+  </xacro:macro>
+
   <xacro:macro name="leg" params="robot_name prefix x y yaw">
 
   <joint name="${prefix}_coxa_servo" type="fixed">
@@ -63,13 +71,7 @@
         <mesh filename="package://drqp_description/meshes/F2.stl" />
       </geometry>
     </collision>
-    <!-- TODO: Define later -->
-    <!-- 
-    <inertial>
-      <origin rpy="0 0 0" xyz="0.019066 -0.000002 0.006577"/>
-      <mass value="0.02471" />
-      <inertia ixx="0.0000215400" iyy="0.00002657000" izz="0.00002925000" ixy="-0.00000000122" ixz="-0.00000192741" iyz="-0.00000000001" />
-    </inertial> -->
+    <xacro:inertial_stub />
   </link>
   <joint name="${prefix}_coxa_inner" type="fixed">
     <origin rpy="0 0 0" xyz="${0.0265 * 2} 0 0"/>
@@ -92,13 +94,7 @@
         <mesh filename="package://drqp_description/meshes/F2.stl" />
       </geometry>
     </collision>
-    <!-- TODO: Define later -->
-    <!-- 
-    <inertial>
-      <origin rpy="0 0 0" xyz="0.019066 -0.000002 0.006577"/>
-      <mass value="0.02471" />
-      <inertia ixx="0.0000215400" iyy="0.00002657000" izz="0.00002925000" ixy="-0.00000000122" ixz="-0.00000192741" iyz="-0.00000000001" />
-    </inertial> -->
+    <xacro:inertial_stub />
   </link>
 
   <joint name="${prefix}_femur" type="revolute">
@@ -169,14 +165,7 @@
         <mesh filename="package://drqp_description/meshes/F3.stl" />
       </geometry>
     </collision>
-    
-    <!-- TODO: Define later -->
-    <!--
-    <inertial>
-      <origin rpy="0 0 0" xyz="0.020226 -0.00029 -0.00063"/>
-      <mass value="0.085834" />
-      <inertia ixx="0.0000288700" iyy="0.0000750200" izz="0.0000867200" ixy="0.0000002419" ixz="0.0000048494" iyz="0.0000000003" />
-    </inertial> -->
+    <xacro:inertial_stub />
   </link>
   
   <joint name="${prefix}_femur_inner_2" type="fixed">
@@ -204,14 +193,7 @@
         <mesh filename="package://drqp_description/meshes/F1.stl" />
       </geometry>
     </collision>
-    
-    <!-- TODO: Define later -->
-    <!--
-    <inertial>
-      <origin rpy="0 0 0" xyz="0.020226 -0.00029 -0.00063"/>
-      <mass value="0.085834" />
-      <inertia ixx="0.0000288700" iyy="0.0000750200" izz="0.0000867200" ixy="0.0000002419" ixz="0.0000048494" iyz="0.0000000003" />
-    </inertial> -->
+    <xacro:inertial_stub />
   </link>
 
   <joint name="${prefix}_tibia" type="revolute">
@@ -277,14 +259,7 @@
         <mesh filename="package://drqp_description/meshes/Tibia.stl" />
       </geometry>
     </collision>
-    
-    <!-- TODO: Define later -->
-    <!--
-    <inertial>
-      <origin rpy="0 0 0" xyz="0.020226 -0.00029 -0.00063"/>
-      <mass value="0.085834" />
-      <inertia ixx="0.0000288700" iyy="0.0000750200" izz="0.0000867200" ixy="0.0000002419" ixz="0.0000048494" iyz="0.0000000003" />
-    </inertial> -->
+    <xacro:inertial_stub />
   </link>
 
   <joint name="${prefix}_foot" type="fixed">
