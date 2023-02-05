@@ -47,7 +47,7 @@
     <limit effort="3" lower="${radians(-90)}" upper="${radians(90)}" velocity="${pi}"/>
     <parent link="${robot_name}/${prefix}_coxa_servo"/>
     <child link="${robot_name}/${prefix}_coxa_f2_link_1"/>
-    <dynamics friction="0.5"/>
+    <!-- <dynamics friction="5"/> -->
   </joint>
 
   <transmission name="trans_${prefix}_coxa">
@@ -109,7 +109,7 @@
     <origin rpy="0 0 0" xyz="0 0 0"/>
     <parent link="${robot_name}/${prefix}_coxa_f2_link_2"/>
     <child link="${robot_name}/${prefix}_femur_servo"/>
-    <dynamics friction="0.5"/>
+    <!-- <dynamics friction="5"/> -->
   </joint>
 
   <transmission name="trans_${prefix}_femur">
@@ -214,7 +214,7 @@
     <origin rpy="0 0 0" xyz="0 0 0"/>
     <parent link="${robot_name}/${prefix}_femur_link_f1"/>
     <child link="${robot_name}/${prefix}_tibia_servo"/>
-    <dynamics friction="0.5"/>
+    <!-- <dynamics friction="5"/> -->
   </joint>
 
   <transmission name="trans_${prefix}_tibia">
