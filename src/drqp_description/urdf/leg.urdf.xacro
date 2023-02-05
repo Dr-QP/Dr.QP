@@ -31,7 +31,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 ${-pi/2}" />
       <geometry>
-        <mesh filename="package://drqp_description/meshes/servo.stl" />
+        <mesh filename="package://drqp_description/meshes/servo-collision.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -71,7 +71,7 @@
     <collision>
       <origin rpy="0 0 ${pi/2}" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://drqp_description/meshes/F2.stl" />
+        <mesh filename="package://drqp_description/meshes/F2-collision.stl" />
       </geometry>
     </collision>
     <xacro:inertial_stub />
@@ -97,7 +97,7 @@
     <collision>
       <origin rpy="0 ${pi/2} ${-pi/2}" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://drqp_description/meshes/F2.stl" />
+        <mesh filename="package://drqp_description/meshes/F2-collision.stl" />
       </geometry>
     </collision>
     <xacro:inertial_stub />
@@ -137,7 +137,7 @@
     <collision>
       <origin rpy="0 ${pi/2} ${pi/2}" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://drqp_description/meshes/servo.stl" />
+        <mesh filename="package://drqp_description/meshes/servo-collision.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -171,7 +171,7 @@
     <collision>
       <origin rpy="0 ${pi/2} ${pi/2}" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://drqp_description/meshes/F3.stl" />
+        <mesh filename="package://drqp_description/meshes/F3-collision.stl" />
       </geometry>
     </collision>
     <xacro:inertial_stub />
@@ -202,7 +202,7 @@
     <collision>
       <origin rpy="${pi} ${-pi/2} ${pi/2}" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://drqp_description/meshes/F1.stl" />
+        <mesh filename="package://drqp_description/meshes/F1-collision.stl" />
       </geometry>
     </collision>
     <xacro:inertial_stub />
@@ -238,7 +238,7 @@
     <collision>
       <origin rpy="0 ${pi/2} ${pi/2}" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://drqp_description/meshes/servo.stl" />
+        <mesh filename="package://drqp_description/meshes/servo-collision.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -271,7 +271,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://drqp_description/meshes/Tibia.stl" />
+        <mesh filename="package://drqp_description/meshes/Tibia-collision.stl" />
       </geometry>
     </collision>
     <xacro:inertial_stub />
