@@ -47,8 +47,11 @@
     <limit effort="3" lower="${radians(-90)}" upper="${radians(90)}" velocity="${pi}"/>
     <parent link="${robot_name}/${prefix}_coxa_servo"/>
     <child link="${robot_name}/${prefix}_coxa_f2_link_1"/>
-    <!-- <dynamics friction="5"/> -->
+    <!-- <dynamics damping="100" friction="0.1" /> -->
   </joint>
+  <gazebo reference="${prefix}_coxa">
+    <dampingFactor>0.2</dampingFactor>
+  </gazebo>
 
   <transmission name="trans_${prefix}_coxa">
     <type>transmission_interface/SimpleTransmission</type>
@@ -109,8 +112,11 @@
     <origin rpy="0 0 0" xyz="0 0 0"/>
     <parent link="${robot_name}/${prefix}_coxa_f2_link_2"/>
     <child link="${robot_name}/${prefix}_femur_servo"/>
-    <!-- <dynamics friction="5"/> -->
+    <!-- <dynamics damping="100" friction="0.1" /> -->
   </joint>
+  <gazebo reference="${prefix}_femur">
+    <dampingFactor>0.2</dampingFactor>
+  </gazebo>
 
   <transmission name="trans_${prefix}_femur">
     <type>transmission_interface/SimpleTransmission</type>
@@ -214,8 +220,11 @@
     <origin rpy="0 0 0" xyz="0 0 0"/>
     <parent link="${robot_name}/${prefix}_femur_link_f1"/>
     <child link="${robot_name}/${prefix}_tibia_servo"/>
-    <!-- <dynamics friction="5"/> -->
+    <!-- <dynamics damping="100" friction="0.1" /> -->
   </joint>
+  <gazebo reference="${prefix}_tibia">
+    <dampingFactor>0.2</dampingFactor>
+  </gazebo>
 
   <transmission name="trans_${prefix}_tibia">
     <type>transmission_interface/SimpleTransmission</type>
