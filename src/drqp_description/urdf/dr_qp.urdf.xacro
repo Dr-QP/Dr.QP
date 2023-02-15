@@ -20,6 +20,7 @@
 
   <xacro:include filename="$(find drqp_description)/urdf/body.urdf.xacro"/>
   <xacro:include filename="$(find drqp_description)/urdf/leg.urdf.xacro"/>
+  <xacro:include filename="$(find drqp_description)/urdf/gazebo.xacro"/>
   
   <xacro:leg robot_name="$(arg robot_name)" prefix="right_front" x="0.11692" y="-0.06387" yaw="${-pi/4}"/>
   <xacro:leg robot_name="$(arg robot_name)" prefix="right_middle" x="0" y="-0.103" yaw="${-pi/2}"/>

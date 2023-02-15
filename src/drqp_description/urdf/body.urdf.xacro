@@ -32,6 +32,9 @@
     <parent link="$(arg robot_name)/base_link"/>
     <child link="$(arg robot_name)/base_center_link"/>
   </joint>
+  <!-- <gazebo reference='base_bottom'>
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo> -->
 
 
   <joint name="base_bottom_to_camera" type="fixed">
@@ -39,6 +42,9 @@
     <parent link="$(arg robot_name)/base_center_link"/>
     <child link="$(arg robot_name)/camera"/>
   </joint>
+  <!-- <gazebo reference='base_bottom_to_camera'>
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo> -->
 
   <link name="$(arg robot_name)/camera">
   </link>

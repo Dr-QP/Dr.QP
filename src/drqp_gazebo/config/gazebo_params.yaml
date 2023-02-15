@@ -1,3 +1,71 @@
 gazebo:
   ros__parameters:
     publish_rate: 400.0
+
+# This should go to drqt_control package probably
+controller_manager:
+  ros__parameters:
+    update_rate: 1000  # Hz - gazebo control complains if it is lower 1KHz
+    use_sim_time: true
+
+    # update_rate: 60  # Hz - for real hardware
+    diagnostic_period: 1
+
+    effort_controllers:
+      type: forward_command_controller/ForwardCommandController
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    position_trajectory_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+effort_controllers:
+  ros__parameters:
+    joints:
+      # - left_back_coxa
+      # - left_back_femur
+      # - left_back_tibia
+      # - left_middle_coxa
+      # - left_middle_femur
+      # - left_middle_tibia
+      # - left_front_coxa
+      # - left_front_femur
+      # - left_front_tibia
+      - right_front_coxa
+      # - right_front_femur
+      # - right_front_tibia
+      # - right_middle_coxa
+      # - right_middle_femur
+      # - right_middle_tibia
+      # - right_back_coxa
+      # - right_back_femur
+      # - right_back_tibia
+    interface_name: effort
+
+position_trajectory_controller:
+  ros__parameters:
+    joints:
+      # - left_back_coxa
+      # - left_back_femur
+      # - left_back_tibia
+      # - left_middle_coxa
+      # - left_middle_femur
+      # - left_middle_tibia
+      # - left_front_coxa
+      # - left_front_femur
+      # - left_front_tibia
+      - right_front_coxa
+      # - right_front_femur
+      # - right_front_tibia
+      # - right_middle_coxa
+      # - right_middle_femur
+      # - right_middle_tibia
+      # - right_back_coxa
+      # - right_back_femur
+      # - right_back_tibia
+    interface_name: position
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
