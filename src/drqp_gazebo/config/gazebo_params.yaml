@@ -5,21 +5,24 @@ gazebo:
 # This should go to drqt_control package probably
 controller_manager:
   ros__parameters:
-    update_rate: 1000  # Hz - gazebo control complains if it is lower 1KHz
+    # update_rate: 1000  # Hz - gazebo control complains if it is lower 1KHz
     use_sim_time: true
 
-    # update_rate: 60  # Hz - for real hardware
+    update_rate: 60  # Hz - for real hardware
     diagnostic_period: 1
-
-    effort_controllers:
-      type: forward_command_controller/ForwardCommandController
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
+    effort_controllers:
+      type: forward_command_controller/ForwardCommandController
+      # type: effort_controllers/JointGroupEffortController
+
+
     position_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
-
+      # type: joint_state_controller/JointStateController
+      # type: position_controllers/JointGroupPositionController
 effort_controllers:
   ros__parameters:
     joints:
