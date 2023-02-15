@@ -23,47 +23,47 @@ controller_manager:
 effort_controllers:
   ros__parameters:
     joints:
-      # - left_back_coxa
-      # - left_back_femur
-      # - left_back_tibia
-      # - left_middle_coxa
-      # - left_middle_femur
-      # - left_middle_tibia
-      # - left_front_coxa
-      # - left_front_femur
-      # - left_front_tibia
+      - left_back_coxa
+      - left_back_femur
+      - left_back_tibia
+      - left_middle_coxa
+      - left_middle_femur
+      - left_middle_tibia
+      - left_front_coxa
+      - left_front_femur
+      - left_front_tibia
       - right_front_coxa
-      # - right_front_femur
-      # - right_front_tibia
-      # - right_middle_coxa
-      # - right_middle_femur
-      # - right_middle_tibia
-      # - right_back_coxa
-      # - right_back_femur
-      # - right_back_tibia
+      - right_front_femur
+      - right_front_tibia
+      - right_middle_coxa
+      - right_middle_femur
+      - right_middle_tibia
+      - right_back_coxa
+      - right_back_femur
+      - right_back_tibia
     interface_name: effort
 
 position_trajectory_controller:
   ros__parameters:
     joints:
-      # - left_back_coxa
-      # - left_back_femur
-      # - left_back_tibia
-      # - left_middle_coxa
-      # - left_middle_femur
-      # - left_middle_tibia
-      # - left_front_coxa
-      # - left_front_femur
-      # - left_front_tibia
+      - left_back_coxa
+      - left_back_femur
+      - left_back_tibia
+      - left_middle_coxa
+      - left_middle_femur
+      - left_middle_tibia
+      - left_front_coxa
+      - left_front_femur
+      - left_front_tibia
       - right_front_coxa
-      # - right_front_femur
-      # - right_front_tibia
-      # - right_middle_coxa
-      # - right_middle_femur
-      # - right_middle_tibia
-      # - right_back_coxa
-      # - right_back_femur
-      # - right_back_tibia
+      - right_front_femur
+      - right_front_tibia
+      - right_middle_coxa
+      - right_middle_femur
+      - right_middle_tibia
+      - right_back_coxa
+      - right_back_femur
+      - right_back_tibia
     interface_name: position
     command_interfaces:
       - position

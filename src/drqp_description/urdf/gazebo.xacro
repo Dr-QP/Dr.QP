@@ -17,7 +17,7 @@
             </joint>
         </xacro:macro>
     
-        <!-- <xacro:hexjoint name="left_back_coxa" />
+        <xacro:hexjoint name="left_back_coxa" />
         <xacro:hexjoint name="left_back_femur" />
         <xacro:hexjoint name="left_back_tibia" />
         <xacro:hexjoint name="left_middle_coxa" />
@@ -25,16 +25,16 @@
         <xacro:hexjoint name="left_middle_tibia" />
         <xacro:hexjoint name="left_front_coxa" />
         <xacro:hexjoint name="left_front_femur" />
-        <xacro:hexjoint name="left_front_tibia" /> -->
+        <xacro:hexjoint name="left_front_tibia" />
         <xacro:hexjoint name="right_front_coxa" />
-        <!-- <xacro:hexjoint name="right_front_femur" />
+        <xacro:hexjoint name="right_front_femur" />
         <xacro:hexjoint name="right_front_tibia" />
         <xacro:hexjoint name="right_middle_coxa" />
         <xacro:hexjoint name="right_middle_femur" />
         <xacro:hexjoint name="right_middle_tibia" />
         <xacro:hexjoint name="right_back_coxa" />
         <xacro:hexjoint name="right_back_femur" />
-        <xacro:hexjoint name="right_back_tibia" /> -->
+        <xacro:hexjoint name="right_back_tibia" />
     </ros2_control>
 
     <gazebo>
