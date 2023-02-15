@@ -10,6 +10,7 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>ros2_control</depend>
   <depend>ros2_controllers</depend>
+  <!-- <depend>rqt_joint_trajectory_controller</depend> --> <!-- https://github.com/ros-controls/ros2_controllers/tree/master/rqt_joint_trajectory_controller -->
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
