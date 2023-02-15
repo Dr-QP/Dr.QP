@@ -18,6 +18,11 @@ def generate_launch_description():
     external_urdf_loc_arg = DeclareLaunchArgument(name='external_urdf_loc', default_value="",
                                                   description='Absolute path additional urdf file to include in the model')
 
+    use_sim_time = LaunchConfiguration('use_sim_time')
+    use_sim_time_arg = DeclareLaunchArgument(
+            name='use_sim_time',
+            default_value='false',
+            description='Use sim time if true')
     rviz_frame_arg = DeclareLaunchArgument(name='rviz_frame', default_value='dr_qp/base_link',
                                            description='Base model frame in rviz')
     rviz_arg = DeclareLaunchArgument(name='rviz', default_value='true', choices=['true', 'false'],
@@ -45,6 +50,7 @@ def generate_launch_description():
         output='screen',
         arguments=[
             '-d', LaunchConfiguration('rvizconfig'), '-f', LaunchConfiguration('rviz_frame')],
+        parameters=[{'use_sim_time': use_sim_time}],
         condition=IfCondition(LaunchConfiguration('rviz'))
     )
 
@@ -54,7 +60,8 @@ def generate_launch_description():
         rvizconfig_arg,
         rviz_frame_arg,
         external_urdf_loc_arg,
-        joint_state_publisher_node,
-        joint_state_publisher_gui_node,
+        use_sim_time_arg,
+        # joint_state_publisher_node,
+        # joint_state_publisher_gui_node,
         rviz_node
     ])
