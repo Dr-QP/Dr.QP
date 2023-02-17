@@ -42,7 +42,7 @@ def generate_launch_description():
                         arguments=['-topic', 'robot_description',
                                    '-entity', entity_name,
                                    '-package_to_model',  # convert mesh paths to work as gazebo models. description package.xml should have proper <export><gazebo_ros gazebo_model_path=""/> tags
-                                   '-z', '.5',  # initial Z possition
+                                   '-z', '.15',  # initial Z possition
                                    ],
                         output='screen')
 
@@ -52,12 +52,16 @@ def generate_launch_description():
         output='screen'
     )
 
-    effort_controllers = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'effort_controllers'],
-        output='screen'
-    )
     position_trajectory_controller = ExecuteProcess(
         cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'position_trajectory_controller'],
+        output='screen'
+    )
+    velocity_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'velocity_controller'],
+        output='screen'
+    )
+    effort_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'effort_controller'],
         output='screen'
     )
     # Launch them all!
@@ -74,13 +78,7 @@ def generate_launch_description():
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=load_joint_state_controller,
-                on_exit=[effort_controllers],
+                on_exit=[effort_controller],
             )
         ),
-        # RegisterEventHandler(
-        #     event_handler=OnProcessExit(
-        #         target_action=effort_controllers,
-        #         on_exit=[position_trajectory_controller],
-        #     )
-        # ),
     ])

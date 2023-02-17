@@ -21,7 +21,7 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
     use_sim_time_arg = DeclareLaunchArgument(
             name='use_sim_time',
-            default_value='false',
+            default_value='true',
             description='Use sim time if true')
     rviz_frame_arg = DeclareLaunchArgument(name='rviz_frame', default_value='dr_qp/base_link',
                                            description='Base model frame in rviz')
