@@ -53,16 +53,6 @@
     <dampingFactor>0.2</dampingFactor>
   </gazebo>
 
-  <transmission name="trans_${prefix}_coxa">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="${prefix}_coxa">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="${prefix}_coxa_motor">
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  
   <link name="${robot_name}/${prefix}_coxa_f2_link_1">
     <visual>
       <origin rpy="0 0 ${pi/2}" xyz="0 0 0"/>
@@ -117,16 +107,6 @@
   <gazebo reference="${prefix}_femur">
     <dampingFactor>0.2</dampingFactor>
   </gazebo>
-
-  <transmission name="trans_${prefix}_femur">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="${prefix}_femur">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="${prefix}_femur_motor">
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
 
   <link name="${robot_name}/${prefix}_femur_servo">
     <visual>
@@ -225,16 +205,6 @@
   <gazebo reference="${prefix}_tibia">
     <dampingFactor>0.2</dampingFactor>
   </gazebo>
-
-  <transmission name="trans_${prefix}_tibia">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="${prefix}_tibia">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="${prefix}_tibia_motor">
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
 
   <link name="${robot_name}/${prefix}_tibia_servo">
     <visual>
