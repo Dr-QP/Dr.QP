@@ -78,7 +78,7 @@ def generate_launch_description():
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=load_joint_state_controller,
-                on_exit=[effort_controller],
+                on_exit=[position_trajectory_controller],
             )
         ),
     ])

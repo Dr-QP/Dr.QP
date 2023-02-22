@@ -8,13 +8,12 @@
         <xacro:macro name="hexjoint" params="name">
             <joint name="${name}">
                 <command_interface name="position">
-                    <!-- <param name="min">-180</param>
-                    <param name="max">18</param> -->
+                    <param name="min">-180</param>
+                    <param name="max">180</param>
                     <!-- <param name="initial_value">0.0</param> -->
                 </command_interface>
                 <state_interface name="effort" />
                 <state_interface name="position" />
-                <state_interface name="velocity" />
             </joint>
         </xacro:macro>
     
