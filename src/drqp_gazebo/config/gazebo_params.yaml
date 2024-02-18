@@ -9,15 +9,15 @@ controller_manager:
     use_sim_time: true
 
     update_rate: 60  # Hz - for real hardware
-    diagnostic_period: 1
+    # diagnostic_period: 1
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
     position_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
-    effort_controller:
-      type: effort_controllers/JointGroupEffortController
+    # effort_controller:
+    #   type: effort_controllers/JointGroupEffortController
 
 position_trajectory_controller:
   ros__parameters:
@@ -40,41 +40,47 @@ position_trajectory_controller:
       # - right_back_coxa
       # - right_back_femur
       # - right_back_tibia
+    
     interface_name: position
     command_interfaces:
-      - effort
-    state_interfaces:
       - position
     state_interfaces:
       - position
+      - velocity
+    # gains:
+    #   p: 100
+    #   i: 0
+    #   d: 5
+    # interpolation_method: splines
 
-effort_controller:
-  ros__parameters:
-    joints:
-      - left_back_coxa
-      - left_back_femur
-      - left_back_tibia
-      # - left_middle_coxa
-      # - left_middle_femur
-      # - left_middle_tibia
-      # - left_front_coxa
-      # - left_front_femur
-      # - left_front_tibia
-      # - right_front_coxa
-      # - right_front_femur
-      # - right_front_tibia
-      # - right_middle_coxa
-      # - right_middle_femur
-      # - right_middle_tibia
-      # - right_back_coxa
-      # - right_back_femur
-      # - right_back_tibia
-    interface_name: effort
-    command_interfaces:
-      - position
-    state_interfaces:
-      - effort
-      - position
+
+# effort_controller:
+#   ros__parameters:
+#     joints:
+#       - left_back_coxa
+#       - left_back_femur
+#       - left_back_tibia
+#       # - left_middle_coxa
+#       # - left_middle_femur
+#       # - left_middle_tibia
+#       # - left_front_coxa
+#       # - left_front_femur
+#       # - left_front_tibia
+#       # - right_front_coxa
+#       # - right_front_femur
+#       # - right_front_tibia
+#       # - right_middle_coxa
+#       # - right_middle_femur
+#       # - right_middle_tibia
+#       # - right_back_coxa
+#       # - right_back_femur
+#       # - right_back_tibia
+#     interface_name: effort
+#     command_interfaces:
+#       - position
+#     state_interfaces:
+#       - effort
+#       - position
 
 # This should not be needed
 # joint_state_broadcaster:
@@ -123,3 +129,6 @@ effort_controller:
 #       - right_back_femur_inner_2
 #       - right_back_tibia_leg
 #       - right_back_foot
+
+
+
