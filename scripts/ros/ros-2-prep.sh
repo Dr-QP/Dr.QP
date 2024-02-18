@@ -61,8 +61,6 @@ sudo rosdep init
 rosdep update
 
 sudo apt install ros-humble-desktop
-# echo sudo apt install ros-humble-ros-base
+# sudo apt install ros-humble-ros-base
 sudo apt install ros-dev-tools
 
-# echo sudo apt install ros-foxy-ros-base
-# echo sudo apt install ros-foxy-desktop
