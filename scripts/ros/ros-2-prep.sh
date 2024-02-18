@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 locale  # check for UTF-8
 
 sudo apt update && sudo apt install locales
@@ -58,5 +60,9 @@ sudo apt install -y python3-rosdep
 sudo rosdep init
 rosdep update
 
-echo sudo apt install ros-foxy-ros-base
-echo sudo apt install ros-foxy-desktop
+sudo apt install ros-humble-desktop
+# echo sudo apt install ros-humble-ros-base
+sudo apt install ros-dev-tools
+
+# echo sudo apt install ros-foxy-ros-base
+# echo sudo apt install ros-foxy-desktop
