@@ -20,6 +20,7 @@
     "ms-vscode.cpptools",
     "twxs.cmake",
     "ms-vscode.cmake-tools",
-    "redhat.vscode-xml"
+    "redhat.vscode-xml",
+    "dlech.chmod"
   ]
 }
