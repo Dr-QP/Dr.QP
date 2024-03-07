@@ -8,7 +8,7 @@
 ```
 cd DR.QP
 ros2_ws
-rosdep install --from-paths src --ignore-src
+rosdep install --from-paths src --ignore-src -y
 ```
 
 3. Open VSCode using `code .` and install recomemnded extensions

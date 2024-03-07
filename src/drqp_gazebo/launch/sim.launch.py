@@ -32,7 +32,10 @@ def generate_launch_description():
         launch_arguments={
             'verbose': 'true',
             'extra_gazebo_args': '--ros-args --params-file ' + gazebo_params_file,
-            'gui_required': 'True'  # Set "true" to shut down launch script when GUI is terminated
+            'gui_required': 'True',  # Set "true" to shut down launch script when GUI is terminated
+            
+            # 'world': os.path.join(get_package_share_directory('drqp_gazebo'), 'worlds', 'drqp.world'),
+            # 'world': os.path.join(get_package_share_directory('gazebo_ros'), 'worlds', 'empty.world'),
         }.items()
     )
 

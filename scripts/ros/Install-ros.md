@@ -2,8 +2,10 @@
 
 ## Development machine
 
-For the development machine use Ubuntu 20.04 and install ros using ros-2-prep.sh. At the end script will print installation instruction for base or desktop distro.
+For the development machine use Ubuntu 22.04 and install ros using ros-2-prep.sh. At the end script will print installation instruction for base or desktop distro.
 Run the base or desktop installation manually
+
+### Bash
 
 Update your `~/.bashrc` with the following snippet that adds couple alises for easy activation of ros1 and 2 globally or in workspace
 
@@ -16,7 +18,27 @@ fi
 alias ros1_activate="source /opt/ros/noetic/setup.bash"
 alias ros1_ws="source ./devel/setup.bash"
 
-alias ros2_activate="source /opt/ros/foxy/setup.bash"
+alias ros2_activate="source /opt/ros/humble/setup.bash"
 alias ros2_ws="source ./install/setup.bash"
+
+```
+
+### Fish
+
+For `fish` shell users install [`bass`](https://github.com/edc/bass)
+
+Update your `~/.config/fish/config.fish`
+
+```fish
+
+function ros2_activate
+    bass source /opt/ros/humble/setup.bash
+    register-python-argcomplete --shell fish ros2 | source
+end
+
+function ros2_ws
+    bass source ./install/setup.bash
+    register-python-argcomplete --shell fish ros2 | source
+end
 
 ```
