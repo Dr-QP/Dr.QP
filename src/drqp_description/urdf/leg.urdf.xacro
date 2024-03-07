@@ -16,7 +16,7 @@
     <parent link="${robot_name}/base_center_link"/>
     <child link="${robot_name}/${prefix}_coxa_servo"/>
   </joint>
-  <gazebo reference='${prefix}_coxa_servo'>
+  <gazebo reference='${robot_name}/${prefix}_coxa_servo'>
     <preserveFixedJoint>true</preserveFixedJoint>
   </gazebo>
   
@@ -49,7 +49,7 @@
     <child link="${robot_name}/${prefix}_coxa_f2_link_1"/>
     <!-- <dynamics damping="100" friction="0.1" /> -->
   </joint>
-  <gazebo reference="${prefix}_coxa">
+  <gazebo reference="${robot_name}/${prefix}_coxa">
     <dampingFactor>0.04</dampingFactor>
     <implicitSpringDamper>true</implicitSpringDamper>
     <!-- <springStiffness>2</springStiffness> -->
@@ -77,7 +77,7 @@
     <parent link="${robot_name}/${prefix}_coxa_f2_link_1"/>
     <child link="${robot_name}/${prefix}_coxa_f2_link_2"/>
   </joint>
-  <gazebo reference='${prefix}_coxa_inner'>
+  <gazebo reference='${robot_name}/${prefix}_coxa_inner'>
     <preserveFixedJoint>true</preserveFixedJoint>
   </gazebo>
   
@@ -107,7 +107,7 @@
     <child link="${robot_name}/${prefix}_femur_servo"/>
     <!-- <dynamics damping="100" friction="0.1" /> -->
   </joint>
-  <gazebo reference="${prefix}_femur">
+  <gazebo reference="${robot_name}/${prefix}_femur">
     <dampingFactor>0.04</dampingFactor>
     <implicitSpringDamper>true</implicitSpringDamper>
     <!-- <springStiffness>2</springStiffness> -->
@@ -144,7 +144,7 @@
     <parent link="${robot_name}/${prefix}_femur_servo"/>
     <child link="${robot_name}/${prefix}_femur_link_f3"/>
   </joint>
-  <gazebo reference='${prefix}_femur_inner_1'>
+  <gazebo reference='${robot_name}/${prefix}_femur_inner_1'>
     <preserveFixedJoint>true</preserveFixedJoint>
   </gazebo>
 
@@ -174,7 +174,7 @@
     <parent link="${robot_name}/${prefix}_femur_link_f3"/>
     <child link="${robot_name}/${prefix}_femur_link_f1"/>
   </joint>
-  <gazebo reference='${prefix}_femur_inner_2'>
+  <gazebo reference='${robot_name}/${prefix}_femur_inner_2'>
     <preserveFixedJoint>true</preserveFixedJoint>
   </gazebo>
 
@@ -208,7 +208,7 @@
     <child link="${robot_name}/${prefix}_tibia_servo"/>
     <!-- <dynamics damping="100" friction="0.1" /> -->
   </joint>
-  <gazebo reference="${prefix}_tibia">
+  <gazebo reference="${robot_name}/${prefix}_tibia">
     <dampingFactor>0.04</dampingFactor>
     <implicitSpringDamper>true</implicitSpringDamper>
     <!-- <springStiffness>2</springStiffness> -->
@@ -241,7 +241,7 @@
     <parent link="${robot_name}/${prefix}_tibia_servo"/>
     <child link="${robot_name}/${prefix}_tibia_leg"/>
   </joint>
-  <gazebo reference='${prefix}_tibia_leg'>
+  <gazebo reference='${robot_name}/${prefix}_tibia_leg'>
     <preserveFixedJoint>true</preserveFixedJoint>
   </gazebo>
 
@@ -270,7 +270,7 @@
     <parent link="${robot_name}/${prefix}_tibia_leg"/>
     <child link="${robot_name}/${prefix}_foot_link"/>
   </joint>
-  <gazebo reference='${prefix}_foot'>
+  <gazebo reference='${robot_name}/${prefix}_foot'>
     <preserveFixedJoint>true</preserveFixedJoint>
   </gazebo>
 
