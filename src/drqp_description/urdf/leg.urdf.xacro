@@ -11,7 +11,7 @@
 
   <xacro:macro name="leg" params="robot_name prefix x y yaw">
 
-  <joint name="${prefix}_coxa_servo" type="fixed">
+  <joint name="${robot_name}/${prefix}_coxa_servo" type="fixed">
     <origin rpy="0 0 ${yaw}" xyz="${x} ${y} 0"/>
     <parent link="${robot_name}/base_center_link"/>
     <child link="${robot_name}/${prefix}_coxa_servo"/>
@@ -42,7 +42,7 @@
   </link>
 
 
-  <joint name="${prefix}_coxa" type="revolute">
+  <joint name="${robot_name}/${prefix}_coxa" type="revolute">
     <axis xyz="0 0 1"/>
     <limit effort="3" lower="${radians(-90)}" upper="${radians(90)}" velocity="${pi}"/>
     <parent link="${robot_name}/${prefix}_coxa_servo"/>
@@ -72,7 +72,7 @@
     </collision>
     <xacro:inertial_stub />
   </link>
-  <joint name="${prefix}_coxa_inner" type="fixed">
+  <joint name="${robot_name}/${prefix}_coxa_inner" type="fixed">
     <origin rpy="0 0 0" xyz="${0.0265 * 2} 0 0"/>
     <parent link="${robot_name}/${prefix}_coxa_f2_link_1"/>
     <child link="${robot_name}/${prefix}_coxa_f2_link_2"/>
@@ -99,7 +99,7 @@
     <xacro:inertial_stub />
   </link>
 
-  <joint name="${prefix}_femur" type="revolute">
+  <joint name="${robot_name}/${prefix}_femur" type="revolute">
     <axis xyz="0 1 0"/>
     <limit effort="3" lower="${radians(-98)}" upper="${radians(90)}" velocity="${pi}"/>
     <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -139,7 +139,7 @@
     </inertial>
   </link>
   
-  <joint name="${prefix}_femur_inner_1" type="fixed">
+  <joint name="${robot_name}/${prefix}_femur_inner_1" type="fixed">
     <origin rpy="0 0 0" xyz="${0.036 + 0.0055} 0 0"/>
     <parent link="${robot_name}/${prefix}_femur_servo"/>
     <child link="${robot_name}/${prefix}_femur_link_f3"/>
@@ -169,7 +169,7 @@
     <xacro:inertial_stub />
   </link>
   
-  <joint name="${prefix}_femur_inner_2" type="fixed">
+  <joint name="${robot_name}/${prefix}_femur_inner_2" type="fixed">
     <origin rpy="0 0 0" xyz="0.023 0 -0.015"/>
     <parent link="${robot_name}/${prefix}_femur_link_f3"/>
     <child link="${robot_name}/${prefix}_femur_link_f1"/>
@@ -200,7 +200,7 @@
     <xacro:inertial_stub />
   </link>
 
-  <joint name="${prefix}_tibia" type="revolute">
+  <joint name="${robot_name}/${prefix}_tibia" type="revolute">
     <axis xyz="0 1 0"/>
     <limit effort="3" lower="${radians(-125)}" upper="${radians(80)}" velocity="${pi}"/>
     <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -236,7 +236,7 @@
     </inertial>
   </link>
 
-  <joint name="${prefix}_tibia_leg" type="fixed">
+  <joint name="${robot_name}/${prefix}_tibia_leg" type="fixed">
     <origin rpy="0 0 0" xyz="0.0325 0 0"/>
     <parent link="${robot_name}/${prefix}_tibia_servo"/>
     <child link="${robot_name}/${prefix}_tibia_leg"/>
@@ -265,7 +265,7 @@
     <xacro:inertial_stub />
   </link>
 
-  <joint name="${prefix}_foot" type="fixed">
+  <joint name="${robot_name}/${prefix}_foot" type="fixed">
     <origin rpy="0 0 0" xyz="0.052797 0 -0.088395"/>
     <parent link="${robot_name}/${prefix}_tibia_leg"/>
     <child link="${robot_name}/${prefix}_foot_link"/>
