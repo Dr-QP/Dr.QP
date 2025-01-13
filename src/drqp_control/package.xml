@@ -5,11 +5,13 @@
   <version>0.0.0</version>
   <description>TODO: Package description</description>
   <maintainer email="anton.matosov@gmail.com">anton</maintainer>
-  <license>TODO: License declaration</license>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>ros2_control</depend>
   <depend>ros2_controllers</depend>
+  <depend>rclcpp</depend>
+  <depend>std_msgs</depend>
   <!-- <depend>rqt_joint_trajectory_controller</depend> --> <!-- https://github.com/ros-controls/ros2_controllers/tree/master/rqt_joint_trajectory_controller -->
 
   <test_depend>ament_lint_auto</test_depend>
