@@ -2,11 +2,9 @@
   "recommendations": [
     "ms-iot.vscode-ros",
     "ms-vscode.cpptools-themes",
-    "xaver.clang-format",
     "plorefice.devicetree",
     "mhutchie.git-graph",
     "eamodio.gitlens",
-    "donjayamanne.python-environment-manager",
     "ms-python.python",
     "ms-python.vscode-pylance",
     "ms-vscode-remote.remote-ssh",
@@ -17,10 +15,11 @@
     "smilerobotics.urdf",
     "jithurjacob.nbpreviewer",
     "redhat.vscode-yaml",
-    "ms-vscode.cpptools",
     "twxs.cmake",
     "ms-vscode.cmake-tools",
     "redhat.vscode-xml",
-    "dlech.chmod"
+    "dlech.chmod",
+    "llvm-vs-code-extensions.vscode-clangd",
+    "yy0931.save-as-root",
   ]
 }
