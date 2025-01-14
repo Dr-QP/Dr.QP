@@ -1,13 +1,13 @@
 #pragma once 
 
 #include "servo/SerialProtocol.h"
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/serial_port.hpp>
+#include <memory>
 
 class UnixSerial: public SerialProtocol
 {
 public:
     UnixSerial(const std::string& fileName);
+    ~UnixSerial();
 
     using SerialProtocol::begin;
     void begin(const unsigned long baudRate, const uint8_t transferConfig) override;
@@ -20,11 +20,8 @@ public:
     size_t write(const uint8_t *data, size_t size) override;
     size_t readBytes(uint8_t *buffer, size_t size) override;
 private:
-    boost::asio::io_service ioService_;
-    boost::asio::serial_port serial_;
-
-    uint8_t lastRead_;
-    bool everRead_;
+    struct Impl;
+    std::unique_ptr<Impl> impl_;
 };
 
 

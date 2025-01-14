@@ -3,6 +3,7 @@
 #include <boost/asio/read.hpp>
 #include <iostream>
 #include <vector>
+#include <optional>
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 
@@ -71,6 +72,30 @@ uint8_t TcpSerial::peek()
     return lastRead_;
 }
 
+// template <typename SyncReadStream, typename MutableBufferSequence>
+// void readWithTimeout(SyncReadStream& s, const MutableBufferSequence& buffers, const boost::asio::deadline_timer::duration_type& expiry_time)
+// {
+//     boost::optional<boost::system::error_code> timer_result;
+//     boost::asio::deadline_timer timer(s.get_io_service());
+//     timer.expires_from_now(expiry_time);
+//     timer.async_wait([&timer_result] (const boost::system::error_code& error) { timer_result.reset(error); });
+
+//     boost::optional<boost::system::error_code> read_result;
+//     boost::asio::async_read(s, buffers, [&read_result] (const boost::system::error_code& error, size_t) { read_result.reset(error); });
+
+//     s.get_io_service().reset();
+//     while (s.get_io_service().run_one())
+//     { 
+//         if (read_result)
+//             timer.cancel();
+//         else if (timer_result)
+//             s.cancel();
+//     }
+
+//     if (*read_result)
+//         throw boost::system::system_error(*read_result);
+// }
+
 template <typename MutableBufferSequence>
 size_t read_with_timeout(boost::asio::io_service &ioService, tcp::socket &sock,
                        const MutableBufferSequence &buffers) {
@@ -99,6 +124,7 @@ size_t read_with_timeout(boost::asio::io_service &ioService, tcp::socket &sock,
   {
     std::cerr << read_result->message() << "\n";
     return 0;
+    // throw boost::system::system_error(*read_result);
   }
 
   return *bytesTransferred;
