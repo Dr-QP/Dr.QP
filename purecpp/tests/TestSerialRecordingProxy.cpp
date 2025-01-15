@@ -2,7 +2,7 @@
 // Created by Anton Matosov on 6/19/17.
 //
 
-#include <doctest/doctest.h>
+#include "doctest.h"
 
 #include "servo/UnixSerial.h"
 #include "SerialPlayer.h"
