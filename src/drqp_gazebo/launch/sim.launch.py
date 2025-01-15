@@ -33,7 +33,7 @@ def generate_launch_description():
             'verbose': 'true',
             'extra_gazebo_args': '--ros-args --params-file ' + gazebo_params_file,
             'gui_required': 'True',  # Set "true" to shut down launch script when GUI is terminated
-            
+
             # 'world': os.path.join(get_package_share_directory('drqp_gazebo'), 'worlds', 'drqp.world'),
             # 'world': os.path.join(get_package_share_directory('gazebo_ros'), 'worlds', 'empty.world'),
         }.items()
@@ -56,15 +56,18 @@ def generate_launch_description():
     )
 
     position_trajectory_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'position_trajectory_controller'],
+        cmd=['ros2', 'control', 'load_controller', '--set-state',
+             'active', 'position_trajectory_controller'],
         output='screen'
     )
     velocity_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'velocity_controller'],
+        cmd=['ros2', 'control', 'load_controller',
+             '--set-state', 'active', 'velocity_controller'],
         output='screen'
     )
     effort_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'effort_controller'],
+        cmd=['ros2', 'control', 'load_controller',
+             '--set-state', 'active', 'effort_controller'],
         output='screen'
     )
     # Launch them all!
