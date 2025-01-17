@@ -27,18 +27,4 @@ alias ros2_ws="source ./install/setup.bash"
 
 For `fish` shell users install [`bass`](https://github.com/edc/bass)
 
-Update your `~/.config/fish/config.fish`
-
-```fish
-
-function ros2_activate
-    bass source /opt/ros/humble/setup.bash
-    register-python-argcomplete --shell fish ros2 | source
-end
-
-function ros2_ws
-    bass source ./install/setup.bash
-    register-python-argcomplete --shell fish ros2 | source
-end
-
-```
+Copy `./scripts/ros/ros.fish` to `~/.config/fish/conf.d/ros.fish` which contains `ros2_activate` and `ros2_ws` commands that will also register autocompletion
