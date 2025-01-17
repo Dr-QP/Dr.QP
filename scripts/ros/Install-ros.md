@@ -27,4 +27,12 @@ alias ros2_ws="source ./install/setup.bash"
 
 For `fish` shell users install [`bass`](https://github.com/edc/bass)
 
+```fish
+# Install fisher (package manager for fish)
+curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher
+
+# Install bass
+fisher install edc/bass
+```
+
 Copy `./scripts/ros/ros.fish` to `~/.config/fish/conf.d/ros.fish` which contains `ros2_activate` and `ros2_ws` commands that will also register autocompletion
