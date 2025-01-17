@@ -18,7 +18,7 @@ jobs:
   test-cpp:
     runs-on: ubuntu-latest
     container:
-      image: osrf/ros:humble-ros-core
+      image: ros:humble-ros-core
     steps:
       - uses: actions/checkout@v2
       - uses: ros-tooling/action-ros-ci@v0.3
