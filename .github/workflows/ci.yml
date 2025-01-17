@@ -15,7 +15,7 @@ on:
       - 'v*'
 
 jobs:
-  test-cpp:
+  ros-ci:
     runs-on: ubuntu-latest
     container:
       image: ros:humble-ros-core
