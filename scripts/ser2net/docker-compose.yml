@@ -14,17 +14,3 @@ services:
       - 2022:2022
     devices:
       - /dev/ttySC0
-
-  ros-base:
-    image: ghcr.io/dr-qp/ros-base
-    build:
-      context: ..
-      dockerfile: docker/ros-base.dockerfile
-
-  ros-desktop:
-    image: ghcr.io/dr-qp/ros-desktop
-    build:
-      context: ..
-      dockerfile: docker/ros-desktop.dockerfile
-    depends_on:
-      - ros-base

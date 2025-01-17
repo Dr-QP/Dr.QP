@@ -7,7 +7,7 @@ RUN cp /usr/local/bin/_activate_current_env.sh /etc/profile.d/100-activate_curre
 
 USER $MAMBA_USER
 
-COPY --chown=$MAMBA_USER:$MAMBA_USER scripts/ros/ros-base.yml /tmp/env.yaml
+COPY --chown=$MAMBA_USER:$MAMBA_USER ./ros-base.yml /tmp/env.yaml
 RUN --mount=type=cache,target=/opt/conda/pkgs micromamba install -y -n base -f /tmp/env.yaml && \
     micromamba install -y -n base mamba
 
