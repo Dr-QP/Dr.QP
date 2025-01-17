@@ -18,7 +18,7 @@ jobs:
   ros-ci:
     runs-on: ubuntu-latest
     container:
-      image: ros:humble-ros-core
+      image: ros:humble-ros-base
     steps:
       - uses: actions/checkout@v2
       - uses: ros-tooling/action-ros-ci@v0.3
