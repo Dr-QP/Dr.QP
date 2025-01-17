@@ -20,8 +20,9 @@ jobs:
     container:
       # image: ros:humble-ros-base # base image is good for testing deployment packages. keep it here as an example
       # Use desktop image as there is gazebo which is a desktop package that has tons of dependencies
-      image: ros:humble-ros-desktop
+      image: osrf/ros:humble-desktop
     steps:
+      - run: sudo apt-get update && sudo apt-get install -y python3-colcon-coveragepy-result
       - uses: actions/checkout@v2
       - uses: ros-tooling/action-ros-ci@v0.3
         with:
