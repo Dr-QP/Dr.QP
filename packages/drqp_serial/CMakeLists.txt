@@ -9,9 +9,18 @@ endif()
 find_package(ament_cmake REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
-# find_package(<dependency> REQUIRED)
 
 if(BUILD_TESTING)
+  find_package(catch_ros2 REQUIRED)
+  add_executable(drqp_serial_test
+    test/drqp_serial_test.cpp
+  )
+  target_link_libraries(drqp_serial_test
+    catch_ros2::catch_ros2_with_main
+  )
+
+
+
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
   # comment the line when a copyright and license is added to all source files
