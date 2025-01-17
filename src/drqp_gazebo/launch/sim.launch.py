@@ -20,7 +20,7 @@
 
 import os
 
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import get_package_share_directory as get_pkg_dir
 
 
 from launch import LaunchDescription
@@ -34,7 +34,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     rsp = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory(
+            get_pkg_dir(
                 'drqp_description'), 'launch', 'rsp.launch.py'
         )]), launch_arguments={
             'use_sim_time': 'True',
@@ -42,29 +42,30 @@ def generate_launch_description():
         }.items()
     )
 
-    gazebo_params_file = os.path.join(get_package_share_directory(
+    gazebo_params_file = os.path.join(get_pkg_dir(
         'drqp_gazebo'), 'config', 'gazebo_params.yaml')
 
     # Include the Gazebo launch file, provided by the gazebo_ros package
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('gazebo_ros'), 'launch', 'gazebo.launch.py')]),
+            get_pkg_dir('gazebo_ros'), 'launch', 'gazebo.launch.py')]),
         launch_arguments={
             'verbose': 'true',
             'extra_gazebo_args': '--ros-args --params-file ' + gazebo_params_file,
             'gui_required': 'True',  # Set "true" to shut down launch script when GUI is terminated
 
-            # 'world': os.path.join(get_package_share_directory('drqp_gazebo'), 'worlds', 'drqp.world'),
-            # 'world': os.path.join(get_package_share_directory('gazebo_ros'), 'worlds', 'empty.world'),
+            # 'world': os.path.join(get_pkg_dir('drqp_gazebo'), 'worlds', 'drqp.world'),
+            # 'world': os.path.join(get_pkg_dir('gazebo_ros'), 'worlds', 'empty.world'),
         }.items()
     )
 
     entity_name = 'dr_qp'
-    # Run the spawner node from the gazebo_ros package. The entity name doesn't really matter if you only have a single robot.
+    # Run the spawner node from the gazebo_ros package. The entity name doesn't really
+    # matter if you only have a single robot.
     spawn_entity = Node(package='gazebo_ros', executable='spawn_entity.py',
                         arguments=['-topic', 'robot_description',
                                    '-entity', entity_name,
-                                   '-package_to_model',  # convert mesh paths to work as gazebo models. description package.xml should have proper <export><gazebo_ros gazebo_model_path=""/> tags
+                                   '-package_to_model',
                                    '-z', '.15',  # initial Z possition
                                    ],
                         output='screen')
@@ -80,16 +81,16 @@ def generate_launch_description():
              'active', 'position_trajectory_controller'],
         output='screen'
     )
-    velocity_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller',
-             '--set-state', 'active', 'velocity_controller'],
-        output='screen'
-    )
-    effort_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller',
-             '--set-state', 'active', 'effort_controller'],
-        output='screen'
-    )
+    # velocity_controller = ExecuteProcess(
+    #     cmd=['ros2', 'control', 'load_controller',
+    #          '--set-state', 'active', 'velocity_controller'],
+    #     output='screen'
+    # )
+    # effort_controller = ExecuteProcess(
+    #     cmd=['ros2', 'control', 'load_controller',
+    #          '--set-state', 'active', 'effort_controller'],
+    #     output='screen'
+    # )
     # Launch them all!
     return LaunchDescription([
         rsp,
