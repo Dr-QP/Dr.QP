@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
 script_dir=$(dirname $0)
-root_dir=$(dirname $(dirname $script_dir))
-sources_dir="$root_dir/src"
+source "$script_dir/__utils.sh"
 
 ros2 pkg create \
   --license MIT \
