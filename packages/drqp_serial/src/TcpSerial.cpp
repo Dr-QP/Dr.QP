@@ -37,8 +37,8 @@ tcp::resolver::iterator resolve(boost::asio::io_service& ioService, const std::s
 
 TcpSerial::TcpSerial(const std::string& ip, uint16_t port)
     : socket_(ioService_)
-    , everRead_(false)
     , lastRead_(0)
+    , everRead_(false)
 {
   connect(socket_, resolve(ioService_, ip, port));
 }

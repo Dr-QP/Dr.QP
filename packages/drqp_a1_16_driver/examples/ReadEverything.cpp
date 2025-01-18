@@ -21,9 +21,9 @@
 // This example reads all the information from a smart servo and
 // prints it to the serial monitor.
 
-#include "servo/XYZrobotServo.h"
-#include "servo/UnixSerial.h"
-#include "servo/TcpSerial.h"
+#include "drqp_a1_16_driver/XYZrobotServo.h"
+#include "drqp_serial/UnixSerial.h"
+#include "drqp_serial/TcpSerial.h"
 
 #include <iostream>
 #include <thread>

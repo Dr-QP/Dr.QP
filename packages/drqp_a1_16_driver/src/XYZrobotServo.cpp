@@ -19,7 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "servo/XYZrobotServo.h"
+#include "drqp_a1_16_driver/XYZrobotServo.h"
 
 #define CMD_EEPROM_WRITE 0x01
 #define CMD_EEPROM_READ  0x02

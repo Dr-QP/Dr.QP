@@ -25,7 +25,7 @@
 #include <inttypes.h>
 #include <memory>
 
-#include "servo/Stream.h"
+#include "drqp_serial/Stream.h"
 
 /// The possible communication errors that can happen when reading the
 /// acknowledgment packet from a servo.

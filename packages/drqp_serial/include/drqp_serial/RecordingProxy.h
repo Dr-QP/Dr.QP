@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include <vector>
 #include <deque>
 #include <boost/serialization/deque.hpp>
 

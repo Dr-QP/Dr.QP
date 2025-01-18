@@ -20,7 +20,8 @@
 
 #include "drqp_serial/SerialPlayer.h"
 #include <cassert>
-
+#include <fstream>
+#include "drqp_serial/doctest.h"
 #include <boost/archive/text_iarchive.hpp>
 
 namespace RecordingProxy

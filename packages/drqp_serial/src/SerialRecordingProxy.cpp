@@ -26,8 +26,8 @@ namespace RecordingProxy
 
 SerialRecordingProxy::SerialRecordingProxy(SerialProtocol &decorated, const std::string &filename)
     : SerialDecorator(decorated)
-    , fileName_(filename)
     , lastOperation_(OperationType::kUndefined)
+    , fileName_(filename)
 {
 
 }
