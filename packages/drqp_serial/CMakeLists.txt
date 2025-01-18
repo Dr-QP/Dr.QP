@@ -15,6 +15,8 @@ if(BUILD_TESTING)
   add_executable(drqp_serial_test
     test/drqp_serial_test.cpp
   )
+
+  # https://docs.ros.org/en/humble/p/catch_ros2/index.html
   target_link_libraries(drqp_serial_test
     catch_ros2::catch_ros2_with_main
   )
