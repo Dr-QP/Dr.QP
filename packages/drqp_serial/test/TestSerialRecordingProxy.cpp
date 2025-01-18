@@ -4,7 +4,7 @@
 
 #include "doctest.h"
 
-#include "servo/UnixSerial.h"
+#include "drqp_serial/UnixSerial.h"
 #include "SerialPlayer.h"
 #include "SerialRecordingProxy.h"
 #include <boost/thread.hpp>

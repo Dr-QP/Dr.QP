@@ -2,10 +2,9 @@
 // Created by Anton Matosov on 6/15/17.
 //
 
-#include "SerialPlayer.h"
+#include "drqp_serial/SerialPlayer.h"
 #include <cassert>
-#include <fstream>
-#include "doctest.h"
+
 #include <boost/archive/text_iarchive.hpp>
 
 namespace RecordingProxy

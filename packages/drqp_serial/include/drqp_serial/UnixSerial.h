@@ -1,6 +1,6 @@
 #pragma once 
 
-#include "servo/SerialProtocol.h"
+#include "drqp_serial/SerialProtocol.h"
 #include <memory>
 
 class UnixSerial: public SerialProtocol

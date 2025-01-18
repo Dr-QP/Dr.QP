@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "servo/Stream.h"
+#include "drqp_serial/Stream.h"
 
 // Define config for Serial.begin(baud, config);
 #define SERIAL_5N1 0x00

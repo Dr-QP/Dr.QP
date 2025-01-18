@@ -2,7 +2,7 @@
 // Created by Anton Matosov on 6/16/17.
 //
 
-#include "SerialRecordingProxy.h"
+#include "drqp_serial/SerialRecordingProxy.h"
 #include <boost/archive/text_oarchive.hpp>
 
 namespace RecordingProxy
