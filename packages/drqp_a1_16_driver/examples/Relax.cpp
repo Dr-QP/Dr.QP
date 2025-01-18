@@ -18,10 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "servo/XYZrobotServo.h"
+#include "drqp_a1_16_driver/XYZrobotServo.h"
 
-#include "servo/TcpSerial.h"
-#include "servo/UnixSerial.h"
+#include "drqp_serial/TcpSerial.h"
+#include "drqp_serial/UnixSerial.h"
 
 #include "DrQp.h"
 

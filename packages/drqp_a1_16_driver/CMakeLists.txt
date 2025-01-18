@@ -1,11 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(drqp_a1_16_driver)
 
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-endif()
-
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
@@ -20,8 +15,9 @@ add_library(drqp_a1_16_driver STATIC
     src/XYZrobotServo.cpp
 )
 
+target_compile_features(drqp_a1_16_driver PUBLIC cxx_std_17)
 target_include_directories(drqp_a1_16_driver PUBLIC include)
-target_link_libraries(drqp_a1_16_driver PUBLIC drqp_serial)
+ament_target_dependencies(drqp_a1_16_driver PUBLIC drqp_serial)
 
 
 if(BUILD_TESTING)

@@ -1,11 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(drqp_serial)
 
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-endif()
-
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter)
 endif()
@@ -32,6 +27,7 @@ add_library(drqp_serial STATIC
     src/UnixSerial.cpp
 )
 
+target_compile_features(drqp_serial PUBLIC cxx_std_17)
 target_include_directories(drqp_serial PUBLIC include)
 target_link_libraries(drqp_serial PUBLIC Boost::system)
 
@@ -47,8 +43,9 @@ if(BUILD_TESTING)
   )
 
   # https://docs.ros.org/en/humble/p/catch_ros2/index.html
-  target_link_libraries(drqp_serial_test
+  target_link_libraries(drqp_serial_test PRIVATE
     catch_ros2::catch_ros2_with_main
+    drqp_serial
   )
 
 
@@ -63,5 +60,25 @@ if(BUILD_TESTING)
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
+
+
+install(TARGETS
+  ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin)
+install(DIRECTORY include/
+  DESTINATION include/${PROJECT_NAME})
+
+# Export old-style CMake variables
+ament_export_include_directories("include/${PROJECT_NAME}")
+# ament_export_libraries(${PROJECT_NAME})
+
+# Export modern CMake targets
+# ament_export_targets(${PROJECT_NAME})
+
+# # Export dependencies
+# ament_export_dependencies(boost)
+
 
 ament_package()

@@ -21,7 +21,7 @@
 #include "drqp_serial/UnixSerial.h"
 #include <boost/asio/write.hpp>
 #include <boost/asio/read.hpp>
-#include <iostream>
+
 #include <vector>
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
@@ -38,8 +38,8 @@ struct UnixSerial::Impl
 
     Impl(const std::string &fileName)
         : serial_(ioService_, fileName)
-        , everRead_(false)
         , lastRead_(0)
+        , everRead_(false)
     {}
 };
 
