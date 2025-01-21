@@ -16,8 +16,8 @@ on:
 
 env:
   ROS_DISTRO: humble
-  CC: clang
-  CXX: clang++
+  # CC: clang # TODO: uncomment this line when clang is available in the image
+  # CXX: clang++
 
 jobs:
   ros-ci:
