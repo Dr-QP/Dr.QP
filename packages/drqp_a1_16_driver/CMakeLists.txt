@@ -8,6 +8,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(drqp_serial REQUIRED)
+find_package(rclcpp REQUIRED)
 
 add_library(drqp_a1_16_driver STATIC
     include/drqp_a1_16_driver/XYZrobotServo.h
@@ -16,9 +17,26 @@ add_library(drqp_a1_16_driver STATIC
 )
 
 target_compile_features(drqp_a1_16_driver PUBLIC cxx_std_17)
-target_include_directories(drqp_a1_16_driver PUBLIC include)
-ament_target_dependencies(drqp_a1_16_driver PUBLIC drqp_serial)
+target_include_directories(drqp_a1_16_driver PUBLIC 
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+ament_target_dependencies(drqp_a1_16_driver PUBLIC rclcpp drqp_serial)
 
+# Install headers
+install(DIRECTORY include/
+  DESTINATION include/${PROJECT_NAME})
+
+# Install libraries
+install(TARGETS
+  drqp_a1_16_driver
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+# Export modern CMake targets
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

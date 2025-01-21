@@ -9,6 +9,8 @@
 
 
   <depend>drqp_serial</depend>
+  <depend>rclcpp</depend>
+
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <test_depend>ament_lint_auto</test_depend>
