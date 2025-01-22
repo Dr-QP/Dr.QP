@@ -31,6 +31,9 @@
             "smilerobotics.urdf",
             "twxs.cmake",
             "yy0931.save-as-root",
+            "althack.ament-task-provider",
+            "nonanonno.vscode-ros2",
+            "jaehyunshim.vscode-ros2",
         ]
     },
     "tasks": {
