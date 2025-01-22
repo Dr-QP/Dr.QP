@@ -1,0 +1,132 @@
+{
+    "folders": [
+        {
+            "path": "../.."
+        }
+    ],
+    "extensions": {
+        "recommendations": [
+            "chrisdias.vscode-opennewinstance",
+            "dlech.chmod",
+            "eamodio.gitlens",
+            "hangxingliu.vscode-systemd-support",
+            "jithurjacob.nbpreviewer",
+            "llvm-vs-code-extensions.vscode-clangd",
+            "llvm-vs-code-extensions.vscode-clangd",
+            "mhutchie.git-graph",
+            "ms-iot.vscode-ros",
+            "ms-python.debugpy",
+            "ms-python.python",
+            "ms-python.vscode-pylance",
+            "ms-vscode-remote.remote-containers",
+            "ms-vscode-remote.remote-containers",
+            "ms-vscode-remote.remote-ssh-edit",
+            "ms-vscode-remote.remote-ssh",
+            "ms-vscode.cmake-tools",
+            "ms-vscode.cpptools-themes",
+            "plorefice.devicetree",
+            "redhat.vscode-xml",
+            "redhat.vscode-yaml",
+            "rpinski.shebang-snippets",
+            "smilerobotics.urdf",
+            "twxs.cmake",
+            "yy0931.save-as-root",
+        ]
+    },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "type": "colcon",
+                "args": [
+                    "build",
+                    "--symlink-install",
+                    "--event-handlers",
+                    "console_cohesion+",
+                    "--base-paths",
+                    "${workspaceFolder}",
+                    "--cmake-args",
+                    "-GNinja",
+                    "-DCMAKE_BUILD_TYPE=Debug",
+    
+                    // "--packages-select",
+                    // // "drqp_description",
+                    // // "drqp_control",
+                    // "drqp_serial",
+                    // "drqp_a1_16_driver",
+                ],
+                "problemMatcher": [
+                    "$catkin-gcc"
+                ],
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                },
+                "label": "colcon: build",
+                "options": {
+                    "env": {
+                        "CMAKE_EXPORT_COMPILE_COMMANDS": "1"
+                    }
+                }
+            },
+            {
+                "type": "colcon",
+                "args": [
+                    "test",
+                    // "--symlink-install",
+                    "--event-handlers",
+                    "console_cohesion+",
+                    "summary+",
+                    "status+",
+                    // "desktop_notification+",
+                    // "--base-paths",
+                    // "${workspaceFolder}",
+                    // "--cmake-args",
+                    // "-DCMAKE_BUILD_TYPE=RelWithDebInfo"
+    
+                    // "--packages-select",
+                    // "drqp_description"
+                ],
+                "problemMatcher": [
+                    "$catkin-gcc"
+                ],
+                "group": {
+                    "kind": "test",
+                    "isDefault": true
+                },
+                "label": "colcon: test"
+            },
+            {
+                "label": "Full clean",
+                "type": "shell",
+                "command": "rm -rf build install log",
+                "options": {
+                    "cwd": "${workspaceFolder}"
+                },
+                "problemMatcher": []
+            }
+        ]
+    },
+    "settings": {
+        "ros.distro": "humble",
+        "python.autoComplete.extraPaths": [
+            "/opt/ros/humble/lib/python3.10/site-packages",
+            "/opt/ros/humble/local/lib/python3.10/dist-packages"
+        ],
+        "python.analysis.extraPaths": [
+            "/opt/ros/humble/lib/python3.10/site-packages",
+            "/opt/ros/humble/local/lib/python3.10/dist-packages"
+        ],
+        "search.exclude": {
+            "**/node_modules": true,
+            "**/bower_components": true,
+            "**/*.code-search": true,
+            "/build/**": true,
+            "/install/**": true,
+            "/log/**": true,
+        },
+    
+        "clangd.enable": true,
+        "C_Cpp.intelliSenseEngine": "disabled",
+    }
+}
