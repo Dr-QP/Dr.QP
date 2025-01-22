@@ -26,7 +26,8 @@
 #include "DrQp.h"
 
 int main() {
-  TcpSerial servoSerial("192.168.1.136", 2022);
+  // TcpSerial servoSerial("192.168.1.136", 2022);
+  UnixSerial servoSerial("/dev/ttySC0");
 
   for (const auto servoId : servoIdsRange())
   {

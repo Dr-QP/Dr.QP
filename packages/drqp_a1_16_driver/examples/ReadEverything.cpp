@@ -34,7 +34,7 @@
 const uint8_t servoId = 5;
 
 // UnixSerial servoSerial("/dev/cu.SLAB_USBtoUART");
-// UnixSerial servoSerial("/dev/ttySC0"); // on Dr.QP raspi
+UnixSerial servoSerial("/dev/ttySC0"); // on Dr.QP raspi
 // UnixSerial servoSerial("/dev/ttySC1"); // extra one on Dr.QP raspi
 
 // https://techtinkering.com/2013/04/02/connecting-to-a-remote-serial-port-over-tcpip/
@@ -42,7 +42,7 @@ const uint8_t servoId = 5;
 //   accepter: tcp,2000
 //   connector: serialdev,/dev/ttySC0,115200n81,local
 //   trace-both: '/var/log/trace-\p'
-TcpSerial servoSerial("192.168.1.136", 2022);
+// TcpSerial servoSerial("192.168.1.136", 2022);
 
 // OR
 // socat pty,link=$HOME/dev/ttyVSC0,waitslave tcp:192.168.1.136:2022
@@ -443,7 +443,7 @@ int main() {
   {
     // testRoundtrip();
     // testWrite();
-    // readLoop();
-    setPos();
+    readLoop();
+    // setPos();
   }
 }

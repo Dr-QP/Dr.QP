@@ -28,11 +28,12 @@
 #include <iostream>
 
 int main() {
-  TcpSerial servoSerial("192.168.1.136", 2022);
+  // TcpSerial servoSerial("192.168.1.136", 2022);
+  UnixSerial servoSerial("/dev/ttySC0");
 
   for (const auto &leg : kAllLegServoIds) {
     int servoIndexInLeg = 0;
-    for (const auto servoId : leg) {
+    for (const int servoId : leg) {
       XYZrobotServo servo(servoSerial, servoId);
 
       XYZrobotServoStatus status = servo.readStatus();
