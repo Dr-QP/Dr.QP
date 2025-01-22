@@ -56,7 +56,8 @@ sudo apt install --no-install-recommends -y \
   libcunit1-dev
 
 
-sudo apt install -y python3-rosdep
+sudo apt install -y python3-rosdep2
+sudo rm -f /etc/ros/rosdep/sources.list.d/*
 sudo rosdep init
 rosdep update
 
