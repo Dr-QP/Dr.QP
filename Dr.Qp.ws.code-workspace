@@ -34,6 +34,7 @@
             "althack.ament-task-provider",
             "nonanonno.vscode-ros2",
             "jaehyunshim.vscode-ros2",
+            "vadimcn.vscode-lldb",
         ]
     },
     "tasks": {
