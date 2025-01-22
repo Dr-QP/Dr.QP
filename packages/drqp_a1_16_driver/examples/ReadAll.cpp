@@ -37,11 +37,11 @@ int main() {
 
       XYZrobotServoStatus status = servo.readStatus();
       if (servo.getLastError()) {
-        std::cerr << legNameForServo(servoId) << " servo: " << (int)servoId
+        std::cerr << legNameForServo(servoId) << " servo: " << servoId
                   << " error reading status: " << servo.getLastError() << "\n";
       } else {
-        std::cout << legNameForServo(servoId) << "\tservo: " << (int)servoId << ": "
-                  << (int)status.position << "\t neutral: " << kNeutralPose[kServoIdToLeg[servoId]][servoIndexInLeg] << "\n";
+        std::cout << legNameForServo(servoId) << "\tservo: " << servoId << ": "
+                  << status.position << "\t neutral: " << kNeutralPose[kServoIdToLeg[servoId]][servoIndexInLeg] << "\n";
       }
       ++servoIndexInLeg;
     }
