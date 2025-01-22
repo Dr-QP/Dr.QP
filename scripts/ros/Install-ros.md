@@ -36,3 +36,8 @@ fisher install edc/bass
 ```
 
 Copy `./scripts/ros/ros.fish` to `~/.config/fish/conf.d/ros.fish` which contains `ros2_activate` and `ros2_ws` commands that will also register autocompletion
+
+If you are in the root of the ROS workspace copy command will look like this
+```bash
+cp src/Dr.QP/scripts/ros/ros.fish ~/.config/fish/conf.d
+```
