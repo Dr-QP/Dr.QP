@@ -69,7 +69,9 @@
                 "label": "colcon: build",
                 "options": {
                     "env": {
-                        "CMAKE_EXPORT_COMPILE_COMMANDS": "1"
+                        "CMAKE_EXPORT_COMPILE_COMMANDS": "1",
+                        "CC": "clang",
+                        "CXX": "clang++",
                     }
                 }
             },

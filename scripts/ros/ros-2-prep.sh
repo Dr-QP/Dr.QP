@@ -65,3 +65,5 @@ sudo apt install ros-humble-desktop
 # sudo apt install ros-humble-ros-base
 sudo apt install ros-dev-tools
 
+sudo apt install -y clang clangd ninja-build cmake build-essential
+
