@@ -62,13 +62,23 @@
                 "args": [
                     "build",
                     "--symlink-install",
+
                     "--event-handlers",
                     "console_cohesion+",
+
                     "--base-paths",
                     "${workspaceFolder}",
+
+                    // "--package-select",
+                    // "drqp_serial",
+
+                    // "--executor=sequential",
+
                     "--cmake-args",
-                    "-GNinja",
-                    "-DCMAKE_BUILD_TYPE=Debug"
+                    " -GNinja",
+                    " -DCMAKE_BUILD_TYPE=Debug",
+                    // " --debugger",
+                    // " --debugger-pipe=/tmp/drqp_serial"
                 ],
                 "problemMatcher": [
                     "$catkin-gcc"
@@ -77,7 +87,7 @@
                     "kind": "build",
                     "isDefault": true
                 },
-                "label": "colcon: build",
+                "label": "Dr.QP colcon build",
                 "options": {
                     "env": {
                         "CMAKE_EXPORT_COMPILE_COMMANDS": "1",
@@ -102,10 +112,10 @@
                     "kind": "test",
                     "isDefault": true
                 },
-                "label": "colcon: test"
+                "label": "Dr.QP colcon test"
             },
             {
-                "label": "Full clean",
+                "label": "Dr.QP clean",
                 "type": "shell",
                 "command": "rm -rf build install log",
                 "options": {
