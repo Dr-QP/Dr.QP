@@ -27,9 +27,11 @@
 #include "RecordingProxy.h"
 #include "drqp_serial/SerialProtocol.h"
 
-namespace RecordingProxy {
-class SerialPlayer : public SerialProtocol {
- public:
+namespace RecordingProxy
+{
+class SerialPlayer : public SerialProtocol
+{
+public:
   void begin(const uint32_t baudRate, const uint8_t transferConfig) override;
   size_t write(uint8_t byte) override;
   bool available() override;
@@ -41,7 +43,7 @@ class SerialPlayer : public SerialProtocol {
 
   void load(const std::string& fileName);
 
- private:
+private:
   Record currentRecord_;
   OperationType lastOperation_;
   std::deque<Record> records_;

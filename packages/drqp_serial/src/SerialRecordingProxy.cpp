@@ -24,20 +24,26 @@
 
 #include <boost/archive/text_oarchive.hpp>
 
-namespace RecordingProxy {
+namespace RecordingProxy
+{
 
 SerialRecordingProxy::SerialRecordingProxy(SerialProtocol& decorated, const std::string& filename)
-  : SerialDecorator(decorated), lastOperation_(OperationType::kUndefined), fileName_(filename) {}
+: SerialDecorator(decorated), lastOperation_(OperationType::kUndefined), fileName_(filename)
+{
+}
 
-SerialRecordingProxy::~SerialRecordingProxy() {
+SerialRecordingProxy::~SerialRecordingProxy()
+{
   save();
 }
 
-void SerialRecordingProxy::begin(const uint32_t baudRate, const uint8_t transferConfig) {
+void SerialRecordingProxy::begin(const uint32_t baudRate, const uint8_t transferConfig)
+{
   super::begin(baudRate, transferConfig);
 }
 
-size_t SerialRecordingProxy::write(uint8_t byte) {
+size_t SerialRecordingProxy::write(uint8_t byte)
+{
   startNewRecordIfNeeded();
   size_t result = super::write(byte);
   currentRecord_.request.bytes.push_back(byte);
@@ -46,7 +52,8 @@ size_t SerialRecordingProxy::write(uint8_t byte) {
   return result;
 }
 
-void SerialRecordingProxy::startNewRecordIfNeeded() {
+void SerialRecordingProxy::startNewRecordIfNeeded()
+{
   if (lastOperation_ == OperationType::kRead) {
     records_.push_back(currentRecord_);
 
@@ -54,7 +61,8 @@ void SerialRecordingProxy::startNewRecordIfNeeded() {
   }
 }
 
-void SerialRecordingProxy::save() {
+void SerialRecordingProxy::save()
+{
   startNewRecordIfNeeded();  // flush current record
 
   std::ofstream file(fileName_, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
@@ -63,15 +71,18 @@ void SerialRecordingProxy::save() {
   archive & records_;
 }
 
-bool SerialRecordingProxy::available() {
+bool SerialRecordingProxy::available()
+{
   return super::available();
 }
 
-uint8_t SerialRecordingProxy::peek() {
+uint8_t SerialRecordingProxy::peek()
+{
   return super::peek();
 }
 
-uint8_t SerialRecordingProxy::read() {
+uint8_t SerialRecordingProxy::read()
+{
   auto result = super::read();
   currentRecord_.response.bytes.push_back(result);
 

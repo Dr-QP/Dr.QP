@@ -24,8 +24,9 @@
 
 #include "drqp_serial/SerialProtocol.h"
 
-class SerialDecorator : public SerialProtocol {
- public:
+class SerialDecorator : public SerialProtocol
+{
+public:
   typedef SerialProtocol super;
   explicit SerialDecorator(SerialProtocol& decorated);
 
@@ -36,6 +37,6 @@ class SerialDecorator : public SerialProtocol {
   uint8_t peek() override;
   uint8_t read() override;
 
- private:
+private:
   SerialProtocol& decorated_;
 };

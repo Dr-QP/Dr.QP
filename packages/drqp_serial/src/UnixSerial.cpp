@@ -29,7 +29,8 @@
 
 // #include <boost/asio/io_service.hpp>
 // #include <boost/asio/serial_port.hpp>
-struct UnixSerial::Impl {
+struct UnixSerial::Impl
+{
   boost::asio::io_service ioService_;
   boost::asio::serial_port serial_;
 
@@ -37,13 +38,16 @@ struct UnixSerial::Impl {
   bool everRead_;
 
   explicit Impl(const std::string& fileName)
-    : serial_(ioService_, fileName), lastRead_(0), everRead_(false) {}
+  : serial_(ioService_, fileName), lastRead_(0), everRead_(false)
+  {
+  }
 };
 
 /// @brief Returns the number of bytes available for reading from a serial
 ///        port without blocking.
-std::size_t get_bytes_available(boost::asio::serial_port& serial_port,
-                                boost::system::error_code& error) {
+std::size_t get_bytes_available(
+  boost::asio::serial_port& serial_port, boost::system::error_code& error)
+{
   error = boost::system::error_code();
   int value = 0;
 #if defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
@@ -67,7 +71,8 @@ std::size_t get_bytes_available(boost::asio::serial_port& serial_port,
 
 /// @brief Returns the number of bytes available for reading from a serial
 ///        port without blocking.  Throws on error.
-std::size_t get_bytes_available(boost::asio::serial_port& serial_port) {
+std::size_t get_bytes_available(boost::asio::serial_port& serial_port)
+{
   boost::system::error_code error;
   std::size_t bytes_available = get_bytes_available(serial_port, error);
   if (error) {
@@ -80,7 +85,8 @@ UnixSerial::UnixSerial(const std::string& fileName) : impl_(std::make_unique<Imp
 
 UnixSerial::~UnixSerial() = default;
 
-void UnixSerial::begin(const uint32_t baudRate, const uint8_t transferConfig) {
+void UnixSerial::begin(const uint32_t baudRate, const uint8_t transferConfig)
+{
   using boost::asio::serial_port_base;
 
   impl_->serial_.set_option(serial_port_base::baud_rate(baudRate));
@@ -90,15 +96,18 @@ void UnixSerial::begin(const uint32_t baudRate, const uint8_t transferConfig) {
   impl_->serial_.set_option(serial_port_base::stop_bits(serial_port_base::stop_bits::one));
 }
 
-size_t UnixSerial::write(uint8_t byte) {
+size_t UnixSerial::write(uint8_t byte)
+{
   return write(&byte, 1);
 }
 
-size_t UnixSerial::write(const uint8_t* data, size_t size) {
+size_t UnixSerial::write(const uint8_t* data, size_t size)
+{
   return boost::asio::write(impl_->serial_, boost::asio::buffer(data, size));
 }
 
-void UnixSerial::flushRead() {
+void UnixSerial::flushRead()
+{
   size_t bytes = get_bytes_available(impl_->serial_);
   if (bytes > 0) {
     std::vector<uint8_t> buf;
@@ -107,11 +116,13 @@ void UnixSerial::flushRead() {
   }
 }
 
-bool UnixSerial::available() {
+bool UnixSerial::available()
+{
   return get_bytes_available(impl_->serial_) != 0;
 }
 
-uint8_t UnixSerial::peek() {
+uint8_t UnixSerial::peek()
+{
   if (!available()) {
     return kNoData;
   }
@@ -121,7 +132,8 @@ uint8_t UnixSerial::peek() {
   return impl_->lastRead_;
 }
 
-uint8_t UnixSerial::read() {
+uint8_t UnixSerial::read()
+{
   // if (!available()) {
   //     return kNoData;
   // }
@@ -130,7 +142,8 @@ uint8_t UnixSerial::read() {
   return impl_->lastRead_;
 }
 
-size_t UnixSerial::readBytes(uint8_t* buffer, size_t size) {
+size_t UnixSerial::readBytes(uint8_t* buffer, size_t size)
+{
   impl_->everRead_ = true;
   return boost::asio::read(impl_->serial_, boost::asio::buffer(buffer, size));
 }

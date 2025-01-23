@@ -28,8 +28,9 @@
 
 using tcp = boost::asio::ip::tcp;
 
-class TcpSerial : public SerialProtocol {
- public:
+class TcpSerial : public SerialProtocol
+{
+public:
   TcpSerial(const std::string& ip, uint16_t port);
 
   using SerialProtocol::begin;
@@ -44,7 +45,7 @@ class TcpSerial : public SerialProtocol {
   size_t write(const uint8_t* data, size_t size) override;
   size_t readBytes(uint8_t* buffer, size_t size) override;
 
- private:
+private:
   boost::asio::io_service ioService_;
   tcp::socket socket_;
 

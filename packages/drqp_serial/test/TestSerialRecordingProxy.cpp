@@ -25,7 +25,8 @@
 #include "drqp_serial/UnixSerial.h"
 #include "drqp_serial/doctest.h"
 
-void simpleSerialTest(SerialProtocol& serial) {
+void simpleSerialTest(SerialProtocol& serial)
+{
   serial.begin(115200);
 
   REQUIRE(serial.write('a') == 1);
@@ -50,11 +51,14 @@ void simpleSerialTest(SerialProtocol& serial) {
   REQUIRE(read == "hello\n");
 }
 
-SCENARIO("test unix serial with serial proxy") {
+SCENARIO("test unix serial with serial proxy")
+{
   static const char* const kSerialRecordingFileName = "tests/test_data/serial_recording.txt";
 
-  WHEN("recording does not exists") {
-    THEN("record it") {
+  WHEN("recording does not exists")
+  {
+    THEN("record it")
+    {
       //            UnixSerial unixSerial("/dev/ttys000");
       ////            UnixSerial unixSerial("/dev/cu.SLAB_USBtoUART");
       //
@@ -63,12 +67,14 @@ SCENARIO("test unix serial with serial proxy") {
     }
   }
 
-  WHEN("recording exists") {
+  WHEN("recording exists")
+  {
     RecordingProxy::SerialPlayer serial;
 
     serial.load(kSerialRecordingFileName);
 
-    THEN("same test should give same results") {
+    THEN("same test should give same results")
+    {
       simpleSerialTest(serial);
     }
   }

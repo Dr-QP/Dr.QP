@@ -73,7 +73,8 @@ enum class XYZrobotServoError {
 
 template <class charT, class charTraitsT>
 static inline std::basic_ostream<charT, charTraitsT>& operator<<(
-    std::basic_ostream<charT, charTraitsT>& out, XYZrobotServoError errorCode) {
+  std::basic_ostream<charT, charTraitsT>& out, XYZrobotServoError errorCode)
+{
   out << "A1-16 servo error ";
   switch (errorCode) {
   case XYZrobotServoError::None:
@@ -143,7 +144,8 @@ enum class XYZrobotServoBaudRate {
   B115200 = 12,
 };
 
-static inline uint32_t XYZrobotServoBaudRateToInt(XYZrobotServoBaudRate baud) {
+static inline uint32_t XYZrobotServoBaudRateToInt(XYZrobotServoBaudRate baud)
+{
   switch (baud) {
   case XYZrobotServoBaudRate::B9600:
     return 9600;
@@ -178,7 +180,8 @@ enum class XYZrobotServoSpdctrlPolicy {
 };
 
 /// This struct represents the data returned by a STAT command.
-struct XYZrobotServoStatus {
+struct XYZrobotServoStatus
+{
   uint8_t statusError;
   uint8_t statusDetail;
   uint16_t pwm;
@@ -187,8 +190,9 @@ struct XYZrobotServoStatus {
   uint16_t iBus;
 } __attribute__((packed));
 
-class XYZrobotServo {
- public:
+class XYZrobotServo
+{
+public:
   XYZrobotServo(Stream&, uint8_t id);
 
   /// Writes data from the specified buffer to the servo's EEPROM.
@@ -299,14 +303,16 @@ class XYZrobotServo {
   /// Uses a STAT command to read the current PWM duty cycle.
   ///
   /// See readStatus().
-  uint16_t readPwm() {
+  uint16_t readPwm()
+  {
     return readStatus().pwm;
   }
 
   /// Uses a STAT command to read the servo position.
   ///
   /// See readStatus().
-  uint16_t readPosition() {
+  uint16_t readPosition()
+  {
     return readStatus().position;
   }
 
@@ -316,14 +322,16 @@ class XYZrobotServo {
   /// position.
   ///
   /// See readStatus().
-  uint16_t readPosRef() {
+  uint16_t readPosRef()
+  {
     return readStatus().posRef;
   }
 
   /// Uses a STAT command to read the bus current.
   ///
   /// See readStatus().
-  uint16_t readIBus() {
+  uint16_t readIBus()
+  {
     return readStatus().iBus;
   }
 
@@ -378,29 +386,34 @@ class XYZrobotServo {
   /// Returns the communication error from the last command.  The return value
   /// will be 0 if there was no error and non-zero if there was an error.  The
   /// return value will be one of the values of the XYZrobotServoError enum.
-  XYZrobotServoError getLastError() const {
+  XYZrobotServoError getLastError() const
+  {
     return lastError;
   }
-  bool isOk() const {
+  bool isOk() const
+  {
     return getLastError() == XYZrobotServoError::None;
   }
-  bool isFailed() const {
+  bool isFailed() const
+  {
     return getLastError() != XYZrobotServoError::None;
   }
 
   /// Get the servo ID assigned to this object.
-  uint8_t getId() const {
+  uint8_t getId() const
+  {
     return id;
   }
 
- private:
+private:
   void flushRead();
 
-  void sendRequest(uint8_t cmd, const uint8_t* data1, uint8_t data1Size,
-                   const uint8_t* data2 = NULL, uint8_t data2Size = 0);
+  void sendRequest(
+    uint8_t cmd, const uint8_t* data1, uint8_t data1Size, const uint8_t* data2 = NULL,
+    uint8_t data2Size = 0);
 
-  void readAck(uint8_t cmd, uint8_t* data1, uint8_t data1Size, uint8_t* data2 = NULL,
-               uint8_t data2Size = 0);
+  void readAck(
+    uint8_t cmd, uint8_t* data1, uint8_t data1Size, uint8_t* data2 = NULL, uint8_t data2Size = 0);
 
   void memoryWrite(uint8_t cmd, uint8_t startAddress, const uint8_t* data, uint8_t dataSize);
 

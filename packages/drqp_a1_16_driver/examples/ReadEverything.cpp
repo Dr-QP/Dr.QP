@@ -54,7 +54,8 @@ UnixSerial servoSerial("/dev/ttySC0");  // on Dr.QP raspi
 
 XYZrobotServo servo(servoSerial, servoId);
 
-void setup() {
+void setup()
+{
   // Serial.begin(115200); // console output
 
   // 115200 8N1 => 11520 B/s / 24 frames = 480 Bytes Per Frame / 18 servos = 26
@@ -69,7 +70,8 @@ void setup() {
   // pinMode(DDD2, INPUT_PULLUP);
 }
 
-struct CustomStatus48 {
+struct CustomStatus48
+{
   uint8_t statusError;
   uint8_t statusDetail;
   uint8_t reserved[3];
@@ -89,7 +91,8 @@ struct CustomStatus48 {
   uint16_t speedRef;  // 18 + 8 = 26
 } __attribute__((packed));
 
-void readAndPrintStatus(XYZrobotServo& servo) {
+void readAndPrintStatus(XYZrobotServo& servo)
+{
   XYZrobotServoStatus status = servo.readStatus();
   if (servo.isFailed()) {
     std::cout << "error reading status: " << servo.getLastError() << std::endl;
@@ -110,7 +113,8 @@ void readAndPrintStatus(XYZrobotServo& servo) {
   }
 }
 
-CustomStatus48 readCustomStatus(XYZrobotServo& servo) {
+CustomStatus48 readCustomStatus(XYZrobotServo& servo)
+{
   CustomStatus48 status;
   const size_t statusSize = sizeof(CustomStatus48);
   servo.ramRead(48, reinterpret_cast<uint8_t*>(&status), statusSize);
@@ -138,7 +142,8 @@ CustomStatus48 readCustomStatus(XYZrobotServo& servo) {
   return status;
 }
 
-void readAndPrintRAM(XYZrobotServo& servo) {
+void readAndPrintRAM(XYZrobotServo& servo)
+{
   uint8_t ram[80];
   servo.ramRead(0, ram, 30);
   if (servo.isOk()) {
@@ -241,7 +246,8 @@ void readAndPrintRAM(XYZrobotServo& servo) {
   }
 }
 
-void readAndPrintEEPROM(XYZrobotServo& servo) {
+void readAndPrintEEPROM(XYZrobotServo& servo)
+{
   uint8_t eeprom[54];
   servo.eepromRead(0, eeprom, 30);
   if (servo.isOk()) {
@@ -321,7 +327,8 @@ void readAndPrintEEPROM(XYZrobotServo& servo) {
   }
 }
 
-void readEverything(XYZrobotServo& servo) {
+void readEverything(XYZrobotServo& servo)
+{
   // readAndPrintStatus(servo);
   // readAndPrintRAM(servo);
   // readAndPrintEEPROM(servo);
@@ -330,7 +337,8 @@ void readEverything(XYZrobotServo& servo) {
   std::cout << "\n";
 }
 
-void readLoop() {
+void readLoop()
+{
   using namespace std::chrono_literals;
 
   std::this_thread::sleep_for(1s);
@@ -344,7 +352,8 @@ int pos = (MaxPosition - MinPosition) / 2;
 const int playtime = 200;
 int stepSize = (MaxPosition - MinPosition) / 10;
 
-void setPos() {
+void setPos()
+{
   using namespace std::chrono_literals;
 
   // readCustomStatus(servo);
@@ -389,18 +398,21 @@ void setPos() {
   std::this_thread::sleep_for(std::chrono::milliseconds(playtime));
 }
 
-uint8_t randomByte() {
+uint8_t randomByte()
+{
   static unsigned int seed = time(nullptr);
   return rand_r(&seed) % 255;
 }
 
-void testWrite() {
+void testWrite()
+{
   uint8_t byte = randomByte();
   std::cout << "write " << std::dec << byte << "\n";
   servoSerial.write(byte);
 }
 
-void testRoundtrip() {
+void testRoundtrip()
+{
   using namespace std::chrono_literals;
 
   std::this_thread::sleep_for(500ms);
@@ -414,12 +426,14 @@ void testRoundtrip() {
   std::cout << "read " << std::dec << byte << "\n";
 }
 
-void signal_callback_handler(int signum) {
+void signal_callback_handler(int signum)
+{
   std::cout << "Caught signal " << signum << std::endl;
   std::exit(signum);
 }
 
-int main() {
+int main()
+{
   std::atexit([]() { servo.torqueOff(); });
   signal(SIGINT, signal_callback_handler);
   signal(SIGHUP, signal_callback_handler);

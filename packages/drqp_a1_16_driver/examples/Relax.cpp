@@ -23,7 +23,8 @@
 #include "drqp_serial/TcpSerial.h"
 #include "drqp_serial/UnixSerial.h"
 
-int main() {
+int main()
+{
   // TcpSerial servoSerial("192.168.1.136", 2022);
   UnixSerial servoSerial("/dev/ttySC0");
 

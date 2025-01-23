@@ -27,10 +27,12 @@
 
 #include "drqp_serial/doctest.h"
 
-namespace RecordingProxy {
+namespace RecordingProxy
+{
 void SerialPlayer::begin(const uint32_t baudRate, const uint8_t transferConfig) {}
 
-size_t SerialPlayer::write(const uint8_t* data, size_t size) {
+size_t SerialPlayer::write(const uint8_t* data, size_t size)
+{
   size_t result = 0;
   assert(data);
   while (size) {
@@ -42,22 +44,26 @@ size_t SerialPlayer::write(const uint8_t* data, size_t size) {
   return result;
 }
 
-size_t SerialPlayer::write(uint8_t byte) {
+size_t SerialPlayer::write(uint8_t byte)
+{
   Record& current = currentRecord();
   REQUIRE(current.request.bytes.front() == byte);
   current.request.bytes.pop_front();
   return 1;
 }
 
-bool SerialPlayer::available() {
+bool SerialPlayer::available()
+{
   return currentRecord().response.bytes.size() > 0;
 }
 
-uint8_t SerialPlayer::peek() {
+uint8_t SerialPlayer::peek()
+{
   return currentRecord().response.bytes.front();
 }
 
-size_t SerialPlayer::readBytes(uint8_t* buffer, size_t size) {
+size_t SerialPlayer::readBytes(uint8_t* buffer, size_t size)
+{
   assert(buffer);
 
   const size_t result = size;
@@ -70,7 +76,8 @@ size_t SerialPlayer::readBytes(uint8_t* buffer, size_t size) {
   return result;
 }
 
-uint8_t SerialPlayer::read() {
+uint8_t SerialPlayer::read()
+{
   auto val = currentRecord().response.bytes.front();
   currentRecord_.response.bytes.pop_front();
   return val;
@@ -78,7 +85,8 @@ uint8_t SerialPlayer::read() {
 
 void SerialPlayer::flushRead() {}
 
-Record& SerialPlayer::currentRecord() {
+Record& SerialPlayer::currentRecord()
+{
   if (currentRecord_.empty()) {
     REQUIRE(records_.size() != 0);
 
@@ -88,7 +96,8 @@ Record& SerialPlayer::currentRecord() {
   return currentRecord_;
 }
 
-void SerialPlayer::load(const std::string& fileName) {
+void SerialPlayer::load(const std::string& fileName)
+{
   std::ifstream file(fileName);
   boost::archive::text_iarchive archive(file);
 

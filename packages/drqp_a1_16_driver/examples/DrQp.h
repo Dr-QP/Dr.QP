@@ -47,7 +47,8 @@ constexpr const ServoId kServoMaxId = kServoMinId + kServosPerLeg * kLegIdCount;
 
 using ServoIdsArray = std::array<ServoId, kServoMaxId - kServoMinId>;
 
-static inline ServoIdsArray servoIdsRange() {
+static inline ServoIdsArray servoIdsRange()
+{
   ServoIdsArray result;
   size_t i = 0;
   for (ServoId id = kServoMinId; id < kServoMaxId; ++id, ++i) {
@@ -102,7 +103,8 @@ const AllLegsNamesArray kAllLegsNames = []() {
   return legs;
 }();
 
-static inline std::string legNameForServo(ServoId id) {
+static inline std::string legNameForServo(ServoId id)
+{
   return kAllLegsNames[kServoIdToLeg[id]];
 }
 
@@ -136,8 +138,8 @@ const Pose kNeutralPose = []() {
   const int16_t kLeft = -1;
 
   legs[kFrontRightLegId] = legs[kMiddleRightLegId] = legs[kBackRightLegId] = {
-      kBase + kCoxaOffset, kBase + kRight * kFemurOffset, kBase + kRight * kTibiaOffset};
+    kBase + kCoxaOffset, kBase + kRight * kFemurOffset, kBase + kRight * kTibiaOffset};
   legs[kFrontLeftLegId] = legs[kMiddleLeftLegId] = legs[kBackLeftLegId] = {
-      kBase + kCoxaOffset, kBase + kLeft * kFemurOffset, kBase + kLeft * kTibiaOffset};
+    kBase + kCoxaOffset, kBase + kLeft * kFemurOffset, kBase + kLeft * kTibiaOffset};
   return legs;
 }();

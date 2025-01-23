@@ -24,46 +24,56 @@
 
 #include <boost/serialization/deque.hpp>
 
-namespace RecordingProxy {
+namespace RecordingProxy
+{
 enum class OperationType { kUndefined, kRead, kWrite };
 
-struct Request {
+struct Request
+{
   std::deque<uint8_t> bytes;
 
   template <class Archive>
-  void serialize(Archive& ar, const unsigned int version) {
+  void serialize(Archive& ar, const unsigned int version)
+  {
     ar & bytes;
   }
 
-  bool empty() const {
+  bool empty() const
+  {
     return bytes.empty();
   }
 };
 
-struct Response {
+struct Response
+{
   std::deque<uint8_t> bytes;
 
   template <class Archive>
-  void serialize(Archive& ar, const unsigned int version) {
+  void serialize(Archive& ar, const unsigned int version)
+  {
     ar & bytes;
   }
 
-  bool empty() const {
+  bool empty() const
+  {
     return bytes.empty();
   }
 };
 
-struct Record {
+struct Record
+{
   Request request;
   Response response;
 
   template <class Archive>
-  void serialize(Archive& ar, const unsigned int version) {
+  void serialize(Archive& ar, const unsigned int version)
+  {
     ar & request;
     ar & response;
   }
 
-  bool empty() const {
+  bool empty() const
+  {
     return request.empty() && response.empty();
   }
 };

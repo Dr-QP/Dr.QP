@@ -24,8 +24,9 @@
 
 #include <cstddef>
 
-class Stream {
- public:
+class Stream
+{
+public:
   virtual bool available() = 0;
   virtual void flushRead() = 0;
   virtual uint8_t peek() = 0;

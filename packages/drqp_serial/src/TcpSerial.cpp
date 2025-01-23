@@ -29,29 +29,34 @@
 #include <boost/asio/write.hpp>
 #include <boost/thread.hpp>
 
-tcp::resolver::iterator resolve(boost::asio::io_service& ioService, const std::string& ip,
-                                uint16_t port) {
+tcp::resolver::iterator resolve(
+  boost::asio::io_service& ioService, const std::string& ip, uint16_t port)
+{
   tcp::resolver resolver(ioService);
   tcp::resolver::query query(ip, std::to_string(port));
   return resolver.resolve(query);
 }
 
 TcpSerial::TcpSerial(const std::string& ip, uint16_t port)
-  : socket_(ioService_), lastRead_(0), everRead_(false) {
+: socket_(ioService_), lastRead_(0), everRead_(false)
+{
   connect(socket_, resolve(ioService_, ip, port));
 }
 
 void TcpSerial::begin(const uint32_t baudRate, const uint8_t transferConfig) {}
 
-size_t TcpSerial::write(uint8_t byte) {
+size_t TcpSerial::write(uint8_t byte)
+{
   return write(&byte, 1);
 }
 
-size_t TcpSerial::write(const uint8_t* data, size_t size) {
+size_t TcpSerial::write(const uint8_t* data, size_t size)
+{
   return boost::asio::write(socket_, boost::asio::buffer(data, size));
 }
 
-void TcpSerial::flushRead() {
+void TcpSerial::flushRead()
+{
   boost::asio::socket_base::bytes_readable command(true);
   socket_.io_control(command);
   const std::size_t bytesReadable = command.get();
@@ -63,7 +68,8 @@ void TcpSerial::flushRead() {
   }
 }
 
-bool TcpSerial::available() {
+bool TcpSerial::available()
+{
   boost::asio::socket_base::bytes_readable command(true);
   socket_.io_control(command);
   const std::size_t bytesReadable = command.get();
@@ -71,7 +77,8 @@ bool TcpSerial::available() {
   return bytesReadable != 0;
 }
 
-uint8_t TcpSerial::peek() {
+uint8_t TcpSerial::peek()
+{
   if (!available()) {
     return kNoData;
   }
@@ -109,8 +116,9 @@ uint8_t TcpSerial::peek() {
 // }
 
 template <typename MutableBufferSequence>
-size_t read_with_timeout(boost::asio::io_service& ioService, tcp::socket& sock,
-                         const MutableBufferSequence& buffers) {
+size_t read_with_timeout(
+  boost::asio::io_service& ioService, tcp::socket& sock, const MutableBufferSequence& buffers)
+{
   std::optional<boost::system::error_code> timer_result;
   boost::asio::deadline_timer timer(ioService);
   timer.expires_from_now(boost::posix_time::milliseconds(50));
@@ -140,7 +148,8 @@ size_t read_with_timeout(boost::asio::io_service& ioService, tcp::socket& sock,
   return *bytesTransferred;
 }
 
-uint8_t TcpSerial::read() {
+uint8_t TcpSerial::read()
+{
   // if (!available()) {
   //     return kNoData;
   // }
@@ -149,7 +158,8 @@ uint8_t TcpSerial::read() {
   return lastRead_;
 }
 
-size_t TcpSerial::readBytes(uint8_t* buffer, size_t size) {
+size_t TcpSerial::readBytes(uint8_t* buffer, size_t size)
+{
   everRead_ = true;
   return read_with_timeout(ioService_, socket_, boost::asio::buffer(buffer, size));
 }

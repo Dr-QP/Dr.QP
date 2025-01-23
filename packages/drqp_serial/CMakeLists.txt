@@ -62,7 +62,7 @@ if(BUILD_TESTING)
   )
 
   set(AMENT_LINT_AUTO_FILE_EXCLUDE "include/drqp_serial/doctest.h")
-
+  set(AMENT_CMAKE_CLANG_FORMAT_CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
 endif()
