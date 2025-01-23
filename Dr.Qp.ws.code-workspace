@@ -37,6 +37,19 @@
             "vadimcn.vscode-lldb",
         ]
     },
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+          {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Launch C++",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": [],
+            "cwd": "${workspaceFolder}"
+          }
+        ]
+      },
     "tasks": {
         "version": "2.0.0",
         "tasks": [
@@ -115,6 +128,8 @@
     },
     "settings": {
         "ros.distro": "humble",
+        "ament-task-provider.envSetup": "source /opt/ros/humble/setup.bash",
+
         "python.autoComplete.extraPaths": [
             "/opt/ros/humble/lib/python3.10/site-packages",
             "/opt/ros/humble/local/lib/python3.10/dist-packages"
@@ -134,5 +149,6 @@
     
         "clangd.enable": true,
         "C_Cpp.intelliSenseEngine": "disabled",
-    }
+
+    },
 }
