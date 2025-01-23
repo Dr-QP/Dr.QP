@@ -20,6 +20,8 @@
 
 #include "drqp_serial/SerialRecordingProxy.h"
 
+#include <fstream>
+
 #include <boost/archive/text_oarchive.hpp>
 
 namespace RecordingProxy {

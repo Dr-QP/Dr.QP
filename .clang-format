@@ -18,6 +18,27 @@ SpacesBeforeTrailingComments: 2
 Cpp11BracedListStyle: true
 AllowAllParametersOfDeclarationOnNextLine: false
 SortIncludes: true
-IncludeBlocks: Regroup
 MaxEmptyLinesToKeep: 1
 InsertNewlineAtEOF: true
+
+IncludeBlocks: Regroup
+IncludeCategories:
+  # Standard C headers in <.h>
+  - Regex: '<[-\w\/-_]+\.h>'
+    Priority: 1
+
+  # Standard C++ headers in <>
+  - Regex: '<[-\w\/-_]+>'
+    Priority: 2
+
+  # Specific external headers in <> to put first
+  - Regex: '<(catch2|gtest|doctest).*>'
+    Priority: 3
+
+  # External headers in <> with extension or /
+  - Regex: '<[-\w\/-_]+[\.\/][-\w\/-_]+>'
+    Priority: 4
+
+  # Local headers in ""
+  - Regex: '"[-\w\/-_]*"'
+    Priority: 5

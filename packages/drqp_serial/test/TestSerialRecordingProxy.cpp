@@ -20,10 +20,10 @@
 
 #include <boost/thread.hpp>
 
-#include "SerialPlayer.h"
-#include "SerialRecordingProxy.h"
-#include "drqp_serial/doctest.h"
+#include "drqp_serial/SerialPlayer.h"
+#include "drqp_serial/SerialRecordingProxy.h"
 #include "drqp_serial/UnixSerial.h"
+#include "drqp_serial/doctest.h"
 
 void simpleSerialTest(SerialProtocol& serial) {
   serial.begin(115200);

@@ -20,8 +20,9 @@
 
 #pragma once
 
-#include <boost/serialization/deque.hpp>
 #include <deque>
+
+#include <boost/serialization/deque.hpp>
 
 namespace RecordingProxy {
 enum class OperationType { kUndefined, kRead, kWrite };

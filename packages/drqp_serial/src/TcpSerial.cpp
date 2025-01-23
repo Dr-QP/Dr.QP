@@ -20,13 +20,14 @@
 
 #include "drqp_serial/TcpSerial.h"
 
+#include <iostream>
+#include <optional>
+#include <vector>
+
 #include <boost/asio.hpp>
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
 #include <boost/thread.hpp>
-#include <iostream>
-#include <optional>
-#include <vector>
 
 tcp::resolver::iterator resolve(boost::asio::io_service& ioService, const std::string& ip,
                                 uint16_t port) {

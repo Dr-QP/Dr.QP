@@ -27,7 +27,7 @@
 class SerialDecorator : public SerialProtocol {
  public:
   typedef SerialProtocol super;
-  SerialDecorator(SerialProtocol& decorated);
+  explicit SerialDecorator(SerialProtocol& decorated);
 
   using super::begin;
   void begin(const uint32_t baudRate, const uint8_t transferConfig) override;

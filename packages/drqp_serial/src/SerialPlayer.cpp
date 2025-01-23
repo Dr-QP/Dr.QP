@@ -20,9 +20,10 @@
 
 #include "drqp_serial/SerialPlayer.h"
 
-#include <boost/archive/text_iarchive.hpp>
 #include <cassert>
 #include <fstream>
+
+#include <boost/archive/text_iarchive.hpp>
 
 #include "drqp_serial/doctest.h"
 

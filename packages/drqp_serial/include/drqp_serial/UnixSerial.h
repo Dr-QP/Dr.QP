@@ -18,30 +18,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#pragma once 
+#pragma once
 
-#include "drqp_serial/SerialProtocol.h"
 #include <memory>
 
-class UnixSerial: public SerialProtocol
-{
-public:
-    UnixSerial(const std::string& fileName);
-    ~UnixSerial();
+#include "drqp_serial/SerialProtocol.h"
 
-    using SerialProtocol::begin;
-    void begin(const uint32_t baudRate, const uint8_t transferConfig) override;
-    size_t write(uint8_t byte) override;
-    bool available() override;
-    void flushRead() override;
-    uint8_t peek() override;
-    uint8_t read() override;
+class UnixSerial : public SerialProtocol {
+ public:
+  UnixSerial(const std::string& fileName);
+  ~UnixSerial();
 
-    size_t write(const uint8_t *data, size_t size) override;
-    size_t readBytes(uint8_t *buffer, size_t size) override;
-private:
-    struct Impl;
-    std::unique_ptr<Impl> impl_;
+  using SerialProtocol::begin;
+  void begin(const uint32_t baudRate, const uint8_t transferConfig) override;
+  size_t write(uint8_t byte) override;
+  bool available() override;
+  void flushRead() override;
+  uint8_t peek() override;
+  uint8_t read() override;
+
+  size_t write(const uint8_t* data, size_t size) override;
+  size_t readBytes(uint8_t* buffer, size_t size) override;
+
+ private:
+  struct Impl;
+  std::unique_ptr<Impl> impl_;
 };
-
-
