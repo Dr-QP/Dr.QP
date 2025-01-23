@@ -16,6 +16,7 @@ cmake-build-*
 .vscode/*
 !.vscode/extensions.json
 !.vscode/launch.json
+!.vscode/*.code-snippets
 
 src/crab_description
 src/urdf_tutorial
