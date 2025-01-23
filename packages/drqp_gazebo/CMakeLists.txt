@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.30..3.31)
 project(drqp_gazebo)
 
 find_package(ament_cmake REQUIRED)
