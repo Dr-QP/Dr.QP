@@ -19,75 +19,62 @@
 // THE SOFTWARE.
 
 #include "drqp_serial/SerialRecordingProxy.h"
+
 #include <boost/archive/text_oarchive.hpp>
 
-namespace RecordingProxy
-{
+namespace RecordingProxy {
 
-SerialRecordingProxy::SerialRecordingProxy(SerialProtocol &decorated, const std::string &filename)
-    : SerialDecorator(decorated)
-    , lastOperation_(OperationType::kUndefined)
-    , fileName_(filename)
-{
+SerialRecordingProxy::SerialRecordingProxy(SerialProtocol& decorated, const std::string& filename)
+  : SerialDecorator(decorated), lastOperation_(OperationType::kUndefined), fileName_(filename) {}
 
+SerialRecordingProxy::~SerialRecordingProxy() {
+  save();
 }
 
-SerialRecordingProxy::~SerialRecordingProxy()
-{
-    save();
+void SerialRecordingProxy::begin(const uint32_t baudRate, const uint8_t transferConfig) {
+  super::begin(baudRate, transferConfig);
 }
 
-void SerialRecordingProxy::begin(const unsigned long baudRate, const uint8_t transferConfig)
-{
-    super::begin(baudRate, transferConfig);
+size_t SerialRecordingProxy::write(uint8_t byte) {
+  startNewRecordIfNeeded();
+  size_t result = super::write(byte);
+  currentRecord_.request.bytes.push_back(byte);
+
+  lastOperation_ = OperationType::kWrite;
+  return result;
 }
 
-size_t SerialRecordingProxy::write(uint8_t byte)
-{
-    startNewRecordIfNeeded();
-    size_t result = super::write(byte);
-    currentRecord_.request.bytes.push_back(byte);
+void SerialRecordingProxy::startNewRecordIfNeeded() {
+  if (lastOperation_ == OperationType::kRead) {
+    records_.push_back(currentRecord_);
 
-    lastOperation_ = OperationType::kWrite;
-    return result;
+    currentRecord_ = Record();
+  }
 }
 
-void SerialRecordingProxy::startNewRecordIfNeeded()
-{
-    if (lastOperation_ == OperationType::kRead) {
-        records_.push_back(currentRecord_);
+void SerialRecordingProxy::save() {
+  startNewRecordIfNeeded();  // flush current record
 
-        currentRecord_ = Record();
-    }
+  std::ofstream file(fileName_, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+  boost::archive::text_oarchive archive(file);
+
+  archive & records_;
 }
 
-void SerialRecordingProxy::save()
-{
-    startNewRecordIfNeeded(); // flush current record
-
-    std::ofstream file(fileName_, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
-    boost::archive::text_oarchive archive(file);
-
-    archive & records_;
+bool SerialRecordingProxy::available() {
+  return super::available();
 }
 
-bool SerialRecordingProxy::available()
-{
-    return super::available();
+uint8_t SerialRecordingProxy::peek() {
+  return super::peek();
 }
 
-uint8_t SerialRecordingProxy::peek()
-{
-    return super::peek();
-}
+uint8_t SerialRecordingProxy::read() {
+  auto result = super::read();
+  currentRecord_.response.bytes.push_back(result);
 
-uint8_t SerialRecordingProxy::read()
-{
-    auto result = super::read();
-    currentRecord_.response.bytes.push_back(result);
+  lastOperation_ = OperationType::kRead;
 
-    lastOperation_ = OperationType::kRead;
-
-    return result;
+  return result;
 }
-}
+}  // namespace RecordingProxy

@@ -40,7 +40,7 @@ public:
     ~SerialRecordingProxy();
 
     using super::begin;
-    void begin(const unsigned long baudRate, const uint8_t transferConfig) override;
+    void begin(const uint32_t baudRate, const uint8_t transferConfig) override;
     size_t write(uint8_t byte) override;
     bool available() override;
     uint8_t peek() override;

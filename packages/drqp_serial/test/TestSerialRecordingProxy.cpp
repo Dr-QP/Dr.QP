@@ -18,60 +18,58 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "doctest.h"
-
-#include "drqp_serial/UnixSerial.h"
-#include "SerialPlayer.h"
-#include "SerialRecordingProxy.h"
 #include <boost/thread.hpp>
 
-void simpleSerialTest(SerialProtocol &serial)
-{
-    serial.begin(115200);
+#include "SerialPlayer.h"
+#include "SerialRecordingProxy.h"
+#include "drqp_serial/doctest.h"
+#include "drqp_serial/UnixSerial.h"
 
-    REQUIRE(serial.write('a') == 1);
-    REQUIRE(serial.write('b') == 1);
-    REQUIRE(serial.write('c') == 1);
-    REQUIRE(serial.write('d') == 1);
-    REQUIRE(serial.write('e') == 1);
-    REQUIRE(serial.write('f') == 1);
-    REQUIRE(serial.write('g') == 1);
-    REQUIRE(serial.write('\n') == 1);
+void simpleSerialTest(SerialProtocol& serial) {
+  serial.begin(115200);
 
-    std::string read;
-    uint8_t lastRead = 0;
-    while (lastRead != '\n') {
-        if (serial.available()) {
-            lastRead = serial.read();
-            read += lastRead;
-        } else {
-            boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-        }
+  REQUIRE(serial.write('a') == 1);
+  REQUIRE(serial.write('b') == 1);
+  REQUIRE(serial.write('c') == 1);
+  REQUIRE(serial.write('d') == 1);
+  REQUIRE(serial.write('e') == 1);
+  REQUIRE(serial.write('f') == 1);
+  REQUIRE(serial.write('g') == 1);
+  REQUIRE(serial.write('\n') == 1);
+
+  std::string read;
+  uint8_t lastRead = 0;
+  while (lastRead != '\n') {
+    if (serial.available()) {
+      lastRead = serial.read();
+      read += lastRead;
+    } else {
+      boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     }
-    REQUIRE(read == "hello\n");
+  }
+  REQUIRE(read == "hello\n");
 }
 
-SCENARIO("test unix serial with serial proxy")
-{
-    static const char *const kSerialRecordingFileName = "tests/test_data/serial_recording.txt";
+SCENARIO("test unix serial with serial proxy") {
+  static const char* const kSerialRecordingFileName = "tests/test_data/serial_recording.txt";
 
-    WHEN("recording does not exists") {
-        THEN("record it") {
-//            UnixSerial unixSerial("/dev/ttys000");
-////            UnixSerial unixSerial("/dev/cu.SLAB_USBtoUART");
-//
-//            RecordingProxy::SerialRecordingProxy serial(unixSerial, kSerialRecordingFileName);
-//            simpleSerialTest(serial);
-        }
+  WHEN("recording does not exists") {
+    THEN("record it") {
+      //            UnixSerial unixSerial("/dev/ttys000");
+      ////            UnixSerial unixSerial("/dev/cu.SLAB_USBtoUART");
+      //
+      //            RecordingProxy::SerialRecordingProxy serial(unixSerial,
+      //            kSerialRecordingFileName); simpleSerialTest(serial);
     }
+  }
 
-    WHEN("recording exists") {
-        RecordingProxy::SerialPlayer serial;
+  WHEN("recording exists") {
+    RecordingProxy::SerialPlayer serial;
 
-        serial.load(kSerialRecordingFileName);
+    serial.load(kSerialRecordingFileName);
 
-        THEN("same test should give same results") {
-            simpleSerialTest(serial);
-        }
+    THEN("same test should give same results") {
+      simpleSerialTest(serial);
     }
+  }
 }

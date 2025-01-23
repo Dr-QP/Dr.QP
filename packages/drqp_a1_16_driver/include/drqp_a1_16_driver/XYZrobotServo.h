@@ -28,8 +28,7 @@
 
 /// The possible communication errors that can happen when reading the
 /// acknowledgment packet from a servo.
-enum class XYZrobotServoError
-{
+enum class XYZrobotServoError {
   /// No error.
   None = 0,
 
@@ -72,93 +71,97 @@ enum class XYZrobotServoError
   ReadLengthWrong = 17,
 };
 
-template<class charT, class charTraitsT>
+template <class charT, class charTraitsT>
 static inline std::basic_ostream<charT, charTraitsT>& operator<<(
-  std::basic_ostream<charT, charTraitsT>& out, XYZrobotServoError errorCode)
-{
+    std::basic_ostream<charT, charTraitsT>& out, XYZrobotServoError errorCode) {
   out << "A1-16 servo error ";
-  switch(errorCode)
-  {
-    case XYZrobotServoError::None:
-      out << "None: No error.";
-      break;
+  switch (errorCode) {
+  case XYZrobotServoError::None:
+    out << "None: No error.";
+    break;
 
-    case XYZrobotServoError::HeaderTimeout:
-      out << "HeaderTimeout: There was a timeout waiting to receive the 7-byte acknowledgment header.";
-      break;
+  case XYZrobotServoError::HeaderTimeout:
+    out << "HeaderTimeout: There was a timeout waiting to receive the 7-byte acknowledgment "
+           "header.";
+    break;
 
-    case XYZrobotServoError::HeaderByte1Wrong:
-      out << "HeaderByte1Wrong: The first byte of received header was not 0xFF.";
-      break;
+  case XYZrobotServoError::HeaderByte1Wrong:
+    out << "HeaderByte1Wrong: The first byte of received header was not 0xFF.";
+    break;
 
-    case XYZrobotServoError::HeaderByte2Wrong:
-      out << "HeaderByte2Wrong: The second byte of the received header was not 0xFF.";
-      break;
+  case XYZrobotServoError::HeaderByte2Wrong:
+    out << "HeaderByte2Wrong: The second byte of the received header was not 0xFF.";
+    break;
 
-    case XYZrobotServoError::IdWrong:
-      out << "IdWrong: The ID byte in the received header was wrong.";
-      break;
+  case XYZrobotServoError::IdWrong:
+    out << "IdWrong: The ID byte in the received header was wrong.";
+    break;
 
-    case XYZrobotServoError::CmdWrong:
-      out << "CmdWrong: The CMD bytes in the received header was wrong.";
-      break;
+  case XYZrobotServoError::CmdWrong:
+    out << "CmdWrong: The CMD bytes in the received header was wrong.";
+    break;
 
-    case XYZrobotServoError::SizeWrong:
-      out << "SizeWrong: The size byte in the received header was wrong.";
-      break;
+  case XYZrobotServoError::SizeWrong:
+    out << "SizeWrong: The size byte in the received header was wrong.";
+    break;
 
-    case XYZrobotServoError::Data1Timeout:
-      out << "Data1Timeout: There was a timeout reading the first expected block of data in the acknowledgment.";
-      break;
+  case XYZrobotServoError::Data1Timeout:
+    out << "Data1Timeout: There was a timeout reading the first expected block of data in the "
+           "acknowledgment.";
+    break;
 
-    case XYZrobotServoError::Data2Timeout:
-      out << "Data2Timeout: There was a timeout reading the second expected block of data in the acknowledgment.";
-      break;
+  case XYZrobotServoError::Data2Timeout:
+    out << "Data2Timeout: There was a timeout reading the second expected block of data in the "
+           "acknowledgment.";
+    break;
 
-    case XYZrobotServoError::Checksum1Wrong:
-      out << "Checksum1Wrong: The first byte of the checksum was wrong.";
-      break;
+  case XYZrobotServoError::Checksum1Wrong:
+    out << "Checksum1Wrong: The first byte of the checksum was wrong.";
+    break;
 
-    case XYZrobotServoError::Checksum2Wrong:
-      out << "Checksum2Wrong: The second byte of the checksum was wrong.";
-      break;
+  case XYZrobotServoError::Checksum2Wrong:
+    out << "Checksum2Wrong: The second byte of the checksum was wrong.";
+    break;
 
-    case XYZrobotServoError::ReadOffsetWrong:
-      out << "ReadOffsetWrong: The offset byte returned by an EEPROM Read or RAM Read command was wrong.";
-      break;
+  case XYZrobotServoError::ReadOffsetWrong:
+    out << "ReadOffsetWrong: The offset byte returned by an EEPROM Read or RAM Read command was "
+           "wrong.";
+    break;
 
-    case XYZrobotServoError::ReadLengthWrong:
-      out << "ReadLengthWrong: The length byte returned by an EEPROM Read or RAM Read command was wrong.";
-      break;
-  };
+  case XYZrobotServoError::ReadLengthWrong:
+    out << "ReadLengthWrong: The length byte returned by an EEPROM Read or RAM Read command was "
+           "wrong.";
+    break;
+  }
   return out;
 }
 
-enum class XYZrobotServoBaudRate
-{
+enum class XYZrobotServoBaudRate {
   B9600 = 1,
   B19200 = 2,
   B57600 = 6,
   B115200 = 12,
 };
 
-static inline uint32_t XYZrobotServoBaudRateToInt(XYZrobotServoBaudRate baud)
-{
-  switch (baud)
-  {
-  case XYZrobotServoBaudRate::B9600:   return 9600;
-  case XYZrobotServoBaudRate::B19200:  return 19200;
-  case XYZrobotServoBaudRate::B57600:  return 57600;
-  case XYZrobotServoBaudRate::B115200: return 115200;
-  default: return 0;
+static inline uint32_t XYZrobotServoBaudRateToInt(XYZrobotServoBaudRate baud) {
+  switch (baud) {
+  case XYZrobotServoBaudRate::B9600:
+    return 9600;
+  case XYZrobotServoBaudRate::B19200:
+    return 19200;
+  case XYZrobotServoBaudRate::B57600:
+    return 57600;
+  case XYZrobotServoBaudRate::B115200:
+    return 115200;
+  default:
+    return 0;
   }
 }
 
 /// The possible values for the ACK_Policy parameter stored in the servo's
 /// EEPROM and RAM.  This parameter determins which commands the servo will send
 /// an acknowledgment response for.
-enum class XYZrobotServoAckPolicy
-{
+enum class XYZrobotServoAckPolicy {
   // The servo only responds to STAT commands.
   OnlyStat = 0,
 
@@ -169,15 +172,13 @@ enum class XYZrobotServoAckPolicy
   All = 2,
 };
 
-enum class XYZrobotServoSpdctrlPolicy
-{
+enum class XYZrobotServoSpdctrlPolicy {
   OpenLoop = 0,
   CloseLoop = 1,
 };
 
 /// This struct represents the data returned by a STAT command.
-struct XYZrobotServoStatus
-{
+struct XYZrobotServoStatus {
   uint8_t statusError;
   uint8_t statusDetail;
   uint16_t pwm;
@@ -187,8 +188,8 @@ struct XYZrobotServoStatus
 } __attribute__((packed));
 
 class XYZrobotServo {
-public:
-  XYZrobotServo(Stream &, uint8_t id);
+ public:
+  XYZrobotServo(Stream&, uint8_t id);
 
   /// Writes data from the specified buffer to the servo's EEPROM.
   ///
@@ -196,22 +197,22 @@ public:
   /// before sending the next command to this servo, since writing to EEPROM
   /// takes some time and the servo cannot receive more commands until it is
   /// done.
-  void eepromWrite(uint8_t startAddress, const uint8_t *, uint8_t dataSize);
+  void eepromWrite(uint8_t startAddress, const uint8_t*, uint8_t dataSize);
 
   /// Reads data from the servo's EEPROM and stores it in the specified buffer.
   ///
   /// The data size should be 35 or less: otherwise the A1-16 seems to return a
   /// response with an invalid CRC.
-  void eepromRead(uint8_t startAddress, uint8_t * data, uint8_t dataSize);
+  void eepromRead(uint8_t startAddress, uint8_t* data, uint8_t dataSize);
 
   /// Writes data from the specified buffer to the servo's RAM.
-  void ramWrite(uint8_t startAddress, const uint8_t *, uint8_t dataSize);
+  void ramWrite(uint8_t startAddress, const uint8_t*, uint8_t dataSize);
 
   /// Reads data from the servo's RAM and stores it in the specified buffer.
   ///
   /// The data size should be 35 or less: otherwise the A1-16 seems to return a
   /// response with an invalid CRC.
-  void ramRead(uint8_t startAddress, uint8_t * data, uint8_t dataSize);
+  void ramRead(uint8_t startAddress, uint8_t* data, uint8_t dataSize);
 
   /// Write the Baud_Rate parameter byte in EEPROM, which determines which baud
   /// rate the servo uses on its serial interface.
@@ -298,12 +299,16 @@ public:
   /// Uses a STAT command to read the current PWM duty cycle.
   ///
   /// See readStatus().
-  uint16_t readPwm() { return readStatus().pwm; }
+  uint16_t readPwm() {
+    return readStatus().pwm;
+  }
 
   /// Uses a STAT command to read the servo position.
   ///
   /// See readStatus().
-  uint16_t readPosition() { return readStatus().position; }
+  uint16_t readPosition() {
+    return readStatus().position;
+  }
 
   /// Uses a STAT command to read the servo position goal.
   ///
@@ -311,12 +316,16 @@ public:
   /// position.
   ///
   /// See readStatus().
-  uint16_t readPosRef() { return readStatus().posRef; }
+  uint16_t readPosRef() {
+    return readStatus().posRef;
+  }
 
   /// Uses a STAT command to read the bus current.
   ///
   /// See readStatus().
-  uint16_t readIBus() { return readStatus().iBus; }
+  uint16_t readIBus() {
+    return readStatus().iBus;
+  }
 
   /// Sends an I-JOG command to set the target/goal position for this servo.
   ///
@@ -369,27 +378,33 @@ public:
   /// Returns the communication error from the last command.  The return value
   /// will be 0 if there was no error and non-zero if there was an error.  The
   /// return value will be one of the values of the XYZrobotServoError enum.
-  XYZrobotServoError getLastError() const { return lastError; }
-  bool isOk() const { return getLastError() == XYZrobotServoError::None; }
-  bool isFailed() const { return getLastError() != XYZrobotServoError::None; }
+  XYZrobotServoError getLastError() const {
+    return lastError;
+  }
+  bool isOk() const {
+    return getLastError() == XYZrobotServoError::None;
+  }
+  bool isFailed() const {
+    return getLastError() != XYZrobotServoError::None;
+  }
 
   /// Get the servo ID assigned to this object.
-  uint8_t getId() const { return id; }
+  uint8_t getId() const {
+    return id;
+  }
 
-private:
+ private:
   void flushRead();
 
-  void sendRequest(uint8_t cmd,
-    const uint8_t * data1, uint8_t data1Size,
-    const uint8_t * data2 = NULL, uint8_t data2Size = 0);
+  void sendRequest(uint8_t cmd, const uint8_t* data1, uint8_t data1Size,
+                   const uint8_t* data2 = NULL, uint8_t data2Size = 0);
 
-  void readAck(uint8_t cmd,
-    uint8_t * data1, uint8_t data1Size,
-    uint8_t * data2 = NULL, uint8_t data2Size = 0);
+  void readAck(uint8_t cmd, uint8_t* data1, uint8_t data1Size, uint8_t* data2 = NULL,
+               uint8_t data2Size = 0);
 
-  void memoryWrite(uint8_t cmd, uint8_t startAddress, const uint8_t * data, uint8_t dataSize);
+  void memoryWrite(uint8_t cmd, uint8_t startAddress, const uint8_t* data, uint8_t dataSize);
 
-  void memoryRead(uint8_t cmd, uint8_t startAddress, uint8_t * data, uint8_t dataSize);
+  void memoryRead(uint8_t cmd, uint8_t startAddress, uint8_t* data, uint8_t dataSize);
 
   void sendIJog(uint16_t goal, uint8_t type, uint8_t playtime);
 
@@ -397,7 +412,5 @@ private:
 
   uint8_t id;
 
-  Stream * stream;
+  Stream* stream;
 };
-
-

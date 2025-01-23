@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#pragma once 
+#pragma once
 
 #include <cstdint>
 
@@ -50,24 +50,15 @@
 #define SERIAL_7O2 0x3C
 #define SERIAL_8O2 0x3E
 
+class SerialProtocol : public Stream {
+ public:
+  enum : uint8_t { kNoData = 0xFF };
 
-class SerialProtocol: public Stream
-{
-public:
-    enum: uint8_t
-    {
-        kNoData = 0xFF
-    };
+  inline void begin(const uint32_t baudRate) {
+    begin(baudRate, SERIAL_8N1);
+  }
 
-    inline virtual void begin(const unsigned long baudRate) final
-    {
-        begin(baudRate, SERIAL_8N1);
-    }
+  virtual void begin(const uint32_t baudRate, const uint8_t transferConfig) = 0;
 
-    virtual void begin(const unsigned long baudRate, const uint8_t transferConfig) = 0;
-    
-    virtual ~SerialProtocol()
-    { }
+  virtual ~SerialProtocol() {}
 };
-
-

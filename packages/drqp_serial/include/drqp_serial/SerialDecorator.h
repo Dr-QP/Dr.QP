@@ -18,26 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#pragma once 
+#pragma once
 
 #include <cstddef>
+
 #include "drqp_serial/SerialProtocol.h"
 
-class SerialDecorator : public SerialProtocol
-{
-public:
-    typedef SerialProtocol super;
-    SerialDecorator(SerialProtocol &decorated);
+class SerialDecorator : public SerialProtocol {
+ public:
+  typedef SerialProtocol super;
+  SerialDecorator(SerialProtocol& decorated);
 
-    using super::begin;
-    void begin(const unsigned long baudRate, const uint8_t transferConfig) override;
-    size_t write(uint8_t byte) override;
-    bool available() override;
-    uint8_t peek() override;
-    uint8_t read() override;
+  using super::begin;
+  void begin(const uint32_t baudRate, const uint8_t transferConfig) override;
+  size_t write(uint8_t byte) override;
+  bool available() override;
+  uint8_t peek() override;
+  uint8_t read() override;
 
-private:
-    SerialProtocol &decorated_;
+ private:
+  SerialProtocol& decorated_;
 };
-
-

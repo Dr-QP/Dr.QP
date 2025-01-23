@@ -20,67 +20,50 @@
 
 #pragma once
 
-#include <deque>
 #include <boost/serialization/deque.hpp>
+#include <deque>
 
-namespace RecordingProxy
-{
-enum class OperationType
-{
-    kUndefined,
-    kRead,
-    kWrite
+namespace RecordingProxy {
+enum class OperationType { kUndefined, kRead, kWrite };
+
+struct Request {
+  std::deque<uint8_t> bytes;
+
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned int version) {
+    ar & bytes;
+  }
+
+  bool empty() const {
+    return bytes.empty();
+  }
 };
 
-struct Request
-{
-    std::deque<uint8_t> bytes;
+struct Response {
+  std::deque<uint8_t> bytes;
 
-    template<class Archive>
-    void serialize(Archive &ar, const unsigned int version)
-    {
-        ar & bytes;
-    }
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned int version) {
+    ar & bytes;
+  }
 
-    bool empty() const
-    {
-        return bytes.empty();
-    }
+  bool empty() const {
+    return bytes.empty();
+  }
 };
 
-struct Response
-{
-    std::deque<uint8_t> bytes;
+struct Record {
+  Request request;
+  Response response;
 
-    template<class Archive>
-    void serialize(Archive &ar, const unsigned int version)
-    {
-        ar & bytes;
-    }
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned int version) {
+    ar & request;
+    ar & response;
+  }
 
-    bool empty() const
-    {
-        return bytes.empty();
-    }
+  bool empty() const {
+    return request.empty() && response.empty();
+  }
 };
-
-struct Record
-{
-    Request request;
-    Response response;
-
-    template<class Archive>
-    void serialize(Archive &ar, const unsigned int version)
-    {
-        ar & request;
-        ar & response;
-    }
-
-    bool empty() const
-    {
-        return request.empty() && response.empty();
-    }
-};
-};
-
-
+}  // namespace RecordingProxy

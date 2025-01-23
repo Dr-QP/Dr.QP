@@ -28,14 +28,14 @@ using ServoId = uint8_t;
 enum LegId {
   // Head is at 12 o'clock
 
-  kFrontRightLegId = 0, //  1 o'clock
-  kFrontLeftLegId,      // 11 o'clock
+  kFrontRightLegId = 0,  // 1 o'clock
+  kFrontLeftLegId,       // 11 o'clock
 
-  kMiddleRightLegId, // 3 o'clock
-  kMiddleLeftLegId,  // 9 o'clock
+  kMiddleRightLegId,  // 3 o'clock
+  kMiddleLeftLegId,   // 9 o'clock
 
-  kBackRightLegId, // 5 o'clock
-  kBackLeftLegId,  // 7 o'clock
+  kBackRightLegId,  // 5 o'clock
+  kBackLeftLegId,   // 7 o'clock
 
   // Must be last
   kLegIdCount
@@ -47,7 +47,7 @@ constexpr const ServoId kServoMaxId = kServoMinId + kServosPerLeg * kLegIdCount;
 
 using ServoIdsArray = std::array<ServoId, kServoMaxId - kServoMinId>;
 
-ServoIdsArray servoIdsRange() {
+static inline ServoIdsArray servoIdsRange() {
   ServoIdsArray result;
   size_t i = 0;
   for (ServoId id = kServoMinId; id < kServoMaxId; ++id, ++i) {
@@ -102,8 +102,7 @@ const AllLegsNamesArray kAllLegsNames = []() {
   return legs;
 }();
 
-std::string legNameForServo(ServoId id)
-{
+static inline std::string legNameForServo(ServoId id) {
   return kAllLegsNames[kServoIdToLeg[id]];
 }
 
@@ -136,8 +135,9 @@ const Pose kNeutralPose = []() {
   const int16_t kRight = 1;
   const int16_t kLeft = -1;
 
-  legs[kFrontRightLegId] = legs[kMiddleRightLegId] = legs[kBackRightLegId] = {kBase + kCoxaOffset, kBase + kRight * kFemurOffset, kBase + kRight * kTibiaOffset};
-  legs[kFrontLeftLegId] = legs[kMiddleLeftLegId] = legs[kBackLeftLegId] = {kBase + kCoxaOffset, kBase + kLeft * kFemurOffset, kBase + kLeft * kTibiaOffset};
-
+  legs[kFrontRightLegId] = legs[kMiddleRightLegId] = legs[kBackRightLegId] = {
+      kBase + kCoxaOffset, kBase + kRight * kFemurOffset, kBase + kRight * kTibiaOffset};
+  legs[kFrontLeftLegId] = legs[kMiddleLeftLegId] = legs[kBackLeftLegId] = {
+      kBase + kCoxaOffset, kBase + kLeft * kFemurOffset, kBase + kLeft * kTibiaOffset};
   return legs;
 }();

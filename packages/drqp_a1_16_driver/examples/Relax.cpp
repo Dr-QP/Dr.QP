@@ -18,19 +18,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include "DrQp.h"
 #include "drqp_a1_16_driver/XYZrobotServo.h"
-
 #include "drqp_serial/TcpSerial.h"
 #include "drqp_serial/UnixSerial.h"
-
-#include "DrQp.h"
 
 int main() {
   // TcpSerial servoSerial("192.168.1.136", 2022);
   UnixSerial servoSerial("/dev/ttySC0");
 
-  for (const auto servoId : servoIdsRange())
-  {
+  for (const auto servoId : servoIdsRange()) {
     XYZrobotServo servo(servoSerial, servoId);
     servo.torqueOff();
   }
