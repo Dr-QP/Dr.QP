@@ -38,8 +38,17 @@ install(TARGETS
 # Export modern CMake targets
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
+
 if(BUILD_TESTING)
-  set(AMENT_CMAKE_CLANG_FORMAT_CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
+  set(CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
+
+  get_filename_component(CONFIG_FILE_RES "${CONFIG_FILE}" REALPATH)
+  if(EXISTS ${CONFIG_FILE_RES})
+    set(ament_cmake_clang_format_CONFIG_FILE "${CONFIG_FILE_RES}" CACHE STRING "Path to the clang-format file to use")
+  else()
+    message(FATAL_ERROR ".clang-format config \"${CONFIG_FILE_RES}\" does not exist")
+  endif()
+
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
 endif()

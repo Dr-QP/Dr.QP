@@ -47,8 +47,6 @@ ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 # Export dependencies
 ament_export_dependencies(Boost)
 
-
-
 if(BUILD_TESTING)
   find_package(catch_ros2 REQUIRED)
   add_executable(drqp_serial_test
@@ -61,8 +59,15 @@ if(BUILD_TESTING)
     drqp_serial
   )
 
+  set(CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
+  get_filename_component(CONFIG_FILE_RES "${CONFIG_FILE}" REALPATH)
+  if(EXISTS ${CONFIG_FILE_RES})
+    set(ament_cmake_clang_format_CONFIG_FILE "${CONFIG_FILE_RES}" CACHE STRING "Path to the clang-format file to use")
+  else()
+    message(FATAL_ERROR ".clang-format config \"${CONFIG_FILE_RES}\" does not exist")
+  endif()
+
   set(AMENT_LINT_AUTO_FILE_EXCLUDE "include/drqp_serial/doctest.h")
-  set(AMENT_CMAKE_CLANG_FORMAT_CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
 endif()
