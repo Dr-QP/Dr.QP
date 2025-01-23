@@ -317,7 +317,7 @@ void XYZrobotServo::memoryRead(uint8_t cmd, uint8_t startAddress,
 
   uint8_t response[4];
   readAck(cmd, response, 4, data, dataSize);
-  if (getLastError()) { return; }
+  if (isFailed()) { return; }
 
   // Despite what the A1-16 datasheet says, the first two bytes of the response
   // tend to 0, and the start address and data size come after that.

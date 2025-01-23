@@ -90,7 +90,7 @@ struct CustomStatus48
 void readAndPrintStatus(XYZrobotServo & servo)
 {
   XYZrobotServoStatus status = servo.readStatus();
-  if (servo.getLastError())
+  if (servo.isFailed())
   {
     std::cout << "error reading status: " << servo.getLastError() << std::endl;
   }
@@ -117,7 +117,7 @@ CustomStatus48 readCustomStatus(XYZrobotServo & servo)
   CustomStatus48 status;
   const size_t statusSize = sizeof(CustomStatus48);
   servo.ramRead(48, (uint8_t*)&status, statusSize);
-  if (servo.getLastError())
+  if (servo.isFailed())
   {
     std::cout << "error reading custom status: " << servo.getLastError() << std::endl;
   }
@@ -147,9 +147,9 @@ void readAndPrintRAM(XYZrobotServo & servo)
 {
   uint8_t ram[80];
   servo.ramRead(0, ram, 30);
-  if (!servo.getLastError()) { servo.ramRead(30, ram + 30, 30); }
-  if (!servo.getLastError()) { servo.ramRead(60, ram + 60, 20); }
-  if (servo.getLastError())
+  if (servo.isOk()) { servo.ramRead(30, ram + 30, 30); }
+  if (servo.isOk()) { servo.ramRead(60, ram + 60, 20); }
+  if (servo.isFailed())
   {
     std::cout << "error reading RAM: ";
     std::cout << servo.getLastError() << "\n";
@@ -251,8 +251,8 @@ void readAndPrintEEPROM(XYZrobotServo & servo)
 
   uint8_t eeprom[54];
   servo.eepromRead(0, eeprom, 30);
-  if (!servo.getLastError()) { servo.eepromRead(30, eeprom + 30, 24); }
-  if (servo.getLastError())
+  if (servo.isOk()) { servo.eepromRead(30, eeprom + 30, 24); }
+  if (servo.isFailed())
   {
     std::cout << "error reading EEPROM: ";
     std::cout << std::dec << servo.getLastError() << "\n";
@@ -380,9 +380,9 @@ void setPos()
   auto endTime = std::chrono::high_resolution_clock::now();
   std::cout << "servo.readStatus takes: " << chrono::duration_cast<chrono::microseconds>(endTime - startTime).count() << " microseconds\n";
 
-  if (int lastError = servo.getLastError())
+  if (servo.isFailed())
   {
-    std::cout << "error reading status: " << lastError << std::endl;
+    std::cout << "error reading status: " << servo.getLastError() << std::endl;
   }
   
 

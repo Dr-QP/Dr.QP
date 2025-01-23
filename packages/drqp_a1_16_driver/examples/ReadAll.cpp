@@ -37,7 +37,7 @@ int main() {
       XYZrobotServo servo(servoSerial, servoId);
 
       XYZrobotServoStatus status = servo.readStatus();
-      if (servo.getLastError()) {
+      if (servo.isFailed()) {
         std::cerr << legNameForServo(servoId) << " servo: " << servoId
                   << " error reading status: " << servo.getLastError() << "\n";
       } else {
