@@ -17,7 +17,7 @@ add_library(drqp_a1_16_driver STATIC
 )
 
 target_compile_features(drqp_a1_16_driver PUBLIC cxx_std_17)
-target_include_directories(drqp_a1_16_driver PUBLIC 
+target_include_directories(drqp_a1_16_driver PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 ament_target_dependencies(drqp_a1_16_driver PUBLIC rclcpp drqp_serial)

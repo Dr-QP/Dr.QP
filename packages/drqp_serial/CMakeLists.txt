@@ -17,9 +17,9 @@ add_library(drqp_serial STATIC
     src/TcpSerial.cpp
     src/UnixSerial.cpp
 )
- 
+
 target_compile_features(drqp_serial PUBLIC cxx_std_17)
-target_include_directories(drqp_serial PUBLIC 
+target_include_directories(drqp_serial PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 target_link_libraries(drqp_serial PUBLIC Boost::boost) # Link to all of boost, its the only way ament can find it in downstream packages
