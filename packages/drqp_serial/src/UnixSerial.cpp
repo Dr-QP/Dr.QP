@@ -50,9 +50,8 @@ std::size_t get_bytes_available(boost::asio::serial_port& serial_port,
   COMSTAT status;
   if (0 != ::ClearCommError(serial_port.lowest_layer().native_handle(), NULL, &status)) {
     value = status.cbInQue;
-  }
-  // On error, set the error code.
-  else {
+  } else {
+    // On error, set the error code.
     error = boost::system::error_code(::GetLastError(), boost::asio::error::get_system_category());
   }
 #else  // defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)

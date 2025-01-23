@@ -3,14 +3,11 @@ BasedOnStyle:    Google
 IndentWidth:     2
 TabWidth:        2
 UseTab:          Never
-ColumnLimit:     100
+
 AllowShortFunctionsOnASingleLine: Empty  # Only allow short empty functions
-ConstructorInitializerIndentWidth: 2
 IndentCaseLabels: false
-BreakBeforeBraces: Attach
+
 AlwaysBreakTemplateDeclarations: Yes
-DerivePointerAlignment: false
-PointerAlignment: Left
 SpaceBeforeParens: ControlStatements
 SpacesInParentheses: false
 SpacesInAngles: false
@@ -42,3 +39,21 @@ IncludeCategories:
   # Local headers in ""
   - Regex: '"[-\w\/-_]*"'
     Priority: 5
+
+# This part comes from 
+# https://github.com/ament/ament_lint/blob/humble/ament_clang_format/ament_clang_format/configuration/.clang-format
+AccessModifierOffset: -2
+AlignAfterOpenBracket: AlwaysBreak
+BraceWrapping:
+  AfterClass: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+BreakBeforeBraces: Custom
+ColumnLimit: 100
+ConstructorInitializerIndentWidth: 0
+ContinuationIndentWidth: 2
+DerivePointerAlignment: false
+# PointerAlignment: Middle
+PointerAlignment: Left # Dr.QP, Middle is ugly
+ReflowComments: false

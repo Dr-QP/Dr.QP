@@ -21,12 +21,14 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 #include "drqp_serial/SerialProtocol.h"
 
-class UnixSerial : public SerialProtocol {
- public:
-  UnixSerial(const std::string& fileName);
+class UnixSerial : public SerialProtocol
+{
+public:
+  explicit UnixSerial(const std::string& fileName);
   ~UnixSerial();
 
   using SerialProtocol::begin;
@@ -40,7 +42,7 @@ class UnixSerial : public SerialProtocol {
   size_t write(const uint8_t* data, size_t size) override;
   size_t readBytes(uint8_t* buffer, size_t size) override;
 
- private:
+private:
   struct Impl;
   std::unique_ptr<Impl> impl_;
 };
