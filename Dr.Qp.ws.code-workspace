@@ -17,13 +17,11 @@
             "hangxingliu.vscode-systemd-support",
             "jithurjacob.nbpreviewer",
             "llvm-vs-code-extensions.vscode-clangd",
-            "llvm-vs-code-extensions.vscode-clangd",
             "mhutchie.git-graph",
             "ms-iot.vscode-ros",
             "ms-python.debugpy",
             "ms-python.python",
             "ms-python.vscode-pylance",
-            "ms-vscode-remote.remote-containers",
             "ms-vscode-remote.remote-containers",
             "ms-vscode-remote.remote-ssh-edit",
             "ms-vscode-remote.remote-ssh",
@@ -40,21 +38,22 @@
             "nonanonno.vscode-ros2",
             "jaehyunshim.vscode-ros2",
             "vadimcn.vscode-lldb",
+            "editorconfig.editorconfig",
         ]
     },
     "launch": {
         "version": "0.2.0",
         "configurations": [
-          {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Launch C++",
-            "program": "${command:cmake.launchTargetPath}",
-            "args": [],
-            "cwd": "${workspaceFolder}"
-          }
+            {
+                "type": "lldb",
+                "request": "launch",
+                "name": "Launch C++",
+                "program": "${command:cmake.launchTargetPath}",
+                "args": [],
+                "cwd": "${workspaceFolder}"
+            }
         ]
-      },
+    },
     "tasks": {
         "version": "2.0.0",
         "tasks": [
@@ -70,7 +69,6 @@
                     "--cmake-args",
                     "-GNinja",
                     "-DCMAKE_BUILD_TYPE=Debug",
-    
                     // "--packages-select",
                     // // "drqp_description",
                     // // "drqp_control",
@@ -107,7 +105,6 @@
                     // "${workspaceFolder}",
                     // "--cmake-args",
                     // "-DCMAKE_BUILD_TYPE=RelWithDebInfo"
-    
                     // "--packages-select",
                     // "drqp_description"
                 ],
@@ -134,7 +131,6 @@
     "settings": {
         "ros.distro": "humble",
         "ament-task-provider.envSetup": "source /opt/ros/humble/setup.bash",
-
         "python.autoComplete.extraPaths": [
             "/opt/ros/humble/lib/python3.10/site-packages",
             "/opt/ros/humble/local/lib/python3.10/dist-packages"
@@ -151,9 +147,10 @@
             "/install/**": true,
             "/log/**": true,
         },
-    
         "clangd.enable": true,
         "C_Cpp.intelliSenseEngine": "disabled",
-        
+        "[cpp]": {
+            "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+        },
     },
 }
