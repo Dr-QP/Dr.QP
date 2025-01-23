@@ -14,10 +14,10 @@ SpacesInAngles: false
 SpacesBeforeTrailingComments: 2
 Cpp11BracedListStyle: true
 AllowAllParametersOfDeclarationOnNextLine: false
-SortIncludes: true
 MaxEmptyLinesToKeep: 1
 InsertNewlineAtEOF: true
 
+SortIncludes: Never
 IncludeBlocks: Regroup
 IncludeCategories:
   # Standard C headers in <.h>
@@ -40,7 +40,7 @@ IncludeCategories:
   - Regex: '"[-\w\/-_]*"'
     Priority: 5
 
-# This part comes from 
+# This part comes from
 # https://github.com/ament/ament_lint/blob/humble/ament_clang_format/ament_clang_format/configuration/.clang-format
 AccessModifierOffset: -2
 AlignAfterOpenBracket: AlwaysBreak
