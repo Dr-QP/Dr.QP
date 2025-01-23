@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <inttypes.h>
-#include <stddef.h>
+#include <cstddef>
+#include <cstdint>
 
 class Stream
 {

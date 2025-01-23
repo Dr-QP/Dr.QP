@@ -20,8 +20,7 @@
 
 #pragma once 
 
-#include <stddef.h>
-#include <stdint.h>
+#include <cstdint>
 
 #include "drqp_serial/Stream.h"
 

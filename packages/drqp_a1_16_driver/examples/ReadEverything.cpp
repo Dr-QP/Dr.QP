@@ -25,10 +25,11 @@
 #include "drqp_serial/UnixSerial.h"
 #include "drqp_serial/TcpSerial.h"
 
+#include <signal.h>
+
 #include <iostream>
 #include <thread>
 #include <cstdlib>
-#include <signal.h>
 // #define servoSerial Serial1
 
 const uint8_t servoId = 5;

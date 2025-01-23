@@ -21,8 +21,7 @@
 #pragma once
 
 #include <array>
-#include <inttypes.h>
-#include <numeric>
+#include <cstdint>
 #include <string>
 
 using ServoId = uint8_t;

@@ -21,8 +21,7 @@
 
 #pragma once
 
-#include <inttypes.h>
-#include <memory>
+#include <cstdint>
 #include <iostream>
 
 #include "drqp_serial/Stream.h"
