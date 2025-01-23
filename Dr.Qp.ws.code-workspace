@@ -68,12 +68,7 @@
                     "${workspaceFolder}",
                     "--cmake-args",
                     "-GNinja",
-                    "-DCMAKE_BUILD_TYPE=Debug",
-                    // "--packages-select",
-                    // // "drqp_description",
-                    // // "drqp_control",
-                    // "drqp_serial",
-                    // "drqp_a1_16_driver",
+                    "-DCMAKE_BUILD_TYPE=Debug"
                 ],
                 "problemMatcher": [
                     "$catkin-gcc"
@@ -87,7 +82,7 @@
                     "env": {
                         "CMAKE_EXPORT_COMPILE_COMMANDS": "1",
                         "CC": "clang",
-                        "CXX": "clang++",
+                        "CXX": "clang++"
                     }
                 }
             },
@@ -95,18 +90,10 @@
                 "type": "colcon",
                 "args": [
                     "test",
-                    // "--symlink-install",
                     "--event-handlers",
                     "console_cohesion+",
                     "summary+",
-                    "status+",
-                    // "desktop_notification+",
-                    // "--base-paths",
-                    // "${workspaceFolder}",
-                    // "--cmake-args",
-                    // "-DCMAKE_BUILD_TYPE=RelWithDebInfo"
-                    // "--packages-select",
-                    // "drqp_description"
+                    "status+"
                 ],
                 "problemMatcher": [
                     "$catkin-gcc"
