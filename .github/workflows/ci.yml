@@ -31,9 +31,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image: ${{ steps.meta.outputs.tags }}
-    permissions:
-      contents: read
-      packages: write
+    # permissions:
+    #   contents: read
+    #   packages: write
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
