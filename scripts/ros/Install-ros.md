@@ -12,7 +12,7 @@ Update your `~/.bashrc` with the following snippet that adds couple alises for e
 ```bash
 #################################################################
 if [ -z "$ROS_IP" ]; then
-	export ROS_IP=127.0.0.1
+  export ROS_IP=127.0.0.1
 fi
 
 alias ros1_activate="source /opt/ros/noetic/setup.bash"
@@ -38,6 +38,7 @@ fisher install edc/bass
 Copy `./scripts/ros/ros.fish` to `~/.config/fish/conf.d/ros.fish` which contains `ros2_activate` and `ros2_ws` commands that will also register autocompletion
 
 If you are in the root of the ROS workspace copy command will look like this
+
 ```bash
 cp src/Dr.QP/scripts/ros/ros.fish ~/.config/fish/conf.d
 ```

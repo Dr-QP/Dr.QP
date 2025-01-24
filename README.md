@@ -2,14 +2,15 @@
 
 ## Bootstrap
 
-1. Follow `scripts/ros/Install-ros.md` to install ROS2 via conda
-2. Open VSCOde from the terminal with activated `ros_env`
+1. Follow `scripts/ros/Install-ros.md` to install ROS2
+2. Open VSCode from the terminal with activated `ros_env`
 
-```
-cd DR.QP
-ros2_ws
-rosdep install --from-paths src --ignore-src -y
+```bash
+mkdir -p drqp_ws/src
+git clone git@github.com:Dr-QP/Dr.QP.git src/Dr.QP
+cd drqp_ws
+ros2_activate
+./src/Dr.QP/scripts/ros/ros-dep.sh
 ```
 
-3. Open VSCode using `code .` and install recomemnded extensions
-4. Run `CMake: Scan for kits` from VSCode command pallet to add compilers from ros env
+3. Open VSCode using `code .` and install recommended extensions

@@ -40,6 +40,7 @@
             "vadimcn.vscode-lldb",
             "editorconfig.editorconfig",
             "sanjulaganepola.github-local-actions",
+            "streetsidesoftware.code-spell-checker",
         ]
     },
     "launch": {
