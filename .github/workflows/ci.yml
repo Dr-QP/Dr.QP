@@ -74,18 +74,25 @@ jobs:
 
   ros-ci:
     runs-on: ubuntu-latest
-    # needs: [build-image]
+    needs: [build-image]
     container:
       # image: ros:humble-ros-base # base image is good for testing deployment packages. keep it here as an example
       # Use desktop image as there is gazebo which is a desktop package that has tons of dependencies
       # image: osrf/ros:humble-desktop
 
-      # image: ${ { needs.build-image.outputs.image }}
-      image: ghcr.io/dr-qp/ros-desktop:pr-4
+      image: ${ { needs.build-image.outputs.image }}
+      # image: ghcr.io/dr-qp/ros-desktop:pr-4
       credentials:
         username: ${{ env.REGISTRY_USERNAME }}
         password: ${{ secrets.GITHUB_TOKEN }}
     steps:
+      - if: ${{ github.actor == 'nektos/act' }}
+        run: |
+          curl -sL https://deb.nodesource.com/setup_20.x -o $pwd/nodesource_setup.sh
+          sudo bash $pwd/nodesource_setup.sh
+          sudo apt-get update
+          sudo apt-get -y remove nodejs npm # remove old versions if any
+          sudo apt-get install -y python3-colcon-coveragepy-result nodejs
       - uses: actions/checkout@v4
       - uses: ros-tooling/action-ros-ci@v0.3
         with:
