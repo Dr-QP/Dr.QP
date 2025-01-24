@@ -19,6 +19,7 @@ env:
   # CC: clang # TODO: uncomment this line when clang is available in the image
   # CXX: clang++
   REGISTRY: ghcr.io
+  REGISTRY_USERNAME: ${{ github.actor == 'nektos/act' && 'anton-matosov' || github.actor }}
 
 jobs:
   build-image:
@@ -39,7 +40,7 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
+          username: ${{ env.REGISTRY_USERNAME }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Docker
