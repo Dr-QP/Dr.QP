@@ -39,6 +39,7 @@
             "jaehyunshim.vscode-ros2",
             "vadimcn.vscode-lldb",
             "editorconfig.editorconfig",
+            "sanjulaganepola.github-local-actions",
         ]
     },
     "launch": {
