@@ -80,7 +80,7 @@ jobs:
       # Use desktop image as there is gazebo which is a desktop package that has tons of dependencies
       # image: osrf/ros:humble-desktop
 
-      image: ${ { needs.build-image.outputs.image }}
+      image: ${{ needs.build-image.outputs.image }}
       # image: ghcr.io/dr-qp/ros-desktop:pr-4
       # credentials:
       #   username: ${{ env.REGISTRY_USERNAME }}
