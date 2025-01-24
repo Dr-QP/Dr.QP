@@ -49,6 +49,7 @@ sudo apt update && sudo apt install -y \
   git \
   libbullet-dev \
   python3-colcon-common-extensions \
+  python3-colcon-coveragepy-result \
   python3-flake8 \
   python3-pip \
   python3-pytest-cov \
@@ -70,6 +71,7 @@ python3 -m pip install -U \
   pytest-repeat \
   pytest-rerunfailures \
   pytest
+
 # install Fast-RTPS dependencies
 sudo apt install --no-install-recommends -y \
   libasio-dev \
@@ -87,3 +89,12 @@ rosdep update
 sudo apt install -y ros-humble-desktop
 # sudo apt install ros-humble-ros-base
 sudo apt install -y ros-dev-tools
+
+# Install Node.js and NPM for local GHA via nektos/act to work
+curl -sL https://deb.nodesource.com/setup_20.x -o $script_dir/nodesource_setup.sh
+sudo bash $script_dir/nodesource_setup.sh
+sudo apt-get -y remove nodejs npm # remove old versions if any
+# The NodeSource nodejs package contains both the node binary and npm, so you don’t need to install npm separately.
+sudo apt-get install -y nodejs
+
+
