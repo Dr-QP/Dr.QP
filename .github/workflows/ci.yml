@@ -20,6 +20,10 @@ env:
   # CXX: clang++
   REGISTRY: ghcr.io
   REGISTRY_USERNAME: ${{ github.actor == 'nektos/act' && 'anton-matosov' || github.actor }}
+  # CACHE_FROM: ${{ github.actor == 'nektos/act' && 'type=local,src=./docker-cache' || 'type=gha' }}
+  # CACHE_TO: ${{ github.actor == 'nektos/act' && 'type=local,dest=./docker-cache' || 'type=gha,mode=max' }}
+  CACHE_FROM: 'type=gha'
+  CACHE_TO: 'type=gha,mode=max'
 
 jobs:
   build-image:
@@ -31,13 +35,18 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v3
-
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
+
+        # Add support for more platforms with QEMU (optional)
+        # https://github.com/docker/setup-qemu-action
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
 
       - name: Log in to the Container registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ env.REGISTRY_USERNAME }}
@@ -45,22 +54,23 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           images:
             ${{ env.REGISTRY }}/dr-qp/ros-desktop
 
+      - uses: actions/checkout@v4 # Checkout the repository to allow work with nektos/act on non pushed commits
       - name: Build and push Docker image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: scripts
           file: scripts/ros-desktop.dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: ${{ env.CACHE_FROM }}
+          cache-to: ${{ env.CACHE_TO }}
 
   ros-ci:
     runs-on: ubuntu-latest
@@ -71,10 +81,13 @@ jobs:
       # image: osrf/ros:humble-desktop
 
       image: ${{ needs.build-image.outputs.image }}
-      options: --user 1001:121 # Mandatory 1.0. Sets user:group matching the one of the runner, allowing access to mounted paths
+      credentials:
+        username: ${{ env.REGISTRY_USERNAME }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - run: sudo apt-get update && sudo apt-get install -y python3-colcon-coveragepy-result
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: ros-tooling/action-ros-ci@v0.3
         with:
           target-ros2-distro: humble
+
