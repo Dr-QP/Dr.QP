@@ -1,6 +1,11 @@
-# FROM osrf/ros:humble-desktop
-# There is no point of reusing desktop image as all the packages will be upgraded to the latest version leading to a lot of unused layers from original image
-FROM ros:humble-ros-base
+# Building 357.7s
+# Resulting "Size": 5516300343,
+FROM osrf/ros:humble-desktop
+
+# Building off the base image saves a bit of space, but the build time is longer
+# Building 478.3s
+# Resulting "Size": 5309090371,
+# FROM ros:humble-ros-base
 
 # Install ROS packages
 COPY ./ros /ros-prep
