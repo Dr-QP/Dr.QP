@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+script_dir=$(dirname $0)
+
 locale  # check for UTF-8
 
 sudo apt update && sudo apt install locales
@@ -30,6 +32,7 @@ sudo apt upgrade
 sudo apt update && sudo apt install -y \
   build-essential \
   cmake \
+  ninja-build \
   git \
   libbullet-dev \
   python3-colcon-common-extensions \
@@ -72,5 +75,9 @@ sudo apt install ros-humble-desktop
 # sudo apt install ros-humble-ros-base
 sudo apt install ros-dev-tools
 
-sudo apt install -y clang clangd ninja-build cmake build-essential
-
+# Clang 19
+CLANG_VERSION=19
+wget https://apt.llvm.org/llvm.sh
+chmod +x llvm.sh
+sudo ./llvm.sh $CLANG_VERSION all
+sudo "$script_dir/update-alternatives-clang.sh" $CLANG_VERSION 1
