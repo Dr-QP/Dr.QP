@@ -76,12 +76,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-image]
     container:
-      # image: ros:humble-ros-base # base image is good for testing deployment packages. keep it here as an example
-      # Use desktop image as there is gazebo which is a desktop package that has tons of dependencies
-      # image: osrf/ros:humble-desktop
-
       image: ${{ needs.build-image.outputs.image }}
-      # image: ghcr.io/dr-qp/ros-desktop:pr-4
+
+      # Only needed for nektos/act runs
       # credentials:
       #   username: ${{ env.REGISTRY_USERNAME }}
       #   password: ${{ secrets.GITHUB_TOKEN }}
