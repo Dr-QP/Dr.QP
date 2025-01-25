@@ -23,7 +23,7 @@ CLANG_VERSION=19
 curl -sSL https://apt.llvm.org/llvm.sh -o "$script_dir/llvm.sh"
 chmod +x "$script_dir/llvm.sh"
 sudo "$script_dir/llvm.sh" $CLANG_VERSION all
-sudo "$script_dir/update-alternatives-clang.sh" $CLANG_VERSION 1
+sudo "$script_dir/update-alternatives-clang.sh" $CLANG_VERSION 99999
 
 
 if [[ ! (-f /etc/apt/sources.list.d/ros2-latest.list || -f /etc/apt/sources.list.d/ros2.list) ]]; then
@@ -97,4 +97,4 @@ sudo apt-get -y remove nodejs npm # remove old versions if any
 # The NodeSource nodejs package contains both the node binary and npm, so you don’t need to install npm separately.
 sudo apt-get install -y nodejs
 
-
+"$script_dir/fix-alternatives.sh"
