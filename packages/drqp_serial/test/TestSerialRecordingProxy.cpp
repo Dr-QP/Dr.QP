@@ -54,7 +54,7 @@ void simpleSerialTest(SerialProtocol& serial)
 
 SCENARIO("test unix serial with serial proxy")
 {
-  static const char* const kSerialRecordingFileName = "tests/test_data/serial_recording.txt";
+  static const char* const kSerialRecordingFileName = "test_data/serial_recording.txt";
 
   WHEN("recording does not exists")
   {

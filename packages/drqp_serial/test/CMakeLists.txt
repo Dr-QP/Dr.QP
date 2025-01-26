@@ -33,6 +33,8 @@ ament_add_test(
   OUTPUT_FILE ${OUTPUT_FILE}
 )
 
-file(INSTALL ${CMAKE_CURRENT_SOURCE_DIR}/test_data
-  DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/tests
+# Copy test data to build directory as it is the default working directory at runtime
+file(
+  INSTALL ${CMAKE_CURRENT_SOURCE_DIR}/test_data
+  DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
 )
