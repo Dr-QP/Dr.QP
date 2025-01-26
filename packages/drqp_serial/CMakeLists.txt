@@ -48,16 +48,7 @@ ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(Boost)
 
 if(BUILD_TESTING)
-  find_package(catch_ros2 REQUIRED)
-  add_executable(drqp_serial_test
-    test/drqp_serial_test.cpp
-  )
-
-  # https://docs.ros.org/en/humble/p/catch_ros2/index.html
-  target_link_libraries(drqp_serial_test PRIVATE
-    catch_ros2::catch_ros2_with_main
-    drqp_serial
-  )
+  add_subdirectory(test)
 
   set(CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format")
   get_filename_component(CONFIG_FILE_RES "${CONFIG_FILE}" REALPATH)
@@ -67,7 +58,7 @@ if(BUILD_TESTING)
     message(FATAL_ERROR ".clang-format config \"${CONFIG_FILE_RES}\" does not exist")
   endif()
 
-  set(AMENT_LINT_AUTO_FILE_EXCLUDE "include/drqp_serial/doctest.h")
+  set(AMENT_LINT_AUTO_FILE_EXCLUDE "test/doctest.h")
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
 endif()

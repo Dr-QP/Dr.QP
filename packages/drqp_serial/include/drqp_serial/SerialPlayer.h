@@ -20,8 +20,11 @@
 
 #pragma once
 
+#include <assert.h>
+
 #include <cstddef>
 #include <deque>
+#include <functional>
 #include <string>
 
 #include "RecordingProxy.h"
@@ -42,6 +45,9 @@ public:
   size_t readBytes(uint8_t* buffer, size_t size) override;
 
   void load(const std::string& fileName);
+
+  using AssertEqual = std::function<void(const uint8_t lhs, const uint8_t rhs)>;
+  AssertEqual assertEqual = [](const uint8_t lhs, const uint8_t rhs) { assert(lhs == rhs); };
 
 private:
   Record currentRecord_;

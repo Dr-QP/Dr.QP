@@ -19,4 +19,4 @@
 // THE SOFTWARE.
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "drqp_serial/doctest.h"
+#include "doctest.h"

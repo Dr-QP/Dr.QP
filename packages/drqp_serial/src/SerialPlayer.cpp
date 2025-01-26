@@ -25,8 +25,6 @@
 
 #include <boost/archive/text_iarchive.hpp>
 
-#include "drqp_serial/doctest.h"
-
 namespace RecordingProxy
 {
 void SerialPlayer::begin(const uint32_t baudRate, const uint8_t transferConfig) {}
@@ -47,7 +45,9 @@ size_t SerialPlayer::write(const uint8_t* data, size_t size)
 size_t SerialPlayer::write(uint8_t byte)
 {
   Record& current = currentRecord();
-  REQUIRE(current.request.bytes.front() == byte);
+  if (assertEqual) {
+    assertEqual(current.request.bytes.front(), byte);
+  }
   current.request.bytes.pop_front();
   return 1;
 }
@@ -88,7 +88,7 @@ void SerialPlayer::flushRead() {}
 Record& SerialPlayer::currentRecord()
 {
   if (currentRecord_.empty()) {
-    REQUIRE(records_.size() != 0);
+    assert(records_.size() != 0);
 
     currentRecord_ = records_.front();
     records_.pop_front();
