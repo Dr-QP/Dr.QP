@@ -20,10 +20,11 @@
 
 #include <boost/thread.hpp>
 
+#include <catch_ros2/catch.hpp>
+
 #include "drqp_serial/SerialPlayer.h"
 #include "drqp_serial/SerialRecordingProxy.h"
 #include "drqp_serial/UnixSerial.h"
-#include "doctest.h"
 
 void simpleSerialTest(SerialProtocol& serial)
 {
@@ -69,13 +70,16 @@ SCENARIO("test unix serial with serial proxy")
 
   WHEN("recording exists")
   {
-    RecordingProxy::SerialPlayer serial;
+    RecordingProxy::SerialPlayer serialPlayer;
+    serialPlayer.assertEqual = [](const uint8_t expected, const uint8_t actual) {
+      REQUIRE(expected == actual);
+    };
 
-    serial.load(kSerialRecordingFileName);
+    serialPlayer.load(kSerialRecordingFileName);
 
     THEN("same test should give same results")
     {
-      simpleSerialTest(serial);
+      simpleSerialTest(serialPlayer);
     }
   }
 }

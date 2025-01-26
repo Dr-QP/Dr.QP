@@ -58,7 +58,6 @@ if(BUILD_TESTING)
     message(FATAL_ERROR ".clang-format config \"${CONFIG_FILE_RES}\" does not exist")
   endif()
 
-  set(AMENT_LINT_AUTO_FILE_EXCLUDE "test/doctest.h")
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
 endif()

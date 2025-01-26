@@ -46,8 +46,10 @@ public:
 
   void load(const std::string& fileName);
 
-  using AssertEqual = std::function<void(const uint8_t lhs, const uint8_t rhs)>;
-  AssertEqual assertEqual = [](const uint8_t lhs, const uint8_t rhs) { assert(lhs == rhs); };
+  using AssertEqual = std::function<void(const uint8_t expected, const uint8_t actual)>;
+  AssertEqual assertEqual = [](const uint8_t expected, const uint8_t actual) {
+    assert(expected == actual);
+  };
 
 private:
   Record currentRecord_;
