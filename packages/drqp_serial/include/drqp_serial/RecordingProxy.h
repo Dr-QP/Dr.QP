@@ -20,9 +20,9 @@
 
 #pragma once
 
-#include <rapidjson/writer.h>
-#include <rapidjson/document.h>
-#include <rapidjson/ostreamwrapper.h>
+#include <drqp_rapidjson/writer.h>
+#include <drqp_rapidjson/document.h>
+#include <drqp_rapidjson/ostreamwrapper.h>
 
 #include <deque>
 
