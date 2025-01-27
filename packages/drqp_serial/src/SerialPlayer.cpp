@@ -20,6 +20,10 @@
 
 #include "drqp_serial/SerialPlayer.h"
 
+#include <drqp_rapidjson/document.h>
+#include <drqp_rapidjson/ostreamwrapper.h>
+#include <drqp_rapidjson/writer.h>
+
 #include <cassert>
 #include <fstream>
 
@@ -102,5 +106,23 @@ void SerialPlayer::load(const std::string& fileName)
   boost::archive::text_iarchive archive(file);
 
   archive & records_;
+
+  std::ofstream ofs(fileName + ".json");
+  rapidjson::OStreamWrapper osw(ofs);
+
+  rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
+
+  writer.StartObject();
+  {
+    writer.Key("records");
+    {
+      writer.StartArray();
+      for (const auto& record : records_) {
+        RecordingProxy::write(writer, record);
+      }
+      writer.EndArray();
+    }
+  }
+  writer.EndObject();
 }
 }  // namespace RecordingProxy

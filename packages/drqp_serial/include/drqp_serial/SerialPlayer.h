@@ -27,7 +27,7 @@
 #include <functional>
 #include <string>
 
-#include "RecordingProxy.h"
+#include "drqp_serial/RecordingProxy.h"
 #include "drqp_serial/SerialProtocol.h"
 
 namespace RecordingProxy

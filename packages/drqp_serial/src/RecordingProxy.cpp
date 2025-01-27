@@ -31,7 +31,7 @@ void write(rapidjson::Writer<rapidjson::OStreamWrapper>& writer, const Packet& p
     writer.Key("bytes");
     {
       writer.StartArray();
-      for (const auto& byte : packet.bytes) {
+      for (const auto byte : packet.bytes) {
         writer.Uint(byte);
       }
       writer.EndArray();
