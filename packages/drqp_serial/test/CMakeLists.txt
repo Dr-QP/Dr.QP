@@ -19,11 +19,10 @@ set(TARGET drqp_serial_tests)
 set(TEST_NAME drqp_serial_tests)
 set(EXECUTABLE "$<TARGET_FILE:${TARGET}>")
 set(RESULT_FILE "${AMENT_TEST_RESULTS_DIR}/${PROJECT_NAME}/${TEST_NAME}.catch2.xml")
-set(OUTPUT_FILE "${CMAKE_BINARY_DIR}/catch_ros2/${TEST_NAME}.txt")
+set(OUTPUT_FILE "${CMAKE_BINARY_DIR}/${TEST_NAME}/${TEST_NAME}.txt.ans")
 set(CMD ${EXECUTABLE}
   --reporter JUnit::out=${RESULT_FILE}
   --reporter console::out=-::colour-mode=ansi
-  --out ${OUTPUT_FILE}
 )
 
 ament_add_test(
