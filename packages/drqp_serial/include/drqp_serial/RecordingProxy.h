@@ -20,9 +20,14 @@
 
 #pragma once
 
+#include <rapidjson/writer.h>
+#include <rapidjson/document.h>
+#include <rapidjson/ostreamwrapper.h>
+
 #include <deque>
 
 #include <boost/serialization/deque.hpp>
+#include <boost/serialization/split_member.hpp>
 
 namespace RecordingProxy
 {
@@ -60,13 +65,36 @@ struct Response
   }
 };
 
+struct Packet
+{
+  std::deque<uint8_t> bytes;
+};
+
+void write(rapidjson::Writer<rapidjson::OStreamWrapper>& writer, const Packet& packet);
+void read(rapidjson::Value& value, Packet& packet);
+
 struct Record
 {
+  BOOST_SERIALIZATION_SPLIT_MEMBER();
+
   Request request;
   Response response;
 
+  Packet requestPacket;
+  Packet responsePacket;
+
   template <class Archive>
-  void serialize(Archive& ar, const unsigned int version)
+  void load(Archive& ar, const unsigned int version)
+  {
+    ar & request;
+    ar & response;
+
+    requestPacket.bytes = request.bytes;
+    responsePacket.bytes = response.bytes;
+  }
+
+  template <class Archive>
+  void save(Archive& ar, const unsigned int version) const
   {
     ar & request;
     ar & response;
@@ -77,4 +105,7 @@ struct Record
     return request.empty() && response.empty();
   }
 };
+
+void write(rapidjson::Writer<rapidjson::OStreamWrapper>& writer, const Record& record);
+void read(rapidjson::Value& value, Record& record);
 }  // namespace RecordingProxy

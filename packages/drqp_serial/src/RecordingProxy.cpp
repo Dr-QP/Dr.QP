@@ -19,3 +19,51 @@
 // THE SOFTWARE.
 
 #include "drqp_serial/RecordingProxy.h"
+
+#include <iostream>
+
+namespace RecordingProxy
+{
+void write(rapidjson::Writer<rapidjson::OStreamWrapper>& writer, const Packet& packet)
+{
+  writer.StartObject();
+  {
+    writer.Key("bytes");
+    {
+      writer.StartArray();
+      for (const auto& byte : packet.bytes) {
+        writer.Uint(byte);
+      }
+      writer.EndArray();
+    }
+  }
+  writer.EndObject();
+}
+
+void read(rapidjson::Value& value, Packet& packet)
+{
+  packet.bytes.clear();
+  for (const auto& byte : value["bytes"].GetArray()) {
+    packet.bytes.push_back(byte.GetUint());
+  }
+}
+
+void write(rapidjson::Writer<rapidjson::OStreamWrapper>& writer, const Record& record)
+{
+  writer.StartObject();
+  {
+    writer.Key("request");
+    write(writer, record.requestPacket);
+
+    writer.Key("response");
+    write(writer, record.responsePacket);
+  }
+  writer.EndObject();
+}
+
+void read(rapidjson::Value& value, Record& record)
+{
+  read(value["request"], record.requestPacket);
+  read(value["response"], record.responsePacket);
+}
+}  // namespace RecordingProxy
