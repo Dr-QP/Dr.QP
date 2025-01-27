@@ -49,7 +49,7 @@ public:
 
 private:
   Record currentRecord_;
-  OperationType lastOperation_;
+  OperationType lastOperation_ = OperationType::kUndefined;
   std::deque<Record> records_;
 
   std::string fileName_;
