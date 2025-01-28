@@ -18,7 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <boost/thread.hpp>
+#include <thread>
+#include <chrono>
 
 #include <catch_ros2/catch.hpp>
 
@@ -46,7 +47,7 @@ void simpleSerialTest(SerialProtocol& serial)
       lastRead = serial.read();
       read += lastRead;
     } else {
-      boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
   }
   REQUIRE(read == "hello\n");

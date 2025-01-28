@@ -26,8 +26,6 @@
 #include <cassert>
 #include <fstream>
 
-#include <boost/archive/text_iarchive.hpp>
-
 namespace RecordingProxy
 {
 void SerialPlayer::begin(const uint32_t baudRate, const uint8_t transferConfig) {}

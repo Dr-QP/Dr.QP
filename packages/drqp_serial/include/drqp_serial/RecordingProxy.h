@@ -26,9 +26,6 @@
 
 #include <deque>
 
-#include <boost/serialization/deque.hpp>
-#include <boost/serialization/split_member.hpp>
-
 namespace RecordingProxy
 {
 enum class OperationType { kUndefined, kRead, kWrite };
@@ -43,8 +40,6 @@ void read(const rapidjson::Value& value, Packet& packet);
 
 struct Record
 {
-  BOOST_SERIALIZATION_SPLIT_MEMBER();
-
   Packet request;
   Packet response;
 

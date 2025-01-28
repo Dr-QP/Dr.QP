@@ -25,8 +25,6 @@
 
 #include <fstream>
 
-#include <boost/archive/text_oarchive.hpp>
-
 namespace RecordingProxy
 {
 SerialRecordingProxy::SerialRecordingProxy(SerialProtocol& decorated, const std::string& filename)

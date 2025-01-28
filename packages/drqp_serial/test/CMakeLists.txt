@@ -1,7 +1,5 @@
 
 find_package(catch_ros2 REQUIRED)
-find_package(Boost REQUIRED COMPONENTS thread serialization system)
-
 add_executable(drqp_serial_tests
   TestSerialRecordingProxy.cpp
 )
@@ -10,9 +8,6 @@ add_executable(drqp_serial_tests
 target_link_libraries(drqp_serial_tests PRIVATE
   drqp_serial
   catch_ros2::catch_ros2_with_main
-  Boost::thread
-  Boost::serialization
-  Boost::system
 )
 
 function(add_catch2_unit_test TARGET)
