@@ -54,7 +54,6 @@ function(add_catch2_unit_test TARGET)
   )
 endfunction()
 
-
 add_catch2_unit_test(drqp_serial_tests)
 
 # Copy test data to build directory as it is the default working directory at runtime

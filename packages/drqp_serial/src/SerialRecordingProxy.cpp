@@ -68,7 +68,7 @@ void SerialRecordingProxy::save()
 {
   startNewRecordIfNeeded();  // flush current record
 
-  std::ofstream ofs(fileName_,std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+  std::ofstream ofs(fileName_, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
   rapidjson::OStreamWrapper osw(ofs);
 
   rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
