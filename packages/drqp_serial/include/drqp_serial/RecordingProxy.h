@@ -33,79 +33,27 @@ namespace RecordingProxy
 {
 enum class OperationType { kUndefined, kRead, kWrite };
 
-struct Request
-{
-  std::deque<uint8_t> bytes;
-
-  template <class Archive>
-  void serialize(Archive& ar, const unsigned int version)
-  {
-    ar & bytes;
-  }
-
-  bool empty() const
-  {
-    return bytes.empty();
-  }
-};
-
-struct Response
-{
-  std::deque<uint8_t> bytes;
-
-  template <class Archive>
-  void serialize(Archive& ar, const unsigned int version)
-  {
-    ar & bytes;
-  }
-
-  bool empty() const
-  {
-    return bytes.empty();
-  }
-};
-
 struct Packet
 {
   std::deque<uint8_t> bytes;
 };
 
 void write(rapidjson::Writer<rapidjson::OStreamWrapper>& writer, const Packet& packet);
-void read(rapidjson::Value& value, Packet& packet);
+void read(const rapidjson::Value& value, Packet& packet);
 
 struct Record
 {
   BOOST_SERIALIZATION_SPLIT_MEMBER();
 
-  Request request;
-  Response response;
-
-  Packet requestPacket;
-  Packet responsePacket;
-
-  template <class Archive>
-  void load(Archive& ar, const unsigned int version)
-  {
-    ar & request;
-    ar & response;
-
-    requestPacket.bytes = request.bytes;
-    responsePacket.bytes = response.bytes;
-  }
-
-  template <class Archive>
-  void save(Archive& ar, const unsigned int version) const
-  {
-    ar & request;
-    ar & response;
-  }
+  Packet request;
+  Packet response;
 
   bool empty() const
   {
-    return request.empty() && response.empty();
+    return request.bytes.empty() && response.bytes.empty();
   }
 };
 
 void write(rapidjson::Writer<rapidjson::OStreamWrapper>& writer, const Record& record);
-void read(rapidjson::Value& value, Record& record);
+void read(const rapidjson::Value& value, Record& record);
 }  // namespace RecordingProxy

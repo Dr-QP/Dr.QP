@@ -21,8 +21,7 @@
 #include "drqp_serial/SerialPlayer.h"
 
 #include <drqp_rapidjson/document.h>
-#include <drqp_rapidjson/ostreamwrapper.h>
-#include <drqp_rapidjson/writer.h>
+#include <drqp_rapidjson/istreamwrapper.h>
 
 #include <cassert>
 #include <fstream>
@@ -103,26 +102,18 @@ Record& SerialPlayer::currentRecord()
 void SerialPlayer::load(const std::string& fileName)
 {
   std::ifstream file(fileName);
-  boost::archive::text_iarchive archive(file);
 
-  archive & records_;
+  rapidjson::IStreamWrapper inputStream(file);
 
-  std::ofstream ofs(fileName + ".json");
-  rapidjson::OStreamWrapper osw(ofs);
+  rapidjson::Document doc;
+  doc.ParseStream(inputStream);
 
-  rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
-
-  writer.StartObject();
-  {
-    writer.Key("records");
-    {
-      writer.StartArray();
-      for (const auto& record : records_) {
-        RecordingProxy::write(writer, record);
-      }
-      writer.EndArray();
-    }
+  // "records"
+  const auto& records = doc["records"].GetArray();
+  for (const auto& record : records) {
+    Record r;
+    RecordingProxy::read(record, r);
+    records_.push_back(r);
   }
-  writer.EndObject();
 }
 }  // namespace RecordingProxy

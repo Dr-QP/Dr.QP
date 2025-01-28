@@ -51,9 +51,10 @@
                 "type": "lldb",
                 "request": "launch",
                 "name": "Launch C++",
-                "program": "${command:cmake.launchTargetPath}",
+                "program": "build/drqp_serial/test/drqp_serial_tests",
                 "args": [],
-                "cwd": "${workspaceFolder}"
+                "cwd": "${workspaceFolder:Dr.QP ROS workspace}/build/drqp_serial/test",
+                "preLaunchTask": "Dr.QP colcon build",
             }
         ]
     },
@@ -72,7 +73,7 @@
                     "--base-paths",
                     "${workspaceFolder}",
 
-                    // "--package-select",
+                    // "--packages-up-to",
                     // "drqp_serial",
 
                     // "--executor=sequential",
@@ -106,7 +107,10 @@
                     "--event-handlers",
                     "console_cohesion+",
                     "summary+",
-                    "status+"
+                    "status+",
+
+                    "--packages-up-to",
+                    "drqp_serial",
                 ],
                 "problemMatcher": [
                     "$catkin-gcc"

@@ -40,7 +40,7 @@ void write(rapidjson::Writer<rapidjson::OStreamWrapper>& writer, const Packet& p
   writer.EndObject();
 }
 
-void read(rapidjson::Value& value, Packet& packet)
+void read(const rapidjson::Value& value, Packet& packet)
 {
   packet.bytes.clear();
   for (const auto& byte : value["bytes"].GetArray()) {
@@ -53,17 +53,17 @@ void write(rapidjson::Writer<rapidjson::OStreamWrapper>& writer, const Record& r
   writer.StartObject();
   {
     writer.Key("request");
-    write(writer, record.requestPacket);
+    write(writer, record.request);
 
     writer.Key("response");
-    write(writer, record.responsePacket);
+    write(writer, record.response);
   }
   writer.EndObject();
 }
 
-void read(rapidjson::Value& value, Record& record)
+void read(const rapidjson::Value& value, Record& record)
 {
-  read(value["request"], record.requestPacket);
-  read(value["response"], record.responsePacket);
+  read(value["request"], record.request);
+  read(value["response"], record.response);
 }
 }  // namespace RecordingProxy

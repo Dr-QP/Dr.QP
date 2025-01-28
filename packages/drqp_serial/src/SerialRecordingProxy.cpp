@@ -20,6 +20,9 @@
 
 #include "drqp_serial/SerialRecordingProxy.h"
 
+#include <drqp_rapidjson/ostreamwrapper.h>
+#include <drqp_rapidjson/writer.h>
+
 #include <fstream>
 
 #include <boost/archive/text_oarchive.hpp>
@@ -65,10 +68,23 @@ void SerialRecordingProxy::save()
 {
   startNewRecordIfNeeded();  // flush current record
 
-  std::ofstream file(fileName_, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
-  boost::archive::text_oarchive archive(file);
+  std::ofstream ofs(fileName_,std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+  rapidjson::OStreamWrapper osw(ofs);
 
-  archive & records_;
+  rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
+
+  writer.StartObject();
+  {
+    writer.Key("records");
+    {
+      writer.StartArray();
+      for (const auto& record : records_) {
+        RecordingProxy::write(writer, record);
+      }
+      writer.EndArray();
+    }
+  }
+  writer.EndObject();
 }
 
 bool SerialRecordingProxy::available()
