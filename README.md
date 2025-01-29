@@ -13,5 +13,5 @@ ros2_activate
 ./src/Dr.QP/scripts/ros/ros-dep.sh
 ```
 
-3. Open `/src/Dr.QP/Dr.Qp.ws.code-workspace` in VSCode
+3. Open `/src/Dr.QP/Dr.QP.code-workspace` in VSCode
 4. Install recommended VSCode extensions
