@@ -9,10 +9,10 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>boost</depend>
+  <depend>Boost</depend>
   <depend>drqp_rapidjson</depend>
-  <depend>catch_ros2</depend>
 
+  <test_depend>catch_ros2</test_depend>
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>drqp_lint_common</test_depend>
 

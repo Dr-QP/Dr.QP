@@ -5,10 +5,14 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter)
 endif()
 
+
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(drqp_rapidjson REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system)
+
+ament_package_xml()
+foreach(dep ${${PROJECT_NAME}_BUILD_DEPENDS})
+  find_package(${dep} REQUIRED)
+endforeach()
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
@@ -26,11 +30,8 @@ target_compile_features(drqp_serial PUBLIC cxx_std_17)
 target_include_directories(drqp_serial PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
-target_link_libraries(drqp_serial PUBLIC
-  Boost::boost # Link to all of boost, its the only way ament can find it in downstream packages
-)
 
-ament_target_dependencies(drqp_serial PUBLIC drqp_rapidjson)
+ament_target_dependencies(drqp_serial PUBLIC ${${PROJECT_NAME}_BUILD_DEPENDS})
 
 target_link_libraries(drqp_serial PRIVATE Threads::Threads $<$<PLATFORM_ID:Linux>:rt>)
 
@@ -51,7 +52,8 @@ install(TARGETS
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 # Export dependencies
-ament_export_dependencies(Boost)
+ament_export_dependencies(${${PROJECT_NAME}_BUILD_EXPORT_DEPENDS})
+
 
 if(BUILD_TESTING)
   add_subdirectory(test)

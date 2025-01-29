@@ -7,20 +7,52 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(ros2_control REQUIRED)
-find_package(ros2_controllers REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
+
+ament_package_xml()
+foreach(dep ${${PROJECT_NAME}_BUILD_DEPENDS})
+  find_package(${dep} REQUIRED)
+endforeach()
+
+add_library(drqp_control INTERFACE)
+target_include_directories(drqp_control INTERFACE
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+
+add_executable(relax src/Relax.cpp)
+target_link_libraries(relax drqp_control)
+ament_target_dependencies(relax drqp_a1_16_driver)
+
+
+add_executable(read_all src/ReadAll.cpp)
+target_link_libraries(read_all drqp_control)
+ament_target_dependencies(read_all drqp_a1_16_driver)
+
+
+# Install headers
+install(DIRECTORY include/
+  DESTINATION include/${PROJECT_NAME})
+
+# Install libraries
+install(TARGETS
+  drqp_control
+  read_all
+  relax
+
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+# Export modern CMake targets
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+
+# Export dependencies
+ament_export_dependencies(${${PROJECT_NAME}_BUILD_EXPORT_DEPENDS})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # comment the line when a copyright and license is added to all source files
-  # set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # comment the line when this package is in a git repo and when
-  # a copyright and license is added to all source files
-  # set(ament_cmake_cpplint_FOUND TRUE)
+
   ament_lint_auto_find_test_dependencies()
 endif()
 

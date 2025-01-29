@@ -18,9 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <iostream>
+#include "drqp_control/DrQp.h"
 
-#include "DrQp.h"
 #include "drqp_a1_16_driver/XYZrobotServo.h"
 #include "drqp_serial/TcpSerial.h"
 #include "drqp_serial/UnixSerial.h"
@@ -30,23 +29,9 @@ int main()
   // TcpSerial servoSerial("192.168.1.136", 2022);
   UnixSerial servoSerial("/dev/ttySC0");
 
-  for (const auto& leg : kAllLegServoIds) {
-    int servoIndexInLeg = 0;
-    for (const int servoId : leg) {
-      XYZrobotServo servo(servoSerial, servoId);
-
-      XYZrobotServoStatus status = servo.readStatus();
-      if (servo.isFailed()) {
-        std::cerr << legNameForServo(servoId) << " servo: " << servoId
-                  << " error reading status: " << servo.getLastError() << "\n";
-      } else {
-        std::cout << legNameForServo(servoId) << "\tservo: " << servoId << ": " << status.position
-                  << "\t neutral: " << kNeutralPose[kServoIdToLeg[servoId]][servoIndexInLeg]
-                  << "\n";
-      }
-      ++servoIndexInLeg;
-    }
-    std::cout << "\n";
+  for (const auto servoId : servoIdsRange()) {
+    XYZrobotServo servo(servoSerial, servoId);
+    servo.torqueOff();
   }
 
   return 0;

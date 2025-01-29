@@ -7,8 +7,11 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(drqp_serial REQUIRED)
-find_package(rclcpp REQUIRED)
+
+ament_package_xml()
+foreach(dep ${${PROJECT_NAME}_BUILD_DEPENDS})
+  find_package(${dep} REQUIRED)
+endforeach()
 
 add_library(drqp_a1_16_driver STATIC
     include/drqp_a1_16_driver/XYZrobotServo.h
@@ -20,7 +23,8 @@ target_compile_features(drqp_a1_16_driver PUBLIC cxx_std_17)
 target_include_directories(drqp_a1_16_driver PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
-ament_target_dependencies(drqp_a1_16_driver PUBLIC rclcpp drqp_serial)
+
+ament_target_dependencies(drqp_a1_16_driver PUBLIC ${${PROJECT_NAME}_BUILD_DEPENDS})
 
 # Install headers
 install(DIRECTORY include/
@@ -38,6 +42,8 @@ install(TARGETS
 # Export modern CMake targets
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
+# Export dependencies
+ament_export_dependencies(${${PROJECT_NAME}_BUILD_EXPORT_DEPENDS})
 
 if(BUILD_TESTING)
   include(../cmake/ClangFormatConfig.cmake)
