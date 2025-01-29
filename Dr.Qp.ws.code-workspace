@@ -1,12 +1,8 @@
 {
     "folders": [
         {
-            "path": "../..",
-            "name": "Dr.QP ROS workspace"
-        },
-        {
             "path": ".",
-            "name": "Dr.QP repo"
+            "name": "Dr.QP"
         },
     ],
     "extensions": {
@@ -53,7 +49,7 @@
                 "name": "Launch C++",
                 "program": "build/drqp_serial/test/drqp_serial_tests",
                 "args": [],
-                "cwd": "${workspaceFolder:Dr.QP ROS workspace}/build/drqp_serial/test",
+                "cwd": "${workspaceFolder:Dr.QP}/build/drqp_serial/test",
                 "preLaunchTask": "Dr.QP colcon build",
             }
         ]
