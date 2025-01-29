@@ -32,12 +32,15 @@ ament_target_dependencies(read_all drqp_a1_16_driver)
 install(DIRECTORY include/
   DESTINATION include/${PROJECT_NAME})
 
-# Install libraries
+# Install executables
 install(TARGETS
-  drqp_control
   read_all
   relax
+  DESTINATION lib/${PROJECT_NAME})
 
+  # Install libraries
+install(TARGETS
+  drqp_control
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
