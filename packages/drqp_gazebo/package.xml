@@ -15,12 +15,12 @@
   <exec_depend>ros2launch</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
+  <test_depend>drqp_lint_common</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
     <!-- <gazebo_ros gazebo_model_path="${prefix}/.."/> This adds package path GAZEBO_MODEL_PATH which is required to load meshes with package_to_model conversion -->
-    <!-- <gazebo_ros gazebo_media_path="${prefix}/models"/>  This will override default resource path as GAZEBO_RESOURCE_PATH and break gazebo loading. Figure out why defautl is not preserved --> 
+    <!-- <gazebo_ros gazebo_media_path="${prefix}/models"/>  This will override default resource path as GAZEBO_RESOURCE_PATH and break gazebo loading. Figure out why defautl is not preserved -->
     <!-- <gazebo_ros plugin_path="${prefix}/plugin"/> -->
 
     <!-- model, plugin, media = GazeboRosPaths.get_paths()
