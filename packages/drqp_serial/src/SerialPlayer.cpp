@@ -106,7 +106,6 @@ void SerialPlayer::load(const std::string& fileName)
   rapidjson::Document doc;
   doc.ParseStream(inputStream);
 
-  // "records"
   const auto& records = doc["records"].GetArray();
   for (const auto& record : records) {
     Record r;
