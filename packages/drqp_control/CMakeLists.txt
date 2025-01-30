@@ -27,6 +27,9 @@ add_executable(read_all src/ReadAll.cpp)
 target_link_libraries(read_all drqp_control)
 ament_target_dependencies(read_all drqp_a1_16_driver)
 
+add_executable(control src/Control.cpp)
+target_link_libraries(control drqp_control)
+ament_target_dependencies(control drqp_a1_16_driver)
 
 # Install headers
 install(DIRECTORY include/
@@ -36,6 +39,7 @@ install(DIRECTORY include/
 install(TARGETS
   read_all
   relax
+  control
   DESTINATION lib/${PROJECT_NAME})
 
 # Install libraries
