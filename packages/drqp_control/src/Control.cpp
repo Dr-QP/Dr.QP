@@ -69,7 +69,6 @@ int main(const int argc, const char* const argv[])
 
     const ServoPosition position = kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg];
     servo.setPosition(position, 100);
-    std::cout << "Setting servo: " << std::dec << servoId << " = " << position << "\n";
   });
 
   return 0;
