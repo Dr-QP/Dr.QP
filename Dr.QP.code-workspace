@@ -38,6 +38,7 @@
             "sanjulaganepola.github-local-actions",
             "streetsidesoftware.code-spell-checker",
             "iliazeus.vscode-ansi",
+            "ms-azuretools.vscode-docker",
         ]
     },
     "launch": {
