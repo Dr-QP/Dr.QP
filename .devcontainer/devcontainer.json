@@ -18,10 +18,20 @@
   },
   "workspaceFolder": "/home/rosdev/ros2_ws/src/Dr.QP/",
   "workspaceMount": "source=${localWorkspaceFolder},target=/home/rosdev/ros2_ws/src/Dr.QP/,type=bind",
-  "mounts": [],
+  "mounts": [
+    {
+      "type": "bind",
+      "source": "${localEnv:HOME}/.1password",
+      "target": "/home/rosdev/.1password"
+    },
+    {
+      "type": "bind",
+      "source": "${localEnv:HOME}/.ssh",
+      "target": "/home/rosdev/.ssh"
+    }
+  ],
   "runArgs": [
-    "--net=host",
-    // "--mount type=bind,source=${localEnv:HOME}/.1password,target=/home/rosdev/.1password",
+    "--net=host"
   ],
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {},
