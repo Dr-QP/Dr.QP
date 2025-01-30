@@ -369,6 +369,12 @@ public:
   /// non-zero setSpeed() command to solve it.
   void torqueOff();
 
+
+  /// Sends an I-JOG command to turn on the servo's motor in position control.
+  ///
+  /// Use this command to smoothly recover from torqueOff() call
+  void torqueOn();
+
   // Resets all parameters in EEPROM to their default values.
   //
   // After running this command, we recommend delaying for 2500 ms before

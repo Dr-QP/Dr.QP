@@ -64,6 +64,16 @@ int main(const int argc, const char* const argv[])
     return kNeutralPose;
   }();
 
+  // Recover each servo to its current position
+  forEachServo(0, [&servoSerial](ServoId servoId, int) {
+    XYZrobotServo servo(servoSerial, servoId);
+
+    XYZrobotServoStatus status = servo.readStatus();
+    if (status.position - status.posRef > 10) {
+      servo.torqueOn();
+    }
+  });
+
   forEachServo(200, [&kPoseSet, &servoSerial](ServoId servoId, int servoIndexInLeg) {
     XYZrobotServo servo(servoSerial, servoId);
 

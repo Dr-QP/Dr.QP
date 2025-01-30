@@ -42,7 +42,7 @@ int main()
                   << " error reading status: " << servo.getLastError() << "\n";
       } else {
         std::cout << legNameForServo(servoId) << "\tservo: " << servoId << ": " << status.position
-                  << "\t neutral: " << kNeutralPose[kServoIdToLeg[servoId]][servoIndexInLeg]
+                  << "\t posRef: " << status.posRef << "\t statusError: " << status.statusError
                   << "\n";
       }
       ++servoIndexInLeg;

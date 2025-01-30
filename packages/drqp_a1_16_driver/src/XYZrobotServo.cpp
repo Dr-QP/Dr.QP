@@ -165,6 +165,11 @@ void XYZrobotServo::torqueOff()
   sendIJog(0, SET_TORQUE_OFF, 0);
 }
 
+void XYZrobotServo::torqueOn()
+{
+  sendIJog(0, SET_POSITION_CONTROL_SERVO_ON, 0);
+}
+
 void XYZrobotServo::rollback()
 {
   sendRequest(CMD_ROLLBACK, NULL, 0);
