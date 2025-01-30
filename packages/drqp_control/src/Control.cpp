@@ -24,18 +24,35 @@
 #include "drqp_serial/TcpSerial.h"
 #include "drqp_serial/UnixSerial.h"
 
-int main()
+int main(const int argc, const char* const argv[])
 {
   // TcpSerial servoSerial("192.168.1.136", 2022);
   UnixSerial servoSerial("/dev/ttySC0");
+
+  const Pose kPoseSet = [argc, argv](){
+    if (argc >= 2) {
+      std::string pose = argv[1];
+      if (pose == "neutral") {
+        return kNeutralPose;
+      } else if (pose == "stand") {
+        return kStandingPose;
+      } else if (pose == "down") {
+        return kFoldedDownPose;
+      } else if (pose == "up") {
+        return kFoldedUpPose;
+      }
+      return kNeutralPose;
+    }
+    return kNeutralPose;
+  }();
 
   for (const auto& leg : kAllLegServoIds) {
     int servoIndexInLeg = 0;
     for (const int servoId : leg) {
       XYZrobotServo servo(servoSerial, servoId);
 
-      const ServoPosition position = kStandingPose[kServoIdToLeg[servoId]][servoIndexInLeg];
-      servo.setPosition(position, 250);
+      const ServoPosition position = kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg];
+      servo.setPosition(position, 100);
       std::cout << "Setting servo: " << std::dec << servoId << " = " << position << "\n";
 
       ++servoIndexInLeg;
