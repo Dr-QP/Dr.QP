@@ -18,16 +18,24 @@
   },
   "workspaceFolder": "/home/rosdev/ros2_ws/src/Dr.QP/",
   "workspaceMount": "source=${localWorkspaceFolder},target=/home/rosdev/ros2_ws/src/Dr.QP/,type=bind",
+  "containerEnv": {
+    "SSH_AUTH_SOCK": "/home/rosdev/.1password/agent.sock"
+  },
   "mounts": [
     {
       "type": "bind",
-      "source": "${localEnv:HOME}/.1password",
-      "target": "/home/rosdev/.1password"
+      "source": "${localEnv:HOME}/.1password/",
+      "target": "/home/rosdev/.1password/"
     },
+    // {
+    //   "type": "bind",
+    //   "source": "${localEnv:HOME}/.config/1Password/",
+    //   "target": "/home/rosdev/.config/1Password/"
+    // },
     {
       "type": "bind",
-      "source": "${localEnv:HOME}/.ssh",
-      "target": "/home/rosdev/.ssh"
+      "source": "${localEnv:HOME}/.ssh/",
+      "target": "/home/rosdev/.ssh/"
     }
   ],
   "runArgs": [
