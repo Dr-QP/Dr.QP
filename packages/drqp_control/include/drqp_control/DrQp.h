@@ -60,19 +60,16 @@ static inline ServoIdsArray servoIdsRange()
 using LegServoIdsArray = std::array<ServoId, kServosPerLeg>;
 using AllLegsServoIdsArray = std::array<LegServoIdsArray, kLegIdCount>;
 
-const AllLegsServoIdsArray kAllLegServoIds = []() {
-  AllLegsServoIdsArray legs;
-  legs[kFrontRightLegId] = {2, 4, 6};
-  legs[kFrontLeftLegId] = {1, 3, 5};
+const AllLegsServoIdsArray kAllLegServoIds = {
+  LegServoIdsArray{2, 4, 6},  // front-right
+  LegServoIdsArray{1, 3, 5},  // front-left
 
-  legs[kMiddleRightLegId] = {14, 16, 18};
-  legs[kMiddleLeftLegId] = {13, 15, 17};
+  LegServoIdsArray{14, 16, 18},  // middle-right
+  LegServoIdsArray{13, 15, 17},  // middle-left
 
-  legs[kBackRightLegId] = {8, 10, 12};
-  legs[kBackLeftLegId] = {7, 9, 11};
-
-  return legs;
-}();
+  LegServoIdsArray{8, 10, 12},  // back-right
+  LegServoIdsArray{7, 9, 11}    // back-left
+};
 
 using ServoIdToLegArray = std::array<ServoId, kServoMaxId>;
 

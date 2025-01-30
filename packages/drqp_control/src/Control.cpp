@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <thread>
 #include "drqp_control/DrQp.h"
 
 #include "drqp_a1_16_driver/XYZrobotServo.h"
@@ -57,6 +58,7 @@ int main(const int argc, const char* const argv[])
 
       ++servoIndexInLeg;
     }
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
 
   return 0;
