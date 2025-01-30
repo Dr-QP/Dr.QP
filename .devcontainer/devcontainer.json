@@ -36,7 +36,8 @@
     // }
   ],
   "runArgs": [
-    "--net=host"
+    // Uncomment only for local run, codespaces add the same arg by itself
+    // "--network host"
   ],
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {},
