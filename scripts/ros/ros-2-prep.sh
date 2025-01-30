@@ -4,16 +4,27 @@ set -x
 
 script_dir="$(dirname $0)"
 
-locale  # check for UTF-8
+# check for UTF-8
+function is_utf8_locale()
+{
+  local loc=$(locale)
+  if [[ $loc =~ 'LANG=en_US.UTF-8' && $loc =~ 'LC_ALL=en_US.UTF-8' ]]; then
+    echo yes
+  else
+    echo no
+  fi
+}
 
-sudo apt update && sudo apt install -y locales
-sudo locale-gen en_US en_US.UTF-8
-sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
-export LANG=en_US.UTF-8
+if [[ $(is_utf8_locale) == 'no' ]]; then
+  sudo apt update && sudo apt install -y locales
+  sudo locale-gen en_US en_US.UTF-8
+  sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+  export LANG=en_US.UTF-8
+fi
+test $(is_utf8_locale) == 'yes' || (echo "Failed to set en_US.UTF-8 locale" && exit 1)
 
-locale  # verify settings
 
-sudo apt install -y software-properties-common
+sudo apt install -y -q --no-install-recommends software-properties-common
 sudo add-apt-repository universe
 
 sudo apt update && sudo apt install -y wget curl gnupg2 lsb-release ca-certificates
@@ -38,11 +49,11 @@ echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://ap
 
 sudo apt update
 test -f /usr/share/doc/kitware-archive-keyring/copyright || sudo rm /usr/share/keyrings/kitware-archive-keyring.gpg
-sudo apt install kitware-archive-keyring
+sudo apt install -y -q --no-install-recommends kitware-archive-keyring
 
-sudo apt upgrade -y
+sudo apt upgrade -y -q
 
-sudo apt update && sudo apt install -y \
+sudo apt install -y -q --no-install-recommends \
   build-essential \
   cmake \
   ninja-build \
@@ -73,22 +84,20 @@ python3 -m pip install -U \
   pytest
 
 # install Fast-RTPS dependencies
-sudo apt install --no-install-recommends -y \
+sudo apt install -y -q --no-install-recommends \
   libasio-dev \
   libtinyxml2-dev
 # install Cyclone DDS dependencies
-sudo apt install --no-install-recommends -y \
+sudo apt install -y -q --no-install-recommends \
   libcunit1-dev
 
 
-sudo apt install -y python3-rosdep2
+sudo apt install -y -q --no-install-recommends python3-rosdep2
 sudo rm -f /etc/ros/rosdep/sources.list.d/*
 sudo rosdep init
 rosdep update
 
-sudo apt install -y ros-humble-desktop
-# sudo apt install ros-humble-ros-base
-sudo apt install -y ros-dev-tools
+sudo apt install -y -q --no-install-recommends ros-humble-desktop ros-dev-tools
 
 # Install Node.js and NPM for local GHA via nektos/act to work
 curl -sL https://deb.nodesource.com/setup_20.x -o $script_dir/nodesource_setup.sh
