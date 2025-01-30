@@ -159,33 +159,6 @@ const Pose kStandingPose = []() {
   return legs;
 }();
 
-// Folded down
-// front-right     servo: 2: 529    neutral: 512
-// front-right     servo: 4: 207    neutral: 562
-// front-right     servo: 6: 457    neutral: 592
-
-// middle-right    servo: 14: 500   neutral: 512
-// middle-right    servo: 16: 197   neutral: 562
-// middle-right    servo: 18: 443   neutral: 592
-
-// back-right      servo: 8: 524    neutral: 512
-// back-right      servo: 10: 192   neutral: 562
-// back-right      servo: 12: 451   neutral: 592
-
-
-
-// front-left      servo: 1: 504    neutral: 512
-// front-left      servo: 3: 807    neutral: 462
-// front-left      servo: 5: 614    neutral: 432
-
-// middle-left     servo: 13: 517   neutral: 512
-// middle-left     servo: 15: 832   neutral: 462
-// middle-left     servo: 17: 586   neutral: 432
-
-// back-left       servo: 7: 477    neutral: 512
-// back-left       servo: 9: 807    neutral: 462
-// back-left       servo: 11: 680   neutral: 432
-
 const Pose kFoldedDownPose = []() {
   Pose legs;
   const uint16_t kBase = 512;
@@ -219,5 +192,24 @@ const Pose kFoldedUpPose = []() {
     kBase + kCoxaOffset, kBase + kRight * kFemurOffset, kBase + kRight * kTibiaOffset};
   legs[kFrontLeftLegId] = legs[kMiddleLeftLegId] = legs[kBackLeftLegId] = {
     kBase + kCoxaOffset, kBase + kLeft * kFemurOffset, kBase + kLeft * kTibiaOffset};
+  return legs;
+}();
+
+
+const Pose kFoldedUpCompactPose = []() {
+  Pose legs;
+  const uint16_t kBase = 512;
+
+  const int16_t kCoxaOffset = -260;
+  const int16_t kFemurOffset = 280;
+  const int16_t kTibiaOffset = 220;
+
+  const int16_t kRight = 1;
+  const int16_t kLeft = -1;
+
+  legs[kFrontRightLegId] = legs[kMiddleRightLegId] = legs[kBackRightLegId] = {
+    kBase + kRight * kCoxaOffset, kBase + kRight * kFemurOffset, kBase + kRight * kTibiaOffset};
+  legs[kFrontLeftLegId] = legs[kMiddleLeftLegId] = legs[kBackLeftLegId] = {
+    kBase + kLeft * kCoxaOffset, kBase + kLeft * kFemurOffset, kBase + kLeft * kTibiaOffset};
   return legs;
 }();

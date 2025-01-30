@@ -41,8 +41,9 @@ int main(const int argc, const char* const argv[])
         return kFoldedDownPose;
       } else if (pose == "up") {
         return kFoldedUpPose;
+      } else if (pose == "upc") {
+        return kFoldedUpCompactPose;
       }
-      return kNeutralPose;
     }
     return kNeutralPose;
   }();
