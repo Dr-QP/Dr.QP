@@ -32,6 +32,10 @@ int main()
   for (const auto servoId : servoIdsRange()) {
     XYZrobotServo servo(servoSerial, servoId);
     servo.torqueOff();
+
+    // In case servos got into faulty state
+    // Note that servo will still remember last refPosition and will animate from it
+    servo.reboot();
   }
 
   return 0;

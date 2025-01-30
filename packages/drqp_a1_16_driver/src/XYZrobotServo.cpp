@@ -178,7 +178,6 @@ void XYZrobotServo::reboot()
 void XYZrobotServo::flushRead()
 {
   stream->flushRead();
-  // while(stream->available()) { stream->read(); }
 }
 
 void XYZrobotServo::sendRequest(

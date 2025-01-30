@@ -34,12 +34,12 @@ int main()
     for (const int servoId : leg) {
       XYZrobotServo servo(servoSerial, servoId);
 
-      const auto neutralPos = kNeutralPose[kServoIdToLeg[servoId]][servoIndexInLeg];
-      servo.setPosition(neutralPos, 150);
+      const ServoPosition position = kStandingPose[kServoIdToLeg[servoId]][servoIndexInLeg];
+      servo.setPosition(position, 250);
+      std::cout << "Setting servo: " << std::dec << servoId << " = " << position << "\n";
 
       ++servoIndexInLeg;
     }
-    std::cout << "\n";
   }
 
   return 0;

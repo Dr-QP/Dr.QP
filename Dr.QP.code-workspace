@@ -40,6 +40,8 @@
       "iliazeus.vscode-ansi",
       "ms-azuretools.vscode-docker",
       "1password.op-vscode",
+      "rogalmic.bash-debug",
+      "mads-hartmann.bash-ide-vscode",
     ]
   },
   "launch": {
@@ -49,10 +51,18 @@
         "type": "lldb",
         "request": "launch",
         "name": "Launch C++",
-        "program": "build/drqp_serial/test/drqp_serial_tests",
+        "program": "install/drqp_control/lib/drqp_control/control",
         "args": [],
-        "cwd": "${workspaceFolder:Dr.QP}/build/drqp_serial/test",
+        "cwd": "${workspaceFolder:Dr.QP}/install/drqp_control/lib/drqp_control",
         "preLaunchTask": "Dr.QP colcon build",
+      },
+      {
+        "type": "bashdb",
+        "request": "launch",
+        "name": "Bash-Debug (current file)",
+        "cwd": "${workspaceFolder}",
+        "program": "${file}",
+        "args": []
       }
     ]
   },

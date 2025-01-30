@@ -4,6 +4,20 @@ set -x
 
 script_dir="$(dirname $0)"
 
+# Basic prerequisites
+sudo apt update \
+  && sudo apt install -y -q --no-install-recommends \
+  locales \
+  software-properties-common \
+  wget \
+  curl \
+  gnupg2 \
+  lsb-release \
+  ca-certificates
+
+# Enable community-maintained free and open-source software (universe).
+sudo add-apt-repository universe -y
+
 # check for UTF-8
 function is_utf8_locale()
 {
@@ -16,18 +30,11 @@ function is_utf8_locale()
 }
 
 if [[ $(is_utf8_locale) == 'no' ]]; then
-  sudo apt update && sudo apt install -y locales
   sudo locale-gen en_US en_US.UTF-8
   sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
   export LANG=en_US.UTF-8
 fi
 test $(is_utf8_locale) == 'yes' || (echo "Failed to set en_US.UTF-8 locale" && exit 1)
-
-
-sudo apt install -y -q --no-install-recommends software-properties-common
-sudo add-apt-repository universe
-
-sudo apt update && sudo apt install -y wget curl gnupg2 lsb-release ca-certificates
 
 # Clang 19
 CLANG_VERSION=19
@@ -36,9 +43,8 @@ chmod +x "$script_dir/llvm.sh"
 sudo "$script_dir/llvm.sh" $CLANG_VERSION all
 sudo "$script_dir/update-alternatives-clang.sh" $CLANG_VERSION 99999
 
-
+# Add ros signing keys
 if [[ ! (-f /etc/apt/sources.list.d/ros2-latest.list || -f /etc/apt/sources.list.d/ros2.list) ]]; then
-  # sudo rm /etc/apt/sources.list.d/ros2-latest.list # remove old ros2-latest.list from the docker image
   sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key  -o /usr/share/keyrings/ros-archive-keyring.gpg
   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(source /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
 fi
@@ -104,6 +110,6 @@ curl -sL https://deb.nodesource.com/setup_20.x -o $script_dir/nodesource_setup.s
 sudo bash $script_dir/nodesource_setup.sh
 sudo apt-get -y remove nodejs npm # remove old versions if any
 # The NodeSource nodejs package contains both the node binary and npm, so you don’t need to install npm separately.
-sudo apt-get install -y nodejs
+sudo apt-get install -y -q --no-install-recommends nodejs
 
 "$script_dir/fix-alternatives.sh"

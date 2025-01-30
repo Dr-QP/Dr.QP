@@ -143,3 +143,21 @@ const Pose kNeutralPose = []() {
     kBase + kCoxaOffset, kBase + kLeft * kFemurOffset, kBase + kLeft * kTibiaOffset};
   return legs;
 }();
+
+const Pose kStandingPose = []() {
+  Pose legs;
+  const uint16_t kBase = 512;
+
+  const uint16_t kCoxaOffset = 0;
+  const uint16_t kFemurOffset = 0;
+  const uint16_t kTibiaOffset = 0;
+
+  const int16_t kRight = 1;
+  const int16_t kLeft = -1;
+
+  legs[kFrontRightLegId] = legs[kMiddleRightLegId] = legs[kBackRightLegId] = {
+    kBase + kCoxaOffset, kBase + kRight * kFemurOffset, kBase + kRight * kTibiaOffset};
+  legs[kFrontLeftLegId] = legs[kMiddleLeftLegId] = legs[kBackLeftLegId] = {
+    kBase + kCoxaOffset, kBase + kLeft * kFemurOffset, kBase + kLeft * kTibiaOffset};
+  return legs;
+}();
