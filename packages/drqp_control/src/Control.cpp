@@ -25,6 +25,22 @@
 #include "drqp_serial/TcpSerial.h"
 #include "drqp_serial/UnixSerial.h"
 
+void forEachServo(long millisecondsBetweenLegs, std::function<void(ServoId servoId, int servoIndexInLeg)> func) {
+  if (!func) {
+    return;
+  }
+
+  for (const auto& leg : kAllLegServoIds) {
+    int servoIndexInLeg = 0;
+    for (const int servoId : leg) {
+      func(servoId, servoIndexInLeg);
+
+      ++servoIndexInLeg;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(millisecondsBetweenLegs));
+  }
+}
+
 int main(const int argc, const char* const argv[])
 {
   // TcpSerial servoSerial("192.168.1.136", 2022);
@@ -48,19 +64,13 @@ int main(const int argc, const char* const argv[])
     return kNeutralPose;
   }();
 
-  for (const auto& leg : kAllLegServoIds) {
-    int servoIndexInLeg = 0;
-    for (const int servoId : leg) {
-      XYZrobotServo servo(servoSerial, servoId);
+  forEachServo(200, [&kPoseSet, &servoSerial](ServoId servoId, int servoIndexInLeg) {
+    XYZrobotServo servo(servoSerial, servoId);
 
-      const ServoPosition position = kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg];
-      servo.setPosition(position, 100);
-      std::cout << "Setting servo: " << std::dec << servoId << " = " << position << "\n";
-
-      ++servoIndexInLeg;
-    }
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-  }
+    const ServoPosition position = kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg];
+    servo.setPosition(position, 100);
+    std::cout << "Setting servo: " << std::dec << servoId << " = " << position << "\n";
+  });
 
   return 0;
 }
