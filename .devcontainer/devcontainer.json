@@ -16,11 +16,12 @@
       ]
     }
   },
-  "workspaceFolder": "/home/rosdev/ros2_ws/",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/home/rosdev/ros2_ws/src,type=bind",
+  "workspaceFolder": "/home/rosdev/ros2_ws/src/Dr.QP/",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/rosdev/ros2_ws/src/Dr.QP/,type=bind",
   "mounts": [],
   "runArgs": [
-    "--net=host"
+    "--net=host",
+    // "--mount type=bind,source=${localEnv:HOME}/.1password,target=/home/rosdev/.1password",
   ],
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {},
@@ -32,7 +33,8 @@
     "ghcr.io/devcontainers-community/features/llvm": {
       "version": "19"
     },
-    "ghcr.io/devcontainers-community/features/cmake": {},
+    "ghcr.io/devcontainers-extra/features/cmake": {},
     "ghcr.io/devcontainers/features/node": {},
+    "ghcr.io/devcontainers-extra/features/fish-apt-get": {},
   }
 }
