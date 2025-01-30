@@ -19,24 +19,21 @@
   "workspaceFolder": "/home/rosdev/ros2_ws/src/Dr.QP/",
   "workspaceMount": "source=${localWorkspaceFolder},target=/home/rosdev/ros2_ws/src/Dr.QP/,type=bind",
   "containerEnv": {
-    "SSH_AUTH_SOCK": "/home/rosdev/.1password/agent.sock"
+    // For local dev, allows to use SSH keys from 1password
+    // "SSH_AUTH_SOCK": "/home/rosdev/.1password/agent.sock"
   },
   "mounts": [
-    {
-      "type": "bind",
-      "source": "${localEnv:HOME}/.1password/",
-      "target": "/home/rosdev/.1password/"
-    },
+    // For local dev, allows to use SSH keys from 1password
     // {
     //   "type": "bind",
-    //   "source": "${localEnv:HOME}/.config/1Password/",
-    //   "target": "/home/rosdev/.config/1Password/"
+    //   "source": "${localEnv:HOME}/.1password/",
+    //   "target": "/home/rosdev/.1password/"
     // },
-    {
-      "type": "bind",
-      "source": "${localEnv:HOME}/.ssh/",
-      "target": "/home/rosdev/.ssh/"
-    }
+    // {
+    //   "type": "bind",
+    //   "source": "${localEnv:HOME}/.ssh/",
+    //   "target": "/home/rosdev/.ssh/"
+    // }
   ],
   "runArgs": [
     "--net=host"
