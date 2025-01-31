@@ -111,12 +111,19 @@ int main(const int argc, const char* const argv[])
   }();
 
   std::array<IJogData, kServoCount> posData;
+  SJogCommand<kServoCount> posCmd;
+  posCmd.playtime = 150;
+
   size_t servoIndex = 0;
-  forEachServo(0, [&kPoseSet, &posData, &servoIndex](ServoId servoId, int servoIndexInLeg) {
-    posData[servoIndex++] = {kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg], 1, servoId, 150};
+  forEachServo(0, [&kPoseSet, &posData, &posCmd, &servoIndex](ServoId servoId, int servoIndexInLeg) {
+    posData[servoIndex] = {kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg], SET_POSITION_CONTROL, servoId, 150};
+    posCmd.data[servoIndex] = {kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg], SET_POSITION_CONTROL, servoId};
+
+    servoIndex++;
   });
   XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
-  servo.setPositions(posData.data(), posData.size());
+  // servo.setPositions(posData.data(), posData.size());
+  servo.sendSJogCommand(posCmd);
 
   return 0;
 }

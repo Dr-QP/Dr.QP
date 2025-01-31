@@ -23,6 +23,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <array>
 
 #include "drqp_serial/Stream.h"
 
@@ -190,6 +191,20 @@ struct XYZrobotServoStatus
   uint16_t iBus;
 } __attribute__((packed));
 
+struct SJogData
+{
+  uint16_t goal;
+  uint8_t type;
+  uint8_t id;
+} __attribute__((packed));
+
+template<size_t ServoCount>
+struct SJogCommand
+{
+  uint8_t playtime;
+  std::array<SJogData, ServoCount> data;
+};
+
 struct IJogData
 {
   uint16_t goal;
@@ -197,6 +212,21 @@ struct IJogData
   uint8_t id;
   uint8_t playtime;
 } __attribute__((packed));
+
+#define SET_POSITION_CONTROL 0
+#define SET_SPEED_CONTROL 1
+#define SET_TORQUE_OFF 2
+#define SET_POSITION_CONTROL_SERVO_ON 3
+
+#define CMD_EEPROM_WRITE 0x01
+#define CMD_EEPROM_READ 0x02
+#define CMD_RAM_WRITE 0x03
+#define CMD_RAM_READ 0x04
+#define CMD_I_JOG 0x05
+#define CMD_S_JOG 0x06
+#define CMD_STAT 0x07
+#define CMD_ROLLBACK 0x08
+#define CMD_REBOOT 0x09
 
 class XYZrobotServo
 {
@@ -421,6 +451,11 @@ public:
     return id;
   }
 
+  template<size_t ServoCount>
+  void sendSJogCommand(SJogCommand<ServoCount>& cmd)
+  {
+    sendRequest(kBroadcastId, CMD_S_JOG, &cmd, sizeof(cmd));
+  }
 private:
   void flushRead();
 

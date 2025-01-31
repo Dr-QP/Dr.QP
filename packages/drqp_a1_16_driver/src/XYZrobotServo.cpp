@@ -26,21 +26,6 @@
 static_assert(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__,
               "This code assumes little-endian byte order.");
 
-#define CMD_EEPROM_WRITE 0x01
-#define CMD_EEPROM_READ 0x02
-#define CMD_RAM_WRITE 0x03
-#define CMD_RAM_READ 0x04
-#define CMD_I_JOG 0x05
-#define CMD_S_JOG 0x06
-#define CMD_STAT 0x07
-#define CMD_ROLLBACK 0x08
-#define CMD_REBOOT 0x09
-
-#define SET_POSITION_CONTROL 0
-#define SET_SPEED_CONTROL 1
-#define SET_TORQUE_OFF 2
-#define SET_POSITION_CONTROL_SERVO_ON 3
-
 
 XYZrobotServo::XYZrobotServo(Stream& stream, uint8_t id)
 {
