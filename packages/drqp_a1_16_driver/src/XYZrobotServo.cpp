@@ -349,22 +349,12 @@ void XYZrobotServo::memoryRead(uint8_t cmd, uint8_t startAddress, void* data, ui
   }
 }
 
-#define LOW_BYTE(x) (char)((x) & 0xFF)
-#define HIGH_BYTE(x) (char)(((x) & 0xFF00) >> 8)
-
 void XYZrobotServo::sendIJog(IJogData data)
 {
   sendRequest(id, CMD_I_JOG, &data, sizeof(data));
 }
 
-// void XYZrobotServo::sendMultiIJog(uint16_t goal, uint8_t type, uint8_t playtime)
-// {
-//   IJogData data;
-//   data.goalLow = LOW_BYTE(goal);
-//   data.goalHigh = HIGH_BYTE(goal);
-//   data.type = type;
-//   data.id = id;
-//   data.playtime = playtime;
-
-//   sendRequest(0xFE, CMD_I_JOG, &data, sizeof(data));
-// }
+void XYZrobotServo::sendMultiIJog(IJogData* data, uint8_t count)
+{
+  sendRequest(kBroadcastId, CMD_I_JOG, data, sizeof(IJogData) * count);
+}

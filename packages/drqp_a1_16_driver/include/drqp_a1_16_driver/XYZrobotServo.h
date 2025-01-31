@@ -433,6 +433,7 @@ private:
   void memoryRead(uint8_t cmd, uint8_t startAddress, void* data, uint8_t dataSize);
 
   void sendIJog(IJogData data);
+  void sendMultiIJog(IJogData* data, uint8_t count);
 
   XYZrobotServoError lastError;
 
