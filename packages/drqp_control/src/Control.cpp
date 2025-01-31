@@ -116,7 +116,7 @@ int main(const int argc, const char* const argv[])
     XYZrobotServo servo(servoSerial, servoId);
 
     const ServoPosition position = kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg];
-    servo.setPosition(position, 50);
+    servo.setPosition(position, 150);
   });
 
   return 0;
