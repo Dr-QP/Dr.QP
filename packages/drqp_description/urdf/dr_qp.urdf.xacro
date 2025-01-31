@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<robot name="dr_qp" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:arg name="robot_name" default = "dr_qp"/>
+  <xacro:arg name="external_urdf_loc" default=""/>
+  <xacro:arg name="load_gazebo_configs" default="false"/>
+
+  <xacro:property name="urdf_loc" value="$(arg external_urdf_loc)"/>
+
+  <xacro:if value="$(arg load_gazebo_configs)">
+    <xacro:include filename="$(find drqp_gazebo)/config/drqp_texture.gazebo"/>
+  </xacro:if>
+
+  <material name="drqp_black">
+    <texture filename="package://drqp_description/meshes/drqp_black.png"/>
+  </material>
+  <material name="drqp_black_tmp">
+    <color rgba="0.5 0.5 0.5 0.2" />
+  </material>
+
+  <xacro:include filename="$(find drqp_description)/urdf/body.urdf.xacro"/>
+  <xacro:include filename="$(find drqp_description)/urdf/leg.urdf.xacro"/>
+  <xacro:include filename="$(find drqp_description)/urdf/gazebo.xacro"/>
+  
+  <xacro:leg robot_name="$(arg robot_name)" prefix="right_front" x="0.11692" y="-0.06387" yaw="${-pi/4}"/>
+  <xacro:leg robot_name="$(arg robot_name)" prefix="right_middle" x="0" y="-0.103" yaw="${-pi/2}"/>
+  <xacro:leg robot_name="$(arg robot_name)" prefix="right_back" x="-0.11692" y="-0.06387" yaw="${-3*pi/4}"/>
+  <xacro:leg robot_name="$(arg robot_name)" prefix="left_front" x="0.11692" y="0.06387" yaw="${pi/4}"/>
+  <xacro:leg robot_name="$(arg robot_name)" prefix="left_middle" x="0" y="0.103" yaw="${pi/2}"/>
+  <xacro:leg robot_name="$(arg robot_name)" prefix="left_back" x="-0.11692" y="0.06387" yaw="${3*pi/4}"/>
+  <gazebo reference="">
+    <self_collide>1</self_collide>
+
+    <!-- Params copied from https://www.youtube.com/watch?v=Gp3DF97yN7k&list=PL_0ePxMRfT22elbjPCf36MS02d6TK2sSk&index=1 -->
+    <mu1>50</mu1>
+    <mu2>25</mu2>
+    <kp>25000</kp>
+    <kd>0.05</kd>
+  </gazebo>
+</robot>

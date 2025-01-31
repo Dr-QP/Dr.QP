@@ -1,0 +1,37 @@
+name: ros_env
+channels:
+  - robostack-humble
+  - robostack
+  - robostack-experimental
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - ros-humble-ros-base
+  - compilers
+  - pkg-config
+  - make
+  - colcon-common-extensions
+  - ca-certificates
+  - certifi
+  - openssl
+  - rosdep
+  - anaconda-client
+  - catkin_pkg
+  - ruamel_yaml
+  - rosdistro
+  - empy
+  - networkx
+  - requests
+  - ruamel
+  - ruamel.yaml
+  - boa
+
+  # App specific
+  - cmake
+  - git
+  - ninja
+  - boost
+  - pip:
+    - conan>=1.50
+prefix: /Users/antonmatosov/opt/miniconda3/envs/ros_env

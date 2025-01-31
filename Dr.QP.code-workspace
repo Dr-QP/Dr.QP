@@ -1,0 +1,182 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "Dr.QP"
+    },
+  ],
+  "extensions": {
+    "recommendations": [
+      "chrisdias.vscode-opennewinstance",
+      "dlech.chmod",
+      "eamodio.gitlens",
+      "hangxingliu.vscode-systemd-support",
+      "jithurjacob.nbpreviewer",
+      "llvm-vs-code-extensions.vscode-clangd",
+      "mhutchie.git-graph",
+      "ms-iot.vscode-ros",
+      "ms-python.debugpy",
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "ms-vscode-remote.remote-containers",
+      "ms-vscode-remote.remote-ssh-edit",
+      "ms-vscode-remote.remote-ssh",
+      "ms-vscode.cmake-tools",
+      "ms-vscode.cpptools-themes",
+      "plorefice.devicetree",
+      "redhat.vscode-xml",
+      "redhat.vscode-yaml",
+      "rpinski.shebang-snippets",
+      "smilerobotics.urdf",
+      "twxs.cmake",
+      "yy0931.save-as-root",
+      "althack.ament-task-provider",
+      "nonanonno.vscode-ros2",
+      "jaehyunshim.vscode-ros2",
+      "vadimcn.vscode-lldb",
+      "editorconfig.editorconfig",
+      "sanjulaganepola.github-local-actions",
+      "streetsidesoftware.code-spell-checker",
+      "iliazeus.vscode-ansi",
+      "ms-azuretools.vscode-docker",
+      "1password.op-vscode",
+      "rogalmic.bash-debug",
+      "mads-hartmann.bash-ide-vscode",
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "lldb",
+        "request": "launch",
+        "name": "Launch C++",
+        "program": "install/drqp_control/lib/drqp_control/control",
+        "args": [],
+        "cwd": "${workspaceFolder:Dr.QP}/install/drqp_control/lib/drqp_control",
+        "preLaunchTask": "Dr.QP colcon build",
+      },
+      {
+        "type": "bashdb",
+        "request": "launch",
+        "name": "Bash-Debug (current file)",
+        "cwd": "${workspaceFolder}",
+        "program": "${file}",
+        "args": []
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "type": "colcon",
+        "args": [
+          "build",
+          "--symlink-install",
+          "--event-handlers",
+          "console_cohesion+",
+          "--base-paths",
+          "${workspaceFolder}",
+          // "--packages-up-to",
+          // "drqp_serial",
+          // "--executor=sequential",
+          "--cmake-args",
+          " -GNinja",
+          " -DCMAKE_BUILD_TYPE=Debug",
+          // " --debugger",
+          // " --debugger-pipe=/tmp/drqp_serial"
+        ],
+        "problemMatcher": [
+          "$catkin-gcc"
+        ],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "label": "Dr.QP colcon build",
+        "options": {
+          "env": {
+            "CMAKE_EXPORT_COMPILE_COMMANDS": "1",
+            "CC": "clang",
+            "CXX": "clang++"
+          }
+        }
+      },
+      {
+        "type": "colcon",
+        "args": [
+          "test",
+          "--event-handlers",
+          "console_cohesion+",
+          "summary+",
+          "status+",
+          // "--packages-up-to",
+          // "drqp_serial",
+        ],
+        "problemMatcher": [
+          "$catkin-gcc"
+        ],
+        "group": {
+          "kind": "test",
+          "isDefault": true
+        },
+        "label": "Dr.QP colcon test"
+      },
+      {
+        "label": "Dr.QP clean",
+        "type": "shell",
+        "command": "rm -rf build install log",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Dr.QP ament cpplint",
+        "type": "ament",
+        "task": "cpplint",
+        "path": "${workspaceFolder}/packages/",
+        "problemMatcher": [
+          "$ament_cpplint"
+        ],
+      },
+      {
+        "label": "Dr.QP ament lint cmake",
+        "type": "ament",
+        "task": "lint_cmake",
+        "path": "${workspaceFolder}/packages/",
+        "problemMatcher": [
+          "$ament_lint_cmake"
+        ],
+      }
+    ]
+  },
+  "settings": {
+    "cmake.configureOnEdit": false,
+    "cmake.configureOnOpen": false,
+    "ros.distro": "humble",
+    "ament-task-provider.envSetup": "source /opt/ros/humble/setup.bash",
+    "python.autoComplete.extraPaths": [
+      "/opt/ros/humble/lib/python3.10/site-packages",
+      "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+      "/opt/ros/humble/lib/python3.10/site-packages",
+      "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/bower_components": true,
+      "**/*.code-search": true,
+      "/build/**": true,
+      "/install/**": true,
+      "/log/**": true,
+    },
+    "clangd.enable": true,
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "[cpp]": {
+      "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+    },
+  },
+}

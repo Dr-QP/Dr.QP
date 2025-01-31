@@ -1,0 +1,56 @@
+{
+  "name": "ROS 2 Workspace humble-ros-base",
+  "remoteUser": "rosdev",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "USERNAME": "rosdev",
+      "GID": "1000",
+      "UID": "1000"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // Open the /home/rosdev/ros2_ws/Dr.QP.code-workspace to install the recommended extensions
+      ]
+    }
+  },
+  "workspaceFolder": "/home/rosdev/ros2_ws/",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/rosdev/ros2_ws/,type=bind",
+  "containerEnv": {
+    // For local dev, allows to use SSH keys from 1password
+    // "SSH_AUTH_SOCK": "/home/rosdev/.1password/agent.sock"
+  },
+  "mounts": [
+    // For local dev, allows to use SSH keys from 1password
+    // {
+    //   "type": "bind",
+    //   "source": "${localEnv:HOME}/.1password/",
+    //   "target": "/home/rosdev/.1password/"
+    // },
+    // {
+    //   "type": "bind",
+    //   "source": "${localEnv:HOME}/.ssh/",
+    //   "target": "/home/rosdev/.ssh/"
+    // }
+  ],
+  "runArgs": [
+    // Uncomment only for local run, codespaces add the same arg by itself
+    // "--network host"
+  ],
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/git-lfs:1": {},
+    "ghcr.io/dhoeric/features/act:1": {},
+    "ghcr.io/itsmechlark/features/1password": {},
+    "ghcr.io/devcontainers-community/features/llvm": {
+      "version": "19"
+    },
+    "ghcr.io/devcontainers-extra/features/cmake": {},
+    "ghcr.io/devcontainers/features/node": {},
+    "ghcr.io/devcontainers-extra/features/fish-apt-get": {},
+  }
+}

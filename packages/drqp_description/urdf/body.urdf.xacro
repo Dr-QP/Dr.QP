@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<robot name="dr_qp" xmlns:xacro="http://ros.org/wiki/xacro">
+    
+  <xacro:property name="body_height" value="0.037" />
+
+  <link name="$(arg robot_name)/base_center_link">
+    <visual>
+      <origin xyz="0 0 -${body_height/2}" rpy="${pi/2} 0 ${pi}" />
+      <geometry>
+        <mesh filename="package://drqp_description/meshes/body-simple.stl" />
+      </geometry>
+      <material name="drqp_black"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -${body_height/2}" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://drqp_description/meshes/body-collision.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.001522 0.000302 0.015345"/>
+      <mass value="1.522054" />
+      <inertia ixx="0.0044660000" iyy="0.0084890000" izz="0.0092020000" ixy="0.0000076888" ixz="-0.0001245000" iyz="0.0000050996" />
+    </inertial>
+  </link>
+
+  <link name="$(arg robot_name)/base_link"> <!-- AKA World -->
+  </link>
+
+  <joint name="base_bottom" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 ${body_height/2}"/>
+    <parent link="$(arg robot_name)/base_link"/>
+    <child link="$(arg robot_name)/base_center_link"/>
+  </joint>
+  <!-- <gazebo reference='base_bottom'>
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo> -->
+
+
+  <joint name="base_bottom_to_camera" type="fixed">
+    <origin rpy="0 0 0" xyz="0.132 0 0"/>
+    <parent link="$(arg robot_name)/base_center_link"/>
+    <child link="$(arg robot_name)/camera"/>
+  </joint>
+  <!-- <gazebo reference='base_bottom_to_camera'>
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo> -->
+
+  <link name="$(arg robot_name)/camera">
+  </link>
+
+</robot>

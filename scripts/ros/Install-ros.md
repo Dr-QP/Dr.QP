@@ -1,96 +1,44 @@
-# Ros Humble
+# Installing ROS
 
-Dr.QP project is using ROS2 Humble version
-Requires Ubuntu 22.04, python 3.9
+## Development machine
 
-# Installation through Conda
+For the development machine use Ubuntu 22.04 and install ros using ros-2-prep.sh. At the end script will print installation instruction for base or desktop distro.
+Run the base or desktop installation manually
 
-## Cleanup old environment variables
+### Bash
 
-If you have ever attempted to install ROS2 manually, you probable have some environment variables in
- - .bashrc
- - .bash_profile
- - .config/fish/config.fish
- - or other RC/config file for your shell
+Update your `~/.bashrc` with the following snippet that adds couple alises for easy activation of ros1 and 2 globally or in workspace
 
-In order to make ROS2 setup via conda properly work you need to remove these variables from the global scope
+```bash
+#################################################################
+if [ -z "$ROS_IP" ]; then
+  export ROS_IP=127.0.0.1
+fi
 
-## Remaining issues: https://github.com/RoboStack/ros-humble/issues/3
+alias ros1_activate="source /opt/ros/noetic/setup.bash"
+alias ros1_ws="source ./devel/setup.bash"
 
-The macOS installation is using RoboStack
-https://robostack.github.io/GettingStarted.html
-
-```
-# if you don't have mamba yet, install it first (not needed when using mambaforge):
-conda install mamba -c conda-forge
-
-# now create a new environment
-mamba create -n ros_env python=3.9
-conda activate ros_env
-
-# this adds the conda-forge channel to the new created environment configuration 
-conda config --env --add channels conda-forge
-# and the robostack channels
-conda config --env --add channels robostack-experimental
-conda config --env --add channels robostack
-conda config --env --add channels robostack-humble
-
-# Install the version of ROS you are interested in:
-mamba install ros-humble-desktop-full
-
-# optionally, install some compiler packages if you want to e.g. build packages in a colcon_ws:
-mamba install compilers cmake pkg-config make ninja colcon-common-extensions
-
-# on Windows, install Visual Studio 2017 or 2019 with C++ support 
-# see https://docs.microsoft.com/en-us/cpp/build/vscpp-step-0-installation?view=msvc-160
-
-# on Windows, install the Visual Studio command prompt:
-mamba install vs2019_win-64
-
-# note that in this case, you should also install the necessary dependencies with conda/mamba, if possible
-
-# reload environment to activate required scripts before running anything
-# on Windows, please restart the Anaconda Prompt / Command Prompt!
-conda deactivate
-conda activate ros_env
-
-
-## This was required to avoid sudo for rosdep
-sudo mkdir /etc/ros
-sudo chown -R (whoami) /etc/ros
-
-# if you want to use rosdep, also do:
-mamba install rosdep
-rosdep init  # note: do not use sudo!
-rosdep update
-```
-
-### Recommended conda config
-
-To avoid pontential conflicts it is recommended to use `strict` channel priority. Read more [here](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-channels.html#strict-channel-priority)
-```
-conda config --set channel_priority strict
-```
-
-## Activating
-
-In order to activate ROS2 shell 2 things need to be done:
- - `conda activate ros_env` - activate conda environment 
- - `source $CONDA_PREFIX/setup.bash` - source ROS2 specific environment variables 
-
-### Fish convenient function
-
-Below are a convenient functions for `fish` shell to source ROS2 environment
-NOTE: it makes use of [`bass`](https://github.com/edc/bass) plugin that allows to source bash scripts in fish
+alias ros2_activate="source /opt/ros/humble/setup.bash"
+alias ros2_ws="source ./install/setup.bash"
 
 ```
-function ros2_activate
-    conda activate ros_env
-    bass source $CONDA_PREFIX/setup.bash
-end
 
-function ros2_ws
-    ros2_activate
-    bass source setup.bash
-end
+### Fish
+
+For `fish` shell users install [`bass`](https://github.com/edc/bass)
+
+```fish
+# Install fisher (package manager for fish)
+curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher
+
+# Install bass
+fisher install edc/bass
+```
+
+Copy `./scripts/ros/ros.fish` to `~/.config/fish/conf.d/ros.fish` which contains `ros2_activate` and `ros2_ws` commands that will also register autocompletion
+
+If you are in the root of the ROS workspace copy command will look like this
+
+```bash
+cp src/Dr.QP/scripts/ros/ros.fish ~/.config/fish/conf.d
 ```

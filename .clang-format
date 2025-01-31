@@ -1,0 +1,59 @@
+Language:        Cpp
+BasedOnStyle:    Google
+IndentWidth:     2
+TabWidth:        2
+UseTab:          Never
+
+AllowShortFunctionsOnASingleLine: Empty  # Only allow short empty functions
+IndentCaseLabels: false
+
+AlwaysBreakTemplateDeclarations: Yes
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+SpacesInAngles: false
+SpacesBeforeTrailingComments: 2
+Cpp11BracedListStyle: true
+AllowAllParametersOfDeclarationOnNextLine: false
+MaxEmptyLinesToKeep: 1
+InsertNewlineAtEOF: true
+
+SortIncludes: Never
+IncludeBlocks: Regroup
+IncludeCategories:
+  # Standard C headers in <.h>
+  - Regex: '<[-\w\/-_]+\.h>'
+    Priority: 1
+
+  # Standard C++ headers in <>
+  - Regex: '<[-\w\/-_]+>'
+    Priority: 2
+
+  # Specific external headers in <> to put first
+  - Regex: '<(catch2|gtest|doctest).*>'
+    Priority: 3
+
+  # External headers in <> with extension or /
+  - Regex: '<[-\w\/-_]+[\.\/][-\w\/-_]+>'
+    Priority: 4
+
+  # Local headers in ""
+  - Regex: '"[-\w\/-_]*"'
+    Priority: 5
+
+# This part comes from
+# https://github.com/ament/ament_lint/blob/humble/ament_clang_format/ament_clang_format/configuration/.clang-format
+AccessModifierOffset: -2
+AlignAfterOpenBracket: AlwaysBreak
+BraceWrapping:
+  AfterClass: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+BreakBeforeBraces: Custom
+ColumnLimit: 100
+ConstructorInitializerIndentWidth: 0
+ContinuationIndentWidth: 2
+DerivePointerAlignment: false
+# PointerAlignment: Middle
+PointerAlignment: Left # Dr.QP, Middle is ugly
+ReflowComments: false
