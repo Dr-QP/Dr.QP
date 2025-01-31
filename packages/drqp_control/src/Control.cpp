@@ -26,7 +26,9 @@
 #include "drqp_serial/TcpSerial.h"
 #include "drqp_serial/UnixSerial.h"
 
-void forEachServo(long millisecondsBetweenLegs, std::function<void(ServoId servoId, int servoIndexInLeg)> func) {
+void forEachServo(
+  long millisecondsBetweenLegs, std::function<void(ServoId servoId, int servoIndexInLeg)> func)
+{
   if (!func) {
     return;
   }
@@ -42,7 +44,8 @@ void forEachServo(long millisecondsBetweenLegs, std::function<void(ServoId servo
   }
 }
 
-void readAll(SerialProtocol& servoSerial) {
+void readAll(SerialProtocol& servoSerial)
+{
   forEachServo(0, [&servoSerial](ServoId servoId, int) {
     XYZrobotServo servo(servoSerial, servoId);
 
@@ -51,9 +54,9 @@ void readAll(SerialProtocol& servoSerial) {
       std::cerr << legNameForServo(servoId) << " servo: " << static_cast<int>(servoId)
                 << " error reading status: " << servo.getLastError() << "\n";
     } else {
-      std::cout << legNameForServo(servoId) << "\tservo: " << static_cast<int>(servoId) << ": " << status.position
-                << "\t posRef: " << status.posRef << "\t statusError: " << status.statusError
-                << "\n";
+      std::cout << legNameForServo(servoId) << "\tservo: " << static_cast<int>(servoId) << ": "
+                << status.position << "\t posRef: " << status.posRef
+                << "\t statusError: " << status.statusError << "\n";
     }
   });
 }
@@ -73,8 +76,7 @@ int main(const int argc, const char* const argv[])
     });
 
     return 0;
-  }
-  else if (pose == "read") {
+  } else if (pose == "read") {
     readAll(servoSerial);
 
     return 0;
@@ -89,12 +91,12 @@ int main(const int argc, const char* const argv[])
     //           << "\t posRef: " << status.posRef << "\n";
     if (abs(status.position - status.posRef) > 15) {
       servo.torqueOn();
-      std::cout << "Recovering " << legNameForServo(servoId) << "\tservo: " << static_cast<int>(servoId) << " to "
-                << status.posRef << "\n";
+      std::cout << "Recovering " << legNameForServo(servoId)
+                << "\tservo: " << static_cast<int>(servoId) << " to " << status.posRef << "\n";
     }
   });
 
-  const Pose kPoseSet = [&pose](){
+  const Pose kPoseSet = [&pose]() {
     if (pose == "neutral") {
       return kNeutralPose;
     } else if (pose == "stand") {

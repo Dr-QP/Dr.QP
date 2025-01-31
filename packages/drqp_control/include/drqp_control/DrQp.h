@@ -167,7 +167,7 @@ const Pose kFoldedDownPose = []() {
   const uint16_t kFemurOffset = 160;
   const uint16_t kTibiaOffset = 290;
 
-  const int16_t kRight = -1; // Inverted compared to other poses
+  const int16_t kRight = -1;  // Inverted compared to other poses
   const int16_t kLeft = 1;
 
   legs[kFrontRightLegId] = legs[kMiddleRightLegId] = legs[kBackRightLegId] = {
@@ -194,7 +194,6 @@ const Pose kFoldedUpPose = []() {
     kBase + kCoxaOffset, kBase + kLeft * kFemurOffset, kBase + kLeft * kTibiaOffset};
   return legs;
 }();
-
 
 const Pose kFoldedUpCompactPose = []() {
   Pose legs;

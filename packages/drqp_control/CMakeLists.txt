@@ -18,15 +18,6 @@ target_include_directories(drqp_control INTERFACE
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
-add_executable(relax src/Relax.cpp)
-target_link_libraries(relax drqp_control)
-ament_target_dependencies(relax drqp_a1_16_driver)
-
-
-add_executable(read_all src/ReadAll.cpp)
-target_link_libraries(read_all drqp_control)
-ament_target_dependencies(read_all drqp_a1_16_driver)
-
 add_executable(control src/Control.cpp)
 target_link_libraries(control drqp_control)
 ament_target_dependencies(control drqp_a1_16_driver)
@@ -37,8 +28,6 @@ install(DIRECTORY include/
 
 # Install executables for `ros2 run`
 install(TARGETS
-  read_all
-  relax
   control
   DESTINATION lib/${PROJECT_NAME})
 
