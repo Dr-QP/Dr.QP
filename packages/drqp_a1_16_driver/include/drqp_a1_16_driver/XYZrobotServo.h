@@ -369,7 +369,6 @@ public:
   /// non-zero setSpeed() command to solve it.
   void torqueOff();
 
-
   /// Sends an I-JOG command to turn on the servo's motor in position control.
   ///
   /// Use this command to smoothly recover from torqueOff() call
