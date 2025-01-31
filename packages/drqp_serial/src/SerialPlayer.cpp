@@ -30,10 +30,12 @@ namespace RecordingProxy
 {
 void SerialPlayer::begin(const uint32_t baudRate, const uint8_t transferConfig) {}
 
-size_t SerialPlayer::write(const uint8_t* data, size_t size)
+size_t SerialPlayer::write(const void* buffer, size_t size)
 {
   size_t result = 0;
-  assert(data);
+  assert(buffer);
+
+  const uint8_t *data = static_cast<const uint8_t*>(buffer);
   while (size) {
     result += write(*data);
 
@@ -63,16 +65,17 @@ uint8_t SerialPlayer::peek()
   return currentRecord().response.bytes.front();
 }
 
-size_t SerialPlayer::readBytes(uint8_t* buffer, size_t size)
+size_t SerialPlayer::readBytes(void* buffer, size_t size)
 {
   assert(buffer);
+  uint8_t *data = static_cast<uint8_t*>(buffer);
 
   const size_t result = size;
   while (size) {
-    *buffer = read();
+    *data = read();
 
     --size;
-    ++buffer;
+    ++data;
   }
   return result;
 }

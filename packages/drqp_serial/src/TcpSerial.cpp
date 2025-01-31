@@ -50,7 +50,7 @@ size_t TcpSerial::write(uint8_t byte)
   return write(&byte, 1);
 }
 
-size_t TcpSerial::write(const uint8_t* data, size_t size)
+size_t TcpSerial::write(const void* data, size_t size)
 {
   return boost::asio::write(socket_, boost::asio::buffer(data, size));
 }
@@ -158,7 +158,7 @@ uint8_t TcpSerial::read()
   return lastRead_;
 }
 
-size_t TcpSerial::readBytes(uint8_t* buffer, size_t size)
+size_t TcpSerial::readBytes(void* buffer, size_t size)
 {
   everRead_ = true;
   return read_with_timeout(ioService_, socket_, boost::asio::buffer(buffer, size));

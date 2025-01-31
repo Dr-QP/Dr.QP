@@ -24,8 +24,6 @@
 #include <cstdint>
 #include <iostream>
 
-#include <boost/endian/buffers.hpp>
-
 #include "drqp_serial/Stream.h"
 
 /// The possible communication errors that can happen when reading the
@@ -194,7 +192,7 @@ struct XYZrobotServoStatus
 
 struct IJogData
 {
-  boost::endian::little_uint16_buf_t goal;
+  uint16_t goal;
   uint8_t type;
   uint8_t id;
   uint8_t playtime;
@@ -211,22 +209,22 @@ public:
   /// before sending the next command to this servo, since writing to EEPROM
   /// takes some time and the servo cannot receive more commands until it is
   /// done.
-  void eepromWrite(uint8_t startAddress, const uint8_t*, uint8_t dataSize);
+  void eepromWrite(uint8_t startAddress, const void* data, uint8_t dataSize);
 
   /// Reads data from the servo's EEPROM and stores it in the specified buffer.
   ///
   /// The data size should be 35 or less: otherwise the A1-16 seems to return a
   /// response with an invalid CRC.
-  void eepromRead(uint8_t startAddress, uint8_t* data, uint8_t dataSize);
+  void eepromRead(uint8_t startAddress, void* data, uint8_t dataSize);
 
   /// Writes data from the specified buffer to the servo's RAM.
-  void ramWrite(uint8_t startAddress, const uint8_t*, uint8_t dataSize);
+  void ramWrite(uint8_t startAddress, const void* data, uint8_t dataSize);
 
   /// Reads data from the servo's RAM and stores it in the specified buffer.
   ///
   /// The data size should be 35 or less: otherwise the A1-16 seems to return a
   /// response with an invalid CRC.
-  void ramRead(uint8_t startAddress, uint8_t* data, uint8_t dataSize);
+  void ramRead(uint8_t startAddress, void* data, uint8_t dataSize);
 
   /// Write the Baud_Rate parameter byte in EEPROM, which determines which baud
   /// rate the servo uses on its serial interface.
@@ -424,17 +422,17 @@ private:
   void flushRead();
 
   void sendRequest(
-    uint8_t headerId, uint8_t cmd, const uint8_t* data1, uint8_t data1Size, const uint8_t* data2 = NULL,
+    uint8_t headerId, uint8_t cmd, const void* data1, uint8_t data1Size, const void* data2 = nullptr,
     uint8_t data2Size = 0);
 
   void readAck(
-    uint8_t cmd, uint8_t* data1, uint8_t data1Size, uint8_t* data2 = NULL, uint8_t data2Size = 0);
+    uint8_t cmd, void* data1, uint8_t data1Size, void* data2 = nullptr, uint8_t data2Size = 0);
 
-  void memoryWrite(uint8_t cmd, uint8_t startAddress, const uint8_t* data, uint8_t dataSize);
+  void memoryWrite(uint8_t cmd, uint8_t startAddress, const void* data, uint8_t dataSize);
 
-  void memoryRead(uint8_t cmd, uint8_t startAddress, uint8_t* data, uint8_t dataSize);
+  void memoryRead(uint8_t cmd, uint8_t startAddress, void* data, uint8_t dataSize);
 
-  void sendIJog(uint16_t goal, uint8_t type, uint8_t playtime);
+  void sendIJog(IJogData data);
 
   XYZrobotServoError lastError;
 

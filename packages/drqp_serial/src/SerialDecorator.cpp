@@ -48,3 +48,13 @@ uint8_t SerialDecorator::read()
 {
   return decorated_.read();
 }
+
+size_t SerialDecorator::write(const void* data, size_t size)
+{
+  return decorated_.write(data, size);
+}
+
+size_t SerialDecorator::readBytes(void* buffer, size_t size)
+{
+  return decorated_.readBytes(buffer, size);
+}

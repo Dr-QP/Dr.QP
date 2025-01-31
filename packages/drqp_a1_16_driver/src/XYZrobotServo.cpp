@@ -50,22 +50,22 @@ XYZrobotServo::XYZrobotServo(Stream& stream, uint8_t id)
   this->lastError = XYZrobotServoError::None;
 }
 
-void XYZrobotServo::eepromWrite(uint8_t startAddress, const uint8_t* data, uint8_t dataSize)
+void XYZrobotServo::eepromWrite(uint8_t startAddress, const void* data, uint8_t dataSize)
 {
   memoryWrite(CMD_EEPROM_WRITE, startAddress, data, dataSize);
 }
 
-void XYZrobotServo::eepromRead(uint8_t startAddress, uint8_t* data, uint8_t dataSize)
+void XYZrobotServo::eepromRead(uint8_t startAddress, void* data, uint8_t dataSize)
 {
   memoryRead(CMD_EEPROM_READ, startAddress, data, dataSize);
 }
 
-void XYZrobotServo::ramWrite(uint8_t startAddress, const uint8_t* data, uint8_t dataSize)
+void XYZrobotServo::ramWrite(uint8_t startAddress, const void* data, uint8_t dataSize)
 {
   memoryWrite(CMD_RAM_WRITE, startAddress, data, dataSize);
 }
 
-void XYZrobotServo::ramRead(uint8_t startAddress, uint8_t* data, uint8_t dataSize)
+void XYZrobotServo::ramRead(uint8_t startAddress, void* data, uint8_t dataSize)
 {
   memoryRead(CMD_RAM_READ, startAddress, data, dataSize);
 }
@@ -132,7 +132,7 @@ void XYZrobotServo::writeSpdctrlPolicyRam(XYZrobotServoSpdctrlPolicy policy)
 
 void XYZrobotServo::writeMaxPwmRam(uint16_t value)
 {
-  ramWrite(16, reinterpret_cast<uint8_t*>(&value), 2);
+  ramWrite(16, &value, 2);
 }
 
 void XYZrobotServo::writeLedControl(uint8_t control)
@@ -152,39 +152,39 @@ XYZrobotServoStatus XYZrobotServo::readStatus()
   flushRead();
 
   XYZrobotServoStatus status;
-  sendRequest(id, CMD_STAT, NULL, 0);
-  readAck(CMD_STAT, reinterpret_cast<uint8_t*>(&status), sizeof(XYZrobotServoStatus));
+  sendRequest(id, CMD_STAT, nullptr, 0);
+  readAck(CMD_STAT, &status, sizeof(XYZrobotServoStatus));
   return status;
 }
 
 void XYZrobotServo::setPosition(uint16_t position, uint8_t playtime)
 {
-  sendIJog(position, SET_POSITION_CONTROL, playtime);
+  sendIJog({position, SET_POSITION_CONTROL, id, playtime});
 }
 
 void XYZrobotServo::setSpeed(int16_t speed, uint8_t playtime)
 {
-  sendIJog(speed, SET_SPEED_CONTROL, playtime);
+  sendIJog({static_cast<uint16_t>(speed), SET_SPEED_CONTROL, id, playtime});
 }
 
 void XYZrobotServo::torqueOff()
 {
-  sendIJog(0, SET_TORQUE_OFF, 0);
+  sendIJog({0, SET_TORQUE_OFF, id, 0});
 }
 
 void XYZrobotServo::torqueOn()
 {
-  sendIJog(0, SET_POSITION_CONTROL_SERVO_ON, 0);
+  sendIJog({0, SET_POSITION_CONTROL_SERVO_ON, id, 0});
 }
 
 void XYZrobotServo::rollback()
 {
-  sendRequest(id, CMD_ROLLBACK, NULL, 0);
+  sendRequest(id, CMD_ROLLBACK, nullptr, 0);
 }
 
 void XYZrobotServo::reboot()
 {
-  sendRequest(id, CMD_REBOOT, NULL, 0);
+  sendRequest(id, CMD_REBOOT, nullptr, 0);
 }
 
 void XYZrobotServo::flushRead()
@@ -193,9 +193,11 @@ void XYZrobotServo::flushRead()
 }
 
 void XYZrobotServo::sendRequest(
-  uint8_t headerId, uint8_t cmd, const uint8_t* data1, uint8_t data1Size, const uint8_t* data2,
+  uint8_t headerId, uint8_t cmd, const void* buffer1, uint8_t data1Size, const void* buffer2,
   uint8_t data2Size)
 {
+  const uint8_t* data1 = static_cast<const uint8_t*>(buffer1);
+  const uint8_t* data2 = static_cast<const uint8_t*>(buffer2);
   uint8_t header[7];
 
   uint8_t size = data1Size + data2Size + sizeof(header);
@@ -228,8 +230,11 @@ void XYZrobotServo::sendRequest(
 }
 
 void XYZrobotServo::readAck(
-  uint8_t cmd, uint8_t* data1, uint8_t data1Size, uint8_t* data2, uint8_t data2Size)
+  uint8_t cmd, void* buffer1, uint8_t data1Size, void* buffer2, uint8_t data2Size)
 {
+  uint8_t* data1 = static_cast<uint8_t*>(buffer1);
+  uint8_t* data2 = static_cast<uint8_t*>(buffer2);
+
   // The CMD byte for an acknowledgment always has bit 6 set.
   cmd |= 0x40;
 
@@ -306,7 +311,7 @@ void XYZrobotServo::readAck(
 }
 
 void XYZrobotServo::memoryWrite(
-  uint8_t cmd, uint8_t startAddress, const uint8_t* data, uint8_t dataSize)
+  uint8_t cmd, uint8_t startAddress, const void* data, uint8_t dataSize)
 {
   uint8_t request[2];
   request[0] = startAddress;
@@ -315,7 +320,7 @@ void XYZrobotServo::memoryWrite(
   sendRequest(id, cmd, request, sizeof(request), data, dataSize);
 }
 
-void XYZrobotServo::memoryRead(uint8_t cmd, uint8_t startAddress, uint8_t* data, uint8_t dataSize)
+void XYZrobotServo::memoryRead(uint8_t cmd, uint8_t startAddress, void* data, uint8_t dataSize)
 {
   flushRead();
 
@@ -347,35 +352,9 @@ void XYZrobotServo::memoryRead(uint8_t cmd, uint8_t startAddress, uint8_t* data,
 #define LOW_BYTE(x) (char)((x) & 0xFF)
 #define HIGH_BYTE(x) (char)(((x) & 0xFF00) >> 8)
 
-struct __attribute__((packed)) IJogDataRaw
+void XYZrobotServo::sendIJog(IJogData data)
 {
-  uint16_t goal;
-  uint8_t type;
-  uint8_t id;
-  uint8_t playtime;
-};
-
-void XYZrobotServo::sendIJog(uint16_t goal, uint8_t type, uint8_t playtime)
-{
-  IJogData cmd;
-  cmd.goal = goal;
-  cmd.type = type;
-  cmd.id = id;
-  cmd.playtime = playtime;
-
-  IJogDataRaw data{goal, type, id, playtime};
-
-  static_assert(sizeof(IJogData) == sizeof(IJogDataRaw), "IJogData and IJogDataRaw must have the same size");
-
-  if (memcmp(&data, &cmd, sizeof(data)) != 0)
-  {
-    std::printf("cmd: %02X %02X %02X %02X %02X\n", cmd.goal.data()[0], cmd.goal.data()[1], cmd.type, cmd.id, cmd.playtime);
-    std::printf("cmd raw: %02X %02X %02X %02X %02X\n", LOW_BYTE(data.goal), HIGH_BYTE(data.goal), data.type, data.id, data.playtime);
-  }
-  assert(memcmp(&data, &cmd, sizeof(data)) == 0);
-
-
-  sendRequest(id, CMD_I_JOG, reinterpret_cast<const uint8_t*>(&cmd), sizeof(cmd));
+  sendRequest(id, CMD_I_JOG, &data, sizeof(data));
 }
 
 // void XYZrobotServo::sendMultiIJog(uint16_t goal, uint8_t type, uint8_t playtime)
@@ -387,5 +366,5 @@ void XYZrobotServo::sendIJog(uint16_t goal, uint8_t type, uint8_t playtime)
 //   data.id = id;
 //   data.playtime = playtime;
 
-//   sendRequest(0xFE, CMD_I_JOG, reinterpret_cast<const uint8_t*>(&data), sizeof(data));
+//   sendRequest(0xFE, CMD_I_JOG, &data, sizeof(data));
 // }
