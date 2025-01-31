@@ -22,10 +22,10 @@ sudo add-apt-repository universe -y
 function is_utf8_locale()
 {
   local loc=$(locale)
-  if [[ $loc =~ 'LANG=en_US.UTF-8' && $loc =~ 'LC_ALL=en_US.UTF-8' ]]; then
-    echo yes
+  if [[ $loc =~ LANG=.*\.UTF-8 ]] || [[ $loc =~ LC_ALL=.*\.UTF-8 ]]; then
+    echo 'yes'
   else
-    echo no
+    echo 'no'
   fi
 }
 
