@@ -41,7 +41,6 @@ static_assert(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__,
 #define SET_TORQUE_OFF 2
 #define SET_POSITION_CONTROL_SERVO_ON 3
 
-constexpr uint8_t kBroadcastId = 0xFE;
 
 XYZrobotServo::XYZrobotServo(Stream& stream, uint8_t id)
 {
@@ -160,6 +159,14 @@ XYZrobotServoStatus XYZrobotServo::readStatus()
 void XYZrobotServo::setPosition(uint16_t position, uint8_t playtime)
 {
   sendIJog({position, SET_POSITION_CONTROL, id, playtime});
+}
+
+void XYZrobotServo::setPositions(IJogData* data, uint8_t count)
+{
+  for (uint8_t i = 0; i < count; i++) {
+    data[i].type = SET_POSITION_CONTROL;
+  }
+  sendMultiIJog(data, count);
 }
 
 void XYZrobotServo::setSpeed(int16_t speed, uint8_t playtime)

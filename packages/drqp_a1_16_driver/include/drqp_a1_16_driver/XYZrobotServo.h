@@ -201,6 +201,8 @@ struct IJogData
 class XYZrobotServo
 {
 public:
+  static constexpr uint8_t kBroadcastId = 0xFE;
+
   XYZrobotServo(Stream&, uint8_t id);
 
   /// Writes data from the specified buffer to the servo's EEPROM.
@@ -351,6 +353,7 @@ public:
   /// 10 ms.  For example, a playtime of 50 would correspond to 500 ms or 0.5
   /// seconds.
   void setPosition(uint16_t position, uint8_t playtime = 0);
+  void setPositions(IJogData* data, uint8_t count);
 
   /// Sends an I-JOG command to set the speed for this servo.
   ///

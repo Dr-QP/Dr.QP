@@ -110,12 +110,13 @@ int main(const int argc, const char* const argv[])
     return kNeutralPose;
   }();
 
-  forEachServo(100, [&kPoseSet, &servoSerial](ServoId servoId, int servoIndexInLeg) {
-    XYZrobotServo servo(servoSerial, servoId);
-
-    const ServoPosition position = kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg];
-    servo.setPosition(position, 150);
+  std::array<IJogData, kServoCount> posData;
+  size_t servoIndex = 0;
+  forEachServo(0, [&kPoseSet, &posData, &servoIndex](ServoId servoId, int servoIndexInLeg) {
+    posData[servoIndex++] = {kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg], 1, servoId, 150};
   });
+  XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
+  servo.setPositions(posData.data(), posData.size());
 
   return 0;
 }
