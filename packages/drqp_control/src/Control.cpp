@@ -27,7 +27,7 @@
 #include "drqp_serial/UnixSerial.h"
 
 void forEachServo(
-  long millisecondsBetweenLegs, std::function<void(ServoId servoId, int servoIndexInLeg)> func)
+  uint64_t millisecondsBetweenLegs, std::function<void(ServoId servoId, int servoIndexInLeg)> func)
 {
   if (!func) {
     return;
@@ -87,8 +87,6 @@ int main(const int argc, const char* const argv[])
     XYZrobotServo servo(servoSerial, servoId);
 
     XYZrobotServoStatus status = servo.readStatus();
-    // std::cout << legNameForServo(servoId) << "\tservo: " << static_cast<int>(servoId) << ": " << status.position
-    //           << "\t posRef: " << status.posRef << "\n";
     if (abs(status.position - status.posRef) > 15) {
       servo.torqueOn();
       std::cout << "Recovering " << legNameForServo(servoId)

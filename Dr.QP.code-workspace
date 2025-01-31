@@ -131,6 +131,24 @@
           "cwd": "${workspaceFolder}"
         },
         "problemMatcher": []
+      },
+      {
+        "label": "Dr.QP ament cpplint",
+        "type": "ament",
+        "task": "cpplint",
+        "path": "${workspaceFolder}/packages/",
+        "problemMatcher": [
+          "$ament_cpplint"
+        ],
+      },
+      {
+        "label": "Dr.QP ament lint cmake",
+        "type": "ament",
+        "task": "lint_cmake",
+        "path": "${workspaceFolder}/packages/",
+        "problemMatcher": [
+          "$ament_lint_cmake"
+        ],
       }
     ]
   },
