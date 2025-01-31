@@ -7,5 +7,9 @@ cd $(git rev-parse --show-toplevel)
 
 prefix=packages/drqp_rapidjson/include/
 
+if [[ -d $prefix ]]; then
+    rm -rf "$prefix"
+    git add "$prefix" && git commit -m "Remove old rapidjson"
+fi
 git subtree add --prefix="$prefix" https://github.com/Dr-QP/rapidjson.git drqp_rapidjson --squash
-git subtree pull --prefix="$prefix"
+git subtree pull --prefix="$prefix" https://github.com/Dr-QP/rapidjson.git drqp_rapidjson --squash
