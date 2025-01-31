@@ -20,6 +20,11 @@
 // THE SOFTWARE.
 
 #include "drqp_a1_16_driver/XYZrobotServo.h"
+#include <cassert>
+#include <cstdio>
+
+static_assert(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__,
+              "This code assumes little-endian byte order.");
 
 #define CMD_EEPROM_WRITE 0x01
 #define CMD_EEPROM_READ 0x02
@@ -35,6 +40,8 @@
 #define SET_SPEED_CONTROL 1
 #define SET_TORQUE_OFF 2
 #define SET_POSITION_CONTROL_SERVO_ON 3
+
+constexpr uint8_t kBroadcastId = 0xFE;
 
 XYZrobotServo::XYZrobotServo(Stream& stream, uint8_t id)
 {
@@ -145,7 +152,7 @@ XYZrobotServoStatus XYZrobotServo::readStatus()
   flushRead();
 
   XYZrobotServoStatus status;
-  sendRequest(CMD_STAT, NULL, 0);
+  sendRequest(id, CMD_STAT, NULL, 0);
   readAck(CMD_STAT, reinterpret_cast<uint8_t*>(&status), sizeof(XYZrobotServoStatus));
   return status;
 }
@@ -172,12 +179,12 @@ void XYZrobotServo::torqueOn()
 
 void XYZrobotServo::rollback()
 {
-  sendRequest(CMD_ROLLBACK, NULL, 0);
+  sendRequest(id, CMD_ROLLBACK, NULL, 0);
 }
 
 void XYZrobotServo::reboot()
 {
-  sendRequest(CMD_REBOOT, NULL, 0);
+  sendRequest(id, CMD_REBOOT, NULL, 0);
 }
 
 void XYZrobotServo::flushRead()
@@ -186,7 +193,8 @@ void XYZrobotServo::flushRead()
 }
 
 void XYZrobotServo::sendRequest(
-  uint8_t cmd, const uint8_t* data1, uint8_t data1Size, const uint8_t* data2, uint8_t data2Size)
+  uint8_t headerId, uint8_t cmd, const uint8_t* data1, uint8_t data1Size, const uint8_t* data2,
+  uint8_t data2Size)
 {
   uint8_t header[7];
 
@@ -203,7 +211,7 @@ void XYZrobotServo::sendRequest(
   header[0] = 0xFF;
   header[1] = 0xFF;
   header[2] = size;
-  header[3] = id;
+  header[3] = headerId;
   header[4] = cmd;
   header[5] = checksum & 0xFE;
   header[6] = ~checksum & 0xFE;
@@ -304,7 +312,7 @@ void XYZrobotServo::memoryWrite(
   request[0] = startAddress;
   request[1] = dataSize;
 
-  sendRequest(cmd, request, sizeof(request), data, dataSize);
+  sendRequest(id, cmd, request, sizeof(request), data, dataSize);
 }
 
 void XYZrobotServo::memoryRead(uint8_t cmd, uint8_t startAddress, uint8_t* data, uint8_t dataSize)
@@ -314,7 +322,7 @@ void XYZrobotServo::memoryRead(uint8_t cmd, uint8_t startAddress, uint8_t* data,
   uint8_t request[2];
   request[0] = startAddress;
   request[1] = dataSize;
-  sendRequest(cmd, request, sizeof(request));
+  sendRequest(id, cmd, request, sizeof(request));
 
   uint8_t response[4];
   readAck(cmd, response, 4, data, dataSize);
@@ -336,13 +344,48 @@ void XYZrobotServo::memoryRead(uint8_t cmd, uint8_t startAddress, uint8_t* data,
   }
 }
 
+#define LOW_BYTE(x) (char)((x) & 0xFF)
+#define HIGH_BYTE(x) (char)(((x) & 0xFF00) >> 8)
+
+struct __attribute__((packed)) IJogDataRaw
+{
+  uint16_t goal;
+  uint8_t type;
+  uint8_t id;
+  uint8_t playtime;
+};
+
 void XYZrobotServo::sendIJog(uint16_t goal, uint8_t type, uint8_t playtime)
 {
-  uint8_t data[5];
-  data[0] = goal & 0xFF;
-  data[1] = goal >> 8 & 0xFF;
-  data[2] = type;
-  data[3] = id;
-  data[4] = playtime;
-  sendRequest(CMD_I_JOG, data, sizeof(data));
+  IJogData cmd;
+  cmd.goal = goal;
+  cmd.type = type;
+  cmd.id = id;
+  cmd.playtime = playtime;
+
+  IJogDataRaw data{goal, type, id, playtime};
+
+  static_assert(sizeof(IJogData) == sizeof(IJogDataRaw), "IJogData and IJogDataRaw must have the same size");
+
+  if (memcmp(&data, &cmd, sizeof(data)) != 0)
+  {
+    std::printf("cmd: %02X %02X %02X %02X %02X\n", cmd.goal.data()[0], cmd.goal.data()[1], cmd.type, cmd.id, cmd.playtime);
+    std::printf("cmd raw: %02X %02X %02X %02X %02X\n", LOW_BYTE(data.goal), HIGH_BYTE(data.goal), data.type, data.id, data.playtime);
+  }
+  assert(memcmp(&data, &cmd, sizeof(data)) == 0);
+
+
+  sendRequest(id, CMD_I_JOG, reinterpret_cast<const uint8_t*>(&cmd), sizeof(cmd));
 }
+
+// void XYZrobotServo::sendMultiIJog(uint16_t goal, uint8_t type, uint8_t playtime)
+// {
+//   IJogData data;
+//   data.goalLow = LOW_BYTE(goal);
+//   data.goalHigh = HIGH_BYTE(goal);
+//   data.type = type;
+//   data.id = id;
+//   data.playtime = playtime;
+
+//   sendRequest(0xFE, CMD_I_JOG, reinterpret_cast<const uint8_t*>(&data), sizeof(data));
+// }

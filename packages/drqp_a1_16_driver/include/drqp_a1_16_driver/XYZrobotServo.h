@@ -24,6 +24,8 @@
 #include <cstdint>
 #include <iostream>
 
+#include <boost/endian/buffers.hpp>
+
 #include "drqp_serial/Stream.h"
 
 /// The possible communication errors that can happen when reading the
@@ -188,6 +190,14 @@ struct XYZrobotServoStatus
   uint16_t posRef;
   uint16_t position;
   uint16_t iBus;
+} __attribute__((packed));
+
+struct IJogData
+{
+  boost::endian::little_uint16_buf_t goal;
+  uint8_t type;
+  uint8_t id;
+  uint8_t playtime;
 } __attribute__((packed));
 
 class XYZrobotServo
@@ -414,7 +424,7 @@ private:
   void flushRead();
 
   void sendRequest(
-    uint8_t cmd, const uint8_t* data1, uint8_t data1Size, const uint8_t* data2 = NULL,
+    uint8_t headerId, uint8_t cmd, const uint8_t* data1, uint8_t data1Size, const uint8_t* data2 = NULL,
     uint8_t data2Size = 0);
 
   void readAck(
