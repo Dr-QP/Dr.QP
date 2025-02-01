@@ -33,13 +33,11 @@ public:
 
   using SerialProtocol::begin;
   void begin(const uint32_t baudRate, const uint8_t transferConfig) override;
-  size_t write(uint8_t byte) override;
+
   bool available() override;
   void flushRead() override;
-  uint8_t peek() override;
-  uint8_t read() override;
 
-  size_t write(const void* data, size_t size) override;
+  size_t writeBytes(const void* buffer, size_t size) override;
   size_t readBytes(void* buffer, size_t size) override;
 
 private:

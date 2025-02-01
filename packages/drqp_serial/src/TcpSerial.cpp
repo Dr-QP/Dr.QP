@@ -37,22 +37,16 @@ tcp::resolver::iterator resolve(
   return resolver.resolve(query);
 }
 
-TcpSerial::TcpSerial(const std::string& ip, uint16_t port)
-: socket_(ioService_), lastRead_(0), everRead_(false)
+TcpSerial::TcpSerial(const std::string& ip, uint16_t port) : socket_(ioService_)
 {
   connect(socket_, resolve(ioService_, ip, port));
 }
 
 void TcpSerial::begin(const uint32_t baudRate, const uint8_t transferConfig) {}
 
-size_t TcpSerial::write(uint8_t byte)
+size_t TcpSerial::writeBytes(const void* buffer, size_t size)
 {
-  return write(&byte, 1);
-}
-
-size_t TcpSerial::write(const void* data, size_t size)
-{
-  return boost::asio::write(socket_, boost::asio::buffer(data, size));
+  return boost::asio::write(socket_, boost::asio::buffer(buffer, size));
 }
 
 void TcpSerial::flushRead()
@@ -76,44 +70,6 @@ bool TcpSerial::available()
 
   return bytesReadable != 0;
 }
-
-uint8_t TcpSerial::peek()
-{
-  if (!available()) {
-    return kNoData;
-  }
-  if (!everRead_) {
-    return read();
-  }
-  return lastRead_;
-}
-
-// template <typename SyncReadStream, typename MutableBufferSequence>
-// void readWithTimeout(SyncReadStream& s, const MutableBufferSequence& buffers, const
-// boost::asio::deadline_timer::duration_type& expiry_time)
-// {
-//     boost::optional<boost::system::error_code> timer_result;
-//     boost::asio::deadline_timer timer(s.get_io_service());
-//     timer.expires_from_now(expiry_time);
-//     timer.async_wait([&timer_result] (const boost::system::error_code& error) {
-//     timer_result.reset(error); });
-
-//     boost::optional<boost::system::error_code> read_result;
-//     boost::asio::async_read(s, buffers, [&read_result] (const boost::system::error_code& error,
-//     size_t) { read_result.reset(error); });
-
-//     s.get_io_service().reset();
-//     while (s.get_io_service().run_one())
-//     {
-//         if (read_result)
-//             timer.cancel();
-//         else if (timer_result)
-//             s.cancel();
-//     }
-
-//     if (*read_result)
-//         throw boost::system::system_error(*read_result);
-// }
 
 template <typename MutableBufferSequence>
 size_t read_with_timeout(
@@ -148,18 +104,7 @@ size_t read_with_timeout(
   return *bytesTransferred;
 }
 
-uint8_t TcpSerial::read()
-{
-  // if (!available()) {
-  //     return kNoData;
-  // }
-  everRead_ = true;
-  // read_with_timeout(ioService_, socket_, boost::asio::buffer(&lastRead_, 1));
-  return lastRead_;
-}
-
 size_t TcpSerial::readBytes(void* buffer, size_t size)
 {
-  everRead_ = true;
   return read_with_timeout(ioService_, socket_, boost::asio::buffer(buffer, size));
 }

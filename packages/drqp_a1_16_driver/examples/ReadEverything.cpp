@@ -408,7 +408,7 @@ void testWrite()
 {
   uint8_t byte = randomByte();
   std::cout << "write " << std::dec << byte << "\n";
-  servoSerial.write(byte);
+  servoSerial.writeBytes(&byte, 1);
 }
 
 void testRoundtrip()
@@ -419,7 +419,7 @@ void testRoundtrip()
 
   uint8_t byte = randomByte();
   std::cout << "write " << std::dec << byte << "\n";
-  servoSerial.write(byte);
+  servoSerial.writeBytes(&byte, 1);
 
   std::this_thread::sleep_for(10ms);
   servoSerial.readBytes(&byte, 1);

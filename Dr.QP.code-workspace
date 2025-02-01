@@ -50,10 +50,19 @@
       {
         "type": "lldb",
         "request": "launch",
-        "name": "Launch C++",
+        "name": "drqp_control control",
         "program": "install/drqp_control/lib/drqp_control/control",
         "args": [],
         "cwd": "${workspaceFolder:Dr.QP}/install/drqp_control/lib/drqp_control",
+        "preLaunchTask": "Dr.QP colcon build",
+      },
+      {
+        "type": "lldb",
+        "request": "launch",
+        "name": "drqp_serial_tests",
+        "program": "build/drqp_serial/test/drqp_serial_tests",
+        "args": [],
+        "cwd": "${workspaceFolder:Dr.QP}/build/drqp_serial/test/",
         "preLaunchTask": "Dr.QP colcon build",
       },
       {

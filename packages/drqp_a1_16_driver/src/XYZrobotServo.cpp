@@ -201,12 +201,12 @@ void XYZrobotServo::sendRequest(
   header[5] = checksum & 0xFE;
   header[6] = ~checksum & 0xFE;
 
-  stream->write(header, sizeof(header));
+  stream->writeBytes(header, sizeof(header));
   if (data1Size) {
-    stream->write(data1, data1Size);
+    stream->writeBytes(data1, data1Size);
   }
   if (data2Size) {
-    stream->write(data2, data2Size);
+    stream->writeBytes(data2, data2Size);
   }
 
   lastError = XYZrobotServoError::None;

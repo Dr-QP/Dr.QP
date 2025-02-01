@@ -42,26 +42,6 @@ void SerialRecordingProxy::begin(const uint32_t baudRate, const uint8_t transfer
   super::begin(baudRate, transferConfig);
 }
 
-size_t SerialRecordingProxy::write(uint8_t byte)
-{
-  startNewRecordIfNeeded();
-  size_t result = super::write(byte);
-  currentRecord_.request.bytes.push_back(byte);
-
-  lastOperation_ = OperationType::kWrite;
-  return result;
-}
-
-void SerialRecordingProxy::startNewRecordIfNeeded()
-{
-  if (lastOperation_ == OperationType::kRead) {
-    records_.push_back(currentRecord_);
-
-    currentRecord_ = Record();
-    lastOperation_ = OperationType::kUndefined;
-  }
-}
-
 void SerialRecordingProxy::save()
 {
   startNewRecordIfNeeded();  // flush current record
@@ -90,18 +70,39 @@ bool SerialRecordingProxy::available()
   return super::available();
 }
 
-uint8_t SerialRecordingProxy::peek()
+size_t SerialRecordingProxy::writeBytes(const void* buffer, size_t size)
 {
-  return super::peek();
+  assert(buffer);
+  const uint8_t* data = static_cast<const uint8_t*>(buffer);
+
+  startNewRecordIfNeeded();
+  size_t result = super::writeBytes(data, size);
+  currentRecord_.request.bytes.insert(currentRecord_.request.bytes.end(), data, data + size);
+
+  lastOperation_ = OperationType::kWrite;
+  return result;
 }
 
-uint8_t SerialRecordingProxy::read()
+void SerialRecordingProxy::startNewRecordIfNeeded()
 {
-  auto result = super::read();
-  currentRecord_.response.bytes.push_back(result);
+  if (lastOperation_ == OperationType::kRead) {
+    records_.push_back(currentRecord_);
+
+    currentRecord_ = Record();
+    lastOperation_ = OperationType::kUndefined;
+  }
+}
+
+size_t SerialRecordingProxy::readBytes(void* buffer, size_t size)
+{
+  assert(buffer);
+  uint8_t* data = static_cast<uint8_t*>(buffer);
+
+  startNewRecordIfNeeded();
+  size_t result = super::readBytes(data, size);
+  currentRecord_.response.bytes.insert(currentRecord_.response.bytes.end(), data, data + size);
 
   lastOperation_ = OperationType::kRead;
-
   return result;
 }
 }  // namespace RecordingProxy

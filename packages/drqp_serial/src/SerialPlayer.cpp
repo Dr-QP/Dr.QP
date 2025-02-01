@@ -23,6 +23,7 @@
 #include <drqp_rapidjson/document.h>
 #include <drqp_rapidjson/istreamwrapper.h>
 
+#include <algorithm>
 #include <cassert>
 #include <fstream>
 
@@ -30,29 +31,30 @@ namespace RecordingProxy
 {
 void SerialPlayer::begin(const uint32_t baudRate, const uint8_t transferConfig) {}
 
-size_t SerialPlayer::write(const void* buffer, size_t size)
+size_t SerialPlayer::writeBytes(const void* buffer, size_t size)
 {
-  size_t result = 0;
   assert(buffer);
-
+  assert(assertEqual);
   const uint8_t* data = static_cast<const uint8_t*>(buffer);
-  while (size) {
-    result += write(*data);
 
-    --size;
-    ++data;
-  }
-  return result;
-}
+  Record& record = currentRecord();
 
-size_t SerialPlayer::write(uint8_t byte)
-{
-  Record& current = currentRecord();
-  if (assertEqual) {
-    assertEqual(current.request.bytes.front(), byte);
+  if (size > record.request.bytes.size()) {
+    // If requested write is larger than was recorded, its a fail
+    assertEqual(size, record.request.bytes.size(), 0);
   }
-  current.request.bytes.pop_front();
-  return 1;
+
+  for (size_t i = 0; i < size; ++i) {
+    // Compare what was written now with recording
+    assertEqual(data[i], record.request.bytes[i], i);
+  }
+
+  // Remove verified recording
+  // TODO(anton-matosov): Consider keeping a lastWritePosition instead of erasing.
+  //  Or use range and update it every write
+  record.request.bytes.erase(record.request.bytes.begin(), record.request.bytes.begin() + size);
+
+  return size;
 }
 
 bool SerialPlayer::available()
@@ -60,31 +62,19 @@ bool SerialPlayer::available()
   return currentRecord().response.bytes.size() > 0;
 }
 
-uint8_t SerialPlayer::peek()
-{
-  return currentRecord().response.bytes.front();
-}
-
 size_t SerialPlayer::readBytes(void* buffer, size_t size)
 {
   assert(buffer);
   uint8_t* data = static_cast<uint8_t*>(buffer);
 
-  const size_t result = size;
-  while (size) {
-    *data = read();
+  Record& record = currentRecord();
+  const size_t availableSize = std::min(size, record.response.bytes.size());
 
-    --size;
-    ++data;
-  }
-  return result;
-}
+  std::copy_n(record.response.bytes.begin(), availableSize, data);
+  record.response.bytes.erase(
+    record.response.bytes.begin(), record.response.bytes.begin() + availableSize);
 
-uint8_t SerialPlayer::read()
-{
-  auto val = currentRecord().response.bytes.front();
-  currentRecord_.response.bytes.pop_front();
-  return val;
+  return availableSize;
 }
 
 void SerialPlayer::flushRead() {}
