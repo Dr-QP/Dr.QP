@@ -115,12 +115,15 @@ int main(const int argc, const char* const argv[])
   sposCmd.playtime = 150;
 
   size_t servoIndex = 0;
-  forEachServo(0, [&kPoseSet, &iposCmd, &sposCmd, &servoIndex](ServoId servoId, int servoIndexInLeg) {
-    iposCmd.data[servoIndex] = {kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg], SET_POSITION_CONTROL, servoId, 150};
-    sposCmd.data[servoIndex] = {kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg], SET_POSITION_CONTROL, servoId};
+  forEachServo(
+    0, [&kPoseSet, &iposCmd, &sposCmd, &servoIndex](ServoId servoId, int servoIndexInLeg) {
+      iposCmd.data[servoIndex] = {
+        kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg], SET_POSITION_CONTROL, servoId, 150};
+      sposCmd.data[servoIndex] = {
+        kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg], SET_POSITION_CONTROL, servoId};
 
-    servoIndex++;
-  });
+      servoIndex++;
+    });
   XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
   // servo.sendJogCommand(sposCmd);
   servo.sendJogCommand(iposCmd);

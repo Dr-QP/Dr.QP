@@ -198,7 +198,7 @@ struct SJogData
   uint8_t id;
 } __attribute__((packed));
 
-template<size_t ServoCount>
+template <size_t ServoCount>
 struct SJogCommand
 {
   uint8_t playtime;
@@ -213,7 +213,7 @@ struct IJogData
   uint8_t playtime;
 } __attribute__((packed));
 
-template<size_t ServoCount>
+template <size_t ServoCount>
 struct IJogCommand
 {
   std::array<IJogData, ServoCount> data;
@@ -456,23 +456,24 @@ public:
     return id;
   }
 
-  template<size_t ServoCount>
+  template <size_t ServoCount>
   void sendJogCommand(SJogCommand<ServoCount>& cmd)
   {
     sendRequest(kBroadcastId, CMD_S_JOG, &cmd, sizeof(cmd));
   }
 
-  template<size_t ServoCount>
+  template <size_t ServoCount>
   void sendJogCommand(IJogCommand<ServoCount>& cmd)
   {
     sendRequest(kBroadcastId, CMD_I_JOG, &cmd, sizeof(cmd));
   }
+
 private:
   void flushRead();
 
   void sendRequest(
-    uint8_t headerId, uint8_t cmd, const void* data1, uint8_t data1Size, const void* data2 = nullptr,
-    uint8_t data2Size = 0);
+    uint8_t headerId, uint8_t cmd, const void* data1, uint8_t data1Size,
+    const void* data2 = nullptr, uint8_t data2Size = 0);
 
   void readAck(
     uint8_t cmd, void* data1, uint8_t data1Size, void* data2 = nullptr, uint8_t data2Size = 0);

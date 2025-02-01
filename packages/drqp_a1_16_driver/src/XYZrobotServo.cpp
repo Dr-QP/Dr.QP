@@ -23,9 +23,8 @@
 #include <cassert>
 #include <cstdio>
 
-static_assert(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__,
-              "This code assumes little-endian byte order.");
-
+static_assert(
+  __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__, "This code assumes little-endian byte order.");
 
 XYZrobotServo::XYZrobotServo(Stream& stream, uint8_t id)
 {
