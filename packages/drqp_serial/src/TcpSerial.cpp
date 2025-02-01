@@ -37,8 +37,7 @@ tcp::resolver::iterator resolve(
   return resolver.resolve(query);
 }
 
-TcpSerial::TcpSerial(const std::string& ip, uint16_t port)
-: socket_(ioService_)
+TcpSerial::TcpSerial(const std::string& ip, uint16_t port) : socket_(ioService_)
 {
   connect(socket_, resolve(ioService_, ip, port));
 }

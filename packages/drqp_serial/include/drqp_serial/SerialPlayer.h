@@ -45,7 +45,8 @@ public:
 
   void load(const std::string& fileName);
 
-  using AssertEqual = std::function<void(const uint8_t expected, const uint8_t actual, const size_t pos)>;
+  using AssertEqual =
+    std::function<void(const uint8_t expected, const uint8_t actual, const size_t pos)>;
   AssertEqual assertEqual = [](const uint8_t expected, const uint8_t actual, const size_t) {
     assert(expected == actual);
   };

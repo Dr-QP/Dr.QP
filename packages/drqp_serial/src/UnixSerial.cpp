@@ -34,10 +34,7 @@ struct UnixSerial::Impl
   boost::asio::io_service ioService_;
   boost::asio::serial_port serial_;
 
-  explicit Impl(const std::string& fileName)
-  : serial_(ioService_, fileName)
-  {
-  }
+  explicit Impl(const std::string& fileName) : serial_(ioService_, fileName) {}
 };
 
 /// @brief Returns the number of bytes available for reading from a serial

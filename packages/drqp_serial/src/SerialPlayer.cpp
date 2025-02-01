@@ -70,7 +70,8 @@ size_t SerialPlayer::readBytes(void* buffer, size_t size)
   const size_t availableSize = std::min(size, record.response.bytes.size());
 
   std::copy_n(record.response.bytes.begin(), availableSize, data);
-  record.response.bytes.erase(record.response.bytes.begin(), record.response.bytes.begin() + availableSize);
+  record.response.bytes.erase(
+    record.response.bytes.begin(), record.response.bytes.begin() + availableSize);
 
   return availableSize;
 }
