@@ -29,7 +29,7 @@ class Stream
 public:
   virtual bool available() = 0;
   virtual void flushRead() = 0;
-  virtual size_t write(const void* data, size_t size) = 0;
+  virtual size_t writeBytes(const void* buffer, size_t size) = 0;
   virtual size_t readBytes(void* buffer, size_t size) = 0;
 
   virtual ~Stream() {}

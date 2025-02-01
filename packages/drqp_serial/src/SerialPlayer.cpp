@@ -31,7 +31,7 @@ namespace RecordingProxy
 {
 void SerialPlayer::begin(const uint32_t baudRate, const uint8_t transferConfig) {}
 
-size_t SerialPlayer::write(const void* buffer, size_t size)
+size_t SerialPlayer::writeBytes(const void* buffer, size_t size)
 {
   assert(buffer);
   assert(assertEqual);

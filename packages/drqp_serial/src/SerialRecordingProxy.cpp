@@ -70,13 +70,13 @@ bool SerialRecordingProxy::available()
   return super::available();
 }
 
-size_t SerialRecordingProxy::write(const void* buffer, size_t size)
+size_t SerialRecordingProxy::writeBytes(const void* buffer, size_t size)
 {
   assert(buffer);
   const uint8_t* data = static_cast<const uint8_t*>(buffer);
 
   startNewRecordIfNeeded();
-  size_t result = super::write(data, size);
+  size_t result = super::writeBytes(data, size);
   currentRecord_.request.bytes.insert(currentRecord_.request.bytes.end(), data, data + size);
 
   lastOperation_ = OperationType::kWrite;

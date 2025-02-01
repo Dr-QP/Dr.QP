@@ -44,9 +44,9 @@ TcpSerial::TcpSerial(const std::string& ip, uint16_t port) : socket_(ioService_)
 
 void TcpSerial::begin(const uint32_t baudRate, const uint8_t transferConfig) {}
 
-size_t TcpSerial::write(const void* data, size_t size)
+size_t TcpSerial::writeBytes(const void* buffer, size_t size)
 {
-  return boost::asio::write(socket_, boost::asio::buffer(data, size));
+  return boost::asio::write(socket_, boost::asio::buffer(buffer, size));
 }
 
 void TcpSerial::flushRead()
