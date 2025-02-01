@@ -13,3 +13,6 @@ if [[ -d $prefix ]]; then
 fi
 git subtree add --prefix="$prefix" https://github.com/Dr-QP/rapidjson.git drqp_rapidjson --squash
 git subtree pull --prefix="$prefix" https://github.com/Dr-QP/rapidjson.git drqp_rapidjson --squash
+
+touch "$prefix/AMENT_IGNORE"
+git add "$prefix/AMENT_IGNORE" && git commit -m "Ignore rapidjson for ament clang format"
