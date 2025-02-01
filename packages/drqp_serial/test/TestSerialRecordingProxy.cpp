@@ -31,8 +31,9 @@ void simpleSerialTest(SerialProtocol& serial)
 {
   serial.begin(115200);
 
-  std::string str = "abcdefg\n";
-  REQUIRE(serial.write(str.c_str(), str.size()) == str.size());
+  const std::string str = "abcdefg\n";
+  const size_t writtenSize = serial.write(str.c_str(), str.size());
+  REQUIRE(writtenSize == str.size());
 
   std::string read;
   uint8_t lastRead = 0;
