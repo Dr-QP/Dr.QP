@@ -155,6 +155,10 @@
   "settings": {
     "cmake.configureOnEdit": false,
     "cmake.configureOnOpen": false,
+    "cmake.cmakePath": "cmake",
+    "cmake.generator": "Ninja",
+    "cmake.exportCompileCommandsFile": true,
+
     "ros.distro": "humble",
     "ament-task-provider.envSetup": "source /opt/ros/humble/setup.bash",
     "python.autoComplete.extraPaths": [
@@ -174,6 +178,7 @@
       "/log/**": true,
     },
     "clangd.enable": true,
+    "clangd.path": "clangd",
     "C_Cpp.intelliSenseEngine": "disabled",
     "[cpp]": {
       "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"

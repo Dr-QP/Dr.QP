@@ -23,6 +23,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <array>
 
 #include "drqp_serial/Stream.h"
 
@@ -190,9 +191,54 @@ struct XYZrobotServoStatus
   uint16_t iBus;
 } __attribute__((packed));
 
+struct SJogData
+{
+  uint16_t goal;
+  uint8_t type;
+  uint8_t id;
+} __attribute__((packed));
+
+template <size_t ServoCount>
+struct SJogCommand
+{
+  uint8_t playtime;
+  std::array<SJogData, ServoCount> data;
+};
+
+struct IJogData
+{
+  uint16_t goal;
+  uint8_t type;
+  uint8_t id;
+  uint8_t playtime;
+} __attribute__((packed));
+
+template <size_t ServoCount>
+struct IJogCommand
+{
+  std::array<IJogData, ServoCount> data;
+};
+
+#define SET_POSITION_CONTROL 0
+#define SET_SPEED_CONTROL 1
+#define SET_TORQUE_OFF 2
+#define SET_POSITION_CONTROL_SERVO_ON 3
+
+#define CMD_EEPROM_WRITE 0x01
+#define CMD_EEPROM_READ 0x02
+#define CMD_RAM_WRITE 0x03
+#define CMD_RAM_READ 0x04
+#define CMD_I_JOG 0x05
+#define CMD_S_JOG 0x06
+#define CMD_STAT 0x07
+#define CMD_ROLLBACK 0x08
+#define CMD_REBOOT 0x09
+
 class XYZrobotServo
 {
 public:
+  static constexpr uint8_t kBroadcastId = 0xFE;
+
   XYZrobotServo(Stream&, uint8_t id);
 
   /// Writes data from the specified buffer to the servo's EEPROM.
@@ -201,22 +247,22 @@ public:
   /// before sending the next command to this servo, since writing to EEPROM
   /// takes some time and the servo cannot receive more commands until it is
   /// done.
-  void eepromWrite(uint8_t startAddress, const uint8_t*, uint8_t dataSize);
+  void eepromWrite(uint8_t startAddress, const void* data, uint8_t dataSize);
 
   /// Reads data from the servo's EEPROM and stores it in the specified buffer.
   ///
   /// The data size should be 35 or less: otherwise the A1-16 seems to return a
   /// response with an invalid CRC.
-  void eepromRead(uint8_t startAddress, uint8_t* data, uint8_t dataSize);
+  void eepromRead(uint8_t startAddress, void* data, uint8_t dataSize);
 
   /// Writes data from the specified buffer to the servo's RAM.
-  void ramWrite(uint8_t startAddress, const uint8_t*, uint8_t dataSize);
+  void ramWrite(uint8_t startAddress, const void* data, uint8_t dataSize);
 
   /// Reads data from the servo's RAM and stores it in the specified buffer.
   ///
   /// The data size should be 35 or less: otherwise the A1-16 seems to return a
   /// response with an invalid CRC.
-  void ramRead(uint8_t startAddress, uint8_t* data, uint8_t dataSize);
+  void ramRead(uint8_t startAddress, void* data, uint8_t dataSize);
 
   /// Write the Baud_Rate parameter byte in EEPROM, which determines which baud
   /// rate the servo uses on its serial interface.
@@ -410,21 +456,33 @@ public:
     return id;
   }
 
+  template <size_t ServoCount>
+  void sendJogCommand(SJogCommand<ServoCount>& cmd)
+  {
+    sendRequest(kBroadcastId, CMD_S_JOG, &cmd, sizeof(cmd));
+  }
+
+  template <size_t ServoCount>
+  void sendJogCommand(IJogCommand<ServoCount>& cmd)
+  {
+    sendRequest(kBroadcastId, CMD_I_JOG, &cmd, sizeof(cmd));
+  }
+
 private:
   void flushRead();
 
   void sendRequest(
-    uint8_t cmd, const uint8_t* data1, uint8_t data1Size, const uint8_t* data2 = NULL,
-    uint8_t data2Size = 0);
+    uint8_t headerId, uint8_t cmd, const void* data1, uint8_t data1Size,
+    const void* data2 = nullptr, uint8_t data2Size = 0);
 
   void readAck(
-    uint8_t cmd, uint8_t* data1, uint8_t data1Size, uint8_t* data2 = NULL, uint8_t data2Size = 0);
+    uint8_t cmd, void* data1, uint8_t data1Size, void* data2 = nullptr, uint8_t data2Size = 0);
 
-  void memoryWrite(uint8_t cmd, uint8_t startAddress, const uint8_t* data, uint8_t dataSize);
+  void memoryWrite(uint8_t cmd, uint8_t startAddress, const void* data, uint8_t dataSize);
 
-  void memoryRead(uint8_t cmd, uint8_t startAddress, uint8_t* data, uint8_t dataSize);
+  void memoryRead(uint8_t cmd, uint8_t startAddress, void* data, uint8_t dataSize);
 
-  void sendIJog(uint16_t goal, uint8_t type, uint8_t playtime);
+  void sendIJog(IJogData data);
 
   XYZrobotServoError lastError;
 

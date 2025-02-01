@@ -110,12 +110,23 @@ int main(const int argc, const char* const argv[])
     return kNeutralPose;
   }();
 
-  forEachServo(100, [&kPoseSet, &servoSerial](ServoId servoId, int servoIndexInLeg) {
-    XYZrobotServo servo(servoSerial, servoId);
+  IJogCommand<kServoCount> iposCmd;
+  SJogCommand<kServoCount> sposCmd;
+  sposCmd.playtime = 150;
 
-    const ServoPosition position = kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg];
-    servo.setPosition(position, 150);
-  });
+  size_t servoIndex = 0;
+  forEachServo(
+    0, [&kPoseSet, &iposCmd, &sposCmd, &servoIndex](ServoId servoId, int servoIndexInLeg) {
+      iposCmd.data[servoIndex] = {
+        kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg], SET_POSITION_CONTROL, servoId, 150};
+      sposCmd.data[servoIndex] = {
+        kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg], SET_POSITION_CONTROL, servoId};
+
+      servoIndex++;
+    });
+  XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
+  // servo.sendJogCommand(sposCmd);
+  servo.sendJogCommand(iposCmd);
 
   return 0;
 }

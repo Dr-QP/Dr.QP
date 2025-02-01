@@ -52,7 +52,7 @@ std::size_t get_bytes_available(
   int value = 0;
 #if defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
   COMSTAT status;
-  if (0 != ::ClearCommError(serial_port.lowest_layer().native_handle(), NULL, &status)) {
+  if (0 != ::ClearCommError(serial_port.lowest_layer().native_handle(), nullptr, &status)) {
     value = status.cbInQue;
   } else {
     // On error, set the error code.
@@ -101,7 +101,7 @@ size_t UnixSerial::write(uint8_t byte)
   return write(&byte, 1);
 }
 
-size_t UnixSerial::write(const uint8_t* data, size_t size)
+size_t UnixSerial::write(const void* data, size_t size)
 {
   return boost::asio::write(impl_->serial_, boost::asio::buffer(data, size));
 }
@@ -142,7 +142,7 @@ uint8_t UnixSerial::read()
   return impl_->lastRead_;
 }
 
-size_t UnixSerial::readBytes(uint8_t* buffer, size_t size)
+size_t UnixSerial::readBytes(void* buffer, size_t size)
 {
   impl_->everRead_ = true;
   return boost::asio::read(impl_->serial_, boost::asio::buffer(buffer, size));

@@ -44,8 +44,9 @@ enum LegId {
 constexpr size_t kServosPerLeg = 3;
 constexpr const ServoId kServoMinId = 1;
 constexpr const ServoId kServoMaxId = kServoMinId + kServosPerLeg * kLegIdCount;
+constexpr const size_t kServoCount = kServoMaxId - kServoMinId;
 
-using ServoIdsArray = std::array<ServoId, kServoMaxId - kServoMinId>;
+using ServoIdsArray = std::array<ServoId, kServoCount>;
 
 static inline ServoIdsArray servoIdsRange()
 {
