@@ -36,18 +36,17 @@ class SerialPlayer : public SerialProtocol
 {
 public:
   void begin(const uint32_t baudRate, const uint8_t transferConfig) override;
-  size_t write(uint8_t byte) override;
   bool available() override;
-  uint8_t peek() override;
-  uint8_t read() override;
+
   void flushRead() override;
+
   size_t write(const void* data, size_t size) override;
   size_t readBytes(void* buffer, size_t size) override;
 
   void load(const std::string& fileName);
 
-  using AssertEqual = std::function<void(const uint8_t expected, const uint8_t actual)>;
-  AssertEqual assertEqual = [](const uint8_t expected, const uint8_t actual) {
+  using AssertEqual = std::function<void(const uint8_t expected, const uint8_t actual, const size_t pos)>;
+  AssertEqual assertEqual = [](const uint8_t expected, const uint8_t actual, const size_t) {
     assert(expected == actual);
   };
 

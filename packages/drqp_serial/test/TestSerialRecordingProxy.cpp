@@ -31,20 +31,14 @@ void simpleSerialTest(SerialProtocol& serial)
 {
   serial.begin(115200);
 
-  REQUIRE(serial.write('a') == 1);
-  REQUIRE(serial.write('b') == 1);
-  REQUIRE(serial.write('c') == 1);
-  REQUIRE(serial.write('d') == 1);
-  REQUIRE(serial.write('e') == 1);
-  REQUIRE(serial.write('f') == 1);
-  REQUIRE(serial.write('g') == 1);
-  REQUIRE(serial.write('\n') == 1);
+  std::string str = "abcdefg\n";
+  REQUIRE(serial.write(str.c_str(), str.size()) == str.size());
 
   std::string read;
   uint8_t lastRead = 0;
   while (lastRead != '\n') {
     if (serial.available()) {
-      lastRead = serial.read();
+      serial.readBytes(&lastRead, 1);
       read += lastRead;
     } else {
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -72,7 +66,8 @@ SCENARIO("test unix serial with serial proxy")
   WHEN("recording exists")
   {
     RecordingProxy::SerialPlayer serialPlayer;
-    serialPlayer.assertEqual = [](const uint8_t expected, const uint8_t actual) {
+    serialPlayer.assertEqual = [](const uint8_t expected, const uint8_t actual, const size_t pos) {
+      INFO("Comparing position " << pos);
       REQUIRE(expected == actual);
     };
 

@@ -34,11 +34,8 @@ struct UnixSerial::Impl
   boost::asio::io_service ioService_;
   boost::asio::serial_port serial_;
 
-  uint8_t lastRead_;
-  bool everRead_;
-
   explicit Impl(const std::string& fileName)
-  : serial_(ioService_, fileName), lastRead_(0), everRead_(false)
+  : serial_(ioService_, fileName)
   {
   }
 };
@@ -96,11 +93,6 @@ void UnixSerial::begin(const uint32_t baudRate, const uint8_t transferConfig)
   impl_->serial_.set_option(serial_port_base::stop_bits(serial_port_base::stop_bits::one));
 }
 
-size_t UnixSerial::write(uint8_t byte)
-{
-  return write(&byte, 1);
-}
-
 size_t UnixSerial::write(const void* data, size_t size)
 {
   return boost::asio::write(impl_->serial_, boost::asio::buffer(data, size));
@@ -121,29 +113,7 @@ bool UnixSerial::available()
   return get_bytes_available(impl_->serial_) != 0;
 }
 
-uint8_t UnixSerial::peek()
-{
-  if (!available()) {
-    return kNoData;
-  }
-  if (!impl_->everRead_) {
-    return read();
-  }
-  return impl_->lastRead_;
-}
-
-uint8_t UnixSerial::read()
-{
-  // if (!available()) {
-  //     return kNoData;
-  // }
-  impl_->everRead_ = true;
-  boost::asio::read(impl_->serial_, boost::asio::buffer(&impl_->lastRead_, 1));
-  return impl_->lastRead_;
-}
-
 size_t UnixSerial::readBytes(void* buffer, size_t size)
 {
-  impl_->everRead_ = true;
   return boost::asio::read(impl_->serial_, boost::asio::buffer(buffer, size));
 }

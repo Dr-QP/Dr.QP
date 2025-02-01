@@ -29,24 +29,9 @@ void SerialDecorator::begin(const uint32_t baudRate, const uint8_t transferConfi
   return decorated_.begin(baudRate, transferConfig);
 }
 
-size_t SerialDecorator::write(uint8_t byte)
-{
-  return decorated_.write(byte);
-}
-
 bool SerialDecorator::available()
 {
   return decorated_.available();
-}
-
-uint8_t SerialDecorator::peek()
-{
-  return decorated_.peek();
-}
-
-uint8_t SerialDecorator::read()
-{
-  return decorated_.read();
 }
 
 size_t SerialDecorator::write(const void* data, size_t size)
