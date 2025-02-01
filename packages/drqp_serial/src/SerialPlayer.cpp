@@ -50,7 +50,8 @@ size_t SerialPlayer::write(const void* buffer, size_t size)
   }
 
   // Remove verified recording
-  // TODO: Consider keeping a lastWritePosition instead of erasing. Or use range and update it every write
+  // TODO(anton-matosov): Consider keeping a lastWritePosition instead of erasing.
+  //  Or use range and update it every write
   record.request.bytes.erase(record.request.bytes.begin(), record.request.bytes.begin() + size);
 
   return size;
