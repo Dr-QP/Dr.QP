@@ -110,20 +110,20 @@ int main(const int argc, const char* const argv[])
     return kNeutralPose;
   }();
 
-  std::array<IJogData, kServoCount> posData;
-  SJogCommand<kServoCount> posCmd;
-  posCmd.playtime = 150;
+  IJogCommand<kServoCount> iposCmd;
+  SJogCommand<kServoCount> sposCmd;
+  sposCmd.playtime = 150;
 
   size_t servoIndex = 0;
-  forEachServo(0, [&kPoseSet, &posData, &posCmd, &servoIndex](ServoId servoId, int servoIndexInLeg) {
-    posData[servoIndex] = {kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg], SET_POSITION_CONTROL, servoId, 150};
-    posCmd.data[servoIndex] = {kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg], SET_POSITION_CONTROL, servoId};
+  forEachServo(0, [&kPoseSet, &iposCmd, &sposCmd, &servoIndex](ServoId servoId, int servoIndexInLeg) {
+    iposCmd.data[servoIndex] = {kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg], SET_POSITION_CONTROL, servoId, 150};
+    sposCmd.data[servoIndex] = {kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg], SET_POSITION_CONTROL, servoId};
 
     servoIndex++;
   });
   XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
-  // servo.setPositions(posData.data(), posData.size());
-  servo.sendSJogCommand(posCmd);
+  // servo.sendJogCommand(sposCmd);
+  servo.sendJogCommand(iposCmd);
 
   return 0;
 }

@@ -146,14 +146,6 @@ void XYZrobotServo::setPosition(uint16_t position, uint8_t playtime)
   sendIJog({position, SET_POSITION_CONTROL, id, playtime});
 }
 
-void XYZrobotServo::setPositions(IJogData* data, uint8_t count)
-{
-  for (uint8_t i = 0; i < count; i++) {
-    data[i].type = SET_POSITION_CONTROL;
-  }
-  sendMultiIJog(data, count);
-}
-
 void XYZrobotServo::setSpeed(int16_t speed, uint8_t playtime)
 {
   sendIJog({static_cast<uint16_t>(speed), SET_SPEED_CONTROL, id, playtime});
@@ -344,9 +336,4 @@ void XYZrobotServo::memoryRead(uint8_t cmd, uint8_t startAddress, void* data, ui
 void XYZrobotServo::sendIJog(IJogData data)
 {
   sendRequest(id, CMD_I_JOG, &data, sizeof(data));
-}
-
-void XYZrobotServo::sendMultiIJog(IJogData* data, uint8_t count)
-{
-  sendRequest(kBroadcastId, CMD_I_JOG, data, sizeof(IJogData) * count);
 }

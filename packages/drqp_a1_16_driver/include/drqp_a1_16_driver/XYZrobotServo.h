@@ -213,6 +213,12 @@ struct IJogData
   uint8_t playtime;
 } __attribute__((packed));
 
+template<size_t ServoCount>
+struct IJogCommand
+{
+  std::array<IJogData, ServoCount> data;
+};
+
 #define SET_POSITION_CONTROL 0
 #define SET_SPEED_CONTROL 1
 #define SET_TORQUE_OFF 2
@@ -383,7 +389,6 @@ public:
   /// 10 ms.  For example, a playtime of 50 would correspond to 500 ms or 0.5
   /// seconds.
   void setPosition(uint16_t position, uint8_t playtime = 0);
-  void setPositions(IJogData* data, uint8_t count);
 
   /// Sends an I-JOG command to set the speed for this servo.
   ///
@@ -452,9 +457,15 @@ public:
   }
 
   template<size_t ServoCount>
-  void sendSJogCommand(SJogCommand<ServoCount>& cmd)
+  void sendJogCommand(SJogCommand<ServoCount>& cmd)
   {
     sendRequest(kBroadcastId, CMD_S_JOG, &cmd, sizeof(cmd));
+  }
+
+  template<size_t ServoCount>
+  void sendJogCommand(IJogCommand<ServoCount>& cmd)
+  {
+    sendRequest(kBroadcastId, CMD_I_JOG, &cmd, sizeof(cmd));
   }
 private:
   void flushRead();
@@ -471,7 +482,6 @@ private:
   void memoryRead(uint8_t cmd, uint8_t startAddress, void* data, uint8_t dataSize);
 
   void sendIJog(IJogData data);
-  void sendMultiIJog(IJogData* data, uint8_t count);
 
   XYZrobotServoError lastError;
 
