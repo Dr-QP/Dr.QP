@@ -199,4 +199,20 @@ SCENARIO("A1-16 servo operations")
       }
     }
   }
+
+  WHEN("set position")
+  {
+    std::unique_ptr<SerialProtocol> serial = makeSerial("set-position");
+    XYZrobotServo servo(*serial, kTestServo);
+
+    servo.setPosition(kTestGoal, 100);
+    while (!Catch::Matchers::WithinAbs(kTestGoal, 5).match(servo.readStatus().position)) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    THEN("should move to correct position in time specified")
+    {
+      REQUIRE_THAT(servo.readStatus().position, Catch::Matchers::WithinAbs(kTestGoal, 5));
+    }
+  }
 }
