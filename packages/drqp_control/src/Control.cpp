@@ -65,6 +65,7 @@ int main(const int argc, const char* const argv[])
 {
   // TcpSerial servoSerial("192.168.1.136", 2022);
   UnixSerial servoSerial("/dev/ttySC0");
+  servoSerial.begin(115200);
 
   std::string pose = (argc >= 2 ? argv[1] : "neutral");
 
