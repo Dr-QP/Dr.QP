@@ -91,16 +91,18 @@ void neutralPose(SerialProtocol& servoSerial)
   REQUIRE_THAT(status2.position, Catch::Matchers::WithinAbs(kStartGoal, 5));
 }
 
+static bool testOptionUseRealHardware = false;
+static bool testOptionResetTorque = false;
+static bool testOptionReturnToNeutral = true;
+
 std::filesystem::path makeRecordingName(const std::string& suffix)
 {
-  auto basePath = std::filesystem::current_path() / "test_data";
+  std::filesystem::path basePath = testOptionUseRealHardware
+                                     ? TEST_DATA_DIR_IN_SOURCE_TREE
+                                     : std::filesystem::current_path() / "test_data";
   create_directories(basePath);
   return basePath / ("a1-16_servo-" + suffix + ".json");
 }
-
-bool testOptionUseRealHardware = false;
-bool testOptionResetTorque = false;
-bool testOptionReturnToNeutral = true;
 
 std::unique_ptr<SerialProtocol> makeSerial(const std::string& suffix)
 {
