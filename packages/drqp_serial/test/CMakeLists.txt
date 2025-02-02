@@ -10,10 +10,9 @@ target_link_libraries(drqp_serial_tests PRIVATE
   catch_ros2::catch_ros2_with_main
 )
 
-add_catch2_unit_test(drqp_serial_tests)
-
-# Copy test data to build directory as it is the default working directory at runtime
-file(
-  INSTALL ${CMAKE_CURRENT_SOURCE_DIR}/test_data
-  DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
+target_compile_definitions(drqp_serial_tests PRIVATE
+  TEST_DATA_DIR_IN_SOURCE_TREE="${CMAKE_CURRENT_SOURCE_DIR}/test_data"
+  TEST_DATA_DIR_IN_BUILD_TREE="${CMAKE_CURRENT_BINARY_DIR}/"
 )
+
+add_catch2_unit_test(drqp_serial_tests)

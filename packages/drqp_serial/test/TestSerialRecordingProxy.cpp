@@ -53,9 +53,9 @@ void simpleSerialTest(SerialProtocol& serial)
 SCENARIO("test unix serial with serial proxy")
 {
   static std::filesystem::path kSourceSerialRecordingFile =
-    std::filesystem::current_path() / "test_data" / "serial_recording.json";
+    std::filesystem::path(TEST_DATA_DIR_IN_SOURCE_TREE) / "serial_recording.json";
   static std::filesystem::path kDestinationSerialRecordingFile =
-    std::filesystem::current_path() / "test_data" / "destination_serial_recording.json";
+    std::filesystem::path(TEST_DATA_DIR_IN_BUILD_TREE) / "destination_serial_recording.json";
 
   WHEN("destination recording does not exist")
   {
