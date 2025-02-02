@@ -98,7 +98,6 @@ size_t SerialRecordingProxy::readBytes(void* buffer, size_t size)
   assert(buffer);
   uint8_t* data = static_cast<uint8_t*>(buffer);
 
-  startNewRecordIfNeeded();
   size_t result = super::readBytes(data, size);
   currentRecord_.response.bytes.insert(currentRecord_.response.bytes.end(), data, data + size);
 
