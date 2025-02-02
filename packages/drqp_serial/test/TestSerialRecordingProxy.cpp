@@ -20,7 +20,9 @@
 
 #include <thread>
 #include <chrono>
+#include <filesystem>
 
+#include <catch_amalgamated.hpp>
 #include <catch_ros2/catch.hpp>
 
 #include "drqp_serial/SerialPlayer.h"
@@ -50,33 +52,45 @@ void simpleSerialTest(SerialProtocol& serial)
 
 SCENARIO("test unix serial with serial proxy")
 {
-  static const char* const kSerialRecordingFileName = "test_data/serial_recording.json";
+  static std::filesystem::path kSourceSerialRecordingFile =
+    std::filesystem::current_path() / "test_data" / "serial_recording.json";
+  static std::filesystem::path kDestinationSerialRecordingFile =
+    std::filesystem::current_path() / "test_data" / "destination_serial_recording.json";
 
-  WHEN("recording does not exists")
+  WHEN("destination recording does not exist")
   {
-    THEN("record it")
+    REQUIRE(exists(kSourceSerialRecordingFile));
+    REQUIRE(!exists(kDestinationSerialRecordingFile));
+
+    THEN("record it from source recording")
     {
-      //            UnixSerial unixSerial("/dev/ttys000");
-      ////            UnixSerial unixSerial("/dev/cu.SLAB_USBtoUART");
-      //
-      //            RecordingProxy::SerialRecordingProxy serial(unixSerial,
-      //            kSerialRecordingFileName); simpleSerialTest(serial);
+      // The source serial for raw recording
+      // UnixSerial sourceSerial("/dev/ttySC0");
+
+      RecordingProxy::SerialPlayer sourceSerial;
+      sourceSerial.load(kSourceSerialRecordingFile);
+
+      RecordingProxy::SerialRecordingProxy serial(sourceSerial, kDestinationSerialRecordingFile);
+      simpleSerialTest(serial);
     }
   }
 
-  WHEN("recording exists")
+  WHEN("destination recording exists")
   {
+    REQUIRE(exists(kDestinationSerialRecordingFile));
     RecordingProxy::SerialPlayer serialPlayer;
     serialPlayer.assertEqual = [](const uint8_t expected, const uint8_t actual, const size_t pos) {
       INFO("Comparing position " << pos);
       REQUIRE(expected == actual);
     };
 
-    serialPlayer.load(kSerialRecordingFileName);
+    serialPlayer.load(kDestinationSerialRecordingFile);
 
     THEN("same test should give same results")
     {
       simpleSerialTest(serialPlayer);
+
+      REQUIRE_NOTHROW(remove(kDestinationSerialRecordingFile));
     }
   }
 }
