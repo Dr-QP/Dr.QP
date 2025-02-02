@@ -79,9 +79,13 @@ void neutralPose(SerialProtocol& servoSerial)
   }};
 
   servo.sendJogCommand(posCmd);
-  std::this_thread::sleep_for(std::chrono::milliseconds(300));
 
   XYZrobotServo testServo(servoSerial, kTestServo);
+  while (!Catch::Matchers::WithinAbs(kStartGoal, 5).match(testServo.readStatus().position))
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+  }
+
   XYZrobotServo testServoOther(servoSerial, kTestServoOther);
 
   auto status1 = testServo.readStatus();
@@ -160,6 +164,12 @@ SCENARIO("A1-16 servo operations")
 
         uint16_t jointPosition = ram[60] + (ram[61] << 8);
         REQUIRE_THAT(jointPosition, Catch::Matchers::WithinAbs(kStartGoal, 5));
+
+        uint16_t positionGoal = ram[68] + (ram[69] << 8);
+        REQUIRE_THAT(positionGoal, Catch::Matchers::WithinAbs(kStartGoal, 5));
+
+        uint16_t positionRef = ram[60] + (ram[71] << 8);
+        REQUIRE_THAT(positionRef, Catch::Matchers::WithinAbs(kStartGoal, 5));
       }
     }
 
