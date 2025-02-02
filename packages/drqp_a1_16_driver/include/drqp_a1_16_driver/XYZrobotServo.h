@@ -198,10 +198,12 @@ struct SJogData
   uint8_t id;
 } __attribute__((packed));
 
+// S-JOG - synchronous control move
+// Stops when playtime duration is reached, even if goal is not reached in position control
 template <size_t ServoCount>
 struct SJogCommand
 {
-  uint8_t playtime;
+  uint8_t playtime; // goal position may not be reached for a short play time;
   std::array<SJogData, ServoCount> data;
 };
 
@@ -210,9 +212,11 @@ struct IJogData
   uint16_t goal;
   uint8_t type;
   uint8_t id;
-  uint8_t playtime;
+  uint8_t playtime; // play time may be modified for a long movement;
 } __attribute__((packed));
 
+// I-JOG - independent control move
+// Stops once the goal is reached, even if it requires more time then specified in playtime
 template <size_t ServoCount>
 struct IJogCommand
 {
