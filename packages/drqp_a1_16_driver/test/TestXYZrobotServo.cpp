@@ -40,6 +40,9 @@ constexpr ServoId kTestServoOther = 3;
 
 ServoIdsArray kTestServoIds = {kTestServo, kTestServoOther};
 
+constexpr uint16_t kStartGoal = 512;
+constexpr uint16_t kTestGoal = 812;
+
 void torqueOff(SerialProtocol& servoSerial)
 {
   XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
@@ -48,8 +51,7 @@ void torqueOff(SerialProtocol& servoSerial)
     {
       SJogData{0, SET_TORQUE_OFF, kTestServo},
       SJogData{0, SET_TORQUE_OFF, kTestServoOther},
-    }
-  };
+    }};
 
   servo.sendJogCommand(sposCmd);
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -63,8 +65,7 @@ void torqueOn(SerialProtocol& servoSerial)
     {
       SJogData{0, SET_POSITION_CONTROL_SERVO_ON, kTestServo},
       SJogData{0, SET_POSITION_CONTROL_SERVO_ON, kTestServoOther},
-    }
-  };
+    }};
 
   servo.sendJogCommand(sposCmd);
 }
@@ -72,13 +73,10 @@ void torqueOn(SerialProtocol& servoSerial)
 void neutralPose(SerialProtocol& servoSerial)
 {
   XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
-  constexpr uint16_t kGoal = 512;
-  IJogCommand<kServoCount> posCmd = {
-    {
-      IJogData{kGoal, SET_POSITION_CONTROL, kTestServo, 30},
-      IJogData{kGoal, SET_POSITION_CONTROL, kTestServoOther, 30},
-    }
-  };
+  IJogCommand<kServoCount> posCmd = {{
+    IJogData{kStartGoal, SET_POSITION_CONTROL, kTestServo, 30},
+    IJogData{kStartGoal, SET_POSITION_CONTROL, kTestServoOther, 30},
+  }};
 
   servo.sendJogCommand(posCmd);
   std::this_thread::sleep_for(std::chrono::milliseconds(300));
@@ -87,10 +85,17 @@ void neutralPose(SerialProtocol& servoSerial)
   XYZrobotServo testServoOther(servoSerial, kTestServoOther);
 
   auto status1 = testServo.readStatus();
-  REQUIRE_THAT(status1.position, Catch::Matchers::WithinAbs(kGoal, 5));
+  REQUIRE_THAT(status1.position, Catch::Matchers::WithinAbs(kStartGoal, 5));
 
   auto status2 = testServoOther.readStatus();
-  REQUIRE_THAT(status2.position, Catch::Matchers::WithinAbs(kGoal, 5));
+  REQUIRE_THAT(status2.position, Catch::Matchers::WithinAbs(kStartGoal, 5));
+}
+
+std::filesystem::path makeRecordingName(const std::string& suffix)
+{
+  auto basePath = std::filesystem::current_path() / "test_data";
+  create_directories(basePath);
+  return basePath / ("a1-16_servo-" + suffix + ".json");
 }
 
 bool testOptionUseRealHardware = true;
@@ -99,32 +104,73 @@ bool testOptionReturnToNeutral = true;
 
 SCENARIO("A1-16 servo operations")
 {
-  static std::filesystem::path kSerialRecordingFile =
-    std::filesystem::current_path() / "test_data" / "a1-16_servo_operations.json";
-
   GIVEN("A serial")
   {
     UnixSerial serial("/dev/ttySC0");
     serial.begin(115200);
-    if (testOptionUseRealHardware)
-    {
-      if (testOptionResetTorque)
-      {
+    if (testOptionUseRealHardware) {
+      if (testOptionResetTorque) {
         torqueOff(serial);
         torqueOn(serial);
       }
 
-      if (testOptionReturnToNeutral)
-      {
+      if (testOptionReturnToNeutral) {
         neutralPose(serial);
       }
     }
 
-    RecordingProxy::SerialRecordingProxy recorder(serial, kSerialRecordingFile);
-
-    WHEN("action")
+    WHEN("read all RAM")
     {
-      THEN("response") {}
+      RecordingProxy::SerialRecordingProxy recorder(serial, makeRecordingName("read-ram"));
+
+      XYZrobotServo servo(recorder, kTestServo);
+
+      uint8_t ram[80] = {};
+
+      servo.ramRead(0, ram, 30);
+      REQUIRE(servo.isOk());
+
+      servo.ramRead(30, ram + 30, 30);
+      REQUIRE(servo.isOk());
+
+      servo.ramRead(60, ram + 60, 20);
+      REQUIRE(servo.isOk());
+
+      THEN("should have correct values")
+      {
+        REQUIRE(ram[0] == kTestServo);
+
+        uint16_t jointPosition = ram[60] + (ram[61] << 8);
+        REQUIRE_THAT(jointPosition, Catch::Matchers::WithinAbs(kStartGoal, 5));
+      }
+    }
+
+    WHEN("read all EEPROM")
+    {
+      RecordingProxy::SerialRecordingProxy recorder(serial, makeRecordingName("read-eeprom"));
+
+      XYZrobotServo servo(recorder, kTestServo);
+
+      uint8_t eeprom[54];
+      servo.eepromRead(0, eeprom, 30);
+      REQUIRE(servo.isOk());
+
+      servo.eepromRead(30, eeprom + 30, 24);
+      REQUIRE(servo.isOk());
+
+      THEN("should have correct values")
+      {
+        REQUIRE(eeprom[0] == 0x01);  // Model number
+        REQUIRE(eeprom[1] == 0x0F);  // Year
+        REQUIRE(eeprom[2] == 0x3A);  // Version/Month
+        REQUIRE(eeprom[3] == 0x01);  // Day
+        REQUIRE(eeprom[6] == kTestServo);
+
+        uint16_t minPosition = eeprom[26] + (eeprom[27] << 8);
+        uint16_t maxPosition = eeprom[28] + (eeprom[29] << 8);
+        REQUIRE(minPosition == 23);
+        REQUIRE(maxPosition == 1000);
+      }
     }
   }
 }
