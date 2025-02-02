@@ -186,8 +186,7 @@ struct XYZrobotServoStatus
   uint8_t statusError;
   uint8_t statusDetail;
   uint16_t pwm;
-  uint16_t
-    posRef;  // Servo position goal. If the servo has no position goal, this is just its current measured position.
+  uint16_t posRef;  /// Servo position goal. If no goal, this is just its current measured position.
   uint16_t position;  // Servo current position
   uint16_t iBus;
 } __attribute__((packed));
