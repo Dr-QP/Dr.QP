@@ -34,6 +34,11 @@ bool SerialDecorator::available()
   return decorated_.available();
 }
 
+void SerialDecorator::flushRead()
+{
+  decorated_.flushRead();
+}
+
 size_t SerialDecorator::writeBytes(const void* buffer, size_t size)
 {
   return decorated_.writeBytes(buffer, size);

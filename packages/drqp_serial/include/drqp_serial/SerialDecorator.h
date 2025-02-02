@@ -33,6 +33,7 @@ public:
   using super::begin;
   void begin(const uint32_t baudRate, const uint8_t transferConfig) override;
   bool available() override;
+  void flushRead() override;
 
   size_t writeBytes(const void* buffer, size_t size) override;
   size_t readBytes(void* buffer, size_t size) override;
