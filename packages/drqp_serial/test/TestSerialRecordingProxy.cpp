@@ -22,7 +22,6 @@
 #include <chrono>
 #include <filesystem>
 
-#include <catch_amalgamated.hpp>
 #include <catch_ros2/catch.hpp>
 
 #include "drqp_serial/SerialPlayer.h"
