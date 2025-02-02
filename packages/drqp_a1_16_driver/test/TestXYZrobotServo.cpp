@@ -97,11 +97,14 @@ static bool testOptionReturnToNeutral = true;
 
 std::filesystem::path makeRecordingName(const std::string& suffix)
 {
-  std::filesystem::path basePath = testOptionUseRealHardware
-                                     ? TEST_DATA_DIR_IN_SOURCE_TREE
-                                     : std::filesystem::current_path() / "test_data";
-  create_directories(basePath);
-  return basePath / ("a1-16_servo-" + suffix + ".json");
+  static const std::filesystem::path basePath = TEST_DATA_DIR_IN_SOURCE_TREE;
+  REQUIRE(exists(basePath));
+  auto result = basePath / ("a1-16_servo-" + suffix + ".json");
+  if (!testOptionUseRealHardware) {
+    INFO("When running in simulation mode, the test recording file should exist. Path: " << result);
+    REQUIRE(exists(result));
+  }
+  return result;
 }
 
 std::unique_ptr<SerialProtocol> makeSerial(const std::string& suffix)
