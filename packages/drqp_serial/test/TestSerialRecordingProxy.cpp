@@ -70,7 +70,8 @@ SCENARIO("test unix serial with serial proxy")
       auto sourceSerial = std::make_unique<RecordingProxy::SerialPlayer>();
       sourceSerial->load(kSourceSerialRecordingFile);
 
-      RecordingProxy::SerialRecordingProxy serial(std::move(sourceSerial), kDestinationSerialRecordingFile);
+      RecordingProxy::SerialRecordingProxy serial(
+        std::move(sourceSerial), kDestinationSerialRecordingFile);
       simpleSerialTest(serial);
     }
   }

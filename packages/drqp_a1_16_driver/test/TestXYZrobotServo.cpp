@@ -118,8 +118,7 @@ std::unique_ptr<SerialProtocol> makeSerial(const std::string& suffix)
       neutralPose(*serial);
     }
 
-    return std::make_unique<RecordingProxy::SerialRecordingProxy>(
-      std::move(serial), filename);
+    return std::make_unique<RecordingProxy::SerialRecordingProxy>(std::move(serial), filename);
   } else {
     std::unique_ptr<RecordingProxy::SerialPlayer> serialPlayer =
       std::make_unique<RecordingProxy::SerialPlayer>();

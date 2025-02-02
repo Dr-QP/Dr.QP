@@ -88,8 +88,8 @@ void UnixSerial::begin(const uint32_t baudRate, const uint8_t transferConfig)
 
   // TODO(anton-matosov): Implement parsing of the options or migrate to explicit options from ext
   // SERIAL_8N1
-  impl_->serial_.set_option(serial_port_base::character_size(8));  // 8
-  impl_->serial_.set_option(serial_port_base::parity(serial_port_base::parity::none));  // N
+  impl_->serial_.set_option(serial_port_base::character_size(8));                            // 8
+  impl_->serial_.set_option(serial_port_base::parity(serial_port_base::parity::none));       // N
   impl_->serial_.set_option(serial_port_base::stop_bits(serial_port_base::stop_bits::one));  // 1
 }
 

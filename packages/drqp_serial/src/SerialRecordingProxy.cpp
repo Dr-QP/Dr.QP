@@ -27,7 +27,8 @@
 
 namespace RecordingProxy
 {
-SerialRecordingProxy::SerialRecordingProxy(DecoratedPtr decorated, const std::filesystem::path& filename)
+SerialRecordingProxy::SerialRecordingProxy(
+  DecoratedPtr decorated, const std::filesystem::path& filename)
 : SerialDecorator(std::move(decorated)), fileName_(filename)
 {
 }
