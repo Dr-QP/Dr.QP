@@ -81,8 +81,7 @@ void neutralPose(SerialProtocol& servoSerial)
   servo.sendJogCommand(posCmd);
 
   XYZrobotServo testServo(servoSerial, kTestServo);
-  while (!Catch::Matchers::WithinAbs(kStartGoal, 5).match(testServo.readStatus().position))
-  {
+  while (!Catch::Matchers::WithinAbs(kStartGoal, 5).match(testServo.readStatus().position)) {
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
   }
 
