@@ -22,6 +22,7 @@
 
 #include <deque>
 #include <string>
+#include <filesystem>
 
 #include "RecordingProxy.h"
 #include "SerialDecorator.h"
@@ -36,8 +37,9 @@ namespace RecordingProxy
 class SerialRecordingProxy : public SerialDecorator
 {
 public:
-  typedef SerialDecorator super;
-  SerialRecordingProxy(SerialProtocol& decorated, const std::string& filename);
+  using super = SerialDecorator;
+
+  SerialRecordingProxy(DecoratedPtr decorated, const std::filesystem::path& filename);
   ~SerialRecordingProxy();
 
   using super::begin;
@@ -52,7 +54,7 @@ private:
   OperationType lastOperation_ = OperationType::kUndefined;
   std::deque<Record> records_;
 
-  std::string fileName_;
+  std::filesystem::path fileName_;
 
   void startNewRecordIfNeeded();
   void save();

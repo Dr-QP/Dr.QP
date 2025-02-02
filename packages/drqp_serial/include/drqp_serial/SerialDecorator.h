@@ -21,14 +21,17 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 
 #include "drqp_serial/SerialProtocol.h"
 
 class SerialDecorator : public SerialProtocol
 {
 public:
-  typedef SerialProtocol super;
-  explicit SerialDecorator(SerialProtocol& decorated);
+  using super = SerialProtocol;
+  using DecoratedPtr = std::unique_ptr<super>;
+
+  explicit SerialDecorator(DecoratedPtr decorated);
 
   using super::begin;
   void begin(const uint32_t baudRate, const uint8_t transferConfig) override;
@@ -39,5 +42,5 @@ public:
   size_t readBytes(void* buffer, size_t size) override;
 
 private:
-  SerialProtocol& decorated_;
+  DecoratedPtr decorated_;
 };

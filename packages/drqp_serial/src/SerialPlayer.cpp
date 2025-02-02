@@ -90,7 +90,7 @@ Record& SerialPlayer::currentRecord()
   return currentRecord_;
 }
 
-void SerialPlayer::load(const std::string& fileName)
+void SerialPlayer::load(const std::filesystem::path& fileName)
 {
   std::ifstream file(fileName);
 

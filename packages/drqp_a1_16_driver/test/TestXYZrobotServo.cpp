@@ -98,32 +98,46 @@ std::filesystem::path makeRecordingName(const std::string& suffix)
   return basePath / ("a1-16_servo-" + suffix + ".json");
 }
 
-bool testOptionUseRealHardware = true;
+bool testOptionUseRealHardware = false;
 bool testOptionResetTorque = false;
 bool testOptionReturnToNeutral = true;
+
+std::unique_ptr<SerialProtocol> makeSerial(const std::string& suffix)
+{
+  const auto filename = makeRecordingName(suffix);
+
+  if (testOptionUseRealHardware) {
+    std::unique_ptr<UnixSerial> serial = std::make_unique<UnixSerial>("/dev/ttySC0");
+    serial->begin(115200);
+    if (testOptionResetTorque) {
+      torqueOff(*serial);
+      torqueOn(*serial);
+    }
+
+    if (testOptionReturnToNeutral) {
+      neutralPose(*serial);
+    }
+
+    return std::make_unique<RecordingProxy::SerialRecordingProxy>(
+      std::move(serial), filename);
+  } else {
+    std::unique_ptr<RecordingProxy::SerialPlayer> serialPlayer =
+      std::make_unique<RecordingProxy::SerialPlayer>();
+
+    serialPlayer->load(filename);
+
+    return serialPlayer;
+  }
+}
 
 SCENARIO("A1-16 servo operations")
 {
   GIVEN("A serial")
   {
-    UnixSerial serial("/dev/ttySC0");
-    serial.begin(115200);
-    if (testOptionUseRealHardware) {
-      if (testOptionResetTorque) {
-        torqueOff(serial);
-        torqueOn(serial);
-      }
-
-      if (testOptionReturnToNeutral) {
-        neutralPose(serial);
-      }
-    }
-
     WHEN("read all RAM")
     {
-      RecordingProxy::SerialRecordingProxy recorder(serial, makeRecordingName("read-ram"));
-
-      XYZrobotServo servo(recorder, kTestServo);
+      std::unique_ptr<SerialProtocol> serial = makeSerial("read-ram");
+      XYZrobotServo servo(*serial, kTestServo);
 
       uint8_t ram[80] = {};
 
@@ -147,9 +161,8 @@ SCENARIO("A1-16 servo operations")
 
     WHEN("read all EEPROM")
     {
-      RecordingProxy::SerialRecordingProxy recorder(serial, makeRecordingName("read-eeprom"));
-
-      XYZrobotServo servo(recorder, kTestServo);
+      std::unique_ptr<SerialProtocol> serial = makeSerial("read-eeprom");
+      XYZrobotServo servo(*serial, kTestServo);
 
       uint8_t eeprom[54];
       servo.eepromRead(0, eeprom, 30);

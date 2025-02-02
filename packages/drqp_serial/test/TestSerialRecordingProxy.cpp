@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <memory>
 #include <thread>
 #include <chrono>
 #include <filesystem>
@@ -66,10 +67,10 @@ SCENARIO("test unix serial with serial proxy")
       // The source serial for raw recording
       // UnixSerial sourceSerial("/dev/ttySC0");
 
-      RecordingProxy::SerialPlayer sourceSerial;
-      sourceSerial.load(kSourceSerialRecordingFile);
+      auto sourceSerial = std::make_unique<RecordingProxy::SerialPlayer>();
+      sourceSerial->load(kSourceSerialRecordingFile);
 
-      RecordingProxy::SerialRecordingProxy serial(sourceSerial, kDestinationSerialRecordingFile);
+      RecordingProxy::SerialRecordingProxy serial(std::move(sourceSerial), kDestinationSerialRecordingFile);
       simpleSerialTest(serial);
     }
   }
