@@ -215,138 +215,135 @@ std::unique_ptr<SerialProtocol> makeSerial(const std::string& suffix)
   }
 }
 
-SCENARIO("A1-16 servo operations")
+TEST_CASE("A1-16 servo read all RAM")
 {
-  WHEN("read all RAM")
+  std::unique_ptr<SerialProtocol> serial = makeSerial("read-ram");
+  XYZrobotServo servo(*serial, kTestServo);
+
+  uint8_t ram[80] = {};
+
+  servo.ramRead(0, ram, 30);
+  REQUIRE(servo.isOk());
+
+  servo.ramRead(30, ram + 30, 30);
+  REQUIRE(servo.isOk());
+
+  servo.ramRead(60, ram + 60, 20);
+  REQUIRE(servo.isOk());
+
+  THEN("should have correct values")
   {
-    std::unique_ptr<SerialProtocol> serial = makeSerial("read-ram");
-    XYZrobotServo servo(*serial, kTestServo);
+    REQUIRE(ram[0] == kTestServo);
 
-    uint8_t ram[80] = {};
+    uint16_t jointPosition = ram[60] + (ram[61] << 8);
+    REQUIRE_THAT(jointPosition, GoalPositionWithin(kStartGoal));
 
-    servo.ramRead(0, ram, 30);
-    REQUIRE(servo.isOk());
+    uint16_t positionGoal = ram[68] + (ram[69] << 8);
+    REQUIRE_THAT(positionGoal, GoalPositionWithin(kStartGoal));
 
-    servo.ramRead(30, ram + 30, 30);
-    REQUIRE(servo.isOk());
-
-    servo.ramRead(60, ram + 60, 20);
-    REQUIRE(servo.isOk());
-
-    THEN("should have correct values")
-    {
-      REQUIRE(ram[0] == kTestServo);
-
-      uint16_t jointPosition = ram[60] + (ram[61] << 8);
-      REQUIRE_THAT(jointPosition, GoalPositionWithin(kStartGoal));
-
-      uint16_t positionGoal = ram[68] + (ram[69] << 8);
-      REQUIRE_THAT(positionGoal, GoalPositionWithin(kStartGoal));
-
-      uint16_t positionRef = ram[60] + (ram[71] << 8);
-      REQUIRE_THAT(positionRef, GoalPositionWithin(kStartGoal));
-    }
+    uint16_t positionRef = ram[60] + (ram[71] << 8);
+    REQUIRE_THAT(positionRef, GoalPositionWithin(kStartGoal));
   }
+}
 
-  WHEN("read all EEPROM")
+TEST_CASE("A1-16 servo read all EEPROM")
+{
+  std::unique_ptr<SerialProtocol> serial = makeSerial("read-eeprom");
+  XYZrobotServo servo(*serial, kTestServo);
+
+  uint8_t eeprom[54];
+  servo.eepromRead(0, eeprom, 30);
+  REQUIRE(servo.isOk());
+
+  servo.eepromRead(30, eeprom + 30, 24);
+  REQUIRE(servo.isOk());
+
+  THEN("should have correct values")
   {
-    std::unique_ptr<SerialProtocol> serial = makeSerial("read-eeprom");
-    XYZrobotServo servo(*serial, kTestServo);
+    REQUIRE(eeprom[0] == 0x01);  // Model number
+    REQUIRE(eeprom[1] == 0x0F);  // Year
+    REQUIRE(eeprom[2] == 0x3A);  // Version/Month
+    REQUIRE(eeprom[3] == 0x01);  // Day
+    REQUIRE(eeprom[6] == kTestServo);
 
-    uint8_t eeprom[54];
-    servo.eepromRead(0, eeprom, 30);
-    REQUIRE(servo.isOk());
-
-    servo.eepromRead(30, eeprom + 30, 24);
-    REQUIRE(servo.isOk());
-
-    THEN("should have correct values")
-    {
-      REQUIRE(eeprom[0] == 0x01);  // Model number
-      REQUIRE(eeprom[1] == 0x0F);  // Year
-      REQUIRE(eeprom[2] == 0x3A);  // Version/Month
-      REQUIRE(eeprom[3] == 0x01);  // Day
-      REQUIRE(eeprom[6] == kTestServo);
-
-      uint16_t minPosition = eeprom[26] + (eeprom[27] << 8);
-      uint16_t maxPosition = eeprom[28] + (eeprom[29] << 8);
-      REQUIRE(minPosition == 23);
-      REQUIRE(maxPosition == 1000);
-    }
+    uint16_t minPosition = eeprom[26] + (eeprom[27] << 8);
+    uint16_t maxPosition = eeprom[28] + (eeprom[29] << 8);
+    REQUIRE(minPosition == 23);
+    REQUIRE(maxPosition == 1000);
   }
+}
 
-  WHEN("set position")
-  {
-    std::unique_ptr<SerialProtocol> serial = makeSerial("set-position");
-    XYZrobotServo servo(*serial, kTestServo);
+TEST_CASE("A1-16 servo set position")
+{
+  std::unique_ptr<SerialProtocol> serial = makeSerial("set-position");
+  XYZrobotServo servo(*serial, kTestServo);
 
-    servo.setPosition(kTestGoal, 10);
+  servo.setPosition(kTestGoal, 10);
 
-    REQUIRE_THAT(waitForPosition(servo, kTestGoal), GoalPositionWithin(kTestGoal));
-  }
+  REQUIRE_THAT(waitForPosition(servo, kTestGoal), GoalPositionWithin(kTestGoal));
+}
 
-  WHEN("set I-JOG")
-  {
-    std::unique_ptr<SerialProtocol> serial = makeSerial("set-neutral-pose-i-jog");
+TEST_CASE("A1-16 servo set I-JOG")
+{
+  std::unique_ptr<SerialProtocol> serial = makeSerial("set-neutral-pose-i-jog");
 
-    neutralPose(*serial);
-  }
+  neutralPose(*serial);
+}
 
-  WHEN("set S-JOG")
-  {
-    std::unique_ptr<SerialProtocol> serial = makeSerial("set-neutral-pose-s-jog");
+TEST_CASE("A1-16 servo set S-JOG")
+{
+  std::unique_ptr<SerialProtocol> serial = makeSerial("set-neutral-pose-s-jog");
 
-    neutralPoseSJog(*serial);
-  }
+  neutralPoseSJog(*serial);
+}
 
-  WHEN("set torque off and back on via S-JOG")
-  {
-    std::unique_ptr<SerialProtocol> serial = makeSerial("set-torque-off-and-on-via-sjog");
+TEST_CASE("A1-16 servo set torque off and back on via S-JOG")
+{
+  std::unique_ptr<SerialProtocol> serial = makeSerial("set-torque-off-and-on-via-sjog");
 
-    torqueOff(*serial);
+  torqueOff(*serial);
 
-    torqueOn(*serial);
-  }
+  torqueOn(*serial);
+}
 
-  WHEN("reboot and back on")
-  {
-    std::unique_ptr<SerialProtocol> serial = makeSerial("reboot-and-torque-back-on");
+TEST_CASE("A1-16 servo reboot and back on")
+{
+  std::unique_ptr<SerialProtocol> serial = makeSerial("reboot-and-torque-back-on");
 
-    XYZrobotServo servo(*serial, kTestServo);
-    servo.reboot();
+  XYZrobotServo servo(*serial, kTestServo);
+  servo.reboot();
 
-    INFO("waiting for reboot to finish");
-    waitHardwareForMilliseconds(3000);
+  INFO("waiting for reboot to finish");
+  waitHardwareForMilliseconds(3000);
 
-    INFO("turning torque back on");
-    servo.torqueOn();
-  }
+  INFO("turning torque back on");
+  servo.torqueOn();
+}
 
-  WHEN("write led policy")
-  {
-    std::unique_ptr<SerialProtocol> serial = makeSerial("write-led-policy");
+TEST_CASE("A1-16 servo write led policy")
+{
+  std::unique_ptr<SerialProtocol> serial = makeSerial("write-led-policy");
 
-    XYZrobotServo servo(*serial, kTestServo);
+  XYZrobotServo servo(*serial, kTestServo);
 
-    INFO("Make while LED controllable by user");
-    servo.writeAlarmLedPolicyRam(XYZrobotServo::kWhiteLedBit);
-    REQUIRE(servo.isOk());
+  INFO("Make while LED controllable by user");
+  servo.writeAlarmLedPolicyRam(XYZrobotServo::kWhiteLedBit);
+  REQUIRE(servo.isOk());
 
-    INFO("Turn off all user LEDs");
-    servo.writeLedControl(0);
-    REQUIRE(servo.isOk());
+  INFO("Turn off all user LEDs");
+  servo.writeLedControl(0);
+  REQUIRE(servo.isOk());
 
-    uint8_t ledControl = {};
-    servo.ramRead(53, &ledControl, sizeof(ledControl));
-    REQUIRE(servo.isOk());
-    REQUIRE(ledControl == 0);
+  uint8_t ledControl = {};
+  servo.ramRead(53, &ledControl, sizeof(ledControl));
+  REQUIRE(servo.isOk());
+  REQUIRE(ledControl == 0);
 
-    waitHardwareForMilliseconds(20);
-    INFO("Restore all LEDs to be controllable by system");
-    servo.writeLedControl(0xF);
-    waitHardwareForMilliseconds(20);
+  waitHardwareForMilliseconds(20);
+  INFO("Restore all LEDs to be controllable by system");
+  servo.writeLedControl(0xF);
+  waitHardwareForMilliseconds(20);
 
-    servo.writeAlarmLedPolicyRam(0);
-    REQUIRE(servo.isOk());
-  }
+  servo.writeAlarmLedPolicyRam(0);
+  REQUIRE(servo.isOk());
 }
