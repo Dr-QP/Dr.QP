@@ -217,64 +217,61 @@ std::unique_ptr<SerialProtocol> makeSerial(const std::string& suffix)
 
 SCENARIO("A1-16 servo operations")
 {
-  GIVEN("A serial")
+  WHEN("read all RAM")
   {
-    WHEN("read all RAM")
+    std::unique_ptr<SerialProtocol> serial = makeSerial("read-ram");
+    XYZrobotServo servo(*serial, kTestServo);
+
+    uint8_t ram[80] = {};
+
+    servo.ramRead(0, ram, 30);
+    REQUIRE(servo.isOk());
+
+    servo.ramRead(30, ram + 30, 30);
+    REQUIRE(servo.isOk());
+
+    servo.ramRead(60, ram + 60, 20);
+    REQUIRE(servo.isOk());
+
+    THEN("should have correct values")
     {
-      std::unique_ptr<SerialProtocol> serial = makeSerial("read-ram");
-      XYZrobotServo servo(*serial, kTestServo);
+      REQUIRE(ram[0] == kTestServo);
 
-      uint8_t ram[80] = {};
+      uint16_t jointPosition = ram[60] + (ram[61] << 8);
+      REQUIRE_THAT(jointPosition, GoalPositionWithin(kStartGoal));
 
-      servo.ramRead(0, ram, 30);
-      REQUIRE(servo.isOk());
+      uint16_t positionGoal = ram[68] + (ram[69] << 8);
+      REQUIRE_THAT(positionGoal, GoalPositionWithin(kStartGoal));
 
-      servo.ramRead(30, ram + 30, 30);
-      REQUIRE(servo.isOk());
-
-      servo.ramRead(60, ram + 60, 20);
-      REQUIRE(servo.isOk());
-
-      THEN("should have correct values")
-      {
-        REQUIRE(ram[0] == kTestServo);
-
-        uint16_t jointPosition = ram[60] + (ram[61] << 8);
-        REQUIRE_THAT(jointPosition, GoalPositionWithin(kStartGoal));
-
-        uint16_t positionGoal = ram[68] + (ram[69] << 8);
-        REQUIRE_THAT(positionGoal, GoalPositionWithin(kStartGoal));
-
-        uint16_t positionRef = ram[60] + (ram[71] << 8);
-        REQUIRE_THAT(positionRef, GoalPositionWithin(kStartGoal));
-      }
+      uint16_t positionRef = ram[60] + (ram[71] << 8);
+      REQUIRE_THAT(positionRef, GoalPositionWithin(kStartGoal));
     }
+  }
 
-    WHEN("read all EEPROM")
+  WHEN("read all EEPROM")
+  {
+    std::unique_ptr<SerialProtocol> serial = makeSerial("read-eeprom");
+    XYZrobotServo servo(*serial, kTestServo);
+
+    uint8_t eeprom[54];
+    servo.eepromRead(0, eeprom, 30);
+    REQUIRE(servo.isOk());
+
+    servo.eepromRead(30, eeprom + 30, 24);
+    REQUIRE(servo.isOk());
+
+    THEN("should have correct values")
     {
-      std::unique_ptr<SerialProtocol> serial = makeSerial("read-eeprom");
-      XYZrobotServo servo(*serial, kTestServo);
+      REQUIRE(eeprom[0] == 0x01);  // Model number
+      REQUIRE(eeprom[1] == 0x0F);  // Year
+      REQUIRE(eeprom[2] == 0x3A);  // Version/Month
+      REQUIRE(eeprom[3] == 0x01);  // Day
+      REQUIRE(eeprom[6] == kTestServo);
 
-      uint8_t eeprom[54];
-      servo.eepromRead(0, eeprom, 30);
-      REQUIRE(servo.isOk());
-
-      servo.eepromRead(30, eeprom + 30, 24);
-      REQUIRE(servo.isOk());
-
-      THEN("should have correct values")
-      {
-        REQUIRE(eeprom[0] == 0x01);  // Model number
-        REQUIRE(eeprom[1] == 0x0F);  // Year
-        REQUIRE(eeprom[2] == 0x3A);  // Version/Month
-        REQUIRE(eeprom[3] == 0x01);  // Day
-        REQUIRE(eeprom[6] == kTestServo);
-
-        uint16_t minPosition = eeprom[26] + (eeprom[27] << 8);
-        uint16_t maxPosition = eeprom[28] + (eeprom[29] << 8);
-        REQUIRE(minPosition == 23);
-        REQUIRE(maxPosition == 1000);
-      }
+      uint16_t minPosition = eeprom[26] + (eeprom[27] << 8);
+      uint16_t maxPosition = eeprom[28] + (eeprom[29] << 8);
+      REQUIRE(minPosition == 23);
+      REQUIRE(maxPosition == 1000);
     }
   }
 
@@ -323,5 +320,33 @@ SCENARIO("A1-16 servo operations")
 
     INFO("turning torque back on");
     servo.torqueOn();
+  }
+
+  WHEN("write led policy")
+  {
+    std::unique_ptr<SerialProtocol> serial = makeSerial("write-led-policy");
+
+    XYZrobotServo servo(*serial, kTestServo);
+
+    INFO("Make while LED controllable by user");
+    servo.writeAlarmLedPolicyRam(XYZrobotServo::kWhiteLedBit);
+    REQUIRE(servo.isOk());
+
+    INFO("Turn off all user LEDs");
+    servo.writeLedControl(0);
+    REQUIRE(servo.isOk());
+
+    uint8_t ledControl = {};
+    servo.ramRead(53, &ledControl, sizeof(ledControl));
+    REQUIRE(servo.isOk());
+    REQUIRE(ledControl == 0);
+
+    waitHardwareForMilliseconds(20);
+    INFO("Restore all LEDs to be controllable by system");
+    servo.writeLedControl(0xF);
+    waitHardwareForMilliseconds(20);
+
+    servo.writeAlarmLedPolicyRam(0);
+    REQUIRE(servo.isOk());
   }
 }

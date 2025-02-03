@@ -335,6 +335,12 @@ public:
   /// 100%.
   void writeMaxPwmRam(uint16_t value);
 
+  enum : uint8_t{
+    kWhiteLedBit = 1,
+    kBlueLedBit = 1 << 1,
+    kGreenLedBit = 1 << 2,
+    kRedLedBit = 1 << 3,
+  };
   /// After calling writeAlarmLedPolicyRam(), you can use this to control any
   /// LEDs that are configured as user LED.
   ///
