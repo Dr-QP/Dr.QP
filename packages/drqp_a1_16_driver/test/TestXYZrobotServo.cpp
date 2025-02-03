@@ -23,6 +23,7 @@
 #include <chrono>
 #include <filesystem>
 
+#define CATCH_CONFIG_RUNNER  // For custom main
 #include <catch_ros2/catch.hpp>
 
 #include "drqp_a1_16_driver/XYZrobotServo.h"
@@ -47,11 +48,31 @@ constexpr uint16_t kTestGoal = 812;
 // TODO(anton-matosov): Add command line options for these options
 struct TestOptions
 {
-  bool useRealHardware = true;
+  bool useRealHardware = false;
   bool resetTorque = false;
-  bool returnToNeutral = true;
+  bool skipReturnToNeutral = false;
 };
 static TestOptions testOptions;
+
+int main(int argc, char* argv[])
+{
+  Catch::Session session;
+
+  using Catch::Clara::Opt;
+  auto cli = session.cli();
+  cli |= Opt(testOptions.useRealHardware)["--use-real-hardware"]("Use real hardware servos");
+  cli |= Opt(testOptions.resetTorque)["--reset-torque"]("reset torque");
+  cli |= Opt(testOptions.skipReturnToNeutral)["--no-neutral"]("Skip return to neutral");
+
+  session.cli(cli);
+
+  auto ret = session.applyCommandLine(argc, argv);
+  if (ret) {
+    return ret;
+  }
+
+  return session.run();
+}
 
 void waitHardwareForMilliseconds(uint64_t milliseconds)
 {
@@ -170,7 +191,7 @@ std::unique_ptr<SerialProtocol> makeSerial(const std::string& suffix)
       torqueOn(*serial);
     }
 
-    if (testOptions.returnToNeutral) {
+    if (!testOptions.skipReturnToNeutral) {
       neutralPose(*serial);
     }
 
