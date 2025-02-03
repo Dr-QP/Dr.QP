@@ -56,7 +56,8 @@ private:
 
   std::filesystem::path fileName_;
 
-  void startNewRecordIfNeeded();
+  void startNewRecordIfRead();
+  void startNewRecordIfDirty();
   void save();
 };
 }  // namespace RecordingProxy

@@ -45,7 +45,7 @@ void SerialRecordingProxy::begin(const uint32_t baudRate, const uint8_t transfer
 
 void SerialRecordingProxy::save()
 {
-  startNewRecordIfNeeded();  // flush current record
+  startNewRecordIfDirty();  // flush current record
 
   std::ofstream ofs(fileName_, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
   rapidjson::OStreamWrapper osw(ofs);
@@ -76,7 +76,7 @@ size_t SerialRecordingProxy::writeBytes(const void* buffer, size_t size)
   assert(buffer);
   const uint8_t* data = static_cast<const uint8_t*>(buffer);
 
-  startNewRecordIfNeeded();
+  startNewRecordIfRead();
   size_t result = super::writeBytes(data, size);
   currentRecord_.request.bytes.insert(currentRecord_.request.bytes.end(), data, data + size);
 
@@ -84,9 +84,16 @@ size_t SerialRecordingProxy::writeBytes(const void* buffer, size_t size)
   return result;
 }
 
-void SerialRecordingProxy::startNewRecordIfNeeded()
+void SerialRecordingProxy::startNewRecordIfRead()
 {
   if (lastOperation_ == OperationType::kRead) {
+    startNewRecordIfDirty();
+  }
+}
+
+void SerialRecordingProxy::startNewRecordIfDirty()
+{
+  if (lastOperation_ != OperationType::kUndefined) {
     records_.push_back(currentRecord_);
 
     currentRecord_ = Record();
