@@ -186,8 +186,8 @@ struct XYZrobotServoStatus
   uint8_t statusError;
   uint8_t statusDetail;
   uint16_t pwm;
-  uint16_t posRef;
-  uint16_t position;
+  uint16_t posRef;  /// Servo position goal. If no goal, this is just its current measured position.
+  uint16_t position;  // Servo current position
   uint16_t iBus;
 } __attribute__((packed));
 
@@ -198,10 +198,12 @@ struct SJogData
   uint8_t id;
 } __attribute__((packed));
 
+// S-JOG - synchronous control move
+// Stops when playtime duration is reached, even if goal is not reached in position control
 template <size_t ServoCount>
 struct SJogCommand
 {
-  uint8_t playtime;
+  uint8_t playtime;  // goal position may not be reached for a short play time;
   std::array<SJogData, ServoCount> data;
 };
 
@@ -210,9 +212,11 @@ struct IJogData
   uint16_t goal;
   uint8_t type;
   uint8_t id;
-  uint8_t playtime;
+  uint8_t playtime;  // play time may be modified for a long movement;
 } __attribute__((packed));
 
+// I-JOG - independent control move
+// Stops once the goal is reached, even if it requires more time then specified in playtime
 template <size_t ServoCount>
 struct IJogCommand
 {
@@ -330,7 +334,14 @@ public:
   /// servo should be allowed to drive its motor, with 1023 corresponding to
   /// 100%.
   void writeMaxPwmRam(uint16_t value);
+  uint16_t readMaxPwmRam();
 
+  enum : uint8_t {
+    kWhiteLedBit = 1,
+    kBlueLedBit = 1 << 1,
+    kGreenLedBit = 1 << 2,
+    kRedLedBit = 1 << 3,
+  };
   /// After calling writeAlarmLedPolicyRam(), you can use this to control any
   /// LEDs that are configured as user LED.
   ///
@@ -345,41 +356,6 @@ public:
 
   /// Sends a STAT command to the servo and returns the results.
   XYZrobotServoStatus readStatus();
-
-  /// Uses a STAT command to read the current PWM duty cycle.
-  ///
-  /// See readStatus().
-  uint16_t readPwm()
-  {
-    return readStatus().pwm;
-  }
-
-  /// Uses a STAT command to read the servo position.
-  ///
-  /// See readStatus().
-  uint16_t readPosition()
-  {
-    return readStatus().position;
-  }
-
-  /// Uses a STAT command to read the servo position goal.
-  ///
-  /// If the servo has no position goal, this is just its current measured
-  /// position.
-  ///
-  /// See readStatus().
-  uint16_t readPosRef()
-  {
-    return readStatus().posRef;
-  }
-
-  /// Uses a STAT command to read the bus current.
-  ///
-  /// See readStatus().
-  uint16_t readIBus()
-  {
-    return readStatus().iBus;
-  }
 
   /// Sends an I-JOG command to set the target/goal position for this servo.
   ///

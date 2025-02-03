@@ -22,24 +22,29 @@
 
 #include <assert.h>
 
-SerialDecorator::SerialDecorator(SerialProtocol& decorated) : decorated_(decorated) {}
+SerialDecorator::SerialDecorator(DecoratedPtr decorated) : decorated_(std::move(decorated)) {}
 
 void SerialDecorator::begin(const uint32_t baudRate, const uint8_t transferConfig)
 {
-  return decorated_.begin(baudRate, transferConfig);
+  return decorated_->begin(baudRate, transferConfig);
 }
 
 bool SerialDecorator::available()
 {
-  return decorated_.available();
+  return decorated_->available();
+}
+
+void SerialDecorator::flushRead()
+{
+  decorated_->flushRead();
 }
 
 size_t SerialDecorator::writeBytes(const void* buffer, size_t size)
 {
-  return decorated_.writeBytes(buffer, size);
+  return decorated_->writeBytes(buffer, size);
 }
 
 size_t SerialDecorator::readBytes(void* buffer, size_t size)
 {
-  return decorated_.readBytes(buffer, size);
+  return decorated_->readBytes(buffer, size);
 }

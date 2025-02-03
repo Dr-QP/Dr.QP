@@ -24,6 +24,7 @@
 
 #include <cstddef>
 #include <deque>
+#include <filesystem>
 #include <functional>
 #include <string>
 
@@ -35,6 +36,8 @@ namespace RecordingProxy
 class SerialPlayer : public SerialProtocol
 {
 public:
+  ~SerialPlayer();
+
   void begin(const uint32_t baudRate, const uint8_t transferConfig) override;
   bool available() override;
 
@@ -43,7 +46,7 @@ public:
   size_t writeBytes(const void* buffer, size_t size) override;
   size_t readBytes(void* buffer, size_t size) override;
 
-  void load(const std::string& fileName);
+  void load(const std::filesystem::path& fileName);
 
   using AssertEqual =
     std::function<void(const uint8_t expected, const uint8_t actual, const size_t pos)>;
@@ -51,10 +54,16 @@ public:
     assert(expected == actual);
   };
 
+  using BeforeDestructionCallback = std::function<void(RecordingProxy::SerialPlayer& player)>;
+  void beforeDestruction(BeforeDestructionCallback callback);
+
+  bool isEmpty() const;
+
 private:
   Record currentRecord_;
   OperationType lastOperation_;
   std::deque<Record> records_;
+  BeforeDestructionCallback beforeDestructionCallback_;
   Record& currentRecord();
 };
 }  // namespace RecordingProxy

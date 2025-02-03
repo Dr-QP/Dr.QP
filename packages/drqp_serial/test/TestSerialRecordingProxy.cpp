@@ -18,8 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <memory>
 #include <thread>
 #include <chrono>
+#include <filesystem>
 
 #include <catch_ros2/catch.hpp>
 
@@ -50,33 +52,46 @@ void simpleSerialTest(SerialProtocol& serial)
 
 SCENARIO("test unix serial with serial proxy")
 {
-  static const char* const kSerialRecordingFileName = "test_data/serial_recording.json";
+  static std::filesystem::path kSourceSerialRecordingFile =
+    std::filesystem::path(TEST_DATA_DIR_IN_SOURCE_TREE) / "serial_recording.json";
+  static std::filesystem::path kDestinationSerialRecordingFile =
+    std::filesystem::path(TEST_DATA_DIR_IN_BUILD_TREE) / "destination_serial_recording.json";
 
-  WHEN("recording does not exists")
+  WHEN("destination recording does not exist")
   {
-    THEN("record it")
+    REQUIRE(exists(kSourceSerialRecordingFile));
+    REQUIRE(!exists(kDestinationSerialRecordingFile));
+
+    THEN("record it from source recording")
     {
-      //            UnixSerial unixSerial("/dev/ttys000");
-      ////            UnixSerial unixSerial("/dev/cu.SLAB_USBtoUART");
-      //
-      //            RecordingProxy::SerialRecordingProxy serial(unixSerial,
-      //            kSerialRecordingFileName); simpleSerialTest(serial);
+      // The source serial for raw recording
+      // UnixSerial sourceSerial("/dev/ttySC0");
+
+      auto sourceSerial = std::make_unique<RecordingProxy::SerialPlayer>();
+      sourceSerial->load(kSourceSerialRecordingFile);
+
+      RecordingProxy::SerialRecordingProxy serial(
+        std::move(sourceSerial), kDestinationSerialRecordingFile);
+      simpleSerialTest(serial);
     }
   }
 
-  WHEN("recording exists")
+  WHEN("destination recording exists")
   {
+    REQUIRE(exists(kDestinationSerialRecordingFile));
     RecordingProxy::SerialPlayer serialPlayer;
     serialPlayer.assertEqual = [](const uint8_t expected, const uint8_t actual, const size_t pos) {
       INFO("Comparing position " << pos);
       REQUIRE(expected == actual);
     };
 
-    serialPlayer.load(kSerialRecordingFileName);
+    serialPlayer.load(kDestinationSerialRecordingFile);
 
     THEN("same test should give same results")
     {
       simpleSerialTest(serialPlayer);
+
+      REQUIRE_NOTHROW(remove(kDestinationSerialRecordingFile));
     }
   }
 }

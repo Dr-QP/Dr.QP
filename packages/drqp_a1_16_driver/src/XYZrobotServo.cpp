@@ -118,6 +118,13 @@ void XYZrobotServo::writeMaxPwmRam(uint16_t value)
   ramWrite(16, &value, 2);
 }
 
+uint16_t XYZrobotServo::readMaxPwmRam()
+{
+  uint16_t result = 0;
+  ramRead(16, &result, 2);
+  return result;
+}
+
 void XYZrobotServo::writeLedControl(uint8_t control)
 {
   ramWrite(53, &control, 1);

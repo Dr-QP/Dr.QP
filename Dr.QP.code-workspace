@@ -42,6 +42,7 @@
       "1password.op-vscode",
       "rogalmic.bash-debug",
       "mads-hartmann.bash-ide-vscode",
+      "anjali.clipboard-history",
     ]
   },
   "launch": {
@@ -63,6 +64,17 @@
         "program": "build/drqp_serial/test/drqp_serial_tests",
         "args": [],
         "cwd": "${workspaceFolder:Dr.QP}/build/drqp_serial/test/",
+        "preLaunchTask": "Dr.QP colcon build",
+      },
+      {
+        "type": "lldb",
+        "request": "launch",
+        "name": "drqp_a1_16_driver_tests",
+        "program": "build/drqp_a1_16_driver/test/drqp_a1_16_driver_tests",
+        "args": [
+          "--use-real-hardware"
+        ],
+        "cwd": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/test/",
         "preLaunchTask": "Dr.QP colcon build",
       },
       {
