@@ -43,16 +43,22 @@ ServoIdsArray kTestServoIds = {kTestServo, kTestServoOther};
 constexpr uint16_t kStartGoal = 512;
 constexpr uint16_t kTestGoal = 812;
 
-
 /// Global test options
 // TODO(anton-matosov): Add command line options for these options
 struct TestOptions
 {
-bool useRealHardware = true;
-bool resetTorque = false;
-bool returnToNeutral = true;
+  bool useRealHardware = true;
+  bool resetTorque = false;
+  bool returnToNeutral = true;
 };
 static TestOptions testOptions;
+
+void waitHardwareForMilliseconds(uint64_t milliseconds)
+{
+  if (testOptions.useRealHardware) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+  }
+}
 
 void torqueOff(SerialProtocol& servoSerial)
 {
@@ -65,7 +71,7 @@ void torqueOff(SerialProtocol& servoSerial)
     }};
 
   servo.sendJogCommand(sposCmd);
-  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  waitHardwareForMilliseconds(500);
 }
 
 void torqueOn(SerialProtocol& servoSerial)
@@ -92,13 +98,13 @@ uint16_t waitForPosition(XYZrobotServo& testServo, uint16_t goalPosition)
 
   int retries = 3;
   do {
-    if (testOptions.useRealHardware) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(300));
-    }
+    waitHardwareForMilliseconds(300);
     currentPosition = testServo.readStatus().position;
   } while (!GoalPositionWithin(goalPosition).match(currentPosition) && --retries > 0);
 
-  INFO("Exceeded number of retries (" << retries << ") while waiting to reach the goalPosition=" << goalPosition << ". CurrentPosition=" << currentPosition);
+  INFO(
+    "Exceeded number of retries (" << retries << ") while waiting to reach the goalPosition="
+                                   << goalPosition << ". CurrentPosition=" << currentPosition);
   REQUIRE(retries > 0);
 
   return currentPosition;
@@ -111,6 +117,25 @@ void neutralPose(SerialProtocol& servoSerial)
     IJogData{kStartGoal, SET_POSITION_CONTROL, kTestServo, 30},
     IJogData{kStartGoal, SET_POSITION_CONTROL, kTestServoOther, 30},
   }};
+
+  servo.sendJogCommand(posCmd);
+
+  XYZrobotServo testServo(servoSerial, kTestServo);
+  XYZrobotServo testServoOther(servoSerial, kTestServoOther);
+
+  REQUIRE_THAT(waitForPosition(testServo, kStartGoal), GoalPositionWithin(kStartGoal));
+  REQUIRE_THAT(waitForPosition(testServoOther, kStartGoal), GoalPositionWithin(kStartGoal));
+}
+
+void neutralPoseSJog(SerialProtocol& servoSerial)
+{
+  XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
+  SJogCommand<kServoCount> posCmd = {
+    200,  // Give it enough time,
+    {
+      SJogData{kStartGoal, SET_POSITION_CONTROL, kTestServo},
+      SJogData{kStartGoal, SET_POSITION_CONTROL, kTestServoOther},
+    }};
 
   servo.sendJogCommand(posCmd);
 
@@ -236,5 +261,42 @@ SCENARIO("A1-16 servo operations")
     servo.setPosition(kTestGoal, 10);
 
     REQUIRE_THAT(waitForPosition(servo, kTestGoal), GoalPositionWithin(kTestGoal));
+  }
+
+  WHEN("set I-JOG")
+  {
+    std::unique_ptr<SerialProtocol> serial = makeSerial("set-neutral-pose-i-jog");
+
+    neutralPose(*serial);
+  }
+
+  WHEN("set S-JOG")
+  {
+    std::unique_ptr<SerialProtocol> serial = makeSerial("set-neutral-pose-s-jog");
+
+    neutralPoseSJog(*serial);
+  }
+
+  WHEN("set torque off and back on via S-JOG")
+  {
+    std::unique_ptr<SerialProtocol> serial = makeSerial("set-torque-off-and-on-via-sjog");
+
+    torqueOff(*serial);
+
+    torqueOn(*serial);
+  }
+
+  WHEN("reboot and back on")
+  {
+    std::unique_ptr<SerialProtocol> serial = makeSerial("reboot-and-torque-back-on");
+
+    XYZrobotServo servo(*serial, kTestServo);
+    servo.reboot();
+
+    INFO("waiting for reboot to finish");
+    waitHardwareForMilliseconds(3000);
+
+    INFO("turning torque back on");
+    servo.torqueOn();
   }
 }
