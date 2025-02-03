@@ -42,6 +42,7 @@
       "1password.op-vscode",
       "rogalmic.bash-debug",
       "mads-hartmann.bash-ide-vscode",
+      "anjali.clipboard-history",
     ]
   },
   "launch": {
