@@ -347,3 +347,20 @@ TEST_CASE("A1-16 servo write led policy")
   servo.writeAlarmLedPolicyRam(0);
   REQUIRE(servo.isOk());
 }
+
+TEST_CASE("A1-16 servo read ack policy ram")
+{
+  std::unique_ptr<SerialProtocol> serial = makeSerial("read-ack-policy-ram");
+
+  XYZrobotServo servo(*serial, kTestServo);
+
+  XYZrobotServoAckPolicy ackPolicy = servo.readAckPolicyRam();
+  REQUIRE(servo.isOk());
+
+  REQUIRE(ackPolicy == XYZrobotServoAckPolicy::OnlyReadAndStat);
+}
+
+// Next test stub
+// TEST_CASE("A1-16 servo ", "[focus]")
+// {
+// }
