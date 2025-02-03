@@ -336,7 +336,7 @@ public:
   void writeMaxPwmRam(uint16_t value);
   uint16_t readMaxPwmRam();
 
-  enum : uint8_t{
+  enum : uint8_t {
     kWhiteLedBit = 1,
     kBlueLedBit = 1 << 1,
     kGreenLedBit = 1 << 2,

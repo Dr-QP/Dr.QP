@@ -58,6 +58,7 @@ public:
   void beforeDestruction(BeforeDestructionCallback callback);
 
   bool isEmpty() const;
+
 private:
   Record currentRecord_;
   OperationType lastOperation_;
