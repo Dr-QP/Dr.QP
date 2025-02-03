@@ -334,6 +334,7 @@ public:
   /// servo should be allowed to drive its motor, with 1023 corresponding to
   /// 100%.
   void writeMaxPwmRam(uint16_t value);
+  uint16_t readMaxPwmRam();
 
   enum : uint8_t{
     kWhiteLedBit = 1,

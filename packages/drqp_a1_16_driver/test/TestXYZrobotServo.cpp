@@ -360,6 +360,26 @@ TEST_CASE("A1-16 servo read ack policy ram")
   REQUIRE(ackPolicy == XYZrobotServoAckPolicy::OnlyReadAndStat);
 }
 
+TEST_CASE("A1-16 servo max PWM RAM", "[focus]")
+{
+  std::unique_ptr<SerialProtocol> serial = makeSerial("max-pwm-ram");
+
+  XYZrobotServo servo(*serial, kTestServo);
+
+  servo.writeMaxPwmRam(5);
+  REQUIRE(servo.isOk());
+  waitHardwareForMilliseconds(20);
+
+  servo.setPosition(kTestGoal, 10);
+
+  REQUIRE_THAT(waitForPosition(servo, kTestGoal), GoalPositionWithin(kTestGoal));
+
+  constexpr uint16_t defaultPWM = 1023;
+  servo.writeMaxPwmRam(defaultPWM);
+  REQUIRE(servo.isOk());
+  waitHardwareForMilliseconds(20);
+}
+
 // Next test stub
 // TEST_CASE("A1-16 servo ", "[focus]")
 // {
