@@ -199,6 +199,10 @@ std::unique_ptr<SerialProtocol> makeSerial(const std::string& suffix)
   } else {
     std::unique_ptr<RecordingProxy::SerialPlayer> serialPlayer =
       std::make_unique<RecordingProxy::SerialPlayer>();
+    serialPlayer->assertEqual = [](const uint8_t expected, const uint8_t actual, const size_t pos) {
+      INFO("Comparing position " << pos);
+      REQUIRE(expected == actual);
+    };
 
     serialPlayer->load(filename);
 

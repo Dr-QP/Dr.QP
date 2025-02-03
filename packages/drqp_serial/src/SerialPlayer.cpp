@@ -58,7 +58,7 @@ size_t SerialPlayer::writeBytes(const void* buffer, size_t size)
 
   for (size_t i = 0; i < size; ++i) {
     // Compare what was written now with recording
-    assertEqual(data[i], record.request.bytes[i], i);
+    assertEqual(record.request.bytes[i], data[i], i);
   }
 
   // Remove verified recording
