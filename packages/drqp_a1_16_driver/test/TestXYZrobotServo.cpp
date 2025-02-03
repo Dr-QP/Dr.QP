@@ -43,6 +43,17 @@ ServoIdsArray kTestServoIds = {kTestServo, kTestServoOther};
 constexpr uint16_t kStartGoal = 512;
 constexpr uint16_t kTestGoal = 812;
 
+
+/// Global test options
+// TODO(anton-matosov): Add command line options for these options
+struct TestOptions
+{
+bool useRealHardware = true;
+bool resetTorque = false;
+bool returnToNeutral = true;
+};
+static TestOptions testOptions;
+
 void torqueOff(SerialProtocol& servoSerial)
 {
   XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
@@ -70,6 +81,29 @@ void torqueOn(SerialProtocol& servoSerial)
   servo.sendJogCommand(sposCmd);
 }
 
+Catch::Matchers::WithinAbsMatcher GoalPositionWithin(uint16_t goalPosition)
+{
+  return Catch::Matchers::WithinAbs(goalPosition, 5);
+}
+
+uint16_t waitForPosition(XYZrobotServo& testServo, uint16_t goalPosition)
+{
+  uint16_t currentPosition = 0;
+
+  int retries = 3;
+  do {
+    if (testOptions.useRealHardware) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    }
+    currentPosition = testServo.readStatus().position;
+  } while (!GoalPositionWithin(goalPosition).match(currentPosition) && --retries > 0);
+
+  INFO("Exceeded number of retries (" << retries << ") while waiting to reach the goalPosition=" << goalPosition << ". CurrentPosition=" << currentPosition);
+  REQUIRE(retries > 0);
+
+  return currentPosition;
+}
+
 void neutralPose(SerialProtocol& servoSerial)
 {
   XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
@@ -81,29 +115,18 @@ void neutralPose(SerialProtocol& servoSerial)
   servo.sendJogCommand(posCmd);
 
   XYZrobotServo testServo(servoSerial, kTestServo);
-  while (!Catch::Matchers::WithinAbs(kStartGoal, 5).match(testServo.readStatus().position)) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
-  }
-
   XYZrobotServo testServoOther(servoSerial, kTestServoOther);
 
-  auto status1 = testServo.readStatus();
-  REQUIRE_THAT(status1.position, Catch::Matchers::WithinAbs(kStartGoal, 5));
-
-  auto status2 = testServoOther.readStatus();
-  REQUIRE_THAT(status2.position, Catch::Matchers::WithinAbs(kStartGoal, 5));
+  REQUIRE_THAT(waitForPosition(testServo, kStartGoal), GoalPositionWithin(kStartGoal));
+  REQUIRE_THAT(waitForPosition(testServoOther, kStartGoal), GoalPositionWithin(kStartGoal));
 }
-
-static bool testOptionUseRealHardware = false;
-static bool testOptionResetTorque = false;
-static bool testOptionReturnToNeutral = true;
 
 std::filesystem::path makeRecordingName(const std::string& suffix)
 {
   static const std::filesystem::path basePath = TEST_DATA_DIR_IN_SOURCE_TREE;
   REQUIRE(exists(basePath));
   auto result = basePath / ("a1-16_servo-" + suffix + ".json");
-  if (!testOptionUseRealHardware) {
+  if (!testOptions.useRealHardware) {
     INFO("When running in simulation mode, the test recording file should exist. Path: " << result);
     REQUIRE(exists(result));
   }
@@ -114,15 +137,15 @@ std::unique_ptr<SerialProtocol> makeSerial(const std::string& suffix)
 {
   const auto filename = makeRecordingName(suffix);
 
-  if (testOptionUseRealHardware) {
+  if (testOptions.useRealHardware) {
     std::unique_ptr<UnixSerial> serial = std::make_unique<UnixSerial>("/dev/ttySC0");
     serial->begin(115200);
-    if (testOptionResetTorque) {
+    if (testOptions.resetTorque) {
       torqueOff(*serial);
       torqueOn(*serial);
     }
 
-    if (testOptionReturnToNeutral) {
+    if (testOptions.returnToNeutral) {
       neutralPose(*serial);
     }
 
@@ -132,6 +155,11 @@ std::unique_ptr<SerialProtocol> makeSerial(const std::string& suffix)
       std::make_unique<RecordingProxy::SerialPlayer>();
 
     serialPlayer->load(filename);
+
+    serialPlayer->beforeDestruction([](RecordingProxy::SerialPlayer& player) {
+      INFO("Verify that all records have been accessed by the test");
+      REQUIRE(player.isEmpty());
+    });
 
     return serialPlayer;
   }
@@ -162,13 +190,13 @@ SCENARIO("A1-16 servo operations")
         REQUIRE(ram[0] == kTestServo);
 
         uint16_t jointPosition = ram[60] + (ram[61] << 8);
-        REQUIRE_THAT(jointPosition, Catch::Matchers::WithinAbs(kStartGoal, 5));
+        REQUIRE_THAT(jointPosition, GoalPositionWithin(kStartGoal));
 
         uint16_t positionGoal = ram[68] + (ram[69] << 8);
-        REQUIRE_THAT(positionGoal, Catch::Matchers::WithinAbs(kStartGoal, 5));
+        REQUIRE_THAT(positionGoal, GoalPositionWithin(kStartGoal));
 
         uint16_t positionRef = ram[60] + (ram[71] << 8);
-        REQUIRE_THAT(positionRef, Catch::Matchers::WithinAbs(kStartGoal, 5));
+        REQUIRE_THAT(positionRef, GoalPositionWithin(kStartGoal));
       }
     }
 
@@ -205,14 +233,8 @@ SCENARIO("A1-16 servo operations")
     std::unique_ptr<SerialProtocol> serial = makeSerial("set-position");
     XYZrobotServo servo(*serial, kTestServo);
 
-    servo.setPosition(kTestGoal, 100);
-    while (!Catch::Matchers::WithinAbs(kTestGoal, 5).match(servo.readStatus().position)) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
+    servo.setPosition(kTestGoal, 10);
 
-    THEN("should move to correct position in time specified")
-    {
-      REQUIRE_THAT(servo.readStatus().position, Catch::Matchers::WithinAbs(kTestGoal, 5));
-    }
+    REQUIRE_THAT(waitForPosition(servo, kTestGoal), GoalPositionWithin(kTestGoal));
   }
 }
