@@ -36,6 +36,8 @@ namespace RecordingProxy
 class SerialPlayer : public SerialProtocol
 {
 public:
+  ~SerialPlayer();
+
   void begin(const uint32_t baudRate, const uint8_t transferConfig) override;
   bool available() override;
 
@@ -52,10 +54,15 @@ public:
     assert(expected == actual);
   };
 
+  using BeforeDestructionCallback = std::function<void(RecordingProxy::SerialPlayer& player)>;
+  void beforeDestruction(BeforeDestructionCallback callback);
+
+  bool isEmpty() const;
 private:
   Record currentRecord_;
   OperationType lastOperation_;
   std::deque<Record> records_;
+  BeforeDestructionCallback beforeDestructionCallback_;
   Record& currentRecord();
 };
 }  // namespace RecordingProxy

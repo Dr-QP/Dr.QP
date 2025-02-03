@@ -29,6 +29,18 @@
 
 namespace RecordingProxy
 {
+SerialPlayer::~SerialPlayer()
+{
+  if (beforeDestructionCallback_) {
+    beforeDestructionCallback_(*this);
+  }
+}
+
+void SerialPlayer::beforeDestruction(BeforeDestructionCallback callback)
+{
+  beforeDestructionCallback_ = callback;
+}
+
 void SerialPlayer::begin(const uint32_t baudRate, const uint8_t transferConfig) {}
 
 size_t SerialPlayer::writeBytes(const void* buffer, size_t size)
@@ -81,7 +93,7 @@ void SerialPlayer::flushRead() {}
 
 Record& SerialPlayer::currentRecord()
 {
-  if (currentRecord_.empty()) {
+  if (currentRecord_.isEmpty()) {
     assert(records_.size() != 0);
 
     currentRecord_ = records_.front();
@@ -105,5 +117,10 @@ void SerialPlayer::load(const std::filesystem::path& fileName)
     RecordingProxy::read(record, r);
     records_.push_back(r);
   }
+}
+
+bool SerialPlayer::isEmpty() const
+{
+  return records_.empty() && currentRecord_.isEmpty();
 }
 }  // namespace RecordingProxy

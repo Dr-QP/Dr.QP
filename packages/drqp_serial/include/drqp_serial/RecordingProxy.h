@@ -43,7 +43,7 @@ struct Record
   Packet request;
   Packet response;
 
-  bool empty() const
+  bool isEmpty() const
   {
     return request.bytes.empty() && response.bytes.empty();
   }
