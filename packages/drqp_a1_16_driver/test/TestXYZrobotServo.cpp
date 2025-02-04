@@ -131,7 +131,7 @@ uint16_t waitForPosition(XYZrobotServo& testServo, uint16_t goalPosition)
   return currentPosition;
 }
 
-void neutralPose(SerialProtocol& servoSerial)
+void neutralPoseIJog(SerialProtocol& servoSerial)
 {
   XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
   IJogCommand<kServoCount> posCmd = {{
@@ -146,6 +146,23 @@ void neutralPose(SerialProtocol& servoSerial)
 
   REQUIRE_THAT(waitForPosition(testServo, kStartGoal), GoalPositionWithin(kStartGoal));
   REQUIRE_THAT(waitForPosition(testServoOther, kStartGoal), GoalPositionWithin(kStartGoal));
+}
+
+void neutralPoseDynamicIJog(SerialProtocol& servoSerial)
+{
+  // XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
+
+  // DynamicSJogCommand sposCmd(kServoCount);
+  // sposCmd.setPlaytime(200);
+  // sposCmd.setData(0, SJogData{kStartGoal, SET_POSITION_CONTROL, kTestServo});
+  // sposCmd.setData(1, SJogData{kStartGoal, SET_POSITION_CONTROL, kTestServoOther});
+  // servo.sendJogCommand(sposCmd);
+
+  // XYZrobotServo testServo(servoSerial, kTestServo);
+  // XYZrobotServo testServoOther(servoSerial, kTestServoOther);
+
+  // REQUIRE_THAT(waitForPosition(testServo, kStartGoal), GoalPositionWithin(kStartGoal));
+  // REQUIRE_THAT(waitForPosition(testServoOther, kStartGoal), GoalPositionWithin(kStartGoal));
 }
 
 void neutralPoseSJog(SerialProtocol& servoSerial)
@@ -170,18 +187,12 @@ void neutralPoseSJog(SerialProtocol& servoSerial)
 void neutralPoseDynamicSJog(SerialProtocol& servoSerial)
 {
   XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
-  SJogCommand<kServoCount> posCmd = {
-    200,  // Give it enough time,
-    {
-      SJogData{kStartGoal, SET_POSITION_CONTROL, kTestServo},
-      SJogData{kStartGoal, SET_POSITION_CONTROL, kTestServoOther},
-    }};
 
   DynamicSJogCommand sposCmd(kServoCount);
   sposCmd.setPlaytime(200);
   sposCmd.setData(0, SJogData{kStartGoal, SET_POSITION_CONTROL, kTestServo});
   sposCmd.setData(1, SJogData{kStartGoal, SET_POSITION_CONTROL, kTestServoOther});
-  servo.sendJogCommand(posCmd);
+  servo.sendJogCommand(sposCmd);
 
   XYZrobotServo testServo(servoSerial, kTestServo);
   XYZrobotServo testServoOther(servoSerial, kTestServoOther);
@@ -215,7 +226,7 @@ std::unique_ptr<SerialProtocol> makeSerial(const std::string& suffix)
     }
 
     if (!testOptions.skipReturnToNeutral) {
-      neutralPose(*serial);
+      neutralPoseIJog(*serial);
     }
 
     return std::make_unique<RecordingProxy::SerialRecordingProxy>(std::move(serial), filename);
@@ -310,7 +321,14 @@ TEST_CASE("A1-16 servo set I-JOG")
 {
   std::unique_ptr<SerialProtocol> serial = makeSerial("set-neutral-pose-i-jog");
 
-  neutralPose(*serial);
+  neutralPoseIJog(*serial);
+}
+
+TEST_CASE("A1-16 servo set dynamic I-JOG")
+{
+  std::unique_ptr<SerialProtocol> serial = makeSerial("set-neutral-pose-dynamic-i-jog");
+
+  neutralPoseDynamicIJog(*serial);
 }
 
 TEST_CASE("A1-16 servo set S-JOG")
@@ -320,7 +338,7 @@ TEST_CASE("A1-16 servo set S-JOG")
   neutralPoseSJog(*serial);
 }
 
-TEST_CASE("A1-16 servo set dynamic S-JOG")
+TEST_CASE("A1-16 servo set dynamic S-JOG", "[focus]")
 {
   std::unique_ptr<SerialProtocol> serial = makeSerial("set-neutral-pose-dynamic-s-jog");
 
@@ -390,7 +408,7 @@ TEST_CASE("A1-16 servo read ack policy ram")
   REQUIRE(ackPolicy == XYZrobotServoAckPolicy::OnlyReadAndStat);
 }
 
-TEST_CASE("A1-16 servo max PWM RAM", "[focus]")
+TEST_CASE("A1-16 servo max PWM RAM")
 {
   std::unique_ptr<SerialProtocol> serial = makeSerial("max-pwm-ram");
 

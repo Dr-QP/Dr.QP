@@ -25,6 +25,7 @@
 #include <cstdint>
 #include <iostream>
 #include <array>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -159,10 +160,12 @@ public:
   explicit DynamicSJogCommand(size_t count) : count_(count)
   {
     size_ = count * sizeof(SJogData) + sizeof(uint8_t);
+    data_.reset(new uint8_t[size_]);
   }
+
   void* data() const
   {
-    return data_;
+    return data_.get();
   }
   size_t size() const
   {
@@ -171,7 +174,7 @@ public:
 
   void setPlaytime(uint8_t playtime)
   {
-    *static_cast<uint8_t*>(data_) = playtime;
+    *(data_.get()) = playtime;
   }
   void setData(uint8_t index, SJogData pos)
   {
@@ -179,12 +182,12 @@ public:
       throw std::out_of_range("SJog data index out of rang");
     }
 
-    SJogData* spos = reinterpret_cast<SJogData*>(static_cast<uint8_t*>(data_) + 1);
+    SJogData* spos = reinterpret_cast<SJogData*>(data_.get() + 1);
     spos[index] = pos;
   }
 
 private:
-  void* data_ = nullptr;
+  std::unique_ptr<uint8_t[]> data_ = nullptr;
   size_t size_ = 0;
   size_t count_;
 };
