@@ -28,6 +28,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "drqp_serial/Stream.h"
 
@@ -176,14 +177,15 @@ public:
   {
     *(data_.get()) = playtime;
   }
-  void setData(uint8_t index, SJogData pos)
-  {
+
+  SJogData& at(size_t index) {
+
     if (index >= count_) {
       throw std::out_of_range("SJog data index out of rang");
     }
 
     SJogData* spos = reinterpret_cast<SJogData*>(data_.get() + 1);
-    spos[index] = pos;
+    return spos[index];
   }
 
 private:
@@ -206,6 +208,30 @@ template <size_t ServoCount>
 struct IJogCommand
 {
   std::array<IJogData, ServoCount> data;
+};
+class DynamicIJogCommand
+{
+public:
+  explicit DynamicIJogCommand(size_t count) : data_(count)
+  {
+  }
+
+  const IJogData* data() const
+  {
+    return data_.data();
+  }
+
+  size_t size() const
+  {
+    return data_.size() * sizeof(data_[0]);
+  }
+
+  IJogData& at(size_t pos) {
+    return data_.at(pos);
+  }
+
+private:
+  std::vector<IJogData> data_;
 };
 
 #define SET_POSITION_CONTROL 0
@@ -432,6 +458,11 @@ public:
   void sendJogCommand(const IJogCommand<ServoCount>& cmd)
   {
     sendRequest(kBroadcastId, CMD_I_JOG, &cmd, sizeof(cmd));
+  }
+
+  void sendJogCommand(const DynamicIJogCommand& cmd)
+  {
+    sendRequest(kBroadcastId, CMD_I_JOG, cmd.data(), cmd.size());
   }
 
 private:

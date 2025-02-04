@@ -150,19 +150,18 @@ void neutralPoseIJog(SerialProtocol& servoSerial)
 
 void neutralPoseDynamicIJog(SerialProtocol& servoSerial)
 {
-  // XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
+  XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
 
-  // DynamicSJogCommand sposCmd(kServoCount);
-  // sposCmd.setPlaytime(200);
-  // sposCmd.setData(0, SJogData{kStartGoal, SET_POSITION_CONTROL, kTestServo});
-  // sposCmd.setData(1, SJogData{kStartGoal, SET_POSITION_CONTROL, kTestServoOther});
-  // servo.sendJogCommand(sposCmd);
+  DynamicIJogCommand posCmd(kServoCount);
+  posCmd.at(0) = IJogData{kStartGoal, SET_POSITION_CONTROL, kTestServo, 30};
+  posCmd.at(1) = IJogData{kStartGoal, SET_POSITION_CONTROL, kTestServoOther, 30};
+  servo.sendJogCommand(posCmd);
 
-  // XYZrobotServo testServo(servoSerial, kTestServo);
-  // XYZrobotServo testServoOther(servoSerial, kTestServoOther);
+  XYZrobotServo testServo(servoSerial, kTestServo);
+  XYZrobotServo testServoOther(servoSerial, kTestServoOther);
 
-  // REQUIRE_THAT(waitForPosition(testServo, kStartGoal), GoalPositionWithin(kStartGoal));
-  // REQUIRE_THAT(waitForPosition(testServoOther, kStartGoal), GoalPositionWithin(kStartGoal));
+  REQUIRE_THAT(waitForPosition(testServo, kStartGoal), GoalPositionWithin(kStartGoal));
+  REQUIRE_THAT(waitForPosition(testServoOther, kStartGoal), GoalPositionWithin(kStartGoal));
 }
 
 void neutralPoseSJog(SerialProtocol& servoSerial)
@@ -190,8 +189,8 @@ void neutralPoseDynamicSJog(SerialProtocol& servoSerial)
 
   DynamicSJogCommand sposCmd(kServoCount);
   sposCmd.setPlaytime(200);
-  sposCmd.setData(0, SJogData{kStartGoal, SET_POSITION_CONTROL, kTestServo});
-  sposCmd.setData(1, SJogData{kStartGoal, SET_POSITION_CONTROL, kTestServoOther});
+  sposCmd.at(0) = SJogData{kStartGoal, SET_POSITION_CONTROL, kTestServo};
+  sposCmd.at(1) = SJogData{kStartGoal, SET_POSITION_CONTROL, kTestServoOther};
   servo.sendJogCommand(sposCmd);
 
   XYZrobotServo testServo(servoSerial, kTestServo);
@@ -324,7 +323,7 @@ TEST_CASE("A1-16 servo set I-JOG")
   neutralPoseIJog(*serial);
 }
 
-TEST_CASE("A1-16 servo set dynamic I-JOG")
+TEST_CASE("A1-16 servo set dynamic I-JOG", "[focus]")
 {
   std::unique_ptr<SerialProtocol> serial = makeSerial("set-neutral-pose-dynamic-i-jog");
 

@@ -62,7 +62,7 @@ public:
           for (size_t index = 0; index < msg.positions.size(); ++index) {
             auto pos = msg.positions.at(index);
             SJogData data{pos.position, SET_POSITION_CONTROL, pos.id};
-            sposCmd.setData(index, data);
+            sposCmd.at(index) = data;
           }
 
           servo.sendJogCommand(sposCmd);
