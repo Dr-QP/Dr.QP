@@ -53,7 +53,10 @@
         "request": "launch",
         "name": "drqp_control control",
         "program": "install/drqp_control/lib/drqp_control/control",
-        "args": [],
+        "args": [
+          "up",
+          "192.168.0.181:2022"
+        ],
         "cwd": "${workspaceFolder:Dr.QP}/install/drqp_control/lib/drqp_control",
         "preLaunchTask": "Dr.QP colcon build",
       },

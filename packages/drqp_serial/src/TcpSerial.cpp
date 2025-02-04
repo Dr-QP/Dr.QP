@@ -30,14 +30,14 @@
 #include <boost/thread.hpp>
 
 tcp::resolver::iterator resolve(
-  boost::asio::io_service& ioService, const std::string& ip, uint16_t port)
+  boost::asio::io_service& ioService, const std::string& ip, std::string port)
 {
   tcp::resolver resolver(ioService);
-  tcp::resolver::query query(ip, std::to_string(port));
+  tcp::resolver::query query(ip, port);
   return resolver.resolve(query);
 }
 
-TcpSerial::TcpSerial(const std::string& ip, uint16_t port) : socket_(ioService_)
+TcpSerial::TcpSerial(const std::string& ip, std::string port) : socket_(ioService_)
 {
   connect(socket_, resolve(ioService_, ip, port));
 }

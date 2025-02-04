@@ -31,7 +31,7 @@ using tcp = boost::asio::ip::tcp;
 class TcpSerial : public SerialProtocol
 {
 public:
-  TcpSerial(const std::string& ip, uint16_t port);
+  TcpSerial(const std::string& ip, std::string port);
 
   using SerialProtocol::begin;
   void begin(const uint32_t baudRate, const uint8_t transferConfig) override;

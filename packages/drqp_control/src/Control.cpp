@@ -18,6 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <drqp_serial/SerialProtocol.h>
+#include <memory>
 #include <stdexcept>
 #include <iostream>
 #include <thread>
@@ -65,15 +67,28 @@ void readAll(SerialProtocol& servoSerial)
 int main(const int argc, const char* const argv[])
 {
   try {
-    TcpSerial servoSerial("192.168.0.181", 2022);
-    // UnixSerial servoSerial("/dev/ttySC0");
-    servoSerial.begin(115200);
-
     std::string pose = (argc >= 2 ? argv[1] : "neutral");
+    std::string address = (argc >= 3 ? argv[2] : "/dev/ttySC0");
+
+    std::unique_ptr<SerialProtocol> servoSerial;
+    if (address.at(0) == '/')
+    {
+      servoSerial = std::make_unique<UnixSerial>(address);
+      servoSerial->begin(115200);
+    }
+    else
+    {
+      std::string port = "2022";
+      if (auto pos = address.find(':'); pos != std::string::npos) {
+        port = address.substr(pos + 1);
+        address.erase(pos);
+      }
+      servoSerial = std::make_unique<TcpSerial>(address, port);
+    }
 
     if (pose == "off" || pose == "relax") {
       forEachServo(0, [&servoSerial](ServoId servoId, int) {
-        XYZrobotServo servo(servoSerial, servoId);
+        XYZrobotServo servo(*servoSerial, servoId);
         servo.torqueOff();
         if (servo.isFailed()) {
           throw std::runtime_error("Torque OFF failed: " + to_string(servo.getLastError()));
@@ -86,14 +101,14 @@ int main(const int argc, const char* const argv[])
 
       return 0;
     } else if (pose == "read") {
-      readAll(servoSerial);
+      readAll(*servoSerial);
 
       return 0;
     }
 
     // Recover each servo to its current position
     forEachServo(0, [&servoSerial](ServoId servoId, int) {
-      XYZrobotServo servo(servoSerial, servoId);
+      XYZrobotServo servo(*servoSerial, servoId);
 
       XYZrobotServoStatus status = servo.readStatus();
       if (servo.isFailed()) {
@@ -139,7 +154,7 @@ int main(const int argc, const char* const argv[])
 
         servoIndex++;
       });
-    XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
+    XYZrobotServo servo(*servoSerial, XYZrobotServo::kBroadcastId);
     // servo.sendJogCommand(sposCmd);
     servo.sendJogCommand(iposCmd);
     if (servo.isFailed()) {
