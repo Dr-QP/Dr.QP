@@ -40,12 +40,12 @@ install(TARGETS
   RUNTIME DESTINATION bin
 )
 
-add_executable(driver_node src/DriverNode.cpp)
-target_link_libraries(driver_node drqp_a1_16_driver)
+add_executable(pose_reader src/PoseReader.cpp)
+target_link_libraries(pose_reader drqp_a1_16_driver)
 
 # Install executables for `ros2 run`
 install(TARGETS
-  driver_node
+  pose_reader
   DESTINATION lib/${PROJECT_NAME}
 )
 
