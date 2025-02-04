@@ -25,7 +25,6 @@
 
 #include <cstdint>
 #include <exception>
-#include <functional>
 #include <memory>
 #include <string>
 
@@ -35,56 +34,47 @@
 #include <drqp_interfaces/msg/multi_async_position_command.hpp>
 #include <drqp_interfaces/msg/sync_position_command.hpp>
 #include <drqp_interfaces/msg/multi_sync_position_command.hpp>
+#include <rclcpp/subscription_base.hpp>
 
 using namespace std::chrono_literals;
 
 class PoseSetter : public rclcpp::Node
 {
 public:
-  PoseSetter() : Node("drqp_pose_reader")
+  PoseSetter() : Node("drqp_pose_setter")
   {
     // declare_parameter("device_address", "/dev/ttySC0");
     declare_parameter("device_address", "192.168.0.181:2022");
     declare_parameter("baud_rate", 115200);
-    declare_parameter("first_id", 1);
-    declare_parameter("last_id", 18);
 
-    subscription_ =
-      this->create_publisher<drqp_interfaces::msg::MultiSyncPositionCommand>("pose", 10);
+    auto subscription_ = this->create_subscription<drqp_interfaces::msg::MultiSyncPositionCommand>(
+      "pose_sync", 10, [this](const drqp_interfaces::msg::MultiSyncPositionCommand& msg) {
+        try {
+          auto pose = drqp_interfaces::msg::MultiSyncPositionCommand{};
+          std::unique_ptr<SerialProtocol> servoSerial;
+          servoSerial = makeSerialForDevice(get_parameter("device_address").as_string());
+          servoSerial->begin(get_parameter("baud_rate").as_int());
 
-    timer_ = this->create_wall_timer(500ms, [this]() {
-      try {
-        auto pose = drqp_interfaces::msg::MultiSyncPositionCommand{};
-        std::unique_ptr<SerialProtocol> servoSerial;
-        servoSerial = makeSerialForDevice(get_parameter("device_address").as_string());
-        servoSerial->begin(get_parameter("baud_rate").as_int());
+          XYZrobotServo servo(*servoSerial, XYZrobotServo::kBroadcastId);
 
-        const uint8_t firstId = get_parameter("first_id").as_int();
-        const uint8_t lastId = get_parameter("last_id").as_int();
-
-        for (uint8_t servoId = firstId; servoId <= lastId; ++servoId) {
-          XYZrobotServo servo(*servoSerial, servoId);
-
-          XYZrobotServoStatus status = servo.readStatus();
-          if (servo.isFailed()) {
-            continue;
+          DynamicSJogCommand sposCmd(msg.positions.size());
+          sposCmd.setPlaytime(msg.playtime);
+          for (size_t index = 0; index < msg.positions.size(); ++index) {
+            auto pos = msg.positions.at(index);
+            SJogData data{pos.position, SET_POSITION_CONTROL, pos.id};
+            sposCmd.setData(index, data);
           }
-          drqp_interfaces::msg::SyncPositionCommand pos;
-          pos.id = servoId;
-          pos.position = status.position;
-          pose.positions.push_back(pos);
+
+          servo.sendJogCommand(sposCmd);
+        } catch (std::exception& e) {
+          RCLCPP_ERROR(get_logger(), "Exception occurred in pose_sync handler %s", e.what());
+        } catch (...) {
+          RCLCPP_ERROR(get_logger(), "Unknown exception occurred in pose_sync handler.");
         }
-        subscription_->publish(pose);
-      } catch (std::exception& e) {
-        RCLCPP_ERROR(get_logger(), "Exception occurred in pose read handler %s", e.what());
-      } catch (...) {
-        RCLCPP_ERROR(get_logger(), "Unknown exception occurred in pose read handler.");
-      }
-    });
+      });
   }
 
-  rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Publisher<drqp_interfaces::msg::MultiSyncPositionCommand>::SharedPtr subscription_;
+  rclcpp::Subscription<drqp_interfaces::msg::MultiSyncPositionCommand>::SharedPtr subscription_;
 };
 
 int main(int argc, char* argv[])
