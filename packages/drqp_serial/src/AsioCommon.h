@@ -81,7 +81,7 @@ size_t doWithTimeout(
   }
 
   if (operationResult && *operationResult) {
-    std::cerr << operationResult->message() << "\n";
+    throw boost::system::system_error(*operationResult);
     return 0;
   }
 
