@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "drqp_serial/UnixSerial.h"
+#include "AsioCommon.h"
 
 #include <vector>
 
@@ -115,5 +116,5 @@ bool UnixSerial::available()
 
 size_t UnixSerial::readBytes(void* buffer, size_t size)
 {
-  return boost::asio::read(impl_->serial_, boost::asio::buffer(buffer, size));
+  return readWithTimeout(impl_->ioService_, impl_->serial_, boost::asio::buffer(buffer, size));
 }
