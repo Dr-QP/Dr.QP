@@ -114,7 +114,7 @@ int main(const int argc, const char* const argv[])
       if (servo.isFailed()) {
         throw std::runtime_error("Read status failed: " + to_string(servo.getLastError()));
       }
-      if (abs(status.position - status.posRef) > 15) {
+      if (status.pwm == 0 && abs(status.position - status.posRef) > 15) {
         servo.torqueOn();
         if (servo.isFailed()) {
           throw std::runtime_error("Torque ON failed: " + to_string(servo.getLastError()));
