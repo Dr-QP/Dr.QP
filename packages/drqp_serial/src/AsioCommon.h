@@ -31,28 +31,61 @@ template <typename MutableBufferSequence, typename Stream>
 size_t readWithTimeout(
   boost::asio::io_service& ioService, Stream& sock, const MutableBufferSequence& buffers, uint64_t timeoutMs = 5000)
 {
-  std::optional<boost::system::error_code> timer_result;
+  std::optional<boost::system::error_code> timerResult;
   boost::asio::deadline_timer timer(ioService);
   timer.expires_from_now(boost::posix_time::milliseconds(timeoutMs));
-  timer.async_wait([&timer_result](const auto& ec) { timer_result = ec; });
+  timer.async_wait([&timerResult](const auto& ec) { timerResult = ec; });
 
-  std::optional<boost::system::error_code> read_result;
+  std::optional<boost::system::error_code> readResult;
   std::optional<std::size_t> bytesTransferred;
-  async_read(sock, buffers, [&read_result, &bytesTransferred](const auto& ec, std::size_t bt) {
-    read_result = ec;
+  async_read(sock, buffers, [&readResult, &bytesTransferred](const auto& ec, std::size_t bt) {
+    readResult = ec;
     bytesTransferred = bt;
   });
 
   ioService.reset();
   while (ioService.run_one()) {
-    if (read_result)
+    if (readResult)
       timer.cancel();
-    else if (timer_result)
+    else if (timerResult)
       sock.cancel();
   }
 
-  if (read_result && *read_result) {
-    std::cerr << read_result->message() << "\n";
+  if (readResult && *readResult) {
+    std::cerr << readResult->message() << "\n";
+    return 0;
+  }
+
+  return *bytesTransferred;
+}
+
+
+template <typename MutableBufferSequence, typename Stream>
+size_t writeWithTimeout(
+  boost::asio::io_service& ioService, Stream& sock, const MutableBufferSequence& buffers, uint64_t timeoutMs = 5000)
+{
+  std::optional<boost::system::error_code> timerResult;
+  boost::asio::deadline_timer timer(ioService);
+  timer.expires_from_now(boost::posix_time::milliseconds(timeoutMs));
+  timer.async_wait([&timerResult](const auto& ec) { timerResult = ec; });
+
+  std::optional<boost::system::error_code> writeResult;
+  std::optional<std::size_t> bytesTransferred;
+  async_write(sock, buffers, [&writeResult, &bytesTransferred](const auto& ec, std::size_t bt) {
+    writeResult = ec;
+    bytesTransferred = bt;
+  });
+
+  ioService.reset();
+  while (ioService.run_one()) {
+    if (writeResult)
+      timer.cancel();
+    else if (timerResult)
+      sock.cancel();
+  }
+
+  if (writeResult && *writeResult) {
+    std::cerr << writeResult->message() << "\n";
     return 0;
   }
 

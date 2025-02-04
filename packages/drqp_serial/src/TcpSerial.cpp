@@ -44,7 +44,7 @@ void TcpSerial::begin(const uint32_t baudRate, const uint8_t transferConfig) {}
 
 size_t TcpSerial::writeBytes(const void* buffer, size_t size)
 {
-  return boost::asio::write(socket_, boost::asio::buffer(buffer, size));
+  return writeWithTimeout(ioService_, socket_, boost::asio::buffer(buffer, size));
 }
 
 void TcpSerial::flushRead()

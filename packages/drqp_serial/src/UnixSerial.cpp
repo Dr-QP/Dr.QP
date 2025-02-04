@@ -96,7 +96,7 @@ void UnixSerial::begin(const uint32_t baudRate, const uint8_t transferConfig)
 
 size_t UnixSerial::writeBytes(const void* buffer, size_t size)
 {
-  return boost::asio::write(impl_->serial_, boost::asio::buffer(buffer, size));
+  return writeWithTimeout(impl_->ioService_, impl_->serial_, boost::asio::buffer(buffer, size));
 }
 
 void UnixSerial::flushRead()
