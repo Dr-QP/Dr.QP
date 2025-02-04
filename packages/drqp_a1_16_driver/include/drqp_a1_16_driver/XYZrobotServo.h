@@ -205,7 +205,6 @@ struct IJogCommand
   std::array<IJogData, ServoCount> data;
 };
 
-
 #define SET_POSITION_CONTROL 0
 #define SET_SPEED_CONTROL 1
 #define SET_TORQUE_OFF 2
