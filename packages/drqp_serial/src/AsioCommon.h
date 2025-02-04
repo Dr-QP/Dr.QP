@@ -21,16 +21,14 @@
 #pragma once
 
 #include <iostream>
+#include <utility>
 #include <optional>
 
 #include <boost/asio.hpp>
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
 
-enum class AsyncOp {
-  Read,
-  Write
-};
+enum class AsyncOp { Read, Write };
 
 template <AsyncOp operation>
 struct AsyncOperation;
@@ -38,25 +36,27 @@ struct AsyncOperation;
 template <>
 struct AsyncOperation<AsyncOp::Read>
 {
-template<typename Stream, class... Args>
-static void perform(Stream& stream, Args... args)
-{
-  return async_read(stream, std::forward<Args>(args)...);
-}
+  template <typename Stream, class... Args>
+  static void perform(Stream& stream, Args... args)
+  {
+    return async_read(stream, std::forward<Args>(args)...);
+  }
 };
 
 template <>
 struct AsyncOperation<AsyncOp::Write>
 {
-template<typename Stream, class... Args>
-static void perform(Stream& stream, Args... args)
-{
-  return async_write(stream, std::forward<Args>(args)...);
-}
+  template <typename Stream, class... Args>
+  static void perform(Stream& stream, Args... args)
+  {
+    return async_write(stream, std::forward<Args>(args)...);
+  }
 };
 
 template <AsyncOp operation, typename MutableBufferSequence, typename Stream>
-size_t doWithTimeout(boost::asio::io_service& ioService, Stream& stream, const MutableBufferSequence& buffers, uint64_t timeoutMs = 5000)
+size_t doWithTimeout(
+  boost::asio::io_service& ioService, Stream& stream, const MutableBufferSequence& buffers,
+  uint64_t timeoutMs = 5000)
 {
   std::optional<boost::system::error_code> timerResult;
   boost::asio::deadline_timer timer(ioService);
@@ -66,10 +66,11 @@ size_t doWithTimeout(boost::asio::io_service& ioService, Stream& stream, const M
   std::optional<boost::system::error_code> operationResult;
   std::optional<std::size_t> bytesTransferred;
 
-  AsyncOperation<operation>::perform(stream, buffers, [&operationResult, &bytesTransferred](const auto& ec, std::size_t bt) {
-    operationResult = ec;
-    bytesTransferred = bt;
-  });
+  AsyncOperation<operation>::perform(
+    stream, buffers, [&operationResult, &bytesTransferred](const auto& ec, std::size_t bt) {
+      operationResult = ec;
+      bytesTransferred = bt;
+    });
 
   ioService.reset();
   while (ioService.run_one()) {
