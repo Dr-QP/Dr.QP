@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include <drqp_serial/SerialProtocol.h>
+#include <functional>
 #include <memory>
 #include <stdexcept>
 #include <iostream>
@@ -26,8 +27,7 @@
 #include "drqp_control/DrQp.h"
 
 #include "drqp_a1_16_driver/XYZrobotServo.h"
-#include "drqp_serial/TcpSerial.h"
-#include "drqp_serial/UnixSerial.h"
+#include "drqp_a1_16_driver/SerialFactory.h"
 
 void forEachServo(
   uint64_t millisecondsBetweenLegs, std::function<void(ServoId servoId, int servoIndexInLeg)> func)
@@ -67,24 +67,10 @@ void readAll(SerialProtocol& servoSerial)
 int main(const int argc, const char* const argv[])
 {
   try {
-    std::string pose = (argc >= 2 ? argv[1] : "neutral");
-    std::string address = (argc >= 3 ? argv[2] : "/dev/ttySC0");
+    const std::string pose = (argc >= 2 ? argv[1] : "neutral");
+    const std::string deviceAddress = (argc >= 3 ? argv[2] : "/dev/ttySC0");
 
-    std::unique_ptr<SerialProtocol> servoSerial;
-    if (address.at(0) == '/')
-    {
-      servoSerial = std::make_unique<UnixSerial>(address);
-      servoSerial->begin(115200);
-    }
-    else
-    {
-      std::string port = "2022";
-      if (auto pos = address.find(':'); pos != std::string::npos) {
-        port = address.substr(pos + 1);
-        address.erase(pos);
-      }
-      servoSerial = std::make_unique<TcpSerial>(address, port);
-    }
+    std::unique_ptr<SerialProtocol> servoSerial = makeSerialForDevice(deviceAddress);
 
     if (pose == "off" || pose == "relax") {
       forEachServo(0, [&servoSerial](ServoId servoId, int) {
@@ -160,7 +146,6 @@ int main(const int argc, const char* const argv[])
     if (servo.isFailed()) {
       throw std::runtime_error("set position failed: " + to_string(servo.getLastError()));
     }
-
   } catch (std::exception& e) {
     std::cerr << "Control call failed with exception: " << e.what() << "\n";
     return 1;

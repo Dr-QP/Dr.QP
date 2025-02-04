@@ -16,6 +16,7 @@ endforeach()
 add_library(drqp_a1_16_driver STATIC
     include/drqp_a1_16_driver/XYZrobotServo.h
 
+    src/SerialFactory.cpp
     src/XYZrobotServo.cpp
 )
 
@@ -39,13 +40,14 @@ install(TARGETS
   RUNTIME DESTINATION bin
 )
 
-add_executable(node src/Node.cpp)
-target_link_libraries(node drqp_a1_16_driver)
+add_executable(driver_node src/DriverNode.cpp)
+target_link_libraries(driver_node drqp_a1_16_driver)
 
 # Install executables for `ros2 run`
 install(TARGETS
-  node
-  DESTINATION lib/${PROJECT_NAME})
+  driver_node
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 
 # Export modern CMake targets
