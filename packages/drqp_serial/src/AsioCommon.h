@@ -27,65 +27,60 @@
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
 
-template <typename MutableBufferSequence, typename Stream>
-size_t readWithTimeout(
-  boost::asio::io_service& ioService, Stream& sock, const MutableBufferSequence& buffers, uint64_t timeoutMs = 5000)
+enum class AsyncOp {
+  Read,
+  Write
+};
+
+template <AsyncOp operation>
+struct AsyncOperation;
+
+template <>
+struct AsyncOperation<AsyncOp::Read>
 {
-  std::optional<boost::system::error_code> timerResult;
-  boost::asio::deadline_timer timer(ioService);
-  timer.expires_from_now(boost::posix_time::milliseconds(timeoutMs));
-  timer.async_wait([&timerResult](const auto& ec) { timerResult = ec; });
-
-  std::optional<boost::system::error_code> readResult;
-  std::optional<std::size_t> bytesTransferred;
-  async_read(sock, buffers, [&readResult, &bytesTransferred](const auto& ec, std::size_t bt) {
-    readResult = ec;
-    bytesTransferred = bt;
-  });
-
-  ioService.reset();
-  while (ioService.run_one()) {
-    if (readResult)
-      timer.cancel();
-    else if (timerResult)
-      sock.cancel();
-  }
-
-  if (readResult && *readResult) {
-    std::cerr << readResult->message() << "\n";
-    return 0;
-  }
-
-  return *bytesTransferred;
+template<typename Stream, class... Args>
+static void perform(Stream& stream, Args... args)
+{
+  return async_read(stream, std::forward<Args>(args)...);
 }
+};
 
+template <>
+struct AsyncOperation<AsyncOp::Write>
+{
+template<typename Stream, class... Args>
+static void perform(Stream& stream, Args... args)
+{
+  return async_write(stream, std::forward<Args>(args)...);
+}
+};
 
-template <typename MutableBufferSequence, typename Stream>
-size_t writeWithTimeout(
-  boost::asio::io_service& ioService, Stream& sock, const MutableBufferSequence& buffers, uint64_t timeoutMs = 5000)
+template <AsyncOp operation, typename MutableBufferSequence, typename Stream>
+size_t doWithTimeout(boost::asio::io_service& ioService, Stream& stream, const MutableBufferSequence& buffers, uint64_t timeoutMs = 5000)
 {
   std::optional<boost::system::error_code> timerResult;
   boost::asio::deadline_timer timer(ioService);
   timer.expires_from_now(boost::posix_time::milliseconds(timeoutMs));
   timer.async_wait([&timerResult](const auto& ec) { timerResult = ec; });
 
-  std::optional<boost::system::error_code> writeResult;
+  std::optional<boost::system::error_code> operationResult;
   std::optional<std::size_t> bytesTransferred;
-  async_write(sock, buffers, [&writeResult, &bytesTransferred](const auto& ec, std::size_t bt) {
-    writeResult = ec;
+
+  AsyncOperation<operation>::perform(stream, buffers, [&operationResult, &bytesTransferred](const auto& ec, std::size_t bt) {
+    operationResult = ec;
     bytesTransferred = bt;
   });
 
   ioService.reset();
   while (ioService.run_one()) {
-    if (writeResult)
+    if (operationResult)
       timer.cancel();
     else if (timerResult)
-      sock.cancel();
+      stream.cancel();
   }
 
-  if (writeResult && *writeResult) {
-    std::cerr << writeResult->message() << "\n";
+  if (operationResult && *operationResult) {
+    std::cerr << operationResult->message() << "\n";
     return 0;
   }
 
