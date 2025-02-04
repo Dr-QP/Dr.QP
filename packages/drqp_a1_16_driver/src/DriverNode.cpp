@@ -24,6 +24,7 @@
 #include <drqp_a1_16_driver/XYZrobotServo.h>
 
 #include <cstdint>
+#include <exception>
 #include <functional>
 #include <memory>
 #include <string>
@@ -44,26 +45,41 @@ public:
   {
     // declare_parameter("device_address", "/dev/ttySC0");
     declare_parameter("device_address", "192.168.0.181:2022");
+    declare_parameter("baud_rate", 115200);
+    declare_parameter("first_id", 1);
+    declare_parameter("last_id", 18);
 
     publisher_ = this->create_publisher<drqp_interfaces::msg::MultiSyncPositionCommand>("pose", 10);
 
     timer_ = this->create_wall_timer(500ms, [this]() {
-      auto pose = drqp_interfaces::msg::MultiSyncPositionCommand{};
-      std::unique_ptr<SerialProtocol> servoSerial;
-      servoSerial = makeSerialForDevice(get_parameter("device_address").as_string());
-      for (uint8_t servoId = 1; servoId <= 18; ++servoId) {
-        XYZrobotServo servo(*servoSerial, servoId);
+      try {
+        auto pose = drqp_interfaces::msg::MultiSyncPositionCommand{};
+        std::unique_ptr<SerialProtocol> servoSerial;
+        servoSerial = makeSerialForDevice(get_parameter("device_address").as_string());
+        servoSerial->begin(get_parameter("baud_rate").as_int());
 
-        XYZrobotServoStatus status = servo.readStatus();
-        if (servo.isFailed()) {
-          continue;
+        const uint8_t firstId = get_parameter("first_id").as_int();
+        const uint8_t lastId = get_parameter("last_id").as_int();
+
+        for (uint8_t servoId = firstId; servoId <= lastId; ++servoId) {
+          XYZrobotServo servo(*servoSerial, servoId);
+
+          XYZrobotServoStatus status = servo.readStatus();
+          if (servo.isFailed()) {
+            continue;
+          }
+          drqp_interfaces::msg::SyncPositionCommand pos;
+          pos.id = servoId;
+          pos.position = status.position;
+          pose.positions.push_back(pos);
         }
-        drqp_interfaces::msg::SyncPositionCommand pos;
-        pos.id = servoId;
-        pos.position = status.position;
-        pose.positions.push_back(pos);
+        publisher_->publish(pose);
+
+      } catch (std::exception& e) {
+        RCLCPP_ERROR(get_logger(), "Exception occurred in pose read handler %s", e.what());
+      } catch (...) {
+        RCLCPP_ERROR(get_logger(), "Unknown exception occurred in pose read handler.");
       }
-      publisher_->publish(pose);
     });
   }
 
