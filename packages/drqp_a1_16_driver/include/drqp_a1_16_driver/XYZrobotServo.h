@@ -178,8 +178,8 @@ public:
     *(data_.get()) = playtime;
   }
 
-  SJogData& at(size_t index) {
-
+  SJogData& at(size_t index)
+  {
     if (index >= count_) {
       throw std::out_of_range("SJog data index out of rang");
     }
@@ -212,9 +212,7 @@ struct IJogCommand
 class DynamicIJogCommand
 {
 public:
-  explicit DynamicIJogCommand(size_t count) : data_(count)
-  {
-  }
+  explicit DynamicIJogCommand(size_t count) : data_(count) {}
 
   const IJogData* data() const
   {
@@ -226,7 +224,8 @@ public:
     return data_.size() * sizeof(data_[0]);
   }
 
-  IJogData& at(size_t pos) {
+  IJogData& at(size_t pos)
+  {
     return data_.at(pos);
   }
 
