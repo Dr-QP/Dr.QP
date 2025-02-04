@@ -26,6 +26,65 @@
 static_assert(
   __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__, "This code assumes little-endian byte order.");
 
+std::string to_string(XYZrobotServoError errorCode)
+{
+#define TO_STR_PREFIX "A1-16 servo error "
+
+  switch (errorCode) {
+  case XYZrobotServoError::None:
+    return TO_STR_PREFIX "None: No error.";
+
+  case XYZrobotServoError::HeaderTimeout:
+    return TO_STR_PREFIX
+      "HeaderTimeout: There was a timeout waiting to receive the 7-byte acknowledgment "
+      "header.";
+
+  case XYZrobotServoError::HeaderByte1Wrong:
+    return TO_STR_PREFIX "HeaderByte1Wrong: The first byte of received header was not 0xFF.";
+
+  case XYZrobotServoError::HeaderByte2Wrong:
+    return TO_STR_PREFIX "HeaderByte2Wrong: The second byte of the received header was not 0xFF.";
+
+  case XYZrobotServoError::IdWrong:
+    return TO_STR_PREFIX "IdWrong: The ID byte in the received header was wrong.";
+
+  case XYZrobotServoError::CmdWrong:
+    return TO_STR_PREFIX "CmdWrong: The CMD bytes in the received header was wrong.";
+
+  case XYZrobotServoError::SizeWrong:
+    return TO_STR_PREFIX "SizeWrong: The size byte in the received header was wrong.";
+
+  case XYZrobotServoError::Data1Timeout:
+    return TO_STR_PREFIX
+      "Data1Timeout: There was a timeout reading the first expected block of data in the "
+      "acknowledgment.";
+
+  case XYZrobotServoError::Data2Timeout:
+    return TO_STR_PREFIX
+      "Data2Timeout: There was a timeout reading the second expected block of data in the "
+      "acknowledgment.";
+
+  case XYZrobotServoError::Checksum1Wrong:
+    return TO_STR_PREFIX "Checksum1Wrong: The first byte of the checksum was wrong.";
+
+  case XYZrobotServoError::Checksum2Wrong:
+    return TO_STR_PREFIX "Checksum2Wrong: The second byte of the checksum was wrong.";
+
+  case XYZrobotServoError::ReadOffsetWrong:
+    return TO_STR_PREFIX
+      "ReadOffsetWrong: The offset byte returned by an EEPROM Read or RAM Read command was "
+      "wrong.";
+
+  case XYZrobotServoError::ReadLengthWrong:
+    return TO_STR_PREFIX
+      "ReadLengthWrong: The length byte returned by an EEPROM Read or RAM Read command was "
+      "wrong.";
+  }
+  return TO_STR_PREFIX "Unknown";
+
+#undef TO_STR_PREFIX
+}
+
 XYZrobotServo::XYZrobotServo(Stream& stream, uint8_t id)
 {
   this->stream = &stream;

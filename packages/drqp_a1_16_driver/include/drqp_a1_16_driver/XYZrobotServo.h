@@ -72,70 +72,13 @@ enum class XYZrobotServoError {
   ReadLengthWrong = 17,
 };
 
+std::string to_string(XYZrobotServoError errorCode);
+
 template <class charT, class charTraitsT>
 static inline std::basic_ostream<charT, charTraitsT>& operator<<(
   std::basic_ostream<charT, charTraitsT>& out, XYZrobotServoError errorCode)
 {
-  out << "A1-16 servo error ";
-  switch (errorCode) {
-  case XYZrobotServoError::None:
-    out << "None: No error.";
-    break;
-
-  case XYZrobotServoError::HeaderTimeout:
-    out << "HeaderTimeout: There was a timeout waiting to receive the 7-byte acknowledgment "
-           "header.";
-    break;
-
-  case XYZrobotServoError::HeaderByte1Wrong:
-    out << "HeaderByte1Wrong: The first byte of received header was not 0xFF.";
-    break;
-
-  case XYZrobotServoError::HeaderByte2Wrong:
-    out << "HeaderByte2Wrong: The second byte of the received header was not 0xFF.";
-    break;
-
-  case XYZrobotServoError::IdWrong:
-    out << "IdWrong: The ID byte in the received header was wrong.";
-    break;
-
-  case XYZrobotServoError::CmdWrong:
-    out << "CmdWrong: The CMD bytes in the received header was wrong.";
-    break;
-
-  case XYZrobotServoError::SizeWrong:
-    out << "SizeWrong: The size byte in the received header was wrong.";
-    break;
-
-  case XYZrobotServoError::Data1Timeout:
-    out << "Data1Timeout: There was a timeout reading the first expected block of data in the "
-           "acknowledgment.";
-    break;
-
-  case XYZrobotServoError::Data2Timeout:
-    out << "Data2Timeout: There was a timeout reading the second expected block of data in the "
-           "acknowledgment.";
-    break;
-
-  case XYZrobotServoError::Checksum1Wrong:
-    out << "Checksum1Wrong: The first byte of the checksum was wrong.";
-    break;
-
-  case XYZrobotServoError::Checksum2Wrong:
-    out << "Checksum2Wrong: The second byte of the checksum was wrong.";
-    break;
-
-  case XYZrobotServoError::ReadOffsetWrong:
-    out << "ReadOffsetWrong: The offset byte returned by an EEPROM Read or RAM Read command was "
-           "wrong.";
-    break;
-
-  case XYZrobotServoError::ReadLengthWrong:
-    out << "ReadLengthWrong: The length byte returned by an EEPROM Read or RAM Read command was "
-           "wrong.";
-    break;
-  }
-  return out;
+  return out << to_string(errorCode);
 }
 
 enum class XYZrobotServoBaudRate {
