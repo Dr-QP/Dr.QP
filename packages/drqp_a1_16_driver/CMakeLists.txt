@@ -39,6 +39,15 @@ install(TARGETS
   RUNTIME DESTINATION bin
 )
 
+add_executable(node src/Node.cpp)
+target_link_libraries(node drqp_a1_16_driver)
+
+# Install executables for `ros2 run`
+install(TARGETS
+  node
+  DESTINATION lib/${PROJECT_NAME})
+
+
 # Export modern CMake targets
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
