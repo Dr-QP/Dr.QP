@@ -1,0 +1,11 @@
+%YAML 1.1
+---
+
+default:
+  name: local
+  value: true
+  class: serialdev
+
+connection: &con00
+  accepter: tcp,2022
+  connector: serialdev,/dev/ttySC0,115200n81,local
