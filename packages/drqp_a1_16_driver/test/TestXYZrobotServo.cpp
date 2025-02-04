@@ -167,6 +167,29 @@ void neutralPoseSJog(SerialProtocol& servoSerial)
   REQUIRE_THAT(waitForPosition(testServoOther, kStartGoal), GoalPositionWithin(kStartGoal));
 }
 
+void neutralPoseDynamicSJog(SerialProtocol& servoSerial)
+{
+  XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
+  SJogCommand<kServoCount> posCmd = {
+    200,  // Give it enough time,
+    {
+      SJogData{kStartGoal, SET_POSITION_CONTROL, kTestServo},
+      SJogData{kStartGoal, SET_POSITION_CONTROL, kTestServoOther},
+    }};
+
+  DynamicSJogCommand sposCmd(kServoCount);
+  sposCmd.setPlaytime(200);
+  sposCmd.setData(0, SJogData{kStartGoal, SET_POSITION_CONTROL, kTestServo});
+  sposCmd.setData(1, SJogData{kStartGoal, SET_POSITION_CONTROL, kTestServoOther});
+  servo.sendJogCommand(posCmd);
+
+  XYZrobotServo testServo(servoSerial, kTestServo);
+  XYZrobotServo testServoOther(servoSerial, kTestServoOther);
+
+  REQUIRE_THAT(waitForPosition(testServo, kStartGoal), GoalPositionWithin(kStartGoal));
+  REQUIRE_THAT(waitForPosition(testServoOther, kStartGoal), GoalPositionWithin(kStartGoal));
+}
+
 std::filesystem::path makeRecordingName(const std::string& suffix)
 {
   static const std::filesystem::path basePath = TEST_DATA_DIR_IN_SOURCE_TREE;
@@ -295,6 +318,13 @@ TEST_CASE("A1-16 servo set S-JOG")
   std::unique_ptr<SerialProtocol> serial = makeSerial("set-neutral-pose-s-jog");
 
   neutralPoseSJog(*serial);
+}
+
+TEST_CASE("A1-16 servo set dynamic S-JOG")
+{
+  std::unique_ptr<SerialProtocol> serial = makeSerial("set-neutral-pose-dynamic-s-jog");
+
+  neutralPoseDynamicSJog(*serial);
 }
 
 TEST_CASE("A1-16 servo set torque off and back on via S-JOG")
