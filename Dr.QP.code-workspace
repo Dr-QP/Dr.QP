@@ -170,6 +170,12 @@
         "problemMatcher": [
           "$ament_lint_cmake"
         ],
+      },
+      {
+        "label": "ser2net",
+        "type": "shell",
+        "command": "ser2net -d -c ${workspaceFolder}/scripts/ser2net/ser2net.yml",
+        "problemMatcher": []
       }
     ]
   },
