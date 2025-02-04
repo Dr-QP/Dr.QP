@@ -82,22 +82,22 @@ static inline std::basic_ostream<charT, charTraitsT>& operator<<(
 }
 
 enum class XYZrobotServoBaudRate {
-  B9600 = 1,
-  B19200 = 2,
-  B57600 = 6,
-  B115200 = 12,
+  xyzB9600 = 1,
+  xyzB19200 = 2,
+  xyzB57600 = 6,
+  xyzB115200 = 12,
 };
 
 static inline uint32_t XYZrobotServoBaudRateToInt(XYZrobotServoBaudRate baud)
 {
   switch (baud) {
-  case XYZrobotServoBaudRate::B9600:
+  case XYZrobotServoBaudRate::xyzB9600:
     return 9600;
-  case XYZrobotServoBaudRate::B19200:
+  case XYZrobotServoBaudRate::xyzB19200:
     return 19200;
-  case XYZrobotServoBaudRate::B57600:
+  case XYZrobotServoBaudRate::xyzB57600:
     return 57600;
-  case XYZrobotServoBaudRate::B115200:
+  case XYZrobotServoBaudRate::xyzB115200:
     return 115200;
   default:
     return 0;
