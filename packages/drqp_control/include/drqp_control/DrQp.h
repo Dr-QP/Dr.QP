@@ -101,7 +101,6 @@ const AllLegsNamesArray kAllLegsNames = []() {
   return legs;
 }();
 
-
 static inline std::string legNameForServo(ServoId id)
 {
   return kAllLegsNames[kServoIdToLeg[id]];
@@ -215,7 +214,6 @@ const Pose kFoldedUpCompactPose = []() {
   return legs;
 }();
 
-
 using FrontRightLeg = LegServoPositionsArray;
 using FrontLeftLeg = LegServoPositionsArray;
 using MiddleRightLeg = LegServoPositionsArray;
@@ -237,6 +235,7 @@ const AllLegsNamesArray kLegClassNames = []() {
   return legs;
 }();
 
+// clang-format off
 static const Pose kStandingNarrowPose = {
   FrontRightLeg{382, 702, 184},
   FrontLeftLeg{642, 322, 840},
@@ -369,3 +368,4 @@ static const Pose kWalkSeq[] = {
   kPoseStep1,
   kStandingNarrowPose
 };
+// clang-format on
