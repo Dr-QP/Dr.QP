@@ -15,7 +15,7 @@ function(add_catch2_unit_test TARGET)
   if(ARG_RESULT_FILE)
     set(RESULT_FILE "${ARG_RESULT_FILE}")
   else()
-    set(RESULT_FILE "${AMENT_TEST_RESULTS_DIR}/${PROJECT_NAME}/${TARGET}.catch2.xml")
+    set(RESULT_FILE "${AMENT_TEST_RESULTS_DIR}/${PROJECT_NAME}/${TARGET}-catch2.xunit.xml")
   endif()
 
   if(ARG_OUTPUT_FILE)

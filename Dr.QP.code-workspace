@@ -43,6 +43,7 @@
       "rogalmic.bash-debug",
       "mads-hartmann.bash-ide-vscode",
       "anjali.clipboard-history",
+      "ryanluker.vscode-coverage-gutters",
     ]
   },
   "launch": {
@@ -75,12 +76,14 @@
         "name": "drqp_a1_16_driver_tests",
         "program": "build/drqp_a1_16_driver/test/drqp_a1_16_driver_tests",
         "args": [
-          "--use-real-hardware"
+          "--use-real-hardware",
+          // "--device", "192.168.0.181:2022",
+          // "[focus]",
         ],
         "cwd": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/test/",
         "preLaunchTask": "Dr.QP colcon build",
       },
-{
+      {
         "type": "lldb",
         "request": "launch",
         "name": "drqp pose_reader",
@@ -114,9 +117,14 @@
           // "--packages-up-to",
           // "drqp_serial",
           // "--executor=sequential",
+          "--mixin",
+          "coverage-gcc",
+          "coverage-pytest",
+
           "--cmake-args",
           " -GNinja",
           " -DCMAKE_BUILD_TYPE=Debug",
+
           // " --debugger",
           // " --debugger-pipe=/tmp/drqp_serial"
         ],
@@ -144,6 +152,8 @@
           "console_cohesion+",
           "summary+",
           "status+",
+          "--mixin",
+          "coverage-pytest",
           // "--packages-up-to",
           // "drqp_serial",
         ],
@@ -157,9 +167,21 @@
         "label": "Dr.QP colcon test"
       },
       {
+        "label": "Dr.QP colcon lcov-result",
+        "type": "shell",
+        "command": "colcon lcov-result",
+        "options": {
+          "cwd": "${workspaceFolder}",
+          "env": {
+            "GCOV_COMMAND": "${workspaceFolder}/scripts/gcov"
+          }
+        },
+        "problemMatcher": [],
+      },
+      {
         "label": "Dr.QP clean",
         "type": "shell",
-        "command": "rm -rf build install log",
+        "command": "rm -rf build install log lcov",
         "options": {
           "cwd": "${workspaceFolder}"
         },
@@ -222,5 +244,14 @@
     "[cpp]": {
       "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
     },
+
+    "coverage-gutters.coverageBaseDir": "lcov",
+    "coverage-gutters.coverageFileNames": [
+      "total_coverage.info",
+    ],
+    "coverage-gutters.showLineCoverage": true,
+    "coverage-gutters.highlightdark": "rgba(0, 122, 30, 0.1)",
+    "coverage-gutters.partialHighlightDark": "rgba(163, 149, 0, 0.1)",
+    "coverage-gutters.noHighlightDark": "rgba(163, 0, 0, 0.1)"
   },
 }

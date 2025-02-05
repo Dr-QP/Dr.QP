@@ -85,6 +85,37 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ros-tooling/action-ros-ci@v0.3
+        id: action_ros_ci_step
+        env:
+          GCOV_COMMAND: "${{ github.workspace }}/scripts/gcov"
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
+          colcon-defaults: |
+            {
+              "build": {
+                "mixin": ["coverage-gcc", "coverage-pytest"]
+              },
+              "test": {
+                "mixin": ["coverage-pytest"]
+              }
+            }
+          # pin the repository in the workflow to a specific commit to avoid
+          # changes in colcon-mixin-repository from breaking your tests.
+          colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml
 
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ros_ws/lcov/total_coverage.info,ros_ws/coveragepy/.coverage
+          disable_search: true
+          flags: unittests
+          name: codecov-umbrella
+
+      - uses: actions/upload-artifact@v4
+        # upload the logs even when the build fails
+        if: always()
+        with:
+          name: colcon-logs
+          path: ${{ steps.action_ros_ci_step.outputs.ros-workspace-directory-name }}/log

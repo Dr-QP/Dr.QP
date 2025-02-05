@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+# Hackaround the colcon lcov-result trying to use GCOV_COMMAND= as GENHTML_COMMAND=
+# This also speeds up CI by skipping the html generation that is thrown away later
+if [[ $@ =~ --quiet ]]; then
+  exit 0
+fi
+
+exec llvm-cov gcov "$@"

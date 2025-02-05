@@ -26,11 +26,12 @@
 #define CATCH_CONFIG_RUNNER  // For custom main
 #include <catch_ros2/catch.hpp>
 
+#include "drqp_serial/SerialProtocol.h"
+#include "drqp_a1_16_driver/SerialFactory.h"
 #include "drqp_a1_16_driver/XYZrobotServo.h"
 
 #include "drqp_serial/SerialPlayer.h"
 #include "drqp_serial/SerialRecordingProxy.h"
-#include "drqp_serial/UnixSerial.h"
 
 using ServoId = uint8_t;
 constexpr uint8_t kServoCount = 2;
@@ -48,6 +49,7 @@ constexpr uint16_t kTestGoal = 812;
 // TODO(anton-matosov): Add command line options for these options
 struct TestOptions
 {
+  std::string serialAddress = "/dev/ttySC0";
   bool useRealHardware = false;
   bool resetTorque = false;
   bool skipReturnToNeutral = false;
@@ -63,6 +65,8 @@ int main(int argc, char* argv[])
   cli |= Opt(testOptions.useRealHardware)["--use-real-hardware"]("Use real hardware servos");
   cli |= Opt(testOptions.resetTorque)["--reset-torque"]("reset torque");
   cli |= Opt(testOptions.skipReturnToNeutral)["--no-neutral"]("Skip return to neutral");
+  cli |= Opt(
+    testOptions.serialAddress, "device")["--device"]("UART device or IP:PORT for ser2net device");
 
   session.cli(cli);
 
@@ -217,7 +221,7 @@ std::unique_ptr<SerialProtocol> makeSerial(const std::string& suffix)
   const auto filename = makeRecordingName(suffix);
 
   if (testOptions.useRealHardware) {
-    std::unique_ptr<UnixSerial> serial = std::make_unique<UnixSerial>("/dev/ttySC0");
+    std::unique_ptr<SerialProtocol> serial = makeSerialForDevice(testOptions.serialAddress);
     serial->begin(115200);
     if (testOptions.resetTorque) {
       torqueOff(*serial);
@@ -323,7 +327,7 @@ TEST_CASE("A1-16 servo set I-JOG")
   neutralPoseIJog(*serial);
 }
 
-TEST_CASE("A1-16 servo set dynamic I-JOG", "[focus]")
+TEST_CASE("A1-16 servo set dynamic I-JOG")
 {
   std::unique_ptr<SerialProtocol> serial = makeSerial("set-neutral-pose-dynamic-i-jog");
 
@@ -337,7 +341,7 @@ TEST_CASE("A1-16 servo set S-JOG")
   neutralPoseSJog(*serial);
 }
 
-TEST_CASE("A1-16 servo set dynamic S-JOG", "[focus]")
+TEST_CASE("A1-16 servo set dynamic S-JOG")
 {
   std::unique_ptr<SerialProtocol> serial = makeSerial("set-neutral-pose-dynamic-s-jog");
 
