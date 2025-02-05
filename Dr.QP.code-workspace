@@ -76,7 +76,8 @@
         "program": "build/drqp_a1_16_driver/test/drqp_a1_16_driver_tests",
         "args": [
           "--use-real-hardware",
-          // "[focus]"
+          // "--device", "192.168.0.181:2022",
+          // "[focus]",
         ],
         "cwd": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/test/",
         "preLaunchTask": "Dr.QP colcon build",
