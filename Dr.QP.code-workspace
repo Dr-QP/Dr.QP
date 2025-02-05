@@ -116,11 +116,19 @@
           // "--packages-up-to",
           // "drqp_serial",
           // "--executor=sequential",
+          "--mixin",
+          "coverage-gcc",
+          "coverage-pytest",
+
           "--cmake-args",
           " -GNinja",
           " -DCMAKE_BUILD_TYPE=Debug",
+
+          // "-DCMAKE_CXX_FLAGS='-fprofile-arcs -ftest-coverage'",
+          // "-DCMAKE_C_FLAGS='-fprofile-arcs -ftest-coverage'",
           // " --debugger",
           // " --debugger-pipe=/tmp/drqp_serial"
+
         ],
         "problemMatcher": [
           "$catkin-gcc"
@@ -133,8 +141,8 @@
         "options": {
           "env": {
             "CMAKE_EXPORT_COMPILE_COMMANDS": "1",
-            "CC": "clang",
-            "CXX": "clang++"
+            // "CC": "clang",
+            // "CXX": "clang++"
           }
         }
       },
@@ -146,6 +154,8 @@
           "console_cohesion+",
           "summary+",
           "status+",
+          "--mixin",
+          "coverage-pytest",
           // "--packages-up-to",
           // "drqp_serial",
         ],

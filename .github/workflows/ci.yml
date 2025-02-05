@@ -16,8 +16,8 @@ on:
 
 env:
   ROS_DISTRO: humble
-  CC: clang
-  CXX: clang++
+  # CC: clang # clang coverage is not compatible with ROS tooling
+  # CXX: clang++
   REGISTRY: ghcr.io
   REGISTRY_USERNAME: ${{ github.actor == 'nektos/act' && 'anton-matosov' || github.actor }}
   # CACHE_FROM: ${{ github.actor == 'nektos/act' && 'type=local,src=./docker-cache' || 'type=gha' }}
