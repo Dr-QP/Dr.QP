@@ -117,9 +117,9 @@
           // "--packages-up-to",
           // "drqp_serial",
           // "--executor=sequential",
-          "--mixin",
-          "coverage-gcc",
-          "coverage-pytest",
+          // "--mixin",
+          // "coverage-gcc",
+          // "coverage-pytest",
 
           "--cmake-args",
           " -GNinja",
@@ -152,8 +152,8 @@
           "console_cohesion+",
           "summary+",
           "status+",
-          "--mixin",
-          "coverage-pytest",
+          // "--mixin",
+          // "coverage-pytest",
           // "--packages-up-to",
           // "drqp_serial",
         ],
@@ -181,7 +181,7 @@
       {
         "label": "Dr.QP clean",
         "type": "shell",
-        "command": "rm -rf build install log lcov",
+        "command": "rm -rf build install log lcov .cache",
         "options": {
           "cwd": "${workspaceFolder}"
         },

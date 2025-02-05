@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include <drqp_serial/SerialProtocol.h>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <stdexcept>
@@ -49,30 +50,67 @@ void forEachServo(
 
 void readAll(SerialProtocol& servoSerial)
 {
-  forEachServo(0, [&servoSerial](ServoId servoId, int) {
-    XYZrobotServo servo(servoSerial, servoId);
+  std::cout << "static const Pose kPose = {\n  ";
 
-    XYZrobotServoStatus status = servo.readStatus();
-    if (servo.isFailed()) {
-      std::cerr << legNameForServo(servoId) << " servo: " << static_cast<int>(servoId)
-                << " error reading status: " << servo.getLastError() << "\n";
-    } else {
-      std::cout << legNameForServo(servoId) << "\tservo: " << static_cast<int>(servoId) << ": "
-                << status.position << "\t posRef: " << status.posRef
-                << "\t statusError: " << status.statusError << "\n";
+  bool needNewline = false;
+  for (int leg = kFirstLegId; leg < kLegIdCount; ++leg) {
+    std::cout << kLegClassNames[leg] << "{";
+    bool needsComma = false;
+    for (const ServoId servoId : kAllLegServoIds[leg]) {
+      XYZrobotServo servo(servoSerial, servoId);
+
+      XYZrobotServoStatus status = servo.readStatus();
+      if (servo.isFailed()) {
+        std::cerr << legNameForServo(servoId) << " servo: " << static_cast<int>(servoId)
+                  << " error reading status: " << servo.getLastError() << "\n";
+        return;
+      }
+
+      if (needsComma) {
+        std::cout << ", ";
+      }
+      std::cout << status.position;
+      needsComma = true;
     }
+    std::cout << "}, ";
+    if (needNewline) {
+      std::cout << "\n  ";
+    }
+    needNewline = !needNewline;
+  }
+  std::cout << "};\n";
+}
+
+void playPose(const Pose pose, const uint8_t playtime, SerialProtocol& servoSerial)
+{
+  SJogCommand<kServoCount> sposCmd;
+  sposCmd.playtime = playtime;
+
+  size_t servoIndex = 0;
+  forEachServo(0, [&pose, &sposCmd, &servoIndex](ServoId servoId, int servoIndexInLeg) {
+    sposCmd.data[servoIndex] = {
+      pose[kServoIdToLeg[servoId]][servoIndexInLeg], SET_POSITION_CONTROL, servoId};
+
+    servoIndex++;
   });
+  XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
+  // servo.sendJogCommand(sposCmd);
+  servo.sendJogCommand(sposCmd);
+  if (servo.isFailed()) {
+    throw std::runtime_error("set position failed: " + to_string(servo.getLastError()));
+  }
+  std::this_thread::sleep_for(std::chrono::milliseconds(playtime * 10));
 }
 
 int main(const int argc, const char* const argv[])
 {
   try {
-    const std::string pose = (argc >= 2 ? argv[1] : "neutral");
+    const std::string action = (argc >= 2 ? argv[1] : "neutral");
     const std::string deviceAddress = (argc >= 3 ? argv[2] : "/dev/ttySC0");
 
     std::unique_ptr<SerialProtocol> servoSerial = makeSerialForDevice(deviceAddress);
 
-    if (pose == "off" || pose == "relax") {
+    if (action == "off" || action == "relax") {
       forEachServo(0, [&servoSerial](ServoId servoId, int) {
         XYZrobotServo servo(*servoSerial, servoId);
         servo.torqueOff();
@@ -86,7 +124,7 @@ int main(const int argc, const char* const argv[])
       });
 
       return 0;
-    } else if (pose == "read") {
+    } else if (action == "read") {
       readAll(*servoSerial);
 
       return 0;
@@ -110,41 +148,44 @@ int main(const int argc, const char* const argv[])
       }
     });
 
-    const Pose kPoseSet = [&pose]() {
-      if (pose == "neutral") {
-        return kNeutralPose;
-      } else if (pose == "stand") {
-        return kStandingPose;
-      } else if (pose == "down") {
-        return kFoldedDownPose;
-      } else if (pose == "up") {
-        return kFoldedUpPose;
-      } else if (pose == "upc") {
-        return kFoldedUpCompactPose;
+    if (action == "walk") {
+      for (const Pose& pose : kWalkSeq) {
+        playPose(pose, 20, *servoSerial);
       }
+    } else {
+      const Pose kPoseSet = [&action]() {
+        if (action == "neutral") {
+          return kNeutralPose;
+        } else if (action == "stand") {
+          return kStandingPose;
+        } else if (action == "narrow") {
+          return kStandingNarrowPose;
+        } else if (action == "down") {
+          return kFoldedDownPose;
+        } else if (action == "up") {
+          return kFoldedUpPose;
+        } else if (action == "upc") {
+          return kFoldedUpCompactPose;
+        } else if (action == "step1") {
+          return kPoseStep1;
+        } else if (action == "step2") {
+          return kPoseStep2;
+        } else if (action == "step3") {
+          return kPoseStep3;
+        } else if (action == "step4") {
+          return kPoseStep4;
+        } else if (action == "step5") {
+          return kPoseStep5;
+        } else if (action == "step6") {
+          return kPoseStep6;
+        } else if (action == "step7") {
+          return kPoseStep7;
+        }
 
-      return kNeutralPose;
-    }();
+        return kNeutralPose;
+      }();
 
-    IJogCommand<kServoCount> iposCmd;
-    SJogCommand<kServoCount> sposCmd;
-    sposCmd.playtime = 150;
-
-    size_t servoIndex = 0;
-    forEachServo(
-      0, [&kPoseSet, &iposCmd, &sposCmd, &servoIndex](ServoId servoId, int servoIndexInLeg) {
-        iposCmd.data[servoIndex] = {
-          kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg], SET_POSITION_CONTROL, servoId, 150};
-        sposCmd.data[servoIndex] = {
-          kPoseSet[kServoIdToLeg[servoId]][servoIndexInLeg], SET_POSITION_CONTROL, servoId};
-
-        servoIndex++;
-      });
-    XYZrobotServo servo(*servoSerial, XYZrobotServo::kBroadcastId);
-    // servo.sendJogCommand(sposCmd);
-    servo.sendJogCommand(iposCmd);
-    if (servo.isFailed()) {
-      throw std::runtime_error("set position failed: " + to_string(servo.getLastError()));
+      playPose(kPoseSet, 150, *servoSerial);
     }
   } catch (std::exception& e) {
     std::cerr << "Control call failed with exception: " << e.what() << "\n";
