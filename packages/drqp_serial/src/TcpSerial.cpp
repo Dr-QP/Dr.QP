@@ -19,25 +19,23 @@
 // THE SOFTWARE.
 
 #include "drqp_serial/TcpSerial.h"
+#include "AsioCommon.h"
 
-#include <iostream>
-#include <optional>
 #include <vector>
 
 #include <boost/asio.hpp>
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
-#include <boost/thread.hpp>
 
 tcp::resolver::iterator resolve(
-  boost::asio::io_service& ioService, const std::string& ip, uint16_t port)
+  boost::asio::io_service& ioService, const std::string& ip, std::string port)
 {
   tcp::resolver resolver(ioService);
-  tcp::resolver::query query(ip, std::to_string(port));
+  tcp::resolver::query query(ip, port);
   return resolver.resolve(query);
 }
 
-TcpSerial::TcpSerial(const std::string& ip, uint16_t port) : socket_(ioService_)
+TcpSerial::TcpSerial(const std::string& ip, std::string port) : socket_(ioService_)
 {
   connect(socket_, resolve(ioService_, ip, port));
 }
@@ -46,7 +44,7 @@ void TcpSerial::begin(const uint32_t baudRate, const uint8_t transferConfig) {}
 
 size_t TcpSerial::writeBytes(const void* buffer, size_t size)
 {
-  return boost::asio::write(socket_, boost::asio::buffer(buffer, size));
+  return doWithTimeout<AsyncOp::Write>(ioService_, socket_, boost::asio::buffer(buffer, size));
 }
 
 void TcpSerial::flushRead()
@@ -71,40 +69,7 @@ bool TcpSerial::available()
   return bytesReadable != 0;
 }
 
-template <typename MutableBufferSequence>
-size_t read_with_timeout(
-  boost::asio::io_service& ioService, tcp::socket& sock, const MutableBufferSequence& buffers)
-{
-  std::optional<boost::system::error_code> timer_result;
-  boost::asio::deadline_timer timer(ioService);
-  timer.expires_from_now(boost::posix_time::milliseconds(50));
-  timer.async_wait([&timer_result](const auto& ec) { timer_result = ec; });
-
-  std::optional<boost::system::error_code> read_result;
-  std::optional<std::size_t> bytesTransferred;
-  async_read(sock, buffers, [&read_result, &bytesTransferred](const auto& ec, std::size_t bt) {
-    read_result = ec;
-    bytesTransferred = bt;
-  });
-
-  ioService.reset();
-  while (ioService.run_one()) {
-    if (read_result)
-      timer.cancel();
-    else if (timer_result)
-      sock.cancel();
-  }
-
-  if (read_result && *read_result) {
-    std::cerr << read_result->message() << "\n";
-    return 0;
-    // throw boost::system::system_error(*read_result);
-  }
-
-  return *bytesTransferred;
-}
-
 size_t TcpSerial::readBytes(void* buffer, size_t size)
 {
-  return read_with_timeout(ioService_, socket_, boost::asio::buffer(buffer, size));
+  return doWithTimeout<AsyncOp::Read>(ioService_, socket_, boost::asio::buffer(buffer, size));
 }

@@ -1,3 +1,4 @@
+// Copyright (C) Pololu Corporation.
 // Copyright (c) 2017-2025 Anton Matosov
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,29 +21,9 @@
 
 #pragma once
 
+#include <drqp_serial/SerialProtocol.h>
+
+#include <memory>
 #include <string>
 
-#include <boost/asio.hpp>
-
-#include "drqp_serial/SerialProtocol.h"
-
-using tcp = boost::asio::ip::tcp;
-
-class TcpSerial : public SerialProtocol
-{
-public:
-  TcpSerial(const std::string& ip, std::string port);
-
-  using SerialProtocol::begin;
-  void begin(const uint32_t baudRate, const uint8_t transferConfig) override;
-
-  bool available() override;
-  void flushRead() override;
-
-  size_t writeBytes(const void* buffer, size_t size) override;
-  size_t readBytes(void* buffer, size_t size) override;
-
-private:
-  boost::asio::io_service ioService_;
-  tcp::socket socket_;
-};
+std::unique_ptr<SerialProtocol> makeSerialForDevice(std::string deviceAddress);

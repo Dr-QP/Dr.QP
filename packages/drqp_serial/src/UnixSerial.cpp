@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "drqp_serial/UnixSerial.h"
+#include "AsioCommon.h"
 
 #include <vector>
 
@@ -95,7 +96,8 @@ void UnixSerial::begin(const uint32_t baudRate, const uint8_t transferConfig)
 
 size_t UnixSerial::writeBytes(const void* buffer, size_t size)
 {
-  return boost::asio::write(impl_->serial_, boost::asio::buffer(buffer, size));
+  return doWithTimeout<AsyncOp::Write>(
+    impl_->ioService_, impl_->serial_, boost::asio::buffer(buffer, size));
 }
 
 void UnixSerial::flushRead()
@@ -115,5 +117,6 @@ bool UnixSerial::available()
 
 size_t UnixSerial::readBytes(void* buffer, size_t size)
 {
-  return boost::asio::read(impl_->serial_, boost::asio::buffer(buffer, size));
+  return doWithTimeout<AsyncOp::Read>(
+    impl_->ioService_, impl_->serial_, boost::asio::buffer(buffer, size));
 }

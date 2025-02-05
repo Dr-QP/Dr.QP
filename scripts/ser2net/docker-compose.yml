@@ -2,14 +2,14 @@ version: '3.4'
 services:
   ser2net:
     # image: danrue/ser2net:3.5
-    build: 
+    build:
       context: .
       dockerfile: ser2net.dockerfile
     volumes:
-      - ./ser2net.conf:/etc/ser2net.conf
+      - ./ser2net.yml:/etc/ser2net.yml
     restart:
       unless-stopped
-    # Ports and devices, same as in ser2net.conf
+    # Ports and devices, same as in ser2net.yml
     ports:
       - 2022:2022
     devices:

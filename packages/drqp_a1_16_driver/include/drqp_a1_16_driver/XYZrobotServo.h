@@ -21,9 +21,15 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <array>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
+#include <chrono>
 
 #include "drqp_serial/Stream.h"
 
@@ -72,89 +78,32 @@ enum class XYZrobotServoError {
   ReadLengthWrong = 17,
 };
 
+std::string to_string(XYZrobotServoError errorCode);
+
 template <class charT, class charTraitsT>
 static inline std::basic_ostream<charT, charTraitsT>& operator<<(
   std::basic_ostream<charT, charTraitsT>& out, XYZrobotServoError errorCode)
 {
-  out << "A1-16 servo error ";
-  switch (errorCode) {
-  case XYZrobotServoError::None:
-    out << "None: No error.";
-    break;
-
-  case XYZrobotServoError::HeaderTimeout:
-    out << "HeaderTimeout: There was a timeout waiting to receive the 7-byte acknowledgment "
-           "header.";
-    break;
-
-  case XYZrobotServoError::HeaderByte1Wrong:
-    out << "HeaderByte1Wrong: The first byte of received header was not 0xFF.";
-    break;
-
-  case XYZrobotServoError::HeaderByte2Wrong:
-    out << "HeaderByte2Wrong: The second byte of the received header was not 0xFF.";
-    break;
-
-  case XYZrobotServoError::IdWrong:
-    out << "IdWrong: The ID byte in the received header was wrong.";
-    break;
-
-  case XYZrobotServoError::CmdWrong:
-    out << "CmdWrong: The CMD bytes in the received header was wrong.";
-    break;
-
-  case XYZrobotServoError::SizeWrong:
-    out << "SizeWrong: The size byte in the received header was wrong.";
-    break;
-
-  case XYZrobotServoError::Data1Timeout:
-    out << "Data1Timeout: There was a timeout reading the first expected block of data in the "
-           "acknowledgment.";
-    break;
-
-  case XYZrobotServoError::Data2Timeout:
-    out << "Data2Timeout: There was a timeout reading the second expected block of data in the "
-           "acknowledgment.";
-    break;
-
-  case XYZrobotServoError::Checksum1Wrong:
-    out << "Checksum1Wrong: The first byte of the checksum was wrong.";
-    break;
-
-  case XYZrobotServoError::Checksum2Wrong:
-    out << "Checksum2Wrong: The second byte of the checksum was wrong.";
-    break;
-
-  case XYZrobotServoError::ReadOffsetWrong:
-    out << "ReadOffsetWrong: The offset byte returned by an EEPROM Read or RAM Read command was "
-           "wrong.";
-    break;
-
-  case XYZrobotServoError::ReadLengthWrong:
-    out << "ReadLengthWrong: The length byte returned by an EEPROM Read or RAM Read command was "
-           "wrong.";
-    break;
-  }
-  return out;
+  return out << to_string(errorCode);
 }
 
 enum class XYZrobotServoBaudRate {
-  B9600 = 1,
-  B19200 = 2,
-  B57600 = 6,
-  B115200 = 12,
+  xyzB9600 = 1,
+  xyzB19200 = 2,
+  xyzB57600 = 6,
+  xyzB115200 = 12,
 };
 
 static inline uint32_t XYZrobotServoBaudRateToInt(XYZrobotServoBaudRate baud)
 {
   switch (baud) {
-  case XYZrobotServoBaudRate::B9600:
+  case XYZrobotServoBaudRate::xyzB9600:
     return 9600;
-  case XYZrobotServoBaudRate::B19200:
+  case XYZrobotServoBaudRate::xyzB19200:
     return 19200;
-  case XYZrobotServoBaudRate::B57600:
+  case XYZrobotServoBaudRate::xyzB57600:
     return 57600;
-  case XYZrobotServoBaudRate::B115200:
+  case XYZrobotServoBaudRate::xyzB115200:
     return 115200;
   default:
     return 0;
@@ -179,6 +128,12 @@ enum class XYZrobotServoSpdctrlPolicy {
   OpenLoop = 0,
   CloseLoop = 1,
 };
+
+template <class DurationT>
+uint8_t toPlaytime(const DurationT& duration)
+{
+  return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() / 10;
+}
 
 /// This struct represents the data returned by a STAT command.
 struct XYZrobotServoStatus
@@ -207,6 +162,45 @@ struct SJogCommand
   std::array<SJogData, ServoCount> data;
 };
 
+class DynamicSJogCommand
+{
+public:
+  explicit DynamicSJogCommand(size_t count) : count_(count)
+  {
+    size_ = count * sizeof(SJogData) + sizeof(uint8_t);
+    data_.reset(new uint8_t[size_]);
+  }
+
+  void* data() const
+  {
+    return data_.get();
+  }
+  size_t size() const
+  {
+    return size_;
+  }
+
+  void setPlaytime(uint8_t playtime)
+  {
+    *(data_.get()) = playtime;
+  }
+
+  SJogData& at(size_t index)
+  {
+    if (index >= count_) {
+      throw std::out_of_range("SJog data index out of rang");
+    }
+
+    SJogData* spos = reinterpret_cast<SJogData*>(data_.get() + 1);
+    return spos[index];
+  }
+
+private:
+  std::unique_ptr<uint8_t[]> data_ = nullptr;
+  size_t size_ = 0;
+  size_t count_;
+};
+
 struct IJogData
 {
   uint16_t goal;
@@ -221,6 +215,29 @@ template <size_t ServoCount>
 struct IJogCommand
 {
   std::array<IJogData, ServoCount> data;
+};
+class DynamicIJogCommand
+{
+public:
+  explicit DynamicIJogCommand(size_t count) : data_(count) {}
+
+  const IJogData* data() const
+  {
+    return data_.data();
+  }
+
+  size_t size() const
+  {
+    return data_.size() * sizeof(data_[0]);
+  }
+
+  IJogData& at(size_t pos)
+  {
+    return data_.at(pos);
+  }
+
+private:
+  std::vector<IJogData> data_;
 };
 
 #define SET_POSITION_CONTROL 0
@@ -433,15 +450,25 @@ public:
   }
 
   template <size_t ServoCount>
-  void sendJogCommand(SJogCommand<ServoCount>& cmd)
+  void sendJogCommand(const SJogCommand<ServoCount>& cmd)
   {
     sendRequest(kBroadcastId, CMD_S_JOG, &cmd, sizeof(cmd));
   }
 
+  void sendJogCommand(const DynamicSJogCommand& cmd)
+  {
+    sendRequest(kBroadcastId, CMD_S_JOG, cmd.data(), cmd.size());
+  }
+
   template <size_t ServoCount>
-  void sendJogCommand(IJogCommand<ServoCount>& cmd)
+  void sendJogCommand(const IJogCommand<ServoCount>& cmd)
   {
     sendRequest(kBroadcastId, CMD_I_JOG, &cmd, sizeof(cmd));
+  }
+
+  void sendJogCommand(const DynamicIJogCommand& cmd)
+  {
+    sendRequest(kBroadcastId, CMD_I_JOG, cmd.data(), cmd.size());
   }
 
 private:

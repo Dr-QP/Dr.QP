@@ -42,7 +42,7 @@ UnixSerial servoSerial("/dev/ttySC0");  // on Dr.QP raspi
 
 // https://techtinkering.com/2013/04/02/connecting-to-a-remote-serial-port-over-tcpip/
 // connection: &con00
-//   accepter: tcp,2000
+//   accepter: tcp,2022
 //   connector: serialdev,/dev/ttySC0,115200n81,local
 //   trace-both: '/var/log/trace-\p'
 // TcpSerial servoSerial("192.168.1.136", 2022);

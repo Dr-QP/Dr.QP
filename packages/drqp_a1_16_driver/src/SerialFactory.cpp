@@ -18,31 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#pragma once
+#include "drqp_a1_16_driver/SerialFactory.h"
 
-#include <string>
+#include <drqp_serial/TcpSerial.h>
+#include <drqp_serial/UnixSerial.h>
 
-#include <boost/asio.hpp>
-
-#include "drqp_serial/SerialProtocol.h"
-
-using tcp = boost::asio::ip::tcp;
-
-class TcpSerial : public SerialProtocol
+std::unique_ptr<SerialProtocol> makeSerialForDevice(std::string deviceAddress)
 {
-public:
-  TcpSerial(const std::string& ip, std::string port);
-
-  using SerialProtocol::begin;
-  void begin(const uint32_t baudRate, const uint8_t transferConfig) override;
-
-  bool available() override;
-  void flushRead() override;
-
-  size_t writeBytes(const void* buffer, size_t size) override;
-  size_t readBytes(void* buffer, size_t size) override;
-
-private:
-  boost::asio::io_service ioService_;
-  tcp::socket socket_;
-};
+  std::unique_ptr<SerialProtocol> servoSerial;
+  if (deviceAddress.at(0) == '/') {
+    servoSerial = std::make_unique<UnixSerial>(deviceAddress);
+    servoSerial->begin(115200);
+  } else {
+    std::string port = "2022";
+    if (auto pos = deviceAddress.find(':'); pos != std::string::npos) {
+      port = deviceAddress.substr(pos + 1);
+      deviceAddress.erase(pos);
+    }
+    servoSerial = std::make_unique<TcpSerial>(deviceAddress, port);
+  }
+  return servoSerial;
+}

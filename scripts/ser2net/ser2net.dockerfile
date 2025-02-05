@@ -8,5 +8,5 @@ RUN apt-get update && \
 CMD echo -n "Starting " && \
     ser2net -v && \
     ls /dev/tty* && \
-    cat /etc/ser2net.conf && \
-    ser2net -d -c /etc/ser2net.conf
+    cat /etc/ser2net.yml && \
+    ser2net -d -c /etc/ser2net.yml
