@@ -49,19 +49,30 @@ void forEachServo(
 
 void readAll(SerialProtocol& servoSerial)
 {
-  forEachServo(0, [&servoSerial](ServoId servoId, int) {
-    XYZrobotServo servo(servoSerial, servoId);
+  std::cout << "static const Pose kPose = {\n";
+  for (int leg = kFrontRightLegId; leg < kLegIdCount; ++leg) {
+    std::cout << "  " << kLegClassNames[leg] << "{";
+    bool needsComma = false;
+    for (const ServoId servoId : kAllLegServoIds[leg]) {
+      XYZrobotServo servo(servoSerial, servoId);
 
-    XYZrobotServoStatus status = servo.readStatus();
-    if (servo.isFailed()) {
-      std::cerr << legNameForServo(servoId) << " servo: " << static_cast<int>(servoId)
+      XYZrobotServoStatus status = servo.readStatus();
+      if (servo.isFailed())
+      {
+        std::cerr << legNameForServo(servoId) << " servo: " << static_cast<int>(servoId)
                 << " error reading status: " << servo.getLastError() << "\n";
-    } else {
-      std::cout << legNameForServo(servoId) << "\tservo: " << static_cast<int>(servoId) << ": "
-                << status.position << "\t posRef: " << status.posRef
-                << "\t statusError: " << status.statusError << "\n";
+        return;
+      }
+
+      if (needsComma) {
+        std::cout << ", ";
+      }
+      std::cout << status.position;
+      needsComma = true;
     }
-  });
+    std::cout << "},\n";//  // " << kAllLegsNames[leg] << "\n";
+  }
+  std::cout << "};\n";
 }
 
 int main(const int argc, const char* const argv[])
@@ -115,6 +126,8 @@ int main(const int argc, const char* const argv[])
         return kNeutralPose;
       } else if (pose == "stand") {
         return kStandingPose;
+      } else if (pose == "narrow") {
+        return kStandingNarrowPose;
       } else if (pose == "down") {
         return kFoldedDownPose;
       } else if (pose == "up") {

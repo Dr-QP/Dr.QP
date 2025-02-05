@@ -101,6 +101,7 @@ const AllLegsNamesArray kAllLegsNames = []() {
   return legs;
 }();
 
+
 static inline std::string legNameForServo(ServoId id)
 {
   return kAllLegsNames[kServoIdToLeg[id]];
@@ -213,3 +214,97 @@ const Pose kFoldedUpCompactPose = []() {
     kBase + kLeft * kCoxaOffset, kBase + kLeft * kFemurOffset, kBase + kLeft * kTibiaOffset};
   return legs;
 }();
+
+
+using FrontRightLeg = LegServoPositionsArray;
+using FrontLeftLeg = LegServoPositionsArray;
+using MiddleRightLeg = LegServoPositionsArray;
+using MiddleLeftLeg = LegServoPositionsArray;
+using BackRightLeg = LegServoPositionsArray;
+using BackLeftLeg = LegServoPositionsArray;
+
+const AllLegsNamesArray kLegClassNames = []() {
+  AllLegsNamesArray legs;
+  legs[kFrontRightLegId] = "FrontRightLeg";
+  legs[kFrontLeftLegId] = "FrontLeftLeg";
+
+  legs[kMiddleRightLegId] = "MiddleRightLeg";
+  legs[kMiddleLeftLegId] = "MiddleLeftLeg";
+
+  legs[kBackRightLegId] = "BackRightLeg";
+  legs[kBackLeftLegId] = "BackLeftLeg";
+
+  return legs;
+}();
+
+static const Pose kStandingNarrowPose = {
+  FrontRightLeg{382, 702, 184},
+  FrontLeftLeg{642, 322, 840},
+  MiddleRightLeg{512, 702, 184},
+  MiddleLeftLeg{512, 322, 840},
+  BackRightLeg{642, 702, 184},
+  BackLeftLeg{382, 322, 840},
+};
+
+static const Pose kPoseStep1 = { // left middle, right front and back up
+  FrontRightLeg{381, 808, 187},
+  FrontLeftLeg{642, 325, 840},
+  MiddleRightLeg{512, 701, 182},
+  MiddleLeftLeg{512, 183, 839},
+  BackRightLeg{637, 813, 181},
+  BackLeftLeg{382, 326, 839},
+};
+
+static const Pose kPoseStep2 = { // left middle, right front and back up and fwd, other down and bwd
+  FrontRightLeg{443, 808, 187},
+  FrontLeftLeg{690, 326, 840},
+  MiddleRightLeg{455, 701, 183},
+  MiddleLeftLeg{454, 183, 839},
+  BackRightLeg{681, 813, 181},
+  BackLeftLeg{432, 326, 839},
+};
+
+static const Pose kPoseStep3 = { // left middle, right front and back fwd, other bwd, all down
+  FrontRightLeg{442, 662, 258},
+  FrontLeftLeg{690, 325, 841},
+  MiddleRightLeg{455, 701, 183},
+  MiddleLeftLeg{455, 337, 786},
+  BackRightLeg{681, 677, 235},
+  BackLeftLeg{432, 326, 839},
+};
+
+static const Pose kPoseStep4 = { // left middle, right front and back fwd and down, other bwd and up
+  FrontRightLeg{442, 662, 258},
+  FrontLeftLeg{691, 202, 841},
+  MiddleRightLeg{455, 826, 183},
+  MiddleLeftLeg{455, 337, 786},
+  BackRightLeg{681, 677, 235},
+  BackLeftLeg{431, 211, 839},
+};
+
+static const Pose kPoseStep5 = { // left middle, right front and back bwd and down, other fwd and up
+  FrontRightLeg{346, 662, 258},
+  FrontLeftLeg{566, 202, 842},
+  MiddleRightLeg{588, 826, 183},
+  MiddleLeftLeg{561, 337, 786},
+  BackRightLeg{578, 677, 235},
+  BackLeftLeg{338, 212, 840},
+};
+
+static const Pose kPoseStep6 = { // left middle, right front and back bwd, other fwd, all down
+  FrontRightLeg{346, 637, 283},
+  FrontLeftLeg{566, 370, 810},
+  MiddleRightLeg{588, 645, 216},
+  MiddleLeftLeg{560, 337, 786},
+  BackRightLeg{580, 627, 234},
+  BackLeftLeg{338, 350, 766},
+};
+
+static const Pose kPoseStep7 = { // left middle, right front and back bwd and up, other fwd and up
+  FrontRightLeg{346, 792, 208},
+  FrontLeftLeg{567, 370, 810},
+  MiddleRightLeg{588, 645, 216},
+  MiddleLeftLeg{561, 207, 829},
+  BackRightLeg{579, 810, 177},
+  BackLeftLeg{337, 350, 766},
+};
