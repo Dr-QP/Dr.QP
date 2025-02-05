@@ -145,7 +145,7 @@ int main(const int argc, const char* const argv[])
 
     if (action == "walk") {
       for (const Pose& pose : kWalkSeq) {
-        playPose(pose, 15, *servoSerial);
+        playPose(pose, 20, *servoSerial);
       }
     }
     else {
