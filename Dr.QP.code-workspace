@@ -181,7 +181,7 @@
       {
         "label": "Dr.QP clean",
         "type": "shell",
-        "command": "rm -rf build install log lcov",
+        "command": "rm -rf build install log lcov .cache",
         "options": {
           "cwd": "${workspaceFolder}"
         },
