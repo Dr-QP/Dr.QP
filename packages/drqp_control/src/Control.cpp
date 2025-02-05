@@ -181,7 +181,6 @@ int main(const int argc, const char* const argv[])
 
       playPose(kPoseSet, 150, *servoSerial);
     }
-
   } catch (std::exception& e) {
     std::cerr << "Control call failed with exception: " << e.what() << "\n";
     return 1;
