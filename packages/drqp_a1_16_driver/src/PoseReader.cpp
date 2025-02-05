@@ -38,10 +38,10 @@
 
 using namespace std::chrono_literals;
 
-class PoseSetter : public rclcpp::Node
+class PoseReader : public rclcpp::Node
 {
 public:
-  PoseSetter() : Node("drqp_pose_reader")
+  PoseReader() : Node("drqp_pose_reader")
   {
     // declare_parameter("device_address", "/dev/ttySC0");
     declare_parameter("device_address", "192.168.0.181:2022");
@@ -90,7 +90,7 @@ public:
 int main(int argc, char* argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<PoseSetter>());
+  rclcpp::spin(std::make_shared<PoseReader>());
   rclcpp::shutdown();
   return 0;
 }
