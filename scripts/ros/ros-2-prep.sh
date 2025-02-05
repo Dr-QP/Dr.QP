@@ -66,7 +66,11 @@ sudo apt install -y -q --no-install-recommends \
   git \
   libbullet-dev \
   python3-colcon-common-extensions \
+  python3-colcon-mixin \
   python3-colcon-coveragepy-result \
+  python3-coverage \
+  python3-colcon-lcov-result \
+  lcov \
   python3-flake8 \
   python3-pip \
   python3-pytest-cov \
