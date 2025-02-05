@@ -16,8 +16,8 @@ on:
 
 env:
   ROS_DISTRO: humble
-  # CC: clang # clang coverage is not compatible with ROS tooling
-  # CXX: clang++
+  CC: clang
+  CXX: clang++
   REGISTRY: ghcr.io
   REGISTRY_USERNAME: ${{ github.actor == 'nektos/act' && 'anton-matosov' || github.actor }}
   # CACHE_FROM: ${{ github.actor == 'nektos/act' && 'type=local,src=./docker-cache' || 'type=gha' }}
@@ -86,6 +86,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ros-tooling/action-ros-ci@v0.3
         id: action_ros_ci_step
+        env:
+          GCOV_COMMAND: "${{ github.workspace }}/scripts/gcov"
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
           colcon-defaults: |
