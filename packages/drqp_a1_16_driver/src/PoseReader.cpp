@@ -56,35 +56,35 @@ public:
 
     auto timerPeriod = std::chrono::milliseconds(get_parameter("period_ms").as_int());
     timer_ = this->create_wall_timer(timerPeriod, [this, timerPeriod]() {
-        try {
-          auto pose = drqp_interfaces::msg::MultiSyncPositionCommand{};
-          pose.playtime = toPlaytime(timerPeriod);
-          std::unique_ptr<SerialProtocol> servoSerial;
-          servoSerial = makeSerialForDevice(get_parameter("device_address").as_string());
-          servoSerial->begin(get_parameter("baud_rate").as_int());
+      try {
+        auto pose = drqp_interfaces::msg::MultiSyncPositionCommand{};
+        pose.playtime = toPlaytime(timerPeriod);
+        std::unique_ptr<SerialProtocol> servoSerial;
+        servoSerial = makeSerialForDevice(get_parameter("device_address").as_string());
+        servoSerial->begin(get_parameter("baud_rate").as_int());
 
-          const uint8_t firstId = get_parameter("first_id").as_int();
-          const uint8_t lastId = get_parameter("last_id").as_int();
+        const uint8_t firstId = get_parameter("first_id").as_int();
+        const uint8_t lastId = get_parameter("last_id").as_int();
 
-          for (uint8_t servoId = firstId; servoId <= lastId; ++servoId) {
-            XYZrobotServo servo(*servoSerial, servoId);
+        for (uint8_t servoId = firstId; servoId <= lastId; ++servoId) {
+          XYZrobotServo servo(*servoSerial, servoId);
 
-            XYZrobotServoStatus status = servo.readStatus();
-            if (servo.isFailed()) {
-              continue;
-            }
-            drqp_interfaces::msg::SyncPositionCommand pos;
-            pos.id = servoId;
-            pos.position = status.position;
-            pose.positions.push_back(pos);
+          XYZrobotServoStatus status = servo.readStatus();
+          if (servo.isFailed()) {
+            continue;
           }
-          subscription_->publish(pose);
-        } catch (std::exception& e) {
-          RCLCPP_ERROR(get_logger(), "Exception occurred in pose read handler %s", e.what());
-        } catch (...) {
-          RCLCPP_ERROR(get_logger(), "Unknown exception occurred in pose read handler.");
+          drqp_interfaces::msg::SyncPositionCommand pos;
+          pos.id = servoId;
+          pos.position = status.position;
+          pose.positions.push_back(pos);
         }
-      });
+        subscription_->publish(pose);
+      } catch (std::exception& e) {
+        RCLCPP_ERROR(get_logger(), "Exception occurred in pose read handler %s", e.what());
+      } catch (...) {
+        RCLCPP_ERROR(get_logger(), "Unknown exception occurred in pose read handler.");
+      }
+    });
   }
 
   rclcpp::TimerBase::SharedPtr timer_;
