@@ -29,6 +29,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <chrono>
 
 #include "drqp_serial/Stream.h"
 
@@ -127,6 +128,12 @@ enum class XYZrobotServoSpdctrlPolicy {
   OpenLoop = 0,
   CloseLoop = 1,
 };
+
+template <class DurationT>
+uint8_t toPlaytime(const DurationT& duration)
+{
+  return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() / 10;
+}
 
 /// This struct represents the data returned by a STAT command.
 struct XYZrobotServoStatus

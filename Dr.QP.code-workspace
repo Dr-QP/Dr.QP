@@ -80,6 +80,15 @@
         "cwd": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/test/",
         "preLaunchTask": "Dr.QP colcon build",
       },
+{
+        "type": "lldb",
+        "request": "launch",
+        "name": "drqp pose_reader",
+        "program": "build/drqp_a1_16_driver/pose_reader",
+        "args": [],
+        "cwd": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/",
+        "preLaunchTask": "Dr.QP colcon build",
+      },
       {
         "type": "bashdb",
         "request": "launch",

@@ -23,6 +23,7 @@
 #include <drqp_a1_16_driver/SerialFactory.h>
 #include <drqp_a1_16_driver/XYZrobotServo.h>
 
+#include <chrono>
 #include <cstdint>
 #include <exception>
 #include <functional>
@@ -48,39 +49,42 @@ public:
     declare_parameter("baud_rate", 115200);
     declare_parameter("first_id", 1);
     declare_parameter("last_id", 18);
+    declare_parameter("period_ms", 500);
 
     subscription_ =
       this->create_publisher<drqp_interfaces::msg::MultiSyncPositionCommand>("pose", 10);
 
-    timer_ = this->create_wall_timer(500ms, [this]() {
-      try {
-        auto pose = drqp_interfaces::msg::MultiSyncPositionCommand{};
-        std::unique_ptr<SerialProtocol> servoSerial;
-        servoSerial = makeSerialForDevice(get_parameter("device_address").as_string());
-        servoSerial->begin(get_parameter("baud_rate").as_int());
+    auto timerPeriod = std::chrono::milliseconds(get_parameter("period_ms").as_int());
+    timer_ = this->create_wall_timer(timerPeriod, [this, timerPeriod]() {
+        try {
+          auto pose = drqp_interfaces::msg::MultiSyncPositionCommand{};
+          pose.playtime = toPlaytime(timerPeriod);
+          std::unique_ptr<SerialProtocol> servoSerial;
+          servoSerial = makeSerialForDevice(get_parameter("device_address").as_string());
+          servoSerial->begin(get_parameter("baud_rate").as_int());
 
-        const uint8_t firstId = get_parameter("first_id").as_int();
-        const uint8_t lastId = get_parameter("last_id").as_int();
+          const uint8_t firstId = get_parameter("first_id").as_int();
+          const uint8_t lastId = get_parameter("last_id").as_int();
 
-        for (uint8_t servoId = firstId; servoId <= lastId; ++servoId) {
-          XYZrobotServo servo(*servoSerial, servoId);
+          for (uint8_t servoId = firstId; servoId <= lastId; ++servoId) {
+            XYZrobotServo servo(*servoSerial, servoId);
 
-          XYZrobotServoStatus status = servo.readStatus();
-          if (servo.isFailed()) {
-            continue;
+            XYZrobotServoStatus status = servo.readStatus();
+            if (servo.isFailed()) {
+              continue;
+            }
+            drqp_interfaces::msg::SyncPositionCommand pos;
+            pos.id = servoId;
+            pos.position = status.position;
+            pose.positions.push_back(pos);
           }
-          drqp_interfaces::msg::SyncPositionCommand pos;
-          pos.id = servoId;
-          pos.position = status.position;
-          pose.positions.push_back(pos);
+          subscription_->publish(pose);
+        } catch (std::exception& e) {
+          RCLCPP_ERROR(get_logger(), "Exception occurred in pose read handler %s", e.what());
+        } catch (...) {
+          RCLCPP_ERROR(get_logger(), "Unknown exception occurred in pose read handler.");
         }
-        subscription_->publish(pose);
-      } catch (std::exception& e) {
-        RCLCPP_ERROR(get_logger(), "Exception occurred in pose read handler %s", e.what());
-      } catch (...) {
-        RCLCPP_ERROR(get_logger(), "Unknown exception occurred in pose read handler.");
-      }
-    });
+      });
   }
 
   rclcpp::TimerBase::SharedPtr timer_;
