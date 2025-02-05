@@ -50,9 +50,11 @@ void forEachServo(
 
 void readAll(SerialProtocol& servoSerial)
 {
-  std::cout << "static const Pose kPose = {\n";
-  for (int leg = kFrontRightLegId; leg < kLegIdCount; ++leg) {
-    std::cout << "  " << kLegClassNames[leg] << "{";
+  std::cout << "static const Pose kPose = {\n  ";
+
+  bool needNewline = false;
+  for (int leg = kFirstLegId; leg < kLegIdCount; ++leg) {
+    std::cout << kLegClassNames[leg] << "{";
     bool needsComma = false;
     for (const ServoId servoId : kAllLegServoIds[leg]) {
       XYZrobotServo servo(servoSerial, servoId);
@@ -70,7 +72,11 @@ void readAll(SerialProtocol& servoSerial)
       std::cout << status.position;
       needsComma = true;
     }
-    std::cout << "},\n";  //  // " << kAllLegsNames[leg] << "\n";
+    std::cout << "}, ";
+    if (needNewline) {
+      std::cout << "\n  ";
+    }
+    needNewline = !needNewline;
   }
   std::cout << "};\n";
 }

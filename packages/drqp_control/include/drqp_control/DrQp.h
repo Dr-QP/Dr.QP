@@ -28,6 +28,7 @@ using ServoId = uint8_t;
 enum LegId {
   // Head is at 12 o'clock
 
+  kFirstLegId = 0,
   kFrontLeftLegId = 0,  // 11 o'clock
   kFrontRightLegId,     // 1 o'clock
 
@@ -77,7 +78,7 @@ using ServoIdToLegArray = std::array<ServoId, kServoMaxId>;
 const ServoIdToLegArray kServoIdToLeg = []() {
   ServoIdToLegArray mappings;
 
-  for (int leg = kFrontRightLegId; leg < kLegIdCount; ++leg) {
+  for (int leg = kFirstLegId; leg < kLegIdCount; ++leg) {
     for (const ServoId id : kAllLegServoIds[leg]) {
       mappings[id] = leg;
     }
