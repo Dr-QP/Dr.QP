@@ -75,12 +75,13 @@
         "name": "drqp_a1_16_driver_tests",
         "program": "build/drqp_a1_16_driver/test/drqp_a1_16_driver_tests",
         "args": [
-          "--use-real-hardware"
+          "--use-real-hardware",
+          // "[focus]"
         ],
         "cwd": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/test/",
         "preLaunchTask": "Dr.QP colcon build",
       },
-{
+      {
         "type": "lldb",
         "request": "launch",
         "name": "drqp pose_reader",

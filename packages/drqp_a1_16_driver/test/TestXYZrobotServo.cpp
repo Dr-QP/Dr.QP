@@ -323,7 +323,7 @@ TEST_CASE("A1-16 servo set I-JOG")
   neutralPoseIJog(*serial);
 }
 
-TEST_CASE("A1-16 servo set dynamic I-JOG", "[focus]")
+TEST_CASE("A1-16 servo set dynamic I-JOG")
 {
   std::unique_ptr<SerialProtocol> serial = makeSerial("set-neutral-pose-dynamic-i-jog");
 
@@ -337,7 +337,7 @@ TEST_CASE("A1-16 servo set S-JOG")
   neutralPoseSJog(*serial);
 }
 
-TEST_CASE("A1-16 servo set dynamic S-JOG", "[focus]")
+TEST_CASE("A1-16 servo set dynamic S-JOG")
 {
   std::unique_ptr<SerialProtocol> serial = makeSerial("set-neutral-pose-dynamic-s-jog");
 
