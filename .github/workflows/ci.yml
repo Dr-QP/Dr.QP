@@ -78,12 +78,6 @@ jobs:
           imageName: ghcr.io/dr-qp/humble-ros-devcontainer
           cacheFrom: ghcr.io/dr-qp/humble-ros-devcontainer
           push: always
-          runCmd: |
-            sudo apt update
-            rosdep update
-            ./scripts/ros/ros-dep.sh
-            colcon build
-            colcon test
 
   ros-ci:
     runs-on: ubuntu-latest
@@ -132,3 +126,26 @@ jobs:
         with:
           name: colcon-logs
           path: ${{ steps.action_ros_ci_step.outputs.ros-workspace-directory-name }}/log
+
+  dev-container-ci:
+      runs-on: ubuntu-latest
+      needs: [build-image]
+      steps:
+        - name: Log in to the Container registry
+          uses: docker/login-action@v3
+          with:
+            registry: ${{ env.REGISTRY }}
+            username: ${{ env.REGISTRY_USERNAME }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+
+        - name: Test pre-built dev container image
+          uses: devcontainers/ci@v0.3
+          with:
+            cacheFrom: ghcr.io/dr-qp/humble-ros-devcontainer
+            push: never
+            runCmd: |
+              sudo apt update
+              rosdep update
+              ./scripts/ros/ros-dep.sh
+              colcon build
+              colcon test
