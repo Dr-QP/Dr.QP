@@ -75,8 +75,8 @@ jobs:
       - name: Pre-build dev container image
         uses: devcontainers/ci@v0.3
         with:
-          imageName: ghcr.io/Dr.QP/humble-ros-devcontainer
-          cacheFrom: ghcr.io/Dr.QP/humble-ros-devcontainer
+          imageName: ghcr.io/dr-qp/humble-ros-devcontainer
+          cacheFrom: ghcr.io/dr-qp/humble-ros-devcontainer
           push: always
           runCmd: |
             ./scripts/ros/ros-dep.sh
