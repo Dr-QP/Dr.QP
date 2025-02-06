@@ -39,7 +39,7 @@ sorted_packages=($(for element in "${packages[@]}"; do echo "$element"; done | s
 # Generate the installation script
 output_script="$script_dir/install_dependencies.sh"
 cat <<EOF > "$output_script"
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo "Installing dependencies: ${sorted_packages[*]}"
 sudo apt-get install -y "${sorted_packages[@]}"
