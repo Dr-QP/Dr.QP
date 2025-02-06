@@ -36,9 +36,11 @@ fi
 output_script="$script_dir/install_dependencies.sh"
 cat <<EOF > "$output_script"
 #!/bin/bash
+sudo apt update
 
 echo "Installing dependencies: ${packages[*]}"
 sudo apt-get install -y -q --no-install-recommends "${packages[@]}"
+
 EOF
 
 # Make the new script executable

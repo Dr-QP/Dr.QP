@@ -5,20 +5,18 @@ script_dir="$(dirname $0)"
 source "$script_dir/__utils.sh"
 
 if isCI; then
-  set +x
+  set -x
 fi
 
 # Basic prerequisites
 sudo apt update \
   && sudo apt install -y -q --no-install-recommends \
-  locales \
   software-properties-common \
   wget \
   curl \
   gnupg2 \
   lsb-release \
   ca-certificates
-
 # Enable community-maintained free and open-source software (universe).
 sudo add-apt-repository universe -y
 
@@ -34,6 +32,7 @@ function is_utf8_locale()
 }
 
 if [[ $(is_utf8_locale) == 'no' ]]; then
+  sudo apt install -y -q --no-install-recommends locales
   sudo locale-gen en_US en_US.UTF-8
   sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
   export LANG=en_US.UTF-8

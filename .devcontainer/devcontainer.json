@@ -9,6 +9,9 @@
       "UID": "1000"
     }
   },
+  "onCreateCommand": {
+    "ros-dep-gen": "./scripts/ros/ros-dep-gen.sh"
+  },
   "customizations": {
     "vscode": {
       "extensions": [
