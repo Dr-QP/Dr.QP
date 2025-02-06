@@ -3,6 +3,8 @@
 script_dir=$(dirname $0)
 source "$script_dir/__utils.sh"
 
+source /opt/ros/"$ROS_DISTRO"/setup.bash --
+
 # to lower is needed for Boost as it's name for CMake is
 keys=$(rosdep keys --from-paths "$sources_dir" | tr '[:upper:]' '[:lower:]')
 resolved_list=$(rosdep resolve $keys 2>/dev/null)
@@ -32,14 +34,15 @@ if [[ ${#packages[@]} -eq 0 ]]; then
     exit 1
 fi
 
+sorted_packages=($(for element in "${packages[@]}"; do echo "$element"; done | sort))
+
 # Generate the installation script
 output_script="$script_dir/install_dependencies.sh"
 cat <<EOF > "$output_script"
 #!/bin/bash
-sudo apt update
 
-echo "Installing dependencies: ${packages[*]}"
-sudo apt-get install -y -q --no-install-recommends "${packages[@]}"
+echo "Installing dependencies: ${sorted_packages[*]}"
+sudo apt-get install -y -q --no-install-recommends "${sorted_packages[@]}"
 
 EOF
 
