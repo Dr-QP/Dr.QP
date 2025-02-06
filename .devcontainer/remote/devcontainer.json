@@ -1,5 +1,5 @@
 {
-  "name": "ROS 2 Workspace humble-ros-base",
+  "name": "ROS 2 remote workspace",
   "remoteUser": "rosdev",
   "image": "ghcr.io/dr-qp/ros-desktop",
   "customizations": {

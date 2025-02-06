@@ -1,5 +1,5 @@
 {
-  "name": "ROS 2 Workspace humble-ros-base",
+  "name": "ROS 2 local workspace",
   "remoteUser": "rosdev",
   "build": {
     "dockerfile": "../../scripts/ros-desktop.dockerfile",
