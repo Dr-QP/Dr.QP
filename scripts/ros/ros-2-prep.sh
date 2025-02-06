@@ -16,7 +16,8 @@ sudo apt update \
   curl \
   gnupg2 \
   lsb-release \
-  ca-certificates
+  ca-certificates \
+  apt-utils
 # Enable community-maintained free and open-source software (universe).
 sudo add-apt-repository universe -y
 
