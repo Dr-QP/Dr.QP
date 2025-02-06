@@ -42,7 +42,7 @@ cat <<EOF > "$output_script"
 #!/bin/bash
 
 echo "Installing dependencies: ${sorted_packages[*]}"
-sudo apt-get install -y -q --no-install-recommends "${sorted_packages[@]}"
+sudo apt-get install -y "${sorted_packages[@]}"
 
 EOF
 
