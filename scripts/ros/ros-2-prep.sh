@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 set -e
-set -x
 
 script_dir="$(dirname $0)"
+source "$script_dir/__utils.sh"
+
+if isCI; then
+  set +x
+fi
 
 # Basic prerequisites
 sudo apt update \
@@ -41,7 +45,6 @@ CLANG_VERSION=19
 curl -sSL https://apt.llvm.org/llvm.sh -o "$script_dir/llvm.sh"
 chmod +x "$script_dir/llvm.sh"
 sudo "$script_dir/llvm.sh" $CLANG_VERSION all
-sudo "$script_dir/update-alternatives-clang.sh" $CLANG_VERSION 99999
 
 # Add ros signing keys
 if [[ ! (-f /etc/apt/sources.list.d/ros2-latest.list || -f /etc/apt/sources.list.d/ros2.list) ]]; then
@@ -64,6 +67,7 @@ sudo apt install -y -q --no-install-recommends \
   cmake \
   ninja-build \
   git \
+  git-lfs \
   libbullet-dev \
   python3-colcon-common-extensions \
   python3-colcon-mixin \
@@ -116,4 +120,20 @@ sudo apt-get -y remove nodejs npm # remove old versions if any
 # The NodeSource nodejs package contains both the node binary and npm, so you don’t need to install npm separately.
 sudo apt-get install -y -q --no-install-recommends nodejs
 
-"$script_dir/fix-alternatives.sh"
+
+echo '##################################################'
+echo '#'
+echo '#'  Add /usr/lib/llvm-19/bin to \$PATH
+echo '#'
+echo '#'  for fish \(in ~/.config/fish/config.fish\):
+echo '#'  'set -gx PATH /usr/lib/llvm-19/bin $PATH'
+echo '#'
+echo '#'
+echo '#'  for bash \(in ~/.bashrc\):
+echo '#'  'export PATH="/usr/lib/llvm-19/bin:$PATH"'
+echo '#'
+echo '#'
+echo '#'  for dockerfile
+echo '#'  'ENV PATH="/usr/lib/llvm-19/bin:$PATH"'
+echo '#'
+echo '##################################################'
