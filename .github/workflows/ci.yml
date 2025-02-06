@@ -72,6 +72,17 @@ jobs:
           cache-from: ${{ env.CACHE_FROM }}
           cache-to: ${{ env.CACHE_TO }}
 
+      - name: Pre-build dev container image
+        uses: devcontainers/ci@v0.3
+        with:
+          imageName: ghcr.io/Dr.QP/humble-ros-devcontainer
+          cacheFrom: ghcr.io/Dr.QP/humble-ros-devcontainer
+          push: always
+          runCmd: |
+            ./scripts/ros/ros-dep.sh
+            colcon build
+            colcon test
+
   ros-ci:
     runs-on: ubuntu-latest
     needs: [build-image]
