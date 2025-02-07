@@ -31,7 +31,7 @@
     }
   ],
   "runArgs": [
-    "--network host"
+    "--network", "host"
   ],
   "features": {
   }
