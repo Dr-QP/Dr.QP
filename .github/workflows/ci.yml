@@ -81,7 +81,7 @@ jobs:
     needs: [build-image]
     container:
       image: ${{ needs.build-image.outputs.image }}
-      options: --user 1000:1000 # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
+      options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
 
       # Only needed for nektos/act runs
       # credentials:
