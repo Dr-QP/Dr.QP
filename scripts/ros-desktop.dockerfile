@@ -28,10 +28,10 @@ WORKDIR /home/$USERNAME/ros2_ws
 RUN echo 'source /opt/ros/'$ROS_DISTRO'/setup.bash' >> /home/$USERNAME/.bashrc \
     && echo 'source /home/'$USERNAME'/ros2_ws/install/setup.bash' >> /home/$USERNAME/.bashrc
 
-RUN sudo apt update \
+RUN sudo apt-get update \
     && rosdep update \
-    && apt clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    && sudo apt-get clean \
+    && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Setup entrypoint
 COPY ./ros/ros_entrypoint.sh /
