@@ -109,7 +109,6 @@ sudo apt install -y -q --no-install-recommends \
 sudo apt install -y -q --no-install-recommends python3-rosdep2
 sudo rm -f /etc/ros/rosdep/sources.list.d/*
 sudo rosdep init
-rosdep update
 
 sudo apt install -y -q --no-install-recommends ros-humble-desktop ros-dev-tools
 

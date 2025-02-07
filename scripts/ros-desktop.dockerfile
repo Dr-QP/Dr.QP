@@ -24,9 +24,14 @@ USER $USERNAME
 RUN mkdir -p /home/$USERNAME/ros2_ws/src
 WORKDIR /home/$USERNAME/ros2_ws
 
-# Copy configuration files
+# Add configuration files
 RUN echo 'source /opt/ros/'$ROS_DISTRO'/setup.bash' >> /home/$USERNAME/.bashrc \
     && echo 'source /home/'$USERNAME'/ros2_ws/install/setup.bash' >> /home/$USERNAME/.bashrc
+
+RUN sudo apt update \
+    && rosdep update \
+    && apt clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Setup entrypoint
 COPY ./ros/ros_entrypoint.sh /
