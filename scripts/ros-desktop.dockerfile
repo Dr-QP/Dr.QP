@@ -1,11 +1,17 @@
 # Building off the base image saves a bit of space, but the build time is longer
 FROM ros:humble-ros-base
 
+# TODO (anton-matosov): Investigate if its really needed for devcontainer to use non root user
+# https://docs.github.com/en/actions/sharing-automations/creating-actions/dockerfile-support-for-github-actions#user
+# Docker actions must be run by the default Docker user (root). Do not use the USER instruction in your Dockerfile,
+# because you won't be able to access the GITHUB_WORKSPACE directory. For more information, see Store information
+# in variables and USER reference in the Docker documentation.
 ARG USERNAME=rosdev
 # UID should be 1001 to match ubuntu-latest in order for file writing to work for @action/checkout
 # see https://github.com/actions/checkout/issues/956 for more details
 ARG UID=1001
 ARG GID=$UID
+
 
 # Force clang-format-19 and friends to the default
 ENV PATH="/usr/lib/llvm-19/bin:$PATH"
