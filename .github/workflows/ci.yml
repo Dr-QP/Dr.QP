@@ -6,12 +6,12 @@ on:
       - published
   push:
     branches:
-      - 'develop'
+      - 'main'
     tags:
       - 'v*'
   pull_request:
     branches:
-      - 'develop'
+      - 'main'
       - 'v*'
 
 env:
@@ -57,8 +57,12 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          images:
-            ${{ env.REGISTRY }}/dr-qp/ros-desktop
+          images: ${{ env.REGISTRY }}/dr-qp/ros-desktop
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
 
       - uses: actions/checkout@v4 # Checkout the repository to allow work with nektos/act on non pushed commits
       - name: Build and push Docker image
