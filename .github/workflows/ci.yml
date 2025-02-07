@@ -70,7 +70,7 @@ jobs:
         with:
           context: scripts
           file: scripts/ros-desktop.dockerfile
-          push: true
+          push: ${{ github.actor != 'nektos/act' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: ${{ env.CACHE_FROM }}
@@ -120,7 +120,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         # upload the logs even when the build fails
-        if: always()
+        if: github.actor != 'nektos/act' && always()
         with:
           name: colcon-logs
           path: ${{ steps.action_ros_ci_step.outputs.ros-workspace-directory-name }}/log
@@ -145,6 +145,13 @@ jobs:
               type=ref,event=pr
               type=semver,pattern={{version}}
               type=semver,pattern={{major}}.{{minor}}
+
+        - name: optionally start DinD for act (local testing)
+          if: github.actor == 'nektos/act'
+          run: |
+            env | sort
+            dockerd -H unix:///var/run/dind.sock & sleep 5;
+            echo "DOCKER_HOST=unix:///var/run/dind.sock" >>${GITHUB_ENV}
 
         - name: Build and test dev container image
           uses: devcontainers/ci@v0.3
