@@ -3,7 +3,12 @@
 script_dir=$(dirname $0)
 source "$script_dir/__utils.sh"
 
-source /opt/ros/"$ROS_DISTRO"/setup.bash --
+if [[ -z $ROS_DISTRO ]]; then
+  echo set ROS_DISTRO to required distribution or source setup file
+  exit 1
+fi
+
+source /opt/ros/"$ROS_DISTRO"/setup.bash
 
 # to lower is needed for Boost as it's name for CMake is
 keys=$(rosdep keys --from-paths "$sources_dir" | tr '[:upper:]' '[:lower:]')
@@ -42,7 +47,7 @@ cat <<EOF > "$output_script"
 #!/usr/bin/env bash
 
 echo "Installing dependencies: ${sorted_packages[*]}"
-sudo apt-get install -y "${sorted_packages[@]}"
+sudo apt-get install -y ${sorted_packages[@]}
 
 EOF
 
