@@ -135,13 +135,24 @@ jobs:
             username: ${{ env.REGISTRY_USERNAME }}
             password: ${{ secrets.GITHUB_TOKEN }}
 
+        - name: Extract metadata (tags, labels) for Docker
+          id: meta
+          uses: docker/metadata-action@v5
+          with:
+            tags: |
+              type=ref,event=branch
+              type=ref,event=pr
+              type=semver,pattern={{version}}
+              type=semver,pattern={{major}}.{{minor}}
+
         - name: Build and test dev container image
           uses: devcontainers/ci@v0.3
           with:
-            imageName: ghcr.io/dr-qp/humble-ros-devcontainer
-            cacheFrom: ghcr.io/dr-qp/humble-ros-devcontainer
+            imageName: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer
+            cacheFrom: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer
             push: always # only if runCmd succeeds
             configFile: .devcontainer/local/devcontainer.json
+            imageTag: ${{ steps.meta.outputs.tags }}
             runCmd: |
               sudo apt update
               rosdep update
