@@ -13,6 +13,7 @@ sudo apt update \
   && sudo apt install -y -q --no-install-recommends \
   software-properties-common \
   wget \
+  fish \
   curl \
   gnupg2 \
   lsb-release \
