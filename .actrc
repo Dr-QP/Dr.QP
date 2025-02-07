@@ -1,8 +1,15 @@
--P ubuntu-latest=catthehacker/ubuntu:act-24.04
--P ubuntu-24.04=catthehacker/ubuntu:act-24.04
--P ubuntu-22.04=catthehacker/ubuntu:act-22.04
--P ubuntu-20.04=catthehacker/ubuntu:act-20.04
--P ubuntu-18.04=catthehacker/ubuntu:act-18.04
+# -P ubuntu-latest=catthehacker/ubuntu:act-24.04
+# -P ubuntu-24.04=catthehacker/ubuntu:act-24.04
+# -P ubuntu-22.04=catthehacker/ubuntu:act-22.04
+# -P ubuntu-20.04=catthehacker/ubuntu:act-20.04
+# -P ubuntu-18.04=catthehacker/ubuntu:act-18.04
+
+# corvina-r-d/ubuntu - has dockerd in it to support DinD
+-P ubuntu-latest=ghcr.io/corvina-r-d/ubuntu:act-22.04
+-P ubuntu-24.04=ghcr.io/corvina-r-d/ubuntu:act-24.04
+-P ubuntu-22.04=ghcr.io/corvina-r-d/ubuntu:act-22.04
+-P ubuntu-20.04=ghcr.io/corvina-r-d/ubuntu:act-20.04
+-P ubuntu-18.04=ghcr.io/corvina-r-d/ubuntu:act-18.04
 
 # -P ubuntu-latest=catthehacker/ubuntu:full-24.04
 # -P ubuntu-24.04=catthehacker/ubuntu:full-24.04
