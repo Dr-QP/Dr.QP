@@ -2,7 +2,9 @@
 FROM ros:humble-ros-base
 
 ARG USERNAME=rosdev
-ARG UID=1000
+# UID should be 1001 to match ubuntu-latest in order for file writing to work for @action/checkout
+# see https://github.com/actions/checkout/issues/956 for more details
+ARG UID=1001
 ARG GID=$UID
 
 # Force clang-format-19 and friends to the default
