@@ -3,7 +3,8 @@
   "remoteUser": "rosdev",
   "build": {
     "dockerfile": "../../scripts/ros-desktop.dockerfile",
-    "cacheFrom": "ghcr.io/dr-qp/ros-desktop"
+    "cacheFrom": "ghcr.io/dr-qp/humble-ros-devcontainer:latest"
+    // "cacheFrom": "ghcr.io/dr-qp/humble-ros-devcontainer:main" // Switch to 'main' once available
   },
   "customizations": {
     "vscode": {
@@ -15,20 +16,21 @@
   "workspaceFolder": "/home/rosdev/ros2_ws/",
   "workspaceMount": "source=${localWorkspaceFolder},target=/home/rosdev/ros2_ws/,type=bind",
   "containerEnv": {
-    "SSH_AUTH_SOCK": "/home/rosdev/.1password/agent.sock"
+    // For local dev, allows to use SSH keys from 1password
+    // "SSH_AUTH_SOCK": "/home/rosdev/.1password/agent.sock"
   },
   "mounts": [
     // For local dev, allows to use SSH keys from 1password
-    {
-      "type": "bind",
-      "source": "${localEnv:HOME}/.1password/",
-      "target": "/home/rosdev/.1password/"
-    },
-    {
-      "type": "bind",
-      "source": "${localEnv:HOME}/.ssh/",
-      "target": "/home/rosdev/.ssh/"
-    }
+    // {
+    //   "type": "bind",
+    //   "source": "${localEnv:HOME}/.1password/",
+    //   "target": "/home/rosdev/.1password/"
+    // },
+    // {
+    //   "type": "bind",
+    //   "source": "${localEnv:HOME}/.ssh/",
+    //   "target": "/home/rosdev/.ssh/"
+    // }
   ],
   "runArgs": [
     "--network", "host"
