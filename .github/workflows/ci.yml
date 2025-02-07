@@ -151,7 +151,7 @@ jobs:
           with:
             imageName: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer
             cacheFrom: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer
-            push: always # only if runCmd succeeds
+            push: ${{ github.actor == 'nektos/act' && 'false' || 'always' }} # always == only if runCmd succeeds
             configFile: .devcontainer/local/devcontainer.json
             imageTag: ${{ steps.meta.outputs.tags }}
             runCmd: |
