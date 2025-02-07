@@ -1,5 +1,5 @@
 {
-  "name": "ROS 2 prebuilt workspace",
+  "name": "ROS 2 humble prebuilt",
   "remoteUser": "rosdev",
   "image": "ghcr.io/dr-qp/humble-ros-devcontainer:main",
   "customizations": {
