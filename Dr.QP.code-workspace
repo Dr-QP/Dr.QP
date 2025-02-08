@@ -44,6 +44,8 @@
       "mads-hartmann.bash-ide-vscode",
       "anjali.clipboard-history",
       "ryanluker.vscode-coverage-gutters",
+      "github.vscode-github-actions",
+      "slevesque.vscode-3dviewer",
     ]
   },
   "launch": {

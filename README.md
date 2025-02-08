@@ -1,5 +1,8 @@
 # Dr.QP
 
+[![ci](https://github.com/Dr-QP/Dr.QP/actions/workflows/ci.yml/badge.svg)](https://github.com/Dr-QP/Dr.QP/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Dr-QP/Dr.QP/graph/badge.svg?token=MSNH7AK8XX)](https://codecov.io/gh/Dr-QP/Dr.QP)
+
 ## Bootstrap
 
 1. Follow `scripts/ros/Install-ros.md` to install ROS2
