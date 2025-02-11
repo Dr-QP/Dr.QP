@@ -6,12 +6,12 @@ on:
       - published
   push:
     branches:
-      - 'develop'
+      - 'main'
     tags:
       - 'v*'
   pull_request:
     branches:
-      - 'develop'
+      - 'main'
       - 'v*'
 
 env:
@@ -57,8 +57,12 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          images:
-            ${{ env.REGISTRY }}/dr-qp/ros-desktop
+          images: ${{ env.REGISTRY }}/dr-qp/ros-desktop
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
 
       - uses: actions/checkout@v4 # Checkout the repository to allow work with nektos/act on non pushed commits
       - name: Build and push Docker image
@@ -66,7 +70,7 @@ jobs:
         with:
           context: scripts
           file: scripts/ros-desktop.dockerfile
-          push: true
+          push: ${{ github.actor != 'nektos/act' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: ${{ env.CACHE_FROM }}
@@ -77,6 +81,7 @@ jobs:
     needs: [build-image]
     container:
       image: ${{ needs.build-image.outputs.image }}
+      options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
 
       # Only needed for nektos/act runs
       # credentials:
@@ -106,6 +111,7 @@ jobs:
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
+        if: github.actor != 'nektos/act'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ros_ws/lcov/total_coverage.info,ros_ws/coveragepy/.coverage
@@ -115,7 +121,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         # upload the logs even when the build fails
-        if: always()
+        if: github.actor != 'nektos/act' && always()
         with:
           name: colcon-logs
           path: ${{ steps.action_ros_ci_step.outputs.ros-workspace-directory-name }}/log
@@ -123,6 +129,21 @@ jobs:
   dev-container-ci:
       runs-on: ubuntu-latest
       steps:
+          # Running container will fail with act due to no Docker in Docker, only Docker outside of Docker
+          # https://github.com/Dr-QP/Dr.QP/wiki/Issue-using-%60act%60-and-%60devcontainers-ci%60
+          # DinD requires an image that has dockerd installed, so run with -P ubuntu-latest=ghcr.io/corvina-r-d/ubuntu:act-22.04
+          # DinD requires --priviliged option as well
+        - name: optionally start DinD for act (local testing)
+          if: env.ACT
+          run: |
+            dockerd -H unix:///var/run/dind.sock & sleep 5;
+            echo "DOCKER_HOST=unix:///var/run/dind.sock" >>${GITHUB_ENV}
+
+        - name: optionally test DinD for act (local testing)
+          if: env.ACT
+          run: |
+            docker run --rm hello-world:linux
+
         - uses: actions/checkout@v4
         - name: Log in to the Container registry
           uses: docker/login-action@v3
@@ -131,12 +152,24 @@ jobs:
             username: ${{ env.REGISTRY_USERNAME }}
             password: ${{ secrets.GITHUB_TOKEN }}
 
+        - name: Extract metadata (tags, labels) for Docker
+          id: meta
+          uses: docker/metadata-action@v5
+          with:
+            tags: |
+              type=ref,event=branch
+              type=ref,event=pr
+              type=semver,pattern={{version}}
+              type=semver,pattern={{major}}.{{minor}}
+
         - name: Build and test dev container image
           uses: devcontainers/ci@v0.3
           with:
-            imageName: ghcr.io/dr-qp/humble-ros-devcontainer
-            cacheFrom: ghcr.io/dr-qp/humble-ros-devcontainer
-            push: always # only if runCmd succeeds
+            imageName: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer
+            cacheFrom: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer
+            push: ${{ github.actor == 'nektos/act' && 'false' || 'always' }} # always == only if runCmd succeeds
+            configFile: .devcontainer/source/devcontainer.json
+            imageTag: ${{ steps.meta.outputs.tags }}
             runCmd: |
               sudo apt update
               rosdep update
