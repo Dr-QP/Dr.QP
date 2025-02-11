@@ -30,7 +30,7 @@ jobs:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     outputs:
-      image: ${{ steps.meta.outputs.tags }}
+      image: ${{ steps.build_meta.outputs.tags }}
     permissions:
       contents: read
       packages: write
