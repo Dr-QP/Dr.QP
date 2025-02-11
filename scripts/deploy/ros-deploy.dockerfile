@@ -1,6 +1,7 @@
 ARG OVERLAY_WS=/opt/ros/overlay_ws
 ARG GIT_SHA=main
 ARG GIT_REPO=https://github.com/Dr-QP/Dr.QP.git
+ARG BUILD_IMAGE=ghcr.io/dr-qp/ros-desktop:main
 
 # multi-stage for caching
 FROM ros:humble-ros-base AS cacher
@@ -20,7 +21,7 @@ repositories: \n\
 " > ../overlay.repos
 RUN vcs import ./ < ../overlay.repos
 
-FROM ghcr.io/dr-qp/ros-desktop:main AS builder
+FROM $BUILD_IMAGE AS builder
 
 ARG OVERLAY_WS
 
