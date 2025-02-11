@@ -61,8 +61,8 @@ ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(${${PROJECT_NAME}_BUILD_EXPORT_DEPENDS})
 
 if(BUILD_TESTING)
-  include(../cmake/ClangFormatConfig.cmake)
-  include(../cmake/Catch2Extras.cmake)
+  include(../../cmake/ClangFormatConfig.cmake)
+  include(../../cmake/Catch2Extras.cmake)
   add_subdirectory(test)
 
   find_package(ament_lint_auto REQUIRED)

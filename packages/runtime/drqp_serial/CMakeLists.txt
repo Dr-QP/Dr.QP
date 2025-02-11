@@ -5,7 +5,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter)
 endif()
 
-include(../cmake/PatchDepends.cmake)
+include(../../cmake/PatchDepends.cmake)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -63,8 +63,8 @@ ament_export_dependencies(${${PROJECT_NAME}_BUILD_EXPORT_DEPENDS})
 
 
 if(BUILD_TESTING)
-  include(../cmake/ClangFormatConfig.cmake)
-  include(../cmake/Catch2Extras.cmake)
+  include(../../cmake/ClangFormatConfig.cmake)
+  include(../../cmake/Catch2Extras.cmake)
   add_subdirectory(test)
 
   find_package(ament_lint_auto REQUIRED)

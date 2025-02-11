@@ -31,12 +31,7 @@ ARG DEPLOY_PACKAGE="drqp_control"
 RUN sudo apt-get update \
     && rosdep update \
     && rosdep install --ignore-src -y \
-      --from-paths "$OVERLAY_WS/drqp/packages/drqp_control" \
-      --from-paths "$OVERLAY_WS/drqp/packages/drqp_a1_16_driver" \
-      --from-paths "$OVERLAY_WS/drqp/packages/drqp_interfaces" \
-      --from-paths "$OVERLAY_WS/drqp/packages/drqp_lint_common" \
-      --from-paths "$OVERLAY_WS/drqp/packages/drqp_rapidjson" \
-      --from-paths "$OVERLAY_WS/drqp/packages/drqp_serial" \
+      --from-paths "$OVERLAY_WS/drqp/packages/runtime" \
     && sudo apt-get clean \
     && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
