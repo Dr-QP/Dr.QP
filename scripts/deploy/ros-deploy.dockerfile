@@ -36,10 +36,8 @@ RUN sudo apt-get update \
     && sudo apt-get clean \
     && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-ARG OVERLAY_MIXINS="rel-with-deb-info"
+ARG OVERLAY_MIXINS="ninja rel-with-deb-info"
 RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
-    colcon mixin add default https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml && \
-    colcon mixin update default && \
     colcon build \
       --packages-up-to \
         $DEPLOY_PACKAGE \

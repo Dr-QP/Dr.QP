@@ -53,7 +53,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Docker
-        id: meta
+        id: build_meta
         uses: docker/metadata-action@v5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -71,8 +71,8 @@ jobs:
           context: scripts
           file: scripts/ros-desktop.dockerfile
           push: ${{ github.actor != 'nektos/act' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.build_meta.outputs.tags }}
+          labels: ${{ steps.build_meta.outputs.labels }}
           cache-from: ${{ env.CACHE_FROM }}
           cache-to: ${{ env.CACHE_TO }}
 
@@ -101,6 +101,7 @@ jobs:
           build-args: |
             ROS_DISTRO=${{ env.ROS_DISTRO }}
             GIT_SHA=${{ github.sha }}
+            BUILD_IMAGE=${{ steps.build_meta.outputs.tags }}
 
 
 
