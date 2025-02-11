@@ -2,5 +2,5 @@
 
 script_dir=$(dirname $0)
 
-IMAGE=dr-qp/ros-desktop
-docker build -t dr-qp/ros-desktop --build-arg GIT_SHA=$(git log -1 --format=%H) -f "$script_dir/ros-deploy.dockerfile" "$script_dir"
+IMAGE=ghcr.io/dr-qp/ros-deploy
+docker build -t $IMAGE --build-arg GIT_SHA=$(git log -1 --format=%H) -f "$script_dir/ros-deploy.dockerfile" "$script_dir"
