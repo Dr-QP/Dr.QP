@@ -83,6 +83,10 @@ sudo apt install -y -q --no-install-recommends \
   python3-setuptools \
   python3-vcstool
 
+# install colcon mixins
+colcon mixin add default https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml
+colcon mixin update default
+
 # install some pip packages needed for testing
 python3 -m pip install -U \
   argcomplete \
