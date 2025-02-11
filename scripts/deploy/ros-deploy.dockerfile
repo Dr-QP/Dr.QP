@@ -37,8 +37,8 @@ RUN sudo apt-get update \
     && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ARG OVERLAY_MIXINS="ninja rel-with-deb-info"
-RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
-    colcon build \
+RUN . /opt/ros/$ROS_DISTRO/setup.sh \
+    && colcon build \
       --packages-up-to \
         $DEPLOY_PACKAGE \
       --mixin $OVERLAY_MIXINS

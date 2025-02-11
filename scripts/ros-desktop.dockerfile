@@ -40,6 +40,13 @@ WORKDIR /home/$USERNAME/ros2_ws
 RUN echo 'source /opt/ros/'$ROS_DISTRO'/setup.bash' >> /home/$USERNAME/.bashrc \
     && echo 'source /home/'$USERNAME'/ros2_ws/install/setup.bash' >> /home/$USERNAME/.bashrc
 
+# install colcon mixins under $USERNAME
+RUN colcon mixin add default https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml \
+    && colcon mixin update default \
+    && colcon mixin list \
+    && colcon mixin show
+
+# rosdep update under $USERNAME
 RUN sudo apt-get update \
     && rosdep update \
     && sudo apt-get clean \
