@@ -32,12 +32,20 @@ RUN sudo apt-get update \
     && sudo apt install tree -y \
     && tree $OVERLAY_WS \
     && rosdep update \
-    && rosdep install --from-paths "$OVERLAY_WS/packages/" --ignore-src -y \
+    && rosdep install --ignore-src -y \
+      --from-paths "$OVERLAY_WS/packages/drqp_control" \
+      --from-paths "$OVERLAY_WS/packages/drqp_a1_16_driver" \
+      --from-paths "$OVERLAY_WS/packages/drqp_interfaces" \
+      --from-paths "$OVERLAY_WS/packages/drqp_lint_common" \
+      --from-paths "$OVERLAY_WS/packages/drqp_rapidjson" \
+      --from-paths "$OVERLAY_WS/packages/drqp_serial" \
     && sudo apt-get clean \
     && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-ARG OVERLAY_MIXINS="release"
+ARG OVERLAY_MIXINS="rel-with-deb-info"
 RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
+    colcon mixin add default https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml && \
+    colcon mixin update default && \
     colcon build \
       --packages-select \
         $DEPLOY_PACKAGE \
