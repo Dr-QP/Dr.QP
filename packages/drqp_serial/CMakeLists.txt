@@ -5,12 +5,19 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter)
 endif()
 
+include(../cmake/PatchDepends.cmake)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
 
 ament_package_xml()
+patch_depends_variables()
+
 foreach(dep ${${PROJECT_NAME}_BUILD_DEPENDS})
+  if (dep STREQUAL "boost")
+    set(dep Boost)
+  endif()
+
   find_package(${dep} REQUIRED)
 endforeach()
 
