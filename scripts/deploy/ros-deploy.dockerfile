@@ -29,8 +29,6 @@ COPY --from=cacher $OVERLAY_WS/src/ $OVERLAY_WS
 
 ARG DEPLOY_PACKAGE="drqp_control"
 RUN sudo apt-get update \
-    && sudo apt install tree -y \
-    && tree $OVERLAY_WS \
     && rosdep update \
     && rosdep install --ignore-src -y \
       --from-paths "$OVERLAY_WS/drqp/packages/drqp_control" \
@@ -59,8 +57,6 @@ ARG OVERLAY_WS
 WORKDIR $OVERLAY_WS
 COPY --from=builder $OVERLAY_WS/install $OVERLAY_WS/install
 RUN sudo apt-get update \
-    && sudo apt install tree -y \
-    && tree $OVERLAY_WS \
     && rosdep update \
     && rosdep install --ignore-src -y \
       --from-paths "$OVERLAY_WS/install"\
