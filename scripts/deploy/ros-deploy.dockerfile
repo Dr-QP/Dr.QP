@@ -50,3 +50,27 @@ RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
       --packages-up-to \
         $DEPLOY_PACKAGE \
       --mixin $OVERLAY_MIXINS
+
+# deployment
+FROM ros:humble-ros-base AS deploy
+
+ARG OVERLAY_WS
+
+WORKDIR $OVERLAY_WS
+COPY --from=builder $OVERLAY_WS/install $OVERLAY_WS/install
+RUN sudo apt-get update \
+    && sudo apt install tree -y \
+    && tree $OVERLAY_WS \
+    && rosdep update \
+    && rosdep install --ignore-src -y \
+      --from-paths "$OVERLAY_WS/install"\
+    && sudo apt-get clean \
+    && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+COPY ./ros_entrypoint.sh /
+
+# run walk node
+CMD ["ros2", "run", "drqp_control", "walk", "192.168.0.181"]
+
+# run launch file
+# CMD ["ros2", "launch", "drqp_control", "drqp_control.py"]
