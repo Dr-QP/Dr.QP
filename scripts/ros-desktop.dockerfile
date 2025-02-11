@@ -46,7 +46,7 @@ RUN sudo apt-get update \
     && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Setup entrypoint
-COPY ./ros/ros_entrypoint.sh /
+COPY ./deploy/ros_entrypoint.sh /
 ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["bash"]
 
