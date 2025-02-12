@@ -27,6 +27,7 @@ env:
 
 jobs:
   build-dev-image:
+    name: Development image
     timeout-minutes: 15
     runs-on: ubuntu-latest
     outputs:
@@ -77,6 +78,7 @@ jobs:
           cache-to: ${{ env.CACHE_TO }}
 
   ros-ci:
+    name: Build and test ROS2 workspace
     runs-on: ubuntu-latest
     needs: [build-dev-image]
     container:
@@ -127,6 +129,7 @@ jobs:
           path: ${{ steps.action_ros_ci_step.outputs.ros-workspace-directory-name }}/log
 
   dev-container-ci:
+      name: Devcontainer image
       runs-on: ubuntu-latest
       steps:
           # Running container will fail with act due to no Docker in Docker, only Docker outside of Docker
@@ -179,6 +182,7 @@ jobs:
               colcon test
 
   build-deploy-image:
+    name: Deployment image
     timeout-minutes: 15
     runs-on: ubuntu-latest
     needs: [build-dev-image, ros-ci, dev-container-ci]
