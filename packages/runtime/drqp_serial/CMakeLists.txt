@@ -14,10 +14,6 @@ ament_package_xml()
 patch_depends_variables()
 
 foreach(dep ${${PROJECT_NAME}_BUILD_DEPENDS})
-  if (dep STREQUAL "boost")
-    set(dep Boost)
-  endif()
-
   find_package(${dep} REQUIRED)
 endforeach()
 
