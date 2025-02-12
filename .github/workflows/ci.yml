@@ -26,7 +26,7 @@ env:
   CACHE_TO: 'type=gha,mode=max'
 
 jobs:
-  build-image:
+  build-dev-image:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     outputs:
@@ -52,7 +52,7 @@ jobs:
           username: ${{ env.REGISTRY_USERNAME }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Extract metadata (tags, labels) for Development docker image
         id: build_meta
         uses: docker/metadata-action@v5
         with:
@@ -76,38 +76,11 @@ jobs:
           cache-from: ${{ env.CACHE_FROM }}
           cache-to: ${{ env.CACHE_TO }}
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: deploy_meta
-        uses: docker/metadata-action@v5
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          images: ${{ env.REGISTRY }}/dr-qp/ros-deploy
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-
-      - name: Build and push Deployment image
-        uses: docker/build-push-action@v6
-        with:
-          context: scripts/deploy
-          file: scripts/deploy/ros-deploy.dockerfile
-          push: ${{ github.actor != 'nektos/act' && github.event_name == 'release' }}
-          tags: ${{ steps.deploy_meta.outputs.tags }}
-          labels: ${{ steps.deploy_meta.outputs.labels }}
-          cache-from: ${{ env.CACHE_FROM }}
-          cache-to: ${{ env.CACHE_TO }}
-          build-args: |
-            ROS_DISTRO=${{ env.ROS_DISTRO }}
-            GIT_SHA=${{ github.event.pull_request && github.event.pull_request.head.sha || github.sha }}
-            BUILD_IMAGE=${{ steps.build_meta.outputs.tags }}
-
   ros-ci:
     runs-on: ubuntu-latest
-    needs: [build-image]
+    needs: [build-dev-image]
     container:
-      image: ${{ needs.build-image.outputs.image }}
+      image: ${{ needs.build-dev-image.outputs.image }}
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
 
       # Only needed for nektos/act runs
@@ -179,7 +152,8 @@ jobs:
             username: ${{ env.REGISTRY_USERNAME }}
             password: ${{ secrets.GITHUB_TOKEN }}
 
-        - name: Extract metadata (tags, labels) for Docker
+        - name: Generate metadata tags for devcontainer image
+          # do not use name for dev container as devcontainer/cli can't handle name in tags
           id: meta
           uses: docker/metadata-action@v5
           with:
@@ -203,3 +177,55 @@ jobs:
               ./scripts/ros/ros-dep.sh
               colcon build
               colcon test
+
+  build-deploy-image:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    needs: [build-dev-image, ros-ci, dev-container-ci]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+        # Add support for more platforms with QEMU (optional)
+        # https://github.com/docker/setup-qemu-action
+      # - name: Set up QEMU
+      #   uses: docker/setup-qemu-action@v3
+      #   with:
+      #     platforms: arm64
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ env.REGISTRY_USERNAME }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Deployment docker image
+        id: deploy_meta
+        uses: docker/metadata-action@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          images: ${{ env.REGISTRY }}/dr-qp/ros-deploy
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build and push Deployment image
+        uses: docker/build-push-action@v6
+        with:
+          context: scripts/deploy
+          file: scripts/deploy/ros-deploy.dockerfile
+          push: ${{ github.actor != 'nektos/act' && github.event_name == 'release' }}
+          tags: ${{ steps.deploy_meta.outputs.tags }}
+          labels: ${{ steps.deploy_meta.outputs.labels }}
+          cache-from: ${{ env.CACHE_FROM }}
+          cache-to: ${{ env.CACHE_TO }}
+          build-args: |
+            ROS_DISTRO=${{ env.ROS_DISTRO }}
+            GIT_SHA=${{ github.event.pull_request && github.event.pull_request.head.sha || github.sha }}
+            BUILD_IMAGE=${{ needs.build-dev-image.outputs.image }}
