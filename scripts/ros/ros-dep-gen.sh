@@ -10,8 +10,7 @@ fi
 
 source /opt/ros/"$ROS_DISTRO"/setup.bash
 
-# to lower is needed for Boost as it's name for CMake is
-keys=$(rosdep keys --from-paths "$sources_dir" | tr '[:upper:]' '[:lower:]')
+keys=$(rosdep keys --from-paths "$sources_dir")
 resolved_list=$(rosdep resolve $keys 2>/dev/null)
 
 # Array to store package names
