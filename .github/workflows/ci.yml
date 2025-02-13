@@ -31,7 +31,7 @@ jobs:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     outputs:
-      image: ${{ steps.build_meta.outputs.tags }}
+      image: ${{ steps.meta.outputs.tags }}
     permissions:
       contents: read
       packages: write
@@ -54,7 +54,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Development docker image
-        id: build_meta
+        id: meta
         uses: docker/metadata-action@v5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -72,8 +72,8 @@ jobs:
           context: scripts
           file: scripts/ros-desktop.dockerfile
           push: ${{ github.actor != 'nektos/act' }}
-          tags: ${{ steps.build_meta.outputs.tags }}
-          labels: ${{ steps.build_meta.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: ${{ env.CACHE_FROM }}
           cache-to: ${{ env.CACHE_TO }}
 
@@ -208,7 +208,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Deployment docker image
-        id: deploy_meta
+        id: meta
         uses: docker/metadata-action@v5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -226,8 +226,8 @@ jobs:
           context: scripts/deploy
           file: scripts/deploy/ros-deploy.dockerfile
           push: ${{ github.actor != 'nektos/act' && github.event_name == 'release' }}
-          tags: ${{ steps.deploy_meta.outputs.tags }}
-          labels: ${{ steps.deploy_meta.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: ${{ env.CACHE_FROM }}
           cache-to: ${{ env.CACHE_TO }}
           build-args: |
