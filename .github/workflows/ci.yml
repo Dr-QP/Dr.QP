@@ -9,6 +9,9 @@ on:
       - 'main'
     tags:
       - 'v*'
+  merge_group:
+    types:
+      - checks_requested
   pull_request:
     branches:
       - 'main'
