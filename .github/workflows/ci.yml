@@ -19,7 +19,7 @@ on:
 
 env:
   ROS_DISTRO: humble
-  PLATFORMS: linux/amd64,linux/arm64
+  PLATFORMS: linux/amd64 #,linux/arm64
   CC: clang
   CXX: clang++
   REGISTRY: ghcr.io
