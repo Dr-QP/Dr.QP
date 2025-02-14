@@ -19,6 +19,7 @@ on:
 
 env:
   ROS_DISTRO: humble
+  PLATFORMS: linux/amd64,linux/arm64
   CC: clang
   CXX: clang++
   REGISTRY: ghcr.io
@@ -72,7 +73,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: ${{ env.CACHE_FROM }}
           cache-to: ${{ env.CACHE_TO }}
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ env.PLATFORMS }}
 
   ros-ci:
     name: Build and test ROS2 workspace
@@ -174,7 +175,7 @@ jobs:
             push: ${{ github.actor == 'nektos/act' && 'false' || 'always' }} # always == only if runCmd succeeds
             configFile: .devcontainer/source/devcontainer.json
             imageTag: ${{ steps.meta.outputs.tags }}
-            platform: linux/amd64,linux/arm64
+            platform: ${{ env.PLATFORMS }}
             runCmd: |
               sudo apt update
               rosdep update
@@ -224,7 +225,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: ${{ env.CACHE_FROM }}
           cache-to: ${{ env.CACHE_TO }}
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ env.PLATFORMS }}
           build-args: |
             ROS_DISTRO=${{ env.ROS_DISTRO }}
             GIT_SHA=${{ github.event.pull_request && github.event.pull_request.head.sha || github.sha }}
