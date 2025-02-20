@@ -63,6 +63,13 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
 
+      - uses: actions/delete-package-versions@v5
+        with:
+          owner: dr-qp
+          package-name: ros-desktop
+          package-type: container
+          min-versions-to-keep: 1
+
       - uses: actions/checkout@v4 # Checkout the repository to allow work with nektos/act on non pushed commits
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -238,6 +245,13 @@ jobs:
             type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
+
+      - uses: actions/delete-package-versions@v5
+        with:
+          owner: dr-qp
+          package-name: ros-deploy
+          package-type: container
+          min-versions-to-keep: 5
 
       - uses: actions/checkout@v4 # Checkout the repository to allow work with nektos/act on non pushed commits
       - name: Build and push Deployment image
