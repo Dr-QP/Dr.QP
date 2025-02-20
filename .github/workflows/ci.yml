@@ -51,6 +51,12 @@ jobs:
           username: ${{ env.REGISTRY_USERNAME }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - uses: actions/delete-package-versions@v5
+        with:
+          package-name: ros-desktop
+          package-type: container
+          min-versions-to-keep: 1
+
       - name: Extract metadata (tags, labels) for Development docker image
         id: meta
         uses: docker/metadata-action@v5
@@ -62,12 +68,6 @@ jobs:
             type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-
-      - uses: actions/delete-package-versions@v5
-        with:
-          package-name: ros-desktop
-          package-type: container
-          min-versions-to-keep: 1
 
       - uses: actions/checkout@v4 # Checkout the repository to allow work with nektos/act on non pushed commits
       - name: Build and push Docker image
@@ -182,6 +182,12 @@ jobs:
             username: ${{ env.REGISTRY_USERNAME }}
             password: ${{ secrets.GITHUB_TOKEN }}
 
+        - uses: actions/delete-package-versions@v5
+          with:
+            package-name: humble-ros-devcontainer
+            package-type: container
+            min-versions-to-keep: 5
+
         - name: Generate metadata tags for devcontainer image
           # do not use name for dev container as devcontainer/cli can't handle name in tags
           id: meta
@@ -233,6 +239,12 @@ jobs:
           username: ${{ env.REGISTRY_USERNAME }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - uses: actions/delete-package-versions@v5
+        with:
+          package-name: ros-deploy
+          package-type: container
+          min-versions-to-keep: 5
+
       - name: Extract metadata (tags, labels) for Deployment docker image
         id: meta
         uses: docker/metadata-action@v5
@@ -244,12 +256,6 @@ jobs:
             type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-
-      - uses: actions/delete-package-versions@v5
-        with:
-          package-name: ros-deploy
-          package-type: container
-          min-versions-to-keep: 5
 
       - uses: actions/checkout@v4 # Checkout the repository to allow work with nektos/act on non pushed commits
       - name: Build and push Deployment image
