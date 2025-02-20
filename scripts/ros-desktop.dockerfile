@@ -29,7 +29,10 @@ RUN /ros-prep/fish/setup.fish
 # Create and switch to user
 RUN groupadd -g $GID $USERNAME \
     && useradd -lm -u $UID -g $USERNAME -s /bin/bash $USERNAME \
-    && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+    && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
+    && ls -l /usr/bin/sudo \
+    && chmod u+s /usr/bin/sudo \
+    && ls -l /usr/bin/sudo
 USER $USERNAME
 
 # Create workspace so that user own this directory
@@ -47,7 +50,7 @@ RUN colcon mixin add default https://raw.githubusercontent.com/colcon/colcon-mix
     && colcon mixin show
 
 # rosdep update under $USERNAME
-RUN sudo apt-get update \
+RUN ls -l /usr/bin/sudo && sudo apt-get update \
     && rosdep update \
     && sudo apt-get clean \
     && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
