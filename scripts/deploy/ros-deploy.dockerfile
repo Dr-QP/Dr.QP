@@ -60,7 +60,7 @@ RUN sudo apt-get update \
 COPY ./ros_entrypoint.sh /
 
 # run walk node
-CMD ["ros2", "run", "drqp_control", "control", "walk", "192.168.0.181"]
+CMD ["ros2", "run", "drqp_control", "control", "walk", "dr-qp-24.local"]
 
 # run launch file
 # CMD ["ros2", "launch", "drqp_control", "drqp_control.py"]
