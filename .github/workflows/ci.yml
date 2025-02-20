@@ -226,7 +226,7 @@ jobs:
         with:
           context: scripts/deploy
           file: scripts/deploy/ros-deploy.dockerfile
-          push: ${{ github.actor != 'nektos/act' && github.event_name == 'release' }}
+          push: ${{ github.actor != 'nektos/act' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: ${{ env.CACHE_FROM }}
