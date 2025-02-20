@@ -21,6 +21,7 @@ env:
   ROS_DISTRO: humble
   CC: clang
   CXX: clang++
+  BUILDX_NO_DEFAULT_ATTESTATIONS: 1
   REGISTRY: ghcr.io
   REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
 
