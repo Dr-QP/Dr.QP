@@ -22,11 +22,7 @@ env:
   CC: clang
   CXX: clang++
   REGISTRY: ghcr.io
-  REGISTRY_USERNAME: ${{ github.actor == 'nektos/act' && 'anton-matosov' || github.actor }}
-  # CACHE_FROM: ${{ github.actor == 'nektos/act' && 'type=local,src=./docker-cache' || 'type=gha' }}
-  # CACHE_TO: ${{ github.actor == 'nektos/act' && 'type=local,dest=./docker-cache' || 'type=gha,mode=max' }}
-  CACHE_FROM: 'type=gha'
-  CACHE_TO: 'type=gha,mode=max'
+  REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
 
 jobs:
   build-dev-image:
@@ -40,7 +36,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-24.04-arm, ubuntu-24.04]
+        include:
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+          - runner: ubuntu-24.04
+            platform: linux/amd64
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: docker/setup-buildx-action@v3
@@ -68,11 +68,12 @@ jobs:
         with:
           context: scripts
           file: scripts/ros-desktop.dockerfile
-          push: ${{ github.actor != 'nektos/act' }}
+          push: ${{ env.ACT == '' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: ${{ env.CACHE_FROM }}
-          cache-to: ${{ env.CACHE_TO }}
+          cache-from: ${{ env.ACT != '' && 'type=registry,ref=${{ env.REGISTRY }}/dr-qp/ros-desktop-cache' || 'type=gha' }}
+          cache-to: ${{ env.ACT != '' && 'type=registry,ref=${{ env.REGISTRY }}/dr-qp/ros-desktop-cache' || 'type=gha,mode=max' }}
+          platforms: ${{ matrix.platform }}
 
   ros-ci:
     name: Build and test ROS2 workspace
@@ -80,7 +81,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-24.04-arm, ubuntu-24.04]
+        include:
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+          - runner: ubuntu-24.04
+            platform: linux/amd64
     runs-on: ${{ matrix.runner }}
     needs: [build-dev-image]
     container:
@@ -112,19 +117,19 @@ jobs:
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
-        if: github.actor != 'nektos/act'
+        if: !env.ACT
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ros_ws/lcov/total_coverage.info,ros_ws/coveragepy/.coverage
           disable_search: true
-          flags: unittests
+          flags: unittests-${{ matrix.platform }}
           name: codecov-umbrella
 
       - uses: actions/upload-artifact@v4
         # upload the logs even when the build fails
-        if: github.actor != 'nektos/act' && always()
+        if: env.ACT == '' && always()
         with:
-          name: colcon-logs
+          name: colcon-logs-${{ matrix.platform }}
           path: ${{ steps.action_ros_ci_step.outputs.ros-workspace-directory-name }}/log
 
   dev-container-ci:
@@ -133,7 +138,11 @@ jobs:
       strategy:
         fail-fast: false
         matrix:
-          runner: [ubuntu-24.04-arm, ubuntu-24.04]
+          include:
+            - runner: ubuntu-24.04-arm
+              platform: linux/arm64
+            - runner: ubuntu-24.04
+              platform: linux/amd64
       runs-on: ${{ matrix.runner }}
       steps:
           # Running container will fail with act due to no Docker in Docker, only Docker outside of Docker
@@ -173,9 +182,10 @@ jobs:
         - name: Build and test dev container image
           uses: devcontainers/ci@v0.3
           with:
+            platform: ${{ matrix.platform }}
             imageName: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer
             cacheFrom: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer
-            push: ${{ github.actor == 'nektos/act' && 'false' || 'always' }} # always == only if runCmd succeeds
+            push: ${{ env.ACT != null && 'false' || 'always' }} # always == only if runCmd succeeds
             configFile: .devcontainer/source/devcontainer.json
             imageTag: ${{ steps.meta.outputs.tags }}
             runCmd: |
@@ -191,7 +201,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-24.04-arm, ubuntu-24.04]
+        include:
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+          - runner: ubuntu-24.04
+            platform: linux/amd64
     runs-on: ${{ matrix.runner }}
     needs: [build-dev-image, ros-ci, dev-container-ci]
     permissions:
@@ -223,11 +237,12 @@ jobs:
         with:
           context: scripts/deploy
           file: scripts/deploy/ros-deploy.dockerfile
-          push: ${{ github.actor != 'nektos/act' }}
+          push: ${{ env.ACT == '' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: ${{ env.CACHE_FROM }}
-          cache-to: ${{ env.CACHE_TO }}
+          platforms: ${{ matrix.platform }}
+          cache-from: ${{ env.ACT != '' && 'type=registry,ref=${{ env.REGISTRY }}/dr-qp/ros-deploy-cache' || 'type=gha' }}
+          cache-to: ${{ env.ACT != '' && 'type=registry,ref=${{ env.REGISTRY }}/dr-qp/ros-deploy-cache' || 'type=gha,mode=max' }}
           build-args: |
             ROS_DISTRO=${{ env.ROS_DISTRO }}
             GIT_SHA=${{ github.event.pull_request && github.event.pull_request.head.sha || github.sha }}
