@@ -11,6 +11,7 @@ bin/
 .idea/dictionaries
 cmake-build-*
 .idea/workspace.xml
+.DS_Store
 
 .history
 
