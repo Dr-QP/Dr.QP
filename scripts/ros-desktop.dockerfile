@@ -26,10 +26,7 @@ RUN env CI=1 /ros-prep/ros-2-prep.sh \
 # Create and switch to user
 RUN groupadd -g $GID $USERNAME \
     && useradd -lm -u $UID -g $USERNAME -s /bin/bash $USERNAME \
-    && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
-    && ls -l /usr/bin/sudo \
-    && chmod u+s /usr/bin/sudo \
-    && ls -l /usr/bin/sudo
+    && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 USER $USERNAME
 
 # Install ros.fish scripts and dependencies
@@ -50,7 +47,7 @@ RUN colcon mixin add default https://raw.githubusercontent.com/colcon/colcon-mix
     && colcon mixin show
 
 # rosdep update under $USERNAME
-RUN ls -l /usr/bin/sudo && sudo apt-get update \
+RUN sudo apt-get update \
     && rosdep update \
     && sudo apt-get clean \
     && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
