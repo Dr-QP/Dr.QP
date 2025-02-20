@@ -31,7 +31,7 @@ env:
 jobs:
   build-dev-image:
     name: Development image
-    timeout-minutes: 15
+    timeout-minutes: 35
     runs-on: ubuntu-latest
     outputs:
       image: ${{ steps.meta.outputs.tags }}
@@ -77,9 +77,12 @@ jobs:
           cache-from: ${{ env.CACHE_FROM }}
           cache-to: ${{ env.CACHE_TO }}
           platforms: linux/${{ matrix.platform }}
+          extra-args: |
+            --mount type=bind,source=/Users/Shared/.docker/buildx/refs,target=/buildx-refs
 
   ros-ci:
     name: Build and test ROS2 workspace
+    timeout-minutes: 35
     runs-on: ubuntu-latest
     needs: [build-dev-image]
     container:
@@ -131,6 +134,7 @@ jobs:
 
   dev-container-ci:
       name: Devcontainer image
+      timeout-minutes: 35
       runs-on: ubuntu-latest
       strategy:
         fail-fast: false
@@ -192,7 +196,7 @@ jobs:
 
   build-deploy-image:
     name: Deployment image
-    timeout-minutes: 15
+    timeout-minutes: 35
     runs-on: ubuntu-latest
     needs: [build-dev-image, ros-ci, dev-container-ci]
     permissions:
