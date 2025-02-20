@@ -23,9 +23,6 @@ RUN env CI=1 /ros-prep/ros-2-prep.sh \
   && apt clean \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install ros.fish scripts and dependencies
-RUN /ros-prep/fish/setup.fish
-
 # Create and switch to user
 RUN groupadd -g $GID $USERNAME \
     && useradd -lm -u $UID -g $USERNAME -s /bin/bash $USERNAME \
@@ -34,6 +31,9 @@ RUN groupadd -g $GID $USERNAME \
     && chmod u+s /usr/bin/sudo \
     && ls -l /usr/bin/sudo
 USER $USERNAME
+
+# Install ros.fish scripts and dependencies
+RUN /ros-prep/fish/setup.fish
 
 # Create workspace so that user own this directory
 RUN mkdir -p /home/$USERNAME/ros2_ws/src
