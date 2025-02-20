@@ -65,7 +65,6 @@ jobs:
 
       - uses: actions/delete-package-versions@v5
         with:
-          owner: dr-qp
           package-name: ros-desktop
           package-type: container
           min-versions-to-keep: 1
@@ -248,7 +247,6 @@ jobs:
 
       - uses: actions/delete-package-versions@v5
         with:
-          owner: dr-qp
           package-name: ros-deploy
           package-type: container
           min-versions-to-keep: 5
