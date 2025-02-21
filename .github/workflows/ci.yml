@@ -226,9 +226,11 @@ jobs:
           - runner: ubuntu-24.04-arm
             platform: linux/arm64
             arch: arm64
+            image: ${{ needs.build-dev-image.outputs.image_arm64 }}
           - runner: ubuntu-24.04
             platform: linux/amd64
             arch: amd64
+            image: ${{ needs.build-dev-image.outputs.image_amd64 }}
     runs-on: ${{ matrix.runner }}
     needs: [build-dev-image, ros-ci]
     permissions:
@@ -275,4 +277,4 @@ jobs:
           build-args: |
             ROS_DISTRO=${{ env.ROS_DISTRO }}
             GIT_SHA=${{ github.event.pull_request && github.event.pull_request.head.sha || github.sha }}
-            BUILD_IMAGE=${{ needs.build-dev-image.outputs.image }}
+            BUILD_IMAGE=${{ matrix.image }}
