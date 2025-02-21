@@ -1,0 +1,35 @@
+name: Delete Old Container Versions
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Container name'
+        required: true
+      versions_to_keep:
+        description: 'Number of versions to keep'
+        required: false
+        default: '10'
+
+jobs:
+  delete-container-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Delete package version
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ inputs.name }}
+          package-type: 'container'
+          min-versions-to-keep: ${{ inputs.versions_to_keep }}
+
+      - name: Delete all untagged
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ inputs.name }}
+          package-type: 'container'
+          min-versions-to-keep: 0
+          delete-only-untagged-versions: true
+
