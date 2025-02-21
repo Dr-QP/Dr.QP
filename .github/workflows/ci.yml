@@ -71,14 +71,16 @@ jobs:
         uses: docker/build-push-action@v6
         env:
           REGISTRY_CACHE: 'type=registry,ref=${{ env.REGISTRY }}/dr-qp/ros-desktop-cache'
+          GHA_CACHE_FROM: 'type=gha,scope=ros-desktop-${{ matrix.arch }}'
+          GHA_CACHE_TO: 'type=gha,scope=ros-desktop-${{ matrix.arch }},mode=max'
         with:
           context: scripts
           file: scripts/ros-desktop.dockerfile
           push: ${{ env.ACT == '' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: ${{ env.ACT != '' && env.REGISTRY_CACHE || 'type=gha' }}
-          cache-to: ${{ env.ACT != '' && env.REGISTRY_CACHE || 'type=gha,mode=max' }}
+          cache-from: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE_FROM }}
+          cache-to: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE_TO }}
           platforms: ${{ matrix.platform }}
 
   ros-ci:
@@ -91,13 +93,15 @@ jobs:
           - runner: ubuntu-24.04-arm
             platform: linux/arm64
             arch: arm64
+            image: ${{ needs.build-dev-image.outputs.image_arm64 }}
           - runner: ubuntu-24.04
             platform: linux/amd64
             arch: amd64
+            image: ${{ needs.build-dev-image.outputs.image_amd64 }}
     runs-on: ${{ matrix.runner }}
     needs: [build-dev-image]
     container:
-      image: ${{ matrix.arch == 'arm64' && needs.build-dev-image.outputs.image_arm64 || needs.build-dev-image.outputs.image_amd64 }}
+      image: ${{ matrix.image }}
 
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
 
@@ -257,6 +261,8 @@ jobs:
         uses: docker/build-push-action@v6
         env:
           REGISTRY_CACHE: 'type=registry,ref=${{ env.REGISTRY }}/dr-qp/ros-deploy-cache'
+          GHA_CACHE_FROM: 'type=gha,scope=ros-deploy-${{ matrix.arch }}'
+          GHA_CACHE_TO: 'type=gha,scope=ros-deploy-${{ matrix.arch }},mode=max'
         with:
           context: scripts/deploy
           file: scripts/deploy/ros-deploy.dockerfile
@@ -264,8 +270,8 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: ${{ matrix.platform }}
-          cache-from: ${{ env.ACT != '' && env.REGISTRY_CACHE || 'type=gha' }}
-          cache-to: ${{ env.ACT != '' && env.REGISTRY_CACHE || 'type=gha,mode=max' }}
+          cache-from: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE_FROM }}
+          cache-to: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE_TO }}
           build-args: |
             ROS_DISTRO=${{ env.ROS_DISTRO }}
             GIT_SHA=${{ github.event.pull_request && github.event.pull_request.head.sha || github.sha }}
