@@ -1,0 +1,23 @@
+# https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/customizing-your-advanced-setup-for-code-scanning#using-a-custom-configuration-file
+name: "ROS 2 CodeQL Configuration"
+version: 2.0.0
+disable-default-queries: false
+
+queries:
+  - uses: security-extended,security-and-quality
+
+packs:
+  codeql/javascript-queries:
+    - exclude: actions/unpinned-tag
+
+paths-ignore:
+  - "**/third_party/**"  # Ignore third-party dependencies
+  - "**/build/**"        # Ignore colcon build artifacts
+  - "**/install/**"      # Ignore ROS 2 install workspace
+  - "**/logs/**"         # Ignore logs
+  - "**/*.md"           # Ignore markdown files
+
+languages:
+  - cpp
+  - python
+  - javascript  # Includes GitHub Actions scripts (if any)
