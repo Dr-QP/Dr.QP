@@ -135,14 +135,14 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ros_ws/lcov/total_coverage.info,ros_ws/coveragepy/.coverage
           disable_search: true
-          flags: unittests
+          flags: unittests-${{ matrix.arch }}
           name: codecov-umbrella
 
       - uses: actions/upload-artifact@v4
         # upload the logs even when the build fails
         if: env.ACT == '' && always()
         with:
-          name: colcon-logs
+          name: colcon-logs-${{ matrix.arch }}
           path: ${{ steps.action_ros_ci_step.outputs.ros-workspace-directory-name }}/log
 
   dev-container-ci:
