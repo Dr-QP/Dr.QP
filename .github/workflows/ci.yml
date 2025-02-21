@@ -57,10 +57,10 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           images: ${{ env.REGISTRY }}/dr-qp/ros-desktop
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=ref,event=branch,suffix=${{ runner.arch }}
+            type=ref,event=pr,suffix=${{ runner.arch }}
+            type=semver,pattern={{version}},suffix=${{ runner.arch }}
+            type=semver,pattern={{major}}.{{minor}},suffix=${{ runner.arch }}
 
       - uses: actions/checkout@v4 # Checkout the repository to allow work with nektos/act on non pushed commits
       - name: Build and push Docker image
@@ -181,10 +181,10 @@ jobs:
           uses: docker/metadata-action@v5
           with:
             tags: |
-              type=ref,event=branch
-              type=ref,event=pr
-              type=semver,pattern={{version}}
-              type=semver,pattern={{major}}.{{minor}}
+              type=ref,event=branch,suffix=${{ runner.arch }}
+              type=ref,event=pr,suffix=${{ runner.arch }}
+              type=semver,pattern={{version}},suffix=${{ runner.arch }}
+              type=semver,pattern={{major}}.{{minor}},suffix=${{ runner.arch }}
 
         - name: Build and test dev container image
           uses: devcontainers/ci@v0.3
@@ -234,10 +234,10 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           images: ${{ env.REGISTRY }}/dr-qp/ros-deploy
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=ref,event=branch,suffix=${{ runner.arch }}
+            type=ref,event=pr,suffix=${{ runner.arch }}
+            type=semver,pattern={{version}},suffix=${{ runner.arch }}
+            type=semver,pattern={{major}}.{{minor}},suffix=${{ runner.arch }}
 
       - uses: actions/checkout@v4 # Checkout the repository to allow work with nektos/act on non pushed commits
       - name: Build and push Deployment image
