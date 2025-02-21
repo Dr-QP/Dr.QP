@@ -29,7 +29,8 @@ jobs:
     name: Development image
     timeout-minutes: 35
     outputs:
-      image: ${{ steps.meta.outputs.tags }}
+      image_arm64: ${{ steps.meta.outputs.tags && contains(matrix.arch, 'arm64') && steps.meta.outputs.tags || '' }}
+      image_amd64: ${{ steps.meta.outputs.tags && contains(matrix.arch, 'amd64') && steps.meta.outputs.tags || '' }}
     permissions:
       contents: read
       packages: write
@@ -96,7 +97,8 @@ jobs:
     runs-on: ${{ matrix.runner }}
     needs: [build-dev-image]
     container:
-      image: ${{ needs.build-dev-image.outputs.image }}
+      image: ${{ matrix.arch == 'arm64' && needs.build-dev-image.outputs.image_arm64 || needs.build-dev-image.outputs.image_amd64 }}
+
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
 
       # Only needed for nektos/act runs
