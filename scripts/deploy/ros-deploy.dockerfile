@@ -29,12 +29,12 @@ WORKDIR $OVERLAY_WS
 COPY --from=cacher $OVERLAY_WS/src/ $OVERLAY_WS
 
 ARG DEPLOY_PACKAGE="drqp_control"
-RUN sudo apt-get update \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    sudo apt-get update \
     && rosdep update \
     && rosdep install --ignore-src -y \
-      --from-paths "$OVERLAY_WS/drqp/packages/runtime" \
-    && sudo apt-get clean \
-    && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+      --from-paths "$OVERLAY_WS/drqp/packages/runtime"
 
 ARG OVERLAY_MIXINS="ninja rel-with-deb-info"
 RUN . /opt/ros/$ROS_DISTRO/setup.sh \
@@ -50,12 +50,13 @@ ARG OVERLAY_WS
 
 WORKDIR $OVERLAY_WS
 COPY --from=builder $OVERLAY_WS/install $OVERLAY_WS/install
-RUN sudo apt-get update \
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    sudo apt-get update \
     && rosdep update \
     && rosdep install --ignore-src -y \
-      --from-paths "$OVERLAY_WS/install"\
-    && sudo apt-get clean \
-    && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+      --from-paths "$OVERLAY_WS/install"
 
 COPY ./ros_entrypoint.sh /
 
