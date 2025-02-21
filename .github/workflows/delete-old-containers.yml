@@ -14,6 +14,9 @@ on:
 jobs:
   delete-container-version:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Delete package version
         uses: actions/delete-package-versions@v5
