@@ -39,8 +39,10 @@ jobs:
         include:
           - runner: ubuntu-24.04-arm
             platform: linux/arm64
-          # - runner: ubuntu-24.04
-          #   platform: linux/amd64
+            arch: arm64
+          - runner: ubuntu-24.04
+            platform: linux/amd64
+            arch: amd64
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: docker/setup-buildx-action@v3
@@ -86,8 +88,10 @@ jobs:
         include:
           - runner: ubuntu-24.04-arm
             platform: linux/arm64
-          # - runner: ubuntu-24.04
-          #   platform: linux/amd64
+            arch: arm64
+          - runner: ubuntu-24.04
+            platform: linux/amd64
+            arch: amd64
     runs-on: ${{ matrix.runner }}
     needs: [build-dev-image]
     container:
@@ -143,8 +147,10 @@ jobs:
           include:
             - runner: ubuntu-24.04-arm
               platform: linux/arm64
-            # - runner: ubuntu-24.04
-            #   platform: linux/amd64
+              arch: arm64
+            - runner: ubuntu-24.04
+              platform: linux/amd64
+              arch: amd64
       runs-on: ${{ matrix.runner }}
       steps:
         - name: Install updated Skopeo needed for docker/buildx
@@ -211,8 +217,10 @@ jobs:
         include:
           - runner: ubuntu-24.04-arm
             platform: linux/arm64
-          # - runner: ubuntu-24.04
-          #   platform: linux/amd64
+            arch: arm64
+          - runner: ubuntu-24.04
+            platform: linux/amd64
+            arch: amd64
     runs-on: ${{ matrix.runner }}
     needs: [build-dev-image, ros-ci]
     permissions:
