@@ -89,8 +89,8 @@ jobs:
               colcon build
               colcon test
 
-  protected:
-    name: Protected check
+  merge-all:
+    name: Devcontainer CI finished
     runs-on: ubuntu-24.04
     needs: [dev-container-ci]
     steps:

@@ -150,8 +150,8 @@ jobs:
             GIT_SHA=${{ github.event.pull_request && github.event.pull_request.head.sha || github.sha }}
             BUILD_IMAGE=${{ matrix.arch == 'arm64' && needs.build-dev-image.outputs.image_arm64 || needs.build-dev-image.outputs.image_amd64 }}
 
-  protected:
-    name: Protected check
+  merge-all:
+    name: CI/CD finished
     runs-on: ubuntu-24.04
     needs: [build-dev-image, ros-ci, build-deploy-image]
     steps:
