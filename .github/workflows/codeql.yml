@@ -37,7 +37,7 @@ jobs:
     runs-on: 'ubuntu-latest'
     container:
       image: ${{ matrix.container_image }}
-      options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
+      options: ${{ matrix.container_options }} # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
 
       # Only needed for nektos/act runs
       credentials:
@@ -61,6 +61,7 @@ jobs:
         - language: c-cpp
           build-mode: manual
           container_image: ghcr.io/dr-qp/ros-desktop:main
+          container_options: --user rosdev # --user 1001:1001
         - language: python
           build-mode: none
         - language: javascript-typescript
