@@ -20,6 +20,13 @@ on:
   schedule:
     - cron: '32 17 * * 5'
 
+env:
+  ROS_DISTRO: humble
+  CC: clang
+  CXX: clang++
+  CMAKE_EXPORT_COMPILE_COMMANDS: "1"
+  REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
+
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
@@ -29,6 +36,9 @@ jobs:
     #   - https://gh.io/using-larger-runners (GitHub.com only)
     # Consider using larger runners or machines with greater resources for possible analysis time improvements.
     runs-on: 'ubuntu-latest'
+    container:
+      image: ghcr.io/dr-qp/ros-desktop:pr-60-amd64
+      options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
     permissions:
       # required for all workflows
       security-events: write
@@ -88,12 +98,15 @@ jobs:
     # to build your code.
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
-    - if: matrix.build-mode == 'manual'
+    - name: Build C++ code
+      if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-        echo 'TODO (anton-matosov): Implement build in ROS container'
-        echo 'colcon build --mixin release compile-commands'
-        exit 0
+        sudo apt-get update
+        source /opt/ros/$ROS_DISTRO/setup.bash
+        rosdep update
+        ./scripts/ros/ros-dep.sh
+        colcon build --cmake-args -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
