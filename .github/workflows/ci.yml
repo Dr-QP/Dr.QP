@@ -115,6 +115,7 @@ jobs:
         with:
           name: colcon-logs-${{ matrix.arch }}
           path: ${{ steps.action_ros_ci_step.outputs.ros-workspace-directory-name }}/log
+          retention-days: 100
 
   build-deploy-image:
     name: Deployment image
