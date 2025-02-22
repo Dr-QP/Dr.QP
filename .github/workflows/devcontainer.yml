@@ -17,6 +17,10 @@ on:
       - 'main'
       - 'v*'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
 env:
   ROS_DISTRO: humble
   CC: clang
@@ -37,6 +41,8 @@ jobs:
             - runner: ubuntu-24.04
               arch: amd64
       runs-on: ${{ matrix.runner }}
+      permissions:
+        packages: write
       steps:
         - name: Install updated Skopeo needed for docker/buildx
           run: |
@@ -90,7 +96,8 @@ jobs:
 
   merge-all:
     name: Devcontainer CI finished
-    runs-on: ubuntu-24.04
     needs: [dev-container-ci]
+    runs-on: ubuntu-24.04-arm
+    permissions: {}
     steps:
       - run: echo "All jobs finished successfully"

@@ -19,6 +19,13 @@ on:
     branches: [ "main", "release/**" ]
   schedule:
     - cron: '32 17 * * 5'
+  merge_group:
+    types:
+      - checks_requested
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
 
 env:
   ROS_DISTRO: humble
@@ -35,9 +42,9 @@ jobs:
     #   - https://gh.io/supported-runners-and-hardware-resources
     #   - https://gh.io/using-larger-runners (GitHub.com only)
     # Consider using larger runners or machines with greater resources for possible analysis time improvements.
-    runs-on: 'ubuntu-latest'
+    runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/dr-qp/ros-desktop:pr-60-amd64
+      image: ghcr.io/dr-qp/ros-desktop:edge-amd64
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
     permissions:
       # required for all workflows
@@ -45,10 +52,6 @@ jobs:
 
       # required to fetch internal or private CodeQL packs
       packages: read
-
-      # only required for workflows in private repositories
-      actions: read
-      contents: read
 
     strategy:
       fail-fast: false
@@ -114,3 +117,50 @@ jobs:
       uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
+        output: sarif-results
+        upload: failure-only
+
+    - name: Find sarif file
+      id: sarif
+      run: |
+        file=$(find sarif-results -name "*.sarif")
+        echo "file=$PWD/$file" >> "$GITHUB_OUTPUT"
+
+    - name: Upload loc as a Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{matrix.language}}-raw.sarif
+        path: ${{ steps.sarif.outputs.file }}
+        retention-days: 7
+
+    - name: filter-sarif
+      uses: advanced-security/filter-sarif@v1
+      with:
+        input: ${{ steps.sarif.outputs.file }}
+        output: ${{ steps.sarif.outputs.file }}
+        patterns: |
+          -**/build/**
+          -**/install/**
+          -**/logs/**
+          -**/examples/**
+          -**/test/**
+
+    - name: Upload SARIF
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ steps.sarif.outputs.file }}
+
+    - name: Upload loc as a Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{matrix.language}}-filtered.sarif
+        path: ${{ steps.sarif.outputs.file }}
+        retention-days: 7
+
+  merge-all:
+    name: Code Analysis finished
+    needs: [analyze]
+    runs-on: ubuntu-24.04-arm
+    permissions: {}
+    steps:
+      - run: echo "All jobs finished successfully"

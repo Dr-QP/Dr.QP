@@ -17,6 +17,10 @@ on:
       - 'main'
       - 'v*'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
 env:
   ROS_DISTRO: humble
   CC: clang
@@ -29,7 +33,6 @@ jobs:
     name: Development image
     timeout-minutes: 35
     permissions:
-      contents: read
       packages: write
     strategy:
       fail-fast: false
@@ -76,6 +79,7 @@ jobs:
 
   ros-ci:
     name: Build and test ROS2 workspace
+    needs: [merge-dev-image]
     timeout-minutes: 35
     strategy:
       fail-fast: false
@@ -86,7 +90,8 @@ jobs:
           - runner: ubuntu-24.04
             arch: amd64
     runs-on: ${{ matrix.runner }}
-    needs: [merge-dev-image]
+    permissions:
+      packages: read
     container:
       image: ${{ needs.merge-dev-image.outputs.image }}
 
@@ -131,9 +136,11 @@ jobs:
         with:
           name: colcon-logs-${{ matrix.arch }}
           path: ${{ steps.action_ros_ci_step.outputs.ros-workspace-directory-name }}/log
+          retention-days: 100
 
   build-deploy-image:
     name: Deployment image
+    needs: [merge-dev-image, ros-ci]
     timeout-minutes: 35
     strategy:
       fail-fast: false
@@ -144,9 +151,7 @@ jobs:
           - runner: ubuntu-24.04
             arch: amd64
     runs-on: ${{ matrix.runner }}
-    needs: [merge-dev-image, ros-ci]
     permissions:
-      contents: read
       packages: write
     steps:
       - uses: actions/checkout@v4
@@ -186,7 +191,8 @@ jobs:
           registry-token: ${{ secrets.GITHUB_TOKEN }}
   merge-all:
     name: CI/CD finished
-    runs-on: ubuntu-24.04
     needs: [merge-dev-image, ros-ci, merge-deploy-image]
+    runs-on: ubuntu-24.04-arm
+    permissions: {}
     steps:
       - run: echo "All jobs finished successfully"
