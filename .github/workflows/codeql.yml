@@ -103,6 +103,7 @@ jobs:
       shell: bash
       run: |
         sudo apt-get update
+        source /opt/ros/$ROS_DISTRO/setup.bash
         rosdep update
         ./scripts/ros/ros-dep.sh
         colcon build --cmake-args -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo
