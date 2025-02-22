@@ -32,4 +32,3 @@ runs:
           type=ref,event=pr,suffix=-${{ inputs.arch }}
           type=semver,pattern={{version}},suffix=-${{ inputs.arch }}
           type=semver,pattern={{major}}.{{minor}},suffix=-${{ inputs.arch }}
-          type=edge,branch=main,suffix=-${{ inputs.arch }}
