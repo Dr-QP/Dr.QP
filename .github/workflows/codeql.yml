@@ -116,8 +116,8 @@ jobs:
     - name: Upload loc as a Build Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{matrix.language}}-sarif-results-raw
-        path: sarif-results
+        name: ${{matrix.language}}-raw.sarif
+        path: sarif-results/${{matrix.language}}.sarif
         retention-days: 7
 
     - name: filter-sarif
@@ -138,6 +138,6 @@ jobs:
     - name: Upload loc as a Build Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{matrix.language}}-sarif-results-filtered
-        path: sarif-results
+        name: ${{matrix.language}}-filtered.sarif
+        path: sarif-results/${{matrix.language}}.sarif
         retention-days: 7
