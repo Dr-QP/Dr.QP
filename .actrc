@@ -1,18 +1,4 @@
-# -P ubuntu-latest=catthehacker/ubuntu:act-24.04
-# -P ubuntu-24.04=catthehacker/ubuntu:act-24.04
-# -P ubuntu-22.04=catthehacker/ubuntu:act-22.04
-# -P ubuntu-20.04=catthehacker/ubuntu:act-20.04
-# -P ubuntu-18.04=catthehacker/ubuntu:act-18.04
-
 # corvina-r-d/ubuntu - has dockerd in it to support DinD
--P ubuntu-latest=ghcr.io/corvina-r-d/ubuntu:act-22.04
--P ubuntu-24.04=ghcr.io/corvina-r-d/ubuntu:act-24.04
--P ubuntu-22.04=ghcr.io/corvina-r-d/ubuntu:act-22.04
--P ubuntu-20.04=ghcr.io/corvina-r-d/ubuntu:act-20.04
--P ubuntu-18.04=ghcr.io/corvina-r-d/ubuntu:act-18.04
-
-# -P ubuntu-latest=catthehacker/ubuntu:full-24.04
-# -P ubuntu-24.04=catthehacker/ubuntu:full-24.04
-# -P ubuntu-22.04=catthehacker/ubuntu:full-22.04
-# -P ubuntu-20.04=catthehacker/ubuntu:full-20.04
-# -P ubuntu-18.04=catthehacker/ubuntu:full-18.04
+# https://github.com/Corvina-R-D/act_docker_images/pkgs/container/ubuntu/293201282?tag=act-latest
+-P ubuntu-24.04=ghcr.io/corvina-r-d/ubuntu:act-latest-20241022@sha256:f91157baa3bcc2a7dbef7c2f21cf2cf96c05dcc0a649f452e8ea5531715d02fb
+-P ubuntu-24.04-arm=ghcr.io/corvina-r-d/ubuntu:act-latest-20241022@sha256:bd73f18a5d9e5dffea4bba76caa6658aae7d58e64b43da328408a8d4709292a1

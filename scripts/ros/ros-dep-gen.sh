@@ -45,8 +45,27 @@ output_script="$script_dir/install_dependencies.sh"
 cat <<EOF > "$output_script"
 #!/usr/bin/env bash
 
-echo "Installing dependencies: ${sorted_packages[*]}"
-sudo apt-get install -y ${sorted_packages[@]}
+packages=(${sorted_packages[@]})
+
+available_packages=()
+
+# Check which packages are available
+for pkg in "\${packages[@]}"; do
+    # if apt-cache show "\$pkg" >/dev/null 2>&1; then
+    if apt-cache policy "\$pkg" | grep -q "Candidate:"; then
+        available_packages+=("\$pkg")
+    else
+        echo "Skipping \$pkg (not found in repo)"
+    fi
+done
+
+# Install available packages in a single command
+if [ \${#available_packages[@]} -gt 0 ]; then
+    echo "Installing: \${available_packages[*]}"
+    sudo apt-get install -y "\${available_packages[@]}"
+else
+    echo "No packages available for installation."
+fi
 
 EOF
 

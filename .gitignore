@@ -11,6 +11,7 @@ bin/
 .idea/dictionaries
 cmake-build-*
 .idea/workspace.xml
+.DS_Store
 
 .history
 
@@ -285,7 +286,6 @@ ui_*.h
 *.qmlc
 *.jsc
 Makefile*
-*build-*
 *.qm
 *.prl
 

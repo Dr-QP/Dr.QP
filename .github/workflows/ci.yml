@@ -22,70 +22,58 @@ env:
   CC: clang
   CXX: clang++
   REGISTRY: ghcr.io
-  REGISTRY_USERNAME: ${{ github.actor == 'nektos/act' && 'anton-matosov' || github.actor }}
-  # CACHE_FROM: ${{ github.actor == 'nektos/act' && 'type=local,src=./docker-cache' || 'type=gha' }}
-  # CACHE_TO: ${{ github.actor == 'nektos/act' && 'type=local,dest=./docker-cache' || 'type=gha,mode=max' }}
-  CACHE_FROM: 'type=gha'
-  CACHE_TO: 'type=gha,mode=max'
+  REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
 
 jobs:
   build-dev-image:
     name: Development image
-    timeout-minutes: 15
-    runs-on: ubuntu-latest
+    timeout-minutes: 35
     outputs:
-      image: ${{ steps.meta.outputs.tags }}
+      image_arm64: ${{ contains(matrix.arch, 'arm64') && steps.build.outputs.image || '' }}
+      image_amd64: ${{ contains(matrix.arch, 'amd64') && steps.build.outputs.image || '' }}
     permissions:
       contents: read
       packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+          - runner: ubuntu-24.04
+            arch: amd64
+    runs-on: ${{ matrix.runner }}
     steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@v4
 
-        # Add support for more platforms with QEMU (optional)
-        # https://github.com/docker/setup-qemu-action
-      # - name: Set up QEMU
-      #   uses: docker/setup-qemu-action@v3
-      #   with:
-      #     platforms: arm64
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ env.REGISTRY_USERNAME }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (tags, labels) for Development docker image
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          images: ${{ env.REGISTRY }}/dr-qp/ros-desktop
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-
-      - uses: actions/checkout@v4 # Checkout the repository to allow work with nektos/act on non pushed commits
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
+      - name: Build development docker image
+        id: build
+        uses: ./.github/actions/docker/build-push-action
         with:
           context: scripts
           file: scripts/ros-desktop.dockerfile
-          push: ${{ github.actor != 'nektos/act' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: ${{ env.CACHE_FROM }}
-          cache-to: ${{ env.CACHE_TO }}
+          image: ${{ env.REGISTRY }}/dr-qp/ros-desktop
+          arch: ${{ matrix.arch }}
+          registry: ${{ env.REGISTRY }}
+          registry-username: ${{ env.REGISTRY_USERNAME }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   ros-ci:
     name: Build and test ROS2 workspace
-    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+          - runner: ubuntu-24.04
+            arch: amd64
+    runs-on: ${{ matrix.runner }}
     needs: [build-dev-image]
     container:
-      image: ${{ needs.build-dev-image.outputs.image }}
+      image: ${{ matrix.arch == 'arm64' && needs.build-dev-image.outputs.image_arm64 || needs.build-dev-image.outputs.image_amd64 }}
+
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
 
       # Only needed for nektos/act runs
@@ -109,131 +97,62 @@ jobs:
                 "mixin": ["coverage-pytest"]
               }
             }
-          # pin the repository in the workflow to a specific commit to avoid
-          # changes in colcon-mixin-repository from breaking your tests.
-          colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml
 
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
-        if: github.actor != 'nektos/act'
+        if: env.ACT == ''
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ros_ws/lcov/total_coverage.info,ros_ws/coveragepy/.coverage
           disable_search: true
-          flags: unittests
+          flags: unittests-${{ matrix.arch }}
           name: codecov-umbrella
 
       - uses: actions/upload-artifact@v4
         # upload the logs even when the build fails
-        if: github.actor != 'nektos/act' && always()
+        if: env.ACT == '' && always()
         with:
-          name: colcon-logs
+          name: colcon-logs-${{ matrix.arch }}
           path: ${{ steps.action_ros_ci_step.outputs.ros-workspace-directory-name }}/log
-
-  dev-container-ci:
-      name: Devcontainer image
-      runs-on: ubuntu-latest
-      steps:
-          # Running container will fail with act due to no Docker in Docker, only Docker outside of Docker
-          # https://github.com/Dr-QP/Dr.QP/wiki/Issue-using-%60act%60-and-%60devcontainers-ci%60
-          # DinD requires an image that has dockerd installed, so run with -P ubuntu-latest=ghcr.io/corvina-r-d/ubuntu:act-22.04
-          # DinD requires --priviliged option as well
-        - name: optionally start DinD for act (local testing)
-          if: env.ACT
-          run: |
-            dockerd -H unix:///var/run/dind.sock & sleep 5;
-            echo "DOCKER_HOST=unix:///var/run/dind.sock" >>${GITHUB_ENV}
-
-        - name: optionally test DinD for act (local testing)
-          if: env.ACT
-          run: |
-            docker run --rm hello-world:linux
-
-        - uses: actions/checkout@v4
-        - name: Log in to the Container registry
-          uses: docker/login-action@v3
-          with:
-            registry: ${{ env.REGISTRY }}
-            username: ${{ env.REGISTRY_USERNAME }}
-            password: ${{ secrets.GITHUB_TOKEN }}
-
-        - name: Generate metadata tags for devcontainer image
-          # do not use name for dev container as devcontainer/cli can't handle name in tags
-          id: meta
-          uses: docker/metadata-action@v5
-          with:
-            tags: |
-              type=ref,event=branch
-              type=ref,event=pr
-              type=semver,pattern={{version}}
-              type=semver,pattern={{major}}.{{minor}}
-
-        - name: Build and test dev container image
-          uses: devcontainers/ci@v0.3
-          with:
-            imageName: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer
-            cacheFrom: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer
-            push: ${{ github.actor == 'nektos/act' && 'false' || 'always' }} # always == only if runCmd succeeds
-            configFile: .devcontainer/source/devcontainer.json
-            imageTag: ${{ steps.meta.outputs.tags }}
-            runCmd: |
-              sudo apt update
-              rosdep update
-              ./scripts/ros/ros-dep.sh
-              colcon build
-              colcon test
 
   build-deploy-image:
     name: Deployment image
-    timeout-minutes: 15
-    runs-on: ubuntu-latest
-    needs: [build-dev-image, ros-ci, dev-container-ci]
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+          - runner: ubuntu-24.04
+            arch: amd64
+    runs-on: ${{ matrix.runner }}
+    needs: [build-dev-image, ros-ci]
     permissions:
       contents: read
       packages: write
     steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@v4
 
-        # Add support for more platforms with QEMU (optional)
-        # https://github.com/docker/setup-qemu-action
-      # - name: Set up QEMU
-      #   uses: docker/setup-qemu-action@v3
-      #   with:
-      #     platforms: arm64
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ env.REGISTRY_USERNAME }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (tags, labels) for Deployment docker image
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          images: ${{ env.REGISTRY }}/dr-qp/ros-deploy
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-
-      - uses: actions/checkout@v4 # Checkout the repository to allow work with nektos/act on non pushed commits
-      - name: Build and push Deployment image
-        uses: docker/build-push-action@v6
+      - name: Build deployment docker image
+        uses: ./.github/actions/docker/build-push-action
         with:
           context: scripts/deploy
           file: scripts/deploy/ros-deploy.dockerfile
-          push: ${{ github.actor != 'nektos/act' && github.event_name == 'release' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: ${{ env.CACHE_FROM }}
-          cache-to: ${{ env.CACHE_TO }}
+          image: ${{ env.REGISTRY }}/dr-qp/ros-deploy
+          arch: ${{ matrix.arch }}
+          registry: ${{ env.REGISTRY }}
+          registry-username: ${{ env.REGISTRY_USERNAME }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
             ROS_DISTRO=${{ env.ROS_DISTRO }}
             GIT_SHA=${{ github.event.pull_request && github.event.pull_request.head.sha || github.sha }}
-            BUILD_IMAGE=${{ needs.build-dev-image.outputs.image }}
+            BUILD_IMAGE=${{ matrix.arch == 'arm64' && needs.build-dev-image.outputs.image_arm64 || needs.build-dev-image.outputs.image_amd64 }}
+
+  merge-all:
+    name: CI/CD finished
+    runs-on: ubuntu-24.04
+    needs: [build-dev-image, ros-ci, build-deploy-image]
+    steps:
+      - run: echo "All jobs finished successfully"
