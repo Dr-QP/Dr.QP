@@ -121,7 +121,7 @@ jobs:
       id: sarif
       run: |
         file=$(find sarif-results -name "*.sarif")
-        echo "file=$PWD/$file >> "$GITHUB_OUTPUT"
+        echo "file=$PWD/$file" >> "$GITHUB_OUTPUT"
 
     - name: Upload loc as a Build Artifact
       uses: actions/upload-artifact@v4
