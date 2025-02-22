@@ -50,15 +50,14 @@ runs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v6
       env:
-        REGISTRY_CACHE: 'type=registry,ref=${{ inputs.image }}-cache:latest-${{ inputs.arch }}'
-        GHA_CACHE_FROM: 'type=gha,scope=${{ inputs.image }}-${{ inputs.arch }}'
-        GHA_CACHE_TO: 'type=gha,scope=${{ inputs.image }}-${{ inputs.arch }},mode=max'
+        REGISTRY_CACHE: 'type=registry,ref=${{ inputs.image }}:cache-${{ inputs.arch }}'
+        GHA_CACHE: 'type=gha,scope=${{ inputs.image }}-${{ inputs.arch }}'
       with:
         context: ${{ inputs.context }}
         file: ${{ inputs.file }}
         push: ${{ env.ACT == '' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-        cache-from: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE_FROM }}
-        cache-to: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE_TO }}
+        cache-from: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE }}
+        cache-to: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE }},mode=max
         build-args: ${{ inputs.build-args }}
