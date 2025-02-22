@@ -56,6 +56,7 @@ jobs:
           registry-token: ${{ secrets.GITHUB_TOKEN }}
 
   merge-dev-image:
+    name: Merge development image
     runs-on: ubuntu-24.04-arm
     needs:
       - build-dev-image
@@ -166,6 +167,7 @@ jobs:
             BUILD_IMAGE=${{ needs.merge-dev-image.outputs.image }}
 
   merge-deploy-image:
+    name: Merge deployment image
     runs-on: ubuntu-24.04-arm
     needs:
       - build-deploy-image
