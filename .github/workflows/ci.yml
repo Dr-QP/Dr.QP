@@ -158,7 +158,7 @@ jobs:
   merge-all:
     name: CI/CD finished
     needs: [build-dev-image, ros-ci, build-deploy-image]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     permissions: {}
     steps:
       - run: echo "All jobs finished successfully"

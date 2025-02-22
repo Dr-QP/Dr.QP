@@ -153,3 +153,11 @@ jobs:
         name: ${{matrix.language}}-filtered.sarif
         path: ${{ steps.sarif.outputs.file }}
         retention-days: 7
+
+  merge-all:
+    name: Code Analysis finished
+    needs: [analyze]
+    runs-on: ubuntu-24.04
+    permissions: {}
+    steps:
+      - run: echo "All jobs finished successfully"
