@@ -1,0 +1,97 @@
+name: Devcontainer CI
+
+on:
+  release:
+    types:
+      - published
+  push:
+    branches:
+      - 'main'
+    tags:
+      - 'v*'
+  merge_group:
+    types:
+      - checks_requested
+  pull_request:
+    branches:
+      - 'main'
+      - 'v*'
+
+env:
+  ROS_DISTRO: humble
+  CC: clang
+  CXX: clang++
+  REGISTRY: ghcr.io
+  REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
+
+jobs:
+  dev-container-ci:
+      name: Devcontainer image
+      timeout-minutes: 35
+      strategy:
+        fail-fast: false
+        matrix:
+          include:
+            - runner: ubuntu-24.04-arm
+              arch: arm64
+            - runner: ubuntu-24.04
+              arch: amd64
+      runs-on: ${{ matrix.runner }}
+      steps:
+        - name: Install updated Skopeo needed for docker/buildx
+          run: |
+            sudo apt-get update
+            sudo apt-get install skopeo -y
+
+          # Running container will fail with act due to no Docker in Docker, only Docker outside of Docker
+          # https://github.com/Dr-QP/Dr.QP/wiki/Issue-using-%60act%60-and-%60devcontainers-ci%60
+          # DinD requires an image that has dockerd installed, so run with -P ubuntu-latest=ghcr.io/corvina-r-d/ubuntu:act-22.04
+          # DinD requires --priviliged option as well
+        - name: optionally start DinD for act (local testing)
+          if: env.ACT
+          run: |
+            dockerd -H unix:///var/run/dind.sock & sleep 5;
+            echo "DOCKER_HOST=unix:///var/run/dind.sock" >>${GITHUB_ENV}
+
+        - name: optionally test DinD for act (local testing)
+          if: env.ACT
+          run: |
+            docker run --rm hello-world:linux
+
+        - uses: actions/checkout@v4
+        - uses: docker/setup-buildx-action@v3
+        - uses: docker/login-action@v3
+          with:
+            registry: ${{ env.REGISTRY }}
+            username: ${{ env.REGISTRY_USERNAME }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+
+        - name: Generate metadata tags for devcontainer image
+          id: meta
+          uses: ./.github/actions/docker/metadata-action
+          with:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+            arch: ${{ matrix.arch }}
+
+        - name: Build and test dev container image
+          uses: devcontainers/ci@v0.3
+          with:
+            imageName: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer
+            cacheFrom: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer:cache-${{ matrix.arch }}
+            cacheTo: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer:cache-${{ matrix.arch }}
+            push: ${{ env.ACT != '' && 'never' || 'always' }} # always == only if runCmd succeeds
+            configFile: .devcontainer/source/devcontainer.json
+            imageTag: ${{ steps.meta.outputs.tags }}
+            runCmd: |
+              sudo apt update
+              rosdep update
+              ./scripts/ros/ros-dep.sh
+              colcon build
+              colcon test
+
+  merge-all:
+    name: Devcontainer CI finished
+    runs-on: ubuntu-24.04
+    needs: [dev-container-ci]
+    steps:
+      - run: echo "All jobs finished successfully"

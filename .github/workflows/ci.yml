@@ -29,8 +29,8 @@ jobs:
     name: Development image
     timeout-minutes: 35
     outputs:
-      image_arm64: ${{ steps.meta.outputs.tags && contains(matrix.arch, 'arm64') && steps.meta.outputs.tags || '' }}
-      image_amd64: ${{ steps.meta.outputs.tags && contains(matrix.arch, 'amd64') && steps.meta.outputs.tags || '' }}
+      image_arm64: ${{ contains(matrix.arch, 'arm64') && steps.build.outputs.image || '' }}
+      image_amd64: ${{ contains(matrix.arch, 'amd64') && steps.build.outputs.image || '' }}
     permissions:
       contents: read
       packages: write
@@ -44,41 +44,19 @@ jobs:
             arch: amd64
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ env.REGISTRY_USERNAME }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
 
-      - name: Extract metadata (tags, labels) for Development docker image
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          images: ${{ env.REGISTRY }}/dr-qp/ros-desktop
-          tags: |
-            type=ref,event=branch,suffix=-${{ matrix.arch }}
-            type=ref,event=pr,suffix=-${{ matrix.arch }}
-            type=semver,pattern={{version}},suffix=-${{ matrix.arch }}
-            type=semver,pattern={{major}}.{{minor}},suffix=-${{ matrix.arch }}
-            type=edge,branch=main,suffix=-${{ matrix.arch }}
-
-      - uses: actions/checkout@v4 # Checkout the repository to allow work with nektos/act on non pushed commits
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        env:
-          REGISTRY_CACHE: 'type=registry,ref=${{ env.REGISTRY }}/dr-qp/ros-desktop-cache'
-          GHA_CACHE_FROM: 'type=gha,scope=ros-desktop-${{ matrix.arch }}'
-          GHA_CACHE_TO: 'type=gha,scope=ros-desktop-${{ matrix.arch }},mode=max'
+      - name: Build development docker image
+        id: build
+        uses: ./.github/actions/docker/build-push-action
         with:
           context: scripts
           file: scripts/ros-desktop.dockerfile
-          push: ${{ env.ACT == '' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE_FROM }}
-          cache-to: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE_TO }}
+          image: ${{ env.REGISTRY }}/dr-qp/ros-desktop
+          arch: ${{ matrix.arch }}
+          registry: ${{ env.REGISTRY }}
+          registry-username: ${{ env.REGISTRY_USERNAME }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   ros-ci:
     name: Build and test ROS2 workspace
@@ -138,74 +116,6 @@ jobs:
           name: colcon-logs-${{ matrix.arch }}
           path: ${{ steps.action_ros_ci_step.outputs.ros-workspace-directory-name }}/log
 
-  dev-container-ci:
-      name: Devcontainer image
-      timeout-minutes: 35
-      strategy:
-        fail-fast: false
-        matrix:
-          include:
-            - runner: ubuntu-24.04-arm
-              arch: arm64
-            - runner: ubuntu-24.04
-              arch: amd64
-      runs-on: ${{ matrix.runner }}
-      steps:
-        - name: Install updated Skopeo needed for docker/buildx
-          run: |
-            sudo apt-get update
-            sudo apt-get install skopeo -y
-
-          # Running container will fail with act due to no Docker in Docker, only Docker outside of Docker
-          # https://github.com/Dr-QP/Dr.QP/wiki/Issue-using-%60act%60-and-%60devcontainers-ci%60
-          # DinD requires an image that has dockerd installed, so run with -P ubuntu-latest=ghcr.io/corvina-r-d/ubuntu:act-22.04
-          # DinD requires --priviliged option as well
-        - name: optionally start DinD for act (local testing)
-          if: env.ACT
-          run: |
-            dockerd -H unix:///var/run/dind.sock & sleep 5;
-            echo "DOCKER_HOST=unix:///var/run/dind.sock" >>${GITHUB_ENV}
-
-        - name: optionally test DinD for act (local testing)
-          if: env.ACT
-          run: |
-            docker run --rm hello-world:linux
-
-        - uses: actions/checkout@v4
-        - uses: docker/setup-buildx-action@v3
-        - uses: docker/login-action@v3
-          with:
-            registry: ${{ env.REGISTRY }}
-            username: ${{ env.REGISTRY_USERNAME }}
-            password: ${{ secrets.GITHUB_TOKEN }}
-
-        - name: Generate metadata tags for devcontainer image
-          # do not use name for dev container as devcontainer/cli can't handle name in tags
-          id: meta
-          uses: docker/metadata-action@v5
-          with:
-            tags: |
-              type=ref,event=branch,suffix=-${{ matrix.arch }}
-              type=ref,event=pr,suffix=-${{ matrix.arch }}
-              type=semver,pattern={{version}},suffix=-${{ matrix.arch }}
-              type=semver,pattern={{major}}.{{minor}},suffix=-${{ matrix.arch }}
-              type=edge,branch=main,suffix=-${{ matrix.arch }}
-
-        - name: Build and test dev container image
-          uses: devcontainers/ci@v0.3
-          with:
-            imageName: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer
-            cacheFrom: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer
-            push: ${{ env.ACT != null && 'false' || 'always' }} # always == only if runCmd succeeds
-            configFile: .devcontainer/source/devcontainer.json
-            imageTag: ${{ steps.meta.outputs.tags }}
-            runCmd: |
-              sudo apt update
-              rosdep update
-              ./scripts/ros/ros-dep.sh
-              colcon build
-              colcon test
-
   build-deploy-image:
     name: Deployment image
     timeout-minutes: 35
@@ -223,50 +133,26 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ env.REGISTRY_USERNAME }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
 
-
-      - name: Extract metadata (tags, labels) for Deployment docker image
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          images: ${{ env.REGISTRY }}/dr-qp/ros-deploy
-          tags: |
-            type=ref,event=branch,suffix=-${{ matrix.arch }}
-            type=ref,event=pr,suffix=-${{ matrix.arch }}
-            type=semver,pattern={{version}},suffix=-${{ matrix.arch }}
-            type=semver,pattern={{major}}.{{minor}},suffix=-${{ matrix.arch }}
-            type=edge,branch=main,suffix=-${{ matrix.arch }}
-
-      - uses: actions/checkout@v4 # Checkout the repository to allow work with nektos/act on non pushed commits
-      - name: Build and push Deployment image
-        uses: docker/build-push-action@v6
-        env:
-          REGISTRY_CACHE: 'type=registry,ref=${{ env.REGISTRY }}/dr-qp/ros-deploy-cache'
-          GHA_CACHE_FROM: 'type=gha,scope=ros-deploy-${{ matrix.arch }}'
-          GHA_CACHE_TO: 'type=gha,scope=ros-deploy-${{ matrix.arch }},mode=max'
+      - name: Build deployment docker image
+        uses: ./.github/actions/docker/build-push-action
         with:
           context: scripts/deploy
           file: scripts/deploy/ros-deploy.dockerfile
-          push: ${{ env.ACT == '' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE_FROM }}
-          cache-to: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE_TO }}
+          image: ${{ env.REGISTRY }}/dr-qp/ros-deploy
+          arch: ${{ matrix.arch }}
+          registry: ${{ env.REGISTRY }}
+          registry-username: ${{ env.REGISTRY_USERNAME }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
             ROS_DISTRO=${{ env.ROS_DISTRO }}
             GIT_SHA=${{ github.event.pull_request && github.event.pull_request.head.sha || github.sha }}
             BUILD_IMAGE=${{ matrix.arch == 'arm64' && needs.build-dev-image.outputs.image_arm64 || needs.build-dev-image.outputs.image_amd64 }}
 
-  protected:
-    name: Protected check
+  merge-all:
+    name: CI/CD finished
     runs-on: ubuntu-24.04
-    needs: [build-dev-image, ros-ci, build-deploy-image, dev-container-ci]
+    needs: [build-dev-image, ros-ci, build-deploy-image]
     steps:
       - run: echo "All jobs finished successfully"

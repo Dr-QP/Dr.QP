@@ -1,0 +1,43 @@
+name: Docker metadata action
+description: Extract metadata (tags, labels) for docker image
+inputs:
+  images:
+    description: 'Image names to pass to metadata-action'
+    default: ''
+  arch:
+    description: 'Architecture to use as suffix'
+    required: true
+  github-token:
+    description: 'GitHub token'
+    required: true
+outputs:
+  tags:
+    description: "Docker tags for the images"
+    value: ${{ steps.meta.outputs.tags }}
+  tag:
+    description: "Docker tag for the images"
+    value: ${{ steps.single-tag.outputs.result }}
+  labels:
+    description: "Docker labels for the images"
+    value: ${{ steps.meta.outputs.labels }}
+runs:
+  using: "composite"
+  steps:
+    - uses: docker/metadata-action@v5
+      id: meta
+      with:
+        github-token: ${{ inputs.github-token }}
+        images: ${{ inputs.images }}
+        tags: |
+          type=ref,event=branch,suffix=-${{ inputs.arch }}
+          type=ref,event=pr,suffix=-${{ inputs.arch }}
+          type=semver,pattern={{version}},suffix=-${{ inputs.arch }}
+          type=semver,pattern={{major}}.{{minor}},suffix=-${{ inputs.arch }}
+          type=edge,branch=main,suffix=-${{ inputs.arch }}
+
+    - shell: bash
+      id: single-tag
+      run: |
+        first_tag=$(echo "${{ steps.meta.outputs.tags }}" | head -n1 | tr -d '\r')
+        echo "result=$first_tag" >> "$GITHUB_OUTPUT"
+

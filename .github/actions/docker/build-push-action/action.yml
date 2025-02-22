@@ -1,0 +1,63 @@
+name: Docker build and push action
+description: Build and push docker image
+inputs:
+  context:
+    description: 'Context for Dockerfile build'
+    required: true
+  file:
+    description: 'Dockerfile to use'
+    required: true
+  image:
+    description: 'Image names to pass to metadata-action'
+    required: true
+  arch:
+    description: 'Architecture to use as suffix'
+    required: true
+  registry:
+    description: 'Docker registry to push to'
+    required: true
+  registry-username:
+    description: 'Docker registry username'
+    required: true
+  github-token:
+    description: 'GitHub token'
+    required: true
+  build-args:
+    description: 'Build arguments for Dockerfile'
+    required: false
+outputs:
+  image:
+    description: "Docker tag for the images"
+    value: ${{ steps.meta.outputs.tag }}
+runs:
+  using: "composite"
+  steps:
+    - uses: docker/setup-buildx-action@v3
+    - uses: docker/login-action@v3
+      with:
+        registry: ${{ inputs.registry }}
+        username: ${{ inputs.registry-username }}
+        password: ${{ inputs.github-token }}
+
+    - name: Extract metadata (tags, labels) for docker image
+      id: meta
+      uses: ./.github/actions/docker/metadata-action
+      with:
+        github-token: ${{ inputs.github-token }}
+        images: ${{ inputs.image }}
+        arch: ${{ inputs.arch }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v6
+      env:
+        REGISTRY_CACHE: 'type=registry,ref=${{ inputs.image }}:cache-${{ inputs.arch }}'
+        GHA_CACHE: 'type=gha,scope=${{ inputs.image }}-${{ inputs.arch }}'
+      with:
+        context: ${{ inputs.context }}
+        file: ${{ inputs.file }}
+        push: ${{ env.ACT == '' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE }}
+        cache-to: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE }},mode=max
+        build-args: ${{ inputs.build-args }}
