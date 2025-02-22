@@ -8,7 +8,7 @@ queries:
 
 query-filters:
   - exclude:
-      id: js/actions/unpinned-tag
+      id: actions/unpinned-tag
 
 paths-ignore:
   - "**/third_party/**"  # Ignore third-party dependencies
