@@ -81,7 +81,7 @@ jobs:
             cacheTo: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer:cache-${{ matrix.arch }}
             push: ${{ env.ACT != '' && 'never' || 'always' }} # always == only if runCmd succeeds
             configFile: .devcontainer/source/devcontainer.json
-            imageTag: ${{ steps.meta.outputs.tags }}
+            imageTag: ${{ steps.meta.outputs.tag }}
             runCmd: |
               sudo apt update
               rosdep update
