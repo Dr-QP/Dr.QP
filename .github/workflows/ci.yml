@@ -139,7 +139,7 @@ jobs:
         uses: ./.github/actions/docker/build-push-action
         with:
           context: scripts
-          file: scripts/ros-deploy.dockerfile
+          file: scripts/deploy/ros-deploy.dockerfile
           image: ${{ env.REGISTRY }}/dr-qp/ros-deploy
           arch: ${{ matrix.arch }}
           registry: ${{ env.REGISTRY }}
