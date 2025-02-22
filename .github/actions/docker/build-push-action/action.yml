@@ -1,14 +1,14 @@
 name: Docker build and push action
 description: Build and push docker image
 inputs:
-  image:
-    description: 'Image names to pass to metadata-action'
-    required: true
   context:
     description: 'Context for Dockerfile build'
     required: true
   file:
     description: 'Dockerfile to use'
+    required: true
+  image:
+    description: 'Image names to pass to metadata-action'
     required: true
   arch:
     description: 'Architecture to use as suffix'
