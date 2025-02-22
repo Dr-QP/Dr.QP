@@ -18,6 +18,12 @@ outputs:
   labels:
     description: Docker labels for the images
     value: ${{ steps.meta.outputs.labels }}
+  version:
+    description: Docker version for the images
+    value: ${{ steps.meta.outputs.version }}
+  json:
+    description: Docker json for the images
+    value: ${{ steps.meta.outputs.json }}
 runs:
   using: composite
   steps:
