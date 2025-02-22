@@ -32,7 +32,6 @@ jobs:
       image_arm64: ${{ contains(matrix.arch, 'arm64') && steps.build.outputs.image || '' }}
       image_amd64: ${{ contains(matrix.arch, 'amd64') && steps.build.outputs.image || '' }}
     permissions:
-      contents: read
       packages: write
     strategy:
       fail-fast: false
@@ -60,6 +59,7 @@ jobs:
 
   ros-ci:
     name: Build and test ROS2 workspace
+    needs: [build-dev-image]
     timeout-minutes: 35
     strategy:
       fail-fast: false
@@ -70,7 +70,8 @@ jobs:
           - runner: ubuntu-24.04
             arch: amd64
     runs-on: ${{ matrix.runner }}
-    needs: [build-dev-image]
+    permissions:
+      packages: read
     container:
       image: ${{ matrix.arch == 'arm64' && needs.build-dev-image.outputs.image_arm64 || needs.build-dev-image.outputs.image_amd64 }}
 
@@ -119,6 +120,7 @@ jobs:
 
   build-deploy-image:
     name: Deployment image
+    needs: [build-dev-image, ros-ci]
     timeout-minutes: 35
     strategy:
       fail-fast: false
@@ -129,9 +131,7 @@ jobs:
           - runner: ubuntu-24.04
             arch: amd64
     runs-on: ${{ matrix.runner }}
-    needs: [build-dev-image, ros-ci]
     permissions:
-      contents: read
       packages: write
     steps:
       - uses: actions/checkout@v4
@@ -153,7 +153,8 @@ jobs:
 
   merge-all:
     name: CI/CD finished
-    runs-on: ubuntu-24.04
     needs: [build-dev-image, ros-ci, build-deploy-image]
+    runs-on: ubuntu-24.04
+    permissions: {}
     steps:
       - run: echo "All jobs finished successfully"
