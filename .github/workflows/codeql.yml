@@ -117,18 +117,24 @@ jobs:
         output: sarif-results
         upload: failure-only
 
+    - name: Find sarif file
+      id: sarif
+      run: |
+        file=$(find sarif-results -name "*.sarif")
+        echo "file=$PWD/$file >> "$GITHUB_OUTPUT"
+
     - name: Upload loc as a Build Artifact
       uses: actions/upload-artifact@v4
       with:
         name: ${{matrix.language}}-raw.sarif
-        path: sarif-results/${{matrix.language}}.sarif
+        path: ${{ steps.sarif.outputs.file }}
         retention-days: 7
 
     - name: filter-sarif
       uses: advanced-security/filter-sarif@v1
       with:
-        input: sarif-results/${{matrix.language}}.sarif
-        output: sarif-results/${{matrix.language}}.sarif
+        input: ${{ steps.sarif.outputs.file }}
+        output: ${{ steps.sarif.outputs.file }}
         patterns: |
           -**/build/**
           -**/install/**
@@ -137,11 +143,11 @@ jobs:
     - name: Upload SARIF
       uses: github/codeql-action/upload-sarif@v3
       with:
-        sarif_file: sarif-results/${{matrix.language}}.sarif
+        sarif_file: ${{ steps.sarif.outputs.file }}
 
     - name: Upload loc as a Build Artifact
       uses: actions/upload-artifact@v4
       with:
         name: ${{matrix.language}}-filtered.sarif
-        path: sarif-results/${{matrix.language}}.sarif
+        path: ${{ steps.sarif.outputs.file }}
         retention-days: 7
