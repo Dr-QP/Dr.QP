@@ -31,6 +31,10 @@ jobs:
     outputs:
       image_arm64: ${{ contains(matrix.arch, 'arm64') && steps.build.outputs.image || '' }}
       image_amd64: ${{ contains(matrix.arch, 'amd64') && steps.build.outputs.image || '' }}
+
+      image: ${{ steps.build.outputs.image }}
+      arch: ${{ matrix.arch }}
+      runner: ${{ matrix.runner }}
     permissions:
       contents: read
       packages: write
@@ -65,14 +69,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: ubuntu-24.04-arm
-            arch: arm64
-          - runner: ubuntu-24.04
-            arch: amd64
+          - runner: ${{ needs.build-dev-image.outputs.runner }}
+            arch: ${{ needs.build-dev-image.outputs.arch }}
+            image: ${{ needs.build-dev-image.outputs.image }}
     runs-on: ${{ matrix.runner }}
     needs: [build-dev-image]
     container:
-      image: ${{ matrix.arch == 'arm64' && needs.build-dev-image.outputs.image_arm64 || needs.build-dev-image.outputs.image_amd64 }}
+      image: ${{ matrix.image }}
 
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
 
@@ -123,10 +126,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: ubuntu-24.04-arm
-            arch: arm64
-          - runner: ubuntu-24.04
-            arch: amd64
+          - runner: ${{ needs.build-dev-image.outputs.runner }}
+            arch: ${{ needs.build-dev-image.outputs.arch }}
     runs-on: ${{ matrix.runner }}
     needs: [build-dev-image, ros-ci]
     permissions:
