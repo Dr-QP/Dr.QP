@@ -40,9 +40,9 @@ jobs:
       options: ${{ matrix.container_options }} # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
 
       # Only needed for nektos/act runs
-      credentials:
-        username: ${{ env.REGISTRY_USERNAME }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      # credentials:
+      #   username: ${{ env.REGISTRY_USERNAME }}
+      #   password: ${{ secrets.GITHUB_TOKEN }}
     permissions:
       # required for all workflows
       security-events: write
