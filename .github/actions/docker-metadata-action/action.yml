@@ -7,15 +7,16 @@ inputs:
   arch:
     description: 'Architecture to use as suffix'
     required: true
-    default: ${{ runner.arch }}
   github-token:
     description: 'GitHub token'
     required: true
-    default: ${{ github.token }}
 outputs:
   tags:
     description: "Docker tags for the images"
     value: ${{ steps.meta.outputs.tags }}
+  tag:
+    description: "Docker tag for the images"
+    value: ${{ steps.single-tag.outputs.result }}
   labels:
     description: "Docker labels for the images"
     value: ${{ steps.meta.outputs.labels }}
@@ -32,3 +33,11 @@ runs:
           type=ref,event=pr,suffix=-${{ inputs.arch }}
           type=semver,pattern={{version}},suffix=-${{ inputs.arch }}
           type=semver,pattern={{major}}.{{minor}},suffix=-${{ inputs.arch }}
+          type=edge,branch=main,suffix=-${{ inputs.arch }}
+
+    - shell: bash
+      id: single-tag
+      run: |
+        first_tag=$(echo "${{ steps.meta.outputs.tags }}" | head -n1 | tr -d '\r')
+        echo "result=$first_tag" >> "$GITHUB_OUTPUT"
+
