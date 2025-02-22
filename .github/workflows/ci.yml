@@ -186,8 +186,9 @@ jobs:
           uses: devcontainers/ci@v0.3
           with:
             imageName: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer
-            cacheFrom: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer
-            push: ${{ env.ACT != null && 'false' || 'always' }} # always == only if runCmd succeeds
+            cacheFrom: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer-cache
+            cacheTo: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer-cache
+            push: ${{ env.ACT != '' && 'never' || 'always' }} # always == only if runCmd succeeds
             configFile: .devcontainer/source/devcontainer.json
             imageTag: ${{ steps.meta.outputs.tags }}
             runCmd: |
