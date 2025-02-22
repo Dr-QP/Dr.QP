@@ -36,7 +36,7 @@ jobs:
     # Consider using larger runners or machines with greater resources for possible analysis time improvements.
     runs-on: 'ubuntu-latest'
     container:
-      image: ghcr.io/dr-qp/ros-desktop:main
+      image: ghcr.io/dr-qp/ros-desktop:pr-60-amd64
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
 
       # Only needed for nektos/act runs
@@ -108,7 +108,7 @@ jobs:
         sudo apt-get update
         rosdep update
         ./scripts/ros/ros-dep.sh
-        colcon build --mixin release compile-commands
+        colcon build --mixin ninja rel-with-deb-info compile-commands
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
