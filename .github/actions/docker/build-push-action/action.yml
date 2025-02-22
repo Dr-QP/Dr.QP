@@ -47,18 +47,10 @@ runs:
         images: ${{ inputs.image }}
         arch: ${{ inputs.arch }}
 
-    - name: Extract metadata (tags, labels) for cache docker image
-      id: meta_cache
-      uses: ./.github/actions/docker/metadata-action
-      with:
-        github-token: ${{ inputs.github-token }}
-        images: ${{ inputs.image }}-cache
-        arch: ${{ inputs.arch }}
-
     - name: Build and push Docker image
       uses: docker/build-push-action@v6
       env:
-        REGISTRY_CACHE: 'type=registry,ref=${{ steps.meta_cache.outputs.tag }}'
+        REGISTRY_CACHE: 'type=registry,ref=${{ inputs.image }}-cache:latest-${{ inputs.arch }}'
         GHA_CACHE_FROM: 'type=gha,scope=${{ inputs.image }}-${{ inputs.arch }}'
         GHA_CACHE_TO: 'type=gha,scope=${{ inputs.image }}-${{ inputs.arch }},mode=max'
       with:
