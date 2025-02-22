@@ -77,8 +77,8 @@ jobs:
           uses: devcontainers/ci@v0.3
           with:
             imageName: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer
-            cacheFrom: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer:cache-${{ inputs.arch }}
-            cacheTo: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer:cache-${{ inputs.arch }}
+            cacheFrom: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer:cache-${{ matrix.arch }}
+            cacheTo: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer:cache-${{ matrix.arch }}
             push: ${{ env.ACT != '' && 'never' || 'always' }} # always == only if runCmd succeeds
             configFile: .devcontainer/source/devcontainer.json
             imageTag: ${{ steps.meta.outputs.tags }}
