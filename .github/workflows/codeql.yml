@@ -157,7 +157,7 @@ jobs:
   merge-all:
     name: Code Analysis finished
     needs: [analyze]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     permissions: {}
     steps:
       - run: echo "All jobs finished successfully"

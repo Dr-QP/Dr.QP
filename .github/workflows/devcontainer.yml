@@ -98,7 +98,7 @@ jobs:
   merge-all:
     name: Devcontainer CI finished
     needs: [dev-container-ci]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     permissions: {}
     steps:
       - run: echo "All jobs finished successfully"
