@@ -2,42 +2,42 @@ name: Docker build and push action
 description: Build and push docker image
 inputs:
   context:
-    description: 'Context for Dockerfile build'
+    description: Context for Dockerfile build
     required: true
   file:
-    description: 'Dockerfile to use'
+    description: Dockerfile to use
     required: true
   image:
-    description: 'Image names to pass to metadata-action'
+    description: Image names to pass to metadata-action
     required: true
   arch:
-    description: 'Architecture to use as suffix'
+    description: Architecture to use as suffix
     required: true
   registry:
-    description: 'Docker registry to push to'
+    description: Docker registry to push to
     required: true
   registry-username:
-    description: 'Docker registry username'
+    description: Docker registry username
     required: true
-  github-token:
-    description: 'GitHub token'
+  registry-token:
+    description: GitHub token
     required: true
   build-args:
-    description: 'Build arguments for Dockerfile'
+    description: Build arguments for Dockerfile
     required: false
 outputs:
   image:
-    description: "Docker tag for the images"
+    description: Docker tag for the images
     value: ${{ steps.meta.outputs.tag }}
 runs:
-  using: "composite"
+  using: composite
   steps:
     - uses: docker/setup-buildx-action@v3
     - uses: docker/login-action@v3
       with:
         registry: ${{ inputs.registry }}
         username: ${{ inputs.registry-username }}
-        password: ${{ inputs.github-token }}
+        password: ${{ inputs.registry-token }}
 
     - name: Extract metadata (tags, labels) for docker image
       id: meta
@@ -48,10 +48,11 @@ runs:
         arch: ${{ inputs.arch }}
 
     - name: Build and push Docker image
+      id: build
       uses: docker/build-push-action@v6
       env:
-        REGISTRY_CACHE: 'type=registry,ref=${{ inputs.image }}:cache-${{ inputs.arch }}'
-        GHA_CACHE: 'type=gha,scope=${{ inputs.image }}-${{ inputs.arch }}'
+        REGISTRY_CACHE: type=registry,ref=${{ inputs.image }}:cache-${{ inputs.arch }}
+        GHA_CACHE: type=gha,scope=${{ inputs.image }}-${{ inputs.arch }}
       with:
         context: ${{ inputs.context }}
         file: ${{ inputs.file }}
