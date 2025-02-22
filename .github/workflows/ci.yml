@@ -54,7 +54,7 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Development docker image
         id: meta
-        uses: ./.github/actions/docker-metadata-action
+        uses: ./.github/actions/docker/metadata-action
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           images: ${{ env.REGISTRY }}/dr-qp/ros-desktop
@@ -177,7 +177,7 @@ jobs:
 
         - name: Generate metadata tags for devcontainer image
           id: meta
-          uses: ./.github/actions/docker-metadata-action
+          uses: ./.github/actions/docker/metadata-action
           with:
             github-token: ${{ secrets.GITHUB_TOKEN }}
             arch: ${{ matrix.arch }}
@@ -224,7 +224,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Extract metadata (tags, labels) for Development docker image
         id: meta
-        uses: ./.github/actions/docker-metadata-action
+        uses: ./.github/actions/docker/metadata-action
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           images: ${{ env.REGISTRY }}/dr-qp/ros-deploy
