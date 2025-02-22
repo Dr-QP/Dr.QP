@@ -25,10 +25,6 @@ inputs:
   build-args:
     description: Build arguments for Dockerfile
     required: false
-outputs:
-  image:
-    description: Docker tag for the images
-    value: ${{ steps.meta.outputs.tag }}
 runs:
   using: composite
   steps:
