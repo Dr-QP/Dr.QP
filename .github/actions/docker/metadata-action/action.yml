@@ -26,7 +26,7 @@ runs:
       id: suffix
       run: |
         if [ -n "${{ inputs.arch }}" ]; then
-          echo "result=-${{ inputs.arch }}" >> "$GITHUB_OUTPUT"
+          echo "result=,suffix=-${{ inputs.arch }}" >> "$GITHUB_OUTPUT"
         else
           echo "result=''" >> "$GITHUB_OUTPUT"
         fi
@@ -36,11 +36,11 @@ runs:
       with:
         images: ${{ inputs.images }}
         tags: |
-          type=ref,event=branch,suffix=${{ steps.suffix.outputs.result }}
-          type=ref,event=pr,suffix=${{ steps.suffix.outputs.result }}
-          type=semver,pattern={{version}},suffix=${{ steps.suffix.outputs.result }}
-          type=semver,pattern={{major}}.{{minor}},suffix=${{ steps.suffix.outputs.result }}
-          type=edge,branch=main,suffix=${{ steps.suffix.outputs.result }}
+          type=ref,event=branch${{ steps.suffix.outputs.result }}
+          type=ref,event=pr${{ steps.suffix.outputs.result }}
+          type=semver,pattern={{version}}${{ steps.suffix.outputs.result }}
+          type=semver,pattern={{major}}.{{minor}}${{ steps.suffix.outputs.result }}
+          type=edge,branch=main${{ steps.suffix.outputs.result }}
 
     - name: Extract single tag
       shell: bash
