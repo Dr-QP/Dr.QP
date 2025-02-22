@@ -24,6 +24,7 @@ env:
   ROS_DISTRO: humble
   CC: clang
   CXX: clang++
+  CMAKE_EXPORT_COMPILE_COMMANDS: "1"
   REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
 
 jobs:
@@ -97,13 +98,14 @@ jobs:
     # to build your code.
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
-    - if: matrix.build-mode == 'manual'
+    - name: Build C++ code
+      if: matrix.build-mode == 'manual'
       shell: bash
       run: |
         sudo apt-get update
         rosdep update
         ./scripts/ros/ros-dep.sh
-        colcon build --mixin ninja rel-with-deb-info compile-commands
+        colcon build --cmake-args -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
