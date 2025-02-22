@@ -20,6 +20,10 @@ on:
   schedule:
     - cron: '32 17 * * 5'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
 env:
   ROS_DISTRO: humble
   CC: clang
