@@ -20,6 +20,12 @@ on:
   schedule:
     - cron: '32 17 * * 5'
 
+env:
+  ROS_DISTRO: humble
+  CC: clang
+  CXX: clang++
+  REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
+
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
@@ -33,6 +39,10 @@ jobs:
       image: ${{ matrix.container_image }}
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
 
+      # Only needed for nektos/act runs
+      credentials:
+        username: ${{ env.REGISTRY_USERNAME }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     permissions:
       # required for all workflows
       security-events: write
@@ -50,7 +60,7 @@ jobs:
         include:
         - language: c-cpp
           build-mode: manual
-          container_image: ghcr.io/dr-qp/ros-desktop:edge-amd64
+          container_image: ghcr.io/dr-qp/ros-desktop:main
         - language: python
           build-mode: none
         - language: javascript-typescript
