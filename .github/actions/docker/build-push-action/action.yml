@@ -64,16 +64,17 @@ runs:
         digest="${{ steps.build.outputs.digest }}"
         touch "${{ runner.temp }}/digests/${digest#sha256:}"
 
-    - name: Prepare
+    - name: Prepare digest artifact name
       shell: bash
+      id: digests
       run: |
-        platform='linux/${{ inputs.arch }}'
-        echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+        artifact_name='digests-${{ inputs.image }}-linux-${{ inputs.arch }}'
+        echo "artifact_name=${artifact_name//\//-}" >> "$GITHUB_OUTPUT"
 
     - name: Upload digest
       uses: actions/upload-artifact@v4
       with:
-        name: digests-${{ env.PLATFORM_PAIR }}
+        name: ${{ step.digests.outputs.artifact_name }}
         path: ${{ runner.temp }}/digests/*
         if-no-files-found: error
         retention-days: 1
