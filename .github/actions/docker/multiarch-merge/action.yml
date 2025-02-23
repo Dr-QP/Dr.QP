@@ -44,7 +44,7 @@ runs:
       shell: bash
       working-directory: ${{ runner.temp }}/digests
       run: |
-        docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "${{ steps.meta.outputs.json }}") \
+        docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
           $(printf '${{ inputs.image }}@sha256:%s ' *)
 
     - name: Inspect image
