@@ -34,7 +34,7 @@ runs:
         if [ -n "${{ inputs.arch }}" ]; then
           echo "result=,suffix=-${{ inputs.arch }}" >> "$GITHUB_OUTPUT"
         else
-          echo "result=''" >> "$GITHUB_OUTPUT"
+          echo "result=" >> "$GITHUB_OUTPUT"
         fi
 
     - uses: docker/metadata-action@v5
