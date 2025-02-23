@@ -2,62 +2,79 @@ name: Docker build and push action
 description: Build and push docker image
 inputs:
   context:
-    description: 'Context for Dockerfile build'
+    description: Context for Dockerfile build
     required: true
   file:
-    description: 'Dockerfile to use'
+    description: Dockerfile to use
     required: true
   image:
-    description: 'Image names to pass to metadata-action'
+    description: Image names to pass to metadata-action
     required: true
   arch:
-    description: 'Architecture to use as suffix'
+    description: Architecture to use as suffix
     required: true
   registry:
-    description: 'Docker registry to push to'
+    description: Docker registry to push to
     required: true
   registry-username:
-    description: 'Docker registry username'
+    description: Docker registry username
     required: true
-  github-token:
-    description: 'GitHub token'
+  registry-token:
+    description: GitHub token
     required: true
   build-args:
-    description: 'Build arguments for Dockerfile'
+    description: Build arguments for Dockerfile
     required: false
-outputs:
-  image:
-    description: "Docker tag for the images"
-    value: ${{ steps.meta.outputs.tag }}
 runs:
-  using: "composite"
+  using: composite
   steps:
     - uses: docker/setup-buildx-action@v3
     - uses: docker/login-action@v3
       with:
         registry: ${{ inputs.registry }}
         username: ${{ inputs.registry-username }}
-        password: ${{ inputs.github-token }}
+        password: ${{ inputs.registry-token }}
 
-    - name: Extract metadata (tags, labels) for docker image
+    - name: Extract metadata (labels) for docker image
       id: meta
-      uses: ./.github/actions/docker/metadata-action
+      uses: docker/metadata-action@v5
       with:
-        github-token: ${{ inputs.github-token }}
-        images: ${{ inputs.image }}
-        arch: ${{ inputs.arch }}
+        images: |
+          ${{ inputs.image }}
 
     - name: Build and push Docker image
+      id: build
       uses: docker/build-push-action@v6
       env:
-        REGISTRY_CACHE: 'type=registry,ref=${{ inputs.image }}:cache-${{ inputs.arch }}'
-        GHA_CACHE: 'type=gha,scope=${{ inputs.image }}-${{ inputs.arch }}'
+        REGISTRY_CACHE: type=registry,ref=${{ inputs.image }}:cache-${{ inputs.arch }}
+        GHA_CACHE: type=gha,scope=${{ inputs.image }}-${{ inputs.arch }}
       with:
         context: ${{ inputs.context }}
         file: ${{ inputs.file }}
-        push: ${{ env.ACT == '' }}
-        tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE }}
         cache-to: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE }},mode=max
         build-args: ${{ inputs.build-args }}
+        outputs: type=image,"name=${{ inputs.image }}",push-by-digest=true,name-canonical=true,push=true
+
+    - name: Export digest
+      shell: bash
+      run: |
+        mkdir -p ${{ runner.temp }}/digests
+        digest="${{ steps.build.outputs.digest }}"
+        touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+    - name: Prepare digest artifact name
+      shell: bash
+      id: digests
+      run: |
+        artifact_name='digests-${{ inputs.image }}-linux-${{ inputs.arch }}'
+        echo "artifact_name=${artifact_name//\//-}" >> "$GITHUB_OUTPUT"
+
+    - name: Upload digest
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.digests.outputs.artifact_name }}
+        path: ${{ runner.temp }}/digests/*
+        if-no-files-found: error
+        retention-days: 1

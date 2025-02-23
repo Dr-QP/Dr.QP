@@ -94,7 +94,6 @@ void playPose(const Pose pose, const uint8_t playtime, SerialProtocol& servoSeri
     servoIndex++;
   });
   XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
-  // servo.sendJogCommand(sposCmd);
   servo.sendJogCommand(sposCmd);
   if (servo.isFailed()) {
     throw std::runtime_error("set position failed: " + to_string(servo.getLastError()));

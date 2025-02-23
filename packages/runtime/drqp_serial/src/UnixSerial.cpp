@@ -28,8 +28,6 @@
 #include <boost/asio/write.hpp>
 #include <boost/thread.hpp>
 
-// #include <boost/asio/io_service.hpp>
-// #include <boost/asio/serial_port.hpp>
 struct UnixSerial::Impl
 {
   boost::asio::io_service ioService_;
