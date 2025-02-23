@@ -96,13 +96,7 @@ jobs:
       packages: read
     container:
       image: ${{ needs.merge-dev-image.outputs.image }}
-
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
-
-      # Only needed for nektos/act runs
-      # credentials:
-      #   username: ${{ env.REGISTRY_USERNAME }}
-      #   password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -132,7 +126,6 @@ jobs:
                 "mixin": ["coverage-pytest"]
               }
             }
-
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
