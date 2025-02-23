@@ -106,14 +106,6 @@ jobs:
               colcon build --event-handlers=console_cohesion+
               colcon test --event-handlers=console_cohesion+
 
-        # - name: Save colcon build dirs
-        #   uses: actions/cache/save@v4
-        #   with:
-        #     path: |
-        #       build
-        #       install
-        #     key: ${{ steps.cache-ros-ws-restore.outputs.cache-primary-key }}
-
   merge-all:
     name: Devcontainer CI finished
     needs: [dev-container-ci]
