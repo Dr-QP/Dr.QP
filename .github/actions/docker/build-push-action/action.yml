@@ -51,7 +51,6 @@ runs:
       with:
         context: ${{ inputs.context }}
         file: ${{ inputs.file }}
-        push: false
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE }}
         cache-to: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE }},mode=max
