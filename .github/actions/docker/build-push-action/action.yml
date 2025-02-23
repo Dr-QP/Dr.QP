@@ -74,7 +74,7 @@ runs:
     - name: Upload digest
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ step.digests.outputs.artifact_name }}
+        name: ${{ steps.digests.outputs.artifact_name }}
         path: ${{ runner.temp }}/digests/*
         if-no-files-found: error
         retention-days: 1
