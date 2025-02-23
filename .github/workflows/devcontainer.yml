@@ -81,12 +81,9 @@ jobs:
         - name: Build and test dev container image
           uses: devcontainers/ci@v0.3
           with:
-            imageName: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer
+            configFile: .devcontainer/source/devcontainer.json
             cacheFrom: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer:cache-${{ matrix.arch }}
             cacheTo: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer:cache-${{ matrix.arch }}
-            push: ${{ env.ACT != '' && 'never' || 'always' }} # always == only if runCmd succeeds
-            configFile: .devcontainer/source/devcontainer.json
-            imageTag: ${{ steps.meta.outputs.tag }}
             runCmd: |
               sudo apt update
               rosdep update
