@@ -86,9 +86,9 @@ jobs:
             path: |
               build
               install
-            key: ${{ runner.os }}-ros_ws-${{ hashFiles('**/package.xml,**/CMakeFiles.txt,**/*.cmake') }}
+            key: ${{ matrix.runner }}-ros_ws-${{ hashFiles('**/package.xml,**/CMakeFiles.txt,**/*.cmake') }}
             restore-keys: |
-              ${{ runner.os }}-ros_ws-
+              ${{ matrix.runner }}-ros_ws-
 
         - name: Build and test dev container image
           uses: devcontainers/ci@v0.3
