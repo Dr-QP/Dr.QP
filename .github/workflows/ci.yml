@@ -99,18 +99,6 @@ jobs:
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
     steps:
       - uses: actions/checkout@v4
-
-      - name: Cache ROS build and install directories
-        id: cache-ros-ws-restore
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            ros_ws/build
-            ros_ws/install
-          key: ${{ runner.os }}-ros_ws-${{ hashFiles('**/package.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-ros_ws-
-
       - uses: ros-tooling/action-ros-ci@v0.3
         env:
           GCOV_COMMAND: "${{ github.workspace }}/scripts/gcov"
@@ -126,14 +114,6 @@ jobs:
                 "mixin": ["coverage-pytest"]
               }
             }
-
-      - name: Save Primes
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            ros_ws/build
-            ros_ws/install
-          key: ${{ steps.cache-ros-ws-restore.outputs.cache-primary-key }}
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
