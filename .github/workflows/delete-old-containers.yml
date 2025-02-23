@@ -27,6 +27,7 @@ jobs:
           package-name: ${{ inputs.name }}
           package-type: 'container'
           min-versions-to-keep: ${{ inputs.versions_to_keep }}
+          ignore-versions: (latest|main|edge).*
 
       - name: Delete all untagged
         uses: actions/delete-package-versions@v5
