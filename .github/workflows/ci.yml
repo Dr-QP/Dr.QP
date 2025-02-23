@@ -96,21 +96,15 @@ jobs:
       packages: read
     container:
       image: ${{ needs.merge-dev-image.outputs.image }}
-
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
-
-      # Only needed for nektos/act runs
-      # credentials:
-      #   username: ${{ env.REGISTRY_USERNAME }}
-      #   password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: ros-tooling/action-ros-ci@v0.3
-        id: action_ros_ci_step
         env:
           GCOV_COMMAND: "${{ github.workspace }}/scripts/gcov"
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
+          no-symlink-install: true
           colcon-defaults: |
             {
               "build": {
@@ -120,7 +114,6 @@ jobs:
                 "mixin": ["coverage-pytest"]
               }
             }
-
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
@@ -137,7 +130,7 @@ jobs:
         if: env.ACT == '' && always()
         with:
           name: colcon-logs-${{ matrix.arch }}
-          path: ${{ steps.action_ros_ci_step.outputs.ros-workspace-directory-name }}/log
+          path: ros_ws/log
           retention-days: 100
 
   build-deploy-image:
