@@ -100,11 +100,11 @@ jobs:
             configFile: .devcontainer/source/devcontainer.json
             imageTag: ${{ steps.meta.outputs.tag }}
             runCmd: |
-              sudo apt update
-              rosdep update
-              ./scripts/ros/ros-dep.sh
-              colcon build --event-handlers=console_cohesion+
-              colcon test --event-handlers=console_cohesion+
+              time sudo apt update
+              time rosdep update
+              time ./scripts/ros/ros-dep.sh
+              time colcon build --event-handlers=console_cohesion+
+              time colcon test --event-handlers=console_cohesion+
 
   merge-all:
     name: Devcontainer CI finished
