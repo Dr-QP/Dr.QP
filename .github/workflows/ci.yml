@@ -105,6 +105,18 @@ jobs:
       #   password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Cache ROS build and install directories
+        uses: actions/cache@v4
+        with:
+          path: |
+            build
+            install
+            log
+          key: ${{ runner.os }}-ros-ci-${{ hashFiles('**/package.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-ros-ci-
+
       - uses: ros-tooling/action-ros-ci@v0.3
         id: action_ros_ci_step
         env:
