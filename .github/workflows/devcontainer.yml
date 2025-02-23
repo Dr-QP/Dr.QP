@@ -81,12 +81,12 @@ jobs:
 
         - name: Restore colcon build dirs
           id: cache-ros-ws-restore
-          uses: actions/cache/restore@v4
+          uses: actions/cache@v4
           with:
             path: |
               build
               install
-            key: ${{ runner.os }}-ros_ws-${{ hashFiles('**/package.xml') }}
+            key: ${{ runner.os }}-ros_ws-${{ hashFiles('**/package.xml,**/CMakeFiles.txt,**/*.cmake') }}
             restore-keys: |
               ${{ runner.os }}-ros_ws-
 
@@ -106,13 +106,13 @@ jobs:
               colcon build
               colcon test
 
-        - name: Save colcon build dirs
-          uses: actions/cache/save@v4
-          with:
-            path: |
-              build
-              install
-            key: ${{ steps.cache-ros-ws-restore.outputs.cache-primary-key }}
+        # - name: Save colcon build dirs
+        #   uses: actions/cache/save@v4
+        #   with:
+        #     path: |
+        #       build
+        #       install
+        #     key: ${{ steps.cache-ros-ws-restore.outputs.cache-primary-key }}
 
   merge-all:
     name: Devcontainer CI finished
