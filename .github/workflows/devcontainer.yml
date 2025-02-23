@@ -80,10 +80,12 @@ jobs:
 
         - name: Build and test dev container image
           uses: devcontainers/ci@v0.3
+          env:
+            CACHE_IMAGE: ${{ env.REGISTRY }}/dr-qp/cache-ros-devcontainer:${{ env.ROS_DISTRO }}-${{ matrix.arch }}
           with:
             configFile: .devcontainer/source/devcontainer.json
-            cacheFrom: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer:cache-${{ matrix.arch }}
-            cacheTo: ${{ env.REGISTRY }}/dr-qp/humble-ros-devcontainer:cache-${{ matrix.arch }}
+            cacheFrom: ${{ env.CACHE_IMAGE }}
+            cacheTo: ${{ env.CACHE_IMAGE }}
             runCmd: |
               sudo apt update
               rosdep update
