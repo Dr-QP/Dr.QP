@@ -108,6 +108,8 @@ jobs:
             ros_ws/build
             ros_ws/install
           key: ${{ runner.os }}-ros_ws-${{ hashFiles('**/package.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-ros_ws-
 
       - uses: ros-tooling/action-ros-ci@v0.3
         env:
