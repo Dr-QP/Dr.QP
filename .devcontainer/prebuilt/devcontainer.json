@@ -1,7 +1,7 @@
 {
   "name": "ROS 2 humble prebuilt",
   "remoteUser": "rosdev",
-  "image": "ghcr.io/dr-qp/humble-ros-devcontainer:main",
+  "image": "ghcr.io/dr-qp/ros-desktop:edge",
   "customizations": {
     "vscode": {
       "extensions": [
