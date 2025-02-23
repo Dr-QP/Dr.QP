@@ -32,9 +32,6 @@ jobs:
   build-dev-image:
     name: Development image
     timeout-minutes: 35
-    outputs:
-      image_arm64: ${{ contains(matrix.arch, 'arm64') && steps.build.outputs.image || '' }}
-      image_amd64: ${{ contains(matrix.arch, 'amd64') && steps.build.outputs.image || '' }}
     permissions:
       packages: write
     strategy:
@@ -59,11 +56,32 @@ jobs:
           arch: ${{ matrix.arch }}
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          registry-token: ${{ secrets.GITHUB_TOKEN }}
+
+  merge-dev-image:
+    name: Merge development image
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      packages: write
+    needs:
+      - build-dev-image
+    timeout-minutes: 35
+    outputs:
+      image: ${{ steps.merge.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Merge and push development docker image
+        id: merge
+        uses: ./.github/actions/docker/multiarch-merge
+        with:
+          image: ${{ env.REGISTRY }}/dr-qp/ros-desktop
+          registry: ${{ env.REGISTRY }}
+          registry-username: ${{ env.REGISTRY_USERNAME }}
+          registry-token: ${{ secrets.GITHUB_TOKEN }}
 
   ros-ci:
     name: Build and test ROS2 workspace
-    needs: [build-dev-image]
+    needs: [merge-dev-image]
     timeout-minutes: 35
     strategy:
       fail-fast: false
@@ -77,7 +95,7 @@ jobs:
     permissions:
       packages: read
     container:
-      image: ${{ matrix.arch == 'arm64' && needs.build-dev-image.outputs.image_arm64 || needs.build-dev-image.outputs.image_amd64 }}
+      image: ${{ needs.merge-dev-image.outputs.image }}
 
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
 
@@ -124,7 +142,7 @@ jobs:
 
   build-deploy-image:
     name: Deployment image
-    needs: [build-dev-image, ros-ci]
+    needs: [merge-dev-image, ros-ci]
     timeout-minutes: 35
     strategy:
       fail-fast: false
@@ -149,15 +167,35 @@ jobs:
           arch: ${{ matrix.arch }}
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          registry-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
             ROS_DISTRO=${{ env.ROS_DISTRO }}
             GIT_SHA=${{ github.event.pull_request && github.event.pull_request.head.sha || github.sha }}
-            BUILD_IMAGE=${{ matrix.arch == 'arm64' && needs.build-dev-image.outputs.image_arm64 || needs.build-dev-image.outputs.image_amd64 }}
+            BUILD_IMAGE=${{ needs.merge-dev-image.outputs.image }}
 
+  merge-deploy-image:
+    name: Merge deployment image
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      packages: write
+    needs:
+      - build-deploy-image
+    timeout-minutes: 35
+    outputs:
+      image: ${{ steps.merge.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Merge and push deployment docker image
+        id: merge
+        uses: ./.github/actions/docker/multiarch-merge
+        with:
+          image: ${{ env.REGISTRY }}/dr-qp/ros-deploy
+          registry: ${{ env.REGISTRY }}
+          registry-username: ${{ env.REGISTRY_USERNAME }}
+          registry-token: ${{ secrets.GITHUB_TOKEN }}
   merge-all:
     name: CI/CD finished
-    needs: [build-dev-image, ros-ci, build-deploy-image]
+    needs: [merge-dev-image, ros-ci, merge-deploy-image]
     runs-on: ubuntu-24.04-arm
     permissions: {}
     steps:

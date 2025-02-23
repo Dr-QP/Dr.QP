@@ -19,7 +19,6 @@ jobs:
   delete-container-version:
     runs-on: ubuntu-24.04-arm
     permissions:
-      contents: read
       packages: write
     steps:
       - name: Delete package version
@@ -28,12 +27,12 @@ jobs:
           package-name: ${{ inputs.name }}
           package-type: 'container'
           min-versions-to-keep: ${{ inputs.versions_to_keep }}
+          ignore-versions: (latest|main|edge).*
 
       - name: Delete all untagged
         uses: actions/delete-package-versions@v5
         with:
           package-name: ${{ inputs.name }}
           package-type: 'container'
-          min-versions-to-keep: 0
           delete-only-untagged-versions: true
 

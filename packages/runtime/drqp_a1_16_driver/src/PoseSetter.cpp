@@ -43,8 +43,7 @@ class PoseSetter : public rclcpp::Node
 public:
   PoseSetter() : Node("drqp_pose_setter")
   {
-    // declare_parameter("device_address", "/dev/ttySC0");
-    declare_parameter("device_address", "192.168.0.181:2022");
+    declare_parameter("device_address", "/dev/ttySC0");
     declare_parameter("baud_rate", 115200);
 
     multiSyncPoseSubscription_ =

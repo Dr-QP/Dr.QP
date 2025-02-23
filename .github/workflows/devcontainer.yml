@@ -76,7 +76,6 @@ jobs:
           id: meta
           uses: ./.github/actions/docker/metadata-action
           with:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
             arch: ${{ matrix.arch }}
 
         - name: Build and test dev container image

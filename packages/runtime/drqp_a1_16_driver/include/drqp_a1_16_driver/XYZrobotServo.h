@@ -158,7 +158,7 @@ struct SJogData
 template <size_t ServoCount>
 struct SJogCommand
 {
-  uint8_t playtime;  // goal position may not be reached for a short play time;
+  uint8_t playtime;  // goal position may not be reached for a short play time
   std::array<SJogData, ServoCount> data;
 };
 

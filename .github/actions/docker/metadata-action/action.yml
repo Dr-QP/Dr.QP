@@ -2,40 +2,54 @@ name: Docker metadata action
 description: Extract metadata (tags, labels) for docker image
 inputs:
   images:
-    description: 'Image names to pass to metadata-action'
+    description: Image names to pass to metadata-action
     default: ''
   arch:
-    description: 'Architecture to use as suffix'
-    required: true
-  github-token:
-    description: 'GitHub token'
-    required: true
+    description: Architecture to use as suffix
+    required: false
+    default: ''
 outputs:
   tags:
-    description: "Docker tags for the images"
+    description: Docker tags for the images
     value: ${{ steps.meta.outputs.tags }}
   tag:
-    description: "Docker tag for the images"
+    description: Docker tag for the images
     value: ${{ steps.single-tag.outputs.result }}
   labels:
-    description: "Docker labels for the images"
+    description: Docker labels for the images
     value: ${{ steps.meta.outputs.labels }}
+  version:
+    description: Docker version for the images
+    value: ${{ steps.meta.outputs.version }}
+  json:
+    description: Docker json for the images
+    value: ${{ steps.meta.outputs.json }}
 runs:
-  using: "composite"
+  using: composite
   steps:
+    - name: Generate suffix if arch set
+      shell: bash
+      id: suffix
+      run: |
+        if [ -n "${{ inputs.arch }}" ]; then
+          echo "result=,suffix=-${{ inputs.arch }}" >> "$GITHUB_OUTPUT"
+        else
+          echo "result=" >> "$GITHUB_OUTPUT"
+        fi
+
     - uses: docker/metadata-action@v5
       id: meta
       with:
-        github-token: ${{ inputs.github-token }}
         images: ${{ inputs.images }}
         tags: |
-          type=ref,event=branch,suffix=-${{ inputs.arch }}
-          type=ref,event=pr,suffix=-${{ inputs.arch }}
-          type=semver,pattern={{version}},suffix=-${{ inputs.arch }}
-          type=semver,pattern={{major}}.{{minor}},suffix=-${{ inputs.arch }}
-          type=edge,branch=main,suffix=-${{ inputs.arch }}
+          type=ref,event=branch${{ steps.suffix.outputs.result }}
+          type=ref,event=pr${{ steps.suffix.outputs.result }}
+          type=semver,pattern={{version}}${{ steps.suffix.outputs.result }}
+          type=semver,pattern={{major}}.{{minor}}${{ steps.suffix.outputs.result }}
+          type=edge,branch=main${{ steps.suffix.outputs.result }}
 
-    - shell: bash
+    - name: Extract single tag
+      shell: bash
       id: single-tag
       run: |
         first_tag=$(echo "${{ steps.meta.outputs.tags }}" | head -n1 | tr -d '\r')

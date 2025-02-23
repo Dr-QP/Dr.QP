@@ -44,8 +44,7 @@ class PoseReader : public rclcpp::Node
 public:
   PoseReader() : Node("drqp_pose_reader")
   {
-    // declare_parameter("device_address", "/dev/ttySC0");
-    declare_parameter("device_address", "192.168.0.181:2022");
+    declare_parameter("device_address", "/dev/ttySC0");
     declare_parameter("baud_rate", 115200);
     declare_parameter("first_id", 1);
     declare_parameter("last_id", 18);
