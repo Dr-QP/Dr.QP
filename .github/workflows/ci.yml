@@ -61,6 +61,8 @@ jobs:
   merge-dev-image:
     name: Merge development image
     runs-on: ubuntu-24.04-arm
+    permissions:
+      packages: write
     needs:
       - build-dev-image
     timeout-minutes: 35
@@ -174,6 +176,8 @@ jobs:
   merge-deploy-image:
     name: Merge deployment image
     runs-on: ubuntu-24.04-arm
+    permissions:
+      packages: write
     needs:
       - build-deploy-image
     timeout-minutes: 35
