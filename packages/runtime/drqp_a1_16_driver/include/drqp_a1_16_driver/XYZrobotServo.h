@@ -206,7 +206,7 @@ struct IJogData
   uint16_t goal;
   uint8_t type;
   uint8_t id;
-  uint8_t playtime;  // play time may be modified for a long movement;
+  uint8_t playtime;  // play time may be modified for a long movement
 } __attribute__((packed));
 
 // I-JOG - independent control move
