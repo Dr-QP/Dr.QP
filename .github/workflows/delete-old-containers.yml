@@ -19,7 +19,6 @@ jobs:
   delete-container-version:
     runs-on: ubuntu-24.04-arm
     permissions:
-      contents: read
       packages: write
     steps:
       - name: Delete package version
@@ -34,6 +33,5 @@ jobs:
         with:
           package-name: ${{ inputs.name }}
           package-type: 'container'
-          min-versions-to-keep: 0
           delete-only-untagged-versions: true
 
