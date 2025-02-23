@@ -103,8 +103,8 @@ jobs:
               sudo apt update
               rosdep update
               ./scripts/ros/ros-dep.sh
-              colcon build
-              colcon test
+              colcon build --event-handlers=console_cohesion+
+              colcon test --event-handlers=console_cohesion+
 
         # - name: Save colcon build dirs
         #   uses: actions/cache/save@v4
