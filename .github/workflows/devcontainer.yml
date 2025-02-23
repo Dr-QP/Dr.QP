@@ -78,7 +78,6 @@ jobs:
           with:
             arch: ${{ matrix.arch }}
 
-
         - name: Restore colcon build dirs
           id: cache-ros-ws-restore
           uses: actions/cache@v4
