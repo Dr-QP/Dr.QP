@@ -46,15 +46,14 @@ public:
     declare_parameter("device_address", "/dev/ttySC0");
     declare_parameter("baud_rate", 115200);
 
+    servoSerial_ = makeSerialForDevice(get_parameter("device_address").as_string());
+    servoSerial_->begin(get_parameter("baud_rate").as_int());
+
     multiSyncPoseSubscription_ =
       this->create_subscription<drqp_interfaces::msg::MultiSyncPositionCommand>(
         "pose", 10, [this](const drqp_interfaces::msg::MultiSyncPositionCommand& msg) {
           try {
-            std::unique_ptr<SerialProtocol> servoSerial;
-            servoSerial = makeSerialForDevice(get_parameter("device_address").as_string());
-            servoSerial->begin(get_parameter("baud_rate").as_int());
-
-            XYZrobotServo servo(*servoSerial, XYZrobotServo::kBroadcastId);
+            XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
 
             DynamicSJogCommand sposCmd(msg.positions.size());
             sposCmd.setPlaytime(msg.playtime);
@@ -77,11 +76,8 @@ public:
         "pose_async", 10, [this](const drqp_interfaces::msg::MultiAsyncPositionCommand& msg) {
           try {
             auto pose = drqp_interfaces::msg::MultiSyncPositionCommand{};
-            std::unique_ptr<SerialProtocol> servoSerial;
-            servoSerial = makeSerialForDevice(get_parameter("device_address").as_string());
-            servoSerial->begin(get_parameter("baud_rate").as_int());
 
-            XYZrobotServo servo(*servoSerial, XYZrobotServo::kBroadcastId);
+            XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
 
             DynamicIJogCommand iposCmd(msg.positions.size());
             for (size_t index = 0; index < msg.positions.size(); ++index) {
@@ -104,6 +100,8 @@ public:
 
   rclcpp::Subscription<drqp_interfaces::msg::MultiAsyncPositionCommand>::SharedPtr
     multiAsyncPoseSubscription_;
+
+  std::unique_ptr<SerialProtocol> servoSerial_;
 };
 
 int main(int argc, char* argv[])
