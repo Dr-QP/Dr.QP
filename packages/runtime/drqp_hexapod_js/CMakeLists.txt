@@ -10,7 +10,7 @@ find_package(ament_cmake REQUIRED)
 
 add_custom_target(drqp_hexapod_js ALL
   COMMAND yarn install
-  COMMAND find . -fstype dir -name node_modules -exec touch {}/COLCON_IGNORE ";"
+  COMMAND find . -fstype dir -name node_modules -exec touch {}/COLCON_IGNORE {}/AMENT_IGNORE ";"
   # COMMAND yarn run generate-ros-messages
   COMMAND yarn build-prod
 
@@ -20,10 +20,23 @@ add_custom_target(drqp_hexapod_js ALL
 )
 
 if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  # Disable auto copyright
-  set(ament_cmake_copyright_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
+  ament_package_xml()
+  foreach(dep ${${PROJECT_NAME}_TEST_DEPENDS})
+    find_package(${dep} REQUIRED)
+  endforeach()
+
+  set(NODE_MODULES
+    node_modules/
+    packages/hexapod/node_modules/
+    packages/hexapod-kinematics-library/node_modules/
+  )
+
+  ament_flake8(${CMAKE_CURRENT_LIST_DIR}/launch)
+  ament_pep257(${CMAKE_CURRENT_LIST_DIR}/launch)
+
+  # Skip for now as there is no easy way to configure excluded folders
+  # ament_copyright(EXCLUDE ${NODE_MODULES})
+  # ament_xmllint(EXCLUDE ${NODE_MODULES})
 endif()
 
 ament_package()
