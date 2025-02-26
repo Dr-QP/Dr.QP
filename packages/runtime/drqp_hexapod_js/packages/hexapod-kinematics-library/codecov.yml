@@ -1,0 +1,14 @@
+# https://docs.codecov.io/docs/commit-status#branches
+ignore:
+    - "tests"
+
+coverage:
+    status:
+        project:
+            default:
+                target: auto
+                threshold: 2%
+        patch:
+            default:
+                target: auto
+                threshold: 2%
