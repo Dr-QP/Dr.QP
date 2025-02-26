@@ -55,7 +55,7 @@ const computePlaneProperties = legs => {
         if (!isStable(p0, p1, p2)) {
             continue
         }
-        const normal = getNormalofThreePoints(p0, p1, p2, "normalVector")
+        const normal = getNormalofThreePoints(p0, p1, p2)
 
         /* * *
          *

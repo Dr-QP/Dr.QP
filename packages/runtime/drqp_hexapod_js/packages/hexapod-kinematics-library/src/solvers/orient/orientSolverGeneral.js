@@ -104,7 +104,7 @@ const computeOrientationProperties = (legsNoGravity, flags = { shuffle: false })
                 continue
             }
 
-            const normal = getNormalofThreePoints(p0, p1, p2, "normalVector")
+            const normal = getNormalofThreePoints(p0, p1, p2)
             const height = -dot(normal, p0)
 
             if (

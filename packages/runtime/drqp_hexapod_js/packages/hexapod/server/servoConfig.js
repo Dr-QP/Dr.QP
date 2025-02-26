@@ -1,8 +1,3 @@
-// See configurable parameters at: http://johnny-five.io/api/servo/
-
-const controller = "PCA9685"
-const address = "0x41"
-
 const kDirect = 1;
 const kInverse = -1;
 
