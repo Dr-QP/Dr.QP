@@ -9,7 +9,8 @@ endif()
 find_package(ament_cmake REQUIRED)
 
 add_custom_target(drqp_hexapod_js ALL
-  COMMAND yarn
+  COMMAND yarn install
+  COMMAND find . -fstype dir -name node_modules -exec touch {}/COLCON_IGNORE ";"
   # COMMAND yarn run generate-ros-messages
   COMMAND yarn build-prod
 
@@ -46,5 +47,6 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
-install(CODE "execute_process(COMMAND yarn install WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/dist)")
+install(SCRIPT ExecYarnInstall.cmake)
+
 
