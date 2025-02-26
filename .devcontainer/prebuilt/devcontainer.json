@@ -14,8 +14,9 @@
   "containerEnv": {},
   "mounts": [],
   "runArgs": [
-    "--network", "host",
-    "--device", "/dev/ttySC0"
+    // Commented out to allow Codespaces use
+    // "--network", "host",
+    // "--device", "/dev/ttySC0"
   ],
   "features": {
   }
