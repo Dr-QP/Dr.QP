@@ -1,7 +1,8 @@
-const { servoConfig_DrQP } = require("./_SERVO_CONFIG")
-const { SOCKET_SERVER_PORT, SOCKET_CLIENT_URLS, CHANNEL_NAME } = require("./_VAR_CONFIG")
+const { servoConfig } = require("./servoConfig")
+const { SOCKET_SERVER_PORT, SOCKET_CLIENT_URLS, setServoEvent, newKeyEvent } = require("../src/connectionConfig")
 
 const rclnodejs = require("rclnodejs")
+const { randomUUID } = require("crypto")
 const app = require("express")()
 const http = require("http").Server(app)
 
@@ -61,7 +62,7 @@ async function setupRosNode() {
     await rclnodejs.init();
     const node = new rclnodejs.Node('hexa_kinematics');
     const publisher = node.createPublisher('drqp_interfaces/msg/MultiAsyncPositionCommand', 'pose_async');
-    
+
     node.spin();
 
     return publisher;
@@ -74,7 +75,7 @@ async function setupRobot()
     // INITIALIZE SERVOS
     // *************************
     const initServo = (legPosition, angleName) =>
-        new Servo(servoConfig_DrQP[legPosition][angleName])
+        new Servo(servoConfig[legPosition][angleName])
 
     let hexapodServos = {}
 
@@ -111,7 +112,7 @@ async function setupRobot()
             servos.push(setServo(pose, leg, "gamma"));
         }
         // console.log("setting pose: ", pose)
-        
+
         let poseAsyncMsg = rclnodejs.createMessageObject('drqp_interfaces/msg/MultiAsyncPositionCommand');
 
         for (let servo of servos) {
@@ -127,15 +128,24 @@ async function setupRobot()
     // *************************
     // LISTEN TO SOCKET
     // *************************
+    let clientKey;
     io.on("connection", socket => {
         console.log("client connected.")
+
+        clientKey = randomUUID();
+        socket.emit(newKeyEvent, {
+          clientKey
+        });
 
         socket.on("disconnect", () => {
             console.log("client disconnected.")
         })
 
-        socket.on(CHANNEL_NAME, msg => {
-            // console.log("lag:", new Date() - msg.time)
+        socket.on(setServoEvent, msg => {
+            if (msg.clientKey != clientKey) {
+              return;
+            }
+
             if (msg.pose) {
                 setHexapodPose(msg.pose)
             }

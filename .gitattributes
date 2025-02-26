@@ -47,3 +47,13 @@
 
 # ROS 2 SLAM data
 *.bag filter=lfs diff=lfs merge=lfs -text
+
+# MS Office Documents
+*.xls filter=lfs diff=lfs merge=lfs -text
+*.xlsx filter=lfs diff=lfs merge=lfs -text
+*.doc filter=lfs diff=lfs merge=lfs -text
+*.docs filter=lfs diff=lfs merge=lfs -text
+*.ppt filter=lfs diff=lfs merge=lfs -text
+*.pptx filter=lfs diff=lfs merge=lfs -text
+*.pptm filter=lfs diff=lfs merge=lfs -text
+*.ppsx filter=lfs diff=lfs merge=lfs -text

@@ -1,4 +1,22 @@
 {
-    "private": true,
-    "workspaces": ["packages/*"]
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build-prod": "yarn wsrun --stages build-prod",
+    "build-dev": "yarn wsrun --stages build-dev",
+
+    "start-prod": "yarn wsrun --parallel start-prod",
+    "start-dev": "yarn wsrun --parallel start-dev"
+  },
+  "bin": {
+    "generate-ros-messages": "node_modules/.bin/generate-ros-messages"
+  },
+  "dependencies": {
+    "rclnodejs": "^0.31.0"
+  },
+  "devDependencies": {
+    "wsrun": "^5.2.4"
   }
+}
