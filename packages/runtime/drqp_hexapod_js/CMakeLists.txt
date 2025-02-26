@@ -39,7 +39,6 @@ install(DIRECTORY
   packages
   DESTINATION share/${PROJECT_NAME}/dist
   PATTERN **/node_modules/** EXCLUDE
-  OPTIONAL
 )
 
 install(
