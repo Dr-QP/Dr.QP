@@ -20,6 +20,8 @@ add_custom_target(drqp_hexapod_js ALL
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+  # Disable auto copyright
+  set(ament_cmake_copyright_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
 
