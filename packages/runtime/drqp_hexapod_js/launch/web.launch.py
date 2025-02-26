@@ -16,7 +16,7 @@ def generate_launch_description():
         executable="yarn",
         output="screen",
         arguments=["start-client-prod"],
-        cwd=os.path.join(share_directory, 'dist', 'packages', 'hexapod'),
+        cwd=os.path.join(share_directory, "dist", "packages", "hexapod"),
     )
 
     server = Node(
@@ -24,7 +24,7 @@ def generate_launch_description():
         output="screen",
         parameters=[{"use_sim_time": use_sim_time}],
         arguments=["start-kill-server"],
-        cwd=os.path.join(share_directory, 'dist', 'packages', 'hexapod'),
+        cwd=os.path.join(share_directory, "dist", "packages", "hexapod"),
     )
     ld = LaunchDescription()
     ld.add_action(server)
