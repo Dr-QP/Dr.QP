@@ -33,7 +33,8 @@
     // }
   ],
   "runArgs": [
-    "--network", "host"
+    "--network", "host",
+    "--device", "/dev/ttySC0"
   ],
   "features": {
   }
