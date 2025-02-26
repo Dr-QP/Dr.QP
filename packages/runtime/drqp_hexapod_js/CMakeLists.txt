@@ -46,6 +46,6 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
-install(SCRIPT ExecYarnInstall.cmake)
+install(SCRIPT scripts/ExecYarnInstall.cmake)
 
 
