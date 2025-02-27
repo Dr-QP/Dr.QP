@@ -11937,10 +11937,10 @@ pkg-up@3.1.0, pkg-up@^3.1.0:
   dependencies:
     find-up "^3.0.0"
 
-plotly.js-gl3d-dist-min@^1.54.7:
-  version "1.58.4"
-  resolved "https://registry.yarnpkg.com/plotly.js-gl3d-dist-min/-/plotly.js-gl3d-dist-min-1.58.4.tgz#f592560f816d6f61f43c972271eea8b7d84918cd"
-  integrity sha512-+ryJtWz7vQcD7JT0Rxj1VmSKx+otuXOyFx5bAD+IKnM7qX1LN+EcMJaiHXhgx9JUvz0uqwiYEgbAbku04f5xZw==
+plotly.js-gl3d-dist-min@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/plotly.js-gl3d-dist-min/-/plotly.js-gl3d-dist-min-3.0.1.tgz#7b12fe3fd3946c06e1f774f773397444a32cd679"
+  integrity sha512-bZiVQZUUey0ONGCGxScWN6N+jcPomMUk/ePrWeFDGCadL5DcHqkKTRxFU2LdF5fmRg3hos0G2PQTw0eHSTncnw==
 
 pn@^1.1.0:
   version "1.1.0"
