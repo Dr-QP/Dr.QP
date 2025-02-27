@@ -1,5 +1,6 @@
 // the channel where the client sends command, and the server receives commands
-const CHANNEL_NAME = "setServo"
+const setServoEvent = "setServo"
+const newKeyEvent = "newKey";
 
 // the port / url where the server listens for commands from clients (clients like our react app)
 const SOCKET_SERVER_PORT = 4001
@@ -23,5 +24,6 @@ module.exports = {
     SOCKET_SERVER_URL,
     MINIMUM_TIME_BETWEEN_MESSAGES,
     CLIENT_SENDER_NAME,
-    CHANNEL_NAME,
+    setServoEvent,
+    newKeyEvent
 }

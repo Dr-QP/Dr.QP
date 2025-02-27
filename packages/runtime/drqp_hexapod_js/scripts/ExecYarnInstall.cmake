@@ -1,0 +1,13 @@
+set(PROJECT_NAME drqp_hexapod_js)
+
+execute_process(
+  COMMAND bash -c "source ${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/local_setup.bash yarn install"
+  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/dist
+
+  COMMAND_ERROR_IS_FATAL ANY
+  TIMEOUT 300
+
+  ECHO_OUTPUT_VARIABLE
+  ECHO_ERROR_VARIABLE
+  COMMAND_ECHO STDOUT
+)

@@ -8,10 +8,13 @@
     "unpkg": "dist/index.umd.js",
     "exports": "./dist/index.modern.js",
     "scripts": {
-        "build": "microbundle",
-        "dev": "microbundle watch",
+        "build-prod": "microbundle",
+        "build-dev": "microbundle watch",
         "test": "jest --coverage",
-        "check-format": "prettier --config ./.prettierrc.yaml --check  \"./tests/*\" \"./src/*\""
+        "check-format": "prettier --config ./.prettierrc.yaml --check  \"./tests/*\" \"./src/*\"",
+
+        "start-dev": "",
+        "start-prod": ""
     },
     "keywords": [
         "hexapod",

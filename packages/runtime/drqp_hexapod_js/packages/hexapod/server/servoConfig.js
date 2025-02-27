@@ -1,8 +1,3 @@
-// See configurable parameters at: http://johnny-five.io/api/servo/
-
-const controller = "PCA9685"
-const address = "0x41"
-
 const kDirect = 1;
 const kInverse = -1;
 
@@ -10,7 +5,7 @@ const kCoxaOffsetAngle = 0;
 const kFemurOffsetAngle = 8;
 const kTibiaOffsetAngle = -60;
 
-const servoConfig_DrQP = {
+const servoConfig = {
     rightFront: {
         alpha: { id: 2, direction: kDirect, offsetAngle: kCoxaOffsetAngle },
         beta: { id: 4, direction: kDirect, offsetAngle: kFemurOffsetAngle - 3 /* faulty servo calibration */ },
@@ -48,4 +43,4 @@ const servoConfig_DrQP = {
     },
 }
 
-module.exports = { servoConfig_DrQP }
+module.exports = { servoConfig }

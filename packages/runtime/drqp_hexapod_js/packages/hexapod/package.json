@@ -15,6 +15,7 @@
         "react-plotly.js": "^2.4.0",
         "react-router-dom": "^5.2.0",
         "react-scripts": "3.4.4",
+        "serve": "^14.2.4",
         "socket.io": "^3.0.5",
         "socket.io-client": "^3.0.5"
     },
@@ -24,13 +25,15 @@
         }
     },
     "scripts": {
-        "dev:client": "env NODE_OPTIONS=--openssl-legacy-provider react-scripts start",
-        "build:client": "env NODE_OPTIONS=--openssl-legacy-provider react-scripts build",
-        "prod:client": "npm run build:client && env NODE_OPTIONS=--openssl-legacy-provider serve -s build",
-        "run:server": "node ./src/_ROBOT_SERVER.js",
-        "eject": "react-scripts eject",
-        "kill:server": "fuser -k 4001/tcp",
-        "start": "concurrently -n \"server,client\" \"yarn run:server\" \"yarn dev:client\""
+        "build-prod": "env NODE_OPTIONS=--openssl-legacy-provider yarn react-scripts build",
+        "build-dev": "",
+        "start-client-dev": "env NODE_OPTIONS=--openssl-legacy-provider yarn react-scripts start",
+        "start-client-prod": "env NODE_OPTIONS=--openssl-legacy-provider yarn serve -s build; echo Ignoring the args:",
+        "start-server": "node ./server/index.js",
+        "start-kill-server": "yarn kill-server; yarn start-server",
+        "kill-server": "fuser -k 4001/tcp",
+        "start-dev": "concurrently -n \"server,client\" \"yarn start-kill-server\" \"yarn start-client-dev\"",
+        "start-prod": "concurrently -n \"server,client\" \"yarn start-kill-server {@}\" \"yarn start-client-prod\""
     },
     "eslintConfig": {
         "extends": "react-app"
@@ -50,7 +53,7 @@
     "devDependencies": {
         "concurrently": "^9.1.2",
         "env": "^0.0.2",
-        "prettier": "2.0.5",
-        "jest": "^24.9.0"
+        "jest": "^24.9.0",
+        "prettier": "2.0.5"
     }
 }

@@ -85,7 +85,7 @@ class WalkingGaitsPage extends Component {
         const hexapod = new VirtualHexapod(dimensions, pose, { wontRotate: true })
 
         // ❗❗️HACK When we've passed undefined pose values for some reason
-        if (!hexapod || !hexapod.body) {
+        if (!hexapod.body) {
             return
         }
 

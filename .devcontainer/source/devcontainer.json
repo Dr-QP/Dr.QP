@@ -34,6 +34,7 @@
   ],
   "runArgs": [
     "--network", "host"
+    // , "--device", "/dev/ttySC0" // For local dev, breaks CI if left uncommented
   ],
   "features": {
   }

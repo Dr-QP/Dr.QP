@@ -71,4 +71,9 @@ endif()
 
 add_subdirectory(examples)
 
+install(
+  DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
 ament_package()

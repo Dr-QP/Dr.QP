@@ -4,17 +4,23 @@ import {
     SOCKET_SERVER_URL,
     MINIMUM_TIME_BETWEEN_MESSAGES,
     CLIENT_SENDER_NAME,
-    CHANNEL_NAME,
-} from "./_VAR_CONFIG"
+    setServoEvent,
+    newKeyEvent,
+} from "./connectionConfig"
 
 const useSendPose = () => {
     const socketRef = useRef()
+    const clientKeyRef = useRef()
     const [lastDate, setLastDate] = useState(() => new Date())
     // delta date is the interval between the last two messages sent
     const [deltaDate, setDeltaDate] = useState(0)
 
     useEffect(() => {
         socketRef.current = socketIOClient(SOCKET_SERVER_URL)
+
+        socketRef.current.on(newKeyEvent, msg => {
+          clientKeyRef.current = msg.clientKey
+        });
         return () => socketRef.current.disconnect()
     }, [])
 
@@ -28,9 +34,10 @@ const useSendPose = () => {
                 return
             }
 
-            socketRef.current.emit(CHANNEL_NAME, {
+            socketRef.current.emit(setServoEvent, {
                 pose,
                 sender: CLIENT_SENDER_NAME,
+                clientKey: clientKeyRef.current,
                 time: currentDate.getTime(),
             })
 

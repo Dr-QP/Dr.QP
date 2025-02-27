@@ -13,7 +13,11 @@
   "workspaceMount": "source=${localWorkspaceFolder},target=/home/rosdev/ros2_ws/,type=bind",
   "containerEnv": {},
   "mounts": [],
-  "runArgs": [],
+  "runArgs": [
+    // Commented out to allow Codespaces use
+    // "--network", "host",
+    // "--device", "/dev/ttySC0"
+  ],
   "features": {
   }
 }
