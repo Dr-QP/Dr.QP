@@ -127,7 +127,7 @@ sudo bash $script_dir/nodesource_setup.sh
 sudo apt-get -y remove nodejs npm # remove old versions if any
 # The NodeSource nodejs package contains both the node binary and npm, so you don’t need to install npm separately.
 sudo apt-get install -y -q --no-install-recommends nodejs
-sudo npm -g yarn
+sudo npm install -g yarn
 
 echo '##################################################'
 echo '#'
