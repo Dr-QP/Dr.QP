@@ -10,7 +10,7 @@
         "plotly.js-gl3d-dist-min": "^1.54.7",
         "rclnodejs": "^0.30.0",
         "react": "^16.13.1",
-        "react-dom": "^16.13.1",
+        "react-dom": "^19.0.0",
         "react-icons": "^3.10.0",
         "react-plotly.js": "^2.4.0",
         "react-router-dom": "^5.2.0",
