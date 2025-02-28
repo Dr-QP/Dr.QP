@@ -46,6 +46,7 @@
       "ryanluker.vscode-coverage-gutters",
       "github.vscode-github-actions",
       "slevesque.vscode-3dviewer",
+      "corker.vscode-micromamba",
     ]
   },
   "launch": {

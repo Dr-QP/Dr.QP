@@ -1,0 +1,21 @@
+# Micromamba environment file
+# https://marketplace.visualstudio.com/items?itemName=corker.vscode-micromamba
+
+
+###############
+# If you run into critical libmamba filesystem error: in permissions: Operation not permitted [".../Dr.QP/.micromamba/pkgs/cache"]
+# Open terminal and run
+#
+# chgrp -R staff .micromamba/
+#
+##############
+name: default
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.13 # keep in sync with .readthedocs.yaml
+  - nodejs=20 # keep in sync with .readthedocs.yaml
+  - pip:
+     - -r ./docs/requirements.txt
