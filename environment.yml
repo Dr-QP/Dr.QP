@@ -19,3 +19,4 @@ dependencies:
   - nodejs=20 # keep in sync with .readthedocs.yaml
   - pip:
      - -r ./docs/requirements.txt
+     - esbonio # reStructuredText language server for preview
