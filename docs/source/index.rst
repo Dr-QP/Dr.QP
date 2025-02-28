@@ -1,10 +1,11 @@
 Welcome to Dr.QP's documentation!
 ===================================
 
-**Dr.QP** (/doctor kupe/) is a hexapod robot inspired by [PhantomX Hexapod Mark III — Multi-Legged Robotic Platform](https://www.interbotix.com/Robotic-Hexapod)
- built from scratch using XYZrobot A1-16 servos (Robotis AX-12 clones) and 3D printed parts
+.. image:: https://github.com/user-attachments/assets/95200255-e44b-45f5-b7cc-242add9f426b
 
-Check out the :doc:`designs` section for further information, including how to :ref:`installation` the project.
+**Dr.QP** (/doctor kupe/) is a hexapod robot inspired by `PhantomX Hexapod Mark III — Multi-Legged Robotic Platform <https://www.interbotix.com/Robotic-Hexapod>`_ built from scratch using XYZrobot A1-16 servos (a clone of Robotis AX-12 speed wise with AX-18 torques) and 3D printed parts
+
+Check out the :doc:`designs` section for further information, including how to :doc:`installation` the project.
 
 .. note::
 
@@ -15,5 +16,6 @@ Contents
 
 .. toctree::
 
-   usage
-   api
+   installation
+   designs
+
