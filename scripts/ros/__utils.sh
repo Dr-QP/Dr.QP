@@ -6,3 +6,5 @@ isCI()
 {
   test ! -z "$CI"
 }
+
+export ROS_DISTRO=humble
