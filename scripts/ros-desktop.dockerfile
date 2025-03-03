@@ -1,5 +1,7 @@
+ARG ROS_DISTRO=humble
+
 # Building off the base image saves a bit of space, but the build time is longer
-FROM ros:humble-ros-base
+FROM ros:$ROS_DISTRO-ros-base
 
 # TODO (anton-matosov): Investigate if its really needed for devcontainer to use non root user
 # https://docs.github.com/en/actions/sharing-automations/creating-actions/dockerfile-support-for-github-actions#user

@@ -18,7 +18,7 @@ Devcontainer (any desktop OS)
 3. Install docker (either `Docker Desktop <https://www.docker.com/products/docker-desktop/>`_ for macOS and Windows) or native docker installtion for linux `scripts/install_docker.sh`
 4. 4. Run `Dev Containers: Open Workspace in Container...` via command pallet `F1` and select [Dr.QP.code-workspace](Dr.QP.code-workspace) workspace
 5. Choose devcontainer to open:
-   - (recommended, fast) `prebuilt` to use devcontainer based on `ghcr.io/dr-qp/ros-desktop:edge` image built from `main` branch
+   - (recommended, fast) `prebuilt` to use devcontainer based on `ghcr.io/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop:edge` image built from `main` branch
    - `source` to build devcontainer from source in the current branch. This setup is useful if you will need to make changes to the dockerfile or installation scripts
 
 Raw Dev machine (linux only)

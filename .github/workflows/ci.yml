@@ -52,11 +52,13 @@ jobs:
         with:
           context: scripts
           file: scripts/ros-desktop.dockerfile
-          image: ${{ env.REGISTRY }}/dr-qp/ros-desktop
+          image: ${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop
           arch: ${{ matrix.arch }}
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
           registry-token: ${{ secrets.GITHUB_TOKEN }}
+          build-args: |
+            ROS_DISTRO=${{ env.ROS_DISTRO }}
 
   merge-dev-image:
     name: Merge development image
@@ -74,7 +76,7 @@ jobs:
         id: merge
         uses: ./.github/actions/docker/multiarch-merge
         with:
-          image: ${{ env.REGISTRY }}/dr-qp/ros-desktop
+          image: ${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
           registry-token: ${{ secrets.GITHUB_TOKEN }}
