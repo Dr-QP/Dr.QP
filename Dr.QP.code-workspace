@@ -46,6 +46,7 @@
       "github.vscode-github-actions",
       "slevesque.vscode-3dviewer",
       "corker.vscode-micromamba",
+      "github.vscode-pull-request-github",
     ]
   },
   "launch": {
