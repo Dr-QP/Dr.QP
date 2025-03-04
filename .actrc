@@ -8,7 +8,7 @@
 
 # privileged is needed for Docker in Docker to work in devcontainer builds
 # Move this option to command line as it is not supported here at the moment
---container-options --privileged
+# --container-options "--privileged"
 
 # Other needed command line options
 # --actor <your-github-user>
