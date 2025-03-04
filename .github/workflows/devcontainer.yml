@@ -88,6 +88,7 @@ jobs:
             cacheTo: ${{ env.CACHE_IMAGE }}
             runCmd: |
               set -x
+              set -e
               time sudo apt update
               time rosdep update
               time ./scripts/ros/ros-dep.sh
