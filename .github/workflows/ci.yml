@@ -129,7 +129,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         # upload the logs even when the build fails
-        if: env.ACT == '' && always()
+        if: always()
         with:
           name: colcon-logs-${{ matrix.arch }}
           path: ros_ws/log
