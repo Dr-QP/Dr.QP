@@ -58,7 +58,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     sudo apt-get update \
     && rosdep update \
     && rosdep install --ignore-src -y \
-      --from-paths "$OVERLAY_WS/install"
+      --from-paths "$OVERLAY_WS/install" \
+      -t exec
 
 COPY ./ros_entrypoint.sh /
 
