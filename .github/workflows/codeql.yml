@@ -28,7 +28,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  ROS_DISTRO: humble # duplicated in job.container.image
+  ROS_DISTRO: jazzy # duplicated in job.container.image
   CC: clang
   CXX: clang++
   CMAKE_EXPORT_COMPILE_COMMANDS: "1"
@@ -44,7 +44,7 @@ jobs:
     # Consider using larger runners or machines with greater resources for possible analysis time improvements.
     runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/dr-qp/humble-ros-desktop:edge
+      image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
     permissions:
       # required for all workflows

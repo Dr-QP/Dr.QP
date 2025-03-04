@@ -1,10 +1,10 @@
 {
-  "name": "ROS 2 humble from source",
+  "name": "ROS 2 jazzy from source",
   "remoteUser": "rosdev",
   "build": {
     "dockerfile": "../../scripts/ros-desktop.dockerfile",
-    "cacheFrom": "ghcr.io/dr-qp/cache-humble-ros-devcontainer:arm64",
-    "cacheTo":  "ghcr.io/dr-qp/cache-humble-ros-devcontainer:arm64"
+    "cacheFrom": "ghcr.io/dr-qp/cache-jazzy-ros-devcontainer:arm64",
+    "cacheTo":  "ghcr.io/dr-qp/cache-jazzy-ros-devcontainer:arm64"
   },
   "customizations": {
     "vscode": {

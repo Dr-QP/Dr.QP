@@ -22,7 +22,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  ROS_DISTRO: humble
+  ROS_DISTRO: jazzy
   CC: clang
   CXX: clang++
   REGISTRY: ghcr.io
