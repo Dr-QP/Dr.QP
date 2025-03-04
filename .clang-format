@@ -41,7 +41,7 @@ IncludeCategories:
     Priority: 5
 
 # This part comes from
-# https://github.com/ament/ament_lint/blob/humble/ament_clang_format/ament_clang_format/configuration/.clang-format
+# https://github.com/ament/ament_lint/blob/jazzy/ament_clang_format/ament_clang_format/configuration/.clang-format
 AccessModifierOffset: -2
 AlignAfterOpenBracket: AlwaysBreak
 BraceWrapping:

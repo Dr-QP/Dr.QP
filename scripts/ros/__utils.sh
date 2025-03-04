@@ -7,4 +7,4 @@ isCI()
   test ! -z "$CI"
 }
 
-export ROS_DISTRO=humble
+export ROS_DISTRO=jazzy

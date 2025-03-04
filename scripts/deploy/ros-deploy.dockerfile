@@ -1,4 +1,4 @@
-ARG ROS_DISTRO=humble
+ARG ROS_DISTRO=jazzy
 
 ARG OVERLAY_WS=/opt/ros/overlay_ws
 ARG GIT_SHA=main

@@ -4,7 +4,7 @@ add_executable(drqp_serial_tests
   TestSerialRecordingProxy.cpp
 )
 
-# https://docs.ros.org/en/humble/p/catch_ros2/index.html
+# https://docs.ros.org/en/jazzy/p/catch_ros2/index.html
 target_link_libraries(drqp_serial_tests PRIVATE
   drqp_serial
   catch_ros2::catch_ros2_with_main

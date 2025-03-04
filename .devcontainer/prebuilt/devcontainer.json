@@ -1,7 +1,7 @@
 {
-  "name": "ROS 2 humble prebuilt",
+  "name": "ROS 2 jazzy prebuilt",
   "remoteUser": "rosdev",
-  "image": "ghcr.io/dr-qp/humble-ros-desktop:edge",
+  "image": "ghcr.io/dr-qp/jazzy-ros-desktop:edge",
   "customizations": {
     "vscode": {
       "extensions": [

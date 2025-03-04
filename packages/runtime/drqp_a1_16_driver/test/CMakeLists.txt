@@ -4,7 +4,7 @@ add_executable(drqp_a1_16_driver_tests
   TestXYZrobotServo.cpp
 )
 
-# https://docs.ros.org/en/humble/p/catch_ros2/index.html
+# https://docs.ros.org/en/jazzy/p/catch_ros2/index.html
 target_link_libraries(drqp_a1_16_driver_tests PRIVATE
   drqp_a1_16_driver
   catch_ros2::catch_ros2

@@ -226,15 +226,15 @@
     "cmake.generator": "Ninja",
     "cmake.exportCompileCommandsFile": true,
 
-    "ros.distro": "humble",
-    "ament-task-provider.envSetup": "source /opt/ros/humble/setup.bash",
+    "ros.distro": "jazzy",
+    "ament-task-provider.envSetup": "source /opt/ros/jazzy/setup.bash",
     "python.autoComplete.extraPaths": [
-      "/opt/ros/humble/lib/python3.10/site-packages",
-      "/opt/ros/humble/local/lib/python3.10/dist-packages"
+      "/opt/ros/jazzy/lib/python3.11/site-packages",
+      "/opt/ros/jazzy/local/lib/python3.11/dist-packages"
     ],
     "python.analysis.extraPaths": [
-      "/opt/ros/humble/lib/python3.10/site-packages",
-      "/opt/ros/humble/local/lib/python3.10/dist-packages"
+      "/opt/ros/jazzy/lib/python3.11/site-packages",
+      "/opt/ros/jazzy/local/lib/python3.11/dist-packages"
     ],
     "search.exclude": {
       "**/node_modules": true,
