@@ -343,3 +343,5 @@ compile_commands.json
 *.exe
 *.out
 *.app
+
+llvm.sh

@@ -3,8 +3,8 @@
   "remoteUser": "rosdev",
   "build": {
     "dockerfile": "../../scripts/ros-desktop.dockerfile",
-    "cacheFrom": "ghcr.io/dr-qp/humble-ros-devcontainer:cache-arm64",
-    "cacheTo":  "ghcr.io/dr-qp/humble-ros-devcontainer:cache-arm64"
+    "cacheFrom": "ghcr.io/dr-qp/cache-humble-ros-devcontainer:arm64",
+    "cacheTo":  "ghcr.io/dr-qp/cache-humble-ros-devcontainer:arm64"
   },
   "customizations": {
     "vscode": {

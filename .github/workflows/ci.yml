@@ -38,10 +38,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: ubuntu-24.04-arm
-            arch: arm64
-          - runner: ubuntu-24.04
-            arch: amd64
+          - runner: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+            arch: ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
+          - runner: ${{ vars.ARM_ONLY == '1' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+            arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
@@ -52,11 +52,13 @@ jobs:
         with:
           context: scripts
           file: scripts/ros-desktop.dockerfile
-          image: ${{ env.REGISTRY }}/dr-qp/ros-desktop
+          image: ${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop
           arch: ${{ matrix.arch }}
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
           registry-token: ${{ secrets.GITHUB_TOKEN }}
+          build-args: |
+            ROS_DISTRO=${{ env.ROS_DISTRO }}
 
   merge-dev-image:
     name: Merge development image
@@ -74,7 +76,7 @@ jobs:
         id: merge
         uses: ./.github/actions/docker/multiarch-merge
         with:
-          image: ${{ env.REGISTRY }}/dr-qp/ros-desktop
+          image: ${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
           registry-token: ${{ secrets.GITHUB_TOKEN }}
@@ -87,10 +89,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: ubuntu-24.04-arm
-            arch: arm64
-          - runner: ubuntu-24.04
-            arch: amd64
+          - runner: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+            arch: ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
+          - runner: ${{ vars.ARM_ONLY == '1' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+            arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
     runs-on: ${{ matrix.runner }}
     permissions:
       packages: read
@@ -127,7 +129,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         # upload the logs even when the build fails
-        if: env.ACT == '' && always()
+        if: always()
         with:
           name: colcon-logs-${{ matrix.arch }}
           path: ros_ws/log
@@ -141,10 +143,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: ubuntu-24.04-arm
-            arch: arm64
-          - runner: ubuntu-24.04
-            arch: amd64
+          - runner: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+            arch: ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
+          - runner: ${{ vars.ARM_ONLY == '1' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+            arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
     runs-on: ${{ matrix.runner }}
     permissions:
       packages: write

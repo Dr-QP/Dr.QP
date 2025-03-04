@@ -1,10 +1,12 @@
+ARG ROS_DISTRO=humble
+
 ARG OVERLAY_WS=/opt/ros/overlay_ws
 ARG GIT_SHA=main
 ARG GIT_REPO=https://github.com/Dr-QP/Dr.QP.git
-ARG BUILD_IMAGE=ghcr.io/dr-qp/ros-desktop:main
+ARG BUILD_IMAGE=ghcr.io/dr-qp/$ROS_DISTRO-ros-desktop:main
 
 # multi-stage for caching
-FROM ros:humble-ros-base AS cacher
+FROM ros:$ROS_DISTRO-ros-base AS cacher
 
 # clone overlay source
 ARG OVERLAY_WS
@@ -44,7 +46,7 @@ RUN . /opt/ros/$ROS_DISTRO/setup.sh \
       --mixin $OVERLAY_MIXINS
 
 # deployment
-FROM ros:humble-ros-base AS deploy
+FROM ros:$ROS_DISTRO-ros-base AS deploy
 
 ARG OVERLAY_WS
 
@@ -56,7 +58,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     sudo apt-get update \
     && rosdep update \
     && rosdep install --ignore-src -y \
-      --from-paths "$OVERLAY_WS/install"
+      --from-paths "$OVERLAY_WS/install" \
+      -t exec
 
 COPY ./ros_entrypoint.sh /
 

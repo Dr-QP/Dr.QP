@@ -36,10 +36,10 @@ jobs:
         fail-fast: false
         matrix:
           include:
-            - runner: ubuntu-24.04-arm
-              arch: arm64
-            - runner: ubuntu-24.04
-              arch: amd64
+            - runner: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+              arch: ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
+            - runner: ${{ vars.ARM_ONLY == '1' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+              arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
       runs-on: ${{ matrix.runner }}
       permissions:
         packages: write
@@ -48,6 +48,11 @@ jobs:
           # https://github.com/Dr-QP/Dr.QP/wiki/Issue-using-%60act%60-and-%60devcontainers-ci%60
           # DinD requires an image that has dockerd installed, so run with -P ubuntu-latest=ghcr.io/corvina-r-d/ubuntu:act-22.04
           # DinD requires --priviliged option as well
+          #
+          #
+          # DinD fails under QEMU emulation of arm64 on the amd64 CPUs:
+          # iptables: Failed to initialize nft: Protocol not supported
+          # https://github.com/multiarch/qemu-user-static/issues/191
         - name: optionally start DinD for act (local testing)
           if: env.ACT
           run: |
@@ -57,12 +62,16 @@ jobs:
         - name: optionally test DinD for act (local testing)
           if: env.ACT
           run: |
-            docker run --rm hello-world:linux
+            docker run --rm ghcr.io/dr-qp/hello-world:linux
+            echo UID=$UID
+            echo USER=$USER
+            id
 
         - name: Install updated Skopeo needed for docker/buildx
           run: |
             sudo apt-get update
             sudo apt-get install skopeo -y
+
 
         - uses: actions/checkout@v4
         - uses: docker/setup-buildx-action@v3
@@ -81,7 +90,7 @@ jobs:
         - name: Build and test dev container image
           uses: devcontainers/ci@v0.3
           env:
-            CACHE_IMAGE: ${{ env.REGISTRY }}/dr-qp/cache-ros-devcontainer:${{ env.ROS_DISTRO }}-${{ matrix.arch }}
+            CACHE_IMAGE: ${{ env.REGISTRY }}/dr-qp/cache-${{ env.ROS_DISTRO }}-ros-devcontainer:${{ matrix.arch }}
           with:
             configFile: .devcontainer/source/devcontainer.json
             cacheFrom: ${{ env.CACHE_IMAGE }}
@@ -89,9 +98,12 @@ jobs:
             runCmd: |
               set -x
               set -e
+              echo UID=$UID
+              echo USER=$USER
+              id
               time sudo apt update
               time rosdep update
-              time ./scripts/ros/ros-dep.sh
+              time ./scripts/ros/ros-dep.sh || true # rosdep will fail to install deps on arm
               time colcon build --event-handlers=console_cohesion+
               time colcon test --event-handlers=console_cohesion+
 
