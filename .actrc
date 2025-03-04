@@ -1,4 +1,5 @@
-# corvina-r-d/ubuntu - has dockerd in it to support DinD
-# https://github.com/Corvina-R-D/act_docker_images/pkgs/container/ubuntu/293201282?tag=act-latest
--P ubuntu-24.04=ghcr.io/corvina-r-d/ubuntu:act-latest-20241022@sha256:f91157baa3bcc2a7dbef7c2f21cf2cf96c05dcc0a649f452e8ea5531715d02fb
--P ubuntu-24.04-arm=ghcr.io/corvina-r-d/ubuntu:act-latest-20241022@sha256:bd73f18a5d9e5dffea4bba76caa6658aae7d58e64b43da328408a8d4709292a1
+# catthehacker images contain docker as well
+# https://github.com/catthehacker/docker_images/pkgs/container/ubuntu/365453403?tag=act-24.04
+
+-P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04-20250301@sha256:0779d1c3d7412a8bccc2343c917300be2d490b63527296c301385332b430e551
+-P ubuntu-24.04-arm=ghcr.io/catthehacker/ubuntu:act-24.04-20250301@sha256:59c79c855397744c2fbbe141535993530ee35f079b36571e1fb9f1ab5782e772
