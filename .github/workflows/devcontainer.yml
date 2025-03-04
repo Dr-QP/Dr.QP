@@ -48,6 +48,11 @@ jobs:
           # https://github.com/Dr-QP/Dr.QP/wiki/Issue-using-%60act%60-and-%60devcontainers-ci%60
           # DinD requires an image that has dockerd installed, so run with -P ubuntu-latest=ghcr.io/corvina-r-d/ubuntu:act-22.04
           # DinD requires --priviliged option as well
+          #
+          #
+          # DinD fails under QEMU emulation of arm64 on the amd64 CPUs:
+          # iptables: Failed to initialize nft: Protocol not supported
+          # https://github.com/multiarch/qemu-user-static/issues/191
         - name: optionally start DinD for act (local testing)
           if: env.ACT
           run: |
