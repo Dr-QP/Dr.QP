@@ -81,7 +81,7 @@ jobs:
         - name: Build and test dev container image
           uses: devcontainers/ci@v0.3
           env:
-            CACHE_IMAGE: ${{ env.REGISTRY }}/dr-qp/cache-ros-devcontainer:${{ env.ROS_DISTRO }}-${{ matrix.arch }}
+            CACHE_IMAGE: ${{ env.REGISTRY }}/dr-qp/cache-${{ env.ROS_DISTRO }}-ros-devcontainer:${{ matrix.arch }}
           with:
             configFile: .devcontainer/source/devcontainer.json
             cacheFrom: ${{ env.CACHE_IMAGE }}

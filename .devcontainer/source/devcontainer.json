@@ -2,9 +2,9 @@
   "name": "ROS 2 humble from source",
   "remoteUser": "rosdev",
   "build": {
-    "dockerfile": "../../scripts/humble-ros-desktop.dockerfile",
-    "cacheFrom": "ghcr.io/dr-qp/humble-ros-devcontainer:cache-arm64",
-    "cacheTo":  "ghcr.io/dr-qp/humble-ros-devcontainer:cache-arm64"
+    "dockerfile": "../../scripts/ros-desktop.dockerfile",
+    "cacheFrom": "ghcr.io/dr-qp/cache-humble-ros-devcontainer:arm64",
+    "cacheTo":  "ghcr.io/dr-qp/cache-humble-ros-devcontainer:arm64"
   },
   "customizations": {
     "vscode": {
