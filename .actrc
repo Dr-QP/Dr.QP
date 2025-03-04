@@ -2,3 +2,14 @@
 # https://github.com/Corvina-R-D/act_docker_images/pkgs/container/ubuntu/293201282?tag=act-latest
 -P ubuntu-24.04=ghcr.io/corvina-r-d/ubuntu:act-latest-20241022@sha256:f91157baa3bcc2a7dbef7c2f21cf2cf96c05dcc0a649f452e8ea5531715d02fb
 -P ubuntu-24.04-arm=ghcr.io/corvina-r-d/ubuntu:act-latest-20241022@sha256:bd73f18a5d9e5dffea4bba76caa6658aae7d58e64b43da328408a8d4709292a1
+
+# A required option for artifacts server used in docker image builds to store digests
+--artifact-server-path /tmp/act-artifacts
+
+# privileged is needed for Docker in Docker to work in devcontainer builds
+# Move this option to command line as it is not supported here at the moment
+# --container-options "--privileged"
+
+# Other needed command line options
+# --actor <your-github-user>
+# Configure secrets.GITHUB_TOKEN with your github PAT with packages:write access
