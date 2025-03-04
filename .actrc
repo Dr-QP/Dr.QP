@@ -1,5 +1,14 @@
-# catthehacker images contain docker as well
-# https://github.com/catthehacker/docker_images/pkgs/container/ubuntu/365453403?tag=act-24.04
+# Custom images that include moby-engine (dockerd for docker in docker to work)
+# catthehacker images do not have it, they only install mobi-cli
+# Detailed diff: https://github.com/catthehacker/docker_images/compare/master...Dr-QP:act_docker_images:master?expand=1#diff-d33ebbe36dbbe0effe1936cde873c438f6175d00fcf35f3bc4b92bc16ce2097fR117
 
--P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04-20250301@sha256:0779d1c3d7412a8bccc2343c917300be2d490b63527296c301385332b430e551
--P ubuntu-24.04-arm=ghcr.io/catthehacker/ubuntu:act-24.04-20250301@sha256:59c79c855397744c2fbbe141535993530ee35f079b36571e1fb9f1ab5782e772
+# https://github.com/Dr-QP/act_docker_images/pkgs/container/act-ubuntu/366732187?tag=act-24.04-dev
+-P ubuntu-24.04=ghcr.io/dr-qp/act-ubuntu:act-24.04-dev@sha256:8a4dbdb83633a0a71cab6e948debf38f2538efd0a2165f8d17312be17f19c8ee
+-P ubuntu-24.04-arm=ghcr.io/dr-qp/act-ubuntu:act-24.04-dev@sha256:16203cb5c2c27271cf541c9db1e2c8694daa0c04865104478533b98d7caad956
+
+# https://github.com/Dr-QP/act_docker_images/pkgs/container/act-ubuntu/366706920?tag=act-22.04-dev
+-P ubuntu-22.04=ghcr.io/dr-qp/act-ubuntu:act-22.04-dev@sha256:4b8800c2a1e5411a6faf47614f5251e51554be3a20179d0f3be6e5691cd52edf
+-P ubuntu-22.04-arm=ghcr.io/dr-qp/act-ubuntu:act-22.04-dev@sha256:e35d2ffd22dc681478a45c7280adb0055d011b7fd5c8e7aee2240b60c83d67d7
+
+# In order to run arm64 images on amd64 linux QEMU needs to be installed by running:
+# docker run --privileged --rm tonistiigi/binfmt --install arm64
