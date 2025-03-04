@@ -62,7 +62,7 @@ jobs:
         - name: optionally test DinD for act (local testing)
           if: env.ACT
           run: |
-            docker run --rm hello-world:linux
+            docker run --rm ghcr.io/dr-qp/hello-world:linux
             echo UID=$UID
             echo USER=$USER
             id
