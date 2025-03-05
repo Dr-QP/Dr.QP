@@ -30,7 +30,7 @@ env:
   PUSH_GHCR: ${{ github.repository == (github.event.pull_request.head.repo.full_name || github.repository) && '1' || '' }}
   PUSH_QUAY: ${{ secrets.QUAY_USER && secrets.QUAY_TOKEN && '1' || '' }}
   PUSH_DOCKER_HUB: ${{ secrets.DOCKER_USER && secrets.DOCKER_TOKEN && '1' || '' }}
-  LATEST_TAG: 22.04
+  LATEST_TAG: 24.04
 
 defaults:
   run:
@@ -95,7 +95,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Build and push ${{ env.DISTRO }}:${{ env.TAG }}
         shell: buildah unshare pwsh "{0}"
@@ -186,12 +186,12 @@ jobs:
               -tags $tags
 
       - if: ${{ !env.SKIP_TEST }}
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: '^1.16'
 
       - if: ${{ !env.SKIP_TEST }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: nektos/act
           path: act
