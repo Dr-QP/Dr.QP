@@ -43,7 +43,7 @@ jobs:
   build:
     name: Build
     if: "!contains(github.event.pull_request.body, '[skip build]')"
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     timeout-minutes: 120
     permissions:
       packages: write
@@ -107,7 +107,7 @@ jobs:
           registry-token: ${{ secrets.GITHUB_TOKEN }}
   test:
     name: Test act image
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     needs: merge
     timeout-minutes: 120
     strategy:
