@@ -55,7 +55,7 @@ install(TARGETS
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 # Export dependencies
-ament_export_dependencies(${${PROJECT_NAME}_BUILD_EXPORT_DEPENDS})
+ament_export_dependencies(${${PROJECT_NAME}_BUILD_EXPORT_DEPENDS} Threads)
 
 
 if(BUILD_TESTING)
