@@ -45,6 +45,8 @@ jobs:
     if: "!contains(github.event.pull_request.body, '[skip build]')"
     runs-on: ubuntu-24.04
     timeout-minutes: 120
+    permissions:
+      packages: write
     strategy:
       fail-fast: true
       max-parallel: 4
