@@ -5,14 +5,16 @@ on:
     - cron: 0 12 */7 * *
   push:
     paths:
-      - '.github/workflows/act-docker-build-image.yml'
-      - 'docker/act/**'
+      - .github/workflows/act-docker-build-image.yml
+      - docker/act/**
     branches:
-      - 'master'
+      - main
   pull_request:
     paths:
-      - '.github/workflows/act-docker-build-image.yml'
-      - 'docker/act/**'
+      - .github/workflows/act-docker-build-image.yml
+      - docker/act/**
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency:
@@ -24,7 +26,7 @@ env:
   IMAGE_LABEL_REPO: ${{ github.repository }}
   SLUG: ${{ github.repository_owner }}/act-ubuntu
   DISTRO: ubuntu
-  NODE: '20'
+  NODE: 20
   BUILD_REF: ${{ github.sha }}
   SKIP_TEST: false
   REGISTRY: ghcr.io

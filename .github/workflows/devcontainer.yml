@@ -5,17 +5,33 @@ on:
     types:
       - published
   push:
+    paths:
+      - .github/workflows/ci.yml
+      - .github/actions/**
+      - docker/ros/**
+      - packages/**
+      - scripts/**
+      - .clang-format
+      - codecov.yml
     branches:
-      - 'main'
+      - main
     tags:
-      - 'v*'
+      - v*
+  pull_request:
+    paths:
+      - .github/workflows/ci.yml
+      - .github/actions/**
+      - docker/ros/**
+      - packages/**
+      - scripts/**
+      - .clang-format
+      - codecov.yml
+    branches:
+      - main
+      - v*
   merge_group:
     types:
       - checks_requested
-  pull_request:
-    branches:
-      - 'main'
-      - 'v*'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
