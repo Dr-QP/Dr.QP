@@ -20,7 +20,7 @@ defaults:
     shell: sh
 jobs:
   copy:
-    name: copy image ${{ matrix.copy.src }}
+    name: Copy image
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: true
