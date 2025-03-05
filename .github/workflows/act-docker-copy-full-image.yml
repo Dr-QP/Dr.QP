@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  SLUG: ${{ github.repository_owner }}/act-ubuntu
+  SLUG: ${{ github.repository_owner }}/catthehacker-ubuntu
   PUSH_GHCR: ${{ github.repository == (github.event.pull_request.head.repo.full_name || github.repository) && '1' || '' }}
   PUSH_QUAY: ${{ secrets.QUAY_USER && secrets.QUAY_TOKEN && '1' || '' }}
   PUSH_DOCKER_HUB: ${{ secrets.DOCKER_USER && secrets.DOCKER_TOKEN && '1' || '' }}
@@ -31,12 +31,10 @@ jobs:
       max-parallel: 1
       matrix:
         copy:
-        - src: ghcr.io/christopherhx/runner-images:ubuntu22-runner-large-${{ inputs.version || 'latest' }}
-          dest: full-latest
-        - src: ghcr.io/christopherhx/runner-images:ubuntu24-runner-large-${{ inputs.version || 'latest' }}
-          dest: full-24.04
-        - src: ghcr.io/christopherhx/runner-images:ubuntu22-runner-large-${{ inputs.version || 'latest' }}
-          dest: full-22.04
+        - src: ghcr.io/catthehacker/ubuntu:act-24.04
+          dest: act-24.04
+        - src: ghcr.io/catthehacker/ubuntu:act-22.04
+          dest: act-22.04
     steps:
       - name: Force SLUG to lowercase
         uses: actions/github-script@v6
