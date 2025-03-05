@@ -345,3 +345,4 @@ compile_commands.json
 *.app
 
 llvm.sh
+nodesource_setup.sh
