@@ -38,14 +38,12 @@ if [[ ${#packages[@]} -eq 0 ]]; then
     exit 1
 fi
 
-sorted_packages=($(for element in "${packages[@]}"; do echo "$element"; done | sort))
-
 # Generate the installation script
 output_script="$script_dir/install_dependencies.sh"
 cat <<EOF > "$output_script"
 #!/usr/bin/env bash
 
-packages=(${sorted_packages[@]})
+packages=($(for element in "${packages[@]}"; do echo "$element"; done | sort))
 
 available_packages=()
 
