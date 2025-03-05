@@ -41,12 +41,6 @@ if [[ $(is_utf8_locale) == 'no' ]]; then
 fi
 test $(is_utf8_locale) == 'yes' || (echo "Failed to set en_US.UTF-8 locale" && exit 1)
 
-# Clang 19
-CLANG_VERSION=19
-curl -sSL https://apt.llvm.org/llvm.sh -o "$script_dir/llvm.sh"
-chmod +x "$script_dir/llvm.sh"
-sudo "$script_dir/llvm.sh" $CLANG_VERSION all
-
 # Add ros signing keys
 if [[ ! (-f /etc/apt/sources.list.d/ros2-latest.list || -f /etc/apt/sources.list.d/ros2.list) ]]; then
   sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key  -o /usr/share/keyrings/ros-archive-keyring.gpg
@@ -121,6 +115,16 @@ sudo apt-get -y remove nodejs npm # remove old versions if any
 # The NodeSource nodejs package contains both the node binary and npm, so you don’t need to install npm separately.
 sudo apt-get install -y -q --no-install-recommends nodejs
 sudo npm install -g yarn
+
+# Install latest Clang
+# If installation fails with output containing Skipping acquire of configured file 'main/binary-i386/Packages'
+# Add `[arch=amd64]` to llvm apt list
+# code /etc/apt/sources.list.d/archive_uri-http_apt_llvm_org_noble_-noble.list
+# More details are in https://stackoverflow.com/a/79155511/888545
+CLANG_VERSION=19
+curl -sSL https://apt.llvm.org/llvm.sh -o "$script_dir/llvm.sh"
+chmod +x "$script_dir/llvm.sh"
+sudo "$script_dir/llvm.sh" $CLANG_VERSION all
 
 echo '##################################################'
 echo '#'
