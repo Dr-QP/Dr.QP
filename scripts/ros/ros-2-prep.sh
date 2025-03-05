@@ -125,6 +125,7 @@ CLANG_VERSION=19
 curl -sSL https://apt.llvm.org/llvm.sh -o "$script_dir/llvm.sh"
 chmod +x "$script_dir/llvm.sh"
 sudo "$script_dir/llvm.sh" $CLANG_VERSION all
+sudo apt install -y -q --no-install-recommends libstdc++-14-dev
 
 echo '##################################################'
 echo '#'
