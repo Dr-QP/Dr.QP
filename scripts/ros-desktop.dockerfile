@@ -1,4 +1,4 @@
-ARG ROS_DISTRO=humble
+ARG ROS_DISTRO=jazzy
 
 # Building off the base image saves a bit of space, but the build time is longer
 FROM ros:$ROS_DISTRO-ros-base

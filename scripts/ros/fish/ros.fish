@@ -24,7 +24,7 @@ function register_argcomplete
 end
 
 function ros2_activate
-  bass source /opt/ros/humble/setup.bash
+  bass source /opt/ros/jazzy/setup.bash
   register_argcomplete
 end
 

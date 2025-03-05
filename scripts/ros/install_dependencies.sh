@@ -1,6 +1,31 @@
 #!/usr/bin/env bash
 
-packages=(libboost-all-dev ros-humble-ament-cmake ros-humble-ament-cmake-clang-format ros-humble-ament-cmake-copyright ros-humble-ament-cmake-core ros-humble-ament-cmake-cppcheck ros-humble-ament-cmake-cpplint ros-humble-ament-cmake-export-dependencies ros-humble-ament-cmake-flake8 ros-humble-ament-cmake-lint-cmake ros-humble-ament-cmake-pep257 ros-humble-ament-cmake-xmllint ros-humble-ament-lint-auto ros-humble-catch-ros2 ros-humble-gazebo-ros ros-humble-gazebo-ros2-control ros-humble-joint-state-publisher ros-humble-joint-state-publisher-gui ros-humble-rclcpp ros-humble-robot-state-publisher ros-humble-ros2-control ros-humble-ros2-controllers ros-humble-ros2launch ros-humble-rosidl-default-generators ros-humble-rosidl-default-runtime ros-humble-rviz2 ros-humble-std-msgs ros-humble-xacro)
+packages=(libboost-all-dev
+ros-jazzy-ament-cmake
+ros-jazzy-ament-cmake-clang-format
+ros-jazzy-ament-cmake-copyright
+ros-jazzy-ament-cmake-core
+ros-jazzy-ament-cmake-cppcheck
+ros-jazzy-ament-cmake-cpplint
+ros-jazzy-ament-cmake-export-dependencies
+ros-jazzy-ament-cmake-flake8
+ros-jazzy-ament-cmake-lint-cmake
+ros-jazzy-ament-cmake-pep257
+ros-jazzy-ament-cmake-xmllint
+ros-jazzy-ament-lint-auto
+ros-jazzy-catch-ros2
+ros-jazzy-joint-state-publisher
+ros-jazzy-joint-state-publisher-gui
+ros-jazzy-rclcpp
+ros-jazzy-robot-state-publisher
+ros-jazzy-ros2-control
+ros-jazzy-ros2-controllers
+ros-jazzy-ros2launch
+ros-jazzy-rosidl-default-generators
+ros-jazzy-rosidl-default-runtime
+ros-jazzy-rviz2
+ros-jazzy-std-msgs
+ros-jazzy-xacro)
 
 available_packages=()
 

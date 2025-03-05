@@ -15,7 +15,7 @@ Update your `~/.bashrc` with the following snippet that adds couple alises for e
 
   #################################################################
 
-  alias ros2_activate="source /opt/ros/humble/setup.bash"
+  alias ros2_activate="source /opt/ros/jazzy/setup.bash"
   alias ros2_ws="source ./install/setup.bash"
 
 Fish

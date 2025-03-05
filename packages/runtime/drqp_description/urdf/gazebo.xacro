@@ -2,9 +2,9 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <ros2_control name="GazeboSystem" type="system">
-        <hardware>
+        <!-- <hardware> Fix in https://github.com/Dr-QP/Dr.QP/issues/91
             <plugin>gazebo_ros2_control/GazeboSystem</plugin>
-        </hardware>
+        </hardware> -->
         <xacro:macro name="hexjoint" params="name">
             <joint name="${name}">
                 <command_interface name="position">
@@ -18,7 +18,7 @@
                 <state_interface name="effort" />
             </joint>
         </xacro:macro>
-    
+
         <xacro:hexjoint name="left_back_coxa" />
         <xacro:hexjoint name="left_back_femur" />
         <xacro:hexjoint name="left_back_tibia" />
@@ -39,11 +39,11 @@
         <!-- <xacro:hexjoint name="right_back_tibia" /> -->
     </ros2_control>
 
-    <gazebo>
+    <!-- <gazebo> Fix in https://github.com/Dr-QP/Dr.QP/issues/91
         <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
           <robot_param>robot_description</robot_param>
           <robot_param_node>robot_state_publisher</robot_param_node>
           <parameters>$(find drqp_gazebo)/config/gazebo_params.yaml</parameters>
         </plugin>
-    </gazebo>
+    </gazebo> -->
 </robot>
