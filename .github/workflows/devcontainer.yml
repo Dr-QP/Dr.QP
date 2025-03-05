@@ -52,11 +52,9 @@ jobs:
         fail-fast: false
         matrix:
           include:
-            - runner: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-              arch: ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
-            - runner: ${{ vars.ARM_ONLY == '1' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
-              arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
-      runs-on: ${{ matrix.runner }}
+            - arch: ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
+            - arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
+      runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
       permissions:
         packages: write
       steps:
