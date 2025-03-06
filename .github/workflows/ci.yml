@@ -157,7 +157,7 @@ jobs:
       - name: Test Summary
         uses: test-summary/action@v2
         with:
-          paths: "build/*/test_results/*/*.xunit.xml"
+          paths: "ros_ws/build/*/test_results/*/*.xunit.xml"
         if: always()
 
   build-deploy-image:
