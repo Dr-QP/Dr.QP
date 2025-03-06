@@ -127,7 +127,7 @@ jobs:
       - uses: actions/setup-go@v5
         if: ${{ env.RUN_TESTS == 'true' }}
         with:
-          go-version: '^1.16'
+          go-version: '^1.24'
 
       - name: Checkout nektos/act repo
         uses: actions/checkout@v4
