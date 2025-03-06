@@ -130,6 +130,7 @@ jobs:
         if: ${{ env.RUN_TESTS == 'true' }}
         with:
           repository: nektos/act
+          ref: v0.2.75
 
       - uses: actions/setup-go@v5
         if: ${{ env.RUN_TESTS == 'true' }}
