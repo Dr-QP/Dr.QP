@@ -116,7 +116,7 @@ jobs:
         with:
           path: drqp
 
-      - uses: ros-tooling/action-ros-ci@v0.4
+      - uses: ros-tooling/action-ros-ci@22096906dbb79d66bc20fa54da981c93f289d3c8
         env:
           GCOV_COMMAND: "${{ github.workspace }}/drqp/scripts/gcov"
         with:
