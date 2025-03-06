@@ -28,8 +28,8 @@
     "scripts": {
         "build-prod": "react-scripts build",
         "build-dev": "",
-        "test-client": "react-scripts test",
-        "test-server": "jest ./server --coverage",
+        "test-client": "react-scripts test --watchAll=false --coverage --coverageReporters lcov",
+        "test-server": "jest ./server --coverage --coverageReporters lcov",
         "test": "yarn test-client && yarn test-server",
         "start-client-dev": "react-scripts start",
         "start-client-prod": "serve -s build; echo Ignoring the args:",
