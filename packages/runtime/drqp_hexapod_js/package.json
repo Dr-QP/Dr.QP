@@ -6,7 +6,6 @@
   "scripts": {
     "build-prod": "yarn wsrun --stages build-prod",
     "build-dev": "yarn wsrun --stages build-dev",
-
     "start-prod": "yarn wsrun --parallel start-prod",
     "start-dev": "yarn wsrun --parallel start-dev"
   },
@@ -14,7 +13,7 @@
     "generate-ros-messages": "node_modules/.bin/generate-ros-messages"
   },
   "dependencies": {
-    "rclnodejs": "^0.31.0"
+    "rclnodejs": "^0.32.0"
   },
   "devDependencies": {
     "wsrun": "^5.2.4"
