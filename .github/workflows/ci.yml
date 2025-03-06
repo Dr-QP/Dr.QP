@@ -113,9 +113,12 @@ jobs:
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: drqp
+
       - uses: ros-tooling/action-ros-ci@v0.4
         env:
-          GCOV_COMMAND: "${{ github.workspace }}/scripts/gcov"
+          GCOV_COMMAND: "${{ github.workspace }}/drqp/scripts/gcov"
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
           no-symlink-install: true
