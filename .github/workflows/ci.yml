@@ -128,6 +128,10 @@ jobs:
                 "mixin": ["coverage-pytest"]
               }
             }
+          # pin the repository in the workflow to a specific commit to avoid
+          # changes in colcon-mixin-repository from breaking your tests.
+          colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml
+
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
