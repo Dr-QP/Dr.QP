@@ -54,7 +54,7 @@ jobs:
         arch:
           - amd64
           - arm64
-        TAG:
+        distro_version:
           - 24.04
           - 22.04
     steps:
@@ -72,12 +72,13 @@ jobs:
         with:
           context: docker/act
           image: ${{ env.REGISTRY }}/${{ env.SLUG }}
+          future-tag: act-${{ matrix.distro_version }}
           arch: ${{ matrix.arch }}
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
           registry-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
-            DISTRO_VERSION=${{ matrix.TAG }}
+            DISTRO_VERSION=${{ matrix.distro_version }}
 
   merge:
     name: Merge multiarch act image
@@ -88,6 +89,13 @@ jobs:
     timeout-minutes: 35
     outputs:
       image: ${{ steps.merge.outputs.image }}
+    strategy:
+      fail-fast: true
+      max-parallel: 4
+      matrix:
+        distro_version:
+          - 24.04
+          - 22.04
     steps:
       - name: Force SLUG to lowercase
         uses: actions/github-script@v6
@@ -102,6 +110,7 @@ jobs:
         uses: ./.github/actions/docker/multiarch-merge
         with:
           image: ${{ env.REGISTRY }}/${{ env.SLUG }}
+          future-tag: act-${{ matrix.distro_version }}
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
           registry-token: ${{ secrets.GITHUB_TOKEN }}
@@ -119,7 +128,7 @@ jobs:
         arch:
           - amd64
           - arm64
-        TAG:
+        distro_version:
           - 24.04
           - 22.04
     steps:
