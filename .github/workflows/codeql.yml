@@ -183,8 +183,6 @@ jobs:
     needs: [analyze]
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions: {}
-    if: ${{ cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}
+    if: success() || ((!cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure')) && fromjson('throw'))
     steps:
-      - run: |
-          echo "Some workflows have failed!"
-          exit 1
+      - run: echo "All jobs finished successfully"
