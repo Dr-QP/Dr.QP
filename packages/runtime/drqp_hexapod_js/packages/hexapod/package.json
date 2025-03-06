@@ -39,6 +39,10 @@
         "start-dev": "concurrently -n \"server,client\" \"yarn start-kill-server\" \"yarn start-client-dev\"",
         "start-prod": "concurrently -n \"server,client\" \"yarn start-kill-server {@}\" \"yarn start-client-prod\""
     },
+    "jest-junit": {
+      "outputDirectory": "jest_test_results",
+      "outputName": "client-report-jest.xunit.xml"
+    },
     "eslintConfig": {
         "extends": "react-app"
     },
