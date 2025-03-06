@@ -52,8 +52,8 @@ jobs:
       max-parallel: 4
       matrix:
         arch:
-          - amd64
-          - arm64
+          - ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
+          - ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
         distro_version:
           - 24.04
           - 22.04
@@ -126,8 +126,8 @@ jobs:
       max-parallel: 4
       matrix:
         arch:
-          - amd64
-          - arm64
+          - ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
+          - ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
         distro_version:
           - 24.04
           - 22.04
