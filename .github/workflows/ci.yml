@@ -139,10 +139,14 @@ jobs:
         if: failure()
         shell: bash
         run: |
+          set -x
           set +e
           ls -al ${{ github.workspace }}
-          ls -al ros_ws
           ls -al .
+          ls -al ros_ws
+          ls -al ros_ws/src
+          cat package.repo
+          vcs import --force --recursive src/ < package.repo
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
