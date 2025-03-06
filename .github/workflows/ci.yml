@@ -135,6 +135,14 @@ jobs:
           # changes in colcon-mixin-repository from breaking your tests.
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml
 
+      - name: Troubleshoot
+        if: failure()
+        shell: bash
+        run: |
+          set +e
+          ls -al ${{ github.workspace }}
+          ls -al ros_ws
+          ls -al .
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
