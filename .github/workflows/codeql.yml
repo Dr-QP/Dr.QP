@@ -14,27 +14,11 @@ name: "CodeQL Advanced"
 on:
   workflow_dispatch:
   push:
-    paths:
-      - .github/workflows/codeql.yml
-      - .github/actions/**
-      - docker/ros/**
-      - packages/**
-      - scripts/**
-      - .clang-format
-      - codecov.yml
     branches:
       - main
     tags:
       - v*
   pull_request:
-    paths:
-      - .github/workflows/codeql.yml
-      - .github/actions/**
-      - docker/ros/**
-      - packages/**
-      - scripts/**
-      - .clang-format
-      - codecov.yml
     branches:
       - main
       - v*
@@ -56,8 +40,21 @@ env:
   REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
 
 jobs:
+  paths-filter:
+    name: Paths filter
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Filters
+        uses: ./.github/actions/paths-filter
+        with:
+          extra-filter: .github/workflows/codeql.yml
+
   analyze:
     name: Analyze (${{ matrix.language }})
+    needs: paths-filter
     # Runner size impacts CodeQL analysis time. To learn more, please see:
     #   - https://gh.io/recommended-hardware-resources-for-running-codeql
     #   - https://gh.io/supported-runners-and-hardware-resources
