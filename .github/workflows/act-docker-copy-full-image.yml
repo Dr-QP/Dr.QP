@@ -22,6 +22,8 @@ jobs:
   copy:
     name: Copy image
     runs-on: ubuntu-24.04
+    permissions:
+      packages: write
     strategy:
       fail-fast: true
       max-parallel: 1
