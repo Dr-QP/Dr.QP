@@ -124,23 +124,24 @@ jobs:
           - 24.04
           - 22.04
     steps:
-      - uses: actions/setup-go@v5
-        if: ${{ env.RUN_TESTS == 'true' }}
-        with:
-          go-version: '^1.24'
 
       - name: Checkout nektos/act repo
         uses: actions/checkout@v4
         if: ${{ env.RUN_TESTS == 'true' }}
         with:
           repository: nektos/act
-          path: act
 
-      - name: Run nektos/act tests
-        shell: bash
+      - uses: actions/setup-go@v5
         if: ${{ env.RUN_TESTS == 'true' }}
-        env:
-          ACT_TEST_IMAGE: ${{ needs.merge.outputs.image }}
-        run: |
-          cd act/
-          go test ./...
+        with:
+          go-version-file: go.mod
+
+      - name: Run Tests
+        if: ${{ env.RUN_TESTS == 'true' }}
+        run: go run gotest.tools/gotestsum@latest --junitfile unit-tests.xml --format pkgname -- -v -cover -coverpkg=./... -coverprofile=coverage.txt -covermode=atomic -timeout 20m -run ^TestRunEventHostEnvironment$ ./...
+        shell: bash
+      - name: Test Summary
+        uses: test-summary/action@v2
+        with:
+          paths: "unit-tests.xml"
+        if: always()
