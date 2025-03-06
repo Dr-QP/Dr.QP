@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - .github/workflows/ci.yml
+      - .github/workflows/codeql.yml
       - .github/actions/**
       - docker/ros/**
       - packages/**
@@ -28,7 +28,7 @@ on:
       - v*
   pull_request:
     paths:
-      - .github/workflows/ci.yml
+      - .github/workflows/codeql.yml
       - .github/actions/**
       - docker/ros/**
       - packages/**
