@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOMClient from 'react-dom/client';
 import App from './App';
 import { render, screen } from '@testing-library/react';
-import {act} from 'react';
+import { act } from 'react';
 
 it('renders home page', async () => {
   await act(async => {
