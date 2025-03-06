@@ -143,13 +143,16 @@ jobs:
           ACT_TEST_IMAGE: ${{ needs.merge.outputs.image }}
         run: go run main.go -P ubuntu-latest=${{ needs.merge.outputs.image }} -C ./pkg/runner/testdata/ -W ./basic/push.yml
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       # Many tests are failing even with stock setup. No idea why they are no longer working
-      # - name: Run Tests
-      #   if: ${{ env.RUN_TESTS == 'true' }}
-      #   env:
-      #     ACT_TEST_IMAGE: ${{ needs.merge.outputs.image }}
-      #   run: go run gotest.tools/gotestsum@latest --junitfile unit-tests.xml --format pkgname -- -v -cover -coverpkg=./... -coverprofile=coverage.txt -covermode=atomic -timeout 20m ./...
-      #   shell: bash
+      - name: Run Tests
+        if: ${{ env.RUN_TESTS == 'true' }}
+        env:
+          ACT_TEST_IMAGE: ${{ needs.merge.outputs.image }}
+        run: go run gotest.tools/gotestsum@latest --junitfile unit-tests.xml --format pkgname -- -v -cover -coverpkg=./... -coverprofile=coverage.txt -covermode=atomic -timeout 20m ./...
+        shell: bash
 
       - name: Test Summary
         uses: test-summary/action@v2
