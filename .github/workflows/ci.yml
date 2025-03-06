@@ -184,7 +184,7 @@ jobs:
         id: merge
         uses: ./.github/actions/docker/multiarch-merge
         with:
-          image: ${{ env.REGISTRY }}/dr-qp/ros-deploy
+          image: ${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-deploy
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
           registry-token: ${{ secrets.GITHUB_TOKEN }}
