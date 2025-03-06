@@ -22,18 +22,10 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  IMAGE_LABEL_OWNER: ${{ github.repository_owner }}
-  IMAGE_LABEL_REPO: ${{ github.repository }}
   SLUG: ${{ github.repository_owner }}/act-ubuntu
-  DISTRO: ubuntu
-  NODE: '20'
-  BUILD_REF: ${{ github.sha }}
   RUN_TESTS: 'true'
   REGISTRY: ghcr.io
   REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
-
-
-  LATEST_TAG: 24.04
 
 defaults:
   run:
