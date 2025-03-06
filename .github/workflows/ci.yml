@@ -113,7 +113,7 @@ jobs:
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
     steps:
       - uses: actions/checkout@v4
-      - uses: ros-tooling/action-ros-ci@v0.3
+      - uses: ros-tooling/action-ros-ci@v0.4
         env:
           GCOV_COMMAND: "${{ github.workspace }}/scripts/gcov"
         with:
