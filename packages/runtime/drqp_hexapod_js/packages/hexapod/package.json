@@ -26,10 +26,10 @@
         }
     },
     "scripts": {
-        "build-prod": "yarn react-scripts build",
+        "build-prod": "react-scripts build",
         "build-dev": "",
-        "start-client-dev": "yarn react-scripts start",
-        "start-client-prod": "yarn serve -s build; echo Ignoring the args:",
+        "start-client-dev": "react-scripts start",
+        "start-client-prod": "serve -s build; echo Ignoring the args:",
         "start-server": "node ./server/index.js",
         "start-kill-server": "yarn kill-server; yarn start-server",
         "kill-server": "fuser -k 4001/tcp",
