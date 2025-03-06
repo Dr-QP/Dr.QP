@@ -102,6 +102,13 @@
         "cwd": "${workspaceFolder}",
         "program": "${file}",
         "args": []
+      },
+      {
+          "type": "chrome",
+          "request": "launch",
+          "name": "drqp_hexapod_js Chrome client",
+          "url": "http://localhost:3000",
+          "webRoot": "${workspaceFolder}",
       }
     ]
   },
