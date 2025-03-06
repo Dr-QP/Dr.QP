@@ -1,4 +1,4 @@
-name: Build ubuntu images
+name: Build act ubuntu docker images
 
 on:
   schedule:
