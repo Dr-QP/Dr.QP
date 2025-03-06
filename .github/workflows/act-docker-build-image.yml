@@ -144,7 +144,8 @@ jobs:
           repository: nektos/act
           path: act
 
-      - shell: bash
+      - name: Run nektos/act tests
+        shell: bash
         if: ${{ env.RUN_TESTS == 'true' }}
         env:
           ACT_TEST_IMAGE: ${{ needs.merge.outputs.image }}
