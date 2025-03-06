@@ -7,7 +7,8 @@
     "build-prod": "yarn wsrun --stages build-prod",
     "build-dev": "yarn wsrun --stages build-dev",
     "start-prod": "yarn wsrun --parallel start-prod",
-    "start-dev": "yarn wsrun --parallel start-dev"
+    "start-dev": "yarn wsrun --parallel start-dev",
+    "test": "yarn wsrun --parallel test"
   },
   "bin": {
     "generate-ros-messages": "node_modules/.bin/generate-ros-messages"
@@ -16,6 +17,7 @@
     "rclnodejs": "^0.32.0"
   },
   "devDependencies": {
-    "wsrun": "^5.2.4"
+    "wsrun": "^5.2.4",
+    "jest-junit": "^16.0.0"
   }
 }
