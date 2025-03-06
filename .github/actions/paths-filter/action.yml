@@ -1,34 +1,32 @@
 name: Shared paths filters
 description: A set of filters to be used to fitler jobs
 inputs:
+  base-branch:
+    description: Base branch
+    required: false
+    default: main
   extra-filter:
     description: Extra filters
     required: false
-    default: '[]'
+    default: 'default-path-that-will-never-match'
 outputs:
-  filter:
-    description: Filters
-    value: ${{ steps.filter.outputs }}
+  pass:
+    description: Filtered file present
+    value: ${{ steps.filter.outputs.ros }}
 runs:
   using: composite
   steps:
   - name: Filter
     id: filter
-    uses: dorny/paths-filter@v2.2.1
+    uses: dorny/paths-filter@v3.0.2
     with:
+      base: ${{ inputs.base-branch }}
       filters: |
-        md:
-          - '**/*.md'
-        js:
-          - '**/*.js'
-        json:
-          - '**/*.json'
         ros:
-          - .github/actions/**
-          - docker/ros/**
-          - packages/**
-          - scripts/**
+          # - .github/actions/**
+          # - docker/ros/**
+          # - packages/**
+          # - scripts/**
           - .clang-format
-          - codecov.yml
-        extra: ${{ inputs.extra-filter }}
-
+          # - codecov.yml
+          # - ${{ inputs.extra-filter }}

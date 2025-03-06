@@ -43,18 +43,22 @@ jobs:
   paths-filter:
     name: Paths filter
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    outputs:
+      pass: ${{ steps.filter.outputs.pass }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Filters
         uses: ./.github/actions/paths-filter
+        id: filter
         with:
           extra-filter: .github/workflows/codeql.yml
 
   analyze:
     name: Analyze (${{ matrix.language }})
     needs: paths-filter
+    if: needs.paths-filter.outputs.pass == 'true'
     # Runner size impacts CodeQL analysis time. To learn more, please see:
     #   - https://gh.io/recommended-hardware-resources-for-running-codeql
     #   - https://gh.io/supported-runners-and-hardware-resources
