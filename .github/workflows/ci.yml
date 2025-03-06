@@ -158,7 +158,7 @@ jobs:
         with:
           context: scripts/deploy
           file: scripts/deploy/ros-deploy.dockerfile
-          image: ${{ env.REGISTRY }}/dr-qp/ros-deploy
+          image: ${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-deploy
           arch: ${{ matrix.arch }}
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
