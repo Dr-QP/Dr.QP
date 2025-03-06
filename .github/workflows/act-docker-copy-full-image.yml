@@ -1,0 +1,54 @@
+name: Act Docker - Copy full images
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 12 */7 * *
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  SLUG: ${{ github.repository_owner }}/catthehacker-ubuntu
+  PUSH_GHCR: ${{ github.repository == (github.event.pull_request.head.repo.full_name || github.repository) && '1' || '' }}
+  PUSH_QUAY: ${{ secrets.QUAY_USER && secrets.QUAY_TOKEN && '1' || '' }}
+  PUSH_DOCKER_HUB: ${{ secrets.DOCKER_USER && secrets.DOCKER_TOKEN && '1' || '' }}
+
+defaults:
+  run:
+    shell: sh
+jobs:
+  copy:
+    name: Copy image
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+    strategy:
+      fail-fast: true
+      max-parallel: 1
+      matrix:
+        copy:
+        - src: ghcr.io/catthehacker/ubuntu:act-24.04
+          dest: act-24.04
+        - src: ghcr.io/catthehacker/ubuntu:act-22.04
+          dest: act-22.04
+    steps:
+      - name: Force SLUG to lowercase
+        uses: actions/github-script@v6
+        with:
+          github-token: n/a
+          script: |
+            core.exportVariable('SLUG', process.env.SLUG.toLowerCase());
+
+      - name: Push to GitHub Container Registry
+        if: env.PUSH_GHCR
+        run: skopeo copy -a --src-creds ${{ github.actor }}:${{ github.token }} --dest-creds ${{ github.actor }}:${{ github.token }} docker://${{ matrix.copy.src }} docker://ghcr.io/${{ env.SLUG }}:${{ matrix.copy.dest }}
+
+      - name: Push to Quay
+        if: env.PUSH_QUAY
+        run: skopeo copy -a --src-creds ${{ github.actor }}:${{ github.token }} --dest-creds ${{ secrets.QUAY_USER }}:${{ secrets.QUAY_TOKEN }} docker://${{ matrix.copy.src }} docker://quay.io/${{ env.SLUG }}:${{ matrix.copy.dest }}
+
+      - name: Push to Docker Hub
+        if: env.PUSH_DOCKER_HUB
+        run: skopeo copy -a --src-creds ${{ github.actor }}:${{ github.token }} --dest-creds ${{ secrets.DOCKER_USER }}:${{ secrets.DOCKER_TOKEN }} docker://${{ matrix.copy.src }} docker://docker.io/${{ env.SLUG }}:${{ matrix.copy.dest }}

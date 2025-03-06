@@ -5,17 +5,33 @@ on:
     types:
       - published
   push:
+    paths:
+      - .github/workflows/ci.yml
+      - .github/actions/**
+      - docker/ros/**
+      - packages/**
+      - scripts/**
+      - .clang-format
+      - codecov.yml
     branches:
-      - 'main'
+      - main
     tags:
-      - 'v*'
+      - v*
+  pull_request:
+    paths:
+      - .github/workflows/ci.yml
+      - .github/actions/**
+      - docker/ros/**
+      - packages/**
+      - scripts/**
+      - .clang-format
+      - codecov.yml
+    branches:
+      - main
+      - v*
   merge_group:
     types:
       - checks_requested
-  pull_request:
-    branches:
-      - 'main'
-      - 'v*'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
@@ -38,11 +54,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-            arch: ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
-          - runner: ${{ vars.ARM_ONLY == '1' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
-            arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
-    runs-on: ${{ matrix.runner }}
+          - arch: ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
+          - arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -62,7 +76,7 @@ jobs:
 
   merge-dev-image:
     name: Merge development image
-    runs-on: ubuntu-24.04-arm
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:
       packages: write
     needs:
@@ -89,11 +103,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-            arch: ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
-          - runner: ${{ vars.ARM_ONLY == '1' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
-            arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
-    runs-on: ${{ matrix.runner }}
+          - arch: ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
+          - arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:
       packages: read
     container:
@@ -101,9 +113,12 @@ jobs:
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
     steps:
       - uses: actions/checkout@v4
-      - uses: ros-tooling/action-ros-ci@v0.3
+        with:
+          path: drqp
+
+      - uses: ros-tooling/action-ros-ci@22096906dbb79d66bc20fa54da981c93f289d3c8
         env:
-          GCOV_COMMAND: "${{ github.workspace }}/scripts/gcov"
+          GCOV_COMMAND: "${{ github.workspace }}/drqp/scripts/gcov"
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
           no-symlink-install: true
@@ -116,6 +131,22 @@ jobs:
                 "mixin": ["coverage-pytest"]
               }
             }
+          # pin the repository in the workflow to a specific commit to avoid
+          # changes in colcon-mixin-repository from breaking your tests.
+          colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml
+
+      - name: Troubleshoot
+        if: failure()
+        shell: bash
+        run: |
+          set -x
+          set +e
+          ls -al ${{ github.workspace }}
+          ls -al .
+          ls -al ros_ws
+          ls -al ros_ws/src
+          cat package.repo
+          vcs import --force --recursive src/ < package.repo
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
@@ -135,6 +166,12 @@ jobs:
           path: ros_ws/log
           retention-days: 100
 
+      - name: Test Summary
+        uses: test-summary/action@v2
+        with:
+          paths: "ros_ws/build/*/test_results/*/*.xunit.xml"
+        if: always()
+
   build-deploy-image:
     name: Deployment image
     needs: [merge-dev-image, ros-ci]
@@ -143,11 +180,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-            arch: ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
-          - runner: ${{ vars.ARM_ONLY == '1' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
-            arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
-    runs-on: ${{ matrix.runner }}
+          - arch: ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
+          - arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:
       packages: write
     steps:
@@ -170,7 +205,7 @@ jobs:
 
   merge-deploy-image:
     name: Merge deployment image
-    runs-on: ubuntu-24.04-arm
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:
       packages: write
     needs:
@@ -191,7 +226,7 @@ jobs:
   merge-all:
     name: CI/CD finished
     needs: [merge-dev-image, ros-ci, merge-deploy-image]
-    runs-on: ubuntu-24.04-arm
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions: {}
     steps:
       - run: echo "All jobs finished successfully"

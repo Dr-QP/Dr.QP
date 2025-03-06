@@ -29,12 +29,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 RUN groupadd -g $GID $USERNAME \
     && useradd -lm -u $UID -g $USERNAME -s /bin/bash $USERNAME \
     && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
-    && mkdir -p /home/$USERNAME/ros2_ws/src \
+    && mkdir -p /home/$USERNAME/ros2_ws/ \
     && chown -R $USERNAME:$USERNAME /home/$USERNAME/ros2_ws \
     && echo 'source /opt/ros/'$ROS_DISTRO'/setup.bash' >> /home/$USERNAME/.bashrc \
     && echo 'source /home/'$USERNAME'/ros2_ws/install/setup.bash' >> /home/$USERNAME/.bashrc
 USER $USERNAME
-WORKDIR /home/$USERNAME/ros2_ws
+WORKDIR /tmp
 
 # Install ros.fish scripts and dependencies
 RUN /ros-prep/fish/setup.fish
@@ -50,6 +50,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     sudo apt-get update \
     && rosdep update
+
+WORKDIR /home/$USERNAME/ros2_ws
 
 # Setup entrypoint
 COPY ./deploy/ros_entrypoint.sh /

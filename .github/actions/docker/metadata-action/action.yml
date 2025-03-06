@@ -8,6 +8,10 @@ inputs:
     description: Architecture to use as suffix
     required: false
     default: ''
+  prefix:
+    description: A tag prefix
+    required: false
+    default: ''
 outputs:
   tags:
     description: Docker tags for the images
@@ -27,26 +31,30 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Generate suffix if arch set
+    - name: Generate suffix and prefix if set
       shell: bash
-      id: suffix
+      id: extra-args
       run: |
-        if [ -n "${{ inputs.arch }}" ]; then
-          echo "result=,suffix=-${{ inputs.arch }}" >> "$GITHUB_OUTPUT"
-        else
-          echo "result=" >> "$GITHUB_OUTPUT"
+        EXTRA_ARGS=''
+        if [ -n "${{ inputs.prefix }}" ]; then
+          EXTRA_ARGS="${EXTRA_ARGS},prefix=${{ inputs.prefix }}"
         fi
+        if [ -n "${{ inputs.arch }}" ]; then
+          EXTRA_ARGS="${EXTRA_ARGS},suffix=-${{ inputs.arch }}"
+        fi
+        echo "result=${EXTRA_ARGS}" >> "$GITHUB_OUTPUT"
+
 
     - uses: docker/metadata-action@v5
       id: meta
       with:
         images: ${{ inputs.images }}
         tags: |
-          type=ref,event=branch${{ steps.suffix.outputs.result }}
-          type=ref,event=pr${{ steps.suffix.outputs.result }}
-          type=semver,pattern={{version}}${{ steps.suffix.outputs.result }}
-          type=semver,pattern={{major}}.{{minor}}${{ steps.suffix.outputs.result }}
-          type=edge,branch=main${{ steps.suffix.outputs.result }}
+          type=ref,event=branch${{ steps.extra-args.outputs.result }}
+          type=ref,event=pr${{ steps.extra-args.outputs.result }}
+          type=semver,pattern={{version}}${{ steps.extra-args.outputs.result }}
+          type=semver,pattern={{major}}.{{minor}}${{ steps.extra-args.outputs.result }}
+          type=edge,branch=main${{ steps.extra-args.outputs.result }}
 
     - name: Extract single tag
       shell: bash

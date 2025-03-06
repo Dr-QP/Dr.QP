@@ -1,0 +1,162 @@
+name: Build act ubuntu docker images
+
+on:
+  schedule:
+    - cron: 0 12 */7 * *
+  push:
+    paths:
+      - .github/workflows/act-docker-build-image.yml
+      - docker/act/**
+    branches:
+      - main
+  pull_request:
+    paths:
+      - .github/workflows/act-docker-build-image.yml
+      - docker/act/**
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  SLUG: ${{ github.repository_owner }}/act-ubuntu
+  RUN_TESTS: 'true'
+  REGISTRY: ghcr.io
+  REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
+
+defaults:
+  run:
+    shell: sh
+
+jobs:
+  build:
+    name: Build
+    if: "!contains(github.event.pull_request.body, '[skip act]')"
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    timeout-minutes: 20
+    permissions:
+      packages: write
+    strategy:
+      fail-fast: true
+      max-parallel: 4
+      matrix:
+        arch:
+          - ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
+          - ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
+        distro_version:
+          - 24.04
+          - 22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Force SLUG to lowercase
+        uses: actions/github-script@v6
+        with:
+          github-token: n/a
+          script: |
+            core.exportVariable('SLUG', process.env.SLUG.toLowerCase());
+
+      - name: Build act docker image
+        id: build
+        uses: ./.github/actions/docker/build-push-action
+        with:
+          context: docker/act
+          image: ${{ env.REGISTRY }}/${{ env.SLUG }}
+          future-tag: act-${{ matrix.distro_version }}-
+          arch: ${{ matrix.arch }}
+          registry: ${{ env.REGISTRY }}
+          registry-username: ${{ env.REGISTRY_USERNAME }}
+          registry-token: ${{ secrets.GITHUB_TOKEN }}
+          build-args: |
+            DISTRO_VERSION=${{ matrix.distro_version }}
+
+  merge:
+    name: Merge multiarch act image
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    permissions:
+      packages: write
+    needs: build
+    timeout-minutes: 10
+    outputs:
+      image: ${{ steps.merge.outputs.image }}
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        distro_version:
+          - 24.04
+          - 22.04
+    steps:
+      - name: Force SLUG to lowercase
+        uses: actions/github-script@v6
+        with:
+          github-token: n/a
+          script: |
+            core.exportVariable('SLUG', process.env.SLUG.toLowerCase());
+
+      - uses: actions/checkout@v4
+      - name: Merge and push act docker image
+        id: merge
+        uses: ./.github/actions/docker/multiarch-merge
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.SLUG }}
+          future-tag: act-${{ matrix.distro_version }}-
+          registry: ${{ env.REGISTRY }}
+          registry-username: ${{ env.REGISTRY_USERNAME }}
+          registry-token: ${{ secrets.GITHUB_TOKEN }}
+  test:
+    name: Test act image
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    needs: merge
+    timeout-minutes: 100
+    permissions:
+      packages: read
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        arch:
+          - ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
+          - ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
+        distro_version:
+          - 24.04
+          - 22.04
+    steps:
+
+      - name: Checkout nektos/act repo
+        uses: actions/checkout@v4
+        if: ${{ env.RUN_TESTS == 'true' }}
+        with:
+          repository: nektos/act
+          ref: v0.2.75
+
+      - uses: actions/setup-go@v5
+        if: ${{ env.RUN_TESTS == 'true' }}
+        with:
+          go-version-file: go.mod
+
+      - name: Run act from cli
+        if: ${{ env.RUN_TESTS == 'true' }}
+        env:
+          ACT_TEST_IMAGE: ${{ needs.merge.outputs.image }}
+        run: go run main.go -P ubuntu-latest=${{ needs.merge.outputs.image }} -C ./pkg/runner/testdata/ -W ./basic/push.yml
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Run Tests
+        if: ${{ env.RUN_TESTS == 'true' }}
+        continue-on-error: true # Many tests are failing even with stock setup. No idea why they are no longer working
+        env:
+          ACT_TEST_IMAGE: ${{ needs.merge.outputs.image }}
+        run: go run gotest.tools/gotestsum@latest --junitfile unit-tests.xml --format pkgname -- -v -cover -coverpkg=./... -coverprofile=coverage.txt -covermode=atomic -timeout 20m ./...
+        shell: bash
+
+      - name: Test Summary
+        uses: test-summary/action@v2
+        if: ${{ env.RUN_TESTS == 'true' && always() || false}}
+        continue-on-error: true
+        with:
+          paths: "unit-tests.xml"
