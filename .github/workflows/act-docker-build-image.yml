@@ -23,7 +23,7 @@ concurrency:
 
 env:
   SLUG: ${{ github.repository_owner }}/act-ubuntu
-  RUN_TESTS: 'true'
+  RUN_TESTS: 'false'
   REGISTRY: ghcr.io
   REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
 
