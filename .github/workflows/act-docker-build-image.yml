@@ -110,7 +110,7 @@ jobs:
         uses: ./.github/actions/docker/multiarch-merge
         with:
           image: ${{ env.REGISTRY }}/${{ env.SLUG }}
-          future-tag: act-${{ matrix.distro_version }}
+          future-tag: act-${{ matrix.distro_version }}-
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
           registry-token: ${{ secrets.GITHUB_TOKEN }}
