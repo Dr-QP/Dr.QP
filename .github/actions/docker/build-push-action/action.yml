@@ -50,8 +50,8 @@ runs:
       id: build
       uses: docker/build-push-action@v6
       env:
-        REGISTRY_CACHE: type=registry,ref=${{ inputs.image }}:cache-${{ inputs.arch }}
-        GHA_CACHE: type=gha,scope=${{ inputs.image }}-${{ inputs.arch }}
+        REGISTRY_CACHE: type=registry,ref=${{ inputs.image }}:cache-${{ inputs.future-tag }}${{ inputs.arch }}
+        GHA_CACHE: type=gha,scope=${{ inputs.image }}-${{ inputs.future-tag }}${{ inputs.arch }}
       with:
         context: ${{ inputs.context }}
         file: ${{ inputs.file }}
