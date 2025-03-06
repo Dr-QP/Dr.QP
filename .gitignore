@@ -80,6 +80,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 coverage/
+jest_test_results/
 
 # Translations
 *.mo
