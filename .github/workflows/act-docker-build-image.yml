@@ -44,7 +44,7 @@ jobs:
     name: Build
     if: "!contains(github.event.pull_request.body, '[skip build]')"
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-    timeout-minutes: 120
+    timeout-minutes: 20
     permissions:
       packages: write
     strategy:
@@ -86,7 +86,7 @@ jobs:
     permissions:
       packages: write
     needs: build
-    timeout-minutes: 35
+    timeout-minutes: 10
     outputs:
       image: ${{ steps.merge.outputs.image }}
     strategy:
@@ -118,7 +118,7 @@ jobs:
     name: Test act image
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     needs: merge
-    timeout-minutes: 120
+    timeout-minutes: 100
     permissions:
       packages: read
     strategy:
