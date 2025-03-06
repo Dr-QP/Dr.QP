@@ -28,7 +28,7 @@
     "scripts": {
         "build-prod": "react-scripts build",
         "build-dev": "",
-        "test-client": "react-scripts test --watchAll=false --coverage --coverageReporters lcov --reporters default --reporters jest-junit",
+        "test-client": "cross-env JEST_JUNIT_OUTPUT_FILE=jest_test_results/client-report-jest.xunit.xml react-scripts test --watchAll=false --coverage --coverageReporters lcov --reporters default --reporters jest-junit",
         "test-server": "jest ./server --config jest-server.config.js",
         "test": "yarn test-client && yarn test-server",
         "start-client-dev": "react-scripts start",
@@ -38,10 +38,6 @@
         "kill-server": "fuser -k 4001/tcp",
         "start-dev": "concurrently -n \"server,client\" \"yarn start-kill-server\" \"yarn start-client-dev\"",
         "start-prod": "concurrently -n \"server,client\" \"yarn start-kill-server {@}\" \"yarn start-client-prod\""
-    },
-    "jest-junit": {
-      "outputDirectory": "jest_test_results",
-      "outputName": "client-report-jest.xunit.xml"
     },
     "eslintConfig": {
         "extends": "react-app"
