@@ -9,7 +9,7 @@
         "johnny-five": "^2.1.0",
         "plotly.js-gl3d-dist-min": "^3.0.1",
         "rclnodejs": "^0.32.0",
-        "react": "^17.0.2",
+        "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "react-icons": "^5.5.0",
         "react-plotly.js": "^2.6.0",
@@ -17,7 +17,8 @@
         "react-scripts": "^5.0.1",
         "serve": "^14.2.4",
         "socket.io": "^4.8.1",
-        "socket.io-client": "^3.0.5"
+        "socket.io-client": "^3.0.5",
+        "web-vitals": "^4.2.4"
     },
     "overrides": {
         "@serialport/bindings": {
@@ -51,6 +52,10 @@
         ]
     },
     "devDependencies": {
+        "@testing-library/dom": "^10.4.0",
+        "@testing-library/jest-dom": "^6.6.3",
+        "@testing-library/react": "^16.2.0",
+        "@testing-library/user-event": "^13.5.0",
         "concurrently": "^9.1.2",
         "env": "^0.0.2",
         "jest": "^29.7.0",
