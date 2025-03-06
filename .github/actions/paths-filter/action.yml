@@ -23,10 +23,10 @@ runs:
       base: ${{ inputs.base-branch }}
       filters: |
         ros:
-          # - .github/actions/**
-          # - docker/ros/**
-          # - packages/**
-          # - scripts/**
+          - .github/actions/**
+          - docker/ros/**
+          - packages/**
+          - scripts/**
           - .clang-format
-          # - codecov.yml
-          # - ${{ inputs.extra-filter }}
+          - codecov.yml
+          - ${{ inputs.extra-filter }}
