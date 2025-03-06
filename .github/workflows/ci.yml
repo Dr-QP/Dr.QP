@@ -76,7 +76,7 @@ jobs:
 
   merge-dev-image:
     name: Merge development image
-    runs-on: ubuntu-24.04-arm
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:
       packages: write
     needs:
@@ -201,7 +201,7 @@ jobs:
 
   merge-deploy-image:
     name: Merge deployment image
-    runs-on: ubuntu-24.04-arm
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:
       packages: write
     needs:
@@ -222,7 +222,7 @@ jobs:
   merge-all:
     name: CI/CD finished
     needs: [merge-dev-image, ros-ci, merge-deploy-image]
-    runs-on: ubuntu-24.04-arm
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions: {}
     steps:
       - run: echo "All jobs finished successfully"
