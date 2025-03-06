@@ -147,6 +147,12 @@ jobs:
           path: ros_ws/log
           retention-days: 100
 
+      - name: Test Summary
+        uses: test-summary/action@v2
+        with:
+          paths: "build/*/test_results/*/*.xunit.xml"
+        if: always()
+
   build-deploy-image:
     name: Deployment image
     needs: [merge-dev-image, ros-ci]
