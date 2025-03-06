@@ -28,7 +28,7 @@ env:
   DISTRO: ubuntu
   NODE: 20
   BUILD_REF: ${{ github.sha }}
-  SKIP_TEST: false
+  RUN_TESTS: true
   REGISTRY: ghcr.io
   REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
 
@@ -133,19 +133,19 @@ jobs:
           - 22.04
     steps:
       - uses: actions/setup-go@v5
-        if: ${{ !env.SKIP_TEST }}
+        if: ${{ env.RUN_TESTS == true }}
         with:
           go-version: '^1.16'
 
       - name: Checkout nektos/act repo
         uses: actions/checkout@v4
-        if: ${{ !env.SKIP_TEST }}
+        if: ${{ env.RUN_TESTS == true }}
         with:
           repository: nektos/act
           path: act
 
       - shell: bash
-        if: ${{ !env.SKIP_TEST }}
+        if: ${{ env.RUN_TESTS == true }}
         env:
           ACT_TEST_IMAGE: ${{ needs.merge.outputs.image }}
         run: |
