@@ -34,7 +34,7 @@ defaults:
 jobs:
   build:
     name: Build
-    if: "!contains(github.event.pull_request.body, '[skip build]')"
+    if: "!contains(github.event.pull_request.body, '[skip act]')"
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     timeout-minutes: 20
     permissions:
