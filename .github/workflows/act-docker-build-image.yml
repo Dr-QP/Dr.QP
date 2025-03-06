@@ -72,7 +72,7 @@ jobs:
         with:
           context: docker/act
           image: ${{ env.REGISTRY }}/${{ env.SLUG }}
-          future-tag: act-${{ matrix.distro_version }}
+          future-tag: act-${{ matrix.distro_version }}-
           arch: ${{ matrix.arch }}
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
