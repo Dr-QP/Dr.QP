@@ -4,6 +4,10 @@ inputs:
   image:
     description: Image names to pass to metadata-action
     required: true
+  future-tag:
+    description: A tag that will be assigned in the future. Used to distinguish digests for the merge
+    required: false
+    default: ''
   registry:
     description: Docker registry to push to
     required: true
@@ -24,7 +28,7 @@ runs:
       shell: bash
       id: digests
       run: |
-        artifact_name='digests-${{ inputs.image }}-'
+        artifact_name='digests-${{ inputs.image }}${{ inputs.future-tag }}-'
         echo "artifact_name_prefix=${artifact_name//\//-}" >> "$GITHUB_OUTPUT"
 
     - name: Download digests
@@ -46,6 +50,7 @@ runs:
       uses: ./.github/actions/docker/metadata-action
       with:
         images: ${{ inputs.image }}
+        prefix: ${{ inputs.future-tag }}
 
     - name: Create manifest list and push
       shell: bash

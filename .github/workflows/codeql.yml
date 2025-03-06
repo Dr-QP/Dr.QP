@@ -14,9 +14,30 @@ name: "CodeQL Advanced"
 on:
   workflow_dispatch:
   push:
-    branches: [ "main", "release/**" ]
+    paths:
+      - .github/workflows/ci.yml
+      - .github/actions/**
+      - docker/ros/**
+      - packages/**
+      - scripts/**
+      - .clang-format
+      - codecov.yml
+    branches:
+      - main
+    tags:
+      - v*
   pull_request:
-    branches: [ "main", "release/**" ]
+    paths:
+      - .github/workflows/ci.yml
+      - .github/actions/**
+      - docker/ros/**
+      - packages/**
+      - scripts/**
+      - .clang-format
+      - codecov.yml
+    branches:
+      - main
+      - v*
   schedule:
     - cron: '32 17 * * 5'
   merge_group:

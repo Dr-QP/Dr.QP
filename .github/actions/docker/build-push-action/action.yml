@@ -10,6 +10,10 @@ inputs:
   image:
     description: Image names to pass to metadata-action
     required: true
+  future-tag:
+    description: A tag that will be assigned in the future. Used to distinguish digests for the merge
+    required: false
+    default: ''
   arch:
     description: Architecture to use as suffix
     required: true
@@ -46,8 +50,8 @@ runs:
       id: build
       uses: docker/build-push-action@v6
       env:
-        REGISTRY_CACHE: type=registry,ref=${{ inputs.image }}:cache-${{ inputs.arch }}
-        GHA_CACHE: type=gha,scope=${{ inputs.image }}-${{ inputs.arch }}
+        REGISTRY_CACHE: type=registry,ref=${{ inputs.image }}:cache-${{ inputs.future-tag }}${{ inputs.arch }}
+        GHA_CACHE: type=gha,scope=${{ inputs.image }}-${{ inputs.future-tag }}${{ inputs.arch }}
       with:
         context: ${{ inputs.context }}
         file: ${{ inputs.file }}
@@ -68,7 +72,7 @@ runs:
       shell: bash
       id: digests
       run: |
-        artifact_name='digests-${{ inputs.image }}-linux-${{ inputs.arch }}'
+        artifact_name='digests-${{ inputs.image }}${{ inputs.future-tag }}-linux-${{ inputs.arch }}'
         echo "artifact_name=${artifact_name//\//-}" >> "$GITHUB_OUTPUT"
 
     - name: Upload digest
