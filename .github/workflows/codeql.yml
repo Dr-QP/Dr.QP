@@ -181,7 +181,8 @@ jobs:
   merge-all:
     name: Code Analysis finished
     needs: [analyze]
-    runs-on: ubuntu-24.04-arm
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions: {}
+    if: success() || ((!cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure')) && fromjson('throw'))
     steps:
       - run: echo "All jobs finished successfully"
