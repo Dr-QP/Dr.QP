@@ -1,0 +1,34 @@
+name: Shared paths filters
+description: A set of filters to be used to fitler jobs
+inputs:
+  extra-filter:
+    description: Extra filters
+    required: false
+    default: '[]'
+outputs:
+  filter:
+    description: Filters
+    value: ${{ steps.filter.outputs }}
+runs:
+  using: composite
+  steps:
+  - name: Filter
+    id: filter
+    uses: dorny/paths-filter@v2.2.1
+    with:
+      filters: |
+        md:
+          - '**/*.md'
+        js:
+          - '**/*.js'
+        json:
+          - '**/*.json'
+        ros:
+          - .github/actions/**
+          - docker/ros/**
+          - packages/**
+          - scripts/**
+          - .clang-format
+          - codecov.yml
+        extra: ${{ inputs.extra-filter }}
+
