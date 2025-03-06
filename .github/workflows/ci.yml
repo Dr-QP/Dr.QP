@@ -193,7 +193,7 @@ jobs:
         with:
           context: scripts/deploy
           file: scripts/deploy/ros-deploy.dockerfile
-          image: ${{ env.REGISTRY }}/dr-qp/ros-deploy
+          image: ${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-deploy
           arch: ${{ matrix.arch }}
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
@@ -228,5 +228,6 @@ jobs:
     needs: [merge-dev-image, ros-ci, merge-deploy-image]
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions: {}
+    if: success() || ((!cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure')) && fromjson('throw'))
     steps:
       - run: echo "All jobs finished successfully"
