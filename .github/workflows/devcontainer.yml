@@ -5,27 +5,11 @@ on:
     types:
       - published
   push:
-    paths:
-      - .github/workflows/devcontainer.yml
-      - .github/actions/**
-      - docker/ros/**
-      - packages/**
-      - scripts/**
-      - .clang-format
-      - codecov.yml
     branches:
       - main
     tags:
       - v*
   pull_request:
-    paths:
-      - .github/workflows/devcontainer.yml
-      - .github/actions/**
-      - docker/ros/**
-      - packages/**
-      - scripts/**
-      - .clang-format
-      - codecov.yml
     branches:
       - main
       - v*
@@ -45,9 +29,26 @@ env:
   REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
 
 jobs:
+  paths-filter:
+    name: Paths filter
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    outputs:
+      pass: ${{ steps.filter.outputs.pass }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Filters
+        uses: ./.github/actions/paths-filter
+        id: filter
+        with:
+          extra-filter: .github/workflows/devcontainer.yml
+
   dev-container-ci:
       name: Devcontainer image
       timeout-minutes: 35
+      needs: paths-filter
+      if: needs.paths-filter.outputs.pass == 'true'
       strategy:
         fail-fast: false
         matrix:
