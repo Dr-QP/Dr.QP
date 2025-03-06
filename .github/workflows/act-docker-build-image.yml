@@ -82,7 +82,7 @@ jobs:
 
   merge:
     name: Merge multiarch act image
-    runs-on: ubuntu-24.04-arm
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:
       packages: write
     needs: build
