@@ -118,7 +118,7 @@ jobs:
               id
               time sudo apt update
               time rosdep update
-              time ./scripts/ros/ros-dep.sh || true # rosdep will fail to install deps on arm
+              time ./scripts/ros/ros-dep.sh
               time colcon build --event-handlers=console_cohesion+
               time colcon test --event-handlers=console_cohesion+
 
