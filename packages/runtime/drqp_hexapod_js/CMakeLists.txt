@@ -65,7 +65,6 @@ if(BUILD_TESTING)
     endif()
 
     set(CMD
-      yarn cross-env JEST_JUNIT_OUTPUT_FILE=${RESULT_FILE}
       yarn run ${RUN_CMD}
       --reporters="jest-junit"
       --reporters="default"
@@ -81,6 +80,7 @@ if(BUILD_TESTING)
       WORKING_DIRECTORY ${ARG_WORKING_DIRECTORY}
       RESULT_FILE ${RESULT_FILE}
       OUTPUT_FILE ${OUTPUT_FILE}
+      ENV JEST_JUNIT_OUTPUT_FILE=${RESULT_FILE}
     )
   endfunction()
 
