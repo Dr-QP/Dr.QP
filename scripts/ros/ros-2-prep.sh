@@ -130,7 +130,7 @@ sudo npm install -g yarn
 # Add `[arch=amd64]` to llvm apt list
 # code /etc/apt/sources.list.d/archive_uri-http_apt_llvm_org_noble_-noble.list
 # More details are in https://stackoverflow.com/a/79155511/888545
-CLANG_VERSION=19
+CLANG_VERSION=20
 curl -sSL https://apt.llvm.org/llvm.sh -o "$script_dir/llvm.sh"
 chmod +x "$script_dir/llvm.sh"
 sudo "$script_dir/llvm.sh" $CLANG_VERSION all
