@@ -160,7 +160,7 @@ jobs:
         with:
           name: colcon-logs-${{ matrix.arch }}
           path: ros_ws/log
-          retention-days: 100
+          retention-days: 90
 
       - name: Test Summary
         uses: test-summary/action@v2
