@@ -6,6 +6,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 include(../../cmake/PatchDepends.cmake)
+include(../../cmake/ClangCoverage.cmake)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -57,10 +58,10 @@ ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 # Export dependencies
 ament_export_dependencies(${${PROJECT_NAME}_BUILD_EXPORT_DEPENDS} Threads)
 
-
 if(BUILD_TESTING)
   include(../../cmake/ClangFormatConfig.cmake)
   include(../../cmake/Catch2Extras.cmake)
+  include(../../cmake/ClangCoverage.cmake)
   add_subdirectory(test)
 
   find_package(ament_lint_auto REQUIRED)
