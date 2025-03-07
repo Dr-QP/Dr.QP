@@ -27,7 +27,7 @@
     },
     "scripts": {
         "build-prod": "react-scripts build",
-        "build-dev": "",
+        "build-dev": "echo nothing to do",
         "test-client": "react-scripts test --watchAll=false --coverage",
         "test-server": "jest ./server --config jest-server.config.js",
         "test": "yarn test-client && yarn test-server",
