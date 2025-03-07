@@ -78,8 +78,6 @@ jobs:
           if: env.ACT
           run: |
             docker run --rm ghcr.io/dr-qp/hello-world:linux
-            echo UID=$UID
-            echo USER=$USER
             id
 
         - name: Install updated Skopeo needed for docker/buildx
@@ -113,8 +111,6 @@ jobs:
             runCmd: |
               set -x
               set -e
-              echo UID=$UID
-              echo USER=$USER
               id
               time sudo apt update
               time rosdep update
