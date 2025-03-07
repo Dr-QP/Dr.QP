@@ -28,7 +28,7 @@
     "scripts": {
         "build-prod": "react-scripts build",
         "build-dev": "",
-        "test-client": "react-scripts test --watchAll=false --coverage",
+        "test-client": "react-scripts test --watchAll=false --coverage --coverageReporters lcov",
         "test-server": "jest ./server --config jest-server.config.js",
         "test": "yarn test-client && yarn test-server",
         "start-client-dev": "react-scripts start",
