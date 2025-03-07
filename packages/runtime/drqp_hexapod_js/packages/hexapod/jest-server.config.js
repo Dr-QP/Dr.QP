@@ -4,7 +4,10 @@ const config = {
   reporters: [
     'default',
   ],
-  coverageReporters: ['lcov'],
+  coverageReporters: [
+    ['lcov', {"projectRoot": "../../../../../"}],
+     'json'
+  ],
   collectCoverage: true,
 };
 

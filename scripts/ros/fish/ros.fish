@@ -23,12 +23,37 @@ function register_argcomplete
   complete --command ament_index -f -a '(__fish_complete ament_index)'
 end
 
+function find_up
+  # find file in parent directories
+  set -l target $argv[1]
+  set -l dir (pwd)
+  while true
+    if test -e "$dir/$target"
+      echo "$dir"
+      return 0
+    end
+    set dir (dirname "$dir")
+    if test "$dir" = /
+      return 1
+    end
+  end
+end
+
 function ros2_activate
   bass source /opt/ros/jazzy/setup.bash
   register_argcomplete
 end
 
 function ros2_ws
-  bass source ./install/setup.bash
+  # set fish_trace 1
+
+  set -l ws (find_up install)
+  if test -z "$ws"
+    echo "No ROS2 workspace found"
+    return 1
+  else
+    echo "Found ROS2 workspace: $ws"
+  end
+  bass source $ws/install/setup.bash
   register_argcomplete
 end

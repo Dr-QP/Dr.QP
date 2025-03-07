@@ -27,8 +27,8 @@
     },
     "scripts": {
         "build-prod": "react-scripts build",
-        "build-dev": "",
-        "test-client": "react-scripts test --watchAll=false --coverage --coverageReporters lcov",
+        "build-dev": "echo nothing to do",
+        "test-client": "react-scripts test --watchAll=false --coverage",
         "test-server": "jest ./server --config jest-server.config.js",
         "test": "yarn test-client && yarn test-server",
         "start-client-dev": "react-scripts start",
@@ -38,6 +38,17 @@
         "kill-server": "fuser -k 4001/tcp",
         "start-dev": "concurrently -n \"server,client\" \"yarn start-kill-server\" \"yarn start-client-dev\"",
         "start-prod": "concurrently -n \"server,client\" \"yarn start-kill-server {@}\" \"yarn start-client-prod\""
+    },
+    "jest": {
+        "coverageReporters": [
+            [
+                "lcov",
+                {
+                    "projectRoot": "../../../../../"
+                }
+            ],
+            "json"
+        ]
     },
     "eslintConfig": {
         "extends": "react-app"
@@ -59,9 +70,10 @@
         "@testing-library/jest-dom": "^6.6.3",
         "@testing-library/react": "^16.2.0",
         "@testing-library/user-event": "^13.5.0",
+        "babel-jest": "^29.7.0",
         "canvas": "^3.1.0",
         "concurrently": "^9.1.2",
         "jest": "^29.7.0",
-        "prettier": "3.5.3"
+        "prettier": "^3.5.3"
     }
 }
