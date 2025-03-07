@@ -6,17 +6,19 @@
   "scripts": {
     "build-prod": "yarn wsrun --stages build-prod",
     "build-dev": "yarn wsrun --stages build-dev",
-
     "start-prod": "yarn wsrun --parallel start-prod",
-    "start-dev": "yarn wsrun --parallel start-dev"
+    "start-dev": "yarn wsrun --parallel start-dev",
+    "test": "yarn wsrun --parallel test"
   },
   "bin": {
     "generate-ros-messages": "node_modules/.bin/generate-ros-messages"
   },
   "dependencies": {
-    "rclnodejs": "^0.31.0"
+    "rclnodejs": "^0.32.0"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
+    "jest-junit": "^16.0.0",
     "wsrun": "^5.2.4"
   }
 }

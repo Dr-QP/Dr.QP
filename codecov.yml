@@ -2,6 +2,6 @@ fixes:
   - "**/ros_ws/src/*/Dr.QP/::"
 
 ignore:
-  - "packages/drqp_interfaces"
-  - "packages/drqp_lint_common"
-  - "packages/drqp_rapidjson"
+  - "packages/runtime/drqp_interfaces"
+  - "packages/runtime/drqp_lint_common"
+  - "packages/runtime/drqp_rapidjson"

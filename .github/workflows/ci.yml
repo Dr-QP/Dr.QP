@@ -114,12 +114,9 @@ jobs:
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: drqp
-
-      - uses: ros-tooling/action-ros-ci@22096906dbb79d66bc20fa54da981c93f289d3c8
+      - uses: ros-tooling/action-ros-ci@v0.4
         env:
-          GCOV_COMMAND: "${{ github.workspace }}/drqp/scripts/gcov"
+          GCOV_COMMAND: "${{ github.workspace }}/scripts/gcov"
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
           no-symlink-install: true
@@ -154,8 +151,6 @@ jobs:
         if: env.ACT == ''
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ros_ws/lcov/total_coverage.info,ros_ws/coveragepy/.coverage
-          disable_search: true
           flags: unittests-${{ matrix.arch }}
           name: codecov-umbrella
 
@@ -165,7 +160,7 @@ jobs:
         with:
           name: colcon-logs-${{ matrix.arch }}
           path: ros_ws/log
-          retention-days: 100
+          retention-days: 90
 
       - name: Test Summary
         uses: test-summary/action@v2
