@@ -47,6 +47,8 @@
       "slevesque.vscode-3dviewer",
       "corker.vscode-micromamba",
       "github.vscode-pull-request-github",
+      "swyddfa.esbonio",
+      "lextudio.restructuredtext",
     ]
   },
   "launch": {
