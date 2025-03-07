@@ -175,14 +175,23 @@
           "kind": "test",
           "isDefault": true
         },
-        "dependsOn":[
-          "Dr.QP colcon build",
-        ]
       },
       {
         "label": "Dr.QP colcon lcov-result",
         "type": "shell",
         "command": "colcon lcov-result",
+        "options": {
+          "cwd": "${workspaceFolder}",
+          "env": {
+            "GCOV_COMMAND": "${workspaceFolder}/scripts/gcov"
+          }
+        },
+        "problemMatcher": [],
+      },
+      {
+        "label": "Dr.QP colcon lcov-result --initial",
+        "type": "shell",
+        "command": "colcon lcov-result --initial",
         "options": {
           "cwd": "${workspaceFolder}",
           "env": {
