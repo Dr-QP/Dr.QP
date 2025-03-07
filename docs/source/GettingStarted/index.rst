@@ -5,5 +5,5 @@ Getting Started
 
    installation
    installation-ros
-   configuring-raspberry-pi
+   setting-up-raspberry-pi
 
