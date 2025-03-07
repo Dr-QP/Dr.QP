@@ -3,6 +3,7 @@ find_package(catch_ros2 REQUIRED)
 add_executable(drqp_serial_tests
   TestSerialRecordingProxy.cpp
 )
+drqp_test_enable_coverage(drqp_serial_tests)
 
 # https://docs.ros.org/en/jazzy/p/catch_ros2/index.html
 target_link_libraries(drqp_serial_tests PRIVATE

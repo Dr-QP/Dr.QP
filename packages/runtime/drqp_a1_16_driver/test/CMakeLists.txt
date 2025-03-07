@@ -3,6 +3,7 @@ find_package(catch_ros2 REQUIRED)
 add_executable(drqp_a1_16_driver_tests
   TestXYZrobotServo.cpp
 )
+drqp_test_enable_coverage(drqp_a1_16_driver_tests)
 
 # https://docs.ros.org/en/jazzy/p/catch_ros2/index.html
 target_link_libraries(drqp_a1_16_driver_tests PRIVATE

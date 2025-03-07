@@ -5,8 +5,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-include(../../cmake/ClangCoverage.cmake)
-
 # find dependencies
 find_package(ament_cmake REQUIRED)
 
@@ -16,6 +14,7 @@ foreach(dep ${${PROJECT_NAME}_BUILD_DEPENDS})
 endforeach()
 
 add_library(drqp_control INTERFACE)
+
 target_include_directories(drqp_control INTERFACE
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")

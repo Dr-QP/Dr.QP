@@ -20,6 +20,7 @@ add_library(drqp_a1_16_driver STATIC
     src/SerialFactory.cpp
     src/XYZrobotServo.cpp
 )
+drqp_enable_coverage(drqp_a1_16_driver)
 
 target_compile_features(drqp_a1_16_driver PUBLIC cxx_std_17)
 target_include_directories(drqp_a1_16_driver PUBLIC
