@@ -1,5 +1,5 @@
 import React from "react"
-import { Route, Routes, Redirect } from "react-router-dom"
+import { Route, Routes, Navigate } from "react-router-dom"
 import { PATHS } from "./components/vars"
 import * as defaults from "./templates"
 import { VirtualHexapod } from "hexapod-kinematics-library"
@@ -13,24 +13,12 @@ import {
 
 const Page = ({ pageComponent }) => (
     <Routes>
-        <Route path="/" exact>
-            {pageComponent(LandingPage)}
-        </Route>
-        <Route path={PATHS.legPatterns.path} exact>
-            {pageComponent(LegPatternPage)}
-        </Route>
-        <Route path={PATHS.forwardKinematics.path} exact>
-            {pageComponent(ForwardKinematicsPage)}
-        </Route>
-        <Route path={PATHS.inverseKinematics.path} exact>
-            {pageComponent(InverseKinematicsPage)}
-        </Route>
-        <Route path={PATHS.walkingGaits.path} exact>
-            {pageComponent(WalkingGaitsPage)}
-        </Route>
-        <Route>
-            <Redirect to="/" />
-        </Route>
+        <Route path={PATHS.landingPage.path} exact component={pageComponent(LandingPage)} />
+        <Route path={PATHS.legPatterns.path} component={pageComponent(LegPatternPage)} />
+        <Route path={PATHS.forwardKinematics.path} component={pageComponent(ForwardKinematicsPage)} />
+        <Route path={PATHS.inverseKinematics.path} component={pageComponent(InverseKinematicsPage)} />
+        <Route path={PATHS.walkingGaits.path} component={pageComponent(WalkingGaitsPage)} />
+        <Route path="*" element={<Navigate to={PATHS.landingPage.path} />} />
     </Routes>
 )
 
