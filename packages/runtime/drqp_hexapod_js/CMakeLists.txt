@@ -57,10 +57,11 @@ if(BUILD_TESTING)
       set(RESULT_FILE "${AMENT_TEST_RESULTS_DIR}/${PROJECT_NAME}/${TARGET}-jest.xunit.xml")
     endif()
 
+    set(DEFAULT_OUT_DIR ${CMAKE_BINARY_DIR}/jest_test_results/${TARGET})
     if(ARG_OUTPUT_FILE)
       set(OUTPUT_FILE "${ARG_OUTPUT_FILE}")
     else()
-      set(OUTPUT_FILE "${CMAKE_BINARY_DIR}/jest_test_results/${TARGET}.txt.ans")
+      set(OUTPUT_FILE "${DEFAULT_OUT_DIR}/output.txt.ans")
     endif()
 
     set(CMD
@@ -70,6 +71,7 @@ if(BUILD_TESTING)
       --reporters="default"
       --coverage
       --coverageReporters lcov
+      --coverageDirectory "${DEFAULT_OUT_DIR}/coverage/"
       ${ARG_EXTRA_COMMAND}
     )
 
