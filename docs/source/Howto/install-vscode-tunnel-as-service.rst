@@ -1,5 +1,8 @@
-On RPi or Apple Silicon
+Install VSCode tunnel as service
 =======================
+
+On RPi or Apple Silicon
+--------------------------
 
 ::
 
@@ -8,7 +11,7 @@ On RPi or Apple Silicon
    ./code tunnel service install
 
 On x86
-======
+--------------------------
 
 ::
 
