@@ -1,7 +1,10 @@
 # Dr.QP
 
 [![ci](https://github.com/Dr-QP/Dr.QP/actions/workflows/ci.yml/badge.svg)](https://github.com/Dr-QP/Dr.QP/actions/workflows/ci.yml?query=branch%3Amain)
-[![CodeQL Advanced](https://github.com/Dr-QP/Dr.QP/actions/workflows/codeql.yml/badge.svg)](https://github.com/Dr-QP/Dr.QP/actions/workflows/codeql.yml?query=branch%3Amain)
+[![CodeQL Advanced](https://github.com/Dr-QP/Dr.QP/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/Dr-QP/Dr.QP/actions/workflows/codeql.yml?query=branch%3Amain)
+[![Devcontainer CI](https://github.com/Dr-QP/Dr.QP/actions/workflows/devcontainer.yml/badge.svg?branch=main)](https://github.com/Dr-QP/Dr.QP/actions/workflows/devcontainer.yml?query=branch%3Amain)
+[![Build act ubuntu docker images](https://github.com/Dr-QP/Dr.QP/actions/workflows/act-docker-build-image.yml/badge.svg?branch=main)](https://github.com/Dr-QP/Dr.QP/actions/workflows/act-docker-build-image.yml?query=branch%3Amain)
+
 [![codecov](https://codecov.io/gh/Dr-QP/Dr.QP/graph/badge.svg?token=MSNH7AK8XX)](https://codecov.io/gh/Dr-QP/Dr.QP)
 
 Welcome to the Dr.QP project.
