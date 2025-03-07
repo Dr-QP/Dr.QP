@@ -151,8 +151,6 @@ jobs:
         if: env.ACT == ''
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ros_ws/lcov/total_coverage.info,ros_ws/coveragepy/.coverage
-          disable_search: true
           flags: unittests-${{ matrix.arch }}
           name: codecov-umbrella
 
