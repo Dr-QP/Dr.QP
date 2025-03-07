@@ -1,5 +1,5 @@
 import React from "react"
-import { Route, Switch, Redirect } from "react-router-dom"
+import { Route, Routes, Redirect } from "react-router-dom"
 import { PATHS } from "./components/vars"
 import * as defaults from "./templates"
 import { VirtualHexapod } from "hexapod-kinematics-library"
@@ -12,7 +12,7 @@ import {
 } from "./components/pages"
 
 const Page = ({ pageComponent }) => (
-    <Switch>
+    <Routes>
         <Route path="/" exact>
             {pageComponent(LandingPage)}
         </Route>
@@ -31,7 +31,7 @@ const Page = ({ pageComponent }) => (
         <Route>
             <Redirect to="/" />
         </Route>
-    </Switch>
+    </Routes>
 )
 
 const updateHexapod = (updateType, newParam, oldHexapod) => {
