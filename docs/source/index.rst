@@ -11,13 +11,12 @@ Check out the :doc:`designs` section for further information, including how to :
 
    This project is under active development.
 
-Contents
---------
-
 .. toctree::
-
+   :titlesonly:
    :maxdepth: 1
+   :hidden:
 
-   GettingStarted
-   Howto
+   GettingStarted/index
+   Howto/index
+   Dev/index
 

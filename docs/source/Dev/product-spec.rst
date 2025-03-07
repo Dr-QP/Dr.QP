@@ -1,3 +1,6 @@
+Product specification
+======================
+
 A basic bot
 ===========
 
