@@ -37,6 +37,68 @@ if(BUILD_TESTING)
   # Skip for now as there is no easy way to configure excluded folders
   # ament_copyright(EXCLUDE ${NODE_MODULES})
   # ament_xmllint(EXCLUDE ${NODE_MODULES})
+
+  function(add_yarn_jest_test TARGET)
+    cmake_parse_arguments(ARG
+      ""
+      "RUN_CMD;RESULT_FILE;OUTPUT_FILE;WORKING_DIRECTORY"
+      "EXTRA_COMMAND"
+      ${ARGN})
+
+    if(ARG_RUN_CMD)
+      set(RUN_CMD "${ARG_RUN_CMD}")
+    else()
+      set(RUN_CMD "$<TARGET_FILE:${TARGET}>")
+    endif()
+
+    if(ARG_RESULT_FILE)
+      set(RESULT_FILE "${ARG_RESULT_FILE}")
+    else()
+      set(RESULT_FILE "${AMENT_TEST_RESULTS_DIR}/${PROJECT_NAME}/${TARGET}-jest.xunit.xml")
+    endif()
+
+    if(ARG_OUTPUT_FILE)
+      set(OUTPUT_FILE "${ARG_OUTPUT_FILE}")
+    else()
+      set(OUTPUT_FILE "${CMAKE_BINARY_DIR}/jest_test_results/${TARGET}.txt.ans")
+    endif()
+
+    set(CMD
+      yarn cross-env JEST_JUNIT_OUTPUT_FILE=${RESULT_FILE}
+      yarn run ${RUN_CMD}
+      --reporters="jest-junit"
+      --reporters="default"
+      --coverage
+      --coverageReporters lcov
+      ${ARG_EXTRA_COMMAND}
+    )
+
+    ament_add_test(
+      ${TARGET}
+      COMMAND ${CMD}
+      WORKING_DIRECTORY ${ARG_WORKING_DIRECTORY}
+      RESULT_FILE ${RESULT_FILE}
+      OUTPUT_FILE ${OUTPUT_FILE}
+    )
+  endfunction()
+
+  add_yarn_jest_test(
+    hexapod-server
+    RUN_CMD test-server
+    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/packages/hexapod
+    EXTRA_COMMAND --reporters="github-actions"
+  )
+  add_yarn_jest_test(
+    hexapod-client
+    RUN_CMD test-client
+    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/packages/hexapod
+  )
+  add_yarn_jest_test(
+    hexapod-kinematics-library
+    RUN_CMD test
+    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/packages/hexapod-kinematics-library
+    EXTRA_COMMAND --reporters="github-actions"
+  )
 endif()
 
 ament_package()
