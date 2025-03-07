@@ -37,8 +37,3 @@ Linux is the only platform that has been tested for this project.
 
   ros2_activate # Source ROS environment
   ./scripts/ros/ros-dep.sh # Install all ROS dependencies
-
-
-.. toctree::
-
-   installation-ros
