@@ -155,7 +155,7 @@ jobs:
         if: ${{ !cancelled() }}
         run: |
           set -x
-          test_reports=$(find build -name "*.xunit.xml" | tr '\n' ',')
+          test_reports=$(find ros_ws/build -name "*.xunit.xml" | tr '\n' ',')
           test_reports=${test_reports%,}  # Remove trailing comma
 
           echo "result=$test_reports" >> $GITHUB_OUTPUT
