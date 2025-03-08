@@ -2,7 +2,7 @@
 
 option(DRQP_ENABLE_COVERAGE "Enable coverage" OFF)
 
-function __check_compatibility()
+function(__check_compatibility)
   if (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     message(FATAL_ERROR "Coverage is only supported with Clang")
   endif()
