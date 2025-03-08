@@ -138,7 +138,7 @@ jobs:
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
-        if: env.ACT == '' && !cancelled()
+        if: ${{ env.ACT == '' && !cancelled() }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: unittests-${{ matrix.arch }}
@@ -147,17 +147,28 @@ jobs:
 
       - name: Test Summary
         uses: test-summary/action@v2
-        if: env.ACT == '' && !cancelled()
+        if: ${{ env.ACT == '' && !cancelled() }}
         with:
           paths: "ros_ws/build/*/test_results/*/*.xunit.xml"
 
+      - name: Discover test reports
+        if: ${{ !cancelled() }}
+        run: |
+          set -x
+          test_reports=$(find build -name "*.xunit.xml" | tr '\n' ',')
+          test_reports=${test_reports%,}  # Remove trailing comma
+
+          echo "result=$test_reports" >> $GITHUB_OUTPUT
+          echo $test_reports
+        shell: bash
+        id: test_reports
+
       - name: Upload test results to Codecov
-        if: env.ACT == '' && !cancelled()
+        if: ${{ !cancelled() }}
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: "*.xunit.xml"
-          directory: "ros_ws/build/"
+          files: ${{ steps.test_reports.outputs.result }}
 
       - uses: actions/upload-artifact@v4
         # upload the logs even when the build fails
