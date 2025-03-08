@@ -23,8 +23,6 @@ concurrency:
 
 env:
   ROS_DISTRO: jazzy
-  CC: clang
-  CXX: clang++
   REGISTRY: ghcr.io
   REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
 

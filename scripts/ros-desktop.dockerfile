@@ -19,6 +19,8 @@ ARG GID=$UID
 # Force clang-format-19 and friends to the default
 ENV CLANG_VERSION=20
 ENV PATH="/usr/lib/llvm-${CLANG_VERSION}/bin:$PATH"
+ENV CC=clang
+ENV CXX=clang++
 
 # Install ROS packages
 COPY ./ros /ros-prep
