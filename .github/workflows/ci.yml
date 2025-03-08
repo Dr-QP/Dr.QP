@@ -120,18 +120,22 @@ jobs:
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
           no-symlink-install: true
+          extra-cmake-args: -DDRQP_ENABLE_COVERAGE=ON
+          # pin the repository in the workflow to a specific commit to avoid
+          # changes in colcon-mixin-repository from breaking your tests.
+          colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml
           colcon-defaults: |
             {
               "build": {
-                "mixin": ["coverage-gcc", "coverage-pytest"]
+                "mixin": ["coverage-pytest"]
               },
               "test": {
                 "mixin": ["coverage-pytest"]
               }
             }
-          # pin the repository in the workflow to a specific commit to avoid
-          # changes in colcon-mixin-repository from breaking your tests.
-          colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml
+      - name: Process llvm coverage
+        shell: python
+        run: ./packages/cmake/llvm-cov-export-all.py ./ros_ws/
 
       - name: Troubleshoot
         if: failure()

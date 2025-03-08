@@ -35,5 +35,6 @@ function(add_catch2_unit_test TARGET)
     COMMAND ${CMD}
     RESULT_FILE ${RESULT_FILE}
     OUTPUT_FILE ${OUTPUT_FILE}
+    ENV "LLVM_PROFILE_FILE=${EXECUTABLE}.profraw"
   )
 endfunction()
