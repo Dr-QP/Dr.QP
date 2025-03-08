@@ -29,7 +29,7 @@ add_library(drqp_serial STATIC
     src/TcpSerial.cpp
     src/UnixSerial.cpp
 )
-drqp_enable_coverage(drqp_serial)
+drqp_library_enable_coverage(drqp_serial)
 
 target_compile_features(drqp_serial PUBLIC cxx_std_17)
 target_include_directories(drqp_serial PUBLIC
