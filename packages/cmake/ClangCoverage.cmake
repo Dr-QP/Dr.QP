@@ -20,7 +20,7 @@ function(drqp_library_enable_coverage TARGET)
 endfunction()
 
 # Enable coverage for C++ test binary
-# by adding needed linker flags flags
+# by adding needed linker flags
 # code from the test binary will be ignored
 function(drqp_test_enable_coverage TARGET)
   if (NOT DRQP_ENABLE_COVERAGE)
