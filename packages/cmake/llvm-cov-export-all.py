@@ -19,7 +19,8 @@ def process(binary, profile, output):
 
     verbose(f"Exporting coverage for {binary} with profile {profile} to {output}")
     Path(output).parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run(["llvm-cov", "export", "--format", "lcov", binary, "-instr-profile", merged_profile], stdout=open(output, "w"))
+    with open(output, "w") as f:
+        subprocess.run(["llvm-cov", "export", "--format", "lcov", binary, "-instr-profile", merged_profile], stdout=f)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process llvm source based coverage profiles and export as lcov format")
