@@ -133,8 +133,9 @@ jobs:
                 "mixin": ["coverage-pytest"]
               }
             }
+
       - name: Process llvm coverage
-        shell: python
+        shell: bash
         run: ./packages/cmake/llvm-cov-export-all.py ./ros_ws/
 
       - name: Troubleshoot
