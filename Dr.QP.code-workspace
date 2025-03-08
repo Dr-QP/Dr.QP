@@ -179,28 +179,22 @@
         },
       },
       {
-        "label": "Dr.QP colcon lcov-result",
+        "label": "Dr.QP coverage",
         "type": "shell",
-        "command": "colcon lcov-result",
-        "options": {
-          "cwd": "${workspaceFolder}",
-          "env": {
-            "GCOV_COMMAND": "${workspaceFolder}/scripts/gcov"
-          }
-        },
+        "command": "${workspaceFolder}/packages/cmake/llvm-cov-export-all.py ${workspaceFolder}",
         "problemMatcher": [],
       },
       {
-        "label": "Dr.QP colcon lcov-result --initial",
+        "label": "Dr.QP build, test, coverage",
         "type": "shell",
-        "command": "colcon lcov-result --initial",
-        "options": {
-          "cwd": "${workspaceFolder}",
-          "env": {
-            "GCOV_COMMAND": "${workspaceFolder}/scripts/gcov"
-          }
-        },
+        "command": "echo done",
         "problemMatcher": [],
+        "dependsOrder": "sequence",
+        "dependsOn": [
+          "Dr.QP colcon build",
+          "Dr.QP colcon test",
+          "Dr.QP coverage"
+        ]
       },
       {
         "label": "Dr.QP clean",
@@ -269,9 +263,9 @@
       "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
     },
 
-    "coverage-gutters.coverageBaseDir": "lcov",
+    "coverage-gutters.coverageBaseDir": "build/**",
     "coverage-gutters.coverageFileNames": [
-      "total_coverage.info",
+      "*.info",
     ],
     "coverage-gutters.showLineCoverage": true,
     "coverage-gutters.highlightdark": "rgba(0, 122, 30, 0.1)",

@@ -29,5 +29,5 @@ if __name__ == "__main__":
     for profile in Path(args.base_path).rglob("*.profraw"):
         print(f"Processing raw profile {profile}")
         binary = profile.with_suffix("")
-        output = binary.with_suffix(".lcov")
+        output = binary.with_suffix(".lcov.info")
         process(binary, profile, output)
