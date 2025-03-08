@@ -156,7 +156,8 @@ jobs:
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          directory: "ros_ws/build/*/test_results/*/*.xunit.xml"
+          file: "*.xunit.xml"
+          directory: "ros_ws/build/"
 
       - uses: actions/upload-artifact@v4
         # upload the logs even when the build fails
