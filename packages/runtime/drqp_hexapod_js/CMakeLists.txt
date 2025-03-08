@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.30..3.31)
 project(drqp_hexapod_js)
 
-return()
-
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
