@@ -12,11 +12,10 @@ def verbose(*args_, **kwargs):
         print(args_, **kwargs)
 
 def process(binary, profile, output):
+    print(f"Exporting coverage to {output}")
     merged_profile = Path(profile).with_suffix(".profdata")
-    verbose(f"Merging profile {profile} into {merged_profile}")
     subprocess.run(["llvm-profdata", "merge", "-sparse", profile, "-o", str(merged_profile)])
 
-    verbose(f"Exporting coverage for {binary} with profile {profile} to {output}")
     Path(output).parent.mkdir(parents=True, exist_ok=True)
     with open(output, "w") as f:
         subprocess.run(["llvm-cov", "export", "--format", "lcov", binary, "-instr-profile", merged_profile], stdout=f)
@@ -27,7 +26,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     for profile in Path(args.base_path).rglob("*.profraw"):
-        print(f"Processing raw profile {profile}")
         binary = profile.with_suffix("")
         output = binary.parent / "coverage" / binary.name / "lcov.info"
         process(binary, profile, output)
