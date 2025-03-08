@@ -134,7 +134,49 @@ jobs:
 
       - name: Process llvm coverage
         shell: bash
-        run: ./packages/cmake/llvm-cov-export-all.py ./ros_ws/
+        run: ./packages/cmake/llvm-cov-export-all.py ./ros_ws/build
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        if: ${{ env.ACT == '' && !cancelled() }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: unittests-${{ matrix.arch }}
+          name: codecov-umbrella
+          directory: ros_ws/build/
+
+      - name: Test Summary
+        uses: test-summary/action@v2
+        if: ${{ env.ACT == '' && !cancelled() }}
+        with:
+          paths: "ros_ws/build/*/test_results/*/*.xunit.xml"
+
+      - name: Discover test reports
+        if: ${{ !cancelled() }}
+        run: |
+          set -x
+          test_reports=$(find ros_ws/build -name "*.xunit.xml" | tr '\n' ',')
+          test_reports=${test_reports%,}  # Remove trailing comma
+
+          echo "result=$test_reports" >> $GITHUB_OUTPUT
+          echo $test_reports
+        shell: bash
+        id: test_reports
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ${{ steps.test_reports.outputs.result }}
+
+      - uses: actions/upload-artifact@v4
+        # upload the logs even when the build fails
+        if: always()
+        with:
+          name: colcon-logs-${{ matrix.arch }}
+          path: ros_ws/log
+          retention-days: 90
 
       - name: Troubleshoot
         if: failure()
@@ -148,28 +190,6 @@ jobs:
           ls -al ros_ws/src
           cat package.repo
           vcs import --force --recursive src/ < package.repo
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        if: env.ACT == ''
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          flags: unittests-${{ matrix.arch }}
-          name: codecov-umbrella
-
-      - uses: actions/upload-artifact@v4
-        # upload the logs even when the build fails
-        if: always()
-        with:
-          name: colcon-logs-${{ matrix.arch }}
-          path: ros_ws/log
-          retention-days: 90
-
-      - name: Test Summary
-        uses: test-summary/action@v2
-        with:
-          paths: "ros_ws/build/*/test_results/*/*.xunit.xml"
-        if: always()
 
   build-deploy-image:
     name: Deployment image
