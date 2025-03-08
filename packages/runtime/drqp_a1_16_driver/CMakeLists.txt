@@ -4,6 +4,7 @@ project(drqp_a1_16_driver)
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
+include(../../cmake/ClangCoverage.cmake)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -19,6 +20,7 @@ add_library(drqp_a1_16_driver STATIC
     src/SerialFactory.cpp
     src/XYZrobotServo.cpp
 )
+drqp_library_enable_coverage(drqp_a1_16_driver)
 
 target_compile_features(drqp_a1_16_driver PUBLIC cxx_std_17)
 target_include_directories(drqp_a1_16_driver PUBLIC

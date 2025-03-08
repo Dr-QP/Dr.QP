@@ -6,6 +6,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 include(../../cmake/PatchDepends.cmake)
+include(../../cmake/ClangCoverage.cmake)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -28,6 +29,7 @@ add_library(drqp_serial STATIC
     src/TcpSerial.cpp
     src/UnixSerial.cpp
 )
+drqp_library_enable_coverage(drqp_serial)
 
 target_compile_features(drqp_serial PUBLIC cxx_std_17)
 target_include_directories(drqp_serial PUBLIC
@@ -37,6 +39,7 @@ target_include_directories(drqp_serial PUBLIC
 ament_target_dependencies(drqp_serial PUBLIC ${${PROJECT_NAME}_BUILD_DEPENDS})
 
 target_link_libraries(drqp_serial PRIVATE Threads::Threads $<$<PLATFORM_ID:Linux>:rt>)
+
 
 # Install headers
 install(DIRECTORY include/
@@ -56,7 +59,6 @@ ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 # Export dependencies
 ament_export_dependencies(${${PROJECT_NAME}_BUILD_EXPORT_DEPENDS} Threads)
-
 
 if(BUILD_TESTING)
   include(../../cmake/ClangFormatConfig.cmake)
