@@ -34,8 +34,6 @@ concurrency:
 
 env:
   ROS_DISTRO: jazzy # duplicated in job.container.image
-  CC: clang
-  CXX: clang++
   CMAKE_EXPORT_COMPILE_COMMANDS: "1"
   REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
 
