@@ -34,14 +34,12 @@ concurrency:
 
 env:
   ROS_DISTRO: jazzy # duplicated in job.container.image
-  CC: clang
-  CXX: clang++
   CMAKE_EXPORT_COMPILE_COMMANDS: "1"
   REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
 
 jobs:
   paths-filter:
-    name: Paths filter
+    name: Need to run?
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     outputs:
       pass: ${{ steps.filter.outputs.pass }}
@@ -184,8 +182,17 @@ jobs:
     needs: [analyze]
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions: {}
-    if: ${{ cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}
+    if: ${{ success() || cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}
     steps:
-      - run: |
-          echo "Some workflows have failed!"
+      - name: All jobs succeeded!
+        if: ${{ success() }}
+        run: |
+          exit 0
+      - name: Some jobs have failed!
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: |
+          exit 1
+      - name: Some jobs have cancelled!
+        if: ${{ cancelled() || contains(needs.*.result, 'cancelled') }}
+        run: |
           exit 1

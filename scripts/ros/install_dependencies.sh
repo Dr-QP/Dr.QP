@@ -14,6 +14,7 @@ ros-jazzy-ament-cmake-pep257
 ros-jazzy-ament-cmake-xmllint
 ros-jazzy-ament-lint-auto
 ros-jazzy-catch-ros2
+ros-jazzy-gz-ros2-control
 ros-jazzy-joint-state-publisher
 ros-jazzy-joint-state-publisher-gui
 ros-jazzy-rclcpp
@@ -21,6 +22,7 @@ ros-jazzy-robot-state-publisher
 ros-jazzy-ros2-control
 ros-jazzy-ros2-controllers
 ros-jazzy-ros2launch
+ros-jazzy-ros-gz-sim
 ros-jazzy-rosidl-default-generators
 ros-jazzy-rosidl-default-runtime
 ros-jazzy-rviz2
