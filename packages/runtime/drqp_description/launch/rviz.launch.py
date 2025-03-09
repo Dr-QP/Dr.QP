@@ -31,21 +31,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     pkg_share_path = get_package_share_path('drqp_description')
 
-    gui = LaunchConfiguration('gui')
     use_sim_time = LaunchConfiguration('use_sim_time')
-
-    # Depending on gui parameter, either launch joint_state_publisher or joint_state_publisher_gui
-    joint_state_publisher_node = Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher',
-        condition=UnlessCondition(gui)
-    )
-
-    joint_state_publisher_gui_node = Node(
-        package='joint_state_publisher_gui',
-        executable='joint_state_publisher_gui',
-        condition=IfCondition(gui)
-    )
 
     rviz_node = Node(
         package='rviz2',
@@ -60,19 +46,9 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        DeclareLaunchArgument(name='gui',
+        DeclareLaunchArgument(name='use_sim_time',
                               default_value='true',
-                              choices=['true', 'false'],
-                              description='Enable joint_state_publisher_gui'),
-
-        DeclareLaunchArgument(name='external_urdf_loc',
-                              default_value='',
-                              description='Absolute path additional urdf file to include in the model'),
-
-        DeclareLaunchArgument(
-            name='use_sim_time',
-            default_value='true',
-            description='Use sim time if true'),
+                              description='Use sim time if true'),
         DeclareLaunchArgument(name='rviz',
                               default_value='true',
                               choices=['true', 'false'],
@@ -84,7 +60,6 @@ def generate_launch_description():
                               default_value=str(
                                   pkg_share_path / 'rviz' / 'drqp_description.rviz'),
                               description='Absolute path to rviz config file'),
-        joint_state_publisher_node,
-        joint_state_publisher_gui_node,
+
         rviz_node
     ])
