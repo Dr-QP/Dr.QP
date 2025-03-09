@@ -63,7 +63,7 @@ def generate_launch_description():
         DeclareLaunchArgument(name='gui',
                               default_value='true',
                               choices=['true', 'false'],
-                              description='Flag to enable joint_state_publisher_gui'),
+                              description='Enable joint_state_publisher_gui'),
 
         DeclareLaunchArgument(name='external_urdf_loc',
                               default_value='',
@@ -76,7 +76,7 @@ def generate_launch_description():
         DeclareLaunchArgument(name='rviz',
                               default_value='true',
                               choices=['true', 'false'],
-                              description='Flag to enable rviz'),
+                              description='Enable rviz'),
         DeclareLaunchArgument(name='rviz_frame',
                               default_value='dr_qp/base_link',
                               description='Base model frame in rviz'),
