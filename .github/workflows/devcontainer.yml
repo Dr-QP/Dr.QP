@@ -133,7 +133,7 @@ jobs:
         if: ${{ contains(needs.*.result, 'failure') }}
         run: |
           exit 1
-      - name: Some jobs have cancelled!
+      - name: Some jobs have been cancelled!
         if: ${{ cancelled() || contains(needs.*.result, 'cancelled') }}
         run: |
           exit 1
