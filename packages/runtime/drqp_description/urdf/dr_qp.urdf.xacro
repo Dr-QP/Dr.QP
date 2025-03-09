@@ -15,6 +15,8 @@
     <color rgba="0.5 0.5 0.5 0.2" />
   </material>
 
+  <xacro:property name="robot_height" value="0.085" />
+
   <xacro:include filename="$(find drqp_description)/urdf/body.urdf.xacro"/>
   <xacro:include filename="$(find drqp_description)/urdf/leg.urdf.xacro"/>
   <xacro:include filename="$(find drqp_description)/urdf/gazebo.xacro"/>
@@ -25,6 +27,15 @@
   <xacro:leg robot_name="$(arg robot_name)" prefix="left_front" x="0.11692" y="0.06387" yaw="${pi/4}"/>
   <xacro:leg robot_name="$(arg robot_name)" prefix="left_middle" x="0" y="0.103" yaw="${pi/2}"/>
   <xacro:leg robot_name="$(arg robot_name)" prefix="left_back" x="-0.11692" y="0.06387" yaw="${3*pi/4}"/>
+
+
+  <link name="world" />
+  <joint name="world_to_base_link=" type="fixed">
+      <origin rpy="0 0 0" xyz="0 0 ${robot_height}"/>
+      <parent link="world"/>
+      <child link="$(arg robot_name)/base_link"/>
+  </joint>
+
   <gazebo reference="">
     <self_collide>1</self_collide>
 
