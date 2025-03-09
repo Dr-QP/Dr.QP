@@ -138,17 +138,17 @@ sudo apt-get install -y -q --no-install-recommends libstdc++-14-dev
 
 echo '##################################################'
 echo '#'
-echo '#'  Add /usr/lib/llvm-19/bin to \$PATH
+echo '#'  Add /usr/lib/llvm-$CLANG_VERSION/bin to \$PATH
 echo '#'
 echo '#'  for fish \(in ~/.config/fish/config.fish\):
-echo '#'  'set -gx PATH /usr/lib/llvm-19/bin $PATH'
+echo '#'  set -gx PATH /usr/lib/llvm-$CLANG_VERSION/bin \$PATH
 echo '#'
 echo '#'
 echo '#'  for bash \(in ~/.bashrc\):
-echo '#'  'export PATH="/usr/lib/llvm-19/bin:$PATH"'
+echo '#'  export PATH="/usr/lib/llvm-$CLANG_VERSION/bin:\$PATH"
 echo '#'
 echo '#'
 echo '#'  for dockerfile
-echo '#'  'ENV PATH="/usr/lib/llvm-19/bin:$PATH"'
+echo '#'  ENV PATH="/usr/lib/llvm-$CLANG_VERSION/bin:\$PATH"
 echo '#'
 echo '##################################################'
