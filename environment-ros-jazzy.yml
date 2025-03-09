@@ -1,0 +1,32 @@
+##############
+name: ros-jazzy
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.12 # keep in sync with .readthedocs.yaml
+  - nodejs=20 # keep in sync with .readthedocs.yaml
+  - pip:
+     - colcon-common-extensions
+     - colcon-coveragepy-result
+     - colcon-lcov-result
+     - colcon-mixin
+     - coverage
+     - flake8
+     - flake8-blind-except
+     - flake8-class-newline
+     - flake8-deprecated
+     - mypy
+     - pytest
+     - pytest-cov
+     - pytest-mock
+     - pytest-repeat
+     - pytest-rerunfailures
+     - pytest-runner
+     - pytest-timeout
+     - rosdep
+     - setuptools
+     - vcstool
+     - -r ./docs/requirements.txt
+     - esbonio # reStructuredText language server for preview

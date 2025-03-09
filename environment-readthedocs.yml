@@ -9,13 +9,13 @@
 # chgrp -R staff .micromamba/
 #
 ##############
-name: default
+name: readthedocs
 
 channels:
   - conda-forge
 
 dependencies:
-  - python=3.13 # keep in sync with .readthedocs.yaml
+  - python=3.12 # keep in sync with .readthedocs.yaml
   - nodejs=20 # keep in sync with .readthedocs.yaml
   - pip:
      - -r ./docs/requirements.txt
