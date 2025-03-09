@@ -42,17 +42,12 @@ def generate_launch_description():
             '-d', LaunchConfiguration('rviz_config'),
             '-f', LaunchConfiguration('rviz_frame')],
         parameters=[{'use_sim_time': use_sim_time}],
-        condition=IfCondition(LaunchConfiguration('rviz'))
     )
 
     return LaunchDescription([
         DeclareLaunchArgument(name='use_sim_time',
                               default_value='true',
                               description='Use sim time if true'),
-        DeclareLaunchArgument(name='rviz',
-                              default_value='true',
-                              choices=['true', 'false'],
-                              description='Enable rviz'),
         DeclareLaunchArgument(name='rviz_frame',
                               default_value='dr_qp/base_link',
                               description='Base model frame in rviz'),
