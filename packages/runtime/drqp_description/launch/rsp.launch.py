@@ -18,9 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import os
-
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import get_package_share_path
 
 from launch import LaunchDescription
 
@@ -32,28 +30,28 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
+    pkg_share_path = get_package_share_path('drqp_description')
+
     # Check if we're told to use sim time
     use_sim_time = LaunchConfiguration('use_sim_time')
     use_ros2_control = LaunchConfiguration('use_ros2_control')
 
     # Process the URDF file
-    pkg_path = os.path.join(get_package_share_directory('drqp_description'))
-    xacro_file = os.path.join(pkg_path, 'urdf', 'dr_qp.urdf.xacro')
-    # robot_description_config = xacro.process_file(xacro_file).toxml()
+
+    # robot_description_config
     robot_description_config = ParameterValue(Command([
-        'xacro ', xacro_file,
+        'xacro ', str(pkg_share_path / 'urdf' / 'dr_qp.urdf.xacro'),
         ' use_ros2_control:=', use_ros2_control,
         ' sim_mode:=', use_sim_time
-        ]), value_type=str)
+    ]), value_type=str)
 
     # Create a robot_state_publisher node
-    params = {'robot_description': robot_description_config,
-              'use_sim_time': use_sim_time}
     node_robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='screen',
-        parameters=[params]
+        parameters=[{'robot_description': robot_description_config,
+                    'use_sim_time': use_sim_time}]
     )
 
     # Launch!

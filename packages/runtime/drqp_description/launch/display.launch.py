@@ -29,7 +29,7 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    drqp_description_path = get_package_share_path('drqp_description')
+    pkg_share_path = get_package_share_path('drqp_description')
 
     gui = LaunchConfiguration('gui')
     use_sim_time = LaunchConfiguration('use_sim_time')
@@ -82,7 +82,7 @@ def generate_launch_description():
                               description='Base model frame in rviz'),
         DeclareLaunchArgument(name='rviz_config',
                               default_value=str(
-                                  drqp_description_path / 'rviz/drqp_description.rviz'),
+                                  pkg_share_path / 'rviz' / 'drqp_description.rviz'),
                               description='Absolute path to rviz config file'),
         joint_state_publisher_node,
         joint_state_publisher_gui_node,
