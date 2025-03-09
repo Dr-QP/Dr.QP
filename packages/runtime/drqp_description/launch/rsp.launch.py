@@ -42,7 +42,7 @@ def generate_launch_description():
     robot_description_config = ParameterValue(Command([
         'xacro ', str(pkg_share_path / 'urdf' / 'dr_qp.urdf.xacro'),
         ' use_ros2_control:=', use_ros2_control,
-        ' sim_mode:=', use_sim_time
+        ' use_sim_time:=', use_sim_time
     ]), value_type=str)
 
     # Create a robot_state_publisher node
