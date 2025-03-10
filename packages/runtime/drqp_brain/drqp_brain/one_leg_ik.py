@@ -129,11 +129,11 @@ class RobotBrain(rclpy.node.Node):
         alpha1_acos_input = z / L
         alpha1 = math.acos(alpha1_acos_input)
 
-        alpha2_acos_input = (self.tibia ** 2 - self.femur ** 2 - L ** 2) / (-2 * self.femur * L)
+        alpha2_acos_input = (self.femur ** 2 + L ** 2 - self.tibia ** 2) / (2 * self.femur * L)
         alpha2 = math.acos(alpha2_acos_input)
         self.alpha = alpha1 + alpha2
 
-        beta_acos_input = (L ** 2 - self.tibia ** 2 - self.femur ** 2) / (-2 * self.tibia * self.femur)
+        beta_acos_input = (self.tibia ** 2 - self.femur ** 2 - L ** 2) / (2 * self.tibia * self.femur)
         self.beta = math.acos(beta_acos_input)
         print(f"Solved {self.alpha=} {self.beta=}, {self.gamma=}, pose: {pose_name}")
 
