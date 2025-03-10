@@ -22,18 +22,13 @@
 import argparse
 import math
 import sys
-import xml.dom.minidom
 
-# Third-party imports
-import packaging.version
 
 # ROS 2 imports
-from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 import rclpy
 import rclpy.node
-import sensor_msgs.msg
-import std_msgs.msg
 
+import drqp_interfaces.msg
 
 class RobotBrain(rclpy.node.Node):
 
@@ -43,6 +38,28 @@ class RobotBrain(rclpy.node.Node):
     def __init__(self):
         super().__init__('drqp_brain')
 
+        self.pose_async_publisher = self.create_publisher(drqp_interfaces.msg.MultiAsyncPositionCommand, '/pose_async', qos_profile=10)
+        self.timer = self.create_timer(1, self.on_timer)
+
+        self.alpha = 0
+        self.beta = 0
+        self.gamma = 0
+
+        self.current_frame = 0
+        self.sequence = [
+            (0, 0, 0), # x, y, z
+        ]
+
+    def on_timer(self):
+        self.frame = self.sequence[self.current_frame]
+        self.current_frame += 1
+        if self.current_frame >= len(self.sequence):
+            self.current_frame = 0
+
+        self.solve_for(*self.frame)
+
+    def solve_for(self, x, y, z):
+        print(f"Solving for {x}, {y}, {z}")
 
 def main():
     # Initialize rclpy with the command-line arguments
