@@ -35,11 +35,13 @@ import sensor_msgs.msg
 import std_msgs.msg
 
 
-class RobotIK(rclpy.node.Node):
+class RobotBrain(rclpy.node.Node):
 
     def get_param(self, name):
         return self.get_parameter(name).value
 
+    def __init__(self):
+        super().__init__('drqp_brain')
 
 
 def main():
@@ -54,7 +56,7 @@ def main():
     # contain the name of the program.
     parsed_args = parser.parse_args(args=stripped_args[1:])
 
-    node = RobotIK()
+    node = RobotBrain()
 
     try:
         rclpy.spin(node)
