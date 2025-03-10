@@ -23,12 +23,44 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <algorithm>
+
+#include "drqp_control/DrQp.h"
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 
 #include <drqp_interfaces/msg/sync_position_command.hpp>
 #include <drqp_interfaces/msg/multi_sync_position_command.hpp>
+
+struct Params
+{
+  std::string name;
+  double ratio = 1.;
+};
+
+static const auto kServoIdToJoint = [](){
+  std::unordered_map<uint8_t, Params> result;
+
+  const std::string kRight = "right";
+  const std::array<const char*, kServosPerLeg> kJointNames = { "-coxa", "-femur", "-tibia" };
+  for (const auto& leg : kAllLegServoIds) {
+    int jointNameIndex = 0;
+    for (const int servoId : leg) {
+      const std::string legName = legNameForServo(servoId);
+      std::string jointName = "dr_qp/" + legName + kJointNames[jointNameIndex];
+      std::replace(jointName.begin(), jointName.end(), '-', '_');
+
+      const bool isRight = std::find_end(legName.begin(), legName.end(), kRight.begin(), kRight.end()) != legName.end();
+      result[servoId] = {
+        jointName,
+        (isRight ? -1. : 1.) / 1023.
+      };
+      ++jointNameIndex;
+    }
+  }
+  return result;
+}();
 
 class JointStateNode : public rclcpp::Node
 {
@@ -40,11 +72,6 @@ public:
     joint_states_publisher_ =
       this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
 
-    static const std::unordered_map<uint8_t, const std::string> mapping = {
-      {1, "dr_qp/left_front_coxa"},
-      {3, "dr_qp/left_front_femur"},
-      {5, "dr_qp/left_front_tibia"},
-    };
 
     multiSyncPoseSubscription_ =
       this->create_subscription<drqp_interfaces::msg::MultiSyncPositionCommand>(
@@ -55,19 +82,20 @@ public:
 
             for (size_t index = 0; index < msg.positions.size(); ++index) {
               auto pos = msg.positions.at(index);
-              if (mapping.count(pos.id) == 0)
+              if (kServoIdToJoint.count(pos.id) == 0)
               {
                 continue;
               }
 
-              const double positionAsRatio = pos.position / 1023.;
+              const Params params = kServoIdToJoint.at(pos.id);
+              const double positionAsRatio = pos.position * params.ratio;
               // Position => Radians
               // 0 => -Pi
               // 512 => 0
               // 1023 => Pi
               const double positionInRadians = positionAsRatio * (2 * 3.14) - 3.14;
 
-              names.push_back(mapping.at(pos.id));
+              names.push_back(params.name);
               positions.push_back(positionInRadians);
             }
 
