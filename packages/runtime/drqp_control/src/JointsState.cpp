@@ -18,16 +18,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <cstdint>
 #include <exception>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 
 #include <drqp_interfaces/msg/sync_position_command.hpp>
 #include <drqp_interfaces/msg/multi_sync_position_command.hpp>
-
 
 class JointStateNode : public rclcpp::Node
 {
@@ -39,21 +40,46 @@ public:
     joint_states_publisher_ =
       this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
 
+    static const std::unordered_map<uint8_t, const std::string> mapping = {
+      {1, "dr_qp/left_front_coxa"},
+      {3, "dr_qp/left_front_femur"},
+      {5, "dr_qp/left_front_tibia"},
+    };
+
     multiSyncPoseSubscription_ =
       this->create_subscription<drqp_interfaces::msg::MultiSyncPositionCommand>(
         "pose", 10, [this](const drqp_interfaces::msg::MultiSyncPositionCommand& msg) {
           try {
+            std::vector<std::string> names;
+            std::vector<double> positions;
 
             for (size_t index = 0; index < msg.positions.size(); ++index) {
               auto pos = msg.positions.at(index);
-              // SJogData data{pos.position, SET_POSITION_CONTROL, pos.id};
+              if (mapping.count(pos.id) == 0)
+              {
+                continue;
+              }
 
+              const double positionAsRatio = pos.position / 1023.;
+              // Position => Radians
+              // 0 => -Pi
+              // 512 => 0
+              // 1023 => Pi
+              const double positionInRadians = positionAsRatio * (2 * 3.14) - 3.14;
+
+              names.push_back(mapping.at(pos.id));
+              positions.push_back(positionInRadians);
             }
 
+            sensor_msgs::msg::JointState msg;
+            msg.header.stamp = this->get_clock()->now();
+            msg.name = names;
+            msg.position = positions;
+            joint_states_publisher_->publish(msg);
           } catch (std::exception& e) {
-            RCLCPP_ERROR(get_logger(), "Exception occurred in pose_sync handler %s", e.what());
+            RCLCPP_ERROR(get_logger(), "Exception occurred in pose handler %s", e.what());
           } catch (...) {
-            RCLCPP_ERROR(get_logger(), "Unknown exception occurred in pose_sync handler.");
+            RCLCPP_ERROR(get_logger(), "Unknown exception occurred in pose handler.");
           }
         });
   }
