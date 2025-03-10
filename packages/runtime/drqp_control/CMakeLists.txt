@@ -23,6 +23,12 @@ add_executable(control src/Control.cpp)
 target_link_libraries(control drqp_control)
 ament_target_dependencies(control drqp_a1_16_driver)
 
+
+add_executable(joints_state src/JointsState.cpp)
+target_link_libraries(joints_state drqp_control)
+ament_target_dependencies(joints_state drqp_a1_16_driver)
+
+
 # Install headers
 install(DIRECTORY include/
   DESTINATION include/${PROJECT_NAME})
@@ -30,6 +36,7 @@ install(DIRECTORY include/
 # Install executables for `ros2 run`
 install(TARGETS
   control
+  joints_state
   DESTINATION lib/${PROJECT_NAME})
 
 # Install libraries
