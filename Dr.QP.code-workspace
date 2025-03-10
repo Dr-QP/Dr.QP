@@ -49,6 +49,7 @@
       "github.vscode-pull-request-github",
       "swyddfa.esbonio",
       "lextudio.restructuredtext",
+      "augment.vscode-augment",
     ]
   },
   "launch": {
