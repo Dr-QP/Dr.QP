@@ -54,6 +54,7 @@ class RobotBrain(rclpy.node.Node):
 
         self.current_frame = 0
         self.sequence = [
+            # All quadrants, 1/8 step
             (1, 0, 0),  # x, y, z
             (1, 1, 0),
             (0, 1, 0),
