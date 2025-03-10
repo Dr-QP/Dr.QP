@@ -19,6 +19,10 @@ add_custom_target(drqp_hexapod_js ALL
   VERBATIM
 )
 
+if (DRQP_SKIP_WEB)
+  set_target_properties(drqp_hexapod_js PROPERTIES EXCLUDE_FROM_ALL TRUE)
+endif()
+
 if(BUILD_TESTING)
   ament_package_xml()
   foreach(dep ${${PROJECT_NAME}_TEST_DEPENDS})
@@ -39,6 +43,10 @@ if(BUILD_TESTING)
   # ament_xmllint(EXCLUDE ${NODE_MODULES})
 
   function(add_yarn_jest_test TARGET)
+    if (DRQP_SKIP_WEB)
+      return()
+    endif()
+
     cmake_parse_arguments(ARG
       ""
       "RUN_CMD;RESULT_FILE;OUTPUT_FILE;WORKING_DIRECTORY"
