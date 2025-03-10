@@ -52,17 +52,23 @@ class RobotBrain(rclpy.node.Node):
         self.beta = 0
         self.gamma = 0
 
+        # TODO (anton-matosov): Use robot description and TF to get these values instead of using hard coded values
+        self.coxa = 0.053
+        self.femur = 0.066225
+        self.tibia = 0.120531
+
         self.current_frame = 0
         self.sequence = [
             # All quadrants, 1/8 step
-            (1, 0, 0),  # x, y, z
-            (1, 1, 0),
-            (0, 1, 0),
-            (-1, 1, 0),
-            (-1, 0, 0),
-            (-1, -1, 0),
-            (0, -1, 0),
-            (1, -1, 0),
+            # x, y, z
+            (1, 0, 0, "forward"),
+            (1, 1, 0, "forward-left"),
+            (0, 1, 0, "left"),
+            (-1, 1, 0, "backward-left"),
+            (-1, 0, 0, "backward"),
+            (-1, -1, 0, "backward-right"),
+            (0, -1, 0, "right"),
+            (1, -1, 0, "forward-right"),
         ]
 
     def on_timer(self):
@@ -74,16 +80,40 @@ class RobotBrain(rclpy.node.Node):
         self.solve_for(*self.frame)
         self.publish()
 
-    def solve_for(self, x, y, z):
-        print(f"Solving for {x=}, {y=}, {z=}")
+    def solve_for(self, x, y, z, pose_name):
+        print(f"Solving for {x=}, {y=}, {z=}, pose: {pose_name}")
 
+        # ROS is using right hand side coordinates system
+        #
+        # X - forward
+        # Y - left
+        # Z - up
+        #
+        # (x=1, y=0, z=0) - is Forward
+
+        #  (view from the top)
+        #                      ^
+        #            + (x, y) /|\
+        #             \        |
+        #              \       |
+        #               *      |
+        #                \     |
+        #                 \    |
+        #                  *   |
+        #                   \  |
+        #                    \ |
+        #             gamma ( \| X
+        #   <------------------+
+        #                  Y    0
+        #
         self.gamma = math.atan2(y, x)
-        print(f"Solved {self.alpha=} {self.beta=}, {self.gamma=}")
+
+        print(f"Solved {self.alpha=} {self.beta=}, {self.gamma=}, pose: {pose_name}")
 
     def publish(self):
         msg = sensor_msgs.msg.JointState()
         msg.header.stamp = self.get_clock().now().to_msg()
-        leg = "dr_qp/middle_right_"
+        leg = "dr_qp/front_left_"
         msg.name = [
             leg + "coxa",
             leg + "femur",
