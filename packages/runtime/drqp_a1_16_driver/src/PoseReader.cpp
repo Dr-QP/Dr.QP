@@ -50,7 +50,7 @@ public:
     declare_parameter("last_id", 18);
     declare_parameter("period_ms", 500);
 
-    subscription_ =
+    publisher_ =
       this->create_publisher<drqp_interfaces::msg::MultiSyncPositionCommand>("pose", 10);
 
     auto timerPeriod = std::chrono::milliseconds(get_parameter("period_ms").as_int());
@@ -77,7 +77,7 @@ public:
           pos.position = status.position;
           pose.positions.push_back(pos);
         }
-        subscription_->publish(pose);
+        publisher_->publish(pose);
       } catch (std::exception& e) {
         RCLCPP_ERROR(get_logger(), "Exception occurred in pose read handler %s", e.what());
       } catch (...) {
@@ -87,7 +87,7 @@ public:
   }
 
   rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Publisher<drqp_interfaces::msg::MultiSyncPositionCommand>::SharedPtr subscription_;
+  rclcpp::Publisher<drqp_interfaces::msg::MultiSyncPositionCommand>::SharedPtr publisher_;
 };
 
 int main(int argc, char* argv[])
