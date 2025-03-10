@@ -28,7 +28,11 @@ import sys
 import rclpy
 import rclpy.node
 
+import sensor_msgs.msg
 import drqp_interfaces.msg
+
+# based on https://oscarliang.com/inverse-kinematics-and-trigonometry-basics/
+
 
 class RobotBrain(rclpy.node.Node):
 
@@ -36,9 +40,12 @@ class RobotBrain(rclpy.node.Node):
         return self.get_parameter(name).value
 
     def __init__(self):
-        super().__init__('drqp_brain')
+        super().__init__("drqp_brain")
 
-        self.pose_async_publisher = self.create_publisher(drqp_interfaces.msg.MultiAsyncPositionCommand, '/pose_async', qos_profile=10)
+        self.pose_async_publisher = self.create_publisher(
+            drqp_interfaces.msg.MultiAsyncPositionCommand, "/pose_async", qos_profile=10)
+        self.joint_state_pub = self.create_publisher(
+            sensor_msgs.msg.JointState, "/joint_states", qos_profile=10)
         self.timer = self.create_timer(1, self.on_timer)
 
         self.alpha = 0
@@ -47,7 +54,14 @@ class RobotBrain(rclpy.node.Node):
 
         self.current_frame = 0
         self.sequence = [
-            (0, 0, 0), # x, y, z
+            (1, 0, 0),  # x, y, z
+            (1, 1, 0),
+            (0, 1, 0),
+            (-1, 1, 0),
+            (-1, 0, 0),
+            (-1, -1, 0),
+            (0, -1, 0),
+            (1, -1, 0),
         ]
 
     def on_timer(self):
@@ -57,9 +71,30 @@ class RobotBrain(rclpy.node.Node):
             self.current_frame = 0
 
         self.solve_for(*self.frame)
+        self.publish()
 
     def solve_for(self, x, y, z):
-        print(f"Solving for {x}, {y}, {z}")
+        print(f"Solving for {x=}, {y=}, {z=}")
+
+        self.gamma = math.atan2(y, x)
+        print(f"Solved {self.alpha=} {self.beta=}, {self.gamma=}")
+
+    def publish(self):
+        msg = sensor_msgs.msg.JointState()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        leg = "dr_qp/middle_right_"
+        msg.name = [
+            leg + "coxa",
+            leg + "femur",
+            leg + "tibia",
+        ]
+        msg.position = [
+            self.gamma,
+            self.beta,
+            self.alpha
+        ]
+        self.joint_state_pub.publish(msg)
+
 
 def main():
     # Initialize rclpy with the command-line arguments
