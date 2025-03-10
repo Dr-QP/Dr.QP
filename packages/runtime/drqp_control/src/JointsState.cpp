@@ -43,13 +43,12 @@ static const auto kServoIdToJoint = []() {
   std::unordered_map<uint8_t, Params> result;
 
   const std::string kRight = "right";
-  const std::array<const char*, kServosPerLeg> kJointNames = {"-coxa", "-femur", "-tibia"};
+  const std::array<const char*, kServosPerLeg> kJointNames = {"_coxa", "_femur", "_tibia"};
   for (const auto& leg : kAllLegServoIds) {
     int jointNameIndex = 0;
     for (const int servoId : leg) {
       const std::string legName = legNameForServo(servoId);
       std::string jointName = "dr_qp/" + legName + kJointNames[jointNameIndex];
-      std::replace(jointName.begin(), jointName.end(), '-', '_');
 
       const bool isRight =
         std::find_end(legName.begin(), legName.end(), kRight.begin(), kRight.end()) !=
