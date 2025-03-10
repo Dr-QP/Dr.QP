@@ -137,7 +137,8 @@
           " -GNinja",
           " -DCMAKE_BUILD_TYPE=Debug",
           " -DDRQP_ENABLE_COVERAGE=ON",
-
+          " -DDRQP_SKIP_WEB=ON",
+          " --no-warn-unused-cli",
           // " --debugger",
           // " --debugger-pipe=/tmp/drqp_serial"
         ],
