@@ -66,8 +66,6 @@ class JointStateNode : public rclcpp::Node
 public:
   JointStateNode() : Node("drqp_joint_state")
   {
-    // declare_parameter("period_ms", 500);
-
     joint_states_publisher_ =
       this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
 
