@@ -25,18 +25,22 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
 def generate_launch_description():
-    hexapod_js_dir = get_package_share_path('drqp_hexapod_js')
-    a1_16_driver_dir = get_package_share_path('drqp_a1_16_driver')
+    pkg_launch_path = get_package_share_path('drqp_description') / 'launch'
 
     return LaunchDescription([
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                str(hexapod_js_dir / 'launch' / 'web.launch.py')
+                str(pkg_launch_path / 'rsp.launch.py')
             )
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                str(a1_16_driver_dir / 'launch' / 'pose_setter.launch.py')
+                str(pkg_launch_path / 'jsp.launch.py')
+            )
+        ),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                str(pkg_launch_path / 'rviz.launch.py')
             )
         )
     ])

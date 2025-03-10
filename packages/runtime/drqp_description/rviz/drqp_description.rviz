@@ -8,7 +8,7 @@ Panels:
         - /TF1
         - /TF1/Frames1
       Splitter Ratio: 0.6455398797988892
-    Tree Height: 807
+    Tree Height: 555
   - Class: rviz_common/Views
     Expanded:
       - /Current View1
@@ -330,6 +330,13 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        world:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+      Mass Properties:
+        Inertia: false
+        Mass: false
       Name: RobotModel
       TF Prefix: ""
       Update Interval: 0
@@ -337,6 +344,8 @@ Visualization Manager:
       Visual Enabled: true
     - Class: rviz_default_plugins/TF
       Enabled: true
+      Filter (blacklist): ""
+      Filter (whitelist): ""
       Frame Timeout: 15
       Frames:
         All Enabled: true
@@ -454,82 +463,85 @@ Visualization Manager:
           Value: true
         dr_qp/right_middle_tibia_servo:
           Value: true
+        world:
+          Value: true
       Marker Scale: 0.20000000298023224
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: false
       Tree:
-        dr_qp/base_link:
-          dr_qp/base_center_link:
-            dr_qp/camera:
-              {}
-            dr_qp/left_back_coxa_servo:
-              dr_qp/left_back_coxa_f2_link_1:
-                dr_qp/left_back_coxa_f2_link_2:
-                  dr_qp/left_back_femur_servo:
-                    dr_qp/left_back_femur_link_f3:
-                      dr_qp/left_back_femur_link_f1:
-                        dr_qp/left_back_tibia_servo:
-                          dr_qp/left_back_tibia_leg:
-                            dr_qp/left_back_foot_link:
-                              {}
-            dr_qp/left_front_coxa_servo:
-              dr_qp/left_front_coxa_f2_link_1:
-                dr_qp/left_front_coxa_f2_link_2:
-                  dr_qp/left_front_femur_servo:
-                    dr_qp/left_front_femur_link_f3:
-                      dr_qp/left_front_femur_link_f1:
-                        dr_qp/left_front_tibia_servo:
-                          dr_qp/left_front_tibia_leg:
-                            dr_qp/left_front_foot_link:
-                              {}
-            dr_qp/left_middle_coxa_servo:
-              dr_qp/left_middle_coxa_f2_link_1:
-                dr_qp/left_middle_coxa_f2_link_2:
-                  dr_qp/left_middle_femur_servo:
-                    dr_qp/left_middle_femur_link_f3:
-                      dr_qp/left_middle_femur_link_f1:
-                        dr_qp/left_middle_tibia_servo:
-                          dr_qp/left_middle_tibia_leg:
-                            dr_qp/left_middle_foot_link:
-                              {}
-            dr_qp/right_back_coxa_servo:
-              dr_qp/right_back_coxa_f2_link_1:
-                dr_qp/right_back_coxa_f2_link_2:
-                  dr_qp/right_back_femur_servo:
-                    dr_qp/right_back_femur_link_f3:
-                      dr_qp/right_back_femur_link_f1:
-                        dr_qp/right_back_tibia_servo:
-                          dr_qp/right_back_tibia_leg:
-                            dr_qp/right_back_foot_link:
-                              {}
-            dr_qp/right_front_coxa_servo:
-              dr_qp/right_front_coxa_f2_link_1:
-                dr_qp/right_front_coxa_f2_link_2:
-                  dr_qp/right_front_femur_servo:
-                    dr_qp/right_front_femur_link_f3:
-                      dr_qp/right_front_femur_link_f1:
-                        dr_qp/right_front_tibia_servo:
-                          dr_qp/right_front_tibia_leg:
-                            dr_qp/right_front_foot_link:
-                              {}
-            dr_qp/right_middle_coxa_servo:
-              dr_qp/right_middle_coxa_f2_link_1:
-                dr_qp/right_middle_coxa_f2_link_2:
-                  dr_qp/right_middle_femur_servo:
-                    dr_qp/right_middle_femur_link_f3:
-                      dr_qp/right_middle_femur_link_f1:
-                        dr_qp/right_middle_tibia_servo:
-                          dr_qp/right_middle_tibia_leg:
-                            dr_qp/right_middle_foot_link:
-                              {}
+        world:
+          dr_qp/base_link:
+            dr_qp/base_center_link:
+              dr_qp/camera:
+                {}
+              dr_qp/left_back_coxa_servo:
+                dr_qp/left_back_coxa_f2_link_1:
+                  dr_qp/left_back_coxa_f2_link_2:
+                    dr_qp/left_back_femur_servo:
+                      dr_qp/left_back_femur_link_f3:
+                        dr_qp/left_back_femur_link_f1:
+                          dr_qp/left_back_tibia_servo:
+                            dr_qp/left_back_tibia_leg:
+                              dr_qp/left_back_foot_link:
+                                {}
+              dr_qp/left_front_coxa_servo:
+                dr_qp/left_front_coxa_f2_link_1:
+                  dr_qp/left_front_coxa_f2_link_2:
+                    dr_qp/left_front_femur_servo:
+                      dr_qp/left_front_femur_link_f3:
+                        dr_qp/left_front_femur_link_f1:
+                          dr_qp/left_front_tibia_servo:
+                            dr_qp/left_front_tibia_leg:
+                              dr_qp/left_front_foot_link:
+                                {}
+              dr_qp/left_middle_coxa_servo:
+                dr_qp/left_middle_coxa_f2_link_1:
+                  dr_qp/left_middle_coxa_f2_link_2:
+                    dr_qp/left_middle_femur_servo:
+                      dr_qp/left_middle_femur_link_f3:
+                        dr_qp/left_middle_femur_link_f1:
+                          dr_qp/left_middle_tibia_servo:
+                            dr_qp/left_middle_tibia_leg:
+                              dr_qp/left_middle_foot_link:
+                                {}
+              dr_qp/right_back_coxa_servo:
+                dr_qp/right_back_coxa_f2_link_1:
+                  dr_qp/right_back_coxa_f2_link_2:
+                    dr_qp/right_back_femur_servo:
+                      dr_qp/right_back_femur_link_f3:
+                        dr_qp/right_back_femur_link_f1:
+                          dr_qp/right_back_tibia_servo:
+                            dr_qp/right_back_tibia_leg:
+                              dr_qp/right_back_foot_link:
+                                {}
+              dr_qp/right_front_coxa_servo:
+                dr_qp/right_front_coxa_f2_link_1:
+                  dr_qp/right_front_coxa_f2_link_2:
+                    dr_qp/right_front_femur_servo:
+                      dr_qp/right_front_femur_link_f3:
+                        dr_qp/right_front_femur_link_f1:
+                          dr_qp/right_front_tibia_servo:
+                            dr_qp/right_front_tibia_leg:
+                              dr_qp/right_front_foot_link:
+                                {}
+              dr_qp/right_middle_coxa_servo:
+                dr_qp/right_middle_coxa_f2_link_1:
+                  dr_qp/right_middle_coxa_f2_link_2:
+                    dr_qp/right_middle_femur_servo:
+                      dr_qp/right_middle_femur_link_f3:
+                        dr_qp/right_middle_femur_link_f1:
+                          dr_qp/right_middle_tibia_servo:
+                            dr_qp/right_middle_tibia_leg:
+                              dr_qp/right_middle_foot_link:
+                                {}
       Update Interval: 0
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: dr_qp/base_link
+    Fixed Frame: world
     Frame Rate: 30
   Name: root
   Tools:
@@ -564,12 +576,12 @@ Visualization Manager:
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1953
+  Height: 1384
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd0000000100000000000001f700000705fc0200000002fb000000100044006900730070006c006100790073010000006e0000041f0000018200fffffffb0000000a005600690065007700730100000499000002da0000013200ffffff00000c6b0000070500000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000100000000000001f700000518fc0200000002fb000000100044006900730070006c006100790073010000002900000302000000fd01000003fb0000000a00560069006500770073010000032c00000215000000d30100000300000c760000051800000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
   Width: 3694
-  X: 144
-  Y: 54
+  X: 140
+  Y: 24

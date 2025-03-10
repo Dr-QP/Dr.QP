@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-    
+
   <xacro:include filename="$(find drqp_description)/urdf/inertial_macros.xacro"/>
   <xacro:macro name="inertial_stub" params="">
     <xacro:property name="tiny_value" value="0.01"/>
@@ -19,7 +19,7 @@
   <gazebo reference='${robot_name}/${prefix}_coxa_servo'>
     <preserveFixedJoint>true</preserveFixedJoint>
   </gazebo>
-  
+
   <link name="${robot_name}/${prefix}_coxa_servo">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 ${-pi/2}" />
@@ -80,8 +80,8 @@
   <gazebo reference='${robot_name}/${prefix}_coxa_inner'>
     <preserveFixedJoint>true</preserveFixedJoint>
   </gazebo>
-  
-  
+
+
   <link name="${robot_name}/${prefix}_coxa_f2_link_2">
     <visual>
       <origin rpy="0 ${pi/2} ${-pi/2}" xyz="0 0 0"/>
@@ -118,7 +118,7 @@
     <visual>
       <origin rpy="0 ${pi/2} ${pi/2}" xyz="0 0 0" />
       <geometry>
-        <!-- 
+        <!--
           Origin is at the actuator center
           36mm - distance from actuator center to the center of the holes on the back
          -->
@@ -138,7 +138,7 @@
       <inertia ixx="0.0000215400" iyy="0.00002657000" izz="0.00002925000" ixy="-0.00000000122" ixz="-0.00000192741" iyz="-0.00000000001" />
     </inertial>
   </link>
-  
+
   <joint name="${robot_name}/${prefix}_femur_inner_1" type="fixed">
     <origin rpy="0 0 0" xyz="${0.036 + 0.0055} 0 0"/>
     <parent link="${robot_name}/${prefix}_femur_servo"/>
@@ -152,7 +152,7 @@
     <visual>
       <origin rpy="0 ${pi/2} ${pi/2}" xyz="0 0 0"/>
       <geometry>
-        <!-- 
+        <!--
           Origin is at the center of the flat plane
           5.5mm - distance from origin to center of the side mounting holes
          -->
@@ -168,7 +168,7 @@
     </collision>
     <xacro:inertial_stub />
   </link>
-  
+
   <joint name="${robot_name}/${prefix}_femur_inner_2" type="fixed">
     <origin rpy="0 0 0" xyz="0.023 0 -0.015"/>
     <parent link="${robot_name}/${prefix}_femur_link_f3"/>
@@ -182,7 +182,7 @@
     <visual>
       <origin rpy="${pi} ${-pi/2} ${pi/2}" xyz="0 0 0"/>
       <geometry>
-        <!-- 
+        <!--
           Origin is at the servo mount/pivot
           15.0mm - distance from origin to the center mount holes on the mount plane - x axis
           23.0mm - distance from origin to mount plane - y axis
@@ -202,7 +202,7 @@
 
   <joint name="${robot_name}/${prefix}_tibia" type="revolute">
     <axis xyz="0 1 0"/>
-    <limit effort="3" lower="${radians(-125)}" upper="${radians(80)}" velocity="${pi}"/>
+    <limit effort="3" lower="${radians(-80)}" upper="${radians(110)}" velocity="${pi}"/>
     <origin rpy="0 0 0" xyz="0 0 0"/>
     <parent link="${robot_name}/${prefix}_femur_link_f1"/>
     <child link="${robot_name}/${prefix}_tibia_servo"/>
@@ -249,7 +249,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <!-- 
+        <!--
           Origin is at end servo attachment, 32.5 between servo pivot and this point
          -->
         <mesh filename="package://drqp_description/meshes/Tibia.stl" />

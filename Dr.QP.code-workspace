@@ -241,12 +241,12 @@
     "ros.distro": "jazzy",
     "ament-task-provider.envSetup": "source /opt/ros/jazzy/setup.bash",
     "python.autoComplete.extraPaths": [
-      "/opt/ros/jazzy/lib/python3.11/site-packages",
-      "/opt/ros/jazzy/local/lib/python3.11/dist-packages"
+      "/opt/ros/jazzy/lib/python3.12/site-packages",
+      "/opt/ros/jazzy/local/lib/python3.12/dist-packages"
     ],
     "python.analysis.extraPaths": [
-      "/opt/ros/jazzy/lib/python3.11/site-packages",
-      "/opt/ros/jazzy/local/lib/python3.11/dist-packages"
+      "/opt/ros/jazzy/lib/python3.12/site-packages",
+      "/opt/ros/jazzy/local/lib/python3.12/dist-packages"
     ],
     "search.exclude": {
       "**/node_modules": true,
@@ -270,6 +270,7 @@
     "coverage-gutters.showLineCoverage": true,
     "coverage-gutters.highlightdark": "rgba(0, 122, 30, 0.1)",
     "coverage-gutters.partialHighlightDark": "rgba(163, 149, 0, 0.1)",
-    "coverage-gutters.noHighlightDark": "rgba(163, 0, 0, 0.1)"
+    "coverage-gutters.noHighlightDark": "rgba(163, 0, 0, 0.1)",
+    "esbonio.server.enabled": false
   },
 }

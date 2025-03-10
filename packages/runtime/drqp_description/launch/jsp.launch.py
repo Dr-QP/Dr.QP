@@ -18,25 +18,36 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.actions import DeclareLaunchArgument
+from launch.conditions import IfCondition, UnlessCondition
+from launch.substitutions import LaunchConfiguration
+
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    hexapod_js_dir = get_package_share_path('drqp_hexapod_js')
-    a1_16_driver_dir = get_package_share_path('drqp_a1_16_driver')
+    gui = LaunchConfiguration('gui')
+
+    # Depending on gui parameter, either launch joint_state_publisher or joint_state_publisher_gui
+    joint_state_publisher_node = Node(
+        package='joint_state_publisher',
+        executable='joint_state_publisher',
+        condition=UnlessCondition(gui)
+    )
+
+    joint_state_publisher_gui_node = Node(
+        package='joint_state_publisher_gui',
+        executable='joint_state_publisher_gui',
+        condition=IfCondition(gui)
+    )
 
     return LaunchDescription([
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                str(hexapod_js_dir / 'launch' / 'web.launch.py')
-            )
-        ),
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                str(a1_16_driver_dir / 'launch' / 'pose_setter.launch.py')
-            )
-        )
+        DeclareLaunchArgument(name='gui',
+                              default_value='true',
+                              choices=['true', 'false'],
+                              description='Enable joint_state_publisher_gui'),
+
+        joint_state_publisher_node,
+        joint_state_publisher_gui_node,
     ])
