@@ -93,7 +93,7 @@ class RobotBrain(rclpy.node.Node):
 
         #  (view from the top)
         #                      ^
-        #            + (x, y) /|\
+        #            @ (x, y) /|\
         #             \        |
         #              \       |
         #               *      |
@@ -108,6 +108,33 @@ class RobotBrain(rclpy.node.Node):
         #
         self.gamma = math.atan2(y, x)
 
+        # <img src=https://oscarliang.com/wp-content/uploads/2012/01/2-IK-side1.jpg />
+        #  (view from the side)
+        #                             ^
+        #                            /|\
+        #                             |
+        #                             |    a - alpha
+        #             *\ Femur        |    b - betta
+        #            / b\             |
+        #           /    \     Coxa   |
+        #    Tibia /   a1(*-----------|
+        #         /  L _/(|        ^  |
+        #        /  _/  a2|   Zoff |  |
+        # (y, z)/_/       |        V  | Z
+        #   <--@----------------------+
+        #      |                 Y    0
+        #      |<-------- L1 -------->|
+        L1 = y
+        L = math.sqrt(z ** 2 + (L1 - self.coxa) ** 2)
+        alpha1_acos_input = z / L
+        alpha1 = math.acos(alpha1_acos_input)
+
+        alpha2_acos_input = (self.tibia ** 2 - self.femur ** 2 - L ** 2) / (-2 * self.femur * L)
+        alpha2 = math.acos(alpha2_acos_input)
+        self.alpha = alpha1 + alpha2
+
+        beta_acos_input = (L ** 2 - self.tibia ** 2 - self.femur ** 2) / (-2 * self.tibia * self.femur)
+        self.beta = math.acos(beta_acos_input)
         print(f"Solved {self.alpha=} {self.beta=}, {self.gamma=}, pose: {pose_name}")
 
     def publish(self):
