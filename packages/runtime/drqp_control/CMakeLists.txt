@@ -26,7 +26,7 @@ ament_target_dependencies(control drqp_a1_16_driver)
 
 add_executable(joints_state src/JointsState.cpp)
 target_link_libraries(joints_state drqp_control)
-ament_target_dependencies(joints_state drqp_a1_16_driver)
+ament_target_dependencies(joints_state ${${PROJECT_NAME}_BUILD_DEPENDS})
 
 
 # Install headers

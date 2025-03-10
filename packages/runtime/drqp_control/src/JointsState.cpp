@@ -28,7 +28,6 @@
 #include <drqp_interfaces/msg/sync_position_command.hpp>
 #include <drqp_interfaces/msg/multi_sync_position_command.hpp>
 
-using namespace std::chrono_literals;
 
 class JointStateNode : public rclcpp::Node
 {
