@@ -22,7 +22,7 @@
 import argparse
 import math
 import sys
-
+import numpy as np
 
 # ROS 2 imports
 import rclpy
@@ -50,7 +50,6 @@ class RobotBrain(rclpy.node.Node):
             drqp_interfaces.msg.MultiAsyncPositionCommand, "/pose_async", qos_profile=10)
         self.joint_state_pub = self.create_publisher(
             sensor_msgs.msg.JointState, "/joint_states", qos_profile=10)
-        self.timer = self.create_timer(1, self.on_timer)
 
         self.alpha = 0
         self.beta = 0
@@ -65,33 +64,67 @@ class RobotBrain(rclpy.node.Node):
         y = x
         z = -0.1
         self.current_frame = 0
-        self.sequence = [
+        sequence_z_down = [
+            # x, y, z
+            (x, 0.04, z, "forward-a-bit-left-z"),
+            (x, 0.04, z - 0.005, "forward-a-bit-left-z-0.005"),
+            (x, 0.04, z - 0.01, "forward-a-bit-left-z-0.01"),
+            (x, 0.04, z - 0.015, "forward-a-bit-left-z-0.015"),
+            (x, 0.04, z - 0.02, "forward-a-bit-left-z-0.02"),
+            (x, 0.04, z - 0.025, "forward-a-bit-left-z-0.025"),
+            (x, 0.04, z - 0.03, "forward-a-bit-left-z-0.03"),
+            (x, 0.04, z - 0.035, "forward-a-bit-left-z-0.035"),
+            (x, 0.04, z - 0.04, "forward-a-bit-left-z-0.04"),
+
+            # These values are technically not reachable, but algorithm doesn't blow up
+            (x, 0.04, z - 0.045, "forward-a-bit-left-z-0.045"),
+            (x, 0.04, z - 0.05, "forward-a-bit-left-z-0.05"),
+            (x, 0.04, z - 0.055, "forward-a-bit-left-z-0.055"),
+        ]
+
+        sequence_all_quadrants = [
             # All quadrants, 1/8 step
             # x, y, z
-            # (x, 0, z, "forward"),
-            (x, 0.02, z, "forward-a-bit-left"),
-            (x, 0.02, z - 0.005, "forward-a-bit-left"),
-            (x, 0.02, z - 0.01, "forward-a-bit-left"),
-            (x, 0.02, z - 0.015, "forward-a-bit-left"),
-            (x, 0.02, z - 0.02, "forward-a-bit-left"),
-            (x, 0.02, z - 0.025, "forward-a-bit-left"),
-            (x, 0.02, z - 0.03, "forward-a-bit-left"),
-            (x, 0.02, z - 0.035, "forward-a-bit-left"),
-            (x, 0.02, z - 0.04, "forward-a-bit-left"),
-            (x, 0.02, z - 0.045, "forward-a-bit-left"),
-            (x, 0.02, z - 0.05, "forward-a-bit-left"),
-            (x, 0.02, z - 0.055, "forward-a-bit-left"),
-            (x, 0.02, z - 0.06, "forward-a-bit-left"),
-            (x, 0.02, z - 0.065, "forward-a-bit-left"),
-            (x, 0.02, z - 0.07, "forward-a-bit-left"),
-            # (x, y, z, "forward-left"),
-            # (0, y, z, "left"),
-            # (-x, y, z, "backward-left"),
-            # (-x, 0, z, "backward"),
-            # (-x, -y, z, "backward-right"),
-            # (0, -y, z, "right"),
-            # (x, -y, z, "forward-right"),
+            (x, 0, z, "forward"),
+            (x, y, z, "forward-left"),
+            (0, y, z, "left"),
+            (-x, y, z, "backward-left"),
+            (-x, 0, z, "backward"),
+            (-x, -y, z, "backward-right"),
+            (0, -y, z, "right"),
+            (x, -y, z, "forward-right"),
         ]
+
+        x = 0.1
+        y = x
+        z = -0.05
+        scalar = 0.04
+        sequence_xy_little_circle = [
+            # x, y, z
+            (x + math.cos(i) * scalar, y + math.sin(i) * scalar, z, f"xy-circle step {i}") for i in np.linspace(0, np.pi * 2, 32)
+        ]
+
+        x = 0.1
+        y = x
+        z = -0.05 # Current algo has a limit of never going above 0 as it uses absolute value of z
+        scalar = 0.04
+        sequence_yz_little_circle = [
+            # x, y, z
+            (x, y + math.sin(i) * scalar, z + math.cos(i) * scalar, f"yz-circle step {i}") for i in np.linspace(0, np.pi * 2, 32)
+        ]
+
+        x = 0.1
+        y = x
+        z = -0.05
+        scalar = 0.04
+        sequence_xz_little_circle = [
+            # x, y, z
+            (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f"xz-circle step {i}") for i in np.linspace(0, np.pi * 2, 32)
+        ]
+
+
+
+        self.sequence = sequence_xy_little_circle
 
         self.current_test_frame = 0
         self.test_angles = [
@@ -106,6 +139,9 @@ class RobotBrain(rclpy.node.Node):
             (0, math.pi / 2, math.pi + math.pi / 8), # Straight leg out, Tibia a bit up + 1
             (0, math.pi / 2, math.pi + math.pi / 4), # Straight leg out, Tibia a bit up + 2
         ]
+
+
+        self.timer = self.create_timer(5 / len(self.sequence), self.on_timer)
 
     def on_timer(self):
         self.frame = self.sequence[self.current_frame]
