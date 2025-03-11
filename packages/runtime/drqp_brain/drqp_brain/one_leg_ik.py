@@ -90,6 +90,14 @@ class RobotBrain(rclpy.node.Node):
         self.test_angles = [
             # gamma, alpha, beta
             (0, math.pi / 2, math.pi), # Straight leg out
+            (0, math.pi / 2 + math.pi / 16, math.pi), # Straight leg out, femur a bit up
+            (0, math.pi / 2 + math.pi / 8, math.pi), # Straight leg out, femur a bit up + 1
+            (0, math.pi / 2 + math.pi / 4, math.pi), # Straight leg out, femur a bit up + 2
+
+            (0, math.pi / 2, math.pi), # Straight leg out
+            (0, math.pi / 2, math.pi + math.pi / 16), # Straight leg out, Tibia a bit up
+            (0, math.pi / 2, math.pi + math.pi / 8), # Straight leg out, Tibia a bit up + 1
+            (0, math.pi / 2, math.pi + math.pi / 4), # Straight leg out, Tibia a bit up + 2
         ]
 
     def on_timer(self):
