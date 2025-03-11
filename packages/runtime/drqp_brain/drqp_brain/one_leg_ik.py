@@ -114,8 +114,8 @@ class RobotBrain(rclpy.node.Node):
             (x, y + math.sin(i) * scalar, z + math.cos(i) * scalar, f"yz-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
         ]
 
-        x = 0.1
-        y = x
+        x = 0.14
+        y = 0.0
         z = -0.05
         scalar = 0.04
         sequence_xz_little_circle = [
@@ -125,7 +125,7 @@ class RobotBrain(rclpy.node.Node):
 
 
 
-        self.sequence = sequence_xy_little_circle
+        self.sequence = sequence_yz_little_circle
 
         self.current_test_frame = 0
         self.test_angles = [
