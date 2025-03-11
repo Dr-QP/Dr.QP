@@ -84,8 +84,8 @@ class RobotBrain(rclpy.node.Node):
 
         # TODO (anton-matosov): Use robot description and TF to get these values instead of using hard coded values
         self.coxa = 0.053
-        self.femur = 0.066
-        self.tibia = 0.121
+        self.femur = 0.066225
+        self.tibia = 0.123
 
         self.tf_broadcaster = TransformBroadcaster(self)
 
@@ -124,6 +124,19 @@ class RobotBrain(rclpy.node.Node):
             (x, -y, z, "forward-right"),
         ]
 
+        max_distance = self.coxa + self.femur + self.tibia - 0.01
+        sequence_only_forward = [
+            (max_distance, 0.0, 0.0, "forward"),
+        ]
+
+        sequence_only_left = [
+            (0.0, max_distance, 0.0, "forward"),
+        ]
+
+        sequence_only_down = [
+            (0.0, 0.0, -max_distance, "forward"),
+        ]
+
         steps = 64
         x = 0.14
         y = 0.0
@@ -152,7 +165,7 @@ class RobotBrain(rclpy.node.Node):
             (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f"xz-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
         ]
 
-        self.sequence = sequence_xy_little_circle
+        self.sequence = sequence_z_down
 
         self.current_test_frame = 0
         self.test_angles = [
@@ -168,9 +181,13 @@ class RobotBrain(rclpy.node.Node):
             (0, math.pi / 2, math.pi + math.pi / 4), # Straight leg out, Tibia a bit up + 2
         ]
 
-        self.test = False
+        self.test = True
+        self.test_angles = [
+            # gamma, alpha, beta
+            (0, math.pi / 2, math.pi), # Straight leg out
+        ]
 
-        cycle_time = 10 if self.test else 5
+        cycle_time = 1 if self.test else 5
         self.timer = self.create_timer(cycle_time / len(self.test_angles if self.test else self.sequence), self.on_timer)
 
     def on_timer(self):
@@ -178,14 +195,11 @@ class RobotBrain(rclpy.node.Node):
 
         if self.test:
             self.gamma, self.alpha, self.beta = self.test_angles[self.current_test_frame]
+            max_distance = self.coxa + self.femur + self.tibia
+            self.frame = (max_distance, 0.0, 0.0, "forward")
             solved = True
         else:
             solved, self.alpha, self.beta, self.gamma = self.solve_for(*self.frame)
-            # self.frame =0.14812521404429016, -0.02887872740850036, -0.05, "stub"
-            # self.alpha=2.544956494172032  + 0.25
-            # self.beta=1.6838700413875667  + 0.0
-            # self.gamma=-0.1925462752668692
-            # solved = True
 
         if solved:
             self.publish_joints()
@@ -285,9 +299,9 @@ class RobotBrain(rclpy.node.Node):
         ]
 
         # Joint offsets are only relevant here
-        kFemurOffsetAngle = -13
+        kFemurOffsetAngle = -13.11
         kFemurOffsetRad = kFemurOffsetAngle * math.pi / 180
-        kTibiaOffsetAngle = -33
+        kTibiaOffsetAngle = -32.9
         kTibiaOffsetRad = kTibiaOffsetAngle * math.pi / 180
 
         msg.position = [
@@ -328,17 +342,11 @@ class RobotBrain(rclpy.node.Node):
         femur_joint = TransformStamped()
         transforms.append(femur_joint)
 
-        # This is render of math model, it shouldn't do adjustments
-        kFemurOffsetAngle = 0
-        kFemurOffsetRad = kFemurOffsetAngle * math.pi / 180
-        kTibiaOffsetAngle = 0
-        kTibiaOffsetRad = kTibiaOffsetAngle * math.pi / 180
-
         femur_joint.header.stamp = self.get_clock().now().to_msg()
         femur_joint.header.frame_id = 'coxa_joint'
         femur_joint.child_frame_id = 'femur_joint'
         femur_joint.transform.translation.x = self.coxa
-        femur_joint.transform.rotation = quaternion_from_euler(0, math.pi / 2 -self.alpha + kFemurOffsetRad, 0)
+        femur_joint.transform.rotation = quaternion_from_euler(0, math.pi / 2 -self.alpha, 0)
 
 
         tibia_joint = TransformStamped()
@@ -348,7 +356,7 @@ class RobotBrain(rclpy.node.Node):
         tibia_joint.header.frame_id = 'femur_joint'
         tibia_joint.child_frame_id = 'tibia_joint'
         tibia_joint.transform.translation.x = self.femur
-        tibia_joint.transform.rotation = quaternion_from_euler(0, math.pi - self.beta + kTibiaOffsetRad, 0)
+        tibia_joint.transform.rotation = quaternion_from_euler(0, math.pi - self.beta, 0)
 
 
         leg_tip = TransformStamped()
