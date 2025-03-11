@@ -69,6 +69,12 @@ def safe_acos(num):
         num = 1.0
     return True, math.acos(num)
 
+
+# Joint offsets are only relevant here
+kFemurOffsetAngle = -13.11
+kFemurOffsetRad = kFemurOffsetAngle * math.pi / 180
+kTibiaOffsetAngle = -32.9
+kTibiaOffsetRad = kTibiaOffsetAngle * math.pi / 180
 class RobotBrain(rclpy.node.Node):
 
     def get_param(self, name):
@@ -142,10 +148,10 @@ class RobotBrain(rclpy.node.Node):
         ]
 
         steps = 64
-        x = 0.2
+        x = 0.15
         y = 0.0
-        z = 0.0
-        scalar = 0.03
+        z = -0.08
+        scalar = 0.05
         sequence_xy_little_circle = [
             # x, y, z
             (x + math.cos(i) * scalar, y + math.sin(i) * scalar, z, f"xy-circle step {i}") for i in np.linspace(np.pi, np.pi * 3, steps)
@@ -196,7 +202,7 @@ class RobotBrain(rclpy.node.Node):
             (0, math.pi / 2, math.pi), # Straight leg out
         ]
 
-        cycle_time = 10 if self.test else 5 * 6
+        cycle_time = 10 if self.test else 16
         self.timer = self.create_timer(cycle_time / len(self.test_angles if self.test else self.sequence), self.on_timer)
 
     def on_timer(self):
@@ -211,7 +217,8 @@ class RobotBrain(rclpy.node.Node):
             solved, self.alpha, self.beta, self.gamma = self.solve_for(*self.frame)
 
         if solved:
-            self.publish_joints()
+            # self.publish_jointsco()
+            self.publish_pose()
             pass
         self.broadcast_tf(self.frame)
 
@@ -307,18 +314,58 @@ class RobotBrain(rclpy.node.Node):
             leg + "tibia",
         ]
 
-        # Joint offsets are only relevant here
-        kFemurOffsetAngle = -13.11
-        kFemurOffsetRad = kFemurOffsetAngle * math.pi / 180
-        kTibiaOffsetAngle = -32.9
-        kTibiaOffsetRad = kTibiaOffsetAngle * math.pi / 180
-
         msg.position = [
             self.gamma,
             math.pi / 2 -self.alpha + kFemurOffsetRad,
             math.pi - self.beta + kTibiaOffsetRad,
         ]
         self.joint_state_pub.publish(msg)
+
+    def publish_pose(self):
+        msg = drqp_interfaces.msg.MultiAsyncPositionCommand()
+
+        def rad_to_pos(angle):
+            return int(angle * 1023 / (2 * math.pi)) + 512
+
+        final_gamma = self.gamma
+        final_alpha = math.pi / 2 -self.alpha + kFemurOffsetRad
+        final_beta = math.pi - self.beta + kTibiaOffsetRad
+
+        coxa_servo_pos = rad_to_pos(final_gamma)
+        femur_servo_pos = rad_to_pos(final_alpha)
+        tibia_servo_pos = rad_to_pos(math.pi - self.beta + kTibiaOffsetRad)
+
+        coxa_servo_pos_right = rad_to_pos(-final_gamma)
+        femur_servo_pos_right = rad_to_pos(-final_alpha)
+        tibia_servo_pos_right = rad_to_pos(-final_beta)
+
+        msg.positions = [
+            drqp_interfaces.msg.AsyncPositionCommand(id=1, position=coxa_servo_pos, playtime=10),
+            drqp_interfaces.msg.AsyncPositionCommand(id=3, position=femur_servo_pos, playtime=10),
+            drqp_interfaces.msg.AsyncPositionCommand(id=5, position=tibia_servo_pos, playtime=10),
+
+            drqp_interfaces.msg.AsyncPositionCommand(id=13, position=coxa_servo_pos, playtime=10),
+            drqp_interfaces.msg.AsyncPositionCommand(id=15, position=femur_servo_pos, playtime=10),
+            drqp_interfaces.msg.AsyncPositionCommand(id=17, position=tibia_servo_pos, playtime=10),
+
+            drqp_interfaces.msg.AsyncPositionCommand(id=7, position=coxa_servo_pos, playtime=10),
+            drqp_interfaces.msg.AsyncPositionCommand(id=9, position=femur_servo_pos, playtime=10),
+            drqp_interfaces.msg.AsyncPositionCommand(id=11, position=tibia_servo_pos, playtime=10),
+
+            drqp_interfaces.msg.AsyncPositionCommand(id=2, position=coxa_servo_pos_right, playtime=10),
+            drqp_interfaces.msg.AsyncPositionCommand(id=4, position=femur_servo_pos_right, playtime=10),
+            drqp_interfaces.msg.AsyncPositionCommand(id=6, position=tibia_servo_pos_right, playtime=10),
+
+            drqp_interfaces.msg.AsyncPositionCommand(id=14, position=coxa_servo_pos_right, playtime=10),
+            drqp_interfaces.msg.AsyncPositionCommand(id=16, position=femur_servo_pos_right, playtime=10),
+            drqp_interfaces.msg.AsyncPositionCommand(id=18, position=tibia_servo_pos_right, playtime=10),
+
+            drqp_interfaces.msg.AsyncPositionCommand(id=8, position=coxa_servo_pos_right, playtime=10),
+            drqp_interfaces.msg.AsyncPositionCommand(id=10, position=femur_servo_pos_right, playtime=10),
+            drqp_interfaces.msg.AsyncPositionCommand(id=12, position=tibia_servo_pos_right, playtime=10),
+        ]
+        self.pose_async_publisher.publish(msg)
+
 
     def broadcast_tf(self, frame):
         x, y, z, pose_name = frame
