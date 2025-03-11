@@ -105,7 +105,10 @@ sequence_all_quadrants = [
     (x, -y, z, 'forward-right'),
 ]
 
-max_leg_reach = self.coxa + self.femur + self.tibia
+coxa = 0.053
+femur = 0.066225
+tibia = 0.123
+max_leg_reach = coxa + femur + tibia
 sequence_only_forward = [
     (max_leg_reach, 0.0, 0.0, 'forward'),
 ]
@@ -115,7 +118,7 @@ sequence_only_left = [
 ]
 
 sequence_only_down = [
-    (0.0, 0.0, -(self.femur + self.tibia), 'down'),
+    (0.0, 0.0, -(femur + tibia), 'down'),
 ]
 
 steps = 64
@@ -217,9 +220,9 @@ class RobotBrain(rclpy.node.Node):
         self.gamma = 0
 
         # TODO (anton-matosov): Use robot description and TF to get these values instead of using hard coded values
-        self.coxa = 0.053
-        self.femur = 0.066225
-        self.tibia = 0.123
+        self.coxa = coxa
+        self.femur = femur
+        self.tibia = tibia
 
         self.tf_broadcaster = TransformBroadcaster(self)
 
@@ -367,30 +370,31 @@ class RobotBrain(rclpy.node.Node):
         femur_servo_pos_right = rad_to_pos(-final_alpha)
         tibia_servo_pos_right = rad_to_pos(-final_beta)
 
+        playtime = 0
         msg.positions = [
-            drqp_interfaces.msg.AsyncPositionCommand(id=1, position=coxa_servo_pos, playtime=10),
-            drqp_interfaces.msg.AsyncPositionCommand(id=3, position=femur_servo_pos, playtime=10),
-            drqp_interfaces.msg.AsyncPositionCommand(id=5, position=tibia_servo_pos, playtime=10),
+            drqp_interfaces.msg.AsyncPositionCommand(id=1, position=coxa_servo_pos, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(id=3, position=femur_servo_pos, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(id=5, position=tibia_servo_pos, playtime=playtime),
 
-            drqp_interfaces.msg.AsyncPositionCommand(id=13, position=coxa_servo_pos, playtime=10),
-            drqp_interfaces.msg.AsyncPositionCommand(id=15, position=femur_servo_pos, playtime=10),
-            drqp_interfaces.msg.AsyncPositionCommand(id=17, position=tibia_servo_pos, playtime=10),
+            drqp_interfaces.msg.AsyncPositionCommand(id=13, position=coxa_servo_pos, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(id=15, position=femur_servo_pos, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(id=17, position=tibia_servo_pos, playtime=playtime),
 
-            drqp_interfaces.msg.AsyncPositionCommand(id=7, position=coxa_servo_pos, playtime=10),
-            drqp_interfaces.msg.AsyncPositionCommand(id=9, position=femur_servo_pos, playtime=10),
-            drqp_interfaces.msg.AsyncPositionCommand(id=11, position=tibia_servo_pos, playtime=10),
+            drqp_interfaces.msg.AsyncPositionCommand(id=7, position=coxa_servo_pos, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(id=9, position=femur_servo_pos, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(id=11, position=tibia_servo_pos, playtime=playtime),
 
-            drqp_interfaces.msg.AsyncPositionCommand(id=2, position=coxa_servo_pos_right, playtime=10),
-            drqp_interfaces.msg.AsyncPositionCommand(id=4, position=femur_servo_pos_right, playtime=10),
-            drqp_interfaces.msg.AsyncPositionCommand(id=6, position=tibia_servo_pos_right, playtime=10),
+            drqp_interfaces.msg.AsyncPositionCommand(id=2, position=coxa_servo_pos_right, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(id=4, position=femur_servo_pos_right, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(id=6, position=tibia_servo_pos_right, playtime=playtime),
 
-            drqp_interfaces.msg.AsyncPositionCommand(id=14, position=coxa_servo_pos_right, playtime=10),
-            drqp_interfaces.msg.AsyncPositionCommand(id=16, position=femur_servo_pos_right, playtime=10),
-            drqp_interfaces.msg.AsyncPositionCommand(id=18, position=tibia_servo_pos_right, playtime=10),
+            drqp_interfaces.msg.AsyncPositionCommand(id=14, position=coxa_servo_pos_right, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(id=16, position=femur_servo_pos_right, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(id=18, position=tibia_servo_pos_right, playtime=playtime),
 
-            drqp_interfaces.msg.AsyncPositionCommand(id=8, position=coxa_servo_pos_right, playtime=10),
-            drqp_interfaces.msg.AsyncPositionCommand(id=10, position=femur_servo_pos_right, playtime=10),
-            drqp_interfaces.msg.AsyncPositionCommand(id=12, position=tibia_servo_pos_right, playtime=10),
+            drqp_interfaces.msg.AsyncPositionCommand(id=8, position=coxa_servo_pos_right, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(id=10, position=femur_servo_pos_right, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(id=12, position=tibia_servo_pos_right, playtime=playtime),
         ]
         self.pose_async_publisher.publish(msg)
 
@@ -466,10 +470,10 @@ def main():
     stripped_args = rclpy.utilities.remove_ros_args(args=sys.argv)
     parser = argparse.ArgumentParser()
     parser.add_argument('--test', action='store_true')
-    parser.add_argument('--cycle-time-seconds', type=float, default=2)
+    parser.add_argument('--cycle-time-seconds', type=float, default=8)
     parser.add_argument('--sequence', type=str, default='all_circles', choices=sequences.keys())
     parser.add_argument('--test-angles', type=str, default='straight_leg', choices=test_angles.keys())
-    parser.add_argument('--sequence-repeat', type=int, default=10)
+    parser.add_argument('--sequence-repeat', type=int, default=2)
 
     # Parse the remaining arguments, noting that the passed-in args must *not*
     # contain the name of the program.
