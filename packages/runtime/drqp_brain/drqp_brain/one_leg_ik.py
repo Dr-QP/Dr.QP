@@ -145,7 +145,7 @@ class RobotBrain(rclpy.node.Node):
         x = 0.14
         y = 0.0
         z = -0.1
-        scalar = 0.03
+        scalar = 0.05
         sequence_xy_little_circle = [
             # x, y, z
             (x + math.cos(i) * scalar, y + math.sin(i) * scalar, z, f"xy-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
