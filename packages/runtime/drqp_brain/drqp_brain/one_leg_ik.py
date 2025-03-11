@@ -144,26 +144,18 @@ class RobotBrain(rclpy.node.Node):
         steps = 64
         x = 0.14
         y = 0.0
-        z = -0.05
+        z = -0.1
         scalar = 0.03
         sequence_xy_little_circle = [
             # x, y, z
             (x + math.cos(i) * scalar, y + math.sin(i) * scalar, z, f"xy-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
         ]
 
-        x = 0.0
-        y = 0.1
-        z = -0.1 # Current algo has a limit of never going above 0 as it uses absolute value of z
-        scalar = 0.04
         sequence_yz_little_circle = [
             # x, y, z
             (x, y + math.sin(i) * scalar, z + math.cos(i) * scalar, f"yz-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
         ]
 
-        x = 0.14
-        y = 0.0
-        z = -0.05
-        scalar = 0.04
         sequence_xz_little_circle = [
             # x, y, z
             (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f"xz-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
