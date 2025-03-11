@@ -65,18 +65,18 @@ class RobotBrain(rclpy.node.Node):
 
         x = 0.07
         y = x
-        z = 0.16
+        z = -0.1
         self.current_frame = 0
         self.sequence = [
             # All quadrants, 1/8 step
             # x, y, z
             # (x, 0, z, "forward"),
             (x, 0.02, z, "forward-a-bit-left"),
-            (x, 0.02, z - 0.001, "forward-a-bit-left"),
-            (x, 0.02, z - 0.002, "forward-a-bit-left"),
-            (x, 0.02, z - 0.003, "forward-a-bit-left"),
-            (x, 0.02, z - 0.004, "forward-a-bit-left"),
             (x, 0.02, z - 0.005, "forward-a-bit-left"),
+            (x, 0.02, z - 0.01, "forward-a-bit-left"),
+            (x, 0.02, z - 0.015, "forward-a-bit-left"),
+            (x, 0.02, z - 0.02, "forward-a-bit-left"),
+            (x, 0.02, z - 0.025, "forward-a-bit-left"),
             # (x, y, z, "forward-left"),
             # (0, y, z, "left"),
             # (-x, y, z, "backward-left"),
@@ -165,9 +165,10 @@ class RobotBrain(rclpy.node.Node):
         #   <--@----------------------+
         #      |                      0
         #      |<-------- L1 -------->|
+        Z_offset = abs(z)
         L1 = math.sqrt(x ** 2 + y ** 2)
-        L = math.sqrt(z ** 2 + (L1 - self.coxa) ** 2)
-        alpha1_acos_input = z / L
+        L = math.sqrt(Z_offset ** 2 + (L1 - self.coxa) ** 2)
+        alpha1_acos_input = Z_offset / L
         alpha1 = safe_acos(alpha1_acos_input)
 
         alpha2_acos_input = (self.femur ** 2 + L ** 2 - self.tibia ** 2) / (2 * self.femur * L)
