@@ -448,6 +448,7 @@ def main():
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
+        # lgtm [py/empty-except]
         pass
 
     node.destroy_node()
