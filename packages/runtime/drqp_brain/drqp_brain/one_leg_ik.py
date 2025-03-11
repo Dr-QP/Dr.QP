@@ -169,7 +169,13 @@ class RobotBrain(rclpy.node.Node):
             (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f"xz-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
         ]
 
-        self.sequence = sequence_xy_little_circle
+        self.sequence = sequence_xy_little_circle \
+            + sequence_xy_little_circle \
+            + sequence_xz_little_circle \
+            + sequence_xz_little_circle \
+            + sequence_yz_little_circle \
+            + sequence_yz_little_circle
+
 
         self.current_test_frame = 0
         self.test_angles = [
@@ -191,7 +197,7 @@ class RobotBrain(rclpy.node.Node):
             (0, math.pi / 2, math.pi), # Straight leg out
         ]
 
-        cycle_time = 10 if self.test else 5
+        cycle_time = 10 if self.test else 5 * 6
         self.timer = self.create_timer(cycle_time / len(self.test_angles if self.test else self.sequence), self.on_timer)
 
     def on_timer(self):
