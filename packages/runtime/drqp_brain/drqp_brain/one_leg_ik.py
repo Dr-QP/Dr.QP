@@ -61,8 +61,12 @@ def quaternion_from_euler(ai, aj, ak):
 # based on https://oscarliang.com/inverse-kinematics-and-trigonometry-basics/
 
 def safe_acos(num):
-    if num < -1 or num > 1:
+    if num < -1.01 or num > 1.01:
         return False, 0
+    if num < -1.0:
+        num = -1.0
+    if num > 1.0:
+        num = 1.0
     return True, math.acos(num)
 
 class RobotBrain(rclpy.node.Node):
@@ -124,7 +128,7 @@ class RobotBrain(rclpy.node.Node):
             (x, -y, z, "forward-right"),
         ]
 
-        max_leg_reach = self.coxa + self.femur + self.tibia - 0.001
+        max_leg_reach = self.coxa + self.femur + self.tibia
         sequence_only_forward = [
             (max_leg_reach, 0.0, 0.0, "forward"),
         ]
@@ -134,7 +138,7 @@ class RobotBrain(rclpy.node.Node):
         ]
 
         sequence_only_down = [
-            (0.0, 0.0, -(self.femur + self.tibia - 0.001), "down"),
+            (0.0, 0.0, -(self.femur + self.tibia), "down"),
         ]
 
         steps = 64
@@ -278,7 +282,7 @@ class RobotBrain(rclpy.node.Node):
             print(f"Can't solve `alpha2` for {x=}, {y=}, {z=}, pose: {pose_name}")
             return False, 0, 0, 0
 
-        beta_acos_input = (self.tibia ** 2 - self.femur ** 2 - L ** 2) / (2 * self.tibia * self.femur)
+        beta_acos_input = (self.tibia ** 2 + self.femur ** 2 - L ** 2) / (2 * self.tibia * self.femur)
         solvable, self.beta = safe_acos(beta_acos_input)
 
         if not solvable:
