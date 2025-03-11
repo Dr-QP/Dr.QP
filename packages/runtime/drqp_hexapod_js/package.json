@@ -14,7 +14,7 @@
     "generate-ros-messages": "node_modules/.bin/generate-ros-messages"
   },
   "dependencies": {
-    "rclnodejs": "^0.32.0"
+    "rclnodejs": "^0.32.2"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
