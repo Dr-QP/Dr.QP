@@ -102,21 +102,24 @@ class RobotBrain(rclpy.node.Node):
 
     def on_timer(self):
         self.frame = self.sequence[self.current_frame]
-        # self.solve_for(*self.frame)
 
-        self.gamma, self.alpha, self.beta = self.test_angles[self.current_test_frame]
+        test = False
+        if test:
+            self.gamma, self.alpha, self.beta = self.test_angles[self.current_test_frame]
+        else:
+            self.solve_for(*self.frame)
+
         self.publish()
 
-        self.current_test_frame += 1
-        if self.current_test_frame >= len(self.test_angles):
-            self.current_test_frame = 0
-
-        self.current_frame += 1
-        if self.current_frame >= len(self.sequence):
-            self.current_frame = 0
-            # print("===========================   DONE   ===========================")
-            # self.timer.cancel()
-            # sys.exit(0)
+        if test:
+            self.current_test_frame += 1
+            if self.current_test_frame >= len(self.test_angles):
+                self.current_test_frame = 0
+        else
+            self.current_frame += 1
+            if self.current_frame >= len(self.sequence):
+                self.current_frame = 0
+                print("===========================   DONE   ===========================")
 
     def solve_for(self, x, y, z, pose_name):
         print(f"Solving for {x=}, {y=}, {z=}, pose: {pose_name}")
