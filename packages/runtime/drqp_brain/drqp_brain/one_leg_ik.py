@@ -81,12 +81,12 @@ class RobotBrain(rclpy.node.Node):
         return self.get_parameter(name).value
 
     def __init__(self):
-        super().__init__("drqp_brain")
+        super().__init__('drqp_brain')
 
         self.pose_async_publisher = self.create_publisher(
-            drqp_interfaces.msg.MultiAsyncPositionCommand, "/pose_async", qos_profile=10)
+            drqp_interfaces.msg.MultiAsyncPositionCommand, '/pose_async', qos_profile=10)
         self.joint_state_pub = self.create_publisher(
-            sensor_msgs.msg.JointState, "/joint_states", qos_profile=50)
+            sensor_msgs.msg.JointState, '/joint_states', qos_profile=50)
 
         self.alpha = 0
         self.beta = 0
@@ -105,46 +105,46 @@ class RobotBrain(rclpy.node.Node):
         self.current_frame = 0
         sequence_z_down = [
             # x, y, z
-            (x, y, z, "forward-a-bit-left-z"),
-            (x, y, z - 0.005, "forward-a-bit-left-z-0.005"),
-            (x, y, z - 0.01, "forward-a-bit-left-z-0.01"),
-            (x, y, z - 0.015, "forward-a-bit-left-z-0.015"),
-            (x, y, z - 0.02, "forward-a-bit-left-z-0.02"),
-            (x, y, z - 0.025, "forward-a-bit-left-z-0.025"),
-            (x, y, z - 0.03, "forward-a-bit-left-z-0.03"),
-            (x, y, z - 0.035, "forward-a-bit-left-z-0.035"),
-            (x, y, z - 0.04, "forward-a-bit-left-z-0.04"),
+            (x, y, z, 'forward-a-bit-left-z'),
+            (x, y, z - 0.005, 'forward-a-bit-left-z-0.005'),
+            (x, y, z - 0.01, 'forward-a-bit-left-z-0.01'),
+            (x, y, z - 0.015, 'forward-a-bit-left-z-0.015'),
+            (x, y, z - 0.02, 'forward-a-bit-left-z-0.02'),
+            (x, y, z - 0.025, 'forward-a-bit-left-z-0.025'),
+            (x, y, z - 0.03, 'forward-a-bit-left-z-0.03'),
+            (x, y, z - 0.035, 'forward-a-bit-left-z-0.035'),
+            (x, y, z - 0.04, 'forward-a-bit-left-z-0.04'),
 
             # These values are technically not reachable, but algorithm doesn't blow up
-            (x, y, z - 0.045, "forward-a-bit-left-z-0.045"),
-            (x, y, z - 0.05, "forward-a-bit-left-z-0.05"),
-            (x, y, z - 0.055, "forward-a-bit-left-z-0.055"),
+            (x, y, z - 0.045, 'forward-a-bit-left-z-0.045'),
+            (x, y, z - 0.05, 'forward-a-bit-left-z-0.05'),
+            (x, y, z - 0.055, 'forward-a-bit-left-z-0.055'),
         ]
 
         sequence_all_quadrants = [
             # All quadrants, 1/8 step
             # x, y, z
-            (x, 0, z, "forward"),
-            (x, y, z, "forward-left"),
-            (0, y, z, "left"),
-            (-x, y, z, "backward-left"),
-            (-x, 0, z, "backward"),
-            (-x, -y, z, "backward-right"),
-            (0, -y, z, "right"),
-            (x, -y, z, "forward-right"),
+            (x, 0, z, 'forward'),
+            (x, y, z, 'forward-left'),
+            (0, y, z, 'left'),
+            (-x, y, z, 'backward-left'),
+            (-x, 0, z, 'backward'),
+            (-x, -y, z, 'backward-right'),
+            (0, -y, z, 'right'),
+            (x, -y, z, 'forward-right'),
         ]
 
         max_leg_reach = self.coxa + self.femur + self.tibia
         sequence_only_forward = [
-            (max_leg_reach, 0.0, 0.0, "forward"),
+            (max_leg_reach, 0.0, 0.0, 'forward'),
         ]
 
         sequence_only_left = [
-            (0.0, max_leg_reach, 0.0, "left"),
+            (0.0, max_leg_reach, 0.0, 'left'),
         ]
 
         sequence_only_down = [
-            (0.0, 0.0, -(self.femur + self.tibia), "down"),
+            (0.0, 0.0, -(self.femur + self.tibia), 'down'),
         ]
 
         steps = 64
@@ -154,21 +154,21 @@ class RobotBrain(rclpy.node.Node):
         scalar = 0.05
         sequence_xy_little_circle = [
             # x, y, z
-            (x + math.cos(i) * scalar, y + math.sin(i) * scalar, z, f"xy-circle step {i}") for i in np.linspace(np.pi, np.pi * 3, steps)
+            (x + math.cos(i) * scalar, y + math.sin(i) * scalar, z, f'xy-circle step {i}') for i in np.linspace(np.pi, np.pi * 3, steps)
         ]
 
         sequence_xz_little_circle = [
             # x, y, z
-            (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f"xz-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
+            (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f'xz-circle step {i}') for i in np.linspace(0, np.pi * 2, steps)
         ]
         sequence_xz_little_circle_last_quarter = [
             # x, y, z
-            (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f"xz-circle step {i}") for i in np.linspace(np.pi * 1.5, np.pi * 2, int(steps / 4))
+            (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f'xz-circle step {i}') for i in np.linspace(np.pi * 1.5, np.pi * 2, int(steps / 4))
         ]
 
         sequence_yz_little_circle = [
             # x, y, z
-            (x, y + math.sin(i) * scalar, z + math.cos(i) * scalar, f"yz-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
+            (x, y + math.sin(i) * scalar, z + math.cos(i) * scalar, f'yz-circle step {i}') for i in np.linspace(0, np.pi * 2, steps)
         ]
 
 
@@ -211,7 +211,7 @@ class RobotBrain(rclpy.node.Node):
         if self.test:
             self.gamma, self.alpha, self.beta = self.test_angles[self.current_test_frame]
             max_distance = self.coxa + self.femur + self.tibia
-            self.frame = (max_distance, 0.0, 0.0, "forward")
+            self.frame = (max_distance, 0.0, 0.0, 'forward')
             solved = True
         else:
             solved, self.alpha, self.beta, self.gamma = self.solve_for(*self.frame)
@@ -230,10 +230,10 @@ class RobotBrain(rclpy.node.Node):
             self.current_frame += 1
             if self.current_frame >= len(self.sequence):
                 self.current_frame = 0
-                print("===========================   DONE   ===========================")
+                print('===========================   DONE   ===========================')
 
     def solve_for(self, x, y, z, pose_name):
-        # print(f"Solving for {x=}, {y=}, {z=}, pose: {pose_name}")
+        # print(f'Solving for {x=}, {y=}, {z=}, pose: {pose_name}')
 
         # ROS is using right hand side coordinates system
         #
@@ -283,7 +283,7 @@ class RobotBrain(rclpy.node.Node):
         solvable, alpha1 = safe_acos(alpha1_acos_input)
 
         if not solvable:
-            print(f"Can't solve `alpha1` for {x=}, {y=}, {z=}, pose: {pose_name}")
+            print(f'Can\'t solve `alpha1` for {x=}, {y=}, {z=}, pose: {pose_name}')
             return False, 0, 0, 0
 
         alpha2_acos_input = (self.femur ** 2 + L ** 2 - self.tibia ** 2) / (2 * self.femur * L)
@@ -291,27 +291,27 @@ class RobotBrain(rclpy.node.Node):
         self.alpha = alpha1 + alpha2
 
         if not solvable:
-            print(f"Can't solve `alpha2` for {x=}, {y=}, {z=}, pose: {pose_name}")
+            print(f'Can\'t solve `alpha2` for {x=}, {y=}, {z=}, pose: {pose_name}')
             return False, 0, 0, 0
 
         beta_acos_input = (self.tibia ** 2 + self.femur ** 2 - L ** 2) / (2 * self.tibia * self.femur)
         solvable, self.beta = safe_acos(beta_acos_input)
 
         if not solvable:
-            print(f"Can't solve `beta` for {x=}, {y=}, {z=}, pose: {pose_name}")
+            print(f'Can\'t solve `beta` for {x=}, {y=}, {z=}, pose: {pose_name}')
             return False, 0, 0, 0
 
-        print(f"Solved  for {x=}, {y=}, {z=}, {self.alpha=} {self.beta=}, {self.gamma=}, pose: {pose_name}")
+        print(f'Solved  for {x=}, {y=}, {z=}, {self.alpha=} {self.beta=}, {self.gamma=}, pose: {pose_name}')
         return True, self.alpha, self.beta, self.gamma
 
     def publish_joints(self):
         msg = sensor_msgs.msg.JointState()
         msg.header.stamp = self.get_clock().now().to_msg()
-        leg = "dr_qp/front_left_"
+        leg = 'dr_qp/front_left_'
         msg.name = [
-            leg + "coxa",
-            leg + "femur",
-            leg + "tibia",
+            leg + 'coxa',
+            leg + 'femur',
+            leg + 'tibia',
         ]
 
         msg.position = [
@@ -453,5 +453,5 @@ def main():
     node.destroy_node()
     rclpy.try_shutdown()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
