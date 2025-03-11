@@ -95,13 +95,14 @@ class RobotBrain(rclpy.node.Node):
             (x, -y, z, "forward-right"),
         ]
 
-        x = 0.1
-        y = x
+        steps = 64
+        x = 0.14
+        y = 0
         z = -0.05
-        scalar = 0.04
+        scalar = 0.03
         sequence_xy_little_circle = [
             # x, y, z
-            (x + math.cos(i) * scalar, y + math.sin(i) * scalar, z, f"xy-circle step {i}") for i in np.linspace(0, np.pi * 2, 32)
+            (x + math.cos(i) * scalar, y + math.sin(i) * scalar, z, f"xy-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
         ]
 
         x = 0.1
@@ -110,7 +111,7 @@ class RobotBrain(rclpy.node.Node):
         scalar = 0.04
         sequence_yz_little_circle = [
             # x, y, z
-            (x, y + math.sin(i) * scalar, z + math.cos(i) * scalar, f"yz-circle step {i}") for i in np.linspace(0, np.pi * 2, 32)
+            (x, y + math.sin(i) * scalar, z + math.cos(i) * scalar, f"yz-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
         ]
 
         x = 0.1
@@ -119,7 +120,7 @@ class RobotBrain(rclpy.node.Node):
         scalar = 0.04
         sequence_xz_little_circle = [
             # x, y, z
-            (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f"xz-circle step {i}") for i in np.linspace(0, np.pi * 2, 32)
+            (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f"xz-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
         ]
 
 
@@ -140,8 +141,8 @@ class RobotBrain(rclpy.node.Node):
             (0, math.pi / 2, math.pi + math.pi / 4), # Straight leg out, Tibia a bit up + 2
         ]
 
-
-        self.timer = self.create_timer(5 / len(self.sequence), self.on_timer)
+        cycle_time = 3
+        self.timer = self.create_timer(cycle_time / len(self.sequence), self.on_timer)
 
     def on_timer(self):
         self.frame = self.sequence[self.current_frame]
@@ -167,7 +168,7 @@ class RobotBrain(rclpy.node.Node):
                 print("===========================   DONE   ===========================")
 
     def solve_for(self, x, y, z, pose_name):
-        print(f"Solving for {x=}, {y=}, {z=}, pose: {pose_name}")
+        # print(f"Solving for {x=}, {y=}, {z=}, pose: {pose_name}")
 
         # ROS is using right hand side coordinates system
         #
@@ -235,7 +236,7 @@ class RobotBrain(rclpy.node.Node):
             print(f"Can't solve `beta` for {x=}, {y=}, {z=}, pose: {pose_name}")
             return False, 0, 0, 0
 
-        print(f"Solved {self.alpha=} {self.beta=}, {self.gamma=}, pose: {pose_name}\n")
+        print(f"Solved  for {x=}, {y=}, {z=}, {self.alpha=} {self.beta=}, {self.gamma=}, pose: {pose_name}")
         return True, self.alpha, self.beta, self.gamma
 
     def publish(self):
