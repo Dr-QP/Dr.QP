@@ -349,7 +349,7 @@ Visualization Manager:
       TF Prefix: ""
       Update Interval: 0
       Value: true
-      Visual Enabled: false
+      Visual Enabled: true
     - Class: rviz_default_plugins/TF
       Enabled: true
       Filter (blacklist): ""
@@ -476,7 +476,7 @@ Visualization Manager:
         femur_joint:
           Value: true
         front_left_target:
-          Value: false
+          Value: true
         leg_tip:
           Value: true
         tibia_joint:
@@ -578,25 +578,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 0.3464127779006958
+      Distance: 0.8170455098152161
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.14498987793922424
-        Y: 0.24332834780216217
-        Z: 0.12717212736606598
-      Focal Shape Fixed Size: true
+        X: 0.01761915534734726
+        Y: 0.054539721459150314
+        Z: 0.08488970249891281
+      Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -0.030201952904462814
+      Pitch: 0.7603983283042908
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz_default_plugins)
-      Yaw: 2.227336883544922
+      Yaw: 1.0154038667678833
     Saved: ~
 Window Geometry:
   Displays:
