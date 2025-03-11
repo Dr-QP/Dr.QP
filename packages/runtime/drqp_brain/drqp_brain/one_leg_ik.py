@@ -148,7 +148,16 @@ class RobotBrain(rclpy.node.Node):
         scalar = 0.03
         sequence_xy_little_circle = [
             # x, y, z
-            # (x + math.cos(i) * scalar, y + math.sin(i) * scalar, z, f"xy-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
+            (x + math.cos(i) * scalar, y + math.sin(i) * scalar, z, f"xy-circle step {i}") for i in np.linspace(np.pi, np.pi * 3, steps)
+        ]
+
+        sequence_xz_little_circle = [
+            # x, y, z
+            (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f"xz-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
+        ]
+        sequence_xz_little_circle_last_quarter = [
+            # x, y, z
+            (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f"xz-circle step {i}") for i in np.linspace(np.pi * 1.5, np.pi * 2, int(steps / 4))
         ]
 
         sequence_yz_little_circle = [
@@ -156,17 +165,15 @@ class RobotBrain(rclpy.node.Node):
             (x, y + math.sin(i) * scalar, z + math.cos(i) * scalar, f"yz-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
         ]
 
-        sequence_xz_little_circle = [
-            # x, y, z
-            (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f"xz-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
-        ]
 
         self.sequence = sequence_xy_little_circle \
             + sequence_xy_little_circle \
+            + sequence_xz_little_circle_last_quarter \
             + sequence_xz_little_circle \
             + sequence_xz_little_circle \
             + sequence_yz_little_circle \
-            + sequence_yz_little_circle
+            + sequence_yz_little_circle \
+            + [*reversed(sequence_xz_little_circle_last_quarter)]
 
 
         self.current_test_frame = 0
