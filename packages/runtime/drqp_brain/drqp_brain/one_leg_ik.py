@@ -124,17 +124,17 @@ class RobotBrain(rclpy.node.Node):
             (x, -y, z, "forward-right"),
         ]
 
-        max_distance = self.coxa + self.femur + self.tibia - 0.01
+        max_leg_reach = self.coxa + self.femur + self.tibia - 0.001
         sequence_only_forward = [
-            (max_distance, 0.0, 0.0, "forward"),
+            (max_leg_reach, 0.0, 0.0, "forward"),
         ]
 
         sequence_only_left = [
-            (0.0, max_distance, 0.0, "forward"),
+            (0.0, max_leg_reach, 0.0, "left"),
         ]
 
         sequence_only_down = [
-            (0.0, 0.0, -max_distance, "forward"),
+            (0.0, 0.0, -(self.femur + self.tibia - 0.001), "down"),
         ]
 
         steps = 64
@@ -165,7 +165,7 @@ class RobotBrain(rclpy.node.Node):
             (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f"xz-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
         ]
 
-        self.sequence = sequence_z_down
+        self.sequence = sequence_only_forward
 
         self.current_test_frame = 0
         self.test_angles = [
@@ -181,13 +181,13 @@ class RobotBrain(rclpy.node.Node):
             (0, math.pi / 2, math.pi + math.pi / 4), # Straight leg out, Tibia a bit up + 2
         ]
 
-        self.test = True
+        self.test = False
         self.test_angles = [
             # gamma, alpha, beta
             (0, math.pi / 2, math.pi), # Straight leg out
         ]
 
-        cycle_time = 1 if self.test else 5
+        cycle_time = 10 if self.test else 5
         self.timer = self.create_timer(cycle_time / len(self.test_angles if self.test else self.sequence), self.on_timer)
 
     def on_timer(self):
