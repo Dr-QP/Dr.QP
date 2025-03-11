@@ -89,26 +89,26 @@ class RobotBrain(rclpy.node.Node):
 
         self.tf_broadcaster = TransformBroadcaster(self)
 
-        x = 0.03
-        y = x
+        x = 0.0
+        y = 0.03
         z = -0.07
         self.current_frame = 0
         sequence_z_down = [
             # x, y, z
-            (x, 0.04, z, "forward-a-bit-left-z"),
-            (x, 0.04, z - 0.005, "forward-a-bit-left-z-0.005"),
-            (x, 0.04, z - 0.01, "forward-a-bit-left-z-0.01"),
-            (x, 0.04, z - 0.015, "forward-a-bit-left-z-0.015"),
-            (x, 0.04, z - 0.02, "forward-a-bit-left-z-0.02"),
-            (x, 0.04, z - 0.025, "forward-a-bit-left-z-0.025"),
-            (x, 0.04, z - 0.03, "forward-a-bit-left-z-0.03"),
-            (x, 0.04, z - 0.035, "forward-a-bit-left-z-0.035"),
-            (x, 0.04, z - 0.04, "forward-a-bit-left-z-0.04"),
+            (x, y, z, "forward-a-bit-left-z"),
+            (x, y, z - 0.005, "forward-a-bit-left-z-0.005"),
+            (x, y, z - 0.01, "forward-a-bit-left-z-0.01"),
+            (x, y, z - 0.015, "forward-a-bit-left-z-0.015"),
+            (x, y, z - 0.02, "forward-a-bit-left-z-0.02"),
+            (x, y, z - 0.025, "forward-a-bit-left-z-0.025"),
+            (x, y, z - 0.03, "forward-a-bit-left-z-0.03"),
+            (x, y, z - 0.035, "forward-a-bit-left-z-0.035"),
+            (x, y, z - 0.04, "forward-a-bit-left-z-0.04"),
 
             # These values are technically not reachable, but algorithm doesn't blow up
-            (x, 0.04, z - 0.045, "forward-a-bit-left-z-0.045"),
-            (x, 0.04, z - 0.05, "forward-a-bit-left-z-0.05"),
-            (x, 0.04, z - 0.055, "forward-a-bit-left-z-0.055"),
+            (x, y, z - 0.045, "forward-a-bit-left-z-0.045"),
+            (x, y, z - 0.05, "forward-a-bit-left-z-0.05"),
+            (x, y, z - 0.055, "forward-a-bit-left-z-0.055"),
         ]
 
         sequence_all_quadrants = [
@@ -152,7 +152,7 @@ class RobotBrain(rclpy.node.Node):
             (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f"xz-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
         ]
 
-        self.sequence = sequence_z_down
+        self.sequence = sequence_xy_little_circle
 
         self.current_test_frame = 0
         self.test_angles = [
@@ -313,6 +313,7 @@ class RobotBrain(rclpy.node.Node):
         t.transform.rotation.y = 0.0
         t.transform.rotation.z = 0.0
         t.transform.rotation.w = 1.0
+
 
 
         coxa_joint = TransformStamped()
