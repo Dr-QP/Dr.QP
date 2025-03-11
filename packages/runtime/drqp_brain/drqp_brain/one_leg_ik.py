@@ -65,18 +65,18 @@ class RobotBrain(rclpy.node.Node):
 
         x = 0.07
         y = x
-        z = -0.16
+        z = 0.16
         self.current_frame = 0
         self.sequence = [
             # All quadrants, 1/8 step
             # x, y, z
             # (x, 0, z, "forward"),
-            (x, 0.02, z + 0.002, "forward-a-bit-left"),
-            (x, 0.02, z + 0.001, "forward-a-bit-left"),
             (x, 0.02, z, "forward-a-bit-left"),
             (x, 0.02, z - 0.001, "forward-a-bit-left"),
             (x, 0.02, z - 0.002, "forward-a-bit-left"),
             (x, 0.02, z - 0.003, "forward-a-bit-left"),
+            (x, 0.02, z - 0.004, "forward-a-bit-left"),
+            (x, 0.02, z - 0.005, "forward-a-bit-left"),
             # (x, y, z, "forward-left"),
             # (0, y, z, "left"),
             # (-x, y, z, "backward-left"),
@@ -115,7 +115,7 @@ class RobotBrain(rclpy.node.Node):
             self.current_test_frame += 1
             if self.current_test_frame >= len(self.test_angles):
                 self.current_test_frame = 0
-        else
+        else:
             self.current_frame += 1
             if self.current_frame >= len(self.sequence):
                 self.current_frame = 0
