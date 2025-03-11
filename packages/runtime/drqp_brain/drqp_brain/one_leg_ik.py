@@ -181,12 +181,12 @@ class RobotBrain(rclpy.node.Node):
             self.gamma, self.alpha, self.beta = self.test_angles[self.current_test_frame]
             solved = True
         else:
-            # solved, self.alpha, self.beta, self.gamma = self.solve_for(*self.frame)
-            self.frame =0.14812521404429016, -0.02887872740850036, -0.05, "stub"
-            self.alpha=2.544956494172032  + 0.25
-            self.beta=1.6838700413875667  + 0.0
-            self.gamma=-0.1925462752668692
-            solved = True
+            solved, self.alpha, self.beta, self.gamma = self.solve_for(*self.frame)
+            # self.frame =0.14812521404429016, -0.02887872740850036, -0.05, "stub"
+            # self.alpha=2.544956494172032  + 0.25
+            # self.beta=1.6838700413875667  + 0.0
+            # self.gamma=-0.1925462752668692
+            # solved = True
 
         if solved:
             self.publish_joints()
@@ -359,16 +359,6 @@ class RobotBrain(rclpy.node.Node):
         leg_tip.transform.rotation.w = 1.0
 
         self.tf_broadcaster.sendTransform(transforms)
-
-        # self.alpha = 0
-        # self.beta = 0
-        # self.gamma = 0
-
-        # # TODO (anton-matosov): Use robot description and TF to get these values instead of using hard coded values
-        # self.coxa = 0.053
-        # self.femur = 0.066225
-        # self.tibia = 0.120531
-
 
 def main():
     # Initialize rclpy with the command-line arguments
