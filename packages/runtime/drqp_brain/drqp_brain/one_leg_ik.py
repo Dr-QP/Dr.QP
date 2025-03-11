@@ -142,13 +142,13 @@ class RobotBrain(rclpy.node.Node):
         ]
 
         steps = 64
-        x = 0.14
+        x = 0.2
         y = 0.0
-        z = -0.1
-        scalar = 0.05
+        z = 0.0
+        scalar = 0.03
         sequence_xy_little_circle = [
             # x, y, z
-            (x + math.cos(i) * scalar, y + math.sin(i) * scalar, z, f"xy-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
+            # (x + math.cos(i) * scalar, y + math.sin(i) * scalar, z, f"xy-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
         ]
 
         sequence_yz_little_circle = [
@@ -262,7 +262,7 @@ class RobotBrain(rclpy.node.Node):
         #   <--@----------------------+
         #      |                      0
         #      |<-------- L1 -------->|
-        Z_offset = abs(z)
+        Z_offset = -z
         L1 = math.sqrt(x ** 2 + y ** 2)
         L = math.sqrt(Z_offset ** 2 + (L1 - self.coxa) ** 2)
         alpha1_acos_input = Z_offset / L
