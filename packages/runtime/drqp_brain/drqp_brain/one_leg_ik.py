@@ -31,6 +31,11 @@ import rclpy.node
 import sensor_msgs.msg
 import drqp_interfaces.msg
 
+from geometry_msgs.msg import TransformStamped
+from tf2_ros import TransformBroadcaster
+
+
+
 # based on https://oscarliang.com/inverse-kinematics-and-trigonometry-basics/
 
 def safe_acos(num):
@@ -49,7 +54,7 @@ class RobotBrain(rclpy.node.Node):
         self.pose_async_publisher = self.create_publisher(
             drqp_interfaces.msg.MultiAsyncPositionCommand, "/pose_async", qos_profile=10)
         self.joint_state_pub = self.create_publisher(
-            sensor_msgs.msg.JointState, "/joint_states", qos_profile=10)
+            sensor_msgs.msg.JointState, "/joint_states", qos_profile=50)
 
         self.alpha = 0
         self.beta = 0
@@ -59,6 +64,8 @@ class RobotBrain(rclpy.node.Node):
         self.coxa = 0.053
         self.femur = 0.066225
         self.tibia = 0.120531
+
+        self.tf_broadcaster = TransformBroadcaster(self)
 
         x = 0.07
         y = x
@@ -97,7 +104,7 @@ class RobotBrain(rclpy.node.Node):
 
         steps = 64
         x = 0.14
-        y = 0
+        y = 0.0
         z = -0.05
         scalar = 0.03
         sequence_xy_little_circle = [
@@ -105,9 +112,9 @@ class RobotBrain(rclpy.node.Node):
             (x + math.cos(i) * scalar, y + math.sin(i) * scalar, z, f"xy-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
         ]
 
-        x = 0.1
-        y = x
-        z = -0.05 # Current algo has a limit of never going above 0 as it uses absolute value of z
+        x = 0.0
+        y = 0.1
+        z = -0.1 # Current algo has a limit of never going above 0 as it uses absolute value of z
         scalar = 0.04
         sequence_yz_little_circle = [
             # x, y, z
@@ -141,7 +148,7 @@ class RobotBrain(rclpy.node.Node):
             (0, math.pi / 2, math.pi + math.pi / 4), # Straight leg out, Tibia a bit up + 2
         ]
 
-        cycle_time = 3
+        cycle_time = 15
         self.timer = self.create_timer(cycle_time / len(self.sequence), self.on_timer)
 
     def on_timer(self):
@@ -154,8 +161,10 @@ class RobotBrain(rclpy.node.Node):
         else:
             solved, self.alpha, self.beta, self.gamma = self.solve_for(*self.frame)
 
+        self.broadcast_tf(self.frame)
         if solved:
-            self.publish()
+            self.publish_joints()
+            pass
 
         if test:
             self.current_test_frame += 1
@@ -239,7 +248,7 @@ class RobotBrain(rclpy.node.Node):
         print(f"Solved  for {x=}, {y=}, {z=}, {self.alpha=} {self.beta=}, {self.gamma=}, pose: {pose_name}")
         return True, self.alpha, self.beta, self.gamma
 
-    def publish(self):
+    def publish_joints(self):
         msg = sensor_msgs.msg.JointState()
         msg.header.stamp = self.get_clock().now().to_msg()
         leg = "dr_qp/front_left_"
@@ -256,6 +265,22 @@ class RobotBrain(rclpy.node.Node):
         ]
         self.joint_state_pub.publish(msg)
 
+    def broadcast_tf(self, frame):
+        x, y, z, pose_name = frame
+        t = TransformStamped()
+
+        t.header.stamp = self.get_clock().now().to_msg()
+        t.header.frame_id = 'dr_qp/front_left_coxa_servo'
+        t.child_frame_id = 'front_left_target'
+        t.transform.translation.x = x
+        t.transform.translation.y = y
+        t.transform.translation.z = z
+        t.transform.rotation.x = 0.0
+        t.transform.rotation.y = 0.0
+        t.transform.rotation.z = 0.0
+        t.transform.rotation.w = 1.0
+
+        self.tf_broadcaster.sendTransform(t)
 
 def main():
     # Initialize rclpy with the command-line arguments
