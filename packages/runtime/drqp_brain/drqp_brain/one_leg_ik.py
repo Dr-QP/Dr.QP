@@ -34,11 +34,9 @@ import drqp_interfaces.msg
 # based on https://oscarliang.com/inverse-kinematics-and-trigonometry-basics/
 
 def safe_acos(num):
-    if num > 1:
-        return math.acos(1)
-    if num < -1:
-        return math.acos(-1)
-    return math.acos(num)
+    if num < -1 or num > 1:
+        return False, 0
+    return True, math.acos(num)
 
 class RobotBrain(rclpy.node.Node):
 
@@ -77,6 +75,15 @@ class RobotBrain(rclpy.node.Node):
             (x, 0.02, z - 0.015, "forward-a-bit-left"),
             (x, 0.02, z - 0.02, "forward-a-bit-left"),
             (x, 0.02, z - 0.025, "forward-a-bit-left"),
+            (x, 0.02, z - 0.03, "forward-a-bit-left"),
+            (x, 0.02, z - 0.035, "forward-a-bit-left"),
+            (x, 0.02, z - 0.04, "forward-a-bit-left"),
+            (x, 0.02, z - 0.045, "forward-a-bit-left"),
+            (x, 0.02, z - 0.05, "forward-a-bit-left"),
+            (x, 0.02, z - 0.055, "forward-a-bit-left"),
+            (x, 0.02, z - 0.06, "forward-a-bit-left"),
+            (x, 0.02, z - 0.065, "forward-a-bit-left"),
+            (x, 0.02, z - 0.07, "forward-a-bit-left"),
             # (x, y, z, "forward-left"),
             # (0, y, z, "left"),
             # (-x, y, z, "backward-left"),
@@ -106,10 +113,12 @@ class RobotBrain(rclpy.node.Node):
         test = False
         if test:
             self.gamma, self.alpha, self.beta = self.test_angles[self.current_test_frame]
+            solved = True
         else:
-            self.solve_for(*self.frame)
+            solved, self.alpha, self.beta, self.gamma = self.solve_for(*self.frame)
 
-        self.publish()
+        if solved:
+            self.publish()
 
         if test:
             self.current_test_frame += 1
@@ -169,15 +178,29 @@ class RobotBrain(rclpy.node.Node):
         L1 = math.sqrt(x ** 2 + y ** 2)
         L = math.sqrt(Z_offset ** 2 + (L1 - self.coxa) ** 2)
         alpha1_acos_input = Z_offset / L
-        alpha1 = safe_acos(alpha1_acos_input)
+        solvable, alpha1 = safe_acos(alpha1_acos_input)
+
+        if not solvable:
+            print(f"Can't solve `alpha1` for {x=}, {y=}, {z=}, pose: {pose_name}")
+            return False, 0, 0, 0
 
         alpha2_acos_input = (self.femur ** 2 + L ** 2 - self.tibia ** 2) / (2 * self.femur * L)
-        alpha2 = safe_acos(alpha2_acos_input)
+        solvable, alpha2 = safe_acos(alpha2_acos_input)
         self.alpha = alpha1 + alpha2
 
+        if not solvable:
+            print(f"Can't solve `alpha2` for {x=}, {y=}, {z=}, pose: {pose_name}")
+            return False, 0, 0, 0
+
         beta_acos_input = (self.tibia ** 2 - self.femur ** 2 - L ** 2) / (2 * self.tibia * self.femur)
-        self.beta = safe_acos(beta_acos_input)
+        solvable, self.beta = safe_acos(beta_acos_input)
+
+        if not solvable:
+            print(f"Can't solve `beta` for {x=}, {y=}, {z=}, pose: {pose_name}")
+            return False, 0, 0, 0
+
         print(f"Solved {self.alpha=} {self.beta=}, {self.gamma=}, pose: {pose_name}\n")
+        return True, self.alpha, self.beta, self.gamma
 
     def publish(self):
         msg = sensor_msgs.msg.JointState()
