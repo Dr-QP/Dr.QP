@@ -69,24 +69,148 @@ def safe_acos(num):
         num = 1.0
     return True, math.acos(num)
 
+# 'only_forward', 'only_left', 'only_down', 'all_quadrants', 'xy_little_circle', 'xz_little_circle', 'yz_little_circle', 'all_circles'
 
-# Joint offsets are only relevant here
+x = 0.0
+y = 0.03
+z = -0.07
+sequence_z_down = [
+    # x, y, z
+    (x, y, z, 'forward-a-bit-left-z'),
+    (x, y, z - 0.005, 'forward-a-bit-left-z-0.005'),
+    (x, y, z - 0.01, 'forward-a-bit-left-z-0.01'),
+    (x, y, z - 0.015, 'forward-a-bit-left-z-0.015'),
+    (x, y, z - 0.02, 'forward-a-bit-left-z-0.02'),
+    (x, y, z - 0.025, 'forward-a-bit-left-z-0.025'),
+    (x, y, z - 0.03, 'forward-a-bit-left-z-0.03'),
+    (x, y, z - 0.035, 'forward-a-bit-left-z-0.035'),
+    (x, y, z - 0.04, 'forward-a-bit-left-z-0.04'),
+
+    # These values are technically not reachable, but algorithm doesn't blow up
+    (x, y, z - 0.045, 'forward-a-bit-left-z-0.045'),
+    (x, y, z - 0.05, 'forward-a-bit-left-z-0.05'),
+    (x, y, z - 0.055, 'forward-a-bit-left-z-0.055'),
+]
+
+sequence_all_quadrants = [
+    # All quadrants, 1/8 step
+    # x, y, z
+    (x, 0, z, 'forward'),
+    (x, y, z, 'forward-left'),
+    (0, y, z, 'left'),
+    (-x, y, z, 'backward-left'),
+    (-x, 0, z, 'backward'),
+    (-x, -y, z, 'backward-right'),
+    (0, -y, z, 'right'),
+    (x, -y, z, 'forward-right'),
+]
+
+max_leg_reach = self.coxa + self.femur + self.tibia
+sequence_only_forward = [
+    (max_leg_reach, 0.0, 0.0, 'forward'),
+]
+
+sequence_only_left = [
+    (0.0, max_leg_reach, 0.0, 'left'),
+]
+
+sequence_only_down = [
+    (0.0, 0.0, -(self.femur + self.tibia), 'down'),
+]
+
+steps = 64
+x = 0.15
+y = 0.0
+z = -0.08
+scalar = 0.05
+sequence_xy_little_circle = [
+    # x, y, z
+    (x + math.cos(i) * scalar, y + math.sin(i) * scalar, z, f'xy-circle step {i}') for i in np.linspace(np.pi, np.pi * 3, steps)
+]
+
+sequence_xz_little_circle = [
+    # x, y, z
+    (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f'xz-circle step {i}') for i in np.linspace(0, np.pi * 2, steps)
+]
+sequence_xz_little_circle_last_quarter = [
+    # x, y, z
+    (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f'xz-circle step {i}') for i in np.linspace(np.pi * 1.5, np.pi * 2, int(steps / 4))
+]
+
+sequence_yz_little_circle = [
+    # x, y, z
+    (x, y + math.sin(i) * scalar, z + math.cos(i) * scalar, f'yz-circle step {i}') for i in np.linspace(0, np.pi * 2, steps)
+]
+
+repeat_circles = 3
+all_circles = sequence_xy_little_circle * repeat_circles \
+    + sequence_xz_little_circle_last_quarter \
+    + sequence_xz_little_circle  * repeat_circles \
+    + sequence_yz_little_circle  * repeat_circles \
+    + [*reversed(sequence_xz_little_circle_last_quarter)]
+
+sequences = {
+    'only_forward': sequence_only_forward,
+    'only_left': sequence_only_left,
+    'only_down': sequence_only_down,
+    'all_quadrants': sequence_all_quadrants,
+    'xy_little_circle': sequence_xy_little_circle,
+    'xz_little_circle': sequence_xz_little_circle,
+    'yz_little_circle': sequence_yz_little_circle,
+    'all_circles': all_circles,
+}
+
+
+test_angles_femur = [
+    # gamma, alpha, beta
+    (0, math.pi / 2, math.pi), # Straight leg out
+    (0, math.pi / 2 + math.pi / 16, math.pi), # Straight leg out, femur a bit up
+    (0, math.pi / 2 + math.pi / 8, math.pi), # Straight leg out, femur a bit up + 1
+    (0, math.pi / 2 + math.pi / 4, math.pi), # Straight leg out, femur a bit up + 2
+]
+
+test_angles_tibia = [
+    # gamma, alpha, beta
+    (0, math.pi / 2, math.pi), # Straight leg out
+    (0, math.pi / 2, math.pi + math.pi / 16), # Straight leg out, Tibia a bit up
+    (0, math.pi / 2, math.pi + math.pi / 8), # Straight leg out, Tibia a bit up + 1
+    (0, math.pi / 2, math.pi + math.pi / 4), # Straight leg out, Tibia a bit up + 2
+]
+
+test_angles_straight_leg = [
+    # gamma, alpha, beta
+    (0, math.pi / 2, math.pi), # Straight leg out
+]
+
+test_angles = {
+    'femur': test_angles_femur,
+    'tibia': test_angles_tibia,
+    'straight_leg': test_angles_straight_leg,
+}
+
+# Joint offsets from math model to physical robot
 kFemurOffsetAngle = -13.11
 kFemurOffsetRad = kFemurOffsetAngle * math.pi / 180
 kTibiaOffsetAngle = -32.9
 kTibiaOffsetRad = kTibiaOffsetAngle * math.pi / 180
+
 class RobotBrain(rclpy.node.Node):
 
     def get_param(self, name):
         return self.get_parameter(name).value
 
-    def __init__(self):
+    def __init__(self, parsed_args):
         super().__init__('drqp_brain')
 
         self.pose_async_publisher = self.create_publisher(
             drqp_interfaces.msg.MultiAsyncPositionCommand, '/pose_async', qos_profile=10)
         self.joint_state_pub = self.create_publisher(
             sensor_msgs.msg.JointState, '/joint_states', qos_profile=50)
+
+        self.test = parsed_args.test
+        self.sequence = sequences[parsed_args.sequence]
+        self.sequence_repeat = parsed_args.sequence_repeat
+        self.test_angles = test_angles[parsed_args.test_angles]
 
         self.alpha = 0
         self.beta = 0
@@ -99,111 +223,12 @@ class RobotBrain(rclpy.node.Node):
 
         self.tf_broadcaster = TransformBroadcaster(self)
 
-        x = 0.0
-        y = 0.03
-        z = -0.07
         self.current_frame = 0
-        sequence_z_down = [
-            # x, y, z
-            (x, y, z, 'forward-a-bit-left-z'),
-            (x, y, z - 0.005, 'forward-a-bit-left-z-0.005'),
-            (x, y, z - 0.01, 'forward-a-bit-left-z-0.01'),
-            (x, y, z - 0.015, 'forward-a-bit-left-z-0.015'),
-            (x, y, z - 0.02, 'forward-a-bit-left-z-0.02'),
-            (x, y, z - 0.025, 'forward-a-bit-left-z-0.025'),
-            (x, y, z - 0.03, 'forward-a-bit-left-z-0.03'),
-            (x, y, z - 0.035, 'forward-a-bit-left-z-0.035'),
-            (x, y, z - 0.04, 'forward-a-bit-left-z-0.04'),
-
-            # These values are technically not reachable, but algorithm doesn't blow up
-            (x, y, z - 0.045, 'forward-a-bit-left-z-0.045'),
-            (x, y, z - 0.05, 'forward-a-bit-left-z-0.05'),
-            (x, y, z - 0.055, 'forward-a-bit-left-z-0.055'),
-        ]
-
-        sequence_all_quadrants = [
-            # All quadrants, 1/8 step
-            # x, y, z
-            (x, 0, z, 'forward'),
-            (x, y, z, 'forward-left'),
-            (0, y, z, 'left'),
-            (-x, y, z, 'backward-left'),
-            (-x, 0, z, 'backward'),
-            (-x, -y, z, 'backward-right'),
-            (0, -y, z, 'right'),
-            (x, -y, z, 'forward-right'),
-        ]
-
-        max_leg_reach = self.coxa + self.femur + self.tibia
-        sequence_only_forward = [
-            (max_leg_reach, 0.0, 0.0, 'forward'),
-        ]
-
-        sequence_only_left = [
-            (0.0, max_leg_reach, 0.0, 'left'),
-        ]
-
-        sequence_only_down = [
-            (0.0, 0.0, -(self.femur + self.tibia), 'down'),
-        ]
-
-        steps = 64
-        x = 0.15
-        y = 0.0
-        z = -0.08
-        scalar = 0.05
-        sequence_xy_little_circle = [
-            # x, y, z
-            (x + math.cos(i) * scalar, y + math.sin(i) * scalar, z, f'xy-circle step {i}') for i in np.linspace(np.pi, np.pi * 3, steps)
-        ]
-
-        sequence_xz_little_circle = [
-            # x, y, z
-            (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f'xz-circle step {i}') for i in np.linspace(0, np.pi * 2, steps)
-        ]
-        sequence_xz_little_circle_last_quarter = [
-            # x, y, z
-            (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f'xz-circle step {i}') for i in np.linspace(np.pi * 1.5, np.pi * 2, int(steps / 4))
-        ]
-
-        sequence_yz_little_circle = [
-            # x, y, z
-            (x, y + math.sin(i) * scalar, z + math.cos(i) * scalar, f'yz-circle step {i}') for i in np.linspace(0, np.pi * 2, steps)
-        ]
-
-
-        self.sequence = sequence_xy_little_circle \
-            + sequence_xy_little_circle \
-            + sequence_xz_little_circle_last_quarter \
-            + sequence_xz_little_circle \
-            + sequence_xz_little_circle \
-            + sequence_yz_little_circle \
-            + sequence_yz_little_circle \
-            + [*reversed(sequence_xz_little_circle_last_quarter)]
-
-
         self.current_test_frame = 0
-        self.test_angles = [
-            # gamma, alpha, beta
-            (0, math.pi / 2, math.pi), # Straight leg out
-            (0, math.pi / 2 + math.pi / 16, math.pi), # Straight leg out, femur a bit up
-            (0, math.pi / 2 + math.pi / 8, math.pi), # Straight leg out, femur a bit up + 1
-            (0, math.pi / 2 + math.pi / 4, math.pi), # Straight leg out, femur a bit up + 2
 
-            (0, math.pi / 2, math.pi), # Straight leg out
-            (0, math.pi / 2, math.pi + math.pi / 16), # Straight leg out, Tibia a bit up
-            (0, math.pi / 2, math.pi + math.pi / 8), # Straight leg out, Tibia a bit up + 1
-            (0, math.pi / 2, math.pi + math.pi / 4), # Straight leg out, Tibia a bit up + 2
-        ]
 
-        self.test = False
-        self.test_angles = [
-            # gamma, alpha, beta
-            (0, math.pi / 2, math.pi), # Straight leg out
-        ]
-
-        cycle_time = 10 if self.test else 16
-        self.timer = self.create_timer(cycle_time / len(self.test_angles if self.test else self.sequence), self.on_timer)
+        step_time = parsed_args.cycle_time_seconds / len(self.test_angles if self.test else self.sequence)
+        self.timer = self.create_timer(step_time, self.on_timer)
 
     def on_timer(self):
         self.frame = self.sequence[self.current_frame]
@@ -219,7 +244,6 @@ class RobotBrain(rclpy.node.Node):
         if solved:
             # self.publish_joints()
             self.publish_pose()
-            pass
         self.broadcast_tf(self.frame)
 
         if self.test:
@@ -230,7 +254,11 @@ class RobotBrain(rclpy.node.Node):
             self.current_frame += 1
             if self.current_frame >= len(self.sequence):
                 self.current_frame = 0
-                print('===========================   DONE   ===========================')
+                print('===========================   Sequence completed   ===========================')
+                if self.sequence_repeat > 1:
+                    self.sequence_repeat -= 1
+                else:
+                    self.timer.cancel()
 
     def solve_for(self, x, y, z, pose_name):
         # print(f'Solving for {x=}, {y=}, {z=}, pose: {pose_name}')
@@ -277,8 +305,8 @@ class RobotBrain(rclpy.node.Node):
         #      |                      0
         #      |<-------- L1 -------->|
         Z_offset = -z
-        L1 = math.sqrt(x ** 2 + y ** 2)
-        L = math.sqrt(Z_offset ** 2 + (L1 - self.coxa) ** 2)
+        L1 = math.hypot(x, y)
+        L = math.hypot(Z_offset, L1 - self.coxa)
         alpha1_acos_input = Z_offset / L
         solvable, alpha1 = safe_acos(alpha1_acos_input)
 
@@ -385,7 +413,6 @@ class RobotBrain(rclpy.node.Node):
         t.transform.rotation.w = 1.0
 
 
-
         coxa_joint = TransformStamped()
         transforms.append(coxa_joint)
 
@@ -438,12 +465,17 @@ def main():
     # Strip off the ROS 2-specific command-line arguments
     stripped_args = rclpy.utilities.remove_ros_args(args=sys.argv)
     parser = argparse.ArgumentParser()
+    parser.add_argument('--test', action='store_true')
+    parser.add_argument('--cycle-time-seconds', type=float, default=2)
+    parser.add_argument('--sequence', type=str, default='all_circles', choices=sequences.keys())
+    parser.add_argument('--test-angles', type=str, default='straight_leg', choices=test_angles.keys())
+    parser.add_argument('--sequence-repeat', type=int, default=10)
 
     # Parse the remaining arguments, noting that the passed-in args must *not*
     # contain the name of the program.
     parsed_args = parser.parse_args(args=stripped_args[1:])
 
-    node = RobotBrain()
+    node = RobotBrain(parsed_args)
 
     try:
         rclpy.spin(node)
