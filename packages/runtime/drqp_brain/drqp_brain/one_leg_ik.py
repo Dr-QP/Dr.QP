@@ -170,7 +170,7 @@ class RobotBrain(rclpy.node.Node):
             (0, math.pi / 2, math.pi + math.pi / 4), # Straight leg out, Tibia a bit up + 2
         ]
 
-        cycle_time = 15
+        cycle_time = 5
         self.timer = self.create_timer(cycle_time / len(self.sequence), self.on_timer)
 
     def on_timer(self):
@@ -272,6 +272,14 @@ class RobotBrain(rclpy.node.Node):
             print(f"Can't solve `beta` for {x=}, {y=}, {z=}, pose: {pose_name}")
             return False, 0, 0, 0
 
+        kFemurOffsetAngle = 0
+        kFemurOffsetRad = kFemurOffsetAngle * math.pi / 180
+        kTibiaOffsetAngle = 0
+        kTibiaOffsetRad = kTibiaOffsetAngle * math.pi / 180
+
+        self.alpha += kFemurOffsetRad
+        self.beta += kTibiaOffsetRad
+
         print(f"Solved  for {x=}, {y=}, {z=}, {self.alpha=} {self.beta=}, {self.gamma=}, pose: {pose_name}")
         return True, self.alpha, self.beta, self.gamma
 
@@ -322,11 +330,18 @@ class RobotBrain(rclpy.node.Node):
         femur_joint = TransformStamped()
         transforms.append(femur_joint)
 
+        # These offsets IS the reason for IK algorithm mismatch as it doesn't consider them
+        # TODO (anton-matosov): Figure out how to adjust IK algorithm to account for them
+        kFemurOffsetAngle = 13
+        kFemurOffsetRad = kFemurOffsetAngle * math.pi / 180
+        kTibiaOffsetAngle = 33
+        kTibiaOffsetRad = kTibiaOffsetAngle * math.pi / 180
+
         femur_joint.header.stamp = self.get_clock().now().to_msg()
         femur_joint.header.frame_id = 'coxa_joint'
         femur_joint.child_frame_id = 'femur_joint'
         femur_joint.transform.translation.x = self.coxa
-        femur_joint.transform.rotation = quaternion_from_euler(0, math.pi / 2 -self.alpha, 0)
+        femur_joint.transform.rotation = quaternion_from_euler(0, math.pi / 2 -self.alpha + kFemurOffsetRad, 0)
 
 
         tibia_joint = TransformStamped()
@@ -336,7 +351,7 @@ class RobotBrain(rclpy.node.Node):
         tibia_joint.header.frame_id = 'femur_joint'
         tibia_joint.child_frame_id = 'tibia_joint'
         tibia_joint.transform.translation.x = self.femur
-        tibia_joint.transform.rotation = quaternion_from_euler(0, math.pi - self.beta, 0)
+        tibia_joint.transform.rotation = quaternion_from_euler(0, math.pi - self.beta + kTibiaOffsetRad, 0)
 
 
         leg_tip = TransformStamped()
