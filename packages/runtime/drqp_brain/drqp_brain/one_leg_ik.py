@@ -33,6 +33,12 @@ import drqp_interfaces.msg
 
 # based on https://oscarliang.com/inverse-kinematics-and-trigonometry-basics/
 
+def safe_acos(num):
+    if num > 1:
+        return math.acos(1)
+    if num < -1:
+        return math.acos(-1)
+    return math.acos(num)
 
 class RobotBrain(rclpy.node.Node):
 
@@ -57,18 +63,27 @@ class RobotBrain(rclpy.node.Node):
         self.femur = 0.066225
         self.tibia = 0.120531
 
+        x = 0.07
+        y = x
+        z = -0.16
         self.current_frame = 0
         self.sequence = [
             # All quadrants, 1/8 step
             # x, y, z
-            (1, 0, 0, "forward"),
-            (1, 1, 0, "forward-left"),
-            (0, 1, 0, "left"),
-            (-1, 1, 0, "backward-left"),
-            (-1, 0, 0, "backward"),
-            (-1, -1, 0, "backward-right"),
-            (0, -1, 0, "right"),
-            (1, -1, 0, "forward-right"),
+            # (x, 0, z, "forward"),
+            (x, 0.02, z + 0.02, "forward-a-bit-left"),
+            (x, 0.02, z + 0.01, "forward-a-bit-left"),
+            (x, 0.02, z, "forward-a-bit-left"),
+            (x, 0.02, z - 0.01, "forward-a-bit-left"),
+            (x, 0.02, z - 0.02, "forward-a-bit-left"),
+            (x, 0.02, z - 0.03, "forward-a-bit-left"),
+            # (x, y, z, "forward-left"),
+            # (0, y, z, "left"),
+            # (-x, y, z, "backward-left"),
+            # (-x, 0, z, "backward"),
+            # (-x, -y, z, "backward-right"),
+            # (0, -y, z, "right"),
+            # (x, -y, z, "forward-right"),
         ]
 
     def on_timer(self):
@@ -76,6 +91,8 @@ class RobotBrain(rclpy.node.Node):
         self.current_frame += 1
         if self.current_frame >= len(self.sequence):
             self.current_frame = 0
+            # self.timer.cancel()
+            # sys.exit(0)
 
         self.solve_for(*self.frame)
         self.publish()
@@ -98,11 +115,11 @@ class RobotBrain(rclpy.node.Node):
         #              \       |
         #               *      |
         #                \     |
-        #                 \    |
-        #                  *   |
-        #                   \  |
+        #              L1 \    |
+        #                  *  g|  g - gamma
+        #                   \--|
         #                    \ |
-        #             gamma ( \| X
+        #                     \| X
         #   <------------------+
         #                  Y    0
         #
@@ -114,27 +131,27 @@ class RobotBrain(rclpy.node.Node):
         #                            /|\
         #                             |
         #                             |    a - alpha
-        #             *\ Femur        |    b - betta
-        #            / b\             |
+        #             *\ Femur        |    b - beta
+        #            /`b\             |
         #           /    \     Coxa   |
         #    Tibia /   a1(*-----------|
         #         /  L _/(|        ^  |
         #        /  _/  a2|   Zoff |  |
         # (y, z)/_/       |        V  | Z
         #   <--@----------------------+
-        #      |                 Y    0
+        #      |                      0
         #      |<-------- L1 -------->|
-        L1 = y
+        L1 = math.sqrt(x ** 2 + y ** 2)
         L = math.sqrt(z ** 2 + (L1 - self.coxa) ** 2)
         alpha1_acos_input = z / L
-        alpha1 = math.acos(alpha1_acos_input)
+        alpha1 = safe_acos(alpha1_acos_input)
 
         alpha2_acos_input = (self.femur ** 2 + L ** 2 - self.tibia ** 2) / (2 * self.femur * L)
-        alpha2 = math.acos(alpha2_acos_input)
+        alpha2 = safe_acos(alpha2_acos_input)
         self.alpha = alpha1 + alpha2
 
         beta_acos_input = (self.tibia ** 2 - self.femur ** 2 - L ** 2) / (2 * self.tibia * self.femur)
-        self.beta = math.acos(beta_acos_input)
+        self.beta = safe_acos(beta_acos_input)
         print(f"Solved {self.alpha=} {self.beta=}, {self.gamma=}, pose: {pose_name}")
 
     def publish(self):
@@ -146,10 +163,13 @@ class RobotBrain(rclpy.node.Node):
             leg + "femur",
             leg + "tibia",
         ]
+        # self.alpha = math.pi / 2
+        # self.alpha = 0
         msg.position = [
             self.gamma,
-            self.beta,
-            self.alpha
+            math.pi / 2 - self.alpha,
+            # self.beta,
+            0,
         ]
         self.joint_state_pub.publish(msg)
 
