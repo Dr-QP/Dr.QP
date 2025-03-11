@@ -217,7 +217,7 @@ class RobotBrain(rclpy.node.Node):
             solved, self.alpha, self.beta, self.gamma = self.solve_for(*self.frame)
 
         if solved:
-            # self.publish_jointsco()
+            # self.publish_joints()
             self.publish_pose()
             pass
         self.broadcast_tf(self.frame)
