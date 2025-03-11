@@ -89,9 +89,9 @@ class RobotBrain(rclpy.node.Node):
 
         self.tf_broadcaster = TransformBroadcaster(self)
 
-        x = 0.07
+        x = 0.03
         y = x
-        z = -0.1
+        z = -0.07
         self.current_frame = 0
         sequence_z_down = [
             # x, y, z
@@ -152,9 +152,7 @@ class RobotBrain(rclpy.node.Node):
             (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f"xz-circle step {i}") for i in np.linspace(0, np.pi * 2, steps)
         ]
 
-
-
-        self.sequence = sequence_xy_little_circle
+        self.sequence = sequence_z_down
 
         self.current_test_frame = 0
         self.test_angles = [
@@ -170,14 +168,15 @@ class RobotBrain(rclpy.node.Node):
             (0, math.pi / 2, math.pi + math.pi / 4), # Straight leg out, Tibia a bit up + 2
         ]
 
-        cycle_time = 5
-        self.timer = self.create_timer(cycle_time / len(self.sequence), self.on_timer)
+        self.test = False
+
+        cycle_time = 10 if self.test else 5
+        self.timer = self.create_timer(cycle_time / len(self.test_angles if self.test else self.sequence), self.on_timer)
 
     def on_timer(self):
         self.frame = self.sequence[self.current_frame]
 
-        test = False
-        if test:
+        if self.test:
             self.gamma, self.alpha, self.beta = self.test_angles[self.current_test_frame]
             solved = True
         else:
@@ -193,7 +192,7 @@ class RobotBrain(rclpy.node.Node):
             pass
         self.broadcast_tf(self.frame)
 
-        if test:
+        if self.test:
             self.current_test_frame += 1
             if self.current_test_frame >= len(self.test_angles):
                 self.current_test_frame = 0
@@ -272,14 +271,6 @@ class RobotBrain(rclpy.node.Node):
             print(f"Can't solve `beta` for {x=}, {y=}, {z=}, pose: {pose_name}")
             return False, 0, 0, 0
 
-        kFemurOffsetAngle = 0
-        kFemurOffsetRad = kFemurOffsetAngle * math.pi / 180
-        kTibiaOffsetAngle = 0
-        kTibiaOffsetRad = kTibiaOffsetAngle * math.pi / 180
-
-        self.alpha += kFemurOffsetRad
-        self.beta += kTibiaOffsetRad
-
         print(f"Solved  for {x=}, {y=}, {z=}, {self.alpha=} {self.beta=}, {self.gamma=}, pose: {pose_name}")
         return True, self.alpha, self.beta, self.gamma
 
@@ -293,10 +284,16 @@ class RobotBrain(rclpy.node.Node):
             leg + "tibia",
         ]
 
+        # Joint offsets are only relevant here
+        kFemurOffsetAngle = -13
+        kFemurOffsetRad = kFemurOffsetAngle * math.pi / 180
+        kTibiaOffsetAngle = -33
+        kTibiaOffsetRad = kTibiaOffsetAngle * math.pi / 180
+
         msg.position = [
             self.gamma,
-            math.pi / 2 -self.alpha,
-            math.pi - self.beta,
+            math.pi / 2 -self.alpha + kFemurOffsetRad,
+            math.pi - self.beta + kTibiaOffsetRad,
         ]
         self.joint_state_pub.publish(msg)
 
@@ -330,11 +327,10 @@ class RobotBrain(rclpy.node.Node):
         femur_joint = TransformStamped()
         transforms.append(femur_joint)
 
-        # These offsets IS the reason for IK algorithm mismatch as it doesn't consider them
-        # TODO (anton-matosov): Figure out how to adjust IK algorithm to account for them
-        kFemurOffsetAngle = 13
+        # This is render of math model, it shouldn't do adjustments
+        kFemurOffsetAngle = 0
         kFemurOffsetRad = kFemurOffsetAngle * math.pi / 180
-        kTibiaOffsetAngle = 33
+        kTibiaOffsetAngle = 0
         kTibiaOffsetRad = kTibiaOffsetAngle * math.pi / 180
 
         femur_joint.header.stamp = self.get_clock().now().to_msg()
