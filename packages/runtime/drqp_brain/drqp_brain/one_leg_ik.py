@@ -71,12 +71,12 @@ class RobotBrain(rclpy.node.Node):
             # All quadrants, 1/8 step
             # x, y, z
             # (x, 0, z, "forward"),
-            (x, 0.02, z + 0.02, "forward-a-bit-left"),
-            (x, 0.02, z + 0.01, "forward-a-bit-left"),
+            (x, 0.02, z + 0.002, "forward-a-bit-left"),
+            (x, 0.02, z + 0.001, "forward-a-bit-left"),
             (x, 0.02, z, "forward-a-bit-left"),
-            (x, 0.02, z - 0.01, "forward-a-bit-left"),
-            (x, 0.02, z - 0.02, "forward-a-bit-left"),
-            (x, 0.02, z - 0.03, "forward-a-bit-left"),
+            (x, 0.02, z - 0.001, "forward-a-bit-left"),
+            (x, 0.02, z - 0.002, "forward-a-bit-left"),
+            (x, 0.02, z - 0.003, "forward-a-bit-left"),
             # (x, y, z, "forward-left"),
             # (0, y, z, "left"),
             # (-x, y, z, "backward-left"),
@@ -86,16 +86,29 @@ class RobotBrain(rclpy.node.Node):
             # (x, -y, z, "forward-right"),
         ]
 
+        self.current_test_frame = 0
+        self.test_angles = [
+            # gamma, alpha, beta
+            (0, math.pi / 2, math.pi), # Straight leg out
+        ]
+
     def on_timer(self):
         self.frame = self.sequence[self.current_frame]
+        # self.solve_for(*self.frame)
+
+        self.gamma, self.alpha, self.beta = self.test_angles[self.current_test_frame]
+        self.publish()
+
+        self.current_test_frame += 1
+        if self.current_test_frame >= len(self.test_angles):
+            self.current_test_frame = 0
+
         self.current_frame += 1
         if self.current_frame >= len(self.sequence):
             self.current_frame = 0
+            # print("===========================   DONE   ===========================")
             # self.timer.cancel()
             # sys.exit(0)
-
-        self.solve_for(*self.frame)
-        self.publish()
 
     def solve_for(self, x, y, z, pose_name):
         print(f"Solving for {x=}, {y=}, {z=}, pose: {pose_name}")
@@ -152,7 +165,7 @@ class RobotBrain(rclpy.node.Node):
 
         beta_acos_input = (self.tibia ** 2 - self.femur ** 2 - L ** 2) / (2 * self.tibia * self.femur)
         self.beta = safe_acos(beta_acos_input)
-        print(f"Solved {self.alpha=} {self.beta=}, {self.gamma=}, pose: {pose_name}")
+        print(f"Solved {self.alpha=} {self.beta=}, {self.gamma=}, pose: {pose_name}\n")
 
     def publish(self):
         msg = sensor_msgs.msg.JointState()
@@ -163,13 +176,11 @@ class RobotBrain(rclpy.node.Node):
             leg + "femur",
             leg + "tibia",
         ]
-        # self.alpha = math.pi / 2
-        # self.alpha = 0
+
         msg.position = [
             self.gamma,
-            math.pi / 2 - self.alpha,
-            # self.beta,
-            0,
+            math.pi / 2 -self.alpha,
+            math.pi - self.beta,
         ]
         self.joint_state_pub.publish(msg)
 
