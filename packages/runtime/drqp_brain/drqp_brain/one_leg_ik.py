@@ -322,16 +322,11 @@ class RobotBrain(rclpy.node.Node):
         femur_joint = TransformStamped()
         transforms.append(femur_joint)
 
-        kFemurOffsetAngle = 13
-        kFemurOffsetRad = kFemurOffsetAngle * math.pi / 180
-        kTibiaOffsetAngle = 33
-        kTibiaOffsetRad = kTibiaOffsetAngle * math.pi / 180
-
         femur_joint.header.stamp = self.get_clock().now().to_msg()
         femur_joint.header.frame_id = 'coxa_joint'
         femur_joint.child_frame_id = 'femur_joint'
         femur_joint.transform.translation.x = self.coxa
-        femur_joint.transform.rotation = quaternion_from_euler(0, math.pi / 2 -self.alpha + kFemurOffsetRad, 0)
+        femur_joint.transform.rotation = quaternion_from_euler(0, math.pi / 2 -self.alpha, 0)
 
 
         tibia_joint = TransformStamped()
@@ -341,7 +336,7 @@ class RobotBrain(rclpy.node.Node):
         tibia_joint.header.frame_id = 'femur_joint'
         tibia_joint.child_frame_id = 'tibia_joint'
         tibia_joint.transform.translation.x = self.femur
-        tibia_joint.transform.rotation = quaternion_from_euler(0, math.pi - self.beta + kTibiaOffsetRad, 0)
+        tibia_joint.transform.rotation = quaternion_from_euler(0, math.pi - self.beta, 0)
 
 
         leg_tip = TransformStamped()
