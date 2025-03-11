@@ -31,10 +31,32 @@ import rclpy.node
 import sensor_msgs.msg
 import drqp_interfaces.msg
 
-from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import TransformStamped, Quaternion
 from tf2_ros import TransformBroadcaster
 
 
+def quaternion_from_euler(ai, aj, ak):
+    ai /= 2.0
+    aj /= 2.0
+    ak /= 2.0
+    ci = math.cos(ai)
+    si = math.sin(ai)
+    cj = math.cos(aj)
+    sj = math.sin(aj)
+    ck = math.cos(ak)
+    sk = math.sin(ak)
+    cc = ci*ck
+    cs = ci*sk
+    sc = si*ck
+    ss = si*sk
+
+    q = Quaternion()
+    q.x = cj*sc - sj*cs
+    q.y = cj*ss + sj*cc
+    q.z = cj*cs - sj*sc
+    q.w = cj*cc + sj*ss
+
+    return q
 
 # based on https://oscarliang.com/inverse-kinematics-and-trigonometry-basics/
 
@@ -62,8 +84,8 @@ class RobotBrain(rclpy.node.Node):
 
         # TODO (anton-matosov): Use robot description and TF to get these values instead of using hard coded values
         self.coxa = 0.053
-        self.femur = 0.066225
-        self.tibia = 0.120531
+        self.femur = 0.066
+        self.tibia = 0.121
 
         self.tf_broadcaster = TransformBroadcaster(self)
 
@@ -132,7 +154,7 @@ class RobotBrain(rclpy.node.Node):
 
 
 
-        self.sequence = sequence_yz_little_circle
+        self.sequence = sequence_xy_little_circle
 
         self.current_test_frame = 0
         self.test_angles = [
@@ -159,12 +181,17 @@ class RobotBrain(rclpy.node.Node):
             self.gamma, self.alpha, self.beta = self.test_angles[self.current_test_frame]
             solved = True
         else:
-            solved, self.alpha, self.beta, self.gamma = self.solve_for(*self.frame)
+            # solved, self.alpha, self.beta, self.gamma = self.solve_for(*self.frame)
+            self.frame =0.14812521404429016, -0.02887872740850036, -0.05, "stub"
+            self.alpha=2.544956494172032  + 0.25
+            self.beta=1.6838700413875667  + 0.0
+            self.gamma=-0.1925462752668692
+            solved = True
 
-        self.broadcast_tf(self.frame)
         if solved:
             self.publish_joints()
             pass
+        self.broadcast_tf(self.frame)
 
         if test:
             self.current_test_frame += 1
@@ -267,7 +294,9 @@ class RobotBrain(rclpy.node.Node):
 
     def broadcast_tf(self, frame):
         x, y, z, pose_name = frame
+        transforms = []
         t = TransformStamped()
+        transforms.append(t)
 
         t.header.stamp = self.get_clock().now().to_msg()
         t.header.frame_id = 'dr_qp/front_left_coxa_servo'
@@ -280,7 +309,66 @@ class RobotBrain(rclpy.node.Node):
         t.transform.rotation.z = 0.0
         t.transform.rotation.w = 1.0
 
-        self.tf_broadcaster.sendTransform(t)
+
+        coxa_joint = TransformStamped()
+        transforms.append(coxa_joint)
+
+        coxa_joint.header.stamp = self.get_clock().now().to_msg()
+        coxa_joint.header.frame_id = 'dr_qp/front_left_coxa_servo'
+        coxa_joint.child_frame_id = 'coxa_joint'
+        coxa_joint.transform.rotation = quaternion_from_euler(0, 0, self.gamma)
+
+
+        femur_joint = TransformStamped()
+        transforms.append(femur_joint)
+
+        kFemurOffsetAngle = 13
+        kFemurOffsetRad = kFemurOffsetAngle * math.pi / 180
+        kTibiaOffsetAngle = 33
+        kTibiaOffsetRad = kTibiaOffsetAngle * math.pi / 180
+
+        femur_joint.header.stamp = self.get_clock().now().to_msg()
+        femur_joint.header.frame_id = 'coxa_joint'
+        femur_joint.child_frame_id = 'femur_joint'
+        femur_joint.transform.translation.x = self.coxa
+        femur_joint.transform.rotation = quaternion_from_euler(0, math.pi / 2 -self.alpha + kFemurOffsetRad, 0)
+
+
+        tibia_joint = TransformStamped()
+        transforms.append(tibia_joint)
+
+        tibia_joint.header.stamp = self.get_clock().now().to_msg()
+        tibia_joint.header.frame_id = 'femur_joint'
+        tibia_joint.child_frame_id = 'tibia_joint'
+        tibia_joint.transform.translation.x = self.femur
+        tibia_joint.transform.rotation = quaternion_from_euler(0, math.pi - self.beta + kTibiaOffsetRad, 0)
+
+
+        leg_tip = TransformStamped()
+        transforms.append(leg_tip)
+
+        leg_tip.header.stamp = self.get_clock().now().to_msg()
+        leg_tip.header.frame_id = 'tibia_joint'
+        leg_tip.child_frame_id = 'leg_tip'
+        leg_tip.transform.translation.x = self.tibia
+        leg_tip.transform.translation.y = 0.
+        leg_tip.transform.translation.z = 0.
+        leg_tip.transform.rotation.x = 0.0
+        leg_tip.transform.rotation.y = 0.0
+        leg_tip.transform.rotation.z = 0.0
+        leg_tip.transform.rotation.w = 1.0
+
+        self.tf_broadcaster.sendTransform(transforms)
+
+        # self.alpha = 0
+        # self.beta = 0
+        # self.gamma = 0
+
+        # # TODO (anton-matosov): Use robot description and TF to get these values instead of using hard coded values
+        # self.coxa = 0.053
+        # self.femur = 0.066225
+        # self.tibia = 0.120531
+
 
 def main():
     # Initialize rclpy with the command-line arguments
