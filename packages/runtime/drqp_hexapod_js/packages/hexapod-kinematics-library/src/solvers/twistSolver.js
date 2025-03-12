@@ -98,6 +98,7 @@ const complexTwist = (currentPoints, defaultPoints) => {
     const samePointIndex = POSITION_NAME_TO_ID_MAP[samePointPosition]
     const defaultSamePoint = defaultPoints[samePointIndex]
 
+    // codeql[js/redundant-operation]
     const thetaRadians =
         Math.atan2(defaultSamePoint.y, defaultSamePoint.x) -
         Math.atan2(defaultSamePoint.y, defaultSamePoint.x)

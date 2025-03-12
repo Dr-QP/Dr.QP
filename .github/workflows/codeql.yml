@@ -41,6 +41,7 @@ jobs:
   paths-filter:
     name: Need to run?
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    permissions: {}
     outputs:
       pass: ${{ steps.filter.outputs.pass }}
     steps:
