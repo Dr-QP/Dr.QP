@@ -1,5 +1,4 @@
 [tool.ruff]
-# Same as Black.
 line-length = 100
 indent-width = 4
 
@@ -12,9 +11,9 @@ target-version = "py312"
 # - Pyflakes (F)
 # - flake8-blind-except (BLE)
 # - pydocstyle (D)
-# - isort (I)
 # - pycodestyle warnings (W)
-select = ["E", "W", "F", "BLE", "D", "I", "D213"]
+# - D213: Multi-line docstring summary should start at the second line
+select = ["E", "W", "F", "BLE", "D", "D213"]
 
 # Never enforce `E501` (line length violations) - handled by formatter
 # Ignore D212 in favor of D213
@@ -26,6 +25,12 @@ quote-style = "single"
 
 # Indent with 4 spaces
 indent-style = "space"
+
+[tool.ruff.lint.isort]
+# Disable import sorting
+force-single-line = false
+force-sort-within-sections = false
+combine-as-imports = false
 
 [tool.ruff.lint.pep8-naming]
 # Allow Pydantic's `cls` parameter to be lowercase

@@ -290,6 +290,7 @@
     },
     "ruff.organizeImports": true,
     "ruff.fixAll": true,
+    "ruff.lint.enable": true,
 
     "cSpell.words": [
       "drqp",
