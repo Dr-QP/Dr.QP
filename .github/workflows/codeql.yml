@@ -79,12 +79,16 @@ jobs:
         include:
         - language: c-cpp
           build-mode: manual
+          supports-dismissal: true
         - language: python
           build-mode: none
+          supports-dismissal: true
         - language: actions
           build-mode: none
+          supports-dismissal: false
         - language: javascript-typescript
           build-mode: none
+          supports-dismissal: true
         # CodeQL supports the following values keywords for 'language': 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift'
         # Use `c-cpp` to analyze code written in C, C++ or both
         # Use 'java-kotlin' to analyze code written in Java, Kotlin or both
@@ -169,6 +173,7 @@ jobs:
       # Unlock inline mechanism to suppress CodeQL warnings.
       # https://github.com/github/codeql/issues/11427#issuecomment-1721059096
     - name: Dismiss alerts that were suppressed with inline comments
+      if: matrix.supports-dismissal
       uses: advanced-security/dismiss-alerts@v1
       with:
         sarif-id: ${{ steps.analyze.outputs.sarif-id }}
