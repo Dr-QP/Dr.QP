@@ -266,8 +266,7 @@ class RobotBrain(rclpy.node.Node):
             self.current_frame += 1
             if self.current_frame >= len(self.sequence):
                 self.current_frame = 0
-                print(
-                    '===========================   Sequence completed   ===========================')
+                print('=======================   Sequence completed   =======================')
                 if self.sequence_repeat > 1:
                     self.sequence_repeat -= 1
                 else:
@@ -323,7 +322,7 @@ class RobotBrain(rclpy.node.Node):
 
         if not solvable:
             print(
-                f'Can\'t solve `alpha1` for {x=}, {y=}, {z=}, pose: {pose_name}')
+                f"Can't solve `alpha1` for {x=}, {y=}, {z=}, pose: {pose_name}")
             return False, 0, 0, 0
 
         alpha2_acos_input = (self.femur ** 2 + L ** 2 -
@@ -333,7 +332,7 @@ class RobotBrain(rclpy.node.Node):
 
         if not solvable:
             print(
-                f'Can\'t solve `alpha2` for {x=}, {y=}, {z=}, pose: {pose_name}')
+                f"Can't solve `alpha2` for {x=}, {y=}, {z=}, pose: {pose_name}")
             return False, 0, 0, 0
 
         beta_acos_input = (self.tibia ** 2 + self.femur **
@@ -342,11 +341,11 @@ class RobotBrain(rclpy.node.Node):
 
         if not solvable:
             print(
-                f'Can\'t solve `beta` for {x=}, {y=}, {z=}, pose: {pose_name}')
+                f"Can't solve `beta` for {x=}, {y=}, {z=}, pose: {pose_name}")
             return False, 0, 0, 0
 
-        print(
-            f'Solved  for {x=}, {y=}, {z=}, {self.alpha=} {self.beta=}, {self.gamma=}, pose: {pose_name}')
+        print(f'Solved  for {x=}, {y=}, {z=}, {self.alpha=} {self.beta=},'
+              f'{self.gamma=}, pose: {pose_name}')
         return True, self.alpha, self.beta, self.gamma
 
     def publish_joints(self):
