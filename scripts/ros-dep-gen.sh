@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 script_dir=$(dirname $0)
-source "$script_dir/__utils.sh"
+source "$script_dir/ros/__utils.sh"
 
 if [[ -z $ROS_DISTRO ]]; then
   echo set ROS_DISTRO to required distribution or source setup file
@@ -39,7 +39,7 @@ if [[ ${#packages[@]} -eq 0 ]]; then
 fi
 
 # Generate the installation script
-output_script="$script_dir/install_dependencies.sh"
+output_script="$script_dir/ros/__gen_install_ros_dependencies.sh"
 cat <<EOF > "$output_script"
 #!/usr/bin/env bash
 

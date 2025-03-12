@@ -23,7 +23,7 @@ ENV CC=clang
 ENV CXX=clang++
 
 # Install ROS packages
-COPY ./ros /ros-prep
+COPY .. /ros-prep
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     env CI=1 /ros-prep/ros-2-prep.sh
@@ -50,10 +50,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     /ros-prep/rosdep-update.sh
 
+RUN rm -rf /ros-prep
+
 WORKDIR /home/$USERNAME/ros2_ws
 
 # Setup entrypoint
-COPY ./deploy/ros_entrypoint.sh /
+COPY ../deploy/ros_entrypoint.sh /
 ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["bash"]
 
