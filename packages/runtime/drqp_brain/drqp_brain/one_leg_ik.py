@@ -60,6 +60,7 @@ def quaternion_from_euler(ai, aj, ak):
 
 # based on https://oscarliang.com/inverse-kinematics-and-trigonometry-basics/
 
+
 def safe_acos(num):
     if num < -1.01 or num > 1.01:
         return False, 0
@@ -70,6 +71,7 @@ def safe_acos(num):
     return True, math.acos(num)
 
 # 'only_forward', 'only_left', 'only_down', 'all_quadrants', 'xy_little_circle', 'xz_little_circle', 'yz_little_circle', 'all_circles'
+
 
 x = 0.0
 y = 0.03
@@ -148,8 +150,8 @@ sequence_yz_little_circle = [
 repeat_circles = 3
 all_circles = sequence_xy_little_circle * repeat_circles \
     + sequence_xz_little_circle_last_quarter \
-    + sequence_xz_little_circle  * repeat_circles \
-    + sequence_yz_little_circle  * repeat_circles \
+    + sequence_xz_little_circle * repeat_circles \
+    + sequence_yz_little_circle * repeat_circles \
     + [*reversed(sequence_xz_little_circle_last_quarter)]
 
 sequences = {
@@ -166,23 +168,29 @@ sequences = {
 
 test_angles_femur = [
     # gamma, alpha, beta
-    (0, math.pi / 2, math.pi), # Straight leg out
-    (0, math.pi / 2 + math.pi / 16, math.pi), # Straight leg out, femur a bit up
-    (0, math.pi / 2 + math.pi / 8, math.pi), # Straight leg out, femur a bit up + 1
-    (0, math.pi / 2 + math.pi / 4, math.pi), # Straight leg out, femur a bit up + 2
+    (0, math.pi / 2, math.pi),  # Straight leg out
+    # Straight leg out, femur a bit up
+    (0, math.pi / 2 + math.pi / 16, math.pi),
+    # Straight leg out, femur a bit up + 1
+    (0, math.pi / 2 + math.pi / 8, math.pi),
+    # Straight leg out, femur a bit up + 2
+    (0, math.pi / 2 + math.pi / 4, math.pi),
 ]
 
 test_angles_tibia = [
     # gamma, alpha, beta
-    (0, math.pi / 2, math.pi), # Straight leg out
-    (0, math.pi / 2, math.pi + math.pi / 16), # Straight leg out, Tibia a bit up
-    (0, math.pi / 2, math.pi + math.pi / 8), # Straight leg out, Tibia a bit up + 1
-    (0, math.pi / 2, math.pi + math.pi / 4), # Straight leg out, Tibia a bit up + 2
+    (0, math.pi / 2, math.pi),  # Straight leg out
+    # Straight leg out, Tibia a bit up
+    (0, math.pi / 2, math.pi + math.pi / 16),
+    # Straight leg out, Tibia a bit up + 1
+    (0, math.pi / 2, math.pi + math.pi / 8),
+    # Straight leg out, Tibia a bit up + 2
+    (0, math.pi / 2, math.pi + math.pi / 4),
 ]
 
 test_angles_straight_leg = [
     # gamma, alpha, beta
-    (0, math.pi / 2, math.pi), # Straight leg out
+    (0, math.pi / 2, math.pi),  # Straight leg out
 ]
 
 test_angles = {
@@ -196,6 +204,7 @@ kFemurOffsetAngle = -13.11
 kFemurOffsetRad = kFemurOffsetAngle * math.pi / 180
 kTibiaOffsetAngle = -32.9
 kTibiaOffsetRad = kTibiaOffsetAngle * math.pi / 180
+
 
 class RobotBrain(rclpy.node.Node):
 
@@ -229,8 +238,8 @@ class RobotBrain(rclpy.node.Node):
         self.current_frame = 0
         self.current_test_frame = 0
 
-
-        step_time = parsed_args.cycle_time_seconds / len(self.test_angles if self.test else self.sequence)
+        step_time = parsed_args.cycle_time_seconds / \
+            len(self.test_angles if self.test else self.sequence)
         self.timer = self.create_timer(step_time, self.on_timer)
 
     def on_timer(self):
@@ -242,7 +251,8 @@ class RobotBrain(rclpy.node.Node):
             self.frame = (max_distance, 0.0, 0.0, 'forward')
             solved = True
         else:
-            solved, self.alpha, self.beta, self.gamma = self.solve_for(*self.frame)
+            solved, self.alpha, self.beta, self.gamma = self.solve_for(
+                *self.frame)
 
         if solved:
             self.publish_pose()
@@ -256,7 +266,8 @@ class RobotBrain(rclpy.node.Node):
             self.current_frame += 1
             if self.current_frame >= len(self.sequence):
                 self.current_frame = 0
-                print('===========================   Sequence completed   ===========================')
+                print(
+                    '===========================   Sequence completed   ===========================')
                 if self.sequence_repeat > 1:
                     self.sequence_repeat -= 1
                 else:
@@ -311,25 +322,31 @@ class RobotBrain(rclpy.node.Node):
         solvable, alpha1 = safe_acos(alpha1_acos_input)
 
         if not solvable:
-            print(f'Can\'t solve `alpha1` for {x=}, {y=}, {z=}, pose: {pose_name}')
+            print(
+                f'Can\'t solve `alpha1` for {x=}, {y=}, {z=}, pose: {pose_name}')
             return False, 0, 0, 0
 
-        alpha2_acos_input = (self.femur ** 2 + L ** 2 - self.tibia ** 2) / (2 * self.femur * L)
+        alpha2_acos_input = (self.femur ** 2 + L ** 2 -
+                             self.tibia ** 2) / (2 * self.femur * L)
         solvable, alpha2 = safe_acos(alpha2_acos_input)
         self.alpha = alpha1 + alpha2
 
         if not solvable:
-            print(f'Can\'t solve `alpha2` for {x=}, {y=}, {z=}, pose: {pose_name}')
+            print(
+                f'Can\'t solve `alpha2` for {x=}, {y=}, {z=}, pose: {pose_name}')
             return False, 0, 0, 0
 
-        beta_acos_input = (self.tibia ** 2 + self.femur ** 2 - L ** 2) / (2 * self.tibia * self.femur)
+        beta_acos_input = (self.tibia ** 2 + self.femur **
+                           2 - L ** 2) / (2 * self.tibia * self.femur)
         solvable, self.beta = safe_acos(beta_acos_input)
 
         if not solvable:
-            print(f'Can\'t solve `beta` for {x=}, {y=}, {z=}, pose: {pose_name}')
+            print(
+                f'Can\'t solve `beta` for {x=}, {y=}, {z=}, pose: {pose_name}')
             return False, 0, 0, 0
 
-        print(f'Solved  for {x=}, {y=}, {z=}, {self.alpha=} {self.beta=}, {self.gamma=}, pose: {pose_name}')
+        print(
+            f'Solved  for {x=}, {y=}, {z=}, {self.alpha=} {self.beta=}, {self.gamma=}, pose: {pose_name}')
         return True, self.alpha, self.beta, self.gamma
 
     def publish_joints(self):
@@ -344,7 +361,7 @@ class RobotBrain(rclpy.node.Node):
 
         msg.position = [
             self.gamma,
-            math.pi / 2 -self.alpha + kFemurOffsetRad,
+            math.pi / 2 - self.alpha + kFemurOffsetRad,
             math.pi - self.beta + kTibiaOffsetRad,
         ]
         self.joint_state_pub.publish(msg)
@@ -356,7 +373,7 @@ class RobotBrain(rclpy.node.Node):
             return int(angle * 1023 / (2 * math.pi)) + 512
 
         final_gamma = self.gamma
-        final_alpha = math.pi / 2 -self.alpha + kFemurOffsetRad
+        final_alpha = math.pi / 2 - self.alpha + kFemurOffsetRad
         final_beta = math.pi - self.beta + kTibiaOffsetRad
 
         coxa_servo_pos = rad_to_pos(final_gamma)
@@ -369,32 +386,49 @@ class RobotBrain(rclpy.node.Node):
 
         playtime = 0
         msg.positions = [
-            drqp_interfaces.msg.AsyncPositionCommand(id=1, position=coxa_servo_pos, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(id=3, position=femur_servo_pos, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(id=5, position=tibia_servo_pos, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(
+                id=1, position=coxa_servo_pos, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(
+                id=3, position=femur_servo_pos, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(
+                id=5, position=tibia_servo_pos, playtime=playtime),
 
-            drqp_interfaces.msg.AsyncPositionCommand(id=13, position=coxa_servo_pos, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(id=15, position=femur_servo_pos, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(id=17, position=tibia_servo_pos, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(
+                id=13, position=coxa_servo_pos, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(
+                id=15, position=femur_servo_pos, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(
+                id=17, position=tibia_servo_pos, playtime=playtime),
 
-            drqp_interfaces.msg.AsyncPositionCommand(id=7, position=coxa_servo_pos, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(id=9, position=femur_servo_pos, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(id=11, position=tibia_servo_pos, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(
+                id=7, position=coxa_servo_pos, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(
+                id=9, position=femur_servo_pos, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(
+                id=11, position=tibia_servo_pos, playtime=playtime),
 
-            drqp_interfaces.msg.AsyncPositionCommand(id=2, position=coxa_servo_pos_right, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(id=4, position=femur_servo_pos_right, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(id=6, position=tibia_servo_pos_right, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(
+                id=2, position=coxa_servo_pos_right, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(
+                id=4, position=femur_servo_pos_right, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(
+                id=6, position=tibia_servo_pos_right, playtime=playtime),
 
-            drqp_interfaces.msg.AsyncPositionCommand(id=14, position=coxa_servo_pos_right, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(id=16, position=femur_servo_pos_right, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(id=18, position=tibia_servo_pos_right, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(
+                id=14, position=coxa_servo_pos_right, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(
+                id=16, position=femur_servo_pos_right, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(
+                id=18, position=tibia_servo_pos_right, playtime=playtime),
 
-            drqp_interfaces.msg.AsyncPositionCommand(id=8, position=coxa_servo_pos_right, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(id=10, position=femur_servo_pos_right, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(id=12, position=tibia_servo_pos_right, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(
+                id=8, position=coxa_servo_pos_right, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(
+                id=10, position=femur_servo_pos_right, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(
+                id=12, position=tibia_servo_pos_right, playtime=playtime),
         ]
         self.pose_async_publisher.publish(msg)
-
 
     def broadcast_tf(self, frame):
         x, y, z, pose_name = frame
@@ -413,7 +447,6 @@ class RobotBrain(rclpy.node.Node):
         t.transform.rotation.z = 0.0
         t.transform.rotation.w = 1.0
 
-
         coxa_joint = TransformStamped()
         transforms.append(coxa_joint)
 
@@ -422,7 +455,6 @@ class RobotBrain(rclpy.node.Node):
         coxa_joint.child_frame_id = 'coxa_joint'
         coxa_joint.transform.rotation = quaternion_from_euler(0, 0, self.gamma)
 
-
         femur_joint = TransformStamped()
         transforms.append(femur_joint)
 
@@ -430,8 +462,8 @@ class RobotBrain(rclpy.node.Node):
         femur_joint.header.frame_id = 'coxa_joint'
         femur_joint.child_frame_id = 'femur_joint'
         femur_joint.transform.translation.x = self.coxa
-        femur_joint.transform.rotation = quaternion_from_euler(0, math.pi / 2 -self.alpha, 0)
-
+        femur_joint.transform.rotation = quaternion_from_euler(
+            0, math.pi / 2 - self.alpha, 0)
 
         tibia_joint = TransformStamped()
         transforms.append(tibia_joint)
@@ -440,8 +472,8 @@ class RobotBrain(rclpy.node.Node):
         tibia_joint.header.frame_id = 'femur_joint'
         tibia_joint.child_frame_id = 'tibia_joint'
         tibia_joint.transform.translation.x = self.femur
-        tibia_joint.transform.rotation = quaternion_from_euler(0, math.pi - self.beta, 0)
-
+        tibia_joint.transform.rotation = quaternion_from_euler(
+            0, math.pi - self.beta, 0)
 
         leg_tip = TransformStamped()
         transforms.append(leg_tip)
@@ -459,6 +491,7 @@ class RobotBrain(rclpy.node.Node):
 
         self.tf_broadcaster.sendTransform(transforms)
 
+
 def main():
     # Initialize rclpy with the command-line arguments
     rclpy.init()
@@ -469,8 +502,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--test', action='store_true')
     parser.add_argument('--cycle-time-seconds', type=float, default=8)
-    parser.add_argument('--sequence', type=str, default='all_circles', choices=sequences.keys())
-    parser.add_argument('--test-angles', type=str, default='straight_leg', choices=test_angles.keys())
+    parser.add_argument('--sequence', type=str,
+                        default='all_circles', choices=sequences.keys())
+    parser.add_argument('--test-angles', type=str,
+                        default='straight_leg', choices=test_angles.keys())
     parser.add_argument('--sequence-repeat', type=int, default=2)
 
     # Parse the remaining arguments, noting that the passed-in args must *not*
@@ -487,6 +522,7 @@ def main():
 
     node.destroy_node()
     rclpy.try_shutdown()
+
 
 if __name__ == '__main__':
     main()
