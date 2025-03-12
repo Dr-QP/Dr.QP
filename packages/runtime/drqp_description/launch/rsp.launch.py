@@ -39,31 +39,37 @@ def generate_launch_description():
     # Process the URDF file
 
     # robot_description_config
-    robot_description_config = ParameterValue(Command([
-        'xacro ', str(pkg_share_path / 'urdf' / 'dr_qp.urdf.xacro'),
-        ' use_ros2_control:=', use_ros2_control,
-        ' use_sim_time:=', use_sim_time
-    ]), value_type=str)
+    robot_description_config = ParameterValue(
+        Command(
+            [
+                'xacro ',
+                str(pkg_share_path / 'urdf' / 'dr_qp.urdf.xacro'),
+                ' use_ros2_control:=',
+                use_ros2_control,
+                ' use_sim_time:=',
+                use_sim_time,
+            ]
+        ),
+        value_type=str,
+    )
 
     # Create a robot_state_publisher node
     node_robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='screen',
-        parameters=[{'robot_description': robot_description_config,
-                    'use_sim_time': use_sim_time}]
+        parameters=[{'robot_description': robot_description_config, 'use_sim_time': use_sim_time}],
     )
 
     # Launch!
-    return LaunchDescription([
-        DeclareLaunchArgument(
-            'use_sim_time',
-            default_value='false',
-            description='Use sim time if true'),
-        DeclareLaunchArgument(
-            'use_ros2_control',
-            default_value='true',
-            description='Use ros2_control if true'),
-
-        node_robot_state_publisher
-    ])
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument(
+                'use_sim_time', default_value='false', description='Use sim time if true'
+            ),
+            DeclareLaunchArgument(
+                'use_ros2_control', default_value='true', description='Use ros2_control if true'
+            ),
+            node_robot_state_publisher,
+        ]
+    )

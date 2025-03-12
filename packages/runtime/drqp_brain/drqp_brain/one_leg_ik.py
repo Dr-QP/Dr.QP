@@ -58,6 +58,7 @@ def quaternion_from_euler(ai, aj, ak):
 
     return q
 
+
 # based on https://oscarliang.com/inverse-kinematics-and-trigonometry-basics/
 
 
@@ -85,7 +86,6 @@ sequence_z_down = [
     (x, y, z - 0.03, 'forward-a-bit-left-z-0.03'),
     (x, y, z - 0.035, 'forward-a-bit-left-z-0.035'),
     (x, y, z - 0.04, 'forward-a-bit-left-z-0.04'),
-
     # These values are technically not reachable, but algorithm doesn't blow up
     (x, y, z - 0.045, 'forward-a-bit-left-z-0.045'),
     (x, y, z - 0.05, 'forward-a-bit-left-z-0.05'),
@@ -128,49 +128,35 @@ z = -0.08
 scalar = 0.05
 sequence_xy_little_circle = [
     # x, y, z
-    (
-        x + math.cos(i) * scalar,
-        y + math.sin(i) * scalar,
-        z,
-        f'xy-circle step {i}'
-    ) for i in np.linspace(np.pi, np.pi * 3, steps)
+    (x + math.cos(i) * scalar, y + math.sin(i) * scalar, z, f'xy-circle step {i}')
+    for i in np.linspace(np.pi, np.pi * 3, steps)
 ]
 
 sequence_xz_little_circle = [
     # x, y, z
-    (
-        x + math.sin(i) * scalar,
-        y,
-        z + math.cos(i) * scalar,
-        f'xz-circle step {i}'
-    ) for i in np.linspace(0, np.pi * 2, steps)
+    (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f'xz-circle step {i}')
+    for i in np.linspace(0, np.pi * 2, steps)
 ]
 sequence_xz_little_circle_last_quarter = [
     # x, y, z
-    (
-        x + math.sin(i) * scalar,
-        y,
-        z + math.cos(i) * scalar,
-        f'xz-circle last quarter step {i}'
-    ) for i in np.linspace(np.pi * 1.5, np.pi * 2, int(steps / 4))
+    (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f'xz-circle last quarter step {i}')
+    for i in np.linspace(np.pi * 1.5, np.pi * 2, int(steps / 4))
 ]
 
 sequence_yz_little_circle = [
     # x, y, z
-    (
-        x,
-        y + math.sin(i) * scalar,
-        z + math.cos(i) * scalar,
-        f'yz-circle step {i}'
-    ) for i in np.linspace(0, np.pi * 2, steps)
+    (x, y + math.sin(i) * scalar, z + math.cos(i) * scalar, f'yz-circle step {i}')
+    for i in np.linspace(0, np.pi * 2, steps)
 ]
 
 repeat_circles = 3
-all_circles = sequence_xy_little_circle * repeat_circles \
-    + sequence_xz_little_circle_last_quarter \
-    + sequence_xz_little_circle * repeat_circles \
-    + sequence_yz_little_circle * repeat_circles \
+all_circles = (
+    sequence_xy_little_circle * repeat_circles
+    + sequence_xz_little_circle_last_quarter
+    + sequence_xz_little_circle * repeat_circles
+    + sequence_yz_little_circle * repeat_circles
     + [*reversed(sequence_xz_little_circle_last_quarter)]
+)
 
 sequences = {
     'only_forward': sequence_only_forward,
@@ -225,17 +211,26 @@ kTibiaOffsetRad = kTibiaOffsetAngle * math.pi / 180
 
 
 class RobotBrain(rclpy.node.Node):
+    """
+    ROS2 node that implements inverse kinematics for a single robot leg.
 
-    def get_param(self, name):
-        return self.get_parameter(name).value
+    This node calculates joint angles for a 3-DOF robotic leg (coxa, femur, tibia)
+    given desired end-effector positions. It publishes the calculated joint angles
+    as both ROS2 JointState messages and servo position commands.
+
+    The node supports different movement sequences and test patterns that can be
+    selected via command-line arguments.
+    """
 
     def __init__(self, parsed_args):
         super().__init__('drqp_brain')
 
         self.pose_async_publisher = self.create_publisher(
-            drqp_interfaces.msg.MultiAsyncPositionCommand, '/pose_async', qos_profile=10)
+            drqp_interfaces.msg.MultiAsyncPositionCommand, '/pose_async', qos_profile=10
+        )
         self.joint_state_pub = self.create_publisher(
-            sensor_msgs.msg.JointState, '/joint_states', qos_profile=50)
+            sensor_msgs.msg.JointState, '/joint_states', qos_profile=50
+        )
 
         self.test = parsed_args.test
         self.sequence = sequences[parsed_args.sequence]
@@ -257,8 +252,9 @@ class RobotBrain(rclpy.node.Node):
         self.current_frame = 0
         self.current_test_frame = 0
 
-        step_time = parsed_args.cycle_time_seconds / \
-            len(self.test_angles if self.test else self.sequence)
+        step_time = parsed_args.cycle_time_seconds / len(
+            self.test_angles if self.test else self.sequence
+        )
         self.timer = self.create_timer(step_time, self.on_timer)
 
     def on_timer(self):
@@ -270,8 +266,7 @@ class RobotBrain(rclpy.node.Node):
             self.frame = (max_distance, 0.0, 0.0, 'forward')
             solved = True
         else:
-            solved, self.alpha, self.beta, self.gamma = self.solve_for(
-                *self.frame)
+            solved, self.alpha, self.beta, self.gamma = self.solve_for(*self.frame)
 
         if solved:
             self.publish_pose()
@@ -285,8 +280,7 @@ class RobotBrain(rclpy.node.Node):
             self.current_frame += 1
             if self.current_frame >= len(self.sequence):
                 self.current_frame = 0
-                print(
-                    '=======================   Sequence completed   =======================')
+                print('=======================   Sequence completed   =======================')
                 if self.sequence_repeat > 1:
                     self.sequence_repeat -= 1
                 else:
@@ -329,7 +323,7 @@ class RobotBrain(rclpy.node.Node):
         #           /    \     Coxa   |
         #    Tibia /   a1(*-----------|
         #         /  L _/(|        ^  |
-        #        /  _/  a2|   Zoff |  |
+        #        /  _/  a2|  Z_off |  |
         # (y, z)/_/       |        V  | Z
         #   <--@----------------------+
         #      |                      0
@@ -341,31 +335,28 @@ class RobotBrain(rclpy.node.Node):
         solvable, alpha1 = safe_acos(alpha1_acos_input)
 
         if not solvable:
-            print(
-                f"Can't solve `alpha1` for {x=}, {y=}, {z=}, pose: {pose_name}")
+            print(f"Can't solve `alpha1` for {x=}, {y=}, {z=}, pose: {pose_name}")
             return False, 0, 0, 0
 
-        alpha2_acos_input = (self.femur ** 2 + L ** 2 -
-                             self.tibia ** 2) / (2 * self.femur * L)
+        alpha2_acos_input = (self.femur**2 + L**2 - self.tibia**2) / (2 * self.femur * L)
         solvable, alpha2 = safe_acos(alpha2_acos_input)
         self.alpha = alpha1 + alpha2
 
         if not solvable:
-            print(
-                f"Can't solve `alpha2` for {x=}, {y=}, {z=}, pose: {pose_name}")
+            print(f"Can't solve `alpha2` for {x=}, {y=}, {z=}, pose: {pose_name}")
             return False, 0, 0, 0
 
-        beta_acos_input = (self.tibia ** 2 + self.femur **
-                           2 - L ** 2) / (2 * self.tibia * self.femur)
+        beta_acos_input = (self.tibia**2 + self.femur**2 - L**2) / (2 * self.tibia * self.femur)
         solvable, self.beta = safe_acos(beta_acos_input)
 
         if not solvable:
-            print(
-                f"Can't solve `beta` for {x=}, {y=}, {z=}, pose: {pose_name}")
+            print(f"Can't solve `beta` for {x=}, {y=}, {z=}, pose: {pose_name}")
             return False, 0, 0, 0
 
-        print(f'Solved  for {x=}, {y=}, {z=}, {self.alpha=} {self.beta=},'
-              f'{self.gamma=}, pose: {pose_name}')
+        print(
+            f'Solved  for {x=}, {y=}, {z=}, {self.alpha=} {self.beta=},'
+            f'{self.gamma=}, pose: {pose_name}'
+        )
         return True, self.alpha, self.beta, self.gamma
 
     def publish_joints(self):
@@ -395,57 +386,34 @@ class RobotBrain(rclpy.node.Node):
         final_alpha = math.pi / 2 - self.alpha + kFemurOffsetRad
         final_beta = math.pi - self.beta + kTibiaOffsetRad
 
-        coxa_servo_pos = rad_to_pos(final_gamma)
-        femur_servo_pos = rad_to_pos(final_alpha)
-        tibia_servo_pos = rad_to_pos(math.pi - self.beta + kTibiaOffsetRad)
+        coxa_pos = rad_to_pos(final_gamma)
+        femur_pos = rad_to_pos(final_alpha)
+        tibia_pos = rad_to_pos(math.pi - self.beta + kTibiaOffsetRad)
 
-        coxa_servo_pos_right = rad_to_pos(-final_gamma)
-        femur_servo_pos_right = rad_to_pos(-final_alpha)
-        tibia_servo_pos_right = rad_to_pos(-final_beta)
+        coxa_pos_right = rad_to_pos(-final_gamma)
+        femur_pos_right = rad_to_pos(-final_alpha)
+        tibia_pos_right = rad_to_pos(-final_beta)
 
-        playtime = 0
+        pt = 0
         msg.positions = [
-            drqp_interfaces.msg.AsyncPositionCommand(
-                id=1, position=coxa_servo_pos, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(
-                id=3, position=femur_servo_pos, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(
-                id=5, position=tibia_servo_pos, playtime=playtime),
-
-            drqp_interfaces.msg.AsyncPositionCommand(
-                id=13, position=coxa_servo_pos, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(
-                id=15, position=femur_servo_pos, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(
-                id=17, position=tibia_servo_pos, playtime=playtime),
-
-            drqp_interfaces.msg.AsyncPositionCommand(
-                id=7, position=coxa_servo_pos, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(
-                id=9, position=femur_servo_pos, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(
-                id=11, position=tibia_servo_pos, playtime=playtime),
-
-            drqp_interfaces.msg.AsyncPositionCommand(
-                id=2, position=coxa_servo_pos_right, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(
-                id=4, position=femur_servo_pos_right, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(
-                id=6, position=tibia_servo_pos_right, playtime=playtime),
-
-            drqp_interfaces.msg.AsyncPositionCommand(
-                id=14, position=coxa_servo_pos_right, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(
-                id=16, position=femur_servo_pos_right, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(
-                id=18, position=tibia_servo_pos_right, playtime=playtime),
-
-            drqp_interfaces.msg.AsyncPositionCommand(
-                id=8, position=coxa_servo_pos_right, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(
-                id=10, position=femur_servo_pos_right, playtime=playtime),
-            drqp_interfaces.msg.AsyncPositionCommand(
-                id=12, position=tibia_servo_pos_right, playtime=playtime),
+            drqp_interfaces.msg.AsyncPositionCommand(id=1, position=coxa_pos, playtime=pt),
+            drqp_interfaces.msg.AsyncPositionCommand(id=3, position=femur_pos, playtime=pt),
+            drqp_interfaces.msg.AsyncPositionCommand(id=5, position=tibia_pos, playtime=pt),
+            drqp_interfaces.msg.AsyncPositionCommand(id=13, position=coxa_pos, playtime=pt),
+            drqp_interfaces.msg.AsyncPositionCommand(id=15, position=femur_pos, playtime=pt),
+            drqp_interfaces.msg.AsyncPositionCommand(id=17, position=tibia_pos, playtime=pt),
+            drqp_interfaces.msg.AsyncPositionCommand(id=7, position=coxa_pos, playtime=pt),
+            drqp_interfaces.msg.AsyncPositionCommand(id=9, position=femur_pos, playtime=pt),
+            drqp_interfaces.msg.AsyncPositionCommand(id=11, position=tibia_pos, playtime=pt),
+            drqp_interfaces.msg.AsyncPositionCommand(id=2, position=coxa_pos_right, playtime=pt),
+            drqp_interfaces.msg.AsyncPositionCommand(id=4, position=femur_pos_right, playtime=pt),
+            drqp_interfaces.msg.AsyncPositionCommand(id=6, position=tibia_pos_right, playtime=pt),
+            drqp_interfaces.msg.AsyncPositionCommand(id=14, position=coxa_pos_right, playtime=pt),
+            drqp_interfaces.msg.AsyncPositionCommand(id=16, position=femur_pos_right, playtime=pt),
+            drqp_interfaces.msg.AsyncPositionCommand(id=18, position=tibia_pos_right, playtime=pt),
+            drqp_interfaces.msg.AsyncPositionCommand(id=8, position=coxa_pos_right, playtime=pt),
+            drqp_interfaces.msg.AsyncPositionCommand(id=10, position=femur_pos_right, playtime=pt),
+            drqp_interfaces.msg.AsyncPositionCommand(id=12, position=tibia_pos_right, playtime=pt),
         ]
         self.pose_async_publisher.publish(msg)
 
@@ -481,8 +449,7 @@ class RobotBrain(rclpy.node.Node):
         femur_joint.header.frame_id = 'coxa_joint'
         femur_joint.child_frame_id = 'femur_joint'
         femur_joint.transform.translation.x = self.coxa
-        femur_joint.transform.rotation = quaternion_from_euler(
-            0, math.pi / 2 - self.alpha, 0)
+        femur_joint.transform.rotation = quaternion_from_euler(0, math.pi / 2 - self.alpha, 0)
 
         tibia_joint = TransformStamped()
         transforms.append(tibia_joint)
@@ -491,8 +458,7 @@ class RobotBrain(rclpy.node.Node):
         tibia_joint.header.frame_id = 'femur_joint'
         tibia_joint.child_frame_id = 'tibia_joint'
         tibia_joint.transform.translation.x = self.femur
-        tibia_joint.transform.rotation = quaternion_from_euler(
-            0, math.pi - self.beta, 0)
+        tibia_joint.transform.rotation = quaternion_from_euler(0, math.pi - self.beta, 0)
 
         leg_tip = TransformStamped()
         transforms.append(leg_tip)
@@ -501,8 +467,8 @@ class RobotBrain(rclpy.node.Node):
         leg_tip.header.frame_id = 'tibia_joint'
         leg_tip.child_frame_id = 'leg_tip'
         leg_tip.transform.translation.x = self.tibia
-        leg_tip.transform.translation.y = 0.
-        leg_tip.transform.translation.z = 0.
+        leg_tip.transform.translation.y = 0.0
+        leg_tip.transform.translation.z = 0.0
         leg_tip.transform.rotation.x = 0.0
         leg_tip.transform.rotation.y = 0.0
         leg_tip.transform.rotation.z = 0.0
@@ -521,10 +487,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--test', action='store_true')
     parser.add_argument('--cycle-time-seconds', type=float, default=8)
-    parser.add_argument('--sequence', type=str,
-                        default='all_circles', choices=sequences.keys())
-    parser.add_argument('--test-angles', type=str,
-                        default='straight_leg', choices=test_angles.keys())
+    parser.add_argument('--sequence', type=str, default='all_circles', choices=sequences.keys())
+    parser.add_argument(
+        '--test-angles', type=str, default='straight_leg', choices=test_angles.keys()
+    )
     parser.add_argument('--sequence-repeat', type=int, default=2)
 
     # Parse the remaining arguments, noting that the passed-in args must *not*

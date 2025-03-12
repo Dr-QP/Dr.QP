@@ -33,21 +33,24 @@ def generate_launch_description():
     joint_state_publisher_node = Node(
         package='joint_state_publisher',
         executable='joint_state_publisher',
-        condition=UnlessCondition(gui)
+        condition=UnlessCondition(gui),
     )
 
     joint_state_publisher_gui_node = Node(
         package='joint_state_publisher_gui',
         executable='joint_state_publisher_gui',
-        condition=IfCondition(gui)
+        condition=IfCondition(gui),
     )
 
-    return LaunchDescription([
-        DeclareLaunchArgument(name='gui',
-                              default_value='true',
-                              choices=['true', 'false'],
-                              description='Enable joint_state_publisher_gui'),
-
-        joint_state_publisher_node,
-        joint_state_publisher_gui_node,
-    ])
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument(
+                name='gui',
+                default_value='true',
+                choices=['true', 'false'],
+                description='Enable joint_state_publisher_gui',
+            ),
+            joint_state_publisher_node,
+            joint_state_publisher_gui_node,
+        ]
+    )

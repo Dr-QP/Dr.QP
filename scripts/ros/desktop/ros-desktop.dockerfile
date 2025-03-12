@@ -15,19 +15,6 @@ ARG USERNAME=rosdev
 ARG UID=1001
 ARG GID=$UID
 
-
-# Force clang-format-19 and friends to the default
-ENV CLANG_VERSION=20
-ENV PATH="/usr/lib/llvm-${CLANG_VERSION}/bin:$PATH"
-ENV CC=clang
-ENV CXX=clang++
-
-# Install ROS packages
-COPY ./ros /ros-prep
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    env CI=1 /ros-prep/ros-2-prep.sh
-
 # Create and switch to user
 RUN groupadd -g $GID $USERNAME \
     && useradd -lm -u $UID -g $USERNAME -s /bin/bash $USERNAME \
@@ -39,25 +26,22 @@ RUN groupadd -g $GID $USERNAME \
 USER $USERNAME
 WORKDIR /tmp
 
-# Install ros.fish scripts and dependencies
-RUN /ros-prep/fish/setup.fish
+# Force clang-format-19 and friends to the default
+ENV CLANG_VERSION=20
+ENV PATH="/usr/lib/llvm-${CLANG_VERSION}/bin:$PATH"
+ENV CC=clang
+ENV CXX=clang++
 
-# install colcon mixins under $USERNAME
-RUN colcon mixin add default https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml \
-    && colcon mixin update default \
-    && colcon mixin list \
-    && colcon mixin show
-
-# rosdep update under $USERNAME
+# Install ROS
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    sudo apt-get update \
-    && rosdep update
+    --mount=type=bind,readonly,source=..,target=/ros-prep \
+    env CI=1 /ros-prep/bootstrap.sh
 
 WORKDIR /home/$USERNAME/ros2_ws
 
 # Setup entrypoint
-COPY ./deploy/ros_entrypoint.sh /
+COPY ../deploy/ros_entrypoint.sh /
 ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["bash"]
 

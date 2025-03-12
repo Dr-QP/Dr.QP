@@ -28,15 +28,15 @@ def generate_launch_description():
     hexapod_js_dir = get_package_share_path('drqp_hexapod_js')
     a1_16_driver_dir = get_package_share_path('drqp_a1_16_driver')
 
-    return LaunchDescription([
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                str(hexapod_js_dir / 'launch' / 'web.launch.py')
-            )
-        ),
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                str(a1_16_driver_dir / 'launch' / 'pose_setter.launch.py')
-            )
-        )
-    ])
+    return LaunchDescription(
+        [
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(str(hexapod_js_dir / 'launch' / 'web.launch.py'))
+            ),
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    str(a1_16_driver_dir / 'launch' / 'pose_setter.launch.py')
+                )
+            ),
+        ]
+    )

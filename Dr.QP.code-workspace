@@ -50,6 +50,9 @@
       "swyddfa.esbonio",
       "lextudio.restructuredtext",
       "augment.vscode-augment",
+      "charliermarsh.ruff",
+      "tamasfe.even-better-toml",
+      "davidanson.vscode-markdownlint",
     ]
   },
   "launch": {
@@ -283,12 +286,18 @@
     "esbonio.server.enabled": false,
     "[python]": {
       "editor.formatOnSave": true,
-      "editor.defaultFormatter": "ms-python.autopep8"
+      "editor.defaultFormatter": "charliermarsh.ruff"
     },
-    "autopep8.args": [
-      "--max-line-length", "100",
-      "--aggressive",
-      "--aggressive"
+    "ruff.organizeImports": true,
+    "ruff.fixAll": true,
+    "ruff.lint.enable": true,
+
+    "cSpell.words": [
+      "drqp",
+      "dr_qp",
+      "Matosov",
+      "rclpy",
+      "rclcpp",
     ],
   },
 }

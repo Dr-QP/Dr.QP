@@ -33,53 +33,71 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     rsp = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(
-            get_pkg_dir(
-                'drqp_description'), 'launch', 'rsp.launch.py'
-        )]), launch_arguments={
+        PythonLaunchDescriptionSource(
+            [os.path.join(get_pkg_dir('drqp_description'), 'launch', 'rsp.launch.py')]
+        ),
+        launch_arguments={
             'use_sim_time': 'True',
             'use_ros2_control': 'True',
-        }.items()
+        }.items(),
     )
 
-    gazebo_params_file = os.path.join(get_pkg_dir(
-        'drqp_gazebo'), 'config', 'gazebo_params.yaml')
+    gazebo_params_file = os.path.join(get_pkg_dir('drqp_gazebo'), 'config', 'gazebo_params.yaml')
 
     # Include the Gazebo launch file, provided by the gazebo_ros package
     gazebo = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(
-            get_pkg_dir('gazebo_ros'), 'launch', 'gazebo.launch.py')]),
+        PythonLaunchDescriptionSource(
+            [os.path.join(get_pkg_dir('gazebo_ros'), 'launch', 'gazebo.launch.py')]
+        ),
         launch_arguments={
             'verbose': 'true',
             'extra_gazebo_args': '--ros-args --params-file ' + gazebo_params_file,
             'gui_required': 'True',  # Set "true" to shut down launch script when GUI is terminated
-
             # 'world': os.path.join(get_pkg_dir('drqp_gazebo'), 'worlds', 'drqp.world'),
             # 'world': os.path.join(get_pkg_dir('gazebo_ros'), 'worlds', 'empty.world'),
-        }.items()
+        }.items(),
     )
 
     entity_name = 'dr_qp'
     # Run the spawner node from the gazebo_ros package. The entity name doesn't really
     # matter if you only have a single robot.
-    spawn_entity = Node(package='gazebo_ros', executable='spawn_entity.py',
-                        arguments=['-topic', 'robot_description',
-                                   '-entity', entity_name,
-                                   '-package_to_model',
-                                   '-z', '.15',  # initial Z possition
-                                   ],
-                        output='screen')
+    spawn_entity = Node(
+        package='gazebo_ros',
+        executable='spawn_entity.py',
+        arguments=[
+            '-topic',
+            'robot_description',
+            '-entity',
+            entity_name,
+            '-package_to_model',
+            '-z',
+            '.15',  # initial Z possition
+        ],
+        output='screen',
+    )
 
     load_joint_state_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
-             'joint_state_broadcaster'],
-        output='screen'
+        cmd=[
+            'ros2',
+            'control',
+            'load_controller',
+            '--set-state',
+            'active',
+            'joint_state_broadcaster',
+        ],
+        output='screen',
     )
 
     position_trajectory_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state',
-             'active', 'position_trajectory_controller'],
-        output='screen'
+        cmd=[
+            'ros2',
+            'control',
+            'load_controller',
+            '--set-state',
+            'active',
+            'position_trajectory_controller',
+        ],
+        output='screen',
     )
     # velocity_controller = ExecuteProcess(
     #     cmd=['ros2', 'control', 'load_controller',
@@ -92,20 +110,22 @@ def generate_launch_description():
     #     output='screen'
     # )
     # Launch them all!
-    return LaunchDescription([
-        rsp,
-        gazebo,
-        spawn_entity,
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=spawn_entity,
-                on_exit=[load_joint_state_controller],
-            )
-        ),
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=load_joint_state_controller,
-                on_exit=[position_trajectory_controller],
-            )
-        ),
-    ])
+    return LaunchDescription(
+        [
+            rsp,
+            gazebo,
+            spawn_entity,
+            RegisterEventHandler(
+                event_handler=OnProcessExit(
+                    target_action=spawn_entity,
+                    on_exit=[load_joint_state_controller],
+                )
+            ),
+            RegisterEventHandler(
+                event_handler=OnProcessExit(
+                    target_action=load_joint_state_controller,
+                    on_exit=[position_trajectory_controller],
+                )
+            ),
+        ]
+    )
