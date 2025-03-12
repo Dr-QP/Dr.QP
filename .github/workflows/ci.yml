@@ -64,8 +64,8 @@ jobs:
         id: build
         uses: ./.github/actions/docker/build-push-action
         with:
-          context: scripts
-          file: scripts/ros-desktop.dockerfile
+          context: scripts/ros
+          file: scripts/ros/desktop/ros-desktop.dockerfile
           image: ${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop
           arch: ${{ matrix.arch }}
           registry: ${{ env.REGISTRY }}
@@ -211,8 +211,8 @@ jobs:
       - name: Build deployment docker image
         uses: ./.github/actions/docker/build-push-action
         with:
-          context: scripts/deploy
-          file: scripts/deploy/ros-deploy.dockerfile
+          context: scripts/ros/deploy
+          file: scripts/ros/deploy/ros-deploy.dockerfile
           image: ${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-deploy
           arch: ${{ matrix.arch }}
           registry: ${{ env.REGISTRY }}
