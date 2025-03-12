@@ -280,6 +280,15 @@
     "coverage-gutters.highlightdark": "rgba(0, 122, 30, 0.1)",
     "coverage-gutters.partialHighlightDark": "rgba(163, 149, 0, 0.1)",
     "coverage-gutters.noHighlightDark": "rgba(163, 0, 0, 0.1)",
-    "esbonio.server.enabled": false
+    "esbonio.server.enabled": false,
+    "[python]": {
+      "editor.formatOnSave": true,
+      "editor.defaultFormatter": "ms-python.autopep8"
+    },
+    "autopep8.args": [
+      "--max-line-length", "100",
+      "--aggressive",
+      "--aggressive"
+    ],
   },
 }

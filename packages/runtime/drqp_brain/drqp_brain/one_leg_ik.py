@@ -45,16 +45,16 @@ def quaternion_from_euler(ai, aj, ak):
     sj = math.sin(aj)
     ck = math.cos(ak)
     sk = math.sin(ak)
-    cc = ci*ck
-    cs = ci*sk
-    sc = si*ck
-    ss = si*sk
+    cc = ci * ck
+    cs = ci * sk
+    sc = si * ck
+    ss = si * sk
 
     q = Quaternion()
-    q.x = cj*sc - sj*cs
-    q.y = cj*ss + sj*cc
-    q.z = cj*cs - sj*sc
-    q.w = cj*cc + sj*ss
+    q.x = cj * sc - sj * cs
+    q.y = cj * ss + sj * cc
+    q.z = cj * cs - sj * sc
+    q.w = cj * cc + sj * ss
 
     return q
 
