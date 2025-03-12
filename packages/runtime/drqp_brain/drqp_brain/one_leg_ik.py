@@ -329,7 +329,7 @@ class RobotBrain(rclpy.node.Node):
         #           /    \     Coxa   |
         #    Tibia /   a1(*-----------|
         #         /  L _/(|        ^  |
-        #        /  _/  a2|   Zoff |  |
+        #        /  _/  a2|  Z_off |  |
         # (y, z)/_/       |        V  | Z
         #   <--@----------------------+
         #      |                      0

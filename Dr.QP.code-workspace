@@ -290,5 +290,12 @@
       "--aggressive",
       "--aggressive"
     ],
+    "cSpell.words": [
+      "drqp",
+      "dr_qp",
+      "Matosov",
+      "rclpy",
+      "rclcpp",
+    ],
   },
 }
