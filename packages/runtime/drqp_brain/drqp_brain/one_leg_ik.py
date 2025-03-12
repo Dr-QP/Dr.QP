@@ -211,7 +211,8 @@ kTibiaOffsetRad = kTibiaOffsetAngle * math.pi / 180
 
 
 class RobotBrain(rclpy.node.Node):
-    """ROS2 node that implements inverse kinematics for a single robot leg.
+    """
+    ROS2 node that implements inverse kinematics for a single robot leg.
 
     This node calculates joint angles for a 3-DOF robotic leg (coxa, femur, tibia)
     given desired end-effector positions. It publishes the calculated joint angles
