@@ -43,16 +43,12 @@ WORKDIR /tmp
 RUN /ros-prep/fish/setup.fish
 
 # install colcon mixins under $USERNAME
-RUN colcon mixin add default https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml \
-    && colcon mixin update default \
-    && colcon mixin list \
-    && colcon mixin show
+RUN /ros-prep/colcon-mixin.sh
 
 # rosdep update under $USERNAME
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    sudo apt-get update \
-    && rosdep update
+    /ros-prep/rosdep-update.sh
 
 WORKDIR /home/$USERNAME/ros2_ws
 
