@@ -7,9 +7,14 @@ indent-width = 4
 target-version = "py312"
 
 [tool.ruff.lint]
-# Enable Pyflakes (`F`), pycodestyle (`E`), flake8-blind-except (`BLE`), 
-# flake8-class-newline (`CNL`), flake8-deprecated (`D`)
-select = ["E", "F", "BLE", "CNL", "D"]
+# Enable:
+# - pycodestyle (E, W)
+# - Pyflakes (F)
+# - flake8-blind-except (BLE)
+# - pydocstyle (D)
+# - isort (I)
+# - pycodestyle warnings (W)
+select = ["E", "W", "F", "BLE", "D", "I"]
 
 # Never enforce `E501` (line length violations) - handled by formatter
 ignore = ["E501"]
@@ -20,9 +25,6 @@ quote-style = "single"
 
 # Indent with 4 spaces
 indent-style = "space"
-
-# Respect `# fmt: skip` comments
-respect-fmt-skip = true
 
 [tool.ruff.lint.pep8-naming]
 # Allow Pydantic's `cls` parameter to be lowercase
@@ -35,3 +37,6 @@ classmethod-decorators = [
 [tool.ruff.lint.per-file-ignores]
 # Ignore unused imports in __init__.py files
 "__init__.py" = ["F401"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
