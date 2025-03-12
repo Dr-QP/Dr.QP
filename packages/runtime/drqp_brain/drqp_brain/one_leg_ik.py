@@ -245,7 +245,6 @@ class RobotBrain(rclpy.node.Node):
             solved, self.alpha, self.beta, self.gamma = self.solve_for(*self.frame)
 
         if solved:
-            # self.publish_joints()
             self.publish_pose()
         self.broadcast_tf(self.frame)
 
@@ -264,8 +263,6 @@ class RobotBrain(rclpy.node.Node):
                     self.timer.cancel()
 
     def solve_for(self, x, y, z, pose_name):
-        # print(f'Solving for {x=}, {y=}, {z=}, pose: {pose_name}')
-
         # ROS is using right hand side coordinates system
         #
         # X - forward
@@ -468,6 +465,7 @@ def main():
 
     # Strip off the ROS 2-specific command-line arguments
     stripped_args = rclpy.utilities.remove_ros_args(args=sys.argv)
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--test', action='store_true')
     parser.add_argument('--cycle-time-seconds', type=float, default=8)
