@@ -1,0 +1,37 @@
+[tool.ruff]
+# Same as Black.
+line-length = 100
+indent-width = 4
+
+# Assume Python 3.12
+target-version = "py312"
+
+[tool.ruff.lint]
+# Enable Pyflakes (`F`), pycodestyle (`E`), flake8-blind-except (`BLE`), 
+# flake8-class-newline (`CNL`), flake8-deprecated (`D`)
+select = ["E", "F", "BLE", "CNL", "D"]
+
+# Never enforce `E501` (line length violations) - handled by formatter
+ignore = ["E501"]
+
+[tool.ruff.format]
+# Use single quotes for strings
+quote-style = "single"
+
+# Indent with 4 spaces
+indent-style = "space"
+
+# Respect `# fmt: skip` comments
+respect-fmt-skip = true
+
+[tool.ruff.lint.pep8-naming]
+# Allow Pydantic's `cls` parameter to be lowercase
+classmethod-decorators = [
+    "classmethod",
+    "pydantic.validator",
+    "pydantic.root_validator",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore unused imports in __init__.py files
+"__init__.py" = ["F401"]

@@ -50,6 +50,7 @@
       "swyddfa.esbonio",
       "lextudio.restructuredtext",
       "augment.vscode-augment",
+      "charliermarsh.ruff",
     ]
   },
   "launch": {
@@ -283,13 +284,10 @@
     "esbonio.server.enabled": false,
     "[python]": {
       "editor.formatOnSave": true,
-      "editor.defaultFormatter": "ms-python.autopep8"
+      "editor.defaultFormatter": "charliermarsh.ruff"
     },
-    "autopep8.args": [
-      "--max-line-length", "100",
-      "--aggressive",
-      "--aggressive"
-    ],
+    "ruff.organizeImports": true,
+    "ruff.format.args": [],
     "cSpell.words": [
       "drqp",
       "dr_qp",
