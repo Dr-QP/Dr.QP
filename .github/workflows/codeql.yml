@@ -139,7 +139,6 @@ jobs:
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
-      id: analyze
       with:
         category: "/language:${{matrix.language}}"
         output: sarif-results
@@ -170,21 +169,22 @@ jobs:
           -**/examples/**
           -**/test/**
 
+    - name: Upload SARIF
+      uses: github/codeql-action/upload-sarif@v3
+      id: upload-sarif
+      with:
+        sarif_file: ${{ steps.sarif.outputs.file }}
+
       # Unlock inline mechanism to suppress CodeQL warnings.
       # https://github.com/github/codeql/issues/11427#issuecomment-1721059096
     - name: Dismiss alerts that were suppressed with inline comments
-      if: matrix.supports-dismissal
+      # if: matrix.supports-dismissal
       uses: advanced-security/dismiss-alerts@v1
       with:
-        sarif-id: ${{ steps.analyze.outputs.sarif-id }}
+        sarif-id: ${{ steps.upload-sarif.outputs.sarif-id }}
         sarif-file: ${{ steps.sarif.outputs.file }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
-
-    - name: Upload SARIF
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: ${{ steps.sarif.outputs.file }}
 
     - name: Upload loc as a Build Artifact
       uses: actions/upload-artifact@v4
