@@ -35,7 +35,7 @@ ENV CXX=clang++
 # Install ROS
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    --mount=type=bind,source=..,target=/ros-prep \
+    --mount=type=bind,readonly,source=..,target=/ros-prep \
     env CI=1 /ros-prep/bootstrap.sh
 
 WORKDIR /home/$USERNAME/ros2_ws
