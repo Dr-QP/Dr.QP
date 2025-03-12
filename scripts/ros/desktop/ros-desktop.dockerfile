@@ -50,8 +50,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     /ros-prep/rosdep-update.sh
 
-RUN rm -rf /ros-prep
-
 WORKDIR /home/$USERNAME/ros2_ws
 
 # Setup entrypoint
