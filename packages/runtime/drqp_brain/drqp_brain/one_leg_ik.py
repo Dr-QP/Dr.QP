@@ -266,7 +266,8 @@ class RobotBrain(rclpy.node.Node):
             self.current_frame += 1
             if self.current_frame >= len(self.sequence):
                 self.current_frame = 0
-                print('=======================   Sequence completed   =======================')
+                print(
+                    '=======================   Sequence completed   =======================')
                 if self.sequence_repeat > 1:
                     self.sequence_repeat -= 1
                 else:
@@ -516,6 +517,7 @@ def main():
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
+        # Stop the node on Ctrl+C
         # codeql[py/empty-except]
         pass
 
