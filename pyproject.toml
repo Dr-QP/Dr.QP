@@ -13,7 +13,7 @@ target-version = "py312"
 # - pydocstyle (D)
 # - pycodestyle warnings (W)
 # - D213: Multi-line docstring summary should start at the second line
-select = ["E", "W", "F", "BLE", "D", "D213"]
+select = ["E", "W", "F", "BLE", "D213"]
 
 # Never enforce `E501` (line length violations) - handled by formatter
 # Ignore D212 in favor of D213
