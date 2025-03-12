@@ -49,6 +49,7 @@
       "github.vscode-pull-request-github",
       "swyddfa.esbonio",
       "lextudio.restructuredtext",
+      "augment.vscode-augment",
     ]
   },
   "launch": {
@@ -111,6 +112,13 @@
           "name": "drqp_hexapod_js Chrome client",
           "url": "http://localhost:3000",
           "webRoot": "${workspaceFolder}",
+      },
+      {
+        "name": "Python Debugger: Current File",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${file}",
+        "console": "integratedTerminal",
       }
     ]
   },
@@ -272,6 +280,15 @@
     "coverage-gutters.highlightdark": "rgba(0, 122, 30, 0.1)",
     "coverage-gutters.partialHighlightDark": "rgba(163, 149, 0, 0.1)",
     "coverage-gutters.noHighlightDark": "rgba(163, 0, 0, 0.1)",
-    "esbonio.server.enabled": false
+    "esbonio.server.enabled": false,
+    "[python]": {
+      "editor.formatOnSave": true,
+      "editor.defaultFormatter": "ms-python.autopep8"
+    },
+    "autopep8.args": [
+      "--max-line-length", "100",
+      "--aggressive",
+      "--aggressive"
+    ],
   },
 }

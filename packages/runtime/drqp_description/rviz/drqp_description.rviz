@@ -7,8 +7,9 @@ Panels:
         - /RobotModel1
         - /TF1
         - /TF1/Frames1
-      Splitter Ratio: 0.6455398797988892
-    Tree Height: 431
+        - /TF1/Tree1
+      Splitter Ratio: 0.7717171907424927
+    Tree Height: 426
   - Class: rviz_common/Views
     Expanded:
       - /Current View1
@@ -348,49 +349,51 @@ Visualization Manager:
       Filter (whitelist): ""
       Frame Timeout: 15
       Frames:
-        All Enabled: true
+        All Enabled: false
+        coxa_joint:
+          Value: true
         dr_qp/back_left_coxa_f2_link_1:
-          Value: true
+          Value: false
         dr_qp/back_left_coxa_f2_link_2:
-          Value: true
+          Value: false
         dr_qp/back_left_coxa_servo:
-          Value: true
+          Value: false
         dr_qp/back_left_femur_link_f1:
-          Value: true
+          Value: false
         dr_qp/back_left_femur_link_f3:
-          Value: true
+          Value: false
         dr_qp/back_left_femur_servo:
-          Value: true
+          Value: false
         dr_qp/back_left_foot_link:
-          Value: true
+          Value: false
         dr_qp/back_left_tibia_leg:
-          Value: true
+          Value: false
         dr_qp/back_left_tibia_servo:
-          Value: true
+          Value: false
         dr_qp/back_right_coxa_f2_link_1:
-          Value: true
+          Value: false
         dr_qp/back_right_coxa_f2_link_2:
-          Value: true
+          Value: false
         dr_qp/back_right_coxa_servo:
-          Value: true
+          Value: false
         dr_qp/back_right_femur_link_f1:
-          Value: true
+          Value: false
         dr_qp/back_right_femur_link_f3:
-          Value: true
+          Value: false
         dr_qp/back_right_femur_servo:
-          Value: true
+          Value: false
         dr_qp/back_right_foot_link:
-          Value: true
+          Value: false
         dr_qp/back_right_tibia_leg:
-          Value: true
+          Value: false
         dr_qp/back_right_tibia_servo:
-          Value: true
+          Value: false
         dr_qp/base_center_link:
-          Value: true
+          Value: false
         dr_qp/base_link:
-          Value: true
+          Value: false
         dr_qp/camera:
-          Value: true
+          Value: false
         dr_qp/front_left_coxa_f2_link_1:
           Value: true
         dr_qp/front_left_coxa_f2_link_2:
@@ -408,63 +411,71 @@ Visualization Manager:
         dr_qp/front_left_tibia_leg:
           Value: true
         dr_qp/front_left_tibia_servo:
-          Value: true
+          Value: false
         dr_qp/front_right_coxa_f2_link_1:
-          Value: true
+          Value: false
         dr_qp/front_right_coxa_f2_link_2:
-          Value: true
+          Value: false
         dr_qp/front_right_coxa_servo:
-          Value: true
+          Value: false
         dr_qp/front_right_femur_link_f1:
-          Value: true
+          Value: false
         dr_qp/front_right_femur_link_f3:
-          Value: true
+          Value: false
         dr_qp/front_right_femur_servo:
-          Value: true
+          Value: false
         dr_qp/front_right_foot_link:
-          Value: true
+          Value: false
         dr_qp/front_right_tibia_leg:
-          Value: true
+          Value: false
         dr_qp/front_right_tibia_servo:
-          Value: true
+          Value: false
         dr_qp/middle_left_coxa_f2_link_1:
-          Value: true
+          Value: false
         dr_qp/middle_left_coxa_f2_link_2:
-          Value: true
+          Value: false
         dr_qp/middle_left_coxa_servo:
-          Value: true
+          Value: false
         dr_qp/middle_left_femur_link_f1:
-          Value: true
+          Value: false
         dr_qp/middle_left_femur_link_f3:
-          Value: true
+          Value: false
         dr_qp/middle_left_femur_servo:
-          Value: true
+          Value: false
         dr_qp/middle_left_foot_link:
-          Value: true
+          Value: false
         dr_qp/middle_left_tibia_leg:
-          Value: true
+          Value: false
         dr_qp/middle_left_tibia_servo:
-          Value: true
+          Value: false
         dr_qp/middle_right_coxa_f2_link_1:
-          Value: true
+          Value: false
         dr_qp/middle_right_coxa_f2_link_2:
-          Value: true
+          Value: false
         dr_qp/middle_right_coxa_servo:
-          Value: true
+          Value: false
         dr_qp/middle_right_femur_link_f1:
-          Value: true
+          Value: false
         dr_qp/middle_right_femur_link_f3:
-          Value: true
+          Value: false
         dr_qp/middle_right_femur_servo:
-          Value: true
+          Value: false
         dr_qp/middle_right_foot_link:
-          Value: true
+          Value: false
         dr_qp/middle_right_tibia_leg:
-          Value: true
+          Value: false
         dr_qp/middle_right_tibia_servo:
+          Value: false
+        femur_joint:
+          Value: true
+        front_left_target:
+          Value: true
+        leg_tip:
+          Value: true
+        tibia_joint:
           Value: true
         world:
-          Value: true
+          Value: false
       Marker Scale: 0.20000000298023224
       Name: TF
       Show Arrows: true
@@ -497,6 +508,11 @@ Visualization Manager:
               dr_qp/camera:
                 {}
               dr_qp/front_left_coxa_servo:
+                coxa_joint:
+                  femur_joint:
+                    tibia_joint:
+                      leg_tip:
+                        {}
                 dr_qp/front_left_coxa_f2_link_1:
                   dr_qp/front_left_coxa_f2_link_2:
                     dr_qp/front_left_femur_servo:
@@ -506,6 +522,8 @@ Visualization Manager:
                             dr_qp/front_left_tibia_leg:
                               dr_qp/front_left_foot_link:
                                 {}
+                front_left_target:
+                  {}
               dr_qp/front_right_coxa_servo:
                 dr_qp/front_right_coxa_f2_link_1:
                   dr_qp/front_right_coxa_f2_link_2:
@@ -553,33 +571,33 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 0.7841410636901855
+      Distance: 0.8170455098152161
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.04902588948607445
-        Y: 0.009913847781717777
-        Z: 0.0412822961807251
-      Focal Shape Fixed Size: true
+        X: 0.01761915534734726
+        Y: 0.054539721459150314
+        Z: 0.08488970249891281
+      Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7447960376739502
+      Pitch: 0.3653987646102905
       Target Frame: <Fixed Frame>
-      Value: Orbit (rviz)
-      Yaw: 5.793179035186768
+      Value: Orbit (rviz_default_plugins)
+      Yaw: 1.1704037189483643
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1174
+  Height: 1173
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd0000000100000000000001f700000446fc0200000002fb000000100044006900730070006c006100790073010000002900000286000000fd01000003fb0000000a0056006900650077007301000002b0000001bf000000d301000003000005880000044600000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000100000000000001ef00000442fc0200000002fb000000100044006900730070006c006100790073010000002a00000283000000ff01000003fb0000000a0056006900650077007301000002ae000001be000000d701000003000005900000044200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
   Width: 1920
