@@ -34,6 +34,8 @@ import rclpy.node
 import sensor_msgs.msg
 from tf2_ros import TransformBroadcaster
 
+from .solver import Solver
+
 
 def quaternion_from_euler(ai, aj, ak):
     ai /= 2.0
@@ -57,19 +59,6 @@ def quaternion_from_euler(ai, aj, ak):
     q.w = cj * cc + sj * ss
 
     return q
-
-
-# based on https://oscarliang.com/inverse-kinematics-and-trigonometry-basics/
-
-
-def safe_acos(num):
-    if num < -1.01 or num > 1.01:
-        return False, 0
-    if num < -1.0:
-        num = -1.0
-    if num > 1.0:
-        num = 1.0
-    return True, math.acos(num)
 
 
 x = 0.0
@@ -243,9 +232,7 @@ class RobotBrain(rclpy.node.Node):
 
         # TODO (anton-matosov): Use robot description and \
         #   TF to get these values instead of using hard coded values
-        self.coxa = coxa
-        self.femur = femur
-        self.tibia = tibia
+        self.solver = Solver(coxa, femur, tibia, self.get_logger())
 
         self.tf_broadcaster = TransformBroadcaster(self)
 
@@ -266,7 +253,7 @@ class RobotBrain(rclpy.node.Node):
             self.frame = (max_distance, 0.0, 0.0, 'forward')
             solved = True
         else:
-            solved, self.alpha, self.beta, self.gamma = self.solve_for(*self.frame)
+            solved, self.alpha, self.beta, self.gamma = self.solver.solve(*self.frame)
 
         if solved:
             self.publish_pose()
@@ -285,79 +272,6 @@ class RobotBrain(rclpy.node.Node):
                     self.sequence_repeat -= 1
                 else:
                     self.timer.cancel()
-
-    def solve_for(self, x, y, z, pose_name):
-        # ROS is using right hand side coordinates system
-        #
-        # X - forward
-        # Y - left
-        # Z - up
-        #
-        # (x=1, y=0, z=0) - is Forward
-
-        #  (view from the top)
-        #                      ^
-        #            @ (x, y) /|\
-        #             \        |
-        #              \       |
-        #               *      |
-        #                \     |
-        #              L1 \    |
-        #                  *  g|  g - gamma
-        #                   \--|
-        #                    \ |
-        #                     \| X
-        #   <------------------+
-        #                  Y    0
-        #
-        self.gamma = math.atan2(y, x)
-
-        # <img src=https://oscarliang.com/wp-content/uploads/2012/01/2-IK-side1.jpg />
-        #  (view from the side)
-        #                             ^
-        #                            /|\
-        #                             |
-        #                             |    a - alpha
-        #             *\ Femur        |    b - beta
-        #            /`b\             |
-        #           /    \     Coxa   |
-        #    Tibia /   a1(*-----------|
-        #         /  L _/(|        ^  |
-        #        /  _/  a2|  Z_off |  |
-        # (y, z)/_/       |        V  | Z
-        #   <--@----------------------+
-        #      |                      0
-        #      |<-------- L1 -------->|
-        Z_offset = -z
-        L1 = math.hypot(x, y)
-        L = math.hypot(Z_offset, L1 - self.coxa)
-        alpha1_acos_input = Z_offset / L
-        solvable, alpha1 = safe_acos(alpha1_acos_input)
-
-        if not solvable:
-            print(f"Can't solve `alpha1` for {x=}, {y=}, {z=}, pose: {pose_name}")
-            return False, 0, 0, 0
-
-        alpha2_acos_input = (self.femur**2 + L**2 - self.tibia**2) / (2 * self.femur * L)
-        solvable, alpha2 = safe_acos(alpha2_acos_input)
-        self.alpha = alpha1 + alpha2
-
-        if not solvable:
-            print(f"Can't solve `alpha2` for {x=}, {y=}, {z=}, pose: {pose_name}")
-            return False, 0, 0, 0
-
-        beta_acos_input = (self.tibia**2 + self.femur**2 - L**2) / (2 * self.tibia * self.femur)
-        solvable, self.beta = safe_acos(beta_acos_input)
-
-        if not solvable:
-            print(f"Can't solve `beta` for {x=}, {y=}, {z=}, pose: {pose_name}")
-            return False, 0, 0, 0
-
-        print(
-            f'Solved  for {x=}, {y=}, {z=}, {self.alpha=} {self.beta=},'
-            f'{self.gamma=}, pose: {pose_name}'
-        )
-        return True, self.alpha, self.beta, self.gamma
 
     def publish_joints(self):
         msg = sensor_msgs.msg.JointState()
