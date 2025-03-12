@@ -27,20 +27,16 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 def generate_launch_description():
     pkg_launch_path = get_package_share_path('drqp_description') / 'launch'
 
-    return LaunchDescription([
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                str(pkg_launch_path / 'rsp.launch.py')
-            )
-        ),
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                str(pkg_launch_path / 'jsp.launch.py')
-            )
-        ),
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                str(pkg_launch_path / 'rviz.launch.py')
-            )
-        )
-    ])
+    return LaunchDescription(
+        [
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(str(pkg_launch_path / 'rsp.launch.py'))
+            ),
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(str(pkg_launch_path / 'jsp.launch.py'))
+            ),
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(str(pkg_launch_path / 'rviz.launch.py'))
+            ),
+        ]
+    )

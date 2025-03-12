@@ -38,22 +38,27 @@ def generate_launch_description():
         name='rviz2',
         output='screen',
         arguments=[
-            '-d', LaunchConfiguration('rviz_config'),
-            '-f', LaunchConfiguration('rviz_frame')],
+            '-d',
+            LaunchConfiguration('rviz_config'),
+            '-f',
+            LaunchConfiguration('rviz_frame'),
+        ],
         parameters=[{'use_sim_time': use_sim_time}],
     )
 
-    return LaunchDescription([
-        DeclareLaunchArgument(name='use_sim_time',
-                              default_value='true',
-                              description='Use sim time if true'),
-        DeclareLaunchArgument(name='rviz_frame',
-                              default_value='world',
-                              description='Base model frame in rviz'),
-        DeclareLaunchArgument(name='rviz_config',
-                              default_value=str(
-                                  pkg_share_path / 'rviz' / 'drqp_description.rviz'),
-                              description='Absolute path to rviz config file'),
-
-        rviz_node
-    ])
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument(
+                name='use_sim_time', default_value='true', description='Use sim time if true'
+            ),
+            DeclareLaunchArgument(
+                name='rviz_frame', default_value='world', description='Base model frame in rviz'
+            ),
+            DeclareLaunchArgument(
+                name='rviz_config',
+                default_value=str(pkg_share_path / 'rviz' / 'drqp_description.rviz'),
+                description='Absolute path to rviz config file',
+            ),
+            rviz_node,
+        ]
+    )
