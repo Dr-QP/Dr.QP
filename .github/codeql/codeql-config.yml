@@ -2,6 +2,11 @@
 name: "CodeQL Configuration"
 disable-default-queries: true
 
+packs:
+  - codeql/javascript-queries:AlertSuppression.ql
+  - codeql/python-queries:AlertSuppression.ql
+  - codeql/cpp-queries:AlertSuppression.ql
+
 queries:
   - uses: security-extended
   - uses: security-and-quality
