@@ -168,6 +168,7 @@ jobs:
           -**/logs/**
           -**/examples/**
           -**/test/**
+          -**/node_modules/**
 
     - name: Upload SARIF
       uses: github/codeql-action/upload-sarif@v3
