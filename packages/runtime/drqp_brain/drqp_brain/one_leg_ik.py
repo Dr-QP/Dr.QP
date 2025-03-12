@@ -70,8 +70,6 @@ def safe_acos(num):
         num = 1.0
     return True, math.acos(num)
 
-# 'only_forward', 'only_left', 'only_down', 'all_quadrants', 'xy_little_circle', 'xz_little_circle', 'yz_little_circle', 'all_circles'
-
 
 x = 0.0
 y = 0.03
@@ -130,21 +128,41 @@ z = -0.08
 scalar = 0.05
 sequence_xy_little_circle = [
     # x, y, z
-    (x + math.cos(i) * scalar, y + math.sin(i) * scalar, z, f'xy-circle step {i}') for i in np.linspace(np.pi, np.pi * 3, steps)
+    (
+        x + math.cos(i) * scalar,
+        y + math.sin(i) * scalar,
+        z,
+        f'xy-circle step {i}'
+    ) for i in np.linspace(np.pi, np.pi * 3, steps)
 ]
 
 sequence_xz_little_circle = [
     # x, y, z
-    (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f'xz-circle step {i}') for i in np.linspace(0, np.pi * 2, steps)
+    (
+        x + math.sin(i) * scalar,
+        y,
+        z + math.cos(i) * scalar,
+        f'xz-circle step {i}'
+    ) for i in np.linspace(0, np.pi * 2, steps)
 ]
 sequence_xz_little_circle_last_quarter = [
     # x, y, z
-    (x + math.sin(i) * scalar, y, z + math.cos(i) * scalar, f'xz-circle step {i}') for i in np.linspace(np.pi * 1.5, np.pi * 2, int(steps / 4))
+    (
+        x + math.sin(i) * scalar,
+        y,
+        z + math.cos(i) * scalar,
+        f'xz-circle last quarter step {i}'
+    ) for i in np.linspace(np.pi * 1.5, np.pi * 2, int(steps / 4))
 ]
 
 sequence_yz_little_circle = [
     # x, y, z
-    (x, y + math.sin(i) * scalar, z + math.cos(i) * scalar, f'yz-circle step {i}') for i in np.linspace(0, np.pi * 2, steps)
+    (
+        x,
+        y + math.sin(i) * scalar,
+        z + math.cos(i) * scalar,
+        f'yz-circle step {i}'
+    ) for i in np.linspace(0, np.pi * 2, steps)
 ]
 
 repeat_circles = 3
@@ -228,7 +246,8 @@ class RobotBrain(rclpy.node.Node):
         self.beta = 0
         self.gamma = 0
 
-        # TODO (anton-matosov): Use robot description and TF to get these values instead of using hard coded values
+        # TODO (anton-matosov): Use robot description and \
+        #   TF to get these values instead of using hard coded values
         self.coxa = coxa
         self.femur = femur
         self.tibia = tibia
