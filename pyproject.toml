@@ -14,10 +14,11 @@ target-version = "py312"
 # - pydocstyle (D)
 # - isort (I)
 # - pycodestyle warnings (W)
-select = ["E", "W", "F", "BLE", "D", "I"]
+select = ["E", "W", "F", "BLE", "D", "I", "D213"]
 
 # Never enforce `E501` (line length violations) - handled by formatter
-ignore = ["E501"]
+# Ignore D212 in favor of D213
+ignore = ["E501", "D212"]
 
 [tool.ruff.format]
 # Use single quotes for strings

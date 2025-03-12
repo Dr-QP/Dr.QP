@@ -8,6 +8,7 @@ dependencies:
   - python=3.12 # keep in sync with .readthedocs.yaml
   - nodejs=20 # keep in sync with .readthedocs.yaml
   - pip:
+     - ruff
      - colcon-common-extensions
      - colcon-coveragepy-result
      - colcon-lcov-result
