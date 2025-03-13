@@ -30,14 +30,13 @@ def test_safe_acos():
     assert safe_acos(-1.0) == (True, math.pi)
     assert safe_acos(0.0) == (True, math.pi / 2)
 
-    # Test edge cases
-    assert safe_acos(1.01) == (False, 0)
-    assert safe_acos(-1.01) == (False, 0)
+    # Test safe zone extensions
+    assert safe_acos(1.01) == (True, 0.0)
+    assert safe_acos(-1.01) == (True, math.pi)
 
     # Test clamping
-    success, value = safe_acos(1.009)
-    assert success is True
-    assert value == 0.0
+    assert safe_acos(1.1) == (False, 0)
+    assert safe_acos(-1.1) == (False, 0)
 
 
 class TestSolver:
@@ -52,7 +51,7 @@ class TestSolver:
         assert solver.coxa == 79
         assert solver.femur == 128
         assert solver.tibia == 167
-        assert solver.logger is None
+        assert solver.logger is not None
 
     def test_forward_position(self, solver):
         # Test reaching forward
