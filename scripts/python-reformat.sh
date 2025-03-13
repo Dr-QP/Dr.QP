@@ -7,3 +7,4 @@ PATH="$PATH:/home/anton/.vscode/extensions/charliermarsh.ruff-2025.14.0-linux-x6
 
 ruff format $sources_dir
 ruff check --fix $sources_dir
+ruff check --select I --fix $sources_dir # isort aka organize imports
