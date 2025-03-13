@@ -27,11 +27,14 @@ select = ["E", "W", "F", "BLE", "D200", "D213"]
 ignore = ["E501", "D212"]
 
 [lint.isort]
-# Disable import sorting
+# Import sorting configuration
 force-single-line = false
-force-sort-within-sections = true
+force-sort-within-sections = true # sort all imports within section no matter the style
 combine-as-imports = true
+known-third-party = ["rclpy", "sensor_msgs", "tf2_ros", "pytest", "drqp_brain"]
 case-sensitive = false
+order-by-type = false # ignore type, use alphabetical order
+
 
 [lint.pep8-naming]
 # Allow Pydantic's `cls` parameter to be lowercase
