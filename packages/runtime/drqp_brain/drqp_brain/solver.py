@@ -18,6 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import math
+
+
 def safe_acos(num):
     if num < -1.01 or num > 1.01:
         return False, 0
@@ -27,24 +30,35 @@ def safe_acos(num):
         num = 1.0
     return True, math.acos(num)
 
+
+class StubLogger:
+    """Stub logger that does nothing."""
+
+    def debug(self, *args, **kwargs):
+        pass
+
+
 class Solver:
     """
-    Inverse kinematics solver for 3DOF leg
+    Inverse kinematics solver for 3DOF leg.
+
     Math is based on https://oscarliang.com/inverse-kinematics-and-trigonometry-basics/
     """
 
-    """
-    coxa - length of the coxa
-    femur - length of the femur
-    tibia - length of the tibia
-    logger - ROS2 logger instance (typically node.get_logger())
-    """
     def __init__(self, coxa, femur, tibia, logger=None):
+        """
+        Initialize the solver with leg dimensions.
+
+        coxa - length of the coxa in meters
+        femur - length of the femur in meters
+        tibia - length of the tibia in meters
+        logger - ROS2 logger instance (typically node.get_logger())
+        """
         self.coxa = coxa
         self.femur = femur
         self.tibia = tibia
 
-        self.logger = logger
+        self.logger = logger or StubLogger()
 
     def get_logger(self):
         return self.logger
@@ -116,5 +130,8 @@ class Solver:
             print(f"Can't solve `beta` for {x=}, {y=}, {z=}")
             return False, 0, 0, 0
 
-        self.get_logger().debug(f'Solved  for {x=}, {y=}, {z=}, {self.alpha=} {self.beta=}, {self.gamma=}')
+        self.get_logger().debug(
+            f'Solved  for {x=}, {y=}, {z=}, {self.alpha=} {self.beta=}, {self.gamma=}',
+            throttle_duration_sec=0.01,
+        )
         return True, self.alpha, self.beta, self.gamma
