@@ -1,38 +1,39 @@
-[tool.ruff]
 line-length = 100
 indent-width = 4
 
 # Assume Python 3.12
 target-version = "py312"
 
-[tool.ruff.lint]
-# Enable:
-# - pycodestyle (E, W)
-# - Pyflakes (F)
-# - flake8-blind-except (BLE)
-# - pydocstyle (D)
-# - pycodestyle warnings (W)
-# - D213: Multi-line docstring summary should start at the second line
-select = ["E", "W", "F", "BLE", "D213"]
-
-# Never enforce `E501` (line length violations) - handled by formatter
-# Ignore D212 in favor of D213
-ignore = ["E501", "D212"]
-
-[tool.ruff.format]
+[format]
 # Use single quotes for strings
 quote-style = "single"
 
 # Indent with 4 spaces
 indent-style = "space"
 
-[tool.ruff.lint.isort]
+[lint]
+# Enable:
+# - pycodestyle (E, W)
+# - Pyflakes (F)
+# - flake8-blind-except (BLE)
+# - pydocstyle (D)
+# - pycodestyle warnings (W)
+# - D200: One-line docstring should fit on one line with quotes
+# - D213: Multi-line docstring summary should start at the second line
+select = ["E", "W", "F", "BLE", "D200", "D213"]
+
+# Never enforce `E501` (line length violations) - handled by formatter
+# Ignore D212 in favor of D213
+ignore = ["E501", "D212"]
+
+[lint.isort]
 # Disable import sorting
 force-single-line = false
-force-sort-within-sections = false
-combine-as-imports = false
+force-sort-within-sections = true
+combine-as-imports = true
+case-sensitive = false
 
-[tool.ruff.lint.pep8-naming]
+[lint.pep8-naming]
 # Allow Pydantic's `cls` parameter to be lowercase
 classmethod-decorators = [
     "classmethod",
@@ -40,9 +41,9 @@ classmethod-decorators = [
     "pydantic.root_validator",
 ]
 
-[tool.ruff.lint.per-file-ignores]
+[lint.per-file-ignores]
 # Ignore unused imports in __init__.py files
 "__init__.py" = ["F401"]
 
-[tool.ruff.lint.pydocstyle]
+[lint.pydocstyle]
 convention = "google"
