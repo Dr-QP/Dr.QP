@@ -45,12 +45,12 @@ class TestSolver:
     @pytest.fixture
     def solver(self):
         # Standard dimensions for a medium-sized leg
-        return Solver(coxa=79, femur=128, tibia=167, logger=None)
+        return Solver(coxa=20, femur=50, tibia=70, logger=None)
 
     def test_initialization(self, solver):
-        assert solver.coxa == 79
-        assert solver.femur == 128
-        assert solver.tibia == 167
+        assert solver.coxa == 20
+        assert solver.femur == 50
+        assert solver.tibia == 70
         assert solver.logger is not None
 
     def test_forward_position(self, solver):
