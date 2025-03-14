@@ -9,7 +9,7 @@
 
 Welcome to the Dr.QP project.
 
-[<img width="1295" alt="image" src="https://github.com/user-attachments/assets/95200255-e44b-45f5-b7cc-242add9f426b" />](https://drqp.readthedocs.io/en/latest/designs)
+[<img width="1295" alt="image" src="https://github.com/user-attachments/assets/95200255-e44b-45f5-b7cc-242add9f426b" />](https://drqp.readthedocs.io/en/latest/Dev/designs.html)
 
 ## Docs
 
