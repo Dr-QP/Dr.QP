@@ -24,38 +24,50 @@ from inline_labels import add_inline_labels
 
 
 # Plot the leg links in 2D space
-def plot_leg_links(axes, points):
+def plot_leg_links(axes, points, no_labels=False):
     # Calculate the coordinates of the leg links
     assert len(points) == 4, 'points must be a list of 4 points'
     colors = ['r', 'g', 'b']
     joint_colors = ['r', 'g', 'b', 'm']
-    labels = ['Coxa', 'Femur', 'Tibia']
+
+    if no_labels:
+        labels = [''] * 3
+    else:
+        labels = ['Coxa', 'Femur', 'Tibia']
+
+    result_lines = []
+    result_joints = []
 
     def plot_joint(point, color):
-        axes.scatter(point.x, point.y, color=color)
-        if point.label:
+        joint = axes.scatter(point.x, point.y, color=color)
+        if not no_labels and point.label:
             axes.text(point.x, point.y + 0.2, point.label, color=color)
+        result_joints.append(joint)
 
     last_point = points[0]
     plot_joint(last_point, joint_colors[0])
     for point, color, label, joint_color in zip(points[1:], colors, labels, joint_colors[1:]):
         # Plot the leg link
-        axes.plot([last_point.x, point.x], [last_point.y, point.y], color, label=label)
+        result_lines += axes.plot(
+            [last_point.x, point.x], [last_point.y, point.y], color, label=label
+        )
 
         plot_joint(point, joint_color)
 
         last_point = point
 
     # Add inline labels for leg links
-    add_inline_labels(axes, with_overall_progress=False, fontsize='medium')
-    # labelLines(axes.get_lines(), zorder=2.5, xvals=(1, 1), align=True, fontsize=12)
+    if not no_labels:
+        add_inline_labels(axes, with_overall_progress=False, fontsize='medium')
+
+    return result_lines, result_joints
 
 
-def plot_leg_links_at_angles(points, title):
-    _, ax = plt.subplots(figsize=(10, 10))
+def plot_leg_with_points(points, title, no_labels=False):
+    fig, ax = plt.subplots(figsize=(10, 10))
     ax.set_title(title)
 
-    plot_leg_links(ax, points)
+    result_lines, result_joints = plot_leg_links(ax, points, no_labels)
 
     # Select length of axes and the space between tick labels
     x, y = np.array([p.x for p in points]), np.array([p.y for p in points])
@@ -96,3 +108,16 @@ def plot_leg_links_at_angles(points, title):
     arrow_fmt = dict(markersize=4, color='black', clip_on=False)
     ax.plot((1), (0), marker='>', transform=ax.get_yaxis_transform(), **arrow_fmt)
     ax.plot((0), (1), marker='^', transform=ax.get_xaxis_transform(), **arrow_fmt)
+
+    return fig, result_lines, result_joints
+
+
+def plot_leg_update_lines(points, lines, joints):
+    last_point = points[0]
+    joints[0].set_offsets([last_point.x, last_point.y])
+    for line, point, joint in zip(lines, points[1:], joints[1:]):
+        line.set_data([last_point.x, point.x], [last_point.y, point.y])
+        joint.set_offsets([point.x, point.y])
+        last_point = point
+
+    return lines
