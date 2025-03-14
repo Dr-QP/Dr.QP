@@ -18,9 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import numpy as np
-import matplotlib.pyplot as plt
 from inline_labels import add_inline_labels
+import matplotlib.pyplot as plt
+import numpy as np
+from point import Point
 
 
 # Plot the leg links in 2D space
@@ -63,20 +64,9 @@ def plot_leg_links(axes, points, no_labels=False):
     return result_lines, result_joints
 
 
-def plot_leg_with_points(points, title, no_labels=False):
-    fig, ax = plt.subplots(figsize=(10, 10))
-    ax.set_title(title)
-
-    result_lines, result_joints = plot_leg_links(ax, points, no_labels)
-
-    # Select length of axes and the space between tick labels
-    x, y = np.array([p.x for p in points]), np.array([p.y for p in points])
-    xmin, xmax = np.min(x), np.max(x)
-    ymin, ymax = np.min(y), np.max(y)
-    ticks_frequency = 5
-
+def plot_cartesian_plane(ax, min: Point, max: Point, ticks_frequency=1):
     # Set identical scales for both axes
-    ax.set(xlim=(xmin - 1, xmax + 1), ylim=(ymin - 1, ymax + 1), aspect='equal')
+    ax.set(xlim=(min.x - 1, max.y + 1), ylim=(min.x - 1, max.y + 1), aspect='equal')
 
     # Set bottom and left spines as x and y axes of coordinate system
     ax.spines['bottom'].set_position('zero')
@@ -91,15 +81,15 @@ def plot_leg_with_points(points, title, no_labels=False):
     ax.set_ylabel('y', size=14, labelpad=-21, y=1.02, rotation=0)
 
     # Create custom major ticks to determine position of tick labels
-    x_ticks = np.arange(xmin, xmax + 1, ticks_frequency)
-    y_ticks = np.arange(ymin, ymax + 1, ticks_frequency)
+    x_ticks = np.arange(min.x, max.x + 1, ticks_frequency)
+    y_ticks = np.arange(min.y, max.y + 1, ticks_frequency)
     ax.set_xticks(x_ticks)
     ax.set_yticks(y_ticks)
 
     # Create minor ticks placed at each integer to enable drawing of minor grid
     # lines: note that this has no effect in this example with ticks_frequency=1
-    ax.set_xticks(np.arange(xmin, xmax + 1), minor=True)
-    ax.set_yticks(np.arange(ymin, ymax + 1), minor=True)
+    ax.set_xticks(np.arange(min.x, max.x + 1), minor=True)
+    ax.set_yticks(np.arange(min.y, max.y + 1), minor=True)
 
     # Draw major and minor grid lines
     ax.grid(which='both', color='grey', linewidth=1, linestyle='-', alpha=0.2)
@@ -108,6 +98,21 @@ def plot_leg_with_points(points, title, no_labels=False):
     arrow_fmt = dict(markersize=4, color='black', clip_on=False)
     ax.plot((1), (0), marker='>', transform=ax.get_yaxis_transform(), **arrow_fmt)
     ax.plot((0), (1), marker='^', transform=ax.get_xaxis_transform(), **arrow_fmt)
+
+
+def plot_leg_with_points(points: list[Point], title: str, no_labels=False):
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    ax.set_title(title)
+
+    result_lines, result_joints = plot_leg_links(ax, points, no_labels)
+
+    # Select length of axes and the space between tick labels
+    x, y = np.array([p.x for p in points]), np.array([p.y for p in points])
+    min = Point(np.min(x), np.min(y))
+    max = Point(np.max(x), np.max(y))
+
+    plot_cartesian_plane(ax, min, max, ticks_frequency=5)
 
     return fig, result_lines, result_joints
 
