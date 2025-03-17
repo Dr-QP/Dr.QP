@@ -23,7 +23,7 @@ from matplotlib.patches import Arc
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox, IdentityTransform, TransformedBbox
 import numpy as np
-from point import Point
+from point import Line, Point
 
 
 class AngleAnnotation(Arc):
@@ -197,53 +197,41 @@ class AngleAnnotation(Arc):
 
 
 # Plot the leg links in 2D space
-def plot_leg_links(axes, points, no_link_labels=False, no_joint_labels=False):
-    # Calculate the coordinates of the leg links
-    assert len(points) == 4, 'points must be a list of 4 points'
-    colors = ['r', 'g', 'b']
-    joint_colors = ['r', 'g', 'b', 'm']
-
-    labels = ['Coxa', 'Femur', 'Tibia']
+def plot_leg_links(axes, model: list[Line], no_link_labels=False, no_joint_labels=False):
+    link_colors = ['c', 'r', 'g', 'b', 'm']
+    joint_colors = link_colors[1:]
 
     result_lines = []
     result_joints = []
 
-    def plot_joint_point_and_angle_arc(last_point, point, next_point, color):
-        joint = axes.scatter(point.x, point.y, color=color)
-        if not no_joint_labels and point.label:
-            AngleAnnotation(
-                point,
-                last_point,
-                next_point,
-                ax=axes,
-                size=75,
-                text=point.label,
-                color=color,
-                linestyle='--',
-                text_kw=dict(fontsize=10, color=color),
-            )
-            # axes.text(point.x, point.y + 0.2, point.label, color=color)
-            pass
-        result_joints.append(joint)
-
-    start_point, coxa_point, femur_point = points[0:3]
-    pre_start_at_x_axis = Point(-1, start_point.y)
-    plot_joint_point_and_angle_arc(pre_start_at_x_axis, start_point, coxa_point, joint_colors[0])
-
-    last_point = start_point
-    for point, color, label, joint_color in zip(points[1:], colors, labels, joint_colors[1:]):
-        # Plot the leg link
-        result_lines += axes.plot(
-            [last_point.x, point.x], [last_point.y, point.y], color, label=label
-        )
-
-        # plot_joint_point_and_angle_arc(last_point, point, joint_color)
-
-        last_point = point
+    for line, color in zip(model, link_colors):
+        result_lines += axes.plot(*zip(line.start, line.end), color, label=line.label)
 
     # Add inline labels for leg links
     if not no_link_labels:
         add_inline_labels(axes, with_overall_progress=False, fontsize='medium')
+
+    def plot_joint_point_and_angle_arc(line_start, line_end, next_line_end, joint_color):
+        joint = axes.scatter(line_end.x, line_end.y, color=joint_color)
+        if not no_joint_labels and line_end.label:
+            AngleAnnotation(
+                line_end.numpy(),
+                line_start.numpy(),
+                next_line_end.numpy(),
+                ax=axes,
+                size=75,
+                text=line_end.label,
+                color=joint_color,
+                linestyle='--',
+                text_kw=dict(fontsize=10, color=joint_color),
+            )
+            pass
+        result_joints.append(joint)
+
+    for i in range(len(model) - 1):
+        line = model[i]
+        next_line = model[i + 1]
+        plot_joint_point_and_angle_arc(line.start, line.end, next_line.end, joint_colors[i])
 
     return result_lines, result_joints
 
@@ -285,18 +273,19 @@ def plot_cartesian_plane(ax, min: Point, max: Point, ticks_frequency=1):
 
 
 def plot_leg_with_points(
-    points: list[Point], title: str, no_link_labels=False, no_joint_labels=False
+    model: list[Line], title: str, no_link_labels=False, no_joint_labels=False
 ):
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
     ax.set_title(title)
 
     result_lines, result_joints = plot_leg_links(
-        ax, points, no_link_labels=no_link_labels, no_joint_labels=no_joint_labels
+        ax, model, no_link_labels=no_link_labels, no_joint_labels=no_joint_labels
     )
 
     # Select length of axes and the space between tick labels
-    x, y = np.array([p.x for p in points]), np.array([p.y for p in points])
+    x = np.array([[line.start.x, line.end.x] for line in model])
+    y = np.array([[line.start.y, line.end.y] for line in model])
     min = Point(np.min(x), np.min(y))
     max = Point(np.max(x), np.max(y))
 
@@ -306,11 +295,11 @@ def plot_leg_with_points(
 
 
 def plot_leg_update_lines(points, lines, joints):
-    last_point = points[0]
-    joints[0].set_offsets([last_point.x, last_point.y])
-    for line, point, joint in zip(lines, points[1:], joints[1:]):
-        line.set_data([last_point.x, point.x], [last_point.y, point.y])
-        joint.set_offsets([point.x, point.y])
-        last_point = point
+    # last_point = points[0]
+    # joints[0].set_offsets([last_point.x, last_point.y])
+    # for line, point, joint in zip(lines, points[1:], joints[1:]):
+    #     line.set_data([last_point.x, point.x], [last_point.y, point.y])
+    #     joint.set_offsets([point.x, point.y])
+    #     last_point = point
 
     return lines

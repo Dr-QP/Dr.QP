@@ -41,9 +41,8 @@ class Point:
     def __mul__(self, other):
         return Point(self.x * other, self.y * other, other.label)
 
-    # cast to numpy array
-    def __array__(self):
-        return self.numpy()
+    def __iter__(self):
+        return iter(self.numpy())
 
     def numpy(self):
         return np.array([self.x, self.y])
@@ -57,3 +56,10 @@ class Point:
         x = self.x * np.cos(angle) - self.y * np.sin(angle)
         y = self.x * np.sin(angle) + self.y * np.cos(angle)
         return Point(x, y, self.label)
+
+
+class Line:
+    def __init__(self, start: Point, end: Point, label: str):
+        self.start = start
+        self.end = end
+        self.label = label
