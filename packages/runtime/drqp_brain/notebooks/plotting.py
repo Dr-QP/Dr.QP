@@ -25,13 +25,13 @@ from point import Point
 
 
 # Plot the leg links in 2D space
-def plot_leg_links(axes, points, no_labels=False):
+def plot_leg_links(axes, points, no_link_labels=False, no_joint_labels=False):
     # Calculate the coordinates of the leg links
     assert len(points) == 4, 'points must be a list of 4 points'
     colors = ['r', 'g', 'b']
     joint_colors = ['r', 'g', 'b', 'm']
 
-    if no_labels:
+    if no_link_labels:
         labels = [''] * 3
     else:
         labels = ['Coxa', 'Femur', 'Tibia']
@@ -41,7 +41,7 @@ def plot_leg_links(axes, points, no_labels=False):
 
     def plot_joint(point, color):
         joint = axes.scatter(point.x, point.y, color=color)
-        if not no_labels and point.label:
+        if not no_joint_labels and point.label:
             axes.text(point.x, point.y + 0.2, point.label, color=color)
         result_joints.append(joint)
 
@@ -58,7 +58,7 @@ def plot_leg_links(axes, points, no_labels=False):
         last_point = point
 
     # Add inline labels for leg links
-    if not no_labels:
+    if not no_link_labels:
         add_inline_labels(axes, with_overall_progress=False, fontsize='medium')
 
     return result_lines, result_joints
@@ -100,12 +100,16 @@ def plot_cartesian_plane(ax, min: Point, max: Point, ticks_frequency=1):
     ax.plot((0), (1), marker='^', transform=ax.get_xaxis_transform(), **arrow_fmt)
 
 
-def plot_leg_with_points(points: list[Point], title: str, no_labels=False):
+def plot_leg_with_points(
+    points: list[Point], title: str, no_link_labels=False, no_joint_labels=False
+):
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
     ax.set_title(title)
 
-    result_lines, result_joints = plot_leg_links(ax, points, no_labels)
+    result_lines, result_joints = plot_leg_links(
+        ax, points, no_link_labels=no_link_labels, no_joint_labels=no_joint_labels
+    )
 
     # Select length of axes and the space between tick labels
     x, y = np.array([p.x for p in points]), np.array([p.y for p in points])
