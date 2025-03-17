@@ -31,10 +31,7 @@ def plot_leg_links(axes, points, no_link_labels=False, no_joint_labels=False):
     colors = ['r', 'g', 'b']
     joint_colors = ['r', 'g', 'b', 'm']
 
-    if no_link_labels:
-        labels = [''] * 3
-    else:
-        labels = ['Coxa', 'Femur', 'Tibia']
+    labels = ['Coxa', 'Femur', 'Tibia']
 
     result_lines = []
     result_joints = []
@@ -77,8 +74,8 @@ def plot_cartesian_plane(ax, min: Point, max: Point, ticks_frequency=1):
     ax.spines['right'].set_visible(False)
 
     # Create 'x' and 'y' labels placed at the end of the axes
-    ax.set_xlabel('x', size=14, labelpad=-24, x=1.03)
-    ax.set_ylabel('y', size=14, labelpad=-21, y=1.02, rotation=0)
+    ax.set_xlabel('X', size=14, labelpad=-24, x=1.03)
+    ax.set_ylabel('Z', size=14, labelpad=-21, y=1.02, rotation=0)
 
     # Create custom major ticks to determine position of tick labels
     x_ticks = np.arange(min.x, max.x + 1, ticks_frequency)
@@ -118,7 +115,7 @@ def plot_leg_with_points(
 
     plot_cartesian_plane(ax, min, max, ticks_frequency=5)
 
-    return fig, result_lines, result_joints
+    return fig, ax, result_lines, result_joints
 
 
 def plot_leg_update_lines(points, lines, joints):
