@@ -208,21 +208,36 @@ def plot_leg_links(axes, points, no_link_labels=False, no_joint_labels=False):
     result_lines = []
     result_joints = []
 
-    def plot_joint(point, color):
+    def plot_joint_point_and_angle_arc(last_point, point, next_point, color):
         joint = axes.scatter(point.x, point.y, color=color)
         if not no_joint_labels and point.label:
-            axes.text(point.x, point.y + 0.2, point.label, color=color)
+            AngleAnnotation(
+                point,
+                last_point,
+                next_point,
+                ax=axes,
+                size=75,
+                text=point.label,
+                color=color,
+                linestyle='--',
+                text_kw=dict(fontsize=10, color=color),
+            )
+            # axes.text(point.x, point.y + 0.2, point.label, color=color)
+            pass
         result_joints.append(joint)
 
-    last_point = points[0]
-    plot_joint(last_point, joint_colors[0])
+    start_point, coxa_point, femur_point = points[0:3]
+    pre_start_at_x_axis = Point(-1, start_point.y)
+    plot_joint_point_and_angle_arc(pre_start_at_x_axis, start_point, coxa_point, joint_colors[0])
+
+    last_point = start_point
     for point, color, label, joint_color in zip(points[1:], colors, labels, joint_colors[1:]):
         # Plot the leg link
         result_lines += axes.plot(
             [last_point.x, point.x], [last_point.y, point.y], color, label=label
         )
 
-        plot_joint(point, joint_color)
+        # plot_joint_point_and_angle_arc(last_point, point, joint_color)
 
         last_point = point
 

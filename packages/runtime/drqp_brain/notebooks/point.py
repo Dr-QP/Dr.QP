@@ -43,6 +43,9 @@ class Point:
 
     # cast to numpy array
     def __array__(self):
+        return self.numpy()
+
+    def numpy(self):
         return np.array([self.x, self.y])
 
     def rotate(self, angle):
