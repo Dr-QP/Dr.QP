@@ -33,10 +33,16 @@ class Point:
         return f'Point({self.x}, {self.y}, {self.label})'
 
     def __add__(self, other):
-        return Point(self.x + other.x, self.y + other.y, other.label)
+        if isinstance(other, Point):
+            return Point(self.x + other.x, self.y + other.y, other.label)
+        else:
+            return Point(self.x + other, self.y + other, self.label)
 
     def __sub__(self, other):
-        return Point(self.x - other.x, self.y - other.y, other.label)
+        if isinstance(other, Point):
+            return Point(self.x - other.x, self.y - other.y, other.label)
+        else:
+            return Point(self.x - other, self.y - other, self.label)
 
     def __mul__(self, other):
         if isinstance(other, Point):
@@ -76,7 +82,7 @@ class Line:
         self.end = end
         self.label = label
 
-    def extended(self, length: float = 1.5):
+    def extended(self, length: float = 1.0):
         return Line(
             self.start, self.end + (self.end - self.start).normalized() * length, self.label
         )
