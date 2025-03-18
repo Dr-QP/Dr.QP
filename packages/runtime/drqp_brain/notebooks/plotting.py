@@ -215,26 +215,28 @@ def plot_leg_links(axes, model: list[Line], no_link_labels=False, no_joint_label
     if not no_link_labels:
         add_inline_labels(axes, with_overall_progress=False, fontsize='medium')
 
-    def extend_line(line: Line, length: float = 1):
-        line.end = line.end + (line.end - line.start).rotate(np.pi) * length
-        return line
-
     if not no_joint_labels:
         for i in range(len(model) - 1):
             line = model[i]
             next_line = model[i + 1]
             joint_color = joint_colors[i]
+
+            # Sort the vectors by y coordinate to always display angle on the correct side
+            vecs = [
+                next_line.end.numpy(),
+                line.extended().end.numpy(),
+            ]
+            vecs.sort(key=lambda v: v[1])
             if line.end.label:
                 AngleAnnotation(
                     line.end.numpy(),
-                    # extend_line(line).end.numpy(),
-                    line.start.numpy(),
-                    next_line.end.numpy(),
+                    *vecs,
                     ax=axes,
                     size=75,
                     text=line.end.label,
                     color=joint_color,
                     linestyle='--',
+                    textposition='outside',
                     text_kw=dict(fontsize=10, color=joint_color),
                 )
 

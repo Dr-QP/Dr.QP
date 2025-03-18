@@ -44,6 +44,12 @@ class Point:
         else:
             return Point(self.x * other, self.y * other, self.label)
 
+    def __truediv__(self, other):
+        if isinstance(other, Point):
+            return Point(self.x / other.x, self.y / other.y, other.label)
+        else:
+            return Point(self.x / other, self.y / other, self.label)
+
     def __iter__(self):
         return iter(self.numpy())
 
@@ -60,9 +66,17 @@ class Point:
         y = self.x * np.sin(angle) + self.y * np.cos(angle)
         return Point(x, y, self.label)
 
+    def normalized(self):
+        return self / np.linalg.norm(self.numpy())
+
 
 class Line:
     def __init__(self, start: Point, end: Point, label: str):
         self.start = start
         self.end = end
         self.label = label
+
+    def extended(self, length: float = 1.5):
+        return Line(
+            self.start, self.end + (self.end - self.start).normalized() * length, self.label
+        )
