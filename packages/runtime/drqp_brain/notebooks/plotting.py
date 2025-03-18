@@ -207,31 +207,31 @@ def plot_leg_links(axes, model: list[Line], no_link_labels=False, no_joint_label
     for line, color in zip(model, link_colors):
         result_lines += axes.plot(*zip(line.start, line.end), color, label=line.label)
 
+    for line, joint_color in zip(model, joint_colors):
+        joint = axes.scatter(line.end.x, line.end.y, color=joint_color)
+        result_joints.append(joint)
+
     # Add inline labels for leg links
     if not no_link_labels:
         add_inline_labels(axes, with_overall_progress=False, fontsize='medium')
 
-    def plot_joint_point_and_angle_arc(line_start, line_end, next_line_end, joint_color):
-        joint = axes.scatter(line_end.x, line_end.y, color=joint_color)
-        if not no_joint_labels and line_end.label:
-            AngleAnnotation(
-                line_end.numpy(),
-                line_start.numpy(),
-                next_line_end.numpy(),
-                ax=axes,
-                size=75,
-                text=line_end.label,
-                color=joint_color,
-                linestyle='--',
-                text_kw=dict(fontsize=10, color=joint_color),
-            )
-            pass
-        result_joints.append(joint)
-
-    for i in range(len(model) - 1):
-        line = model[i]
-        next_line = model[i + 1]
-        plot_joint_point_and_angle_arc(line.start, line.end, next_line.end, joint_colors[i])
+    if not no_joint_labels:
+        for i in range(len(model) - 1):
+            line = model[i]
+            next_line = model[i + 1]
+            joint_color = joint_colors[i]
+            if line.end.label:
+                AngleAnnotation(
+                    line.end.numpy(),
+                    line.start.numpy(),
+                    next_line.end.numpy(),
+                    ax=axes,
+                    size=75,
+                    text=line.end.label,
+                    color=joint_color,
+                    linestyle='--',
+                    text_kw=dict(fontsize=10, color=joint_color),
+                )
 
     return result_lines, result_joints
 
@@ -294,12 +294,25 @@ def plot_leg_with_points(
     return fig, ax, result_lines, result_joints
 
 
-def plot_leg_update_lines(points, lines, joints):
+def plot_leg_update_lines(model, lines, joints):
+    # for line, color in zip(model, link_colors):
+    #     result_lines += axes.plot(*zip(line.start, line.end), color, label=line.label)
+
+    # for line, joint_color in zip(model, joint_colors):
+    #     joint = axes.scatter(line.end.x, line.end.y, color=joint_color)
+    #     result_joints.append(joint)
+
     # last_point = points[0]
     # joints[0].set_offsets([last_point.x, last_point.y])
     # for line, point, joint in zip(lines, points[1:], joints[1:]):
     #     line.set_data([last_point.x, point.x], [last_point.y, point.y])
     #     joint.set_offsets([point.x, point.y])
     #     last_point = point
+
+    for line, line_model in zip(lines, model):
+        line.set_data(*zip(line_model.start, line_model.end))
+
+    for joint, line_model in zip(joints, model):
+        joint.set_offsets([line_model.end.x, line_model.end.y])
 
     return lines
