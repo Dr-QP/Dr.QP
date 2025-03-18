@@ -39,7 +39,10 @@ class Point:
         return Point(self.x - other.x, self.y - other.y, other.label)
 
     def __mul__(self, other):
-        return Point(self.x * other, self.y * other, other.label)
+        if isinstance(other, Point):
+            return Point(self.x * other.x, self.y * other.y, other.label)
+        else:
+            return Point(self.x * other, self.y * other, self.label)
 
     def __iter__(self):
         return iter(self.numpy())
