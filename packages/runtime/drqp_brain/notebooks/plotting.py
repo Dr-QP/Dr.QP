@@ -338,7 +338,13 @@ def plot_leg_with_points(
 
 
 def plot_cartesian_plane(
-    ax, min: Point, max: Point, ticks_frequency=1, no_ticks=False, x_label='X', y_label='Z'
+    ax: plt.Axes,
+    min: Point,
+    max: Point,
+    ticks_frequency=1,
+    no_ticks=False,
+    x_label='X',
+    y_label='Z',
 ):
     # Set identical scales for both axes
     ax.set(xlim=(min.x, max.x), ylim=(min.y, max.y), aspect='equal')
@@ -353,7 +359,7 @@ def plot_cartesian_plane(
 
     # Create 'x' and 'y' labels placed at the end of the axes
     ax.set_xlabel(x_label, size=14, labelpad=-24, x=1.03)
-    ax.set_ylabel(y_label, size=14, labelpad=-21, y=1.02, rotation=0)
+    ax.set_ylabel(y_label, size=14, labelpad=2, y=0.96, rotation=0)
 
     if no_ticks:
         ax.set_xticks([])
