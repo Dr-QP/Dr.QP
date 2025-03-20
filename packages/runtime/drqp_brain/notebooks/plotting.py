@@ -304,9 +304,13 @@ def plot_leg_with_points(
     no_link_labels=False,
     no_joint_labels=False,
     no_cartesian_ticks=False,
+    x_label='X',
+    y_label='Z',
+    setup_axes=lambda ax: None,
 ):
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
+    setup_axes(ax)
     ax.set_title(title)
 
     result_lines, result_joints = plot_leg_links(
@@ -319,12 +323,22 @@ def plot_leg_with_points(
     min = Point(np.min(x), np.min(y)) - 5
     max = Point(np.max(x), np.max(y)) + 5
 
-    plot_cartesian_plane(ax, min, max, ticks_frequency=5, no_ticks=no_cartesian_ticks)
+    plot_cartesian_plane(
+        ax,
+        min,
+        max,
+        ticks_frequency=5,
+        no_ticks=no_cartesian_ticks,
+        x_label=x_label,
+        y_label=y_label,
+    )
 
     return fig, ax, result_lines, result_joints
 
 
-def plot_cartesian_plane(ax, min: Point, max: Point, ticks_frequency=1, no_ticks=False):
+def plot_cartesian_plane(
+    ax, min: Point, max: Point, ticks_frequency=1, no_ticks=False, x_label='X', y_label='Z'
+):
     min.x -= 1
     min.y -= 1
     max.x += 1
@@ -342,8 +356,8 @@ def plot_cartesian_plane(ax, min: Point, max: Point, ticks_frequency=1, no_ticks
     ax.spines['right'].set_visible(False)
 
     # Create 'x' and 'y' labels placed at the end of the axes
-    ax.set_xlabel('X', size=14, labelpad=-24, x=1.03)
-    ax.set_ylabel('Z', size=14, labelpad=-21, y=1.02, rotation=0)
+    ax.set_xlabel(x_label, size=14, labelpad=-24, x=1.03)
+    ax.set_ylabel(y_label, size=14, labelpad=-21, y=1.02, rotation=0)
 
     if no_ticks:
         ax.set_xticks([])
