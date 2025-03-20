@@ -235,7 +235,12 @@ class AngleAnnotation(Arc):
             X = R(angle, r, bbox.width, bbox.height)
             trans = self.ax.figure.dpi_scale_trans.inverted()
             offs = trans.transform(((X - s / 2), 0))[0] * 72
-            self.text.set_position([offs * np.cos(angle), offs * np.sin(angle)])
+
+            y_offs = 0
+            if abs(angle_span) <= 15:
+                y_offs = bbox.height / 2
+
+            self.text.set_position([offs * np.cos(angle), offs * np.sin(angle) + y_offs])
 
 
 # Plot the leg links in 2D space
