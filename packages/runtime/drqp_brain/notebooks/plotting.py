@@ -299,7 +299,11 @@ def plot_leg_links(axes: plt.Axes, model: list[Line], no_link_labels=False, no_j
 
 
 def plot_leg_with_points(
-    model: list[Line], title: str, no_link_labels=False, no_joint_labels=False
+    model: list[Line],
+    title: str,
+    no_link_labels=False,
+    no_joint_labels=False,
+    no_cartesian_plane=False,
 ):
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
@@ -309,13 +313,14 @@ def plot_leg_with_points(
         ax, model, no_link_labels=no_link_labels, no_joint_labels=no_joint_labels
     )
 
-    # Select length of axes and the space between tick labels
-    x = np.array([[line.start.x, line.end.x] for line in model])
-    y = np.array([[line.start.y, line.end.y] for line in model])
-    min = Point(np.min(x), np.min(y)) - 5
-    max = Point(np.max(x), np.max(y)) + 5
+    if not no_cartesian_plane:
+        # Select length of axes and the space between tick labels
+        x = np.array([[line.start.x, line.end.x] for line in model])
+        y = np.array([[line.start.y, line.end.y] for line in model])
+        min = Point(np.min(x), np.min(y)) - 5
+        max = Point(np.max(x), np.max(y)) + 5
 
-    plot_cartesian_plane(ax, min, max, ticks_frequency=5)
+        plot_cartesian_plane(ax, min, max, ticks_frequency=5)
 
     return fig, ax, result_lines, result_joints
 
