@@ -100,22 +100,16 @@ class Solver:
         #           /    \     Coxa   |
         #    Tibia /   a2(*-----------|
         #         /  L _/(|        ^  |
-        #        /  _/  a1|  Z_off |  |
+        #        /  _/  a1|  D     |  |
         # (y, z)/_/       |        V  | Z
-        #   <--@----------------------+
-        #      |                      0
+        #   <--@----------------------+ 0
+        #      |<-- T --->|           |
         #      |<-------- L1 -------->|
-        Z_offset = -z
+        D = -z
         L1 = math.hypot(x, y)
-        L = math.hypot(Z_offset, L1 - self.coxa)
-        alpha1_acos_input = Z_offset / L
-        solvable, alpha1 = safe_acos(alpha1_acos_input)
-        alpha1_alt = math.atan2(L1 - self.coxa, Z_offset)
-        assert (alpha1 - alpha1_alt) < 0.001, f'Alternative logic {alpha1=} != {alpha1_alt=}'
-
-        if not solvable:
-            print(f"Can't solve `alpha1` for {x=}, {y=}, {z=}")
-            return False, 0, 0, 0
+        T = L1 - self.coxa
+        L = math.hypot(D, T)
+        alpha1 = math.atan2(T, D)
 
         alpha2_acos_input = (self.femur**2 + L**2 - self.tibia**2) / (2 * self.femur * L)
         solvable, alpha2 = safe_acos(alpha2_acos_input)
