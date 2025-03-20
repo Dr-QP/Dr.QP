@@ -303,7 +303,7 @@ def plot_leg_with_points(
     title: str,
     no_link_labels=False,
     no_joint_labels=False,
-    no_cartesian_plane=False,
+    no_cartesian_ticks=False,
 ):
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
@@ -313,21 +313,25 @@ def plot_leg_with_points(
         ax, model, no_link_labels=no_link_labels, no_joint_labels=no_joint_labels
     )
 
-    if not no_cartesian_plane:
-        # Select length of axes and the space between tick labels
-        x = np.array([[line.start.x, line.end.x] for line in model])
-        y = np.array([[line.start.y, line.end.y] for line in model])
-        min = Point(np.min(x), np.min(y)) - 5
-        max = Point(np.max(x), np.max(y)) + 5
+    # Select length of axes and the space between tick labels
+    x = np.array([[line.start.x, line.end.x] for line in model])
+    y = np.array([[line.start.y, line.end.y] for line in model])
+    min = Point(np.min(x), np.min(y)) - 5
+    max = Point(np.max(x), np.max(y)) + 5
 
-        plot_cartesian_plane(ax, min, max, ticks_frequency=5)
+    plot_cartesian_plane(ax, min, max, ticks_frequency=5, no_ticks=no_cartesian_ticks)
 
     return fig, ax, result_lines, result_joints
 
 
-def plot_cartesian_plane(ax, min: Point, max: Point, ticks_frequency=1):
+def plot_cartesian_plane(ax, min: Point, max: Point, ticks_frequency=1, no_ticks=False):
+    min.x -= 1
+    min.y -= 1
+    max.x += 1
+    max.y += 1
+
     # Set identical scales for both axes
-    ax.set(xlim=(min.x - 1, max.y + 1), ylim=(min.x - 1, max.y + 1), aspect='equal')
+    ax.set(xlim=(min.x, max.y), ylim=(min.x, max.y), aspect='equal')
 
     # Set bottom and left spines as x and y axes of coordinate system
     ax.spines['bottom'].set_position('zero')
@@ -341,16 +345,20 @@ def plot_cartesian_plane(ax, min: Point, max: Point, ticks_frequency=1):
     ax.set_xlabel('X', size=14, labelpad=-24, x=1.03)
     ax.set_ylabel('Z', size=14, labelpad=-21, y=1.02, rotation=0)
 
-    # Create custom major ticks to determine position of tick labels
-    x_ticks = np.arange(min.x, max.x + 1, ticks_frequency, dtype=int)
-    y_ticks = np.arange(min.y, max.y + 1, ticks_frequency, dtype=int)
-    ax.set_xticks(x_ticks)
-    ax.set_yticks(y_ticks)
+    if no_ticks:
+        ax.set_xticks([])
+        ax.set_yticks([])
+    else:
+        # Create custom major ticks to determine position of tick labels
+        x_ticks = np.arange(min.x, max.x, ticks_frequency, dtype=int)
+        y_ticks = np.arange(min.y, max.y, ticks_frequency, dtype=int)
+        ax.set_xticks(x_ticks)
+        ax.set_yticks(y_ticks)
 
     # Create minor ticks placed at each integer to enable drawing of minor grid
     # lines: note that this has no effect in this example with ticks_frequency=1
-    ax.set_xticks(np.arange(min.x, max.x + 1, dtype=int), minor=True)
-    ax.set_yticks(np.arange(min.y, max.y + 1, dtype=int), minor=True)
+    ax.set_xticks(np.arange(min.x, max.x, dtype=int), minor=True)
+    ax.set_yticks(np.arange(min.y, max.y, dtype=int), minor=True)
 
     # Draw major and minor grid lines
     ax.grid(which='both', color='grey', linewidth=1, linestyle='-', alpha=0.2)
