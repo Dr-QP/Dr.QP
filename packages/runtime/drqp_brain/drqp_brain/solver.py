@@ -98,9 +98,9 @@ class Solver:
         #             *\ Femur        |    b - beta
         #            /`b\             |
         #           /    \     Coxa   |
-        #    Tibia /   a1(*-----------|
+        #    Tibia /   a2(*-----------|
         #         /  L _/(|        ^  |
-        #        /  _/  a2|  Z_off |  |
+        #        /  _/  a1|  Z_off |  |
         # (y, z)/_/       |        V  | Z
         #   <--@----------------------+
         #      |                      0
@@ -110,6 +110,8 @@ class Solver:
         L = math.hypot(Z_offset, L1 - self.coxa)
         alpha1_acos_input = Z_offset / L
         solvable, alpha1 = safe_acos(alpha1_acos_input)
+        alpha1_alt = math.atan2(L1 - self.coxa, Z_offset)
+        assert (alpha1 - alpha1_alt) < 0.001, f'Alternative logic {alpha1=} != {alpha1_alt=}'
 
         if not solvable:
             print(f"Can't solve `alpha1` for {x=}, {y=}, {z=}")

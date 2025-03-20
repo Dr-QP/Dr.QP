@@ -250,7 +250,8 @@ class RobotBrain(rclpy.node.Node):
             self.frame = (max_distance, 0.0, 0.0, 'forward')
             solved = True
         else:
-            solved, self.alpha, self.beta, self.gamma = self.solver.solve(*self.frame)
+            x, y, z, comment = self.frame
+            solved, self.alpha, self.beta, self.gamma = self.solver.solve(x, y, z)
 
         if solved:
             self.publish_pose()
@@ -359,7 +360,7 @@ class RobotBrain(rclpy.node.Node):
         femur_joint.header.stamp = self.get_clock().now().to_msg()
         femur_joint.header.frame_id = 'coxa_joint'
         femur_joint.child_frame_id = 'femur_joint'
-        femur_joint.transform.translation.x = self.coxa
+        femur_joint.transform.translation.x = self.solver.coxa
         femur_joint.transform.rotation = quaternion_from_euler(0, math.pi / 2 - self.alpha, 0)
 
         tibia_joint = TransformStamped()
@@ -368,7 +369,7 @@ class RobotBrain(rclpy.node.Node):
         tibia_joint.header.stamp = self.get_clock().now().to_msg()
         tibia_joint.header.frame_id = 'femur_joint'
         tibia_joint.child_frame_id = 'tibia_joint'
-        tibia_joint.transform.translation.x = self.femur
+        tibia_joint.transform.translation.x = self.solver.femur
         tibia_joint.transform.rotation = quaternion_from_euler(0, math.pi - self.beta, 0)
 
         leg_tip = TransformStamped()
@@ -377,7 +378,7 @@ class RobotBrain(rclpy.node.Node):
         leg_tip.header.stamp = self.get_clock().now().to_msg()
         leg_tip.header.frame_id = 'tibia_joint'
         leg_tip.child_frame_id = 'leg_tip'
-        leg_tip.transform.translation.x = self.tibia
+        leg_tip.transform.translation.x = self.solver.tibia
         leg_tip.transform.translation.y = 0.0
         leg_tip.transform.translation.z = 0.0
         leg_tip.transform.rotation.x = 0.0
