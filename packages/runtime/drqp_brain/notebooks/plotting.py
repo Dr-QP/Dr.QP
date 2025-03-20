@@ -297,6 +297,28 @@ def plot_leg_links(axes: plt.Axes, model: list[Line], no_link_labels=False, no_j
     return result_lines, result_joints
 
 
+def plot_leg_with_points(
+    model: list[Line], title: str, no_link_labels=False, no_joint_labels=False
+):
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    ax.set_title(title)
+
+    result_lines, result_joints = plot_leg_links(
+        ax, model, no_link_labels=no_link_labels, no_joint_labels=no_joint_labels
+    )
+
+    # Select length of axes and the space between tick labels
+    x = np.array([[line.start.x, line.end.x] for line in model])
+    y = np.array([[line.start.y, line.end.y] for line in model])
+    min = Point(np.min(x), np.min(y)) - 5
+    max = Point(np.max(x), np.max(y)) + 5
+
+    plot_cartesian_plane(ax, min, max, ticks_frequency=5)
+
+    return fig, ax, result_lines, result_joints
+
+
 def plot_cartesian_plane(ax, min: Point, max: Point, ticks_frequency=1):
     # Set identical scales for both axes
     ax.set(xlim=(min.x - 1, max.y + 1), ylim=(min.x - 1, max.y + 1), aspect='equal')
@@ -331,28 +353,6 @@ def plot_cartesian_plane(ax, min: Point, max: Point, ticks_frequency=1):
     arrow_fmt = dict(markersize=4, color='black', clip_on=False)
     ax.plot((1), (0), marker='>', transform=ax.get_yaxis_transform(), **arrow_fmt)
     ax.plot((0), (1), marker='^', transform=ax.get_xaxis_transform(), **arrow_fmt)
-
-
-def plot_leg_with_points(
-    model: list[Line], title: str, no_link_labels=False, no_joint_labels=False
-):
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1)
-    ax.set_title(title)
-
-    result_lines, result_joints = plot_leg_links(
-        ax, model, no_link_labels=no_link_labels, no_joint_labels=no_joint_labels
-    )
-
-    # Select length of axes and the space between tick labels
-    x = np.array([[line.start.x, line.end.x] for line in model])
-    y = np.array([[line.start.y, line.end.y] for line in model])
-    min = Point(np.min(x), np.min(y)) - 5
-    max = Point(np.max(x), np.max(y)) + 5
-
-    plot_cartesian_plane(ax, min, max, ticks_frequency=5)
-
-    return fig, ax, result_lines, result_joints
 
 
 def plot_leg_update_lines(model, lines, joints):
