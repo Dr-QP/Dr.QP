@@ -204,18 +204,22 @@ def plot_leg_links(axes: plt.Axes, model: list[Line], no_link_labels=False, no_j
     result_lines = []
     result_joints = []
 
+    line_i = 0
     for line, color in zip(model, link_colors):
         result_lines += axes.plot(*zip(line.start, line.end), color, label=line.label)
-        if not no_joint_labels:
+        if not no_joint_labels and not line_i == len(model) - 1:
             # Extend the line to make the joint angles easier to understand
             result_lines += axes.plot(*zip(line.end, line.extended(3).end), color + ':')
+        line_i += 1
 
     for line, joint_color in zip(model, joint_colors):
         joint = axes.scatter(line.end.x, line.end.y, color=joint_color)
         result_joints.append(joint)
 
     # Add inline labels for leg links
-    if not no_link_labels:
+    if no_link_labels:
+        axes.legend()
+    else:
         add_inline_labels(axes, with_overall_progress=False, fontsize='medium')
 
     if not no_joint_labels:
