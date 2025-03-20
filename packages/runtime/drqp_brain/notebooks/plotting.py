@@ -377,3 +377,51 @@ def plot_leg_update_lines(model, lines, joints):
         joint.set_offsets([line_model.end.x, line_model.end.y])
 
     return lines
+
+
+def plot_ik_lines(ax, femur, tibia):
+    d_end = Point(femur.start.x, tibia.end.y)
+    ax.plot(*zip(femur.start, tibia.end), 'm--', label='L')
+    ax.plot(*zip(femur.start, d_end), 'm--', label='D')
+    ax.plot(*zip(tibia.end, d_end), 'm--', label='T')
+
+    AngleAnnotation(
+        femur.start.numpy(),
+        tibia.end.numpy(),
+        femur.end.numpy(),
+        ax=ax,
+        size=50,
+        text=r'$\theta$1',
+        color='m',
+        linestyle='--',
+        textposition='outside',
+        text_kw=dict(fontsize=10, color='m'),
+    )
+    AngleAnnotation(
+        femur.start.numpy(),
+        d_end.numpy(),
+        tibia.end.numpy(),
+        ax=ax,
+        size=50,
+        text=r'$\theta$2',
+        color='m',
+        linestyle='--',
+        textposition='outside',
+        text_kw=dict(fontsize=10, color='m'),
+    )
+
+    AngleAnnotation(
+        femur.end.numpy(),
+        femur.start.numpy(),
+        tibia.end.numpy(),
+        ax=ax,
+        size=50,
+        text=r'$\Phi$',
+        color='m',
+        linestyle='--',
+        textposition='outside',
+        text_kw=dict(fontsize=10, color='m'),
+    )
+
+    add_inline_labels(ax, with_overall_progress=False, fontsize='medium')
+    ax.legend().remove()  # remove legend as labels are added inline
