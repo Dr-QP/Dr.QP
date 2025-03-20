@@ -310,6 +310,11 @@ def plot_leg_with_points(
 ):
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
+    # ax = fig.add_subplot(111, projection='3d')
+
+    # # for rotate the axes and update.
+    # ax.view_init(-90, 90)
+
     setup_axes(ax)
     ax.set_title(title)
 
