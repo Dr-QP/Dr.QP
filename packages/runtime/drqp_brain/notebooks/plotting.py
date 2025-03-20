@@ -172,8 +172,24 @@ class AngleAnnotation(Arc):
             r = s / np.interp(angle_span, [60, 90, 135, 180], [3.3, 3.5, 3.8, 4])
         self.text.xy = c + r * np.array([np.cos(angle), np.sin(angle)])
         if self.textposition == 'outside':
-
+            # The goal is to place text at an appropriate distance from the center
+            # of an arc while avoiding overlap with the arc itself.
             def R90(a, r, w, h):
+                """
+                This function calculates the distance needed to place text at angle a without overlapping the arc:
+                It handles the case when the angle is in the first quadrant (0-90°)
+                The function has two cases:
+                For small angles: Uses a simpler calculation based on the tangent
+                For larger angles: Uses a more complex geometric calculation involving the diagonal of the text box
+
+                Parameters
+                ----------
+                a: angle in radians
+
+                r: radius of the arc
+
+                w, h: width and height of the text bounding box
+                """
                 if a < np.arctan(h / 2 / (r + w / 2)):
                     return np.sqrt((r + w / 2) ** 2 + (np.tan(a) * (r + w / 2)) ** 2)
                 else:
@@ -184,11 +200,37 @@ class AngleAnnotation(Arc):
                     return np.sqrt(np.sum(xy**2))
 
             def R(a, r, w, h):
-                aa = (a % (np.pi / 4)) * ((a % (np.pi / 2)) <= np.pi / 4) + (
-                    np.pi / 4 - (a % (np.pi / 4))
-                ) * ((a % (np.pi / 2)) >= np.pi / 4)
+                """
+                This function extends  R90 to handle angles in all quadrants by:
+
+                Converting any angle to an equivalent angle in the first quadrant ( aa)
+                Swapping width and height parameters depending on which quadrant the angle is in
+
+                Parameters
+                ----------
+                a: angle in radians
+
+                r: radius of the arc
+
+                w, h: width and height of the text bounding box
+                """
+
+                # aa = (a % (np.pi/4))*((a % (np.pi/2)) <= np.pi/4) + \
+                #      (np.pi/4 - (a % (np.pi/4)))*((a % (np.pi/2)) >= np.pi/4)
+                angle_mod_first_quadrant = a % (np.pi / 2)
+                angle_is_under_45_degrees = angle_mod_first_quadrant <= np.pi / 4
+                if angle_is_under_45_degrees:
+                    aa = a % (np.pi / 4)
+                else:
+                    aa = np.pi / 4 - (a % (np.pi / 4))
+
+                # swap w, h if a is in 2nd or 3rd quadrant
                 return R90(aa, r, *[w, h][:: int(np.sign(np.cos(2 * a)))])
 
+            # Gets the actual pixel dimensions of the text
+            # Calculates the optimal distance X using the R function
+            # Converts from pixel units to points (72 points = 1 inch)
+            # Sets the text position using polar coordinates (distance and angle)
             bbox = self.text.get_window_extent()
             X = R(angle, r, bbox.width, bbox.height)
             trans = self.ax.figure.dpi_scale_trans.inverted()
@@ -239,7 +281,7 @@ def plot_leg_links(axes: plt.Axes, model: list[Line], no_link_labels=False, no_j
                     line.end.numpy(),
                     *vecs,
                     ax=axes,
-                    size=75,
+                    size=50,
                     text=line.end.label,
                     color=joint_color,
                     linestyle='--',
