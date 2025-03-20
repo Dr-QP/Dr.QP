@@ -320,13 +320,14 @@ def plot_leg_with_points(
     # Select length of axes and the space between tick labels
     x = np.array([[line.start.x, line.end.x] for line in model])
     y = np.array([[line.start.y, line.end.y] for line in model])
-    min = Point(np.min(x), np.min(y)) - 5
-    max = Point(np.max(x), np.max(y)) + 5
+    min = Point(np.min(x), np.min(y))
+    max = Point(np.max(x), np.max(y))
 
+    extra_space = 3
     plot_cartesian_plane(
         ax,
-        min,
-        max,
+        min - extra_space,
+        max + extra_space,
         ticks_frequency=5,
         no_ticks=no_cartesian_ticks,
         x_label=x_label,
@@ -339,13 +340,8 @@ def plot_leg_with_points(
 def plot_cartesian_plane(
     ax, min: Point, max: Point, ticks_frequency=1, no_ticks=False, x_label='X', y_label='Z'
 ):
-    min.x -= 1
-    min.y -= 1
-    max.x += 1
-    max.y += 1
-
     # Set identical scales for both axes
-    ax.set(xlim=(min.x, max.y), ylim=(min.x, max.y), aspect='equal')
+    ax.set(xlim=(min.x, max.x), ylim=(min.y, max.y), aspect='equal')
 
     # Set bottom and left spines as x and y axes of coordinate system
     ax.spines['bottom'].set_position('zero')
