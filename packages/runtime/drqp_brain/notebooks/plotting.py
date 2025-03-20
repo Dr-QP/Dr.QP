@@ -166,6 +166,7 @@ class AngleAnnotation(Arc):
         c = self._center
         s = self.get_size()
         angle_span = (self.theta2 - self.theta1) % 360
+        # print(f'{angle_span=}')
         angle = np.deg2rad(self.theta1 + angle_span / 2)
         r = s / 2
         if self.textposition == 'inside':
