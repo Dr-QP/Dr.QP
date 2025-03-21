@@ -24,7 +24,7 @@ import numpy as np
 class Point:
     """A simple 2D point class to make math less verbose"""
 
-    def __init__(self, x, y, label=None):
+    def __init__(self, x: float, y: float, label=None):
         self.x = x
         self.y = y
         self.label = label
@@ -86,3 +86,34 @@ class Line:
         return Line(
             self.start, self.end + (self.end - self.start).normalized() * length, self.label
         )
+
+
+class Point3D:
+    """A simple 3D point class to make math less verbose"""
+
+    def __init__(self, x: float, y: float, z: float, label: str = None):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.label = label
+
+    def __repr__(self):
+        return f'Point3D({self.x}, {self.y}, {self.z}, {self.label})'
+
+    @property
+    def xy(self):
+        return Point(self.x, self.y, self.label)
+
+    @property
+    def xz(self):
+        return Point(self.x, self.z, self.label)
+
+    @property
+    def yz(self):
+        return Point(self.y, self.z, self.label)
+
+    def __iter__(self):
+        return iter(self.numpy())
+
+    def numpy(self):
+        return np.array([self.x, self.y, self.z])
