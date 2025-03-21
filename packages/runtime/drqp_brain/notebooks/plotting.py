@@ -305,7 +305,7 @@ def plot_leg_with_points(
     no_joint_labels=False,
     no_cartesian_ticks=False,
     x_label='X',
-    y_label='Z',
+    y_label='Y',
     setup_axes=lambda ax: None,
 ):
     fig = plt.figure()
