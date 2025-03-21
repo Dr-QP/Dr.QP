@@ -409,8 +409,6 @@ def plot_leg_update_lines(model, lines, joints):
     for joint, line_model in zip(joints, model):
         joint.set_offsets([line_model.end.x, line_model.end.y])
 
-    return lines
-
 
 def plot_ik_lines(ax, femur, tibia):
     d_end = Point(femur.start.x, tibia.end.y)
