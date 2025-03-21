@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox, IdentityTransform, TransformedBbox
 import numpy as np
 from point import Line, Point
+from typing import Literal
 
 
 class AngleAnnotation(Arc):
@@ -244,8 +245,17 @@ class AngleAnnotation(Arc):
             self.text.set_position([offs * np.cos(angle), offs * np.sin(angle) + y_offs])
 
 
+link_labels_type = Literal['inline', 'legend', 'label', 'none']
+joint_labels_type = Literal['annotated', 'points', 'none']
+
+
 # Plot the leg links in 2D space
-def plot_leg_links(axes: plt.Axes, model: list[Line], no_link_labels=False, no_joint_labels=False):
+def plot_leg_links(
+    axes: plt.Axes,
+    model: list[Line],
+    link_labels: link_labels_type,
+    joint_labels: joint_labels_type,
+):
     link_colors = ['c', 'r', 'g', 'b', 'm']
     joint_colors = link_colors[1:]
 
@@ -254,23 +264,25 @@ def plot_leg_links(axes: plt.Axes, model: list[Line], no_link_labels=False, no_j
 
     line_i = 0
     for line, color in zip(model, link_colors):
-        result_lines += axes.plot(*zip(line.start, line.end), color, label=line.label)
-        if not no_joint_labels and not line_i == len(model) - 1:
+        label = line.label if link_labels != 'none' else None
+        result_lines += axes.plot(*zip(line.start, line.end), color, label=label)
+        if joint_labels == 'annotated' and not line_i == len(model) - 1:
             # Extend the line to make the joint angles easier to understand
             result_lines += axes.plot(*zip(line.end, line.extended(3).end), color + ':')
         line_i += 1
 
-    for line, joint_color in zip(model, joint_colors):
-        joint = axes.scatter(line.end.x, line.end.y, color=joint_color)
-        result_joints.append(joint)
+    if joint_labels == 'annotated' or joint_labels == 'points':
+        for line, joint_color in zip(model, joint_colors):
+            joint = axes.scatter(line.end.x, line.end.y, color=joint_color)
+            result_joints.append(joint)
 
     # Add inline labels for leg links
-    if no_link_labels:
+    if link_labels == 'legend':
         axes.legend()
-    else:
+    elif link_labels == 'inline':
         add_inline_labels(axes, with_overall_progress=False, fontsize='medium')
 
-    if not no_joint_labels:
+    if joint_labels == 'annotated':
         for i in range(len(model) - 1):
             line = model[i]
             next_line = model[i + 1]
@@ -301,8 +313,8 @@ def plot_leg_links(axes: plt.Axes, model: list[Line], no_link_labels=False, no_j
 def plot_leg_with_points(
     model: list[Line],
     title: str,
-    no_link_labels=False,
-    no_joint_labels=False,
+    link_labels: link_labels_type = 'inline',
+    joint_labels: joint_labels_type = 'annotated',
     no_cartesian_ticks=False,
     x_label='X',
     y_label='Y',
@@ -319,7 +331,7 @@ def plot_leg_with_points(
     ax.set_title(title)
 
     result_lines, result_joints = plot_leg_links(
-        ax, model, no_link_labels=no_link_labels, no_joint_labels=no_joint_labels
+        ax, model, link_labels=link_labels, joint_labels=joint_labels
     )
 
     # Select length of axes and the space between tick labels
