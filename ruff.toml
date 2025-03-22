@@ -20,7 +20,10 @@ indent-style = "space"
 # - pycodestyle warnings (W)
 # - D200: One-line docstring should fit on one line with quotes
 # - D213: Multi-line docstring summary should start at the second line
-select = ["E", "W", "F", "BLE", "D200", "D213"]
+# - D202: No blank lines allowed after function docstring's "Args"
+# - D205: 1 blank line required between summary line and description
+# - D400: First line should end with a period
+select = ["E", "W", "F", "BLE", "D200", "D202", "D205", "D213", "D400"]
 
 # Never enforce `E501` (line length violations) - handled by formatter
 # Ignore D212 in favor of D213

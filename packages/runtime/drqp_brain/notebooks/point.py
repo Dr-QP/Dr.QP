@@ -22,7 +22,7 @@ import numpy as np
 
 
 class Point:
-    """A simple 2D point class to make math less verbose"""
+    """A simple 2D point class to make math less verbose."""
 
     def __init__(self, x: float, y: float, label=None):
         self.x = x
@@ -64,7 +64,7 @@ class Point:
 
     def rotate(self, angle):
         """
-        Rotate the point by the given angle
+        Rotate the point by the given angle.
 
         https://en.wikipedia.org/wiki/Rotation_matrix
         """
@@ -89,7 +89,7 @@ class Line:
 
 
 class Point3D:
-    """A simple 3D point class to make math less verbose"""
+    """A simple 3D point class to make math less verbose."""
 
     def __init__(self, x: float, y: float, z: float, label: str = None):
         self.x = x

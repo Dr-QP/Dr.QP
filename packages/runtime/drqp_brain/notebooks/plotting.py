@@ -18,13 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from typing import Literal
+
 from inline_labels import add_inline_labels
 from matplotlib.patches import Arc
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox, IdentityTransform, TransformedBbox
 import numpy as np
 from point import Line, Point
-from typing import Literal
 
 
 class AngleAnnotation(Arc):
@@ -48,6 +49,8 @@ class AngleAnnotation(Arc):
         **kwargs,
     ):
         """
+        Draws an arc between p1 and p2 which appears circular in display space.
+
         Parameters
         ----------
         xy, p1, p2 : tuple or array of two floats
@@ -131,11 +134,11 @@ class AngleAnnotation(Arc):
         self.size = size
 
     def get_center_in_pixels(self):
-        """return center in pixels"""
+        """return center in pixels."""
         return self.ax.transData.transform(self._xydata)
 
     def set_center(self, xy):
-        """set center in data coordinates"""
+        """set center in data coordinates."""
         self._xydata = xy
 
     def get_theta(self, vec):
@@ -178,7 +181,8 @@ class AngleAnnotation(Arc):
             # of an arc while avoiding overlap with the arc itself.
             def R90(a, r, w, h):
                 """
-                This function calculates the distance needed to place text at angle a without overlapping the arc:
+                This function calculates the distance needed to place text at angle a without overlapping the arc.
+
                 It handles the case when the angle is in the first quadrant (0-90°)
                 The function has two cases:
                 For small angles: Uses a simpler calculation based on the tangent
@@ -203,7 +207,7 @@ class AngleAnnotation(Arc):
 
             def R(a, r, w, h):
                 """
-                This function extends  R90 to handle angles in all quadrants by:
+                This function extends R90 to handle angles in all quadrants.
 
                 Converting any angle to an equivalent angle in the first quadrant ( aa)
                 Swapping width and height parameters depending on which quadrant the angle is in
@@ -216,9 +220,6 @@ class AngleAnnotation(Arc):
 
                 w, h: width and height of the text bounding box
                 """
-
-                # aa = (a % (np.pi/4))*((a % (np.pi/2)) <= np.pi/4) + \
-                #      (np.pi/4 - (a % (np.pi/4)))*((a % (np.pi/2)) >= np.pi/4)
                 angle_mod_first_quadrant = a % (np.pi / 2)
                 angle_is_under_45_degrees = angle_mod_first_quadrant <= np.pi / 4
                 if angle_is_under_45_degrees:
