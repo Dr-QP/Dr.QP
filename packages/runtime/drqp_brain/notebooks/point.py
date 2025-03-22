@@ -22,7 +22,7 @@ import numpy as np
 
 
 class Point:
-    """A simple 2D point class to make math less verbose."""
+    """A simple 2D point class."""
 
     def __init__(self, x: float, y: float, label=None):
         self.x = x
@@ -77,6 +77,8 @@ class Point:
 
 
 class Line:
+    """A simple 2D line class."""
+
     def __init__(self, start: Point, end: Point, label: str):
         self.start = start
         self.end = end
@@ -89,7 +91,7 @@ class Line:
 
 
 class Point3D:
-    """A simple 3D point class to make math less verbose."""
+    """A simple 3D point class."""
 
     def __init__(self, x: float, y: float, z: float, label: str = None):
         self.x = x

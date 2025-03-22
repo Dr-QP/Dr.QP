@@ -134,11 +134,11 @@ class AngleAnnotation(Arc):
         self.size = size
 
     def get_center_in_pixels(self):
-        """return center in pixels."""
+        """Return center in pixels."""
         return self.ax.transData.transform(self._xydata)
 
     def set_center(self, xy):
-        """set center in data coordinates."""
+        """Set center in data coordinates."""
         self._xydata = xy
 
     def get_theta(self, vec):
@@ -181,20 +181,25 @@ class AngleAnnotation(Arc):
             # of an arc while avoiding overlap with the arc itself.
             def R90(a, r, w, h):
                 """
-                This function calculates the distance needed to place text at angle a without overlapping the arc.
+                Calculate the distance needed to place text at angle a without overlapping the arc.
 
                 It handles the case when the angle is in the first quadrant (0-90°)
                 The function has two cases:
-                For small angles: Uses a simpler calculation based on the tangent
-                For larger angles: Uses a more complex geometric calculation involving the diagonal of the text box
+                 - For small angles: Uses a simpler calculation based on the tangent
+                 - For larger angles: Uses a more complex geometric calculation involving the
+                   diagonal of the text box
 
                 Parameters
                 ----------
-                a: angle in radians
+                a:
+                  angle in radians
 
-                r: radius of the arc
+                r:
+                  radius of the arc
 
-                w, h: width and height of the text bounding box
+                w, h:
+                  width and height of the text bounding box
+
                 """
                 if a < np.arctan(h / 2 / (r + w / 2)):
                     return np.sqrt((r + w / 2) ** 2 + (np.tan(a) * (r + w / 2)) ** 2)
@@ -207,18 +212,22 @@ class AngleAnnotation(Arc):
 
             def R(a, r, w, h):
                 """
-                This function extends R90 to handle angles in all quadrants.
+                Extend R90 to handle angles in all quadrants.
 
                 Converting any angle to an equivalent angle in the first quadrant ( aa)
                 Swapping width and height parameters depending on which quadrant the angle is in
 
                 Parameters
                 ----------
-                a: angle in radians
+                a:
+                  angle in radians
 
-                r: radius of the arc
+                r:
+                  radius of the arc
 
-                w, h: width and height of the text bounding box
+                w, h:
+                  width and height of the text bounding box
+
                 """
                 angle_mod_first_quadrant = a % (np.pi / 2)
                 angle_is_under_45_degrees = angle_mod_first_quadrant <= np.pi / 4
