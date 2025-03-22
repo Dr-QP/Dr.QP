@@ -29,5 +29,3 @@ dependencies:
      - rosdep
      - setuptools
      - vcstool
-     - -r ./docs/requirements.txt
-     - esbonio # reStructuredText language server for preview

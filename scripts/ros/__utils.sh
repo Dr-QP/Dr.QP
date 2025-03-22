@@ -1,4 +1,4 @@
-export script_dir=$(dirname $0)
+export script_dir=$(dirname "${BASH_SOURCE[0]}")
 export root_dir=$(dirname $(dirname $script_dir))
 export sources_dir="$root_dir/packages"
 

@@ -86,6 +86,7 @@ sudo apt-get install -y -q --no-install-recommends \
   python3-rosdep \
   python3-setuptools \
   python3-vcstool \
+  python3-venv \
   ros-dev-tools \
   libasio-dev \
   libtinyxml2-dev \

@@ -21,13 +21,10 @@
 import os
 
 from ament_index_python.packages import get_package_share_directory as get_pkg_dir
-
-
 from launch import LaunchDescription
 from launch.actions import ExecuteProcess, IncludeLaunchDescription, RegisterEventHandler
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-
 from launch_ros.actions import Node
 
 

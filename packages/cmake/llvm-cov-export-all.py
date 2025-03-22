@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-from pathlib import Path
-
 import argparse
+from pathlib import Path
 import subprocess
 
 is_verbose = False
