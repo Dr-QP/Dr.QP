@@ -104,14 +104,14 @@ class AngleAnnotation(Arc):
         self.set_transform(IdentityTransform())
         self.ax.add_patch(self)
 
-        self.kw = dict(
-            ha='center',
-            va='center',
-            xycoords=IdentityTransform(),
-            xytext=(0, 0),
-            textcoords='offset points',
-            annotation_clip=True,
-        )
+        self.kw = {
+            'ha': 'center',
+            'va': 'center',
+            'xycoords': IdentityTransform(),
+            'xytext': (0, 0),
+            'textcoords': 'offset points',
+            'annotation_clip': True,
+        }
         self.kw.update(text_kw or {})
         self.text = ax.annotate(text, xy=self._center, **self.kw)
 
@@ -305,7 +305,7 @@ def plot_leg_links(
                     color=joint_color,
                     linestyle='--',
                     textposition='outside',
-                    text_kw=dict(fontsize=10, color=joint_color),
+                    text_kw={'fontsize': 10, 'color': joint_color},
                 )
 
     return result_lines, result_joints
@@ -338,14 +338,14 @@ def plot_leg_with_points(
     # Select length of axes and the space between tick labels
     x = np.array([[line.start.x, line.end.x] for line in model])
     y = np.array([[line.start.y, line.end.y] for line in model])
-    min = Point(np.min(x), np.min(y))
-    max = Point(np.max(x), np.max(y))
+    plot_min = Point(np.min(x), np.min(y))
+    plot_max = Point(np.max(x), np.max(y))
 
     extra_space = 3
     plot_cartesian_plane(
         ax,
-        min - extra_space,
-        max + extra_space,
+        plot_min - extra_space,
+        plot_max + extra_space,
         ticks_frequency=5,
         no_ticks=no_cartesian_ticks,
         x_label=x_label,
@@ -357,15 +357,15 @@ def plot_leg_with_points(
 
 def plot_cartesian_plane(
     ax: plt.Axes,
-    min: Point,
-    max: Point,
+    plot_min: Point,
+    plot_max: Point,
     ticks_frequency=1,
     no_ticks=False,
     x_label='X',
     y_label='Z',
 ):
     # Set identical scales for both axes
-    ax.set(xlim=(min.x, max.x), ylim=(min.y, max.y), aspect='equal')
+    ax.set(xlim=(plot_min.x, plot_max.x), ylim=(plot_min.y, plot_max.y), aspect='equal')
 
     # Set bottom and left spines as x and y axes of coordinate system
     ax.spines['bottom'].set_position('zero')
@@ -384,21 +384,21 @@ def plot_cartesian_plane(
         ax.set_yticks([])
     else:
         # Create custom major ticks to determine position of tick labels
-        x_ticks = np.arange(min.x, max.x, ticks_frequency, dtype=int)
-        y_ticks = np.arange(min.y, max.y, ticks_frequency, dtype=int)
+        x_ticks = np.arange(plot_min.x, plot_max.x, ticks_frequency, dtype=int)
+        y_ticks = np.arange(plot_min.y, plot_max.y, ticks_frequency, dtype=int)
         ax.set_xticks(x_ticks)
         ax.set_yticks(y_ticks)
 
     # Create minor ticks placed at each integer to enable drawing of minor grid
     # lines: note that this has no effect in this example with ticks_frequency=1
-    ax.set_xticks(np.arange(min.x, max.x, dtype=int), minor=True)
-    ax.set_yticks(np.arange(min.y, max.y, dtype=int), minor=True)
+    ax.set_xticks(np.arange(plot_min.x, plot_max.x, dtype=int), minor=True)
+    ax.set_yticks(np.arange(plot_min.y, plot_max.y, dtype=int), minor=True)
 
     # Draw major and minor grid lines
     ax.grid(which='both', color='grey', linewidth=1, linestyle='-', alpha=0.2)
 
     # Draw arrows
-    arrow_fmt = dict(markersize=4, color='black', clip_on=False)
+    arrow_fmt = {'markersize': 4, 'color': 'black', 'clip_on': False}
     ax.plot((1), (0), marker='>', transform=ax.get_yaxis_transform(), **arrow_fmt)
     ax.plot((0), (1), marker='^', transform=ax.get_xaxis_transform(), **arrow_fmt)
 
@@ -427,7 +427,7 @@ def plot_ik_lines(ax, femur, tibia):
         color='m',
         linestyle='--',
         textposition='outside',
-        text_kw=dict(fontsize=10, color='m'),
+        text_kw={'fontsize': 10, 'color': 'm'},
     )
     AngleAnnotation(
         femur.start.numpy(),
@@ -439,7 +439,7 @@ def plot_ik_lines(ax, femur, tibia):
         color='m',
         linestyle='--',
         textposition='outside',
-        text_kw=dict(fontsize=10, color='m'),
+        text_kw={'fontsize': 10, 'color': 'm'},
     )
 
     AngleAnnotation(
@@ -452,7 +452,7 @@ def plot_ik_lines(ax, femur, tibia):
         color='m',
         linestyle='--',
         textposition='outside',
-        text_kw=dict(fontsize=10, color='m'),
+        text_kw={'fontsize': 10, 'color': 'm'},
     )
 
     add_inline_labels(ax, with_overall_progress=False, fontsize='medium')
