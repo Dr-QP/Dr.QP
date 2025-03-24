@@ -90,8 +90,8 @@ class Line:
         )
 
 
-class Point3D:
-    """A simple 3D point class."""
+class SimplePoint3D:
+    """A simple 3D point class for getting_started_with_robot_ik."""
 
     def __init__(self, x: float, y: float, z: float, label: str = None):
         self.x = x
@@ -119,3 +119,74 @@ class Point3D:
 
     def numpy(self):
         return np.array([self.x, self.y, self.z])
+
+
+class Point3D:
+    """A thin wrapper on numpy array for 3D point class."""
+
+    def __init__(self, a: np.ndarray | list[float], label: str = None):
+        assert len(a) == 3
+        self._array = np.array(a)
+        self.label = label
+
+    def __repr__(self):
+        return f'Point3D({self.x}, {self.y}, {self.z}, {self.label})'
+
+    @property
+    def x(self):
+        return self._array[0]
+
+    @property
+    def y(self):
+        return self._array[1]
+
+    @property
+    def z(self):
+        return self._array[2]
+
+    @property
+    def xy(self):
+        return Point(self.x, self.y, self.label)
+
+    @property
+    def xz(self):
+        return Point(self.x, self.z, self.label)
+
+    @property
+    def yz(self):
+        return Point(self.y, self.z, self.label)
+
+    def __iter__(self):
+        return iter(self._array)
+
+    def numpy(self):
+        return self._array
+
+    def normalized(self):
+        return self / np.linalg.norm(self._array)
+
+
+class Line3D:
+    """A simple 3D line class."""
+
+    def __init__(self, start: Point3D, end: Point3D, label: str):
+        self.start = start
+        self.end = end
+        self.label = label
+
+    def extended(self, length: float = 1.0):
+        return Line3D(
+            self.start, self.end + (self.end - self.start).normalized() * length, self.label
+        )
+
+    @property
+    def xy(self):
+        return Line(self.start.xy, self.end.xy, self.label)
+
+    @property
+    def xz(self):
+        return Line(self.start.xz, self.end.xz, self.label)
+
+    @property
+    def yz(self):
+        return Line(self.start.yz, self.end.yz, self.label)
