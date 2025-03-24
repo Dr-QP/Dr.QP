@@ -165,6 +165,30 @@ class Point3D:
     def normalized(self):
         return self / np.linalg.norm(self._array)
 
+    def __add__(self, other):
+        if isinstance(other, Point3D):
+            return Point3D(self._array + other._array, other.label)
+        else:
+            return Point3D(self._array + other, self.label)
+
+    def __sub__(self, other):
+        if isinstance(other, Point3D):
+            return Point3D(self._array - other._array, other.label)
+        else:
+            return Point3D(self._array - other, self.label)
+
+    def __mul__(self, other):
+        if isinstance(other, Point3D):
+            return Point3D(self._array * other._array, other.label)
+        else:
+            return Point3D(self._array * other, self.label)
+
+    def __truediv__(self, other):
+        if isinstance(other, Point3D):
+            return Point3D(self._array / other._array, other.label)
+        else:
+            return Point3D(self._array / other, self.label)
+
 
 class Line3D:
     """A simple 3D line class."""
