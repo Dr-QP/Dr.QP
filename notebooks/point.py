@@ -214,3 +214,25 @@ class Line3D:
     @property
     def yz(self):
         return Line(self.start.yz, self.end.yz, self.label)
+
+
+class Leg3D:
+    """A 3D leg class."""
+
+    def __init__(self, lines: list[Line3D]):
+        self.lines = lines
+
+    def __iter__(self):
+        return iter(self.lines)
+
+    @property
+    def xy(self):
+        return [line.xy for line in self.lines]
+
+    @property
+    def xz(self):
+        return [line.xz for line in self.lines]
+
+    @property
+    def yz(self):
+        return [line.yz for line in self.lines]
