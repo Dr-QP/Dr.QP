@@ -30,7 +30,7 @@ class Point:
         self.label = label
 
     def __repr__(self):
-        return f'Point({self.x}, {self.y}, {self.label})'
+        return f'Point({self.x:.4f}, {self.y:.4f}, {self.label})'
 
     def __add__(self, other):
         if isinstance(other, Point):
@@ -89,6 +89,9 @@ class Line:
             self.start, self.end + (self.end - self.start).normalized() * length, self.label
         )
 
+    def __repr__(self):
+        return f'Line({self.start}, {self.end}, {self.label})'
+
 
 class SimplePoint3D:
     """A simple 3D point class for getting_started_with_robot_ik."""
@@ -130,7 +133,7 @@ class Point3D:
         self.label = label
 
     def __repr__(self):
-        return f'Point3D({self.x}, {self.y}, {self.z}, {self.label})'
+        return f'Point3D({self.x:.4f}, {self.y:.4f}, {self.z:.4f}, {self.label})'
 
     @property
     def x(self):
