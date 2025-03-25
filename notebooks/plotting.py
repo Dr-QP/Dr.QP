@@ -25,7 +25,7 @@ from matplotlib.patches import Arc
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox, IdentityTransform, TransformedBbox
 import numpy as np
-from point import Line, Line3D, Point
+from point import Leg3D, Line, Line3D, Point
 
 
 class AngleAnnotation(Arc):
@@ -257,6 +257,32 @@ class AngleAnnotation(Arc):
 
 link_labels_type = Literal['inline', 'legend', 'label', 'none']
 joint_labels_type = Literal['annotated', 'points', 'none']
+
+
+def plot_leg3d(
+    model: Leg3D,
+    title: str,
+    link_labels: Literal['legend', 'label', 'none'] = 'legend',
+    joint_labels: Literal['points', 'none'] = 'points',
+    subplot=111,
+    fig=None,
+):
+    if fig is None:
+        fig = plt.figure()
+    ax = fig.add_subplot(subplot, projection='3d')
+    ax.set_title(title)
+
+    assert link_labels != 'inline', 'Inline labels not supported in 3D plots'
+    assert joint_labels != 'annotated', 'Joint annotations not supported in 3D plots'
+
+    result_lines, result_joints = plot_leg_links(
+        ax, model.lines, link_labels=link_labels, joint_labels=joint_labels
+    )
+
+    # Doesn't really add anything to the plot
+    # plot_cartesian_plane(ax, Point(-10, -10), Point(10, 10), no_ticks=True)
+
+    return fig, ax, result_lines, result_joints
 
 
 # Plot the leg links in 2D space
