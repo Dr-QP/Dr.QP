@@ -395,11 +395,19 @@ def plot_leg_with_points(
     plot_min = Point(np.min(x), np.min(y))
     plot_max = Point(np.max(x), np.max(y))
 
-    extra_space = 3
+    def extra_space(v):
+        return max(2, abs(v) * 0.2)
+
+    plot_min.x -= extra_space(plot_min.x)
+    plot_min.y -= extra_space(plot_min.y)
+
+    plot_max.x += extra_space(plot_max.x)
+    plot_max.y += extra_space(plot_max.y)
+
     plot_cartesian_plane(
         ax,
-        plot_min - extra_space,
-        plot_max + extra_space,
+        plot_min,
+        plot_max,
         ticks_frequency=5,
         no_ticks=no_cartesian_ticks,
         x_label=x_label,
