@@ -266,11 +266,14 @@ def plot_leg3d(
     joint_labels: Literal['points', 'none'] = 'points',
     subplot=111,
     fig=None,
+    ax=None,
 ):
     if fig is None:
         fig = plt.figure()
-    ax = fig.add_subplot(subplot, projection='3d')
-    ax.set_title(title)
+
+    if ax is None:
+        ax = fig.add_subplot(subplot, projection='3d')
+        ax.set_title(title)
 
     assert link_labels != 'inline', 'Inline labels not supported in 3D plots'
     assert joint_labels != 'annotated', 'Joint annotations not supported in 3D plots'
@@ -354,20 +357,16 @@ def plot_leg_with_points(
     no_cartesian_ticks=False,
     x_label='X',
     y_label='Y',
-    setup_axes=lambda ax: None,
     subplot=111,
     fig=None,
+    ax=None,
 ):
     if fig is None:
         fig = plt.figure()
-    ax = fig.add_subplot(subplot)
-    # ax = fig.add_subplot(111, projection='3d')
 
-    # # for rotate the axes and update.
-    # ax.view_init(-90, 90)
-
-    setup_axes(ax)
-    ax.set_title(title)
+    if ax is None:
+        ax = fig.add_subplot(subplot)
+        ax.set_title(title)
 
     result_lines, result_joints = plot_leg_links(
         ax, model, link_labels=link_labels, joint_labels=joint_labels
