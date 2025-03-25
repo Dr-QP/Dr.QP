@@ -285,6 +285,23 @@ def plot_leg3d(
     # Doesn't really add anything to the plot
     # plot_cartesian_plane(ax, Point(-10, -10), Point(10, 10), no_ticks=True)
 
+    ax.set(aspect='equal')
+    # Hide grid lines
+    ax.grid(False)
+    # ax.grid(False, which='both', axis='z')
+
+    # Hide axes ticks
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_zticks([])
+
+    ax.set_facecolor('white')
+    ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    ax.zaxis.set_pane_color((0, 0.2, 0, 0.5))
+    ax.zaxis.line.set_visible(False)
+    ax.zaxis.gridlines.set_visible(False)
+
     return fig, ax, result_lines, result_joints
 
 
