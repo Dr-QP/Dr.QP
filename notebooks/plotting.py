@@ -25,7 +25,7 @@ from matplotlib.patches import Arc
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox, IdentityTransform, TransformedBbox
 import numpy as np
-from point import Line, Point
+from point import Line, Line3D, Point
 
 
 class AngleAnnotation(Arc):
@@ -262,7 +262,7 @@ joint_labels_type = Literal['annotated', 'points', 'none']
 # Plot the leg links in 2D space
 def plot_leg_links(
     axes: plt.Axes,
-    model: list[Line],
+    model: list[Line] | list[Line3D],
     link_labels: link_labels_type,
     joint_labels: joint_labels_type,
 ):
@@ -283,7 +283,7 @@ def plot_leg_links(
 
     if joint_labels == 'annotated' or joint_labels == 'points':
         for line, joint_color in zip(model, joint_colors):
-            joint = axes.scatter(line.end.x, line.end.y, color=joint_color)
+            joint = axes.scatter(*line.end.numpy(), color=joint_color)
             result_joints.append(joint)
 
     # Add inline labels for leg links
@@ -329,9 +329,12 @@ def plot_leg_with_points(
     x_label='X',
     y_label='Y',
     setup_axes=lambda ax: None,
+    subplot=111,
+    fig=None,
 ):
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1)
+    if fig is None:
+        fig = plt.figure()
+    ax = fig.add_subplot(subplot)
     # ax = fig.add_subplot(111, projection='3d')
 
     # # for rotate the axes and update.
@@ -371,7 +374,7 @@ def plot_cartesian_plane(
     ticks_frequency=1,
     no_ticks=False,
     x_label='X',
-    y_label='Z',
+    y_label='Y',
 ):
     # Set identical scales for both axes
     ax.set(xlim=(plot_min.x, plot_max.x), ylim=(plot_min.y, plot_max.y), aspect='equal')
