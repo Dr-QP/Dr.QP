@@ -98,6 +98,17 @@ class HexapodModel:
             rotation=leg_rotation * -3,
             location_on_body=[-front_offset, -side_offset, 0.0],
         )
+        self.__named_legs = {
+            leg.label: leg
+            for leg in [
+                self.left_front,
+                self.left_middle,
+                self.left_back,
+                self.right_front,
+                self.right_middle,
+                self.right_back,
+            ]
+        }
 
         # Head, x-forward
         self.__head_base_line = Line3D(Point3D([0, 0, 0]), Point3D([front_offset, 0, 0]), 'Head')
@@ -118,14 +129,11 @@ class HexapodModel:
 
     @property
     def legs(self):
-        return [
-            self.left_front,
-            self.left_middle,
-            self.left_back,
-            self.right_front,
-            self.right_middle,
-            self.right_back,
-        ]
+        return self.__named_legs.values()
+
+    @property
+    def named_legs(self):
+        return self.__named_legs
 
     @property
     def body_transform(self):
