@@ -34,7 +34,7 @@ class Transform:
         self._matrix = matrix
 
     @classmethod
-    def make(self, rotation, translation):
+    def make(cls, rotation, translation):
         return Transform(
             np.block(
                 [
@@ -45,15 +45,15 @@ class Transform:
         )
 
     @classmethod
-    def identity(self):
+    def identity(cls):
         return Transform(np.identity(4))
 
     @classmethod
-    def from_rotvec(self, rotvec, degrees=False):
+    def from_rotvec(cls, rotvec, degrees=False):
         return Transform.make(R.from_rotvec(rotvec, degrees=degrees), [0, 0, 0])
 
     @classmethod
-    def from_translation(self, translation):
+    def from_translation(cls, translation):
         return Transform.make(R.identity(), translation)
 
     @property
