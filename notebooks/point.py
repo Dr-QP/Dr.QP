@@ -139,13 +139,25 @@ class Point3D:
     def x(self):
         return self._array[0]
 
+    @x.setter
+    def x(self, value):
+        self._array[0] = value
+
     @property
     def y(self):
         return self._array[1]
 
+    @y.setter
+    def y(self, value):
+        self._array[1] = value
+
     @property
     def z(self):
         return self._array[2]
+
+    @z.setter
+    def z(self, value):
+        self._array[2] = value
 
     @property
     def xy(self):

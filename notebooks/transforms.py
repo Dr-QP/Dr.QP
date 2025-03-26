@@ -72,6 +72,9 @@ class Transform:
         transformed_point = self._matrix @ point4d
         return transformed_point[:3]
 
+    def inverse(self):
+        return Transform(np.linalg.inv(self._matrix))
+
     # operator @
     def __matmul__(self, other):
         return Transform(self._matrix @ other._matrix)

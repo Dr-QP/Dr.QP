@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import math
 from transforms import Transform
 from point import Line3D, Point3D
 
@@ -33,10 +34,13 @@ class LegModel:
         location_on_body=[0, 0, 0],
         rotation=[0, 0, 0],
         body_transform=Transform.identity(),
+        label='',
     ):
         self.coxa_length = coxa_length
         self.femur_length = femur_length
         self.tibia_length = tibia_length
+
+        self.label = label
 
         self.location_on_body = location_on_body
         self.rotation = rotation
@@ -117,3 +121,85 @@ class LegModel:
 
         self.tibia_end = self.tibia_link.apply_point(identity_point)
         self.tibia_end.label = 'Foot'
+
+    def move_to(self, foot_target: Point3D, verbose=False):
+        alpha, beta, gamma = self.inverse_kinematics(foot_target, verbose)
+        if verbose:
+            print(
+                f'{self.label} moving to {foot_target}. new angles: {alpha=:.4f}\t{beta=:.4f}\t{gamma=:.4f}'
+            )
+        self.forward_kinematics(alpha, beta, gamma)
+
+    def inverse_kinematics(self, foot_target: Point3D, verbose=False):
+        localized_foot_target = self.to_local(foot_target)
+        alpha, X_tick = self._inverse_kinematics_xy(localized_foot_target)
+        beta, gamma = self._inverse_kinematics_xz(
+            self.coxa_length,
+            self.femur_length,
+            self.tibia_length,
+            localized_foot_target.z,
+            X_tick,
+            verbose=verbose,
+        )
+        return alpha, beta, gamma
+
+    def to_local(self, point):
+        return self.body_joint.inverse().apply_point(point)
+
+    @staticmethod
+    def _inverse_kinematics_xy(localized_foot_target: Point3D):
+        alpha = math.degrees(math.atan2(localized_foot_target.y, localized_foot_target.x))
+        X_tick = math.hypot(localized_foot_target.x, localized_foot_target.y)
+        return alpha, X_tick
+
+    @staticmethod
+    def _inverse_kinematics_xz(
+        coxa_length: float,
+        femur_length: float,
+        tibia_length: float,
+        z_offset: float,
+        X_tick: float,
+        verbose=False,
+    ):
+        """
+        XZ axis Inverse kinematics solver for 3DOF leg.
+
+        Math as described above
+
+        Parameters:
+        -----------
+        coxa_length:
+        length of the coxa in meters
+
+        femur_length:
+        length of the femur in meters
+
+        tibia_length:
+        length of the tibia in meters
+
+        z_offset:
+        z offset from the coxa joint of the foot target in meters
+
+        X_tick:
+            X distance from the coxa joint of the foot target in meters, returned by the inverse_kinematics_xy
+        """
+        D = -z_offset
+        T = X_tick - coxa_length
+        L = math.hypot(D, T)
+
+        theta1 = math.degrees(
+            math.acos((L**2 + femur_length**2 - tibia_length**2) / (2 * L * femur_length))
+        )
+        theta2 = math.degrees(math.atan2(T, D))
+        phi = math.degrees(
+            math.acos(
+                (tibia_length**2 + femur_length**2 - L**2) / (2 * tibia_length * femur_length)
+            )
+        )
+
+        # The right hand coordinate system is used, so the angle offsets are inverted
+        beta = 90 - (theta1 + theta2)
+        gamma = 180 - phi
+        if verbose:
+            print(f'{theta1=}\n{theta2=}\n{phi=}\n\n{beta=}\n{gamma=}')
+        return beta, gamma
