@@ -64,6 +64,10 @@ class Transform:
     def translation(self):
         return self._matrix[:3, 3]
 
+    @property
+    def matrix(self):
+        return self._matrix
+
     def apply_point(self, point):
         return Point3D(self.apply_nd(point.numpy()))
 
