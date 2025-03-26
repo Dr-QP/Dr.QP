@@ -204,6 +204,9 @@ class Point3D:
         else:
             return Point3D(self._array / other, self.label)
 
+    def copy(self):
+        return Point3D(self._array, self.label)
+
 
 class Line3D:
     """A simple 3D line class."""
