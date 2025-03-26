@@ -21,7 +21,6 @@
 import math
 
 import numpy as np
-
 from point import Line3D, Point3D
 from transforms import Transform
 
