@@ -25,7 +25,7 @@ from matplotlib.patches import Arc
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox, IdentityTransform, TransformedBbox
 import numpy as np
-from point import Line, Point
+from point import Leg3D, Line, Line3D, Point
 
 
 class AngleAnnotation(Arc):
@@ -259,10 +259,56 @@ link_labels_type = Literal['inline', 'legend', 'label', 'none']
 joint_labels_type = Literal['annotated', 'points', 'none']
 
 
+def plot_leg3d(
+    model: Leg3D,
+    title: str,
+    link_labels: Literal['legend', 'label', 'none'] = 'legend',
+    joint_labels: Literal['points', 'none'] = 'points',
+    subplot=111,
+    fig=None,
+    ax=None,
+):
+    if fig is None:
+        fig = plt.figure()
+
+    if ax is None:
+        ax = fig.add_subplot(subplot, projection='3d')
+        ax.set_title(title)
+
+    assert link_labels != 'inline', 'Inline labels not supported in 3D plots'
+    assert joint_labels != 'annotated', 'Joint annotations not supported in 3D plots'
+
+    result_lines, result_joints = plot_leg_links(
+        ax, model.lines, link_labels=link_labels, joint_labels=joint_labels
+    )
+
+    # Doesn't really add anything to the plot
+    # plot_cartesian_plane(ax, Point(-10, -10), Point(10, 10), no_ticks=True)
+
+    ax.set(aspect='equal')
+    # Hide grid lines
+    ax.grid(False)
+    # ax.grid(False, which='both', axis='z')
+
+    # Hide axes ticks
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_zticks([])
+
+    ax.set_facecolor('white')
+    ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    ax.zaxis.set_pane_color((0, 0.2, 0, 0.5))
+    ax.zaxis.line.set_visible(False)
+    ax.zaxis.gridlines.set_visible(False)
+
+    return fig, ax, result_lines, result_joints
+
+
 # Plot the leg links in 2D space
 def plot_leg_links(
     axes: plt.Axes,
-    model: list[Line],
+    model: list[Line] | list[Line3D],
     link_labels: link_labels_type,
     joint_labels: joint_labels_type,
 ):
@@ -283,7 +329,7 @@ def plot_leg_links(
 
     if joint_labels == 'annotated' or joint_labels == 'points':
         for line, joint_color in zip(model, joint_colors):
-            joint = axes.scatter(line.end.x, line.end.y, color=joint_color)
+            joint = axes.scatter(*line.end.numpy(), color=joint_color)
             result_joints.append(joint)
 
     # Add inline labels for leg links
@@ -328,17 +374,16 @@ def plot_leg_with_points(
     no_cartesian_ticks=False,
     x_label='X',
     y_label='Y',
-    setup_axes=lambda ax: None,
+    subplot=111,
+    fig=None,
+    ax=None,
 ):
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1)
-    # ax = fig.add_subplot(111, projection='3d')
+    if fig is None:
+        fig = plt.figure()
 
-    # # for rotate the axes and update.
-    # ax.view_init(-90, 90)
-
-    setup_axes(ax)
-    ax.set_title(title)
+    if ax is None:
+        ax = fig.add_subplot(subplot)
+        ax.set_title(title)
 
     result_lines, result_joints = plot_leg_links(
         ax, model, link_labels=link_labels, joint_labels=joint_labels
@@ -350,11 +395,19 @@ def plot_leg_with_points(
     plot_min = Point(np.min(x), np.min(y))
     plot_max = Point(np.max(x), np.max(y))
 
-    extra_space = 3
+    def extra_space(v):
+        return max(2, abs(v) * 0.2)
+
+    plot_min.x -= extra_space(plot_min.x)
+    plot_min.y -= extra_space(plot_min.y)
+
+    plot_max.x += extra_space(plot_max.x)
+    plot_max.y += extra_space(plot_max.y)
+
     plot_cartesian_plane(
         ax,
-        plot_min - extra_space,
-        plot_max + extra_space,
+        plot_min,
+        plot_max,
         ticks_frequency=5,
         no_ticks=no_cartesian_ticks,
         x_label=x_label,
@@ -371,7 +424,7 @@ def plot_cartesian_plane(
     ticks_frequency=1,
     no_ticks=False,
     x_label='X',
-    y_label='Z',
+    y_label='Y',
 ):
     # Set identical scales for both axes
     ax.set(xlim=(plot_min.x, plot_max.x), ylim=(plot_min.y, plot_max.y), aspect='equal')
@@ -418,6 +471,14 @@ def plot_leg_update_lines(model, lines, joints):
 
     for joint, line_model in zip(joints, model):
         joint.set_offsets([line_model.end.x, line_model.end.y])
+
+
+def plot_update_leg3d_lines(leg: Leg3D, lines, joints):
+    for line, line_model in zip(lines, leg.lines):
+        line.set_data_3d(*zip(line_model.start, line_model.end))
+
+    for joint, line_model in zip(joints, leg.lines):
+        joint._offsets3d = ([line_model.end.x], [line_model.end.y], [line_model.end.z])
 
 
 def plot_ik_lines(ax, femur, tibia):

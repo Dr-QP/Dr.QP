@@ -30,7 +30,7 @@ class Point:
         self.label = label
 
     def __repr__(self):
-        return f'Point({self.x}, {self.y}, {self.label})'
+        return f'Point({self.x:.4f}, {self.y:.4f}, {self.label})'
 
     def __add__(self, other):
         if isinstance(other, Point):
@@ -89,9 +89,12 @@ class Line:
             self.start, self.end + (self.end - self.start).normalized() * length, self.label
         )
 
+    def __repr__(self):
+        return f'Line({self.start}, {self.end}, {self.label})'
 
-class Point3D:
-    """A simple 3D point class."""
+
+class SimplePoint3D:
+    """A simple 3D point class for getting_started_with_robot_ik."""
 
     def __init__(self, x: float, y: float, z: float, label: str = None):
         self.x = x
@@ -119,3 +122,135 @@ class Point3D:
 
     def numpy(self):
         return np.array([self.x, self.y, self.z])
+
+
+class Point3D:
+    """A thin wrapper on numpy array for 3D point class."""
+
+    def __init__(self, a: np.ndarray | list[float], label: str = None):
+        assert len(a) == 3
+        self._array = np.array(a)
+        self.label = label
+
+    def __repr__(self):
+        return f'Point3D({self.x:.4f}, {self.y:.4f}, {self.z:.4f}, {self.label})'
+
+    @property
+    def x(self):
+        return self._array[0]
+
+    @x.setter
+    def x(self, value):
+        self._array[0] = value
+
+    @property
+    def y(self):
+        return self._array[1]
+
+    @y.setter
+    def y(self, value):
+        self._array[1] = value
+
+    @property
+    def z(self):
+        return self._array[2]
+
+    @z.setter
+    def z(self, value):
+        self._array[2] = value
+
+    @property
+    def xy(self):
+        return Point(self.x, self.y, self.label)
+
+    @property
+    def xz(self):
+        return Point(self.x, self.z, self.label)
+
+    @property
+    def yz(self):
+        return Point(self.y, self.z, self.label)
+
+    def __iter__(self):
+        return iter(self._array)
+
+    def numpy(self):
+        return self._array
+
+    def normalized(self):
+        return self / np.linalg.norm(self._array)
+
+    def __add__(self, other):
+        if isinstance(other, Point3D):
+            return Point3D(self._array + other._array, other.label)
+        else:
+            return Point3D(self._array + other, self.label)
+
+    def __sub__(self, other):
+        if isinstance(other, Point3D):
+            return Point3D(self._array - other._array, other.label)
+        else:
+            return Point3D(self._array - other, self.label)
+
+    def __mul__(self, other):
+        if isinstance(other, Point3D):
+            return Point3D(self._array * other._array, other.label)
+        else:
+            return Point3D(self._array * other, self.label)
+
+    def __truediv__(self, other):
+        if isinstance(other, Point3D):
+            return Point3D(self._array / other._array, other.label)
+        else:
+            return Point3D(self._array / other, self.label)
+
+    def copy(self):
+        return Point3D(self._array, self.label)
+
+
+class Line3D:
+    """A simple 3D line class."""
+
+    def __init__(self, start: Point3D, end: Point3D, label: str):
+        self.start = start
+        self.end = end
+        self.label = label
+
+    def extended(self, length: float = 1.0):
+        return Line3D(
+            self.start, self.end + (self.end - self.start).normalized() * length, self.label
+        )
+
+    @property
+    def xy(self):
+        return Line(self.start.xy, self.end.xy, self.label)
+
+    @property
+    def xz(self):
+        return Line(self.start.xz, self.end.xz, self.label)
+
+    @property
+    def yz(self):
+        return Line(self.start.yz, self.end.yz, self.label)
+
+
+class Leg3D:
+    """A 3D leg class."""
+
+    def __init__(self, lines: list[Line3D]):
+        self.lines = lines
+
+    def __iter__(self):
+        return iter(self.lines)
+
+    @property
+    def xy(self):
+        return [line.xy for line in self.lines]
+
+    @property
+    def xz(self):
+        return [line.xz for line in self.lines]
+
+    @property
+    def yz(self):
+        return [line.yz for line in self.lines]
