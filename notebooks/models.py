@@ -20,6 +20,8 @@
 
 import math
 
+import numpy as np
+
 from point import Line3D, Point3D
 from transforms import Transform
 
@@ -31,6 +33,110 @@ def safe_acos(num):
         return False, 0.0  # math.acos(1)
     else:
         return True, math.acos(num)
+
+
+class HexapodModel:
+    def __init__(
+        self,
+        front_offset=100,  # x offset for the front and back legs
+        side_offset=100,  # y offset fo the front and back legs
+        middle_offset=100,  # x offset for the middle legs
+        coxa_len=100,
+        femur_len=100,
+        tibia_len=100,
+        body_transform=Transform.identity(),
+        leg_rotation=[0, 0, 45],
+    ):
+        leg_rotation = np.array(leg_rotation)
+
+        self.left_front = LegModel(
+            coxa_len,
+            femur_len,
+            tibia_len,
+            label='left_front',
+            rotation=leg_rotation,
+            location_on_body=[front_offset, side_offset, 0.0],
+        )
+        self.left_middle = LegModel(
+            coxa_len,
+            femur_len,
+            tibia_len,
+            label='left_middle',
+            rotation=leg_rotation * 2,
+            location_on_body=[0.0, middle_offset, 0.0],
+        )
+        self.left_back = LegModel(
+            coxa_len,
+            femur_len,
+            tibia_len,
+            label='left_back',
+            rotation=leg_rotation * 3,
+            location_on_body=[-front_offset, side_offset, 0.0],
+        )
+
+        self.right_front = LegModel(
+            coxa_len,
+            femur_len,
+            tibia_len,
+            label='right_front',
+            rotation=leg_rotation * -1,
+            location_on_body=[front_offset, -side_offset, 0.0],
+        )
+        self.right_middle = LegModel(
+            coxa_len,
+            femur_len,
+            tibia_len,
+            label='right_middle',
+            rotation=leg_rotation * -2,
+            location_on_body=[0.0, -middle_offset, 0.0],
+        )
+        self.right_back = LegModel(
+            coxa_len,
+            femur_len,
+            tibia_len,
+            label='right_back',
+            rotation=leg_rotation * -3,
+            location_on_body=[-front_offset, -side_offset, 0.0],
+        )
+
+        # Head, x-forward
+        self.__head_base_line = Line3D(Point3D([0, 0, 0]), Point3D([front_offset, 0, 0]), 'Head')
+
+        # Setting body transform has to be last as it will update head and all the lgs
+        self.body_transform = body_transform
+
+    def forward_kinematics(self, alpha, beta, gamma):
+        for leg in self.legs:
+            leg.forward_kinematics(alpha, beta, gamma)
+
+    def move_legs_to(self, foot_targets, verbose=False):
+        results = []
+        for leg, target in zip(self.legs, foot_targets):
+            reached = leg.move_to(target, verbose)
+            results.append(reached)
+        return results
+
+    @property
+    def legs(self):
+        return [
+            self.left_front,
+            self.left_middle,
+            self.left_back,
+            self.right_front,
+            self.right_middle,
+            self.right_back,
+        ]
+
+    @property
+    def body_transform(self):
+        return self.left_front.body_transform
+
+    @body_transform.setter
+    def body_transform(self, body_transform):
+        for leg in self.legs:
+            leg.body_transform = body_transform
+
+        self.head = body_transform.apply_line(self.__head_base_line)
 
 
 class LegModel:

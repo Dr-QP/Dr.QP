@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 import numpy as np
-from point import Point3D
+from point import Line3D, Point3D
 from scipy.spatial.transform import Rotation as R
 
 
@@ -70,6 +70,9 @@ class Transform:
 
     def apply_point(self, point):
         return Point3D(self.apply_nd(point.numpy()))
+
+    def apply_line(self, line: Line3D):
+        return Line3D(self.apply_point(line.start), self.apply_point(line.end), line.label)
 
     def apply_nd(self, nd_point):
         point4d = np.append(nd_point, 1)
