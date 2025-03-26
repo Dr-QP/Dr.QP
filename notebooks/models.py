@@ -53,7 +53,7 @@ class LegModel:
 
         self.location_on_body = location_on_body
         self.rotation = rotation
-        self.body_transform = body_transform
+        self._body_transform = body_transform
         self.update_base_transforms()
 
         self.coxa_link = None
@@ -67,6 +67,15 @@ class LegModel:
         self.coxa_end = None
         self.femur_end = None
         self.tibia_end = None
+
+    @property
+    def body_transform(self):
+        return self._body_transform
+
+    @body_transform.setter
+    def body_transform(self, value):
+        self._body_transform = value
+        self.update_base_transforms()
 
     def update_base_transforms(self):
         self.body_link = self.body_transform @ Transform.from_translation(self.location_on_body)
@@ -105,6 +114,8 @@ class LegModel:
         beta,
         gamma,
     ):
+        self.update_base_transforms()
+
         self.coxa_joint = self.body_joint @ Transform.from_rotvec([0, 0, alpha], degrees=True)
         self.coxa_link = self.coxa_joint @ Transform.from_translation([self.coxa_length, 0, 0])
 
