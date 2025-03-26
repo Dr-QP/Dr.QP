@@ -19,8 +19,9 @@
 # THE SOFTWARE.
 
 import math
-from transforms import Transform
+
 from point import Line3D, Point3D
+from transforms import Transform
 
 
 def safe_acos(num):
