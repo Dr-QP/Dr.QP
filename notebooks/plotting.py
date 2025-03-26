@@ -473,6 +473,14 @@ def plot_leg_update_lines(model, lines, joints):
         joint.set_offsets([line_model.end.x, line_model.end.y])
 
 
+def plot_update_leg3d_lines(leg: Leg3D, lines, joints):
+    for line, line_model in zip(lines, leg.lines):
+        line.set_data_3d(*zip(line_model.start, line_model.end))
+
+    for joint, line_model in zip(joints, leg.lines):
+        joint._offsets3d = ([line_model.end.x], [line_model.end.y], [line_model.end.z])
+
+
 def plot_ik_lines(ax, femur, tibia):
     d_end = Point(femur.start.x, tibia.end.y)
     ax.plot(*zip(femur.start, tibia.end), 'm--', label='L')
