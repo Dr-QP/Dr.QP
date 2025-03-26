@@ -35,7 +35,7 @@ class Transform:
 
     @classmethod
     def make(cls, rotation, translation):
-        return Transform(
+        return cls(
             np.block(
                 [
                     [rotation.as_matrix(), np.array(translation).reshape(3, 1)],
@@ -46,15 +46,15 @@ class Transform:
 
     @classmethod
     def identity(cls):
-        return Transform(np.identity(4))
+        return cls(np.identity(4))
 
     @classmethod
     def from_rotvec(cls, rotvec, degrees=False):
-        return Transform.make(R.from_rotvec(rotvec, degrees=degrees), [0, 0, 0])
+        return cls.make(R.from_rotvec(rotvec, degrees=degrees), [0, 0, 0])
 
     @classmethod
     def from_translation(cls, translation):
-        return Transform.make(R.identity(), translation)
+        return cls.make(R.identity(), translation)
 
     @property
     def rotation(self):
