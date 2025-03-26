@@ -156,9 +156,6 @@ class LegModel:
         localized_foot_target = self.to_local(foot_target)
         alpha, X_tick = self._inverse_kinematics_xy(localized_foot_target)
         solvable, beta, gamma = self._inverse_kinematics_xz(
-            self.coxa_length,
-            self.femur_length,
-            self.tibia_length,
             localized_foot_target.z,
             X_tick,
             verbose=verbose,
@@ -174,11 +171,8 @@ class LegModel:
         X_tick = math.hypot(localized_foot_target.x, localized_foot_target.y)
         return alpha, X_tick
 
-    @staticmethod
     def _inverse_kinematics_xz(
-        coxa: float,
-        femur: float,
-        tibia: float,
+        self,
         z_offset: float,
         X_tick: float,
         verbose=False,
@@ -190,15 +184,6 @@ class LegModel:
 
         Parameters:
         -----------
-        coxa_length:
-        length of the coxa in meters
-
-        femur_length:
-        length of the femur in meters
-
-        tibia_length:
-        length of the tibia in meters
-
         z_offset:
         z offset from the coxa joint of the foot target in meters
 
@@ -206,14 +191,19 @@ class LegModel:
             X distance from the coxa joint of the foot target in meters, returned by the inverse_kinematics_xy
         """
         D = -z_offset
-        T = X_tick - coxa
+        T = X_tick - self.coxa_length
         L = math.hypot(D, T)
 
-        solvable_theta1, theta1_rad = safe_acos((L**2 + femur**2 - tibia**2) / (2 * L * femur))
+        solvable_theta1, theta1_rad = safe_acos(
+            (L**2 + self.femur_length**2 - self.tibia_length**2) / (2 * L * self.femur_length)
+        )
         theta1 = math.degrees(theta1_rad)
 
         theta2 = math.degrees(math.atan2(T, D))
-        solvable_phi, phi_rad = safe_acos((tibia**2 + femur**2 - L**2) / (2 * tibia * femur))
+        solvable_phi, phi_rad = safe_acos(
+            (self.tibia_length**2 + self.femur_length**2 - L**2)
+            / (2 * self.tibia_length * self.femur_length)
+        )
         phi = math.degrees(phi_rad)
 
         # The right hand coordinate system is used, so the angle offsets are inverted
