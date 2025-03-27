@@ -23,30 +23,49 @@ from abc import abstractmethod
 import matplotlib.pyplot as plt
 import numpy as np
 
-from point import Point3D, Point
+from point import Point3D
 
 
 class GaitGenerator:
+    def __init__(
+        self,
+        all_legs=[
+            'left_front',
+            'left_middle',
+            'left_back',
+            'right_front',
+            'right_middle',
+            'right_back',
+        ],
+    ):
+        self.all_legs = all_legs
+
     @abstractmethod
-    def get_offsets_at_phase(self, phase, direction=Point(1, 0)) -> dict[str, Point3D]:
+    def get_offsets_at_phase(self, phase) -> dict[str, Point3D]:
         pass
 
     @abstractmethod
-    def get_offsets_at_phase_for_leg(self, leg, phase, direction=Point(1, 0)) -> Point3D:
+    def get_offsets_at_phase_for_leg(self, leg, phase) -> Point3D:
         pass
 
-    def visualize_continuous(self, steps=100, direction=Point(1, 0)):
+    def _legend_for_leg(self, leg) -> str:
+        return leg
+
+    def _line_style_for_leg(self, leg) -> str:
+        return '-'
+
+    def visualize_continuous(self, steps=100, **gen_args):
         """Visualize the gait sequence as a continuous function."""
         phases = np.linspace(0, 1, steps, endpoint=True)
 
         # Create data structures to store values for plotting
-        x_values = {leg: [] for leg in self.tripod_a + self.tripod_b}
-        y_values = {leg: [] for leg in self.tripod_a + self.tripod_b}
-        z_values = {leg: [] for leg in self.tripod_a + self.tripod_b}
+        x_values = {leg: [] for leg in self.all_legs}
+        y_values = {leg: [] for leg in self.all_legs}
+        z_values = {leg: [] for leg in self.all_legs}
 
         # Generate data points
         for phase in phases:
-            offsets = self.get_offsets_at_phase(phase, direction)
+            offsets = self.get_offsets_at_phase(phase, **gen_args)
             for leg, offset in offsets.items():
                 x_values[leg].append(offset.x)
                 y_values[leg].append(offset.y)
@@ -56,33 +75,39 @@ class GaitGenerator:
         fig, axs = plt.subplots(3, 1, figsize=(12, 10))
 
         # Plot x offsets
-        for leg in self.tripod_a + self.tripod_b:
-            if leg in self.tripod_a:
-                axs[0].plot(phases, x_values[leg], label=f'{leg} (A)', linestyle='-')
-            else:
-                axs[0].plot(phases, x_values[leg], label=f'{leg} (B)', linestyle='--')
+        for leg in self.all_legs:
+            axs[0].plot(
+                phases,
+                x_values[leg],
+                label=self._legend_for_leg(leg),
+                linestyle=self._line_style_for_leg(leg),
+            )
         axs[0].set_title('X offsets (forward/backward)')
         axs[0].set_ylabel('meters')
         axs[0].set_xlabel('phase')
         axs[0].legend()
 
         # Plot y offsets
-        for leg in self.tripod_a + self.tripod_b:
-            if leg in self.tripod_a:
-                axs[1].plot(phases, y_values[leg], label=f'{leg} (A)', linestyle='-')
-            else:
-                axs[1].plot(phases, y_values[leg], label=f'{leg} (B)', linestyle='--')
+        for leg in self.all_legs:
+            axs[1].plot(
+                phases,
+                y_values[leg],
+                label=self._legend_for_leg(leg),
+                linestyle=self._line_style_for_leg(leg),
+            )
         axs[1].set_title('Y offsets (left/right)')
         axs[1].set_ylabel('meters')
         axs[1].set_xlabel('phase')
         axs[1].legend()
 
         # Plot z offsets
-        for leg in self.tripod_a + self.tripod_b:
-            if leg in self.tripod_a:
-                axs[2].plot(phases, z_values[leg], label=f'{leg} (A)', linestyle='-')
-            else:
-                axs[2].plot(phases, z_values[leg], label=f'{leg} (B)', linestyle='--')
+        for leg in self.all_legs:
+            axs[2].plot(
+                phases,
+                z_values[leg],
+                label=self._legend_for_leg(leg),
+                linestyle=self._line_style_for_leg(leg),
+            )
         axs[2].set_title('Z offsets (up/down)')
         axs[2].set_ylabel('meters')
         axs[2].set_xlabel('phase')
