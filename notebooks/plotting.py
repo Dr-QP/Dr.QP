@@ -572,3 +572,30 @@ def plot_update_leg3d_lines(leg: Leg3D, lines, joints):
 
     for joint, line_model in zip(joints, leg.lines):
         joint._offsets3d = ([line_model.end.x], [line_model.end.y], [line_model.end.z])
+
+
+def animate_plot_template(func=lambda: None, interactive=False, skip=False):
+    if skip:
+        return
+
+    was_interactive = plt.isinteractive()
+
+    plt.rcParams['animation.html'] = 'jshtml'
+    if interactive:
+        plt.ion()
+    else:
+        plt.ioff()
+
+    try:
+        anim = func()
+
+        if plt.isinteractive():
+            plt.show()
+        else:
+            display(anim)  # type: ignore # noqa: F821
+        return anim
+    finally:
+        if was_interactive:
+            plt.ion()
+        else:
+            plt.ioff()
