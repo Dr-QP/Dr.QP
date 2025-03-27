@@ -53,6 +53,17 @@ class Transform:
         return cls.make(R.from_rotvec(rotvec, degrees=degrees), [0, 0, 0])
 
     @classmethod
+    def from_rotmatrix(cls, rotation_matrix):
+        return cls(
+            np.block(
+                [
+                    [np.array(rotation_matrix), np.zeros((3, 1))],
+                    [np.zeros(3), 1],
+                ]
+            )
+        )
+
+    @classmethod
     def from_translation(cls, translation):
         return cls.make(R.identity(), translation)
 

@@ -23,19 +23,19 @@ from abc import abstractmethod
 import matplotlib.pyplot as plt
 import numpy as np
 
-from point import Point3D
+from point import Point3D, Point
 
 
 class GaitGenerator:
     @abstractmethod
-    def get_offsets_at_phase(self, phase) -> dict[str, Point3D]:
+    def get_offsets_at_phase(self, phase, direction=Point(1, 0)) -> dict[str, Point3D]:
         pass
 
     @abstractmethod
-    def get_offsets_at_phase_for_leg(self, leg, phase) -> Point3D:
+    def get_offsets_at_phase_for_leg(self, leg, phase, direction=Point(1, 0)) -> Point3D:
         pass
 
-    def visualize_continuous(self, steps=100):
+    def visualize_continuous(self, steps=100, direction=Point(1, 0)):
         """Visualize the gait sequence as a continuous function."""
         phases = np.linspace(0, 1, steps, endpoint=True)
 
@@ -46,7 +46,7 @@ class GaitGenerator:
 
         # Generate data points
         for phase in phases:
-            offsets = self.get_offsets_at_phase(phase)
+            offsets = self.get_offsets_at_phase(phase, direction)
             for leg, offset in offsets.items():
                 x_values[leg].append(offset.x)
                 y_values[leg].append(offset.y)
