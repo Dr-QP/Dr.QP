@@ -23,14 +23,16 @@ from abc import abstractmethod
 import matplotlib.pyplot as plt
 import numpy as np
 
+from point import Point3D
+
 
 class GaitGenerator:
     @abstractmethod
-    def get_offsets_at_phase(self, phase):
+    def get_offsets_at_phase(self, phase) -> dict[str, Point3D]:
         pass
 
     @abstractmethod
-    def get_offsets_at_phase_for_leg(self, leg, phase):
+    def get_offsets_at_phase_for_leg(self, leg, phase) -> Point3D:
         pass
 
     def visualize_continuous(self, steps=100):
