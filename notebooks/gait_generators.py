@@ -74,6 +74,12 @@ class GaitGenerator:
         # Plot the data
         fig, axs = plt.subplots(3, 1, figsize=(12, 10))
 
+        # print out **gen_args into a string
+        if len(gen_args) == 0:
+            subtitle = ''
+        else:
+            subtitle = '\n' + ', '.join([f'{k}={v}' for k, v in gen_args.items()])
+
         # Plot x offsets
         for leg in self.all_legs:
             axs[0].plot(
@@ -82,7 +88,7 @@ class GaitGenerator:
                 label=self._legend_for_leg(leg),
                 linestyle=self._line_style_for_leg(leg),
             )
-        axs[0].set_title('X offsets (forward/backward)')
+        axs[0].set_title('X offsets (forward/backward)' + subtitle)
         axs[0].set_ylabel('meters')
         axs[0].set_xlabel('phase')
         axs[0].legend()
@@ -95,7 +101,7 @@ class GaitGenerator:
                 label=self._legend_for_leg(leg),
                 linestyle=self._line_style_for_leg(leg),
             )
-        axs[1].set_title('Y offsets (left/right)')
+        axs[1].set_title('Y offsets (left/right)' + subtitle)
         axs[1].set_ylabel('meters')
         axs[1].set_xlabel('phase')
         axs[1].legend()
@@ -108,7 +114,7 @@ class GaitGenerator:
                 label=self._legend_for_leg(leg),
                 linestyle=self._line_style_for_leg(leg),
             )
-        axs[2].set_title('Z offsets (up/down)')
+        axs[2].set_title('Z offsets (up/down)' + subtitle)
         axs[2].set_ylabel('meters')
         axs[2].set_xlabel('phase')
         axs[2].legend()
