@@ -121,3 +121,75 @@ class GaitGenerator:
 
         plt.tight_layout()
         plt.show()
+
+    def visualize_continuous_in_3d(
+        self,
+        steps=100,
+        phase_start=0,
+        phase_end=1,
+        leg_centers={
+            'left_front': Point3D([24.0, 24.0, 0.0]),
+            'left_middle': Point3D([0.0, 30.0, 0.0]),
+            'left_back': Point3D([-24.0, 24.0, 0.0]),
+            'right_front': Point3D([24.0, -24.0, 0.0]),
+            'right_middle': Point3D([0.0, -30.0, 0.0]),
+            'right_back': Point3D([-24.0, -24.0, 0.0]),
+        },
+        ax=None,
+        plot_lines=None,
+        **gen_args,
+    ):
+        """Visualize the gait sequence as a continuous function in 3D plot."""
+        phases = np.linspace(phase_start, phase_end, steps, endpoint=True)
+
+        # Create data structures to store values for plotting
+        x_values = {leg: [] for leg in self.all_legs}
+        y_values = {leg: [] for leg in self.all_legs}
+        z_values = {leg: [] for leg in self.all_legs}
+
+        # Generate data points
+        for phase in phases:
+            offsets = self.get_offsets_at_phase(phase, **gen_args)
+            for leg, offset in offsets.items():
+                offset = offset + leg_centers[leg]
+                x_values[leg].append(offset.x)
+                y_values[leg].append(offset.y)
+                z_values[leg].append(offset.z)
+
+        # print out **gen_args into a string
+        if len(gen_args) == 0:
+            subtitle = ''
+        else:
+            subtitle = '\n' + ', '.join([f'{k}={v}' for k, v in gen_args.items()])
+
+        # Plot the data
+        if ax is None:
+            fig = plt.figure(figsize=(12, 10))
+            ax = fig.add_subplot(111, projection='3d')
+
+            ax.view_init(elev=47, azim=-160)
+            # ax.view_init(elev=24, azim=24)
+
+            ax.set_title('3D offsets' + subtitle)
+            ax.set_xlabel('X (forward/backward)')
+            ax.set_ylabel('Y (left/right)')
+            ax.set_zlabel('Z (up/down)')
+
+        # Plot x offsets
+        for leg in self.all_legs:
+            if plot_lines and leg in plot_lines and plot_lines[leg]:
+                lines = plot_lines[leg]
+                lines.set_data_3d(x_values[leg], y_values[leg], z_values[leg])
+            else:
+                lines = ax.plot(
+                    x_values[leg],
+                    y_values[leg],
+                    z_values[leg],
+                    label=self._legend_for_leg(leg),
+                    linestyle=self._line_style_for_leg(leg),
+                )
+                if not plot_lines:
+                    plot_lines = {}
+                plot_lines[leg] = lines[0]
+
+        return ax, plot_lines
