@@ -24,18 +24,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from point import Point3D
+from models import HexapodLeg
 
 
 class GaitGenerator:
     def __init__(
         self,
         all_legs=[
-            'left_front',
-            'left_middle',
-            'left_back',
-            'right_front',
-            'right_middle',
-            'right_back',
+            HexapodLeg.left_front,
+            HexapodLeg.left_middle,
+            HexapodLeg.left_back,
+            HexapodLeg.right_front,
+            HexapodLeg.right_middle,
+            HexapodLeg.right_back,
         ],
     ):
         self.all_legs = all_legs
@@ -128,12 +129,12 @@ class GaitGenerator:
         phase_start=0,
         phase_end=1,
         leg_centers={
-            'left_front': Point3D([24.0, 24.0, 0.0]),
-            'left_middle': Point3D([0.0, 30.0, 0.0]),
-            'left_back': Point3D([-24.0, 24.0, 0.0]),
-            'right_front': Point3D([24.0, -24.0, 0.0]),
-            'right_middle': Point3D([0.0, -30.0, 0.0]),
-            'right_back': Point3D([-24.0, -24.0, 0.0]),
+            HexapodLeg.left_middle: Point3D([0.0, 30.0, 0.0]),
+            HexapodLeg.left_front: Point3D([24.0, 24.0, 0.0]),
+            HexapodLeg.left_back: Point3D([-24.0, 24.0, 0.0]),
+            HexapodLeg.right_front: Point3D([24.0, -24.0, 0.0]),
+            HexapodLeg.right_middle: Point3D([0.0, -30.0, 0.0]),
+            HexapodLeg.right_back: Point3D([-24.0, -24.0, 0.0]),
         },
         ax=None,
         plot_lines=None,

@@ -19,10 +19,20 @@
 # THE SOFTWARE.
 
 import math
+import enum
 
 import numpy as np
 from point import Line3D, Point3D
 from transforms import Transform
+
+
+class HexapodLeg(enum.Enum):
+    left_front = enum.auto()
+    left_middle = enum.auto()
+    left_back = enum.auto()
+    right_front = enum.auto()
+    right_middle = enum.auto()
+    right_back = enum.auto()
 
 
 def safe_acos(num):
@@ -52,7 +62,7 @@ class HexapodModel:
             coxa_len,
             femur_len,
             tibia_len,
-            label='left_front',
+            label=HexapodLeg.left_front,
             rotation=leg_rotation,
             location_on_body=[front_offset, side_offset, 0.0],
         )
@@ -60,7 +70,7 @@ class HexapodModel:
             coxa_len,
             femur_len,
             tibia_len,
-            label='left_middle',
+            label=HexapodLeg.left_middle,
             rotation=leg_rotation * 2,
             location_on_body=[0.0, middle_offset, 0.0],
         )
@@ -68,7 +78,7 @@ class HexapodModel:
             coxa_len,
             femur_len,
             tibia_len,
-            label='left_back',
+            label=HexapodLeg.left_back,
             rotation=leg_rotation * 3,
             location_on_body=[-front_offset, side_offset, 0.0],
         )
@@ -77,7 +87,7 @@ class HexapodModel:
             coxa_len,
             femur_len,
             tibia_len,
-            label='right_front',
+            label=HexapodLeg.right_front,
             rotation=leg_rotation * -1,
             location_on_body=[front_offset, -side_offset, 0.0],
         )
@@ -85,7 +95,7 @@ class HexapodModel:
             coxa_len,
             femur_len,
             tibia_len,
-            label='right_middle',
+            label=HexapodLeg.right_middle,
             rotation=leg_rotation * -2,
             location_on_body=[0.0, -middle_offset, 0.0],
         )
@@ -93,7 +103,7 @@ class HexapodModel:
             coxa_len,
             femur_len,
             tibia_len,
-            label='right_back',
+            label=HexapodLeg.right_back,
             rotation=leg_rotation * -3,
             location_on_body=[-front_offset, -side_offset, 0.0],
         )
