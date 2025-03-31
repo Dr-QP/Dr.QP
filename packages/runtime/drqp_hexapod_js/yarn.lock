@@ -9811,10 +9811,10 @@ rc@^1.0.1, rc@^1.1.6, rc@^1.2.7:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
-rclnodejs@^0.32.4:
-  version "0.32.4"
-  resolved "https://registry.yarnpkg.com/rclnodejs/-/rclnodejs-0.32.4.tgz#ad5025021b3212ac93bab928b53297be3fdd4d82"
-  integrity sha512-kvwNGPo6Bn2luY4uWmO7zvImNahjPOlGYlI1+5kGZO34Yk95MvFqzd9FmzOrBEtF2wPvtQvGW50YwQhwM59dNw==
+rclnodejs@^0.32.5:
+  version "0.32.5"
+  resolved "https://registry.yarnpkg.com/rclnodejs/-/rclnodejs-0.32.5.tgz#6954bafaa41255a2229380ff80194a0c644bfb8a"
+  integrity sha512-RMR1euOPxq0GAIfWKFwxdPmthTGJ4a+rQe7/jrQH3uys52JLWPcvLKf3LNjlPAfeUL0Qmy/H+xPu2Bm4Szv5iA==
   dependencies:
     "@rclnodejs/ref-array-di" "^1.2.2"
     "@rclnodejs/ref-napi" "^4.0.0"
