@@ -53,6 +53,7 @@
       "charliermarsh.ruff",
       "tamasfe.even-better-toml",
       "davidanson.vscode-markdownlint",
+      "elagil.pre-commit-helper",
     ]
   },
   "launch": {
