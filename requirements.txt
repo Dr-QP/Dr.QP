@@ -9,3 +9,7 @@ matplotlib-inline-labels>=0.1
 typeguard>=4.1.5  # Required by generate-parameter-library-py
 
 Pygments>=2.17.2
+
+# For cleaning up jupyter notebooks from output
+pre-commit>=4.2.0
+nbstripout>=0.8.1
