@@ -3,3 +3,10 @@ repos:
     rev: 0.8.1
     hooks:
       - id: nbstripout
+  # Enable in separate PR
+  # - repo: https://github.com/pre-commit/pre-commit-hooks
+  #   rev: v2.3.0
+  #   hooks:
+  #    - id: check-yaml
+  #    - id: end-of-file-fixer
+  #    - id: trailing-whitespace
