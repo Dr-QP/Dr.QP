@@ -1,5 +1,21 @@
 name: reviewdog
-on: [pull_request]
+on:
+  release:
+    types:
+      - published
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  pull_request:
+    branches:
+      - main
+      - v*
+  merge_group:
+    types:
+      - checks_requested
+
 jobs:
   actionlint:
     timeout-minutes: 10

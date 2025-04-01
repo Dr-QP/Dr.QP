@@ -1,5 +1,21 @@
 name: gitleaks
-on: [pull_request, push, workflow_dispatch]
+on:
+  release:
+    types:
+      - published
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  pull_request:
+    branches:
+      - main
+      - v*
+  merge_group:
+    types:
+      - checks_requested
+
 jobs:
   scan:
     name: gitleaks
