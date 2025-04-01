@@ -6,7 +6,7 @@ inputs:
     required: true
   file:
     description: Dockerfile to use
-    required: true
+    required: false
   image:
     description: Image names to pass to metadata-action
     required: true
