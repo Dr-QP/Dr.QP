@@ -610,8 +610,9 @@ def plot_update_leg3d_lines(leg: Leg3D, lines, joints):
 
 
 def animate_plot_template(func=lambda: None, interactive=False, skip=False):
+    anim = None
     if skip:
-        return
+        return anim
 
     was_interactive = plt.isinteractive()
 
@@ -628,9 +629,10 @@ def animate_plot_template(func=lambda: None, interactive=False, skip=False):
             plt.show()
         else:
             display(anim)  # type: ignore # noqa: F821
-        return anim
     finally:
         if was_interactive:
             plt.ion()
         else:
             plt.ioff()
+
+    return anim
