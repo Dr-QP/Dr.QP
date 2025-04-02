@@ -21,13 +21,14 @@
 from typing import Literal
 
 from inline_labels import add_inline_labels
+from ipywidgets import interact
+from matplotlib.animation import FuncAnimation
 from matplotlib.patches import Arc
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox, IdentityTransform, TransformedBbox
+from models import HexapodModel
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 import numpy as np
-
-from models import HexapodModel
 from point import Leg3D, Line, Line3D, Point
 
 
@@ -609,21 +610,30 @@ def plot_update_leg3d_lines(leg: Leg3D, lines, joints):
         joint._offsets3d = ([line_model.end.x], [line_model.end.y], [line_model.end.z])
 
 
-def animate_plot_template(func=lambda: None, interactive=False, skip=False):
+def animate_plot(
+    _fig,
+    _animate: callable,
+    _frames,
+    _interval=16,  # 60 fps
+    _interactive=False,
+    _skip=False,
+    **interact_kwargs,
+):
     anim = None
-    if skip:
-        return anim
 
     was_interactive = plt.isinteractive()
 
     plt.rcParams['animation.html'] = 'jshtml'
-    if interactive:
+    if _interactive:
         plt.ion()
     else:
         plt.ioff()
 
     try:
-        anim = func()
+        if _interactive:
+            anim = interact(_animate, frame=(0, _frames), **interact_kwargs)
+        else:
+            anim = FuncAnimation(_fig, _animate, frames=_frames, interval=_interval)
 
         if plt.isinteractive():
             plt.show()
