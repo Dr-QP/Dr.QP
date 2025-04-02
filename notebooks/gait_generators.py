@@ -43,7 +43,7 @@ class GaitGenerator:
 
     @abstractmethod
     def get_offsets_at_phase(self, phase) -> dict[str, Point3D]:
-        pass
+        return {leg: self.get_offsets_at_phase_for_leg(leg, phase) for leg in self.all_legs}
 
     @abstractmethod
     def get_offsets_at_phase_for_leg(self, leg, phase) -> Point3D:
