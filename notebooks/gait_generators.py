@@ -128,20 +128,26 @@ class GaitGenerator:
         steps=100,
         phase_start=0,
         phase_end=1,
-        leg_centers={
-            HexapodLeg.left_middle: Point3D([0.0, 30.0, 0.0]),
-            HexapodLeg.left_front: Point3D([24.0, 24.0, 0.0]),
-            HexapodLeg.left_back: Point3D([-24.0, 24.0, 0.0]),
-            HexapodLeg.right_front: Point3D([24.0, -24.0, 0.0]),
-            HexapodLeg.right_middle: Point3D([0.0, -30.0, 0.0]),
-            HexapodLeg.right_back: Point3D([-24.0, -24.0, 0.0]),
-        },
+        leg_centers=None,
         ax=None,
         plot_lines=None,
+        step_length=50,
         **gen_args,
     ):
         """Visualize the gait sequence as a continuous function in 3D plot."""
         phases = np.linspace(phase_start, phase_end, steps, endpoint=True)
+
+        if leg_centers is None:
+            base_offset = step_length / 1.6
+            side_offset = base_offset * 1.5
+            leg_centers = {
+                HexapodLeg.left_middle: Point3D([0.0, side_offset, 0.0]),
+                HexapodLeg.left_front: Point3D([base_offset, base_offset, 0.0]),
+                HexapodLeg.left_back: Point3D([-base_offset, base_offset, 0.0]),
+                HexapodLeg.right_front: Point3D([base_offset, -base_offset, 0.0]),
+                HexapodLeg.right_middle: Point3D([0.0, side_offset, 0.0]),
+                HexapodLeg.right_back: Point3D([-base_offset, -base_offset, 0.0]),
+            }
 
         # Create data structures to store values for plotting
         x_values = {leg: [] for leg in self.all_legs}
