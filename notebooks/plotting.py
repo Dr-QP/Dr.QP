@@ -616,7 +616,6 @@ def animate_plot(
     _frames,
     _interval=16,  # 60 fps
     _interactive=False,
-    _skip=False,
     **interact_kwargs,
 ):
     anim = None
