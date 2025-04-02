@@ -78,7 +78,7 @@ def plot_spline(
     elif spline_type == SplineType.splrep:
         spline_x = make_splrep(t, x, s=s, k=k)
         spline_y = make_splrep(t, y, s=s, k=k)
-    if spline_type == SplineType.splprep:
+    elif spline_type == SplineType.splprep:
         _spline_x, tx = make_splprep([x, t], s=s, k=k)
         _spline_y, ty = make_splprep([y, t], s=s, k=k)
 
@@ -101,26 +101,29 @@ def plot_spline(
         raise ValueError(f'Unknown spline type {spline_type}')
 
     if mix < 1:
-        _spline_x = spline_x  # noqa[py/uninitialized-local-variable]
-        _spline_y = spline_y  # noqa[py/uninitialized-local-variable]
+        _spline_x = spline_x  # codeql[py/uninitialized-local-variable]
+        _spline_y = spline_y  # codeql[py/uninitialized-local-variable]
         line_x = make_interp_spline(t, x, k=1)
         line_y = make_interp_spline(t, y, k=1)
 
         def spline_x(t_fine):
             mixed = mix * _spline_x(t_fine) + (1 - mix) * line_x(t_fine)
-            # print(np.array([_spline_x(t_fine), line_x(t_fine), mixed]).T)
             return mixed
 
         def spline_y(t_fine):
             mixed = mix * _spline_y(t_fine) + (1 - mix) * line_y(t_fine)
-            # print(np.array([_spline_y(t_fine), line_y(t_fine), mixed]).T)
             return mixed
 
-    ax.plot(spline_x(t_fine_x), spline_y(t_fine_y), label=label, color=color)  # noqa[py/call-to-non-callable]
+    ax.plot(
+        spline_x(t_fine_x),  # codeql[py/call-to-non-callable]
+        spline_y(t_fine_y),  # codeql[py/call-to-non-callable]
+        label=label,
+        color=color,
+    )
 
     ax.scatter(
-        spline_x(current_t),  # noqa[py/call-to-non-callable]
-        spline_y(current_t),  # noqa[py/call-to-non-callable]
+        spline_x(current_t),  # codeql[py/call-to-non-callable]
+        spline_y(current_t),  # codeql[py/call-to-non-callable]
         label=f'{label} (current point)',
         color=color,
     )
