@@ -36,9 +36,6 @@ def plot_spline(
     k: degree of BSpline to plot
 
     """
-    if len(control_points) < k:
-        return
-
     if derivatives_ax is None:
         derivatives_ax = ax
 
@@ -100,10 +97,12 @@ def plot_spline(
 
         spline_x = Spline(_spline_x)
         spline_y = Spline(_spline_y)
+    else:
+        raise ValueError(f'Unknown spline type {spline_type}')
 
     if mix < 1:
-        _spline_x = spline_x
-        _spline_y = spline_y
+        _spline_x = spline_x  # noqa[py/uninitialized-local-variable]
+        _spline_y = spline_y  # noqa[py/uninitialized-local-variable]
         line_x = make_interp_spline(t, x, k=1)
         line_y = make_interp_spline(t, y, k=1)
 
@@ -117,11 +116,11 @@ def plot_spline(
             # print(np.array([_spline_y(t_fine), line_y(t_fine), mixed]).T)
             return mixed
 
-    ax.plot(spline_x(t_fine_x), spline_y(t_fine_y), label=label, color=color)
+    ax.plot(spline_x(t_fine_x), spline_y(t_fine_y), label=label, color=color)  # noqa[py/call-to-non-callable]
 
     ax.scatter(
-        spline_x(current_t),
-        spline_y(current_t),
+        spline_x(current_t),  # noqa[py/call-to-non-callable]
+        spline_y(current_t),  # noqa[py/call-to-non-callable]
         label=f'{label} (current point)',
         color=color,
     )
@@ -144,8 +143,6 @@ def plot_spline(
             _t_deriv_plot_x = t_fine_x
             _t_deriv_plot_y = t_fine_y
             if spline_type == SplineType.splprep:
-                _t_deriv_plot_x = np.linspace(t[0], t[-1], num_fine_t_points)
-                _t_deriv_plot_y = _t_deriv_plot_x
                 raise NotImplementedError('splprep derivatives not implemented')
 
             derivatives_ax.plot(
