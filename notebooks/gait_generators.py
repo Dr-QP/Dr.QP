@@ -23,6 +23,7 @@ from abc import abstractmethod
 import matplotlib.pyplot as plt
 import numpy as np
 
+from transforms import Transform
 from point import Point3D
 from models import HexapodLeg
 
@@ -132,6 +133,7 @@ class GaitGenerator:
         ax=None,
         plot_lines=None,
         step_length=50,
+        rotation_gaits=False,
         **gen_args,
     ):
         """Visualize the gait sequence as a continuous function in 3D plot."""
@@ -158,10 +160,16 @@ class GaitGenerator:
         for phase in phases:
             offsets = self.get_offsets_at_phase(phase, **gen_args)
             for leg, offset in offsets.items():
-                offset = offset + leg_centers[leg]
-                x_values[leg].append(offset.x)
-                y_values[leg].append(offset.y)
-                z_values[leg].append(offset.z)
+                leg_tip = leg_centers[leg]
+                if rotation_gaits:
+                    rotation_transform = Transform.from_rotvec([0, 0, offset.x], degrees=True)
+                    leg_tip = rotation_transform.apply_point(leg_tip) + Point3D([0, 0, offset.z])
+                else:
+                    leg_tip = leg_tip + offset
+
+                x_values[leg].append(leg_tip.x)
+                y_values[leg].append(leg_tip.y)
+                z_values[leg].append(leg_tip.z)
 
         # print out **gen_args into a string
         if len(gen_args) == 0:
