@@ -28,7 +28,7 @@ import ps5_controller
 import argparse
 
 
-def main(real_robot=False):
+def main():
     drqp_coxa = 0.053  # in meters
     drqp_femur = 0.066225  # in meters
     drqp_tibia = 0.123  # in meters
@@ -75,20 +75,10 @@ def main(real_robot=False):
         )
 
         process_frame(0.001)
-        if real_robot:
-            # Use local import to allow visualizations running on platforms without ROS
-            import joint_state_publisher
-
-            if jsp is None:
-                jsp = joint_state_publisher.JointStatePublisher()
-
-            jsp.publish(hexapod)
-
     ps5_controller.close()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Dr.QP Robot controller')
-    parser.add_argument('--real-robot', action='store_true')
     args = parser.parse_args()
-    main(real_robot=args.real_robot)
+    main()
