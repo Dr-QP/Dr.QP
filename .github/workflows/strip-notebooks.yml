@@ -1,4 +1,4 @@
-name: Cleanup Jupyter Animations
+name: Cleanup Jupyter Notebook outputs
 
 on:
   pull_request:
