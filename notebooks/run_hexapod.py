@@ -26,13 +26,13 @@ from plotting import plot_hexapod, update_hexapod_plot
 from walk_controller import GaitType, WalkController
 import ps5_controller
 
-drqp_front_offset = 0.116924  # x offset for the front and back legs
+drqp_coxa = 0.053  # in meters
+drqp_femur = 0.066225  # in meters
+drqp_tibia = 0.123  # in meters
+
+drqp_front_offset = 0.116924  # x offset for the front and back legs in meters
 drqp_side_offset = 0.063871  # y offset fo the front and back legs
 drqp_middle_offset = 0.103  # x offset for the middle legs
-
-drqp_coxa = 0.053
-drqp_femur = 0.066225
-drqp_tibia = 0.123
 
 hexapod = HexapodModel(
     coxa_len=drqp_coxa,
@@ -47,7 +47,11 @@ hexapod = HexapodModel(
 hexapod.forward_kinematics(0, -25, 110)
 
 walker = WalkController(
-    hexapod, step_length=120, step_height=60, rotation_speed_degrees=10, gait=GaitType.ripple
+    hexapod,
+    step_length=0.13,  # in meters
+    step_height=0.06,  # in meters
+    rotation_speed_degrees=25,
+    gait=GaitType.ripple,
 )
 
 
@@ -60,8 +64,6 @@ def process_frame(delta_time=0.001):
     plt.show(block=False)
     plt.pause(delta_time)
 
-
-g.process_frame = process_frame
 
 while plt.get_fignums():  # window(s) open
     inputs = ps5_controller.get_controls()

@@ -47,12 +47,12 @@ class Controls:
 def get_controls():
     inputs = Controls()
     stick_rang = [-128, 128]
-    direction_y = np.interp(ds.state.LX, stick_rang, -1, 1)
-    direction_x = np.interp(ds.state.LY, stick_rang, -1, 1)
+    direction_y = np.interp(ds.state.LX, stick_rang, [1, -1])
+    direction_x = np.interp(ds.state.LY, stick_rang, [1, -1])
 
     inputs.direction = Point3D([direction_x, direction_y, 0])
     inputs.walk_speed = abs(direction_x) + abs(direction_y)
-    inputs.rotation_speed = np.interp(ds.state.RX, stick_rang, 1, -1)
+    inputs.rotation_speed = np.interp(ds.state.RX, stick_rang, [1, -1])
 
     return inputs
 
