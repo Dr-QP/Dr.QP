@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import math
 import enum
 
 import numpy as np
@@ -35,13 +34,13 @@ class HexapodLeg(enum.Enum):
     right_back = enum.auto()
 
 
-def safe_acos(num):
+def safe_arccos(num):
     if num < -1:
-        return False, math.pi  # math.acos(-1)
+        return False, np.pi  # np.acos(-1)
     elif num > 1:
-        return False, 0.0  # math.acos(1)
+        return False, 0.0  # np.acos(1)
     else:
-        return True, math.acos(num)
+        return True, np.arccos(num)
 
 
 class HexapodModel:
@@ -298,8 +297,8 @@ class LegModel:
 
     @staticmethod
     def _inverse_kinematics_xy(localized_foot_target: Point3D):
-        alpha = math.degrees(math.atan2(localized_foot_target.y, localized_foot_target.x))
-        X_tick = math.hypot(localized_foot_target.x, localized_foot_target.y)
+        alpha = np.degrees(np.arctan2(localized_foot_target.y, localized_foot_target.x))
+        X_tick = np.hypot(localized_foot_target.x, localized_foot_target.y)
         return alpha, X_tick
 
     def _inverse_kinematics_xz(
@@ -323,19 +322,19 @@ class LegModel:
         """
         D = -z_offset
         T = X_tick - self.coxa_length
-        L = math.hypot(D, T)
+        L = np.hypot(D, T)
 
-        solvable_theta1, theta1_rad = safe_acos(
+        solvable_theta1, theta1_rad = safe_arccos(
             (L**2 + self.femur_length**2 - self.tibia_length**2) / (2 * L * self.femur_length)
         )
-        theta1 = math.degrees(theta1_rad)
+        theta1 = np.degrees(theta1_rad)
 
-        theta2 = math.degrees(math.atan2(T, D))
-        solvable_phi, phi_rad = safe_acos(
+        theta2 = np.degrees(np.arctan2(T, D))
+        solvable_phi, phi_rad = safe_arccos(
             (self.tibia_length**2 + self.femur_length**2 - L**2)
             / (2 * self.tibia_length * self.femur_length)
         )
-        phi = math.degrees(phi_rad)
+        phi = np.degrees(phi_rad)
 
         # The right hand coordinate system is used, so the angle offsets are inverted
         beta = 90 - (theta1 + theta2)
