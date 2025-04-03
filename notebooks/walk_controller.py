@@ -25,6 +25,8 @@ class WalkController:
         self.phase_step = 1 / phase_steps_per_cycle
 
         self.leg_tips_on_ground = [(leg, leg.tibia_end.copy()) for leg in hexapod.legs]
+
+        self.current_direction = Point3D([1, 0, 0])
         self.current_stride_ratio = 0
         self.current_rotation_ratio = 0
 
@@ -70,6 +72,8 @@ class WalkController:
         self.current_rotation_ratio = np.interp(
             0.1, [0, 1], [self.current_rotation_ratio, rotation_ratio]
         )
+        self.current_direction = self.current_direction.interpolate(stride_direction, 0.1)
+
         self.current_stride_ratio = np.clip(self.current_stride_ratio, 0, 1)
         self.current_rotation_ratio = np.clip(self.current_rotation_ratio, -1, 1)
 
@@ -88,7 +92,7 @@ class WalkController:
             height_ratio = np.clip(self.current_stride_ratio, 0.5, 1)
 
         result = []
-        direction_transform = self.__make_direction_transform(stride_direction)
+        direction_transform = self.__make_direction_transform(self.current_direction)
         for leg, leg_tip in self.leg_tips_on_ground:
             foot_target = leg_tip
             gait_offsets = self.gait_gen.get_offsets_at_phase_for_leg(leg.label, self.current_phase)
