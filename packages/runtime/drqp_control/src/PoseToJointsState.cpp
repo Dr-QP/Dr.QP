@@ -60,10 +60,10 @@ static const auto kServoIdToJoint = []() {
   return result;
 }();
 
-class JointsStateToPoseNode : public rclcpp::Node
+class PoseToJointState : public rclcpp::Node
 {
 public:
-  JointsStateToPoseNode() : Node("drqp_pose_to_joint_state")
+  PoseToJointState() : Node("drqp_pose_to_joint_state")
   {
     joint_states_publisher_ =
       this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
@@ -143,7 +143,7 @@ private:
 int main(int argc, char* argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<JointsStateToPoseNode>());
+  rclcpp::spin(std::make_shared<PoseToJointState>());
   rclcpp::shutdown();
   return 0;
 }
