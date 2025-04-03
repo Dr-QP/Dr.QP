@@ -1,4 +1,4 @@
-name: Cleanup Jupyter Notebook outputs
+name: Strip outputs from notebooks
 
 on:
   pull_request:
@@ -8,7 +8,8 @@ on:
       types:
         - checks_requested
 jobs:
-  cleanup:
+  strip-notebooks:
+    name: Strip outputs from notebooks
     runs-on: ubuntu-latest
     permissions:
       # Give the default GITHUB_TOKEN write permission to commit and push the
