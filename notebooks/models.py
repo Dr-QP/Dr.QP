@@ -180,6 +180,10 @@ class LegModel:
         self._body_transform = body_transform
         self.update_base_transforms()
 
+        self.coxa_angle = 0
+        self.femur_angle = 0
+        self.tibia_angle = 0
+
         self.coxa_link = None
         self.coxa_joint = None
         self.femur_link = None
@@ -239,6 +243,10 @@ class LegModel:
         gamma,
     ):
         self.update_base_transforms()
+
+        self.coxa_angle = alpha
+        self.femur_angle = beta
+        self.tibia_angle = gamma
 
         self.coxa_joint = self.body_joint @ Transform.from_rotvec([0, 0, alpha], degrees=True)
         self.coxa_link = self.coxa_joint @ Transform.from_translation([self.coxa_length, 0, 0])

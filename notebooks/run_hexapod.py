@@ -25,54 +25,70 @@ from models import HexapodModel
 from plotting import plot_hexapod, update_hexapod_plot
 from walk_controller import GaitType, WalkController
 import ps5_controller
-
-drqp_coxa = 0.053  # in meters
-drqp_femur = 0.066225  # in meters
-drqp_tibia = 0.123  # in meters
-
-drqp_front_offset = 0.116924  # x offset for the front and back legs in meters
-drqp_side_offset = 0.063871  # y offset fo the front and back legs
-drqp_middle_offset = 0.103  # x offset for the middle legs
-
-hexapod = HexapodModel(
-    coxa_len=drqp_coxa,
-    femur_len=drqp_femur,
-    tibia_len=drqp_tibia,
-    front_offset=drqp_front_offset,
-    middle_offset=drqp_middle_offset,
-    side_offset=drqp_side_offset,
-    leg_rotation=[0, 0, 45],
-)
-
-hexapod.forward_kinematics(0, -25, 110)
-
-walker = WalkController(
-    hexapod,
-    step_length=0.13,  # in meters
-    step_height=0.06,  # in meters
-    rotation_speed_degrees=25,
-    gait=GaitType.ripple,
-)
+import argparse
 
 
-fig, ax, plot_data = plot_hexapod(hexapod, feet_trails_frames=30)
+def main(real_robot=False):
+    drqp_coxa = 0.053  # in meters
+    drqp_femur = 0.066225  # in meters
+    drqp_tibia = 0.123  # in meters
 
+    drqp_front_offset = 0.116924  # x offset for the front and back legs in meters
+    drqp_side_offset = 0.063871  # y offset fo the front and back legs
+    drqp_middle_offset = 0.103  # x offset for the middle legs
 
-def process_frame(delta_time=0.001):
-    update_hexapod_plot(hexapod, plot_data)
-
-    plt.show(block=False)
-    plt.pause(delta_time)
-
-
-while plt.get_fignums():  # window(s) open
-    inputs = ps5_controller.get_controls()
-    walker.next(
-        stride_direction=inputs.direction,
-        stride_ratio=inputs.walk_speed,
-        rotation_ratio=inputs.rotation_speed,
+    hexapod = HexapodModel(
+        coxa_len=drqp_coxa,
+        femur_len=drqp_femur,
+        tibia_len=drqp_tibia,
+        front_offset=drqp_front_offset,
+        middle_offset=drqp_middle_offset,
+        side_offset=drqp_side_offset,
+        leg_rotation=[0, 0, 45],
     )
 
-    process_frame(0.001)
+    hexapod.forward_kinematics(0, -25, 110)
 
-ps5_controller.close()
+    walker = WalkController(
+        hexapod,
+        step_length=0.13,  # in meters
+        step_height=0.06,  # in meters
+        rotation_speed_degrees=25,
+        gait=GaitType.ripple,
+    )
+
+    fig, ax, plot_data = plot_hexapod(hexapod, feet_trails_frames=30)
+
+    def process_frame(delta_time=0.001):
+        update_hexapod_plot(hexapod, plot_data)
+
+        plt.show(block=False)
+        plt.pause(delta_time)
+
+    jsp = None
+    while plt.get_fignums():  # window(s) open
+        inputs = ps5_controller.get_controls()
+        walker.next(
+            stride_direction=inputs.direction,
+            stride_ratio=inputs.walk_speed,
+            rotation_ratio=inputs.rotation_speed,
+        )
+
+        process_frame(0.001)
+        if real_robot:
+            # Use local import to allow visualizations running on platforms without ROS
+            import joint_state_publisher
+
+            if jsp is None:
+                jsp = joint_state_publisher.JointStatePublisher()
+
+            jsp.publish(hexapod)
+
+    ps5_controller.close()
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser('Dr.QP Robot controller')
+    parser.add_argument('--real-robot', action='store_true')
+    args = parser.parse_args()
+    main(real_robot=args.real_robot)
