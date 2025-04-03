@@ -1,0 +1,48 @@
+name: Cleanup Jupyter Animations
+
+on:
+  pull_request:
+    branches:
+      - main
+  merge_group:
+      types:
+        - checks_requested
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the
+      # added or changed files to the repository.
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12.x'
+
+      - name: Install dependencies
+        run: |
+          pip install nbconvert nbstripout
+
+      - name: Strip outputs from notebooks
+        run: |
+          find . -name "*.ipynb" -exec nbstripout {} \;
+
+      - name: Fail if outputs are present (Merge Queue Check)
+        if: ${{ github.event_name == 'merge_group' }}
+        run: |
+          if git diff --exit-code; then
+            echo "No outputs found."
+          else
+            echo "Jupyter Notebook outputs detected. Failing check."
+            exit 1
+          fi
+
+      # Commit all changed files back to the repository
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          commit_message: Strip outputs from notebooks
