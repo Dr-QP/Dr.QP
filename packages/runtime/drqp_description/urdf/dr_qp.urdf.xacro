@@ -21,14 +21,14 @@
   <xacro:include filename="$(find drqp_description)/urdf/leg.urdf.xacro"/>
   <xacro:include filename="$(find drqp_description)/urdf/gazebo.xacro"/>
 
-  <xacro:leg robot_name="$(arg robot_name)" prefix="front_left" x="0.11692" y="0.06387" yaw="${pi/4}"/>
-  <xacro:leg robot_name="$(arg robot_name)" prefix="front_right" x="0.11692" y="-0.06387" yaw="${-pi/4}"/>
+  <xacro:leg robot_name="$(arg robot_name)" prefix="left_front" x="0.11692" y="0.06387" yaw="${pi/4}"/>
+  <xacro:leg robot_name="$(arg robot_name)" prefix="right_front" x="0.11692" y="-0.06387" yaw="${-pi/4}"/>
 
-  <xacro:leg robot_name="$(arg robot_name)" prefix="middle_left" x="0" y="0.103" yaw="${pi/2}"/>
-  <xacro:leg robot_name="$(arg robot_name)" prefix="middle_right" x="0" y="-0.103" yaw="${-pi/2}"/>
+  <xacro:leg robot_name="$(arg robot_name)" prefix="left_middle" x="0" y="0.103" yaw="${pi/2}"/>
+  <xacro:leg robot_name="$(arg robot_name)" prefix="right_middle" x="0" y="-0.103" yaw="${-pi/2}"/>
 
-  <xacro:leg robot_name="$(arg robot_name)" prefix="back_left" x="-0.11692" y="0.06387" yaw="${3*pi/4}"/>
-  <xacro:leg robot_name="$(arg robot_name)" prefix="back_right" x="-0.11692" y="-0.06387" yaw="${-3*pi/4}"/>
+  <xacro:leg robot_name="$(arg robot_name)" prefix="left_back" x="-0.11692" y="0.06387" yaw="${3*pi/4}"/>
+  <xacro:leg robot_name="$(arg robot_name)" prefix="right_back" x="-0.11692" y="-0.06387" yaw="${-3*pi/4}"/>
 
 
   <link name="world" />

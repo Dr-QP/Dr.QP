@@ -274,7 +274,7 @@ class RobotBrain(rclpy.node.Node):
     def publish_joints(self):
         msg = sensor_msgs.msg.JointState()
         msg.header.stamp = self.get_clock().now().to_msg()
-        leg = 'dr_qp/front_left_'
+        leg = 'dr_qp/left_front_'
         msg.name = [
             leg + 'coxa',
             leg + 'femur',
@@ -336,8 +336,8 @@ class RobotBrain(rclpy.node.Node):
         transforms.append(t)
 
         t.header.stamp = self.get_clock().now().to_msg()
-        t.header.frame_id = 'dr_qp/front_left_coxa_servo'
-        t.child_frame_id = 'front_left_target'
+        t.header.frame_id = 'dr_qp/left_front_coxa_servo'
+        t.child_frame_id = 'left_front_target'
         t.transform.translation.x = x
         t.transform.translation.y = y
         t.transform.translation.z = z
@@ -350,7 +350,7 @@ class RobotBrain(rclpy.node.Node):
         transforms.append(coxa_joint)
 
         coxa_joint.header.stamp = self.get_clock().now().to_msg()
-        coxa_joint.header.frame_id = 'dr_qp/front_left_coxa_servo'
+        coxa_joint.header.frame_id = 'dr_qp/left_front_coxa_servo'
         coxa_joint.child_frame_id = 'coxa_joint'
         coxa_joint.transform.rotation = quaternion_from_euler(0, 0, self.gamma)
 

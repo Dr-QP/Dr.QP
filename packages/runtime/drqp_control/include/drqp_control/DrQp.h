@@ -90,14 +90,14 @@ const ServoIdToLegArray kServoIdToLeg = []() {
 using AllLegsNamesArray = std::array<std::string, kLegIdCount>;
 const AllLegsNamesArray kAllLegsNames = []() {
   AllLegsNamesArray legs;
-  legs[kFrontLeftLegId] = "front_left";
-  legs[kFrontRightLegId] = "front_right";
+  legs[kFrontLeftLegId] = "left_front";
+  legs[kFrontRightLegId] = "right_front";
 
-  legs[kMiddleLeftLegId] = "middle_left";
-  legs[kMiddleRightLegId] = "middle_right";
+  legs[kMiddleLeftLegId] = "left_middle";
+  legs[kMiddleRightLegId] = "right_middle";
 
-  legs[kBackLeftLegId] = "back_left";
-  legs[kBackRightLegId] = "back_right";
+  legs[kBackLeftLegId] = "left_back";
+  legs[kBackRightLegId] = "right_back";
 
   return legs;
 }();
