@@ -35,14 +35,14 @@ kTibiaOffsetAngle = -32.9
 
 class HexapodController(rclpy.node.Node):
     def __init__(self):
-        super().__init__('drqp/hexapod_joint_state_publisher')
+        super().__init__('drqp_hexapod_joint_state_publisher')
 
         self.direction = Point3D([0, 0, 0])
         self.rotation = 0
         self.walk_speed = 0
         self.rotation_speed = 0
 
-        self.fps = 30
+        self.fps = 50
         self.joystick_sub = self.create_subscription(
             sensor_msgs.msg.Joy, '/joy', self.process_inputs, qos_profile=10
         )
@@ -80,6 +80,7 @@ class HexapodController(rclpy.node.Node):
             step_height=0.06,  # in meters
             rotation_speed_degrees=25,
             gait=GaitType.ripple,
+            phase_steps_per_cycle=self.fps,
         )
 
     def process_inputs(self, joy: sensor_msgs.msg.Joy):
@@ -123,9 +124,9 @@ class HexapodController(rclpy.node.Node):
         left_x = joy.axes[0]
         left_y = joy.axes[1]
         right_x = joy.axes[2]
-        self.direction = Point3D([left_x, left_y, 0])
+        self.direction = Point3D([left_y, left_x, 0])
         self.walk_speed = abs(left_x) + abs(left_y)
-        self.rotation_speed = right_x
+        self.rotation_speed = -right_x
 
     def loop(self):
         self.walker.next(
@@ -145,7 +146,7 @@ class HexapodController(rclpy.node.Node):
                 ('femur', leg.femur_angle + kFemurOffsetAngle),
                 ('tibia', leg.tibia_angle + kTibiaOffsetAngle),
             ]:
-                msg.name.append(f'dr_qp/{leg.label}_{joint}')
+                msg.name.append(f'dr_qp/{leg.label.name}_{joint}')
                 msg.position.append(np.radians(angle))
 
         self.joint_state_pub.publish(msg)
@@ -154,4 +155,10 @@ class HexapodController(rclpy.node.Node):
 if __name__ == '__main__':
     rclpy.init()
     node = HexapodController()
-    rclpy.spin(node)
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass  # codeql[py/empty-except]
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
