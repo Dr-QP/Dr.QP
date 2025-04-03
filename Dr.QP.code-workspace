@@ -123,6 +123,13 @@
         "request": "launch",
         "program": "${workspaceFolder}/notebooks/run_hexapod.py",
         "console": "integratedTerminal",
+      },
+      {
+        "name": "ROS run_hexapod.py",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${workspaceFolder}/notebooks/run_hexapod_ros.py",
+        "console": "integratedTerminal",
       }
     ]
   },

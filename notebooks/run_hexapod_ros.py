@@ -83,18 +83,49 @@ class HexapodController(rclpy.node.Node):
         )
 
     def process_inputs(self, joy: sensor_msgs.msg.Joy):
-        # # Reports the state of a joysticks axes and buttons.
+        # Process the state of a joysticks axes and buttons.
         # Header header           # timestamp in the header is the time the data is received from the joystick
         # float32[] axes          # the axes measurements from a joystick
         # int32[] buttons         # the buttons measurements from a joystick
         #
         # Button and axis mappings:
         # https://docs.ros.org/en/ros2_packages/jazzy/api/joy/
-        print(joy)
-        self.direction = Point3D([0, 0, 0])
-        self.rotation = 0
-        self.walk_speed = 0
-        self.rotation_speed = 0
+        # Index	Button
+        # 0	A (CROSS)
+        # 1	B (CIRCLE)
+        # 2	X (SQUARE)
+        # 3	Y (TRIANGLE)
+        # 4	BACK (SELECT)
+        # 5	GUIDE (Middle/Manufacturer Button)
+        # 6	START
+        # 7	LEFTSTICK
+        # 8	RIGHTSTICK
+        # 9	LEFTSHOULDER
+        # 10	RIGHTSHOULDER
+        # 11	DPAD_UP
+        # 12	DPAD_DOWN
+        # 13	DPAD_LEFT
+        # 14	DPAD_RIGHT
+        # 15	MISC1 (Depends on the controller manufacturer, but is usually at a similar location on the controller as back/start)
+        # 16	PADDLE1 (Upper left, facing the back of the controller if present)
+        # 17	PADDLE2 (Upper right, facing the back of the controller if present)
+        # 18	PADDLE3 (Lower left, facing the back of the controller if present)
+        # 19	PADDLE4 (Lower right, facing the back of the controller if present)
+        # 20	TOUCHPAD (If present. Button status only)
+        # Index	Axis
+        # 0	LEFTX
+        # 1	LEFTY
+        # 2	RIGHTX
+        # 3	RIGHTY
+        # 4	TRIGGERLEFT
+        # 5	TRIGGERRIGHT
+
+        left_x = joy.axes[0]
+        left_y = joy.axes[1]
+        right_x = joy.axes[2]
+        self.direction = Point3D([left_x, left_y, 0])
+        self.walk_speed = abs(left_x) + abs(left_y)
+        self.rotation_speed = right_x
 
     def loop(self):
         self.walker.next(
