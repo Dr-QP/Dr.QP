@@ -20,12 +20,10 @@
 
 from abc import abstractmethod
 
-import matplotlib.pyplot as plt
-import numpy as np
-
-from transforms import Transform
-from point import Point3D
 from models import HexapodLeg
+import numpy as np
+from point import Point3D
+from transforms import Transform
 
 
 class GaitGenerator:
@@ -58,6 +56,8 @@ class GaitGenerator:
 
     def visualize_continuous(self, steps=100, **gen_args):
         """Visualize the gait sequence as a continuous function."""
+        import matplotlib.pyplot as plt
+
         phases = np.linspace(0, 1, steps, endpoint=True)
 
         # Create data structures to store values for plotting
@@ -137,6 +137,8 @@ class GaitGenerator:
         **gen_args,
     ):
         """Visualize the gait sequence as a continuous function in 3D plot."""
+        import matplotlib.pyplot as plt
+
         phases = np.linspace(phase_start, phase_end, steps, endpoint=True)
 
         if leg_centers is None:
