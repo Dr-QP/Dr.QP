@@ -59,6 +59,9 @@ class WalkController:
             self.current_phase += self.phase_step
 
     def __next_feet_targets(self, stride_direction, stride_ratio, rotation_ratio, verbose):
+        ###############################################################
+        ## All if this mixing, smoothing and clipping is a hot garbage,
+        # TODO(anton-matosov) switch to proper trajectory mixing
         stride_ratio = np.clip(stride_ratio, 0, 1)
         rotation_ratio = np.clip(rotation_ratio, -1, 1)
 
@@ -67,12 +70,12 @@ class WalkController:
         had_rotation = abs(self.current_rotation_ratio) > no_motion_eps
 
         self.current_stride_ratio = np.interp(
-            0.1, [0, 1], [self.current_stride_ratio, stride_ratio]
+            0.3, [0, 1], [self.current_stride_ratio, stride_ratio]
         )
         self.current_rotation_ratio = np.interp(
-            0.1, [0, 1], [self.current_rotation_ratio, rotation_ratio]
+            0.3, [0, 1], [self.current_rotation_ratio, rotation_ratio]
         )
-        self.current_direction = self.current_direction.interpolate(stride_direction, 0.1)
+        self.current_direction = self.current_direction.interpolate(stride_direction, 0.3)
 
         self.current_stride_ratio = np.clip(self.current_stride_ratio, 0, 1)
         self.current_rotation_ratio = np.clip(self.current_rotation_ratio, -1, 1)
@@ -84,12 +87,21 @@ class WalkController:
         has_motion = has_stride or has_rotation
 
         stopping = had_motion and not has_motion
+        starting = not had_motion and has_motion
+        stopped = not had_motion and not has_motion
+
+        if starting or stopped:
+            self.current_phase = 0
+
         if stopping:
             self.last_stop_phase = self.current_phase
             height_ratio = np.clip(self.current_stride_ratio, 0, 1)
         else:
             self.last_stop_phase = 0.0
-            height_ratio = np.clip(self.current_stride_ratio, 0.5, 1)
+            height_ratio = np.clip(
+                self.current_stride_ratio, 0.5, 1
+            )  # need to include rotation ratio
+        ###############################################################
 
         result = []
         direction_transform = self.__make_direction_transform(self.current_direction)
