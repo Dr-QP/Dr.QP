@@ -53,7 +53,9 @@ static const auto kServoIdToJoint = []() {
       const bool isRight =
         std::find_end(legName.begin(), legName.end(), kRight.begin(), kRight.end()) !=
         legName.end();
-      result[servoId] = {jointName, isRight ? -1. : 1.};
+      const bool isCoxa = jointNameIndex == 0;
+      double ratio = (isRight && !isCoxa) ? -1. : 1.;
+      result[servoId] = {jointName, ratio};
       ++jointNameIndex;
     }
   }
