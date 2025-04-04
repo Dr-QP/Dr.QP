@@ -123,6 +123,7 @@ class GaitGenerator:
 
         plt.tight_layout()
         plt.show()
+        return axs
 
     def visualize_continuous_in_3d(
         self,

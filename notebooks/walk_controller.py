@@ -143,9 +143,7 @@ class WalkController:
                 foot_target = rotation_transform.apply_point(foot_target)
 
             if has_stride or has_rotation:
-                foot_target = foot_target + Point3D(
-                    [0, 0, gait_offsets.z * self.step_height * height_ratio]
-                )
+                foot_target.z += gait_offsets.z * self.step_height * height_ratio
 
             if verbose:
                 print(f'{leg.label} {self.current_phase=}')
