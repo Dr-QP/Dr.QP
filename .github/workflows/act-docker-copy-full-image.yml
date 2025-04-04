@@ -35,7 +35,7 @@ jobs:
           dest: act-22.04
     steps:
       - name: Force SLUG to lowercase
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: n/a
           script: |

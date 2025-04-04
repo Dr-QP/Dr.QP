@@ -53,17 +53,19 @@ static const auto kServoIdToJoint = []() {
       const bool isRight =
         std::find_end(legName.begin(), legName.end(), kRight.begin(), kRight.end()) !=
         legName.end();
-      result[servoId] = {jointName, (isRight ? -1. : 1.) / 1023.};
+      const bool isCoxa = jointNameIndex == 0;
+      double ratio = (isRight && !isCoxa) ? -1. : 1.;
+      result[servoId] = {jointName, ratio};
       ++jointNameIndex;
     }
   }
   return result;
 }();
 
-class JointStateNode : public rclcpp::Node
+class PoseToJointState : public rclcpp::Node
 {
 public:
-  JointStateNode() : Node("drqp_joint_state")
+  PoseToJointState() : Node("drqp_pose_to_joint_state")
   {
     joint_states_publisher_ =
       this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
@@ -120,12 +122,7 @@ private:
     }
 
     const Params params = kServoIdToJoint.at(servoId);
-    const double positionAsRatio = position * params.ratio;
-    // Position => Radians
-    // 0 => -Pi
-    // 512 => 0
-    // 1023 => Pi
-    const double positionInRadians = positionAsRatio * (2 * 3.14) - 3.14;
+    const double positionInRadians = params.ratio * positionToRadians(position);
 
     jointState.name.push_back(params.name);
     jointState.position.push_back(positionInRadians);
@@ -143,7 +140,7 @@ private:
 int main(int argc, char* argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<JointStateNode>());
+  rclcpp::spin(std::make_shared<PoseToJointState>());
   rclcpp::shutdown();
   return 0;
 }

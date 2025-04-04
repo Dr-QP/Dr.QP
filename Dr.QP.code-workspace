@@ -53,6 +53,7 @@
       "charliermarsh.ruff",
       "tamasfe.even-better-toml",
       "davidanson.vscode-markdownlint",
+      "elagil.pre-commit-helper",
     ]
   },
   "launch": {
@@ -117,10 +118,17 @@
           "webRoot": "${workspaceFolder}",
       },
       {
-        "name": "Python Debugger: Current File",
+        "name": "run_hexapod.py",
         "type": "debugpy",
         "request": "launch",
-        "program": "${file}",
+        "program": "${workspaceFolder}/notebooks/run_hexapod.py",
+        "console": "integratedTerminal",
+      },
+      {
+        "name": "ROS run_hexapod.py",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${workspaceFolder}/notebooks/run_hexapod_ros.py",
         "console": "integratedTerminal",
       }
     ]

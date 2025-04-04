@@ -26,7 +26,7 @@ src/urdf_tutorial
 
 
 ### Python template
-
+.micromamba/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

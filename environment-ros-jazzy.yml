@@ -3,29 +3,43 @@ name: ros-jazzy
 
 channels:
   - conda-forge
+  - robostack-jazzy
 
 dependencies:
-  - python=3.12 # keep in sync with .readthedocs.yaml
-  - nodejs=20 # keep in sync with .readthedocs.yaml
+  - nodejs=20
+  - ros-jazzy-desktop
+  - compilers
+  - cmake
+  - pkg-config
+  - make
+  - ninja
+  - colcon-common-extensions
+  - catkin_tools
+  - rosdep
+  - numpy
+  - scipy
+  - matplotlib
+  - ipympl
+  - jupyter
   - pip:
-     - ruff
-     - colcon-common-extensions
-     - colcon-coveragepy-result
-     - colcon-lcov-result
-     - colcon-mixin
-     - coverage
-     - flake8
-     - flake8-blind-except
-     - flake8-class-newline
-     - flake8-deprecated
-     - mypy
-     - pytest
-     - pytest-cov
-     - pytest-mock
-     - pytest-repeat
-     - pytest-rerunfailures
-     - pytest-runner
-     - pytest-timeout
-     - rosdep
-     - setuptools
-     - vcstool
+     - -r ./requirements.txt
+    #  - colcon-common-extensions
+    #  - colcon-coveragepy-result
+    #  - colcon-lcov-result
+    #  - colcon-mixin
+    #  - coverage
+    #  - flake8
+    #  - flake8-blind-except
+    #  - flake8-class-newline
+    #  - flake8-deprecated
+    #  - mypy
+    #  - pytest
+    #  - pytest-cov
+    #  - pytest-mock
+    #  - pytest-repeat
+    #  - pytest-rerunfailures
+    #  - pytest-runner
+    #  - pytest-timeout
+    #  - rosdep
+    #  - setuptools
+    #  - vcstool
