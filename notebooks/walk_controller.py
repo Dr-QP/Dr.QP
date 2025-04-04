@@ -93,14 +93,11 @@ class WalkController:
         if starting or stopped:
             self.current_phase = 0
 
+        height_ratio = 1
         if stopping:
             self.last_stop_phase = self.current_phase
-            height_ratio = np.clip(self.current_stride_ratio, 0, 1)
         else:
             self.last_stop_phase = 0.0
-            height_ratio = np.clip(
-                self.current_stride_ratio, 0.5, 1
-            )  # need to include rotation ratio
         ###############################################################
 
         result = []
