@@ -42,10 +42,18 @@ class HexapodController(rclpy.node.Node):
         self.walk_speed = 0
         self.rotation_speed = 0
 
-        self.fps = 50
+        self.fps = 40
+
+        self.gait_index = 0
+        self.gaits = [GaitType.tripod, GaitType.ripple, GaitType.wave]
+        self.phase_steps_per_cycle = [50, 50, 50]  # per gait
+
         self.joystick_sub = self.create_subscription(
             sensor_msgs.msg.Joy, '/joy', self.process_inputs, qos_profile=10
         )
+        joystick_buttons_count = 20
+        self.joystick_buttons_cooldown = 5
+        self.joystick_buttons_debounce = [0] * joystick_buttons_count
 
         self.joint_state_pub = self.create_publisher(
             sensor_msgs.msg.JointState, '/joint_states', qos_profile=50
@@ -73,14 +81,24 @@ class HexapodController(rclpy.node.Node):
             leg_rotation=[0, 0, 45],
         )
 
-        self.hexapod.forward_kinematics(0, -25, 110)
+        # self.hexapod.forward_kinematics(0, 55, 50)  # bulldog
+        # step_length = 0.10  # in meters
+        # step_height = 0.06  # in meters
+
+        # self.hexapod.forward_kinematics(0, -25, 110)  # default sim
+        self.hexapod.forward_kinematics(
+            0, -35, 130
+        )  # reasonable hexa, servos out of reach for 0.06 height
+        step_length = 0.10  # in meters
+        step_height = 0.03  # in meters
+
         self.walker = WalkController(
             self.hexapod,
-            step_length=0.13,  # in meters
-            step_height=0.06,  # in meters
-            rotation_speed_degrees=25,
-            gait=GaitType.ripple,
-            phase_steps_per_cycle=self.fps,
+            step_length=step_length,
+            step_height=step_height,
+            rotation_speed_degrees=20,
+            gait=self.gaits[self.gait_index],
+            phase_steps_per_cycle=self.fps / 2.5,
         )
 
     def process_inputs(self, joy: sensor_msgs.msg.Joy):
@@ -124,11 +142,32 @@ class HexapodController(rclpy.node.Node):
         left_x = joy.axes[0]
         left_y = joy.axes[1]
         right_x = joy.axes[2]
-        self.direction = Point3D([left_y, left_x, 0])
-        self.walk_speed = abs(left_x) + abs(left_y)
-        self.rotation_speed = -right_x
+        left_trigger = np.interp(joy.axes[4], [-1, 1], [1, 0])
+        self.direction = Point3D([left_y, left_x, left_trigger])
+        self.walk_speed = abs(left_x) + abs(left_y) + abs(left_trigger)
+        self.rotation_speed = right_x
+
+        # self.joystick_buttons_cooldown = 50
+        # self.joystick_buttons_debounce = [self.joystick_buttons_cooldown] * joystick_buttons_count
+
+        if joy.buttons[10] == 1:  # R1
+            if self.joystick_buttons_debounce[10] > 0:
+                # self.joystick_buttons_debounce[10] -= 1
+                pass
+            else:
+                self.joystick_buttons_debounce[10] = self.joystick_buttons_cooldown
+                self.gait_index = (self.gait_index + 1) % len(self.gaits)
+                self.get_logger().info(f'Switching gait: {self.gaits[self.gait_index]}')
+        if joy.buttons[10] == 0:  # R1
+            self.joystick_buttons_debounce[10] = 0
+
+        # if joy.buttons[9] == 1:  # L1
+        #     self.gait_index = (self.gait_index + -1) % len(self.gaits)
+        #     self.get_logger().info(f'Switching gait: {self.gaits[self.gait_index]}')
 
     def loop(self):
+        self.walker.current_gait = self.gaits[self.gait_index]
+        self.walker.phase_step = 1 / self.phase_steps_per_cycle[self.gait_index]
         self.walker.next(
             stride_direction=self.direction,
             stride_ratio=self.walk_speed,
