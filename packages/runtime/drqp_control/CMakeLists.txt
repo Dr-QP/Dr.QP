@@ -29,6 +29,11 @@ target_link_libraries(pose_to_joint_state drqp_control)
 ament_target_dependencies(pose_to_joint_state ${${PROJECT_NAME}_BUILD_DEPENDS})
 
 
+add_executable(joint_state_to_pose src/JointsStateToPose.cpp)
+target_link_libraries(joint_state_to_pose drqp_control)
+ament_target_dependencies(joint_state_to_pose ${${PROJECT_NAME}_BUILD_DEPENDS})
+
+
 
 # Install headers
 install(DIRECTORY include/
@@ -38,6 +43,7 @@ install(DIRECTORY include/
 install(TARGETS
   control
   pose_to_joint_state
+  joint_state_to_pose
   DESTINATION lib/${PROJECT_NAME})
 
 # Install libraries
