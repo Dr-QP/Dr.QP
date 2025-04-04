@@ -89,7 +89,7 @@ class HexapodController(rclpy.node.Node):
         self.hexapod.forward_kinematics(
             0, -35, 130
         )  # reasonable hexa, servos out of reach for 0.06 height
-        step_length = 0.10  # in meters
+        step_length = 0.14  # in meters
         step_height = 0.03  # in meters
 
         self.walker = WalkController(
