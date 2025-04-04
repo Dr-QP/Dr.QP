@@ -5,6 +5,7 @@ from models import HexapodLeg
 import numpy as np
 from point import Point3D
 
+
 class GaitType(Enum):
     ripple = auto()
     wave = auto()
@@ -23,7 +24,7 @@ class ParametricGaitGenerator(GaitGenerator):
             self.leg_phase_offsets = leg_phase_offsets
             self.swing_duration = swing_duration
 
-    def __init__(self, step_length=1, step_height=1, gait = GaitType.wave):
+    def __init__(self, step_length=1, step_height=1, gait=GaitType.wave):
         super().__init__()
 
         self.step_length = step_length
@@ -37,9 +38,9 @@ class ParametricGaitGenerator(GaitGenerator):
                     HexapodLeg.right_back: 0,
                     HexapodLeg.right_middle: 1 / 6,
                     HexapodLeg.right_front: 2 / 6,
-                    HexapodLeg.left_back: 3 / 6,
+                    HexapodLeg.left_front: 3 / 6,
                     HexapodLeg.left_middle: 4 / 6,
-                    HexapodLeg.left_front: 5 / 6,
+                    HexapodLeg.left_back: 5 / 6,
                 },
                 swing_duration=1 / 6,
             ),
@@ -58,12 +59,12 @@ class ParametricGaitGenerator(GaitGenerator):
             GaitType.tripod: self.GaitPhaseParams(
                 GaitType.tripod,
                 leg_phase_offsets={
-                    HexapodLeg.right_back: 1 / 2,
-                    HexapodLeg.left_middle: 1 / 2,
-                    HexapodLeg.right_front: 1 / 2,
-                    HexapodLeg.left_back: 0,
-                    HexapodLeg.right_middle: 0,
                     HexapodLeg.left_front: 0,
+                    HexapodLeg.right_middle: 0,
+                    HexapodLeg.left_back: 0,
+                    HexapodLeg.right_front: 1 / 2,
+                    HexapodLeg.left_middle: 1 / 2,
+                    HexapodLeg.right_back: 1 / 2,
                 },
                 swing_duration=1 / 2,
             ),
