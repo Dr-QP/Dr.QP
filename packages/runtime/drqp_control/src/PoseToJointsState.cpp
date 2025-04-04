@@ -53,7 +53,7 @@ static const auto kServoIdToJoint = []() {
       const bool isRight =
         std::find_end(legName.begin(), legName.end(), kRight.begin(), kRight.end()) !=
         legName.end();
-      result[servoId] = {jointName, (isRight ? -1. : 1.) / 1023.};
+      result[servoId] = {jointName, isRight ? -1. : 1.};
       ++jointNameIndex;
     }
   }
@@ -120,12 +120,7 @@ private:
     }
 
     const Params params = kServoIdToJoint.at(servoId);
-    const double positionAsRatio = position * params.ratio;
-    // Position => Radians
-    // 0 => -Pi
-    // 512 => 0
-    // 1023 => Pi
-    const double positionInRadians = positionAsRatio * (2 * 3.14) - 3.14;
+    const double positionInRadians = params.ratio * positionToRadians(position);
 
     jointState.name.push_back(params.name);
     jointState.position.push_back(positionInRadians);
