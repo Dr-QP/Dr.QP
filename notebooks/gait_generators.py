@@ -46,7 +46,7 @@ class GaitGenerator:
         pass
 
     def _legend_for_leg(self, leg) -> str:
-        return leg.name
+        return leg.name.replace('_', ' ').title()
 
     def _line_style_for_leg(self, leg) -> str:
         if leg.name.startswith('left'):
@@ -100,21 +100,39 @@ class GaitGenerator:
         leg_line = np.linspace(0, 6, 6)
         for i, leg in enumerate(self.all_legs):
             y = leg_line[i]
-            is_swing = np.array(z_values[leg]) > 0
+            line_y = np.full_like(phases, y)
             ax.text(
                 0.0,
                 y + 0.1,
-                leg.name,
+                self._legend_for_leg(leg),
                 ha='left',
                 va='bottom',
                 color=self._color_for_leg(leg),
             )
+            # Plot the base line for each leg
             ax.plot(
                 phases,
-                np.full_like(phases, y),
+                line_y,
                 color=self._color_for_leg(leg),
                 label=self._legend_for_leg(leg),
                 linestyle=self._line_style_for_leg(leg),
+            )
+
+            # Plot black lines for swing phase
+            is_swing = np.array(z_values[leg]) > 0
+            # Create masked arrays for swing phases
+            masked_phases = np.ma.masked_array(phases, mask=~is_swing)
+            masked_y = np.ma.masked_array(line_y, mask=~is_swing)
+
+            # Plot black lines for swing phases
+            ax.plot(
+                masked_phases,
+                masked_y,
+                color=self._color_for_leg(leg),
+                label=self._legend_for_leg(leg),
+                linestyle='-',
+                linewidth=8,
+                solid_capstyle='butt',  # The line ends exactly at the data point without any extension
             )
 
         # Plot x offsets
