@@ -96,7 +96,6 @@ public:
             drqp_interfaces::msg::AsyncPositionCommand poseCmd;
             poseCmd.id = params.id;
             poseCmd.position = position;
-            // poseCmd.playtime = (100. / 20.);
             poseCmd.playtime = 0;
             pose.positions.emplace_back(std::move(poseCmd));
           }
