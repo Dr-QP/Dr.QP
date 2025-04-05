@@ -27,18 +27,15 @@ from transforms import Transform
 
 
 class GaitGenerator:
-    def __init__(
-        self,
-        all_legs=[
+    def __init__(self):
+        self.all_legs = [
             HexapodLeg.left_front,
             HexapodLeg.left_middle,
             HexapodLeg.left_back,
             HexapodLeg.right_front,
             HexapodLeg.right_middle,
             HexapodLeg.right_back,
-        ],
-    ):
-        self.all_legs = all_legs
+        ]
 
     @abstractmethod
     def get_offsets_at_phase(self, phase) -> dict[str, Point3D]:
@@ -49,12 +46,22 @@ class GaitGenerator:
         pass
 
     def _legend_for_leg(self, leg) -> str:
-        return leg
+        return leg.name
 
     def _line_style_for_leg(self, leg) -> str:
-        return '-'
+        if leg.name.startswith('left'):
+            return '-'
+        return '--'
 
-    def visualize_continuous(self, steps=100, **gen_args):
+    def _color_for_leg(self, leg) -> str:
+        if leg in [HexapodLeg.left_front, HexapodLeg.right_front]:
+            return 'C2'
+        elif leg in [HexapodLeg.left_middle, HexapodLeg.right_middle]:
+            return 'C0'
+        elif leg in [HexapodLeg.left_back, HexapodLeg.right_back]:
+            return 'C3'
+
+    def visualize_continuous(self, steps=100, _subtitle='', **gen_args):
         """Visualize the gait sequence as a continuous function."""
         import matplotlib.pyplot as plt
 
@@ -74,56 +81,92 @@ class GaitGenerator:
                 z_values[leg].append(offset.z)
 
         # Plot the data
-        fig, axs = plt.subplots(3, 1, figsize=(12, 10))
+        fig, axs = plt.subplots(4, 1, figsize=(10, 12))
+        # Adjust spacing between subplots to avoid title overlapping with ticks
+        plt.subplots_adjust(hspace=0.5)
 
         # print out **gen_args into a string
         if len(gen_args) == 0:
-            subtitle = ''
+            subtitle = _subtitle
         else:
-            subtitle = '\n' + ', '.join([f'{k}={v}' for k, v in gen_args.items()])
+            subtitle = _subtitle + '\n' + ', '.join([f'{k}={v}' for k, v in gen_args.items()])
+
+        ax_index = 0
+        ax = axs[ax_index]
+        ax.set_title('Gait sequence' + subtitle)
+        ax.set_ylabel('')
+        ax.set_xlabel('phase')
+        ax.set_ylim(-1, 7)
+        leg_line = np.linspace(0, 6, 6)
+        for i, leg in enumerate(self.all_legs):
+            y = leg_line[i]
+            is_swing = np.array(z_values[leg]) > 0
+            ax.text(
+                0.0,
+                y + 0.1,
+                leg.name,
+                ha='left',
+                va='bottom',
+                color=self._color_for_leg(leg),
+            )
+            ax.plot(
+                phases,
+                np.full_like(phases, y),
+                color=self._color_for_leg(leg),
+                label=self._legend_for_leg(leg),
+                linestyle=self._line_style_for_leg(leg),
+            )
 
         # Plot x offsets
+        ax_index += 1
+        ax = axs[ax_index]
+        ax.set_title('X offsets (forward/backward)' + subtitle)
+        ax.set_ylabel('meters')
+        ax.set_xlabel('phase')
         for leg in self.all_legs:
-            axs[0].plot(
+            ax.plot(
                 phases,
                 x_values[leg],
+                color=self._color_for_leg(leg),
                 label=self._legend_for_leg(leg),
                 linestyle=self._line_style_for_leg(leg),
             )
-        axs[0].set_title('X offsets (forward/backward)' + subtitle)
-        axs[0].set_ylabel('meters')
-        axs[0].set_xlabel('phase')
-        axs[0].legend()
+        ax.legend()
 
         # Plot y offsets
+        ax_index += 1
+        ax = axs[ax_index]
+        ax.set_title('Y offsets (left/right)' + subtitle)
+        ax.set_ylabel('meters')
+        ax.set_xlabel('phase')
         for leg in self.all_legs:
-            axs[1].plot(
+            ax.plot(
                 phases,
                 y_values[leg],
+                color=self._color_for_leg(leg),
                 label=self._legend_for_leg(leg),
                 linestyle=self._line_style_for_leg(leg),
             )
-        axs[1].set_title('Y offsets (left/right)' + subtitle)
-        axs[1].set_ylabel('meters')
-        axs[1].set_xlabel('phase')
-        axs[1].legend()
+        ax.legend()
 
+        ax_index += 1
+        ax = axs[ax_index]
+        ax.set_title('Z offsets (up/down)' + subtitle)
+        ax.set_ylabel('meters')
+        ax.set_xlabel('phase')
         # Plot z offsets
         for leg in self.all_legs:
-            axs[2].plot(
+            ax.plot(
                 phases,
                 z_values[leg],
+                color=self._color_for_leg(leg),
                 label=self._legend_for_leg(leg),
                 linestyle=self._line_style_for_leg(leg),
             )
-        axs[2].set_title('Z offsets (up/down)' + subtitle)
-        axs[2].set_ylabel('meters')
-        axs[2].set_xlabel('phase')
-        axs[2].legend()
+        ax.legend()
 
         plt.tight_layout()
         plt.show()
-        return axs
 
     def visualize_continuous_in_3d(
         self,
@@ -203,6 +246,7 @@ class GaitGenerator:
                     x_values[leg],
                     y_values[leg],
                     z_values[leg],
+                    color=self._color_for_leg(leg),
                     label=self._legend_for_leg(leg),
                     linestyle=self._line_style_for_leg(leg),
                 )
@@ -210,4 +254,6 @@ class GaitGenerator:
                     plot_lines = {}
                 plot_lines[leg] = lines[0]
 
+        plt.tight_layout()
+        plt.show()
         return ax, plot_lines
