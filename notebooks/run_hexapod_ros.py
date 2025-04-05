@@ -147,9 +147,6 @@ class HexapodController(rclpy.node.Node):
         self.walk_speed = abs(left_x) + abs(left_y) + abs(left_trigger)
         self.rotation_speed = right_x
 
-        # self.joystick_buttons_cooldown = 50
-        # self.joystick_buttons_debounce = [self.joystick_buttons_cooldown] * joystick_buttons_count
-
         if joy.buttons[10] == 1:  # R1
             if self.joystick_buttons_debounce[10] > 0:
                 # self.joystick_buttons_debounce[10] -= 1
