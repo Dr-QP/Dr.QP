@@ -179,11 +179,11 @@ class HexapodController(rclpy.node.Node):
 
     def prev_gait(self):
         self.gait_index = (self.gait_index - 1) % len(self.gaits)
-        self.get_logger().info(f'Switching gait: {self.gaits[self.gait_index]}')
+        self.get_logger().info(f'Switching gait: {self.gaits[self.gait_index].name}')
 
     def next_gait(self):
         self.gait_index = (self.gait_index + 1) % len(self.gaits)
-        self.get_logger().info(f'Switching gait: {self.gaits[self.gait_index]}')
+        self.get_logger().info(f'Switching gait: {self.gaits[self.gait_index].name}')
 
     def loop(self):
         self.walker.current_gait = self.gaits[self.gait_index]
