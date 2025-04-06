@@ -110,7 +110,6 @@ public:
   }
 
 private:
-
   rclcpp::Publisher<drqp_interfaces::msg::MultiAsyncPositionCommand>::SharedPtr
     multiAsyncPosePublisher_;
 
