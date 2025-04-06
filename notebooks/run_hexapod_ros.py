@@ -29,9 +29,71 @@ import rclpy
 import rclpy.node
 import sensor_msgs.msg
 from walk_controller import GaitType, WalkController
+from enum import Enum, auto
 
 kFemurOffsetAngle = -13.11
 kTibiaOffsetAngle = -32.9
+
+
+class ButtonState(Enum):
+    Released = 0  # match ROS joy states
+    Pressed = 1  # match ROS joy states
+
+
+class ButtonEvent(Enum):
+    Tapped = auto()
+
+
+# https://docs.ros.org/en/ros2_packages/jazzy/api/joy/
+class ButtonIndex(Enum):
+    Cross = 0
+    Circle = 1
+    Square = 2
+    Triangle = 3
+    Select = 4
+    PS = 5
+    Start = 6
+    LeftStick = 7
+    RightStick = 8
+    LeftShoulder = 9
+    R1 = 10
+    DpadUp = 11
+    DpadDown = 12
+    DpadLeft = 13
+    DpadRight = 14
+    Misc1 = 15  # (Depends on the controller manufacturer, but is usually at a similar location on the controller as back/start)
+    Paddle1 = 16  # (Upper left, facing the back of the controller if present)
+    Paddle2 = 17  # (Upper right, facing the back of the controller if present)
+    Paddle3 = 18  # (Lower left, facing the back of the controller if present)
+    Paddle4 = 19  # (Lower right, facing the back of the controller if present)
+    Touchpad = 20  #  (If present. Button status only)
+
+
+class ButtonAxis(Enum):
+    LeftX = 0
+    LeftY = 1
+    RightX = 2
+    RightY = 3
+    TriggerLeft = 4
+    TriggerRight = 5
+
+
+class JoystickButton:
+    def __init__(self, button_index: ButtonIndex, event_handler: callable):
+        self.button_index = button_index
+        self.event_handler = event_handler
+
+        self.last_state = ButtonState.Released
+
+    def update(self, joy_buttons_array):
+        self.last_state = self.current_state
+        self.current_state = ButtonState(joy_buttons_array[self.button_index.value])
+
+        if not self.event_handler:
+            return
+
+        if self.last_state == ButtonState.Released and self.current_state == ButtonState.Pressed:
+            self.event_handler(self, ButtonEvent.Tapped)
 
 
 class HexapodController(rclpy.node.Node):
@@ -52,9 +114,10 @@ class HexapodController(rclpy.node.Node):
         self.joystick_sub = self.create_subscription(
             sensor_msgs.msg.Joy, '/joy', self.process_inputs, qos_profile=10
         )
-        joystick_buttons_count = 20
-        self.joystick_buttons_cooldown = 5
-        self.joystick_buttons_debounce = [0] * joystick_buttons_count
+        self.joystick_buttons = [
+            JoystickButton(ButtonIndex.Paddle1, lambda _: self.prev_gait()),
+            JoystickButton(ButtonIndex.Paddle2, lambda _: self.next_gait()),
+        ]
 
         self.joint_state_pub = self.create_publisher(
             sensor_msgs.msg.JointState, '/joint_states', qos_profile=50
@@ -103,61 +166,24 @@ class HexapodController(rclpy.node.Node):
         )
 
     def process_inputs(self, joy: sensor_msgs.msg.Joy):
-        # Process the state of a joysticks axes and buttons.
-        # Header header           # timestamp in the header is the time the data is received from the joystick
-        # float32[] axes          # the axes measurements from a joystick
-        # int32[] buttons         # the buttons measurements from a joystick
-        #
-        # Button and axis mappings:
-        # https://docs.ros.org/en/ros2_packages/jazzy/api/joy/
-        # Index	Button
-        # 0	A (CROSS)
-        # 1	B (CIRCLE)
-        # 2	X (SQUARE)
-        # 3	Y (TRIANGLE)
-        # 4	BACK (SELECT)
-        # 5	GUIDE (Middle/Manufacturer Button)
-        # 6	START
-        # 7	LEFTSTICK
-        # 8	RIGHTSTICK
-        # 9	LEFTSHOULDER
-        # 10	RIGHTSHOULDER
-        # 11	DPAD_UP
-        # 12	DPAD_DOWN
-        # 13	DPAD_LEFT
-        # 14	DPAD_RIGHT
-        # 15	MISC1 (Depends on the controller manufacturer, but is usually at a similar location on the controller as back/start)
-        # 16	PADDLE1 (Upper left, facing the back of the controller if present)
-        # 17	PADDLE2 (Upper right, facing the back of the controller if present)
-        # 18	PADDLE3 (Lower left, facing the back of the controller if present)
-        # 19	PADDLE4 (Lower right, facing the back of the controller if present)
-        # 20	TOUCHPAD (If present. Button status only)
-        # Index	Axis
-        # 0	LEFTX
-        # 1	LEFTY
-        # 2	RIGHTX
-        # 3	RIGHTY
-        # 4	TRIGGERLEFT
-        # 5	TRIGGERRIGHT
-
-        left_x = joy.axes[0]
-        left_y = joy.axes[1]
-        right_x = joy.axes[2]
-        left_trigger = np.interp(joy.axes[4], [-1, 1], [1, 0])
+        left_x = joy.axes[ButtonAxis.LeftX.value]
+        left_y = joy.axes[ButtonAxis.LeftY.value]
+        right_x = joy.axes[ButtonAxis.RightX.value]
+        left_trigger = np.interp(joy.axes[ButtonAxis.TriggerLeft.value], [-1, 1], [1, 0])
         self.direction = Point3D([left_y, left_x, left_trigger])
         self.walk_speed = abs(left_x) + abs(left_y) + abs(left_trigger)
         self.rotation_speed = right_x
 
-        if joy.buttons[10] == 1:  # R1
-            if self.joystick_buttons_debounce[10] > 0:
-                # self.joystick_buttons_debounce[10] -= 1
-                pass
-            else:
-                self.joystick_buttons_debounce[10] = self.joystick_buttons_cooldown
-                self.gait_index = (self.gait_index + 1) % len(self.gaits)
-                self.get_logger().info(f'Switching gait: {self.gaits[self.gait_index]}')
-        if joy.buttons[10] == 0:  # R1
-            self.joystick_buttons_debounce[10] = 0
+        for button in self.joystick_buttons:
+            button.update(joy.buttons)
+
+    def prev_gait(self):
+        self.gait_index = (self.gait_index - 1) % len(self.gaits)
+        self.get_logger().info(f'Switching gait: {self.gaits[self.gait_index]}')
+
+    def next_gait(self):
+        self.gait_index = (self.gait_index + 1) % len(self.gaits)
+        self.get_logger().info(f'Switching gait: {self.gaits[self.gait_index]}')
 
     def loop(self):
         self.walker.current_gait = self.gaits[self.gait_index]
