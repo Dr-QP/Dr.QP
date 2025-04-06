@@ -158,10 +158,6 @@ class HexapodController(rclpy.node.Node):
         if joy.buttons[10] == 0:  # R1
             self.joystick_buttons_debounce[10] = 0
 
-        # if joy.buttons[9] == 1:  # L1
-        #     self.gait_index = (self.gait_index + -1) % len(self.gaits)
-        #     self.get_logger().info(f'Switching gait: {self.gaits[self.gait_index]}')
-
     def loop(self):
         self.walker.current_gait = self.gaits[self.gait_index]
         self.walker.phase_step = 1 / self.phase_steps_per_cycle[self.gait_index]
