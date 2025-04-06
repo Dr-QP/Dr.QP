@@ -11,11 +11,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
 
-defaults:
-  run:
-    # interactive shell, to source ROS setup.bash
-    shell: bash -ileo pipefail {0}
-
 jobs:
   paths-filter:
     name: Need to run?
@@ -51,6 +46,7 @@ jobs:
 
     - name: Reformat code
       run: |
+        source /opt/ros/jazzy/setup.bash
         ./scripts/cpp-reformat.sh
         ./scripts/python-reformat.sh
 
