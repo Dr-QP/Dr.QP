@@ -55,18 +55,13 @@ class ButtonIndex(Enum):
     Start = 6
     LeftStick = 7
     RightStick = 8
-    LeftShoulder = 9
+    L1 = 9
     R1 = 10
     DpadUp = 11
     DpadDown = 12
     DpadLeft = 13
     DpadRight = 14
-    Misc1 = 15  # (Depends on the controller manufacturer, but is usually at a similar location on the controller as back/start)
-    Paddle1 = 16  # (Upper left, facing the back of the controller if present)
-    Paddle2 = 17  # (Upper right, facing the back of the controller if present)
-    Paddle3 = 18  # (Lower left, facing the back of the controller if present)
-    Paddle4 = 19  # (Lower right, facing the back of the controller if present)
-    Touchpad = 20  #  (If present. Button status only)
+    TouchpadButton = 15
 
 
 class ButtonAxis(Enum):
@@ -83,6 +78,7 @@ class JoystickButton:
         self.button_index = button_index
         self.event_handler = event_handler
 
+        self.current_state = ButtonState.Released
         self.last_state = ButtonState.Released
 
     def update(self, joy_buttons_array):
@@ -115,8 +111,8 @@ class HexapodController(rclpy.node.Node):
             sensor_msgs.msg.Joy, '/joy', self.process_inputs, qos_profile=10
         )
         self.joystick_buttons = [
-            JoystickButton(ButtonIndex.Paddle1, lambda _: self.prev_gait()),
-            JoystickButton(ButtonIndex.Paddle2, lambda _: self.next_gait()),
+            JoystickButton(ButtonIndex.L1, lambda _: self.prev_gait()),
+            JoystickButton(ButtonIndex.R1, lambda _: self.next_gait()),
         ]
 
         self.joint_state_pub = self.create_publisher(
@@ -213,7 +209,8 @@ class HexapodController(rclpy.node.Node):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Dr.QP Robot controller ROS node')
-    args = parser.parse_args(args=rclpy.utilities.remove_ros_args(args=sys.argv))
+    filtered_args = rclpy.utilities.remove_ros_args()
+    args = parser.parse_args(args=filtered_args[1:])
     rclpy.init()
     node = HexapodController(**vars(args))
     try:
