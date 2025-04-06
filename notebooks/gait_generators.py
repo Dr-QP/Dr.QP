@@ -60,6 +60,7 @@ class GaitGenerator:
             return 'C0'
         elif leg in [HexapodLeg.left_back, HexapodLeg.right_back]:
             return 'C3'
+        raise ValueError(f'Unknown leg: {leg}')
 
     def visualize_continuous(self, _steps=100, _subtitle='', _num_phases=1, **gen_args):
         """Visualize the gait sequence as a continuous function."""
