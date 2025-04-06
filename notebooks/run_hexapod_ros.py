@@ -20,6 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import argparse
+import sys
 from models import HexapodModel
 from point import Point3D
 from walk_controller import GaitType, WalkController
@@ -185,8 +187,10 @@ class HexapodController(rclpy.node.Node):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser('Dr.QP Robot controller ROS node')
+    args = parser.parse_args(args=rclpy.utilities.remove_ros_args(args=sys.argv))
     rclpy.init()
-    node = HexapodController()
+    node = HexapodController(**vars(args))
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:

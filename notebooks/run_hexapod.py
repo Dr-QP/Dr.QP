@@ -65,7 +65,6 @@ def main():
         plt.show(block=False)
         plt.pause(delta_time)
 
-    jsp = None
     while plt.get_fignums():  # window(s) open
         inputs = ps5_controller.get_controls()
         walker.next(
@@ -81,4 +80,4 @@ def main():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Dr.QP Robot controller')
     args = parser.parse_args()
-    main()
+    main(**vars(args))
