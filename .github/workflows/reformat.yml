@@ -1,0 +1,56 @@
+name: Reformat code
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+      - v*
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  paths-filter:
+    name: Need to run?
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    permissions: {}
+    outputs:
+      pass: ${{ steps.filter.outputs.pass }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Filters
+        uses: ./.github/actions/paths-filter
+        id: filter
+        with:
+          extra-filter: ".github/workflows/reformat.yml,notebooks/**"
+
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    needs: paths-filter
+    if: needs.paths-filter.outputs.pass == 'true'
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    container:
+      image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
+      options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the
+      # added or changed files to the repository.
+      contents: write
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Reformat code
+      run: |
+        ./scripts/cpp-reformat.sh
+        ./scripts/python-reformat.sh
+
+    # Commit all changed files back to the repository
+    - uses: stefanzweifel/git-auto-commit-action@v5
+      if: ${{ github.event_name == 'pull_request' }}
+      with:
+        commit_message: Reformatted code
