@@ -1,6 +1,7 @@
-from scipy.interpolate import make_interp_spline, make_smoothing_spline, make_splrep, make_splprep
-from enum import Enum, auto
+from enum import auto, Enum
+
 import numpy as np
+from scipy.interpolate import make_interp_spline, make_smoothing_spline, make_splprep, make_splrep
 
 
 # See https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html for full details

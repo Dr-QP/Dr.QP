@@ -1,7 +1,7 @@
-from pygments import highlight
-from pygments.lexers import PythonLexer
-from pygments.formatters import HtmlFormatter
 import IPython
+from pygments import highlight
+from pygments.formatters import HtmlFormatter
+from pygments.lexers import PythonLexer
 
 
 def display_file(file_path, start_line=0, end_line=-1, style='default'):
