@@ -23,13 +23,12 @@
 import argparse
 import sys
 from models import HexapodModel
+import numpy as np
 from point import Point3D
-from walk_controller import GaitType, WalkController
-
-import sensor_msgs.msg
 import rclpy
 import rclpy.node
-import numpy as np
+import sensor_msgs.msg
+from walk_controller import GaitType, WalkController
 
 kFemurOffsetAngle = -13.11
 kTibiaOffsetAngle = -32.9
@@ -44,11 +43,11 @@ class HexapodController(rclpy.node.Node):
         self.walk_speed = 0
         self.rotation_speed = 0
 
-        self.fps = 40
+        self.fps = 30
 
         self.gait_index = 0
         self.gaits = [GaitType.tripod, GaitType.ripple, GaitType.wave]
-        self.phase_steps_per_cycle = [50, 50, 50]  # per gait
+        self.phase_steps_per_cycle = [20, 25, 40]  # per gait
 
         self.joystick_sub = self.create_subscription(
             sensor_msgs.msg.Joy, '/joy', self.process_inputs, qos_profile=10
@@ -91,7 +90,7 @@ class HexapodController(rclpy.node.Node):
         self.hexapod.forward_kinematics(
             0, -35, 130
         )  # reasonable hexa, servos out of reach for 0.06 height
-        step_length = 0.10  # in meters
+        step_length = 0.14  # in meters
         step_height = 0.03  # in meters
 
         self.walker = WalkController(

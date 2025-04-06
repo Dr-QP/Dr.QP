@@ -113,16 +113,17 @@ inline double mapToRange(double x, double in_min, double in_max, double out_min,
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-inline double radiansToPosition(double angle)
+inline uint16_t radiansToPosition(double angle)
 {
-  return mapToRange(angle, -M_PI, M_PI, 0, 1023);
+  const double result = mapToRange(angle, -M_PI, M_PI, 0, 1023);
+  return static_cast<uint16_t>(result);
 }
 
 // Position => Radians
 // 0 => -Pi
 // 512 => 0
 // 1023 => Pi
-inline double positionToRadians(double position)
+inline double positionToRadians(uint16_t position)
 {
   return mapToRange(position, 0, 1023, -M_PI, M_PI);
 }

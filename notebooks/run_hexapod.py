@@ -20,12 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import argparse
+
 from matplotlib import pyplot as plt
 from models import HexapodModel
 from plotting import plot_hexapod, update_hexapod_plot
-from walk_controller import GaitType, WalkController
 import ps5_controller
-import argparse
+from walk_controller import GaitType, WalkController
 
 
 def main():

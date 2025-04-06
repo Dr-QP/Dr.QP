@@ -1,3 +1,23 @@
+# Copyright (c) 2017-2025 Anton Matosov
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
 from enum import auto, Enum
 
 from gait_generators import GaitGenerator
@@ -38,33 +58,33 @@ class ParametricGaitGenerator(GaitGenerator):
                     HexapodLeg.right_back: 0,
                     HexapodLeg.right_middle: 1 / 6,
                     HexapodLeg.right_front: 2 / 6,
-                    HexapodLeg.left_front: 3 / 6,
+                    HexapodLeg.left_back: 3 / 6,
                     HexapodLeg.left_middle: 4 / 6,
-                    HexapodLeg.left_back: 5 / 6,
+                    HexapodLeg.left_front: 5 / 6,
                 },
                 swing_duration=1 / 6,
             ),
             GaitType.ripple: self.GaitPhaseParams(
                 GaitType.ripple,
                 leg_phase_offsets={
-                    HexapodLeg.right_middle: 0,
-                    HexapodLeg.left_front: 1 / 6,
-                    HexapodLeg.right_back: 2 / 6,
-                    HexapodLeg.left_middle: 3 / 6,
+                    HexapodLeg.right_back: 0,
+                    HexapodLeg.right_middle: 2 / 6,
                     HexapodLeg.right_front: 4 / 6,
-                    HexapodLeg.left_back: 5 / 6,
+                    HexapodLeg.left_back: 3 / 6,
+                    HexapodLeg.left_middle: 5 / 6,
+                    HexapodLeg.left_front: 1 / 6,
                 },
                 swing_duration=1 / 3,
             ),
             GaitType.tripod: self.GaitPhaseParams(
                 GaitType.tripod,
                 leg_phase_offsets={
-                    HexapodLeg.left_front: 0,
-                    HexapodLeg.right_middle: 0,
-                    HexapodLeg.left_back: 0,
-                    HexapodLeg.right_front: 1 / 2,
-                    HexapodLeg.left_middle: 1 / 2,
-                    HexapodLeg.right_back: 1 / 2,
+                    HexapodLeg.right_back: 0,
+                    HexapodLeg.right_middle: 1 / 2,
+                    HexapodLeg.right_front: 0,
+                    HexapodLeg.left_back: 1 / 2,
+                    HexapodLeg.left_middle: 0,
+                    HexapodLeg.left_front: 1 / 2,
                 },
                 swing_duration=1 / 2,
             ),
@@ -72,7 +92,7 @@ class ParametricGaitGenerator(GaitGenerator):
 
     def get_offsets_at_phase_for_leg(self, leg, phase) -> Point3D:
         gait = self.gaits[self.current_gait]
-        leg_phase = gait.leg_phase_offsets[leg] + phase
+        leg_phase = phase - gait.leg_phase_offsets[leg]
         leg_phase %= 1
 
         half_step = self.step_length / 2

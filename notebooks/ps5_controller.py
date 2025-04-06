@@ -25,10 +25,9 @@
 #
 # linux:
 # # sudo apt install libhidapi-dev
-from pydualsense import pydualsense
 import numpy as np
-
 from point import Point3D
+from pydualsense import pydualsense
 
 ds = pydualsense()  # open controller
 ds.init()  # initialize controller

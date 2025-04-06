@@ -1,3 +1,23 @@
+# Copyright (c) 2017-2025 Anton Matosov
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
 import numpy as np
 from parametric_gait_generator import GaitType, ParametricGaitGenerator
 from point import Point3D
@@ -93,14 +113,11 @@ class WalkController:
         if starting or stopped:
             self.current_phase = 0
 
+        height_ratio = 1
         if stopping:
             self.last_stop_phase = self.current_phase
-            height_ratio = np.clip(self.current_stride_ratio, 0, 1)
         else:
             self.last_stop_phase = 0.0
-            height_ratio = np.clip(
-                self.current_stride_ratio, 0.5, 1
-            )  # need to include rotation ratio
         ###############################################################
 
         result = []
@@ -126,9 +143,7 @@ class WalkController:
                 foot_target = rotation_transform.apply_point(foot_target)
 
             if has_stride or has_rotation:
-                foot_target = foot_target + Point3D(
-                    [0, 0, gait_offsets.z * self.step_height * height_ratio]
-                )
+                foot_target.z += gait_offsets.z * self.step_height * height_ratio
 
             if verbose:
                 print(f'{leg.label} {self.current_phase=}')
