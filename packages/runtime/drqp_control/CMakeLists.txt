@@ -14,6 +14,7 @@ foreach(dep ${${PROJECT_NAME}_BUILD_DEPENDS})
 endforeach()
 
 add_library(drqp_control INTERFACE)
+target_compile_features(drqp_control INTERFACE cxx_std_20)
 
 target_include_directories(drqp_control INTERFACE
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
@@ -24,9 +25,15 @@ target_link_libraries(control drqp_control)
 ament_target_dependencies(control drqp_a1_16_driver)
 
 
-add_executable(joints_state src/JointsState.cpp)
-target_link_libraries(joints_state drqp_control)
-ament_target_dependencies(joints_state ${${PROJECT_NAME}_BUILD_DEPENDS})
+add_executable(pose_to_joint_state src/PoseToJointsState.cpp)
+target_link_libraries(pose_to_joint_state drqp_control)
+ament_target_dependencies(pose_to_joint_state ${${PROJECT_NAME}_BUILD_DEPENDS})
+
+
+add_executable(joint_state_to_pose src/JointsStateToPose.cpp)
+target_link_libraries(joint_state_to_pose drqp_control)
+ament_target_dependencies(joint_state_to_pose ${${PROJECT_NAME}_BUILD_DEPENDS})
+
 
 
 # Install headers
@@ -36,7 +43,8 @@ install(DIRECTORY include/
 # Install executables for `ros2 run`
 install(TARGETS
   control
-  joints_state
+  pose_to_joint_state
+  joint_state_to_pose
   DESTINATION lib/${PROJECT_NAME})
 
 # Install libraries
@@ -53,6 +61,11 @@ ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 # Export dependencies
 ament_export_dependencies(${${PROJECT_NAME}_BUILD_EXPORT_DEPENDS})
+
+install(
+  DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   include(../../cmake/ClangFormatConfig.cmake)

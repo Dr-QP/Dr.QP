@@ -3,7 +3,7 @@
 # -- Project information
 
 project = 'Dr.QP'
-copyright = '2017-2025 Anton Matosov'
+copyright = '2017-2025 Anton Matosov'  # noqa
 author = 'Anton Matosov'
 
 release = '0.1'

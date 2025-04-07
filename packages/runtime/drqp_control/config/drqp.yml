@@ -1,0 +1,47 @@
+robot:
+  name: Dr.QP
+  device_address: 192.168.0.190:2022 # via ser2net
+  # device_address: /dev/ttySC0
+  baud_rate: 115200
+  servos:
+      left_front_coxa:
+        id: 1
+      left_front_femur:
+        id: 3
+      left_front_tibia:
+        id: 5
+      left_middle_coxa:
+        id: 13
+      left_middle_femur:
+        id: 15
+      left_middle_tibia:
+        id: 17
+      left_back_coxa:
+        id: 7
+      left_back_femur:
+        id: 9
+      left_back_tibia:
+        id: 11
+      right_front_coxa:
+        id: 2
+      right_front_femur:
+        id: 4
+      right_front_tibia:
+        id: 6
+      right_middle_coxa:
+        id: 14
+      right_middle_femur:
+        id: 16
+      right_middle_tibia:
+        id: 18
+      right_back_coxa:
+        id: 8
+      right_back_femur:
+        id: 10
+      right_back_tibia:
+        id: 12
+
+joint_state_publisher:
+  update_rate: 30
+  publish_states: true
+  topic_name: joint_states

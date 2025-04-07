@@ -2,6 +2,8 @@
 # shellcheck disable=SC1090,SC1091
 set -e
 
+export PATH="$HOME/.local/bin:$PATH"
+
 # setup ros2 environment
 source "/opt/ros/$ROS_DISTRO/setup.bash" --
 

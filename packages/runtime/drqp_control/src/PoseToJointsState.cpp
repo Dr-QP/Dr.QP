@@ -26,6 +26,7 @@
 #include <algorithm>
 
 #include "drqp_control/DrQp.h"
+#include "drqp_control/JointServoMappings.h"
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
@@ -33,37 +34,10 @@
 #include <drqp_interfaces/msg/multi_sync_position_command.hpp>
 #include <drqp_interfaces/msg/multi_async_position_command.hpp>
 
-struct Params
-{
-  std::string name;
-  double ratio = 1.;
-};
-
-static const auto kServoIdToJoint = []() {
-  std::unordered_map<uint8_t, Params> result;
-
-  const std::string kRight = "right";
-  const std::array<const char*, kServosPerLeg> kJointNames = {"_coxa", "_femur", "_tibia"};
-  for (const auto& leg : kAllLegServoIds) {
-    int jointNameIndex = 0;
-    for (const int servoId : leg) {
-      const std::string legName = legNameForServo(servoId);
-      std::string jointName = "dr_qp/" + legName + kJointNames[jointNameIndex];
-
-      const bool isRight =
-        std::find_end(legName.begin(), legName.end(), kRight.begin(), kRight.end()) !=
-        legName.end();
-      result[servoId] = {jointName, (isRight ? -1. : 1.) / 1023.};
-      ++jointNameIndex;
-    }
-  }
-  return result;
-}();
-
-class JointStateNode : public rclcpp::Node
+class PoseToJointState : public rclcpp::Node
 {
 public:
-  JointStateNode() : Node("drqp_joint_state")
+  PoseToJointState() : Node("drqp_pose_to_joint_state")
   {
     joint_states_publisher_ =
       this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
@@ -119,15 +93,10 @@ private:
       return;
     }
 
-    const Params params = kServoIdToJoint.at(servoId);
-    const double positionAsRatio = position * params.ratio;
-    // Position => Radians
-    // 0 => -Pi
-    // 512 => 0
-    // 1023 => Pi
-    const double positionInRadians = positionAsRatio * (2 * 3.14) - 3.14;
+    const JointParams params = kServoIdToJoint.at(servoId);
+    const double positionInRadians = params.ratio * positionToRadians(position);
 
-    jointState.name.push_back(params.name);
+    jointState.name.push_back(params.jointName);
     jointState.position.push_back(positionInRadians);
   }
 
@@ -143,7 +112,7 @@ private:
 int main(int argc, char* argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<JointStateNode>());
+  rclcpp::spin(std::make_shared<PoseToJointState>());
   rclcpp::shutdown();
   return 0;
 }

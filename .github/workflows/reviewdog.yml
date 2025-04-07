@@ -1,0 +1,28 @@
+name: reviewdog
+on:
+  release:
+    types:
+      - published
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  pull_request:
+    branches:
+      - main
+      - v*
+  merge_group:
+    types:
+      - checks_requested
+
+jobs:
+  actionlint:
+    timeout-minutes: 10
+    permissions: {}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: reviewdog/action-actionlint@v1

@@ -18,19 +18,141 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import math
+import enum
 
+import numpy as np
 from point import Line3D, Point3D
 from transforms import Transform
 
 
-def safe_acos(num):
+class HexapodLeg(enum.Enum):
+    left_front = enum.auto()
+    left_middle = enum.auto()
+    left_back = enum.auto()
+    right_front = enum.auto()
+    right_middle = enum.auto()
+    right_back = enum.auto()
+
+
+def safe_arccos(num):
     if num < -1:
-        return False, math.pi  # math.acos(-1)
+        return False, np.pi  # np.acos(-1)
     elif num > 1:
-        return False, 0.0  # math.acos(1)
+        return False, 0.0  # np.acos(1)
     else:
-        return True, math.acos(num)
+        return True, np.arccos(num)
+
+
+class HexapodModel:
+    def __init__(
+        self,
+        front_offset=100,  # x offset for the front and back legs
+        side_offset=100,  # y offset fo the front and back legs
+        middle_offset=100,  # x offset for the middle legs
+        coxa_len=100,
+        femur_len=100,
+        tibia_len=100,
+        body_transform=Transform.identity(),
+        leg_rotation=[0, 0, 45],
+    ):
+        leg_rotation = np.array(leg_rotation)
+
+        self.left_front = LegModel(
+            coxa_len,
+            femur_len,
+            tibia_len,
+            label=HexapodLeg.left_front,
+            rotation=leg_rotation,
+            location_on_body=[front_offset, side_offset, 0.0],
+        )
+        self.left_middle = LegModel(
+            coxa_len,
+            femur_len,
+            tibia_len,
+            label=HexapodLeg.left_middle,
+            rotation=leg_rotation * 2,
+            location_on_body=[0.0, middle_offset, 0.0],
+        )
+        self.left_back = LegModel(
+            coxa_len,
+            femur_len,
+            tibia_len,
+            label=HexapodLeg.left_back,
+            rotation=leg_rotation * 3,
+            location_on_body=[-front_offset, side_offset, 0.0],
+        )
+
+        self.right_front = LegModel(
+            coxa_len,
+            femur_len,
+            tibia_len,
+            label=HexapodLeg.right_front,
+            rotation=leg_rotation * -1,
+            location_on_body=[front_offset, -side_offset, 0.0],
+        )
+        self.right_middle = LegModel(
+            coxa_len,
+            femur_len,
+            tibia_len,
+            label=HexapodLeg.right_middle,
+            rotation=leg_rotation * -2,
+            location_on_body=[0.0, -middle_offset, 0.0],
+        )
+        self.right_back = LegModel(
+            coxa_len,
+            femur_len,
+            tibia_len,
+            label=HexapodLeg.right_back,
+            rotation=leg_rotation * -3,
+            location_on_body=[-front_offset, -side_offset, 0.0],
+        )
+        self.__named_legs = {
+            leg.label: leg
+            for leg in [
+                self.left_front,
+                self.left_middle,
+                self.left_back,
+                self.right_front,
+                self.right_middle,
+                self.right_back,
+            ]
+        }
+
+        # Head, x-forward
+        self.__head_base_line = Line3D(Point3D([0, 0, 0]), Point3D([front_offset, 0, 0]), 'Head')
+
+        # Setting body transform has to be last as it will update head and all the lgs
+        self.body_transform = body_transform
+
+    def forward_kinematics(self, alpha, beta, gamma):
+        for leg in self.legs:
+            leg.forward_kinematics(alpha, beta, gamma)
+
+    def move_legs_to(self, foot_targets, verbose=False):
+        results = []
+        for leg, target in zip(self.legs, foot_targets):
+            reached = leg.move_to(target, verbose)
+            results.append(reached)
+        return results
+
+    @property
+    def legs(self):
+        return self.__named_legs.values()
+
+    @property
+    def named_legs(self):
+        return self.__named_legs
+
+    @property
+    def body_transform(self):
+        return self.left_front.body_transform
+
+    @body_transform.setter
+    def body_transform(self, body_transform):
+        for leg in self.legs:
+            leg.body_transform = body_transform
+
+        self.head = body_transform.apply_line(self.__head_base_line)
 
 
 class LegModel:
@@ -56,6 +178,10 @@ class LegModel:
         self.rotation = rotation
         self._body_transform = body_transform
         self.update_base_transforms()
+
+        self.coxa_angle = 0
+        self.femur_angle = 0
+        self.tibia_angle = 0
 
         self.coxa_link = None
         self.coxa_joint = None
@@ -117,6 +243,10 @@ class LegModel:
     ):
         self.update_base_transforms()
 
+        self.coxa_angle = alpha
+        self.femur_angle = beta
+        self.tibia_angle = gamma
+
         self.coxa_joint = self.body_joint @ Transform.from_rotvec([0, 0, alpha], degrees=True)
         self.coxa_link = self.coxa_joint @ Transform.from_translation([self.coxa_length, 0, 0])
 
@@ -167,8 +297,8 @@ class LegModel:
 
     @staticmethod
     def _inverse_kinematics_xy(localized_foot_target: Point3D):
-        alpha = math.degrees(math.atan2(localized_foot_target.y, localized_foot_target.x))
-        X_tick = math.hypot(localized_foot_target.x, localized_foot_target.y)
+        alpha = np.degrees(np.arctan2(localized_foot_target.y, localized_foot_target.x))
+        X_tick = np.hypot(localized_foot_target.x, localized_foot_target.y)
         return alpha, X_tick
 
     def _inverse_kinematics_xz(
@@ -192,19 +322,19 @@ class LegModel:
         """
         D = -z_offset
         T = X_tick - self.coxa_length
-        L = math.hypot(D, T)
+        L = np.hypot(D, T)
 
-        solvable_theta1, theta1_rad = safe_acos(
+        solvable_theta1, theta1_rad = safe_arccos(
             (L**2 + self.femur_length**2 - self.tibia_length**2) / (2 * L * self.femur_length)
         )
-        theta1 = math.degrees(theta1_rad)
+        theta1 = np.degrees(theta1_rad)
 
-        theta2 = math.degrees(math.atan2(T, D))
-        solvable_phi, phi_rad = safe_acos(
+        theta2 = np.degrees(np.arctan2(T, D))
+        solvable_phi, phi_rad = safe_arccos(
             (self.tibia_length**2 + self.femur_length**2 - L**2)
             / (2 * self.tibia_length * self.femur_length)
         )
-        phi = math.degrees(phi_rad)
+        phi = np.degrees(phi_rad)
 
         # The right hand coordinate system is used, so the angle offsets are inverted
         beta = 90 - (theta1 + theta2)

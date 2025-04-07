@@ -21,9 +21,13 @@
 from typing import Literal
 
 from inline_labels import add_inline_labels
+from ipywidgets import interact
+from matplotlib.animation import FuncAnimation
 from matplotlib.patches import Arc
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox, IdentityTransform, TransformedBbox
+from models import HexapodModel
+from mpl_toolkits.mplot3d.art3d import Line3DCollection
 import numpy as np
 from point import Leg3D, Line, Line3D, Point
 
@@ -473,14 +477,6 @@ def plot_leg_update_lines(model, lines, joints):
         joint.set_offsets([line_model.end.x, line_model.end.y])
 
 
-def plot_update_leg3d_lines(leg: Leg3D, lines, joints):
-    for line, line_model in zip(lines, leg.lines):
-        line.set_data_3d(*zip(line_model.start, line_model.end))
-
-    for joint, line_model in zip(joints, leg.lines):
-        joint._offsets3d = ([line_model.end.x], [line_model.end.y], [line_model.end.z])
-
-
 def plot_ik_lines(ax, femur, tibia):
     d_end = Point(femur.start.x, tibia.end.y)
     ax.plot(*zip(femur.start, tibia.end), 'm--', label='L')
@@ -527,3 +523,125 @@ def plot_ik_lines(ax, femur, tibia):
 
     add_inline_labels(ax, with_overall_progress=False, fontsize='medium')
     ax.legend().remove()  # remove legend as labels are added inline
+
+
+class HexapodPlotData:
+    def __init__(self):
+        self.leg_lines = []
+        self.leg_joints = []
+        self.head_line = None
+        self.leg_tips = {}
+        self.leg_tip_collections = {}
+        self.feet_trails_frames = False
+
+
+def plot_hexapod(hexapod: HexapodModel, targets=None, feet_trails_frames=0):
+    fig, ax = None, None
+
+    plot_data = HexapodPlotData()
+    plot_data.feet_trails_frames = feet_trails_frames
+
+    for leg in hexapod.legs:
+        fig, ax, lines, joints = plot_leg3d(
+            leg,
+            'Hexapod in 3D',
+            link_labels='none',
+            joint_labels='points',
+            subplot=111,
+            fig=fig,
+            ax=ax,
+        )
+        plot_data.leg_lines.append(lines)
+        plot_data.leg_joints.append(joints)
+
+        if feet_trails_frames > 0:
+            plot_data.leg_tips[leg.label] = [leg.tibia_end.numpy()]
+            segments = leg_tips_to_segments(plot_data.leg_tips[leg.label])
+
+            lc = Line3DCollection(segments, cmap='plasma')
+
+            colors = np.linspace(1, 0, plot_data.feet_trails_frames)
+            lc.set_array(colors)
+            lc.set_linewidth(2)
+
+            plot_data.leg_tip_collections[leg.label] = ax.add_collection(lc)
+
+    plot_data.head_line = ax.plot(*zip(hexapod.head.start, hexapod.head.end), 'c')[0]
+
+    if targets:
+        ax.scatter(
+            *zip(*[target.numpy() for target in targets]), color='k', label='unreachable target'
+        )
+
+    ax.view_init(elev=44.0, azim=-160)
+    return fig, ax, plot_data
+
+
+def leg_tips_to_segments(leg_tips):
+    points = np.array(leg_tips)
+    segments = np.concatenate([points[:-1], points[1:]], axis=1)
+    segments = segments.reshape(-1, 2, 3)
+    return segments
+
+
+def update_hexapod_plot(hexapod: HexapodModel, plot_data: HexapodPlotData):
+    for leg, lines, joints in zip(hexapod.legs, plot_data.leg_lines, plot_data.leg_joints):
+        plot_update_leg3d_lines(leg, lines, joints)
+
+    if plot_data.head_line:
+        plot_data.head_line.set_data_3d(*zip(hexapod.head.start, hexapod.head.end))
+
+    if plot_data.feet_trails_frames > 0:
+        for leg in hexapod.legs:
+            if len(plot_data.leg_tips[leg.label]) > plot_data.feet_trails_frames:
+                plot_data.leg_tips[leg.label].pop(0)
+            plot_data.leg_tips[leg.label].append(leg.tibia_end.numpy())
+
+            segments = leg_tips_to_segments(plot_data.leg_tips[leg.label])
+            lc = plot_data.leg_tip_collections[leg.label]
+            lc.set_segments(segments)
+
+
+def plot_update_leg3d_lines(leg: Leg3D, lines, joints):
+    for line, line_model in zip(lines, leg.lines):
+        line.set_data_3d(*zip(line_model.start, line_model.end))
+
+    for joint, line_model in zip(joints, leg.lines):
+        joint._offsets3d = ([line_model.end.x], [line_model.end.y], [line_model.end.z])
+
+
+def animate_plot(
+    _fig,
+    _animate: callable,
+    _frames,
+    _interval=16,  # 60 fps
+    _interactive=False,
+    **interact_kwargs,
+):
+    anim = None
+
+    was_interactive = plt.isinteractive()
+
+    plt.rcParams['animation.html'] = 'jshtml'
+    if _interactive:
+        plt.ion()
+    else:
+        plt.ioff()
+
+    try:
+        if _interactive:
+            anim = interact(_animate, frame=(0, _frames), **interact_kwargs)
+        else:
+            anim = FuncAnimation(_fig, _animate, frames=_frames, interval=_interval)
+
+        if plt.isinteractive():
+            plt.show()
+        else:
+            display(anim)  # type: ignore # noqa: F821
+    finally:
+        if was_interactive:
+            plt.ion()
+        else:
+            plt.ioff()
+
+    return anim

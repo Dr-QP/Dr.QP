@@ -22,6 +22,7 @@
 
 #include <array>
 #include <cstdint>
+#include <cmath>
 #include <string>
 
 using ServoId = uint8_t;
@@ -63,14 +64,14 @@ using LegServoIdsArray = std::array<ServoId, kServosPerLeg>;
 using AllLegsServoIdsArray = std::array<LegServoIdsArray, kLegIdCount>;
 
 const AllLegsServoIdsArray kAllLegServoIds = {
-  LegServoIdsArray{1, 3, 5},  // front-left
-  LegServoIdsArray{2, 4, 6},  // front-right
+  LegServoIdsArray{1, 3, 5},  // left_front
+  LegServoIdsArray{2, 4, 6},  // right_front
 
-  LegServoIdsArray{13, 15, 17},  // middle-left
-  LegServoIdsArray{14, 16, 18},  // middle-right
+  LegServoIdsArray{13, 15, 17},  // left_middle
+  LegServoIdsArray{14, 16, 18},  // right_middle
 
-  LegServoIdsArray{7, 9, 11},   // back-left
-  LegServoIdsArray{8, 10, 12},  // back-right
+  LegServoIdsArray{7, 9, 11},   // left_back
+  LegServoIdsArray{8, 10, 12},  // right_back
 };
 
 using ServoIdToLegArray = std::array<ServoId, kServoMaxId>;
@@ -90,14 +91,14 @@ const ServoIdToLegArray kServoIdToLeg = []() {
 using AllLegsNamesArray = std::array<std::string, kLegIdCount>;
 const AllLegsNamesArray kAllLegsNames = []() {
   AllLegsNamesArray legs;
-  legs[kFrontLeftLegId] = "front_left";
-  legs[kFrontRightLegId] = "front_right";
+  legs[kFrontLeftLegId] = "left_front";
+  legs[kFrontRightLegId] = "right_front";
 
-  legs[kMiddleLeftLegId] = "middle_left";
-  legs[kMiddleRightLegId] = "middle_right";
+  legs[kMiddleLeftLegId] = "left_middle";
+  legs[kMiddleRightLegId] = "right_middle";
 
-  legs[kBackLeftLegId] = "back_left";
-  legs[kBackRightLegId] = "back_right";
+  legs[kBackLeftLegId] = "left_back";
+  legs[kBackRightLegId] = "right_back";
 
   return legs;
 }();
@@ -107,14 +108,34 @@ static inline std::string legNameForServo(ServoId id)
   return kAllLegsNames[kServoIdToLeg[id]];
 }
 
-// Leg joins in the straight line
-// front-right     servo: 2:       516 // Coxa
-// front-right     servo: 4:       554 // Femur
-// front-right     servo: 6:       592 // Tibia
+inline double mapToRange(double x, double in_min, double in_max, double out_min, double out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
 
-// front-left      servo: 1:       517
-// front-left      servo: 3:       451
-// front-left      servo: 5:       429
+inline uint16_t radiansToPosition(double angle)
+{
+  const double result = mapToRange(angle, -M_PI, M_PI, 0, 1023);
+  return static_cast<uint16_t>(result);
+}
+
+// Position => Radians
+// 0 => -Pi
+// 512 => 0
+// 1023 => Pi
+inline double positionToRadians(uint16_t position)
+{
+  return mapToRange(position, 0, 1023, -M_PI, M_PI);
+}
+
+// Leg joins in the straight line
+// right_front     servo: 2:       516 // Coxa
+// right_front     servo: 4:       554 // Femur
+// right_front     servo: 6:       592 // Tibia
+
+// left_front      servo: 1:       517
+// left_front      servo: 3:       451
+// left_front      servo: 5:       429
 
 //          Left              Right
 // Coxa     512               512

@@ -54,90 +54,90 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        dr_qp/back_left_coxa_f2_link_1:
+        dr_qp/left_back_coxa_f2_link_1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/back_left_coxa_f2_link_2:
+        dr_qp/left_back_coxa_f2_link_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/back_left_coxa_servo:
+        dr_qp/left_back_coxa_servo:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/back_left_femur_link_f1:
+        dr_qp/left_back_femur_link_f1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/back_left_femur_link_f3:
+        dr_qp/left_back_femur_link_f3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/back_left_femur_servo:
+        dr_qp/left_back_femur_servo:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/back_left_foot_link:
+        dr_qp/left_back_foot_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        dr_qp/back_left_tibia_leg:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        dr_qp/back_left_tibia_servo:
+        dr_qp/left_back_tibia_leg:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/back_right_coxa_f2_link_1:
+        dr_qp/left_back_tibia_servo:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/back_right_coxa_f2_link_2:
+        dr_qp/right_back_coxa_f2_link_1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/back_right_coxa_servo:
+        dr_qp/right_back_coxa_f2_link_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/back_right_femur_link_f1:
+        dr_qp/right_back_coxa_servo:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/back_right_femur_link_f3:
+        dr_qp/right_back_femur_link_f1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/back_right_femur_servo:
+        dr_qp/right_back_femur_link_f3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/back_right_foot_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        dr_qp/back_right_tibia_leg:
+        dr_qp/right_back_femur_servo:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/back_right_tibia_servo:
+        dr_qp/right_back_foot_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        dr_qp/right_back_tibia_leg:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        dr_qp/right_back_tibia_servo:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -155,178 +155,178 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        dr_qp/front_left_coxa_f2_link_1:
+        dr_qp/left_front_coxa_f2_link_1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/front_left_coxa_f2_link_2:
+        dr_qp/left_front_coxa_f2_link_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/front_left_coxa_servo:
+        dr_qp/left_front_coxa_servo:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/front_left_femur_link_f1:
+        dr_qp/left_front_femur_link_f1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/front_left_femur_link_f3:
+        dr_qp/left_front_femur_link_f3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/front_left_femur_servo:
+        dr_qp/left_front_femur_servo:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/front_left_foot_link:
+        dr_qp/left_front_foot_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        dr_qp/front_left_tibia_leg:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        dr_qp/front_left_tibia_servo:
+        dr_qp/left_front_tibia_leg:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/front_right_coxa_f2_link_1:
+        dr_qp/left_front_tibia_servo:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/front_right_coxa_f2_link_2:
+        dr_qp/right_front_coxa_f2_link_1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/front_right_coxa_servo:
+        dr_qp/right_front_coxa_f2_link_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/front_right_femur_link_f1:
+        dr_qp/right_front_coxa_servo:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/front_right_femur_link_f3:
+        dr_qp/right_front_femur_link_f1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/front_right_femur_servo:
+        dr_qp/right_front_femur_link_f3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/front_right_foot_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        dr_qp/front_right_tibia_leg:
+        dr_qp/right_front_femur_servo:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/front_right_tibia_servo:
+        dr_qp/right_front_foot_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        dr_qp/right_front_tibia_leg:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/middle_left_coxa_f2_link_1:
+        dr_qp/right_front_tibia_servo:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/middle_left_coxa_f2_link_2:
+        dr_qp/left_middle_coxa_f2_link_1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/middle_left_coxa_servo:
+        dr_qp/left_middle_coxa_f2_link_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/middle_left_femur_link_f1:
+        dr_qp/left_middle_coxa_servo:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/middle_left_femur_link_f3:
+        dr_qp/left_middle_femur_link_f1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/middle_left_femur_servo:
+        dr_qp/left_middle_femur_link_f3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/middle_left_foot_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        dr_qp/middle_left_tibia_leg:
+        dr_qp/left_middle_femur_servo:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/middle_left_tibia_servo:
+        dr_qp/left_middle_foot_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        dr_qp/left_middle_tibia_leg:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/middle_right_coxa_f2_link_1:
+        dr_qp/left_middle_tibia_servo:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/middle_right_coxa_f2_link_2:
+        dr_qp/right_middle_coxa_f2_link_1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/middle_right_coxa_servo:
+        dr_qp/right_middle_coxa_f2_link_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/middle_right_femur_link_f1:
+        dr_qp/right_middle_coxa_servo:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/middle_right_femur_link_f3:
+        dr_qp/right_middle_femur_link_f1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/middle_right_femur_servo:
+        dr_qp/right_middle_femur_link_f3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/middle_right_foot_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        dr_qp/middle_right_tibia_leg:
+        dr_qp/right_middle_femur_servo:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        dr_qp/middle_right_tibia_servo:
+        dr_qp/right_middle_foot_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        dr_qp/right_middle_tibia_leg:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        dr_qp/right_middle_tibia_servo:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -352,41 +352,41 @@ Visualization Manager:
         All Enabled: false
         coxa_joint:
           Value: true
-        dr_qp/back_left_coxa_f2_link_1:
+        dr_qp/left_back_coxa_f2_link_1:
           Value: false
-        dr_qp/back_left_coxa_f2_link_2:
+        dr_qp/left_back_coxa_f2_link_2:
           Value: false
-        dr_qp/back_left_coxa_servo:
+        dr_qp/left_back_coxa_servo:
           Value: false
-        dr_qp/back_left_femur_link_f1:
+        dr_qp/left_back_femur_link_f1:
           Value: false
-        dr_qp/back_left_femur_link_f3:
+        dr_qp/left_back_femur_link_f3:
           Value: false
-        dr_qp/back_left_femur_servo:
+        dr_qp/left_back_femur_servo:
           Value: false
-        dr_qp/back_left_foot_link:
+        dr_qp/left_back_foot_link:
           Value: false
-        dr_qp/back_left_tibia_leg:
+        dr_qp/left_back_tibia_leg:
           Value: false
-        dr_qp/back_left_tibia_servo:
+        dr_qp/left_back_tibia_servo:
           Value: false
-        dr_qp/back_right_coxa_f2_link_1:
+        dr_qp/right_back_coxa_f2_link_1:
           Value: false
-        dr_qp/back_right_coxa_f2_link_2:
+        dr_qp/right_back_coxa_f2_link_2:
           Value: false
-        dr_qp/back_right_coxa_servo:
+        dr_qp/right_back_coxa_servo:
           Value: false
-        dr_qp/back_right_femur_link_f1:
+        dr_qp/right_back_femur_link_f1:
           Value: false
-        dr_qp/back_right_femur_link_f3:
+        dr_qp/right_back_femur_link_f3:
           Value: false
-        dr_qp/back_right_femur_servo:
+        dr_qp/right_back_femur_servo:
           Value: false
-        dr_qp/back_right_foot_link:
+        dr_qp/right_back_foot_link:
           Value: false
-        dr_qp/back_right_tibia_leg:
+        dr_qp/right_back_tibia_leg:
           Value: false
-        dr_qp/back_right_tibia_servo:
+        dr_qp/right_back_tibia_servo:
           Value: false
         dr_qp/base_center_link:
           Value: false
@@ -394,81 +394,81 @@ Visualization Manager:
           Value: false
         dr_qp/camera:
           Value: false
-        dr_qp/front_left_coxa_f2_link_1:
+        dr_qp/left_front_coxa_f2_link_1:
           Value: true
-        dr_qp/front_left_coxa_f2_link_2:
+        dr_qp/left_front_coxa_f2_link_2:
           Value: true
-        dr_qp/front_left_coxa_servo:
+        dr_qp/left_front_coxa_servo:
           Value: true
-        dr_qp/front_left_femur_link_f1:
+        dr_qp/left_front_femur_link_f1:
           Value: true
-        dr_qp/front_left_femur_link_f3:
+        dr_qp/left_front_femur_link_f3:
           Value: true
-        dr_qp/front_left_femur_servo:
+        dr_qp/left_front_femur_servo:
           Value: true
-        dr_qp/front_left_foot_link:
+        dr_qp/left_front_foot_link:
           Value: true
-        dr_qp/front_left_tibia_leg:
+        dr_qp/left_front_tibia_leg:
           Value: true
-        dr_qp/front_left_tibia_servo:
+        dr_qp/left_front_tibia_servo:
           Value: false
-        dr_qp/front_right_coxa_f2_link_1:
+        dr_qp/right_front_coxa_f2_link_1:
           Value: false
-        dr_qp/front_right_coxa_f2_link_2:
+        dr_qp/right_front_coxa_f2_link_2:
           Value: false
-        dr_qp/front_right_coxa_servo:
+        dr_qp/right_front_coxa_servo:
           Value: false
-        dr_qp/front_right_femur_link_f1:
+        dr_qp/right_front_femur_link_f1:
           Value: false
-        dr_qp/front_right_femur_link_f3:
+        dr_qp/right_front_femur_link_f3:
           Value: false
-        dr_qp/front_right_femur_servo:
+        dr_qp/right_front_femur_servo:
           Value: false
-        dr_qp/front_right_foot_link:
+        dr_qp/right_front_foot_link:
           Value: false
-        dr_qp/front_right_tibia_leg:
+        dr_qp/right_front_tibia_leg:
           Value: false
-        dr_qp/front_right_tibia_servo:
+        dr_qp/right_front_tibia_servo:
           Value: false
-        dr_qp/middle_left_coxa_f2_link_1:
+        dr_qp/left_middle_coxa_f2_link_1:
           Value: false
-        dr_qp/middle_left_coxa_f2_link_2:
+        dr_qp/left_middle_coxa_f2_link_2:
           Value: false
-        dr_qp/middle_left_coxa_servo:
+        dr_qp/left_middle_coxa_servo:
           Value: false
-        dr_qp/middle_left_femur_link_f1:
+        dr_qp/left_middle_femur_link_f1:
           Value: false
-        dr_qp/middle_left_femur_link_f3:
+        dr_qp/left_middle_femur_link_f3:
           Value: false
-        dr_qp/middle_left_femur_servo:
+        dr_qp/left_middle_femur_servo:
           Value: false
-        dr_qp/middle_left_foot_link:
+        dr_qp/left_middle_foot_link:
           Value: false
-        dr_qp/middle_left_tibia_leg:
+        dr_qp/left_middle_tibia_leg:
           Value: false
-        dr_qp/middle_left_tibia_servo:
+        dr_qp/left_middle_tibia_servo:
           Value: false
-        dr_qp/middle_right_coxa_f2_link_1:
+        dr_qp/right_middle_coxa_f2_link_1:
           Value: false
-        dr_qp/middle_right_coxa_f2_link_2:
+        dr_qp/right_middle_coxa_f2_link_2:
           Value: false
-        dr_qp/middle_right_coxa_servo:
+        dr_qp/right_middle_coxa_servo:
           Value: false
-        dr_qp/middle_right_femur_link_f1:
+        dr_qp/right_middle_femur_link_f1:
           Value: false
-        dr_qp/middle_right_femur_link_f3:
+        dr_qp/right_middle_femur_link_f3:
           Value: false
-        dr_qp/middle_right_femur_servo:
+        dr_qp/right_middle_femur_servo:
           Value: false
-        dr_qp/middle_right_foot_link:
+        dr_qp/right_middle_foot_link:
           Value: false
-        dr_qp/middle_right_tibia_leg:
+        dr_qp/right_middle_tibia_leg:
           Value: false
-        dr_qp/middle_right_tibia_servo:
+        dr_qp/right_middle_tibia_servo:
           Value: false
         femur_joint:
           Value: true
-        front_left_target:
+        left_front_target:
           Value: true
         leg_tip:
           Value: true
@@ -485,74 +485,74 @@ Visualization Manager:
         world:
           dr_qp/base_link:
             dr_qp/base_center_link:
-              dr_qp/back_left_coxa_servo:
-                dr_qp/back_left_coxa_f2_link_1:
-                  dr_qp/back_left_coxa_f2_link_2:
-                    dr_qp/back_left_femur_servo:
-                      dr_qp/back_left_femur_link_f3:
-                        dr_qp/back_left_femur_link_f1:
-                          dr_qp/back_left_tibia_servo:
-                            dr_qp/back_left_tibia_leg:
-                              dr_qp/back_left_foot_link:
+              dr_qp/left_back_coxa_servo:
+                dr_qp/left_back_coxa_f2_link_1:
+                  dr_qp/left_back_coxa_f2_link_2:
+                    dr_qp/left_back_femur_servo:
+                      dr_qp/left_back_femur_link_f3:
+                        dr_qp/left_back_femur_link_f1:
+                          dr_qp/left_back_tibia_servo:
+                            dr_qp/left_back_tibia_leg:
+                              dr_qp/left_back_foot_link:
                                 {}
-              dr_qp/back_right_coxa_servo:
-                dr_qp/back_right_coxa_f2_link_1:
-                  dr_qp/back_right_coxa_f2_link_2:
-                    dr_qp/back_right_femur_servo:
-                      dr_qp/back_right_femur_link_f3:
-                        dr_qp/back_right_femur_link_f1:
-                          dr_qp/back_right_tibia_servo:
-                            dr_qp/back_right_tibia_leg:
-                              dr_qp/back_right_foot_link:
+              dr_qp/right_back_coxa_servo:
+                dr_qp/right_back_coxa_f2_link_1:
+                  dr_qp/right_back_coxa_f2_link_2:
+                    dr_qp/right_back_femur_servo:
+                      dr_qp/right_back_femur_link_f3:
+                        dr_qp/right_back_femur_link_f1:
+                          dr_qp/right_back_tibia_servo:
+                            dr_qp/right_back_tibia_leg:
+                              dr_qp/right_back_foot_link:
                                 {}
               dr_qp/camera:
                 {}
-              dr_qp/front_left_coxa_servo:
+              dr_qp/left_front_coxa_servo:
                 coxa_joint:
                   femur_joint:
                     tibia_joint:
                       leg_tip:
                         {}
-                dr_qp/front_left_coxa_f2_link_1:
-                  dr_qp/front_left_coxa_f2_link_2:
-                    dr_qp/front_left_femur_servo:
-                      dr_qp/front_left_femur_link_f3:
-                        dr_qp/front_left_femur_link_f1:
-                          dr_qp/front_left_tibia_servo:
-                            dr_qp/front_left_tibia_leg:
-                              dr_qp/front_left_foot_link:
+                dr_qp/left_front_coxa_f2_link_1:
+                  dr_qp/left_front_coxa_f2_link_2:
+                    dr_qp/left_front_femur_servo:
+                      dr_qp/left_front_femur_link_f3:
+                        dr_qp/left_front_femur_link_f1:
+                          dr_qp/left_front_tibia_servo:
+                            dr_qp/left_front_tibia_leg:
+                              dr_qp/left_front_foot_link:
                                 {}
-                front_left_target:
+                left_front_target:
                   {}
-              dr_qp/front_right_coxa_servo:
-                dr_qp/front_right_coxa_f2_link_1:
-                  dr_qp/front_right_coxa_f2_link_2:
-                    dr_qp/front_right_femur_servo:
-                      dr_qp/front_right_femur_link_f3:
-                        dr_qp/front_right_femur_link_f1:
-                          dr_qp/front_right_tibia_servo:
-                            dr_qp/front_right_tibia_leg:
-                              dr_qp/front_right_foot_link:
+              dr_qp/right_front_coxa_servo:
+                dr_qp/right_front_coxa_f2_link_1:
+                  dr_qp/right_front_coxa_f2_link_2:
+                    dr_qp/right_front_femur_servo:
+                      dr_qp/right_front_femur_link_f3:
+                        dr_qp/right_front_femur_link_f1:
+                          dr_qp/right_front_tibia_servo:
+                            dr_qp/right_front_tibia_leg:
+                              dr_qp/right_front_foot_link:
                                 {}
-              dr_qp/middle_left_coxa_servo:
-                dr_qp/middle_left_coxa_f2_link_1:
-                  dr_qp/middle_left_coxa_f2_link_2:
-                    dr_qp/middle_left_femur_servo:
-                      dr_qp/middle_left_femur_link_f3:
-                        dr_qp/middle_left_femur_link_f1:
-                          dr_qp/middle_left_tibia_servo:
-                            dr_qp/middle_left_tibia_leg:
-                              dr_qp/middle_left_foot_link:
+              dr_qp/left_middle_coxa_servo:
+                dr_qp/left_middle_coxa_f2_link_1:
+                  dr_qp/left_middle_coxa_f2_link_2:
+                    dr_qp/left_middle_femur_servo:
+                      dr_qp/left_middle_femur_link_f3:
+                        dr_qp/left_middle_femur_link_f1:
+                          dr_qp/left_middle_tibia_servo:
+                            dr_qp/left_middle_tibia_leg:
+                              dr_qp/left_middle_foot_link:
                                 {}
-              dr_qp/middle_right_coxa_servo:
-                dr_qp/middle_right_coxa_f2_link_1:
-                  dr_qp/middle_right_coxa_f2_link_2:
-                    dr_qp/middle_right_femur_servo:
-                      dr_qp/middle_right_femur_link_f3:
-                        dr_qp/middle_right_femur_link_f1:
-                          dr_qp/middle_right_tibia_servo:
-                            dr_qp/middle_right_tibia_leg:
-                              dr_qp/middle_right_foot_link:
+              dr_qp/right_middle_coxa_servo:
+                dr_qp/right_middle_coxa_f2_link_1:
+                  dr_qp/right_middle_coxa_f2_link_2:
+                    dr_qp/right_middle_femur_servo:
+                      dr_qp/right_middle_femur_link_f3:
+                        dr_qp/right_middle_femur_link_f1:
+                          dr_qp/right_middle_tibia_servo:
+                            dr_qp/right_middle_tibia_leg:
+                              dr_qp/right_middle_foot_link:
                                 {}
       Update Interval: 0
       Value: true

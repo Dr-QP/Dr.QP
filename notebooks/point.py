@@ -180,6 +180,30 @@ class Point3D:
     def normalized(self):
         return self / np.linalg.norm(self._array)
 
+    def interpolate(self, other, alpha):
+        """
+        Interpolates between two points.
+
+        Parameters:
+        ----------
+            other: Point3D
+                The other point to interpolate to.
+            alpha: float
+                The interpolation factor. 0.0 is this point, 1.0 is the other point.
+
+        Returns:
+        --------
+            Point3D
+
+        """
+        return Point3D(
+            [
+                np.interp(alpha, [0, 1], [self.x, other.x]),
+                np.interp(alpha, [0, 1], [self.y, other.y]),
+                np.interp(alpha, [0, 1], [self.z, other.z]),
+            ]
+        )
+
     def __add__(self, other):
         if isinstance(other, Point3D):
             return Point3D(self._array + other._array, other.label)
