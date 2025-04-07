@@ -21,7 +21,8 @@
 # THE SOFTWARE.
 
 import argparse
-import sys
+from enum import auto, Enum
+
 from models import HexapodModel
 import numpy as np
 from point import Point3D
@@ -29,7 +30,6 @@ import rclpy
 import rclpy.node
 import sensor_msgs.msg
 from walk_controller import GaitType, WalkController
-from enum import Enum, auto
 
 kFemurOffsetAngle = -13.11
 kTibiaOffsetAngle = -32.9
