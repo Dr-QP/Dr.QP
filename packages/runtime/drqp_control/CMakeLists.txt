@@ -14,6 +14,7 @@ foreach(dep ${${PROJECT_NAME}_BUILD_DEPENDS})
 endforeach()
 
 add_library(drqp_control INTERFACE)
+target_compile_features(drqp_control INTERFACE cxx_std_20)
 
 target_include_directories(drqp_control INTERFACE
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
