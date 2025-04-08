@@ -14,7 +14,6 @@
       "jithurjacob.nbpreviewer",
       "llvm-vs-code-extensions.vscode-clangd",
       "mhutchie.git-graph",
-      "ms-iot.vscode-ros",
       "ms-python.debugpy",
       "ms-python.python",
       "ms-python.vscode-pylance",
@@ -27,7 +26,6 @@
       "redhat.vscode-xml",
       "redhat.vscode-yaml",
       "rpinski.shebang-snippets",
-      "smilerobotics.urdf",
       "yy0931.save-as-root",
       "althack.ament-task-provider",
       "nonanonno.vscode-ros2",
@@ -54,6 +52,8 @@
       "tamasfe.even-better-toml",
       "davidanson.vscode-markdownlint",
       "elagil.pre-commit-helper",
+      "ranch-hand-robotics.rde-ros-2",
+      "ranch-hand-robotics.urdf-editor",
     ]
   },
   "launch": {
