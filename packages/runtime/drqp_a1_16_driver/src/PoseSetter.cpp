@@ -76,8 +76,9 @@ public:
     DynamicSJogCommand sposCmd(msg.goals.size());
     sposCmd.setPlaytime(msg.goals.at(0).playtime);
 
-    for (const auto& pos : msg.goals) {
-      sposCmd.at(pos.id) = {pos.position, SET_POSITION_CONTROL, pos.id};  // SJogData
+    for (size_t index = 0; index < msg.goals.size(); ++index) {
+      auto pos = msg.goals.at(index);
+      sposCmd.at(index) = {pos.position, SET_POSITION_CONTROL, pos.id};
     }
 
     servo.sendJogCommand(sposCmd);
@@ -88,8 +89,9 @@ public:
     XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
 
     DynamicIJogCommand iposCmd(msg.goals.size());
-    for (const auto& pos : msg.goals) {
-      iposCmd.at(pos.id) = {pos.position, SET_POSITION_CONTROL, pos.id, pos.playtime};  // IJogData
+    for (size_t index = 0; index < msg.goals.size(); ++index) {
+      auto pos = msg.goals.at(index);
+      iposCmd.at(index) = {pos.position, SET_POSITION_CONTROL, pos.id, pos.playtime};
     }
 
     servo.sendJogCommand(iposCmd);
