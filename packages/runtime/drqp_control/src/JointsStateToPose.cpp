@@ -34,10 +34,10 @@ public:
   JointsStateToPoseNode() : Node("drqp_joint_state_to_pose")
   {
     servoGoalsPublisher_ =
-      this->create_publisher<drqp_interfaces::msg::MultiServoPositionGoal>("servo_goals", 10);
+      this->create_publisher<drqp_interfaces::msg::MultiServoPositionGoal>("/servo_goals", 10);
 
     jointStateSubscription_ = this->create_subscription<sensor_msgs::msg::JointState>(
-      "joint_states", 10, [this](const sensor_msgs::msg::JointState& msg) {
+      "/joint_states", 10, [this](const sensor_msgs::msg::JointState& msg) {
         try {
           drqp_interfaces::msg::MultiServoPositionGoal pose;
           pose.mode = drqp_interfaces::msg::MultiServoPositionGoal::MODE_ASYNC;

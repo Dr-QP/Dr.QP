@@ -23,7 +23,7 @@ import argparse
 import math
 import sys
 
-import drqp_interfaces.msg
+from drqp_interfaces.msg import MultiServoPositionGoal, ServoPositionGoal
 from geometry_msgs.msg import Quaternion, TransformStamped
 import numpy as np
 import rclpy
@@ -211,8 +211,8 @@ class RobotBrain(rclpy.node.Node):
     def __init__(self, parsed_args):
         super().__init__('drqp_brain')
 
-        self.pose_publisher = self.create_publisher(
-            drqp_interfaces.msg.MultiPositionCommand, '/pose', qos_profile=10
+        self.servo_goals_publisher = self.create_publisher(
+            MultiServoPositionGoal, '/servo_goals', qos_profile=10
         )
         self.joint_state_pub = self.create_publisher(
             sensor_msgs.msg.JointState, '/joint_states', qos_profile=50
@@ -289,8 +289,6 @@ class RobotBrain(rclpy.node.Node):
         self.joint_state_pub.publish(msg)
 
     def publish_pose(self):
-        msg = drqp_interfaces.msg.MultiPositionCommand()
-
         def rad_to_pos(angle):
             return int(angle * 1023 / (2 * math.pi)) + 512
 
@@ -306,29 +304,30 @@ class RobotBrain(rclpy.node.Node):
         femur_pos_right = rad_to_pos(-final_alpha)
         tibia_pos_right = rad_to_pos(-final_beta)
 
-        pt = 0
-        msg.mode = drqp_interfaces.msg.MultiPositionCommand.MODE_ASYNC
+        playtime = 0
+        msg = MultiServoPositionGoal()
+        msg.mode = MultiServoPositionGoal.MODE_ASYNC
         msg.positions = [
-            drqp_interfaces.msg.PositionCommand(id=1, position=coxa_pos, playtime=pt),
-            drqp_interfaces.msg.PositionCommand(id=3, position=femur_pos, playtime=pt),
-            drqp_interfaces.msg.PositionCommand(id=5, position=tibia_pos, playtime=pt),
-            drqp_interfaces.msg.PositionCommand(id=13, position=coxa_pos, playtime=pt),
-            drqp_interfaces.msg.PositionCommand(id=15, position=femur_pos, playtime=pt),
-            drqp_interfaces.msg.PositionCommand(id=17, position=tibia_pos, playtime=pt),
-            drqp_interfaces.msg.PositionCommand(id=7, position=coxa_pos, playtime=pt),
-            drqp_interfaces.msg.PositionCommand(id=9, position=femur_pos, playtime=pt),
-            drqp_interfaces.msg.PositionCommand(id=11, position=tibia_pos, playtime=pt),
-            drqp_interfaces.msg.PositionCommand(id=2, position=coxa_pos_right, playtime=pt),
-            drqp_interfaces.msg.PositionCommand(id=4, position=femur_pos_right, playtime=pt),
-            drqp_interfaces.msg.PositionCommand(id=6, position=tibia_pos_right, playtime=pt),
-            drqp_interfaces.msg.PositionCommand(id=14, position=coxa_pos_right, playtime=pt),
-            drqp_interfaces.msg.PositionCommand(id=16, position=femur_pos_right, playtime=pt),
-            drqp_interfaces.msg.PositionCommand(id=18, position=tibia_pos_right, playtime=pt),
-            drqp_interfaces.msg.PositionCommand(id=8, position=coxa_pos_right, playtime=pt),
-            drqp_interfaces.msg.PositionCommand(id=10, position=femur_pos_right, playtime=pt),
-            drqp_interfaces.msg.PositionCommand(id=12, position=tibia_pos_right, playtime=pt),
+            ServoPositionGoal(id=1, position=coxa_pos, playtime=playtime),
+            ServoPositionGoal(id=3, position=femur_pos, playtime=playtime),
+            ServoPositionGoal(id=5, position=tibia_pos, playtime=playtime),
+            ServoPositionGoal(id=13, position=coxa_pos, playtime=playtime),
+            ServoPositionGoal(id=15, position=femur_pos, playtime=playtime),
+            ServoPositionGoal(id=17, position=tibia_pos, playtime=playtime),
+            ServoPositionGoal(id=7, position=coxa_pos, playtime=playtime),
+            ServoPositionGoal(id=9, position=femur_pos, playtime=playtime),
+            ServoPositionGoal(id=11, position=tibia_pos, playtime=playtime),
+            ServoPositionGoal(id=2, position=coxa_pos_right, playtime=playtime),
+            ServoPositionGoal(id=4, position=femur_pos_right, playtime=playtime),
+            ServoPositionGoal(id=6, position=tibia_pos_right, playtime=playtime),
+            ServoPositionGoal(id=14, position=coxa_pos_right, playtime=playtime),
+            ServoPositionGoal(id=16, position=femur_pos_right, playtime=playtime),
+            ServoPositionGoal(id=18, position=tibia_pos_right, playtime=playtime),
+            ServoPositionGoal(id=8, position=coxa_pos_right, playtime=playtime),
+            ServoPositionGoal(id=10, position=femur_pos_right, playtime=playtime),
+            ServoPositionGoal(id=12, position=tibia_pos_right, playtime=playtime),
         ]
-        self.pose_publisher.publish(msg)
+        self.servo_goals_publisher.publish(msg)
 
     def broadcast_tf(self, frame):
         x, y, z, pose_name = frame

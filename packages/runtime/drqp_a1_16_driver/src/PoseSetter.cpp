@@ -47,7 +47,7 @@ public:
     servoSerial_->begin(get_parameter("baud_rate").as_int());
 
     multiServoPositionGoalSubscription_ = create_subscription<drqp_interfaces::msg::MultiServoPositionGoal>(
-      "servo_goals", 10, [this](const drqp_interfaces::msg::MultiServoPositionGoal& msg) {
+      "/servo_goals", 10, [this](const drqp_interfaces::msg::MultiServoPositionGoal& msg) {
         try {
           if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_SYNC) {
             handleSyncPose(msg);
