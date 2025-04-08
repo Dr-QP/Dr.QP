@@ -16,30 +16,17 @@ dependencies:
   - colcon-common-extensions
   - catkin_tools
   - rosdep
-  - numpy
-  - scipy
-  - matplotlib
-  - ipympl
-  - jupyter
   - pip:
      - -r ./requirements.txt
-    #  - colcon-common-extensions
-    #  - colcon-coveragepy-result
-    #  - colcon-lcov-result
-    #  - colcon-mixin
-    #  - coverage
-    #  - flake8
-    #  - flake8-blind-except
-    #  - flake8-class-newline
-    #  - flake8-deprecated
-    #  - mypy
-    #  - pytest
-    #  - pytest-cov
-    #  - pytest-mock
-    #  - pytest-repeat
-    #  - pytest-rerunfailures
-    #  - pytest-runner
-    #  - pytest-timeout
-    #  - rosdep
-    #  - setuptools
-    #  - vcstool
+
+  # rosdep pre-install
+  - ros-jazzy-joint-state-publisher
+  - ros-jazzy-joint-state-publisher-gui
+  - ros-jazzy-xacro
+  - ros-jazzy-ros2-control
+  - ros-jazzy-ros2-controllers
+  - ros-jazzy-ament-cmake-clang-format
+  - ros-jazzy-ros-gz-sim
+  - ros-jazzy-gz-ros2-control
+  - libboost-python-devel
+  # - ros-jazzy-catch-ros2 # not available
