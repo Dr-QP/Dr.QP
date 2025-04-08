@@ -26,16 +26,12 @@
 #include <chrono>
 #include <cstdint>
 #include <exception>
-#include <functional>
 #include <memory>
 #include <string>
 
 #include <rclcpp/rclcpp.hpp>
 
-#include <drqp_interfaces/msg/async_position_command.hpp>
-#include <drqp_interfaces/msg/multi_async_position_command.hpp>
-#include <drqp_interfaces/msg/sync_position_command.hpp>
-#include <drqp_interfaces/msg/multi_sync_position_command.hpp>
+#include <drqp_interfaces/msg/multi_servo_position_goal.hpp>
 
 using namespace std::chrono_literals;
 
@@ -50,13 +46,14 @@ public:
     declare_parameter("last_id", 18);
     declare_parameter("period_ms", 500);
 
-    publisher_ = this->create_publisher<drqp_interfaces::msg::MultiSyncPositionCommand>("pose", 10);
+    publisher_ = this->create_publisher<drqp_interfaces::msg::MultiServoPositionGoal>("servo_goals", 10);
 
     auto timerPeriod = std::chrono::milliseconds(get_parameter("period_ms").as_int());
-    timer_ = this->create_wall_timer(timerPeriod, [this, timerPeriod]() {
+    timer_ = this->create_wall_timer(timerPeriod, [this]() {
       try {
-        auto pose = drqp_interfaces::msg::MultiSyncPositionCommand{};
-        pose.playtime = toPlaytime(timerPeriod);
+        auto servoGoals = drqp_interfaces::msg::MultiServoPositionGoal{};
+        servoGoals.mode = drqp_interfaces::msg::MultiServoPositionGoal::MODE_SYNC;
+
         std::unique_ptr<SerialProtocol> servoSerial;
         servoSerial = makeSerialForDevice(get_parameter("device_address").as_string());
         servoSerial->begin(get_parameter("baud_rate").as_int());
@@ -71,12 +68,13 @@ public:
           if (servo.isFailed()) {
             continue;
           }
-          drqp_interfaces::msg::SyncPositionCommand pos;
-          pos.id = servoId;
-          pos.position = status.position;
-          pose.positions.push_back(pos);
+          auto goal = drqp_interfaces::msg::ServoPositionGoal{};
+          goal.id = servoId;
+          goal.position = status.position;
+
+          servoGoals.goals.emplace_back(std::move(goal));
         }
-        publisher_->publish(pose);
+        publisher_->publish(servoGoals);
       } catch (std::exception& e) {
         RCLCPP_ERROR(get_logger(), "Exception occurred in pose read handler %s", e.what());
       } catch (...) {
@@ -86,7 +84,7 @@ public:
   }
 
   rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Publisher<drqp_interfaces::msg::MultiSyncPositionCommand>::SharedPtr publisher_;
+  rclcpp::Publisher<drqp_interfaces::msg::MultiServoPositionGoal>::SharedPtr publisher_;
 };
 
 int main(int argc, char* argv[])

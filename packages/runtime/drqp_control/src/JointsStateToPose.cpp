@@ -25,21 +25,21 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 
-#include <drqp_interfaces/msg/multi_sync_position_command.hpp>
-#include <drqp_interfaces/msg/multi_async_position_command.hpp>
+#include <drqp_interfaces/msg/multi_servo_position_goal.hpp>
 
 class JointsStateToPoseNode : public rclcpp::Node
 {
 public:
   JointsStateToPoseNode() : Node("drqp_joint_state_to_pose")
   {
-    multiAsyncPosePublisher_ =
-      this->create_publisher<drqp_interfaces::msg::MultiAsyncPositionCommand>("pose_async", 10);
+    servoGoalsPublisher_ =
+      this->create_publisher<drqp_interfaces::msg::MultiServoPositionGoal>("servo_goals", 10);
 
     jointStateSubscription_ = this->create_subscription<sensor_msgs::msg::JointState>(
       "joint_states", 10, [this](const sensor_msgs::msg::JointState& msg) {
         try {
-          drqp_interfaces::msg::MultiAsyncPositionCommand pose;
+          drqp_interfaces::msg::MultiServoPositionGoal pose;
+          pose.mode = drqp_interfaces::msg::MultiServoPositionGoal::MODE_ASYNC;
 
           for (size_t index = 0; index < msg.name.size(); ++index) {
             auto pos = msg.name.at(index);
@@ -52,14 +52,14 @@ public:
             const ServoParams params = kJointToServoId.at(pos);
             const uint16_t position = radiansToPosition(params.ratio * msg.position[index]);
 
-            drqp_interfaces::msg::AsyncPositionCommand poseCmd;
+            drqp_interfaces::msg::PositionCommand poseCmd;
             poseCmd.id = params.id;
             poseCmd.position = position;
             poseCmd.playtime = 0;
             pose.positions.emplace_back(std::move(poseCmd));
           }
 
-          multiAsyncPosePublisher_->publish(pose);
+          servoGoalsPublisher_->publish(pose);
         } catch (std::exception& e) {
           RCLCPP_ERROR(get_logger(), "Exception occurred in pose handler %s", e.what());
         } catch (...) {
@@ -69,8 +69,8 @@ public:
   }
 
 private:
-  rclcpp::Publisher<drqp_interfaces::msg::MultiAsyncPositionCommand>::SharedPtr
-    multiAsyncPosePublisher_;
+  rclcpp::Publisher<drqp_interfaces::msg::MultiPositionCommand>::SharedPtr
+    servoGoalsPublisher_;
 
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr jointStateSubscription_;
 };
