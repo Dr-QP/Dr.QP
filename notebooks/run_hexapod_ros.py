@@ -165,7 +165,9 @@ class HexapodController(rclpy.node.Node):
         left_x = joy.axes[ButtonAxis.LeftX.value]
         left_y = joy.axes[ButtonAxis.LeftY.value]
         right_x = joy.axes[ButtonAxis.RightX.value]
-        left_trigger = np.interp(joy.axes[ButtonAxis.TriggerLeft.value], [-1, 1], [1, 0])
+
+        # On some platforms default value for trigger is -1 (robobook with ubuntu 24.04) but on raspi with ubutnu 24.04 it is 0
+        left_trigger = np.interp(joy.axes[ButtonAxis.TriggerLeft.value], [-1, 0], [1, 0])
         self.direction = Point3D([left_y, left_x, left_trigger])
         self.walk_speed = abs(left_x) + abs(left_y) + abs(left_trigger)
         self.rotation_speed = right_x
