@@ -41,23 +41,24 @@ public:
     jointStatesPublisher_ =
       this->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
 
-    multiServoPositionGoalSubscription_ = this->create_subscription<drqp_interfaces::msg::MultiServoPositionGoal>(
-      "/servo_goals", 10, [this](const drqp_interfaces::msg::MultiServoPositionGoal& msg) {
-        try {
-          sensor_msgs::msg::JointState jointState;
-          jointState.header.stamp = this->get_clock()->now();
+    multiServoPositionGoalSubscription_ =
+      this->create_subscription<drqp_interfaces::msg::MultiServoPositionGoal>(
+        "/servo_goals", 10, [this](const drqp_interfaces::msg::MultiServoPositionGoal& msg) {
+          try {
+            sensor_msgs::msg::JointState jointState;
+            jointState.header.stamp = this->get_clock()->now();
 
-          for (const auto& posGoal : msg.goals) {
-            addJointServo(jointState, posGoal.id, posGoal.position);
+            for (const auto& posGoal : msg.goals) {
+              addJointServo(jointState, posGoal.id, posGoal.position);
+            }
+
+            jointStatesPublisher_->publish(jointState);
+          } catch (std::exception& e) {
+            RCLCPP_ERROR(get_logger(), "Exception occurred in pose handler %s", e.what());
+          } catch (...) {
+            RCLCPP_ERROR(get_logger(), "Unknown exception occurred in pose handler.");
           }
-
-          jointStatesPublisher_->publish(jointState);
-        } catch (std::exception& e) {
-          RCLCPP_ERROR(get_logger(), "Exception occurred in pose handler %s", e.what());
-        } catch (...) {
-          RCLCPP_ERROR(get_logger(), "Unknown exception occurred in pose handler.");
-        }
-      });
+        });
   }
 
 private:

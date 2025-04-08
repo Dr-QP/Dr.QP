@@ -46,7 +46,8 @@ public:
     declare_parameter("last_id", 18);
     declare_parameter("period_ms", 500);
 
-    publisher_ = this->create_publisher<drqp_interfaces::msg::MultiServoPositionGoal>("/servo_goals", 10);
+    publisher_ =
+      this->create_publisher<drqp_interfaces::msg::MultiServoPositionGoal>("/servo_goals", 10);
 
     auto timerPeriod = std::chrono::milliseconds(get_parameter("period_ms").as_int());
     timer_ = this->create_wall_timer(timerPeriod, [this]() {

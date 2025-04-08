@@ -46,22 +46,23 @@ public:
     servoSerial_ = makeSerialForDevice(get_parameter("device_address").as_string());
     servoSerial_->begin(get_parameter("baud_rate").as_int());
 
-    multiServoPositionGoalSubscription_ = create_subscription<drqp_interfaces::msg::MultiServoPositionGoal>(
-      "/servo_goals", 10, [this](const drqp_interfaces::msg::MultiServoPositionGoal& msg) {
-        try {
-          if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_SYNC) {
-            handleSyncPose(msg);
-          } else if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_ASYNC) {
-            handleAsyncPose(msg);
-          } else {
-            RCLCPP_ERROR(get_logger(), "Unknown pose mode %i", msg.mode);
+    multiServoPositionGoalSubscription_ =
+      create_subscription<drqp_interfaces::msg::MultiServoPositionGoal>(
+        "/servo_goals", 10, [this](const drqp_interfaces::msg::MultiServoPositionGoal& msg) {
+          try {
+            if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_SYNC) {
+              handleSyncPose(msg);
+            } else if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_ASYNC) {
+              handleAsyncPose(msg);
+            } else {
+              RCLCPP_ERROR(get_logger(), "Unknown pose mode %i", msg.mode);
+            }
+          } catch (std::exception& e) {
+            RCLCPP_ERROR(get_logger(), "Exception occurred in servo_goals handler %s", e.what());
+          } catch (...) {
+            RCLCPP_ERROR(get_logger(), "Unknown exception occurred in servo_goals handler.");
           }
-        } catch (std::exception& e) {
-          RCLCPP_ERROR(get_logger(), "Exception occurred in servo_goals handler %s", e.what());
-        } catch (...) {
-          RCLCPP_ERROR(get_logger(), "Unknown exception occurred in servo_goals handler.");
-        }
-      });
+        });
   }
 
   void handleSyncPose(const drqp_interfaces::msg::MultiServoPositionGoal& msg)
@@ -88,7 +89,7 @@ public:
 
     DynamicIJogCommand iposCmd(msg.goals.size());
     for (const auto& pos : msg.goals) {
-      iposCmd.at(pos.id) = {pos.position, SET_POSITION_CONTROL, pos.id, pos.playtime}; // IJogData
+      iposCmd.at(pos.id) = {pos.position, SET_POSITION_CONTROL, pos.id, pos.playtime};  // IJogData
     }
 
     servo.sendJogCommand(iposCmd);
