@@ -54,6 +54,10 @@
       "elagil.pre-commit-helper",
       "ranch-hand-robotics.rde-ros-2",
       "ranch-hand-robotics.urdf-editor",
+      "ms-toolsai.jupyter",
+      "ms-toolsai.vscode-jupyter-cell-tags",
+      "dotjoshjohnson.xml",
+      "ms-vscode.cpptools", // MS C++ extension is needed for ROS extension to activate
     ]
   },
   "launch": {
