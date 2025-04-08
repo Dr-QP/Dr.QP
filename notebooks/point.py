@@ -178,6 +178,8 @@ class Point3D:
         return self._array
 
     def normalized(self):
+        if np.allclose(self._array, 0):
+            return self
         return self / np.linalg.norm(self._array)
 
     def interpolate(self, other, alpha):
