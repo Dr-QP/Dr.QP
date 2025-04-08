@@ -70,8 +70,7 @@ public:
   }
 
 private:
-  rclcpp::Publisher<drqp_interfaces::msg::MultiServoPositionGoal>::SharedPtr
-    servoGoalsPublisher_;
+  rclcpp::Publisher<drqp_interfaces::msg::MultiServoPositionGoal>::SharedPtr servoGoalsPublisher_;
 
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr jointStateSubscription_;
 };
