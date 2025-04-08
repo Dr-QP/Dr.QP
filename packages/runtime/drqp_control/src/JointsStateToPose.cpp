@@ -21,6 +21,7 @@
 #include <exception>
 
 #include "drqp_control/JointServoMappings.h"
+#include "drqp_interfaces/msg/servo_position_goal.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
@@ -52,11 +53,11 @@ public:
             const ServoParams params = kJointToServoId.at(pos);
             const uint16_t position = radiansToPosition(params.ratio * msg.position[index]);
 
-            drqp_interfaces::msg::PositionCommand poseCmd;
-            poseCmd.id = params.id;
-            poseCmd.position = position;
-            poseCmd.playtime = 0;
-            pose.positions.emplace_back(std::move(poseCmd));
+            drqp_interfaces::msg::ServoPositionGoal goalCmd;
+            goalCmd.id = params.id;
+            goalCmd.position = position;
+            goalCmd.playtime = 0;
+            pose.goals.emplace_back(std::move(goalCmd));
           }
 
           servoGoalsPublisher_->publish(pose);
@@ -69,7 +70,7 @@ public:
   }
 
 private:
-  rclcpp::Publisher<drqp_interfaces::msg::MultiPositionCommand>::SharedPtr
+  rclcpp::Publisher<drqp_interfaces::msg::MultiServoPositionGoal>::SharedPtr
     servoGoalsPublisher_;
 
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr jointStateSubscription_;

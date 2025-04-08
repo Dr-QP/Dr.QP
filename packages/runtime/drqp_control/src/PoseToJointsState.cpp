@@ -31,7 +31,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 
-#include <drqp_interfaces/msg/multi_position_command.hpp>
+#include <drqp_interfaces/msg/multi_servo_position_goal.hpp>
 
 class PoseToJointState : public rclcpp::Node
 {
@@ -41,16 +41,14 @@ public:
     jointStatesPublisher_ =
       this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
 
-    multiPoseSubscription_ = this->create_subscription<drqp_interfaces::msg::MultiPositionCommand>(
-      "pose", 10, [this](const drqp_interfaces::msg::MultiPositionCommand& msg) {
+    multiServoPositionGoalSubscription_ = this->create_subscription<drqp_interfaces::msg::MultiServoPositionGoal>(
+      "pose", 10, [this](const drqp_interfaces::msg::MultiServoPositionGoal& msg) {
         try {
           sensor_msgs::msg::JointState jointState;
           jointState.header.stamp = this->get_clock()->now();
 
-          for (size_t index = 0; index < msg.positions.size(); ++index) {
-            auto pos = msg.positions.at(index);
-
-            addJointServo(jointState, pos.id, pos.position);
+          for (const auto& posGoal : msg.goals) {
+            addJointServo(jointState, posGoal.id, posGoal.position);
           }
 
           jointStatesPublisher_->publish(jointState);
@@ -77,8 +75,8 @@ private:
     jointState.position.push_back(positionInRadians);
   }
 
-  rclcpp::Subscription<drqp_interfaces::msg::MultiPositionCommand>::SharedPtr
-    multiPoseSubscription_;
+  rclcpp::Subscription<drqp_interfaces::msg::MultiServoPositionGoal>::SharedPtr
+    multiServoPositionGoalSubscription_;
 
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr jointStatesPublisher_;
 };
