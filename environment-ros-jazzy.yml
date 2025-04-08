@@ -22,7 +22,7 @@ dependencies:
      - -r ./docs/requirements.txt
      - esbonio # reStructuredText language server for preview
 
-  # - hidapi=0.12.0 # for pydualsense
+  # - hidapi # for pydualsense, is not available for arm64 (apple silicon)
 
   # rosdep pre-install
   - ros-jazzy-joint-state-publisher

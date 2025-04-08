@@ -264,6 +264,12 @@
 
     "ros.distro": "jazzy",
     "ament-task-provider.envSetup": "source /opt/ros/jazzy/setup.bash",
+
+    // Draft for .micromamba ros-jazzy, but still doesn't work
+    // "ros2.rosRootDir": ".micromamba/envs/ros-jazzy/",
+    // "ros.rosSetupScript": ".micromamba/envs/ros-jazzy/setup.bash",
+    // "RDE.rosSetupScript": ".micromamba/envs/ros-jazzy/setup.bash",
+    // "ament-task-provider.envSetup": "source .micromamba/envs/ros-jazzy/setup.bash",
     "python.autoComplete.extraPaths": [
       "/opt/ros/jazzy/lib/python3.12/site-packages",
       "/opt/ros/jazzy/local/lib/python3.12/dist-packages"

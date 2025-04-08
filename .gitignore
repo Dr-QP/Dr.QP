@@ -3,6 +3,7 @@ build/
 install/
 log/
 lcov/
+packages/vendor/
 
 build.vscode/
 bin/
