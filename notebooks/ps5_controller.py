@@ -30,30 +30,37 @@ class Controls:
         self.rotation_speed = 0
 
 
+joystick = None
+inputs = Controls()
 pygame.init()
 pygame.joystick.init()
-joystick_count = pygame.joystick.get_count()
-
-joystick = None
-if joystick_count > 0:
-    joystick = pygame.joystick.Joystick(0)  # Create a joystick object for the first joystick
-    joystick.init()  # Initialize the joystick
-    print('Joystick connected:', joystick.get_name())
-    print('Number of axes:', joystick.get_numaxes())
-    print('Number of buttons:', joystick.get_numbuttons())
-
-else:
-    print('No joystick connected')
-
-
-inputs = Controls()
 
 
 def map_float(value, in_min, in_max, out_min, out_max):
     return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
 
+def get_joystick():
+    global joystick
+    if joystick is None:
+        joystick_count = pygame.joystick.get_count()
+        if joystick_count > 0:
+            joystick = pygame.joystick.Joystick(
+                0
+            )  # Create a joystick object for the first joystick
+            joystick.init()  # Initialize the joystick
+            print('Joystick connected:', joystick.get_name())
+            print('Number of axes:', joystick.get_numaxes())
+            print('Number of buttons:', joystick.get_numbuttons())
+
+        else:
+            # App completely hangs if joystick is connected mid session. So end it early
+            raise Exception('No joystick connected')
+    return joystick
+
+
 def get_controls():
+    joystick = get_joystick()
     if joystick is None:
         return inputs
 
@@ -81,5 +88,6 @@ def get_controls():
 
 
 def close():
-    if joystick_count > 0:
+    global joystick
+    if joystick is not None:
         joystick.quit()
