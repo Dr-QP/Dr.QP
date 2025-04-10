@@ -47,12 +47,12 @@ def get_joystick():
                 0
             )  # Create a joystick object for the first joystick
             joystick.init()  # Initialize the joystick
-            logging.info('Joystick connected:', joystick.get_name())
-            logging.info('Number of axes:', joystick.get_numaxes())
-            logging.info('Number of buttons:', joystick.get_numbuttons())
-
+            logging.info(f'Joystick connected: {joystick.get_name()}')
+            logging.info(f'Number of axes: {joystick.get_numaxes()}')
+            logging.info(f'Number of buttons: {joystick.get_numbuttons()}')
         else:
             # App completely hangs if joystick is connected mid session. So end it early
+            logging.error('No joystick connected')
             raise Exception('No joystick connected')
     return joystick
 
