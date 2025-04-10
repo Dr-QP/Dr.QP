@@ -20,7 +20,8 @@
 
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -28,6 +29,8 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
+    load_drivers = LaunchConfiguration('load_drivers')
+
     description_launch_path = get_package_share_path('drqp_description') / 'launch'
 
     return LaunchDescription(
@@ -38,9 +41,22 @@ def generate_launch_description():
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(str(description_launch_path / 'rviz.launch.py'))
             ),
+            DeclareLaunchArgument(
+                name='load_drivers',
+                default_value='true',
+                choices=['true', 'false'],
+                description='Load drqp_a1_16_driver pose_setter',
+            ),
+            Node(
+                package='drqp_a1_16_driver',
+                executable='pose_setter',
+                output='screen',
+                parameters=[{'use_sim_time': use_sim_time}],
+                condition=IfCondition(load_drivers),
+            ),
             Node(
                 package='joy',
-                executable='joy_node',
+                executable='game_controller_node',
                 output='screen',
                 parameters=[{'use_sim_time': use_sim_time}],
             ),

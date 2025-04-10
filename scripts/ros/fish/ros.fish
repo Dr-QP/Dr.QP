@@ -40,8 +40,21 @@ function find_up
 end
 
 function ros2_activate
-  bass source /opt/ros/jazzy/setup.bash
-  register_argcomplete
+  if test -f /opt/ros/jazzy/setup.bash
+    echo "Found ros-jazzy in /opt/ros"
+    bass source /opt/ros/jazzy/setup.bash
+    register_argcomplete
+    return 0
+  end
+
+  set -l ws (find_up .micromamba)
+  if test -f "$ws/.micromamba/envs/ros-jazzy/setup.bash"
+    echo "Found ros-jazzy in .micromamba"
+    bass source "$ws/.micromamba/envs/ros-jazzy/setup.bash"
+    register_argcomplete
+    return 0
+  end
+  echo "ROS2 not installed"
 end
 
 function ros2_ws

@@ -14,7 +14,6 @@
       "jithurjacob.nbpreviewer",
       "llvm-vs-code-extensions.vscode-clangd",
       "mhutchie.git-graph",
-      "ms-iot.vscode-ros",
       "ms-python.debugpy",
       "ms-python.python",
       "ms-python.vscode-pylance",
@@ -27,7 +26,6 @@
       "redhat.vscode-xml",
       "redhat.vscode-yaml",
       "rpinski.shebang-snippets",
-      "smilerobotics.urdf",
       "yy0931.save-as-root",
       "althack.ament-task-provider",
       "nonanonno.vscode-ros2",
@@ -54,6 +52,12 @@
       "tamasfe.even-better-toml",
       "davidanson.vscode-markdownlint",
       "elagil.pre-commit-helper",
+      "ranch-hand-robotics.rde-ros-2",
+      "ranch-hand-robotics.urdf-editor",
+      "ms-toolsai.jupyter",
+      "ms-toolsai.vscode-jupyter-cell-tags",
+      "dotjoshjohnson.xml",
+      "ms-vscode.cpptools", // MS C++ extension is needed for ROS extension to activate
     ]
   },
   "launch": {
@@ -260,6 +264,12 @@
 
     "ros.distro": "jazzy",
     "ament-task-provider.envSetup": "source /opt/ros/jazzy/setup.bash",
+
+    // Draft for .micromamba ros-jazzy, but still doesn't work
+    // "ros2.rosRootDir": ".micromamba/envs/ros-jazzy/",
+    // "ros.rosSetupScript": ".micromamba/envs/ros-jazzy/setup.bash",
+    // "RDE.rosSetupScript": ".micromamba/envs/ros-jazzy/setup.bash",
+    // "ament-task-provider.envSetup": "source .micromamba/envs/ros-jazzy/setup.bash",
     "python.autoComplete.extraPaths": [
       "/opt/ros/jazzy/lib/python3.12/site-packages",
       "/opt/ros/jazzy/local/lib/python3.12/dist-packages"

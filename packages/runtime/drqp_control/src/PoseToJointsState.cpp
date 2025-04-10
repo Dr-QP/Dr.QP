@@ -31,56 +31,32 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 
-#include <drqp_interfaces/msg/multi_sync_position_command.hpp>
-#include <drqp_interfaces/msg/multi_async_position_command.hpp>
+#include <drqp_interfaces/msg/multi_servo_position_goal.hpp>
 
 class PoseToJointState : public rclcpp::Node
 {
 public:
   PoseToJointState() : Node("drqp_pose_to_joint_state")
   {
-    joint_states_publisher_ =
-      this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
+    jointStatesPublisher_ =
+      this->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
 
-    multiSyncPoseSubscription_ =
-      this->create_subscription<drqp_interfaces::msg::MultiSyncPositionCommand>(
-        "pose", 10, [this](const drqp_interfaces::msg::MultiSyncPositionCommand& msg) {
+    multiServoPositionGoalSubscription_ =
+      this->create_subscription<drqp_interfaces::msg::MultiServoPositionGoal>(
+        "/servo_goals", 10, [this](const drqp_interfaces::msg::MultiServoPositionGoal& msg) {
           try {
             sensor_msgs::msg::JointState jointState;
             jointState.header.stamp = this->get_clock()->now();
 
-            for (size_t index = 0; index < msg.positions.size(); ++index) {
-              auto pos = msg.positions.at(index);
-
-              addJointServo(jointState, pos.id, pos.position);
+            for (const auto& posGoal : msg.goals) {
+              addJointServo(jointState, posGoal.id, posGoal.position);
             }
 
-            joint_states_publisher_->publish(jointState);
+            jointStatesPublisher_->publish(jointState);
           } catch (std::exception& e) {
             RCLCPP_ERROR(get_logger(), "Exception occurred in pose handler %s", e.what());
           } catch (...) {
             RCLCPP_ERROR(get_logger(), "Unknown exception occurred in pose handler.");
-          }
-        });
-
-    multiAsyncPoseSubscription_ =
-      create_subscription<drqp_interfaces::msg::MultiAsyncPositionCommand>(
-        "pose_async", 10, [this](const drqp_interfaces::msg::MultiAsyncPositionCommand& msg) {
-          try {
-            sensor_msgs::msg::JointState jointState;
-            jointState.header.stamp = this->get_clock()->now();
-
-            for (size_t index = 0; index < msg.positions.size(); ++index) {
-              auto pos = msg.positions.at(index);
-
-              addJointServo(jointState, pos.id, pos.position);
-            }
-
-            joint_states_publisher_->publish(jointState);
-          } catch (std::exception& e) {
-            RCLCPP_ERROR(get_logger(), "Exception occurred in pose_async handler %s", e.what());
-          } catch (...) {
-            RCLCPP_ERROR(get_logger(), "Unknown exception occurred in pose_async handler.");
           }
         });
   }
@@ -100,13 +76,10 @@ private:
     jointState.position.push_back(positionInRadians);
   }
 
-  rclcpp::Subscription<drqp_interfaces::msg::MultiSyncPositionCommand>::SharedPtr
-    multiSyncPoseSubscription_;
+  rclcpp::Subscription<drqp_interfaces::msg::MultiServoPositionGoal>::SharedPtr
+    multiServoPositionGoalSubscription_;
 
-  rclcpp::Subscription<drqp_interfaces::msg::MultiAsyncPositionCommand>::SharedPtr
-    multiAsyncPoseSubscription_;
-
-  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_states_publisher_;
+  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr jointStatesPublisher_;
 };
 
 int main(int argc, char* argv[])

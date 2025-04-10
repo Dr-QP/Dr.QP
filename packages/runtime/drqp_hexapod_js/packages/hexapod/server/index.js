@@ -61,7 +61,7 @@ class Servo {
 async function setupRosNode() {
     await rclnodejs.init();
     const node = new rclnodejs.Node('hexa_kinematics');
-    const publisher = node.createPublisher('drqp_interfaces/msg/MultiAsyncPositionCommand', 'pose_async');
+    const publisher = node.createPublisher('drqp_interfaces/msg/MultiServoPositionGoal', 'servo_goals');
 
     node.spin();
 
@@ -113,10 +113,10 @@ async function setupRobot()
         }
         // console.log("setting pose: ", pose)
 
-        let poseAsyncMsg = rclnodejs.createMessageObject('drqp_interfaces/msg/MultiAsyncPositionCommand');
+        let poseAsyncMsg = rclnodejs.createMessageObject('drqp_interfaces/msg/MultiServoPositionGoal');
 
         for (let servo of servos) {
-            poseAsyncMsg.positions.push({
+            poseAsyncMsg.goals.push({
                 id: servo.id,
                 position: servo.position,
                 playtime: 5,

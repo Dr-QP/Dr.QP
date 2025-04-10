@@ -16,10 +16,8 @@ foreach(dep ${${PROJECT_NAME}_BUILD_DEPENDS} ${${PROJECT_NAME}_BUILDTOOL_DEPENDS
 endforeach()
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  msg/AsyncPositionCommand.msg
-  msg/MultiAsyncPositionCommand.msg
-  msg/MultiSyncPositionCommand.msg
-  msg/SyncPositionCommand.msg
+  msg/ServoPositionGoal.msg
+  msg/MultiServoPositionGoal.msg
 )
 
 if(BUILD_TESTING)

@@ -17,44 +17,72 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+import logging
 
-# https://pypi.org/project/pydualsense/ for additional libs install
-#
-# macOS
-# brew install hidapi
-#
-# linux:
-# # sudo apt install libhidapi-dev
 import numpy as np
 from point import Point3D
-from pydualsense import pydualsense
-
-ds = pydualsense()  # open controller
-ds.init()  # initialize controller
-
-ds.light.setColorI(0, 0, 0)
+import pygame
 
 
 class Controls:
     def __init__(self):
-        self.direction = Point3D([0, 0, 0])
-        self.rotation = 0
+        self.direction = Point3D([0.0, 0.0, 0.0])
+
         self.walk_speed = 0
         self.rotation_speed = 0
 
 
+joystick = None
+inputs = Controls()
+pygame.init()
+pygame.joystick.init()
+
+
+def get_joystick():
+    global joystick
+    if joystick is None:
+        joystick_count = pygame.joystick.get_count()
+        if joystick_count > 0:
+            joystick = pygame.joystick.Joystick(
+                0
+            )  # Create a joystick object for the first joystick
+            joystick.init()  # Initialize the joystick
+            logging.info(f'Joystick connected: {joystick.get_name()}')
+            logging.info(f'Number of axes: {joystick.get_numaxes()}')
+            logging.info(f'Number of buttons: {joystick.get_numbuttons()}')
+        else:
+            # App completely hangs if joystick is connected mid session. So end it early
+            logging.error('No joystick connected')
+            raise RuntimeError('No joystick connected')
+    return joystick
+
+
 def get_controls():
-    inputs = Controls()
-    stick_rang = [-128, 128]
-    direction_y = np.interp(ds.state.LX, stick_rang, [1, -1])
-    direction_x = np.interp(ds.state.LY, stick_rang, [1, -1])
+    joystick = get_joystick()
+    if joystick is None:
+        return inputs
 
-    inputs.direction = Point3D([direction_x, direction_y, 0])
-    inputs.walk_speed = abs(direction_x) + abs(direction_y)
-    inputs.rotation_speed = np.interp(ds.state.RX, stick_rang, [1, -1])
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            return inputs
 
+        if event.type == pygame.JOYAXISMOTION:
+            if event.axis == 1:
+                inputs.direction.x = -event.value
+            elif event.axis == 0:
+                inputs.direction.y = -event.value
+            elif event.axis == 2:
+                inputs.rotation_speed = -event.value
+            elif event.axis == 4:
+                inputs.direction.z = np.interp(event.value, [-1, 1], [0, 1])
+
+            inputs.walk_speed = (
+                abs(inputs.direction.x) + abs(inputs.direction.y) + abs(inputs.direction.z)
+            )
     return inputs
 
 
 def close():
-    ds.close()  # closing the controller
+    global joystick
+    if joystick is not None:
+        joystick.quit()

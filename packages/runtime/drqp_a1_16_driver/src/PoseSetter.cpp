@@ -30,10 +30,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include <drqp_interfaces/msg/async_position_command.hpp>
-#include <drqp_interfaces/msg/multi_async_position_command.hpp>
-#include <drqp_interfaces/msg/sync_position_command.hpp>
-#include <drqp_interfaces/msg/multi_sync_position_command.hpp>
+#include <drqp_interfaces/msg/multi_servo_position_goal.hpp>
 #include <rclcpp/subscription_base.hpp>
 
 using namespace std::chrono_literals;
@@ -49,57 +46,59 @@ public:
     servoSerial_ = makeSerialForDevice(get_parameter("device_address").as_string());
     servoSerial_->begin(get_parameter("baud_rate").as_int());
 
-    multiSyncPoseSubscription_ =
-      this->create_subscription<drqp_interfaces::msg::MultiSyncPositionCommand>(
-        "pose", 10, [this](const drqp_interfaces::msg::MultiSyncPositionCommand& msg) {
+    multiServoPositionGoalSubscription_ =
+      create_subscription<drqp_interfaces::msg::MultiServoPositionGoal>(
+        "/servo_goals", 10, [this](const drqp_interfaces::msg::MultiServoPositionGoal& msg) {
           try {
-            XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
-
-            DynamicSJogCommand sposCmd(msg.positions.size());
-            sposCmd.setPlaytime(msg.playtime);
-            for (size_t index = 0; index < msg.positions.size(); ++index) {
-              auto pos = msg.positions.at(index);
-              SJogData data{pos.position, SET_POSITION_CONTROL, pos.id};
-              sposCmd.at(index) = data;
+            if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_SYNC) {
+              handleSyncPose(msg);
+            } else if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_ASYNC) {
+              handleAsyncPose(msg);
+            } else {
+              RCLCPP_ERROR(get_logger(), "Unknown pose mode %i", msg.mode);
             }
-
-            servo.sendJogCommand(sposCmd);
           } catch (std::exception& e) {
-            RCLCPP_ERROR(get_logger(), "Exception occurred in pose_sync handler %s", e.what());
+            RCLCPP_ERROR(get_logger(), "Exception occurred in servo_goals handler %s", e.what());
           } catch (...) {
-            RCLCPP_ERROR(get_logger(), "Unknown exception occurred in pose_sync handler.");
-          }
-        });
-
-    multiAsyncPoseSubscription_ =
-      create_subscription<drqp_interfaces::msg::MultiAsyncPositionCommand>(
-        "pose_async", 10, [this](const drqp_interfaces::msg::MultiAsyncPositionCommand& msg) {
-          try {
-            auto pose = drqp_interfaces::msg::MultiSyncPositionCommand{};
-
-            XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
-
-            DynamicIJogCommand iposCmd(msg.positions.size());
-            for (size_t index = 0; index < msg.positions.size(); ++index) {
-              auto pos = msg.positions.at(index);
-              IJogData data{pos.position, SET_POSITION_CONTROL, pos.id, pos.playtime};
-              iposCmd.at(index) = data;
-            }
-
-            servo.sendJogCommand(iposCmd);
-          } catch (std::exception& e) {
-            RCLCPP_ERROR(get_logger(), "Exception occurred in pose_async handler %s", e.what());
-          } catch (...) {
-            RCLCPP_ERROR(get_logger(), "Unknown exception occurred in pose_async handler.");
+            RCLCPP_ERROR(get_logger(), "Unknown exception occurred in servo_goals handler.");
           }
         });
   }
 
-  rclcpp::Subscription<drqp_interfaces::msg::MultiSyncPositionCommand>::SharedPtr
-    multiSyncPoseSubscription_;
+  void handleSyncPose(const drqp_interfaces::msg::MultiServoPositionGoal& msg)
+  {
+    if (msg.goals.empty()) {
+      return;
+    }
 
-  rclcpp::Subscription<drqp_interfaces::msg::MultiAsyncPositionCommand>::SharedPtr
-    multiAsyncPoseSubscription_;
+    XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
+
+    DynamicSJogCommand sposCmd(msg.goals.size());
+    sposCmd.setPlaytime(msg.goals.at(0).playtime);
+
+    for (size_t index = 0; index < msg.goals.size(); ++index) {
+      auto pos = msg.goals.at(index);
+      sposCmd.at(index) = {pos.position, SET_POSITION_CONTROL, pos.id};
+    }
+
+    servo.sendJogCommand(sposCmd);
+  }
+
+  void handleAsyncPose(const drqp_interfaces::msg::MultiServoPositionGoal& msg)
+  {
+    XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
+
+    DynamicIJogCommand iposCmd(msg.goals.size());
+    for (size_t index = 0; index < msg.goals.size(); ++index) {
+      auto pos = msg.goals.at(index);
+      iposCmd.at(index) = {pos.position, SET_POSITION_CONTROL, pos.id, pos.playtime};
+    }
+
+    servo.sendJogCommand(iposCmd);
+  }
+
+  rclcpp::Subscription<drqp_interfaces::msg::MultiServoPositionGoal>::SharedPtr
+    multiServoPositionGoalSubscription_;
 
   std::unique_ptr<SerialProtocol> servoSerial_;
 };

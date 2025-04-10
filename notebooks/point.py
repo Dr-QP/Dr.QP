@@ -129,7 +129,7 @@ class Point3D:
 
     def __init__(self, a: np.ndarray | list[float], label: str = None):
         assert len(a) == 3
-        self._array = np.array(a)
+        self._array = np.array(a, dtype=np.float32)
         self.label = label
 
     def __repr__(self):
@@ -178,6 +178,8 @@ class Point3D:
         return self._array
 
     def normalized(self):
+        if np.allclose(self._array, 0):
+            return self
         return self / np.linalg.norm(self._array)
 
     def interpolate(self, other, alpha):
