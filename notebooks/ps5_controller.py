@@ -17,6 +17,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+import logging
+
 import numpy as np
 from point import Point3D
 import pygame
@@ -36,10 +38,6 @@ pygame.init()
 pygame.joystick.init()
 
 
-def map_float(value, in_min, in_max, out_min, out_max):
-    return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
-
-
 def get_joystick():
     global joystick
     if joystick is None:
@@ -49,9 +47,9 @@ def get_joystick():
                 0
             )  # Create a joystick object for the first joystick
             joystick.init()  # Initialize the joystick
-            print('Joystick connected:', joystick.get_name())
-            print('Number of axes:', joystick.get_numaxes())
-            print('Number of buttons:', joystick.get_numbuttons())
+            logging.info('Joystick connected:', joystick.get_name())
+            logging.info('Number of axes:', joystick.get_numaxes())
+            logging.info('Number of buttons:', joystick.get_numbuttons())
 
         else:
             # App completely hangs if joystick is connected mid session. So end it early
@@ -76,10 +74,7 @@ def get_controls():
             elif event.axis == 2:
                 inputs.rotation_speed = -event.value
             elif event.axis == 4:
-                interp = np.interp(event.value, [-1, 1], [0, 1])
-                mapped = map_float(event.value, -1, 1, 0, 1)
-                inputs.direction.z = interp
-                print(f'{event.value=}, {interp=}, {mapped=} {inputs.direction.z=}')
+                inputs.direction.z = np.interp(event.value, [-1, 1], [0, 1])
 
             inputs.walk_speed = (
                 abs(inputs.direction.x) + abs(inputs.direction.y) + abs(inputs.direction.z)
