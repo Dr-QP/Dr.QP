@@ -75,10 +75,17 @@ def main():
         )
 
         process_frame(0.001)
-    ps5_controller.close()
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('Dr.QP Robot controller')
-    args = parser.parse_args()
-    main(**vars(args))
+    try:
+        main()
+        parser = argparse.ArgumentParser('Dr.QP Robot controller')
+        args = parser.parse_args()
+        main(**vars(args))
+    except KeyboardInterrupt:
+        pass  # codeql[py/empty-except]
+    except RuntimeError as e:
+        print(e)
+    finally:
+        ps5_controller.close()

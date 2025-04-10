@@ -53,7 +53,7 @@ def get_joystick():
         else:
             # App completely hangs if joystick is connected mid session. So end it early
             logging.error('No joystick connected')
-            raise Exception('No joystick connected')
+            raise RuntimeError('No joystick connected')
     return joystick
 
 
