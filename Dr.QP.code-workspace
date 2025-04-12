@@ -142,7 +142,8 @@
     "tasks": [
       {
         "label": "Dr.QP colcon build",
-        "type": "colcon",
+        "type": "shell",
+        "command": "colcon",
         "args": [
           "build",
           "--symlink-install",
@@ -182,7 +183,8 @@
       },
       {
         "label": "Dr.QP colcon test",
-        "type": "colcon",
+        "type": "shell",
+        "command": "colcon",
         "args": [
           "test",
           "--event-handlers",
