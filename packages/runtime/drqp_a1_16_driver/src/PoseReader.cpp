@@ -65,19 +65,12 @@ public:
           auto startTime = this->get_clock()->now();
           XYZrobotServo servo(*servoSerial_, servoId);
 
-          // XYZrobotServoStatus status = servo.readStatus();
-          // if (servo.isFailed()) {
-          //   RCLCPP_ERROR(get_logger(), "Servo %i read status failed %s.", servoId, to_string(servo.getLastError()).c_str());
-          //   continue;
-          // }
           uint16_t position= 0;
           servo.ramRead(60, &position, sizeof(position));
           if (servo.isFailed()) {
             RCLCPP_ERROR(get_logger(), "Servo %i read position from ram failed %s.", servoId, to_string(servo.getLastError()).c_str());
             continue;
           }
-          // RCLCPP_INFO(get_logger(), "Servo %i ram position %i.", servoId, position);
-          // RCLCPP_INFO(get_logger(), "Servo %i status.position %i.", servoId, status.position);
           auto servoState = drqp_interfaces::msg::ServoState{};
           auto endTime = this->get_clock()->now();
 
