@@ -1,4 +1,4 @@
-uint32 read_time_ms
+uint32 read_time_microsec
 uint8 id
 uint16 position
 

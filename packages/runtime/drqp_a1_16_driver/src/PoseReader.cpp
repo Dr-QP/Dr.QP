@@ -81,14 +81,14 @@ public:
           auto servoState = drqp_interfaces::msg::ServoState{};
           auto endTime = this->get_clock()->now();
 
-          servoState.read_time_ms = (endTime - startTime).nanoseconds() / 1000;
+          servoState.read_time_microsec = (endTime - startTime).nanoseconds() / 1000;
           servoState.id = servoId;
           servoState.position = position;
 
           multiServoStates.servos.emplace_back(std::move(servoState));
         }
         auto endTime = this->get_clock()->now();
-        multiServoStates.read_time_ms = (endTime - multiServoStates.header.stamp).nanoseconds() / 1000;
+        multiServoStates.read_time_microsec = (endTime - multiServoStates.header.stamp).nanoseconds() / 1000;
         servoStatesPublisher_->publish(multiServoStates);
       } catch (std::exception& e) {
         RCLCPP_ERROR(get_logger(), "Exception occurred in pose read handler %s", e.what());
