@@ -260,28 +260,32 @@ struct SharedMemData
   uint8_t sID;
   uint8_t ACK_Policy;
   uint8_t Alarm_LED_Policy;
-  uint8_t Torque_Policy;
-  uint8_t SPDctrl_Policy;
-  uint8_t Max_Temperature;
-  uint8_t Min_Voltage;
-  uint8_t Max_Voltage;
-  uint8_t Acceleration_Ratio;
+  uint8_t Torque_Policy; // Shut down Motor when Voltage/Load/Temperature. Torque Free Control: 0, Torque Limited: 1
+  uint8_t SPDctrl_Policy; // Speed open/close loop control. Open loop: 0, Close loop: 1
+  uint8_t Max_Temperature; // The limit of A1-16 servo operating temperature. The value is in Degrees Celsius
+  uint8_t Min_Voltage; // The min value of A1-16 servo operating voltage. The value is 16 times the actual voltage
+  uint8_t Max_Voltage; // The max value of A1-16 servo operating voltage. The value is 16 times the actual voltage
+  uint8_t Acceleration_Ratio; // 0-50. Note: acceleration_time = deceleration_time = play_time * Acceleration_Ratio/100
+  // Play time | Acceleration_Ratio | Reference position trajectory
+  // 0         | 0                  | Ramp-to-step position command, see (36)
+  // 1-255     | 0                  | Constant speed profile
+  // 1-255     | 1-50               | T-curve speed profile
 
   uint8_t reserved1[3];
 
-  uint16_t Max_Wheel_Ref_Position;
+  uint16_t Max_Wheel_Ref_Position; // Start virtual position for speed close loop control.
 
   uint8_t reserved2[2];
 
-  uint16_t Max_PWM;
+  uint16_t Max_PWM; // The max value of A1-16 servo output torque
 
-  uint16_t Overload_Threshold;
-  uint16_t Min_Position;
-  uint16_t Max_Position;
-  uint16_t Position_Kp;
-  uint16_t Position_Kd;
-  uint16_t Position_Ki;
-  uint16_t Close_to_Open_Ref_Position;
+  uint16_t Overload_Threshold;  // The max value of A1-16 servo output torque
+  uint16_t Min_Position; // Min operational angle
+  uint16_t Max_Position; // Max operational angle
+  uint16_t Position_Kp; // The P control law is implemented below with a sampling time of 10 msec
+  uint16_t Position_Kd; // The PD control law is implemented below with a sampling time of 10 msec
+  uint16_t Position_Ki; // The PID control law is implemented below with a sampling time of 10 msec
+  uint16_t Close_to_Open_Ref_Position; // close loop continuous rotate mode close to open position
   uint16_t Open_to_Close_Ref_Position;
 
   uint8_t reserved3[2];
@@ -338,7 +342,7 @@ struct EEPROM_header
 {
   uint8_t Model_Number;
   uint8_t Year;
-  uint8_t Version_Month;
+  uint8_t Version_Month; // bit 0-3: month; bit 4-7: version of servo firmware
   uint8_t Day;
   uint8_t reserved1;
   uint8_t Baud_Rate;

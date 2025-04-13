@@ -350,7 +350,7 @@ TEST_CASE("A1-16 servo set dynamic S-JOG")
 
 TEST_CASE("A1-16 servo set torque off and back on via S-JOG")
 {
-  std::unique_ptr<SerialProtocol> serial = makeSerial("set-torque-off-and-on-via-sjog");
+  std::unique_ptr<SerialProtocol> serial = makeSerial("set-torque-off-and-on-via-s-jog");
 
   torqueOff(*serial);
 
@@ -435,6 +435,12 @@ TEST_CASE("A1-16 servo max PWM RAM")
 // TEST_CASE("A1-16 servo ", "[focus]")
 // {
 // }
+
+// clang handles -Winvalid-offsetof just fine
+// https://github.com/llvm/llvm-project/issues/45267
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Winvalid-offsetof"
+
 
 static_assert(sizeof(XYZrobotServoRAM) == 80, "XYZrobotServoRAM has wrong size");
 
@@ -566,3 +572,5 @@ static_assert(offsetof(XYZrobotServoEEPROM, sID) == 6, "XYZrobotServoEEPROM::sID
 static_assert(
   offsetof(XYZrobotServoEEPROM, Calibration_Difference) == 53,
   "XYZrobotServoEEPROM::Calibration_Difference has wrong offset");
+
+#pragma clang diagnostic pop

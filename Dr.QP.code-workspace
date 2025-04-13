@@ -319,11 +319,13 @@
     "esbonio.server.enabled": false,
 
     "cSpell.words": [
-      "drqp",
       "dr_qp",
+      "drqp",
+      "EEPROM",
       "Matosov",
-      "rclpy",
+      "Pololu",
       "rclcpp",
+      "rclpy"
     ],
   },
 }
