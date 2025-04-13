@@ -18,6 +18,9 @@ endforeach()
 rosidl_generate_interfaces(${PROJECT_NAME}
   msg/ServoPositionGoal.msg
   msg/MultiServoPositionGoal.msg
+
+  msg/ServoState.msg
+  msg/MultiServoState.msg
 )
 
 if(BUILD_TESTING)

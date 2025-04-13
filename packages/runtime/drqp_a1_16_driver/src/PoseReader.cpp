@@ -31,7 +31,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include <drqp_interfaces/msg/multi_servo_position_goal.hpp>
+#include <drqp_interfaces/msg/multi_servo_state.hpp>
 
 using namespace std::chrono_literals;
 
@@ -47,13 +47,12 @@ public:
     declare_parameter("period_ms", 500);
 
     publisher_ =
-      this->create_publisher<drqp_interfaces::msg::MultiServoPositionGoal>("/servo_goals", 10);
+      this->create_publisher<drqp_interfaces::msg::MultiServoState>("/servo_states", 10);
 
     auto timerPeriod = std::chrono::milliseconds(get_parameter("period_ms").as_int());
     timer_ = this->create_wall_timer(timerPeriod, [this]() {
       try {
-        auto servoGoals = drqp_interfaces::msg::MultiServoPositionGoal{};
-        servoGoals.mode = drqp_interfaces::msg::MultiServoPositionGoal::MODE_SYNC;
+        auto multiServoStates = drqp_interfaces::msg::MultiServoState{};
 
         std::unique_ptr<SerialProtocol> servoSerial;
         servoSerial = makeSerialForDevice(get_parameter("device_address").as_string());
@@ -69,13 +68,13 @@ public:
           if (servo.isFailed()) {
             continue;
           }
-          auto goal = drqp_interfaces::msg::ServoPositionGoal{};
-          goal.id = servoId;
-          goal.position = status.position;
+          auto servoState = drqp_interfaces::msg::ServoState{};
+          servoState.id = servoId;
+          servoState.position = status.position;
 
-          servoGoals.goals.emplace_back(std::move(goal));
+          multiServoStates.servos.emplace_back(std::move(servoState));
         }
-        publisher_->publish(servoGoals);
+        publisher_->publish(multiServoStates);
       } catch (std::exception& e) {
         RCLCPP_ERROR(get_logger(), "Exception occurred in pose read handler %s", e.what());
       } catch (...) {
@@ -85,7 +84,7 @@ public:
   }
 
   rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Publisher<drqp_interfaces::msg::MultiServoPositionGoal>::SharedPtr publisher_;
+  rclcpp::Publisher<drqp_interfaces::msg::MultiServoState>::SharedPtr publisher_;
 };
 
 int main(int argc, char* argv[])
