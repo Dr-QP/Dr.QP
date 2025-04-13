@@ -167,7 +167,7 @@
           // " --debugger-pipe=/tmp/drqp_serial"
         ],
         "problemMatcher": [
-          "$catkin-gcc"
+          "$colcon-gcc"
         ],
         "group": {
           "kind": "build",
@@ -197,7 +197,7 @@
           // "drqp_serial",
         ],
         "problemMatcher": [
-          "$catkin-gcc"
+          "$colcon-gcc"
         ],
         "group": {
           "kind": "test",
