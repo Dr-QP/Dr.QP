@@ -87,7 +87,7 @@ static inline std::basic_ostream<charT, charTraitsT>& operator<<(
   return out << to_string(errorCode);
 }
 
-enum class XYZrobotServoBaudRate: uint8_t {
+enum class XYZrobotServoBaudRate : uint8_t {
   xyzB9600 = 0x01,
   xyzB19200 = 0x02,
   xyzB57600 = 0x06,
@@ -330,7 +330,7 @@ struct SharedMemData
   uint8_t Calibration_Difference;
 } __attribute__((packed));
 
-enum class XYZrobotServoStatusError: uint8_t {
+enum class XYZrobotServoStatusError : uint8_t {
   None = 0,
 
   // Exceed Potentiometer Range Error. Blue LED on
@@ -358,7 +358,7 @@ enum class XYZrobotServoStatusError: uint8_t {
   RequestedPacketRxFifoError = 0x80,
 };
 
-enum class XYZrobotServoStatusDetail: uint8_t {
+enum class XYZrobotServoStatusDetail : uint8_t {
   None = 0,
 
   // Motor Moving

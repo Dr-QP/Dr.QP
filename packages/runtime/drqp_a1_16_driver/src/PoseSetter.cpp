@@ -104,7 +104,6 @@ public:
     publishServoStates(msg);
   }
 
-
   void publishServoStates(const drqp_interfaces::msg::MultiServoPositionGoal& msg)
   {
     auto multiServoStates = drqp_interfaces::msg::MultiServoState{};
