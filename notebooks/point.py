@@ -258,7 +258,7 @@ class Line3D:
     @property
     def yz(self):
         return Line(self.start.yz, self.end.yz, self.label)
-
+ 
 
 class Leg3D:
     """A 3D leg class."""
