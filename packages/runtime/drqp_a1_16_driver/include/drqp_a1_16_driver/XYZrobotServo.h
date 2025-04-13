@@ -135,11 +135,55 @@ uint8_t toPlaytime(const DurationT& duration)
   return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() / 10;
 }
 
+enum class XYZrobotServoStatusError : uint8_t {
+  None = 0,
+
+  // Exceed Potentiometer Range Error. Blue LED on
+  ExceedPotentiometerRangeError = 0x01,
+
+  // Over Voltage Limits Error. Red LED on/ White LED off
+  OverVoltageLimitsError = 0x02,
+
+  // Over Temperature Error. Red LED on/ White LED off
+  OverTemperatureError = 0x04,
+
+  // Overload/Over-current Error. Red LED on/ White LED off
+  OverloadOvercurrentError = 0x08,
+
+  // Reserved
+  Reserved = 0x10,
+
+  // Requested Packet Checksum Error. Green LED on
+  RequestedPacketChecksumError = 0x20,
+
+  // Requested Packet Data Error. Green LED on
+  RequestedPacketDataError = 0x40,
+
+  // Requested Packet RX FIFO Error. Green LED on
+  RequestedPacketRxFifoError = 0x80,
+};
+
+enum class XYZrobotServoStatusDetail : uint8_t {
+  None = 0,
+
+  // Motor Moving
+  MotorMoving = 0x10,
+
+  // Motor In-Position (Position control mode only)
+  MotorInPosition = 0x20,
+
+  // 1: Torque on (Position/Speed control), 0: Torque off
+  TorqueOn = 0x40,
+
+  // Motor Braked
+  MotorBraked = 0x80,
+};
+
 /// This struct represents the data returned by a STAT command.
 struct XYZrobotServoStatus
 {
-  uint8_t statusError;
-  uint8_t statusDetail;
+  XYZrobotServoStatusError statusError;
+  XYZrobotServoStatusDetail statusDetail;
   uint16_t pwm;     // The torque applied to motor
   uint16_t posRef;  /// Servo position goal. If no goal, this is just its current measured position.
   uint16_t position;  // Servo current position
@@ -329,50 +373,6 @@ struct SharedMemData
   // The difference between newtral point and position raw data.
   uint8_t Calibration_Difference;
 } __attribute__((packed));
-
-enum class XYZrobotServoStatusError : uint8_t {
-  None = 0,
-
-  // Exceed Potentiometer Range Error. Blue LED on
-  ExceedPotentiometerRangeError = 0x01,
-
-  // Over Voltage Limits Error. Red LED on/ White LED off
-  OverVoltageLimitsError = 0x02,
-
-  // Over Temperature Error. Red LED on/ White LED off
-  OverTemperatureError = 0x04,
-
-  // Overload/Over-current Error. Red LED on/ White LED off
-  OverloadOvercurrentError = 0x08,
-
-  // Reserved
-  Reserved = 0x10,
-
-  // Requested Packet Checksum Error. Green LED on
-  RequestedPacketChecksumError = 0x20,
-
-  // Requested Packet Data Error. Green LED on
-  RequestedPacketDataError = 0x40,
-
-  // Requested Packet RX FIFO Error. Green LED on
-  RequestedPacketRxFifoError = 0x80,
-};
-
-enum class XYZrobotServoStatusDetail : uint8_t {
-  None = 0,
-
-  // Motor Moving
-  MotorMoving = 0x10,
-
-  // Motor In-Position (Position control mode only)
-  MotorInPosition = 0x20,
-
-  // 1: Torque on (Position/Speed control), 0: Torque off
-  TorqueOn = 0x40,
-
-  // Motor Braked
-  MotorBraked = 0x80,
-};
 
 struct XYZrobotServoRAM : public SharedMemData
 {

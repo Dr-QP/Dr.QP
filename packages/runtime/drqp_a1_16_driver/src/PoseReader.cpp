@@ -78,8 +78,8 @@ public:
           servoState.id = servoId;
           servoState.position = status.position;
           servoState.goal = status.posRef;
-          servoState.status_error = status.statusError;
-          servoState.status_detail = status.statusDetail;
+          servoState.status_error = static_cast<uint8_t>(status.statusError);
+          servoState.status_detail = static_cast<uint8_t>(status.statusDetail);
           servoState.torque = status.pwm;
 
           multiServoStates.servos.emplace_back(std::move(servoState));

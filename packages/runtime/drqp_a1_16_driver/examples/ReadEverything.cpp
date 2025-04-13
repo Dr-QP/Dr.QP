@@ -23,10 +23,12 @@
 
 #include <signal.h>
 
+#include <cstdint>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
 #include <thread>
+#include <type_traits>
 
 #include "drqp_a1_16_driver/XYZrobotServo.h"
 // #include "drqp_serial/TcpSerial.h"
@@ -99,9 +101,9 @@ void readAndPrintStatus(XYZrobotServo& servo)
   } else {
     std::cout << "status:\n";
     std::cout << "  statusError: 0x";
-    std::cout << std::hex << std::dec << status.statusError << "\n";
+    std::cout << std::hex << static_cast<int>(status.statusError) << "\n";
     std::cout << "  statusDetail: 0x";
-    std::cout << std::hex << std::dec << status.statusDetail << std::dec << "\n";
+    std::cout << std::hex << static_cast<int>(status.statusDetail) << "\n";
     std::cout << "  pwm: ";
     std::cout << std::dec << status.pwm << "\n";
     std::cout << "  posRef: ";
@@ -123,8 +125,7 @@ CustomStatus48 readCustomStatus(XYZrobotServo& servo)
   } else {
     std::cout << "status:\n";
     std::cout << "  statusError: 0x" << std::hex << std::dec << status.statusError << "\n";
-    std::cout << "  statusDetail: 0x" << std::hex << std::dec << status.statusDetail << std::dec
-              << "\n";
+    std::cout << "  statusDetail: 0x" << std::hex << std::dec << status.statusDetail << "\n";
     std::cout << "  ledControl: " << std::dec << status.ledControl << "\n";
     std::cout << "  voltage: " << std::dec << status.voltage / 16 << "V\n";
     std::cout << "  temperature: " << std::dec << status.temperature << "˚C\n";
