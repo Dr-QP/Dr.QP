@@ -142,7 +142,7 @@
     "tasks": [
       {
         "label": "Dr.QP colcon build",
-        "type": "shell",
+        "type": "RDE",
         "command": "colcon",
         "args": [
           "build",
@@ -183,7 +183,7 @@
       },
       {
         "label": "Dr.QP colcon test",
-        "type": "shell",
+        "type": "RDE",
         "command": "colcon",
         "args": [
           "test",
