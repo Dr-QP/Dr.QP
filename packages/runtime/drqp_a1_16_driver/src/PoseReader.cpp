@@ -53,6 +53,7 @@ public:
     timer_ = this->create_wall_timer(timerPeriod, [this]() {
       try {
         auto multiServoStates = drqp_interfaces::msg::MultiServoState{};
+        multiServoStates.header.stamp = this->get_clock()->now();
 
         std::unique_ptr<SerialProtocol> servoSerial;
         servoSerial = makeSerialForDevice(get_parameter("device_address").as_string());
@@ -62,6 +63,7 @@ public:
         const uint8_t lastId = get_parameter("last_id").as_int();
 
         for (uint8_t servoId = firstId; servoId <= lastId; ++servoId) {
+          auto startTime = this->get_clock()->now();
           XYZrobotServo servo(*servoSerial, servoId);
 
           XYZrobotServoStatus status = servo.readStatus();
@@ -70,12 +72,16 @@ public:
             continue;
           }
           auto servoState = drqp_interfaces::msg::ServoState{};
-          servoState.header.stamp = this->get_clock()->now();
+          auto endTime = this->get_clock()->now();
+
+          servoState.read_time_nanosec = (endTime - startTime).nanoseconds();
           servoState.id = servoId;
           servoState.position = status.position;
 
           multiServoStates.servos.emplace_back(std::move(servoState));
         }
+        auto endTime = this->get_clock()->now();
+        multiServoStates.read_time_nanosec = (endTime - multiServoStates.header.stamp).nanoseconds();
         servoStatesPublisher_->publish(multiServoStates);
       } catch (std::exception& e) {
         RCLCPP_ERROR(get_logger(), "Exception occurred in pose read handler %s", e.what());
