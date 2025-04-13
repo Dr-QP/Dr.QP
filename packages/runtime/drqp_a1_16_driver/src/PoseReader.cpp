@@ -44,7 +44,7 @@ public:
     declare_parameter("baud_rate", 115200);
     declare_parameter("first_id", 1);
     declare_parameter("last_id", 18);
-    declare_parameter("period_ms", 500);
+    declare_parameter("period_ms", 100);
 
     servoStatesPublisher_ =
       this->create_publisher<drqp_interfaces::msg::MultiServoState>("/servo_states", 10);
@@ -66,9 +66,11 @@ public:
 
           XYZrobotServoStatus status = servo.readStatus();
           if (servo.isFailed()) {
+            RCLCPP_ERROR(get_logger(), "Servo %i read status failed %s.", servoId, to_string(servo.getLastError()).c_str());
             continue;
           }
           auto servoState = drqp_interfaces::msg::ServoState{};
+          servoState.header.stamp = this->get_clock()->now();
           servoState.id = servoId;
           servoState.position = status.position;
 
