@@ -60,16 +60,14 @@ public:
         auto multiServoStates = drqp_interfaces::msg::MultiServoState{};
         multiServoStates.header.stamp = this->get_clock()->now();
 
+
         for (uint8_t servoId = firstId; servoId <= lastId; ++servoId) {
           auto startTime = this->get_clock()->now();
           XYZrobotServo servo(*servoSerial_, servoId);
 
-          uint16_t position = 0;
-          servo.ramRead(60, &position, sizeof(position));
+          XYZrobotServoStatus status = servo.readStatus();
           if (servo.isFailed()) {
-            RCLCPP_ERROR(
-              get_logger(), "Servo %i read position from ram failed %s.", servoId,
-              to_string(servo.getLastError()).c_str());
+            RCLCPP_ERROR(get_logger(), "Servo %i read status failed %s.", servoId, to_string(servo.getLastError()).c_str());
             continue;
           }
           auto servoState = drqp_interfaces::msg::ServoState{};
@@ -77,13 +75,16 @@ public:
 
           servoState.read_time_microsec = (endTime - startTime).nanoseconds() / 1000;
           servoState.id = servoId;
-          servoState.position = position;
+          servoState.position = status.position;
+          servoState.goal = status.posRef;
+          servoState.status_error = status.statusError;
+          servoState.status_detail = status.statusDetail;
+          servoState.torque = status.pwm;
 
           multiServoStates.servos.emplace_back(std::move(servoState));
         }
         auto endTime = this->get_clock()->now();
-        multiServoStates.read_time_microsec =
-          (endTime - multiServoStates.header.stamp).nanoseconds() / 1000;
+        multiServoStates.read_time_microsec = (endTime - multiServoStates.header.stamp).nanoseconds() / 1000;
         servoStatesPublisher_->publish(multiServoStates);
       } catch (std::exception& e) {
         RCLCPP_ERROR(get_logger(), "Exception occurred in pose read handler %s", e.what());

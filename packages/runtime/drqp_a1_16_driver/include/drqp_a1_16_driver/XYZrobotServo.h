@@ -140,10 +140,10 @@ struct XYZrobotServoStatus
 {
   uint8_t statusError;
   uint8_t statusDetail;
-  uint16_t pwm;
+  uint16_t pwm; // The torque applied to motor
   uint16_t posRef;  /// Servo position goal. If no goal, this is just its current measured position.
   uint16_t position;  // Servo current position
-  uint16_t iBus;
+  uint16_t iBus; // ：The Current applied to motor. The Value is 200 times the actual current.
 } __attribute__((packed));
 
 struct SJogData
