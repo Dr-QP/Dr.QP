@@ -5,11 +5,6 @@
 
 version: 2
 updates:
-  - package-ecosystem: npm
-    directory: packages/runtime/drqp_hexapod_js
-    schedule:
-      interval: weekly
-
   - directory: .github
     package-ecosystem: github-actions
     schedule:
