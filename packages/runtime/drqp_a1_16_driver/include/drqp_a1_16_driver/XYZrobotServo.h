@@ -255,6 +255,99 @@ private:
 #define CMD_ROLLBACK 0x08
 #define CMD_REBOOT 0x09
 
+struct SharedMemData
+{
+  uint8_t sID;
+  uint8_t ACK_Policy;
+  uint8_t Alarm_LED_Policy;
+  uint8_t Torque_Policy;
+  uint8_t SPDctrl_Policy;
+  uint8_t Max_Temperature;
+  uint8_t Min_Voltage;
+  uint8_t Max_Voltage;
+  uint8_t Acceleration_Ratio;
+
+  uint8_t reserved1[3];
+
+  uint16_t Max_Wheel_Ref_Position;
+
+  uint8_t reserved2[2];
+
+  uint16_t Max_PWM;
+
+  uint16_t Overload_Threshold;
+  uint16_t Min_Position;
+  uint16_t Max_Position;
+  uint16_t Position_Kp;
+  uint16_t Position_Kd;
+  uint16_t Position_Ki;
+  uint16_t Close_to_Open_Ref_Position;
+  uint16_t Open_to_Close_Ref_Position;
+
+  uint8_t reserved3[2];
+
+  uint16_t Ramp_Speed;
+  uint8_t LED_Blink_Period;
+
+  uint8_t reserved4;
+
+  uint8_t Packet_Timeout_Detection_Period;
+
+  uint8_t reserved5;
+
+  uint8_t Overload_Detection_Period;
+
+  uint8_t reserved6;
+
+  uint8_t Inposition_Margin;
+  uint8_t Over_Voltage_Detection_Period;
+  uint8_t Over_Temperature_Detection_Period;
+  uint8_t Calibration_Difference;
+} __attribute__((packed));
+
+struct XYZrobotServoRAM : public SharedMemData
+{
+  uint8_t Status_Error;
+  uint8_t Status_Detail;
+
+  uint8_t reserved7[3];
+
+  uint8_t LED_Control;
+  uint8_t Voltage;
+  uint8_t Temperature;
+  uint8_t Current_Control_Mode;
+  uint8_t Tick;
+
+  uint8_t reserved8[2];
+
+  uint16_t Joint_Position;
+
+  uint8_t reserved9[2];
+
+  uint16_t PWM_Output_Duty;
+  uint16_t Bus_Current;
+  uint16_t Position_Goal;
+  uint16_t Position_Ref;
+  uint16_t Omega_Goal;
+  uint16_t Omega_Ref;
+  uint16_t Requested_Counts;
+  uint16_t ACK_Counts;
+} __attribute__((packed));
+
+struct EEPROM_header
+{
+  uint8_t Model_Number;
+  uint8_t Year;
+  uint8_t Version_Month;
+  uint8_t Day;
+  uint8_t reserved1;
+  uint8_t Baud_Rate;
+} __attribute__((packed));
+
+struct XYZrobotServoEEPROM : public EEPROM_header, public SharedMemData
+{
+} __attribute__((packed));
+
 class XYZrobotServo
 {
 public:

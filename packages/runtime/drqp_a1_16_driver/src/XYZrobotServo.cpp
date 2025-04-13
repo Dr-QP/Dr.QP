@@ -402,3 +402,134 @@ void XYZrobotServo::sendIJog(IJogData data)
 {
   sendRequest(id, CMD_I_JOG, &data, sizeof(data));
 }
+
+static_assert(sizeof(XYZrobotServoRAM) == 80, "XYZrobotServoRAM has wrong size");
+
+static_assert(offsetof(XYZrobotServoRAM, sID) == 0, "XYZrobotServoRAM::sID has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, ACK_Policy) == 1, "XYZrobotServoRAM::ACK_Policy has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Alarm_LED_Policy) == 2,
+  "XYZrobotServoRAM::Alarm_LED_Policy has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Torque_Policy) == 3,
+  "XYZrobotServoRAM::Torque_Policy has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, SPDctrl_Policy) == 4,
+  "XYZrobotServoRAM::SPDctrl_Policy has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Max_Temperature) == 5,
+  "XYZrobotServoRAM::Max_Temperature has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Min_Voltage) == 6, "XYZrobotServoRAM::Min_Voltage has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Max_Voltage) == 7, "XYZrobotServoRAM::Max_Voltage has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Acceleration_Ratio) == 8,
+  "XYZrobotServoRAM::Acceleration_Ratio has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Max_Wheel_Ref_Position) == 12,
+  "XYZrobotServoRAM::Max_Wheel_Ref_Position has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Max_PWM) == 16, "XYZrobotServoRAM::Max_PWM has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Overload_Threshold) == 18,
+  "XYZrobotServoRAM::Overload_Threshold has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Min_Position) == 20,
+  "XYZrobotServoRAM::Min_Position has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Max_Position) == 22,
+  "XYZrobotServoRAM::Max_Position has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Position_Kp) == 24, "XYZrobotServoRAM::Position_Kp has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Position_Kd) == 26, "XYZrobotServoRAM::Position_Kd has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Position_Ki) == 28, "XYZrobotServoRAM::Position_Ki has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Close_to_Open_Ref_Position) == 30,
+  "XYZrobotServoRAM::Close_to_Open_Ref_Position has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Open_to_Close_Ref_Position) == 32,
+  "XYZrobotServoRAM::Open_to_Close_Ref_Position has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Ramp_Speed) == 36, "XYZrobotServoRAM::Ramp_Speed has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, LED_Blink_Period) == 38,
+  "XYZrobotServoRAM::LED_Blink_Period has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Packet_Timeout_Detection_Period) == 40,
+  "XYZrobotServoRAM::Packet_Timeout_Detection_Period has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Overload_Detection_Period) == 42,
+  "XYZrobotServoRAM::Overload_Detection_Period has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Inposition_Margin) == 44,
+  "XYZrobotServoRAM::Inposition_Margin has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Over_Voltage_Detection_Period) == 45,
+  "XYZrobotServoRAM::Over_Voltage_Detection_Period has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Over_Temperature_Detection_Period) == 46,
+  "XYZrobotServoRAM::Over_Temperature_Detection_Period has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Calibration_Difference) == 47,
+  "XYZrobotServoRAM::Calibration_Difference has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Status_Error) == 48,
+  "XYZrobotServoRAM::Status_Error has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Status_Detail) == 49,
+  "XYZrobotServoRAM::Status_Detail has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, LED_Control) == 53, "XYZrobotServoRAM::LED_Control has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Voltage) == 54, "XYZrobotServoRAM::Voltage has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Temperature) == 55, "XYZrobotServoRAM::Temperature has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Current_Control_Mode) == 56,
+  "XYZrobotServoRAM::Current_Control_Mode has wrong offset");
+static_assert(offsetof(XYZrobotServoRAM, Tick) == 57, "XYZrobotServoRAM::Tick has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Joint_Position) == 60,
+  "XYZrobotServoRAM::Joint_Position has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, PWM_Output_Duty) == 64,
+  "XYZrobotServoRAM::PWM_Output_Duty has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Bus_Current) == 66, "XYZrobotServoRAM::Bus_Current has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Position_Goal) == 68,
+  "XYZrobotServoRAM::Position_Goal has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Position_Ref) == 70,
+  "XYZrobotServoRAM::Position_Ref has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Omega_Goal) == 72, "XYZrobotServoRAM::Omega_Goal has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Omega_Ref) == 74, "XYZrobotServoRAM::Omega_Ref has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, Requested_Counts) == 76,
+  "XYZrobotServoRAM::Requested_Counts has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoRAM, ACK_Counts) == 78, "XYZrobotServoRAM::ACK_Counts has wrong offset");
+
+static_assert(sizeof(XYZrobotServoEEPROM) == 54, "XYZrobotServoEEPROM has wrong size");
+
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Model_Number) == 0,
+  "XYZrobotServoEEPROM::Model_Number has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Year) == 1, "XYZrobotServoEEPROM::Year has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Version_Month) == 2,
+  "XYZrobotServoEEPROM::Version_Month has wrong offset");
+static_assert(offsetof(XYZrobotServoEEPROM, Day) == 3, "XYZrobotServoEEPROM::Day has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Baud_Rate) == 5, "XYZrobotServoEEPROM::Baud_Rate has wrong offset");
+static_assert(offsetof(XYZrobotServoEEPROM, sID) == 6, "XYZrobotServoEEPROM::sID has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Calibration_Difference) == 53,
+  "XYZrobotServoEEPROM::Calibration_Difference has wrong offset");
