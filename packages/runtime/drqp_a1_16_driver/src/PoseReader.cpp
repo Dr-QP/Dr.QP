@@ -46,7 +46,7 @@ public:
     declare_parameter("last_id", 18);
     declare_parameter("period_ms", 500);
 
-    publisher_ =
+    servoStatesPublisher_ =
       this->create_publisher<drqp_interfaces::msg::MultiServoState>("/servo_states", 10);
 
     auto timerPeriod = std::chrono::milliseconds(get_parameter("period_ms").as_int());
@@ -74,7 +74,7 @@ public:
 
           multiServoStates.servos.emplace_back(std::move(servoState));
         }
-        publisher_->publish(multiServoStates);
+        servoStatesPublisher_->publish(multiServoStates);
       } catch (std::exception& e) {
         RCLCPP_ERROR(get_logger(), "Exception occurred in pose read handler %s", e.what());
       } catch (...) {
@@ -84,7 +84,7 @@ public:
   }
 
   rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Publisher<drqp_interfaces::msg::MultiServoState>::SharedPtr publisher_;
+  rclcpp::Publisher<drqp_interfaces::msg::MultiServoState>::SharedPtr servoStatesPublisher_;
 };
 
 int main(int argc, char* argv[])

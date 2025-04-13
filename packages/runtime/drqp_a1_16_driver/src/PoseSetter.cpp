@@ -31,6 +31,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <drqp_interfaces/msg/multi_servo_position_goal.hpp>
+#include <drqp_interfaces/msg/multi_servo_state.hpp>
 #include <rclcpp/subscription_base.hpp>
 
 using namespace std::chrono_literals;
@@ -46,10 +47,14 @@ public:
     servoSerial_ = makeSerialForDevice(get_parameter("device_address").as_string());
     servoSerial_->begin(get_parameter("baud_rate").as_int());
 
+    servoStatesPublisher_ =
+      this->create_publisher<drqp_interfaces::msg::MultiServoState>("/servo_states", 10);
+
     multiServoPositionGoalSubscription_ =
       create_subscription<drqp_interfaces::msg::MultiServoPositionGoal>(
         "/servo_goals", 10, [this](const drqp_interfaces::msg::MultiServoPositionGoal& msg) {
           try {
+            auto multiServoStates = drqp_interfaces::msg::MultiServoState{};
             if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_SYNC) {
               handleSyncPose(msg);
             } else if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_ASYNC) {
@@ -82,6 +87,7 @@ public:
     }
 
     servo.sendJogCommand(sposCmd);
+    publishServoStates(msg);
   }
 
   void handleAsyncPose(const drqp_interfaces::msg::MultiServoPositionGoal& msg)
@@ -95,7 +101,23 @@ public:
     }
 
     servo.sendJogCommand(iposCmd);
+    publishServoStates(msg);
   }
+
+
+  void publishServoStates(const drqp_interfaces::msg::MultiServoPositionGoal& msg)
+  {
+    auto multiServoStates = drqp_interfaces::msg::MultiServoState{};
+    for (const auto& posGoal : msg.goals) {
+      auto servoState = drqp_interfaces::msg::ServoState{};
+      servoState.id = posGoal.id;
+      servoState.position = posGoal.position;
+      multiServoStates.servos.emplace_back(servoState);
+    }
+    servoStatesPublisher_->publish(multiServoStates);
+  }
+
+  rclcpp::Publisher<drqp_interfaces::msg::MultiServoState>::SharedPtr servoStatesPublisher_;
 
   rclcpp::Subscription<drqp_interfaces::msg::MultiServoPositionGoal>::SharedPtr
     multiServoPositionGoalSubscription_;
