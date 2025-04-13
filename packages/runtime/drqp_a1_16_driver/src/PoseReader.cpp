@@ -49,39 +49,46 @@ public:
     servoStatesPublisher_ =
       this->create_publisher<drqp_interfaces::msg::MultiServoState>("/servo_states", 10);
 
+    servoSerial_ = makeSerialForDevice(get_parameter("device_address").as_string());
+    servoSerial_->begin(get_parameter("baud_rate").as_int());
+    const uint8_t firstId = get_parameter("first_id").as_int();
+    const uint8_t lastId = get_parameter("last_id").as_int();
+
     auto timerPeriod = std::chrono::milliseconds(get_parameter("period_ms").as_int());
-    timer_ = this->create_wall_timer(timerPeriod, [this]() {
+    timer_ = this->create_wall_timer(timerPeriod, [this, firstId, lastId]() {
       try {
         auto multiServoStates = drqp_interfaces::msg::MultiServoState{};
         multiServoStates.header.stamp = this->get_clock()->now();
 
-        std::unique_ptr<SerialProtocol> servoSerial;
-        servoSerial = makeSerialForDevice(get_parameter("device_address").as_string());
-        servoSerial->begin(get_parameter("baud_rate").as_int());
-
-        const uint8_t firstId = get_parameter("first_id").as_int();
-        const uint8_t lastId = get_parameter("last_id").as_int();
 
         for (uint8_t servoId = firstId; servoId <= lastId; ++servoId) {
           auto startTime = this->get_clock()->now();
-          XYZrobotServo servo(*servoSerial, servoId);
+          XYZrobotServo servo(*servoSerial_, servoId);
 
-          XYZrobotServoStatus status = servo.readStatus();
+          // XYZrobotServoStatus status = servo.readStatus();
+          // if (servo.isFailed()) {
+          //   RCLCPP_ERROR(get_logger(), "Servo %i read status failed %s.", servoId, to_string(servo.getLastError()).c_str());
+          //   continue;
+          // }
+          uint16_t position= 0;
+          servo.ramRead(60, &position, sizeof(position));
           if (servo.isFailed()) {
-            RCLCPP_ERROR(get_logger(), "Servo %i read status failed %s.", servoId, to_string(servo.getLastError()).c_str());
+            RCLCPP_ERROR(get_logger(), "Servo %i read position from ram failed %s.", servoId, to_string(servo.getLastError()).c_str());
             continue;
           }
+          // RCLCPP_INFO(get_logger(), "Servo %i ram position %i.", servoId, position);
+          // RCLCPP_INFO(get_logger(), "Servo %i status.position %i.", servoId, status.position);
           auto servoState = drqp_interfaces::msg::ServoState{};
           auto endTime = this->get_clock()->now();
 
-          servoState.read_time_nanosec = (endTime - startTime).nanoseconds();
+          servoState.read_time_ms = (endTime - startTime).nanoseconds() / 1000;
           servoState.id = servoId;
-          servoState.position = status.position;
+          servoState.position = position;
 
           multiServoStates.servos.emplace_back(std::move(servoState));
         }
         auto endTime = this->get_clock()->now();
-        multiServoStates.read_time_nanosec = (endTime - multiServoStates.header.stamp).nanoseconds();
+        multiServoStates.read_time_ms = (endTime - multiServoStates.header.stamp).nanoseconds() / 1000;
         servoStatesPublisher_->publish(multiServoStates);
       } catch (std::exception& e) {
         RCLCPP_ERROR(get_logger(), "Exception occurred in pose read handler %s", e.what());
@@ -91,6 +98,7 @@ public:
     });
   }
 
+  std::unique_ptr<SerialProtocol> servoSerial_;
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<drqp_interfaces::msg::MultiServoState>::SharedPtr servoStatesPublisher_;
 };
