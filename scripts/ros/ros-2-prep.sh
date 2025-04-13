@@ -124,7 +124,7 @@ downloads_tmp=$(mktemp -d)
 # add trap to always cleanup
 trap 'rm -rf -- "${downloads_tmp}"' EXIT
 
-# Install Node.js and NPM for drqp_hexapod_js and local GHA via nektos/act to work
+# Install Node.js and NPM for local GHA via nektos/act to work
 curl -sL https://deb.nodesource.com/setup_20.x -o $downloads_tmp/nodesource_setup.sh
 sudo bash $downloads_tmp/nodesource_setup.sh
 sudo apt-get -y remove nodejs npm # remove old versions if any
