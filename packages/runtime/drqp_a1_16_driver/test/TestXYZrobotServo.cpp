@@ -441,7 +441,6 @@ TEST_CASE("A1-16 servo max PWM RAM")
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
 
-
 static_assert(sizeof(XYZrobotServoRAM) == 80, "XYZrobotServoRAM has wrong size");
 
 static_assert(offsetof(XYZrobotServoRAM, sID) == 0, "XYZrobotServoRAM::sID has wrong offset");
