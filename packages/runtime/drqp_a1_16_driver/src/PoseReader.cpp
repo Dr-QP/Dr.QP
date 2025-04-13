@@ -60,14 +60,15 @@ public:
         auto multiServoStates = drqp_interfaces::msg::MultiServoState{};
         multiServoStates.header.stamp = this->get_clock()->now();
 
-
         for (uint8_t servoId = firstId; servoId <= lastId; ++servoId) {
           auto startTime = this->get_clock()->now();
           XYZrobotServo servo(*servoSerial_, servoId);
 
           XYZrobotServoStatus status = servo.readStatus();
           if (servo.isFailed()) {
-            RCLCPP_ERROR(get_logger(), "Servo %i read status failed %s.", servoId, to_string(servo.getLastError()).c_str());
+            RCLCPP_ERROR(
+              get_logger(), "Servo %i read status failed %s.", servoId,
+              to_string(servo.getLastError()).c_str());
             continue;
           }
           auto servoState = drqp_interfaces::msg::ServoState{};
@@ -84,7 +85,8 @@ public:
           multiServoStates.servos.emplace_back(std::move(servoState));
         }
         auto endTime = this->get_clock()->now();
-        multiServoStates.read_time_microsec = (endTime - multiServoStates.header.stamp).nanoseconds() / 1000;
+        multiServoStates.read_time_microsec =
+          (endTime - multiServoStates.header.stamp).nanoseconds() / 1000;
         servoStatesPublisher_->publish(multiServoStates);
       } catch (std::exception& e) {
         RCLCPP_ERROR(get_logger(), "Exception occurred in pose read handler %s", e.what());
