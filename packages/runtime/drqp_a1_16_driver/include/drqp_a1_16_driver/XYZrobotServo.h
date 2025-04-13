@@ -87,11 +87,11 @@ static inline std::basic_ostream<charT, charTraitsT>& operator<<(
   return out << to_string(errorCode);
 }
 
-enum class XYZrobotServoBaudRate {
-  xyzB9600 = 1,
-  xyzB19200 = 2,
-  xyzB57600 = 6,
-  xyzB115200 = 12,
+enum class XYZrobotServoBaudRate: uint8_t {
+  xyzB9600 = 0x01,
+  xyzB19200 = 0x02,
+  xyzB57600 = 0x06,
+  xyzB115200 = 0x0C,
 };
 
 static inline uint32_t XYZrobotServoBaudRateToInt(XYZrobotServoBaudRate baud)
@@ -257,95 +257,199 @@ private:
 
 struct SharedMemData
 {
-  uint8_t sID;
-  uint8_t ACK_Policy;
-  uint8_t Alarm_LED_Policy;
-  uint8_t Torque_Policy; // Shut down Motor when Voltage/Load/Temperature. Torque Free Control: 0, Torque Limited: 1
-  uint8_t SPDctrl_Policy; // Speed open/close loop control. Open loop: 0, Close loop: 1
-  uint8_t Max_Temperature; // The limit of A1-16 servo operating temperature. The value is in Degrees Celsius
-  uint8_t Min_Voltage; // The min value of A1-16 servo operating voltage. The value is 16 times the actual voltage
-  uint8_t Max_Voltage; // The max value of A1-16 servo operating voltage. The value is 16 times the actual voltage
-  uint8_t Acceleration_Ratio; // 0-50. Note: acceleration_time = deceleration_time = play_time * Acceleration_Ratio/100
+  uint8_t sID;               // Servo ID 1-253
+  uint8_t ACK_Policy;        // see XYZrobotServoAckPolicy
+  uint8_t Alarm_LED_Policy;  // see writeAlarmLedPolicyRam
+
+  // Shut down Motor when Voltage/Load/Temperature. Torque Free Control: 0, Torque Limited: 1
+  uint8_t Torque_Policy;
+  uint8_t SPDctrl_Policy;  // Speed open/close loop control. Open loop: 0, Close loop: 1
+
+  // The limit of A1-16 servo operating temperature. The value is in Degrees Celsius
+  uint8_t Max_Temperature;
+  // The min value of A1-16 servo operating voltage. The value is 16 times the actual voltage
+  uint8_t Min_Voltage;
+
+  // The max value of A1-16 servo operating voltage. The value is 16 times the actual voltage
+  uint8_t Max_Voltage;
+
+  // 0-50. Note: acceleration_time = deceleration_time = play_time * Acceleration_Ratio/100
   // Play time | Acceleration_Ratio | Reference position trajectory
   // 0         | 0                  | Ramp-to-step position command, see (36)
   // 1-255     | 0                  | Constant speed profile
   // 1-255     | 1-50               | T-curve speed profile
+  uint8_t Acceleration_Ratio;
 
   uint8_t reserved1[3];
 
-  uint16_t Max_Wheel_Ref_Position; // Start virtual position for speed close loop control.
+  uint16_t Max_Wheel_Ref_Position;  // Start virtual position for speed close loop control.
 
   uint8_t reserved2[2];
 
-  uint16_t Max_PWM; // The max value of A1-16 servo output torque
+  uint16_t Max_PWM;  // The max value of A1-16 servo output torque
 
   uint16_t Overload_Threshold;  // The max value of A1-16 servo output torque
-  uint16_t Min_Position; // Min operational angle
-  uint16_t Max_Position; // Max operational angle
-  uint16_t Position_Kp; // The P control law is implemented below with a sampling time of 10 msec
-  uint16_t Position_Kd; // The PD control law is implemented below with a sampling time of 10 msec
-  uint16_t Position_Ki; // The PID control law is implemented below with a sampling time of 10 msec
-  uint16_t Close_to_Open_Ref_Position; // close loop continuous rotate mode close to open position
-  uint16_t Open_to_Close_Ref_Position;
+  uint16_t Min_Position;        // Min operational angle
+  uint16_t Max_Position;        // Max operational angle
+  uint16_t Position_Kp;  // The P control law is implemented below with a sampling time of 10 msec
+  uint16_t Position_Kd;  // The PD control law is implemented below with a sampling time of 10 msec
+  uint16_t Position_Ki;  // The PID control law is implemented below with a sampling time of 10 msec
+  uint16_t Close_to_Open_Ref_Position;  // close loop continuous rotate mode close to open position
+  uint16_t Open_to_Close_Ref_Position;  // close loop continuous rotate mode open to close position.
 
   uint8_t reserved3[2];
 
-  uint16_t Ramp_Speed;
-  uint8_t LED_Blink_Period;
+  uint16_t Ramp_Speed;       // 0 (step position command), 1~1023 (slope of ramp-to-step)
+  uint8_t LED_Blink_Period;  // Blinking Period of LED with a sampling time of 10 msec.
 
   uint8_t reserved4;
 
+  // Packet Timeout Detection Period of
+  // LED with a sampling time of 10 msec. 1 = 10ms
   uint8_t Packet_Timeout_Detection_Period;
 
   uint8_t reserved5;
 
+  // Overload Detection Period of servo with a
+  // sampling time of 10 msec. 1 = 10ms
   uint8_t Overload_Detection_Period;
 
   uint8_t reserved6;
 
   uint8_t Inposition_Margin;
+
+  // Over Voltage Detection Period of servo
+  // with a sampling time of 10 msec. 1 = 10ms
   uint8_t Over_Voltage_Detection_Period;
+
+  // Over Temperature Detection Period of servo
+  // with a sampling time of 10 msec. 1 = 10ms
   uint8_t Over_Temperature_Detection_Period;
+
+  // The difference between newtral point and position raw data.
   uint8_t Calibration_Difference;
 } __attribute__((packed));
 
+enum class XYZrobotServoStatusError: uint8_t {
+  None = 0,
+
+  // Exceed Potentiometer Range Error. Blue LED on
+  ExceedPotentiometerRangeError = 0x01,
+
+  // Over Voltage Limits Error. Red LED on/ White LED off
+  OverVoltageLimitsError = 0x02,
+
+  // Over Temperature Error. Red LED on/ White LED off
+  OverTemperatureError = 0x04,
+
+  // Overload/Over-current Error. Red LED on/ White LED off
+  OverloadOvercurrentError = 0x08,
+
+  // Reserved
+  Reserved = 0x10,
+
+  // Requested Packet Checksum Error. Green LED on
+  RequestedPacketChecksumError = 0x20,
+
+  // Requested Packet Data Error. Green LED on
+  RequestedPacketDataError = 0x40,
+
+  // Requested Packet RX FIFO Error. Green LED on
+  RequestedPacketRxFifoError = 0x80,
+};
+
+enum class XYZrobotServoStatusDetail: uint8_t {
+  None = 0,
+
+  // Motor Moving
+  MotorMoving = 0x10,
+
+  // Motor In-Position (Position control mode only)
+  MotorInPosition = 0x20,
+
+  // 1: Torque on (Position/Speed control), 0: Torque off
+  TorqueOn = 0x40,
+
+  // Motor Braked
+  MotorBraked = 0x80,
+};
+
 struct XYZrobotServoRAM : public SharedMemData
 {
-  uint8_t Status_Error;
-  uint8_t Status_Detail;
+  XYZrobotServoStatusError Status_Error;
+  XYZrobotServoStatusDetail Status_Detail;
 
   uint8_t reserved7[3];
 
+  // i = 0 (LEDi off), 1 (LEDi on); (see Alarm_LED_Policy)
+  // Bit 0：White LED
+  // Bit 1：Blue LED
+  // Bit 2：Green LED
+  // Bit 3：Red LED
   uint8_t LED_Control;
+
+  // The voltage currently applied to servo. The Value is 16 times the actual voltage.
   uint8_t Voltage;
+
+  // The internal temperature of motor in Degrees Celsius.
   uint8_t Temperature;
+
+  // 0 (position control), 1 (speed control), 2 (torque off)
   uint8_t Current_Control_Mode;
+
+  // Time servo operation. 1 = 10ms
   uint8_t Tick;
 
   uint8_t reserved8[2];
 
+  // Servo Position
   uint16_t Joint_Position;
 
   uint8_t reserved9[2];
 
+  // The torque applied to motor
   uint16_t PWM_Output_Duty;
+
+  // The Current applied to motor. The Value is 200 times the actual current.
   uint16_t Bus_Current;
+
+  // Servo goal of position control mode
   uint16_t Position_Goal;
+
+  // Ref point for position control
   uint16_t Position_Ref;
+
+  // Goal speed of speed close-loop control
   uint16_t Omega_Goal;
+
+  // Ref speed of speed close-loop control
   uint16_t Omega_Ref;
+
+  // Total # of requested packets received since power on.
   uint16_t Requested_Counts;
+
+  // Total # of ACK packets send since power on.
   uint16_t ACK_Counts;
 } __attribute__((packed));
 
 struct EEPROM_header
 {
+  // Servo model name
   uint8_t Model_Number;
+
+  // Year
   uint8_t Year;
-  uint8_t Version_Month; // bit 0-3: month; bit 4-7: version of servo firmware
+
+  // bit 0-3: month; bit 4-7: version of servo firmware
+  uint8_t Version_Month;
+
+  // Day
   uint8_t Day;
+
   uint8_t reserved1;
-  uint8_t Baud_Rate;
+
+  // Baud rate
+  XYZrobotServoBaudRate Baud_Rate;
 } __attribute__((packed));
 
 struct XYZrobotServoEEPROM : public EEPROM_header, public SharedMemData
