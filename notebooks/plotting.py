@@ -522,8 +522,8 @@ def plot_ik_lines(ax, femur, tibia):
     )
 
     add_inline_labels(ax, with_overall_progress=False, fontsize='medium')
-    if ax._remove_legend:
-        ax._remove_legend()  # remove legend as labels are added inline
+    if ax._legend:
+        ax.legend().remove()  # remove legend as labels are added inline
 
 
 class HexapodPlotData:

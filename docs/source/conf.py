@@ -35,6 +35,14 @@ language = 'en'
 exclude_patterns = ['**/_*.rst']
 
 # -- General configuration
+myst_enable_extensions = [
+    'amsmath',
+    'colon_fence',
+    'deflist',
+    'dollarmath',
+    'html_image',
+]
+myst_url_schemes = ('http', 'https', 'mailto')
 
 extensions = [
     'sphinx.ext.duration',
