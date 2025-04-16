@@ -31,7 +31,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include <drqp_interfaces/msg/multi_servo_position_goal.hpp>
+#include <drqp_interfaces/msg/multi_servo_state.hpp>
 
 using namespace std::chrono_literals;
 
@@ -44,38 +44,50 @@ public:
     declare_parameter("baud_rate", 115200);
     declare_parameter("first_id", 1);
     declare_parameter("last_id", 18);
-    declare_parameter("period_ms", 500);
+    declare_parameter("period_ms", 100);
 
-    publisher_ =
-      this->create_publisher<drqp_interfaces::msg::MultiServoPositionGoal>("/servo_goals", 10);
+    servoStatesPublisher_ =
+      this->create_publisher<drqp_interfaces::msg::MultiServoState>("/servo_states", 10);
+
+    servoSerial_ = makeSerialForDevice(get_parameter("device_address").as_string());
+    servoSerial_->begin(get_parameter("baud_rate").as_int());
+    const uint8_t firstId = get_parameter("first_id").as_int();
+    const uint8_t lastId = get_parameter("last_id").as_int();
 
     auto timerPeriod = std::chrono::milliseconds(get_parameter("period_ms").as_int());
-    timer_ = this->create_wall_timer(timerPeriod, [this]() {
+    timer_ = this->create_wall_timer(timerPeriod, [this, firstId, lastId]() {
       try {
-        auto servoGoals = drqp_interfaces::msg::MultiServoPositionGoal{};
-        servoGoals.mode = drqp_interfaces::msg::MultiServoPositionGoal::MODE_SYNC;
-
-        std::unique_ptr<SerialProtocol> servoSerial;
-        servoSerial = makeSerialForDevice(get_parameter("device_address").as_string());
-        servoSerial->begin(get_parameter("baud_rate").as_int());
-
-        const uint8_t firstId = get_parameter("first_id").as_int();
-        const uint8_t lastId = get_parameter("last_id").as_int();
+        auto multiServoStates = drqp_interfaces::msg::MultiServoState{};
+        multiServoStates.header.stamp = this->get_clock()->now();
 
         for (uint8_t servoId = firstId; servoId <= lastId; ++servoId) {
-          XYZrobotServo servo(*servoSerial, servoId);
+          auto startTime = this->get_clock()->now();
+          XYZrobotServo servo(*servoSerial_, servoId);
 
           XYZrobotServoStatus status = servo.readStatus();
           if (servo.isFailed()) {
+            RCLCPP_ERROR(
+              get_logger(), "Servo %i read status failed %s.", servoId,
+              to_string(servo.getLastError()).c_str());
             continue;
           }
-          auto goal = drqp_interfaces::msg::ServoPositionGoal{};
-          goal.id = servoId;
-          goal.position = status.position;
+          auto servoState = drqp_interfaces::msg::ServoState{};
+          auto endTime = this->get_clock()->now();
 
-          servoGoals.goals.emplace_back(std::move(goal));
+          servoState.read_time_microsec = (endTime - startTime).nanoseconds() / 1000;
+          servoState.id = servoId;
+          servoState.position = status.position;
+          servoState.goal = status.posRef;
+          servoState.status_error = static_cast<uint8_t>(status.statusError);
+          servoState.status_detail = static_cast<uint8_t>(status.statusDetail);
+          servoState.torque = status.pwm;
+
+          multiServoStates.servos.emplace_back(std::move(servoState));
         }
-        publisher_->publish(servoGoals);
+        auto endTime = this->get_clock()->now();
+        multiServoStates.read_time_microsec =
+          (endTime - multiServoStates.header.stamp).nanoseconds() / 1000;
+        servoStatesPublisher_->publish(multiServoStates);
       } catch (std::exception& e) {
         RCLCPP_ERROR(get_logger(), "Exception occurred in pose read handler %s", e.what());
       } catch (...) {
@@ -84,8 +96,9 @@ public:
     });
   }
 
+  std::unique_ptr<SerialProtocol> servoSerial_;
   rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Publisher<drqp_interfaces::msg::MultiServoPositionGoal>::SharedPtr publisher_;
+  rclcpp::Publisher<drqp_interfaces::msg::MultiServoState>::SharedPtr servoStatesPublisher_;
 };
 
 int main(int argc, char* argv[])

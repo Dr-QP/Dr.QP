@@ -200,7 +200,7 @@ XYZrobotServoStatus XYZrobotServo::readStatus()
 {
   flushRead();
 
-  XYZrobotServoStatus status;
+  XYZrobotServoStatus status = {};
   sendRequest(id, CMD_STAT, nullptr, 0);
   readAck(CMD_STAT, &status, sizeof(XYZrobotServoStatus));
   return status;

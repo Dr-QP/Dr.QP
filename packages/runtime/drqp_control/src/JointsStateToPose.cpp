@@ -41,6 +41,7 @@ public:
         try {
           drqp_interfaces::msg::MultiServoPositionGoal pose;
           pose.mode = drqp_interfaces::msg::MultiServoPositionGoal::MODE_ASYNC;
+          pose.header = msg.header;
 
           for (size_t index = 0; index < msg.name.size(); ++index) {
             auto pos = msg.name.at(index);

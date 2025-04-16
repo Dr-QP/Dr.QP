@@ -135,7 +135,8 @@
     "tasks": [
       {
         "label": "Dr.QP colcon build",
-        "type": "colcon",
+        "type": "RDE",
+        "command": "colcon",
         "args": [
           "build",
           "--symlink-install",
@@ -159,7 +160,7 @@
           // " --debugger-pipe=/tmp/drqp_serial"
         ],
         "problemMatcher": [
-          "$catkin-gcc"
+          "$colcon-gcc"
         ],
         "group": {
           "kind": "build",
@@ -175,7 +176,8 @@
       },
       {
         "label": "Dr.QP colcon test",
-        "type": "colcon",
+        "type": "RDE",
+        "command": "colcon",
         "args": [
           "test",
           "--event-handlers",
@@ -188,7 +190,7 @@
           // "drqp_serial",
         ],
         "problemMatcher": [
-          "$catkin-gcc"
+          "$colcon-gcc"
         ],
         "group": {
           "kind": "test",
@@ -310,11 +312,13 @@
     "esbonio.server.enabled": false,
 
     "cSpell.words": [
-      "drqp",
       "dr_qp",
+      "drqp",
+      "EEPROM",
       "Matosov",
-      "rclpy",
+      "Pololu",
       "rclcpp",
+      "rclpy"
     ],
   },
 }

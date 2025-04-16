@@ -111,8 +111,8 @@ class HexapodController(rclpy.node.Node):
             sensor_msgs.msg.Joy, '/joy', self.process_inputs, qos_profile=10
         )
         self.joystick_buttons = [
-            JoystickButton(ButtonIndex.L1, lambda b, e: self.prev_gait()),
-            JoystickButton(ButtonIndex.R1, lambda b, e: self.next_gait()),
+            JoystickButton(ButtonIndex.DpadLeft, lambda b, e: self.prev_gait()),
+            JoystickButton(ButtonIndex.DpadRight, lambda b, e: self.next_gait()),
         ]
 
         self.joint_state_pub = self.create_publisher(
