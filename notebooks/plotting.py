@@ -303,7 +303,7 @@ def plot_leg3d(
     ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
     ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
     ax.zaxis.set_pane_color((0, 0.2, 0, 0.5))
-    ax.zaxis.line.set_visible(False)
+    # ax.zaxis.line.set_visible(False)  # OFF to bypass ValueError: 'bboxes' cannot be empty in inline figures
     ax.zaxis.gridlines.set_visible(False)
 
     return fig, ax, result_lines, result_joints
@@ -522,7 +522,8 @@ def plot_ik_lines(ax, femur, tibia):
     )
 
     add_inline_labels(ax, with_overall_progress=False, fontsize='medium')
-    ax.legend().remove()  # remove legend as labels are added inline
+    if ax._remove_legend:
+        ax._remove_legend()  # remove legend as labels are added inline
 
 
 class HexapodPlotData:
@@ -620,28 +621,18 @@ def animate_plot(
 ):
     anim = None
 
-    was_interactive = plt.isinteractive()
-
     plt.rcParams['animation.html'] = 'jshtml'
-    if _interactive:
-        plt.ion()
-    else:
-        plt.ioff()
 
     try:
         if _interactive:
-            anim = interact(_animate, frame=(0, _frames), **interact_kwargs)
+            with plt.ion():
+                anim = interact(_animate, frame=(0, _frames), **interact_kwargs)
+                plt.show()
         else:
-            anim = FuncAnimation(_fig, _animate, frames=_frames, interval=_interval)
-
-        if plt.isinteractive():
-            plt.show()
-        else:
-            display(anim)  # type: ignore # noqa: F821
-    finally:
-        if was_interactive:
-            plt.ion()
-        else:
-            plt.ioff()
+            with plt.ioff():
+                anim = FuncAnimation(_fig, _animate, frames=_frames, interval=_interval)
+                display(anim)  # type: ignore # noqa: F821
+    except KeyboardInterrupt:
+        print('Skipping animation')
 
     return anim
