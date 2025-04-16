@@ -1,3 +1,6 @@
+Uninstalling Ubuntu Desktop
+=============================
+
 To full remove desktop shell and xserver from ubuntu installation run
 
 ::
