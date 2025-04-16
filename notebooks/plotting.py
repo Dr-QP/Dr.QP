@@ -621,28 +621,18 @@ def animate_plot(
 ):
     anim = None
 
-    was_interactive = plt.isinteractive()
-
     plt.rcParams['animation.html'] = 'jshtml'
-    if _interactive:
-        plt.ion()
-    else:
-        plt.ioff()
 
     try:
         if _interactive:
-            anim = interact(_animate, frame=(0, _frames), **interact_kwargs)
+            with plt.ion():
+                anim = interact(_animate, frame=(0, _frames), **interact_kwargs)
+                plt.show()
         else:
-            anim = FuncAnimation(_fig, _animate, frames=_frames, interval=_interval)
-
-        if plt.isinteractive():
-            plt.show()
-        else:
-            display(anim)  # type: ignore # noqa: F821
-    finally:
-        if was_interactive:
-            plt.ion()
-        else:
-            plt.ioff()
+            with plt.ioff():
+                anim = FuncAnimation(_fig, _animate, frames=_frames, interval=_interval)
+                display(anim)  # type: ignore # noqa: F821
+    except KeyboardInterrupt:
+        print('Skipping animation')
 
     return anim
