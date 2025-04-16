@@ -1,8 +1,14 @@
 Kinematics model
 ==================
 
-.. figure::
-   https://github.com/user-attachments/assets/e6447032-cd1a-4f5b-b756-689c733b8389
-   :alt: image
+Kinematics of the Dr.QP robot is covered in a series of notebooks.
 
 
+.. toctree::
+  ---
+  maxdepth: 2
+  caption: Contents:
+  ---
+  ../../../notebooks/1_getting_started_with_robot_ik.ipynb
+  ../../../notebooks/2_affine_transforms.ipynb
+  ../../../notebooks/3_generating_gaits.ipynb

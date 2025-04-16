@@ -42,6 +42,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
+    'myst_nb',  # for embedding jupyter notebooks
 ]
 
 intersphinx_mapping = {
