@@ -303,7 +303,7 @@ def plot_leg3d(
     ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
     ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
     ax.zaxis.set_pane_color((0, 0.2, 0, 0.5))
-    ax.zaxis.line.set_visible(False)
+    # ax.zaxis.line.set_visible(False)  # OFF to bypass ValueError: 'bboxes' cannot be empty in inline figures
     ax.zaxis.gridlines.set_visible(False)
 
     return fig, ax, result_lines, result_joints
@@ -522,7 +522,8 @@ def plot_ik_lines(ax, femur, tibia):
     )
 
     add_inline_labels(ax, with_overall_progress=False, fontsize='medium')
-    ax.legend().remove()  # remove legend as labels are added inline
+    if ax._remove_legend:
+        ax._remove_legend()  # remove legend as labels are added inline
 
 
 class HexapodPlotData:
