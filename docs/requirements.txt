@@ -20,4 +20,4 @@ myst-nb>=1.2.0
 -c constraints.txt
 
 # The requirements for notebooks
--r ../requirements.txt
+-r source/notebooks/requirements.txt
