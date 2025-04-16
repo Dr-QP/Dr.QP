@@ -14,7 +14,7 @@ python -m venv .venv-docs
 ## Adding notebooks to the documentation
 
 ```bash
-cd docs/source/notebooks
+cd docs/source/
 
-ln -rs ../../../notebooks/notebook_name.ipynb notebook_name.ipynb
+ln -s ../../notebooks notebooks
 ```
