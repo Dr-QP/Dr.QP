@@ -1,0 +1,71 @@
+line-length = 100
+indent-width = 4
+
+# Assume Python 3.12
+target-version = "py312"
+
+[format]
+# Use single quotes for strings
+quote-style = "single"
+
+# Indent with 4 spaces
+indent-style = "space"
+
+[lint]
+# Enable:
+# - pycodestyle (E, W)
+# - Pyflakes (F)
+# - flake8-blind-except (BLE)
+# - pydocstyle (D)
+# - pycodestyle warnings (W)
+# - D200: One-line docstring should fit on one line with quotes
+# - D213: Multi-line docstring summary should start at the second line
+# - D202: No blank lines allowed after function docstring's "Args"
+# - D205: 1 blank line required between summary line and description
+# - D400: First line should end with a period
+# - A001: variable is shadowing a python builtin
+# - A002: argument is shadowing a python builtin
+select = ["E", "W", "F", "BLE",
+  "D200", # One-line docstring should fit on one line with quotes
+  "D202", # No blank lines allowed after function docstring's "Args"
+  "D205", # 1 blank line required between summary line and description
+  "D213", # Multi-line docstring summary should start at the second line
+  "D400", # First line should end with a period
+  "D401", # First line should be in imperative mood
+  "D403", # First word of the docstring should be properly capitalized
+  "D413", # Missing blank line after last section ('Parameters')
+  "D417", # Missing argument descriptions in the docstring argument(s)
+  "A001", # variable is shadowing a python builtin
+  "A002", # argument is shadowing a python builtin
+  "C408", # Unnecessary dict call - rewrite as a literal
+  "E501", # Line too long
+]
+
+# Never enforce `E501` (line length violations) - handled by formatter
+# Ignore D212 in favor of D213
+ignore = ["E501", "D212", "E402"]
+
+[lint.isort]
+# Import sorting configuration
+force-single-line = false
+force-sort-within-sections = true # sort all imports within section no matter the style
+combine-as-imports = true
+known-third-party = ["rclpy", "sensor_msgs", "tf2_ros", "pytest", "drqp_brain"]
+case-sensitive = false
+order-by-type = false # ignore type, use alphabetical order
+
+
+[lint.pep8-naming]
+# Allow Pydantic's `cls` parameter to be lowercase
+classmethod-decorators = [
+    "classmethod",
+    "pydantic.validator",
+    "pydantic.root_validator",
+]
+
+[lint.per-file-ignores]
+# Ignore unused imports in __init__.py files
+"__init__.py" = ["F401"]
+
+[lint.pydocstyle]
+convention = "google"
