@@ -30,7 +30,7 @@ The next couple of cells are designated to the setup of the notebook environment
 
 The first step is to enable live python modules reloading, so changes in the python code of imported files are immediately reflected in the notebook without restarting the kernel.
 
-```{code-cell}
+```{code-cell} ipython3
 # Enable python modules live reloading
 %load_ext autoreload
 %autoreload 2
@@ -40,7 +40,7 @@ The first step is to enable live python modules reloading, so changes in the pyt
 
 The code below is provided for your convenience to open this notebook in one of the editors.
 
-```{code-cell}
+```{code-cell} ipython3
 from IPython.display import display, Markdown
 
 source_branch = 'main'  ## <<<< source branch name
@@ -70,7 +70,7 @@ In order to view non default branch change `source_branch='main'` above and reru
 
 The runtime need to be restarted to pick up the new modules. The code below will install them and kill runtime, simply run all cells again afterwards
 
-```{code-cell}
+```{code-cell} ipython3
 # type: ignore
 # Setup for Google Colab
 import importlib.util
@@ -99,7 +99,7 @@ if IN_COLAB:
 
 The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
-```{code-cell}
+```{code-cell} ipython3
 %matplotlib widget
 
 import matplotlib.pyplot as plt
@@ -109,7 +109,7 @@ plt.ioff()  # this is equivalent to using inline backend, but figures have to be
 
 ## BSpline
 
-```{code-cell}
+```{code-cell} ipython3
 # Example from https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html
 
 import matplotlib.pyplot as plt
@@ -137,7 +137,7 @@ display(fig)
 
 ## BSpline in application to gaits trajectory approximation
 
-```{code-cell}
+```{code-cell} ipython3
 from scipy.interpolate import make_interp_spline
 
 
@@ -188,7 +188,7 @@ The SciPy's BSpline class can represent Bezier curves, as Bezier curves are a sp
 
 To define a Bezier curve in SciPy, one needs to specify the control points and the degree of the curve. For example, a cubic Bezier curve (degree 3) requires four control points. The BSpline class then creates a spline object, which can be evaluated at any point to obtain the corresponding point on the curve.
 
-```{code-cell}
+```{code-cell} ipython3
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import BSpline
@@ -223,7 +223,7 @@ plt.grid()
 display(fig)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 from math import comb
 
 import matplotlib.pyplot as plt
@@ -307,7 +307,7 @@ Here's a pure Python function for a Bézier curve of any degree, parameterized b
 
 This function computes a Bézier curve point for a given $t$ by iterating through control points and applying the Bernstein polynomial formula.
 
-```{code-cell}
+```{code-cell} ipython3
 import matplotlib.pyplot as plt
 
 
@@ -350,7 +350,7 @@ plt.title('Bézier Curve')
 display(fig)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 phase = np.linspace(0, 1, 100)
 
 
@@ -386,7 +386,7 @@ ax[1].plot(phase, [leg_control_point(p)[1] for p in phase])
 display(fig)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 phase = np.linspace(0, 1, 100)
 
 
@@ -425,7 +425,7 @@ ax[1].plot(phase, [leg_control_point(p)[1] for p in phase])
 display(fig)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 gait_points = np.array([leg_gait_point(p) for p in phase])
 control_pts = np.array([leg_control_point(p) for p in phase])
 
@@ -465,7 +465,7 @@ ax[1].legend()
 display(fig)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 phase = np.linspace(0, 1, 50)
 
 
@@ -535,7 +535,7 @@ ax[2].legend()
 display(fig)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import make_interp_spline
@@ -574,7 +574,7 @@ ax.legend()
 display(fig)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 from collections import deque
 
 import matplotlib.pyplot as plt
@@ -646,7 +646,7 @@ for new_wp in [(6, 8, 6, 3), (8, 10, 9, 5), (10, 12, 11, 7)]:
     update_spline(new_wp)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 from collections import deque
 
 import matplotlib.pyplot as plt
@@ -718,7 +718,7 @@ for new_wp in [(8, 6, 3), (10, 9, 5), (12, 11, 7)]:
     update_spline(new_wp)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 from smoothing_splines import plot_spline, SplineType
 
 t = np.array([0, 1, 2.5, 4, 6])  # Time values (not uniformly spaced)
@@ -812,7 +812,7 @@ Z_o=\max(0, \sin(t))
 
 The next step is to define control points for the B-spline that will give a similar trajectory.
 
-```{code-cell}
+```{code-cell} ipython3
 import matplotlib.pyplot as plt
 from scipy.interpolate import make_interp_spline
 
@@ -856,7 +856,7 @@ display(fig)
 
 For the sake of completeness, this is how bezier curve will look like. As you can see, it doesn't follow control points, and thus is not the best choice for our use case.
 
-```{code-cell}
+```{code-cell} ipython3
 fig, ax = plt.subplots(1, 1)
 
 ax.set_xlabel('phase')
@@ -888,7 +888,7 @@ Each phase has its own additional parameters:
 
 To keep things simple for the first iteration we are going to keep speed constant and equal between phases.
 
-```{code-cell}
+```{code-cell} ipython3
 from abc import abstractmethod
 import enum
 
@@ -1065,7 +1065,7 @@ _ = gait_gen.visualize_continuous_in_3d(_steps=100, return_control_points=True)
 # _ = gait_gen.visualize_continuous_in_3d(_steps=100, return_control_points=False)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 # hexapod = HexapodModel()
 # hexapod.forward_kinematics(0, -25, 110)
 

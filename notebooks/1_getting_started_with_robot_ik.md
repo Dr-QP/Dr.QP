@@ -35,7 +35,7 @@ The next couple of cells are designated to the setup of the notebook environment
 
 The first step is to enable live python modules reloading, so changes in the python code of imported files are immediately reflected in the notebook without restarting the kernel.
 
-```{code-cell}
+```{code-cell} ipython3
 # Enable python modules live reloading
 %load_ext autoreload
 %autoreload 2
@@ -45,7 +45,7 @@ The first step is to enable live python modules reloading, so changes in the pyt
 
 The code below is provided for your convenience to open this notebook in one of the editors.
 
-```{code-cell}
+```{code-cell} ipython3
 :tags: [keep_output]
 
 from IPython.display import display, Markdown
@@ -77,7 +77,7 @@ In order to view non default branch change `source_branch='main'` above and reru
 
 The runtime need to be restarted to pick up the new modules. The code below will install them and kill runtime, simply run all cells again afterwards
 
-```{code-cell}
+```{code-cell} ipython3
 # type: ignore
 # Setup for Google Colab
 import importlib.util
@@ -106,7 +106,7 @@ if IN_COLAB:
 
 The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
-```{code-cell}
+```{code-cell} ipython3
 %matplotlib widget
 
 import matplotlib.pyplot as plt
@@ -134,7 +134,7 @@ The diagrams below will make it much more clear, I promise.
 
 The values below are the default parameters for the simulated leg used in this tutorial.
 
-```{code-cell}
+```{code-cell} ipython3
 coxa_length = 5
 femur_length = 8
 tibia_length = 10
@@ -150,7 +150,7 @@ Before we dive into the details of how inverse kinematics works, let's first get
 
 Coxa, femur and tibia are represented with vector that is rotated at its base. Each next link starts at the ened of the previous link.
 
-```{code-cell}
+```{code-cell} ipython3
 from point import Line, Point
 
 
@@ -181,7 +181,7 @@ def forward_kinematics_rads(
 
 Radians is a natural way to represent angles in most of the math related to robotics, however I find it easier to think in degrees, therefore I will be using degrees in this notebook.
 
-```{code-cell}
+```{code-cell} ipython3
 import numpy as np
 
 
@@ -228,7 +228,7 @@ def forward_kinematics(
 
 First, lets see how our leg looks in the neutral position. It is a straight line going from start point at (0, 0) and ending with the `Foot`
 
-```{code-cell}
+```{code-cell} ipython3
 from plotting import plot_leg_with_points
 
 model = forward_kinematics(coxa_length, femur_length, tibia_length, alpha, beta, gamma)
@@ -240,7 +240,7 @@ with plt.ioff():
 
 Now lets try changing some angles to see how it behaves. Feel free to experiment with different values.
 
-```{code-cell}
+```{code-cell} ipython3
 model = forward_kinematics(coxa_length, femur_length, tibia_length, 50, -60, -10)
 
 with plt.ioff():
@@ -250,7 +250,7 @@ with plt.ioff():
     display(plt.gcf())
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 # Lifted up (coxa) and bent down (femur), with foot on the ground (guessed angle)
 model = forward_kinematics(coxa_length, femur_length, tibia_length, 45, -55, -14)
 
@@ -265,7 +265,7 @@ Its time to have a little fun with our robot.
 
 Using the sliders on the interactive diagram below try to find angles at which the foot is on the ground.
 
-```{code-cell}
+```{code-cell} ipython3
 from ipywidgets import interact
 from plotting import plot_leg_update_lines
 
@@ -333,7 +333,7 @@ This diagram should give you an idea of what we are trying to solve:
 
 `TODO: Update diagram with the one from Dr.QP leg and names of angles and planes matching this notebook`
 
-```{code-cell}
+```{code-cell} ipython3
 # Custom lengths for the IK examples
 coxa_len = 5
 femur_len = 10
@@ -348,7 +348,7 @@ IK problem is to find angle alpha that will align leg with a given target point.
 
 Below you can find a view of the leg in XY plane
 
-```{code-cell}
+```{code-cell} ipython3
 def forward_kinematics_xy(coxa_length, femur_length, tibia_length, alpha, show_alpha_value=False):
     body_rad = np.radians(0)
     alpha_rad = body_rad + np.radians(alpha)
@@ -389,7 +389,7 @@ with plt.ioff():
 
 Finding angle $\alpha$ is a trivial problem, since we are dealing with a right triangle.
 
-```{code-cell}
+```{code-cell} ipython3
 from inline_labels import add_inline_labels
 
 
@@ -421,7 +421,7 @@ The second computation we need to make is the length of the hypotenuse $X'$ that
 
 $\Large X' = \sqrt{target_x^2 + target_y^2}$ or in python: `X_tick = math.hypot(foot_target.x, foot_target.y)`
 
-```{code-cell}
+```{code-cell} ipython3
 import math
 
 
@@ -442,7 +442,7 @@ plot_xtick(30)
 
 Putting all of this in code will look as follows
 
-```{code-cell}
+```{code-cell} ipython3
 from point import SimplePoint3D as Point3D
 
 
@@ -483,7 +483,7 @@ As you can see on the diagram above, coxa IK was solved correctly and leg is now
 
 Inverse Kinematics for Femur and Tibia is a bit more involved than for the Coxa. Let's start by looking at diagram below.
 
-```{code-cell}
+```{code-cell} ipython3
 from plotting import plot_ik_lines
 
 alpha = 0
@@ -579,7 +579,7 @@ $\gamma = \Phi - 180$
 
 And that is all, lets put it all together:
 
-```{code-cell}
+```{code-cell} ipython3
 def inverse_kinematics_xz(coxa, femur, tibia, foot_target, verbose=False):
     """
     XZ axis Inverse kinematics solver for 3DOF leg.
@@ -645,7 +645,7 @@ with plt.ioff():
 
 And that is all. We have solved inverse kinematics for a 3DOF leg.
 
-```{code-cell}
+```{code-cell} ipython3
 print(f'alpha = {alpha_ik:.2f}')
 print(f'beta = {beta_ik:.2f}')
 print(f'gamma = {gamma_ik:.2f}')
@@ -653,7 +653,7 @@ print(f'gamma = {gamma_ik:.2f}')
 
 To understand where the offset values for beta and gamma in the computation above are coming from, let's plot straight leg and see what theta and phi are.
 
-```{code-cell}
+```{code-cell} ipython3
 with plt.ioff():
     _ = solve_and_plot_at_target_xz(
         Point(coxa_len + femur_len + tibia_len, 0), 'Straight leg out', verbose=True
@@ -664,13 +664,13 @@ with plt.ioff():
 Now once we have the solution, let's play with it a little bit and solve for various target points.
 If math is working correctly, foot (magenta dot) should always overlap with the target (black dot).
 
-```{code-cell}
+```{code-cell} ipython3
 with plt.ioff():
     _ = solve_and_plot_at_target_xz(Point(20.61, 6.14), verbose=True)
     display(plt.gcf())
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 with plt.ioff():
     _ = solve_and_plot_at_target_xz(Point(15, 0), verbose=True)
     display(plt.gcf())
@@ -678,7 +678,7 @@ with plt.ioff():
 
 ### Putting it all together
 
-```{code-cell}
+```{code-cell} ipython3
 def inverse_kinematics(coxa, femur, tibia, foot_target: Point3D):
     alpha, X_tick = coxa_ik(foot_target.xy)
     beta, gamma = inverse_kinematics_xz(coxa, femur, tibia, Point(X_tick, foot_target.z))
@@ -689,7 +689,7 @@ def inverse_kinematics(coxa, femur, tibia, foot_target: Point3D):
 
 The classic IK test is to draw a circle with the foot in each coordinate plane. Since we are using projects, let's limit it to the XZ plane.
 
-```{code-cell}
+```{code-cell} ipython3
 # Generate data and solve IK
 
 steps = 32
@@ -725,7 +725,7 @@ for target in sequence_xz_little_circle:
     solved_model.append(model)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 # Plot IK solutions and targets into an animation
 
 from matplotlib.animation import FuncAnimation
@@ -763,7 +763,7 @@ with plt.ioff():
 
  There is still one oopsy to cover, a case when the target is unreachable.
 
-```{code-cell}
+```{code-cell} ipython3
 try:
     inverse_kinematics(1, 1, 1, Point3D(10, 1, 1))
 except ValueError as e:
@@ -772,7 +772,7 @@ except ValueError as e:
 
 The `math domain error` happens inside the `acos` function when input is outside of range [-1, 1] which happens exactly when there is no solution. One of the possible fixes is to cap the input to the valid range.
 
-```{code-cell}
+```{code-cell} ipython3
 def safe_acos(num):
     if num < -1:
         return False, math.pi  # math.acos(-1)
@@ -826,7 +826,7 @@ With the safe capped version of acos function not only not throwing, but also pr
 
 Let's plot it to have better intuition about what's going on.
 
-```{code-cell}
+```{code-cell} ipython3
 import matplotlib.pyplot as plt
 
 plt.rcParams['animation.html'] = 'none'

@@ -40,7 +40,7 @@ The next couple of cells are designated to the setup of the notebook environment
 
 The first step is to enable live python modules reloading, so changes in the python code of imported files are immediately reflected in the notebook without restarting the kernel.
 
-```{code-cell}
+```{code-cell} ipython3
 # Enable python modules live reloading
 %load_ext autoreload
 %autoreload 2
@@ -50,7 +50,7 @@ The first step is to enable live python modules reloading, so changes in the pyt
 
 The code below is provided for your convenience to open this notebook in one of the editors.
 
-```{code-cell}
+```{code-cell} ipython3
 from IPython.display import display, Markdown
 
 source_branch = 'main'  ## <<<< source branch name
@@ -80,7 +80,7 @@ In order to view non default branch change `source_branch='main'` above and reru
 
 The runtime need to be restarted to pick up the new modules. The code below will install them and kill runtime, simply run all cells again afterwards
 
-```{code-cell}
+```{code-cell} ipython3
 # type: ignore
 # Setup for Google Colab
 import importlib.util
@@ -109,7 +109,7 @@ if IN_COLAB:
 
 The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
-```{code-cell}
+```{code-cell} ipython3
 %matplotlib widget
 
 import matplotlib.pyplot as plt
@@ -127,7 +127,7 @@ while one group is in stance phase, the other group is in swing phase and cycle 
 
 Lets build the simplest tripod gait generator, it will generate offsets for each leg at a specific phase (0.0 to 1.0).
 
-```{code-cell}
+```{code-cell} ipython3
 from gait_generators import GaitGenerator
 import matplotlib.pyplot as plt
 from models import HexapodLeg
@@ -247,7 +247,7 @@ gait_generator.visualize_continuous(_steps=100)
 _ = gait_generator.visualize_continuous_in_3d(_steps=100)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 from models import HexapodModel
 from plotting import animate_plot, plot_hexapod, update_hexapod_plot
 
@@ -319,7 +319,7 @@ Transition out of gait is similar, but starts at 0 and ends at 0.25 or X and Z c
 
 Below is the implementation of the transition. This kind of code works for the animation and is suitable for tripod gait, but with increase of gait complexity and with joystick style controls it would be impossible to implement it this way. We are going to explore a different approach later in this notebook.
 
-```{code-cell}
+```{code-cell} ipython3
 def animate_hexapod_gait_with_transitions(
     hexapod: HexapodModel,
     gaits_gen: GaitGenerator,
@@ -477,7 +477,7 @@ dy & dx
 \end{bmatrix}
 \end{equation}
 
-```{code-cell}
+```{code-cell} ipython3
 from transforms import Transform
 
 
@@ -534,7 +534,7 @@ _ = directional_tripod_gen.visualize_continuous_in_3d(direction=Point3D([0, 0, 1
 
 Adding a direction vector did the trick, at least charts look good. Let's see it on the hexapod.
 
-```{code-cell}
+```{code-cell} ipython3
 def animate_hexapod_gait_with_direction(
     hexapod: HexapodModel,
     gaits_gen: GaitGenerator,
@@ -657,7 +657,7 @@ This RippleGaitGenerator implements a classic ripple gait where:
  5. During stance, the leg moves backward linearly
  6. During swing, the leg lifts in a parabolic trajectory while moving forward
 
-```{code-cell}
+```{code-cell} ipython3
 class RippleGaitGenerator(GaitGenerator):
     def __init__(
         self,
@@ -828,7 +828,7 @@ ripple_gen.visualize_continuous()
 _ = ripple_gen.visualize_continuous_in_3d()
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 hexapod = HexapodModel()
 hexapod.forward_kinematics(0, -25, 110)
 
@@ -849,7 +849,7 @@ The WaveGaitGenerator implements a wave gait with these key characteristics:
  6. During stance, the leg moves backward linearly
  7. During swing, the leg lifts in a parabolic trajectory while moving forward
 
-```{code-cell}
+```{code-cell} ipython3
 class WaveGaitGenerator(GaitGenerator):
     def __init__(
         self,
@@ -1019,7 +1019,7 @@ wave_generator.visualize_continuous(_steps=100)
 _ = wave_generator.visualize_continuous_in_3d(_steps=100)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 hexapod = HexapodModel()
 hexapod.forward_kinematics(0, -25, 110)
 
@@ -1059,7 +1059,7 @@ Gait trajectory are fairly straightforward and we have seen some solution using 
 
 In order to achieve transitioning we need to implement trajectory interpolation. The simplest approach would be to use linear interpolation, however it may create jerkiness cause by sudden trajectory changes causing high deceleration and acceleration. Much better results can be achieved using [smoothing spline functions](https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html), e.g. a 2nd degree [B-spline](https://en.wikipedia.org/wiki/B-spline). B-spline allows a smooth transition between control points while remaining stable if some of the control points are changed, e.g. when new goal point is added. 2nd degree B-spline has continuous first derivative, which means that the velocity is smooth and has no sudden changes in direction.
 
-```{code-cell}
+```{code-cell} ipython3
 from smoothing_splines import plot_spline, SplineType
 
 frames_between_points = 30
@@ -1108,7 +1108,7 @@ display(fig)
 As you can see above, interpolating BSpline generates a smooth trajectory that follows the control points with smooth velocity changes, which will reduce strains on servos. However it comes at a cost of random overshooting that might be non desirable.
 One of the approaches is to reduce smoothness by mixing in a linear trajectory. Animation below shows how it affects the trajectory.
 
-```{code-cell}
+```{code-cell} ipython3
 # Animation size has reached 21028704 bytes, exceeding the limit of 20971520.0. If you're sure you want a larger animation embedded, set the animation.embed_limit rc parameter to a larger value (in MB). This and further frames will be dropped.
 plt.rcParams['animation.embed_limit'] = 50
 
@@ -1164,7 +1164,7 @@ animate_plot(fig, update, frames * frames_between_points, _interval=16, _interac
 
 Let's put it all together and generate some gaits!
 
-```{code-cell}
+```{code-cell} ipython3
 %%writefile parametric_gait_generator.py
 # Copyright (c) 2017-2025 Anton Matosov
 #
@@ -1283,7 +1283,7 @@ class ParametricGaitGenerator(GaitGenerator):
         )
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 import matplotlib.pyplot as plt
 from parametric_gait_generator import GaitType, ParametricGaitGenerator  # noqa: F811
 
@@ -1303,7 +1303,7 @@ axs = gait_gen.visualize_continuous(_steps=500, _subtitle=' Tripod gait')
 _ = gait_gen.visualize_continuous_in_3d(_steps=100, step_length=gait_gen.step_length)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 hexapod = HexapodModel()
 hexapod.forward_kinematics(0, -25, 110)
 
@@ -1321,7 +1321,7 @@ anim = animate_hexapod_gait_with_direction(
 
 To make robot turn we need to mix in circular movement to the gait. Let's first make it turn in place. This can be achieved by using existing gait generator and treating X offsets as a rotation angle of the foot around center of the body.
 
-```{code-cell}
+```{code-cell} ipython3
 from models import HexapodModel
 from plotting import animate_plot
 
@@ -1401,7 +1401,7 @@ Now that we have all the pieces in place, we can put them together to create a f
 4. Combine the two trajectories into a single walk trajectory
 5. Apply the walk trajectory to the robot based on the current robot legs position
 
-```{code-cell}
+```{code-cell} ipython3
 %%writefile walk_controller.py
 # Copyright (c) 2017-2025 Anton Matosov
 #
@@ -1583,7 +1583,7 @@ class WalkController:
             leg.move_to(foot_target)
 ```
 
-```{code-cell}
+```{code-cell} ipython3
 import importlib
 
 from models import HexapodModel
