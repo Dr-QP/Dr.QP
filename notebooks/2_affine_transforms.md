@@ -1,15 +1,14 @@
 ---
-jupyter:
-  jupytext:
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.3'
-      jupytext_version: 1.17.0
-  kernelspec:
-    display_name: .venv
-    language: python
-    name: python3
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.17.0
+kernelspec:
+  display_name: .venv
+  language: python
+  name: python3
 ---
 
 # 2. Matrix based transforms
@@ -18,6 +17,7 @@ In the last notebook `1_getting_started_with_robot_ik.ipynb` we have familiarize
 
 SciPy, a Python library built upon NumPy, provides a wide array of mathematical algorithms and functions that are valuable for robotics, including linear algebra, which is of interest here.
 
++++
 
 ## Setting up the Jupyter notebook for experimentation
 
@@ -27,7 +27,7 @@ The next couple of cells are designated to the setup of the notebook environment
 
 The first step is to enable live python modules reloading, so changes in the python code of imported files are immediately reflected in the notebook without restarting the kernel.
 
-```python
+```{code-cell}
 # Enable python modules live reloading
 %load_ext autoreload
 %autoreload 2
@@ -37,7 +37,7 @@ The first step is to enable live python modules reloading, so changes in the pyt
 
 The code below is provided for your convenience to open this notebook in one of the editors.
 
-```python
+```{code-cell}
 from IPython.display import display, Markdown
 
 source_branch = 'main'  ## <<<< source branch name
@@ -67,7 +67,7 @@ In order to view non default branch change `source_branch='main'` above and reru
 
 The runtime need to be restarted to pick up the new modules. The code below will install them and kill runtime, simply run all cells again afterwards
 
-```python
+```{code-cell}
 # type: ignore
 # Setup for Google Colab
 import importlib.util
@@ -96,7 +96,7 @@ if IN_COLAB:
 
 The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
-```python
+```{code-cell}
 %matplotlib widget
 
 import matplotlib.pyplot as plt
@@ -110,7 +110,7 @@ The first step is to convert our forward kinematics code from custom Points and 
 
 Alongside the conversion, we are going to bring all the algorithms to work in full 3D space, not just 2D projections.
 
-```python
+```{code-cell}
 import numpy as np
 from point import Leg3D, Line3D, Point3D
 from scipy.spatial.transform import Rotation as R
@@ -173,7 +173,7 @@ def forward_kinematics(
     )
 ```
 
-```python
+```{code-cell}
 from plotting import plot_leg_with_points
 
 coxa = 5
@@ -198,7 +198,7 @@ This was a good start, but code is hard to read and understand due to excessive 
 
 With this `Transform` class we can now create a chain of transformations instead of hand crafting them.
 
-```python
+```{code-cell}
 from plotting import plot_leg3d
 from transforms import Transform
 
@@ -307,7 +307,7 @@ display(fig)
 
 With full 3D kinematics model and plotting support lets setup a 6 legged robot.
 
-```python
+```{code-cell}
 # Dr.QP Dimensions
 from models import LegModel
 from plotting import plot_update_leg3d_lines
@@ -460,16 +460,14 @@ fig, ax, plot_data = plot_drqp(drqp)
 display(fig)
 ```
 
-<!-- #region -->
 With the ability to do forward kinematics for a full robot, we can now start to work on the inverse kinematics. 1_getting_started_with_robot_ik.ipynb notebook covers the full 3D case of a single leg IK, however it works in the leg's local coordinate frame. In order to use it for the full robot, each leg global target position needs to be converted to the leg's local coordinate frame. Since we used matrix transformations for the forward kinematics, we can use the inverse of the body transform to convert the global target to the local coordinate frame.
 
 ```python
     def to_local(self, point):
         return self.body_joint.inverse().apply_point(point)
 ```
-<!-- #endregion -->
 
-```python
+```{code-cell}
 orig_alpha, orig_beta, orig_gamma = 0, -25, 110
 drqp = DrQP()
 drqp.forward_kinematics(orig_alpha, orig_beta, orig_gamma)
@@ -500,7 +498,7 @@ The algorithm is as follows:
  2. Apply transform to the robot's body (translation, rotation, twist).
  3. Run inverse kinematics for all legs with the foot positions captured in step 1.
 
-```python
+```{code-cell}
 orig_alpha, orig_beta, orig_gamma = 0, -25, 110
 drqp = DrQP()
 drqp.forward_kinematics(orig_alpha, orig_beta, orig_gamma)
@@ -523,7 +521,7 @@ fig, ax, plot_data = plot_drqp(drqp, unreachable_targets)
 display(fig)
 ```
 
-```python
+```{code-cell}
 import math
 
 steps = 64
@@ -554,7 +552,7 @@ sequence_xyz_little_circle = [
 ]
 ```
 
-```python
+```{code-cell}
 # Plot IK solutions and targets into an animation
 
 import matplotlib.animation
@@ -647,7 +645,7 @@ except KeyboardInterrupt:
 
 To make all the learnings and findings reusable in other notebooks, lets move all the code into modules and double check it works.
 
-```python
+```{code-cell}
 from models import HexapodModel
 from plotting import plot_hexapod, update_hexapod_plot
 
