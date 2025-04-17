@@ -1189,6 +1189,7 @@ Let's put it all together and generate some gaits!
 from enum import auto, Enum
 
 from gait_generators import GaitGenerator
+from models import HexapodLeg
 import numpy as np
 from point import Point3D
 

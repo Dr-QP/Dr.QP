@@ -5,6 +5,7 @@ jupytext:
     format_name: myst
     format_version: 0.13
     jupytext_version: 1.17.0
+  root_level_metadata_filter: -jupytext,-kernelspec
 kernelspec:
   display_name: .venv
   language: python

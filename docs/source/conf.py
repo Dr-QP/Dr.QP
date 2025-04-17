@@ -32,9 +32,30 @@ language = 'en'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['**/_*.rst']
+exclude_patterns = ['**/_*.rst', '**/*.ipynb']
 
 # -- General configuration
+extensions = [
+    'sphinx.ext.duration',
+    'sphinx.ext.doctest',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.intersphinx',
+    'myst_nb',  # for embedding jupyter notebooks
+]
+
+# Javascript to be loaded on pages containing ipywidgets
+nb_ipywidgets_js = {
+    'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js': {
+        'integrity': 'sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=',
+        'crossorigin': 'anonymous',
+    },
+    'https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@1.0.6/dist/embed-amd.js': {
+        'data-jupyter-widgets-cdn': 'https://cdn.jsdelivr.net/npm/',
+        'crossorigin': 'anonymous',
+    },
+}
+
 myst_enable_extensions = [
     'amsmath',
     'colon_fence',
@@ -44,14 +65,6 @@ myst_enable_extensions = [
 ]
 myst_url_schemes = ('http', 'https', 'mailto')
 
-extensions = [
-    'sphinx.ext.duration',
-    'sphinx.ext.doctest',
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.intersphinx',
-    'myst_nb',  # for embedding jupyter notebooks
-]
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),

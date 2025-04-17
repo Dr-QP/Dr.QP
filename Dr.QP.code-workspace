@@ -265,7 +265,7 @@
       {
         "label": "Dr.QP sync notebooks",
         "type": "shell",
-        "command": ".venv/bin/jupytext --sync notebooks/*.myst.md notebooks/*.ipynb",
+        "command": ".venv/bin/jupytext --sync notebooks/*.md notebooks/*.ipynb",
         "options": {
           "cwd": "${workspaceFolder}"
         },
@@ -358,12 +358,14 @@
     "esbonio.server.enabled": false,
 
     "cSpell.words": [
+      "amsmath",
       "arange",
       "arccos",
       "arctan",
       "arctan2",
       "argsort",
       "autoreload",
+      "autosummary",
       "azim",
       "bashdb",
       "bezier",
@@ -374,6 +376,8 @@
       "colcon",
       "cpplint",
       "debugpy",
+      "deflist",
+      "dollarmath",
       "dr_qp",
       "drqp",
       "EEPROM",
@@ -384,8 +388,11 @@
       "highlightdark",
       "hypot",
       "interp",
+      "intersphinx",
       "ioff",
       "ipympl",
+      "ipynb",
+      "jupytext",
       "linestyle",
       "linspace",
       "Matosov",
@@ -404,6 +411,7 @@
       "splprep",
       "splrep",
       "stylesheet",
+      "toctree",
       "venv",
       "xaxis",
       "xaxislabel",
