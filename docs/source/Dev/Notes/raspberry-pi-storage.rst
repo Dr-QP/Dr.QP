@@ -15,7 +15,7 @@ Built in SSD (Ultra XC10)
    1073741824 bytes (1.1 GB, 1.0 GiB) copied, 55.1041 s, 19.5 MB/s
 
 Samsung tiny USB3 Drive (FAT)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: bash
 
@@ -29,7 +29,7 @@ Samsung tiny USB3 Drive (FAT)
    1073741824 bytes (1.1 GB, 1.0 GiB) copied, 26.7883 s, 40.1 MB/s
 
 Samsung tiny USB3 Drive (ext4)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: bash
 

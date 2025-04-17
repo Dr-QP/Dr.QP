@@ -15,4 +15,9 @@ sphinx-notfound-page~=1.0.0
 # to install that as well.
 sphinx_rtd_theme>=3.0.2
 
+myst-nb>=1.2.0
+
 -c constraints.txt
+
+# The requirements for notebooks
+-r source/notebooks/requirements.txt
