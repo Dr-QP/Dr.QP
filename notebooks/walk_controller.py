@@ -21,7 +21,6 @@
 import numpy as np
 from parametric_gait_generator import GaitType, ParametricGaitGenerator
 from point import Point3D
-from transforms import Transform
 
 
 class WalkController:
