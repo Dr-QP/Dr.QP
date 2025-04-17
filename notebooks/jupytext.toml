@@ -1,1 +1,1 @@
-formats = "ipynb,py:percent,md:myst"
+formats = "ipynb,md:myst"
