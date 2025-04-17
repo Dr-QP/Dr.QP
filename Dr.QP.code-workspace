@@ -265,7 +265,7 @@
       {
         "label": "Dr.QP sync notebooks",
         "type": "shell",
-        "command": ".venv/bin/jupytext --sync notebooks/*.myst notebooks/*.ipynb",
+        "command": ".venv/bin/jupytext --sync notebooks/*.myst.md notebooks/*.ipynb",
         "options": {
           "cwd": "${workspaceFolder}"
         },
