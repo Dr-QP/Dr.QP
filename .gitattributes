@@ -1,4 +1,0 @@
-# git config filter.jupytext.smudge "jupytext --to notebook --pipe cat"
-# git config filter.jupytext.clean "jupytext --from notebook --pipe cat"
-# git config filter.jupytext.required true
-*.ipynb filter=jupytext
