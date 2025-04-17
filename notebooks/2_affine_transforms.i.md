@@ -1,46 +1,43 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.17.0
-#   kernelspec:
-#     display_name: .venv
-#     language: python
-#     name: python3
-# ---
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.17.0
+kernelspec:
+  display_name: .venv
+  language: python
+  name: python3
+---
 
-# %% [markdown]
-# # 2. Matrix based transforms
-#
-# In the last notebook `1_getting_started_with_robot_ik.ipynb` we have familiarized ourselves with the concept of Forward and Inverse Kinematics (IK) and implemented a simple IK solver for a 3DOF leg using trigonometry. In this notebook we will use SciPy to implement a more advanced IK solver using matrix transformations.
-#
-# SciPy, a Python library built upon NumPy, provides a wide array of mathematical algorithms and functions that are valuable for robotics, including linear algebra, which is of interest here.
-#
+# 2. Matrix based transforms
 
-# %% [markdown]
-# ## Setting up the Jupyter notebook for experimentation
-#
-# This documentation has been generated from a Jupyter notebook and is available in the repo source code (see link below).
-#
-# The next couple of cells are designated to the setup of the notebook environment locally or on the Google Colab. If you are not interested in the experimentation and only want to read the documentation, feel free to skip them.
-#
-# The first step is to enable live python modules reloading, so changes in the python code of imported files are immediately reflected in the notebook without restarting the kernel.
-#
+In the last notebook `1_getting_started_with_robot_ik.ipynb` we have familiarized ourselves with the concept of Forward and Inverse Kinematics (IK) and implemented a simple IK solver for a 3DOF leg using trigonometry. In this notebook we will use SciPy to implement a more advanced IK solver using matrix transformations.
 
-# %%
+SciPy, a Python library built upon NumPy, provides a wide array of mathematical algorithms and functions that are valuable for robotics, including linear algebra, which is of interest here.
+
++++
+
+## Setting up the Jupyter notebook for experimentation
+
+This documentation has been generated from a Jupyter notebook and is available in the repo source code (see link below).
+
+The next couple of cells are designated to the setup of the notebook environment locally or on the Google Colab. If you are not interested in the experimentation and only want to read the documentation, feel free to skip them.
+
+The first step is to enable live python modules reloading, so changes in the python code of imported files are immediately reflected in the notebook without restarting the kernel.
+
+```{code-cell}
 # Enable python modules live reloading
-# %load_ext autoreload
-# %autoreload 2
+%load_ext autoreload
+%autoreload 2
+```
 
-# %% [markdown]
-# ### Convenient links to editors
-#
-# The code below is provided for your convenience to open this notebook in one of the editors.
+### Convenient links to editors
 
-# %%
+The code below is provided for your convenience to open this notebook in one of the editors.
+
+```{code-cell}
 from IPython.display import display, Markdown
 
 source_branch = 'main'  ## <<<< source branch name
@@ -54,23 +51,23 @@ codespace_badge_markdown = f'[![Open In GitHub Codespace](https://img.shields.io
 badge_markdown = f'{colab_badge_markdown}\n\n{github_badge_markdown}\n\n{codespace_badge_markdown}'
 
 display(Markdown(badge_markdown))
+```
 
-# %% [markdown]
-# ### Viewing on github
-#
-# All cell outputs in this notebook are stripped from source code, so github will not show them. To see the outputs, run the notebook locally, on Colab or in GitHub Codespace.
-#
-# ### Colab specific setup
-#
-# Google Colab opens only the notebook file and all the dependencies are not available. The code below will clone the repository and install the dependencies.
-#
-# In order to view non default branch change `source_branch='main'` above and rerun the cell.
-#
-# #### Runtime restart!!
-#
-# The runtime need to be restarted to pick up the new modules. The code below will install them and kill runtime, simply run all cells again afterwards
+### Viewing on github
 
-# %%
+All cell outputs in this notebook are stripped from source code, so github will not show them. To see the outputs, run the notebook locally, on Colab or in GitHub Codespace.
+
+### Colab specific setup
+
+Google Colab opens only the notebook file and all the dependencies are not available. The code below will clone the repository and install the dependencies.
+
+In order to view non default branch change `source_branch='main'` above and rerun the cell.
+
+#### Runtime restart!!
+
+The runtime need to be restarted to pick up the new modules. The code below will install them and kill runtime, simply run all cells again afterwards
+
+```{code-cell}
 # type: ignore
 # Setup for Google Colab
 import importlib.util
@@ -86,34 +83,34 @@ if IN_COLAB:
         import plotting  # noqa: F401
         import point  # noqa: F401
     except ImportError:
-        # !git clone --filter=blob:none --no-checkout --depth 1 --sparse https://github.com/Dr-QP/Dr.QP.git --branch=$source_branch
-        # !cd Dr.QP && git sparse-checkout add notebooks && git checkout && cd ..
-        # !mv -f Dr.QP/* .
-        # !mv -f notebooks/* .
-        # !rm -rf Dr.QP
-        # %pip install -r requirements.txt
+        !git clone --filter=blob:none --no-checkout --depth 1 --sparse https://github.com/Dr-QP/Dr.QP.git --branch=$source_branch
+        !cd Dr.QP && git sparse-checkout add notebooks && git checkout && cd ..
+        !mv -f Dr.QP/* .
+        !mv -f notebooks/* .
+        !rm -rf Dr.QP
+        %pip install -r requirements.txt
 
         print('\n\n\nRestarting runtime to pick up the new modules...')
         os.kill(os.getpid(), 9)
+```
 
-# %% [markdown]
-# The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
+The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
-# %%
-# %matplotlib widget
+```{code-cell}
+%matplotlib widget
 
 import matplotlib.pyplot as plt
 
 plt.ioff()  # this is equivalent to using inline backend, but figures have to be displayed manually
+```
 
-# %% [markdown]
-# ## Affine transforms
-#
-# The first step is to convert our forward kinematics code from custom Points and hand crafted function to use matrix transforms for rotation and translation.
-#
-# Alongside the conversion, we are going to bring all the algorithms to work in full 3D space, not just 2D projections.
+## Affine transforms
 
-# %%
+The first step is to convert our forward kinematics code from custom Points and hand crafted function to use matrix transforms for rotation and translation.
+
+Alongside the conversion, we are going to bring all the algorithms to work in full 3D space, not just 2D projections.
+
+```{code-cell}
 import numpy as np
 from point import Leg3D, Line3D, Point3D
 from scipy.spatial.transform import Rotation as R
@@ -174,9 +171,9 @@ def forward_kinematics(
             Line3D(femur_point, tibia_point, 'Tibia'),
         ]
     )
+```
 
-
-# %%
+```{code-cell}
 from plotting import plot_leg_with_points
 
 coxa = 5
@@ -195,13 +192,13 @@ _ = plot_leg_with_points(
     model.xz, 'Foot on the ground (XZ)', link_labels='none', x_label="X'", y_label='Z'
 )
 display(plt.gcf())
+```
 
-# %% [markdown]
-# This was a good start, but code is hard to read and understand due to excessive repetitions. Let's introduce a transform system, similar to the one used in ROS TF2 library.
-#
-# With this `Transform` class we can now create a chain of transformations instead of hand crafting them.
+This was a good start, but code is hard to read and understand due to excessive repetitions. Let's introduce a transform system, similar to the one used in ROS TF2 library.
 
-# %%
+With this `Transform` class we can now create a chain of transformations instead of hand crafting them.
+
+```{code-cell}
 from plotting import plot_leg3d
 from transforms import Transform
 
@@ -306,11 +303,11 @@ _ = plot_leg_with_points(
 _ = plot_leg3d(model, 'Foot in 3D', link_labels='none', joint_labels='points', subplot=224, fig=fig)
 display(fig)
 # print("foot position: ", model.lines[-1].end)
+```
 
-# %% [markdown]
-# With full 3D kinematics model and plotting support lets setup a 6 legged robot.
+With full 3D kinematics model and plotting support lets setup a 6 legged robot.
 
-# %%
+```{code-cell}
 # Dr.QP Dimensions
 from models import LegModel
 from plotting import plot_update_leg3d_lines
@@ -461,16 +458,16 @@ drqp = DrQP()
 drqp.forward_kinematics(0, -25, 110)
 fig, ax, plot_data = plot_drqp(drqp)
 display(fig)
+```
 
-# %% [markdown]
-# With the ability to do forward kinematics for a full robot, we can now start to work on the inverse kinematics. 1_getting_started_with_robot_ik.ipynb notebook covers the full 3D case of a single leg IK, however it works in the leg's local coordinate frame. In order to use it for the full robot, each leg global target position needs to be converted to the leg's local coordinate frame. Since we used matrix transformations for the forward kinematics, we can use the inverse of the body transform to convert the global target to the local coordinate frame.
-#
-# ```python
-#     def to_local(self, point):
-#         return self.body_joint.inverse().apply_point(point)
-# ```
+With the ability to do forward kinematics for a full robot, we can now start to work on the inverse kinematics. 1_getting_started_with_robot_ik.ipynb notebook covers the full 3D case of a single leg IK, however it works in the leg's local coordinate frame. In order to use it for the full robot, each leg global target position needs to be converted to the leg's local coordinate frame. Since we used matrix transformations for the forward kinematics, we can use the inverse of the body transform to convert the global target to the local coordinate frame.
 
-# %%
+```python
+    def to_local(self, point):
+        return self.body_joint.inverse().apply_point(point)
+```
+
+```{code-cell}
 orig_alpha, orig_beta, orig_gamma = 0, -25, 110
 drqp = DrQP()
 drqp.forward_kinematics(orig_alpha, orig_beta, orig_gamma)
@@ -490,18 +487,18 @@ for leg in drqp.legs:
 
 fig, ax, plot_data = plot_drqp(drqp, targets)
 display(fig)
+```
 
-# %% [markdown]
-# With the ability to position all legs, its time to work on the inverse kinematics for the body.
-#
-# The algorithm is as follows:
-#  1. Capture the reference stance
-#     - Run forward kinematics for all legs with the same angles in a desired position (neutral, wide, narrow, specific gait).
-#     - Capture global positions of all leg foot tips
-#  2. Apply transform to the robot's body (translation, rotation, twist).
-#  3. Run inverse kinematics for all legs with the foot positions captured in step 1.
+With the ability to position all legs, its time to work on the inverse kinematics for the body.
 
-# %%
+The algorithm is as follows:
+ 1. Capture the reference stance
+    - Run forward kinematics for all legs with the same angles in a desired position (neutral, wide, narrow, specific gait).
+    - Capture global positions of all leg foot tips
+ 2. Apply transform to the robot's body (translation, rotation, twist).
+ 3. Run inverse kinematics for all legs with the foot positions captured in step 1.
+
+```{code-cell}
 orig_alpha, orig_beta, orig_gamma = 0, -25, 110
 drqp = DrQP()
 drqp.forward_kinematics(orig_alpha, orig_beta, orig_gamma)
@@ -522,8 +519,9 @@ for leg, target in zip(drqp.legs, targets):
 
 fig, ax, plot_data = plot_drqp(drqp, unreachable_targets)
 display(fig)
+```
 
-# %%
+```{code-cell}
 import math
 
 steps = 64
@@ -552,8 +550,9 @@ sequence_xyz_little_circle = [
     )
     for i in np.linspace(0, np.pi * 2, steps)
 ]
+```
 
-# %%
+```{code-cell}
 # Plot IK solutions and targets into an animation
 
 import matplotlib.animation
@@ -642,11 +641,11 @@ try:
             display(anim)
 except KeyboardInterrupt:
     print('Skipping animation')
+```
 
-# %% [markdown]
-# To make all the learnings and findings reusable in other notebooks, lets move all the code into modules and double check it works.
+To make all the learnings and findings reusable in other notebooks, lets move all the code into modules and double check it works.
 
-# %%
+```{code-cell}
 from models import HexapodModel
 from plotting import plot_hexapod, update_hexapod_plot
 
@@ -662,3 +661,4 @@ hexapod.body_transform = Transform.from_translation([0.05, 0, -0.01]) @ Transfor
 hexapod.move_legs_to(leg_tips)
 update_hexapod_plot(hexapod, plot_data)
 display(fig)
+```

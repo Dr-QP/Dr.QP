@@ -1,49 +1,46 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.17.0
-#   kernelspec:
-#     display_name: .venv
-#     language: python
-#     name: python3
-# ---
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.17.0
+kernelspec:
+  display_name: .venv
+  language: python
+  name: python3
+---
 
-# %% [markdown]
-# # Smoothing Splines
-#
-# This notebook shows several examples of smoothing splines.
-#
-# ## Deep dive into smoothing splines
-#
-# Make sure to read https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html from Scipy docs that explains smoothing splines in detail.
-#
-#
+# Smoothing Splines
 
-# %% [markdown]
-# ## Setting up the Jupyter notebook for experimentation
-#
-# This documentation has been generated from a Jupyter notebook and is available in the repo source code (see link below).
-#
-# The next couple of cells are designated to the setup of the notebook environment locally or on the Google Colab. If you are not interested in the experimentation and only want to read the documentation, feel free to skip them.
-#
-# The first step is to enable live python modules reloading, so changes in the python code of imported files are immediately reflected in the notebook without restarting the kernel.
-#
+This notebook shows several examples of smoothing splines.
 
-# %%
+## Deep dive into smoothing splines
+
+Make sure to read https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html from Scipy docs that explains smoothing splines in detail.
+
+
++++
+
+## Setting up the Jupyter notebook for experimentation
+
+This documentation has been generated from a Jupyter notebook and is available in the repo source code (see link below).
+
+The next couple of cells are designated to the setup of the notebook environment locally or on the Google Colab. If you are not interested in the experimentation and only want to read the documentation, feel free to skip them.
+
+The first step is to enable live python modules reloading, so changes in the python code of imported files are immediately reflected in the notebook without restarting the kernel.
+
+```{code-cell}
 # Enable python modules live reloading
-# %load_ext autoreload
-# %autoreload 2
+%load_ext autoreload
+%autoreload 2
+```
 
-# %% [markdown]
-# ### Convenient links to editors
-#
-# The code below is provided for your convenience to open this notebook in one of the editors.
+### Convenient links to editors
 
-# %%
+The code below is provided for your convenience to open this notebook in one of the editors.
+
+```{code-cell}
 from IPython.display import display, Markdown
 
 source_branch = 'main'  ## <<<< source branch name
@@ -57,23 +54,23 @@ codespace_badge_markdown = f'[![Open In GitHub Codespace](https://img.shields.io
 badge_markdown = f'{colab_badge_markdown}\n\n{github_badge_markdown}\n\n{codespace_badge_markdown}'
 
 display(Markdown(badge_markdown))
+```
 
-# %% [markdown]
-# ### Viewing on github
-#
-# All cell outputs in this notebook are stripped from source code, so github will not show them. To see the outputs, run the notebook locally, on Colab or in GitHub Codespace.
-#
-# ### Colab specific setup
-#
-# Google Colab opens only the notebook file and all the dependencies are not available. The code below will clone the repository and install the dependencies.
-#
-# In order to view non default branch change `source_branch='main'` above and rerun the cell.
-#
-# #### Runtime restart!!
-#
-# The runtime need to be restarted to pick up the new modules. The code below will install them and kill runtime, simply run all cells again afterwards
+### Viewing on github
 
-# %%
+All cell outputs in this notebook are stripped from source code, so github will not show them. To see the outputs, run the notebook locally, on Colab or in GitHub Codespace.
+
+### Colab specific setup
+
+Google Colab opens only the notebook file and all the dependencies are not available. The code below will clone the repository and install the dependencies.
+
+In order to view non default branch change `source_branch='main'` above and rerun the cell.
+
+#### Runtime restart!!
+
+The runtime need to be restarted to pick up the new modules. The code below will install them and kill runtime, simply run all cells again afterwards
+
+```{code-cell}
 # type: ignore
 # Setup for Google Colab
 import importlib.util
@@ -89,30 +86,30 @@ if IN_COLAB:
         import plotting  # noqa: F401
         import point  # noqa: F401
     except ImportError:
-        # !git clone --filter=blob:none --no-checkout --depth 1 --sparse https://github.com/Dr-QP/Dr.QP.git --branch=$source_branch
-        # !cd Dr.QP && git sparse-checkout add notebooks && git checkout && cd ..
-        # !mv -f Dr.QP/* .
-        # !mv -f notebooks/* .
-        # !rm -rf Dr.QP
-        # %pip install -r requirements.txt
+        !git clone --filter=blob:none --no-checkout --depth 1 --sparse https://github.com/Dr-QP/Dr.QP.git --branch=$source_branch
+        !cd Dr.QP && git sparse-checkout add notebooks && git checkout && cd ..
+        !mv -f Dr.QP/* .
+        !mv -f notebooks/* .
+        !rm -rf Dr.QP
+        %pip install -r requirements.txt
 
         print('\n\n\nRestarting runtime to pick up the new modules...')
         os.kill(os.getpid(), 9)
+```
 
-# %% [markdown]
-# The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
+The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
-# %%
-# %matplotlib widget
+```{code-cell}
+%matplotlib widget
 
 import matplotlib.pyplot as plt
 
 plt.ioff()  # this is equivalent to using inline backend, but figures have to be displayed manually
+```
 
-# %% [markdown]
-# ## BSpline
+## BSpline
 
-# %%
+```{code-cell}
 # Example from https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html
 
 import matplotlib.pyplot as plt
@@ -136,11 +133,11 @@ plt.plot(x, y, 'o')
 plt.legend()
 
 display(fig)
+```
 
-# %% [markdown]
-# ## BSpline in application to gaits trajectory approximation
+## BSpline in application to gaits trajectory approximation
 
-# %%
+```{code-cell}
 from scipy.interpolate import make_interp_spline
 
 
@@ -183,15 +180,15 @@ plt.xlabel('X')
 plt.ylabel('Y')
 plt.title('Spline Interpolation Curve')
 display(fig)
+```
 
-# %% [markdown]
-# ## Bezier curve using B-spline
-#
-# The SciPy's BSpline class can represent Bezier curves, as Bezier curves are a special case of B-splines.
-#
-# To define a Bezier curve in SciPy, one needs to specify the control points and the degree of the curve. For example, a cubic Bezier curve (degree 3) requires four control points. The BSpline class then creates a spline object, which can be evaluated at any point to obtain the corresponding point on the curve.
+## Bezier curve using B-spline
 
-# %%
+The SciPy's BSpline class can represent Bezier curves, as Bezier curves are a special case of B-splines.
+
+To define a Bezier curve in SciPy, one needs to specify the control points and the degree of the curve. For example, a cubic Bezier curve (degree 3) requires four control points. The BSpline class then creates a spline object, which can be evaluated at any point to obtain the corresponding point on the curve.
+
+```{code-cell}
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import BSpline
@@ -224,8 +221,9 @@ plt.ylabel('Y')
 plt.title('Cubic Bézier Curve using B-Spline')
 plt.grid()
 display(fig)
+```
 
-# %%
+```{code-cell}
 from math import comb
 
 import matplotlib.pyplot as plt
@@ -299,17 +297,17 @@ for num_items in range(2, len(spline_x_all) + 1):
     ax.scatter(spline_x, spline_z, c='r', label='Trajectory points')
     ax.legend()
     display(fig)
+```
 
-# %% [markdown]
-# ## Pure python implementation of Bézier curve
-#
-# Here's a pure Python function for a Bézier curve of any degree, parameterized by $t$ in the range $[0,1]$. It uses the Bernstein polynomial form to compute the interpolated point for a given $t$.
-#
-# ### Bezier Interpolation
-#
-# This function computes a Bézier curve point for a given $t$ by iterating through control points and applying the Bernstein polynomial formula.
+## Pure python implementation of Bézier curve
 
-# %%
+Here's a pure Python function for a Bézier curve of any degree, parameterized by $t$ in the range $[0,1]$. It uses the Bernstein polynomial form to compute the interpolated point for a given $t$.
+
+### Bezier Interpolation
+
+This function computes a Bézier curve point for a given $t$ by iterating through control points and applying the Bernstein polynomial formula.
+
+```{code-cell}
 import matplotlib.pyplot as plt
 
 
@@ -350,8 +348,9 @@ plt.xlabel('X')
 plt.ylabel('Y')
 plt.title('Bézier Curve')
 display(fig)
+```
 
-# %%
+```{code-cell}
 phase = np.linspace(0, 1, 100)
 
 
@@ -385,8 +384,9 @@ ax[1].set_title('Z offset')
 ax[1].plot(phase, [leg_control_point(p)[1] for p in phase])
 
 display(fig)
+```
 
-# %%
+```{code-cell}
 phase = np.linspace(0, 1, 100)
 
 
@@ -423,8 +423,9 @@ ax[1].plot(phase, [leg_gait_point(p)[1] for p in phase])
 ax[1].plot(phase, [leg_control_point(p)[1] for p in phase])
 
 display(fig)
+```
 
-# %%
+```{code-cell}
 gait_points = np.array([leg_gait_point(p) for p in phase])
 control_pts = np.array([leg_control_point(p) for p in phase])
 
@@ -462,8 +463,9 @@ ax[1].plot(phase[0:-1], bezier_control_pts_pairs[:, 1], label='Bezier (Control P
 ax[1].legend()
 
 display(fig)
+```
 
-# %%
+```{code-cell}
 phase = np.linspace(0, 1, 50)
 
 
@@ -531,8 +533,9 @@ ax[2].plot(
 ax[2].legend()
 
 display(fig)
+```
 
-# %%
+```{code-cell}
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import make_interp_spline
@@ -569,11 +572,11 @@ ax.set_zlabel('Z')
 ax.legend()
 
 display(fig)
+```
 
-# %% [markdown]
-#
 
-# %%
+
+```{code-cell}
 from collections import deque
 
 import matplotlib.pyplot as plt
@@ -643,8 +646,9 @@ def update_spline(new_waypoint):
 # Simulate incoming new waypoints dynamically
 for new_wp in [(6, 8, 6, 3), (8, 10, 9, 5), (10, 12, 11, 7)]:
     update_spline(new_wp)
+```
 
-# %%
+```{code-cell}
 from collections import deque
 
 import matplotlib.pyplot as plt
@@ -714,8 +718,9 @@ def update_spline(new_waypoint):
 # Simulate incoming waypoints dynamically
 for new_wp in [(8, 6, 3), (10, 9, 5), (12, 11, 7)]:
     update_spline(new_wp)
+```
 
-# %%
+```{code-cell}
 from smoothing_splines import plot_spline, SplineType
 
 t = np.array([0, 1, 2.5, 4, 6])  # Time values (not uniformly spaced)
@@ -775,41 +780,41 @@ plot_spline(ax, 0, control_points, 3, mix=1)
 ax.legend()
 
 fig
+```
 
-# %% [markdown]
-# # An abandoned attempt to use smoothing splines for gait generation
-#
-# ## Summary and steps forward (pun intended)
-#
-# With the current approach we have achieved decent results and it helped us to get a basic understanding of gaits generation, however it has a serious limitations:
-#  1. It is not possible to transition between gaits as they are implemented as separate classes
-#  2. There is no transition in and out of the gait from standing position.
-#  3. Different gaits have different trajectories, however the only thing that has to change is the order in which legs are lifted.
-#  4. Phase logic is mixed with trajectory logic.
-#
-# Lets rework the code to address all these issues and have production ready solution we will use in the next notebook that will be taking all we have learned so far to real ROS implementation controlling a simulated robot in Gazebo.
-#
-# Our new approach should satisfy the following requirements:
-#  1. Allow defining a gait trajectory.
-#  2. Allow defining a gait sequence.
-#  3. Allow defining a gait generator function that will combine the two above given a set of parameters.
-#  4. Allow steering, turing and transitioning between gaits and positions.
-#
-# 1 and 2 are fairly straightforward and we have seen some solution using trigonometrical functions and polynomials already, however they do not allow proper mixing of the trajectories needed to achieve smooth transitions. 3 and 4 require a function that allows mixing. That is a task for a [smoothing spline function](https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html), e.g. a [B-spline](https://en.wikipedia.org/wiki/B-spline). It allows a smooth transition between control points while remaining stable if some of the control points are changed.
-#
-# ### Gait trajectory function
-#
-# A good trajectory function has a smooth lift stage and flat stance stage. A simple rectified sinusoidal function did the trick in the previous example of tripod gait:
-#
-# \begin{equation}
-# Z_o=\max(0, \sin(t))
-# \end{equation}
-#
-# (see plot below)
-#
-# The next step is to define control points for the B-spline that will give a similar trajectory.
+# An abandoned attempt to use smoothing splines for gait generation
 
-# %%
+## Summary and steps forward (pun intended)
+
+With the current approach we have achieved decent results and it helped us to get a basic understanding of gaits generation, however it has a serious limitations:
+ 1. It is not possible to transition between gaits as they are implemented as separate classes
+ 2. There is no transition in and out of the gait from standing position.
+ 3. Different gaits have different trajectories, however the only thing that has to change is the order in which legs are lifted.
+ 4. Phase logic is mixed with trajectory logic.
+
+Lets rework the code to address all these issues and have production ready solution we will use in the next notebook that will be taking all we have learned so far to real ROS implementation controlling a simulated robot in Gazebo.
+
+Our new approach should satisfy the following requirements:
+ 1. Allow defining a gait trajectory.
+ 2. Allow defining a gait sequence.
+ 3. Allow defining a gait generator function that will combine the two above given a set of parameters.
+ 4. Allow steering, turing and transitioning between gaits and positions.
+
+1 and 2 are fairly straightforward and we have seen some solution using trigonometrical functions and polynomials already, however they do not allow proper mixing of the trajectories needed to achieve smooth transitions. 3 and 4 require a function that allows mixing. That is a task for a [smoothing spline function](https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html), e.g. a [B-spline](https://en.wikipedia.org/wiki/B-spline). It allows a smooth transition between control points while remaining stable if some of the control points are changed.
+
+### Gait trajectory function
+
+A good trajectory function has a smooth lift stage and flat stance stage. A simple rectified sinusoidal function did the trick in the previous example of tripod gait:
+
+\begin{equation}
+Z_o=\max(0, \sin(t))
+\end{equation}
+
+(see plot below)
+
+The next step is to define control points for the B-spline that will give a similar trajectory.
+
+```{code-cell}
 import matplotlib.pyplot as plt
 from scipy.interpolate import make_interp_spline
 
@@ -849,11 +854,11 @@ ax.plot(phase_new, bspline_trajectory(phase_new))
 ax.scatter(spline_x, spline_z, c='r')
 
 display(fig)
+```
 
-# %% [markdown]
-# For the sake of completeness, this is how bezier curve will look like. As you can see, it doesn't follow control points, and thus is not the best choice for our use case.
+For the sake of completeness, this is how bezier curve will look like. As you can see, it doesn't follow control points, and thus is not the best choice for our use case.
 
-# %%
+```{code-cell}
 fig, ax = plt.subplots(1, 1)
 
 ax.set_xlabel('phase')
@@ -866,26 +871,26 @@ ax.plot(phase, [bezier_curve(points, t)[1] for t in phase])
 ax.scatter(points[:, 0], points[:, 1], c='r')
 
 display(fig)
+```
 
-# %% [markdown]
-# ### Defining gaits as b-spline control points
-#
-# Having BSplines as interpolation mechanism it is easy to define gaits as a sequence of control points.
-#
-# As we already know every gait has two phases: swing and stance. The first parameter for those phases is the duration.
-#
-# Each phase has its own additional parameters:
-#  1. swing phase:
-#     - lift height
-#     - step length
-#     - swing speed
-#  2. stance phase:
-#     - step length
-#     - stance speed
-#
-# To keep things simple for the first iteration we are going to keep speed constant and equal between phases.
+### Defining gaits as b-spline control points
 
-# %%
+Having BSplines as interpolation mechanism it is easy to define gaits as a sequence of control points.
+
+As we already know every gait has two phases: swing and stance. The first parameter for those phases is the duration.
+
+Each phase has its own additional parameters:
+ 1. swing phase:
+    - lift height
+    - step length
+    - swing speed
+ 2. stance phase:
+    - step length
+    - stance speed
+
+To keep things simple for the first iteration we are going to keep speed constant and equal between phases.
+
+```{code-cell}
 from abc import abstractmethod
 import enum
 
@@ -1060,8 +1065,9 @@ _ = gait_gen.visualize_continuous_in_3d(_steps=100, return_control_points=True)
 
 # gait_gen.visualize_continuous(_steps=100, return_control_points=False)
 # _ = gait_gen.visualize_continuous_in_3d(_steps=100, return_control_points=False)
+```
 
-# %%
+```{code-cell}
 # hexapod = HexapodModel()
 # hexapod.forward_kinematics(0, -25, 110)
 
@@ -1078,3 +1084,4 @@ _ = gait_gen.visualize_continuous_in_3d(_steps=100, return_control_points=True)
 # inter = animate_hexapod_gait_with_direction(
 #     hexapod, directional_param_gait_gen, interactive=True, skip=False
 # )
+```
