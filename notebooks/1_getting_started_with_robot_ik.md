@@ -98,7 +98,9 @@ from point import Line, Point
 # unused
 def forward_kinematics_rads(
     coxa_length,
-    femur_length,     tibia_length,     alpha_rad,
+    femur_length,
+    tibia_length,
+    alpha_rad,
     beta_rad,
     gamma_rad,
     start_height=2,
