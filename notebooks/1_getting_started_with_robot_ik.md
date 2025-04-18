@@ -251,7 +251,7 @@ def animate(frame=0, alpha=alpha, beta=beta, gamma=gamma):
     fig.canvas.draw_idle()
 
 
-animate_plot(
+_ = animate_plot(
     fig,
     animate,
     _interactive=is_interactive,
