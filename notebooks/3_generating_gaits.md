@@ -1093,7 +1093,7 @@ animate_plot(fig, update, frames * frames_between_points, _interval=16, _interac
 
 Let's put it all together and generate some gaits!
 
-![image.png](attachment:image.png)
+![Hexapod wave and ripple gaits](hexapod_wave_ripple_gait.png)
 
 ```{code-cell} ipython3
 %%writefile parametric_gait_generator.py
