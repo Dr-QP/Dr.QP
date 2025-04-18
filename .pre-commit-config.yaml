@@ -1,8 +1,4 @@
 repos:
-- repo: https://github.com/kynan/nbstripout
-  rev: 0.8.1
-  hooks:
-    - id: nbstripout
   # Enable in separate PR
   #- repo: https://github.com/pre-commit/pre-commit-hooks
   #  rev: v2.3.0
@@ -12,14 +8,25 @@ repos:
   #   - id: trailing-whitespace
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  # Ruff version.
   rev: v0.11.2
   hooks:
-    # Run the linter.
-    - id: ruff
-      args: [ --fix ]
-    # Run the formatter.
     - id: ruff-format
+    - id: ruff # lint
+      args: [ --fix ]
+    - id: ruff # isort
+      args: [ --fix, --select, I ]
+
+# [jupytext] Error: the git index is outdated.
+# Please add the paired notebook with:
+#     git add notebooks/1_getting_started_with_robot_ik.ipynb
+# - repo: https://github.com/mwouts/jupytext
+#   rev: v1.17.0
+#   hooks:
+#   - id: jupytext
+#     args: [--sync, notebooks/*.md, notebooks/*.ipynb, --pipe-fmt, py:percent, --pipe, 'ruff format {}', --pipe, 'ruff check --fix --ignore E402,F811 {}', --pipe, 'ruff check --fix --select I {}']
+#     additional_dependencies:
+#     - ruff==v0.11.2
+#     pass_filenames: false
 
 - repo: https://github.com/gitleaks/gitleaks
   rev: v8.24.3
@@ -30,3 +37,18 @@ repos:
   rev: v1.7.7
   hooks:
     - id: actionlint
+
+- repo: local
+  hooks:
+  - id: python-reformat
+    name: python-reformat
+    entry: ./scripts/python-reformat.sh
+    language: script
+    pass_filenames: false
+
+  - id: format-cpp
+    name: format-cpp
+    entry: ./scripts/cpp-reformat.sh
+    language: script
+    types: [c++]
+    pass_filenames: false

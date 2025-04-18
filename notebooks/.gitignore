@@ -1,1 +1,4 @@
 *.mp4
+
+# Ignore the classic notebooks in favor of the myst (.md) ones
+*.ipynb

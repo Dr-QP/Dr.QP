@@ -1,6 +1,5 @@
-# For cleaning up jupyter notebooks from output
+
 pre-commit>=4.2.0
-nbstripout>=0.8.1
 
 pygame>=2.5
 
