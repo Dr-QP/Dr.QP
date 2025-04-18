@@ -67,6 +67,7 @@ classmethod-decorators = [
 # Ignore unused imports in __init__.py files
 "__init__.py" = ["F401"]
 "notebooks/*.i.py" = ["E402"]
+"*.ipynb" = ["E402"]
 
 [lint.pydocstyle]
 convention = "google"
