@@ -3,4 +3,6 @@
 script_dir=$(dirname $0)
 source "$script_dir/ros/__utils.sh"
 
-$root_dir/.venv/bin/jupytext --sync notebooks/*.md notebooks/*.ipynb
+source $root_dir/.venv/bin/activate
+
+jupytext --sync "$root_dir/notebooks/*.md" "$root_dir/notebooks/*.ipynb" "$@"

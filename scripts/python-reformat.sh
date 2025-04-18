@@ -15,8 +15,4 @@ ruff check --fix $root_dir/notebooks
 ruff check --select I --fix $root_dir/notebooks
 
 script_dir=$(dirname $0)
-$script_dir/sync-notebooks.sh
-nbqa 'ruff format' $root_dir/notebooks/*.ipynb
-nbqa 'ruff check --ignore E402 --fix' $root_dir/notebooks/*.ipynb
-nbqa 'ruff check --select I' --fix $root_dir/notebooks/*.ipynb
-$script_dir/sync-notebooks.sh
+$script_dir/sync-notebooks.sh --pipe "ruff format {}" --pipe "ruff check --ignore E402,F811 --fix {}" --pipe "ruff check --select I --fix {}" --pipe-fmt "py:percent"
