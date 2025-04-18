@@ -62,7 +62,10 @@ jobs:
         run: |
           source /opt/ros/jazzy/setup.bash
           ./scripts/cpp-reformat.sh || true
+
+          ./scripts/sync-notebooks.sh
           ./scripts/python-reformat.sh || true
+          ./scripts/sync-notebooks.sh
 
       # Commit all changed files back to the repository
       - uses: stefanzweifel/git-auto-commit-action@v5
