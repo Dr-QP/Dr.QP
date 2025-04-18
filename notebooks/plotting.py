@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import os
 from typing import Literal
 
 from inline_labels import add_inline_labels
@@ -629,7 +630,7 @@ def animate_plot(
     plt.rcParams['animation.html'] = 'jshtml'
 
     try:
-        if _interactive:
+        if _interactive and not is_sphinx_build():
             with plt.ion():
                 anim = interact(_animate, frame=(0, _frames), **interact_kwargs)
                 plt.show()
@@ -641,3 +642,7 @@ def animate_plot(
         print('Skipping animation')
 
     return anim
+
+
+def is_sphinx_build():
+    return os.getenv('SPHINX_BUILD') == '1'

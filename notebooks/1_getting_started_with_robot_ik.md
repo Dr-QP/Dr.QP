@@ -223,7 +223,6 @@ model = forward_kinematics(
     start_height=start_height,
 )
 
-is_interactive = False
 frames_to_animate = 50
 
 fig, _, plot_data = plot_leg_with_points(
@@ -234,9 +233,10 @@ fig, _, plot_data = plot_leg_with_points(
 )
 
 
-def animate(frame=0, alpha=alpha, beta=beta, gamma=gamma):
-    if frame > 0 and not is_interactive:
-        beta = np.interp(frame, [0, frames_to_animate], [35, 55])
+def animate(frame, alpha=alpha, beta=beta, gamma=gamma):
+    if frame > 0:
+        beta = np.interp(frame, [0, frames_to_animate / 2], [35, 55])
+        gamma = np.interp(frame, [frames_to_animate / 2, frames_to_animate], [-110, -140])
 
     model = forward_kinematics(
         coxa_length,
@@ -254,7 +254,7 @@ def animate(frame=0, alpha=alpha, beta=beta, gamma=gamma):
 _ = animate_plot(
     fig,
     animate,
-    _interactive=is_interactive,
+    _interactive=True,
     _frames=50,
     alpha=(-180, 180, 0.1),
     beta=(-180, 180, 0.1),
