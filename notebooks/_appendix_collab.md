@@ -37,8 +37,8 @@ The runtime need to be restarted to pick up the new modules. The code below will
 ```{code-cell} ipython3
 # type: ignore
 # Setup for Google Colab
-import os
 import importlib.util
+import os
 
 IN_COLAB = (
     importlib.util.find_spec('google') is not None
