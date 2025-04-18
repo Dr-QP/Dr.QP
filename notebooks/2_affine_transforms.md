@@ -36,6 +36,7 @@ The next step is configuring matplotlib backend. Widget backend allows to intera
 ```{code-cell} ipython3
 %matplotlib widget
 
+from IPython.display import display
 import matplotlib.pyplot as plt
 
 plt.ioff()  # this is equivalent to using inline backend, but figures have to be displayed manually

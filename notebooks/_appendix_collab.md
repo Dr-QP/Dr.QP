@@ -1,3 +1,16 @@
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.17.0
+kernelspec:
+  display_name: .venv
+  language: python
+  name: python3
+---
+
 ### Convenient links to editors
 
 The code below is provided for your convenience to open this notebook in one of the editors.
@@ -37,8 +50,8 @@ The runtime need to be restarted to pick up the new modules. The code below will
 ```{code-cell} ipython3
 # type: ignore
 # Setup for Google Colab
-import os
 import importlib.util
+import os
 
 IN_COLAB = (
     importlib.util.find_spec('google') is not None
