@@ -5,8 +5,8 @@ source "$script_dir/ros/__utils.sh"
 
 source $root_dir/.venv/bin/activate
 
-ruff_format='ruff format'
-ruff_lint_fix='ruff check --fix'
+ruff_format='ruff format --quiet'
+ruff_lint_fix='ruff check --quiet --fix'
 ruff_isort="$ruff_lint_fix --select I" # isort aka organize imports
 
 $ruff_format $sources_dir $root_dir/notebooks
