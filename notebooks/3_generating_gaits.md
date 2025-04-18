@@ -76,7 +76,7 @@ Google Colab opens only the notebook file and all the dependencies are not avail
 
 In order to view non default branch change `source_branch='main'` above and rerun the cell.
 
-#### Runtime restart!!
+#### Runtime restart
 
 The runtime need to be restarted to pick up the new modules. The code below will install them and kill runtime, simply run all cells again afterwards
 
@@ -120,8 +120,9 @@ plt.ioff()  # this is equivalent to using inline backend, but figures have to be
 ## Tripod gait
 
 The tripod gait is a simple gait where the robot legs move in two groups of three:
- - group A: left-front, right-middle, and left-back
- - group B: right-front, left-middle, and right-back.
+
+- group A: left-front, right-middle, and left-back
+- group B: right-front, left-middle, and right-back.
 
 while one group is in stance phase, the other group is in swing phase and cycle repeats.
 
@@ -309,6 +310,7 @@ This gives a nice forward locomotive gait. However some changes are needed to th
 A good starting point for the transition is a 0.25 phase mark where all legs have zero offsets in X axis, however group A is lifted up. In order to start from all the legs on the ground we need to compress Z phase to quarter of the original cycle.
 
 So here is the plan for transition stage:
+
  1. It runs for 0.25 of the phase
  2. We start with X cycle at 0.25
  3. We start Z cycle 0, but compress first 0.5 of it to 0.25.
@@ -448,9 +450,8 @@ dy & dx
 
 ### Why This Works
 
- - Original offsets are along the X-axis, meaning they can be represented as $[x, 0]$.
- - A A standard 2D rotation matrix for an angle $\theta$ is:
-
+- Original offsets are along the X-axis, meaning they can be represented as $[x, 0]$.
+- A A standard 2D rotation matrix for an angle $\theta$ is:
 
 \begin{equation}
 R=\begin{bmatrix}
@@ -459,7 +460,7 @@ R=\begin{bmatrix}
 \end{bmatrix}
 \end{equation}
 
- - The unit direction vector $[dx, dy]$ corresponds to the cosine and sine of some angle, where:
+- The unit direction vector $[dx, dy]$ corresponds to the cosine and sine of some angle, where:
 
 \begin{equation}
 \begin{aligned}
@@ -468,7 +469,7 @@ dy = \sin\theta
 \end{aligned}
 \end{equation}
 
- - Substituting these into the rotation matrix gives us the desired transformation matrix.
+- Substituting these into the rotation matrix gives us the desired transformation matrix.
 
 \begin{equation}
 R=\begin{bmatrix}
@@ -1042,6 +1043,7 @@ inter = animate_hexapod_gait_with_direction(
 ## Summary and steps forward (pun intended)
 
 With the current approach we have achieved decent results and it helped us to get a basic understanding of gaits generation, however it has a serious limitations:
+
  1. It is not possible to transition between gaits as they are implemented as separate classes
  2. There is no transition in and out of the gait from standing position.
  3. Different gaits have different trajectories, however the only thing that has to change is the order in which legs are lifted.
@@ -1050,6 +1052,7 @@ With the current approach we have achieved decent results and it helped us to ge
 Lets rework the code to address all these issues and have production ready solution we will use in the next notebook that will be taking all we have learned so far to real ROS implementation controlling a simulated robot in Gazebo.
 
 Our new approach should satisfy the following requirements:
+
  1. Allow defining a gait trajectory.
  2. Allow defining a gait sequence.
  3. Allow defining a gait generator function that will combine the two above given a set of parameters.
@@ -1395,6 +1398,7 @@ anim = animate_hexapod_rotation_gait(hexapod, rotation_gen, interactive=False, s
 ### Putting it all together
 
 Now that we have all the pieces in place, we can put them together to create a full walk controller. The controller will take care of the following:
+
 1. Process input command of the walk direction and rotation
 2. Generate a walk trajectory based on the input direction
 3. Generate a turn trajectory based on the input rotation

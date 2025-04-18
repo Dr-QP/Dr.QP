@@ -18,7 +18,7 @@ This notebook shows several examples of smoothing splines.
 
 ## Deep dive into smoothing splines
 
-Make sure to read https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html from Scipy docs that explains smoothing splines in detail.
+Make sure to read <https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html> from Scipy docs that explains smoothing splines in detail.
 
 +++
 
@@ -66,7 +66,7 @@ Google Colab opens only the notebook file and all the dependencies are not avail
 
 In order to view non default branch change `source_branch='main'` above and rerun the cell.
 
-#### Runtime restart!!
+#### Runtime restart
 
 The runtime need to be restarted to pick up the new modules. The code below will install them and kill runtime, simply run all cells again afterwards
 
@@ -785,6 +785,7 @@ fig
 ## Summary and steps forward (pun intended)
 
 With the current approach we have achieved decent results and it helped us to get a basic understanding of gaits generation, however it has a serious limitations:
+
  1. It is not possible to transition between gaits as they are implemented as separate classes
  2. There is no transition in and out of the gait from standing position.
  3. Different gaits have different trajectories, however the only thing that has to change is the order in which legs are lifted.
@@ -793,6 +794,7 @@ With the current approach we have achieved decent results and it helped us to ge
 Lets rework the code to address all these issues and have production ready solution we will use in the next notebook that will be taking all we have learned so far to real ROS implementation controlling a simulated robot in Gazebo.
 
 Our new approach should satisfy the following requirements:
+
  1. Allow defining a gait trajectory.
  2. Allow defining a gait sequence.
  3. Allow defining a gait generator function that will combine the two above given a set of parameters.
@@ -878,6 +880,7 @@ Having BSplines as interpolation mechanism it is easy to define gaits as a seque
 As we already know every gait has two phases: swing and stance. The first parameter for those phases is the duration.
 
 Each phase has its own additional parameters:
+
  1. swing phase:
     - lift height
     - step length

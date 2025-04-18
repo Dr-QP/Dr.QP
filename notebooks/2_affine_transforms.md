@@ -63,7 +63,7 @@ Google Colab opens only the notebook file and all the dependencies are not avail
 
 In order to view non default branch change `source_branch='main'` above and rerun the cell.
 
-#### Runtime restart!!
+#### Runtime restart
 
 The runtime need to be restarted to pick up the new modules. The code below will install them and kill runtime, simply run all cells again afterwards
 
@@ -492,6 +492,7 @@ display(fig)
 With the ability to position all legs, its time to work on the inverse kinematics for the body.
 
 The algorithm is as follows:
+
  1. Capture the reference stance
     - Run forward kinematics for all legs with the same angles in a desired position (neutral, wide, narrow, specific gait).
     - Capture global positions of all leg foot tips

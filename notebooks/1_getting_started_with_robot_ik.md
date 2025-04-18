@@ -17,12 +17,15 @@ Welcome to the first guide in the series of getting started with Dr.QP robot Inv
 In this guide, we will cover the basics of IK and how to use it to control a robot.
 
 ## What is Inverse Kinematics?
+
 Inverse Kinematics (IK) is a technique used in robotics to determine the joint angles required to achieve a desired end-effector position. It is the process of solving the inverse problem of forward kinematics, which calculates the end-effector position given the joint angles.
 
 ## Why is Inverse Kinematics Important?
+
 Inverse Kinematics is important because it allows robots to perform complex movements and tasks. By calculating the joint angles required to reach a specific position, robots can navigate their environment and interact with objects more effectively.
 
 ## How to Use Inverse Kinematics
+
 To use Inverse Kinematics, you need to have a model of your robot's kinematics. This model includes the lengths of the robot's links and the joint angles. Once you have this model, you can use it to calculate the joint angles required to achieve a desired end-effector position.
 
 +++
@@ -73,7 +76,7 @@ Google Colab opens only the notebook file and all the dependencies are not avail
 
 In order to view non default branch change `source_branch='main'` above and rerun the cell.
 
-#### Runtime restart!!
+#### Runtime restart
 
 The runtime need to be restarted to pick up the new modules. The code below will install them and kill runtime, simply run all cells again afterwards
 
@@ -119,14 +122,16 @@ plt.ioff()  # this is equivalent to using inline backend, but figures have to be
 For this tutorial we will use the simplest part of Dr.QP robot - a single leg.
 
 It has a 3 degrees of freedom and consists of 3 links:
- - coxa (hip)
- - femur (thigh)
- - tibia (shin)
+
+- coxa (hip)
+- femur (thigh)
+- tibia (shin)
 
 and 3 joints:
- - alpha (coxa joint, hip joint)
- - beta (femur joint, thigh joint)
- - gamma (tibia joint, shin joint)
+
+- alpha (coxa joint, hip joint)
+- beta (femur joint, thigh joint)
+- gamma (tibia joint, shin joint)
 
 Links have only single property - length. They are connected to each other with joints. Joints have only single property - angle.
 
@@ -543,7 +548,6 @@ $\Large \cos A = (\frac{b^2 + c^2 – a^2}{2bc})$
 
 $\Large \cos B = (\frac{a^2 + c^2 – b^2}{2ac})$
 
-
 In our case:
 
 $a = L$
@@ -557,7 +561,6 @@ angle $A = \Phi$
 angle $B = \theta1$
 
 ---
-
 
 Therefore:
 
@@ -574,8 +577,6 @@ What is left is to compute $\beta$ and $\gamma$ using the following formulas:
 $\beta = \theta1 + \theta2 - 90$ (offset by 90 degrees to align with leg coordinate frame, see diagram below of a straight leg)
 
 $\gamma = \Phi - 180$
-
-
 
 And that is all, lets put it all together:
 
