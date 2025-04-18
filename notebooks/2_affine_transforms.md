@@ -209,7 +209,7 @@ tibia = 10
 
 model = forward_kinematics_transforms(coxa, femur, tibia, 0, -25, 110)
 
-fig, _, _, _ = plot_leg_with_points(
+fig, _, _ = plot_leg_with_points(
     model.xy,
     'Foot in 3D (XY)',
     link_labels='none',

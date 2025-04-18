@@ -320,7 +320,7 @@ def forward_kinematics_xy(coxa_length, femur_length, tibia_length, alpha, show_a
 
 
 def plot_leg_with_points_xy(model: list[Line], title: str):
-    _, ax, _, _ = plot_leg_with_points(model, title, link_labels='none', x_label='X', y_label='Y')
+    _, ax, _ = plot_leg_with_points(model, title, link_labels='none', x_label='X', y_label='Y')
     return ax
 
 
@@ -454,7 +454,7 @@ model = forward_kinematics(
 )
 
 with plt.ioff():
-    fig, ax, _, _ = plot_leg_with_points(
+    fig, ax, _ = plot_leg_with_points(
         model,
         'Inverse Kinematics trigonometry',
         joint_labels='points',
@@ -568,7 +568,7 @@ def solve_and_plot_at_target_xz(
         body_length=0,
     )
 
-    fig, ax, _, _ = plot_leg_with_points(
+    fig, ax, _ = plot_leg_with_points(
         model,
         plot_title,
         joint_labels='points',
@@ -803,7 +803,7 @@ def safe_solve_and_plot_at_target(
         body_length=0,
     )
 
-    _, ax, _, _ = plot_leg_with_points(
+    _, ax, _ = plot_leg_with_points(
         model,
         plot_title + (' (target reached)' if solvable else ' (target unreachable)'),
         joint_labels='points',
