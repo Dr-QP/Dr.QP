@@ -25,7 +25,7 @@ repos:
   rev: v1.17.0
   hooks:
   - id: jupytext
-    args: [--sync, --pipe-fmt, py:percent, --pipe, 'ruff format {}', --pipe, 'ruff check --fix --ignore E402,F811 {}', --pipe, 'ruff check --fix --select I {}']
+    args: [--sync, notebooks/*.md, notebooks/*.ipynb, --pipe-fmt, py:percent, --pipe, 'ruff format {}', --pipe, 'ruff check --fix --ignore E402,F811 {}', --pipe, 'ruff check --fix --select I {}']
     additional_dependencies:
     - ruff==v0.11.2
 
@@ -38,3 +38,12 @@ repos:
   rev: v1.7.7
   hooks:
     - id: actionlint
+
+- repo: local
+  hooks:
+  - id: format-cpp
+    name: format-cpp
+    entry: ./scripts/cpp-reformat.sh
+    language: script
+    types: [c++]
+    pass_filenames: false
