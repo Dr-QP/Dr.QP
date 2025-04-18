@@ -16,16 +16,16 @@ repos:
   hooks:
     - id: ruff-format
     - id: ruff # lint
-      args: [ --fix, --exit-non-zero-on-fix ]
+      args: [ --fix ]
     - id: ruff # isort
-      args: [ --fix, --select, I, --exit-non-zero-on-fix ]
+      args: [ --fix, --select, I ]
 
 
 - repo: https://github.com/mwouts/jupytext
   rev: v1.17.0
   hooks:
   - id: jupytext
-    args: [--pipe-fmt, py:percent, --check, 'ruff format --exit-non-zero-on-format', --check, 'ruff check --fix --ignore E402,F811 {}', --check, 'ruff check --fix --select I {}']
+    args: [--sync, --pipe-fmt, py:percent, --pipe, 'ruff format {}', --pipe, 'ruff check --fix --ignore E402,F811 {}', --pipe, 'ruff check --fix --select I {}']
     additional_dependencies:
     - ruff==v0.11.2
 
