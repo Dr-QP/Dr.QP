@@ -718,9 +718,9 @@ ax.legend()
 fig
 ```
 
-# An abandoned attempt to use smoothing splines for gait generation
+## An abandoned attempt to use smoothing splines for gait generation
 
-## Summary and steps forward (pun intended)
+### Summary and steps forward (pun intended)
 
 With the current approach we have achieved decent results and it helped us to get a basic understanding of gaits generation, however it has a serious limitations:
 
