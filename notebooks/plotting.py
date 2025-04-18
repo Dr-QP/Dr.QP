@@ -309,6 +309,14 @@ def plot_leg3d(
     return fig, ax, result_lines, result_joints
 
 
+class LegPlotData:
+    def __init__(self):
+        self.lines = []
+        self.joints = []
+        self.joint_labels = []
+        self.link_labels = []
+
+
 # Plot the leg links in 2D space
 def plot_leg_links(
     axes: plt.Axes,
@@ -319,22 +327,21 @@ def plot_leg_links(
     link_colors = ['c', 'r', 'g', 'b', 'm']
     joint_colors = link_colors[1:]
 
-    result_lines = []
-    result_joints = []
+    plot_data = LegPlotData()
 
     line_i = 0
     for line, color in zip(model, link_colors):
         label = line.label if link_labels != 'none' else None
-        result_lines += axes.plot(*zip(line.start, line.end), color, label=label)
+        plot_data.lines += axes.plot(*zip(line.start, line.end), color, label=label)
         if joint_labels == 'annotated' and not line_i == len(model) - 1:
             # Extend the line to make the joint angles easier to understand
-            result_lines += axes.plot(*zip(line.end, line.extended(3).end), color + ':')
+            plot_data.lines += axes.plot(*zip(line.end, line.extended(3).end), color + ':')
         line_i += 1
 
     if joint_labels == 'annotated' or joint_labels == 'points':
         for line, joint_color in zip(model, joint_colors):
             joint = axes.scatter(*line.end.numpy(), color=joint_color)
-            result_joints.append(joint)
+            plot_data.joints.append(joint)
 
     # Add inline labels for leg links
     if link_labels == 'legend':
@@ -367,7 +374,7 @@ def plot_leg_links(
                     text_kw={'fontsize': 10, 'color': joint_color},
                 )
 
-    return result_lines, result_joints
+    return plot_data
 
 
 def plot_leg_with_points(
@@ -389,9 +396,7 @@ def plot_leg_with_points(
         ax = fig.add_subplot(subplot)
         ax.set_title(title)
 
-    result_lines, result_joints = plot_leg_links(
-        ax, model, link_labels=link_labels, joint_labels=joint_labels
-    )
+    plot_data = plot_leg_links(ax, model, link_labels=link_labels, joint_labels=joint_labels)
 
     # Select length of axes and the space between tick labels
     x = np.array([[line.start.x, line.end.x] for line in model])
@@ -418,7 +423,7 @@ def plot_leg_with_points(
         y_label=y_label,
     )
 
-    return fig, ax, result_lines, result_joints
+    return fig, ax, plot_data
 
 
 def plot_cartesian_plane(
@@ -469,11 +474,11 @@ def plot_cartesian_plane(
     ax.plot((0), (1), marker='^', transform=ax.get_xaxis_transform(), **arrow_fmt)
 
 
-def plot_leg_update_lines(model, lines, joints):
-    for line, line_model in zip(lines, model):
+def plot_leg_update_lines(model, plot_data: LegPlotData):
+    for line, line_model in zip(plot_data.lines, model):
         line.set_data(*zip(line_model.start, line_model.end))
 
-    for joint, line_model in zip(joints, model):
+    for joint, line_model in zip(plot_data.joints, model):
         joint.set_offsets([line_model.end.x, line_model.end.y])
 
 

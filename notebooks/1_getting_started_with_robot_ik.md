@@ -207,8 +207,7 @@ Its time to have a little fun with our robot.
 Using the sliders on the interactive diagram below try to find angles at which the foot is on the ground.
 
 ```{code-cell} ipython3
-from ipywidgets import interact
-from plotting import plot_leg_update_lines
+from plotting import animate_plot, plot_leg_update_lines
 
 start_height = 3
 alpha = 0
@@ -224,18 +223,21 @@ model = forward_kinematics(
     start_height=start_height,
 )
 
-with plt.ion():
-    fig, _, lines, joints = plot_leg_with_points(
-        model,
-        'Find angles to place foot on the X axis',
-        # no_joint_labels=is_interactive,
-        # no_link_labels=is_interactive,
-        link_labels='legend',
-        joint_labels='points',
-    )
+is_interactive = False
+frames_to_animate = 50
+
+fig, _, plot_data = plot_leg_with_points(
+    model,
+    'Find angles to place foot on the X axis',
+    link_labels='legend',  # if is_interactive else 'inline',
+    joint_labels='points',  # if is_interactive else 'annotated',
+)
 
 
-def animate(alpha=alpha, beta=beta, gamma=gamma):
+def animate(frame=0, alpha=alpha, beta=beta, gamma=gamma):
+    if frame > 0 and not is_interactive:
+        beta = np.interp(frame, [0, frames_to_animate], [35, 55])
+
     model = forward_kinematics(
         coxa_length,
         femur_length,
@@ -245,11 +247,19 @@ def animate(alpha=alpha, beta=beta, gamma=gamma):
         gamma,
         start_height=start_height,
     )
-    plot_leg_update_lines(model, lines, joints)
+    plot_leg_update_lines(model, plot_data)
     fig.canvas.draw_idle()
 
 
-_ = interact(animate, alpha=(-180, 180, 0.1), beta=(-180, 180, 0.1), gamma=(-180, 180, 0.1))
+animate_plot(
+    fig,
+    animate,
+    _interactive=is_interactive,
+    _frames=50,
+    alpha=(-180, 180, 0.1),
+    beta=(-180, 180, 0.1),
+    gamma=(-180, 180, 0.1),
+)
 ```
 
 That was a fun little exercise, but it takes some effort to find just the right angle, and you might have noticed that there are more than one solution to it.
@@ -673,7 +683,7 @@ plt.rcParams['animation.html'] = 'jshtml'
 model = solved_model[0]
 
 with plt.ioff():
-    fig, ax, lines, joints = plot_leg_with_points(
+    fig, ax, plot_data = plot_leg_with_points(
         model,
         'IK Circle',
         link_labels='none',
@@ -689,7 +699,7 @@ with plt.ioff():
         else:
             frame = frame // 2
             model = solved_model[frame]
-            plot_leg_update_lines(model, lines, joints)
+            plot_leg_update_lines(model, plot_data)
             foot = solved_foot[frame]
             ax.scatter(foot.x, foot.y, color='m', alpha=0.5, zorder=100)
 
