@@ -89,7 +89,7 @@ sphinx_rtd_size_width = '90%'
 
 
 def version_name():
-    name = os.environ.get('READTHEDOCS_VERSION_NAME', 'main')
+    name = os.environ.get('READTHEDOCS_VERSION_NAME', os.environ.get('READTHEDOCS_VERSION', 'main'))
     if name == 'latest' or name == 'stable':
         return 'main'
     return name
