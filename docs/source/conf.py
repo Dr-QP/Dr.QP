@@ -111,5 +111,5 @@ epub_show_urls = 'footnote'
 # -- lightweight Sphinx extension
 def setup(app):
     # Set default if not already defined in the shell
-    os.environ.setdefault('SPHINX_BUILD', '0')
+    os.environ.setdefault('SPHINX_BUILD', '1')
     return {}
