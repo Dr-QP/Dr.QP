@@ -9,7 +9,7 @@ For the development machine use Ubuntu 22.04 and install ros using [ros-2-prep.s
 Bash
 -------------------------
 
-Update your `~/.bashrc` with the following snippet that adds couple alises for easy activation of ros1 and 2 globally or in workspace
+Update your ``~/.bashrc`` with the following snippet that adds couple alises for easy activation of ros1 and 2 globally or in workspace
 
 .. code-block:: bash
 
@@ -21,7 +21,7 @@ Update your `~/.bashrc` with the following snippet that adds couple alises for e
 Fish
 -------------------------
 
-For `fish` shell users run setup script
+For ``fish`` shell users run setup script
 
 .. code-block:: bash
 

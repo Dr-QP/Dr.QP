@@ -223,7 +223,6 @@ model = forward_kinematics(
     start_height=start_height,
 )
 
-is_interactive = False
 frames_to_animate = 50
 
 fig, _, plot_data = plot_leg_with_points(
@@ -234,9 +233,10 @@ fig, _, plot_data = plot_leg_with_points(
 )
 
 
-def animate(frame=0, alpha=alpha, beta=beta, gamma=gamma):
-    if frame > 0 and not is_interactive:
-        beta = np.interp(frame, [0, frames_to_animate], [35, 55])
+def animate(frame, alpha=alpha, beta=beta, gamma=gamma):
+    if frame > 0:
+        beta = np.interp(frame, [0, frames_to_animate / 2], [35, 55])
+        gamma = np.interp(frame, [frames_to_animate / 2, frames_to_animate], [-110, -140])
 
     model = forward_kinematics(
         coxa_length,
@@ -251,10 +251,10 @@ def animate(frame=0, alpha=alpha, beta=beta, gamma=gamma):
     fig.canvas.draw_idle()
 
 
-animate_plot(
+_ = animate_plot(
     fig,
     animate,
-    _interactive=is_interactive,
+    _interactive=True,
     _frames=50,
     alpha=(-180, 180, 0.1),
     beta=(-180, 180, 0.1),
@@ -320,7 +320,7 @@ def forward_kinematics_xy(coxa_length, femur_length, tibia_length, alpha, show_a
 
 
 def plot_leg_with_points_xy(model: list[Line], title: str):
-    _, ax, _, _ = plot_leg_with_points(model, title, link_labels='none', x_label='X', y_label='Y')
+    _, ax, _ = plot_leg_with_points(model, title, link_labels='none', x_label='X', y_label='Y')
     return ax
 
 
@@ -454,7 +454,7 @@ model = forward_kinematics(
 )
 
 with plt.ioff():
-    fig, ax, _, _ = plot_leg_with_points(
+    fig, ax, _ = plot_leg_with_points(
         model,
         'Inverse Kinematics trigonometry',
         joint_labels='points',
@@ -568,7 +568,7 @@ def solve_and_plot_at_target_xz(
         body_length=0,
     )
 
-    fig, ax, _, _ = plot_leg_with_points(
+    fig, ax, _ = plot_leg_with_points(
         model,
         plot_title,
         joint_labels='points',
@@ -803,7 +803,7 @@ def safe_solve_and_plot_at_target(
         body_length=0,
     )
 
-    _, ax, _, _ = plot_leg_with_points(
+    _, ax, _ = plot_leg_with_points(
         model,
         plot_title + (' (target reached)' if solvable else ' (target unreachable)'),
         joint_labels='points',

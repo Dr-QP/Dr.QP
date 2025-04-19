@@ -22,9 +22,7 @@ The gait cycle of a hexapod robot refers to the sequential movement of its six l
 
 To get an idea of the variance and complexity between gaits, Fig 1. shows four typical gaits. The six legs, right and left hind, middle and front, indicated as RH, RM, RF, LH, LM, and LF, at any one time are either on the ground pushing forward (supporting) shown in white, or in the air moving up to their next position (recovering) shown in black. [borrowed from hexapodrobot.weebly.com](https://hexapodrobot.weebly.com/the-legs.html)
 
-<div>
-<img src="hexapod_gaits.png" width="600"/>
-</div>
+![Hexapod gaits](hexapod_gaits.png)
 
 Fig 1. Four typical hexapodal gaits, depicting each of the six legs as either supporting (white) or recovering (black). Image source: (Chen et al. 2012)
 
@@ -180,7 +178,7 @@ _ = gait_generator.visualize_continuous_in_3d(_steps=100)
 
 ```{code-cell} ipython3
 from models import HexapodModel
-from plotting import animate_plot, plot_hexapod, update_hexapod_plot
+from plotting import animate_plot, is_sphinx_build, plot_hexapod, update_hexapod_plot
 
 
 def animate_hexapod_gait(
@@ -197,6 +195,10 @@ def animate_hexapod_gait(
 ):
     if skip:
         return
+
+    if is_sphinx_build():
+        repeat = 1
+
     leg_centers = {leg.label: leg.tibia_end.copy() for leg in hexapod.legs}
     leg_tips = [leg.tibia_end.copy() for leg in hexapod.legs]
 
@@ -487,6 +489,9 @@ def animate_hexapod_gait_with_direction(
 ):
     if skip:
         return
+
+    if is_sphinx_build():
+        repeat = 1
 
     leg_tips = [leg.tibia_end.copy() for leg in hexapod.legs]
     leg_centers = {leg.label: leg.tibia_end.copy() for leg in hexapod.legs}
@@ -1088,7 +1093,7 @@ def update(frame=0):
 
 frames = len(trajectory_points) - 1
 
-animate_plot(fig, update, frames * frames_between_points, _interval=16, _interactive=False)
+_ = animate_plot(fig, update, frames * frames_between_points, _interval=16, _interactive=False)
 ```
 
 Let's put it all together and generate some gaits!
@@ -1254,7 +1259,7 @@ To make robot turn we need to mix in circular movement to the gait. Let's first 
 
 ```{code-cell} ipython3
 from models import HexapodModel
-from plotting import animate_plot
+from plotting import animate_plot, is_sphinx_build
 
 
 def animate_hexapod_rotation_gait(
@@ -1271,6 +1276,10 @@ def animate_hexapod_rotation_gait(
 ):
     if skip:
         return
+
+    if is_sphinx_build():
+        repeat = 1
+
     leg_centers = {leg.label: leg.tibia_end.copy() for leg in hexapod.legs}
     leg_tips = [leg.tibia_end.copy() for leg in hexapod.legs]
 
@@ -1515,7 +1524,7 @@ class WalkController:
 import importlib
 
 from models import HexapodModel
-from plotting import animate_plot
+from plotting import animate_plot, is_sphinx_build
 import walk_controller
 
 importlib.reload(walk_controller)  # autoreload fails with files written by notebook for some reason
@@ -1536,6 +1545,9 @@ def animate_hexapod_walk(
 
     if interactive:
         repeat = 100
+
+    if is_sphinx_build():
+        repeat = 1
 
     fig, ax, plot_data = plot_hexapod(
         walk_controller.hexapod, feet_trails_frames=feet_trails_frames

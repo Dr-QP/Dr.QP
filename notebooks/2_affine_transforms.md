@@ -209,7 +209,7 @@ tibia = 10
 
 model = forward_kinematics_transforms(coxa, femur, tibia, 0, -25, 110)
 
-fig, _, _, _ = plot_leg_with_points(
+fig, _, _ = plot_leg_with_points(
     model.xy,
     'Foot in 3D (XY)',
     link_labels='none',
@@ -352,14 +352,13 @@ def plot_drqp(drqp, targets=None):
 
     class PlotData:
         def __init__(self):
-            self.leg_lines = []
-            self.leg_joints = []
+            self.leg_plot_data = []
             self.head_line = None
 
     plot_data = PlotData()
 
     for leg in drqp.legs:
-        fig, ax, lines, joints = plot_leg3d(
+        fig, ax, leg_plot_data = plot_leg3d(
             leg,
             'Hexapod in 3D',
             link_labels='none',
@@ -368,8 +367,7 @@ def plot_drqp(drqp, targets=None):
             fig=fig,
             ax=ax,
         )
-        plot_data.leg_lines.append(lines)
-        plot_data.leg_joints.append(joints)
+        plot_data.leg_plot_data.append(leg_plot_data)
 
     plot_data.head_line = ax.plot(*zip(drqp.head.start, drqp.head.end), 'c')[0]
 
@@ -385,8 +383,8 @@ def plot_drqp(drqp, targets=None):
 
 
 def update_drqp_plot(drqp, plot_data):
-    for leg, lines, joints in zip(drqp.legs, plot_data.leg_lines, plot_data.leg_joints):
-        plot_update_leg3d_lines(leg, lines, joints)
+    for leg, leg_plot_data in zip(drqp.legs, plot_data.leg_plot_data):
+        plot_update_leg3d_lines(leg, leg_plot_data)
 
     if plot_data.head_line:
         plot_data.head_line.set_data_3d(*zip(drqp.head.start, drqp.head.end))
@@ -494,92 +492,82 @@ sequence_xyz_little_circle = [
 ```{code-cell} ipython3
 # Plot IK solutions and targets into an animation
 
-import matplotlib.animation
-from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
+from plotting import animate_plot, is_sphinx_build
 from scipy.interpolate import interp1d
 
 plt.rcParams['animation.html'] = 'jshtml'
 
-skip = True
+skip = not is_sphinx_build()
 interactive = False
-was_interactive = plt.isinteractive()
+save_animation = False
+
+orig_alpha, orig_beta, orig_gamma = 0, -25, 110
+drqp = DrQP()
+drqp.forward_kinematics(orig_alpha, orig_beta, orig_gamma)
+
+targets = [leg.tibia_end.copy() for leg in drqp.legs]
+
+transforms = [Transform.identity()]
 
 
-def plot_mode():
-    if interactive:
-        return plt.ion()
-    else:
-        return plt.ioff()
+def interpolate(tf1: Transform, tf2: Transform, steps=10):
+    interp_func = interp1d([0, steps], np.stack([tf1.matrix, tf2.matrix]), axis=0)
+    for i in range(steps):
+        transforms.append(Transform(interp_func(i)))
 
 
-try:
-    if skip:
-        raise KeyboardInterrupt
+def extend_transforms(ohter_transforms, steps=10):
+    interpolate(transforms[-1], ohter_transforms[0], steps=steps)
+    transforms.extend(ohter_transforms)
 
-    orig_alpha, orig_beta, orig_gamma = 0, -25, 110
-    drqp = DrQP()
-    drqp.forward_kinematics(orig_alpha, orig_beta, orig_gamma)
 
-    targets = [leg.tibia_end.copy() for leg in drqp.legs]
+def turn_transforms(axis, turn_degrees=10):
+    axis = np.array(axis)
+    for i in range(0, turn_degrees):
+        transforms.append(Transform.from_rotvec(axis * i, degrees=True))
 
-    transforms = [Transform.identity()]
+    for i in range(turn_degrees, -turn_degrees, -1):
+        transforms.append(Transform.from_rotvec(axis * i, degrees=True))
 
-    def interpolate(tf1: Transform, tf2: Transform, steps=10):
-        interp_func = interp1d([0, steps], np.stack([tf1.matrix, tf2.matrix]), axis=0)
-        for i in range(steps):
-            transforms.append(Transform(interp_func(i)))
+    for i in range(-turn_degrees, 0):
+        transforms.append(Transform.from_rotvec(axis * i, degrees=True))
 
-    def extend_transforms(ohter_transforms, steps=10):
-        interpolate(transforms[-1], ohter_transforms[0], steps=steps)
-        transforms.extend(ohter_transforms)
 
-    def turn_transforms(axis, turn_degrees=10):
-        axis = np.array(axis)
-        for i in range(0, turn_degrees):
-            transforms.append(Transform.from_rotvec(axis * i, degrees=True))
+turn_transforms([0, 0, 1])
+turn_transforms([0, 1, 0])
+turn_transforms([1, 0, 0])
+turn_transforms([1, 1, 0])
+turn_transforms([1, 0, 1])
+turn_transforms([1, 1, 1])
 
-        for i in range(turn_degrees, -turn_degrees, -1):
-            transforms.append(Transform.from_rotvec(axis * i, degrees=True))
+extend_transforms(sequence_xy_little_circle, steps=5)
+extend_transforms(sequence_xz_little_circle, steps=5)
+extend_transforms(sequence_yz_little_circle, steps=5)
+extend_transforms(sequence_xyz_little_circle, steps=5)
 
-        for i in range(-turn_degrees, 0):
-            transforms.append(Transform.from_rotvec(axis * i, degrees=True))
+# Close the loop
+interpolate(transforms[-1], transforms[0], steps=15)
 
-    turn_transforms([0, 0, 1])
-    turn_transforms([0, 1, 0])
-    turn_transforms([1, 0, 0])
-    turn_transforms([1, 1, 0])
-    turn_transforms([1, 0, 1])
-    turn_transforms([1, 1, 1])
+fig, ax, plot_data = plot_drqp(drqp)
 
-    extend_transforms(sequence_xy_little_circle, steps=5)
-    extend_transforms(sequence_xz_little_circle, steps=5)
-    extend_transforms(sequence_yz_little_circle, steps=5)
-    extend_transforms(sequence_xyz_little_circle, steps=5)
 
-    # Close the loop
-    interpolate(transforms[-1], transforms[0], steps=15)
+def animate(frame):
+    drqp.body_transform = transforms[frame]
+    for leg, target in zip(drqp.legs, targets):
+        leg.move_to(target)
+    update_drqp_plot(drqp, plot_data)
 
-    with plot_mode():
-        fig, ax, plot_data = plot_drqp(drqp)
 
-        def animate(frame):
-            drqp.body_transform = transforms[frame]
-            for leg, target in zip(drqp.legs, targets):
-                leg.move_to(target)
-            update_drqp_plot(drqp, plot_data)
-
-        anim = FuncAnimation(fig, animate, frames=len(transforms), interval=20)
-
-        save_animation = False
-        if save_animation:
-            animation_writer = matplotlib.animation.FFMpegWriter(fps=24)
-            anim.save('animation.mp4', writer=animation_writer)
-
-        if not interactive:
-            display(anim)
-except KeyboardInterrupt:
-    print('Skipping animation')
+if not skip:
+    animate_plot(
+        fig,
+        animate,
+        _frames=len(transforms),
+        _interval=20,
+        _interactive=interactive,
+        _save_animation_name='animation' if save_animation else None,
+    )
 ```
 
 To make all the learnings and findings reusable in other notebooks, lets move all the code into modules and double check it works.

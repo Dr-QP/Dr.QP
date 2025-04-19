@@ -1,4 +1,5 @@
 # Configuration file for the Sphinx documentation builder.
+import os
 
 # -- Project information
 
@@ -32,7 +33,7 @@ language = 'en'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['**/_*.rst', '**/*.ipynb']
+exclude_patterns = ['**/_*.rst', '**/_*.md', '**/*.ipynb']
 
 # -- General configuration
 extensions = [
@@ -41,6 +42,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
+    'sphinx_rtd_size',
     'myst_nb',  # for embedding jupyter notebooks
 ]
 
@@ -55,6 +57,7 @@ nb_ipywidgets_js = {
         'crossorigin': 'anonymous',
     },
 }
+nb_execution_timeout = 300  # seconds
 
 myst_enable_extensions = [
     'amsmath',
@@ -82,13 +85,31 @@ html_theme_options = {
     'sticky_navigation': True,
     'navigation_depth': -1,
 }
+# sphinx_rtd_size_width = '90%' # This makes reading much harder due to excessive width
+
+
+def version_name():
+    # READTHEDOCS_VERSION is not suitable here as for PRs it will simply have the PR number which doesn't work as a branch name in github URL
+    name = os.environ.get('READTHEDOCS_VERSION_NAME', 'main')
+    if name == 'latest' or name == 'stable':
+        return 'main'
+    return name
+
 
 html_context = {
     'display_github': True,
     'github_user': 'dr-qp',
     'github_repo': 'Dr.QP',
-    'github_version': 'main',
+    'github_version': version_name(),
+    'conf_py_path': '/docs/source/',
 }
 
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
+
+
+# -- lightweight Sphinx extension
+def setup(app):
+    # Set default if not already defined in the shell
+    os.environ.setdefault('SPHINX_BUILD', '1')
+    return {}

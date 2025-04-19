@@ -14,6 +14,7 @@ sphinx-notfound-page~=1.0.0
 # The theme used by the documentation is stored separately, so we need
 # to install that as well.
 sphinx_rtd_theme>=3.0.2
+sphinx-rtd-size>=0.2
 
 myst-nb>=1.2.0
 

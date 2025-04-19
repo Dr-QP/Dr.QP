@@ -280,6 +280,9 @@
         "options": {
           "cwd": "${workspaceFolder}"
         },
+        "dependsOn": [
+          "Dr.QP sync notebooks"
+        ],
         "problemMatcher": [
           {
             "owner": "sphinx",
