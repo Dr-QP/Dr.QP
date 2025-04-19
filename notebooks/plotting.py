@@ -19,11 +19,12 @@
 # THE SOFTWARE.
 
 import os
+from pathlib import Path
 from typing import Literal
 
 from inline_labels import add_inline_labels
 from ipywidgets import interact
-from matplotlib.animation import FuncAnimation
+from matplotlib.animation import FFMpegWriter, FuncAnimation
 from matplotlib.patches import Arc
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox, IdentityTransform, TransformedBbox
@@ -283,9 +284,7 @@ def plot_leg3d(
     assert link_labels != 'inline', 'Inline labels not supported in 3D plots'
     assert joint_labels != 'annotated', 'Joint annotations not supported in 3D plots'
 
-    result_lines, result_joints = plot_leg_links(
-        ax, model.lines, link_labels=link_labels, joint_labels=joint_labels
-    )
+    plot_data = plot_leg_links(ax, model.lines, link_labels=link_labels, joint_labels=joint_labels)
 
     # Doesn't really add anything to the plot
     # plot_cartesian_plane(ax, Point(-10, -10), Point(10, 10), no_ticks=True)
@@ -307,7 +306,7 @@ def plot_leg3d(
     # ax.zaxis.line.set_visible(False)  # OFF to bypass ValueError: 'bboxes' cannot be empty in inline figures
     ax.zaxis.gridlines.set_visible(False)
 
-    return fig, ax, result_lines, result_joints
+    return fig, ax, plot_data
 
 
 class LegPlotData:
@@ -534,8 +533,7 @@ def plot_ik_lines(ax, femur, tibia):
 
 class HexapodPlotData:
     def __init__(self):
-        self.leg_lines = []
-        self.leg_joints = []
+        self.leg_plot_data = []
         self.head_line = None
         self.leg_tips = {}
         self.leg_tip_collections = {}
@@ -549,7 +547,7 @@ def plot_hexapod(hexapod: HexapodModel, targets=None, feet_trails_frames=0):
     plot_data.feet_trails_frames = feet_trails_frames
 
     for leg in hexapod.legs:
-        fig, ax, lines, joints = plot_leg3d(
+        fig, ax, leg_plot_data = plot_leg3d(
             leg,
             'Hexapod in 3D',
             link_labels='none',
@@ -558,8 +556,7 @@ def plot_hexapod(hexapod: HexapodModel, targets=None, feet_trails_frames=0):
             fig=fig,
             ax=ax,
         )
-        plot_data.leg_lines.append(lines)
-        plot_data.leg_joints.append(joints)
+        plot_data.leg_plot_data.append(leg_plot_data)
 
         if feet_trails_frames > 0:
             plot_data.leg_tips[leg.label] = [leg.tibia_end.numpy()]
@@ -592,8 +589,8 @@ def leg_tips_to_segments(leg_tips):
 
 
 def update_hexapod_plot(hexapod: HexapodModel, plot_data: HexapodPlotData):
-    for leg, lines, joints in zip(hexapod.legs, plot_data.leg_lines, plot_data.leg_joints):
-        plot_update_leg3d_lines(leg, lines, joints)
+    for leg, leg_plot_data in zip(hexapod.legs, plot_data.leg_plot_data):
+        plot_update_leg3d_lines(leg, leg_plot_data)
 
     if plot_data.head_line:
         plot_data.head_line.set_data_3d(*zip(hexapod.head.start, hexapod.head.end))
@@ -609,11 +606,11 @@ def update_hexapod_plot(hexapod: HexapodModel, plot_data: HexapodPlotData):
             lc.set_segments(segments)
 
 
-def plot_update_leg3d_lines(leg: Leg3D, lines, joints):
-    for line, line_model in zip(lines, leg.lines):
+def plot_update_leg3d_lines(leg: Leg3D, leg_plot_data: LegPlotData):
+    for line, line_model in zip(leg_plot_data.lines, leg.lines):
         line.set_data_3d(*zip(line_model.start, line_model.end))
 
-    for joint, line_model in zip(joints, leg.lines):
+    for joint, line_model in zip(leg_plot_data.joints, leg.lines):
         joint._offsets3d = ([line_model.end.x], [line_model.end.y], [line_model.end.z])
 
 
@@ -623,23 +620,25 @@ def animate_plot(
     _frames,
     _interval=16,  # 60 fps
     _interactive=False,
+    _save_animation_name=None,
     **interact_kwargs,
 ):
     anim = None
 
     plt.rcParams['animation.html'] = 'jshtml'
 
-    try:
-        if _interactive and not is_sphinx_build():
-            with plt.ion():
-                anim = interact(_animate, frame=(0, _frames), **interact_kwargs)
-                plt.show()
-        else:
-            with plt.ioff():
-                anim = FuncAnimation(_fig, _animate, frames=_frames, interval=_interval)
-                display(anim)  # type: ignore # noqa: F821
-    except KeyboardInterrupt:
-        print('Skipping animation')
+    if _interactive and not is_sphinx_build():
+        with plt.ion():
+            anim = interact(_animate, frame=(0, _frames), **interact_kwargs)
+            plt.show()
+    else:
+        with plt.ioff():
+            anim = FuncAnimation(_fig, _animate, frames=_frames, interval=_interval)
+            display(anim)  # type: ignore # noqa: F821
+
+            if _save_animation_name is not None:
+                animation_writer = FFMpegWriter(fps=24)
+                anim.save(Path(_save_animation_name).with_suffix('.mp4'), writer=animation_writer)
 
     return anim
 
