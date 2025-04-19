@@ -85,7 +85,7 @@ html_theme_options = {
     'sticky_navigation': True,
     'navigation_depth': -1,
 }
-sphinx_rtd_size_width = '90%'
+# sphinx_rtd_size_width = '90%' # This makes reading much harder due to excessive width
 
 
 def version_name():
