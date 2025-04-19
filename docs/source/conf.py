@@ -89,7 +89,8 @@ sphinx_rtd_size_width = '90%'
 
 
 def version_name():
-    name = os.environ.get('READTHEDOCS_VERSION_NAME', os.environ.get('READTHEDOCS_VERSION', 'main'))
+    # READTHEDOCS_VERSION is not suitable here as for PRs it will simply have the PR number which doesn't work as a branch name in github URL
+    name = os.environ.get('READTHEDOCS_VERSION_NAME', 'main')
     if name == 'latest' or name == 'stable':
         return 'main'
     return name
@@ -99,7 +100,7 @@ html_context = {
     'display_github': True,
     'github_user': 'dr-qp',
     'github_repo': 'Dr.QP',
-    'github_version': version_name() + '/',
+    # 'github_version': version_name() + '/',
 }
 
 # -- Options for EPUB output
@@ -109,5 +110,5 @@ epub_show_urls = 'footnote'
 # -- lightweight Sphinx extension
 def setup(app):
     # Set default if not already defined in the shell
-    os.environ.setdefault('SPHINX_BUILD', '1')
+    os.environ.setdefault('SPHINX_BUILD', '0')
     return {}
