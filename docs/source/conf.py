@@ -42,6 +42,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
+    'sphinx_rtd_size',
     'myst_nb',  # for embedding jupyter notebooks
 ]
 
@@ -84,6 +85,7 @@ html_theme_options = {
     'sticky_navigation': True,
     'navigation_depth': -1,
 }
+sphinx_rtd_size_width = '90%'
 
 
 def version_name():
