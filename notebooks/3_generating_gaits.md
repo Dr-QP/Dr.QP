@@ -22,9 +22,7 @@ The gait cycle of a hexapod robot refers to the sequential movement of its six l
 
 To get an idea of the variance and complexity between gaits, Fig 1. shows four typical gaits. The six legs, right and left hind, middle and front, indicated as RH, RM, RF, LH, LM, and LF, at any one time are either on the ground pushing forward (supporting) shown in white, or in the air moving up to their next position (recovering) shown in black. [borrowed from hexapodrobot.weebly.com](https://hexapodrobot.weebly.com/the-legs.html)
 
-<div>
-<img src="hexapod_gaits.png" width="600"/>
-</div>
+![Hexapod gaits](hexapod_gaits.png)
 
 Fig 1. Four typical hexapodal gaits, depicting each of the six legs as either supporting (white) or recovering (black). Image source: (Chen et al. 2012)
 
