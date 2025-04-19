@@ -56,6 +56,7 @@ nb_ipywidgets_js = {
         'crossorigin': 'anonymous',
     },
 }
+nb_execution_timeout = 300  # seconds
 
 myst_enable_extensions = [
     'amsmath',
