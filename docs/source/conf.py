@@ -85,11 +85,19 @@ html_theme_options = {
     'navigation_depth': -1,
 }
 
+
+def version_name():
+    name = os.environ.get('READTHEDOCS_VERSION_NAME', 'main')
+    if name == 'latest' or name == 'stable':
+        return 'main'
+    return name
+
+
 html_context = {
     'display_github': True,
     'github_user': 'dr-qp',
     'github_repo': 'Dr.QP',
-    'github_version': 'main',
+    'github_version': version_name() + '/',
 }
 
 # -- Options for EPUB output
