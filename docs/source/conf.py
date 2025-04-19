@@ -100,7 +100,8 @@ html_context = {
     'display_github': True,
     'github_user': 'dr-qp',
     'github_repo': 'Dr.QP',
-    # 'github_version': version_name() + '/',
+    'github_version': version_name(),
+    'conf_py_path': '/docs/source/',
 }
 
 # -- Options for EPUB output
