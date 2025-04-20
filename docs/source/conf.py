@@ -87,19 +87,35 @@ html_theme_options = {
 }
 # sphinx_rtd_size_width = '90%' # This makes reading much harder due to excessive width
 
+github_user = 'dr-qp'
+github_repo = 'Dr.QP'
+
+
+def get_github_branch_from_pr(pr_number: int):
+    from github import Github
+
+    g = Github()
+    return g.get_repo(github_user + '/' + github_repo).get_pull(pr_number).head.ref
+
 
 def version_name():
-    # READTHEDOCS_VERSION is not suitable here as for PRs it will simply have the PR number which doesn't work as a branch name in github URL
-    name = os.environ.get('READTHEDOCS_VERSION_NAME', 'main')
-    if name == 'latest' or name == 'stable':
-        return 'main'
-    return name
+    rtd_version_name = os.environ.get('READTHEDOCS_VERSION_NAME', 'main')
+    rtd_version_type = os.environ.get('READTHEDOCS_VERSION_TYPE', '')
+    rtd_git_sha = os.environ.get('READTHEDOCS_GIT_COMMIT_HASH', 'main')
+
+    if rtd_version_type == 'tag' or rtd_version_type == 'branch':
+        return rtd_version_name
+    elif rtd_version_type == 'external':  # pull request
+        pr_number = int(rtd_version_name)
+        return get_github_branch_from_pr(pr_number) or rtd_git_sha
+
+    return 'main'
 
 
 html_context = {
     'display_github': True,
-    'github_user': 'dr-qp',
-    'github_repo': 'Dr.QP',
+    'github_user': github_user,
+    'github_repo': github_repo,
     'github_version': version_name(),
     'conf_py_path': '/docs/source/',
 }
