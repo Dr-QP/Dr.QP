@@ -6,5 +6,5 @@ pygame>=2.5
 esbonio>=0.16
 
 
--r notebooks/requirements.txt
+-r docs/source/notebooks/requirements.txt
 -r docs/requirements.txt
