@@ -87,21 +87,34 @@ html_theme_options = {
 }
 # sphinx_rtd_size_width = '90%' # This makes reading much harder due to excessive width
 
+github_user = 'dr-qp'
+github_repo = 'Dr.QP'
+
+
+def get_github_branch_from_pr(pr_number):
+    from github import Github
+
+    g = Github()
+    return g.get_repo(github_user + '/' + github_repo).get_pull(pr_number).head.ref
+
 
 def version_name():
-    # READTHEDOCS_VERSION is not suitable here as for PRs it will simply have the PR number which doesn't work as a branch name in github URL
-    READTHEDOCS_VERSION = os.environ.get('READTHEDOCS_VERSION', '')
-    READTHEDOCS_VERSION_NAME = os.environ.get('READTHEDOCS_VERSION_NAME', '')
-    READTHEDOCS_GIT_COMMIT_HASH = os.environ.get('READTHEDOCS_GIT_COMMIT_HASH', '')
-    READTHEDOCS_VERSION_TYPE = os.environ.get('READTHEDOCS_VERSION_TYPE', '')
+    rtd_version_name = os.environ.get('READTHEDOCS_VERSION_NAME', 'main')
+    rtd_version_type = os.environ.get('READTHEDOCS_VERSION_TYPE', '')
+    rtd_git_sha = os.environ.get('READTHEDOCS_GIT_COMMIT_HASH', 'main')
 
-    return f'{READTHEDOCS_VERSION}_{READTHEDOCS_VERSION_NAME}_{READTHEDOCS_GIT_COMMIT_HASH}_{READTHEDOCS_VERSION_TYPE}'
+    if rtd_version_type == 'tag' or rtd_version_type == 'branch':
+        return rtd_version_name
+    elif rtd_version_type == 'external':  # pull request
+        return get_github_branch_from_pr(rtd_version_name) or rtd_git_sha
+
+    return 'main'
 
 
 html_context = {
     'display_github': True,
-    'github_user': 'dr-qp',
-    'github_repo': 'Dr.QP',
+    'github_user': github_user,
+    'github_repo': github_repo,
     'github_version': version_name(),
     'conf_py_path': '/docs/source/',
 }
