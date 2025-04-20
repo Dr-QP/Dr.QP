@@ -90,10 +90,12 @@ html_theme_options = {
 
 def version_name():
     # READTHEDOCS_VERSION is not suitable here as for PRs it will simply have the PR number which doesn't work as a branch name in github URL
-    name = os.environ.get('READTHEDOCS_VERSION_NAME', 'main')
-    if name == 'latest' or name == 'stable':
-        return 'main'
-    return name
+    READTHEDOCS_VERSION = os.environ.get('READTHEDOCS_VERSION', '')
+    READTHEDOCS_VERSION_NAME = os.environ.get('READTHEDOCS_VERSION_NAME', '')
+    READTHEDOCS_GIT_COMMIT_HASH = os.environ.get('READTHEDOCS_GIT_COMMIT_HASH', '')
+    READTHEDOCS_VERSION_TYPE = os.environ.get('READTHEDOCS_VERSION_TYPE', '')
+
+    return f'{READTHEDOCS_VERSION}_{READTHEDOCS_VERSION_NAME}_{READTHEDOCS_GIT_COMMIT_HASH}_{READTHEDOCS_VERSION_TYPE}'
 
 
 html_context = {
