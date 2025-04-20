@@ -91,7 +91,7 @@ github_user = 'dr-qp'
 github_repo = 'Dr.QP'
 
 
-def get_github_branch_from_pr(pr_number):
+def get_github_branch_from_pr(pr_number: int):
     from github import Github
 
     g = Github()
@@ -106,7 +106,8 @@ def version_name():
     if rtd_version_type == 'tag' or rtd_version_type == 'branch':
         return rtd_version_name
     elif rtd_version_type == 'external':  # pull request
-        return get_github_branch_from_pr(rtd_version_name) or rtd_git_sha
+        pr_number = int(rtd_version_name)
+        return get_github_branch_from_pr(pr_number) or rtd_git_sha
 
     return 'main'
 
