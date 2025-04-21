@@ -5,3 +5,5 @@ robots:
       ansible_python_interpreter: /usr/bin/python3
   vars:
     ansible_user: anton
+    # ansible_become_password: "{{ op://Private/Dr.QP robot root/password }}"
+
