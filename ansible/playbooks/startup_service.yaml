@@ -23,7 +23,7 @@
 
         [Service]
         Restart=always
-        ExecStart=/usr/bin/docker run --pull=always --network host --device /dev/ttySC0 --rm --name {{ container_name }} {{ container_image }} ros2 launch drqp_control bringup.launch.py
+        ExecStart=/usr/bin/docker run --pull=always --network host --device /dev/ttySC0 --rm --name {{ container_name }} {{ container_image }}
         ExecStop=/usr/bin/docker stop {{ container_name }}
 
         [Install]
