@@ -30,6 +30,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
     load_drivers = LaunchConfiguration('load_drivers')
+    show_rviz = LaunchConfiguration('show_rviz')
 
     description_launch_path = get_package_share_path('drqp_description') / 'launch'
 
@@ -47,8 +48,8 @@ def generate_launch_description():
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
                     str(description_launch_path / 'rviz.launch.py'),
-                    condition=IfCondition(load_drivers),
-                )
+                ),
+                condition=IfCondition(show_rviz),
             ),
             DeclareLaunchArgument(
                 name='load_drivers',
