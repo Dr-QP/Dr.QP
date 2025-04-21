@@ -1,5 +1,5 @@
 ruff>=0.11.5
-jupyter>=1.1.1
+jupyterlab>=4.4
 numpy>=1.26.0,<2.0.0  # Compatible with Python 3.12, but before bool8 removal needed by matplotlib-inline-labels
 scipy>=1.15.2
 numpy-quaternion>=2024.0.7

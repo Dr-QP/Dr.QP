@@ -29,7 +29,7 @@ jobs:
         uses: ./.github/actions/paths-filter
         id: filter
         with:
-          extra-filter: ".github/workflows/reformat.yml,notebooks/**"
+          extra-filter: ".github/workflows/reformat.yml,docs/source/notebooks/**"
 
   analyze:
     name: Analyze (${{ matrix.language }})

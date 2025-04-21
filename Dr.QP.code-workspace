@@ -122,14 +122,14 @@
         "name": "run_hexapod.py",
         "type": "debugpy",
         "request": "launch",
-        "program": "${workspaceFolder}/notebooks/run_hexapod.py",
+        "program": "${workspaceFolder}/docs/source/notebooks/run_hexapod.py",
         "console": "integratedTerminal",
       },
       {
         "name": "ROS run_hexapod.py",
         "type": "debugpy",
         "request": "launch",
-        "program": "${workspaceFolder}/notebooks/run_hexapod_ros.py",
+        "program": "${workspaceFolder}/docs/source/notebooks/run_hexapod_ros.py",
         "console": "integratedTerminal",
       }
     ]
@@ -221,7 +221,7 @@
       {
         "label": "Dr.QP clean",
         "type": "shell",
-        "command": "rm -rf build install log lcov .cache $(find packages/ -type d -name node_modules -o -name build -o -name dist)",
+        "command": "rm -rf build install log lcov .cache docs/_build $(find packages/ -type d -name node_modules -o -name build -o -name dist)",
         "options": {
           "cwd": "${workspaceFolder}"
         },
@@ -265,7 +265,7 @@
       {
         "label": "Dr.QP sync notebooks",
         "type": "shell",
-        "command": ".venv/bin/jupytext --sync notebooks/*.md notebooks/*.ipynb",
+        "command": "${workspaceFolder}/scripts/sync-notebooks.sh",
         "options": {
           "cwd": "${workspaceFolder}"
         },
