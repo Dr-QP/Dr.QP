@@ -38,8 +38,17 @@ def generate_launch_description():
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(str(description_launch_path / 'rsp.launch.py'))
             ),
+            DeclareLaunchArgument(
+                name='show_rviz',
+                default_value='true',
+                choices=['true', 'false'],
+                description='Show rviz',
+            ),
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(str(description_launch_path / 'rviz.launch.py'))
+                PythonLaunchDescriptionSource(
+                    str(description_launch_path / 'rviz.launch.py'),
+                    condition=IfCondition(load_drivers),
+                )
             ),
             DeclareLaunchArgument(
                 name='load_drivers',
