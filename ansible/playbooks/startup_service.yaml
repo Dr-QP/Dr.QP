@@ -2,52 +2,10 @@
   hosts: robots
   become: true
   vars:
-    github_username: "your-github-username"
-    github_token: "your-github-token"
     container_image: "ghcr.io/dr-qp/jazzy-ros-deploy:edge"
     container_name: "drqp-ros-deploy-edge"
     service_name: "drqp-ros-deploy-docker"
-
   tasks:
-
-  # - name: Install Docker dependencies
-  #   apt:
-  #     name:
-  #       - apt-transport-https
-  #       - ca-certificates
-  #       - curl
-  #       - software-properties-common
-  #     state: present
-  #     update_cache: yes
-
-  # - name: Add Docker GPG key
-  #   apt_key:
-  #     url: https://download.docker.com/linux/ubuntu/gpg
-  #     state: present
-
-  # - name: Add Docker repository
-  #   apt_repository:
-  #     repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
-  #     state: present
-
-  # - name: Install Docker Engine
-  #   apt:
-  #     name: docker-ce
-  #     state: latest
-  #     update_cache: yes
-
-  # - name: Ensure Docker service is running
-  #   service:
-  #     name: docker
-  #     state: started
-  #     enabled: true
-
-  # - name: Login to GitHub Container Registry
-  #   community.docker.docker_login:
-  #     registry_url: ghcr.io
-  #     username: "{{ github_username }}"
-  #     password: "{{ github_token }}"
-
   - name: Pull Docker image from GitHub Container Registry
     community.docker.docker_image:
       name: "{{ container_image }}"
