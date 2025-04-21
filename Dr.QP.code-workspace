@@ -60,7 +60,8 @@
       "dotjoshjohnson.xml",
       "ms-vscode.cpptools",
       "batyan-soft.fast-tasks",
-      "executablebookproject.myst-highlight", // MS C++ extension is needed for ROS extension to activate
+      "executablebookproject.myst-highlight",
+      "gbraad.systemd-universal-manager", // MS C++ extension is needed for ROS extension to activate
       // cSpell:enable
     ]
   },
@@ -435,5 +436,6 @@
       "znew",
       "ztick"
     ],
+    "ros.distro": "jazzy",
   },
 }
