@@ -63,4 +63,4 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 COPY ./ros_entrypoint.sh /
 
-CMD ["ros2", "launch", "drqp_control", "bringup.launch.py", "--ros-args", "show_rviz:=false"]
+CMD ["ros2", "launch", "drqp_control", "bringup.launch.py", "show_rviz:=false"]
