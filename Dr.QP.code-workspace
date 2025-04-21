@@ -61,7 +61,9 @@
       "ms-vscode.cpptools",
       "batyan-soft.fast-tasks",
       "executablebookproject.myst-highlight",
-      "gbraad.systemd-universal-manager", // MS C++ extension is needed for ROS extension to activate
+      "gbraad.systemd-universal-manager",
+      "ipierre1.ansible-vault-vscode",
+      "redhat.ansible", // MS C++ extension is needed for ROS extension to activate
       // cSpell:enable
     ]
   },
@@ -436,6 +438,7 @@
       "znew",
       "ztick"
     ],
-    "ros.distro": "jazzy",
+    "ansible.ansible.path": ".venv/bin/ansible",
+    "ansible.python.interpreterPath": "/Users/antonmatosov/Develop/XYZRobot/Dr-QP/Dr.QP/.venv/bin/python",
   },
 }
