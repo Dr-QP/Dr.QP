@@ -61,6 +61,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --from-paths "$OVERLAY_WS/install" \
       -t exec
 
-COPY ./ros_entrypoint.sh ./
+ENV OVERLAY_WS=$OVERLAY_WS
+ENV ROS_DISTRO=$ROS_DISTRO
+
+COPY ./ros_entrypoint.sh /
+ENTRYPOINT ["/ros_entrypoint.sh"]
 
 CMD ["ros2", "launch", "drqp_control", "bringup.launch.py", "show_rviz:=false"]
