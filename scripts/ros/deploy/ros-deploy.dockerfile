@@ -57,6 +57,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     sudo apt-get update \
     && rosdep update \
+    && rm -f $OVERLAY_WS/install/COLCON_IGNORE \
     && rosdep install --ignore-src -y \
       --from-paths "$OVERLAY_WS/install" \
       -t exec
