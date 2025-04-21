@@ -65,6 +65,12 @@ jobs:
 
           ./scripts/python-reformat.sh || true
 
+      - name: Run ansible-lint
+        uses: ansible/ansible-lint@v25
+        with:
+          setup_python: false
+          working_directory: ansible
+
       # Commit all changed files back to the repository
       - uses: stefanzweifel/git-auto-commit-action@v5
         if: ${{ github.event_name == 'pull_request' }}
