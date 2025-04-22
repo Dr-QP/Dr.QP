@@ -1,0 +1,50 @@
+---
+- name: Pair a DualSense Wireless Controller
+  hosts: robots
+  vars:
+    controller_mac: "D0:BC:C1:F4:F9:8B"
+  gather_facts: false
+  tasks:
+    - name: Install Bluetooth stack
+      become: true
+      ansible.builtin.apt:
+        name:
+          - bluez
+        state: present
+        update_cache: true
+
+    - name: Check if controller is already paired
+      register: controller_paired
+      changed_when: false
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: set -o pipefail && bluetoothctl devices Paired | grep -q "{{ controller_mac }}"
+      failed_when: false
+
+    - name: Turn on Bluetooth agent
+      when: controller_paired.rc != 0
+      changed_when: false
+      ansible.builtin.command:
+        cmd: bluetoothctl agent on
+
+    - name: Pair controller
+      when: controller_paired.rc != 0
+      register: pair_result
+      changed_when: true
+      ansible.builtin.command:
+        cmd: bluetoothctl pair {{ controller_mac }}
+
+    - name: Check if controller is already trusted
+      register: controller_trusted
+      changed_when: false
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: set -o pipefail && bluetoothctl devices Trusted | grep -q "{{ controller_mac }}"
+      failed_when: false
+
+    - name: Trust the controller
+      when: controller_trusted.rc != 0
+      register: trust_result
+      changed_when: true
+      ansible.builtin.command:
+        cmd: bluetoothctl trust {{ controller_mac }}
