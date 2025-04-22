@@ -134,6 +134,9 @@
         "request": "launch",
         "program": "${workspaceFolder}/docs/source/notebooks/run_hexapod_ros.py",
         "console": "integratedTerminal",
+        "env": {
+          "FASTDDS_BUILTIN_TRANSPORTS": "UDPv4"
+        }
       }
     ]
   },
