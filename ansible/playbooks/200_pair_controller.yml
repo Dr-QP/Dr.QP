@@ -71,5 +71,3 @@
           expect "#"
 
           send "exit\r"
-
-
