@@ -28,6 +28,8 @@
           # Environment=FASTDDS_BUILTIN_TRANSPORTS=UDPv4
           ExecStart=/usr/bin/docker run --pull=always \
             --network host \
+            --ipc host \
+            --pid host \
             --device /dev/ttySC0 \
             --device /dev/input/event0 \
             --device /dev/input/event1 \
