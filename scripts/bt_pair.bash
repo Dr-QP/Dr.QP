@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
 
-DEVICE_MAC="D0:BC:C1:F4:F9:8B"   # your controller MAC
+DEVICE_MAC="${1:-'D0:BC:C1:F4:F9:8B'}"   # your controller MAC
+
+echo "Pairing $DEVICE_MAC"
 
 # Start pairing agent in the background
 bt-agent --capability=NoInputNoOutput &
