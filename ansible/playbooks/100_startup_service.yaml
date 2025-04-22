@@ -6,16 +6,42 @@
     container_image: "ghcr.io/dr-qp/jazzy-ros-deploy:edge"
     container_name: "drqp-ros-deploy-edge"
     service_name: "drqp-ros-deploy-docker"
+    container_user: 1000
+    dialout_group: 20
+    input_group: 995
   tasks:
     - name: Pull Docker image from GitHub Container Registry
       community.docker.docker_image:
         name: "{{ container_image }}"
         source: pull
 
+    - name: Stop autorun service before update {{ service_name }}
+      ansible.builtin.systemd_service:
+        name: "{{ service_name }}"
+        enabled: false
+        state: stopped
+
     - name: Create systemd service to run container on boot
       ansible.builtin.copy:
         mode: "0644"
         dest: "/etc/systemd/system/{{ service_name }}.service"
+        # Explicit devices or privileged access is required for docker container to work
+        # Control module needs to have access to the UART devices that control servos
+        # Joy node needs to have access to /dev/input/event* devices that are SDL joysticks
+        # Below are the commands to devices at startup and they can be used for the service
+        # AS LONG AS DEVICES ARE PRESENT AT STARTUP TIME!!!
+        # And that obviously doesn't work for Bluetooth joysticks.
+        # Moreover having event devices passed in causes issues with joystick reconnection as
+        # docker holds original devices open and unlink from disconnect doesn't do full cleanup.
+        # This results in joystick failing to reconnect unless container is restarted.
+        #
+        # $(find /dev/ -name "ttySC*" | xargs -I{} echo --device {}) \
+        # $(find /dev/input/ -name "event*" | xargs -I{} echo --device {}) \
+        # --device-cgroup-rule=\'c 13:* rwm\' \ # this doesn't do the trick with input devices
+        #
+        # With all these issues the --privileged is being used to run the container.
+        #
+        # For added security, container is using the non-root user and group matching primary user on the Dr.QP host
         content: |
           [Unit]
           Description=Dr.QP ROS container
@@ -26,28 +52,23 @@
           Restart=always
           # Force network mode for DDS network https://robotics.stackexchange.com/a/114955/38643
           # Environment=FASTDDS_BUILTIN_TRANSPORTS=UDPv4
-          ExecStart=/usr/bin/docker run --pull=always \
+          ExecStart=/bin/bash -c '/usr/bin/docker run --pull=always \
             --network host \
             --ipc host \
             --pid host \
-            --device /dev/ttySC0 \
-            --device /dev/input/event0 \
-            --device /dev/input/event1 \
-            --device /dev/input/event2 \
-            --device /dev/input/event3 \
-            --device /dev/input/event4 \
-            --device /dev/input/event5 \
-            --device /dev/input/event6 \
-            --device /dev/input/event7 \
+            --user {{ container_user }} \
+            --group-add {{ dialout_group }} \
+            --group-add {{ input_group }} \
+            --privileged \
             --rm \
             --name {{ container_name }} \
-             {{ container_image }}
+             {{ container_image }}'
           ExecStop=/usr/bin/docker stop {{ container_name }}
 
           [Install]
           WantedBy=multi-user.target
 
-    - name: Enable and start autorun service
+    - name: Enable and start autorun service {{ service_name }}
       ansible.builtin.systemd_service:
         daemon-reload: true
         name: "{{ service_name }}"
