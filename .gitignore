@@ -351,4 +351,4 @@ llvm.sh
 nodesource_setup.sh
 
 # Ansible
-./ansible/
+.ansible/
