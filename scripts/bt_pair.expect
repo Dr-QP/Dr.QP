@@ -1,7 +1,10 @@
 #!/usr/bin/env expect
 
+set device_mac [lindex $argv 0]
+if {$device_mac eq ""} {
+    set device_mac "D0:BC:C1:F4:F9:8B"  ;# Default MAC if none provided
+}
 set timeout 30
-set device_mac "D0:BC:C1:F4:F9:8B"  ;# Replace with your target device's MAC
 
 spawn bluetoothctl
 expect "#"
