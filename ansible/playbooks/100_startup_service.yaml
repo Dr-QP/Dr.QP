@@ -24,7 +24,20 @@
 
           [Service]
           Restart=always
-          ExecStart=/usr/bin/docker run --pull=always --network host --device /dev/ttySC0 --rm --name {{ container_name }} {{ container_image }}
+          ExecStart=/usr/bin/docker run --pull=always \
+            --network host \
+            --device /dev/ttySC0 \
+            --device /dev/input/event0 \
+            --device /dev/input/event1 \
+            --device /dev/input/event2 \
+            --device /dev/input/event3 \
+            --device /dev/input/event4 \
+            --device /dev/input/event5 \
+            --device /dev/input/event6 \
+            --device /dev/input/event7 \
+            --rm \
+            --name {{ container_name }} \
+             {{ container_image }}
           ExecStop=/usr/bin/docker stop {{ container_name }}
 
           [Install]
