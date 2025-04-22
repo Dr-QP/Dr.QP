@@ -10,41 +10,66 @@
       ansible.builtin.apt:
         name:
           - bluez
+          - expect
         state: present
         update_cache: true
 
-    - name: Check if controller is already paired
-      register: controller_paired
-      changed_when: false
+    - name: Pair controller if not already paired
+      register: pairing_result
+      changed_when: "'already paired' not in pairing_result.stdout and 'Paired successfully' in pairing_result.stdout"
       ansible.builtin.shell:
-        executable: /bin/bash
-        cmd: set -o pipefail && bluetoothctl devices Paired | grep -q "{{ controller_mac }}"
-      failed_when: false
+        executable: /usr/bin/expect
+        cmd: |
+          set timeout 30
+          set device_mac "{{ controller_mac }}"
 
-    - name: Turn on Bluetooth agent
-      when: controller_paired.rc != 0
-      changed_when: false
-      ansible.builtin.command:
-        cmd: bluetoothctl agent on
+          spawn bluetoothctl
+          expect "#"
 
-    - name: Pair controller
-      when: controller_paired.rc != 0
-      register: pair_result
-      changed_when: true
-      ansible.builtin.command:
-        cmd: bluetoothctl pair {{ controller_mac }}
+          # Check if device is already paired
+          send "devices Paired\r"
+          expect {
+              -re ".*Device $device_mac.*" {
+                  puts "✅ Device $device_mac already paired!"
+                  send "exit\r"
+                  exit 0
+              }
+              "#" {
+                  puts "Device not previously paired."
+              }
+          }
 
-    - name: Check if controller is already trusted
-      register: controller_trusted
-      changed_when: false
-      ansible.builtin.shell:
-        executable: /bin/bash
-        cmd: set -o pipefail && bluetoothctl devices Trusted | grep -q "{{ controller_mac }}"
-      failed_when: false
+          send "scan on\r"
 
-    - name: Trust the controller
-      when: controller_trusted.rc != 0
-      register: trust_result
-      changed_when: true
-      ansible.builtin.command:
-        cmd: bluetoothctl trust {{ controller_mac }}
+          # Wait until the device appears in scan output
+          expect {
+              -re ".*Device $device_mac.*" {
+                  puts "✅ Device $device_mac found!"
+              }
+              timeout {
+                  puts "❌ Device $device_mac not found within timeout."
+                  send "exit\r"
+                  exit 1
+              }
+          }
+
+          send "scan off\r"
+          expect "#"
+
+          send "pair $device_mac\r"
+          expect {
+              "Pairing successful" { puts "✅ Paired successfully." }
+              "Failed to pair" { puts "❌ Failed to pair."; exit 1 }
+              timeout { puts "❌ Timeout during pairing."; exit 1 }
+          }
+          expect "#"
+
+          send "trust $device_mac\r"
+          expect "#"
+
+          send "connect $device_mac\r"
+          expect "#"
+
+          send "exit\r"
+
+
