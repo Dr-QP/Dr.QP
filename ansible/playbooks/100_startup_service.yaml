@@ -24,7 +24,24 @@
 
           [Service]
           Restart=always
-          ExecStart=/usr/bin/docker run --pull=always --network host --device /dev/ttySC0 --rm --name {{ container_name }} {{ container_image }}
+          # Force network mode for DDS network https://robotics.stackexchange.com/a/114955/38643
+          # Environment=FASTDDS_BUILTIN_TRANSPORTS=UDPv4
+          ExecStart=/usr/bin/docker run --pull=always \
+            --network host \
+            --ipc host \
+            --pid host \
+            --device /dev/ttySC0 \
+            --device /dev/input/event0 \
+            --device /dev/input/event1 \
+            --device /dev/input/event2 \
+            --device /dev/input/event3 \
+            --device /dev/input/event4 \
+            --device /dev/input/event5 \
+            --device /dev/input/event6 \
+            --device /dev/input/event7 \
+            --rm \
+            --name {{ container_name }} \
+             {{ container_image }}
           ExecStop=/usr/bin/docker stop {{ container_name }}
 
           [Install]
