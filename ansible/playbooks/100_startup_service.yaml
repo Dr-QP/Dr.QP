@@ -1,3 +1,4 @@
+---
 - name: Setup startup service to bring ROS nodes up in docker container
   hosts: robots
   become: true
@@ -16,18 +17,18 @@
         mode: "0644"
         dest: "/etc/systemd/system/{{ service_name }}.service"
         content: |
-            [Unit]
-            Description=Dr.QP ROS container
-            After=docker.service
-            Requires=docker.service
+          [Unit]
+          Description=Dr.QP ROS container
+          After=docker.service
+          Requires=docker.service
 
-            [Service]
-            Restart=always
-            ExecStart=/usr/bin/docker run --pull=always --network host --device /dev/ttySC0 --rm --name {{ container_name }} {{ container_image }}
-            ExecStop=/usr/bin/docker stop {{ container_name }}
+          [Service]
+          Restart=always
+          ExecStart=/usr/bin/docker run --pull=always --network host --device /dev/ttySC0 --rm --name {{ container_name }} {{ container_image }}
+          ExecStop=/usr/bin/docker stop {{ container_name }}
 
-            [Install]
-            WantedBy=multi-user.target
+          [Install]
+          WantedBy=multi-user.target
 
     - name: Enable and start autorun service
       ansible.builtin.systemd_service:

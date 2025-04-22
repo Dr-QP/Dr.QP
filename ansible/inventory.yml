@@ -1,3 +1,4 @@
+---
 robots:
   hosts:
     drqp-24:
@@ -6,4 +7,3 @@ robots:
   vars:
     ansible_user: anton
     # ansible_become_password: "{{ op://Private/Dr.QP robot root/password }}"
-
