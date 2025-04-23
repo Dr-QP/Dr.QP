@@ -68,4 +68,4 @@ ENV ROS_DISTRO=$ROS_DISTRO
 COPY ./ros_entrypoint.sh /
 ENTRYPOINT ["/ros_entrypoint.sh"]
 
-CMD ["ros2", "launch", "drqp_control", "bringup.launch.py", "show_rviz:=false"]
+CMD ["ros2", "launch", "drqp_control", "bringup.launch.py"]

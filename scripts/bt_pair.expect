@@ -1,45 +1,91 @@
 #!/usr/bin/env expect
 
-set search_term [lindex $argv 0]
-if {$search_term eq ""} {
-    puts "❌ Usage: $argv0 \"Search Term\""
+# Parse command line arguments
+set name ""
+set mac ""
+set args $argv
+set i 0
+
+while {$i < [llength $args]} {
+    set arg [lindex $args $i]
+    switch -glob -- $arg {
+        "--name" {
+            incr i
+            set name [lindex $args $i]
+        }
+        "--mac" {
+            incr i
+            set mac [lindex $args $i]
+        }
+        default {
+            puts "❌ Unknown argument: $arg"
+            puts "Usage: $argv0 --name \"Device Name\" or --mac \"XX:XX:XX:XX:XX:XX\""
+            exit 1
+        }
+    }
+    incr i
+}
+
+# Validate arguments
+if {$name eq "" && $mac eq ""} {
+    puts "❌ Usage: $argv0 --name \"Device Name\" or --mac \"XX:XX:XX:XX:XX:XX\""
+    puts "   At least one of --name or --mac must be specified."
     exit 1
 }
 
-set timeout 30
+set timeout 120
 set device_mac ""
 set full_device_name ""
 
 spawn bluetoothctl
 expect "#"
 
-# Check if device is already paired by name (partial match)
+# Check if device is already paired
 send "devices Paired\r"
 expect {
-    -re "Device (\[0-9A-Fa-f:\]+) (.*$search_term.*)\r" {
-        set device_mac $expect_out(1,string)
-        set full_device_name $expect_out(2,string)
-        puts "✅ Device '$full_device_name' ($device_mac) already paired!"
-        exit 0
+    -re {Device ([0-9A-Fa-f:]+) (.*)} {
+        set found_mac $expect_out(1,string)
+        set found_name $expect_out(2,string)
+
+        if {($mac ne "" && $found_mac eq $mac) || ($name ne "" && [string match "*$name*" $found_name])} {
+            set device_mac $found_mac
+            set full_device_name $found_name
+            puts "✅ Device '$full_device_name' ($device_mac) already paired!"
+            exit 0
+        }
+        exp_continue
     }
     "#" {
-        puts "Device containing '$search_term' not previously paired. Scanning..."
+        if {$mac ne ""} {
+            puts "Device with MAC $mac not previously paired. Scanning..."
+        } else {
+            puts "Device containing '$name' not previously paired. Scanning..."
+        }
     }
 }
 
 send "scan on\r"
 
-# Wait until the device appears in scan output and extract MAC address (partial match)
+# Wait until the device appears in scan output
 expect {
-    # Look for
-    # [bluetooth]# [NEW] Device D0:BC:C1:F4:F9:8B DualSense Wireless Controller
-    -re ".*NEW.*Device (\[0-9A-Fa-f:\]+) (.*$search_term.*)" {
-        set device_mac $expect_out(1,string)
-        set full_device_name $expect_out(2,string)
-        puts "✅ Found device: '$full_device_name' with MAC: $device_mac"
+    -re {.*NEW.*Device ([0-9A-Fa-f:]+) (.*)} {
+        set found_mac $expect_out(1,string)
+        set found_name $expect_out(2,string)
+
+        if {($mac ne "" && $found_mac eq $mac) || ($name ne "" && [string match "*$name*" $found_name])} {
+            set device_mac $found_mac
+            set full_device_name $found_name
+            puts "✅ Found device: '$full_device_name' with MAC: $device_mac"
+        } else {
+            exp_continue
+        }
     }
     timeout {
-        puts "❌ Device containing '$search_term' not found within timeout."
+        if {$mac ne ""} {
+            puts "❌ Device with MAC $mac not found within timeout."
+        } else {
+            puts "❌ Device containing '$name' not found within timeout."
+        }
         exit 1
     }
 }

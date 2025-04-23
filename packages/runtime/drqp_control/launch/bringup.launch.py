@@ -30,6 +30,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
     load_drivers = LaunchConfiguration('load_drivers')
+    load_joystick = LaunchConfiguration('load_joystick')
     show_rviz = LaunchConfiguration('show_rviz')
 
     description_launch_path = get_package_share_path('drqp_description') / 'launch'
@@ -41,7 +42,7 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 name='show_rviz',
-                default_value='true',
+                default_value='false',
                 choices=['true', 'false'],
                 description='Show rviz',
             ),
@@ -64,11 +65,18 @@ def generate_launch_description():
                 parameters=[{'use_sim_time': use_sim_time}],
                 condition=IfCondition(load_drivers),
             ),
+            DeclareLaunchArgument(
+                name='load_joystick',
+                default_value='false',
+                choices=['true', 'false'],
+                description='Load joy game_controller_node',
+            ),
             Node(
                 package='joy',
                 executable='game_controller_node',
                 output='screen',
                 parameters=[{'use_sim_time': use_sim_time}],
+                condition=IfCondition(load_joystick),
             ),
             Node(
                 package='drqp_control',

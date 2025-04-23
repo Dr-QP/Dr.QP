@@ -1,0 +1,56 @@
+#!/usr/bin/env expect
+
+set device_mac [lindex $argv 0]
+if {$device_mac eq ""} {
+    set device_mac "D0:BC:C1:F4:F9:8B"  ;# Default MAC if none provided
+}
+set timeout 30
+
+spawn bluetoothctl
+expect "#"
+
+# Check if device is already paired
+send "devices Paired\r"
+expect {
+    -re ".*Device $device_mac.*" {
+        puts "✅ Device $device_mac already paired!"
+        send "exit\r"
+        exit 0
+    }
+    "#" {
+        puts "Device not previously paired."
+    }
+}
+
+send "scan on\r"
+
+# Wait until the device appears in scan output
+expect {
+    -re ".*Device $device_mac.*" {
+        puts "✅ Device $device_mac found!"
+    }
+    timeout {
+        puts "❌ Device $device_mac not found within timeout."
+        send "exit\r"
+        exit 1
+    }
+}
+
+send "scan off\r"
+expect "#"
+
+send "pair $device_mac\r"
+expect {
+    "Pairing successful" { puts "✅ Paired successfully." }
+    "Failed to pair" { puts "❌ Failed to pair."; exit 1 }
+    timeout { puts "❌ Timeout during pairing."; exit 1 }
+}
+expect "#"
+
+send "trust $device_mac\r"
+expect "#"
+
+send "connect $device_mac\r"
+expect "#"
+
+send "exit\r"

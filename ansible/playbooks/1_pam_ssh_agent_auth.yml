@@ -1,0 +1,57 @@
+---
+- name: Enable sudo via SSH agent (pam_ssh_agent_auth)
+  hosts: robots
+  become: true
+  vars:
+    # ssh_public_key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_ed25519.pub') }}"
+    ssh_public_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINiAeXP6p2eYCZuz/2IgQKXG8oIba1LKL1VcLDrUXgHg"
+    pam_sudo_file: /etc/pam.d/sudo
+    pam_auth_line: "auth sufficient pam_ssh_agent_auth.so file=/etc/security/authorized_keys debug"
+    local_ssh_config: |
+      Host dr-qp-24
+      	HostName dr-qp-24.local
+      	User anton
+      	ForwardAgent yes
+
+      Host *
+      	ForwardAgent yes
+      	IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+
+  tasks:
+    - name: Install libpam-ssh-agent-auth
+      ansible.builtin.apt:
+        name: libpam-ssh-agent-auth
+        state: present
+        update_cache: true
+
+    - name: Ensure /etc/security/authorized_keys exists
+      ansible.builtin.copy:
+        content: "{{ ssh_public_key }}\n\n"
+        dest: /etc/security/authorized_keys
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Read current PAM sudo config
+      ansible.builtin.slurp:
+        src: "{{ pam_sudo_file }}"
+      register: pam_sudo_config
+
+    - name: Add pam_ssh_agent_auth line to PAM sudo config if not present
+      ansible.builtin.blockinfile:
+        path: "{{ pam_sudo_file }}"
+        marker: "# {mark} PAM SSH agent auth config"
+        block: "{{ pam_auth_line }}"
+        insertafter: "#\\%PAM-1\\.0"
+        state: present
+
+    - name: Ensure sudo preserves SSH_AUTH_SOCK
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/ssh_auth_sock
+        content: |
+          # Keep SSH_AUTH_SOCK to locate your forwarded agent. Needed for pam_ssh_agent_auth
+          Defaults env_keep += "SSH_AUTH_SOCK"
+        owner: root
+        group: root
+        mode: "0440"
+        validate: "visudo -cf %s"

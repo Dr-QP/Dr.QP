@@ -6,4 +6,7 @@ robots:
       ansible_python_interpreter: /usr/bin/python3
   vars:
     ansible_user: anton
+    ansible_ssh_common_args: "-o ForwardAgent=true"
+    ansible_become_pass: "001" # stub to bypass "Missing sudo password"
+
     # ansible_become_password: "{{ op://Private/Dr.QP robot root/password }}"

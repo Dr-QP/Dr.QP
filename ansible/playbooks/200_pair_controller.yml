@@ -2,10 +2,16 @@
 - name: Pair a DualSense Wireless Controller
   hosts: robots
   vars:
-    controller_mac: "D0:BC:C1:F4:F9:8B"
+    # Only one is needed
+    # controller_mac: "D0:BC:C1:F4:F9:8B"
+    # controller_name: ""
+
+    controller_mac: ""
+    controller_name: "DualSense"
   gather_facts: false
   tasks:
     - name: Install Bluetooth stack
+      when: ansible_become_pass is defined
       become: true
       ansible.builtin.apt:
         name:
@@ -14,60 +20,8 @@
         state: present
         update_cache: true
 
-    - name: Pair controller if not already paired
+    - name: Pair controller by MAC or name
       register: pairing_result
       changed_when: "'already paired' not in pairing_result.stdout and 'Paired successfully' in pairing_result.stdout"
-      ansible.builtin.shell:
-        executable: /usr/bin/expect
-        cmd: |
-          set timeout 30
-          set device_mac "{{ controller_mac }}"
-
-          spawn bluetoothctl
-          expect "#"
-
-          # Check if device is already paired
-          send "devices Paired\r"
-          expect {
-              -re ".*Device $device_mac.*" {
-                  puts "✅ Device $device_mac already paired!"
-                  send "exit\r"
-                  exit 0
-              }
-              "#" {
-                  puts "Device not previously paired."
-              }
-          }
-
-          send "scan on\r"
-
-          # Wait until the device appears in scan output
-          expect {
-              -re ".*Device $device_mac.*" {
-                  puts "✅ Device $device_mac found!"
-              }
-              timeout {
-                  puts "❌ Device $device_mac not found within timeout."
-                  send "exit\r"
-                  exit 1
-              }
-          }
-
-          send "scan off\r"
-          expect "#"
-
-          send "pair $device_mac\r"
-          expect {
-              "Pairing successful" { puts "✅ Paired successfully." }
-              "Failed to pair" { puts "❌ Failed to pair."; exit 1 }
-              timeout { puts "❌ Timeout during pairing."; exit 1 }
-          }
-          expect "#"
-
-          send "trust $device_mac\r"
-          expect "#"
-
-          send "connect $device_mac\r"
-          expect "#"
-
-          send "exit\r"
+      ansible.builtin.script:
+        cmd: '{{ playbook_dir }}/../../scripts/bt_pair.expect --mac "{{ controller_mac }}" --name "{{ controller_name }}"'
