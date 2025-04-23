@@ -39,7 +39,8 @@
         # $(find /dev/input/ -name "event*" | xargs -I{} echo --device {}) \
         # --device-cgroup-rule=\'c 13:* rwm\' \ # this doesn't do the trick with input devices
         #
-        # With all these issues the --privileged is being used to run the container.
+        # --privileged doesn't solve that issue either. So joystick reconnection is not supported without restart
+        # Potential solution is to move joystick handling to a separate container that can be auto-restarted and only runs joy node
         #
         # For added security, container is using the non-root user and group matching primary user on the Dr.QP host
         content: |
