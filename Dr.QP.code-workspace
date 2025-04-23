@@ -23,6 +23,7 @@
       "ms-vscode-remote.remote-ssh",
       "ms-vscode.cmake-tools",
       "ms-vscode.cpptools-themes",
+      "ms-vscode.cpptools",  // MS C++ extension is needed for ROS extension to activate
       "plorefice.devicetree",
       "redhat.vscode-xml",
       "redhat.vscode-yaml",
@@ -57,12 +58,11 @@
       "ms-toolsai.jupyter",
       "ms-toolsai.vscode-jupyter-cell-tags",
       "dotjoshjohnson.xml",
-      "ms-vscode.cpptools",
       "batyan-soft.fast-tasks",
       "executablebookproject.myst-highlight",
       "gbraad.systemd-universal-manager",
       "ipierre1.ansible-vault-vscode",
-      "redhat.ansible", // MS C++ extension is needed for ROS extension to activate
+      "redhat.ansible",
       // cSpell:enable
     ]
   },
