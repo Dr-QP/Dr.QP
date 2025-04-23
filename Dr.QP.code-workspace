@@ -135,6 +135,7 @@
         "program": "${workspaceFolder}/docs/source/notebooks/run_hexapod_ros.py",
         "console": "integratedTerminal",
         "env": {
+          // Force network mode for DDS network https://robotics.stackexchange.com/a/114955/38643
           // "FASTDDS_BUILTIN_TRANSPORTS": "UDPv4"
         }
       }
