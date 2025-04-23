@@ -31,8 +31,8 @@ jobs:
         with:
           extra-filter: ".github/workflows/reformat.yml,docs/source/notebooks/**,ansible/**"
 
-  analyze:
-    name: Analyze (${{ matrix.language }})
+  reformat:
+    name: Reformat
     needs: paths-filter
     if: needs.paths-filter.outputs.pass == 'true'
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
