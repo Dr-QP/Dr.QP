@@ -14,6 +14,7 @@ send "devices Paired\r"
 expect {
     -re ".*Device $device_mac.*" {
         puts "✅ Device $device_mac already paired!"
+        send "exit\r"
         exit 0
     }
     "#" {
@@ -30,6 +31,7 @@ expect {
     }
     timeout {
         puts "❌ Device $device_mac not found within timeout."
+        send "exit\r"
         exit 1
     }
 }
