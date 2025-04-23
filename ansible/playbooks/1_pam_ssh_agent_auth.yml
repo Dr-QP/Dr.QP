@@ -45,6 +45,13 @@
         insertafter: "#\\%PAM-1\\.0"
         state: present
 
-
-# # Keep SSH_AUTH_SOCK to locate your forwarded agent. Needed for pam_ssh_agent_auth
-# Defaults env_keep += "SSH_AUTH_SOCK"
+    - name: Ensure sudo preserves SSH_AUTH_SOCK
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/ssh_auth_sock
+        content: |
+          # Keep SSH_AUTH_SOCK to locate your forwarded agent. Needed for pam_ssh_agent_auth
+          Defaults env_keep += "SSH_AUTH_SOCK"
+        owner: root
+        group: root
+        mode: '0440'
+        validate: 'visudo -cf %s'
