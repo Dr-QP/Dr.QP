@@ -33,7 +33,7 @@ if {$name eq "" && $mac eq ""} {
     exit 1
 }
 
-set timeout 30
+set timeout 120
 set device_mac ""
 set full_device_name ""
 

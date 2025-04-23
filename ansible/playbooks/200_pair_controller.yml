@@ -4,6 +4,9 @@
   vars:
     # Only one is needed
     # controller_mac: "D0:BC:C1:F4:F9:8B"
+    # controller_name: ""
+
+    controller_mac: ""
     controller_name: "DualSense"
   gather_facts: false
   tasks:
@@ -17,17 +20,8 @@
         state: present
         update_cache: true
 
-    - name: Pair controller by MAC "{{ controller_mac }}"
-      when: controller_mac is defined
+    - name: Pair controller by MAC or name
       register: pairing_result
       changed_when: "'already paired' not in pairing_result.stdout and 'Paired successfully' in pairing_result.stdout"
       ansible.builtin.script:
-        cmd: '{{ playbook_dir }}/../../scripts/bt_pair_by_mac.expect "{{ controller_mac }}"'
-
-
-    - name: Pair controller by name "{{ controller_name }}"
-      when: controller_name is defined
-      register: pairing_result
-      changed_when: "'already paired' not in pairing_result.stdout and 'Paired successfully' in pairing_result.stdout"
-      ansible.builtin.script:
-        cmd: '{{ playbook_dir }}/../../scripts/bt_pair_by_name.expect "{{ controller_name }}"'
+        cmd: '{{ playbook_dir }}/../../scripts/bt_pair.expect --mac "{{ controller_mac }}" --name "{{ controller_name }}"'
