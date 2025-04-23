@@ -29,7 +29,7 @@
   hosts: robots
   become: true
   vars:
-    container_image: "ghcr.io/dr-qp/jazzy-ros-deploy:pr-165"
+    container_image: "ghcr.io/dr-qp/jazzy-ros-deploy:edge"
     control_service_name: "drqp-control-service"
     joystick_service_name: "drqp-joystick-service"
     container_user: 1000
@@ -40,6 +40,9 @@
       community.docker.docker_image_pull:
         name: "{{ container_image }}"
         pull: always
+        platform: arm64
+
+
     - name: Create Dr.QP control systemd service
       ansible.builtin.copy:
         mode: "0644"
@@ -90,16 +93,25 @@
           Restart=always
           # Force network mode for DDS network https://robotics.stackexchange.com/a/114955/38643
           # Environment=FASTDDS_BUILTIN_TRANSPORTS=UDPv4
-          ExecStart=/bin/bash -c '/usr/bin/docker run --pull=always \
-            --network host \
-            --ipc host \
-            --pid host \
-            --user {{ container_user }} \
-            --group-add {{ input_group }} \
-            $(find /dev/input/ -name "event*" | xargs -I{} echo --device {}) \
-            --rm \
-            --name {{ joystick_service_name }} \
-             {{ container_image }} ros2 run joy game_controller_node'
+          ExecStart=/bin/bash -c 'PREV_DEVICES=""; while true; do \
+            DEVICES=$(find /dev/input/ -name "event*" | sort | paste -sd,); \
+            if [ "$DEVICES" != "$PREV_DEVICES" ]; then \
+              [ ! -z "$PREV_DEVICES" ] && /usr/bin/docker stop {{ joystick_service_name }} 2>/dev/null || true; \
+              PREV_DEVICES="$DEVICES"; \
+              DEVICE_ARGS=$(echo "$DEVICES" | tr "," "\n" | xargs -I{} echo --device {}); \
+              /usr/bin/docker run --pull=always \
+                --network host \
+                --ipc host \
+                --pid host \
+                --user {{ container_user }} \
+                --group-add {{ input_group }} \
+                $DEVICE_ARGS \
+                --rm \
+                --name {{ joystick_service_name }} \
+                {{ container_image }} ros2 run joy game_controller_node & \
+            fi; \
+            sleep 2; \
+          done'
           ExecStop=/usr/bin/docker stop {{ joystick_service_name }}
 
           [Install]
