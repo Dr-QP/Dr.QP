@@ -4,7 +4,8 @@ pre-commit>=4.2.0
 pygame>=2.5
 
 esbonio>=0.16
-
+ansible>=11.4
+ansible-lint>=25.2.1
 
 -r docs/source/notebooks/requirements.txt
 -r docs/requirements.txt

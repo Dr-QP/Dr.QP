@@ -1,0 +1,110 @@
+#!/usr/bin/env expect
+
+# Parse command line arguments
+set name ""
+set mac ""
+set args $argv
+set i 0
+
+while {$i < [llength $args]} {
+    set arg [lindex $args $i]
+    switch -glob -- $arg {
+        "--name" {
+            incr i
+            set name [lindex $args $i]
+        }
+        "--mac" {
+            incr i
+            set mac [lindex $args $i]
+        }
+        default {
+            puts "❌ Unknown argument: $arg"
+            puts "Usage: $argv0 --name \"Device Name\" or --mac \"XX:XX:XX:XX:XX:XX\""
+            exit 1
+        }
+    }
+    incr i
+}
+
+# Validate arguments
+if {$name eq "" && $mac eq ""} {
+    puts "❌ Usage: $argv0 --name \"Device Name\" or --mac \"XX:XX:XX:XX:XX:XX\""
+    puts "   At least one of --name or --mac must be specified."
+    exit 1
+}
+
+set timeout 120
+set device_mac ""
+set full_device_name ""
+
+spawn bluetoothctl
+expect "#"
+
+# Check if device is already paired
+send "devices Paired\r"
+expect {
+    -re {Device ([0-9A-Fa-f:]+) (.*)} {
+        set found_mac $expect_out(1,string)
+        set found_name $expect_out(2,string)
+
+        if {($mac ne "" && $found_mac eq $mac) || ($name ne "" && [string match "*$name*" $found_name])} {
+            set device_mac $found_mac
+            set full_device_name $found_name
+            puts "✅ Device '$full_device_name' ($device_mac) already paired!"
+            exit 0
+        }
+        exp_continue
+    }
+    "#" {
+        if {$mac ne ""} {
+            puts "Device with MAC $mac not previously paired. Scanning..."
+        } else {
+            puts "Device containing '$name' not previously paired. Scanning..."
+        }
+    }
+}
+
+send "scan on\r"
+
+# Wait until the device appears in scan output
+expect {
+    -re {.*NEW.*Device ([0-9A-Fa-f:]+) (.*)} {
+        set found_mac $expect_out(1,string)
+        set found_name $expect_out(2,string)
+
+        if {($mac ne "" && $found_mac eq $mac) || ($name ne "" && [string match "*$name*" $found_name])} {
+            set device_mac $found_mac
+            set full_device_name $found_name
+            puts "✅ Found device: '$full_device_name' with MAC: $device_mac"
+        } else {
+            exp_continue
+        }
+    }
+    timeout {
+        if {$mac ne ""} {
+            puts "❌ Device with MAC $mac not found within timeout."
+        } else {
+            puts "❌ Device containing '$name' not found within timeout."
+        }
+        exit 1
+    }
+}
+
+send "scan off\r"
+expect "#"
+
+send "pair $device_mac\r"
+expect {
+    "Pairing successful" { puts "✅ Paired successfully." }
+    "Failed to pair" { puts "❌ Failed to pair."; exit 1 }
+    timeout { puts "❌ Timeout during pairing."; exit 1 }
+}
+expect "#"
+
+send "trust $device_mac\r"
+expect "#"
+
+send "connect $device_mac\r"
+expect "#"
+
+send "exit\r"

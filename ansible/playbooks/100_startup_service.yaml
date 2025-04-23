@@ -1,0 +1,127 @@
+---
+# Explicit devices or privileged access is required for docker container to work
+# Control module needs to have access to the UART devices that control servos
+# Joy node needs to have access to /dev/input/event* devices that are SDL joysticks
+
+# $(find /dev/ -name "ttySC*" | xargs -I{} echo --device {}) \
+# $(find /dev/input/ -name "event*" | xargs -I{} echo --device {}) \
+# Above commands to find devices at startup and they can be used for the service
+# AS LONG AS DEVICES ARE PRESENT AT STARTUP TIME!!!
+# And that obviously doesn't work for Bluetooth joysticks as they are not present at OS startup.
+#
+# Note:
+# Passing /dev/input/event* devices to docker causes issues with joystick reconnection.
+# My guess is that it is because docker holds original devices open and unlink from disconnect doesn't do full cleanup.
+# This results in joystick failing to reconnect unless container is restarted.
+#
+# One of the existing methods for device hotplugging is to use cgroup rules, however it doesn't work for some reason for input/event devices
+# --device-cgroup-rule=\'c 13:* rwm\' \
+#
+# --privileged doesn't solve that issue either as it only passed devices that were present at startup time, aka `--device **`
+# So joystick reconnection is not supported without restart
+#
+# The solution used here is to move joystick handling to a separate container that can be auto-restarted
+# when new input/event devices are discovered and only runs joy node
+#
+# For added security and to allow shared memory based DDS communication,
+# containers are using the non-root user and group matching primary user on the Dr.QP host
+# An alternative to shared memory DDS is to force DDS to use UDPv4 by using
+# Environment=FASTDDS_BUILTIN_TRANSPORTS=UDPv4
+# These options are discussed in detail at https://robotics.stackexchange.com/a/114955/38643
+- name: Setup startup service to bring ROS nodes up in docker container
+  hosts: robots
+  become: true
+  vars:
+    container_image: "ghcr.io/dr-qp/jazzy-ros-deploy:edge"
+    control_service_name: "drqp-control-service"
+    joystick_service_name: "drqp-joystick-service"
+    container_user: 1000
+    dialout_group: 20
+    input_group: 995
+  tasks:
+    - name: Pull Docker image from GitHub Container Registry
+      community.docker.docker_image_pull:
+        name: "{{ container_image }}"
+        pull: always
+        platform: arm64
+
+    - name: Create Dr.QP control systemd service
+      ansible.builtin.copy:
+        mode: "0644"
+        dest: "/etc/systemd/system/{{ control_service_name }}.service"
+        content: |
+          [Unit]
+          Description=Dr.QP control service
+          After=docker.service
+          Requires=docker.service
+
+          [Service]
+          Restart=always
+          # Force network mode for DDS network https://robotics.stackexchange.com/a/114955/38643
+          # Environment=FASTDDS_BUILTIN_TRANSPORTS=UDPv4
+          ExecStart=/bin/bash -c '/usr/bin/docker run --pull=always \
+            --network host \
+            --ipc host \
+            --pid host \
+            --user {{ container_user }} \
+            --group-add {{ dialout_group }} \
+            $(find /dev/ -name "ttySC*" | xargs -I{} echo --device {}) \
+            --rm \
+            --name {{ control_service_name }} \
+             {{ container_image }}'
+          ExecStop=/usr/bin/docker stop {{ control_service_name }}
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Enable and start autorun service {{ control_service_name }}
+      ansible.builtin.systemd_service:
+        daemon-reload: true
+        name: "{{ control_service_name }}"
+        enabled: true
+        state: restarted
+
+    - name: Create Dr.QP joystick systemd service
+      ansible.builtin.copy:
+        mode: "0644"
+        dest: "/etc/systemd/system/{{ joystick_service_name }}.service"
+        content: |
+          [Unit]
+          Description=Dr.QP joystick service
+          After=docker.service
+          Requires=docker.service
+
+          [Service]
+          Restart=always
+          # Force network mode for DDS network https://robotics.stackexchange.com/a/114955/38643
+          # Environment=FASTDDS_BUILTIN_TRANSPORTS=UDPv4
+          ExecStart=/bin/bash -c 'PREV_DEVICES=""; while true; do \
+            DEVICES=$(find /dev/input/ -name "event*" | sort | paste -sd,); \
+            if [ "$DEVICES" != "$PREV_DEVICES" ]; then \
+              [ ! -z "$PREV_DEVICES" ] && /usr/bin/docker stop {{ joystick_service_name }} 2>/dev/null || true; \
+              PREV_DEVICES="$DEVICES"; \
+              DEVICE_ARGS=$(echo "$DEVICES" | tr "," "\n" | xargs -I{} echo --device {}); \
+              /usr/bin/docker run --pull=always \
+                --network host \
+                --ipc host \
+                --pid host \
+                --user {{ container_user }} \
+                --group-add {{ input_group }} \
+                $DEVICE_ARGS \
+                --rm \
+                --name {{ joystick_service_name }} \
+                {{ container_image }} ros2 run joy game_controller_node & \
+            fi; \
+            sleep 2; \
+          done'
+          ExecStop=/usr/bin/docker stop {{ joystick_service_name }}
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Enable and start joystick service {{ joystick_service_name }}
+      ansible.builtin.systemd_service:
+        daemon-reload: true
+        name: "{{ joystick_service_name }}"
+        enabled: true
+        state: restarted

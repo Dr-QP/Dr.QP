@@ -57,14 +57,15 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     sudo apt-get update \
     && rosdep update \
+    && rm -f $OVERLAY_WS/install/COLCON_IGNORE \
     && rosdep install --ignore-src -y \
       --from-paths "$OVERLAY_WS/install" \
       -t exec
 
+ENV OVERLAY_WS=$OVERLAY_WS
+ENV ROS_DISTRO=$ROS_DISTRO
+
 COPY ./ros_entrypoint.sh /
+ENTRYPOINT ["/ros_entrypoint.sh"]
 
-# run walk node
-CMD ["ros2", "run", "drqp_control", "control", "walk", "dr-qp-24.local"]
-
-# run launch file
-# CMD ["ros2", "launch", "drqp_control", "drqp_control.py"]
+CMD ["ros2", "launch", "drqp_control", "bringup.launch.py"]

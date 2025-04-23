@@ -23,6 +23,7 @@
       "ms-vscode-remote.remote-ssh",
       "ms-vscode.cmake-tools",
       "ms-vscode.cpptools-themes",
+      "ms-vscode.cpptools",  // MS C++ extension is needed for ROS extension to activate
       "plorefice.devicetree",
       "redhat.vscode-xml",
       "redhat.vscode-yaml",
@@ -47,7 +48,6 @@
       "corker.vscode-micromamba",
       "github.vscode-pull-request-github",
       "swyddfa.esbonio",
-      "lextudio.restructuredtext",
       "augment.vscode-augment",
       "charliermarsh.ruff",
       "tamasfe.even-better-toml",
@@ -58,9 +58,11 @@
       "ms-toolsai.jupyter",
       "ms-toolsai.vscode-jupyter-cell-tags",
       "dotjoshjohnson.xml",
-      "ms-vscode.cpptools",
       "batyan-soft.fast-tasks",
-      "executablebookproject.myst-highlight", // MS C++ extension is needed for ROS extension to activate
+      "executablebookproject.myst-highlight",
+      "gbraad.systemd-universal-manager",
+      "ipierre1.ansible-vault-vscode",
+      "redhat.ansible",
       // cSpell:enable
     ]
   },
@@ -131,6 +133,10 @@
         "request": "launch",
         "program": "${workspaceFolder}/docs/source/notebooks/run_hexapod_ros.py",
         "console": "integratedTerminal",
+        "env": {
+          // Force network mode for DDS network https://robotics.stackexchange.com/a/114955/38643
+          // "FASTDDS_BUILTIN_TRANSPORTS": "UDPv4"
+        }
       }
     ]
   },
@@ -435,5 +441,7 @@
       "znew",
       "ztick"
     ],
-  },
+    "ansible.ansible.path": ".venv/bin/ansible",
+    "ansible.python.interpreterPath": "${workspaceFolder}/.venv/bin/python",
+  }
 }

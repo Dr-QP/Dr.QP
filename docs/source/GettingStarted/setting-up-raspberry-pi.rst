@@ -31,6 +31,16 @@ Update config.txt
 
 ``sudo nano /boot/firmware/config.txt``
 
+Installing deployment service
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Production docker container is deployed using Ansible.
+Run the following command on your dev host to install docker and setup autorun service
+
+::
+  ansible-playbook -i inventory.yml playbooks/*.yaml --ask-become-pass
+
+
 ::
 
    [all]

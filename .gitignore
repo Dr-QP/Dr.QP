@@ -349,3 +349,6 @@ compile_commands.json
 
 llvm.sh
 nodesource_setup.sh
+
+# Ansible
+.ansible/
