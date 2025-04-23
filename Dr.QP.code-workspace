@@ -442,6 +442,5 @@
       "ztick"
     ],
     "ansible.ansible.path": ".venv/bin/ansible",
-    "ansible.python.interpreterPath": "/Users/antonmatosov/Develop/XYZRobot/Dr-QP/Dr.QP/.venv/bin/python",
-  },
+  }
 }
