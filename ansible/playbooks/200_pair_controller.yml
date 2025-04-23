@@ -2,10 +2,13 @@
 - name: Pair a DualSense Wireless Controller
   hosts: robots
   vars:
-    controller_mac: "D0:BC:C1:F4:F9:8B"
+    # Only one is needed
+    # controller_mac: "D0:BC:C1:F4:F9:8B"
+    controller_name: "DualSense"
   gather_facts: false
   tasks:
     - name: Install Bluetooth stack
+      when: ansible_become_pass is defined
       become: true
       ansible.builtin.apt:
         name:
@@ -14,7 +17,8 @@
         state: present
         update_cache: true
 
-    - name: Pair controller if not already paired
+    - name: Pair controller by MAC "{{ controller_mac }}"
+      when: controller_mac is defined
       register: pairing_result
       changed_when: "'already paired' not in pairing_result.stdout and 'Paired successfully' in pairing_result.stdout"
       ansible.builtin.shell:
@@ -72,4 +76,72 @@
 
           send "exit\r"
 
+    - name: Pair controller by name "{{ controller_name }}"
+      when: controller_name is defined
+      register: pairing_result
+      changed_when: "'already paired' not in pairing_result.stdout and 'Paired successfully' in pairing_result.stdout"
+      ansible.builtin.shell:
+        executable: /usr/bin/expect
+        cmd: |
+          set search_term "{{ controller_name }}"
+          if {$search_term eq ""} {
+              puts "❌ Usage: $argv0 \"Search Term\""
+              exit 1
+          }
 
+          set timeout 30
+          set device_mac ""
+          set full_device_name ""
+
+          spawn bluetoothctl
+          expect "#"
+
+          # Check if device is already paired by name (partial match)
+          send "devices Paired\r"
+          expect {
+              -re "Device (\[0-9A-Fa-f:\]+) (.*$search_term.*)\r" {
+                  set device_mac $expect_out(1,string)
+                  set full_device_name $expect_out(2,string)
+                  puts "✅ Device '$full_device_name' ($device_mac) already paired!"
+                  exit 0
+              }
+              "#" {
+                  puts "Device containing '$search_term' not previously paired. Scanning..."
+              }
+          }
+
+          send "scan on\r"
+
+          # Wait until the device appears in scan output and extract MAC address (partial match)
+          expect {
+              # Look for
+              # [bluetooth]# [NEW] Device D0:BC:C1:F4:F9:8B DualSense Wireless Controller
+              -re ".*NEW.*Device (\[0-9A-Fa-f:\]+) (.*$search_term.*)" {
+                  set device_mac $expect_out(1,string)
+                  set full_device_name $expect_out(2,string)
+                  puts "✅ Found device: '$full_device_name' with MAC: $device_mac"
+              }
+              timeout {
+                  puts "❌ Device containing '$search_term' not found within timeout."
+                  exit 1
+              }
+          }
+
+          send "scan off\r"
+          expect "#"
+
+          send "pair $device_mac\r"
+          expect {
+              "Pairing successful" { puts "✅ Paired successfully." }
+              "Failed to pair" { puts "❌ Failed to pair."; exit 1 }
+              timeout { puts "❌ Timeout during pairing."; exit 1 }
+          }
+          expect "#"
+
+          send "trust $device_mac\r"
+          expect "#"
+
+          send "connect $device_mac\r"
+          expect "#"
+
+          send "exit\r"
