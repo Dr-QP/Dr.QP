@@ -19,6 +19,6 @@
     state: present
     repo: "{{ item }}"
   loop:
-    - "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports {{ ansible_distribution_release }} universe"
-    - "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports {{ ansible_distribution_release }}-updates universe"
-    - "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports {{ ansible_distribution_release }}-security universe"
+    - "deb [arch={{ ansible_architecture }}] http://ports.ubuntu.com/ubuntu-ports {{ ansible_distribution_release }} universe"
+    - "deb [arch={{ ansible_architecture }}] http://ports.ubuntu.com/ubuntu-ports {{ ansible_distribution_release }}-updates universe"
+    - "deb [arch={{ ansible_architecture }}] http://ports.ubuntu.com/ubuntu-ports {{ ansible_distribution_release }}-security universe"

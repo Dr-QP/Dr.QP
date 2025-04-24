@@ -1,5 +1,12 @@
 ---
 # Node.js and NPM installation
+- name: Remove old Node.js and NPM
+  ansible.builtin.apt:
+    name:
+      - nodejs
+      - npm
+    state: absent
+
 - name: Create temporary directory for downloads
   ansible.builtin.tempfile:
     state: directory
@@ -14,15 +21,9 @@
   become: false
 
 - name: Run Node.js setup script
-  ansible.builtin.command: bash "{{ temp_dir.path }}/nodesource_setup.sh"
+  ansible.builtin.command: /bin/bash "{{ temp_dir.path }}/nodesource_setup.sh"
   args:
     creates: /etc/apt/sources.list.d/nodesource.list
-- name: Remove old Node.js and NPM
-  ansible.builtin.apt:
-    name:
-      - nodejs
-      - npm
-    state: absent
 
 - name: Install Node.js
   ansible.builtin.apt:

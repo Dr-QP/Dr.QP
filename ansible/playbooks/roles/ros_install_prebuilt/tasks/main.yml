@@ -1,7 +1,29 @@
 ---
 # ROS 2 prebuilt installation
+
+- name: Upgrade packages
+  ansible.builtin.apt:
+    upgrade: true
+
+- name: Add ROS 2 signing key
+  ansible.builtin.apt_key:
+    url: https://raw.githubusercontent.com/ros/rosdistro/master/ros.key
+    keyring: /usr/share/keyrings/ros2-latest-archive-keyring.gpg
+    state: present
+  when: not ros2_repo.stat.exists
+
+- name: Add ROS 2 repository
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ ansible_architecture }} signed-by=/usr/share/keyrings/ros2-latest-archive-keyring.gpg]
+      http://packages.ros.org/ros2/ubuntu {{ ansible_distribution_release }} main
+    state: present
+    filename: ros2-latest
+  when: not ros2_repo.stat.exists
+
 - name: Install ROS 2 from packages
   ansible.builtin.apt:
     name: "ros-{{ ros_distro }}-desktop"
     state: present
+    update_cache: true
     install_recommends: false

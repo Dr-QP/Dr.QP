@@ -33,10 +33,6 @@
     state: present
     filename: kitware
 
-- name: Update apt cache
-  ansible.builtin.apt:
-    update_cache: true
-
 - name: Remove temporary keyring if needed
   ansible.builtin.file:
     path: /usr/share/keyrings/kitware-archive-keyring.gpg
@@ -47,8 +43,5 @@
   ansible.builtin.apt:
     name: kitware-archive-keyring
     state: present
+    update_cache: true
     install_recommends: false
-
-- name: Upgrade packages
-  ansible.builtin.apt:
-    upgrade: true

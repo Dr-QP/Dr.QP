@@ -37,12 +37,8 @@
       - libasio-dev
       - libtinyxml2-dev
       - libcunit1-dev
-    state: present
-    install_recommends: false
 
-- name: Install node-canvas dependencies
-  ansible.builtin.apt:
-    name:
+      # node-canvas dependencies
       - build-essential
       - libcairo2-dev
       - libpango1.0-dev
