@@ -11,18 +11,26 @@
     ros_packages: "{{ ros_dependencies_known_packages }}"
 
 - name: Check which ROS packages are available
-  ansible.builtin.shell: set -o pipefail && apt-cache policy {{ item }} | grep -q "Candidate:"
-  args:
-    executable: /bin/bash
-  register: available_packages
+  ansible.builtin.command: apt-cache policy "{{ item }}"
+  register: package_policies
   changed_when: false
   failed_when: false
   loop: "{{ ros_dependencies_known_packages }}"
 
+- name: Determine available packages
+  ansible.builtin.set_fact:
+    available_packages_list: "{{ available_packages_list | default([]) + [item.item] }}"
+  loop: "{{ package_policies.results }}"
+  when: item.stdout is search('Candidate:')
+  no_log: true
+
+- name: List available packages
+  ansible.builtin.debug:
+    msg: "Available packages: {{ available_packages_list | default([]) }}"
+
 - name: Install available ROS packages
   ansible.builtin.apt:
-    name: "{{ item.item }}"
+    name: "{{ available_packages_list }}"
     state: present
     install_recommends: false
-  loop: "{{ available_packages.results }}"
-  when: item.rc == 0
+  when: available_packages_list | default([]) | length > 0
