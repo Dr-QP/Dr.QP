@@ -486,7 +486,7 @@ Since `L`, `D`, `T` form a square triangle, $\theta2$ can be computed using trig
 
 For $\theta1$ and $\Phi$ we need to use [law of cosines](https://www.geeksforgeeks.org/law-of-cosine/):
 
-![Law of Cosines](https://media.geeksforgeeks.org/wp-content/uploads/20240607181448/Law-of-Cosines-copy.webp)
+[![Law of Cosines](https://media.geeksforgeeks.org/wp-content/uploads/20240607181448/Law-of-Cosines-copy.webp)](https://www.geeksforgeeks.org/law-of-cosine/)
 
 Which can be rewritten to compute angles as:
 
