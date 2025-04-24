@@ -32,8 +32,4 @@
   ansible.builtin.command: locale
   register: locale_updated
   changed_when: false
-
-- name: Fail if UTF-8 locale is not set
-  ansible.builtin.fail:
-    msg: "UTF-8 locale is not set properly"
-  when: not (locale_updated.stdout is search('LANG=.*\\.UTF-8') or locale_updated.stdout is search('LC_ALL=.*\\.UTF-8'))
+  failed_when: not (locale_updated.stdout is search('LANG=.*\\.UTF-8') or locale_updated.stdout is search('LC_ALL=.*\\.UTF-8'))
