@@ -44,6 +44,13 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx_rtd_size',
     'myst_nb',  # for embedding jupyter notebooks
+    # Disabled for now due to conflict with myst_nb
+    # see https://github.com/executablebooks/MyST-NB/issues/421
+    # and https://github.com/executablebooks/MyST-NB/issues/304
+    # myst_parser is used by myst_nb under the hood
+    # https://github.com/executablebooks/MyST-NB/blob/master/myst_nb/sphinx_ext.py#L49
+    # so it is not really needed here
+    # 'myst_parser',  # for embedding myst pages
 ]
 
 # Javascript to be loaded on pages containing ipywidgets

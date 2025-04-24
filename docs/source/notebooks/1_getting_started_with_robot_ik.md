@@ -280,7 +280,7 @@ The following 2 chapters will cover the math behind solving inverse kinematics f
 
 This diagram should give you an idea of what we are trying to solve:
 
-<img src="https://github.com/user-attachments/assets/e6447032-cd1a-4f5b-b756-689c733b8389" />
+![Inverse Kinematics Diagram](https://github.com/user-attachments/assets/e6447032-cd1a-4f5b-b756-689c733b8389)
 
 `TODO: Update diagram with the one from Dr.QP leg and names of angles and planes matching this notebook`
 
@@ -486,7 +486,7 @@ Since `L`, `D`, `T` form a square triangle, $\theta2$ can be computed using trig
 
 For $\theta1$ and $\Phi$ we need to use [law of cosines](https://www.geeksforgeeks.org/law-of-cosine/):
 
-<img src="https://media.geeksforgeeks.org/wp-content/uploads/20240607181448/Law-of-Cosines-copy.webp" width="500">
+[![Law of Cosines](https://media.geeksforgeeks.org/wp-content/uploads/20240607181448/Law-of-Cosines-copy.webp)](https://www.geeksforgeeks.org/law-of-cosine/)
 
 Which can be rewritten to compute angles as:
 

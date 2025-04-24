@@ -7,5 +7,7 @@ esbonio>=0.16
 ansible>=11.4
 ansible-lint>=25.2.1
 
+sphinx-autobuild
+
 -r docs/source/notebooks/requirements.txt
 -r docs/requirements.txt
