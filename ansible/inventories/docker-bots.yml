@@ -1,12 +1,10 @@
 ---
-virtual_bots:
-  vars:
-    ansible_connection: docker
-  hosts:
-    virtual-bot-1:
-    virtual-bot-2:
-    virtual-bot-3:
-local:
-  hosts:
-    localhost:
-      ansible_connection: local
+all:
+  children:
+    virtual_bots:
+      vars:
+        ansible_connection: docker
+      hosts:
+        virtual-bot-1:
+        virtual-bot-2:
+        virtual-bot-3:
