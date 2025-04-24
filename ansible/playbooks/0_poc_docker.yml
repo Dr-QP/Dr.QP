@@ -1,0 +1,15 @@
+---
+- name: Docker POC Setup
+  hosts: my_poc_hosts
+  tasks:
+    - name: Pull the base image
+      community.docker.docker_image:
+        name: ubuntu:24.04
+        source: pull
+    - name: Create and start containers
+      community.docker.docker_container:
+        name: target{{ item }}
+        image: ubuntu:24.04
+        state: started
+      with_sequence:
+        count: 3
