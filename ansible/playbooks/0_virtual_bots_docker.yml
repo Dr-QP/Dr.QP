@@ -1,11 +1,12 @@
 ---
-- name: Docker POC Setup
-  hosts: virtual_bots
+- name: Bring up virtual bots
+  hosts: local
   tasks:
     - name: Pull the base image
       community.docker.docker_image:
         name: ubuntu:24.04
         source: pull
+
     - name: Create and start containers
       community.docker.docker_container:
         name: virtual-bot-{{ item }}
