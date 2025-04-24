@@ -1,19 +1,11 @@
 ---
-# ROS 2 installation
-- name: Install ROS 2 from packages
-  ansible.builtin.apt:
-    name: "ros-{{ ros_distro }}-desktop"
-    state: present
-    install_recommends: false
-  when: not source_install
-
+# ROS 2 source installation
 - name: Create ROS 2 source directory
   ansible.builtin.file:
     path: "~/ros2_{{ ros_distro }}/src"
     state: directory
     mode: "0755"
   become: false
-  when: source_install
 
 - name: Import ROS 2 repositories
   ansible.builtin.shell: |
@@ -22,7 +14,6 @@
   args:
     creates: "~/ros2_{{ ros_distro }}/src/.git"
   become: false
-  when: source_install
 
 - name: Pull ROS 2 repositories
   ansible.builtin.shell: |
@@ -31,14 +22,12 @@
   register: vcs_pull
   changed_when: vcs_pull.stdout is not search('All up-to-date')
   become: false
-  when: source_install
 
 - name: Update rosdep
   ansible.builtin.command: rosdep update
   register: rosdep_update
   changed_when: rosdep_update.stdout is search('updated')
   become: false
-  when: source_install
 
 - name: Install ROS 2 dependencies
   ansible.builtin.shell: |
@@ -47,7 +36,6 @@
   register: rosdep_install
   changed_when: rosdep_install.stdout is not search('All required rosdeps installed')
   become: false
-  when: source_install
 
 - name: Build ROS 2 from source
   ansible.builtin.shell: |
@@ -56,4 +44,3 @@
   register: colcon_build
   changed_when: colcon_build.rc == 0
   become: false
-  when: source_install

@@ -1,0 +1,7 @@
+---
+# ROS 2 prebuilt installation
+- name: Install ROS 2 from packages
+  ansible.builtin.apt:
+    name: "ros-{{ ros_distro }}-desktop"
+    state: present
+    install_recommends: false

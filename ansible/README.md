@@ -8,6 +8,17 @@ This directory contains Ansible playbooks to set up a ROS 2 development environm
 - `group_vars/all.yml`: Configuration variables
 - `inventory.ini`: Ansible inventory file
 - `roles/`: Directory containing all the individual roles
+  - `basic_prereqs`: Installs basic prerequisites
+  - `locale_setup`: Sets up UTF-8 locale
+  - `ros_repo`: Configures ROS 2 repository
+  - `cmake`: Installs CMake
+  - `dev_tools`: Installs development tools
+  - `colcon_setup`: Sets up colcon mixin
+  - `ros_install_prebuilt`: Installs ROS 2 from prebuilt packages (used when `source_install=false`)
+  - `ros_install_source`: Installs ROS 2 from source (used when `source_install=true`)
+  - `ros_dependencies`: Installs ROS dependencies
+  - `nodejs`: Installs Node.js and NPM
+  - `clang`: Installs Clang
 
 ## Configuration
 
@@ -20,7 +31,7 @@ Edit `group_vars/all.yml` to configure:
 
 ## Usage
 
-### Install ROS 2 from packages
+### Install ROS 2 from packages (default)
 
 ```bash
 ansible-playbook ros_setup.yml
@@ -36,6 +47,20 @@ ansible-playbook ros_setup.yml -e "source_install=true"
 
 ```bash
 ansible-playbook ros_setup.yml --tags "basic_prereqs,ros_repo"
+```
+
+### Run only the ROS installation part
+
+For prebuilt packages:
+
+```bash
+ansible-playbook ros_setup.yml --tags "ros_install_prebuilt"
+```
+
+For source installation:
+
+```bash
+ansible-playbook ros_setup.yml --tags "ros_install_source" -e "source_install=true"
 ```
 
 ## Requirements
