@@ -23,6 +23,7 @@
     "type=volume,source=drqp-python-micromamba,target=/home/rosdev/ros2_ws/.micromamba",
     "type=volume,source=drqp-python-venv,target=/home/rosdev/ros2_ws/.venv",
   ],
+  "postCreateCommand": "sudo chown rosdev:rosdev /home/rosdev/ros2_ws/.ansible /home/rosdev/ros2_ws/.cache /home/rosdev/ros2_ws/build /home/rosdev/ros2_ws/install /home/rosdev/ros2_ws/lcov /home/rosdev/ros2_ws/log /home/rosdev/ros2_ws/docs/_build /home/rosdev/ros2_ws/.micromamba /home/rosdev/ros2_ws/.venv",
   "runArgs": [
     // Commented out to allow Codespaces use
     // "--network", "host",
