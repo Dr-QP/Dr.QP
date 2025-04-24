@@ -10,6 +10,10 @@
   ansible.builtin.set_fact:
     ros_packages: "{{ ros_dependencies_known_packages }}"
 
+- name: Update APT cache
+  ansible.builtin.apt:
+    update_cache: true
+
 - name: Check which ROS packages are available
   ansible.builtin.command: apt-cache policy "{{ item }}"
   register: package_policies
@@ -22,7 +26,6 @@
     available_packages_list: "{{ available_packages_list | default([]) + [item.item] }}"
   loop: "{{ package_policies.results }}"
   when: item.stdout is search('Candidate:')
-  no_log: true
 
 - name: List available packages
   ansible.builtin.debug:
