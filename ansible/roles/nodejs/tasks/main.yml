@@ -1,0 +1,42 @@
+---
+# Node.js and NPM installation
+- name: Create temporary directory for downloads
+  ansible.builtin.tempfile:
+    state: directory
+  register: temp_dir
+  become: false
+
+- name: Download Node.js setup script
+  ansible.builtin.get_url:
+    url: https://deb.nodesource.com/setup_20.x
+    dest: "{{ temp_dir.path }}/nodesource_setup.sh"
+    mode: "0755"
+  become: false
+
+- name: Run Node.js setup script
+  ansible.builtin.command: bash "{{ temp_dir.path }}/nodesource_setup.sh"
+  args:
+    creates: /etc/apt/sources.list.d/nodesource.list
+- name: Remove old Node.js and NPM
+  ansible.builtin.apt:
+    name:
+      - nodejs
+      - npm
+    state: absent
+
+- name: Install Node.js
+  ansible.builtin.apt:
+    name: nodejs
+    state: present
+    install_recommends: false
+
+- name: Install Yarn globally
+  community.general.npm:
+    name: yarn
+    global: true
+
+- name: Clean up temporary directory
+  ansible.builtin.file:
+    path: "{{ temp_dir.path }}"
+    state: absent
+  become: false

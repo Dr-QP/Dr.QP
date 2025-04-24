@@ -1,0 +1,6 @@
+---
+# ROS 2 configuration variables
+ros_distro: jazzy
+source_install: false # Set to true for source installation
+clang_version: 20
+ci_mode: false # Set to true for CI environment

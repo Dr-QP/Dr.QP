@@ -1,0 +1,24 @@
+---
+# Basic prerequisites installation
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Install basic prerequisites
+  ansible.builtin.apt:
+    name:
+      - software-properties-common
+      - wget
+      - fish
+      - curl
+      - gnupg2
+      - lsb-release
+      - ca-certificates
+      - apt-utils
+    state: present
+    install_recommends: false
+
+- name: Enable universe repository
+  ansible.builtin.apt_repository:
+    repo: universe
+    state: present

@@ -1,0 +1,28 @@
+---
+# Colcon mixin setup
+- name: Remove default colcon mixin
+  ansible.builtin.command: colcon mixin remove default
+  register: remove_result
+  changed_when: remove_result.rc == 0
+  failed_when: remove_result.rc != 0 and "No mixin named 'default' is registered" not in remove_result.stderr
+  ignore_errors: true
+
+- name: Add default colcon mixin
+  ansible.builtin.command: colcon mixin add default https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml
+  register: add_result
+  changed_when: add_result.rc == 0
+
+- name: Update default colcon mixin
+  ansible.builtin.command: colcon mixin update default
+  register: update_result
+  changed_when: update_result.rc == 0
+
+- name: Clean ROS dependencies
+  ansible.builtin.file:
+    path: /etc/ros/rosdep/sources.list.d/
+    state: absent
+
+- name: Initialize rosdep
+  ansible.builtin.command: rosdep init
+  args:
+    creates: /etc/ros/rosdep/sources.list.d/20-default.list

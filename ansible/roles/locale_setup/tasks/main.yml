@@ -1,0 +1,37 @@
+---
+# UTF-8 locale setup
+- name: Check if locale is UTF-8
+  ansible.builtin.shell: |
+    if [[ $(locale) =~ LANG=.*\.UTF-8 ]] || [[ $(locale) =~ LC_ALL=.*\.UTF-8 ]]; then
+      echo "yes"
+    else
+      echo "no"
+    fi
+  register: utf8_check
+  changed_when: false
+
+- name: Install locales package
+  ansible.builtin.apt:
+    name: locales
+    state: present
+    install_recommends: false
+  when: utf8_check.stdout == "no"
+
+- name: Generate en_US and en_US.UTF-8 locales
+  ansible.builtin.command: locale-gen en_US en_US.UTF-8
+  when: utf8_check.stdout == "no"
+
+- name: Set locale to en_US.UTF-8
+  ansible.builtin.command: update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+  when: utf8_check.stdout == "no"
+
+- name: Verify UTF-8 locale is set
+  ansible.builtin.shell: |
+    if [[ $(locale) =~ LANG=.*\.UTF-8 ]] || [[ $(locale) =~ LC_ALL=.*\.UTF-8 ]]; then
+      echo "yes"
+    else
+      echo "no"
+    fi
+  register: utf8_verify
+  changed_when: false
+  failed_when: utf8_verify.stdout != "yes"

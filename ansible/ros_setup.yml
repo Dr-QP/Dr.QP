@@ -1,0 +1,18 @@
+---
+# Main playbook for ROS 2 setup
+- name: Setup ROS 2 Environment
+  hosts: all
+  become: true
+  gather_facts: true
+
+  roles:
+    - { role: basic_prereqs, tags: ["basic_prereqs"] }
+    - { role: locale_setup, tags: ["locale_setup"] }
+    - { role: ros_repo, tags: ["ros_repo"] }
+    - { role: cmake, tags: ["cmake"] }
+    - { role: dev_tools, tags: ["dev_tools"] }
+    - { role: colcon_setup, tags: ["colcon_setup"] }
+    - { role: ros_install, tags: ["ros_install"] }
+    - { role: ros_dependencies, tags: ["ros_dependencies"] }
+    - { role: nodejs, tags: ["nodejs"] }
+    - { role: clang, tags: ["clang"] }

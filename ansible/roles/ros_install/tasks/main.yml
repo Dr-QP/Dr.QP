@@ -1,0 +1,51 @@
+---
+# ROS 2 installation
+- name: Install ROS 2 from packages
+  ansible.builtin.apt:
+    name: "ros-{{ ros_distro }}-desktop"
+    state: present
+    install_recommends: false
+  when: not source_install
+
+- name: Create ROS 2 source directory
+  ansible.builtin.file:
+    path: "~/ros2_{{ ros_distro }}/src"
+    state: directory
+    mode: "0755"
+  become: false
+  when: source_install
+
+- name: Import ROS 2 repositories
+  ansible.builtin.shell: |
+    cd ~/ros2_{{ ros_distro }}
+    vcs import --input https://raw.githubusercontent.com/ros2/ros2/{{ ros_distro }}/ros2.repos src
+  args:
+    creates: "~/ros2_{{ ros_distro }}/src/.git"
+  become: false
+  when: source_install
+
+- name: Pull ROS 2 repositories
+  ansible.builtin.shell: |
+    cd ~/ros2_{{ ros_distro }}
+    vcs pull src
+  become: false
+  when: source_install
+
+- name: Update rosdep
+  ansible.builtin.command: rosdep update
+  become: false
+  when: source_install
+
+- name: Install ROS 2 dependencies
+  ansible.builtin.shell: |
+    cd ~/ros2_{{ ros_distro }}
+    rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 urdfdom_headers ignition-cmake2 ignition-math6"
+  become: false
+  when: source_install
+
+- name: Build ROS 2 from source
+  ansible.builtin.shell: |
+    cd ~/ros2_{{ ros_distro }}
+    colcon build --symlink-install --packages-skip image_tools intra_process_demo
+  become: false
+  when: source_install

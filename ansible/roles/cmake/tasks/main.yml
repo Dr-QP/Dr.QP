@@ -1,0 +1,37 @@
+---
+# CMake installation
+- name: Check if Kitware archive keyring is installed
+  ansible.builtin.stat:
+    path: /usr/share/doc/kitware-archive-keyring/copyright
+  register: kitware_keyring
+
+- name: Download and install Kitware archive keyring
+  ansible.builtin.shell: |
+    wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null
+  when: not kitware_keyring.stat.exists
+
+- name: Add Kitware repository
+  ansible.builtin.shell: |
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/kitware.list >/dev/null
+  args:
+    creates: /etc/apt/sources.list.d/kitware.list
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Remove temporary keyring if needed
+  ansible.builtin.file:
+    path: /usr/share/keyrings/kitware-archive-keyring.gpg
+    state: absent
+  when: not kitware_keyring.stat.exists
+
+- name: Install Kitware archive keyring
+  ansible.builtin.apt:
+    name: kitware-archive-keyring
+    state: present
+    install_recommends: false
+
+- name: Upgrade packages
+  ansible.builtin.apt:
+    upgrade: true
