@@ -63,6 +63,7 @@
       "gbraad.systemd-universal-manager",
       "ipierre1.ansible-vault-vscode",
       "redhat.ansible",
+      "davidkol.fastcompare",
       // cSpell:enable
     ]
   },
