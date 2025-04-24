@@ -12,7 +12,7 @@ fi
 source /opt/ros/"$ROS_DISTRO"/setup.bash
 
 keys=$(rosdep keys --from-paths "$sources_dir")
-resolved_list=$(rosdep resolve $keys 2>/dev/null)
+resolved_list=$(rosdep resolve $keys 2>/dev/null || true)
 
 # Array to store package names
 packages=()
@@ -29,6 +29,7 @@ while IFS= read -r line; do
     # If we previously saw "#apt", this line is the package name
     if $found_apt; then
         packages+=("$line")
+        echo "Adding ROS package: $line"
         found_apt=false  # Reset flag
     fi
 done <<< "$resolved_list"
@@ -43,7 +44,7 @@ fi
 sorted_packages=($(for element in "${packages[@]}"; do echo "$element"; done | sort))
 
 # Create ansible vars directory
-ansible_vars_dir="$script_dir/../ansible/roles/ros_dependencies/vars"
+ansible_vars_dir="$root_dir/ansible/roles/ros_dependencies/vars"
 mkdir -p "$ansible_vars_dir"
 
 # Generate the variables file

@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
+set -e
 
 script_dir=$(dirname $0)
 source "$script_dir/ros/__utils.sh"
 
 if [[ -z $ROS_DISTRO ]]; then
-  echo set ROS_DISTRO to required distribution or source setup file
+  echo "Set ROS_DISTRO to required distribution or source setup file"
   exit 1
 fi
 
 source /opt/ros/"$ROS_DISTRO"/setup.bash
 
 keys=$(rosdep keys --from-paths "$sources_dir")
-resolved_list=$(rosdep resolve $keys 2>/dev/null)
+resolved_list=$(rosdep resolve $keys 2>/dev/null || true)
 
 # Array to store package names
 packages=()
@@ -28,6 +29,7 @@ while IFS= read -r line; do
     # If we previously saw "#apt", this line is the package name
     if $found_apt; then
         packages+=("$line")
+        echo "Adding ROS package: $line"
         found_apt=false  # Reset flag
     fi
 done <<< "$resolved_list"
