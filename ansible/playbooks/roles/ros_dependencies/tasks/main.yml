@@ -16,33 +16,29 @@
 
 - name: Check policy for all ROS packages at once
   ansible.builtin.command:
-    cmd: apt-cache policy {{ ros_dependencies_known_packages | join(' ') }}
+    cmd: apt-cache policy --quiet=0 {{ ros_dependencies_known_packages | join(' ') }}
   register: pkg_policy
   changed_when: false
   failed_when: false
 
 - name: Extract only the header names (i.e. found packages)
   ansible.builtin.set_fact:
-    available_pkg_headers: >-
-      {{ pkg_policy.stdout_lines
-         | select('match', '^[^\\s].*:$')
-         | map('regex_replace', ':$','')
+    not_available_packages: >-
+      {{ pkg_policy.stderr_lines
+         | select('match', '^.*Unable to locate package.*$')
+         | map('regex_replace', 'N: Unable to locate package ','')
          | list }}
 
 
 - name: Debug
   ansible.builtin.debug:
-    msg: "available_pkg_headers: {{ available_pkg_headers }}"
+    msg: "not_available_packages: {{ not_available_packages }}"
 
-- name: Filter known_packages by what actually exists
+- name: Remove not available packages
   ansible.builtin.set_fact:
     available_packages_list: >-
       {{ ros_dependencies_known_packages
-         | intersect(available_pkg_headers) }}
-
-- name: Debug - the following packages are missing
-  ansible.builtin.debug:
-    msg: "Missing: {{ ros_dependencies_known_packages | difference(available_pkg_headers) | sort }}"
+         | difference(not_available_packages) }}
 
 - name: Debug - will install only these
   ansible.builtin.debug:
