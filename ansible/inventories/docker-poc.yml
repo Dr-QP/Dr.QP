@@ -1,9 +1,10 @@
 ---
 all:
   children:
-    poc_hosts:
+    virtual_bots:
       vars:
         ansible_connection: docker
       hosts:
-        virtual-bot1:
-        virtual-bot2:
+        virtual-bot-1:
+        virtual-bot-2:
+        virtual-bot-3:
