@@ -1,14 +1,14 @@
 ---
 # UTF-8 locale setup
-- name: Check if locale is UTF-8
-  ansible.builtin.shell: |
-    if [[ $(locale) =~ LANG=.*\.UTF-8 ]] || [[ $(locale) =~ LC_ALL=.*\.UTF-8 ]]; then
-      echo "yes"
-    else
-      echo "no"
-    fi
-  register: utf8_check
+- name: Get locale information
+  ansible.builtin.command: locale
+  register: locale_output
   changed_when: false
+
+- name: Check if locale is UTF-8
+  ansible.builtin.set_fact:
+    utf8_check:
+      stdout: "{{ 'yes' if (locale_output.stdout is search('LANG=.*\\.UTF-8') or locale_output.stdout is search('LC_ALL=.*\\.UTF-8')) else 'no' }}"
 
 - name: Install locales package
   ansible.builtin.apt:
@@ -29,13 +29,17 @@
   changed_when: update_locale.rc == 0
   when: utf8_check.stdout == "no"
 
-- name: Verify UTF-8 locale is set
-  ansible.builtin.shell: |
-    if [[ $(locale) =~ LANG=.*\.UTF-8 ]] || [[ $(locale) =~ LC_ALL=.*\.UTF-8 ]]; then
-      echo "yes"
-    else
-      echo "no"
-    fi
-  register: utf8_verify
+- name: Get updated locale information
+  ansible.builtin.command: locale
+  register: locale_updated
   changed_when: false
-  failed_when: utf8_verify.stdout != "yes"
+
+- name: Verify UTF-8 locale is set
+  ansible.builtin.set_fact:
+    utf8_verify:
+      stdout: "{{ 'yes' if (locale_updated.stdout is search('LANG=.*\\.UTF-8') or locale_updated.stdout is search('LC_ALL=.*\\.UTF-8')) else 'no' }}"
+
+- name: Fail if UTF-8 locale is not set
+  ansible.builtin.fail:
+    msg: "UTF-8 locale is not set properly"
+  when: utf8_verify.stdout != "yes"
