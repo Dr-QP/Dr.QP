@@ -3,3 +3,4 @@
   ansible.builtin.set_fact:
     system_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else ansible_architecture }}"
     system_dist: "{{ ansible_distribution_release | lower }}"
+    user_home: "{{ lookup('env', 'HOME') }}"

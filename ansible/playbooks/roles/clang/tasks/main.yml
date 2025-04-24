@@ -23,20 +23,32 @@
     state: present
     install_recommends: false
 
+- name: Add Clang to PATH in fish config
+  ansible.builtin.blockinfile:
+    path: "{{ user_home }}/.config/fish/config.fish"
+    content: "set -gx PATH /usr/lib/llvm-{{ clang_version }}/bin $PATH"
+    create: true
+    insertafter: EOF
+    mode: "0660"
+    marker: "# {mark} Clang PATH configuration"
+  become: false
+
+- name: Add Clang to PATH in bash config
+  ansible.builtin.blockinfile:
+    path: "{{ user_home }}/.bashrc"
+    content: 'export PATH="/usr/lib/llvm-{{ clang_version }}/bin:$PATH"'
+    create: true
+    insertafter: EOF
+    mode: "0660"
+    marker: "# {mark} Clang PATH configuration"
+  become: false
+
 - name: Display Clang path information
   ansible.builtin.debug:
     msg:
       - "##################################################"
       - "##"
       - "##  Add /usr/lib/llvm-{{ clang_version }}/bin to $PATH"
-      - "##"
-      - "##  for fish (in ~/.config/fish/config.fish):"
-      - "##  set -gx PATH /usr/lib/llvm-{{ clang_version }}/bin $PATH"
-      - "##"
-      - "##"
-      - "##  for bash (in ~/.bashrc):"
-      - "##  export PATH=\"/usr/lib/llvm-{{ clang_version }}/bin:$PATH\""
-      - "##"
       - "##"
       - "##  for dockerfile"
       - "##  ENV PATH=\"/usr/lib/llvm-{{ clang_version }}/bin:$PATH\""
