@@ -44,6 +44,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx_rtd_size',
     'myst_nb',  # for embedding jupyter notebooks
+    'myst_parser',  # for embedding myst pages
 ]
 
 # Javascript to be loaded on pages containing ipywidgets
