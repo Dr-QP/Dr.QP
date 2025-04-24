@@ -1,5 +1,4 @@
-vcpkg evaluation
-================
+# vcpkg evaluation
 
 TL;DR doesn’t suite needs of the project
 
