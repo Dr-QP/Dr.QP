@@ -15,10 +15,20 @@
     install_recommends: false
 
 - name: Enable community-maintained free and open-source software (universe repository)
-  ansible.builtin.apt_repository:
-    state: present
-    repo: "{{ item }}"
-  loop:
-    - "deb [arch={{ ansible_architecture }}] http://ports.ubuntu.com/ubuntu-ports {{ ansible_distribution_release }} universe"
-    - "deb [arch={{ ansible_architecture }}] http://ports.ubuntu.com/ubuntu-ports {{ ansible_distribution_release }}-updates universe"
-    - "deb [arch={{ ansible_architecture }}] http://ports.ubuntu.com/ubuntu-ports {{ ansible_distribution_release }}-security universe"
+  # ansible.builtin.apt_repository: doesn't support repo short names
+  # Request to fix that was closed as "Won't do" https://github.com/ansible/ansible/issues/48714
+  # The code below is a workaround, the commented out version works as well,
+  # but it creates a duplicate entry conflicting with /etc/apt/sources.list.d/ubuntu.sources
+  become: true
+  ansible.builtin.command: add-apt-repository universe
+  changed_when: false
+
+# NOT USED because it creates a duplicate entry conflicting with /etc/apt/sources.list.d/ubuntu.sources
+# - name: Enable community-maintained free and open-source software (universe repository)
+#   ansible.builtin.apt_repository:
+#     state: present
+#     repo: "{{ item }}"
+#   loop:
+#     - "deb [arch={{ system_arch }}] http://ports.ubuntu.com/ubuntu-ports {{ system_dist }} universe"
+#     - "deb [arch={{ system_arch }}] http://ports.ubuntu.com/ubuntu-ports {{ system_dist }}-updates universe"
+#     - "deb [arch={{ system_arch }}] http://ports.ubuntu.com/ubuntu-ports {{ system_dist }}-security universe"

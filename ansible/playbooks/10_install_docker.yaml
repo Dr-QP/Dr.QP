@@ -2,6 +2,9 @@
 - name: Install Docker on robots
   hosts: robots
   become: true
+  gather_facts: true
+  roles:
+    - { role: extra_facts, tags: ["extra_facts"] }
   tasks:
     - name: Install Docker dependencies
       ansible.builtin.apt:
@@ -22,8 +25,8 @@
     - name: Add Docker repository
       ansible.builtin.apt_repository:
         repo: >-
-          deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.asc]
-          https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+          deb [arch={{ system_arch }} signed-by=/etc/apt/keyrings/docker.asc]
+          https://download.docker.com/linux/ubuntu {{ system_dist }} stable
         state: present
         filename: docker
         update_cache: true

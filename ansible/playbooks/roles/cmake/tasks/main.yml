@@ -20,16 +20,11 @@
   changed_when: dearmor_key.rc == 0
   when: not kitware_keyring.stat.exists
 
-- name: Get Ubuntu codename
-  ansible.builtin.command: lsb_release -cs
-  register: ubuntu_codename
-  changed_when: false
-
 - name: Add Kitware repository
   ansible.builtin.apt_repository:
     repo: >-
-      deb [arch={{ ansible_architecture }} signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg]
-      https://apt.kitware.com/ubuntu/ {{ ubuntu_codename.stdout }} main
+      deb [arch={{ system_arch }} signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg]
+      https://apt.kitware.com/ubuntu/ {{ system_dist }} main
     state: present
     filename: kitware
 
