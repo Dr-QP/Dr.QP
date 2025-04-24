@@ -6,5 +6,5 @@ all:
         ansible_connection: docker
       hosts:
         virtual-bot-1:
-        # virtual-bot-2:
-        # virtual-bot-3:
+        virtual-bot-2:
+        virtual-bot-3:

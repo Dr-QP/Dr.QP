@@ -1,0 +1,11 @@
+---
+- name: Bring down virtual bots
+  hosts: localhost
+  tasks:
+    - name: Stop containers
+      community.docker.docker_container:
+        name: "{{ item }}"
+        state: stopped
+        detach: false
+        auto_remove: true
+      loop: "{{ groups['virtual_bots'] | default([]) }}"
