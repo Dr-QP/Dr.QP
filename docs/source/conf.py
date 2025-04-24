@@ -44,6 +44,9 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx_rtd_size',
     'myst_nb',  # for embedding jupyter notebooks
+    # Disabled for now due to conflict with myst_nb
+    # see https://github.com/executablebooks/MyST-NB/issues/421
+    # and https://github.com/executablebooks/MyST-NB/issues/304
     # 'myst_parser',  # for embedding myst pages
 ]
 
