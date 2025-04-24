@@ -9,7 +9,7 @@
   ansible.builtin.get_url:
     url: https://apt.kitware.com/keys/kitware-archive-latest.asc
     dest: /tmp/kitware-archive-latest.asc
-    mode: '0644'
+    mode: "0644"
   when: not kitware_keyring.stat.exists
 
 - name: Dearmor and install Kitware archive key
