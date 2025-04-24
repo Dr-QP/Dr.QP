@@ -14,22 +14,39 @@
   ansible.builtin.apt:
     update_cache: true
 
-- name: Check which ROS packages are available
-  ansible.builtin.command: apt-cache policy "{{ item }}"
-  register: package_policies
+- name: Check policy for all ROS packages at once
+  ansible.builtin.command:
+    cmd: apt-cache policy {{ ros_dependencies_known_packages | join(' ') }}
+  register: pkg_policy
   changed_when: false
   failed_when: false
-  loop: "{{ ros_dependencies_known_packages }}"
 
-- name: Determine available packages
+- name: Extract only the header names (i.e. found packages)
   ansible.builtin.set_fact:
-    available_packages_list: "{{ available_packages_list | default([]) + [item.item] }}"
-  loop: "{{ package_policies.results }}"
-  when: item.stdout is search('Candidate:')
+    available_pkg_headers: >-
+      {{ pkg_policy.stdout_lines
+         | select('match', '^[^\\s].*:$')
+         | map('regex_replace', ':$','')
+         | list }}
 
-- name: List available packages
+
+- name: Debug
   ansible.builtin.debug:
-    msg: "Available packages: {{ available_packages_list | default([]) }}"
+    msg: "available_pkg_headers: {{ available_pkg_headers }}"
+
+- name: Filter known_packages by what actually exists
+  ansible.builtin.set_fact:
+    available_packages_list: >-
+      {{ ros_dependencies_known_packages
+         | intersect(available_pkg_headers) }}
+
+- name: Debug - the following packages are missing
+  ansible.builtin.debug:
+    msg: "Missing: {{ ros_dependencies_known_packages | difference(available_pkg_headers) | sort }}"
+
+- name: Debug - will install only these
+  ansible.builtin.debug:
+    msg: "Installing: {{ available_packages_list }}"
 
 - name: Install available ROS packages
   ansible.builtin.apt:
