@@ -24,15 +24,6 @@
     // "SSH_AUTH_SOCK": "/home/rosdev/.1password/agent.sock"
   },
   "mounts": [
-    "type=volume,source=drqp-ansible,target=/home/rosdev/ros2_ws/.ansible",
-    "type=volume,source=drqp-clangd-cache,target=/home/rosdev/ros2_ws/.cache",
-    "type=volume,source=drqp-colcon-build,target=/home/rosdev/ros2_ws/build",
-    "type=volume,source=drqp-colcon-install,target=/home/rosdev/ros2_ws/install",
-    "type=volume,source=drqp-colcon-lcov,target=/home/rosdev/ros2_ws/lcov",
-    "type=volume,source=drqp-colcon-log,target=/home/rosdev/ros2_ws/log",
-    "type=volume,source=drqp-docs-build,target=/home/rosdev/ros2_ws/docs/_build",
-    "type=volume,source=drqp-python-micromamba,target=/home/rosdev/ros2_ws/.micromamba",
-    "type=volume,source=drqp-python-venv,target=/home/rosdev/ros2_ws/.venv",
     // For local dev, allows to use SSH keys from 1password
     // {
     //   "type": "bind",
@@ -45,11 +36,23 @@
     //   "target": "/home/rosdev/.ssh/"
     // }
   ],
-  "postCreateCommand": "sudo chown rosdev:rosdev /home/rosdev/ros2_ws/.ansible /home/rosdev/ros2_ws/.cache /home/rosdev/ros2_ws/build /home/rosdev/ros2_ws/install /home/rosdev/ros2_ws/lcov /home/rosdev/ros2_ws/log /home/rosdev/ros2_ws/docs/_build /home/rosdev/ros2_ws/.micromamba /home/rosdev/ros2_ws/.venv",
   "runArgs": [
-    "--network", "host"
+    "--network", "host",
+    "--ipc", "host",
+    "--pid", "host",
     // , "--device", "/dev/ttySC0" // For local dev, breaks CI if left uncommented
+
+    "--mount", "type=volume,source=drqp-ansible,target=/home/rosdev/ros2_ws/.ansible",
+    "--mount", "type=volume,source=drqp-clangd-cache,target=/home/rosdev/ros2_ws/.cache",
+    "--mount", "type=volume,source=drqp-colcon-build,target=/home/rosdev/ros2_ws/build",
+    "--mount", "type=volume,source=drqp-colcon-install,target=/home/rosdev/ros2_ws/install",
+    "--mount", "type=volume,source=drqp-colcon-lcov,target=/home/rosdev/ros2_ws/lcov",
+    "--mount", "type=volume,source=drqp-colcon-log,target=/home/rosdev/ros2_ws/log",
+    "--mount", "type=volume,source=drqp-docs-build,target=/home/rosdev/ros2_ws/docs/_build",
+    "--mount", "type=volume,source=drqp-python-micromamba,target=/home/rosdev/ros2_ws/.micromamba",
+    "--mount", "type=volume,source=drqp-python-venv,target=/home/rosdev/ros2_ws/.venv",
   ],
+  "postCreateCommand": "sudo chown rosdev:rosdev /home/rosdev/ros2_ws/.ansible /home/rosdev/ros2_ws/.cache /home/rosdev/ros2_ws/build /home/rosdev/ros2_ws/install /home/rosdev/ros2_ws/lcov /home/rosdev/ros2_ws/log /home/rosdev/ros2_ws/docs/_build /home/rosdev/ros2_ws/.micromamba /home/rosdev/ros2_ws/.venv && python3 -m venv /home/rosdev/ros2_ws/.venv && /home/rosdev/ros2_ws/.venv/bin/python3 -m pip install -r /home/rosdev/ros2_ws/requirements.txt",
   "features": {
   }
 }
