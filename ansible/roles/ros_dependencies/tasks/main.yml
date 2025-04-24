@@ -1,36 +1,14 @@
 ---
 # ROS dependencies installation
-- name: Define ROS package list
+
+# Always include the variables file (contains known ROS dependencies)
+- name: Include known ROS dependencies
+  ansible.builtin.include_vars:
+    file: "{{ role_path }}/vars/known_ros_dependencies.yml"
+
+- name: Set ros_packages variable for backward compatibility
   ansible.builtin.set_fact:
-    ros_packages:
-      - libboost-all-dev
-      - "ros-{{ ros_distro }}-ament-cmake"
-      - "ros-{{ ros_distro }}-ament-cmake-clang-format"
-      - "ros-{{ ros_distro }}-ament-cmake-copyright"
-      - "ros-{{ ros_distro }}-ament-cmake-core"
-      - "ros-{{ ros_distro }}-ament-cmake-cppcheck"
-      - "ros-{{ ros_distro }}-ament-cmake-cpplint"
-      - "ros-{{ ros_distro }}-ament-cmake-export-dependencies"
-      - "ros-{{ ros_distro }}-ament-cmake-flake8"
-      - "ros-{{ ros_distro }}-ament-cmake-lint-cmake"
-      - "ros-{{ ros_distro }}-ament-cmake-pep257"
-      - "ros-{{ ros_distro }}-ament-cmake-xmllint"
-      - "ros-{{ ros_distro }}-ament-lint-auto"
-      - "ros-{{ ros_distro }}-catch-ros2"
-      - "ros-{{ ros_distro }}-gz-ros2-control"
-      - "ros-{{ ros_distro }}-joint-state-publisher"
-      - "ros-{{ ros_distro }}-joint-state-publisher-gui"
-      - "ros-{{ ros_distro }}-rclcpp"
-      - "ros-{{ ros_distro }}-robot-state-publisher"
-      - "ros-{{ ros_distro }}-ros2-control"
-      - "ros-{{ ros_distro }}-ros2-controllers"
-      - "ros-{{ ros_distro }}-ros2launch"
-      - "ros-{{ ros_distro }}-ros-gz-sim"
-      - "ros-{{ ros_distro }}-rosidl-default-generators"
-      - "ros-{{ ros_distro }}-rosidl-default-runtime"
-      - "ros-{{ ros_distro }}-rviz2"
-      - "ros-{{ ros_distro }}-std-msgs"
-      - "ros-{{ ros_distro }}-xacro"
+    ros_packages: "{{ ros_dependencies_known_packages }}"
 
 - name: Check which ROS packages are available
   ansible.builtin.shell: set -o pipefail && apt-cache policy {{ item }} | grep -q "Candidate:"
@@ -39,7 +17,7 @@
   register: available_packages
   changed_when: false
   failed_when: false
-  loop: "{{ ros_packages }}"
+  loop: "{{ ros_dependencies_known_packages }}"
 
 - name: Install available ROS packages
   ansible.builtin.apt:
