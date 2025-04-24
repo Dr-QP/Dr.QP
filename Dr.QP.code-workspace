@@ -228,7 +228,7 @@
       {
         "label": "Dr.QP clean",
         "type": "shell",
-        "command": "rm -rf build install log lcov .cache docs/_build $(find packages/ -type d -name node_modules -o -name build -o -name dist)",
+        "command": "rm -rf build install log lcov .cache docs/_build",
         "options": {
           "cwd": "${workspaceFolder}"
         },

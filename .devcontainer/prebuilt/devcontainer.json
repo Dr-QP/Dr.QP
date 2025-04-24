@@ -12,7 +12,17 @@
   "workspaceFolder": "/home/rosdev/ros2_ws/",
   "workspaceMount": "source=${localWorkspaceFolder},target=/home/rosdev/ros2_ws/,type=bind",
   "containerEnv": {},
-  "mounts": [],
+  "mounts": [
+    "type=volume,source=drqp-ansible,target=/home/rosdev/ros2_ws/.ansible",
+    "type=volume,source=drqp-clangd-cache,target=/home/rosdev/ros2_ws/.cache",
+    "type=volume,source=drqp-colcon-build,target=/home/rosdev/ros2_ws/build",
+    "type=volume,source=drqp-colcon-install,target=/home/rosdev/ros2_ws/install",
+    "type=volume,source=drqp-colcon-lcov,target=/home/rosdev/ros2_ws/lcov",
+    "type=volume,source=drqp-colcon-log,target=/home/rosdev/ros2_ws/log",
+    "type=volume,source=drqp-docs-build,target=/home/rosdev/ros2_ws/docs/_build",
+    "type=volume,source=drqp-python-micromamba,target=/home/rosdev/ros2_ws/.micromamba",
+    "type=volume,source=drqp-python-venv,target=/home/rosdev/ros2_ws/.venv",
+  ],
   "runArgs": [
     // Commented out to allow Codespaces use
     // "--network", "host",
