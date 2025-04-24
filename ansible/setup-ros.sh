@@ -23,6 +23,6 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
 # Run the Ansible playbook
-ansible-playbook ros_setup.yml "$@"
+ansible-playbook playbooks/20_ros_setup.yml "$@"
 
 echo "ROS 2 setup completed successfully!"

@@ -12,6 +12,15 @@ The Ansible playbooks are located in the `ansible` directory:
 ansible/
 ├── group_vars/
 │   └── all.yml                  # Configuration variables
+├── inventories/                 # Inventory files for different environments
+│   ├── docker-poc.yml           # Docker-based inventory for testing
+│   └── real-robots.yml          # Real robot inventory
+├── playbooks/                   # Playbooks for different tasks
+│   ├── 1_pam_ssh_agent_auth.yml # SSH agent authentication setup
+│   ├── 10_install_docker.yaml   # Docker installation
+│   ├── 20_ros_setup.yml         # Main ROS 2 setup playbook
+│   ├── 100_startup_service.yaml # Robot startup service
+│   └── 200_pair_controller.yml  # Controller pairing
 ├── roles/                       # Individual roles for each component
 │   ├── basic_prereqs/           # Basic prerequisites
 │   ├── locale_setup/            # UTF-8 locale setup
@@ -25,9 +34,8 @@ ansible/
 │   ├── nodejs/                  # Node.js and NPM
 │   └── clang/                   # Clang installation
 ├── ansible.cfg                  # Ansible configuration
-├── inventory.ini                # Inventory file
+├── inventory.ini                # Default inventory file
 ├── README.md                    # Documentation
-├── ros_setup.yml                # Main playbook
 └── setup-ros.sh                 # Wrapper script
 ```
 
@@ -54,19 +62,19 @@ cd ansible
 ### Install ROS 2 from packages (default)
 
 ```bash
-ansible-playbook ros_setup.yml
+ansible-playbook playbooks/20_ros_setup.yml
 ```
 
 ### Install ROS 2 from source
 
 ```bash
-ansible-playbook ros_setup.yml -e "source_install=true"
+ansible-playbook playbooks/20_ros_setup.yml -e "source_install=true"
 ```
 
 ### Run specific roles only
 
 ```bash
-ansible-playbook ros_setup.yml --tags "basic_prereqs,ros_repo"
+ansible-playbook playbooks/20_ros_setup.yml --tags "basic_prereqs,ros_repo"
 ```
 
 ### Run only the ROS installation part
@@ -74,13 +82,25 @@ ansible-playbook ros_setup.yml --tags "basic_prereqs,ros_repo"
 For prebuilt packages:
 
 ```bash
-ansible-playbook ros_setup.yml --tags "ros_install_prebuilt"
+ansible-playbook playbooks/20_ros_setup.yml --tags "ros_install_prebuilt"
 ```
 
 For source installation:
 
 ```bash
-ansible-playbook ros_setup.yml --tags "ros_install_source" -e "source_install=true"
+ansible-playbook playbooks/20_ros_setup.yml --tags "ros_install_source" -e "source_install=true"
+```
+
+### Using specific inventory
+
+```bash
+ansible-playbook -i inventories/real-robots.yml playbooks/20_ros_setup.yml
+```
+
+For Docker-based testing:
+
+```bash
+ansible-playbook -i inventories/docker-poc.yml playbooks/20_ros_setup.yml
 ```
 
 ## Generating ROS Dependencies
@@ -100,7 +120,7 @@ This script:
 To run only the ROS dependencies role:
 
 ```bash
-ansible-playbook ros_setup.yml --tags "ros_dependencies"
+ansible-playbook playbooks/20_ros_setup.yml --tags "ros_dependencies"
 ```
 
 ## Requirements
@@ -139,7 +159,7 @@ ENV PATH="/usr/lib/llvm-20/bin:$PATH"
 
 The Ansible playbooks replace the following shell scripts:
 
-- `scripts/ros/ros-2-prep.sh` → `ansible/ros_setup.yml`
+- `scripts/ros/ros-2-prep.sh` → `ansible/playbooks/20_ros_setup.yml`
 - `scripts/ros/ros-2-src-build.sh` → `ansible/roles/ros_install_source`
 - `scripts/ros/__gen_install_ros_dependencies.sh` → `ansible/roles/ros_dependencies` with known packages
 

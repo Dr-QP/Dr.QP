@@ -1,0 +1,8 @@
+all:
+  children:
+    robots:
+      vars:
+        ansible_connection: docker
+      hosts:
+        virtual-bot1:
+        virtual-bot2:
