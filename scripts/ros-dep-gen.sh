@@ -39,7 +39,7 @@ if [[ ${#packages[@]} -eq 0 ]]; then
 fi
 
 # Generate the installation script
-output_script="$script_dir/ros/__gen_install_ros_dependencies.sh"
+output_script="$script_dir/__gen_install_ros_dependencies.sh"
 cat <<EOF > "$output_script"
 #!/usr/bin/env bash
 

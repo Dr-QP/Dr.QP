@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 packages=(libboost-all-dev
+python3-pytest
 ros-jazzy-ament-cmake
 ros-jazzy-ament-cmake-clang-format
 ros-jazzy-ament-cmake-copyright
@@ -12,20 +13,28 @@ ros-jazzy-ament-cmake-flake8
 ros-jazzy-ament-cmake-lint-cmake
 ros-jazzy-ament-cmake-pep257
 ros-jazzy-ament-cmake-xmllint
+ros-jazzy-ament-copyright
+ros-jazzy-ament-flake8
 ros-jazzy-ament-lint-auto
+ros-jazzy-ament-pep257
 ros-jazzy-catch-ros2
 ros-jazzy-gz-ros2-control
 ros-jazzy-joint-state-publisher
 ros-jazzy-joint-state-publisher-gui
+ros-jazzy-joy
+ros-jazzy-launch
+ros-jazzy-launch-ros
 ros-jazzy-rclcpp
+ros-jazzy-rclpy
 ros-jazzy-robot-state-publisher
+ros-jazzy-ros-gz-sim
 ros-jazzy-ros2-control
 ros-jazzy-ros2-controllers
 ros-jazzy-ros2launch
-ros-jazzy-ros-gz-sim
 ros-jazzy-rosidl-default-generators
 ros-jazzy-rosidl-default-runtime
 ros-jazzy-rviz2
+ros-jazzy-sensor-msgs
 ros-jazzy-std-msgs
 ros-jazzy-xacro)
 
