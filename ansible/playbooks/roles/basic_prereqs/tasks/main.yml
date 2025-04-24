@@ -1,9 +1,4 @@
 ---
-# Basic prerequisites installation
-- name: Update apt cache
-  ansible.builtin.apt:
-    update_cache: true
-
 - name: Install basic prerequisites
   ansible.builtin.apt:
     name:
@@ -16,9 +11,14 @@
       - ca-certificates
       - apt-utils
     state: present
+    update_cache: true
     install_recommends: false
 
-- name: Enable universe repository
+- name: Enable community-maintained free and open-source software (universe repository)
   ansible.builtin.apt_repository:
-    repo: universe
     state: present
+    repo: "{{ item }}"
+  loop:
+    - "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports {{ ansible_distribution_release }} universe"
+    - "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports {{ ansible_distribution_release }}-updates universe"
+    - "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports {{ ansible_distribution_release }}-security universe"
