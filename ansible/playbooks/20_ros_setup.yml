@@ -8,7 +8,6 @@
   roles:
     - { role: basic_prereqs, tags: ["basic_prereqs"] }
     - { role: locale_setup, tags: ["locale_setup"] }
-    - { role: ros_repo, tags: ["ros_repo"] }
     - { role: cmake, tags: ["cmake"] }
     - { role: dev_tools, tags: ["dev_tools"] }
     - { role: colcon_setup, tags: ["colcon_setup"] }
