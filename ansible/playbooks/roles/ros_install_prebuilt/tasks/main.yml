@@ -10,7 +10,6 @@
     url: https://raw.githubusercontent.com/ros/rosdistro/master/ros.key
     keyring: /usr/share/keyrings/ros2-latest-archive-keyring.gpg
     state: present
-  when: not ros2_repo.stat.exists
 
 - name: Add ROS 2 repository
   ansible.builtin.apt_repository:
@@ -19,7 +18,6 @@
       http://packages.ros.org/ros2/ubuntu {{ ansible_distribution_release }} main
     state: present
     filename: ros2-latest
-  when: not ros2_repo.stat.exists
 
 - name: Install ROS 2 from packages
   ansible.builtin.apt:
