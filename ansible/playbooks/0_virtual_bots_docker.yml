@@ -1,16 +1,19 @@
 ---
 - name: Bring up virtual bots
   hosts: local
+  vars:
+    container_image: "ghcr.io/dr-qp/jazzy-ros-deploy:edge"
   tasks:
     - name: Pull the base image
       community.docker.docker_image:
-        name: ubuntu:24.04
+        name: "{{ container_image }}"
         source: pull
 
     - name: Create and start containers
       community.docker.docker_container:
         name: virtual-bot-{{ item }}
-        image: ubuntu:24.04
+        image: "{{ container_image }}"
         state: started
-      with_sequence:
-        count: 3
+        detach: true
+        command: sleep infinity
+      with_sequence: start=1 end=3
