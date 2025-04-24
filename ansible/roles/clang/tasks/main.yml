@@ -15,6 +15,8 @@
 
 - name: Run LLVM installation script
   ansible.builtin.command: bash "{{ temp_dir.path }}/llvm.sh" {{ clang_version }} all
+  register: llvm_install
+  changed_when: llvm_install.stdout is search('Installing')
 - name: Install libstdc++ development package
   ansible.builtin.apt:
     name: libstdc++-14-dev

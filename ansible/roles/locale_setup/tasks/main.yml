@@ -19,10 +19,14 @@
 
 - name: Generate en_US and en_US.UTF-8 locales
   ansible.builtin.command: locale-gen en_US en_US.UTF-8
+  register: locale_gen
+  changed_when: locale_gen.stdout is search('done')
   when: utf8_check.stdout == "no"
 
 - name: Set locale to en_US.UTF-8
   ansible.builtin.command: update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+  register: update_locale
+  changed_when: update_locale.rc == 0
   when: utf8_check.stdout == "no"
 
 - name: Verify UTF-8 locale is set

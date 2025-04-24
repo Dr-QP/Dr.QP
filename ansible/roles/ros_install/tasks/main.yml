@@ -28,11 +28,15 @@
   ansible.builtin.shell: |
     cd ~/ros2_{{ ros_distro }}
     vcs pull src
+  register: vcs_pull
+  changed_when: vcs_pull.stdout is not search('All up-to-date')
   become: false
   when: source_install
 
 - name: Update rosdep
   ansible.builtin.command: rosdep update
+  register: rosdep_update
+  changed_when: rosdep_update.stdout is search('updated')
   become: false
   when: source_install
 
@@ -40,6 +44,8 @@
   ansible.builtin.shell: |
     cd ~/ros2_{{ ros_distro }}
     rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 urdfdom_headers ignition-cmake2 ignition-math6"
+  register: rosdep_install
+  changed_when: rosdep_install.stdout is not search('All required rosdeps installed')
   become: false
   when: source_install
 
@@ -47,5 +53,7 @@
   ansible.builtin.shell: |
     cd ~/ros2_{{ ros_distro }}
     colcon build --symlink-install --packages-skip image_tools intra_process_demo
+  register: colcon_build
+  changed_when: colcon_build.rc == 0
   become: false
   when: source_install

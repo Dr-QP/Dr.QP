@@ -5,16 +5,33 @@
     path: /usr/share/doc/kitware-archive-keyring/copyright
   register: kitware_keyring
 
-- name: Download and install Kitware archive keyring
-  ansible.builtin.shell: |
-    wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null
+- name: Download Kitware archive key
+  ansible.builtin.get_url:
+    url: https://apt.kitware.com/keys/kitware-archive-latest.asc
+    dest: /tmp/kitware-archive-latest.asc
+    mode: '0644'
   when: not kitware_keyring.stat.exists
 
-- name: Add Kitware repository
-  ansible.builtin.shell: |
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/kitware.list >/dev/null
+- name: Dearmor and install Kitware archive key
+  ansible.builtin.shell: set -o pipefail && cat /tmp/kitware-archive-latest.asc | gpg --dearmor - > /usr/share/keyrings/kitware-archive-keyring.gpg
   args:
-    creates: /etc/apt/sources.list.d/kitware.list
+    executable: /bin/bash
+  register: dearmor_key
+  changed_when: dearmor_key.rc == 0
+  when: not kitware_keyring.stat.exists
+
+- name: Get Ubuntu codename
+  ansible.builtin.command: lsb_release -cs
+  register: ubuntu_codename
+  changed_when: false
+
+- name: Add Kitware repository
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ ansible_architecture }} signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg]
+      https://apt.kitware.com/ubuntu/ {{ ubuntu_codename.stdout }} main
+    state: present
+    filename: kitware
 
 - name: Update apt cache
   ansible.builtin.apt:

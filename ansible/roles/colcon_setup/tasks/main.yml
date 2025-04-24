@@ -8,7 +8,9 @@
   ignore_errors: true
 
 - name: Add default colcon mixin
-  ansible.builtin.command: colcon mixin add default https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml
+  ansible.builtin.command: >-
+    colcon mixin add default
+    https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml
   register: add_result
   changed_when: add_result.rc == 0
 

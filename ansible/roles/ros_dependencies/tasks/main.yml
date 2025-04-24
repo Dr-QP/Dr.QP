@@ -33,7 +33,9 @@
       - "ros-{{ ros_distro }}-xacro"
 
 - name: Check which ROS packages are available
-  ansible.builtin.shell: apt-cache policy {{ item }} | grep -q "Candidate:"
+  ansible.builtin.shell: set -o pipefail && apt-cache policy {{ item }} | grep -q "Candidate:"
+  args:
+    executable: /bin/bash
   register: available_packages
   changed_when: false
   failed_when: false
