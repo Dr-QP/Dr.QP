@@ -1,6 +1,7 @@
+---
 all:
   children:
-    robots:
+    poc_hosts:
       vars:
         ansible_connection: docker
       hosts:
