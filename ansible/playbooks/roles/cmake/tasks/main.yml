@@ -5,20 +5,35 @@
     path: /usr/share/doc/kitware-archive-keyring/copyright
   register: kitware_keyring
 
+- name: Create temporary directory for downloads
+  ansible.builtin.tempfile:
+    state: directory
+  register: temp_dir
+  when: not kitware_keyring.stat.exists
+
 - name: Download Kitware archive key
   ansible.builtin.get_url:
     url: https://apt.kitware.com/keys/kitware-archive-latest.asc
-    dest: /tmp/kitware-archive-latest.asc
+    dest: "{{ temp_dir.path }}/kitware-archive-latest.asc"
     mode: "0644"
   when: not kitware_keyring.stat.exists
 
 - name: Dearmor and install Kitware archive key
-  ansible.builtin.shell: set -o pipefail && cat /tmp/kitware-archive-latest.asc | gpg --dearmor - > /usr/share/keyrings/kitware-archive-keyring.gpg
+  ansible.builtin.shell: >-
+    set -o pipefail && cat '{{ temp_dir.path }}/kitware-archive-latest.asc'
+    | gpg --dearmor -
+    | sudo tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null
   args:
     executable: /bin/bash
   register: dearmor_key
   changed_when: dearmor_key.rc == 0
   when: not kitware_keyring.stat.exists
+
+- name: Clean up temporary directory
+  ansible.builtin.file:
+    path: "{{ temp_dir.path }}"
+    state: absent
+  when: temp_dir.path is defined
 
 - name: Add Kitware repository
   ansible.builtin.apt_repository:
@@ -27,12 +42,7 @@
       https://apt.kitware.com/ubuntu/ {{ system_dist }} main
     state: present
     filename: kitware
-
-- name: Remove temporary keyring if needed
-  ansible.builtin.file:
-    path: /usr/share/keyrings/kitware-archive-keyring.gpg
-    state: absent
-  when: not kitware_keyring.stat.exists
+    update_cache: true
 
 - name: Install Kitware archive keyring
   ansible.builtin.apt:
