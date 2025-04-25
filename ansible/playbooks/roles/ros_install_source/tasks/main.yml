@@ -1,24 +1,29 @@
 ---
 # ROS 2 source installation
+- name: ROS 2 source installation facts
+  ansible.builtin.set_fact:
+    ros2_workspace_path: "{{ user_home }}/ros2_{{ ros_distro }}"
+    ros2_workspace_src_path: "{{ ros2_workspace_path }}/src"
+
 - name: Create ROS 2 source directory
   ansible.builtin.file:
-    path: "~/ros2_{{ ros_distro }}/src"
+    path: "{{ ros2_workspace_src_path }}"
     state: directory
     mode: "0755"
   become: false
 
 - name: Import ROS 2 repositories
-  ansible.builtin.shell: |
-    cd ~/ros2_{{ ros_distro }}
-    vcs import --input https://raw.githubusercontent.com/ros2/ros2/{{ ros_distro }}/ros2.repos src
+  ansible.builtin.command:
+    chdir: "{{ ros2_workspace_path }}"
+    cmd: vcs import --input https://raw.githubusercontent.com/ros2/ros2/{{ ros_distro }}/ros2.repos src
   args:
-    creates: "~/ros2_{{ ros_distro }}/src/.git"
+    creates: "{{ ros2_workspace_src_path }}/.git"
   become: false
 
 - name: Pull ROS 2 repositories
-  ansible.builtin.shell: |
-    cd ~/ros2_{{ ros_distro }}
-    vcs pull src
+  ansible.builtin.command:
+    chdir: "{{ ros2_workspace_path }}"
+    cmd: vcs pull src
   register: vcs_pull
   changed_when: vcs_pull.stdout is not search('All up-to-date')
   become: false
@@ -30,17 +35,17 @@
   become: false
 
 - name: Install ROS 2 dependencies
-  ansible.builtin.shell: |
-    cd ~/ros2_{{ ros_distro }}
-    rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 urdfdom_headers ignition-cmake2 ignition-math6"
+  ansible.builtin.command:
+    chdir: "{{ ros2_workspace_path }}"
+    cmd: rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 urdfdom_headers ignition-cmake2 ignition-math6"
   register: rosdep_install
   changed_when: rosdep_install.stdout is not search('All required rosdeps installed')
   become: false
 
 - name: Build ROS 2 from source
-  ansible.builtin.shell: |
-    cd ~/ros2_{{ ros_distro }}
-    colcon build --symlink-install --packages-skip image_tools intra_process_demo
+  ansible.builtin.command:
+    chdir: "{{ ros2_workspace_path }}"
+    cmd: colcon build --symlink-install --packages-skip image_tools intra_process_demo
   register: colcon_build
   changed_when: colcon_build.rc == 0
   become: false
