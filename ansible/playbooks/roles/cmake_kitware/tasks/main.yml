@@ -60,16 +60,19 @@
   changed_when: false
   failed_when: false
 
-- name: Remove old cmake if present
+- name: Set CMake check result
+  ansible.builtin.set_fact:
+    is_kitware_cmake: "{{ cmake_old_version.stdout is defined and cmake_old_version.stdout is search('kitware') }}"
+
+- name: Remove old cmake if not Kitware
+  when: not is_kitware_cmake
   ansible.builtin.apt:
     name:
       - cmake
+      - cmake-data
     state: absent
-  when: cmake_old_version.stdout is defined
-
-- name: Set UTF-8 check result
-  ansible.builtin.set_fact:
-    is_kitware_cmake: "{{ cmake_old_version.stdout is defined and cmake_old_version.stdout is search('kitware') }}"
+    autoremove: true
+    purge: true
 
 - name: Install latest Kitware CMake
   when: not is_kitware_cmake
@@ -80,6 +83,16 @@
     update_cache: true
     install_recommends: false
 
+- name: Upgrade if Kitware CMake
+  when: is_kitware_cmake
+  ansible.builtin.apt:
+    name:
+      - cmake
+    state: latest
+    only_upgrade: true
+    update_cache: true
+    install_recommends: false
+
 - name: Capture New CMake version
   when: not is_kitware_cmake
   ansible.builtin.shell:
@@ -87,6 +100,11 @@
     executable: /bin/bash
   register: cmake_new_version
   changed_when: false
+
+- name: Set CMake check result
+  when: cmake_new_version.stdout is defined
+  ansible.builtin.set_fact:
+    is_kitware_cmake: "{{ cmake_new_version.stdout is defined and cmake_new_version.stdout is search('kitware') }}"
 
 - name: Warn for source installs
   ansible.builtin.debug:

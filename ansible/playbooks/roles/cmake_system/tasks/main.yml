@@ -9,8 +9,19 @@
     cmake_max_version: "{{ '3.28.3' if ros_distro == 'jazzy' or ros_distro == 'rolling'
       else '3.22.3' if ros_distro == 'humble' }}"
 
+- name: Capture Old CMake version
+  ansible.builtin.shell:
+    cmd: dpkg-query -W -f='${Version}' cmake
+    executable: /bin/bash
+  register: cmake_old_version
+  changed_when: false
+  failed_when: false
+
+- name: Set UTF-8 check result
+  ansible.builtin.set_fact:
+    is_kitware_cmake: "{{ cmake_old_version.stdout is defined and cmake_old_version.stdout is search('kitware') }}"
+
 - name: Remove Kitware repository
-  when: source_install
   ansible.builtin.apt_repository:
     repo: >-
       deb [arch={{ system_arch }} signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg]
@@ -19,19 +30,29 @@
     filename: kitware
     update_cache: true
 
+- name: Remove old cmake if present
+  ansible.builtin.apt:
+    name:
+      - cmake
+      - cmake-data
+    state: absent
+    autoremove: true
+    purge: true
+  when: cmake_old_version.stdout is defined
+
 - name: Install system packaged CMake
-  when: source_install
   ansible.builtin.apt:
     name:
       - cmake
     state: present
     allow_downgrade: true
+    clean: true
     update_cache: true
     install_recommends: false
 
 - name: Get installed version of cmake
   ansible.builtin.shell:
-    cmd: dpkg-query -W -f='${Version}' cmake
+    cmd: set -o pipefail && dpkg-query -W -f='${Version}' cmake | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'
     executable: /bin/bash
   register: cmake_version
   changed_when: false
