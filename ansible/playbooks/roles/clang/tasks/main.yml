@@ -46,15 +46,15 @@
 
 - name: Display Clang path information
   ansible.builtin.debug:
-    msg: |
-      ##################################################
-      ##
-      ##  To ensure installed clang is used in Docker,
-      ##  add the following line to your dockerfile:
-      ##
-      ##  ENV PATH=/usr/lib/llvm-{{ clang_version }}/bin:$PATH
-      ##
-      ##################################################
+    msg:
+      - "##################################################"
+      - "##"
+      - "##  To ensure installed clang is used in Docker,"
+      - "##  add the following line to your dockerfile:"
+      - "##"
+      - "##  ENV PATH=/usr/lib/llvm-{{ clang_version }}/bin:$PATH"
+      - "##"
+      - "##################################################"
 
 - name: Clean up temporary directory
   ansible.builtin.file:
