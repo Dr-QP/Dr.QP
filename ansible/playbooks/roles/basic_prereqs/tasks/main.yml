@@ -27,8 +27,9 @@
 # - name: Enable community-maintained free and open-source software (universe repository)
 #   ansible.builtin.apt_repository:
 #     state: present
-#     repo: "{{ item }}"
+#     repo: "deb [arch={{ system_arch }} signed-by=/usr/share/keyrings/ubuntu-archive-keyring.gpg] http://ports.ubuntu.com/ubuntu-ports {{ item }} universe"
+#     filename: ubuntu-universe
 #   loop:
-#     - "deb [arch={{ system_arch }}] http://ports.ubuntu.com/ubuntu-ports {{ system_dist }} universe"
-#     - "deb [arch={{ system_arch }}] http://ports.ubuntu.com/ubuntu-ports {{ system_dist }}-updates universe"
-#     - "deb [arch={{ system_arch }}] http://ports.ubuntu.com/ubuntu-ports {{ system_dist }}-security universe"
+#     - "{{ system_dist }}"
+#     - "{{ system_dist }}-updates"
+#     - "{{ system_dist }}-security"
