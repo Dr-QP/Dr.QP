@@ -41,3 +41,4 @@
     path: "{{ temp_dir.path }}"
     state: absent
   become: false
+  when: temp_dir.path is defined
