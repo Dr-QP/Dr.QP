@@ -21,7 +21,7 @@
   # but it creates a duplicate entry conflicting with /etc/apt/sources.list.d/ubuntu.sources
   become: true
   ansible.builtin.command: add-apt-repository universe
-  changed_when: false
+  changed_when: true
 
 # NOT USED because it creates a duplicate entry conflicting with /etc/apt/sources.list.d/ubuntu.sources
 # - name: Enable community-maintained free and open-source software (universe repository)
