@@ -17,6 +17,7 @@
   ansible.builtin.command: bash "{{ temp_dir.path }}/llvm.sh" {{ clang_version }} all
   register: llvm_install
   changed_when: llvm_install.stdout is search('Installing')
+
 - name: Install libstdc++ development package
   ansible.builtin.apt:
     name: libstdc++-14-dev
@@ -45,15 +46,15 @@
 
 - name: Display Clang path information
   ansible.builtin.debug:
-    msg:
-      - "##################################################"
-      - "##"
-      - "##  Add /usr/lib/llvm-{{ clang_version }}/bin to $PATH"
-      - "##"
-      - "##  for dockerfile"
-      - "##  ENV PATH=\"/usr/lib/llvm-{{ clang_version }}/bin:$PATH\""
-      - "##"
-      - "##################################################"
+    msg: |
+      ##################################################
+      ##
+      ##  To ensure installed clang is used in Docker,
+      ##  add the following line to your dockerfile:
+      ##
+      ##  ENV PATH=/usr/lib/llvm-{{ clang_version }}/bin:$PATH
+      ##
+      ##################################################
 
 - name: Clean up temporary directory
   ansible.builtin.file:
