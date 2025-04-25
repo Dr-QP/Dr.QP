@@ -1,0 +1,47 @@
+---
+# Install CMake from system packages
+# - set fact
+- name: Desired CMake version
+  ansible.builtin.set_fact:
+    cmake_min_version: "{{ '3.25.1' if ros_distro == 'jazzy' or ros_distro == 'rolling'
+      else '3.16.3' if ros_distro == 'humble' }}"
+    cmake_max_version: "{{ '3.28.4' if ros_distro == 'jazzy' or ros_distro == 'rolling'
+      else '3.22.3' if ros_distro == 'humble' }}"
+
+- name: Remove Kitware repository
+  when: source_install
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ system_arch }} signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg]
+      https://apt.kitware.com/ubuntu/ {{ system_dist }} main
+    state: absent
+    filename: kitware
+    update_cache: true
+
+- name: Install system packaged CMake
+  when: source_install
+  ansible.builtin.apt:
+    name:
+      - cmake
+    state: present
+    allow_downgrade: true
+    update_cache: true
+    install_recommends: false
+
+- name: Get installed version of cmake
+  ansible.builtin.shell:
+    cmd: dpkg-query -W -f='${Version}' cmake
+    executable: /bin/bash
+  register: cmake_version
+  changed_when: false
+  failed_when: false
+
+- name: Fail if cmake version is not in the allowed range
+  ansible.builtin.fail:
+    msg: "cmake version must be {{ cmake_min_version }} <= and <= {{ cmake_max_version }}, but found {{ cmake_version.stdout | default('not installed') }}"
+  when: >-
+    source_install and
+    cmake_version.stdout is defined and not (
+      cmake_version.stdout is version(operator='>=', version=cmake_min_version) and
+      cmake_version.stdout is version(operator='<=', version=cmake_max_version)
+    )

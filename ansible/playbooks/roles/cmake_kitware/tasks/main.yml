@@ -1,5 +1,5 @@
 ---
-# CMake installation
+# Install CMake from Kitware repository
 - name: Check if Kitware archive keyring is installed
   ansible.builtin.stat:
     path: /usr/share/doc/kitware-archive-keyring/copyright
@@ -48,10 +48,51 @@
   ansible.builtin.apt:
     name:
       - kitware-archive-keyring
-      - cmake
     state: present
-    autoremove: true
-    purge: true
-    upgrade: true
     update_cache: true
     install_recommends: false
+
+- name: Capture Old CMake version
+  ansible.builtin.shell:
+    cmd: dpkg-query -W -f='${Version}' cmake
+    executable: /bin/bash
+  register: cmake_old_version
+  changed_when: false
+  failed_when: false
+
+- name: Remove old cmake if present
+  ansible.builtin.apt:
+    name:
+      - cmake
+    state: absent
+  when: cmake_old_version.stdout is defined
+
+- name: Set UTF-8 check result
+  ansible.builtin.set_fact:
+    is_kitware_cmake: "{{ cmake_old_version.stdout is defined and cmake_old_version.stdout is search('kitware') }}"
+
+- name: Install latest Kitware CMake
+  when: not is_kitware_cmake
+  ansible.builtin.apt:
+    name:
+      - cmake
+    state: present
+    update_cache: true
+    install_recommends: false
+
+- name: Capture New CMake version
+  when: not is_kitware_cmake
+  ansible.builtin.shell:
+    cmd: dpkg-query -W -f='${Version}' cmake
+    executable: /bin/bash
+  register: cmake_new_version
+  changed_when: false
+
+- name: Warn for source installs
+  ansible.builtin.debug:
+    msg:
+      - The CMake has been upgraded from {{ cmake_old_version.stdout }}
+      - to the latest version {{ cmake_new_version.stdout }} which is required by the Dr.QP project
+      - It is not compatible with source installation of ROS 2
+      - If you need to install ROS 2 from source, please use the system packaged version instead
+  when: source_install and cmake_new_version.stdout is defined
