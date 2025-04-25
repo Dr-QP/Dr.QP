@@ -46,7 +46,12 @@
 
 - name: Install Kitware archive keyring
   ansible.builtin.apt:
-    name: kitware-archive-keyring
+    name:
+      - kitware-archive-keyring
+      - cmake
     state: present
+    autoremove: true
+    purge: true
+    upgrade: true
     update_cache: true
     install_recommends: false
