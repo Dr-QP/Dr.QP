@@ -3,11 +3,10 @@
 - name: ROS 2 source installation facts
   ansible.builtin.set_fact:
     ros2_workspace_path: "{{ user_home }}/ros2_{{ ros_distro }}"
-    ros2_workspace_src_path: "{{ ros2_workspace_path }}/src"
 
 - name: Create ROS 2 source directory
   ansible.builtin.file:
-    path: "{{ ros2_workspace_src_path }}"
+    path: "{{ ros2_workspace_path }}/src"
     state: directory
     mode: "0755"
   become: false
@@ -16,8 +15,8 @@
   ansible.builtin.command:
     chdir: "{{ ros2_workspace_path }}"
     cmd: vcs import --input https://raw.githubusercontent.com/ros2/ros2/{{ ros_distro }}/ros2.repos src
-  args:
-    creates: "{{ ros2_workspace_src_path }}/.git"
+  register: vcs_import
+  changed_when: vcs_import.stdout is not search('All repositories already up-to-date')
   become: false
 
 - name: Pull ROS 2 repositories
