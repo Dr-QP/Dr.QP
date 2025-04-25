@@ -3,7 +3,8 @@
   hosts: localhost
   vars:
     # container_image: "ghcr.io/dr-qp/jazzy-ros-deploy:edge"
-    container_image: "ros:jazzy-ros-base"
+    # container_image: "ros:jazzy-ros-base"
+    container_image: "ubuntu:24.04"
   tasks:
     - name: Pull the base image
       community.docker.docker_image:
@@ -17,4 +18,11 @@
         state: started
         detach: true
         command: sleep infinity
+      loop: "{{ groups['virtual_bots'] | default([]) }}"
+
+    - name: Install Python and sudo in containers
+      community.docker.docker_container_exec:
+        container: "{{ item }}"
+        command: >
+          bash -c "apt-get update && apt-get install -y python3 sudo"
       loop: "{{ groups['virtual_bots'] | default([]) }}"

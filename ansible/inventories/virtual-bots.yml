@@ -4,6 +4,7 @@ all:
     virtual_bots:
       vars:
         ansible_connection: docker
+        ansible_python_interpreter: /usr/bin/python3
       hosts:
         virtual-bot-1:
         # virtual-bot-2:
