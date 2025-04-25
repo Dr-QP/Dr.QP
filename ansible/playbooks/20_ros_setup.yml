@@ -11,7 +11,7 @@
     - { role: locale_setup, tags: ["locale_setup"] }
     - { role: ros_repo, tags: ["ros_repo"] }
     - { role: cmake, tags: ["cmake"], when: not source_install }
-    - { role: clang, tags: ["clang"], when: not source_install }
+    - { role: clang, tags: ["clang"] }
     - { role: dev_tools, tags: ["dev_tools"] }
     - { role: colcon_setup, tags: ["colcon_setup"] }
     - { role: ros_install_prebuilt, tags: ["ros_install", "ros_install_prebuilt"], when: not source_install }
