@@ -40,9 +40,12 @@
       {{ ros_dependencies_known_packages
          | difference(not_available_packages) }}
 
-- name: Debug - will install only these
+- name: Available packages
   ansible.builtin.debug:
-    msg: "Installing: {{ available_packages_list }}"
+    msg: "{{ item }}"
+  when: available_packages_list | default([]) | length > 0
+  loop:
+    - "{{ available_packages_list }}"
 
 - name: Install available ROS packages
   ansible.builtin.apt:
