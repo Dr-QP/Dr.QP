@@ -44,7 +44,7 @@
 - name: Build ROS 2 from source
   ansible.builtin.command:
     chdir: "{{ ros2_workspace_path }}"
-    cmd: colcon build --symlink-install --packages-skip image_tools intra_process_demo
+    cmd: colcon build --symlink-install
   register: colcon_build
   changed_when: colcon_build.rc == 0
   become: false
