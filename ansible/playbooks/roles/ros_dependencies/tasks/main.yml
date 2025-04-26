@@ -6,10 +6,6 @@
   ansible.builtin.include_vars:
     file: "{{ role_path }}/vars/known_ros_dependencies.yml"
 
-- name: Set ros_packages variable for backward compatibility
-  ansible.builtin.set_fact:
-    ros_packages: "{{ ros_dependencies_known_packages }}"
-
 - name: Update APT cache
   ansible.builtin.apt:
     update_cache: true
