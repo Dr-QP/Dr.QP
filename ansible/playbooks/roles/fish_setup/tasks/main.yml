@@ -32,7 +32,6 @@
     cmd: source {{ temp_dir.path }}/fisher.fish && fisher install jorgebucaran/fisher
     chdir: "{{ temp_dir.path }}"
     executable: fish
-  args:
     creates: "{{ user_home }}/.config/fish/functions/fisher.fish"
   become: false
 
@@ -41,7 +40,6 @@
     cmd: fisher install edc/bass
     chdir: "{{ temp_dir.path }}"
     executable: fish
-  args:
     creates: "{{ user_home }}/.config/fish/functions/bass.fish"
   become: false
 

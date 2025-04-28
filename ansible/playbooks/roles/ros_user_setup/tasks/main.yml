@@ -36,9 +36,14 @@
     mode: "0755"
 
 # Add ROS setup to .bashrc
+- name: Swap user variables to {{ ros_user_setup_username }}
+  ansible.builtin.set_fact:
+    user_home: "/home/{{ ros_user_setup_username }}"
+    ros_user: "{{ ros_user_setup_username }}"
+
 - name: Add ROS setup to .bashrc
   ansible.builtin.lineinfile:
-    path: "/home/{{ ros_user_setup_username }}/.bashrc"
+    path: "{{ user_home }}/.bashrc"
     line: "source /opt/ros/{{ ros_distro }}/setup.bash"
     state: present
     create: true
@@ -49,7 +54,7 @@
 # Add workspace setup to .bashrc
 - name: Add workspace setup to .bashrc
   ansible.builtin.lineinfile:
-    path: "/home/{{ ros_user_setup_username }}/.bashrc"
+    path: "{{ user_home }}/.bashrc"
     line: "source {{ ros_user_setup_workspace_dir }}/install/setup.bash"
     state: present
     create: true

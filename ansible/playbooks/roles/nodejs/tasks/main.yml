@@ -21,8 +21,10 @@
   become: false
 
 - name: Run Node.js setup script
-  ansible.builtin.command: /bin/bash "{{ temp_dir.path }}/nodesource_setup.sh"
-  args:
+  ansible.builtin.shell:
+    cmd: "{{ temp_dir.path }}/nodesource_setup.sh"
+    executable: /bin/bash
+    chdir: "{{ temp_dir.path }}"
     creates: /etc/apt/sources.list.d/nodesource.list
 
 - name: Install Node.js

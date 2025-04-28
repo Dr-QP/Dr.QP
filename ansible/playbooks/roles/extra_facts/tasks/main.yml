@@ -3,4 +3,8 @@
   ansible.builtin.set_fact:
     system_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else ansible_architecture }}"
     system_dist: "{{ ansible_distribution_release | lower }}"
+
+- name: Set user variables
+  ansible.builtin.set_fact:
     user_home: "{{ ansible_env.HOME }}"
+    ros_user: "{{ ansible_env.USER }}"

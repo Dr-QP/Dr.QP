@@ -29,12 +29,3 @@
   register: show_result
   changed_when: false
 
-- name: Clean ROS dependencies
-  ansible.builtin.file:
-    path: /etc/ros/rosdep/sources.list.d/
-    state: absent
-
-- name: Initialize rosdep
-  ansible.builtin.command: rosdep init
-  args:
-    creates: /etc/ros/rosdep/sources.list.d/20-default.list
