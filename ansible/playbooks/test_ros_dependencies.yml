@@ -1,8 +1,0 @@
----
-# Test playbook for ROS dependencies
-- name: Test ROS dependencies installation
-  hosts: localhost
-  connection: local
-  become: true
-  roles:
-    - ros_dependencies

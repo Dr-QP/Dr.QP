@@ -38,6 +38,9 @@
     container_user: 1000
     dialout_group: 20
     input_group: 995
+  roles:
+    - { role: extra_facts, tags: ["extra_facts"] }
+    - { role: install_docker, tags: ["install_docker"] }
   tasks:
     - name: Pull Docker image from GitHub Container Registry
       community.docker.docker_image_pull:
