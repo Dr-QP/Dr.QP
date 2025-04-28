@@ -20,6 +20,7 @@ ENV CLANG_VERSION=20
 ENV PATH="/usr/lib/llvm-${CLANG_VERSION}/bin:/home/rosdev/.local/bin:$PATH"
 ENV CC=clang
 ENV CXX=clang++
+WORKDIR /tmp
 
 # Install ROS
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
