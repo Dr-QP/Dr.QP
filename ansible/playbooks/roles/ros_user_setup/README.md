@@ -6,11 +6,10 @@ This Ansible role creates and configures a ROS user account with the necessary e
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `ros_username` | Username for the ROS user | `rosdev` |
-| `ros_uid` | User ID for the ROS user | `1001` |
-| `ros_gid` | Group ID for the ROS user | `{{ ros_uid }}` |
-| `ros_workspace_dir` | Path to the ROS workspace directory | `{{ user_home }}/ros2_ws` |
-| `ros_user_setup_clang_version` | Clang version to use | `{{ clang_version \| default(20) }}` |
+| `ros_user_setup_username` | Username for the ROS user | `rosdev` |
+| `ros_user_setup_uid` | User ID for the ROS user | `1001` |
+| `ros_user_setup_gid` | Group ID for the ROS user | `{{ ros_user_setup_uid }}` |
+| `ros_user_setup_workspace_dir` | Path to the ROS workspace directory | `{{ user_home }}/ros2_ws` |
 
 ## Tasks
 
@@ -23,7 +22,6 @@ This role performs the following tasks:
 5. Configures the user's `.bashrc` with:
    - ROS setup source commands
    - Workspace setup source commands
-   - Clang environment variables
 
 ## Example Usage
 
@@ -34,7 +32,3 @@ This role performs the following tasks:
   roles:
     - { role: ros_user_setup, tags: ["ros_user_setup"] }
 ```
-
-## Notes
-
-This role was created to replace the user setup portion of the `scripts/ros/desktop/ros-desktop.dockerfile` file, providing the same functionality in an Ansible-managed way.

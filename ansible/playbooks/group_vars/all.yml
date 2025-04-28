@@ -6,6 +6,7 @@ clang_version: 20
 ci_mode: false # Set to true for CI environment
 
 # ROS user configuration
-ros_username: rosdev
-ros_uid: 1001
-ros_gid: 1001
+setup_user: false # Do not setup user by default, used by docker only
+ros_user_setup_username: rosdev
+ros_user_setup_uid: 1001
+ros_user_setup_gid: 1001

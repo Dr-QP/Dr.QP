@@ -9,6 +9,7 @@
     - { role: extra_facts, tags: ["extra_facts", "always"] }
     - { role: basic_prereqs, tags: ["basic_prereqs"] }
     - { role: locale_setup, tags: ["locale_setup"] }
+    - { role: ros_user_setup, tags: ["ros_user_setup"], when: setup_user }
     - { role: ros_repo, tags: ["ros_repo"] }
     - { role: dev_tools, tags: ["dev_tools"] }
     - { role: colcon_setup, tags: ["colcon_setup"] }
@@ -19,4 +20,3 @@
     - { role: nodejs, tags: ["nodejs"] }
     - { role: cmake_kitware, tags: ["cmake_kitware"] }
     - { role: clang, tags: ["clang"] }
-    - { role: ros_user_setup, tags: ["ros_user_setup"] }
