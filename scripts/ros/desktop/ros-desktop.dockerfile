@@ -12,14 +12,12 @@ ARG ROS_USERNAME=rosdev
 
 # UID should be 1001 to match ubuntu-latest in order for file writing to work for @action/checkout
 # see https://github.com/actions/checkout/issues/956 for more details
-ARG UID=1001
-ARG GID=$UID
+ARG ROS_UID=1001
+ARG ROS_GID=$ROS_UID
 
 WORKDIR /tmp
 
 RUN env | sort
-RUN --mount=type=bind,readonly,source=..,target=/ros-scripts \
-    && /ros-scripts/echo-vars.sh
 
 # Install ROS
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -29,7 +27,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && /ros-scripts/ansible/setup-ansible.sh \
     && ansible-playbook -i /ros-scripts/ansible/inventories/localhost.yml \
        /ros-scripts/ansible/playbooks/20_ros_setup.yml -vvv \
-       -e "ci_mode=true setup_user=true ros_user_setup_username=$ROS_USERNAME ros_user_setup_uid=$UID ros_user_setup_gid=$GID clang_version=$CLANG_VERSION ros_distro=$ROS_DISTRO"
+       -e "ci_mode=true setup_user=true ros_user_setup_username=$ROS_USERNAME ros_user_setup_uid=$ROS_UID ros_user_setup_gid=$ROS_GID clang_version=$CLANG_VERSION ros_distro=$ROS_DISTRO"
 
 WORKDIR /home/$ROS_USERNAME/ros2_ws
 USER $ROS_USERNAME

@@ -4,9 +4,6 @@
   "build": {
     "dockerfile": "../../scripts/ros/desktop/ros-desktop.dockerfile",
     "context": "../../scripts/ros",
-    "args": {
-      "USERNAME": "rosdev"
-    },
     "cacheFrom": "ghcr.io/dr-qp/cache-jazzy-ros-devcontainer:arm64",
     "cacheTo":  "ghcr.io/dr-qp/cache-jazzy-ros-devcontainer:arm64"
   },
