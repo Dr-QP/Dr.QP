@@ -25,7 +25,8 @@ ENV CXX=clang++
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     --mount=type=bind,readonly,source=..,target=/ros-scripts \
-    /ros-scripts/ansible/setup-ansible.sh \
+    apt-get update && apt-get install -y python3 sudo \
+    && /ros-scripts/ansible/setup-ansible.sh \
     && ansible-playbook -i /ros-scripts/ansible/inventories/localhost.yml \
        /ros-scripts/ansible/playbooks/20_ros_setup.yml \
        -e "ci_mode=true setup_user=true ros_user_setup_username=$USERNAME ros_user_setup_uid=$UID ros_user_setup_gid=$GID"
