@@ -19,6 +19,16 @@
   register: update_result
   changed_when: update_result.rc == 0
 
+- name: List colcon mixins
+  ansible.builtin.command: colcon mixin list
+  register: list_result
+  changed_when: false
+
+- name: Show colcon mixins
+  ansible.builtin.command: colcon mixin show
+  register: show_result
+  changed_when: false
+
 - name: Clean ROS dependencies
   ansible.builtin.file:
     path: /etc/ros/rosdep/sources.list.d/
