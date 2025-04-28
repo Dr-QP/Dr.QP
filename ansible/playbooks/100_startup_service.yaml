@@ -49,6 +49,7 @@
         platform: arm64
 
     - name: Create Dr.QP control systemd service
+      register: control_service_file
       ansible.builtin.copy:
         mode: "0644"
         dest: "/etc/systemd/system/{{ control_service_name }}.service"
@@ -79,12 +80,13 @@
 
     - name: Enable and start autorun service {{ control_service_name }}
       ansible.builtin.systemd_service:
-        daemon-reload: true
+        daemon-reload: "{{ control_service_file.changed }}"
         name: "{{ control_service_name }}"
         enabled: true
-        state: restarted
+        state: "{{ 'restarted' if control_service_file.changed else 'started' }}"
 
     - name: Create Dr.QP joystick systemd service
+      register: joystick_service_file
       ansible.builtin.copy:
         mode: "0644"
         dest: "/etc/systemd/system/{{ joystick_service_name }}.service"
@@ -124,7 +126,7 @@
 
     - name: Enable and start joystick service {{ joystick_service_name }}
       ansible.builtin.systemd_service:
-        daemon-reload: true
+        daemon-reload: "{{ joystick_service_file.changed }}"
         name: "{{ joystick_service_name }}"
         enabled: true
-        state: restarted
+        state: "{{ 'restarted' if joystick_service_file.changed else 'started' }}"
