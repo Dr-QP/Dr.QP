@@ -24,7 +24,7 @@
     path: /etc/sudoers
     line: "{{ ros_user_setup_username }} ALL=(ALL) NOPASSWD:ALL"
     state: present
-    validate: 'visudo -cf %s'
+    validate: "visudo -cf %s"
 
 # Create ROS workspace directory
 - name: Create ROS workspace directory

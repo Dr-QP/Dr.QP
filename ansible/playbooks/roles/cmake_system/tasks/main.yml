@@ -4,10 +4,8 @@
 - name: Desired CMake version
   ansible.builtin.set_fact:
     # From https://www.ros.org/reps/rep-2000.html#id50
-    cmake_min_version: "{{ '3.25.1' if ros_distro == 'jazzy' or ros_distro == 'rolling'
-      else '3.16.3' if ros_distro == 'humble' }}"
-    cmake_max_version: "{{ '3.28.3' if ros_distro == 'jazzy' or ros_distro == 'rolling'
-      else '3.22.3' if ros_distro == 'humble' }}"
+    cmake_min_version: "{{ '3.25.1' if ros_distro == 'jazzy' or ros_distro == 'rolling' else '3.16.3' if ros_distro == 'humble' else 'x.xx.x' }}"
+    cmake_max_version: "{{ '3.28.3' if ros_distro == 'jazzy' or ros_distro == 'rolling' else '3.22.3' if ros_distro == 'humble' else 'x.xx.x' }}"
 
 - name: Capture Old CMake version
   ansible.builtin.shell:
