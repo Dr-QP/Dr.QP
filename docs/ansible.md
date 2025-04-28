@@ -37,7 +37,8 @@ ansible/
 │   │   ├── nodejs/              # Node.js and NPM
 │   │   ├── ros_dependencies/    # ROS dependencies (uses known packages)
 │   │   ├── ros_install_prebuilt/ # ROS 2 installation from packages
-│   │   └── ros_install_source/  # ROS 2 installation from source
+│   │   ├── ros_install_source/  # ROS 2 installation from source
+│   │   └── ros_user_setup/      # ROS user creation and setup
 │   └── test_ros_dependencies.yml # Test playbook for ROS dependencies
 ├── README.md                    # Documentation
 └── setup-ros.sh                 # Wrapper script
@@ -94,6 +95,7 @@ Available role tags:
 - `ros_dependencies`: ROS dependencies
 - `nodejs`: Node.js and NPM
 - `clang`: Clang installation
+- `ros_user_setup`: ROS user creation and setup
 
 ### Run only the ROS installation part
 
@@ -277,6 +279,7 @@ The Ansible playbooks replace the following shell scripts:
 - `scripts/ros/ros-2-src-build.sh` → `ansible/playbooks/roles/ros_install_source`
 - `scripts/ros/__gen_install_ros_dependencies.sh` → `ansible/playbooks/roles/ros_dependencies` with known packages
 - `scripts/install_docker.sh` → `ansible/playbooks/10_install_docker.yaml`
+- `scripts/ros/desktop/ros-desktop.dockerfile` (user setup) → `ansible/playbooks/roles/ros_user_setup`
 
 ```{admonition} Benefits
 :class: note

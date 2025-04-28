@@ -19,3 +19,4 @@
     - { role: nodejs, tags: ["nodejs"] }
     - { role: cmake_kitware, tags: ["cmake_kitware"] }
     - { role: clang, tags: ["clang"] }
+    - { role: ros_user_setup, tags: ["ros_user_setup"] }

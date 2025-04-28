@@ -1,0 +1,74 @@
+---
+# ROS user setup tasks
+
+# Create the ROS user group
+- name: Create ROS user group
+  ansible.builtin.group:
+    name: "{{ ros_username }}"
+    gid: "{{ ros_gid }}"
+    state: present
+
+# Create the ROS user
+- name: Create ROS user
+  ansible.builtin.user:
+    name: "{{ ros_username }}"
+    uid: "{{ ros_uid }}"
+    group: "{{ ros_username }}"
+    shell: /bin/bash
+    create_home: true
+    state: present
+
+# Add the user to sudoers with NOPASSWD
+- name: Add ROS user to sudoers with NOPASSWD
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    line: "{{ ros_username }} ALL=(ALL) NOPASSWD:ALL"
+    state: present
+    validate: 'visudo -cf %s'
+
+# Create ROS workspace directory
+- name: Create ROS workspace directory
+  ansible.builtin.file:
+    path: "{{ ros_workspace_dir }}"
+    state: directory
+    owner: "{{ ros_username }}"
+    group: "{{ ros_username }}"
+    mode: "0755"
+
+# Add ROS setup to .bashrc
+- name: Add ROS setup to .bashrc
+  ansible.builtin.lineinfile:
+    path: "/home/{{ ros_username }}/.bashrc"
+    line: "source /opt/ros/{{ ros_distro }}/setup.bash"
+    state: present
+    create: true
+    owner: "{{ ros_username }}"
+    group: "{{ ros_username }}"
+    mode: "0644"
+
+# Add workspace setup to .bashrc
+- name: Add workspace setup to .bashrc
+  ansible.builtin.lineinfile:
+    path: "/home/{{ ros_username }}/.bashrc"
+    line: "source {{ ros_workspace_dir }}/install/setup.bash"
+    state: present
+    create: true
+    owner: "{{ ros_username }}"
+    group: "{{ ros_username }}"
+    mode: "0644"
+
+# Add Clang environment variables to .bashrc
+- name: Add Clang environment variables to .bashrc
+  ansible.builtin.blockinfile:
+    path: "/home/{{ ros_username }}/.bashrc"
+    block: |
+      # Clang environment variables
+      export PATH="/usr/lib/llvm-{{ ros_user_setup_clang_version }}/bin:$HOME/.local/bin:$PATH"
+      export CC=clang
+      export CXX=clang++
+    state: present
+    create: true
+    owner: "{{ ros_username }}"
+    group: "{{ ros_username }}"
+    mode: "0644"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - Clang environment variables"

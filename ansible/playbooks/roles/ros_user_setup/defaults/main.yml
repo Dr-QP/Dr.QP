@@ -1,0 +1,11 @@
+---
+# Default variables for ros_user_setup role
+
+# ROS user configuration
+ros_username: rosdev
+ros_uid: 1001
+ros_gid: "{{ ros_uid }}"
+ros_workspace_dir: "{{ user_home }}/ros2_ws"
+
+# Clang configuration
+ros_user_setup_clang_version: "{{ clang_version | default(20) }}"

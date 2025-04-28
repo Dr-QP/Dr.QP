@@ -4,3 +4,8 @@ ros_distro: jazzy
 source_install: false # Set to true for source installation
 clang_version: 20
 ci_mode: false # Set to true for CI environment
+
+# ROS user configuration
+ros_username: rosdev
+ros_uid: 1001
+ros_gid: 1001
