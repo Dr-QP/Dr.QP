@@ -87,7 +87,8 @@ Available role tags:
 - `extra_facts`: System facts gathering (always runs)
 - `basic_prereqs`: Basic prerequisites
 - `locale_setup`: UTF-8 locale setup
-- `cmake`: CMake installation
+- `cmake_kitware`: CMake installation from Kitware repository
+- `cmake_system`: CMake installation from system packages
 - `dev_tools`: Development tools
 - `colcon_setup`: Colcon mixin setup
 - `ros_install_prebuilt`: ROS 2 installation from packages
