@@ -15,14 +15,3 @@ if ! ansible-galaxy collection list | grep -q "community.general"; then
     echo "Installing required Ansible collections..."
     ansible-galaxy collection install community.general
 fi
-
-# Get the directory of this script
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-# Change to the script directory
-cd "$SCRIPT_DIR"
-
-# Run the Ansible playbook
-ansible-playbook playbooks/20_ros_setup.yml "$@"
-
-echo "ROS 2 setup completed successfully!"
