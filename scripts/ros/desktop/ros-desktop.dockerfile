@@ -17,6 +17,7 @@ ARG GID=$UID
 
 WORKDIR /tmp
 
+RUN env | sort
 RUN --mount=type=bind,readonly,source=..,target=/ros-scripts \
     && /ros-scripts/echo-vars.sh
 
