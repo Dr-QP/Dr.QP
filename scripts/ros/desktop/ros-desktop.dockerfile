@@ -17,6 +17,9 @@ ARG GID=$UID
 
 WORKDIR /tmp
 
+RUN --mount=type=bind,readonly,source=..,target=/ros-scripts \
+    && /ros-scripts/echo-vars.sh
+
 # Install ROS
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
