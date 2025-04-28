@@ -8,13 +8,12 @@ FROM ubuntu:24.04
 # because you won't be able to access the GITHUB_WORKSPACE directory. For more information, see [Store information]
 # (https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables)
 # in variables and [USER](https://docs.docker.com/engine/reference/builder/#user) reference in the Docker documentation.
-ARG USERNAME=rosdev
+ARG ROS_USERNAME=rosdev
 
 # UID should be 1001 to match ubuntu-latest in order for file writing to work for @action/checkout
 # see https://github.com/actions/checkout/issues/956 for more details
 ARG UID=1001
 ARG GID=$UID
-
 
 WORKDIR /tmp
 
@@ -26,14 +25,14 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && /ros-scripts/ansible/setup-ansible.sh \
     && ansible-playbook -i /ros-scripts/ansible/inventories/localhost.yml \
        /ros-scripts/ansible/playbooks/20_ros_setup.yml -vvv \
-       -e "ci_mode=true setup_user=true ros_user_setup_username=$USERNAME ros_user_setup_uid=$UID ros_user_setup_gid=$GID clang_version=$CLANG_VERSION ros_distro=$ROS_DISTRO"
+       -e "ci_mode=true setup_user=true ros_user_setup_username=$ROS_USERNAME ros_user_setup_uid=$UID ros_user_setup_gid=$GID clang_version=$CLANG_VERSION ros_distro=$ROS_DISTRO"
 
-WORKDIR /home/$USERNAME/ros2_ws
-USER $USERNAME
+WORKDIR /home/$ROS_USERNAME/ros2_ws
+USER $ROS_USERNAME
 
 # Force clang-format-20 and friends to the default in docker
 ENV CLANG_VERSION=20
-ENV PATH="/usr/lib/llvm-${CLANG_VERSION}/bin:/home/$USERNAME/.local/bin:$PATH"
+ENV PATH="/usr/lib/llvm-${CLANG_VERSION}/bin:/home/$ROS_USERNAME/.local/bin:$PATH"
 ENV CC=clang
 ENV CXX=clang++
 
