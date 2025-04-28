@@ -27,12 +27,6 @@
   changed_when: vcs_pull.stdout is not search('All up-to-date')
   become: false
 
-- name: Update rosdep
-  ansible.builtin.command: rosdep update
-  register: rosdep_update
-  changed_when: rosdep_update.stdout is search('updated')
-  become: false
-
 - name: Install ROS 2 dependencies
   ansible.builtin.command:
     chdir: "{{ ros2_workspace_path }}"

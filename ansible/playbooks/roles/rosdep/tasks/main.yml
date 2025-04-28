@@ -1,0 +1,11 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+  become: true
+
+- name: Update rosdep
+  ansible.builtin.command: rosdep update
+  register: rosdep_update
+  changed_when: rosdep_update.stdout is search('updated')
+  become: false

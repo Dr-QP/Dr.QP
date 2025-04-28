@@ -10,10 +10,11 @@
     - { role: basic_prereqs, tags: ["basic_prereqs"] }
     - { role: locale_setup, tags: ["locale_setup"] }
     - { role: ros_user_setup, tags: ["ros_user_setup"], when: setup_user }
+    - { role: fish_setup, tags: ["fish_setup"] }
     - { role: ros_repo, tags: ["ros_repo"] }
     - { role: dev_tools, tags: ["dev_tools"] }
     - { role: colcon_setup, tags: ["colcon_setup"] }
-    - { role: fish_setup, tags: ["fish_setup"] }
+    - { role: rosdep, tags: ["rosdep"] }
     - { role: ros_install_prebuilt, tags: ["ros_install", "ros_install_prebuilt"], when: not source_install }
     - { role: cmake_system, tags: ["cmake_system"], when: source_install }
     - { role: ros_install_source, tags: ["ros_install", "ros_install_source"], when: source_install }
