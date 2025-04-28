@@ -15,7 +15,7 @@ ARG USERNAME=rosdev
 ARG UID=1001
 ARG GID=$UID
 
-# Force clang-format-19 and friends to the default
+# Force clang-format-20 and friends to the default
 ENV CLANG_VERSION=20
 ENV PATH="/usr/lib/llvm-${CLANG_VERSION}/bin:/home/rosdev/.local/bin:$PATH"
 ENV CC=clang
@@ -29,7 +29,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && /ros-scripts/ansible/setup-ansible.sh \
     && ansible-playbook -i /ros-scripts/ansible/inventories/localhost.yml \
        /ros-scripts/ansible/playbooks/20_ros_setup.yml \
-       -e "ci_mode=true setup_user=true ros_user_setup_username=$USERNAME ros_user_setup_uid=$UID ros_user_setup_gid=$GID"
+       -e "ci_mode=true setup_user=true ros_user_setup_username=$USERNAME ros_user_setup_uid=$UID ros_user_setup_gid=$GID clang_version=$CLANG_VERSION ros_distro=$ROS_DISTRO"
 
 WORKDIR /home/$USERNAME/ros2_ws
 USER $USERNAME
