@@ -15,11 +15,7 @@ ARG USERNAME=rosdev
 ARG UID=1001
 ARG GID=$UID
 
-# Force clang-format-20 and friends to the default
-ENV CLANG_VERSION=20
-ENV PATH="/usr/lib/llvm-${CLANG_VERSION}/bin:/home/rosdev/.local/bin:$PATH"
-ENV CC=clang
-ENV CXX=clang++
+
 WORKDIR /tmp
 
 # Install ROS
@@ -34,6 +30,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 WORKDIR /home/$USERNAME/ros2_ws
 USER $USERNAME
+
+# Force clang-format-20 and friends to the default in docker
+ENV CLANG_VERSION=20
+ENV PATH="/usr/lib/llvm-${CLANG_VERSION}/bin:/home/$USERNAME/.local/bin:$PATH"
+ENV CC=clang
+ENV CXX=clang++
 
 # Setup entrypoint
 COPY ../deploy/ros_entrypoint.sh /
