@@ -28,4 +28,3 @@
   ansible.builtin.command: colcon mixin show
   register: show_result
   changed_when: false
-
