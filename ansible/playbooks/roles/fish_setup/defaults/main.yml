@@ -1,0 +1,3 @@
+---
+# Default variables for fish_setup role
+fish_setup_user: "{{ lookup('env', 'USER') }}"

@@ -91,6 +91,7 @@ Available role tags:
 - `cmake_system`: CMake installation from system packages
 - `dev_tools`: Development tools
 - `colcon_setup`: Colcon mixin setup
+- `fish_setup`: Fish shell configuration for ROS 2
 - `ros_install_prebuilt`: ROS 2 installation from packages
 - `ros_install_source`: ROS 2 installation from source
 - `ros_dependencies`: ROS dependencies
@@ -281,6 +282,9 @@ The Ansible playbooks replace the following shell scripts:
 - `scripts/ros/__gen_install_ros_dependencies.sh` → `ansible/playbooks/roles/ros_dependencies` with known packages
 - `scripts/install_docker.sh` → `ansible/playbooks/10_install_docker.yaml`
 - `scripts/ros/desktop/ros-desktop.dockerfile` (user setup) → `ansible/playbooks/roles/ros_user_setup`
+- `scripts/ros/fish/setup.fish` → `ansible/playbooks/roles/fish_setup`
+- `scripts/ros/colcon-mixin.sh` → `ansible/playbooks/roles/colcon_setup`
+- `scripts/ros/rosdep-update.sh` → `ansible/playbooks/roles/colcon_setup`
 
 ```{admonition} Benefits
 :class: note
