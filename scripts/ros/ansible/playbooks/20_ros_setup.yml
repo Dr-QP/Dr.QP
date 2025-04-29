@@ -9,6 +9,7 @@
     - { role: extra_facts, tags: ["extra_facts", "always"] }
     - { role: basic_prereqs, tags: ["basic_prereqs"] }
     - { role: locale_setup, tags: ["locale_setup"] }
+    - { role: utc_timezone, tags: ["utc_timezone"] }
     - { role: ros_user_setup, tags: ["setup_user"], when: setup_user }
     - { role: fish_setup, tags: ["fish_setup"] }
     - { role: ros_repo, tags: ["ros_repo"] }

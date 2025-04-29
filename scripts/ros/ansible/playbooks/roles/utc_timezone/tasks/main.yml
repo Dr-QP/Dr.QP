@@ -1,0 +1,35 @@
+---
+# UTC timezone setup tasks
+
+- name: Check current timezone
+  ansible.builtin.command: cat /etc/timezone
+  register: current_timezone
+  changed_when: false
+  check_mode: false
+
+- name: Set timezone to UTC
+  ansible.builtin.copy:
+    content: "Etc/UTC\n"
+    dest: /etc/timezone
+    owner: root
+    group: root
+    mode: "0644"
+  register: timezone_updated
+  when: current_timezone.stdout != "Etc/UTC"
+
+- name: Update localtime link
+  ansible.builtin.file:
+    src: /usr/share/zoneinfo/Etc/UTC
+    dest: /etc/localtime
+    state: link
+    force: true
+    owner: root
+    group: root
+  when: timezone_updated is changed
+
+- name: Install tzdata package
+  ansible.builtin.apt:
+    name: tzdata
+    state: present
+    update_cache: false
+    install_recommends: false

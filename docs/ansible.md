@@ -34,6 +34,7 @@ ansible/
 │   │   ├── dev_tools/           # Development tools
 │   │   ├── extra_facts/         # System facts gathering
 │   │   ├── locale_setup/        # UTF-8 locale setup
+│   │   ├── utc_timezone/        # UTC timezone setup
 │   │   ├── nodejs/              # Node.js and NPM
 │   │   ├── ros_dependencies/    # ROS dependencies (uses known packages)
 │   │   ├── ros_install_prebuilt/ # ROS 2 installation from packages
@@ -87,6 +88,7 @@ Available role tags:
 - `extra_facts`: System facts gathering (always runs)
 - `basic_prereqs`: Basic prerequisites
 - `locale_setup`: UTF-8 locale setup
+- `utc_timezone`: UTC timezone setup
 - `cmake_kitware`: CMake installation from Kitware repository
 - `cmake_system`: CMake installation from system packages
 - `dev_tools`: Development tools
