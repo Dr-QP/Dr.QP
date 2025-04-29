@@ -13,3 +13,4 @@
       http://packages.ros.org/ros2/ubuntu {{ system_dist }} main
     state: present
     filename: ros2-latest
+    update_cache: true
