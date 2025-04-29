@@ -1,5 +1,5 @@
 {
-  "name": "ROS 2 jazzy prebuilt",
+  "name": "Dr.QP ROS 2 jazzy",
   "remoteUser": "rosdev",
   "image": "ghcr.io/dr-qp/jazzy-ros-desktop:edge",
   "customizations": {
