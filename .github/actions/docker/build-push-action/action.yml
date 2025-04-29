@@ -75,7 +75,7 @@ runs:
       run: |
         mkdir -p ${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}
         digest="${{ steps.build.outputs.digest }}"
-        touch "${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}/${digest#sha256:}"
+        echo "${{ inputs.image }}-${{ inputs.future-tag }}-${{ inputs.arch }}" > "${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}/${digest#sha256:}"
 
     - name: Prepare digest artifact name
       if: ${{ inputs.export-digest == 'true' }}
