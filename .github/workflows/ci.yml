@@ -159,8 +159,8 @@ jobs:
           test_reports=$(find ros_ws/build -name "*.xunit.xml" | tr '\n' ',')
           test_reports=${test_reports%,}  # Remove trailing comma
 
-          echo "result=$test_reports" >> $GITHUB_OUTPUT
-          echo $test_reports
+          echo "result=$test_reports" >> "$GITHUB_OUTPUT"
+          echo "$test_reports"
         shell: bash
         id: test_reports
 
