@@ -84,7 +84,7 @@ jobs:
           registry-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
             ROS_DISTRO=${{ env.ROS_DISTRO }}
-            FROM_BASE_TAG=${{ steps.build_ubuntu_ansible.outputs.digest }}
+            FROM_IMAGE=ghcr.io/dr-qp/ubuntu-ansible@${{ steps.build_ubuntu_ansible.outputs.digest }}
 
   merge-dev-image:
     name: Merge development image
