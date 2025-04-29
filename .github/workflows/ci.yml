@@ -159,8 +159,8 @@ jobs:
           test_reports=$(find ros_ws/build -name "*.xunit.xml" | tr '\n' ',')
           test_reports=${test_reports%,}  # Remove trailing comma
 
-          echo "result=$test_reports" >> $GITHUB_OUTPUT
-          echo $test_reports
+          echo "result=$test_reports" >> "$GITHUB_OUTPUT"
+          echo "$test_reports"
         shell: bash
         id: test_reports
 
@@ -191,6 +191,73 @@ jobs:
           ls -al ros_ws/src
           cat package.repo
           vcs import --force --recursive src/ < package.repo
+
+  dev-container-ci:
+      name: Devcontainer image
+      needs: [merge-dev-image]
+      timeout-minutes: 35
+      strategy:
+        fail-fast: false
+        matrix:
+          include:
+            - arch: ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
+            - arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
+      runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+      permissions:
+        packages: read
+      steps:
+          # Running container will fail with act due to no Docker in Docker, only Docker outside of Docker
+          # https://github.com/Dr-QP/Dr.QP/wiki/Issue-using-%60act%60-and-%60devcontainers-ci%60
+          # DinD requires an image that has dockerd installed, so run with -P ubuntu-latest=ghcr.io/corvina-r-d/ubuntu:act-22.04
+          # DinD requires --priviliged option as well
+          #
+          #
+          # DinD fails under QEMU emulation of arm64 on the amd64 CPUs:
+          # iptables: Failed to initialize nft: Protocol not supported
+          # https://github.com/multiarch/qemu-user-static/issues/191
+        - name: optionally start DinD for act (local testing)
+          if: env.ACT
+          run: |
+            dockerd -H unix:///var/run/dind.sock & sleep 5;
+            echo "DOCKER_HOST=unix:///var/run/dind.sock" >> "${GITHUB_ENV}"
+
+        - name: optionally test DinD for act (local testing)
+          if: env.ACT
+          run: |
+            docker run --rm ghcr.io/dr-qp/hello-world:linux
+            id
+
+        - name: Install updated Skopeo needed for docker/buildx
+          run: |
+            sudo apt-get update
+            sudo apt-get install skopeo -y
+
+        - uses: actions/checkout@v4
+        - uses: docker/setup-buildx-action@v3
+        - uses: docker/login-action@v3
+          with:
+            registry: ${{ env.REGISTRY }}
+            username: ${{ env.REGISTRY_USERNAME }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+
+        - name: Patch devcontainer.json to use image built in this workflow
+          run: |
+            sed -i "s|ghcr.io/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop:edge|${{ needs.merge-dev-image.outputs.image }}|g" .devcontainer/devcontainer.json
+
+        - name: Build and test dev container image
+          uses: devcontainers/ci@v0.3
+          with:
+            configFile: .devcontainer/devcontainer.json
+            noCache: true
+            runCmd: |
+              set -x
+              set -e
+              id
+              time sudo apt update
+              time rosdep update
+              time ./scripts/ros/ros-dep.sh
+              time colcon build --event-handlers=console_cohesion+
+              time colcon test --event-handlers=console_cohesion+
 
   build-deploy-image:
     name: Deployment image
@@ -245,7 +312,7 @@ jobs:
           registry-token: ${{ secrets.GITHUB_TOKEN }}
   merge-all:
     name: CI/CD finished
-    needs: [merge-dev-image, ros-ci, merge-deploy-image]
+    needs: [merge-dev-image, ros-ci, merge-deploy-image, dev-container-ci]
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions: {}
     if: ${{ success() || cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}
