@@ -72,10 +72,12 @@ runs:
     - name: Export digest
       if: ${{ inputs.export-digest == 'true' }}
       shell: bash
+      env:
+        DIGESTS_DIR: ${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}
       run: |
-        mkdir -p '${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}'
+        mkdir -p "${DIGESTS_DIR}"
         digest='${{ steps.build.outputs.digest }}'
-        echo '${{ inputs.image }}-${{ inputs.future-tag }}-${{ inputs.arch }}' > '${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}/${digest#sha256:}'
+        echo '${{ inputs.image }}-${{ inputs.future-tag }}-${{ inputs.arch }}' > "${DIGESTS_DIR}/${digest#sha256:}"
 
     - name: Prepare digest artifact name
       if: ${{ inputs.export-digest == 'true' }}
@@ -97,5 +99,7 @@ runs:
     - name: Cleanup digests
       if: ${{ inputs.export-digest == 'true' }}
       shell: bash
+      env:
+        DIGESTS_DIR: ${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}
       run: |
-        rm -rf '${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}/*'
+        rm -rf "${DIGESTS_DIR}/*"
