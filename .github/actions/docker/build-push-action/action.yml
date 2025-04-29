@@ -74,18 +74,20 @@ runs:
       shell: bash
       env:
         DIGESTS_DIR: ${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}
+        DIGEST_CONTENT: ${{ inputs.image }}-${{ inputs.future-tag }}-${{ inputs.arch }}
+        DIGEST: ${{ steps.build.outputs.digest }}
       run: |
         mkdir -p "${DIGESTS_DIR}"
-        digest='${{ steps.build.outputs.digest }}'
-        echo '${{ inputs.image }}-${{ inputs.future-tag }}-${{ inputs.arch }}' > "${DIGESTS_DIR}/${digest#sha256:}"
+        echo "${DIGEST_CONTENT}" > "${DIGESTS_DIR}/${DIGEST#sha256:}"
 
     - name: Prepare digest artifact name
       if: ${{ inputs.export-digest == 'true' }}
       shell: bash
       id: digests
+      env:
+        ARTIFACT_NAME: digests-${{ inputs.image }}${{ inputs.future-tag }}-linux-${{ inputs.arch }}
       run: |
-        artifact_name='digests-${{ inputs.image }}${{ inputs.future-tag }}-linux-${{ inputs.arch }}'
-        echo "artifact_name=${artifact_name//\//-}" >> "$GITHUB_OUTPUT"
+        echo "artifact_name=${ARTIFACT_NAME//\//-}" >> "$GITHUB_OUTPUT"
 
     - name: Upload digest
       if: ${{ inputs.export-digest == 'true' }}
