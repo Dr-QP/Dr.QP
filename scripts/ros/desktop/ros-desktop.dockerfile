@@ -16,7 +16,7 @@ ARG ROS_USERNAME=rosdev
 ARG ROS_UID=1001
 ARG ROS_GID=$ROS_UID
 
-WORKDIR /tmp
+ARG CLANG_VERSION=20
 
 RUN env | sort
 
@@ -40,8 +40,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 WORKDIR /home/$ROS_USERNAME/ros2_ws
 USER $ROS_USERNAME
 
-# Force clang-format-20 and friends to the default in docker
-ENV CLANG_VERSION=20
+# Force clang installed by llvm.sh in /usr/lib/llvm-${CLANG_VERSION}/bin to be the default in docker
 ENV PATH="/usr/lib/llvm-${CLANG_VERSION}/bin:/home/$ROS_USERNAME/.local/bin:$PATH"
 ENV CC=clang
 ENV CXX=clang++
