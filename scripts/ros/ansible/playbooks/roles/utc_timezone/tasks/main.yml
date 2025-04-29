@@ -22,14 +22,13 @@
     src: /usr/share/zoneinfo/Etc/UTC
     dest: /etc/localtime
     state: link
-    force: true
     owner: root
     group: root
-  when: timezone_updated is changed
+    mode: "0644"
 
 - name: Install tzdata package
   ansible.builtin.apt:
     name: tzdata
     state: present
-    update_cache: false
+    update_cache: true
     install_recommends: false

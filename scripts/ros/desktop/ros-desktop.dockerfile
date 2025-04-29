@@ -5,7 +5,6 @@ FROM ros:$ROS_DISTRO-ros-base
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 
-
 # TODO (anton-matosov): Investigate if its really needed for devcontainer to use non root user
 # https://docs.github.com/en/actions/sharing-automations/creating-actions/dockerfile-support-for-github-actions#user
 # Docker actions must be run by the default Docker user (root). Do not use the USER instruction in your Dockerfile,
