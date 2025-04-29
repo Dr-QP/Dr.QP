@@ -30,9 +30,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     --mount=type=bind,readonly,source=..,target=/ros-scripts \
-    ansible-playbook -i /ros-scripts/ansible/inventories/localhost.yml \
-       /ros-scripts/ansible/playbooks/20_ros_setup.yml -vvv \
-       -e "ci_mode=true setup_user=true ros_user_setup_username=$ROS_USERNAME ros_user_setup_uid=$ROS_UID ros_user_setup_gid=$ROS_GID clang_version=$CLANG_VERSION ros_distro=$ROS_DISTRO"
+    cd /ros-scripts/ansible \
+    && ansible-playbook playbooks/20_ros_setup.yml \
+      -i inventories/localhost.yml \
+      -vvv \
+      -e "ci_mode=true setup_user=true ros_user_setup_username=$ROS_USERNAME ros_user_setup_uid=$ROS_UID ros_user_setup_gid=$ROS_GID clang_version=$CLANG_VERSION ros_distro=$ROS_DISTRO"
 
 WORKDIR /home/$ROS_USERNAME/ros2_ws
 USER $ROS_USERNAME
