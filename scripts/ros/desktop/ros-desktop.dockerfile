@@ -22,7 +22,8 @@ ARG CLANG_VERSION=20
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     --mount=type=bind,readonly,source=..,target=/ros-scripts \
-    cd /ros-scripts/ansible \
+    apt-get update \
+    && cd /ros-scripts/ansible \
     && ansible-playbook playbooks/20_ros_setup.yml \
       -i inventories/localhost.yml \
       -vvv \
