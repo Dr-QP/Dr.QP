@@ -28,6 +28,16 @@
   changed_when: update_locale.rc == 0
   when: not is_utf8
 
+- name: Update system profile
+  ansible.builtin.copy:
+    dest: /etc/profile.d/set-locale.sh
+    content: |
+      export LANG=en_US.UTF-8
+      export LC_ALL=en_US.UTF-8
+    owner: root
+    group: root
+    mode: "0644"
+
 - name: Verify UTF-8 locale is set
   ansible.builtin.command: locale
   register: locale_updated

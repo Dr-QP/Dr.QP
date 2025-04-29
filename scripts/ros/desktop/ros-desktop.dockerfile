@@ -2,6 +2,9 @@ ARG ROS_DISTRO=jazzy
 
 # FROM ubuntu:24.04 # locale remains at POSIX... figure out why later. use ros image that has proper locale
 FROM ros:$ROS_DISTRO-ros-base
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
 
 # TODO (anton-matosov): Investigate if its really needed for devcontainer to use non root user
 # https://docs.github.com/en/actions/sharing-automations/creating-actions/dockerfile-support-for-github-actions#user
