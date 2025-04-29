@@ -14,6 +14,7 @@
       - python3-colcon-coveragepy-result
       - python3-colcon-lcov-result
       - python3-colcon-mixin
+      - python3-colcon-package-information
       - python3-coverage
       - python3-flake8
       - python3-flake8-blind-except
