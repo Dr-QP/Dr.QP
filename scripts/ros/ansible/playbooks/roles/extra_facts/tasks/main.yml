@@ -8,3 +8,8 @@
   ansible.builtin.set_fact:
     user_home: "{{ ansible_env.HOME }}"
     ros_user: "{{ ansible_env.USER | default(ansible_user) | default('root') }}"
+
+- name: Ensure ros_distro is set
+  ansible.builtin.fail:
+    msg: "ros_distro is not set"
+  when: ros_distro is undefined
