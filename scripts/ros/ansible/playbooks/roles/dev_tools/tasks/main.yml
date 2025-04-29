@@ -1,5 +1,10 @@
 ---
 # Development tools installation
+- name: Update APT cache
+  ansible.builtin.apt:
+    update_cache: true
+  become: true
+
 - name: Install development tools
   ansible.builtin.apt:
     name:
@@ -46,5 +51,4 @@
       - libgif-dev
       - librsvg2-dev
     state: present
-    update_cache: true
     install_recommends: false
