@@ -7,4 +7,4 @@
 - name: Set user variables
   ansible.builtin.set_fact:
     user_home: "{{ ansible_env.HOME }}"
-    ros_user: "{{ ansible_user }}"
+    ros_user: "{{ ansible_env.USER | default(ansible_user) | default('root') }}"
