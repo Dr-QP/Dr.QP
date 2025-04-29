@@ -46,4 +46,5 @@
       - libgif-dev
       - librsvg2-dev
     state: present
+    update_cache: true
     install_recommends: false
