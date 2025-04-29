@@ -29,6 +29,10 @@ inputs:
   build-args:
     description: Build arguments for Dockerfile
     required: false
+outputs:
+  digest:
+    description: Digest of the built image
+    value: ${{ steps.build.outputs.digest }}
 runs:
   using: composite
   steps:

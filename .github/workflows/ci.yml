@@ -59,6 +59,17 @@ jobs:
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Build ubuntu ansible
+        id: build_ubuntu_ansible
+        uses: ./.github/actions/docker/build-push-action
+        with:
+          context: docker/ansible
+          file: docker/ansible/Dockerfile
+          image: ${{ env.REGISTRY }}/dr-qp/ubuntu-ansible
+          arch: ${{ matrix.arch }}
+          registry: ${{ env.REGISTRY }}
+          registry-username: ${{ env.REGISTRY_USERNAME }}
+          registry-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build development docker image
         id: build
@@ -73,6 +84,7 @@ jobs:
           registry-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
             ROS_DISTRO=${{ env.ROS_DISTRO }}
+            FROM_BASE_TAG=${{ steps.build_ubuntu_ansible.outputs.digest }}
 
   merge-dev-image:
     name: Merge development image

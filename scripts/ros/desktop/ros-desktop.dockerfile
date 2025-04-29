@@ -1,9 +1,7 @@
 ARG ROS_DISTRO=jazzy
+ARG FROM_BASE_TAG=edge
 
-# FROM ubuntu:24.04 # locale remains at POSIX... figure out why later. use ros image that has proper locale
-FROM ros:$ROS_DISTRO-ros-base
-ENV LANG=en_US.UTF-8
-ENV LC_ALL=en_US.UTF-8
+FROM ghcr.io/dr-qp/ubuntu-ansible:$FROM_BASE_TAG
 
 # TODO (anton-matosov): Investigate if its really needed for devcontainer to use non root user
 # https://docs.github.com/en/actions/sharing-automations/creating-actions/dockerfile-support-for-github-actions#user
@@ -19,15 +17,6 @@ ARG ROS_UID=1001
 ARG ROS_GID=$ROS_UID
 
 ARG CLANG_VERSION=20
-
-RUN env | sort
-
-# Install Ansible
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    --mount=type=bind,readonly,source=..,target=/ros-scripts \
-    apt-get update && apt-get install -y python3 sudo \
-    && /ros-scripts/ansible/setup-ansible.sh
 
 # Install ROS
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
