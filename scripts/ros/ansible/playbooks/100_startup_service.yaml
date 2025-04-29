@@ -29,7 +29,7 @@
 # Environment=FASTDDS_BUILTIN_TRANSPORTS=UDPv4
 # These options are discussed in detail at https://robotics.stackexchange.com/a/114955/38643
 - name: Setup startup service to bring ROS nodes up in docker container
-  hosts: robots
+  hosts: all
   become: true
   vars:
     container_image: "ghcr.io/dr-qp/jazzy-ros-deploy:edge"

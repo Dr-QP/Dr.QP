@@ -1,6 +1,6 @@
 ---
 - name: Pair a DualSense Wireless Controller
-  hosts: robots
+  hosts: all
   vars:
     # Only one is needed
     # controller_mac: "D0:BC:C1:F4:F9:8B"

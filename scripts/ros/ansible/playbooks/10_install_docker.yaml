@@ -1,6 +1,6 @@
 ---
 - name: Install Docker on robots
-  hosts: robots
+  hosts: all
   become: true
   gather_facts: true
   roles:
