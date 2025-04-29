@@ -219,7 +219,7 @@ jobs:
           if: env.ACT
           run: |
             dockerd -H unix:///var/run/dind.sock & sleep 5;
-            echo "DOCKER_HOST=unix:///var/run/dind.sock" >>${GITHUB_ENV}
+            echo "DOCKER_HOST=unix:///var/run/dind.sock" >> "${GITHUB_ENV}"
 
         - name: optionally test DinD for act (local testing)
           if: env.ACT
