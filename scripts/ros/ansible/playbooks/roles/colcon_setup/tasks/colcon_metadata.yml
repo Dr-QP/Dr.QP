@@ -22,10 +22,3 @@
   ansible.builtin.command: colcon --log-base "{{ temp_dir.path }}" metadata list
   register: list_metadata_result
   changed_when: false
-
-- name: Remove colcon logs
-  ansible.builtin.file:
-    path: "{{ temp_dir.path }}"
-    state: absent
-  become: false
-  when: temp_dir.path is defined
