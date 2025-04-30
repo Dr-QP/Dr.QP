@@ -1,5 +1,4 @@
-# FROM ubuntu:24.04
-FROM ros:jazzy-ros-base
+FROM ubuntu:24.04
 
 # Install Ansible
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -12,7 +11,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 # Docker runs a non login shell that does not read bashrc and does NOT initialize locale
 # from /etc/default/locale requiring to set it manually via ENV instruction
 # https://web.archive.org/web/20230323021946/http://jaredmarkell.com/docker-and-locales/
-# RUN locale-gen en_US.UTF-8
-# ENV LANG=en_US.UTF-8
-# ENV LANGUAGE=en_US:en
-# ENV LC_ALL=en_US.UTF-8
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
