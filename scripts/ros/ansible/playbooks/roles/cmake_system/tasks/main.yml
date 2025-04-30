@@ -15,7 +15,7 @@
   changed_when: false
   failed_when: false
 
-- name: Set UTF-8 check result
+- name: Set IS_KITWARE_CMAKE check result
   ansible.builtin.set_fact:
     is_kitware_cmake: "{{ cmake_old_version.stdout is defined and cmake_old_version.stdout is search('kitware') }}"
 
@@ -28,15 +28,13 @@
     filename: kitware
     update_cache: true
 
-- name: Remove old cmake if present
+- name: Remove Kitware CMake if present
   ansible.builtin.apt:
     name:
       - cmake
       - cmake-data
     state: absent
-    autoremove: true
-    purge: true
-  when: cmake_old_version.stdout is defined
+  when: is_kitware_cmake
 
 - name: Install system packaged CMake
   ansible.builtin.apt:

@@ -71,8 +71,6 @@
       - cmake
       - cmake-data
     state: absent
-    autoremove: true
-    purge: true
 
 - name: Install latest Kitware CMake
   when: not is_kitware_cmake
