@@ -470,5 +470,9 @@
     ],
     "ansible.ansible.path": ".venv/bin/ansible",
     "ansible.python.interpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "files.associations": {
+      "**/ansible/**/*.yml": "ansible",
+      "**/ansible/**/*.yaml": "ansible",
+    }
   }
 }
