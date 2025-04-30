@@ -129,7 +129,7 @@ jobs:
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
           no-symlink-install: true
-          extra-cmake-args: ' -D DRQP_ENABLE_COVERAGE=ON'
+          extra-cmake-args: ' -D DRQP_ENABLE_COVERAGE=ON -G Ninja'
           # pin the repository in the workflow to a specific commit to avoid
           # changes in colcon-mixin-repository from breaking your tests.
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml
@@ -267,8 +267,8 @@ jobs:
               time sudo apt update
               time rosdep update
               time ./scripts/ros/ros-dep.sh
-              time colcon build --event-handlers=console_cohesion+
-              time colcon test --event-handlers=console_cohesion+
+              time colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+
+              time colcon test --mixin ninja --event-handlers=console_cohesion+
 
   build-deploy-image:
     name: Deployment image
