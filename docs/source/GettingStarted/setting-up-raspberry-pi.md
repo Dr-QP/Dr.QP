@@ -33,7 +33,7 @@ Run the following command on your dev host to install docker and setup autorun s
 
 ::
 
-: ansible-playbook -i inventory.yml playbooks/.yaml --ask-become-pass
+: ansible-playbook -i inventory.yml playbooks/.yml --ask-become-pass
 
 ```
 [all]

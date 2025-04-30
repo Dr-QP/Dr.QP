@@ -19,9 +19,9 @@ ansible/
 ├── playbooks/                   # Playbooks for different tasks
 │   ├── 0_start_virtual_bots.yml # Start Docker containers for virtual bots
 │   ├── 1_pam_ssh_agent_auth.yml # SSH agent authentication setup
-│   ├── 10_install_docker.yaml   # Docker installation
+│   ├── 10_install_docker.yml    # Docker installation
 │   ├── 20_ros_setup.yml         # Main ROS 2 setup playbook
-│   ├── 100_startup_service.yaml # Robot startup service
+│   ├── 100_startup_service.yml  # Robot startup service
 │   ├── 200_pair_controller.yml  # Controller pairing
 │   ├── 9999_stop_virtual_bots.yml # Stop Docker containers for virtual bots
 │   ├── group_vars/              # Playbook-specific variables
@@ -223,7 +223,7 @@ The project includes Ansible playbooks for Docker integration:
 To install Docker on robots:
 
 ```bash
-ansible-playbook -i inventories/real-robots.yml playbooks/10_install_docker.yaml
+ansible-playbook -i inventories/real-robots.yml playbooks/10_install_docker.yml
 ```
 
 This playbook:
@@ -237,7 +237,7 @@ This playbook:
 The project includes a playbook to set up a systemd service that runs ROS nodes in Docker containers:
 
 ```bash
-ansible-playbook -i inventories/real-robots.yml playbooks/100_startup_service.yaml
+ansible-playbook -i inventories/real-robots.yml playbooks/100_startup_service.yml
 ```
 
 This playbook:
@@ -282,7 +282,7 @@ The Ansible playbooks replace the following shell scripts:
 - `scripts/ros/ros-2-prep.sh` → `ansible/playbooks/20_ros_setup.yml`
 - `scripts/ros/ros-2-src-build.sh` → `ansible/playbooks/roles/ros_install_source`
 - `scripts/ros/__gen_install_ros_dependencies.sh` → `ansible/playbooks/roles/ros_dependencies` with known packages
-- `scripts/install_docker.sh` → `ansible/playbooks/10_install_docker.yaml`
+- `scripts/install_docker.sh` → `ansible/playbooks/10_install_docker.yml`
 - `scripts/ros/desktop/ros-desktop.dockerfile` (user setup) → `ansible/playbooks/roles/ros_user_setup`
 - `scripts/ros/fish/setup.fish` → `ansible/playbooks/roles/fish_setup`
 - `scripts/ros/colcon-mixin.sh` → `ansible/playbooks/roles/colcon_setup`
