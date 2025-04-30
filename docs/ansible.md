@@ -141,20 +141,24 @@ For Docker-based virtual bots:
 
 ```bash
 # First start the virtual bots
-ansible-playbook -i inventories/virtual-bots.yml playbooks/0_start_virtual_bots.yml
+env ANSIBLE_CONFIG=ansible-virtual.cfg ansible-playbook playbooks/0_start_virtual_bots.yml
 
 # Then run the setup playbook
-ansible-playbook -i inventories/virtual-bots.yml playbooks/20_ros_setup.yml
+env ANSIBLE_CONFIG=ansible-virtual.cfg ansible-playbook playbooks/20_ros_setup.yml
 
 # When finished, stop the virtual bots
-ansible-playbook -i inventories/virtual-bots.yml playbooks/9999_stop_virtual_bots.yml
+env ANSIBLE_CONFIG=ansible-virtual.cfg ansible-playbook playbooks/9999_stop_virtual_bots.yml
 ```
 
-You can also use the `ansible-virtual.cfg` configuration file for virtual bots:
+For faster iteration, playbooks can be chained:
 
 ```bash
-ANSIBLE_CONFIG=ansible-virtual.cfg ansible-playbook playbooks/20_ros_setup.yml
+env ANSIBLE_CONFIG=ansible-virtual.cfg ansible-playbook \
+    playbooks/9999_stop_virtual_bots.yml \
+    playbooks/0_start_virtual_bots.yml \
+    playbooks/20_ros_setup.yml -vvv
 ```
+
 
 ## Generating ROS Dependencies
 
