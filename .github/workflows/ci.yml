@@ -126,8 +126,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ros-tooling/action-ros-ci@v0.4
-        env:
-          GCOV_COMMAND: "${{ github.workspace }}/scripts/gcov"
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
           no-symlink-install: true
