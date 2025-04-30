@@ -93,14 +93,6 @@ sudo apt-get install -y -q --no-install-recommends \
   libtinyxml2-dev \
   libcunit1-dev
 
-# https://github.com/Automattic/node-canvas
-sudo apt-get install -y -q --no-install-recommends \
-  build-essential \
-  libcairo2-dev \
-  libpango1.0-dev \
-  libjpeg-dev \
-  libgif-dev \
-  librsvg2-dev
 
 # install colcon mixins under ROOT
 colcon mixin remove default || true
