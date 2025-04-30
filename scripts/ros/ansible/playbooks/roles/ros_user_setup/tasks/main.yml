@@ -31,8 +31,8 @@
   ansible.builtin.file:
     path: "{{ ros_user_setup_workspace_dir }}"
     state: directory
-    owner: "{{ ros_user_setup_username }}"
-    group: "{{ ros_user_setup_username }}"
+    owner: "{{ ros_user_setup_uid }}"
+    group: "{{ ros_user_setup_gid }}"
     mode: "0755"
 
 # Add ROS setup to .bashrc
@@ -47,8 +47,8 @@
     line: "source /opt/ros/{{ ros_distro }}/setup.bash"
     state: present
     create: true
-    owner: "{{ ros_user_setup_username }}"
-    group: "{{ ros_user_setup_username }}"
+    owner: "{{ ros_user_setup_uid }}"
+    group: "{{ ros_user_setup_gid }}"
     mode: "0644"
 
 # Add workspace setup to .bashrc
@@ -58,6 +58,6 @@
     line: "source {{ ros_user_setup_workspace_dir }}/install/setup.bash"
     state: present
     create: true
-    owner: "{{ ros_user_setup_username }}"
-    group: "{{ ros_user_setup_username }}"
+    owner: "{{ ros_user_setup_uid }}"
+    group: "{{ ros_user_setup_gid }}"
     mode: "0644"

@@ -12,6 +12,8 @@
     path: "{{ user_home }}/.config/fish/conf.d"
     state: directory
     mode: "0755"
+    owner: "{{ ros_user_setup_uid }}"
+    group: "{{ ros_user_setup_gid }}"
   become: false
 
 - name: Create temporary directory for downloads
@@ -48,6 +50,8 @@
     src: ros.fish.j2
     dest: "{{ user_home }}/.config/fish/conf.d/ros.fish"
     mode: "0644"
+    owner: "{{ ros_user_setup_uid }}"
+    group: "{{ ros_user_setup_gid }}"
   become: false
 
 - name: Clean up temporary directory
