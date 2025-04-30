@@ -12,12 +12,13 @@
     - { role: utc_timezone, tags: ["utc_timezone"] }
     - { role: ros_user_setup, tags: ["setup_user"], when: setup_user }
     - { role: fish_setup, tags: ["fish_setup"] }
+    - { role: cmake_kitware, tags: ["cmake_kitware"], when: not source_install } # Install Kitware CMake beforehand for prebuilt install
+    - { role: cmake_system, tags: ["cmake_system"], when: source_install }
     - { role: ros_repo, tags: ["ros_repo"] }
     - { role: dev_tools, tags: ["dev_tools"] }
     - { role: colcon_setup, tags: ["colcon_setup"] }
     - { role: rosdep, tags: ["rosdep"] }
     - { role: ros_install_prebuilt, tags: ["ros_install", "ros_install_prebuilt"], when: not source_install }
-    - { role: cmake_system, tags: ["cmake_system"], when: source_install }
     - { role: ros_install_source, tags: ["ros_install", "ros_install_source"], when: source_install }
     - { role: ros_dependencies, tags: ["ros_dependencies"] }
     - { role: nodejs, tags: ["nodejs"] }
