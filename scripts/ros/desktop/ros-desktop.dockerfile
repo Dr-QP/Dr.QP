@@ -3,6 +3,7 @@ ARG FROM_IMAGE=ghcr.io/dr-qp/ubuntu-ansible:edge
 FROM $FROM_IMAGE
 
 ARG ROS_DISTRO=jazzy
+ENV ROS_DISTRO=$ROS_DISTRO
 
 # TODO (anton-matosov): Investigate if its really needed for devcontainer to use non root user
 # https://docs.github.com/en/actions/sharing-automations/creating-actions/dockerfile-support-for-github-actions#user
