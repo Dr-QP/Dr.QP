@@ -268,7 +268,7 @@ jobs:
               time rosdep update
               time ./scripts/ros/ros-dep.sh
               time colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+
-              time colcon test --mixin ninja --event-handlers=console_cohesion+
+              time colcon test --event-handlers=console_cohesion+
 
   build-deploy-image:
     name: Deployment image
