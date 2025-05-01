@@ -1,9 +1,7 @@
 ---
 # Ansible playbook for setting up Raspberry Pi for the Robot
-# Based on docs/source/GettingStarted/setting-up-raspberry-pi.md
-
 - name: Setup Raspberry Pi for Robot
-  hosts: raspberry_pi
+  hosts: all
   become: true
   tasks:
     - name: Create systemd override directory if it doesn't exist
@@ -21,12 +19,6 @@
           ExecStart=/lib/systemd/systemd-networkd-wait-online --ignore=eth0 --quiet
         mode: '0644'
       notify: Reload systemd
-
-    - name: Install sc16is752 overlays for UART expansion
-      ansible.builtin.apt:
-        name: linux-modules-extra-raspi
-        state: present
-        update_cache: true
 
     - name: Update config.txt for sc16is752 and power settings
       ansible.builtin.blockinfile:
