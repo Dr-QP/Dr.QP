@@ -98,6 +98,15 @@ jobs:
       image: ${{ steps.merge.outputs.image }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Merge and push ansible docker image
+        uses: ./.github/actions/docker/multiarch-merge
+        with:
+          image: ${{ env.REGISTRY }}/dr-qp/ubuntu-ansible
+          registry: ${{ env.REGISTRY }}
+          registry-username: ${{ env.REGISTRY_USERNAME }}
+          registry-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Merge and push development docker image
         id: merge
         uses: ./.github/actions/docker/multiarch-merge
