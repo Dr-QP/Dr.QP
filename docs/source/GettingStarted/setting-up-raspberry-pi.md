@@ -4,44 +4,32 @@
 
 Ubuntu 24.04 is the only LTS currently supported by Raspberry Pi 5
 
-Install ROS and docker
+## Initial setup
 
-### Update networkd to not wait for ethernet
+Setup ssh agent based authentication to avoid typing password every time
 
-Run: `sudo systemctl edit systemd-networkd-wait-online.service`
-
-Paste an override into edit section:
+As well as configure Raspberry Pi. See playbooks for details.
 
 ```bash
-[Service]
-ExecStart=
-ExecStart=/lib/systemd/systemd-networkd-wait-online --ignore=eth0 --quiet
+cd scripts/ros/ansible
+ansible-playbook playbooks/1_pam_ssh_agent_auth.yml --ask-become-pass
+ansible-playbook playbooks/30_raspberry_pi_setup.yml
 ```
 
-### Install sc16is752 overlays
-
-The UART expansion board is based on sc16is752 and needs an overlay
-
-### Update config.txt
-
-`sudo nano /boot/firmware/config.txt`
+## Install ROS and docker
 
 ```bash
-[all]
-# Dr.QP: UART via I2C devices. addr is different according to status of A0/A1, default 0X48
-dtoverlay=sc16is752-i2c,int_pin=24,addr=0x48
-
-# Skip power supply check on RPi5
-usb_max_current_enable=1
+cd scripts/ros/ansible
+ansible-playbook playbooks/10_install_docker.yml
+ansible-playbook playbooks/20_ros_setup.yml
 ```
 
-### Installing deployment service
+## Installing deployment service
 
 Production docker container is deployed using Ansible.
 Run the following command on your dev host to install docker and setup autorun service
 
 ```bash
 cd scripts/ros/ansible
-ansible-playbook playbooks/1_pam_ssh_agent_auth.yml --ask-become-pass
 ansible-playbook playbooks/100_startup_service.yml
 ```
