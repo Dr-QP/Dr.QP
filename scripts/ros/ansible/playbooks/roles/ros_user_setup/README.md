@@ -11,18 +11,6 @@ This Ansible role creates and configures a ROS user account with the necessary e
 | `ros_user_setup_gid` | Group ID for the ROS user | `{{ ros_user_setup_uid }}` |
 | `ros_user_setup_workspace_dir` | Path to the ROS workspace directory | `{{ user_home }}/ros2_ws` |
 
-## Tasks
-
-This role performs the following tasks:
-
-1. Creates a user group for the ROS user
-2. Creates the ROS user with the specified UID and GID
-3. Adds the ROS user to sudoers with NOPASSWD privileges
-4. Creates the ROS workspace directory
-5. Configures the user's `.bashrc` with:
-   - ROS setup source commands
-   - Workspace setup source commands
-
 ## Example Usage
 
 ```yaml

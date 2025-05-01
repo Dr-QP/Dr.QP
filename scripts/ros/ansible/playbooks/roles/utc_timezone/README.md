@@ -1,15 +1,6 @@
 # UTC Timezone Role
 
-This Ansible role configures the system timezone to UTC.
-
-## Role Tasks
-
-This role performs the following tasks:
-
-1. Checks the current timezone
-2. Sets the timezone to UTC by updating `/etc/timezone`
-3. Updates the `/etc/localtime` symlink to point to the UTC timezone
-4. Installs the `tzdata` package
+This Ansible role configures the system timezone to UTC, ensuring consistent time settings across all systems.
 
 ## Example Usage
 
