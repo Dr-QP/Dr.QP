@@ -13,7 +13,7 @@ As well as configure Raspberry Pi. See playbooks for details.
 ```bash
 cd scripts/ros/ansible
 ansible-playbook playbooks/1_pam_ssh_agent_auth.yml --ask-become-pass
-ansible-playbook playbooks/30_raspberry_pi_setup.yml
+ansible-playbook playbooks/5_raspberry_pi_setup.yml
 ```
 
 ## Install ROS and docker
