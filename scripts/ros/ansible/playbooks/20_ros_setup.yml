@@ -12,6 +12,7 @@
     - { role: utc_timezone, tags: ["utc_timezone"] }
     - { role: ros_user_setup, tags: ["setup_user"], when: setup_user }
     - { role: fish_setup, tags: ["fish_setup"] }
+    - { role: bash_setup, tags: ["bash_setup"] }
     - { role: cmake_kitware, tags: ["cmake"], when: not source_install } # Install Kitware CMake beforehand for prebuilt install
     - { role: cmake_system, tags: ["cmake"], when: source_install }
     - { role: ros_repo, tags: ["ros_repo"] }

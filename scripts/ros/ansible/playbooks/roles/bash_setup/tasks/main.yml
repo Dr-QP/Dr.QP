@@ -1,0 +1,21 @@
+---
+# Bash setup tasks
+- name: Add ros2_activate to .bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ user_home }}/.bashrc"
+    line: 'alias ros2_activate="source /opt/ros/{{ ros_distro }}/setup.bash"'
+    state: present
+    create: true
+    owner: "{{ ros_user_setup_uid }}"
+    group: "{{ ros_user_setup_gid }}"
+    mode: "0644"
+
+- name: Add ros2_ws to .bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ user_home }}/.bashrc"
+    line: 'alias ros2_ws="source ./install/setup.bash"'
+    state: present
+    create: true
+    owner: "{{ ros_user_setup_uid }}"
+    group: "{{ ros_user_setup_gid }}"
+    mode: "0644"
