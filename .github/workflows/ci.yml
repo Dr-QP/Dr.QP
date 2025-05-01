@@ -207,8 +207,8 @@ jobs:
           ls -al ${{ github.workspace }}
           ls -al .
           ls -al ros_ws
-          ls -d ros_ws/src/*/ | xargs ls -al
           cd ros_ws
+          find src/ -print0 | xargs -0 ls -al
           cat package.repo
           vcs import --force --recursive src/ < package.repo
 
