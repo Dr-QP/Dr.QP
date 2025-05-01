@@ -3,4 +3,5 @@
 ```{toctree}
 installation
 setting-up-raspberry-pi
+ansible
 ```
