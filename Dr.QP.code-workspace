@@ -278,9 +278,9 @@
       {
         "label": "Dr.QP setup ROS",
         "type": "shell",
-        "command": ".venv/bin/ansible-playbook playbooks/20_ros_setup.yml -i inventories/localhost.yml",
+        "command": "${workspaceFolder}/.venv/bin/ansible-playbook playbooks/20_ros_setup.yml -i inventories/localhost.yml",
         "options": {
-          "cwd": "${workspaceFolder}/scripts/ros/ansible"
+          "cwd": "${workspaceFolder}/scripts/ros/ansible",
         },
         "problemMatcher": [
           "$python"
