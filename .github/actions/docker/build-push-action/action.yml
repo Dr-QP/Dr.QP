@@ -77,6 +77,7 @@ runs:
         DIGESTS_DIR: ${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}-XXXXXXXXX
         DIGEST_CONTENT: ${{ inputs.image }}-${{ inputs.future-tag }}-${{ inputs.arch }}
         DIGEST: ${{ steps.build.outputs.digest }}
+        ARTIFACT_NAME: digests-${{ inputs.image }}${{ inputs.future-tag }}-linux-${{ inputs.arch }}
       run: |
         mkdir -p "${DIGESTS_DIR}"
         echo "${DIGEST_CONTENT}" > "${DIGESTS_DIR}/${DIGEST#sha256:}"
@@ -84,13 +85,6 @@ runs:
         DIGESTS_DIR=$(mktemp -d "${DIGESTS_DIR}")
         echo "digests_dir=${DIGESTS_DIR}" >> "$GITHUB_OUTPUT"
 
-    - name: Prepare digest artifact name
-      if: ${{ inputs.export-digest == 'true' }}
-      shell: bash
-      id: digests
-      env:
-        ARTIFACT_NAME: digests-${{ inputs.image }}${{ inputs.future-tag }}-linux-${{ inputs.arch }}
-      run: |
         echo "artifact_name=${ARTIFACT_NAME//\//-}" >> "$GITHUB_OUTPUT"
 
     - name: Upload digest
