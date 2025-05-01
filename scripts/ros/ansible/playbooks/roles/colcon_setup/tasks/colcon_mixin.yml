@@ -1,0 +1,29 @@
+---
+- name: Remove default colcon mixin
+  ansible.builtin.command: colcon --log-base "{{ temp_dir.path }}" mixin remove default
+  register: remove_result
+  changed_when: remove_result.rc == 0
+  failed_when: remove_result.rc != 0 and "A repository with the name 'default' doesn't exist" not in remove_result.stderr
+  ignore_errors: true
+
+- name: Add default colcon mixin
+  ansible.builtin.command: >-
+    colcon --log-base "{{ temp_dir.path }}" mixin add default
+    https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml
+  register: add_result
+  changed_when: add_result.rc == 0
+
+- name: Update default colcon mixin
+  ansible.builtin.command: colcon --log-base "{{ temp_dir.path }}" mixin update default
+  register: update_result
+  changed_when: update_result.rc == 0
+
+- name: List colcon mixins
+  ansible.builtin.command: colcon --log-base "{{ temp_dir.path }}" mixin list
+  register: list_result
+  changed_when: false
+
+- name: Show colcon mixins
+  ansible.builtin.command: colcon --log-base "{{ temp_dir.path }}" mixin show
+  register: show_result
+  changed_when: false

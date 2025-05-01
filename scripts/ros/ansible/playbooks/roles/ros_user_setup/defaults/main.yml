@@ -1,0 +1,8 @@
+---
+# Default variables for ros_user_setup role
+
+# ROS user configuration
+ros_user_setup_username: rosdev
+ros_user_setup_uid: 1001
+ros_user_setup_gid: "{{ ros_user_setup_uid }}"
+ros_user_setup_workspace_dir: "/home/{{ ros_user_setup_username }}/ros2_ws"

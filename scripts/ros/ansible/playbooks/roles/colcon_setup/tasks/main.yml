@@ -1,0 +1,26 @@
+---
+# Colcon mixin setup
+- name: Temp dir for colcon logs
+  ansible.builtin.tempfile:
+    state: directory
+  register: temp_dir
+  become: true
+  become_user: "{{ ros_user }}"
+
+- name: Setup colcon mixin
+  ansible.builtin.import_tasks: colcon_mixin.yml
+  become: true
+  become_user: "{{ ros_user }}"
+
+- name: Setup colcon metadata
+  ansible.builtin.import_tasks: colcon_metadata.yml
+  become: true
+  become_user: "{{ ros_user }}"
+
+- name: Remove colcon logs
+  when: temp_dir.path is defined
+  ansible.builtin.file:
+    path: "{{ temp_dir.path }}"
+    state: absent
+  become: true
+  become_user: "{{ ros_user }}"

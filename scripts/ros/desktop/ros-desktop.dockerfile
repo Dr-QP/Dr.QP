@@ -1,7 +1,9 @@
-ARG ROS_DISTRO=jazzy
+ARG FROM_IMAGE=ghcr.io/dr-qp/ubuntu-ansible:edge
 
-# Building off the base image saves a bit of space, but the build time is longer
-FROM ros:$ROS_DISTRO-ros-base
+FROM $FROM_IMAGE
+
+ARG ROS_DISTRO=jazzy
+ENV ROS_DISTRO=$ROS_DISTRO
 
 # TODO (anton-matosov): Investigate if its really needed for devcontainer to use non root user
 # https://docs.github.com/en/actions/sharing-automations/creating-actions/dockerfile-support-for-github-actions#user
@@ -9,36 +11,33 @@ FROM ros:$ROS_DISTRO-ros-base
 # because you won't be able to access the GITHUB_WORKSPACE directory. For more information, see [Store information]
 # (https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables)
 # in variables and [USER](https://docs.docker.com/engine/reference/builder/#user) reference in the Docker documentation.
-ARG USERNAME=rosdev
+ARG ROS_USERNAME=rosdev
+
 # UID should be 1001 to match ubuntu-latest in order for file writing to work for @action/checkout
 # see https://github.com/actions/checkout/issues/956 for more details
-ARG UID=1001
-ARG GID=$UID
+ARG ROS_UID=1001
+ARG ROS_GID=$ROS_UID
 
-# Create and switch to user
-RUN groupadd -g $GID $USERNAME \
-    && useradd -lm -u $UID -g $USERNAME -s /bin/bash $USERNAME \
-    && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
-    && mkdir -p /home/$USERNAME/ros2_ws/ \
-    && chown -R $USERNAME:$USERNAME /home/$USERNAME/ros2_ws \
-    && echo 'source /opt/ros/'$ROS_DISTRO'/setup.bash' >> /home/$USERNAME/.bashrc \
-    && echo 'source /home/'$USERNAME'/ros2_ws/install/setup.bash' >> /home/$USERNAME/.bashrc
-USER $USERNAME
-WORKDIR /tmp
-
-# Force clang-format-19 and friends to the default
-ENV CLANG_VERSION=20
-ENV PATH="/usr/lib/llvm-${CLANG_VERSION}/bin:/home/rosdev/.local/bin:$PATH"
-ENV CC=clang
-ENV CXX=clang++
+ARG CLANG_VERSION=20
 
 # Install ROS
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    --mount=type=bind,readonly,source=..,target=/ros-prep \
-    env CI=1 /ros-prep/bootstrap.sh
+    --mount=type=bind,readonly,source=..,target=/ros-scripts \
+    apt-get update \
+    && cd /ros-scripts/ansible \
+    && ansible-playbook playbooks/20_ros_setup.yml \
+      -i inventories/localhost.yml \
+      -vvv \
+      -e "ci_mode=true setup_user=true ros_user_setup_username=$ROS_USERNAME ros_user_setup_uid=$ROS_UID ros_user_setup_gid=$ROS_GID clang_version=$CLANG_VERSION ros_distro=$ROS_DISTRO"
 
-WORKDIR /home/$USERNAME/ros2_ws
+WORKDIR /home/$ROS_USERNAME/ros2_ws
+USER $ROS_USERNAME
+
+# Force clang installed by llvm.sh in /usr/lib/llvm-${CLANG_VERSION}/bin to be the default in docker
+ENV PATH="/usr/lib/llvm-${CLANG_VERSION}/bin:/home/$ROS_USERNAME/.local/bin:$PATH"
+ENV CC=clang
+ENV CXX=clang++
 
 # Setup entrypoint
 COPY ../deploy/ros_entrypoint.sh /

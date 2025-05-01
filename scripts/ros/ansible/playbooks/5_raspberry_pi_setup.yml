@@ -1,0 +1,41 @@
+---
+# Ansible playbook for setting up Raspberry Pi for the Robot
+- name: Setup Raspberry Pi for Robot
+  hosts: all
+  become: true
+  tasks:
+    - name: Create systemd override directory if it doesn't exist
+      ansible.builtin.file:
+        path: /etc/systemd/system/systemd-networkd-wait-online.service.d
+        state: directory
+        mode: "0755"
+
+    - name: Configure systemd-networkd-wait-online to not wait for ethernet (eth0)
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/systemd-networkd-wait-online.service.d/override.conf
+        content: |
+          [Service]
+          ExecStart=
+          ExecStart=/lib/systemd/systemd-networkd-wait-online --ignore=eth0 --quiet
+        mode: "0644"
+      notify: Reload systemd
+
+    - name: Update config.txt for sc16is752 and power settings
+      ansible.builtin.blockinfile:
+        path: /boot/firmware/config.txt
+        block: |
+          [all]
+          # Dr.QP: UART via I2C devices. addr is different according to status of A0/A1, default 0X48
+          dtoverlay=sc16is752-i2c,int_pin=24,addr=0x48
+          # Dr.QP: Skip power supply check on RPi5 to allow startup with UPS that doesn't report current
+          usb_max_current_enable=1
+
+        state: present
+        insertafter: EOF
+        create: false
+        marker: "# {mark} DR.QP MANAGED BLOCK"
+
+  handlers:
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: true

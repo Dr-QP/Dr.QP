@@ -59,6 +59,17 @@ jobs:
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Build ubuntu ansible
+        id: build_ubuntu_ansible
+        uses: ./.github/actions/docker/build-push-action
+        with:
+          context: docker/ansible
+          file: docker/ansible/Dockerfile
+          image: ${{ env.REGISTRY }}/dr-qp/ubuntu-ansible
+          arch: ${{ matrix.arch }}
+          registry: ${{ env.REGISTRY }}
+          registry-username: ${{ env.REGISTRY_USERNAME }}
+          registry-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build development docker image
         id: build
@@ -73,6 +84,7 @@ jobs:
           registry-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
             ROS_DISTRO=${{ env.ROS_DISTRO }}
+            FROM_IMAGE=ghcr.io/dr-qp/ubuntu-ansible@${{ steps.build_ubuntu_ansible.outputs.digest }}
 
   merge-dev-image:
     name: Merge development image
@@ -86,6 +98,15 @@ jobs:
       image: ${{ steps.merge.outputs.image }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Merge and push ansible docker image
+        uses: ./.github/actions/docker/multiarch-merge
+        with:
+          image: ${{ env.REGISTRY }}/dr-qp/ubuntu-ansible
+          registry: ${{ env.REGISTRY }}
+          registry-username: ${{ env.REGISTRY_USERNAME }}
+          registry-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Merge and push development docker image
         id: merge
         uses: ./.github/actions/docker/multiarch-merge
@@ -114,19 +135,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ros-tooling/action-ros-ci@v0.4
-        env:
-          GCOV_COMMAND: "${{ github.workspace }}/scripts/gcov"
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
           no-symlink-install: true
-          extra-cmake-args: -DDRQP_ENABLE_COVERAGE=ON
+          extra-cmake-args: ' -D DRQP_ENABLE_COVERAGE=ON'
           # pin the repository in the workflow to a specific commit to avoid
           # changes in colcon-mixin-repository from breaking your tests.
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml
           colcon-defaults: |
             {
               "build": {
-                "mixin": ["coverage-pytest"]
+                "mixin": ["coverage-pytest", "ninja"]
               },
               "test": {
                 "mixin": ["coverage-pytest"]
@@ -188,7 +207,8 @@ jobs:
           ls -al ${{ github.workspace }}
           ls -al .
           ls -al ros_ws
-          ls -al ros_ws/src
+          cd ros_ws
+          find src/ -print0 | xargs -0 ls -al
           cat package.repo
           vcs import --force --recursive src/ < package.repo
 
@@ -256,7 +276,7 @@ jobs:
               time sudo apt update
               time rosdep update
               time ./scripts/ros/ros-dep.sh
-              time colcon build --event-handlers=console_cohesion+
+              time colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+
               time colcon test --event-handlers=console_cohesion+
 
   build-deploy-image:

@@ -1,0 +1,64 @@
+---
+# Clang installation
+- name: Create temporary directory for downloads
+  ansible.builtin.tempfile:
+    state: directory
+  register: temp_dir
+  become: false
+
+- name: Download LLVM installation script
+  ansible.builtin.get_url:
+    url: https://apt.llvm.org/llvm.sh
+    dest: "{{ temp_dir.path }}/llvm.sh"
+    mode: "0755"
+  become: false
+
+- name: Run LLVM installation script
+  ansible.builtin.command: bash "{{ temp_dir.path }}/llvm.sh" {{ clang_version }} all
+  register: llvm_install
+  changed_when: llvm_install.stdout is search('Installing')
+
+- name: Install libstdc++ development package
+  ansible.builtin.apt:
+    name: libstdc++-14-dev
+    state: present
+    install_recommends: false
+
+- name: Add Clang to PATH in fish config
+  ansible.builtin.blockinfile:
+    path: "{{ user_home }}/.config/fish/config.fish"
+    content: "set -gx PATH /usr/lib/llvm-{{ clang_version }}/bin $PATH"
+    create: true
+    insertafter: EOF
+    mode: "0660"
+    marker: "# {mark} Clang PATH configuration"
+  become: false
+
+- name: Add Clang to PATH in bash config
+  ansible.builtin.blockinfile:
+    path: "{{ user_home }}/.bashrc"
+    content: 'export PATH="/usr/lib/llvm-{{ clang_version }}/bin:$PATH"'
+    create: true
+    insertafter: EOF
+    mode: "0660"
+    marker: "# {mark} Clang PATH configuration"
+  become: false
+
+- name: Display Clang path information
+  ansible.builtin.debug:
+    msg:
+      - "##################################################"
+      - "##"
+      - "##  To ensure installed clang is used in Docker,"
+      - "##  add the following line to your dockerfile:"
+      - "##"
+      - "##  ENV PATH=/usr/lib/llvm-{{ clang_version }}/bin:$PATH"
+      - "##"
+      - "##################################################"
+
+- name: Clean up temporary directory
+  ansible.builtin.file:
+    path: "{{ temp_dir.path }}"
+    state: absent
+  become: false
+  when: temp_dir.path is defined

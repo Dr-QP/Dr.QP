@@ -1,0 +1,63 @@
+---
+# ROS user setup tasks
+
+# Create the ROS user group
+- name: Create ROS user group
+  ansible.builtin.group:
+    name: "{{ ros_user_setup_username }}"
+    gid: "{{ ros_user_setup_gid }}"
+    state: present
+
+# Create the ROS user
+- name: Create ROS user
+  ansible.builtin.user:
+    name: "{{ ros_user_setup_username }}"
+    uid: "{{ ros_user_setup_uid }}"
+    group: "{{ ros_user_setup_username }}"
+    shell: /bin/bash
+    create_home: true
+    state: present
+
+# Add the user to sudoers with NOPASSWD
+- name: Add ROS user to sudoers with NOPASSWD
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    line: "{{ ros_user_setup_username }} ALL=(ALL) NOPASSWD:ALL"
+    state: present
+    validate: "visudo -cf %s"
+
+# Create ROS workspace directory
+- name: Create ROS workspace directory
+  ansible.builtin.file:
+    path: "{{ ros_user_setup_workspace_dir }}"
+    state: directory
+    owner: "{{ ros_user_setup_uid }}"
+    group: "{{ ros_user_setup_gid }}"
+    mode: "0755"
+
+# Add ROS setup to .bashrc
+- name: Swap user variables to {{ ros_user_setup_username }}
+  ansible.builtin.set_fact:
+    user_home: "/home/{{ ros_user_setup_username }}"
+    ros_user: "{{ ros_user_setup_username }}"
+
+- name: Add ROS setup to .bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ user_home }}/.bashrc"
+    line: "source /opt/ros/{{ ros_distro }}/setup.bash"
+    state: present
+    create: true
+    owner: "{{ ros_user_setup_uid }}"
+    group: "{{ ros_user_setup_gid }}"
+    mode: "0644"
+
+# Add workspace setup to .bashrc
+- name: Add workspace setup to .bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ user_home }}/.bashrc"
+    line: "source {{ ros_user_setup_workspace_dir }}/install/setup.bash"
+    state: present
+    create: true
+    owner: "{{ ros_user_setup_uid }}"
+    group: "{{ ros_user_setup_gid }}"
+    mode: "0644"

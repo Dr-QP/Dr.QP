@@ -1,0 +1,24 @@
+---
+- name: Remove colcon metadata default
+  ansible.builtin.command: colcon --log-base "{{ temp_dir.path }}" metadata remove default
+  register: remove_metadata_result
+  changed_when: remove_metadata_result.rc == 0
+  failed_when: remove_metadata_result.rc != 0 and "A repository with the name 'default' doesn't exist" not in remove_metadata_result.stderr
+  ignore_errors: true
+
+- name: Add colcon metadata default
+  ansible.builtin.command: >-
+    colcon --log-base "{{ temp_dir.path }}" metadata add default
+    https://raw.githubusercontent.com/colcon/colcon-metadata-repository/f0ea17f9a0e70ec0e0e15f869deec2b9f942607d/index.yaml
+  register: add_metadata_result
+  changed_when: add_metadata_result.rc == 0
+
+- name: Update colcon metadata default
+  ansible.builtin.command: colcon --log-base "{{ temp_dir.path }}" metadata update default
+  register: update_metadata_result
+  changed_when: update_metadata_result.rc == 0
+
+- name: List colcon metadata
+  ansible.builtin.command: colcon --log-base "{{ temp_dir.path }}" metadata list
+  register: list_metadata_result
+  changed_when: false

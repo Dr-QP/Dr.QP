@@ -29,6 +29,14 @@ inputs:
   build-args:
     description: Build arguments for Dockerfile
     required: false
+  export-digest:
+    description: Export digest as artifacts
+    required: false
+    default: 'true'
+outputs:
+  digest:
+    description: Digest of the built image
+    value: ${{ steps.build.outputs.digest }}
 runs:
   using: composite
   steps:
@@ -62,23 +70,36 @@ runs:
         outputs: type=image,"name=${{ inputs.image }}",push-by-digest=true,name-canonical=true,push=true
 
     - name: Export digest
-      shell: bash
-      run: |
-        mkdir -p ${{ runner.temp }}/digests
-        digest="${{ steps.build.outputs.digest }}"
-        touch "${{ runner.temp }}/digests/${digest#sha256:}"
-
-    - name: Prepare digest artifact name
+      if: ${{ inputs.export-digest == 'true' }}
       shell: bash
       id: digests
+      env:
+        DIGESTS_DIR: ${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}
+        DIGEST_CONTENT: ${{ inputs.image }}-${{ inputs.future-tag }}-${{ inputs.arch }}
+        DIGEST: ${{ steps.build.outputs.digest }}
+        ARTIFACT_NAME: digests-${{ inputs.image }}${{ inputs.future-tag }}-linux-${{ inputs.arch }}
       run: |
-        artifact_name='digests-${{ inputs.image }}${{ inputs.future-tag }}-linux-${{ inputs.arch }}'
-        echo "artifact_name=${artifact_name//\//-}" >> "$GITHUB_OUTPUT"
+        mkdir -p "${DIGESTS_DIR}"
+        DIGESTS_DIR=$(mktemp -d "${DIGESTS_DIR}/XXXXXXXXX")
+        echo "digests_dir=${DIGESTS_DIR}" >> "$GITHUB_OUTPUT"
+
+        echo "${DIGEST_CONTENT}" > "${DIGESTS_DIR}/${DIGEST#sha256:}"
+
+        echo "artifact_name=${ARTIFACT_NAME//\//-}" >> "$GITHUB_OUTPUT"
 
     - name: Upload digest
+      if: ${{ inputs.export-digest == 'true' }}
       uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.digests.outputs.artifact_name }}
-        path: ${{ runner.temp }}/digests/*
+        path: ${{ steps.digests.outputs.digests_dir }}/*
         if-no-files-found: error
         retention-days: 1
+
+    - name: Cleanup digests
+      if: ${{ inputs.export-digest == 'true' }}
+      shell: bash
+      env:
+        DIGESTS_DIR: ${{ steps.digests.outputs.digests_dir }}
+      run: |
+        rm -rf "${DIGESTS_DIR}/*"

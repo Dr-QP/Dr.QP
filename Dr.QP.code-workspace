@@ -63,6 +63,7 @@
       "gbraad.systemd-universal-manager",
       "ipierre1.ansible-vault-vscode",
       "redhat.ansible",
+      "davidkol.fastcompare",
       // cSpell:enable
     ]
   },
@@ -227,7 +228,7 @@
       {
         "label": "Dr.QP clean",
         "type": "shell",
-        "command": "rm -rf build install log lcov .cache docs/_build $(find packages/ -type d -name node_modules -o -name build -o -name dist)",
+        "command": "rm -rf build install log lcov .cache docs/_build",
         "options": {
           "cwd": "${workspaceFolder}"
         },
@@ -252,6 +253,12 @@
         ],
       },
       {
+        "label": "Dr.QP rosdep",
+        "type": "RDE",
+        "command": "./scripts/ros/ros-dep.sh",
+        "problemMatcher": []
+      },
+      {
         "label": "Dr.QP ser2net",
         "type": "shell",
         "command": "ser2net -d -c ${workspaceFolder}/scripts/ser2net/ser2net.yml",
@@ -263,6 +270,17 @@
         "command": "python3 -m venv .venv && .venv/bin/python3 -m pip install -r requirements.txt",
         "options": {
           "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": [
+          "$python"
+        ]
+      },
+      {
+        "label": "Dr.QP setup ROS",
+        "type": "shell",
+        "command": "${workspaceFolder}/.venv/bin/ansible-playbook playbooks/20_ros_setup.yml -i inventories/localhost.yml",
+        "options": {
+          "cwd": "${workspaceFolder}/scripts/ros/ansible",
         },
         "problemMatcher": [
           "$python"
@@ -427,6 +445,7 @@
       "ipympl",
       "ipynb",
       "jupytext",
+      "libstdc",
       "linestyle",
       "linspace",
       "Matosov",
@@ -468,5 +487,9 @@
     ],
     "ansible.ansible.path": ".venv/bin/ansible",
     "ansible.python.interpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "files.associations": {
+      "**/ansible/**/*.yml": "ansible",
+      "**/ansible/**/*.yaml": "ansible",
+    }
   }
 }

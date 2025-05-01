@@ -1,0 +1,62 @@
+---
+# Fish shell setup for ROS 2
+- name: Install fish
+  ansible.builtin.apt:
+    name: fish
+    state: present
+    update_cache: true
+    install_recommends: false
+
+- name: Ensure fish config directory exists
+  ansible.builtin.file:
+    path: "{{ user_home }}/.config/fish/conf.d"
+    state: directory
+    mode: "0755"
+    owner: "{{ ros_user_setup_uid }}"
+    group: "{{ ros_user_setup_gid }}"
+  become: false
+
+- name: Create temporary directory for downloads
+  ansible.builtin.tempfile:
+    state: directory
+  register: temp_dir
+  become: false
+
+- name: Download fisher (fish package manager)
+  ansible.builtin.get_url:
+    url: https://git.io/fisher
+    dest: "{{ temp_dir.path }}/fisher.fish"
+    mode: "0755"
+  become: false
+
+- name: Install fisher
+  ansible.builtin.shell:
+    cmd: source {{ temp_dir.path }}/fisher.fish && fisher install jorgebucaran/fisher
+    chdir: "{{ temp_dir.path }}"
+    executable: fish
+    creates: "{{ user_home }}/.config/fish/functions/fisher.fish"
+  become: false
+
+- name: Install bass (for sourcing bash scripts in fish)
+  ansible.builtin.shell:
+    cmd: fisher install edc/bass
+    chdir: "{{ temp_dir.path }}"
+    executable: fish
+    creates: "{{ user_home }}/.config/fish/functions/bass.fish"
+  become: false
+
+- name: Copy ROS fish configuration
+  ansible.builtin.template:
+    src: ros.fish.j2
+    dest: "{{ user_home }}/.config/fish/conf.d/ros.fish"
+    mode: "0644"
+    owner: "{{ ros_user_setup_uid }}"
+    group: "{{ ros_user_setup_gid }}"
+  become: false
+
+- name: Clean up temporary directory
+  ansible.builtin.file:
+    path: "{{ temp_dir.path }}"
+    state: absent
+  become: false
+  when: temp_dir.path is defined

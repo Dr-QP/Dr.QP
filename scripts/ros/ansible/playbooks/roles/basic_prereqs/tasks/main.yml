@@ -1,0 +1,41 @@
+---
+- name: Install basic prerequisites
+  ansible.builtin.apt:
+    name:
+      - software-properties-common
+      - wget
+      - fish
+      - curl
+      - gnupg2
+      - lsb-release
+      - ca-certificates
+      - apt-utils
+    state: present
+    update_cache: true
+    install_recommends: false
+
+- name: Enable community-maintained free and open-source software (universe repository)
+  # ansible.builtin.apt_repository: doesn't support repo short names
+  # Request to fix that was closed as "Won't do" https://github.com/ansible/ansible/issues/48714
+  # The code below is a workaround, the commented out version works as well,
+  # but it creates a duplicate entry conflicting with /etc/apt/sources.list.d/ubuntu.sources
+  #
+  # Possible future improvement if ever needed is to do a dry-run and check if the entry already exists
+  # sudo add-apt-repository universe --dry-run
+  # Adding component(s) 'universe' to all repositories.
+  # DRY-RUN mode: no modifications will be made
+  #
+  become: true
+  ansible.builtin.command: add-apt-repository universe
+  changed_when: true
+
+# NOT USED because it creates a duplicate entry conflicting with /etc/apt/sources.list.d/ubuntu.sources
+# - name: Enable community-maintained free and open-source software (universe repository)
+#   ansible.builtin.apt_repository:
+#     state: present
+#     repo: "deb [arch={{ system_arch }} signed-by=/usr/share/keyrings/ubuntu-archive-keyring.gpg] http://ports.ubuntu.com/ubuntu-ports {{ item }} universe"
+#     filename: ubuntu-universe
+#   loop:
+#     - "{{ system_dist }}"
+#     - "{{ system_dist }}-updates"
+#     - "{{ system_dist }}-security"

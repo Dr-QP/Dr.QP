@@ -1,0 +1,24 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+  become: true
+
+- name: Clean ROS dependencies
+  ansible.builtin.file:
+    path: /etc/ros/rosdep/sources.list.d/
+    state: absent
+
+- name: Initialize rosdep
+  ansible.builtin.command:
+    cmd: rosdep init
+    creates: /etc/ros/rosdep/sources.list.d/20-default.list
+
+- name: Update rosdep
+  ansible.builtin.command:
+    cmd: rosdep update
+    creates: "{{ user_home }}/.ros/rosdep/sources.cache"
+  register: rosdep_update
+  changed_when: rosdep_update.stdout is search('updated cache in')
+  become: true
+  become_user: "{{ ros_user }}"
