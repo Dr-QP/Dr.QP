@@ -27,14 +27,19 @@ runs:
     - name: Prepare digest artifact name
       shell: bash
       id: digests
+      env:
+        ARTIFACT_NAME: digests-${{ inputs.image }}${{ inputs.future-tag }}-
+        DIGESTS_DIR: ${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}-XXXXXXXXX
       run: |
-        artifact_name='digests-${{ inputs.image }}${{ inputs.future-tag }}-'
-        echo "artifact_name_prefix=${artifact_name//\//-}" >> "$GITHUB_OUTPUT"
+        echo "artifact_name_prefix=${ARTIFACT_NAME//\//-}" >> "$GITHUB_OUTPUT"
+
+        DIGESTS_DIR=$(mktemp -d "${DIGESTS_DIR}")
+        echo "digests_dir=${DIGESTS_DIR}" >> "$GITHUB_OUTPUT"
 
     - name: Download digests
       uses: actions/download-artifact@v4
       with:
-        path: ${{ runner.temp }}/digests
+        path: ${{ steps.digests.outputs.digests_dir }}
         pattern: ${{ steps.digests.outputs.artifact_name_prefix }}*
         merge-multiple: true
 
@@ -54,7 +59,7 @@ runs:
 
     - name: Create manifest list and push
       shell: bash
-      working-directory: ${{ runner.temp }}/digests
+      working-directory: ${{ steps.digests.outputs.digests_dir }}
       run: |
         docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
           $(printf '${{ inputs.image }}@sha256:%s ' *)
@@ -63,3 +68,11 @@ runs:
       shell: bash
       run: |
         docker buildx imagetools inspect ${{ inputs.image }}:${{ steps.meta.outputs.version }}
+
+    - name: Cleanup digests temp dir
+      if: ${{ inputs.export-digest == 'true' }}
+      shell: bash
+      env:
+        DIGESTS_DIR: ${{ steps.digests.outputs.digests_dir }}
+      run: |
+        rm -rf "${DIGESTS_DIR}/*"

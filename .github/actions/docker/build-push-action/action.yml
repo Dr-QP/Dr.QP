@@ -72,13 +72,17 @@ runs:
     - name: Export digest
       if: ${{ inputs.export-digest == 'true' }}
       shell: bash
+      id: digests
       env:
-        DIGESTS_DIR: ${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}
+        DIGESTS_DIR: ${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}-XXXXXXXXX
         DIGEST_CONTENT: ${{ inputs.image }}-${{ inputs.future-tag }}-${{ inputs.arch }}
         DIGEST: ${{ steps.build.outputs.digest }}
       run: |
         mkdir -p "${DIGESTS_DIR}"
         echo "${DIGEST_CONTENT}" > "${DIGESTS_DIR}/${DIGEST#sha256:}"
+
+        DIGESTS_DIR=$(mktemp -d "${DIGESTS_DIR}")
+        echo "digests_dir=${DIGESTS_DIR}" >> "$GITHUB_OUTPUT"
 
     - name: Prepare digest artifact name
       if: ${{ inputs.export-digest == 'true' }}
@@ -94,7 +98,7 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.digests.outputs.artifact_name }}
-        path: ${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}/*
+        path: ${{ steps.digests.outputs.digests_dir }}/*
         if-no-files-found: error
         retention-days: 1
 
@@ -102,6 +106,6 @@ runs:
       if: ${{ inputs.export-digest == 'true' }}
       shell: bash
       env:
-        DIGESTS_DIR: ${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}
+        DIGESTS_DIR: ${{ steps.digests.outputs.digests_dir }}
       run: |
         rm -rf "${DIGESTS_DIR}/*"
