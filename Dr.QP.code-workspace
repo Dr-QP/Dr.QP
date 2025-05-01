@@ -253,6 +253,12 @@
         ],
       },
       {
+        "label": "Dr.QP rosdep",
+        "type": "RDE",
+        "command": "./scripts/ros/ros-dep.sh",
+        "problemMatcher": []
+      },
+      {
         "label": "Dr.QP ser2net",
         "type": "shell",
         "command": "ser2net -d -c ${workspaceFolder}/scripts/ser2net/ser2net.yml",
@@ -264,6 +270,17 @@
         "command": "python3 -m venv .venv && .venv/bin/python3 -m pip install -r requirements.txt",
         "options": {
           "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": [
+          "$python"
+        ]
+      },
+      {
+        "label": "Dr.QP setup ROS",
+        "type": "shell",
+        "command": ".venv/bin/ansible-playbook playbooks/20_ros_setup.yml -i inventories/localhost.yml",
+        "options": {
+          "cwd": "${workspaceFolder}/scripts/ros/ansible"
         },
         "problemMatcher": [
           "$python"

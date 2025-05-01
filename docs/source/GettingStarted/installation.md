@@ -24,12 +24,9 @@ While ROS 2 is supported on many OS, the quality of support is still low and man
 
 Linux is the only platform that has been tested for this project.
 
-1. Follow {doc}`installation-ros` to install ROS2
+1. Use Ubuntu 24.04 Noble as the base OS
 2. Open `Dr.QP.code-workspace` in VSCode
 3. Install recommended VSCode extensions
-4. Install ROS dependencies
-
-```bash
-ros2_activate # Source ROS environment
-./scripts/ros/ros-dep.sh # Install all ROS dependencies
-```
+4. Create venv using the task `Dr.QP venv`
+5. Setup environment using the task `Dr.QP setup ROS`
+6. Install ROS dependencies using the task `Dr.QP rosdep`
