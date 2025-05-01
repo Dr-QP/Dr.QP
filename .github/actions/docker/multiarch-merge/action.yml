@@ -29,11 +29,12 @@ runs:
       id: digests
       env:
         ARTIFACT_NAME: digests-${{ inputs.image }}${{ inputs.future-tag }}-
-        DIGESTS_DIR: ${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}-XXXXXXXXX
+        DIGESTS_DIR: ${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}
       run: |
         echo "artifact_name_prefix=${ARTIFACT_NAME//\//-}" >> "$GITHUB_OUTPUT"
 
-        DIGESTS_DIR=$(mktemp -d "${DIGESTS_DIR}")
+        mkdir -p "${DIGESTS_DIR}"
+        DIGESTS_DIR=$(mktemp -d "${DIGESTS_DIR}/XXXXXXXXX")
         echo "digests_dir=${DIGESTS_DIR}" >> "$GITHUB_OUTPUT"
 
     - name: Download digests

@@ -74,15 +74,15 @@ runs:
       shell: bash
       id: digests
       env:
-        DIGESTS_DIR: ${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}-XXXXXXXXX
+        DIGESTS_DIR: ${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}
         DIGEST_CONTENT: ${{ inputs.image }}-${{ inputs.future-tag }}-${{ inputs.arch }}
         DIGEST: ${{ steps.build.outputs.digest }}
         ARTIFACT_NAME: digests-${{ inputs.image }}${{ inputs.future-tag }}-linux-${{ inputs.arch }}
       run: |
-        DIGESTS_DIR=$(mktemp -d "${DIGESTS_DIR}")
+        mkdir -p "${DIGESTS_DIR}"
+        DIGESTS_DIR=$(mktemp -d "${DIGESTS_DIR}/XXXXXXXXX")
         echo "digests_dir=${DIGESTS_DIR}" >> "$GITHUB_OUTPUT"
 
-        mkdir -p "${DIGESTS_DIR}"
         echo "${DIGEST_CONTENT}" > "${DIGESTS_DIR}/${DIGEST#sha256:}"
 
         echo "artifact_name=${ARTIFACT_NAME//\//-}" >> "$GITHUB_OUTPUT"
