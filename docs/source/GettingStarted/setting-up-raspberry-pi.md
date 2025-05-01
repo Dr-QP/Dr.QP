@@ -12,7 +12,7 @@ Run: `sudo systemctl edit systemd-networkd-wait-online.service`
 
 Paste an override into edit section:
 
-```
+```bash
 [Service]
 ExecStart=
 ExecStart=/lib/systemd/systemd-networkd-wait-online --ignore=eth0 --quiet
@@ -26,20 +26,22 @@ The UART expansion board is based on sc16is752 and needs an overlay
 
 `sudo nano /boot/firmware/config.txt`
 
-### Installing deployment service
-
-Production docker container is deployed using Ansible.
-Run the following command on your dev host to install docker and setup autorun service
-
-::
-
-: ansible-playbook -i inventory.yml playbooks/.yml --ask-become-pass
-
-```
+```bash
 [all]
 # Dr.QP: UART via I2C devices. addr is different according to status of A0/A1, default 0X48
 dtoverlay=sc16is752-i2c,int_pin=24,addr=0x48
 
 # Skip power supply check on RPi5
 usb_max_current_enable=1
+```
+
+### Installing deployment service
+
+Production docker container is deployed using Ansible.
+Run the following command on your dev host to install docker and setup autorun service
+
+```bash
+cd scripts/ros/ansible
+ansible-playbook playbooks/1_pam_ssh_agent_auth.yml --ask-become-pass
+ansible-playbook playbooks/100_startup_service.yml
 ```
