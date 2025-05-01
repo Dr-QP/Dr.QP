@@ -79,11 +79,11 @@ runs:
         DIGEST: ${{ steps.build.outputs.digest }}
         ARTIFACT_NAME: digests-${{ inputs.image }}${{ inputs.future-tag }}-linux-${{ inputs.arch }}
       run: |
-        mkdir -p "${DIGESTS_DIR}"
-        echo "${DIGEST_CONTENT}" > "${DIGESTS_DIR}/${DIGEST#sha256:}"
-
         DIGESTS_DIR=$(mktemp -d "${DIGESTS_DIR}")
         echo "digests_dir=${DIGESTS_DIR}" >> "$GITHUB_OUTPUT"
+
+        mkdir -p "${DIGESTS_DIR}"
+        echo "${DIGEST_CONTENT}" > "${DIGESTS_DIR}/${DIGEST#sha256:}"
 
         echo "artifact_name=${ARTIFACT_NAME//\//-}" >> "$GITHUB_OUTPUT"
 
