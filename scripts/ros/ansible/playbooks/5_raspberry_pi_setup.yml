@@ -8,7 +8,7 @@
       ansible.builtin.file:
         path: /etc/systemd/system/systemd-networkd-wait-online.service.d
         state: directory
-        mode: '0755'
+        mode: "0755"
 
     - name: Configure systemd-networkd-wait-online to not wait for ethernet (eth0)
       ansible.builtin.copy:
@@ -17,7 +17,7 @@
           [Service]
           ExecStart=
           ExecStart=/lib/systemd/systemd-networkd-wait-online --ignore=eth0 --quiet
-        mode: '0644'
+        mode: "0644"
       notify: Reload systemd
 
     - name: Update config.txt for sc16is752 and power settings
