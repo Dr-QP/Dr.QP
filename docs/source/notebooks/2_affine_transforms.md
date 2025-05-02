@@ -217,7 +217,7 @@ model = forward_kinematics_transforms(coxa, femur, tibia, 0, -25, 110)
 fig = sp.make_subplots(
     rows=2,
     cols=2,
-    specs=[[{'type': 'xy'}, {'type': 'xy'}], [{'type': 'xy'}, {'type': '3d'}]],
+    specs=[[{'type': 'xy'}, {'type': 'xy'}], [{'type': 'xy'}, {'type': 'scene'}]],
     subplot_titles=['Foot in 3D (XY)', 'Foot in 3D (XZ)', 'Foot in 3D (YZ)', 'Foot in 3D'],
 )
 
