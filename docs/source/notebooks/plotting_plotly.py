@@ -423,7 +423,7 @@ def plot_leg_with_points(
         y_label=y_label,
     )
 
-    return fig, None, plot_data
+    return fig, plot_data
 
 
 def plot_cartesian_plane(

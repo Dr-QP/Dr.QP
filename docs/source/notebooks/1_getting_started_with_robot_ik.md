@@ -176,7 +176,7 @@ from plotting_plotly import plot_leg_with_points
 
 model = forward_kinematics(coxa_length, femur_length, tibia_length, alpha, beta, gamma)
 
-fig, _, _ = plot_leg_with_points(model, 'Neutral position (straight leg)')
+fig, _ = plot_leg_with_points(model, 'Neutral position (straight leg)')
 display(fig)
 ```
 
@@ -185,7 +185,7 @@ Now lets try changing some angles to see how it behaves. Feel free to experiment
 ```{code-cell} ipython3
 model = forward_kinematics(coxa_length, femur_length, tibia_length, 50, -60, -10)
 
-fig, _, _ = plot_leg_with_points(
+fig, _ = plot_leg_with_points(
     model, 'Lifted up (coxa) and bent down (femur, tibia)', link_labels='legend'
 )
 display(fig)
@@ -195,7 +195,7 @@ display(fig)
 # Lifted up (coxa) and bent down (femur), with foot on the ground (guessed angle)
 model = forward_kinematics(coxa_length, femur_length, tibia_length, 45, -55, -14)
 
-fig, _, _ = plot_leg_with_points(model, 'Foot on the ground', link_labels='legend')
+fig, _ = plot_leg_with_points(model, 'Foot on the ground', link_labels='legend')
 display(fig)
 ```
 
@@ -224,7 +224,7 @@ model = forward_kinematics(
 
 frames_to_animate = 50
 
-fig, _, plot_data = plot_leg_with_points(
+fig, plot_data = plot_leg_with_points(
     model,
     'Find angles to place foot on the X axis',
     link_labels='legend',  # if is_interactive else 'inline',
@@ -318,7 +318,7 @@ def forward_kinematics_xy(coxa_length, femur_length, tibia_length, alpha, show_a
 
 
 def plot_leg_with_points_xy(model: list[Line], title: str):
-    fig, _, _ = plot_leg_with_points(model, title, link_labels='none', x_label='X', y_label='Y')
+    fig, _ = plot_leg_with_points(model, title, link_labels='none', x_label='X', y_label='Y')
     return fig
 
 
@@ -500,7 +500,7 @@ model = forward_kinematics(
     body_length=0,
 )
 
-fig, _, plot_data = plot_leg_with_points(
+fig, plot_data = plot_leg_with_points(
     model,
     'Inverse Kinematics trigonometry',
     joint_labels='points',
@@ -614,7 +614,7 @@ def solve_and_plot_at_target_xz(
         body_length=0,
     )
 
-    fig, _, _ = plot_leg_with_points(
+    fig, _ = plot_leg_with_points(
         model,
         plot_title,
         joint_labels='points',
@@ -731,7 +731,7 @@ import plotly.graph_objects as go
 
 model = solved_model[0]
 
-fig, _, plot_data = plot_leg_with_points(
+fig, plot_data = plot_leg_with_points(
     model,
     'IK Circle',
     link_labels='none',
@@ -885,7 +885,7 @@ def safe_solve_and_plot_at_target(
         body_length=0,
     )
 
-    fig, _, _ = plot_leg_with_points(
+    fig, _ = plot_leg_with_points(
         model,
         plot_title + (' (target reached)' if solvable else ' (target unreachable)'),
         joint_labels='points',

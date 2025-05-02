@@ -125,12 +125,12 @@ tibia = 10
 
 model = forward_kinematics(coxa, femur, tibia, 45, -55, -14)
 
-fig1 = plot_leg_with_points(
+fig1, _ = plot_leg_with_points(
     model.xy, 'Foot on the ground (XY)', link_labels='none', x_label="X'", y_label='Y'
 )
 display(fig1)
 
-fig2 = plot_leg_with_points(
+fig2, _ = plot_leg_with_points(
     model.xz, 'Foot on the ground (XZ)', link_labels='none', x_label="X'", y_label='Z'
 )
 display(fig2)
@@ -222,21 +222,21 @@ fig = sp.make_subplots(
 )
 
 # Plot XY view (top left)
-fig_xy = plot_leg_with_points(
+fig_xy, _ = plot_leg_with_points(
     model.xy, 'Foot in 3D (XY)', link_labels='none', joint_labels='points', x_label='X', y_label='Y'
 )
 for trace in fig_xy.data:
     fig.add_trace(trace, row=1, col=1)
 
 # Plot XZ view (top right)
-fig_xz = plot_leg_with_points(
+fig_xz, _ = plot_leg_with_points(
     model.xz, 'Foot in 3D (XZ)', link_labels='none', joint_labels='points', x_label='X', y_label='Z'
 )
 for trace in fig_xz.data:
     fig.add_trace(trace, row=1, col=2)
 
 # Plot YZ view (bottom left)
-fig_yz = plot_leg_with_points(
+fig_yz, _ = plot_leg_with_points(
     model.yz, 'Foot in 3D (YZ)', link_labels='none', joint_labels='points', x_label='Y', y_label='Z'
 )
 for trace in fig_yz.data:
