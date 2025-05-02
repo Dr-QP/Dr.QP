@@ -77,13 +77,16 @@ def add_inline_labels(fig, with_overall_progress=True, fontsize='medium'):
                 dx = x_values[-1] - x_values[0]
                 dy = y_values[-1] - y_values[0]
 
-            angle = np.degrees(np.arctan2(dy, dx))
+            # Calculate the angle of the line
+            line_angle = -np.degrees(np.arctan2(dy, dx))
 
-            # Adjust angle for readability
-            if -90 <= angle <= 90:
-                text_angle = angle
+            # For text alignment, we want the text to follow the line direction
+            # If the line goes down (negative slope), we need to flip the angle
+            # to ensure the text follows the line correctly
+            if -90 <= line_angle <= 90:
+                text_angle = line_angle
             else:
-                text_angle = angle - 180
+                text_angle = line_angle - 180
 
             # Add annotation
             fig.add_annotation(
@@ -99,7 +102,7 @@ def add_inline_labels(fig, with_overall_progress=True, fontsize='medium'):
                 textangle=text_angle,
                 xanchor='center',
                 yanchor='middle',
-                bgcolor='rgba(255, 255, 255, 0.7)',
+                bgcolor='rgba(255, 255, 255, 1)',
                 borderpad=2,
             )
 
