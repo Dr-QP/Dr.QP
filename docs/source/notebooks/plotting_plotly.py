@@ -65,12 +65,27 @@ def plot_leg3d(
         fig = go.Figure()
         fig.update_layout(
             title=title,
-            scene=dict(
-                aspectmode='data',
-                xaxis=dict(showticklabels=False, showgrid=False, zeroline=False, showline=False),
-                yaxis=dict(showticklabels=False, showgrid=False, zeroline=False, showline=False),
-                zaxis=dict(showticklabels=False, showgrid=False, zeroline=False, showline=False),
-            ),
+            scene={
+                'aspectmode': 'data',
+                'xaxis': {
+                    'showticklabels': False,
+                    'showgrid': False,
+                    'zeroline': False,
+                    'showline': False,
+                },
+                'yaxis': {
+                    'showticklabels': False,
+                    'showgrid': False,
+                    'zeroline': False,
+                    'showline': False,
+                },
+                'zaxis': {
+                    'showticklabels': False,
+                    'showgrid': False,
+                    'zeroline': False,
+                    'showline': False,
+                },
+            },
         )
 
     plot_data = plot_leg_links(fig, model.lines, link_labels=link_labels, joint_labels=joint_labels)
@@ -110,7 +125,7 @@ def plot_leg_links(
             y=y_vals,
             z=z_vals,
             mode='lines',
-            line=dict(color=color, width=4),
+            line={'color': color, 'width': 4},
             name=label if label else f'Line {i}',
             showlegend=(link_labels == 'legend'),
         )
@@ -127,7 +142,7 @@ def plot_leg_links(
                     y=[line.end.y],
                     z=[line.end.z],
                     mode='markers',
-                    marker=dict(color=joint_color, size=6),
+                    marker={'color': joint_color, 'size': 6},
                     name=f'Joint {i}',
                     showlegend=False,
                 )
@@ -137,7 +152,7 @@ def plot_leg_links(
                     y=[line.end.y],
                     z=[0],
                     mode='markers',
-                    marker=dict(color=joint_color, size=6),
+                    marker={'color': joint_color, 'size': 6},
                     name=f'Joint {i}',
                     showlegend=False,
                 )
@@ -162,16 +177,31 @@ def plot_hexapod(hexapod: HexapodModel, targets=None, feet_trails_frames=0):
     fig = go.Figure()
     fig.update_layout(
         title='Hexapod in 3D',
-        scene=dict(
-            aspectmode='data',
-            xaxis=dict(showticklabels=False, showgrid=False, zeroline=False, showline=False),
-            yaxis=dict(showticklabels=False, showgrid=False, zeroline=False, showline=False),
-            zaxis=dict(showticklabels=False, showgrid=False, zeroline=False, showline=False),
-        ),
-        scene_camera=dict(
-            eye=dict(x=1.5, y=1.5, z=0.8),
-            up=dict(x=0, y=0, z=1),
-        ),
+        scene={
+            'aspectmode': 'data',
+            'xaxis': {
+                'showticklabels': False,
+                'showgrid': False,
+                'zeroline': False,
+                'showline': False,
+            },
+            'yaxis': {
+                'showticklabels': False,
+                'showgrid': False,
+                'zeroline': False,
+                'showline': False,
+            },
+            'zaxis': {
+                'showticklabels': False,
+                'showgrid': False,
+                'zeroline': False,
+                'showline': False,
+            },
+        },
+        scene_camera={
+            'eye': {'x': 1.5, 'y': 1.5, 'z': 0.8},
+            'up': {'x': 0, 'y': 0, 'z': 1},
+        },
     )
 
     plot_data = HexapodPlotData()
@@ -198,7 +228,7 @@ def plot_hexapod(hexapod: HexapodModel, targets=None, feet_trails_frames=0):
                 y=[],
                 z=[],
                 mode='lines',
-                line=dict(color='orange', width=2),
+                line={'color': 'orange', 'width': 2},
                 name=f'{leg.label} trail',
                 showlegend=False,
             )
@@ -212,7 +242,7 @@ def plot_hexapod(hexapod: HexapodModel, targets=None, feet_trails_frames=0):
         y=[hexapod.head.start.y, hexapod.head.end.y],
         z=[hexapod.head.start.z, hexapod.head.end.z],
         mode='lines',
-        line=dict(color='cyan', width=4),
+        line={'color': 'cyan', 'width': 4},
         name='Head',
         showlegend=False,
     )
@@ -231,7 +261,7 @@ def plot_hexapod(hexapod: HexapodModel, targets=None, feet_trails_frames=0):
             y=target_y,
             z=target_z,
             mode='markers',
-            marker=dict(color='black', size=6),
+            marker={'color': 'black', 'size': 6},
             name='Targets',
         )
 
@@ -239,16 +269,16 @@ def plot_hexapod(hexapod: HexapodModel, targets=None, feet_trails_frames=0):
 
     # Set initial camera view
     fig.update_layout(
-        scene_camera=dict(
-            eye=dict(x=1.5, y=1.5, z=0.8),
-            up=dict(x=0, y=0, z=1),
-        )
+        scene_camera={
+            'eye': {'x': 1.5, 'y': 1.5, 'z': 0.8},
+            'up': {'x': 0, 'y': 0, 'z': 1},
+        }
     )
 
     return fig, plot_data
 
 
-def update_hexapod_plot(hexapod: HexapodModel, plot_data: HexapodPlotData, fig=None):
+def update_hexapod_plot(hexapod: HexapodModel, plot_data: HexapodPlotData, _=None):
     """Update the hexapod plot with new positions."""
     # Update leg positions
     for leg, leg_plot_data in zip(hexapod.legs, plot_data.leg_plot_data):

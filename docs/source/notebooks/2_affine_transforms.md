@@ -35,8 +35,6 @@ The next step is configuring matplotlib backend. Widget backend allows to intera
 
 ```{code-cell} ipython3
 from IPython.display import display
-import plotly.graph_objects as go
-import plotly.subplots as sp
 ```
 
 ## Affine transforms
@@ -47,6 +45,8 @@ Alongside the conversion, we are going to bring all the algorithms to work in fu
 
 ```{code-cell} ipython3
 import numpy as np
+import plotly.graph_objects as go
+import plotly.subplots as sp
 from point import Leg3D, Line3D, Point3D
 from scipy.spatial.transform import Rotation as R
 
@@ -210,43 +210,27 @@ model = forward_kinematics_transforms(coxa, femur, tibia, 0, -25, 110)
 fig = sp.make_subplots(
     rows=2,
     cols=2,
-    specs=[[{'type': 'xy'}, {'type': 'xy'}],
-           [{'type': 'xy'}, {'type': '3d'}]],
-    subplot_titles=['Foot in 3D (XY)', 'Foot in 3D (XZ)', 'Foot in 3D (YZ)', 'Foot in 3D']
+    specs=[[{'type': 'xy'}, {'type': 'xy'}], [{'type': 'xy'}, {'type': '3d'}]],
+    subplot_titles=['Foot in 3D (XY)', 'Foot in 3D (XZ)', 'Foot in 3D (YZ)', 'Foot in 3D'],
 )
 
 # Plot XY view (top left)
 fig_xy = plot_leg_with_points(
-    model.xy,
-    'Foot in 3D (XY)',
-    link_labels='none',
-    joint_labels='points',
-    x_label='X',
-    y_label='Y'
+    model.xy, 'Foot in 3D (XY)', link_labels='none', joint_labels='points', x_label='X', y_label='Y'
 )
 for trace in fig_xy.data:
     fig.add_trace(trace, row=1, col=1)
 
 # Plot XZ view (top right)
 fig_xz = plot_leg_with_points(
-    model.xz,
-    'Foot in 3D (XZ)',
-    link_labels='none',
-    joint_labels='points',
-    x_label='X',
-    y_label='Z'
+    model.xz, 'Foot in 3D (XZ)', link_labels='none', joint_labels='points', x_label='X', y_label='Z'
 )
 for trace in fig_xz.data:
     fig.add_trace(trace, row=1, col=2)
 
 # Plot YZ view (bottom left)
 fig_yz = plot_leg_with_points(
-    model.yz,
-    'Foot in 3D (YZ)',
-    link_labels='none',
-    joint_labels='points',
-    x_label='Y',
-    y_label='Z'
+    model.yz, 'Foot in 3D (YZ)', link_labels='none', joint_labels='points', x_label='Y', y_label='Z'
 )
 for trace in fig_yz.data:
     fig.add_trace(trace, row=2, col=1)
@@ -257,7 +241,7 @@ for trace in fig_3d.data:
     fig.add_trace(trace, row=2, col=2)
 
 # Update layout
-fig.update_layout(height=800, width=1000, title_text="Leg Views")
+fig.update_layout(height=800, width=1000, title_text='Leg Views')
 display(fig)
 # print("foot position: ", model.lines[-1].end)
 ```
@@ -394,7 +378,7 @@ def plot_drqp(drqp, targets=None):
         y=[drqp.head.start.y, drqp.head.end.y],
         z=[drqp.head.start.z, drqp.head.end.z],
         mode='lines',
-        line=dict(color='cyan', width=4),
+        line={'color': 'cyan', 'width': 4},
         name='Head',
     )
     fig.add_trace(head_trace)
@@ -412,23 +396,23 @@ def plot_drqp(drqp, targets=None):
                 y=target_y,
                 z=target_z,
                 mode='markers',
-                marker=dict(color='black', size=6),
+                marker={'color': 'black', 'size': 6},
                 name='Unreachable target',
             )
         )
 
     # Set camera view
     fig.update_layout(
-        scene_camera=dict(
-            eye=dict(x=1.5, y=1.5, z=0.8),
-            up=dict(x=0, y=0, z=1),
-        ),
-        scene=dict(
-            aspectmode='data',
-            xaxis_title='X',
-            yaxis_title='Y',
-            zaxis_title='Z',
-        ),
+        scene_camera={
+            'eye': {'x': 1.5, 'y': 1.5, 'z': 0.8},
+            'up': {'x': 0, 'y': 0, 'z': 1},
+        },
+        scene={
+            'aspectmode': 'data',
+            'xaxis_title': 'X',
+            'yaxis_title': 'Y',
+            'zaxis_title': 'Z',
+        },
         width=800,
         height=600,
     )
@@ -625,7 +609,7 @@ if not skip:
         plot_data=plot_data,
         drqp=drqp,
         transforms=transforms,
-        targets=targets
+        targets=targets,
     )
 ```
 

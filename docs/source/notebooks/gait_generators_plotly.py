@@ -111,7 +111,7 @@ class GaitGenerator:
                 showarrow=False,
                 xref='x',
                 yref='y',
-                font=dict(color=self._color_for_leg(leg)),
+                font={'color': self._color_for_leg(leg)},
                 row=1,
                 col=1,
             )
@@ -122,7 +122,7 @@ class GaitGenerator:
                     x=phases,
                     y=line_y,
                     mode='lines',
-                    line=dict(color=self._color_for_leg(leg), dash=self._line_style_for_leg(leg)),
+                    line={'color': self._color_for_leg(leg), 'dash': self._line_style_for_leg(leg)},
                     name=self._legend_for_leg(leg),
                     showlegend=False,
                 ),
@@ -155,7 +155,7 @@ class GaitGenerator:
                             x=phases[start : end + 1],
                             y=line_y[start : end + 1],
                             mode='lines',
-                            line=dict(color=self._color_for_leg(leg), width=8),
+                            line={'color': self._color_for_leg(leg), 'width': 8},
                             showlegend=False,
                         ),
                         row=1,
@@ -169,7 +169,7 @@ class GaitGenerator:
                     x=phases,
                     y=x_values[leg],
                     mode='lines',
-                    line=dict(color=self._color_for_leg(leg), dash=self._line_style_for_leg(leg)),
+                    line={'color': self._color_for_leg(leg), 'dash': self._line_style_for_leg(leg)},
                     name=self._legend_for_leg(leg),
                 ),
                 row=2,
@@ -183,7 +183,7 @@ class GaitGenerator:
                     x=phases,
                     y=y_values[leg],
                     mode='lines',
-                    line=dict(color=self._color_for_leg(leg), dash=self._line_style_for_leg(leg)),
+                    line={'color': self._color_for_leg(leg), 'dash': self._line_style_for_leg(leg)},
                     name=self._legend_for_leg(leg),
                     showlegend=False,
                 ),
@@ -198,7 +198,7 @@ class GaitGenerator:
                     x=phases,
                     y=z_values[leg],
                     mode='lines',
-                    line=dict(color=self._color_for_leg(leg), dash=self._line_style_for_leg(leg)),
+                    line={'color': self._color_for_leg(leg), 'dash': self._line_style_for_leg(leg)},
                     name=self._legend_for_leg(leg),
                     showlegend=False,
                 ),
@@ -210,7 +210,7 @@ class GaitGenerator:
         fig.update_layout(
             height=800,
             width=1000,
-            legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1),
+            legend={'orientation': 'h', 'yanchor': 'bottom', 'y': 1.02, 'xanchor': 'right', 'x': 1},
         )
 
         # Update y-axis ranges
@@ -285,12 +285,12 @@ class GaitGenerator:
             fig = go.Figure()
             fig.update_layout(
                 title='3D offsets' + subtitle,
-                scene=dict(
-                    xaxis_title='X (forward/backward)',
-                    yaxis_title='Y (left/right)',
-                    zaxis_title='Z (up/down)',
-                    aspectmode='data',
-                ),
+                scene={
+                    'xaxis_title': 'X (forward/backward)',
+                    'yaxis_title': 'Y (left/right)',
+                    'zaxis_title': 'Z (up/down)',
+                    'aspectmode': 'data',
+                },
                 width=800,
                 height=700,
             )
@@ -313,9 +313,11 @@ class GaitGenerator:
                     y=y_values[leg],
                     z=z_values[leg],
                     mode='lines',
-                    line=dict(
-                        color=self._color_for_leg(leg), dash=self._line_style_for_leg(leg), width=4
-                    ),
+                    line={
+                        'color': self._color_for_leg(leg),
+                        'dash': self._line_style_for_leg(leg),
+                        'width': 4,
+                    },
                     name=self._legend_for_leg(leg),
                 )
                 fig.add_trace(trace)
@@ -324,10 +326,10 @@ class GaitGenerator:
         # Set camera position for better visibility
         if own_fig:
             fig.update_layout(
-                scene_camera=dict(
-                    eye=dict(x=1.5, y=1.5, z=0.8),
-                    up=dict(x=0, y=0, z=1),
-                )
+                scene_camera={
+                    'eye': {'x': 1.5, 'y': 1.5, 'z': 0.8},
+                    'up': {'x': 0, 'y': 0, 'z': 1},
+                }
             )
 
             # Calculate axis limits with padding
@@ -340,11 +342,11 @@ class GaitGenerator:
 
             padding = max(max_x - min_x, max_y - min_y, max_z - min_z) * 0.2
             fig.update_layout(
-                scene=dict(
-                    xaxis=dict(range=[min_x - padding, max_x + padding]),
-                    yaxis=dict(range=[min_y - padding, max_y + padding]),
-                    zaxis=dict(range=[min_z, max_z + padding]),
-                )
+                scene={
+                    'xaxis': {'range': [min_x - padding, max_x + padding]},
+                    'yaxis': {'range': [min_y - padding, max_y + padding]},
+                    'zaxis': {'range': [min_z, max_z + padding]},
+                }
             )
 
             display(fig)

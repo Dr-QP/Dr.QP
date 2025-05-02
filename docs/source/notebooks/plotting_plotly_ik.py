@@ -106,7 +106,7 @@ def plot_leg_links(
             x=[line.start.x, line.end.x],
             y=[line.start.y, line.end.y],
             mode='lines',
-            line=dict(color=color, width=2),
+            line={'color': color, 'width': 2},
             name=label if label else f'Line {i}',
             showlegend=(link_labels == 'legend'),
         )
@@ -120,7 +120,7 @@ def plot_leg_links(
                 x=[line.end.x, extended_line.end.x],
                 y=[line.end.y, extended_line.end.y],
                 mode='lines',
-                line=dict(color=color, width=1, dash='dot'),
+                line={'color': color, 'width': 1, 'dash': 'dot'},
                 showlegend=False,
             )
             fig.add_trace(extended_trace)
@@ -133,7 +133,7 @@ def plot_leg_links(
                 x=[line.end.x],
                 y=[line.end.y],
                 mode='markers',
-                marker=dict(color=joint_color, size=8),
+                marker={'color': joint_color, 'size': 8},
                 name=f'Joint {i}',
                 showlegend=False,
             )
@@ -188,26 +188,26 @@ def plot_cartesian_plane(
     """Plot a Cartesian coordinate system using Plotly."""
     # Set axis limits
     fig.update_layout(
-        xaxis=dict(
-            range=[plot_min.x, plot_max.x],
-            zeroline=True,
-            zerolinewidth=2,
-            zerolinecolor='black',
-            showgrid=True,
-            gridwidth=1,
-            gridcolor='lightgray',
-        ),
-        yaxis=dict(
-            range=[plot_min.y, plot_max.y],
-            zeroline=True,
-            zerolinewidth=2,
-            zerolinecolor='black',
-            showgrid=True,
-            gridwidth=1,
-            gridcolor='lightgray',
-            scaleanchor='x',
-            scaleratio=1,
-        ),
+        xaxis={
+            'range': [plot_min.x, plot_max.x],
+            'zeroline': True,
+            'zerolinewidth': 2,
+            'zerolinecolor': 'black',
+            'showgrid': True,
+            'gridwidth': 1,
+            'gridcolor': 'lightgray',
+        },
+        yaxis={
+            'range': [plot_min.y, plot_max.y],
+            'zeroline': True,
+            'zerolinewidth': 2,
+            'zerolinecolor': 'black',
+            'showgrid': True,
+            'gridwidth': 1,
+            'gridcolor': 'lightgray',
+            'scaleanchor': 'x',
+            'scaleratio': 1,
+        },
     )
 
     # Set axis labels
@@ -219,8 +219,8 @@ def plot_cartesian_plane(
     # Hide ticks if requested
     if no_ticks:
         fig.update_layout(
-            xaxis=dict(showticklabels=False),
-            yaxis=dict(showticklabels=False),
+            xaxis={'showticklabels': False},
+            yaxis={'showticklabels': False},
         )
     else:
         # Create custom ticks
@@ -228,8 +228,8 @@ def plot_cartesian_plane(
         y_ticks = np.arange(plot_min.y, plot_max.y, ticks_frequency, dtype=int)
 
         fig.update_layout(
-            xaxis=dict(tickvals=x_ticks),
-            yaxis=dict(tickvals=y_ticks),
+            xaxis={'tickvals': x_ticks},
+            yaxis={'tickvals': y_ticks},
         )
 
     # Add arrows at the end of axes
@@ -297,7 +297,7 @@ def plot_ik_lines(fig, femur, tibia):
             x=[femur.start.x, tibia.end.x],
             y=[femur.start.y, tibia.end.y],
             mode='lines',
-            line=dict(color='magenta', width=2, dash='dash'),
+            line={'color': 'magenta', 'width': 2, 'dash': 'dash'},
             name='L',
         )
     )
@@ -308,7 +308,7 @@ def plot_ik_lines(fig, femur, tibia):
             x=[femur.start.x, d_end.x],
             y=[femur.start.y, d_end.y],
             mode='lines',
-            line=dict(color='magenta', width=2, dash='dash'),
+            line={'color': 'magenta', 'width': 2, 'dash': 'dash'},
             name='D',
         )
     )
@@ -319,7 +319,7 @@ def plot_ik_lines(fig, femur, tibia):
             x=[tibia.end.x, d_end.x],
             y=[tibia.end.y, d_end.y],
             mode='lines',
-            line=dict(color='magenta', width=2, dash='dash'),
+            line={'color': 'magenta', 'width': 2, 'dash': 'dash'},
             name='T',
         )
     )

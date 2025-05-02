@@ -91,11 +91,11 @@ def add_inline_labels(fig, with_overall_progress=True, fontsize='medium'):
                 y=y_mid,
                 text=trace.name,
                 showarrow=False,
-                font=dict(
-                    family='Arial',
-                    size=font_size,
-                    color=trace.line.color if hasattr(trace.line, 'color') else 'black',
-                ),
+                font={
+                    'family': 'Arial',
+                    'size': font_size,
+                    'color': trace.line.color if hasattr(trace.line, 'color') else 'black',
+                },
                 textangle=text_angle,
                 xanchor='center',
                 yanchor='middle',
@@ -207,7 +207,7 @@ class AngleAnnotation:
                 x=x,
                 y=y,
                 mode='lines',
-                line=dict(color=self.color, dash=self.dash, width=1.5),
+                line={'color': self.color, 'dash': self.dash, 'width': 1.5},
                 showlegend=False,
             )
         )
@@ -230,11 +230,11 @@ class AngleAnnotation:
                 y=text_y,
                 text=self.text,
                 showarrow=False,
-                font=dict(
-                    family='Arial',
-                    size=self.text_kw.get('font_size', 10),
-                    color=self.text_kw.get('font_color', self.color),
-                ),
+                font={
+                    'family': 'Arial',
+                    'size': self.text_kw.get('font_size', 10),
+                    'color': self.text_kw.get('font_color', self.color),
+                },
                 xanchor='center',
                 yanchor='middle',
                 bgcolor='rgba(255, 255, 255, 0.7)',

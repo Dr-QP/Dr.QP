@@ -139,7 +139,7 @@ def plot_spline(
     y_values = spline_y(t_fine_y)
 
     fig.add_trace(
-        go.Scatter(x=x_values, y=y_values, mode='lines', line=dict(color=color), name=label)
+        go.Scatter(x=x_values, y=y_values, mode='lines', line={'color': color}, name=label)
     )
 
     # Plot the current point
@@ -151,7 +151,7 @@ def plot_spline(
             x=[current_x],
             y=[current_y],
             mode='markers',
-            marker=dict(color=color, size=10),
+            marker={'color': color, 'size': 10},
             name=f'{label} (current point)',
         )
     )
@@ -186,7 +186,7 @@ def plot_spline(
                     x=_t_deriv_plot_x,
                     y=deriv_x(t_fine_x),
                     mode='lines',
-                    line=dict(color=deriv_color, dash='dash'),
+                    line={'color': deriv_color, 'dash': 'dash'},
                     name=f'{name} (x) {label}',
                 )
             )
@@ -197,7 +197,7 @@ def plot_spline(
                     x=_t_deriv_plot_y,
                     y=deriv_y(t_fine_y),
                     mode='lines',
-                    line=dict(color=deriv_color, dash='dot'),
+                    line={'color': deriv_color, 'dash': 'dot'},
                     name=f'{name} (y) {label}',
                 )
             )
