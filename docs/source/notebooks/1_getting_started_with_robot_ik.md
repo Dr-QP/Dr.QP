@@ -170,7 +170,7 @@ from plotting_plotly_ik import plot_leg_with_points
 
 model = forward_kinematics(coxa_length, femur_length, tibia_length, alpha, beta, gamma)
 
-fig = plot_leg_with_points(model, 'Neutral position (straight leg)')
+fig, _, _ = plot_leg_with_points(model, 'Neutral position (straight leg)')
 display(fig)
 ```
 
@@ -179,7 +179,7 @@ Now lets try changing some angles to see how it behaves. Feel free to experiment
 ```{code-cell} ipython3
 model = forward_kinematics(coxa_length, femur_length, tibia_length, 50, -60, -10)
 
-fig = plot_leg_with_points(
+fig, _, _ = plot_leg_with_points(
     model, 'Lifted up (coxa) and bent down (femur, tibia)', link_labels='legend'
 )
 display(fig)
@@ -189,7 +189,7 @@ display(fig)
 # Lifted up (coxa) and bent down (femur), with foot on the ground (guessed angle)
 model = forward_kinematics(coxa_length, femur_length, tibia_length, 45, -55, -14)
 
-fig = plot_leg_with_points(model, 'Foot on the ground', link_labels='legend')
+fig, _, _ = plot_leg_with_points(model, 'Foot on the ground', link_labels='legend')
 display(fig)
 ```
 
