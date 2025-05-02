@@ -236,7 +236,7 @@ for trace in fig_yz.data:
     fig.add_trace(trace, row=2, col=1)
 
 # Plot 3D view (bottom right)
-fig_3d, _, _ = plot_leg3d(model, 'Foot in 3D', link_labels='none', joint_labels='points')
+fig_3d, plot_data_3d = plot_leg3d(model, 'Foot in 3D', link_labels='none', joint_labels='points')
 for trace in fig_3d.data:
     fig.add_trace(trace, row=2, col=2)
 
