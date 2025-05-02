@@ -6,7 +6,7 @@ The project includes Ansible playbooks to set up a ROS 2 development environment
 
 ## Directory Structure
 
-The Ansible playbooks are located in the `ansible` directory:
+The Ansible playbooks are located in the `scripts/ros/ansible` directory:
 
 ```text
 ansible/
@@ -42,7 +42,6 @@ ansible/
 │   │   └── ros_user_setup/      # ROS user creation and setup
 │   └── test_ros_dependencies.yml # Test playbook for ROS dependencies
 ├── README.md                    # Documentation
-└── setup-ros.sh                 # Wrapper script
 ```
 
 ## Configuration
@@ -55,15 +54,6 @@ Edit `ansible/playbooks/group_vars/all.yml` to configure:
 - `ci_mode`: Whether running in CI environment (default: false)
 
 ## Usage
-
-### Quick Start
-
-To set up a ROS 2 development environment:
-
-```bash
-cd ansible
-./setup-ros.sh
-```
 
 ### Install ROS 2 from packages (default)
 
