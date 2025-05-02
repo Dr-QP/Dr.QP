@@ -45,8 +45,15 @@ The first step is to enable live python modules reloading, so changes in the pyt
 The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
 ```{code-cell} ipython3
-from IPython.display import display
+from IPython.display import display, HTML
 import plotly.graph_objects as go
+import plotly
+
+# Fix for LaTeX in VSCode https://github.com/microsoft/vscode-jupyter/issues/8131#issuecomment-1589961116
+plotly.offline.init_notebook_mode()
+display(HTML(
+    '<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_SVG"></script>'
+))
 ```
 
 ## The robot model
@@ -138,9 +145,9 @@ def forward_kinematics(
     gamma_rad = np.radians(gamma) + beta_rad
 
     start = Point(0, start_height)
-    body = start + Point(body_length, 0, rf'$\alpha={alpha}°$')
-    coxa = body + Point(coxa_length, 0, rf'$\beta={beta}°$').rotate(alpha_rad)
-    femur = coxa + Point(femur_length, 0, rf'$\gamma={gamma}°$').rotate(beta_rad)
+    body = start + Point(body_length, 0, f'$\\alpha={alpha}°$')
+    coxa = body + Point(coxa_length, 0, f'$\\beta={beta}°$').rotate(alpha_rad)
+    femur = coxa + Point(femur_length, 0, f'$\\gamma={gamma}°$').rotate(beta_rad)
     tibia = femur + Point(tibia_length, 0, 'Foot').rotate(gamma_rad)
 
     result = (
@@ -298,7 +305,7 @@ def forward_kinematics_xy(coxa_length, femur_length, tibia_length, alpha, show_a
     alpha_rad = body_rad + np.radians(alpha)
     start = Point(0, 0)
     body = start + Point(
-        0.001, 0, rf'$\alpha={alpha:.2f}°$' if show_alpha_value else r'$\alpha$'
+        0.001, 0, f'$\\alpha={alpha:.2f}°$' if show_alpha_value else '$\\alpha$'
     ).rotate(body_rad)
     coxa = body + Point(coxa_length, 0).rotate(alpha_rad)
     femur = coxa + Point(femur_length, 0).rotate(alpha_rad)
