@@ -19,13 +19,12 @@
 # THE SOFTWARE.
 
 from abc import abstractmethod
-from typing import Dict, List, Optional
 
+from IPython.display import display
+from models import HexapodLeg
 import numpy as np
 import plotly.graph_objects as go
 import plotly.subplots as sp
-from IPython.display import display
-from models import HexapodLeg
 from point import Point3D
 from transforms import Transform
 
@@ -85,88 +84,82 @@ class GaitGenerator:
 
         # Create subplot figure with 4 rows
         fig = sp.make_subplots(
-            rows=4, 
+            rows=4,
             cols=1,
             subplot_titles=[
                 'Gait sequence' + _subtitle,
                 'X offsets (forward/backward)' + _subtitle,
                 'Y offsets (left/right)' + _subtitle,
-                'Z offsets (up/down)' + _subtitle
+                'Z offsets (up/down)' + _subtitle,
             ],
-            vertical_spacing=0.1
+            vertical_spacing=0.1,
         )
 
         # Plot gait sequence (top plot)
         top_line_y = 6
         leg_line = np.linspace(0, top_line_y, 6)
-        
+
         for i, leg in enumerate(self.all_legs):
             y = leg_line[i]
             line_y = np.full_like(phases, y)
-            
+
             # Add text annotation for leg name
             fig.add_annotation(
                 x=0.0,
                 y=y + 0.2,
                 text=self._legend_for_leg(leg),
                 showarrow=False,
-                xref="x",
-                yref="y",
+                xref='x',
+                yref='y',
                 font=dict(color=self._color_for_leg(leg)),
                 row=1,
-                col=1
+                col=1,
             )
-            
+
             # Plot base line for each leg
             fig.add_trace(
                 go.Scatter(
                     x=phases,
                     y=line_y,
                     mode='lines',
-                    line=dict(
-                        color=self._color_for_leg(leg),
-                        dash=self._line_style_for_leg(leg)
-                    ),
+                    line=dict(color=self._color_for_leg(leg), dash=self._line_style_for_leg(leg)),
                     name=self._legend_for_leg(leg),
-                    showlegend=False
+                    showlegend=False,
                 ),
                 row=1,
-                col=1
+                col=1,
             )
-            
+
             # Plot swing phases (black lines)
             is_swing = np.array(z_values[leg]) > 0
             if any(is_swing):
                 # Create segments for swing phases
                 segments = []
                 segment_start = None
-                
+
                 for j, (phase, swing) in enumerate(zip(phases, is_swing)):
                     if swing and segment_start is None:
                         segment_start = j
                     elif not swing and segment_start is not None:
-                        segments.append((segment_start, j-1))
+                        segments.append((segment_start, j - 1))
                         segment_start = None
-                
+
                 # Handle case where last segment extends to the end
                 if segment_start is not None:
-                    segments.append((segment_start, len(phases)-1))
-                
+                    segments.append((segment_start, len(phases) - 1))
+
                 # Plot each swing segment
                 for start, end in segments:
                     fig.add_trace(
                         go.Scatter(
-                            x=phases[start:end+1],
-                            y=line_y[start:end+1],
+                            x=phases[start : end + 1],
+                            y=line_y[start : end + 1],
                             mode='lines',
-                            line=dict(
-                                color=self._color_for_leg(leg),
-                                width=8
-                            ),
-                            showlegend=False
+                            line=dict(color=self._color_for_leg(leg), width=8),
+                            showlegend=False,
                         ),
                         row=1,
-                        col=1
+                        col=1,
                     )
 
         # Plot X offsets
@@ -176,14 +169,11 @@ class GaitGenerator:
                     x=phases,
                     y=x_values[leg],
                     mode='lines',
-                    line=dict(
-                        color=self._color_for_leg(leg),
-                        dash=self._line_style_for_leg(leg)
-                    ),
-                    name=self._legend_for_leg(leg)
+                    line=dict(color=self._color_for_leg(leg), dash=self._line_style_for_leg(leg)),
+                    name=self._legend_for_leg(leg),
                 ),
                 row=2,
-                col=1
+                col=1,
             )
 
         # Plot Y offsets
@@ -193,15 +183,12 @@ class GaitGenerator:
                     x=phases,
                     y=y_values[leg],
                     mode='lines',
-                    line=dict(
-                        color=self._color_for_leg(leg),
-                        dash=self._line_style_for_leg(leg)
-                    ),
+                    line=dict(color=self._color_for_leg(leg), dash=self._line_style_for_leg(leg)),
                     name=self._legend_for_leg(leg),
-                    showlegend=False
+                    showlegend=False,
                 ),
                 row=3,
-                col=1
+                col=1,
             )
 
         # Plot Z offsets
@@ -211,38 +198,29 @@ class GaitGenerator:
                     x=phases,
                     y=z_values[leg],
                     mode='lines',
-                    line=dict(
-                        color=self._color_for_leg(leg),
-                        dash=self._line_style_for_leg(leg)
-                    ),
+                    line=dict(color=self._color_for_leg(leg), dash=self._line_style_for_leg(leg)),
                     name=self._legend_for_leg(leg),
-                    showlegend=False
+                    showlegend=False,
                 ),
                 row=4,
-                col=1
+                col=1,
             )
 
         # Update layout
         fig.update_layout(
             height=800,
             width=1000,
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1
-            )
+            legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1),
         )
-        
+
         # Update y-axis ranges
         fig.update_yaxes(range=[-1, top_line_y + 1], row=1, col=1)
-        
+
         # Update axis labels
-        fig.update_xaxes(title_text="phase", row=4, col=1)
-        fig.update_yaxes(title_text="meters", row=2, col=1)
-        fig.update_yaxes(title_text="meters", row=3, col=1)
-        fig.update_yaxes(title_text="meters", row=4, col=1)
+        fig.update_xaxes(title_text='phase', row=4, col=1)
+        fig.update_yaxes(title_text='meters', row=2, col=1)
+        fig.update_yaxes(title_text='meters', row=3, col=1)
+        fig.update_yaxes(title_text='meters', row=4, col=1)
 
         display(fig)
         return fig
@@ -336,9 +314,7 @@ class GaitGenerator:
                     z=z_values[leg],
                     mode='lines',
                     line=dict(
-                        color=self._color_for_leg(leg),
-                        dash=self._line_style_for_leg(leg),
-                        width=4
+                        color=self._color_for_leg(leg), dash=self._line_style_for_leg(leg), width=4
                     ),
                     name=self._legend_for_leg(leg),
                 )
@@ -353,7 +329,7 @@ class GaitGenerator:
                     up=dict(x=0, y=0, z=1),
                 )
             )
-            
+
             # Calculate axis limits with padding
             max_x = max([max(x_values[leg]) for leg in self.all_legs])
             min_x = min([min(x_values[leg]) for leg in self.all_legs])
@@ -361,7 +337,7 @@ class GaitGenerator:
             min_y = min([min(y_values[leg]) for leg in self.all_legs])
             max_z = max([max(z_values[leg]) for leg in self.all_legs])
             min_z = min([min(z_values[leg]) for leg in self.all_legs])
-            
+
             padding = max(max_x - min_x, max_y - min_y, max_z - min_z) * 0.2
             fig.update_layout(
                 scene=dict(
@@ -370,7 +346,7 @@ class GaitGenerator:
                     zaxis=dict(range=[min_z, max_z + padding]),
                 )
             )
-            
+
             display(fig)
 
         return fig, plot_lines

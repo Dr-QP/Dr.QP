@@ -25,10 +25,10 @@ import plotly.graph_objects as go
 def add_inline_labels(fig, with_overall_progress=True, fontsize='medium'):
     """
     Add inline labels to a Plotly figure.
-    
+
     This function adds text annotations to line traces in a Plotly figure,
     positioning them along the lines they describe.
-    
+
     Parameters:
     -----------
     fig : plotly.graph_objects.Figure
@@ -37,30 +37,27 @@ def add_inline_labels(fig, with_overall_progress=True, fontsize='medium'):
         Whether to add a progress indicator, by default True
     fontsize : str, optional
         Font size for the labels, by default 'medium'
-    
+
     Returns:
     --------
     plotly.graph_objects.Figure
         The figure with added annotations
+
     """
     # Convert fontsize to pixel size
-    font_size_map = {
-        'small': 10,
-        'medium': 12,
-        'large': 14
-    }
+    font_size_map = {'small': 10, 'medium': 12, 'large': 14}
     font_size = font_size_map.get(fontsize, 12)
-    
+
     # Process each trace in the figure
     for trace in fig.data:
         if trace.mode and 'lines' in trace.mode and trace.name:
             # Get line coordinates
             x_values = trace.x
             y_values = trace.y
-            
+
             if len(x_values) < 2 or len(y_values) < 2:
                 continue
-            
+
             # Calculate the midpoint of the line
             mid_idx = len(x_values) // 2
             if len(x_values) > 2:
@@ -71,7 +68,7 @@ def add_inline_labels(fig, with_overall_progress=True, fontsize='medium'):
                 # For simple lines, use the midpoint
                 x_mid = (x_values[0] + x_values[-1]) / 2
                 y_mid = (y_values[0] + y_values[-1]) / 2
-            
+
             # Calculate angle for text alignment
             if len(x_values) > 2:
                 dx = x_values[mid_idx + 1] - x_values[mid_idx - 1]
@@ -79,15 +76,15 @@ def add_inline_labels(fig, with_overall_progress=True, fontsize='medium'):
             else:
                 dx = x_values[-1] - x_values[0]
                 dy = y_values[-1] - y_values[0]
-            
+
             angle = np.degrees(np.arctan2(dy, dx))
-            
+
             # Adjust angle for readability
             if -90 <= angle <= 90:
                 text_angle = angle
             else:
                 text_angle = angle - 180
-            
+
             # Add annotation
             fig.add_annotation(
                 x=x_mid,
@@ -95,27 +92,27 @@ def add_inline_labels(fig, with_overall_progress=True, fontsize='medium'):
                 text=trace.name,
                 showarrow=False,
                 font=dict(
-                    family="Arial",
+                    family='Arial',
                     size=font_size,
-                    color=trace.line.color if hasattr(trace.line, 'color') else "black"
+                    color=trace.line.color if hasattr(trace.line, 'color') else 'black',
                 ),
                 textangle=text_angle,
-                xanchor="center",
-                yanchor="middle",
-                bgcolor="rgba(255, 255, 255, 0.7)",
-                borderpad=2
+                xanchor='center',
+                yanchor='middle',
+                bgcolor='rgba(255, 255, 255, 0.7)',
+                borderpad=2,
             )
-    
+
     return fig
 
 
 class AngleAnnotation:
     """
     Create an angle annotation for Plotly figures.
-    
+
     This class creates an arc between two vectors and adds a text label.
     """
-    
+
     def __init__(
         self,
         xy,
@@ -131,7 +128,7 @@ class AngleAnnotation:
     ):
         """
         Initialize an angle annotation.
-        
+
         Parameters:
         -----------
         xy : tuple or array of two floats
@@ -161,7 +158,7 @@ class AngleAnnotation:
         self.text = text
         self.color = color
         self.textposition = textposition
-        
+
         # Convert matplotlib linestyle to plotly dash
         dash_map = {
             'solid': 'solid',
@@ -171,82 +168,75 @@ class AngleAnnotation:
             'dotted': 'dot',
             ':': 'dot',
             'dashdot': 'dashdot',
-            '-.': 'dashdot'
+            '-.': 'dashdot',
         }
         self.dash = dash_map.get(linestyle, 'solid')
-        
+
         # Default text styling
-        self.text_kw = {
-            'font_size': 10,
-            'font_color': color
-        }
+        self.text_kw = {'font_size': 10, 'font_color': color}
         if text_kw:
             self.text_kw.update(text_kw)
-        
+
         # Draw the angle annotation
         self._draw()
-    
+
     def _draw(self):
         """Draw the angle annotation on the figure."""
         # Calculate vectors from center to points
         v1 = self.p1 - self.xy
         v2 = self.p2 - self.xy
-        
+
         # Calculate angles in degrees
         angle1 = np.degrees(np.arctan2(v1[1], v1[0]))
         angle2 = np.degrees(np.arctan2(v2[1], v2[0]))
-        
+
         # Ensure angle2 > angle1 for proper arc drawing
         if angle2 < angle1:
             angle2 += 360
-        
+
         # Create points for the arc
         theta = np.linspace(np.radians(angle1), np.radians(angle2), 50)
         radius = self.size / 100  # Scale size appropriately
-        
+
         x = self.xy[0] + radius * np.cos(theta)
         y = self.xy[1] + radius * np.sin(theta)
-        
+
         # Add the arc to the figure
         self.fig.add_trace(
             go.Scatter(
                 x=x,
                 y=y,
                 mode='lines',
-                line=dict(
-                    color=self.color,
-                    dash=self.dash,
-                    width=1.5
-                ),
-                showlegend=False
+                line=dict(color=self.color, dash=self.dash, width=1.5),
+                showlegend=False,
             )
         )
-        
+
         # Add the text label
         if self.text:
             # Calculate position for text
             angle_mid = np.radians((angle1 + angle2) / 2)
-            
+
             if self.textposition == 'inside':
                 text_radius = radius * 0.7
             else:  # 'outside'
                 text_radius = radius * 1.4
-            
+
             text_x = self.xy[0] + text_radius * np.cos(angle_mid)
             text_y = self.xy[1] + text_radius * np.sin(angle_mid)
-            
+
             self.fig.add_annotation(
                 x=text_x,
                 y=text_y,
                 text=self.text,
                 showarrow=False,
                 font=dict(
-                    family="Arial",
+                    family='Arial',
                     size=self.text_kw.get('font_size', 10),
-                    color=self.text_kw.get('font_color', self.color)
+                    color=self.text_kw.get('font_color', self.color),
                 ),
-                xanchor="center",
-                yanchor="middle",
-                bgcolor="rgba(255, 255, 255, 0.7)",
-                borderpad=2
+                xanchor='center',
+                yanchor='middle',
+                bgcolor='rgba(255, 255, 255, 0.7)',
+                borderpad=2,
             )

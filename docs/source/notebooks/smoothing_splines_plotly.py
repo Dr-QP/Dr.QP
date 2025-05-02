@@ -71,7 +71,7 @@ def plot_spline(
             label = f'Splprep s={s} k={k}'
         else:
             raise ValueError(f'Unknown spline type {spline_type}')
-    
+
     if mix < 1:
         label += f' mix={mix}'
 
@@ -137,28 +137,22 @@ def plot_spline(
     # Plot the spline curve
     x_values = spline_x(t_fine_x)
     y_values = spline_y(t_fine_y)
-    
+
     fig.add_trace(
-        go.Scatter(
-            x=x_values,
-            y=y_values,
-            mode='lines',
-            line=dict(color=color),
-            name=label
-        )
+        go.Scatter(x=x_values, y=y_values, mode='lines', line=dict(color=color), name=label)
     )
 
     # Plot the current point
     current_x = spline_x(current_t)
     current_y = spline_y(current_t)
-    
+
     fig.add_trace(
         go.Scatter(
             x=[current_x],
             y=[current_y],
             mode='markers',
             marker=dict(color=color, size=10),
-            name=f'{label} (current point)'
+            name=f'{label} (current point)',
         )
     )
 
@@ -175,14 +169,14 @@ def plot_spline(
             8: ('Drop (8th)', 'black'),
         }
         derivatives = min(derivatives, k)
-        
+
         for d in range(1, derivatives + 1):
             name, deriv_color = names[d]
             deriv_x = spline_x.derivative(d)
             deriv_y = spline_y.derivative(d)
             _t_deriv_plot_x = t_fine_x
             _t_deriv_plot_y = t_fine_y
-            
+
             if spline_type == SplineType.splprep:
                 raise NotImplementedError('splprep derivatives not implemented')
 
@@ -193,10 +187,10 @@ def plot_spline(
                     y=deriv_x(t_fine_x),
                     mode='lines',
                     line=dict(color=deriv_color, dash='dash'),
-                    name=f'{name} (x) {label}'
+                    name=f'{name} (x) {label}',
                 )
             )
-            
+
             # Plot y derivative
             derivatives_fig.add_trace(
                 go.Scatter(
@@ -204,7 +198,7 @@ def plot_spline(
                     y=deriv_y(t_fine_y),
                     mode='lines',
                     line=dict(color=deriv_color, dash='dot'),
-                    name=f'{name} (y) {label}'
+                    name=f'{name} (y) {label}',
                 )
             )
 

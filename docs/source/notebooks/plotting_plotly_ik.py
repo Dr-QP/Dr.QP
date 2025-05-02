@@ -19,14 +19,13 @@
 # THE SOFTWARE.
 
 import os
-from pathlib import Path
-from typing import Dict, List, Literal, Optional, Tuple, Union
+from typing import Literal
 
+from inline_labels_plotly import add_inline_labels, AngleAnnotation
+from IPython.display import display
 import numpy as np
 import plotly.graph_objects as go
-from IPython.display import display
-from inline_labels_plotly import AngleAnnotation, add_inline_labels
-from point import Leg3D, Line, Line3D, Point
+from point import Line, Line3D, Point
 
 # Define types for label options
 link_labels_type = Literal['inline', 'legend', 'label', 'none']
@@ -35,7 +34,7 @@ joint_labels_type = Literal['annotated', 'points', 'none']
 
 class LegPlotData:
     """Store plot data for a leg."""
-    
+
     def __init__(self):
         self.lines = []
         self.joints = []
@@ -55,24 +54,24 @@ def plot_leg_with_points(
     """Plot a leg model with points using Plotly."""
     fig = go.Figure()
     fig.update_layout(title=title)
-    
+
     plot_data = plot_leg_links(fig, model, link_labels=link_labels, joint_labels=joint_labels)
-    
+
     # Select length of axes and the space between tick labels
     x = np.array([[line.start.x, line.end.x] for line in model])
     y = np.array([[line.start.y, line.end.y] for line in model])
     plot_min = Point(np.min(x), np.min(y))
     plot_max = Point(np.max(x), np.max(y))
-    
+
     def extra_space(v):
         return max(2, abs(v) * 0.2)
-    
+
     plot_min.x -= extra_space(plot_min.x)
     plot_min.y -= extra_space(plot_min.y)
-    
+
     plot_max.x += extra_space(plot_max.x)
     plot_max.y += extra_space(plot_max.y)
-    
+
     plot_cartesian_plane(
         fig,
         plot_min,
@@ -82,7 +81,7 @@ def plot_leg_with_points(
         x_label=x_label,
         y_label=y_label,
     )
-    
+
     return fig, None, plot_data
 
 
@@ -95,25 +94,25 @@ def plot_leg_links(
     """Plot leg links in 2D space using Plotly."""
     link_colors = ['cyan', 'red', 'green', 'blue', 'magenta']
     joint_colors = link_colors[1:]
-    
+
     plot_data = LegPlotData()
-    
+
     # Plot lines
     for i, (line, color) in enumerate(zip(model, link_colors)):
         label = line.label if link_labels != 'none' else None
-        
+
         # Plot main line
         line_trace = go.Scatter(
             x=[line.start.x, line.end.x],
             y=[line.start.y, line.end.y],
             mode='lines',
             line=dict(color=color, width=2),
-            name=label if label else f"Line {i}",
-            showlegend=(link_labels == 'legend')
+            name=label if label else f'Line {i}',
+            showlegend=(link_labels == 'legend'),
         )
         fig.add_trace(line_trace)
         plot_data.lines.append(line_trace)
-        
+
         # Plot extended line for joint angles if needed
         if joint_labels == 'annotated' and i < len(model) - 1:
             extended_line = line.extended(3)
@@ -122,11 +121,11 @@ def plot_leg_links(
                 y=[line.end.y, extended_line.end.y],
                 mode='lines',
                 line=dict(color=color, width=1, dash='dot'),
-                showlegend=False
+                showlegend=False,
             )
             fig.add_trace(extended_trace)
             plot_data.lines.append(extended_trace)
-    
+
     # Plot joints
     if joint_labels == 'annotated' or joint_labels == 'points':
         for i, (line, joint_color) in enumerate(zip(model, joint_colors)):
@@ -135,32 +134,32 @@ def plot_leg_links(
                 y=[line.end.y],
                 mode='markers',
                 marker=dict(color=joint_color, size=8),
-                name=f"Joint {i}",
-                showlegend=False
+                name=f'Joint {i}',
+                showlegend=False,
             )
             fig.add_trace(joint_trace)
             plot_data.joints.append(joint_trace)
-    
+
     # Add inline labels for leg links
     if link_labels == 'legend':
         pass  # Already handled with showlegend=True
     elif link_labels == 'inline':
         add_inline_labels(fig, with_overall_progress=False, fontsize='medium')
-    
+
     # Add angle annotations
     if joint_labels == 'annotated':
         for i in range(len(model) - 1):
             line = model[i]
             next_line = model[i + 1]
             joint_color = joint_colors[i]
-            
+
             # Sort the vectors by y coordinate to always display angle on the correct side
             vecs = [
                 next_line.end.numpy(),
                 line.extended().end.numpy(),
             ]
             vecs.sort(key=lambda v: v[1])
-            
+
             if line.end.label:
                 AngleAnnotation(
                     line.end.numpy(),
@@ -173,7 +172,7 @@ def plot_leg_links(
                     textposition='outside',
                     text_kw={'font_size': 10, 'font_color': joint_color},
                 )
-    
+
     return plot_data
 
 
@@ -210,13 +209,13 @@ def plot_cartesian_plane(
             scaleratio=1,
         ),
     )
-    
+
     # Set axis labels
     fig.update_layout(
         xaxis_title=x_label,
         yaxis_title=y_label,
     )
-    
+
     # Hide ticks if requested
     if no_ticks:
         fig.update_layout(
@@ -227,12 +226,12 @@ def plot_cartesian_plane(
         # Create custom ticks
         x_ticks = np.arange(plot_min.x, plot_max.x, ticks_frequency, dtype=int)
         y_ticks = np.arange(plot_min.y, plot_max.y, ticks_frequency, dtype=int)
-        
+
         fig.update_layout(
             xaxis=dict(tickvals=x_ticks),
             yaxis=dict(tickvals=y_ticks),
         )
-    
+
     # Add arrows at the end of axes
     fig.add_annotation(
         x=plot_max.x,
@@ -249,7 +248,7 @@ def plot_cartesian_plane(
         arrowwidth=2,
         arrowcolor='black',
     )
-    
+
     fig.add_annotation(
         x=0,
         y=plot_max.y,
@@ -275,14 +274,14 @@ def plot_leg_update_lines(model, plot_data: LegPlotData):
         plot_data.lines[line_index].x = [line_model.start.x, line_model.end.x]
         plot_data.lines[line_index].y = [line_model.start.y, line_model.end.y]
         line_index += 1
-        
+
         # Skip extended line for the last segment
         if i < len(model) - 1:
             extended = line_model.extended(3)
             plot_data.lines[line_index].x = [line_model.end.x, extended.end.x]
             plot_data.lines[line_index].y = [line_model.end.y, extended.end.y]
             line_index += 1
-    
+
     for i, (joint, line_model) in enumerate(zip(plot_data.joints, model)):
         joint.x = [line_model.end.x]
         joint.y = [line_model.end.y]
@@ -291,7 +290,7 @@ def plot_leg_update_lines(model, plot_data: LegPlotData):
 def plot_ik_lines(fig, femur, tibia):
     """Plot IK lines for visualization using Plotly."""
     d_end = Point(femur.start.x, tibia.end.y)
-    
+
     # Plot L line
     fig.add_trace(
         go.Scatter(
@@ -302,7 +301,7 @@ def plot_ik_lines(fig, femur, tibia):
             name='L',
         )
     )
-    
+
     # Plot D line
     fig.add_trace(
         go.Scatter(
@@ -313,7 +312,7 @@ def plot_ik_lines(fig, femur, tibia):
             name='D',
         )
     )
-    
+
     # Plot T line
     fig.add_trace(
         go.Scatter(
@@ -324,7 +323,7 @@ def plot_ik_lines(fig, femur, tibia):
             name='T',
         )
     )
-    
+
     # Add angle annotations
     AngleAnnotation(
         femur.start.numpy(),
@@ -338,7 +337,7 @@ def plot_ik_lines(fig, femur, tibia):
         textposition='outside',
         text_kw={'font_size': 10, 'font_color': 'magenta'},
     )
-    
+
     AngleAnnotation(
         femur.start.numpy(),
         d_end.numpy(),
@@ -351,7 +350,7 @@ def plot_ik_lines(fig, femur, tibia):
         textposition='outside',
         text_kw={'font_size': 10, 'font_color': 'magenta'},
     )
-    
+
     AngleAnnotation(
         femur.end.numpy(),
         femur.start.numpy(),
@@ -372,27 +371,26 @@ def animate_plot(
     frames,
     interval=16,  # 60 fps
     interactive=False,
-    **interact_kwargs
+    **interact_kwargs,
 ):
     """Create an interactive animation using Plotly."""
     import ipywidgets as widgets
-    from IPython.display import display
-    
+
     if interactive:
         # Create slider for interactive control
         slider = widgets.IntSlider(
             min=0,
-            max=frames-1,
+            max=frames - 1,
             step=1,
             value=0,
             description='Frame:',
             continuous_update=True,
-            layout=widgets.Layout(width='500px')
+            layout=widgets.Layout(width='500px'),
         )
-        
+
         # Create output widget to display the figure
         output = widgets.Output()
-        
+
         # Define update function for the slider
         def on_slider_change(change):
             with output:
@@ -400,89 +398,96 @@ def animate_plot(
                 frame = change['new']
                 update_func(frame, **interact_kwargs)
                 display(fig)
-        
+
         # Connect the slider to the update function
         slider.observe(on_slider_change, names='value')
-        
+
         # Initial display
         with output:
             update_func(0, **interact_kwargs)
             display(fig)
-        
+
         # Display the slider and output
         display(widgets.VBox([slider, output]))
-        
+
         return slider
     else:
         # For non-interactive mode, create frames for animation
         frames_list = []
-        
+
         for i in range(frames):
             update_func(i, **interact_kwargs)
-            
+
             # Create a frame with the current state
-            frame = go.Frame(
-                data=fig.data,
-                name=f'frame_{i}'
-            )
+            frame = go.Frame(data=fig.data, name=f'frame_{i}')
             frames_list.append(frame)
-        
+
         # Add frames to the figure
         fig.frames = frames_list
-        
+
         # Add animation controls
         fig.update_layout(
             updatemenus=[
                 {
-                    "type": "buttons",
-                    "buttons": [
+                    'type': 'buttons',
+                    'buttons': [
                         {
-                            "label": "Play",
-                            "method": "animate",
-                            "args": [None, {"frame": {"duration": interval, "redraw": True}, "fromcurrent": True}]
+                            'label': 'Play',
+                            'method': 'animate',
+                            'args': [
+                                None,
+                                {
+                                    'frame': {'duration': interval, 'redraw': True},
+                                    'fromcurrent': True,
+                                },
+                            ],
                         },
                         {
-                            "label": "Pause",
-                            "method": "animate",
-                            "args": [[None], {"frame": {"duration": 0, "redraw": True}, "mode": "immediate"}]
-                        }
+                            'label': 'Pause',
+                            'method': 'animate',
+                            'args': [
+                                [None],
+                                {'frame': {'duration': 0, 'redraw': True}, 'mode': 'immediate'},
+                            ],
+                        },
                     ],
-                    "direction": "left",
-                    "pad": {"r": 10, "t": 10},
-                    "showactive": False,
-                    "x": 0.1,
-                    "y": 0,
-                    "xanchor": "right",
-                    "yanchor": "top"
+                    'direction': 'left',
+                    'pad': {'r': 10, 't': 10},
+                    'showactive': False,
+                    'x': 0.1,
+                    'y': 0,
+                    'xanchor': 'right',
+                    'yanchor': 'top',
                 }
             ],
-            sliders=[{
-                "active": 0,
-                "yanchor": "top",
-                "xanchor": "left",
-                "currentvalue": {
-                    "prefix": "Frame: ",
-                    "visible": True,
-                    "xanchor": "right"
-                },
-                "pad": {"b": 10, "t": 50},
-                "len": 0.9,
-                "x": 0.1,
-                "y": 0,
-                "steps": [
-                    {
-                        "args": [
-                            [f"frame_{i}"],
-                            {"frame": {"duration": interval, "redraw": True}, "mode": "immediate"}
-                        ],
-                        "label": str(i),
-                        "method": "animate"
-                    }
-                    for i in range(frames)
-                ]
-            }]
+            sliders=[
+                {
+                    'active': 0,
+                    'yanchor': 'top',
+                    'xanchor': 'left',
+                    'currentvalue': {'prefix': 'Frame: ', 'visible': True, 'xanchor': 'right'},
+                    'pad': {'b': 10, 't': 50},
+                    'len': 0.9,
+                    'x': 0.1,
+                    'y': 0,
+                    'steps': [
+                        {
+                            'args': [
+                                [f'frame_{i}'],
+                                {
+                                    'frame': {'duration': interval, 'redraw': True},
+                                    'mode': 'immediate',
+                                },
+                            ],
+                            'label': str(i),
+                            'method': 'animate',
+                        }
+                        for i in range(frames)
+                    ],
+                }
+            ],
         )
-        
+
         display(fig)
         return fig
 

@@ -19,14 +19,13 @@
 # THE SOFTWARE.
 
 import os
-from pathlib import Path
-from typing import Dict, List, Literal, Optional, Tuple, Union
+from typing import List, Literal
 
-import numpy as np
-import plotly.graph_objects as go
 from IPython.display import display
 from models import HexapodModel
-from point import Leg3D, Line, Line3D, Point, Point3D
+import numpy as np
+import plotly.graph_objects as go
+from point import Leg3D, Line, Line3D
 
 # Define types for label options
 link_labels_type = Literal['inline', 'legend', 'label', 'none']
@@ -35,7 +34,7 @@ joint_labels_type = Literal['annotated', 'points', 'none']
 
 class LegPlotData:
     """Store plot data for a leg."""
-    
+
     def __init__(self):
         self.lines = []
         self.joints = []
@@ -45,7 +44,7 @@ class LegPlotData:
 
 class HexapodPlotData:
     """Store plot data for a hexapod."""
-    
+
     def __init__(self):
         self.leg_plot_data = []
         self.head_line = None
@@ -75,7 +74,7 @@ def plot_leg3d(
         )
 
     plot_data = plot_leg_links(fig, model.lines, link_labels=link_labels, joint_labels=joint_labels)
-    
+
     return fig, plot_data
 
 
@@ -94,7 +93,7 @@ def plot_leg_links(
     # Plot lines
     for i, (line, color) in enumerate(zip(model, link_colors)):
         label = line.label if link_labels != 'none' else None
-        
+
         # Get start and end points
         if isinstance(line, Line3D):
             x_vals = [line.start.x, line.end.x]
@@ -104,7 +103,7 @@ def plot_leg_links(
             x_vals = [line.start.x, line.end.x]
             y_vals = [line.start.y, line.end.y]
             z_vals = [0, 0]
-        
+
         # Create line trace
         line_trace = go.Scatter3d(
             x=x_vals,
@@ -112,10 +111,10 @@ def plot_leg_links(
             z=z_vals,
             mode='lines',
             line=dict(color=color, width=4),
-            name=label if label else f"Line {i}",
+            name=label if label else f'Line {i}',
             showlegend=(link_labels == 'legend'),
         )
-        
+
         fig.add_trace(line_trace)
         plot_data.lines.append(line_trace)
 
@@ -129,7 +128,7 @@ def plot_leg_links(
                     z=[line.end.z],
                     mode='markers',
                     marker=dict(color=joint_color, size=6),
-                    name=f"Joint {i}",
+                    name=f'Joint {i}',
                     showlegend=False,
                 )
             else:  # Line (2D)
@@ -139,10 +138,10 @@ def plot_leg_links(
                     z=[0],
                     mode='markers',
                     marker=dict(color=joint_color, size=6),
-                    name=f"Joint {i}",
+                    name=f'Joint {i}',
                     showlegend=False,
                 )
-            
+
             fig.add_trace(joint_trace)
             plot_data.joints.append(joint_trace)
 
@@ -154,7 +153,7 @@ def leg_tips_to_segments(leg_tips):
     points = np.array(leg_tips)
     if len(points) < 2:
         return points
-    
+
     return points
 
 
@@ -192,7 +191,7 @@ def plot_hexapod(hexapod: HexapodModel, targets=None, feet_trails_frames=0):
         # Add feet trails if requested
         if feet_trails_frames > 0:
             plot_data.leg_tips[leg.label] = [leg.tibia_end.numpy()]
-            
+
             # Create empty trace for leg tip trails
             leg_tip_trace = go.Scatter3d(
                 x=[],
@@ -200,10 +199,10 @@ def plot_hexapod(hexapod: HexapodModel, targets=None, feet_trails_frames=0):
                 z=[],
                 mode='lines',
                 line=dict(color='orange', width=2),
-                name=f"{leg.label} trail",
+                name=f'{leg.label} trail',
                 showlegend=False,
             )
-            
+
             fig.add_trace(leg_tip_trace)
             plot_data.leg_tip_traces[leg.label] = leg_tip_trace
 
@@ -217,7 +216,7 @@ def plot_hexapod(hexapod: HexapodModel, targets=None, feet_trails_frames=0):
         name='Head',
         showlegend=False,
     )
-    
+
     fig.add_trace(head_trace)
     plot_data.head_line = head_trace
 
@@ -226,7 +225,7 @@ def plot_hexapod(hexapod: HexapodModel, targets=None, feet_trails_frames=0):
         target_x = [target.x for target in targets]
         target_y = [target.y for target in targets]
         target_z = [target.z for target in targets]
-        
+
         target_trace = go.Scatter3d(
             x=target_x,
             y=target_y,
@@ -235,7 +234,7 @@ def plot_hexapod(hexapod: HexapodModel, targets=None, feet_trails_frames=0):
             marker=dict(color='black', size=6),
             name='Targets',
         )
-        
+
         fig.add_trace(target_trace)
 
     # Set initial camera view
@@ -266,11 +265,11 @@ def update_hexapod_plot(hexapod: HexapodModel, plot_data: HexapodPlotData, fig=N
         for leg in hexapod.legs:
             # Add new position to trail
             plot_data.leg_tips[leg.label].append(leg.tibia_end.numpy())
-            
+
             # Remove oldest position if exceeding max frames
             if len(plot_data.leg_tips[leg.label]) > plot_data.feet_trails_frames:
                 plot_data.leg_tips[leg.label].pop(0)
-            
+
             # Update trail trace
             points = np.array(plot_data.leg_tips[leg.label])
             plot_data.leg_tip_traces[leg.label].x = points[:, 0]
@@ -297,27 +296,26 @@ def animate_plot(
     frames,
     interval=16,  # 60 fps
     interactive=False,
-    **interact_kwargs
+    **interact_kwargs,
 ):
     """Create an interactive animation using Plotly."""
     import ipywidgets as widgets
-    from IPython.display import display
-    
+
     if interactive:
         # Create slider for interactive control
         slider = widgets.IntSlider(
             min=0,
-            max=frames-1,
+            max=frames - 1,
             step=1,
             value=0,
             description='Frame:',
             continuous_update=True,
-            layout=widgets.Layout(width='500px')
+            layout=widgets.Layout(width='500px'),
         )
-        
+
         # Create output widget to display the figure
         output = widgets.Output()
-        
+
         # Define update function for the slider
         def on_slider_change(change):
             with output:
@@ -325,89 +323,96 @@ def animate_plot(
                 frame = change['new']
                 update_func(frame, **interact_kwargs)
                 display(fig)
-        
+
         # Connect the slider to the update function
         slider.observe(on_slider_change, names='value')
-        
+
         # Initial display
         with output:
             update_func(0, **interact_kwargs)
             display(fig)
-        
+
         # Display the slider and output
         display(widgets.VBox([slider, output]))
-        
+
         return slider
     else:
         # For non-interactive mode, create frames for animation
         frames_list = []
-        
+
         for i in range(frames):
             update_func(i, **interact_kwargs)
-            
+
             # Create a frame with the current state
-            frame = go.Frame(
-                data=fig.data,
-                name=f'frame_{i}'
-            )
+            frame = go.Frame(data=fig.data, name=f'frame_{i}')
             frames_list.append(frame)
-        
+
         # Add frames to the figure
         fig.frames = frames_list
-        
+
         # Add animation controls
         fig.update_layout(
             updatemenus=[
                 {
-                    "type": "buttons",
-                    "buttons": [
+                    'type': 'buttons',
+                    'buttons': [
                         {
-                            "label": "Play",
-                            "method": "animate",
-                            "args": [None, {"frame": {"duration": interval, "redraw": True}, "fromcurrent": True}]
+                            'label': 'Play',
+                            'method': 'animate',
+                            'args': [
+                                None,
+                                {
+                                    'frame': {'duration': interval, 'redraw': True},
+                                    'fromcurrent': True,
+                                },
+                            ],
                         },
                         {
-                            "label": "Pause",
-                            "method": "animate",
-                            "args": [[None], {"frame": {"duration": 0, "redraw": True}, "mode": "immediate"}]
-                        }
+                            'label': 'Pause',
+                            'method': 'animate',
+                            'args': [
+                                [None],
+                                {'frame': {'duration': 0, 'redraw': True}, 'mode': 'immediate'},
+                            ],
+                        },
                     ],
-                    "direction": "left",
-                    "pad": {"r": 10, "t": 10},
-                    "showactive": False,
-                    "x": 0.1,
-                    "y": 0,
-                    "xanchor": "right",
-                    "yanchor": "top"
+                    'direction': 'left',
+                    'pad': {'r': 10, 't': 10},
+                    'showactive': False,
+                    'x': 0.1,
+                    'y': 0,
+                    'xanchor': 'right',
+                    'yanchor': 'top',
                 }
             ],
-            sliders=[{
-                "active": 0,
-                "yanchor": "top",
-                "xanchor": "left",
-                "currentvalue": {
-                    "prefix": "Frame: ",
-                    "visible": True,
-                    "xanchor": "right"
-                },
-                "pad": {"b": 10, "t": 50},
-                "len": 0.9,
-                "x": 0.1,
-                "y": 0,
-                "steps": [
-                    {
-                        "args": [
-                            [f"frame_{i}"],
-                            {"frame": {"duration": interval, "redraw": True}, "mode": "immediate"}
-                        ],
-                        "label": str(i),
-                        "method": "animate"
-                    }
-                    for i in range(frames)
-                ]
-            }]
+            sliders=[
+                {
+                    'active': 0,
+                    'yanchor': 'top',
+                    'xanchor': 'left',
+                    'currentvalue': {'prefix': 'Frame: ', 'visible': True, 'xanchor': 'right'},
+                    'pad': {'b': 10, 't': 50},
+                    'len': 0.9,
+                    'x': 0.1,
+                    'y': 0,
+                    'steps': [
+                        {
+                            'args': [
+                                [f'frame_{i}'],
+                                {
+                                    'frame': {'duration': interval, 'redraw': True},
+                                    'mode': 'immediate',
+                                },
+                            ],
+                            'label': str(i),
+                            'method': 'animate',
+                        }
+                        for i in range(frames)
+                    ],
+                }
+            ],
         )
-        
+
         display(fig)
         return fig
 
