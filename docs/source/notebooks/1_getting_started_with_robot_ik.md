@@ -45,12 +45,9 @@ The first step is to enable live python modules reloading, so changes in the pyt
 The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
 ```{code-cell} ipython3
-%matplotlib widget
-
 from IPython.display import display
-import matplotlib.pyplot as plt
-
-plt.ioff()  # this is equivalent to using inline backend, but figures have to be displayed manually
+import plotly.graph_objects as go
+import plotly.subplots as sp
 ```
 
 ## The robot model
@@ -170,13 +167,12 @@ def forward_kinematics(
 First, lets see how our leg looks in the neutral position. It is a straight line going from start point at (0, 0) and ending with the `Foot`
 
 ```{code-cell} ipython3
-from plotting import plot_leg_with_points
+from plotting_plotly_ik import plot_leg_with_points
 
 model = forward_kinematics(coxa_length, femur_length, tibia_length, alpha, beta, gamma)
 
-with plt.ioff():
-    _ = plot_leg_with_points(model, 'Neutral position (straight leg)')
-    display(plt.gcf())
+fig = plot_leg_with_points(model, 'Neutral position (straight leg)')
+display(fig)
 ```
 
 Now lets try changing some angles to see how it behaves. Feel free to experiment with different values.
@@ -184,20 +180,18 @@ Now lets try changing some angles to see how it behaves. Feel free to experiment
 ```{code-cell} ipython3
 model = forward_kinematics(coxa_length, femur_length, tibia_length, 50, -60, -10)
 
-with plt.ioff():
-    _ = plot_leg_with_points(
-        model, 'Lifted up (coxa) and bent down (femur, tibia)', link_labels='legend'
-    )
-    display(plt.gcf())
+fig = plot_leg_with_points(
+    model, 'Lifted up (coxa) and bent down (femur, tibia)', link_labels='legend'
+)
+display(fig)
 ```
 
 ```{code-cell} ipython3
 # Lifted up (coxa) and bent down (femur), with foot on the ground (guessed angle)
 model = forward_kinematics(coxa_length, femur_length, tibia_length, 45, -55, -14)
 
-with plt.ioff():
-    _ = plot_leg_with_points(model, 'Foot on the ground', link_labels='legend')
-    display(plt.gcf())
+fig = plot_leg_with_points(model, 'Foot on the ground', link_labels='legend')
+display(fig)
 ```
 
 ## Exercise 1. Forward kinematics. Find angles at which the leg is on the ground
@@ -207,7 +201,7 @@ Its time to have a little fun with our robot.
 Using the sliders on the interactive diagram below try to find angles at which the foot is on the ground.
 
 ```{code-cell} ipython3
-from plotting import animate_plot, plot_leg_update_lines
+from plotting_plotly_ik import animate_plot, plot_leg_update_lines
 
 start_height = 3
 alpha = 0
@@ -341,7 +335,7 @@ with plt.ioff():
 Finding angle $\alpha$ is a trivial problem, since we are dealing with a right triangle.
 
 ```{code-cell} ipython3
-from inline_labels import add_inline_labels
+from inline_labels_plotly import add_inline_labels
 
 
 def plot_leg_with_points_xy_ik(model: list[Line], title: str):
@@ -435,7 +429,7 @@ As you can see on the diagram above, coxa IK was solved correctly and leg is now
 Inverse Kinematics for Femur and Tibia is a bit more involved than for the Coxa. Let's start by looking at diagram below.
 
 ```{code-cell} ipython3
-from plotting import plot_ik_lines
+from plotting_plotly_ik import plot_ik_lines
 
 alpha = 0
 beta = 35
@@ -601,26 +595,23 @@ print(f'gamma = {gamma_ik:.2f}')
 To understand where the offset values for beta and gamma in the computation above are coming from, let's plot straight leg and see what theta and phi are.
 
 ```{code-cell} ipython3
-with plt.ioff():
-    _ = solve_and_plot_at_target_xz(
-        Point(coxa_len + femur_len + tibia_len, 0), 'Straight leg out', verbose=True
-    )
-    display(plt.gcf())
+fig = solve_and_plot_at_target_xz(
+    Point(coxa_len + femur_len + tibia_len, 0), 'Straight leg out', verbose=True
+)
+display(fig)
 ```
 
 Now once we have the solution, let's play with it a little bit and solve for various target points.
 If math is working correctly, foot (magenta dot) should always overlap with the target (black dot).
 
 ```{code-cell} ipython3
-with plt.ioff():
-    _ = solve_and_plot_at_target_xz(Point(20.61, 6.14), verbose=True)
-    display(plt.gcf())
+fig = solve_and_plot_at_target_xz(Point(20.61, 6.14), verbose=True)
+display(fig)
 ```
 
 ```{code-cell} ipython3
-with plt.ioff():
-    _ = solve_and_plot_at_target_xz(Point(15, 0), verbose=True)
-    display(plt.gcf())
+fig = solve_and_plot_at_target_xz(Point(15, 0), verbose=True)
+display(fig)
 ```
 
 ### Putting it all together
@@ -675,35 +666,65 @@ for target in sequence_xz_little_circle:
 ```{code-cell} ipython3
 # Plot IK solutions and targets into an animation
 
-from matplotlib.animation import FuncAnimation
-import matplotlib.pyplot as plt
-
-plt.rcParams['animation.html'] = 'jshtml'
+import plotly.graph_objects as go
 
 model = solved_model[0]
 
-with plt.ioff():
-    fig, ax, plot_data = plot_leg_with_points(
-        model,
-        'IK Circle',
-        link_labels='none',
-        joint_labels='points',
-    )
+fig, _, plot_data = plot_leg_with_points(
+    model,
+    'IK Circle',
+    link_labels='none',
+    joint_labels='points',
+)
 
-    def animate(frame):
-        even = not frame % 2
-        if even:
-            frame = frame // 2
-            target = sequence_xz_little_circle[frame]
-            ax.scatter(target.x, target.z, color='k', zorder=-100)
-        else:
-            frame = frame // 2
-            model = solved_model[frame]
-            plot_leg_update_lines(model, plot_data)
-            foot = solved_foot[frame]
-            ax.scatter(foot.x, foot.y, color='m', alpha=0.5, zorder=100)
+# Create a function to update the plot for each frame
+def update_func(frame, fig, plot_data, solved_model, solved_foot, sequence_xz_little_circle):
+    even = not frame % 2
+    if even:
+        frame = frame // 2
+        target = sequence_xz_little_circle[frame]
+        # Add target point
+        fig.add_trace(
+            go.Scatter(
+                x=[target.x],
+                y=[target.z],
+                mode='markers',
+                marker=dict(color='black', size=8),
+                name='Target',
+                showlegend=False
+            )
+        )
+    else:
+        frame = frame // 2
+        model = solved_model[frame]
+        plot_leg_update_lines(model, plot_data)
+        foot = solved_foot[frame]
+        # Add foot point
+        fig.add_trace(
+            go.Scatter(
+                x=[foot.x],
+                y=[foot.y],
+                mode='markers',
+                marker=dict(color='magenta', size=8, opacity=0.5),
+                name='Foot',
+                showlegend=False
+            )
+        )
+    return fig
 
-    display(FuncAnimation(fig, animate, frames=total_targets * 2, interval=50))
+# Create the animation
+slider = animate_plot(
+    fig,
+    update_func,
+    frames=total_targets * 2,
+    interval=50,
+    interactive=True,
+    fig=fig,
+    plot_data=plot_data,
+    solved_model=solved_model,
+    solved_foot=solved_foot,
+    sequence_xz_little_circle=sequence_xz_little_circle
+)
 ```
 
  Woohoo! The entire IK chain works as expected and we can put the foot on a target!
@@ -774,9 +795,7 @@ With the safe capped version of acos function not only not throwing, but also pr
 Let's plot it to have better intuition about what's going on.
 
 ```{code-cell} ipython3
-import matplotlib.pyplot as plt
-
-plt.rcParams['animation.html'] = 'none'
+import plotly.graph_objects as go
 
 
 def safe_solve_and_plot_at_target(
@@ -829,8 +848,8 @@ def safe_solve_and_plot_at_target(
     ax.legend().remove()
 
 
-with plt.ion():
-    safe_solve_and_plot_at_target(1, 1, 1, Point3D(5, 0, -2), verbose=False)
+fig = safe_solve_and_plot_at_target(1, 1, 1, Point3D(5, 0, -2), verbose=False)
+display(fig)
 ```
 
 The chart above is a nice demonstration of how the safe algorithm works. Even though leg is clearly not reaching the target (leg foot is magenta dot), it is pointing exactly at the target as seen by the dotted line.
