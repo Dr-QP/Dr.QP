@@ -166,7 +166,7 @@ def forward_kinematics(
 First, lets see how our leg looks in the neutral position. It is a straight line going from start point at (0, 0) and ending with the `Foot`
 
 ```{code-cell} ipython3
-from plotting_plotly_ik import plot_leg_with_points
+from plotting_plotly import plot_leg_with_points
 
 model = forward_kinematics(coxa_length, femur_length, tibia_length, alpha, beta, gamma)
 
@@ -200,7 +200,7 @@ Its time to have a little fun with our robot.
 Using the sliders on the interactive diagram below try to find angles at which the foot is on the ground.
 
 ```{code-cell} ipython3
-from plotting_plotly_ik import animate_plot, plot_leg_update_lines
+from plotting_plotly import animate_plot, plot_leg_update_lines
 
 start_height = 3
 alpha = 0
@@ -477,7 +477,7 @@ As you can see on the diagram above, coxa IK was solved correctly and leg is now
 Inverse Kinematics for Femur and Tibia is a bit more involved than for the Coxa. Let's start by looking at diagram below.
 
 ```{code-cell} ipython3
-from plotting_plotly_ik import plot_ik_lines
+from plotting_plotly import plot_ik_lines
 
 alpha = 0
 beta = 35
