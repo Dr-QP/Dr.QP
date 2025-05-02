@@ -45,12 +45,9 @@ The first step is to enable live python modules reloading, so changes in the pyt
 The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
 ```{code-cell} ipython3
-%matplotlib widget
-
 from IPython.display import display
-import matplotlib.pyplot as plt
-
-plt.ioff()  # this is equivalent to using inline backend, but figures have to be displayed manually
+import plotly.graph_objects as go
+import plotly.subplots as sp
 ```
 
 ## Tripod gait
@@ -65,8 +62,7 @@ while one group is in stance phase, the other group is in swing phase and cycle 
 Lets build the simplest tripod gait generator, it will generate offsets for each leg at a specific phase (0.0 to 1.0).
 
 ```{code-cell} ipython3
-from gait_generators import GaitGenerator
-import matplotlib.pyplot as plt
+from gait_generators_plotly import GaitGenerator
 from models import HexapodLeg
 import numpy as np
 from point import Point3D
@@ -178,7 +174,7 @@ _ = gait_generator.visualize_continuous_in_3d(_steps=100)
 
 ```{code-cell} ipython3
 from models import HexapodModel
-from plotting import animate_plot, is_sphinx_build, plot_hexapod, update_hexapod_plot
+from plotting_plotly import animate_plot, is_sphinx_build, plot_hexapod, update_hexapod_plot
 
 
 def animate_hexapod_gait(
@@ -994,7 +990,7 @@ Gait trajectory are fairly straightforward and we have seen some solution using 
 In order to achieve transitioning we need to implement trajectory interpolation. The simplest approach would be to use linear interpolation, however it may create jerkiness cause by sudden trajectory changes causing high deceleration and acceleration. Much better results can be achieved using [smoothing spline functions](https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html), e.g. a 2nd degree [B-spline](https://en.wikipedia.org/wiki/B-spline). B-spline allows a smooth transition between control points while remaining stable if some of the control points are changed, e.g. when new goal point is added. 2nd degree B-spline has continuous first derivative, which means that the velocity is smooth and has no sudden changes in direction.
 
 ```{code-cell} ipython3
-from smoothing_splines import plot_spline, SplineType
+from smoothing_splines_plotly import plot_spline, SplineType
 
 frames_between_points = 30
 # x, y, t
@@ -1011,89 +1007,189 @@ trajectory_points = np.array(
         [3, 3, frames_between_points * 8],
     ]
 )
-fig, ax = plt.subplots(2, 1, figsize=(8, 10))
-ax[0].scatter(trajectory_points[::, 0], trajectory_points[::, 1], c='k', label='Trajectory points')
+# Create two subplots
+fig1 = go.Figure()
+fig2 = go.Figure()
 
+# Add trajectory points to the first figure
+fig1.add_trace(
+    go.Scatter(
+        x=trajectory_points[:, 0],
+        y=trajectory_points[:, 1],
+        mode='markers',
+        marker=dict(color='black', size=8),
+        name='Trajectory points'
+    )
+)
+
+# Set current time
 current_t = trajectory_points[3, 2] + 20
-plot_spline(ax[0], current_t, trajectory_points, k=1)
+
+# Plot linear spline
+plot_spline(fig1, current_t, trajectory_points, k=1)
+
+# Plot cubic spline with derivatives
 spline_x, spline_y = plot_spline(
-    ax[0],
+    fig1,
     current_t,
     trajectory_points,
     k=3,
     derivatives=4,
-    derivatives_ax=ax[1],
+    derivatives_fig=fig2,
     bc_type='natural',
     spline_type=SplineType.interp,
     color='green',
 )
 
+# Add text annotations for time points
 for x, y, t in trajectory_points:
-    ax[0].text(x, y + 0.2, f'{t=}')
+    fig1.add_annotation(
+        x=x,
+        y=y + 0.2,
+        text=f't={t}',
+        showarrow=False,
+        font=dict(color='black')
+    )
 
-ax[0].text(spline_x(current_t), spline_y(current_t) + 0.2, f'{current_t=}', color='green')
+# Add annotation for current time
+fig1.add_annotation(
+    x=spline_x(current_t),
+    y=spline_y(current_t) + 0.2,
+    text=f'current_t={current_t}',
+    showarrow=False,
+    font=dict(color='green')
+)
 
-ax[0].legend()
-ax[1].legend()
+# Update layout for both figures
+fig1.update_layout(
+    title='Spline Interpolation',
+    xaxis_title='X',
+    yaxis_title='Y',
+    legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1)
+)
 
-display(fig)
+fig2.update_layout(
+    title='Spline Derivatives',
+    xaxis_title='t',
+    yaxis_title='Derivative Value',
+    legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1)
+)
+
+# Display figures
+display(fig1)
+display(fig2)
 ```
 
 As you can see above, interpolating BSpline generates a smooth trajectory that follows the control points with smooth velocity changes, which will reduce strains on servos. However it comes at a cost of random overshooting that might be non desirable.
 One of the approaches is to reduce smoothness by mixing in a linear trajectory. Animation below shows how it affects the trajectory.
 
 ```{code-cell} ipython3
-# Animation size has reached 21028704 bytes, exceeding the limit of 20971520.0. If you're sure you want a larger animation embedded, set the animation.embed_limit rc parameter to a larger value (in MB). This and further frames will be dropped.
-plt.rcParams['animation.embed_limit'] = 50
-
-
-plt.ioff()
-fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+import ipywidgets as widgets
+from IPython.display import display
 
 num_items = 4
 max_points = 7
 
+# Create interactive widget for animation
+frame_slider = widgets.IntSlider(
+    min=0,
+    max=(len(trajectory_points) - 1) * frames_between_points,
+    step=1,
+    value=0,
+    description='Frame:',
+    continuous_update=True,
+    layout=widgets.Layout(width='500px')
+)
 
-def update(frame=0):
-    ax.clear()
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_title('Trajectory smoothing using interpolating B-spline (time points are not uniform)')
-    ax.set(xlim=(-1, 10), ylim=(-1, 10), aspect='equal')
-    ax.grid(which='both', color='grey', linewidth=1, linestyle='-', alpha=0.2)
+# Create output widget to display the figure
+output = widgets.Output()
 
+# Function to update the plot based on the current frame
+def update_plot(frame):
+    # Create a new figure for each update
+    fig = go.Figure()
+
+    # Set axis limits and title
+    fig.update_layout(
+        title='Trajectory smoothing using interpolating B-spline (time points are not uniform)',
+        xaxis=dict(range=[-1, 10], title='x'),
+        yaxis=dict(range=[-1, 10], title='y'),
+        width=800,
+        height=600
+    )
+
+    # Calculate which control points to use based on the frame
     first_point = frame // frames_between_points
     last_point = min(first_point + num_items, len(trajectory_points))
     control_points = trajectory_points[0 : last_point + 1]
     if len(control_points) > max_points:
         control_points = control_points[-max_points:]
-    ##############################
-    ax.scatter(trajectory_points[::, 0], trajectory_points[::, 1], c='k', label='All points')
-    ax.scatter(control_points[::, 0], control_points[::, 1], c='r', label='Active points')
 
-    for x, y, t in trajectory_points:
-        ax.text(x, y + 0.2, f't={t}')
-
-    ##############################
-    # Uncomment to see other splines
-    # spline_x, spline_y = plot_spline(ax, frame, control_points, 1, color='blue')
-    # ax.text(spline_x(frame), spline_y(frame) + .2, f'curr_t={frame}', color='blue')
-
-    # spline_x, spline_y = plot_spline(ax, frame, control_points, 2, color='orange')
-    # ax.text(spline_x(frame), spline_y(frame) + .2, f'curr_t={frame}', color='orange')
-
-    spline_x, spline_y = plot_spline(
-        ax, frame, control_points, 3, color='green', bc_type='natural', mix=0.5
+    # Plot all trajectory points
+    fig.add_trace(
+        go.Scatter(
+            x=trajectory_points[:, 0],
+            y=trajectory_points[:, 1],
+            mode='markers',
+            marker=dict(color='black', size=8),
+            name='All points'
+        )
     )
-    ax.text(spline_x(frame), spline_y(frame) + 0.2, f'curr_t={frame}', color='green')
 
-    ax.legend()
-    fig.canvas.draw_idle()
+    # Plot active control points
+    fig.add_trace(
+        go.Scatter(
+            x=control_points[:, 0],
+            y=control_points[:, 1],
+            mode='markers',
+            marker=dict(color='red', size=10),
+            name='Active points'
+        )
+    )
 
+    # Add text annotations for time points
+    for x, y, t in trajectory_points:
+        fig.add_annotation(
+            x=x,
+            y=y + 0.2,
+            text=f't={t}',
+            showarrow=False,
+            font=dict(color='black')
+        )
 
-frames = len(trajectory_points) - 1
+    # Plot the spline
+    spline_x, spline_y = plot_spline(
+        fig, frame, control_points, 3, color='green', bc_type='natural', mix=0.5
+    )
 
-_ = animate_plot(fig, update, frames * frames_between_points, _interval=16, _interactive=False)
+    # Add annotation for current time
+    fig.add_annotation(
+        x=spline_x(frame),
+        y=spline_y(frame) + 0.2,
+        text=f'curr_t={frame}',
+        showarrow=False,
+        font=dict(color='green')
+    )
+
+    return fig
+
+# Function to handle slider changes
+def on_frame_change(change):
+    with output:
+        output.clear_output(wait=True)
+        fig = update_plot(change['new'])
+        display(fig)
+
+# Connect the slider to the update function
+frame_slider.observe(on_frame_change, names='value')
+
+# Initial display
+with output:
+    fig = update_plot(0)
+    display(fig)
+
+# Display the slider and output
+display(widgets.VBox([frame_slider, output]))
 ```
 
 Let's put it all together and generate some gaits!
@@ -1220,7 +1316,6 @@ class ParametricGaitGenerator(GaitGenerator):
 ```
 
 ```{code-cell} ipython3
-import matplotlib.pyplot as plt
 from parametric_gait_generator import GaitType, ParametricGaitGenerator
 
 gait_gen = ParametricGaitGenerator()
@@ -1259,7 +1354,7 @@ To make robot turn we need to mix in circular movement to the gait. Let's first 
 
 ```{code-cell} ipython3
 from models import HexapodModel
-from plotting import animate_plot, is_sphinx_build
+from plotting_plotly import animate_plot, is_sphinx_build
 
 
 def animate_hexapod_rotation_gait(
@@ -1524,7 +1619,7 @@ class WalkController:
 import importlib
 
 from models import HexapodModel
-from plotting import animate_plot, is_sphinx_build
+from plotting_plotly import animate_plot, is_sphinx_build
 import walk_controller
 
 importlib.reload(walk_controller)  # autoreload fails with files written by notebook for some reason
