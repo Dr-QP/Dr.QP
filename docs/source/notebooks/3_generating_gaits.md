@@ -45,9 +45,7 @@ The first step is to enable live python modules reloading, so changes in the pyt
 The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
 ```{code-cell} ipython3
-from IPython.display import display
-import plotly.graph_objects as go
-import plotly.subplots as sp
+
 ```
 
 ## Tripod gait
@@ -63,8 +61,10 @@ Lets build the simplest tripod gait generator, it will generate offsets for each
 
 ```{code-cell} ipython3
 from gait_generators_plotly import GaitGenerator
+from IPython.display import display
 from models import HexapodLeg
 import numpy as np
+import plotly.graph_objects as go
 from point import Point3D
 
 
@@ -1018,7 +1018,7 @@ fig1.add_trace(
         y=trajectory_points[:, 1],
         mode='markers',
         marker={'color': 'black', 'size': 8},
-        name='Trajectory points'
+        name='Trajectory points',
     )
 )
 
@@ -1048,7 +1048,7 @@ for x, y, t in trajectory_points:
         y=y + 0.2,
         text=f't={t}',
         showarrow=False,
-        font={'color': 'black'}
+        font={'color': 'black'},
     )
 
 # Add annotation for current time
@@ -1057,7 +1057,7 @@ fig1.add_annotation(
     y=spline_y(current_t) + 0.2,
     text=f'current_t={current_t}',
     showarrow=False,
-    font={'color': 'green'}
+    font={'color': 'green'},
 )
 
 # Update layout for both figures
@@ -1065,14 +1065,26 @@ fig1.update_layout(
     title='Spline Interpolation',
     xaxis_title='X',
     yaxis_title='Y',
-    legend={'orientation': 'h', 'yanchor': 'bottom', 'y': 1.02, 'xanchor': 'right', 'x': 1}
+    legend={
+        'orientation': 'h',
+        'yanchor': 'bottom',
+        'y': 1.02,
+        'xanchor': 'right',
+        'x': 1,
+    },
 )
 
 fig2.update_layout(
     title='Spline Derivatives',
     xaxis_title='t',
     yaxis_title='Derivative Value',
-    legend={'orientation': 'h', 'yanchor': 'bottom', 'y': 1.02, 'xanchor': 'right', 'x': 1}
+    legend={
+        'orientation': 'h',
+        'yanchor': 'bottom',
+        'y': 1.02,
+        'xanchor': 'right',
+        'x': 1,
+    },
 )
 
 # Display figures
@@ -1084,8 +1096,8 @@ As you can see above, interpolating BSpline generates a smooth trajectory that f
 One of the approaches is to reduce smoothness by mixing in a linear trajectory. Animation below shows how it affects the trajectory.
 
 ```{code-cell} ipython3
-import ipywidgets as widgets
 from IPython.display import display
+import ipywidgets as widgets
 
 num_items = 4
 max_points = 7
@@ -1098,11 +1110,12 @@ frame_slider = widgets.IntSlider(
     value=0,
     description='Frame:',
     continuous_update=True,
-    layout=widgets.Layout(width='500px')
+    layout=widgets.Layout(width='500px'),
 )
 
 # Create output widget to display the figure
 output = widgets.Output()
+
 
 # Function to update the plot based on the current frame
 def update_plot(frame):
@@ -1115,7 +1128,7 @@ def update_plot(frame):
         xaxis={'range': [-1, 10], 'title': 'x'},
         yaxis={'range': [-1, 10], 'title': 'y'},
         width=800,
-        height=600
+        height=600,
     )
 
     # Calculate which control points to use based on the frame
@@ -1132,7 +1145,7 @@ def update_plot(frame):
             y=trajectory_points[:, 1],
             mode='markers',
             marker={'color': 'black', 'size': 8},
-            name='All points'
+            name='All points',
         )
     )
 
@@ -1143,7 +1156,7 @@ def update_plot(frame):
             y=control_points[:, 1],
             mode='markers',
             marker={'color': 'red', 'size': 10},
-            name='Active points'
+            name='Active points',
         )
     )
 
@@ -1154,7 +1167,7 @@ def update_plot(frame):
             y=y + 0.2,
             text=f't={t}',
             showarrow=False,
-            font={'color': 'black'}
+            font={'color': 'black'},
         )
 
     # Plot the spline
@@ -1168,10 +1181,11 @@ def update_plot(frame):
         y=spline_y(frame) + 0.2,
         text=f'curr_t={frame}',
         showarrow=False,
-        font={'color': 'green'}
+        font={'color': 'green'},
     )
 
     return fig
+
 
 # Function to handle slider changes
 def on_frame_change(change):
@@ -1179,6 +1193,7 @@ def on_frame_change(change):
         output.clear_output(wait=True)
         fig = update_plot(change['new'])
         display(fig)
+
 
 # Connect the slider to the update function
 frame_slider.observe(on_frame_change, names='value')

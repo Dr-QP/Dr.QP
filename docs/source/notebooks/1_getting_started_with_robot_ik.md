@@ -47,7 +47,6 @@ The next step is configuring matplotlib backend. Widget backend allows to intera
 ```{code-cell} ipython3
 from IPython.display import display
 import plotly.graph_objects as go
-import plotly.subplots as sp
 ```
 
 ## The robot model
@@ -314,22 +313,20 @@ def forward_kinematics_xy(coxa_length, femur_length, tibia_length, alpha, show_a
 
 
 def plot_leg_with_points_xy(model: list[Line], title: str):
-    _, ax, _ = plot_leg_with_points(model, title, link_labels='none', x_label='X', y_label='Y')
-    return ax
+    fig, _, _ = plot_leg_with_points(model, title, link_labels='none', x_label='X', y_label='Y')
+    return fig
 
 
 model = forward_kinematics_xy(coxa_len, femur_len, tibia_len, 0)
 
-with plt.ioff():
-    plot_leg_with_points_xy(model, 'XY plane (top view, neutral position)')
-    display(plt.gcf())
+fig = plot_leg_with_points_xy(model, 'XY plane (top view, neutral position)')
+display(fig)
 
 
 model = forward_kinematics_xy(coxa_len, femur_len, tibia_len, 30)
 
-with plt.ioff():
-    plot_leg_with_points_xy(model, 'XY plane (top view)')
-    display(plt.gcf())
+fig = plot_leg_with_points_xy(model, 'XY plane (top view)')
+display(fig)
 ```
 
 Finding angle $\alpha$ is a trivial problem, since we are dealing with a right triangle.
@@ -339,23 +336,52 @@ from inline_labels_plotly import add_inline_labels
 
 
 def plot_leg_with_points_xy_ik(model: list[Line], title: str):
-    ax = plot_leg_with_points_xy(model, title)
+    fig = plot_leg_with_points_xy(model, title)
     start = model[0].start
     foot = model[-1].end
     x_projection = Point(foot.x, 0)
-    ax.plot(*zip(foot, x_projection), 'm--', label=r'$target_y$')
-    ax.plot(*zip(start, x_projection), 'm--', label=r'$target_x$')
-    ax.plot(*zip(start, foot), 'm:', label="X'")
-    add_inline_labels(ax, with_overall_progress=False, fontsize='medium')
-    ax.legend().remove()
-    return ax
+
+    # Add target_y line
+    fig.add_trace(
+        go.Scatter(
+            x=[foot.x, x_projection.x],
+            y=[foot.y, x_projection.y],
+            mode='lines',
+            line={'color': 'magenta', 'dash': 'dash'},
+            name='$target_y$',
+        )
+    )
+
+    # Add target_x line
+    fig.add_trace(
+        go.Scatter(
+            x=[start.x, x_projection.x],
+            y=[start.y, x_projection.y],
+            mode='lines',
+            line={'color': 'magenta', 'dash': 'dash'},
+            name='$target_x$',
+        )
+    )
+
+    # Add X' line
+    fig.add_trace(
+        go.Scatter(
+            x=[start.x, foot.x],
+            y=[start.y, foot.y],
+            mode='lines',
+            line={'color': 'magenta', 'dash': 'dot'},
+            name="X'",
+        )
+    )
+
+    add_inline_labels(fig, with_overall_progress=False, fontsize='medium')
+    return fig
 
 
 model = forward_kinematics_xy(coxa_len, femur_len, tibia_len, 30)
 
-with plt.ioff():
-    plot_leg_with_points_xy_ik(model, 'Coxa (alpha) IK')
-    display(plt.gcf())
+fig = plot_leg_with_points_xy_ik(model, 'Coxa (alpha) IK')
+display(fig)
 ```
 
 Our right triangle is formed by lines $target_y$ and $target_x$ and hypotenuse $X'$ which is the leg itself. Therefore a simple $arctan$ will give us the angle:
@@ -371,13 +397,20 @@ import math
 
 
 def plot_xtick(alpha):
-    with plt.ioff():
-        model = forward_kinematics_xy(coxa_len, femur_len, tibia_len, alpha)
-        ax = plot_leg_with_points_xy(model, "Translating X to X'")
+    model = forward_kinematics_xy(coxa_len, femur_len, tibia_len, alpha)
+    fig = plot_leg_with_points_xy(model, "Translating X to X'")
 
-        foot = model[-1].end
-        ax.text(foot.x, foot.y + 1, f"X={foot.x:.2f}\nX'={math.hypot(foot.x, foot.y):.2f}")
-    display(plt.gcf())
+    foot = model[-1].end
+    fig.add_annotation(
+        x=foot.x,
+        y=foot.y + 1,
+        text=f"X={foot.x:.2f}<br>X'={math.hypot(foot.x, foot.y):.2f}",
+        showarrow=False,
+        font={'size': 12},
+        bgcolor='rgba(255, 255, 255, 0.7)',
+        borderpad=2,
+    )
+    display(fig)
 
 
 plot_xtick(0)
@@ -402,22 +435,37 @@ def plot_leg_ik_xy(foot_target: Point, plot_title='Inverse Kinematics solved'):
 
     model = forward_kinematics_xy(coxa_len, femur_len, tibia_len, alpha, show_alpha_value=True)
 
-    ax = plot_leg_with_points_xy(model, plot_title)
+    fig = plot_leg_with_points_xy(model, plot_title)
 
-    ax.scatter(foot_target.x, foot_target.y, color='k', label='Foot target')
-    ax.text(
-        foot_target.x,
-        foot_target.y - 3,
-        f"({foot_target.x}, {foot_target.y})\nX'={X_tick:.2f}",
+    # Add foot target point
+    fig.add_trace(
+        go.Scatter(
+            x=[foot_target.x],
+            y=[foot_target.y],
+            mode='markers',
+            marker={'color': 'black', 'size': 8},
+            name='Foot target',
+        )
     )
-    ax.legend().remove()
+
+    # Add annotation for foot target
+    fig.add_annotation(
+        x=foot_target.x,
+        y=foot_target.y - 3,
+        text=f"({foot_target.x}, {foot_target.y})<br>X'={X_tick:.2f}",
+        showarrow=False,
+        font={'size': 12},
+        bgcolor='rgba(255, 255, 255, 0.7)',
+        borderpad=2,
+    )
+
+    return fig
 
 
 foot_target_3d = Point3D(13, 15, -6)
 
-with plt.ioff():
-    plot_leg_ik_xy(foot_target_3d.xy)
-    display(plt.gcf())
+fig = plot_leg_ik_xy(foot_target_3d.xy)
+display(fig)
 ```
 
 As you can see on the diagram above, coxa IK was solved correctly and leg is now aligned with the target foot position. However leg's foot is not at the target foot position. That will be solved by femur and tibia IK described below.
@@ -447,21 +495,20 @@ model = forward_kinematics(
     body_length=0,
 )
 
-with plt.ioff():
-    fig, ax, _ = plot_leg_with_points(
-        model,
-        'Inverse Kinematics trigonometry',
-        joint_labels='points',
-        link_labels='label',
-        no_cartesian_ticks=True,
-        x_label="X'",
-        y_label='Z',
-    )
+fig, _, plot_data = plot_leg_with_points(
+    model,
+    'Inverse Kinematics trigonometry',
+    joint_labels='points',
+    link_labels='label',
+    no_cartesian_ticks=True,
+    x_label="X'",
+    y_label='Z',
+)
 
-    body, coxa, femur, tibia = model
-    plot_ik_lines(ax, femur, tibia)
+body, coxa, femur, tibia = model
+plot_ik_lines(fig, femur, tibia)
 
-    display(plt.gcf())
+display(fig)
 ```
 
 As you can see on the diagram above, there are 2 triangles formed by leg links and additional lines `D`, `T` and `L`.
@@ -562,7 +609,7 @@ def solve_and_plot_at_target_xz(
         body_length=0,
     )
 
-    fig, ax, _ = plot_leg_with_points(
+    fig, _, _ = plot_leg_with_points(
         model,
         plot_title,
         joint_labels='points',
@@ -570,18 +617,27 @@ def solve_and_plot_at_target_xz(
         y_label='Z',
     )
 
-    ax.scatter(foot_target.x, foot_target.y, color='k', label='Foot target')
-    ax.legend().remove()
+    # Add foot target point
+    fig.add_trace(
+        go.Scatter(
+            x=[foot_target.x],
+            y=[foot_target.y],
+            mode='markers',
+            marker={'color': 'black', 'size': 8},
+            name='Foot target',
+            showlegend=False,
+        )
+    )
+
+    display(fig)
     return beta, gamma
 
 
 alpha_ik, X_tick = coxa_ik(foot_target_3d.xy)
 
-with plt.ioff():
-    beta_ik, gamma_ik = solve_and_plot_at_target_xz(
-        Point(X_tick, foot_target_3d.z), 'Foot_target_3D in XZ plane', verbose=True
-    )
-    display(plt.gcf())
+beta_ik, gamma_ik = solve_and_plot_at_target_xz(
+    Point(X_tick, foot_target_3d.z), 'Foot_target_3D in XZ plane', verbose=True
+)
 ```
 
 And that is all. We have solved inverse kinematics for a 3DOF leg.
@@ -677,6 +733,7 @@ fig, _, plot_data = plot_leg_with_points(
     joint_labels='points',
 )
 
+
 # Create a function to update the plot for each frame
 def update_func(frame, fig, plot_data, solved_model, solved_foot, sequence_xz_little_circle):
     even = not frame % 2
@@ -691,7 +748,7 @@ def update_func(frame, fig, plot_data, solved_model, solved_foot, sequence_xz_li
                 mode='markers',
                 marker={'color': 'black', 'size': 8},
                 name='Target',
-                showlegend=False
+                showlegend=False,
             )
         )
     else:
@@ -707,10 +764,11 @@ def update_func(frame, fig, plot_data, solved_model, solved_foot, sequence_xz_li
                 mode='markers',
                 marker={'color': 'magenta', 'size': 8, 'opacity': 0.5},
                 name='Foot',
-                showlegend=False
+                showlegend=False,
             )
         )
     return fig
+
 
 # Create the animation
 slider = animate_plot(
@@ -723,7 +781,7 @@ slider = animate_plot(
     plot_data=plot_data,
     solved_model=solved_model,
     solved_foot=solved_foot,
-    sequence_xz_little_circle=sequence_xz_little_circle
+    sequence_xz_little_circle=sequence_xz_little_circle,
 )
 ```
 
@@ -822,7 +880,7 @@ def safe_solve_and_plot_at_target(
         body_length=0,
     )
 
-    _, ax, _ = plot_leg_with_points(
+    fig, _, _ = plot_leg_with_points(
         model,
         plot_title + (' (target reached)' if solvable else ' (target unreachable)'),
         joint_labels='points',
@@ -830,22 +888,44 @@ def safe_solve_and_plot_at_target(
         x_label='X',
         y_label='Z',
     )
-    xmin, xmax = ax.get_xlim()
-    ax.set_xlim(min(xmin, foot_target.x - 1), max(xmax, foot_target.x + 1))
-    ymin, ymax = ax.get_ylim()
-    ax.set_ylim(min(ymin, foot_target.z - 1), max(ymax, foot_target.z + 1))
 
-    ax.scatter(foot_target.x, foot_target.z, color='k', label='Foot target')
+    # Adjust axis limits to include the target
+    x_range = fig.layout.xaxis.range
+    y_range = fig.layout.yaxis.range
 
-    tibia_line = model[-1]
-    ax.plot(
-        *zip(
-            tibia_line.end,
-            tibia_line.extended(np.linalg.norm((foot_target.xy - tibia_line.end).numpy())).end,
-        ),
-        'm:',
+    new_x_range = [min(x_range[0], foot_target.x - 1), max(x_range[1], foot_target.x + 1)]
+
+    new_y_range = [min(y_range[0], foot_target.z - 1), max(y_range[1], foot_target.z + 1)]
+
+    fig.update_layout(xaxis={'range': new_x_range}, yaxis={'range': new_y_range})
+
+    # Add foot target point
+    fig.add_trace(
+        go.Scatter(
+            x=[foot_target.x],
+            y=[foot_target.z],
+            mode='markers',
+            marker={'color': 'black', 'size': 8},
+            name='Foot target',
+            showlegend=False,
+        )
     )
-    ax.legend().remove()
+
+    # Add dotted line from tibia end to target
+    tibia_line = model[-1]
+    extended = tibia_line.extended(np.linalg.norm((foot_target.xy - tibia_line.end).numpy()))
+
+    fig.add_trace(
+        go.Scatter(
+            x=[tibia_line.end.x, extended.end.x],
+            y=[tibia_line.end.y, extended.end.y],
+            mode='lines',
+            line={'color': 'magenta', 'dash': 'dot'},
+            showlegend=False,
+        )
+    )
+
+    return fig
 
 
 fig = safe_solve_and_plot_at_target(1, 1, 1, Point3D(5, 0, -2), verbose=False)

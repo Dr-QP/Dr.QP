@@ -38,15 +38,12 @@ The next step is configuring matplotlib backend. Widget backend allows to intera
 
 ```{code-cell} ipython3
 from IPython.display import display
-import plotly.graph_objects as go
-import plotly.subplots as sp
 ```
 
 ## BSpline
 
 ```{code-cell} ipython3
 # Example from https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html
-
 import numpy as np
 import plotly.graph_objects as go
 from scipy.interpolate import make_splrep
@@ -67,7 +64,7 @@ fig.add_trace(
         y=np.sin(xnew),
         mode='lines',
         line={'dash': 'dashdot'},
-        name='sin(x)'
+        name='sin(x)',
     )
 )
 
@@ -77,7 +74,7 @@ fig.add_trace(
         x=xnew,
         y=make_splrep(x, y, s=0, k=4)(xnew),
         mode='lines',
-        name='s=0'
+        name='s=0',
     )
 )
 
@@ -86,7 +83,7 @@ fig.add_trace(
         x=xnew,
         y=make_splrep(x, y, s=len(x), k=3)(xnew),
         mode='lines',
-        name=f's={len(x)}, k=3'
+        name=f's={len(x)}, k=3',
     )
 )
 
@@ -95,7 +92,7 @@ fig.add_trace(
         x=xnew,
         y=make_splrep(x, y, s=len(x), k=4)(xnew),
         mode='lines',
-        name=f's={len(x)}, k=4'
+        name=f's={len(x)}, k=4',
     )
 )
 
@@ -104,7 +101,7 @@ fig.add_trace(
         x=xnew,
         y=make_splrep(x, y, s=len(x), k=5)(xnew),
         mode='lines',
-        name=f's={len(x)}, k=5'
+        name=f's={len(x)}, k=5',
     )
 )
 
@@ -115,7 +112,7 @@ fig.add_trace(
         y=y,
         mode='markers',
         marker={'size': 8},
-        name='Data points'
+        name='Data points',
     )
 )
 
@@ -127,12 +124,12 @@ fig.update_layout(
     xaxis_title='x',
     yaxis_title='y',
     legend={
-        'orientation': "h",
-        'yanchor': "bottom",
+        'orientation': 'h',
+        'yanchor': 'bottom',
         'y': 1.02,
-        'xanchor': "right",
-        'x': 1
-    }
+        'xanchor': 'right',
+        'x': 1,
+    },
 )
 
 display(fig)
@@ -141,8 +138,8 @@ display(fig)
 ## BSpline in application to gaits trajectory approximation
 
 ```{code-cell} ipython3
-from scipy.interpolate import make_interp_spline
 import plotly.graph_objects as go
+from scipy.interpolate import make_interp_spline
 
 
 def bezier_spline(control_points, num_points=100):
@@ -184,7 +181,7 @@ fig.add_trace(
         x=curve_x,
         y=curve_y,
         mode='lines',
-        name='Spline Curve'
+        name='Spline Curve',
     )
 )
 
@@ -195,7 +192,7 @@ fig.add_trace(
         y=control_y,
         mode='markers',
         marker={'color': 'red', 'size': 10},
-        name='Control Points'
+        name='Control Points',
     )
 )
 
@@ -207,7 +204,7 @@ fig.add_trace(
         mode='lines',
         line={'color': 'red', 'dash': 'dash', 'width': 1},
         opacity=0.5,
-        name='Control Polygon'
+        name='Control Polygon',
     )
 )
 
@@ -219,12 +216,12 @@ fig.update_layout(
     xaxis_title='X',
     yaxis_title='Y',
     legend={
-        'orientation': "h",
-        'yanchor': "bottom",
+        'orientation': 'h',
+        'yanchor': 'bottom',
         'y': 1.02,
-        'xanchor': "right",
-        'x': 1
-    }
+        'xanchor': 'right',
+        'x': 1,
+    },
 )
 
 display(fig)
@@ -268,7 +265,7 @@ fig.add_trace(
         x=curve_points_x,
         y=curve_points_y,
         mode='lines',
-        name='Bézier Curve'
+        name='Bézier Curve',
     )
 )
 
@@ -280,7 +277,7 @@ fig.add_trace(
         mode='markers+lines',
         marker={'size': 10},
         line={'dash': 'dash'},
-        name='Control Points'
+        name='Control Points',
     )
 )
 
@@ -292,22 +289,22 @@ fig.update_layout(
     xaxis_title='X',
     yaxis_title='Y',
     legend={
-        'orientation': "h",
-        'yanchor': "bottom",
+        'orientation': 'h',
+        'yanchor': 'bottom',
         'y': 1.02,
-        'xanchor': "right",
-        'x': 1
+        'xanchor': 'right',
+        'x': 1,
     },
     xaxis={
         'showgrid': True,
         'gridwidth': 1,
-        'gridcolor': 'lightgray'
+        'gridcolor': 'lightgray',
     },
     yaxis={
         'showgrid': True,
         'gridwidth': 1,
-        'gridcolor': 'lightgray'
-    }
+        'gridcolor': 'lightgray',
+    },
 )
 
 display(fig)
