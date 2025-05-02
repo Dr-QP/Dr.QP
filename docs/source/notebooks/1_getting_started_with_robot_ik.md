@@ -138,9 +138,9 @@ def forward_kinematics(
     gamma_rad = np.radians(gamma) + beta_rad
 
     start = Point(0, start_height)
-    body = start + Point(body_length, 0, rf'$\alpha$={alpha}°')
-    coxa = body + Point(coxa_length, 0, rf'$\beta$={beta}°').rotate(alpha_rad)
-    femur = coxa + Point(femur_length, 0, rf'$\gamma$={gamma}°').rotate(beta_rad)
+    body = start + Point(body_length, 0, rf'$\alpha={alpha}°$')
+    coxa = body + Point(coxa_length, 0, rf'$\beta={beta}°$').rotate(alpha_rad)
+    femur = coxa + Point(femur_length, 0, rf'$\gamma={gamma}°$').rotate(beta_rad)
     tibia = femur + Point(tibia_length, 0, 'Foot').rotate(gamma_rad)
 
     result = (
@@ -298,7 +298,7 @@ def forward_kinematics_xy(coxa_length, femur_length, tibia_length, alpha, show_a
     alpha_rad = body_rad + np.radians(alpha)
     start = Point(0, 0)
     body = start + Point(
-        0.001, 0, rf'$\alpha$={alpha:.2f}°' if show_alpha_value else r'$\alpha$'
+        0.001, 0, rf'$\alpha={alpha:.2f}°$' if show_alpha_value else r'$\alpha$'
     ).rotate(body_rad)
     coxa = body + Point(coxa_length, 0).rotate(alpha_rad)
     femur = coxa + Point(femur_length, 0).rotate(alpha_rad)
