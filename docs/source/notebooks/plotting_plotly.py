@@ -100,66 +100,122 @@ def plot_leg_links(
     link_labels: link_labels_type,
     joint_labels: joint_labels_type,
 ):
-    """Plot leg links in 3D space using Plotly."""
+    """Plot leg links using Plotly."""
     link_colors = ['cyan', 'red', 'green', 'blue', 'magenta']
     joint_colors = link_colors[1:]
 
     plot_data = LegPlotData()
+
+    # Determine if we're dealing with 3D or 2D lines
+    is_3d = any(isinstance(line, Line3D) for line in model)
 
     # Plot lines
     for i, (line, color) in enumerate(zip(model, link_colors)):
         label = line.label if link_labels != 'none' else None
 
         # Get start and end points
-        if isinstance(line, Line3D):
-            x_vals = [line.start.x, line.end.x]
-            y_vals = [line.start.y, line.end.y]
-            z_vals = [line.start.z, line.end.z]
-        else:  # Line (2D)
-            x_vals = [line.start.x, line.end.x]
-            y_vals = [line.start.y, line.end.y]
-            z_vals = [0, 0]
+        x_vals = [line.start.x, line.end.x]
+        y_vals = [line.start.y, line.end.y]
 
-        # Create line trace
-        line_trace = go.Scatter3d(
-            x=x_vals,
-            y=y_vals,
-            z=z_vals,
-            mode='lines',
-            line={'color': color, 'width': 4},
-            name=label if label else f'Line {i}',
-            showlegend=(link_labels == 'legend'),
-        )
+        # Create line trace - use Scatter3d for 3D and Scatter for 2D
+        if is_3d:
+            # For 3D plotting, use Scatter3d
+            z_vals = [line.start.z, line.end.z] if isinstance(line, Line3D) else [0, 0]
+            line_trace = go.Scatter3d(
+                x=x_vals,
+                y=y_vals,
+                z=z_vals,
+                mode='lines',
+                line={'color': color, 'width': 4},
+                name=label if label else f'Line {i}',
+                showlegend=(link_labels == 'legend'),
+            )
+        else:
+            # For 2D plotting, use Scatter
+            line_trace = go.Scatter(
+                x=x_vals,
+                y=y_vals,
+                mode='lines',
+                line={'color': color, 'width': 2},
+                name=label if label else f'Line {i}',
+                showlegend=(link_labels == 'legend'),
+            )
 
         fig.add_trace(line_trace)
         plot_data.lines.append(line_trace)
 
+        # Plot extended line for joint angles if needed (2D only)
+        if not is_3d and joint_labels == 'annotated' and i < len(model) - 1:
+            extended_line = line.extended(3)
+            extended_trace = go.Scatter(
+                x=[line.end.x, extended_line.end.x],
+                y=[line.end.y, extended_line.end.y],
+                mode='lines',
+                line={'color': color, 'width': 1, 'dash': 'dot'},
+                showlegend=False,
+            )
+            fig.add_trace(extended_trace)
+            plot_data.lines.append(extended_trace)
+
     # Plot joints
-    if joint_labels == 'points':
+    if joint_labels in ['points', 'annotated']:
         for i, (line, joint_color) in enumerate(zip(model, joint_colors)):
-            if isinstance(line, Line3D):
+            if is_3d:
+                # For 3D plotting, use Scatter3d
+                z_val = line.end.z if isinstance(line, Line3D) else 0
                 joint_trace = go.Scatter3d(
                     x=[line.end.x],
                     y=[line.end.y],
-                    z=[line.end.z],
+                    z=[z_val],
                     mode='markers',
                     marker={'color': joint_color, 'size': 6},
                     name=f'Joint {i}',
                     showlegend=False,
                 )
-            else:  # Line (2D)
-                joint_trace = go.Scatter3d(
+            else:
+                # For 2D plotting, use Scatter
+                joint_trace = go.Scatter(
                     x=[line.end.x],
                     y=[line.end.y],
-                    z=[0],
                     mode='markers',
-                    marker={'color': joint_color, 'size': 6},
+                    marker={'color': joint_color, 'size': 8},
                     name=f'Joint {i}',
                     showlegend=False,
                 )
 
             fig.add_trace(joint_trace)
             plot_data.joints.append(joint_trace)
+
+    # Add inline labels for leg links (2D only)
+    if not is_3d and link_labels == 'inline':
+        add_inline_labels(fig, with_overall_progress=False, fontsize='medium')
+
+    # Add angle annotations (2D only)
+    if not is_3d and joint_labels == 'annotated':
+        for i in range(len(model) - 1):
+            line = model[i]
+            next_line = model[i + 1]
+            joint_color = joint_colors[i]
+
+            # Sort the vectors by y coordinate to always display angle on the correct side
+            vecs = [
+                next_line.end.numpy(),
+                line.extended().end.numpy(),
+            ]
+            vecs.sort(key=lambda v: v[1])
+
+            if line.end.label:
+                AngleAnnotation(
+                    line.end.numpy(),
+                    *vecs,
+                    fig=fig,
+                    size=50,
+                    text=line.end.label,
+                    color=joint_color,
+                    linestyle='dash',
+                    textposition='outside',
+                    text_kw={'font_size': 10, 'font_color': joint_color},
+                )
 
     return plot_data
 
@@ -326,16 +382,6 @@ def is_sphinx_build():
     return os.getenv('SPHINX_BUILD') == '1'
 
 
-class LegPlotData:
-    """Store plot data for a leg."""
-
-    def __init__(self):
-        self.lines = []
-        self.joints = []
-        self.joint_labels = []
-        self.link_labels = []
-
-
 def plot_leg_with_points(
     model: list[Line],
     title: str,
@@ -377,97 +423,6 @@ def plot_leg_with_points(
     )
 
     return fig, None, plot_data
-
-
-def plot_leg_links(
-    fig: go.Figure,
-    model: list[Line] | list[Line3D],
-    link_labels: link_labels_type,
-    joint_labels: joint_labels_type,
-):
-    """Plot leg links in 2D space using Plotly."""
-    link_colors = ['cyan', 'red', 'green', 'blue', 'magenta']
-    joint_colors = link_colors[1:]
-
-    plot_data = LegPlotData()
-
-    # Plot lines
-    for i, (line, color) in enumerate(zip(model, link_colors)):
-        label = line.label if link_labels != 'none' else None
-
-        # Plot main line
-        line_trace = go.Scatter(
-            x=[line.start.x, line.end.x],
-            y=[line.start.y, line.end.y],
-            mode='lines',
-            line={'color': color, 'width': 2},
-            name=label if label else f'Line {i}',
-            showlegend=(link_labels == 'legend'),
-        )
-        fig.add_trace(line_trace)
-        plot_data.lines.append(line_trace)
-
-        # Plot extended line for joint angles if needed
-        if joint_labels == 'annotated' and i < len(model) - 1:
-            extended_line = line.extended(3)
-            extended_trace = go.Scatter(
-                x=[line.end.x, extended_line.end.x],
-                y=[line.end.y, extended_line.end.y],
-                mode='lines',
-                line={'color': color, 'width': 1, 'dash': 'dot'},
-                showlegend=False,
-            )
-            fig.add_trace(extended_trace)
-            plot_data.lines.append(extended_trace)
-
-    # Plot joints
-    if joint_labels == 'annotated' or joint_labels == 'points':
-        for i, (line, joint_color) in enumerate(zip(model, joint_colors)):
-            joint_trace = go.Scatter(
-                x=[line.end.x],
-                y=[line.end.y],
-                mode='markers',
-                marker={'color': joint_color, 'size': 8},
-                name=f'Joint {i}',
-                showlegend=False,
-            )
-            fig.add_trace(joint_trace)
-            plot_data.joints.append(joint_trace)
-
-    # Add inline labels for leg links
-    if link_labels == 'legend':
-        pass  # Already handled with showlegend=True
-    elif link_labels == 'inline':
-        add_inline_labels(fig, with_overall_progress=False, fontsize='medium')
-
-    # Add angle annotations
-    if joint_labels == 'annotated':
-        for i in range(len(model) - 1):
-            line = model[i]
-            next_line = model[i + 1]
-            joint_color = joint_colors[i]
-
-            # Sort the vectors by y coordinate to always display angle on the correct side
-            vecs = [
-                next_line.end.numpy(),
-                line.extended().end.numpy(),
-            ]
-            vecs.sort(key=lambda v: v[1])
-
-            if line.end.label:
-                AngleAnnotation(
-                    line.end.numpy(),
-                    *vecs,
-                    fig=fig,
-                    size=50,
-                    text=line.end.label,
-                    color=joint_color,
-                    linestyle='dash',
-                    textposition='outside',
-                    text_kw={'font_size': 10, 'font_color': joint_color},
-                )
-
-    return plot_data
 
 
 def plot_cartesian_plane(
