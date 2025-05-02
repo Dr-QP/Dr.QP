@@ -660,21 +660,21 @@ def plot_ik_lines(fig, femur, tibia):
 
 
 def animate_plot(
-    fig,
-    update_func,
-    frames,
-    interval=16,  # 60 fps
-    interactive=False,
+    _fig,
+    _update_func,
+    _frames,
+    _interval=16,  # 60 fps
+    _interactive=False,
     **interact_kwargs,
 ):
     """Create an interactive animation using Plotly."""
     import ipywidgets as widgets
 
-    if interactive:
+    if _interactive:
         # Create slider for interactive control
         slider = widgets.IntSlider(
             min=0,
-            max=frames - 1,
+            max=_frames - 1,
             step=1,
             value=0,
             description='Frame:',
@@ -690,16 +690,16 @@ def animate_plot(
             with output:
                 output.clear_output(wait=True)
                 frame = change['new']
-                update_func(frame, **interact_kwargs)
-                display(fig)
+                _update_func(frame, **interact_kwargs)
+                display(_fig)
 
         # Connect the slider to the update function
         slider.observe(on_slider_change, names='value')
 
         # Initial display
         with output:
-            update_func(0, **interact_kwargs)
-            display(fig)
+            _update_func(0, **interact_kwargs)
+            display(_fig)
 
         # Display the slider and output
         display(widgets.VBox([slider, output]))
@@ -709,18 +709,18 @@ def animate_plot(
         # For non-interactive mode, create frames for animation
         frames_list = []
 
-        for i in range(frames):
-            update_func(i, **interact_kwargs)
+        for i in range(_frames):
+            _update_func(i, **interact_kwargs)
 
             # Create a frame with the current state
-            frame = go.Frame(data=fig.data, name=f'frame_{i}')
+            frame = go.Frame(data=_fig.data, name=f'frame_{i}')
             frames_list.append(frame)
 
         # Add frames to the figure
-        fig.frames = frames_list
+        _fig.frames = frames_list
 
         # Add animation controls
-        fig.update_layout(
+        _fig.update_layout(
             updatemenus=[
                 {
                     'type': 'buttons',
@@ -731,7 +731,7 @@ def animate_plot(
                             'args': [
                                 None,
                                 {
-                                    'frame': {'duration': interval, 'redraw': True},
+                                    'frame': {'duration': _interval, 'redraw': True},
                                     'fromcurrent': True,
                                 },
                             ],
@@ -769,18 +769,18 @@ def animate_plot(
                             'args': [
                                 [f'frame_{i}'],
                                 {
-                                    'frame': {'duration': interval, 'redraw': True},
+                                    'frame': {'duration': _interval, 'redraw': True},
                                     'mode': 'immediate',
                                 },
                             ],
                             'label': str(i),
                             'method': 'animate',
                         }
-                        for i in range(frames)
+                        for i in range(_frames)
                     ],
                 }
             ],
         )
 
-        display(fig)
-        return fig
+        display(_fig)
+        return _fig
