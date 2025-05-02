@@ -417,7 +417,7 @@ def plot_drqp(drqp, targets=None):
         height=600,
     )
 
-    return fig, None, plot_data
+    return fig, plot_data
 
 
 def update_drqp_plot(drqp, plot_data):
@@ -432,7 +432,7 @@ def update_drqp_plot(drqp, plot_data):
 
 drqp = DrQP()
 drqp.forward_kinematics(0, -25, 110)
-fig, ax, plot_data = plot_drqp(drqp)
+fig, plot_data = plot_drqp(drqp)
 display(fig)
 ```
 
@@ -461,7 +461,7 @@ for leg in drqp.legs:
         targets.append(target)
         print(f'Leg {leg.label} failed to reach {target}, ended at {leg.tibia_end}')
 
-fig, ax, plot_data = plot_drqp(drqp, targets)
+fig, plot_data = plot_drqp(drqp, targets)
 display(fig)
 ```
 
@@ -494,7 +494,7 @@ for leg, target in zip(drqp.legs, targets):
         unreachable_targets.append(target)
         print(f'Leg {leg.label} failed to reach {target}, ended at {leg.tibia_end}')
 
-fig, ax, plot_data = plot_drqp(drqp, unreachable_targets)
+fig, plot_data = plot_drqp(drqp, unreachable_targets)
 display(fig)
 ```
 
@@ -587,7 +587,7 @@ extend_transforms(sequence_xyz_little_circle, steps=5)
 # Close the loop
 interpolate(transforms[-1], transforms[0], steps=15)
 
-fig, ax, plot_data = plot_drqp(drqp)
+fig, plot_data = plot_drqp(drqp)
 
 
 def animate(frame, fig, plot_data, drqp, transforms, targets):
