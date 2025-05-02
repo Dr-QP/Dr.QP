@@ -110,6 +110,8 @@ def plot_leg_links(
     # Determine if we're dealing with 3D or 2D lines
     is_3d = any(isinstance(line, Line3D) for line in model)
 
+    is_show_link_legend = link_labels == 'legend'
+
     # Plot lines
     for i, (line, color) in enumerate(zip(model, link_colors)):
         label = line.label if link_labels != 'none' else None
@@ -118,6 +120,15 @@ def plot_leg_links(
         x_vals = [line.start.x, line.end.x]
         y_vals = [line.start.y, line.end.y]
 
+        line_args = {
+            'mode': 'lines',
+            'line': {
+                'color': color,
+                'width': 4,
+            },
+            'showlegend': is_show_link_legend,
+            'name': label,
+        }
         # Create line trace - use Scatter3d for 3D and Scatter for 2D
         if is_3d:
             # For 3D plotting, use Scatter3d
@@ -126,20 +137,14 @@ def plot_leg_links(
                 x=x_vals,
                 y=y_vals,
                 z=z_vals,
-                mode='lines',
-                line={'color': color, 'width': 4},
-                name=label if label else f'Line {i}',
-                showlegend=(link_labels == 'legend'),
+                arg=line_args,
             )
         else:
             # For 2D plotting, use Scatter
             line_trace = go.Scatter(
                 x=x_vals,
                 y=y_vals,
-                mode='lines',
-                line={'color': color, 'width': 2},
-                name=label if label else f'Line {i}',
-                showlegend=(link_labels == 'legend'),
+                arg=line_args,
             )
 
         fig.add_trace(line_trace)
