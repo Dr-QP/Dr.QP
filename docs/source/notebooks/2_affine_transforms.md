@@ -34,12 +34,9 @@ The first step is to enable live python modules reloading, so changes in the pyt
 The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
 ```{code-cell} ipython3
-%matplotlib widget
-
 from IPython.display import display
-import matplotlib.pyplot as plt
-
-plt.ioff()  # this is equivalent to using inline backend, but figures have to be displayed manually
+import plotly.graph_objects as go
+import plotly.subplots as sp
 ```
 
 ## Affine transforms
@@ -112,7 +109,7 @@ def forward_kinematics(
 ```
 
 ```{code-cell} ipython3
-from plotting import plot_leg_with_points
+from plotting_plotly import plot_leg_with_points
 
 coxa = 5
 femur = 8
@@ -121,15 +118,15 @@ tibia = 10
 
 model = forward_kinematics(coxa, femur, tibia, 45, -55, -14)
 
-_ = plot_leg_with_points(
+fig1 = plot_leg_with_points(
     model.xy, 'Foot on the ground (XY)', link_labels='none', x_label="X'", y_label='Y'
 )
-display(plt.gcf())
+display(fig1)
 
-_ = plot_leg_with_points(
+fig2 = plot_leg_with_points(
     model.xz, 'Foot on the ground (XZ)', link_labels='none', x_label="X'", y_label='Z'
 )
-display(plt.gcf())
+display(fig2)
 ```
 
 This was a good start, but code is hard to read and understand due to excessive repetitions. Let's introduce a transform system, similar to the one used in ROS TF2 library.
@@ -137,7 +134,7 @@ This was a good start, but code is hard to read and understand due to excessive 
 With this `Transform` class we can now create a chain of transformations instead of hand crafting them.
 
 ```{code-cell} ipython3
-from plotting import plot_leg3d
+from plotting_plotly import plot_leg3d
 from transforms import Transform
 
 
@@ -209,36 +206,58 @@ tibia = 10
 
 model = forward_kinematics_transforms(coxa, femur, tibia, 0, -25, 110)
 
-fig, _, _ = plot_leg_with_points(
+# Create a 2x2 subplot figure
+fig = sp.make_subplots(
+    rows=2,
+    cols=2,
+    specs=[[{'type': 'xy'}, {'type': 'xy'}],
+           [{'type': 'xy'}, {'type': '3d'}]],
+    subplot_titles=['Foot in 3D (XY)', 'Foot in 3D (XZ)', 'Foot in 3D (YZ)', 'Foot in 3D']
+)
+
+# Plot XY view (top left)
+fig_xy = plot_leg_with_points(
     model.xy,
     'Foot in 3D (XY)',
     link_labels='none',
     joint_labels='points',
     x_label='X',
-    y_label='Y',
-    subplot=221,
+    y_label='Y'
 )
-_ = plot_leg_with_points(
+for trace in fig_xy.data:
+    fig.add_trace(trace, row=1, col=1)
+
+# Plot XZ view (top right)
+fig_xz = plot_leg_with_points(
     model.xz,
     'Foot in 3D (XZ)',
     link_labels='none',
     joint_labels='points',
     x_label='X',
-    y_label='Z',
-    subplot=222,
-    fig=fig,
+    y_label='Z'
 )
-_ = plot_leg_with_points(
+for trace in fig_xz.data:
+    fig.add_trace(trace, row=1, col=2)
+
+# Plot YZ view (bottom left)
+fig_yz = plot_leg_with_points(
     model.yz,
     'Foot in 3D (YZ)',
     link_labels='none',
     joint_labels='points',
     x_label='Y',
-    y_label='Z',
-    subplot=223,
-    fig=fig,
+    y_label='Z'
 )
-_ = plot_leg3d(model, 'Foot in 3D', link_labels='none', joint_labels='points', subplot=224, fig=fig)
+for trace in fig_yz.data:
+    fig.add_trace(trace, row=2, col=1)
+
+# Plot 3D view (bottom right)
+fig_3d, _, _ = plot_leg3d(model, 'Foot in 3D', link_labels='none', joint_labels='points')
+for trace in fig_3d.data:
+    fig.add_trace(trace, row=2, col=2)
+
+# Update layout
+fig.update_layout(height=800, width=1000, title_text="Leg Views")
 display(fig)
 # print("foot position: ", model.lines[-1].end)
 ```
@@ -248,7 +267,7 @@ With full 3D kinematics model and plotting support lets setup a 6 legged robot.
 ```{code-cell} ipython3
 # Dr.QP Dimensions
 from models import LegModel
-from plotting import plot_update_leg3d_lines
+from plotting_plotly import plot_update_leg3d_lines
 
 drqp_front_offset = 0.116924  # x offset for the front and back legs
 drqp_side_offset = 0.063871  # y offset fo the front and back legs
@@ -348,7 +367,7 @@ class DrQP:
 
 
 def plot_drqp(drqp, targets=None):
-    fig, ax = None, None
+    fig = go.Figure()
 
     class PlotData:
         def __init__(self):
@@ -358,28 +377,63 @@ def plot_drqp(drqp, targets=None):
     plot_data = PlotData()
 
     for leg in drqp.legs:
-        fig, ax, leg_plot_data = plot_leg3d(
+        leg_fig, _, leg_plot_data = plot_leg3d(
             leg,
             'Hexapod in 3D',
             link_labels='none',
             joint_labels='points',
-            subplot=111,
-            fig=fig,
-            ax=ax,
         )
+        # Add all traces from leg figure to main figure
+        for trace in leg_fig.data:
+            fig.add_trace(trace)
         plot_data.leg_plot_data.append(leg_plot_data)
 
-    plot_data.head_line = ax.plot(*zip(drqp.head.start, drqp.head.end), 'c')[0]
+    # Add head line
+    head_trace = go.Scatter3d(
+        x=[drqp.head.start.x, drqp.head.end.x],
+        y=[drqp.head.start.y, drqp.head.end.y],
+        z=[drqp.head.start.z, drqp.head.end.z],
+        mode='lines',
+        line=dict(color='cyan', width=4),
+        name='Head',
+    )
+    fig.add_trace(head_trace)
+    plot_data.head_line = head_trace
 
+    # Add targets if provided
     if targets:
-        ax.scatter(
-            *zip(*[target.numpy() for target in targets]),
-            color='k',
-            label='unreachable target',
+        target_x = [target.x for target in targets]
+        target_y = [target.y for target in targets]
+        target_z = [target.z for target in targets]
+
+        fig.add_trace(
+            go.Scatter3d(
+                x=target_x,
+                y=target_y,
+                z=target_z,
+                mode='markers',
+                marker=dict(color='black', size=6),
+                name='Unreachable target',
+            )
         )
 
-    ax.view_init(elev=44.0, azim=-160)
-    return fig, ax, plot_data
+    # Set camera view
+    fig.update_layout(
+        scene_camera=dict(
+            eye=dict(x=1.5, y=1.5, z=0.8),
+            up=dict(x=0, y=0, z=1),
+        ),
+        scene=dict(
+            aspectmode='data',
+            xaxis_title='X',
+            yaxis_title='Y',
+            zaxis_title='Z',
+        ),
+        width=800,
+        height=600,
+    )
+
+    return fig, None, plot_data
 
 
 def update_drqp_plot(drqp, plot_data):
@@ -387,7 +441,9 @@ def update_drqp_plot(drqp, plot_data):
         plot_update_leg3d_lines(leg, leg_plot_data)
 
     if plot_data.head_line:
-        plot_data.head_line.set_data_3d(*zip(drqp.head.start, drqp.head.end))
+        plot_data.head_line.x = [drqp.head.start.x, drqp.head.end.x]
+        plot_data.head_line.y = [drqp.head.start.y, drqp.head.end.y]
+        plot_data.head_line.z = [drqp.head.start.z, drqp.head.end.z]
 
 
 drqp = DrQP()
@@ -492,11 +548,9 @@ sequence_xyz_little_circle = [
 ```{code-cell} ipython3
 # Plot IK solutions and targets into an animation
 
-import matplotlib.pyplot as plt
-from plotting import animate_plot, is_sphinx_build
+import plotly.graph_objects as go
+from plotting_plotly import animate_plot, is_sphinx_build
 from scipy.interpolate import interp1d
-
-plt.rcParams['animation.html'] = 'jshtml'
 
 skip = not is_sphinx_build()
 interactive = False
@@ -552,21 +606,26 @@ interpolate(transforms[-1], transforms[0], steps=15)
 fig, ax, plot_data = plot_drqp(drqp)
 
 
-def animate(frame):
+def animate(frame, fig, plot_data, drqp, transforms, targets):
     drqp.body_transform = transforms[frame]
     for leg, target in zip(drqp.legs, targets):
         leg.move_to(target)
     update_drqp_plot(drqp, plot_data)
+    return fig
 
 
 if not skip:
-    animate_plot(
+    slider = animate_plot(
         fig,
         animate,
-        _frames=len(transforms),
-        _interval=20,
-        _interactive=interactive,
-        _save_animation_name='animation' if save_animation else None,
+        frames=len(transforms),
+        interval=20,
+        interactive=interactive,
+        fig=fig,
+        plot_data=plot_data,
+        drqp=drqp,
+        transforms=transforms,
+        targets=targets
     )
 ```
 
@@ -574,7 +633,7 @@ To make all the learnings and findings reusable in other notebooks, lets move al
 
 ```{code-cell} ipython3
 from models import HexapodModel
-from plotting import plot_hexapod, update_hexapod_plot
+from plotting_plotly import plot_hexapod, update_hexapod_plot
 
 hexapod = HexapodModel()
 hexapod.forward_kinematics(0, -25, 110)

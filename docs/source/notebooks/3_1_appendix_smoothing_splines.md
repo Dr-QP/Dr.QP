@@ -37,12 +37,9 @@ The first step is to enable live python modules reloading, so changes in the pyt
 The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
 ```{code-cell} ipython3
-%matplotlib widget
-
 from IPython.display import display
-import matplotlib.pyplot as plt
-
-plt.ioff()  # this is equivalent to using inline backend, but figures have to be displayed manually
+import plotly.graph_objects as go
+import plotly.subplots as sp
 ```
 
 ## BSpline
@@ -50,25 +47,93 @@ plt.ioff()  # this is equivalent to using inline backend, but figures have to be
 ```{code-cell} ipython3
 # Example from https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html
 
-import matplotlib.pyplot as plt
 import numpy as np
+import plotly.graph_objects as go
 from scipy.interpolate import make_splrep
 
 x = np.arange(0, 2 * np.pi + np.pi / 4, 2 * np.pi / 16)
 rng = np.random.default_rng()
 y = np.sin(x) + 0.4 * rng.standard_normal(size=len(x))
 
-
 xnew = np.arange(0, 9 / 4, 1 / 50) * np.pi
 
-fig = plt.figure(figsize=(8, 6))
-plt.plot(xnew, np.sin(xnew), '-.', label='sin(x)')
-plt.plot(xnew, make_splrep(x, y, s=0, k=4)(xnew), '-', label='s=0')
-plt.plot(xnew, make_splrep(x, y, s=len(x), k=3)(xnew), '-', label=f's={len(x)}, k=3')
-plt.plot(xnew, make_splrep(x, y, s=len(x), k=4)(xnew), '-', label=f's={len(x)}, k=4')
-plt.plot(xnew, make_splrep(x, y, s=len(x), k=5)(xnew), '-', label=f's={len(x)}, k=5')
-plt.plot(x, y, 'o')
-plt.legend()
+# Create a Plotly figure
+fig = go.Figure()
+
+# Add the original sin(x) curve
+fig.add_trace(
+    go.Scatter(
+        x=xnew,
+        y=np.sin(xnew),
+        mode='lines',
+        line=dict(dash='dashdot'),
+        name='sin(x)'
+    )
+)
+
+# Add the spline curves with different parameters
+fig.add_trace(
+    go.Scatter(
+        x=xnew,
+        y=make_splrep(x, y, s=0, k=4)(xnew),
+        mode='lines',
+        name='s=0'
+    )
+)
+
+fig.add_trace(
+    go.Scatter(
+        x=xnew,
+        y=make_splrep(x, y, s=len(x), k=3)(xnew),
+        mode='lines',
+        name=f's={len(x)}, k=3'
+    )
+)
+
+fig.add_trace(
+    go.Scatter(
+        x=xnew,
+        y=make_splrep(x, y, s=len(x), k=4)(xnew),
+        mode='lines',
+        name=f's={len(x)}, k=4'
+    )
+)
+
+fig.add_trace(
+    go.Scatter(
+        x=xnew,
+        y=make_splrep(x, y, s=len(x), k=5)(xnew),
+        mode='lines',
+        name=f's={len(x)}, k=5'
+    )
+)
+
+# Add the original data points
+fig.add_trace(
+    go.Scatter(
+        x=x,
+        y=y,
+        mode='markers',
+        marker=dict(size=8),
+        name='Data points'
+    )
+)
+
+# Update layout
+fig.update_layout(
+    width=800,
+    height=600,
+    title='B-Spline Interpolation',
+    xaxis_title='x',
+    yaxis_title='y',
+    legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+    )
+)
 
 display(fig)
 ```
@@ -77,6 +142,7 @@ display(fig)
 
 ```{code-cell} ipython3
 from scipy.interpolate import make_interp_spline
+import plotly.graph_objects as go
 
 
 def bezier_spline(control_points, num_points=100):
@@ -109,14 +175,58 @@ t = np.linspace(0, 1, 100)
 curve_x = spline_x(t)
 curve_y = spline_y(t)
 
-fig = plt.figure(figsize=(8, 6))
-plt.plot(curve_x, curve_y, label='Spline Curve')
-plt.scatter(control_x, control_y, color='red', label='Control Points')
-plt.plot(control_x, control_y, 'r--', alpha=0.5)
-plt.legend()
-plt.xlabel('X')
-plt.ylabel('Y')
-plt.title('Spline Interpolation Curve')
+# Create a Plotly figure
+fig = go.Figure()
+
+# Add the spline curve
+fig.add_trace(
+    go.Scatter(
+        x=curve_x,
+        y=curve_y,
+        mode='lines',
+        name='Spline Curve'
+    )
+)
+
+# Add the control points
+fig.add_trace(
+    go.Scatter(
+        x=control_x,
+        y=control_y,
+        mode='markers',
+        marker=dict(color='red', size=10),
+        name='Control Points'
+    )
+)
+
+# Add the control polygon
+fig.add_trace(
+    go.Scatter(
+        x=control_x,
+        y=control_y,
+        mode='lines',
+        line=dict(color='red', dash='dash', width=1),
+        opacity=0.5,
+        name='Control Polygon'
+    )
+)
+
+# Update layout
+fig.update_layout(
+    width=800,
+    height=600,
+    title='Spline Interpolation Curve',
+    xaxis_title='X',
+    yaxis_title='Y',
+    legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+    )
+)
+
 display(fig)
 ```
 
@@ -127,8 +237,8 @@ The SciPy's BSpline class can represent Bezier curves, as Bezier curves are a sp
 To define a Bezier curve in SciPy, one needs to specify the control points and the degree of the curve. For example, a cubic Bezier curve (degree 3) requires four control points. The BSpline class then creates a spline object, which can be evaluated at any point to obtain the corresponding point on the curve.
 
 ```{code-cell} ipython3
-import matplotlib.pyplot as plt
 import numpy as np
+import plotly.graph_objects as go
 from scipy.interpolate import BSpline
 
 # Define control points for a cubic Bezier curve
@@ -149,15 +259,57 @@ t = np.linspace(0, 1, 100)
 curve_points_x = spl_x(t)
 curve_points_y = spl_y(t)
 
-# Plot the curve and control points
-fig = plt.figure(figsize=(8, 6))
-plt.plot(curve_points_x, curve_points_y, label='Bézier Curve')
-plt.plot(control_points[:, 0], control_points[:, 1], 'o--', label='Control Points')
-plt.legend()
-plt.xlabel('X')
-plt.ylabel('Y')
-plt.title('Cubic Bézier Curve using B-Spline')
-plt.grid()
+# Create a Plotly figure
+fig = go.Figure()
+
+# Add the Bezier curve
+fig.add_trace(
+    go.Scatter(
+        x=curve_points_x,
+        y=curve_points_y,
+        mode='lines',
+        name='Bézier Curve'
+    )
+)
+
+# Add the control points with connecting lines
+fig.add_trace(
+    go.Scatter(
+        x=control_points[:, 0],
+        y=control_points[:, 1],
+        mode='markers+lines',
+        marker=dict(size=10),
+        line=dict(dash='dash'),
+        name='Control Points'
+    )
+)
+
+# Update layout
+fig.update_layout(
+    width=800,
+    height=600,
+    title='Cubic Bézier Curve using B-Spline',
+    xaxis_title='X',
+    yaxis_title='Y',
+    legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+    ),
+    xaxis=dict(
+        showgrid=True,
+        gridwidth=1,
+        gridcolor='lightgray'
+    ),
+    yaxis=dict(
+        showgrid=True,
+        gridwidth=1,
+        gridcolor='lightgray'
+    )
+)
+
 display(fig)
 ```
 
