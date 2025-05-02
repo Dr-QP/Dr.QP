@@ -689,7 +689,7 @@ def update_func(frame, fig, plot_data, solved_model, solved_foot, sequence_xz_li
                 x=[target.x],
                 y=[target.z],
                 mode='markers',
-                marker=dict(color='black', size=8),
+                marker={'color': 'black', 'size': 8},
                 name='Target',
                 showlegend=False
             )
@@ -705,7 +705,7 @@ def update_func(frame, fig, plot_data, solved_model, solved_foot, sequence_xz_li
                 x=[foot.x],
                 y=[foot.y],
                 mode='markers',
-                marker=dict(color='magenta', size=8, opacity=0.5),
+                marker={'color': 'magenta', 'size': 8, 'opacity': 0.5},
                 name='Foot',
                 showlegend=False
             )

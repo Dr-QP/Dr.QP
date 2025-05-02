@@ -66,7 +66,7 @@ fig.add_trace(
         x=xnew,
         y=np.sin(xnew),
         mode='lines',
-        line=dict(dash='dashdot'),
+        line={'dash': 'dashdot'},
         name='sin(x)'
     )
 )
@@ -114,7 +114,7 @@ fig.add_trace(
         x=x,
         y=y,
         mode='markers',
-        marker=dict(size=8),
+        marker={'size': 8},
         name='Data points'
     )
 )
@@ -126,13 +126,13 @@ fig.update_layout(
     title='B-Spline Interpolation',
     xaxis_title='x',
     yaxis_title='y',
-    legend=dict(
-        orientation="h",
-        yanchor="bottom",
-        y=1.02,
-        xanchor="right",
-        x=1
-    )
+    legend={
+        'orientation': "h",
+        'yanchor': "bottom",
+        'y': 1.02,
+        'xanchor': "right",
+        'x': 1
+    }
 )
 
 display(fig)
@@ -194,7 +194,7 @@ fig.add_trace(
         x=control_x,
         y=control_y,
         mode='markers',
-        marker=dict(color='red', size=10),
+        marker={'color': 'red', 'size': 10},
         name='Control Points'
     )
 )
@@ -205,7 +205,7 @@ fig.add_trace(
         x=control_x,
         y=control_y,
         mode='lines',
-        line=dict(color='red', dash='dash', width=1),
+        line={'color': 'red', 'dash': 'dash', 'width': 1},
         opacity=0.5,
         name='Control Polygon'
     )
@@ -218,13 +218,13 @@ fig.update_layout(
     title='Spline Interpolation Curve',
     xaxis_title='X',
     yaxis_title='Y',
-    legend=dict(
-        orientation="h",
-        yanchor="bottom",
-        y=1.02,
-        xanchor="right",
-        x=1
-    )
+    legend={
+        'orientation': "h",
+        'yanchor': "bottom",
+        'y': 1.02,
+        'xanchor': "right",
+        'x': 1
+    }
 )
 
 display(fig)
@@ -278,8 +278,8 @@ fig.add_trace(
         x=control_points[:, 0],
         y=control_points[:, 1],
         mode='markers+lines',
-        marker=dict(size=10),
-        line=dict(dash='dash'),
+        marker={'size': 10},
+        line={'dash': 'dash'},
         name='Control Points'
     )
 )
@@ -291,23 +291,23 @@ fig.update_layout(
     title='Cubic Bézier Curve using B-Spline',
     xaxis_title='X',
     yaxis_title='Y',
-    legend=dict(
-        orientation="h",
-        yanchor="bottom",
-        y=1.02,
-        xanchor="right",
-        x=1
-    ),
-    xaxis=dict(
-        showgrid=True,
-        gridwidth=1,
-        gridcolor='lightgray'
-    ),
-    yaxis=dict(
-        showgrid=True,
-        gridwidth=1,
-        gridcolor='lightgray'
-    )
+    legend={
+        'orientation': "h",
+        'yanchor': "bottom",
+        'y': 1.02,
+        'xanchor': "right",
+        'x': 1
+    },
+    xaxis={
+        'showgrid': True,
+        'gridwidth': 1,
+        'gridcolor': 'lightgray'
+    },
+    yaxis={
+        'showgrid': True,
+        'gridwidth': 1,
+        'gridcolor': 'lightgray'
+    }
 )
 
 display(fig)

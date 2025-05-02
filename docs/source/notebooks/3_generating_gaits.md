@@ -1017,7 +1017,7 @@ fig1.add_trace(
         x=trajectory_points[:, 0],
         y=trajectory_points[:, 1],
         mode='markers',
-        marker=dict(color='black', size=8),
+        marker={'color': 'black', 'size': 8},
         name='Trajectory points'
     )
 )
@@ -1048,7 +1048,7 @@ for x, y, t in trajectory_points:
         y=y + 0.2,
         text=f't={t}',
         showarrow=False,
-        font=dict(color='black')
+        font={'color': 'black'}
     )
 
 # Add annotation for current time
@@ -1057,7 +1057,7 @@ fig1.add_annotation(
     y=spline_y(current_t) + 0.2,
     text=f'current_t={current_t}',
     showarrow=False,
-    font=dict(color='green')
+    font={'color': 'green'}
 )
 
 # Update layout for both figures
@@ -1065,14 +1065,14 @@ fig1.update_layout(
     title='Spline Interpolation',
     xaxis_title='X',
     yaxis_title='Y',
-    legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1)
+    legend={'orientation': 'h', 'yanchor': 'bottom', 'y': 1.02, 'xanchor': 'right', 'x': 1}
 )
 
 fig2.update_layout(
     title='Spline Derivatives',
     xaxis_title='t',
     yaxis_title='Derivative Value',
-    legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1)
+    legend={'orientation': 'h', 'yanchor': 'bottom', 'y': 1.02, 'xanchor': 'right', 'x': 1}
 )
 
 # Display figures
@@ -1112,8 +1112,8 @@ def update_plot(frame):
     # Set axis limits and title
     fig.update_layout(
         title='Trajectory smoothing using interpolating B-spline (time points are not uniform)',
-        xaxis=dict(range=[-1, 10], title='x'),
-        yaxis=dict(range=[-1, 10], title='y'),
+        xaxis={'range': [-1, 10], 'title': 'x'},
+        yaxis={'range': [-1, 10], 'title': 'y'},
         width=800,
         height=600
     )
@@ -1131,7 +1131,7 @@ def update_plot(frame):
             x=trajectory_points[:, 0],
             y=trajectory_points[:, 1],
             mode='markers',
-            marker=dict(color='black', size=8),
+            marker={'color': 'black', 'size': 8},
             name='All points'
         )
     )
@@ -1142,7 +1142,7 @@ def update_plot(frame):
             x=control_points[:, 0],
             y=control_points[:, 1],
             mode='markers',
-            marker=dict(color='red', size=10),
+            marker={'color': 'red', 'size': 10},
             name='Active points'
         )
     )
@@ -1154,7 +1154,7 @@ def update_plot(frame):
             y=y + 0.2,
             text=f't={t}',
             showarrow=False,
-            font=dict(color='black')
+            font={'color': 'black'}
         )
 
     # Plot the spline
@@ -1168,7 +1168,7 @@ def update_plot(frame):
         y=spline_y(frame) + 0.2,
         text=f'curr_t={frame}',
         showarrow=False,
-        font=dict(color='green')
+        font={'color': 'green'}
     )
 
     return fig
