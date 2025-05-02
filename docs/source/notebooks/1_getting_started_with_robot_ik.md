@@ -47,9 +47,9 @@ The next step is configuring matplotlib backend. Widget backend allows to intera
 ```{code-cell} ipython3
 from IPython.display import display, HTML
 import plotly.graph_objects as go
-import plotly
 
 # Fix for LaTeX in VSCode https://github.com/microsoft/vscode-jupyter/issues/8131#issuecomment-1589961116
+# TODO: figure out why it is not working on the first run.
 display(HTML(
     '<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_SVG"></script>'
 ))
@@ -247,7 +247,6 @@ def animate(frame, alpha=alpha, beta=beta, gamma=gamma):
         start_height=start_height,
     )
     plot_leg_update_lines(model, plot_data)
-    fig.canvas.draw_idle()
 
 
 _ = animate_plot(

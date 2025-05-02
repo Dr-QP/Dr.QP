@@ -18,11 +18,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import inspect
 import os
 from typing import List, Literal
 
 from inline_labels_plotly import add_inline_labels, AngleAnnotation
-from IPython.display import display
+from IPython.display import display, clear_output
 from models import HexapodModel
 import numpy as np
 import plotly.graph_objects as go
@@ -622,12 +623,24 @@ def animate_plot(
     _interactive=False,
     **interact_kwargs,
 ):
-    """Create an interactive animation using Plotly."""
+    """Create an interactive animation using Plotly.
+
+    When _interactive=True, this function can process interact_kwargs to create sliders.
+    Each interact_kwargs should be in the format:
+        param_name=(min_val, max_val, step_val)
+
+    For example:
+        alpha=(-180, 180, 0.1)
+        beta=(-180, 180, 0.1)
+        gamma=(-180, 180, 0.1)
+    """
     import ipywidgets as widgets
 
     if _interactive:
-        # Create slider for interactive control
-        slider = widgets.IntSlider(
+        sliders = []
+
+        # Create frame slider for animation control
+        frame_slider = widgets.IntSlider(
             min=0,
             max=_frames - 1,
             step=1,
@@ -636,30 +649,96 @@ def animate_plot(
             continuous_update=True,
             layout=widgets.Layout(width='500px'),
         )
+        sliders.append(frame_slider)
+
+        # Get default values from _update_func kwargs if available
+        default_values = {}
+        # Inspect the function signature to get default values
+        sig = inspect.signature(_update_func)
+        for param_name, param in sig.parameters.items():
+            if param.default is not param.empty and param_name != 'frame':
+                default_values[param_name] = param.default
+
+        # Process interact_kwargs to create parameter sliders
+        param_values = {}
+        for param_name, param_range in interact_kwargs.items():
+            # Skip parameters that start with underscore
+            if param_name.startswith('_'):
+                param_values[param_name] = param_range
+                continue
+
+            # Check if param_range is a tuple with 3 elements (min, max, step)
+            if isinstance(param_range, tuple) and len(param_range) == 3:
+                min_val, max_val, step_val = param_range
+
+                # Get default value from function signature or use middle value
+                default_val = default_values.get(param_name, (min_val + max_val) / 2)
+                # Ensure default value is within range
+                default_val = max(min_val, min(max_val, default_val))
+
+                # Create a slider for this parameter
+                param_slider = widgets.FloatSlider(
+                    min=min_val,
+                    max=max_val,
+                    step=step_val,
+                    value=default_val,
+                    description=f'{param_name}:',
+                    continuous_update=True,
+                    layout=widgets.Layout(width='500px'),
+                )
+                sliders.append(param_slider)
+                param_values[param_name] = param_slider
+            else:
+                # For non-tuple parameters, just pass them through
+                param_values[param_name] = param_range
 
         # Create output widget to display the figure
         output = widgets.Output()
 
-        # Define update function for the slider
-        def on_slider_change(change):
+        # Define update function for the sliders
+        def on_change(*args):
             with output:
                 output.clear_output(wait=True)
-                frame = change['new']
-                _update_func(frame, **interact_kwargs)
+
+                # Get current values from all sliders
+                frame = frame_slider.value
+                kwargs = {}
+
+                # Add all parameter values
+                for param_name, param_value in param_values.items():
+                    if isinstance(param_value, widgets.Widget):
+                        kwargs[param_name] = param_value.value
+                    else:
+                        kwargs[param_name] = param_value
+
+                # Call the update function with current values
+                _update_func(frame, **kwargs)
+                clear_output(wait=True)
                 display(_fig)
 
-        # Connect the slider to the update function
-        slider.observe(on_slider_change, names='value')
+        # Connect all sliders to the update function
+        frame_slider.observe(on_change, names='value')
+        for param_name, param_value in param_values.items():
+            if isinstance(param_value, widgets.Widget):
+                param_value.observe(on_change, names='value')
 
         # Initial display
         with output:
-            _update_func(0, **interact_kwargs)
+            # Prepare initial kwargs
+            initial_kwargs = {}
+            for param_name, param_value in param_values.items():
+                if isinstance(param_value, widgets.Widget):
+                    initial_kwargs[param_name] = param_value.value
+                else:
+                    initial_kwargs[param_name] = param_value
+
+            _update_func(0, **initial_kwargs)
             display(_fig)
 
-        # Display the slider and output
-        display(widgets.VBox([slider, output]))
+        # Display all sliders and the output
+        display(widgets.VBox(sliders + [output]))
 
-        return slider
+        return _fig
     else:
         # For non-interactive mode, create frames for animation
         frames_list = []
