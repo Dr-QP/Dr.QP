@@ -299,6 +299,30 @@
         ]
       },
       {
+        "label": "Dr.QP check docs",
+        "type": "shell",
+        "command": ".venv/bin/sphinx-build -nW --keep-going -b rediraffewritediff docs/source/ docs/_build/html",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "dependsOn": [
+          "Dr.QP sync notebooks"
+        ],
+        "problemMatcher": [
+          {
+            "owner": "sphinx",
+            "fileLocation": "absolute",
+            "pattern": {
+              "regexp": "^(.*):(\\d+):\\s+(\\w*):\\s+(.*)$",
+              "file": 1,
+              "line": 2,
+              "severity": 3,
+              "message": 4
+            }
+          }
+        ]
+      }
+      {
         "label": "Dr.QP build docs server",
         "type": "shell",
         "command": ".venv/bin/sphinx-autobuild -nW --keep-going -b html docs/source/ docs/_build/html --port 8000",
