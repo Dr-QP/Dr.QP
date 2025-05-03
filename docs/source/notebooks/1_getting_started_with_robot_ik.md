@@ -700,6 +700,7 @@ with plt.ioff():
             foot = solved_foot[frame]
             ax.scatter(foot.x, foot.y, color='m', alpha=0.5, zorder=100)
 
+
 _ = animate_plot(
     fig,
     animate,
@@ -777,7 +778,6 @@ With the safe capped version of acos function not only not throwing, but also pr
 Let's plot it to have better intuition about what's going on.
 
 ```{code-cell} ipython3
-
 def safe_solve_and_plot_at_target(
     coxa,
     femur,
