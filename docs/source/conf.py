@@ -125,14 +125,10 @@ html_theme_options = {
         'index': [],
         '**/*': ['page-toc', 'edit-this-page', 'sourcelink'],
     },
-    # 'use_edit_page_button': True,
     'navbar_center': ['version-switcher', 'navbar-nav'],
     'footer_start': ['copyright'],
     'footer_center': ['sphinx-version'],
 }
-# html_show_sourcelink = False
-# html_sourcelink_suffix = ''
-
 
 github_user = 'dr-qp'
 github_repo = 'Dr.QP'
