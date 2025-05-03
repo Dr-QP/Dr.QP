@@ -120,7 +120,7 @@ if not os.environ.get('READTHEDOCS'):
     sitemap_locales = [None]
     sitemap_url_scheme = '{link}'
 
-# -- Options for HTML output
+# -- Options for HTML output ---------------------------------------------------
 
 html_theme = 'pydata_sphinx_theme'
 html_theme_options = {
@@ -133,6 +133,12 @@ html_theme_options = {
     'footer_start': ['copyright'],
     'footer_center': ['sphinx-version'],
 }
+html_static_path = ['_static']
+html_css_files = [
+    'styles/custom.css',
+]
+
+# -- Edit on GitHub -------------------------------------------------------------
 
 github_user = 'dr-qp'
 github_repo = 'Dr.QP'
@@ -168,7 +174,7 @@ html_context = {
     'doc_path': '/docs/source/',
 }
 
-# -- Options for EPUB output
+# -- Options for EPUB output ---------------------------------------------------
 epub_show_urls = 'footnote'
 
 

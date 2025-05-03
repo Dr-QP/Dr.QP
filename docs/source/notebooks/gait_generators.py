@@ -82,7 +82,8 @@ class GaitGenerator:
                 z_values[leg].append(offset.z)
 
         # Plot the data
-        fig, axs = plt.subplots(4, 1, figsize=(10, 12))
+        fig, axs = plt.subplots(4, 1)
+        fig.set_figheight(12, forward=True)
         # Adjust spacing between subplots to avoid title overlapping with ticks
         plt.subplots_adjust(hspace=0.8)  # Increased from 0.5 to 0.8 for more space between subplots
 
@@ -248,7 +249,8 @@ class GaitGenerator:
 
         # Plot the data
         if ax is None:
-            fig = plt.figure(figsize=(12, 10))
+            fig = plt.figure()
+            fig.set_figheight(7, forward=True)
             ax = fig.add_subplot(111, projection='3d')
 
             # Adjust view angle for better visibility of all legs

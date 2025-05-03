@@ -37,6 +37,7 @@ The first step is to enable live python modules reloading, so changes in the pyt
 The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
 ```{code-cell} ipython3
+%config InlineBackend.figure_formats = ['svg']
 %matplotlib widget
 
 from IPython.display import display

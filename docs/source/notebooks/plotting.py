@@ -625,7 +625,7 @@ def animate_plot(
 ):
     anim = None
 
-    plt.rcParams['animation.html'] = 'jshtml'
+    plt.rcParams['animation.html'] = 'html5'
 
     if _interactive and not is_sphinx_build():
         with plt.ion():

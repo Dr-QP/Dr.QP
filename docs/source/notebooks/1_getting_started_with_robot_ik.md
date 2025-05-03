@@ -45,6 +45,7 @@ The first step is to enable live python modules reloading, so changes in the pyt
 The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
 ```{code-cell} ipython3
+%config InlineBackend.figure_formats = ['svg']
 %matplotlib widget
 
 from IPython.display import display
@@ -675,10 +676,6 @@ for target in sequence_xz_little_circle:
 ```{code-cell} ipython3
 # Plot IK solutions and targets into an animation
 
-from matplotlib.animation import FuncAnimation
-import matplotlib.pyplot as plt
-
-plt.rcParams['animation.html'] = 'jshtml'
 
 model = solved_model[0]
 
@@ -703,7 +700,13 @@ with plt.ioff():
             foot = solved_foot[frame]
             ax.scatter(foot.x, foot.y, color='m', alpha=0.5, zorder=100)
 
-    display(FuncAnimation(fig, animate, frames=total_targets * 2, interval=50))
+_ = animate_plot(
+    fig,
+    animate,
+    _interactive=False,
+    _frames=total_targets * 2,
+    _interval=50,
+)
 ```
 
  Woohoo! The entire IK chain works as expected and we can put the foot on a target!
@@ -774,10 +777,6 @@ With the safe capped version of acos function not only not throwing, but also pr
 Let's plot it to have better intuition about what's going on.
 
 ```{code-cell} ipython3
-import matplotlib.pyplot as plt
-
-plt.rcParams['animation.html'] = 'none'
-
 
 def safe_solve_and_plot_at_target(
     coxa,
@@ -829,8 +828,9 @@ def safe_solve_and_plot_at_target(
     ax.legend().remove()
 
 
-with plt.ion():
+with plt.ioff():
     safe_solve_and_plot_at_target(1, 1, 1, Point3D(5, 0, -2), verbose=False)
+    display(plt.gcf())
 ```
 
 The chart above is a nice demonstration of how the safe algorithm works. Even though leg is clearly not reaching the target (leg foot is magenta dot), it is pointing exactly at the target as seen by the dotted line.
