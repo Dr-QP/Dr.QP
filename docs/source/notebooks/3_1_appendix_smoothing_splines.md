@@ -62,7 +62,8 @@ y = np.sin(x) + 0.4 * rng.standard_normal(size=len(x))
 
 xnew = np.arange(0, 9 / 4, 1 / 50) * np.pi
 
-fig = plt.figure(figsize=(8, 6))
+fig = plt.figure()
+fig.set_figheight(6)
 plt.plot(xnew, np.sin(xnew), '-.', label='sin(x)')
 plt.plot(xnew, make_splrep(x, y, s=0, k=4)(xnew), '-', label='s=0')
 plt.plot(xnew, make_splrep(x, y, s=len(x), k=3)(xnew), '-', label=f's={len(x)}, k=3')
@@ -110,7 +111,8 @@ t = np.linspace(0, 1, 100)
 curve_x = spline_x(t)
 curve_y = spline_y(t)
 
-fig = plt.figure(figsize=(8, 6))
+fig = plt.figure()
+fig.set_figheight(6)
 plt.plot(curve_x, curve_y, label='Spline Curve')
 plt.scatter(control_x, control_y, color='red', label='Control Points')
 plt.plot(control_x, control_y, 'r--', alpha=0.5)
@@ -151,7 +153,8 @@ curve_points_x = spl_x(t)
 curve_points_y = spl_y(t)
 
 # Plot the curve and control points
-fig = plt.figure(figsize=(8, 6))
+fig = plt.figure()
+fig.set_figheight(6)
 plt.plot(curve_points_x, curve_points_y, label='Bézier Curve')
 plt.plot(control_points[:, 0], control_points[:, 1], 'o--', label='Control Points')
 plt.legend()
@@ -278,7 +281,8 @@ points = [bezier_curve(control_pts, t) for t in t_values]
 curve_x, curve_y = zip(*points)
 control_x, control_y = zip(*control_pts)
 
-fig = plt.figure(figsize=(8, 6))
+fig = plt.figure()
+fig.set_figheight(6)
 plt.plot(curve_x, curve_y, label='Bézier Curve')
 plt.scatter(control_x, control_y, color='red', label='Control Points')
 plt.plot(control_x, control_y, 'r--', alpha=0.5)
@@ -499,7 +503,8 @@ y_smooth = spline_y(t_fine)
 z_smooth = spline_z(t_fine)
 
 # Plot the results
-fig = plt.figure(figsize=(8, 6))
+fig = plt.figure()
+fig.set_figheight(6)
 ax = fig.add_subplot(111, projection='3d')
 
 ax.plot(x, y, z, 'ro', label='Waypoints')  # Original points
@@ -567,7 +572,8 @@ def update_spline(new_waypoint):
 
         # Plot updated trajectory
         plt.clf()
-        fig = plt.figure(figsize=(8, 6))
+        fig = plt.figure()
+        fig.set_figheight(6)
         ax = fig.add_subplot(111, projection='3d')
         ax.plot(x, y, z, 'ro', label='Waypoints')
         ax.plot(x_smooth, y_smooth, z_smooth, 'b-', label='B-spline Trajectory')
@@ -639,7 +645,8 @@ def update_spline(new_waypoint):
 
     # Plot updated trajectory
     plt.clf()
-    fig = plt.figure(figsize=(8, 6))
+    fig = plt.figure()
+    fig.set_figheight(6)
     ax = fig.add_subplot(111, projection='3d')
     ax.plot(waypoints[:, 0], waypoints[:, 1], waypoints[:, 2], 'ro', label='Waypoints')
     ax.plot(x_smooth, y_smooth, z_smooth, 'b-', label='B-spline Trajectory')
@@ -663,60 +670,68 @@ from smoothing_splines import plot_spline, SplineType
 t = np.array([0, 1, 2.5, 4, 6])  # Time values (not uniformly spaced)
 x = np.array([0, 2, 3, 5, 8])  # X trajectory
 y = np.array([1, 3, 1, 4, 6])  # Y trajectory
-
 control_points = np.array([x, y, t]).T
 
-fig, axes = plt.subplots(7, 1, figsize=(12, 20))
-plot_i = 0
 
-ax = axes[plot_i]
-plot_i += 1
+fig, ax = plt.subplots(1, 1)
+fig.set_figheight(4, forward=True)
 ax.scatter(x, y, c='k', label='Control points')
 plot_spline(ax, 0, control_points, 3, derivatives=2)
-ax.legend()
+ax.legend(bbox_to_anchor=(1.0, 0.97), loc='lower right')
+display(fig)
+plt.close()
 
-ax = axes[plot_i]
-plot_i += 1
+fig, ax = plt.subplots(1, 1)
+fig.set_figheight(4, forward=True)
 ax.scatter(x, y, c='k', label='Control points')
 plot_spline(ax, 0, control_points, 3, derivatives=2, bc_type='natural')
-ax.legend()
+ax.legend(bbox_to_anchor=(1.0, 0.97), loc='lower right')
+display(fig)
+plt.close()
 
-ax = axes[plot_i]
-plot_i += 1
+fig, ax = plt.subplots(1, 1)
+fig.set_figheight(4, forward=True)
 ax.scatter(x, y, c='k', label='Control points')
 plot_spline(ax, 0, control_points, 3, derivatives=2, bc_type='clamped')
-ax.legend()
+ax.legend(bbox_to_anchor=(1.0, 0.97), loc='lower right')
+display(fig)
+plt.close()
 
-
-ax = axes[plot_i]
-plot_i += 1
+fig, ax = plt.subplots(1, 1)
+fig.set_figheight(4, forward=True)
 ax.scatter(x, y, c='k', label='Control points')
 plot_spline(ax, 0, control_points, 0.5, derivatives=2, spline_type=SplineType.smoothing)
-ax.legend()
+ax.legend(bbox_to_anchor=(1.0, 0.97), loc='lower right')
+display(fig)
+plt.close()
 
-ax = axes[plot_i]
-plot_i += 1
+fig, ax = plt.subplots(1, 1)
+fig.set_figheight(4, forward=True)
 ax.scatter(x, y, c='k', label='Control points')
 plot_spline(ax, 0, control_points, 0.5, derivatives=2, spline_type=SplineType.splrep)
-ax.legend()
+ax.legend(bbox_to_anchor=(1.0, 0.97), loc='lower right')
+display(fig)
+plt.close()
 
-ax = axes[plot_i]
-plot_i += 1
+fig, ax = plt.subplots(1, 1)
+fig.set_figheight(4, forward=True)
 ax.scatter(x, y, c='k', label='Control points')
 plot_spline(ax, 0, control_points, 0.01, spline_type=SplineType.smoothing)
 plot_spline(ax, 0, control_points, 0.5, spline_type=SplineType.splprep)
 plot_spline(ax, 0, control_points, 1, spline_type=SplineType.splprep)
-ax.legend()
+ax.legend(bbox_to_anchor=(1.0, 0.97), loc='lower right')
+display(fig)
+plt.close()
 
-ax = axes[plot_i]
-plot_i += 1
+fig, ax = plt.subplots(1, 1)
+fig.set_figheight(4, forward=True)
 ax.scatter(x, y, c='k', label='Control points')
 plot_spline(ax, 0, control_points, 1, mix=1)
 plot_spline(ax, 0, control_points, 3, mix=0.5)
 plot_spline(ax, 0, control_points, 3, mix=1)
-ax.legend()
-
-fig
+ax.legend(bbox_to_anchor=(1.0, 0.97), loc='lower right')
+display(fig)
+plt.close()
 ```
 
 ## An abandoned attempt to use smoothing splines for gait generation
