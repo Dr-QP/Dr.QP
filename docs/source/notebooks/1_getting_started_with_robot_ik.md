@@ -45,14 +45,10 @@ The first step is to enable live python modules reloading, so changes in the pyt
 The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
 ```{code-cell} ipython3
-from IPython.display import display, HTML
 import plotly.graph_objects as go
+import plotly.offline as pyo
 
-# Fix for LaTeX in VSCode https://github.com/microsoft/vscode-jupyter/issues/8131#issuecomment-1589961116
-# TODO: figure out why it is not working on the first run.
-display(HTML(
-    '<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_SVG"></script>'
-))
+pyo.init_notebook_mode(connected=True)
 ```
 
 ## The robot model
