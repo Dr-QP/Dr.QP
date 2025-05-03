@@ -47,13 +47,17 @@ jobs:
             docs/source/notebooks/requirements.txt
           install-cmd: pip install -r requirements.txt
 
-      - name: sphinx-build
+      - name: sphinx - build html
         if: ${{ steps.filter.outputs.docs == 'true' }}
         shell: bash
         run: |
           .venv/bin/sphinx-build -nW --keep-going -b html docs/source/ docs/_build/html
 
-          # Multiple builds are not supported, so run them one after another. See https://github.com/sphinx-doc/sphinx/issues/10096
+        # Multiple builds are not supported, so run them one after another. See https://github.com/sphinx-doc/sphinx/issues/10096
+      - name: sphinx - check redirects diff
+        if: ${{ steps.filter.outputs.docs == 'true' }}
+        shell: bash
+        run: |
           .venv/bin/sphinx-build -nW --keep-going -b rediraffecheckdiff docs/source/ docs/_build/html
 
   merge-all:
