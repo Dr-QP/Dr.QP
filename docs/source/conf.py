@@ -129,7 +129,7 @@ html_theme_options = {
         'index': [],
         '**/*': ['page-toc', 'edit-this-page', 'sourcelink'],
     },
-    'navbar_center': ['version-switcher', 'navbar-nav'],
+    'navbar_center': ['navbar-nav'],  # 'version-switcher',
     'footer_start': ['copyright'],
     'footer_center': ['sphinx-version'],
 }
