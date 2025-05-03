@@ -1,5 +1,19 @@
-# Configuration file for the Sphinx documentation builder.
+"""
+Configuration file for the Sphinx documentation builder.
+
+This file only contains a selection of the most common options. For a full
+list see the documentation:
+https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""
+
 import os
+from pathlib import Path
+import sys
+from typing import Any, Dict
+
+import pydata_sphinx_theme
+from sphinx.application import Sphinx
+from sphinx.locale import _
 
 # -- Project information
 
@@ -33,7 +47,15 @@ language = 'en'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['**/_*.rst', '**/_*.md', '**/*.ipynb']
+exclude_patterns = [
+    '**/_*.rst',
+    '**/_*.md',
+    '**/*.ipynb',
+    '_build',
+    'Thumbs.db',
+    '.DS_Store',
+    '**.ipynb_checkpoints',
+]
 
 # -- General configuration
 extensions = [
@@ -42,7 +64,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
-    'sphinx_rtd_size',
+    # "sphinx.ext.viewcode",
+    # "sphinx.ext.graphviz",
     'myst_nb',  # for embedding jupyter notebooks
     # Disabled for now due to conflict with myst_nb
     # see https://github.com/executablebooks/MyST-NB/issues/421
@@ -84,15 +107,26 @@ intersphinx_disabled_domains = ['std']
 
 templates_path = ['_templates']
 
+# -- Sitemap -----------------------------------------------------------------
+
+# ReadTheDocs has its own way of generating sitemaps, etc.
+if not os.environ.get('READTHEDOCS'):
+    extensions += ['sphinx_sitemap']
+
+    html_baseurl = os.environ.get('SITEMAP_URL_BASE', 'http://127.0.0.1:8000/')
+    sitemap_locales = [None]
+    sitemap_url_scheme = '{link}'
+
 # -- Options for HTML output
 
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'pydata_sphinx_theme'
 html_theme_options = {
-    'collapse_navigation': False,
-    'sticky_navigation': True,
-    'navigation_depth': -1,
+    'announcement': 'https://raw.githubusercontent.com/pydata/pydata-sphinx-theme/main/docs/_templates/custom-template.html',
+    'secondary_sidebar_items': {
+        '**/*': ['page-toc', 'edit-this-page', 'sourcelink'],
+        'examples/no-sidebar': [],
+    },
 }
-# sphinx_rtd_size_width = '90%' # This makes reading much harder due to excessive width
 
 github_user = 'dr-qp'
 github_repo = 'Dr.QP'
@@ -131,8 +165,46 @@ html_context = {
 epub_show_urls = 'footnote'
 
 
-# -- lightweight Sphinx extension
-def setup(app):
+# -- application setup -------------------------------------------------------
+def setup_to_main(app: Sphinx, pagename: str, templatename: str, context, doctree) -> None:
+    """Add a function that jinja can access for returning an "edit this page" link pointing to `main`."""
+
+    def to_main(link: str) -> str:
+        """
+        Transform "edit on github" links and make sure they always point to the main branch.
+
+        Args:
+            link: the link to the github edit interface
+
+        Returns:
+            the link to the tip of the main branch for the same file
+        """
+        links = link.split('/')
+        idx = links.index('edit')
+        return '/'.join(links[: idx + 1]) + '/main/' + '/'.join(links[idx + 2 :])
+
+    context['to_main'] = to_main
+
+
+def setup(app: Sphinx) -> Dict[str, Any]:
+    """
+    Add custom configuration to sphinx app.
+
+    Args:
+    -----
+        app: the Sphinx application
+
+    Returns:
+    --------
+        the 2 parallel parameters set to ``True``.
+
+    """
+    app.connect('html-page-context', setup_to_main)
+
     # Set default if not already defined in the shell
     os.environ.setdefault('SPHINX_BUILD', '1')
-    return {}
+
+    return {
+        'parallel_read_safe': True,
+        'parallel_write_safe': True,
+    }
