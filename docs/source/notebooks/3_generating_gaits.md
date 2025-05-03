@@ -1012,7 +1012,8 @@ trajectory_points = np.array(
         [3, 3, frames_between_points * 8],
     ]
 )
-fig, ax = plt.subplots(2, 1, figsize=(8, 10))
+fig, ax = plt.subplots(2, 1)
+fig.set_figheight(10)
 ax[0].scatter(trajectory_points[::, 0], trajectory_points[::, 1], c='k', label='Trajectory points')
 
 current_t = trajectory_points[3, 2] + 20
@@ -1049,7 +1050,8 @@ plt.rcParams['animation.embed_limit'] = 50
 
 
 plt.ioff()
-fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+fig, ax = plt.subplots(1, 1)
+fig.set_figheight(8)
 
 num_items = 4
 max_points = 7
