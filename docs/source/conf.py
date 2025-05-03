@@ -1,5 +1,14 @@
-# Configuration file for the Sphinx documentation builder.
+"""
+Configuration file for the Sphinx documentation builder.
+
+This file only contains a selection of the most common options. For a full
+list see the documentation:
+https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""
+
 import os
+from typing import Any, Dict
+from sphinx.application import Sphinx
 
 # -- Project information
 
@@ -7,7 +16,8 @@ project = 'Dr.QP'
 copyright = '2017-2025 Anton Matosov'  # noqa
 author = 'Anton Matosov'
 
-release = '0.1'
+# Remove `release` to avoid their display in the title
+# release = '0.1'
 version = '0.1.0'
 
 
@@ -33,16 +43,27 @@ language = 'en'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['**/_*.rst', '**/_*.md', '**/*.ipynb']
+exclude_patterns = [
+    '**/_*.rst',
+    '**/_*.md',
+    '**/*.ipynb',
+    '_build',
+    'Thumbs.db',
+    '.DS_Store',
+    '**.ipynb_checkpoints',
+]
 
 # -- General configuration
 extensions = [
-    'sphinx.ext.duration',
-    'sphinx.ext.doctest',
+    'sphinx_copybutton',
+    'sphinx_design',
+    'sphinx_togglebutton',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+    'sphinx.ext.doctest',
+    'sphinx.ext.duration',
     'sphinx.ext.intersphinx',
-    'sphinx_rtd_size',
+    'sphinxext.rediraffe',
     'myst_nb',  # for embedding jupyter notebooks
     # Disabled for now due to conflict with myst_nb
     # see https://github.com/executablebooks/MyST-NB/issues/421
@@ -84,15 +105,34 @@ intersphinx_disabled_domains = ['std']
 
 templates_path = ['_templates']
 
+# -- Redirects -----------------------------------------------------------------
+
+rediraffe_branch = 'origin/main'
+rediraffe_redirects = 'redirects.txt'
+
+# -- Sitemap -----------------------------------------------------------------
+
+# ReadTheDocs has its own way of generating sitemaps, etc.
+if not os.environ.get('READTHEDOCS'):
+    extensions += ['sphinx_sitemap']
+
+    html_baseurl = os.environ.get('SITEMAP_URL_BASE', 'http://127.0.0.1:8000/')
+    sitemap_locales = [None]
+    sitemap_url_scheme = '{link}'
+
 # -- Options for HTML output
 
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'pydata_sphinx_theme'
 html_theme_options = {
-    'collapse_navigation': False,
-    'sticky_navigation': True,
-    'navigation_depth': -1,
+    'github_url': 'https://github.com/Dr-QP/Dr.QP',
+    'secondary_sidebar_items': {
+        'index': [],
+        '**/*': ['page-toc', 'edit-this-page', 'sourcelink'],
+    },
+    'navbar_center': ['navbar-nav'],  # 'version-switcher',
+    'footer_start': ['copyright'],
+    'footer_center': ['sphinx-version'],
 }
-# sphinx_rtd_size_width = '90%' # This makes reading much harder due to excessive width
 
 github_user = 'dr-qp'
 github_repo = 'Dr.QP'
@@ -125,14 +165,29 @@ html_context = {
     'github_repo': github_repo,
     'github_version': version_name(),
     'conf_py_path': '/docs/source/',
+    'doc_path': '/docs/source/',
 }
 
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
 
 
-# -- lightweight Sphinx extension
-def setup(app):
+# -- application setup -------------------------------------------------------
+
+
+def setup(app: Sphinx) -> Dict[str, Any]:
+    """
+    Add custom configuration to sphinx app.
+
+    Args:
+    -----
+        app: the Sphinx application
+
+    """
     # Set default if not already defined in the shell
     os.environ.setdefault('SPHINX_BUILD', '1')
-    return {}
+
+    return {
+        'parallel_read_safe': True,
+        'parallel_write_safe': True,
+    }

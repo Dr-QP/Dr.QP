@@ -64,6 +64,7 @@
       "ipierre1.ansible-vault-vscode",
       "redhat.ansible",
       "davidkol.fastcompare",
+      "samuelcolvin.jinjahtml",
       // cSpell:enable
     ]
   },
@@ -323,9 +324,9 @@
         ]
       },
       {
-        "label": "Dr.QP build docs",
+        "label": "Dr.QP check docs",
         "type": "shell",
-        "command": ".venv/bin/sphinx-build -nW --keep-going -b html docs/source/ docs/_build/html",
+        "command": ".venv/bin/sphinx-build -nW --keep-going -b rediraffewritediff docs/source/ docs/_build/html",
         "options": {
           "cwd": "${workspaceFolder}"
         },
@@ -345,7 +346,7 @@
             }
           }
         ]
-      }
+      },
     ]
   },
   "settings": {

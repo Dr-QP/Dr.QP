@@ -11,14 +11,19 @@ sphinx~=8.2.0
 
 sphinx-notfound-page~=1.0.0
 
-# The theme used by the documentation is stored separately, so we need
-# to install that as well.
-sphinx_rtd_theme>=3.0.2
-sphinx-rtd-size>=0.2
+# Sphinx theme https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/install.html
+# 0.16.1 has issue with source link template https://github.com/pydata/pydata-sphinx-theme/issues/2088
+pydata-sphinx-theme==0.16.0
+sphinx-sitemap>=2.6.0
 
 myst-nb>=1.2.0
 myst-parser>=4.0.0
 PyGithub>=2.6
+
+sphinx-copybutton
+sphinx-design
+sphinx-togglebutton
+sphinxext-rediraffe # Redirect from deleted files https://github.com/sphinx-doc/sphinxext-rediraffe
 
 -c constraints.txt
 

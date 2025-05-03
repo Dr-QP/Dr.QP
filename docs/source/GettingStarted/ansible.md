@@ -1,14 +1,12 @@
 # Ansible Playbooks for ROS 2 Setup
 
-```{admonition} Summary
-The project includes Ansible playbooks to set up a ROS 2 development environment. These playbooks replace the shell scripts previously used for installation.
-```
+The project has been migrated from shell scripts to Ansible playbooks for all the aspects of robot and dev machine setup.
 
 ## Directory Structure
 
 The Ansible playbooks are located in the `ansible` directory:
 
-```text
+```bash
 ansible/
 ├── ansible-virtual.cfg          # Configuration for virtual bots
 ├── ansible.cfg                  # Ansible configuration
@@ -41,8 +39,7 @@ ansible/
 │   │   ├── ros_install_source/  # ROS 2 installation from source
 │   │   └── ros_user_setup/      # ROS user creation and setup
 │   └── test_ros_dependencies.yml # Test playbook for ROS dependencies
-├── README.md                    # Documentation
-└── setup-ros.sh                 # Wrapper script
+└── README.md                    # Points back to this documentation
 ```
 
 ## Configuration
