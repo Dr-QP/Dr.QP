@@ -12,6 +12,9 @@ on:
     branches:
       - main
       - v*
+  merge_group:
+    types:
+      - checks_requested
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
@@ -25,8 +28,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Filter
+        id: filter
+        uses: dorny/paths-filter@v3.0.2
+        with:
+          filters: |
+            docs:
+              - docs/**
 
       - uses: getsentry/action-setup-venv@v2.1.1
+        if: ${{ steps.filter.outputs.docs == 'true' }}
         with:
           python-version: 3.12
           cache-dependency-path: |
@@ -37,9 +48,30 @@ jobs:
           install-cmd: pip install -r requirements.txt
 
       - name: sphinx-build
+        if: ${{ steps.filter.outputs.docs == 'true' }}
         shell: bash
         run: |
           .venv/bin/sphinx-build -nW --keep-going -b html docs/source/ docs/_build/html
 
           # Multiple builds are not supported, so run them one after another. See https://github.com/sphinx-doc/sphinx/issues/10096
           .venv/bin/sphinx-build -nW --keep-going -b rediraffecheckdiff docs/source/ docs/_build/html
+
+  merge-all:
+    name: Docs build finished
+    needs: [docs]
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    permissions: {}
+    if: ${{ success() || cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}
+    steps:
+      - name: All jobs succeeded!
+        if: ${{ success() }}
+        run: |
+          exit 0
+      - name: Some jobs have failed!
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: |
+          exit 1
+      - name: Some jobs have been cancelled!
+        if: ${{ cancelled() || contains(needs.*.result, 'cancelled') }}
+        run: |
+          exit 1
