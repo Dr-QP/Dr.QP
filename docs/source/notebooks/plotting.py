@@ -289,7 +289,7 @@ def plot_leg3d(
     # Doesn't really add anything to the plot
     # plot_cartesian_plane(ax, Point(-10, -10), Point(10, 10), no_ticks=True)
 
-    ax.set(aspect='equal')
+    ax.set_aspect('equal')
     # Hide grid lines
     ax.grid(False)
     # ax.grid(False, which='both', axis='z')
