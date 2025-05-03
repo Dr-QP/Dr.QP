@@ -107,7 +107,7 @@ templates_path = ['_templates']
 
 # -- Redirects -----------------------------------------------------------------
 
-rediraffe_branch = 'main'
+rediraffe_branch = 'origin/main'
 rediraffe_redirects = 'redirects.txt'
 
 # -- Sitemap -----------------------------------------------------------------
