@@ -460,7 +460,7 @@ directional_tripod_gen = DirectionalGaitGenerator(TripodGaitGenerator(step_lengt
 
 directional_tripod_gen.visualize_continuous_in_3d(direction=Point3D([1, 0, 0], 'Forward'))
 directional_tripod_gen.visualize_continuous_in_3d(direction=Point3D([0, 1, 0], 'Left'))
-directional_tripod_gen.visualize_continuous_in_3d(direction=Point3D([1, 1, 0], 'Forward-Left'))
+directional_tripod_gen.visualize_continuous_in_3d(direction=Point3D([1, -1, 0], 'Forward-right'))
 
 # stomp in place
 _ = directional_tripod_gen.visualize_continuous_in_3d(direction=Point3D([0, 0, 1], 'UP/Stomp'))
