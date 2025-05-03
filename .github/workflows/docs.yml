@@ -1,0 +1,38 @@
+name: Build docs
+on:
+  release:
+    types:
+      - published
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  pull_request:
+    branches:
+      - main
+      - v*
+
+jobs:
+  docs:
+    name: docs
+    timeout-minutes: 10
+    permissions: {}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: getsentry/action-setup-venv@v2.1.1
+        with:
+          python-version: 3.12
+          cache-dependency-path: |
+            requirements.txt
+            docs/requirements.txt
+            docs/constraints.txt
+            docs/source/notebooks/requirements.txt
+          install-cmd: pip install -r requirements.txt
+
+      - name: sphinx-build
+        shell: bash
+        run: |
+          .venv/bin/sphinx-build -nW --keep-going -b html -b rediraffecheckdiff docs/source/ docs/_build/html

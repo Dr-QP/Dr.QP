@@ -1,0 +1,17 @@
+index.rst index.md
+Dev/Notes/index.rst Dev/Notes/index.md
+Dev/Notes/raspberry-pi-storage.rst Dev/Notes/raspberry-pi-storage.md
+Dev/Notes/uninstalling-ubuntu-desktop.rst Dev/Notes/uninstalling-ubuntu-desktop.md
+Dev/Notes/vcpkg-evaluation.rst Dev/Notes/vcpkg-evaluation.md
+Dev/designs.rst Dev/designs.md
+Dev/index.rst Dev/index.md
+Dev/kinematics-model.rst Dev/kinematics-model.md
+GettingStarted/index.rst GettingStarted/index.md
+GettingStarted/installation-ros.rst GettingStarted/installation.md
+GettingStarted/installation.rst GettingStarted/installation.md
+GettingStarted/setting-up-raspberry-pi.rst GettingStarted/setting-up-raspberry-pi.md
+Howto/index.rst Howto/index.md
+Howto/install-vscode-tunnel-as-service.rst Howto/install-vscode-tunnel-as-service.md
+Howto/issue-using-act-and-devcontainers-ci.rst Howto/issue-using-act-and-devcontainers-ci.md
+Howto/ros2-containers-and-networking.rst Howto/ros2-containers-and-networking.md
+Dev/product-spec.rst Dev/product-spec.md

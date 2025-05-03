@@ -55,6 +55,9 @@ jobs:
           python-version: 3.12
           cache-dependency-path: |
             requirements.txt
+            docs/requirements.txt
+            docs/constraints.txt
+            docs/source/notebooks/requirements.txt
           install-cmd: pip install -r requirements.txt
 
       - name: Reformat code
