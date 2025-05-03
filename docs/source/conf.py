@@ -21,7 +21,8 @@ project = 'Dr.QP'
 copyright = '2017-2025 Anton Matosov'  # noqa
 author = 'Anton Matosov'
 
-release = '0.1'
+# Remove `release` to avoid their display in the title
+# release = '0.1'
 version = '0.1.0'
 
 
@@ -66,6 +67,9 @@ extensions = [
     'sphinx.ext.intersphinx',
     # "sphinx.ext.viewcode",
     # "sphinx.ext.graphviz",
+    'sphinx_togglebutton',
+    'sphinx_design',
+    'sphinx_copybutton',
     'myst_nb',  # for embedding jupyter notebooks
     # Disabled for now due to conflict with myst_nb
     # see https://github.com/executablebooks/MyST-NB/issues/421
@@ -121,12 +125,19 @@ if not os.environ.get('READTHEDOCS'):
 
 html_theme = 'pydata_sphinx_theme'
 html_theme_options = {
-    'announcement': 'https://raw.githubusercontent.com/pydata/pydata-sphinx-theme/main/docs/_templates/custom-template.html',
+    'github_url': 'https://github.com/Dr-QP/Dr.QP',
     'secondary_sidebar_items': {
+        'index': [],
         '**/*': ['page-toc', 'edit-this-page', 'sourcelink'],
-        'examples/no-sidebar': [],
     },
+    # 'use_edit_page_button': True,
+    'navbar_center': ['version-switcher', 'navbar-nav'],
+    'footer_start': ['copyright'],
+    'footer_center': ['sphinx-version'],
 }
+# html_show_sourcelink = False
+# html_sourcelink_suffix = ''
+
 
 github_user = 'dr-qp'
 github_repo = 'Dr.QP'
@@ -159,6 +170,7 @@ html_context = {
     'github_repo': github_repo,
     'github_version': version_name(),
     'conf_py_path': '/docs/source/',
+    'doc_path': '/docs/source/',
 }
 
 # -- Options for EPUB output
@@ -166,24 +178,6 @@ epub_show_urls = 'footnote'
 
 
 # -- application setup -------------------------------------------------------
-def setup_to_main(app: Sphinx, pagename: str, templatename: str, context, doctree) -> None:
-    """Add a function that jinja can access for returning an "edit this page" link pointing to `main`."""
-
-    def to_main(link: str) -> str:
-        """
-        Transform "edit on github" links and make sure they always point to the main branch.
-
-        Args:
-            link: the link to the github edit interface
-
-        Returns:
-            the link to the tip of the main branch for the same file
-        """
-        links = link.split('/')
-        idx = links.index('edit')
-        return '/'.join(links[: idx + 1]) + '/main/' + '/'.join(links[idx + 2 :])
-
-    context['to_main'] = to_main
 
 
 def setup(app: Sphinx) -> Dict[str, Any]:
@@ -194,13 +188,7 @@ def setup(app: Sphinx) -> Dict[str, Any]:
     -----
         app: the Sphinx application
 
-    Returns:
-    --------
-        the 2 parallel parameters set to ``True``.
-
     """
-    app.connect('html-page-context', setup_to_main)
-
     # Set default if not already defined in the shell
     os.environ.setdefault('SPHINX_BUILD', '1')
 

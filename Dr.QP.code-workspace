@@ -64,6 +64,7 @@
       "ipierre1.ansible-vault-vscode",
       "redhat.ansible",
       "davidkol.fastcompare",
+      "samuelcolvin.jinjahtml",
       // cSpell:enable
     ]
   },
