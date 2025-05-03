@@ -7,13 +7,8 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
 import os
-from pathlib import Path
-import sys
 from typing import Any, Dict
-
-import pydata_sphinx_theme
 from sphinx.application import Sphinx
-from sphinx.locale import _
 
 # -- Project information
 
