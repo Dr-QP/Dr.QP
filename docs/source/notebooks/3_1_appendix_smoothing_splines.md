@@ -672,66 +672,36 @@ x = np.array([0, 2, 3, 5, 8])  # X trajectory
 y = np.array([1, 3, 1, 4, 6])  # Y trajectory
 control_points = np.array([x, y, t]).T
 
+def plot_with_legend(plot: callable):
+  fig, ax = plt.subplots(1, 1)
+  fig.set_figheight(4, forward=True)
+  ax.scatter(x, y, c='k', label='Control points')
+  plot(ax)
+  ax.legend(bbox_to_anchor=(1.0, 0.97), loc='lower right')
+  display(fig)
+  plt.close()
 
-fig, ax = plt.subplots(1, 1)
-fig.set_figheight(4, forward=True)
-ax.scatter(x, y, c='k', label='Control points')
-plot_spline(ax, 0, control_points, 3, derivatives=2)
-ax.legend(bbox_to_anchor=(1.0, 0.97), loc='lower right')
-display(fig)
-plt.close()
+plot_with_legend(lambda ax: plot_spline(ax, 0, control_points, 3, derivatives=2))
 
-fig, ax = plt.subplots(1, 1)
-fig.set_figheight(4, forward=True)
-ax.scatter(x, y, c='k', label='Control points')
-plot_spline(ax, 0, control_points, 3, derivatives=2, bc_type='natural')
-ax.legend(bbox_to_anchor=(1.0, 0.97), loc='lower right')
-display(fig)
-plt.close()
+plot_with_legend(lambda ax: plot_spline(ax, 0, control_points, 3, derivatives=2, bc_type='natural'))
 
-fig, ax = plt.subplots(1, 1)
-fig.set_figheight(4, forward=True)
-ax.scatter(x, y, c='k', label='Control points')
-plot_spline(ax, 0, control_points, 3, derivatives=2, bc_type='clamped')
-ax.legend(bbox_to_anchor=(1.0, 0.97), loc='lower right')
-display(fig)
-plt.close()
+plot_with_legend(lambda ax: plot_spline(ax, 0, control_points, 3, derivatives=2, bc_type='clamped'))
 
-fig, ax = plt.subplots(1, 1)
-fig.set_figheight(4, forward=True)
-ax.scatter(x, y, c='k', label='Control points')
-plot_spline(ax, 0, control_points, 0.5, derivatives=2, spline_type=SplineType.smoothing)
-ax.legend(bbox_to_anchor=(1.0, 0.97), loc='lower right')
-display(fig)
-plt.close()
+plot_with_legend(lambda ax: plot_spline(ax, 0, control_points, 0.5, derivatives=2, spline_type=SplineType.smoothing))
 
-fig, ax = plt.subplots(1, 1)
-fig.set_figheight(4, forward=True)
-ax.scatter(x, y, c='k', label='Control points')
-plot_spline(ax, 0, control_points, 0.5, derivatives=2, spline_type=SplineType.splrep)
-ax.legend(bbox_to_anchor=(1.0, 0.97), loc='lower right')
-display(fig)
-plt.close()
+plot_with_legend(lambda ax: plot_spline(ax, 0, control_points, 0.5, derivatives=2, spline_type=SplineType.splrep))
 
-fig, ax = plt.subplots(1, 1)
-fig.set_figheight(4, forward=True)
-ax.scatter(x, y, c='k', label='Control points')
-plot_spline(ax, 0, control_points, 0.01, spline_type=SplineType.smoothing)
-plot_spline(ax, 0, control_points, 0.5, spline_type=SplineType.splprep)
-plot_spline(ax, 0, control_points, 1, spline_type=SplineType.splprep)
-ax.legend(bbox_to_anchor=(1.0, 0.97), loc='lower right')
-display(fig)
-plt.close()
+plot_with_legend(lambda ax: (
+  plot_spline(ax, 0, control_points, 0.01, spline_type=SplineType.smoothing),
+  plot_spline(ax, 0, control_points, 0.5, spline_type=SplineType.splprep),
+  plot_spline(ax, 0, control_points, 1, spline_type=SplineType.splprep),
+))
 
-fig, ax = plt.subplots(1, 1)
-fig.set_figheight(4, forward=True)
-ax.scatter(x, y, c='k', label='Control points')
-plot_spline(ax, 0, control_points, 1, mix=1)
-plot_spline(ax, 0, control_points, 3, mix=0.5)
-plot_spline(ax, 0, control_points, 3, mix=1)
-ax.legend(bbox_to_anchor=(1.0, 0.97), loc='lower right')
-display(fig)
-plt.close()
+plot_with_legend(lambda ax: (
+  plot_spline(ax, 0, control_points, 1, mix=1),
+  plot_spline(ax, 0, control_points, 3, mix=0.5),
+  plot_spline(ax, 0, control_points, 3, mix=1),
+))
 ```
 
 ## An abandoned attempt to use smoothing splines for gait generation
