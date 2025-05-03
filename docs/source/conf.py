@@ -55,16 +55,15 @@ exclude_patterns = [
 
 # -- General configuration
 extensions = [
-    'sphinx.ext.duration',
-    'sphinx.ext.doctest',
+    'sphinx_copybutton',
+    'sphinx_design',
+    'sphinx_togglebutton',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+    'sphinx.ext.doctest',
+    'sphinx.ext.duration',
     'sphinx.ext.intersphinx',
-    # "sphinx.ext.viewcode",
-    # "sphinx.ext.graphviz",
-    'sphinx_togglebutton',
-    'sphinx_design',
-    'sphinx_copybutton',
+    'sphinxext.rediraffe',
     'myst_nb',  # for embedding jupyter notebooks
     # Disabled for now due to conflict with myst_nb
     # see https://github.com/executablebooks/MyST-NB/issues/421
@@ -105,6 +104,11 @@ intersphinx_mapping = {
 intersphinx_disabled_domains = ['std']
 
 templates_path = ['_templates']
+
+# -- Redirects -----------------------------------------------------------------
+
+rediraffe_branch = 'main'
+rediraffe_redirects = 'redirects.txt'
 
 # -- Sitemap -----------------------------------------------------------------
 
