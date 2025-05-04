@@ -1039,6 +1039,7 @@ ax[0].legend()
 ax[1].legend()
 
 display(fig)
+plt.close(fig)
 ```
 
 As you can see above, interpolating BSpline generates a smooth trajectory that follows the control points with smooth velocity changes, which will reduce strains on servos. However it comes at a cost of random overshooting that might be non desirable.

@@ -625,7 +625,7 @@ def animate_plot(
 ):
     if is_sphinx_build_no_videos():
         return
-    plt.close()  # Close all the previous figures to ensure best performance and least bugs
+
     anim = None
 
     plt.rcParams['animation.html'] = 'html5'
@@ -638,7 +638,7 @@ def animate_plot(
         with plt.ioff():
             anim = FuncAnimation(_fig, _animate, frames=_frames, interval=_interval)
             display(anim)  # type: ignore # noqa: F821
-            plt.close()
+            plt.close(_fig)
 
             if _save_animation_name is not None:
                 animation_writer = FFMpegWriter(fps=24)

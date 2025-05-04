@@ -190,6 +190,7 @@ class GaitGenerator:
 
         plt.tight_layout()
         display(fig)
+        plt.close(fig)
 
     def visualize_continuous_in_3d(
         self,
@@ -301,4 +302,5 @@ class GaitGenerator:
             ax.legend()
             plt.tight_layout()
             display(fig)
+            plt.close(fig)
         return ax, plot_lines
