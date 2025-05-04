@@ -24,6 +24,7 @@ from models import HexapodLeg
 import numpy as np
 from point import Point3D
 from transforms import Transform
+from IPython.display import display
 
 
 class GaitGenerator:
@@ -188,7 +189,7 @@ class GaitGenerator:
         ax.legend()
 
         plt.tight_layout()
-        plt.show()
+        display(fig)
 
     def visualize_continuous_in_3d(
         self,
@@ -299,5 +300,5 @@ class GaitGenerator:
         if own_fig:
             ax.legend()
             plt.tight_layout()
-            plt.show()
+            display(fig)
         return ax, plot_lines
