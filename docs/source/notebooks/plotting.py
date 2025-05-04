@@ -273,7 +273,7 @@ def plot_leg3d(
     subplot=111,
     fig=None,
     ax=None,
-    hide_grid=True,
+    hide_grid=False,
 ):
     if fig is None:
         fig = plt.figure()
