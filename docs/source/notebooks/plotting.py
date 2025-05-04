@@ -345,7 +345,7 @@ def plot_leg_links(
 
     # Add inline labels for leg links
     if link_labels == 'legend':
-        axes.legend()
+        axes.legend(bbox_to_anchor=(1.0, 0.97), loc='upper right')
     elif link_labels == 'inline':
         add_inline_labels(axes, with_overall_progress=False, fontsize='medium')
 
