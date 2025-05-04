@@ -582,8 +582,8 @@ def update_spline(new_waypoint):
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
         ax.legend()
-        plt.draw()
-        plt.pause(0.1)
+        display(fig)
+        plt.close()
 
 
 # Simulate incoming new waypoints dynamically
@@ -655,8 +655,8 @@ def update_spline(new_waypoint):
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
     ax.legend()
-    plt.draw()
-    plt.pause(0.1)
+    display(fig)
+    plt.close()
 
 
 # Simulate incoming waypoints dynamically
