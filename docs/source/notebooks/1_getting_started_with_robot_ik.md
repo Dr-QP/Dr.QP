@@ -685,6 +685,7 @@ fig, ax, plot_data = plot_leg_with_points(
     joint_labels='points',
 )
 
+
 def animate(frame):
     even = not frame % 2
     if even:
@@ -697,6 +698,7 @@ def animate(frame):
         plot_leg_update_lines(model, plot_data)
         foot = solved_foot[frame]
         ax.scatter(foot.x, foot.y, color='m', alpha=0.5, zorder=100)
+
 
 _ = animate_plot(
     fig,

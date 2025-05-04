@@ -244,7 +244,6 @@ _ = plot_leg_with_points(
 _ = plot_leg3d(model, 'Foot in 3D', link_labels='none', joint_labels='points', subplot=224, fig=fig)
 display(fig)
 plt.close(fig)
-
 ```
 
 With full 3D kinematics model and plotting support lets setup a 6 legged robot.

@@ -20,11 +20,11 @@
 
 from abc import abstractmethod
 
+from IPython.display import display
 from models import HexapodLeg
 import numpy as np
 from point import Point3D
 from transforms import Transform
-from IPython.display import display
 
 
 class GaitGenerator:
