@@ -638,6 +638,7 @@ def animate_plot(
         with plt.ioff():
             anim = FuncAnimation(_fig, _animate, frames=_frames, interval=_interval)
             display(anim)  # type: ignore # noqa: F821
+            plt.close()
 
             if _save_animation_name is not None:
                 animation_writer = FFMpegWriter(fps=24)
