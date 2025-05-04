@@ -34,6 +34,7 @@ The first step is to enable live python modules reloading, so changes in the pyt
 The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
 ```{code-cell} ipython3
+%config InlineBackend.figure_formats = ['svg']
 %matplotlib widget
 
 from IPython.display import display
@@ -125,11 +126,13 @@ _ = plot_leg_with_points(
     model.xy, 'Foot on the ground (XY)', link_labels='none', x_label="X'", y_label='Y'
 )
 display(plt.gcf())
+plt.close(plt.gcf())
 
 _ = plot_leg_with_points(
     model.xz, 'Foot on the ground (XZ)', link_labels='none', x_label="X'", y_label='Z'
 )
 display(plt.gcf())
+plt.close(plt.gcf())
 ```
 
 This was a good start, but code is hard to read and understand due to excessive repetitions. Let's introduce a transform system, similar to the one used in ROS TF2 library.
@@ -238,9 +241,19 @@ _ = plot_leg_with_points(
     subplot=223,
     fig=fig,
 )
-_ = plot_leg3d(model, 'Foot in 3D', link_labels='none', joint_labels='points', subplot=224, fig=fig)
+fig, ax, plot_data = plot_leg3d(
+    model,
+    'Foot in 3D',
+    link_labels='none',
+    joint_labels='points',
+    subplot=224,
+    fig=fig,
+    hide_grid=False,
+)
+ax.plot(*zip([0, -5, 0], [0, 5, 0]), 'w:')  # add depth
+ax.set_aspect('equal')  # Upset the aspect ratio
 display(fig)
-# print("foot position: ", model.lines[-1].end)
+plt.close(fig)
 ```
 
 With full 3D kinematics model and plotting support lets setup a 6 legged robot.
@@ -394,6 +407,7 @@ drqp = DrQP()
 drqp.forward_kinematics(0, -25, 110)
 fig, ax, plot_data = plot_drqp(drqp)
 display(fig)
+plt.close(fig)
 ```
 
 With the ability to do forward kinematics for a full robot, we can now start to work on the inverse kinematics. 1_getting_started_with_robot_ik.ipynb notebook covers the full 3D case of a single leg IK, however it works in the leg's local coordinate frame. In order to use it for the full robot, each leg global target position needs to be converted to the leg's local coordinate frame. Since we used matrix transformations for the forward kinematics, we can use the inverse of the body transform to convert the global target to the local coordinate frame.
@@ -423,6 +437,7 @@ for leg in drqp.legs:
 
 fig, ax, plot_data = plot_drqp(drqp, targets)
 display(fig)
+plt.close(fig)
 ```
 
 With the ability to position all legs, its time to work on the inverse kinematics for the body.
@@ -456,6 +471,7 @@ for leg, target in zip(drqp.legs, targets):
 
 fig, ax, plot_data = plot_drqp(drqp, unreachable_targets)
 display(fig)
+plt.close(fig)
 ```
 
 ```{code-cell} ipython3
@@ -588,4 +604,5 @@ hexapod.body_transform = Transform.from_translation([0.05, 0, -0.01]) @ Transfor
 hexapod.move_legs_to(leg_tips)
 update_hexapod_plot(hexapod, plot_data)
 display(fig)
+plt.close(fig)
 ```

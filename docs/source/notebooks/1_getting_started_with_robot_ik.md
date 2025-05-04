@@ -45,6 +45,7 @@ The first step is to enable live python modules reloading, so changes in the pyt
 The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
 ```{code-cell} ipython3
+%config InlineBackend.figure_formats = ['svg']
 %matplotlib widget
 
 from IPython.display import display
@@ -174,9 +175,9 @@ from plotting import plot_leg_with_points
 
 model = forward_kinematics(coxa_length, femur_length, tibia_length, alpha, beta, gamma)
 
-with plt.ioff():
-    _ = plot_leg_with_points(model, 'Neutral position (straight leg)')
-    display(plt.gcf())
+_ = plot_leg_with_points(model, 'Neutral position (straight leg)')
+display(plt.gcf())
+plt.close(plt.gcf())
 ```
 
 Now lets try changing some angles to see how it behaves. Feel free to experiment with different values.
@@ -184,20 +185,20 @@ Now lets try changing some angles to see how it behaves. Feel free to experiment
 ```{code-cell} ipython3
 model = forward_kinematics(coxa_length, femur_length, tibia_length, 50, -60, -10)
 
-with plt.ioff():
-    _ = plot_leg_with_points(
-        model, 'Lifted up (coxa) and bent down (femur, tibia)', link_labels='legend'
-    )
-    display(plt.gcf())
+_ = plot_leg_with_points(
+    model, 'Lifted up (coxa) and bent down (femur, tibia)', link_labels='legend'
+)
+display(plt.gcf())
+plt.close(plt.gcf())
 ```
 
 ```{code-cell} ipython3
 # Lifted up (coxa) and bent down (femur), with foot on the ground (guessed angle)
 model = forward_kinematics(coxa_length, femur_length, tibia_length, 45, -55, -14)
 
-with plt.ioff():
-    _ = plot_leg_with_points(model, 'Foot on the ground', link_labels='legend')
-    display(plt.gcf())
+_ = plot_leg_with_points(model, 'Foot on the ground', link_labels='legend')
+display(plt.gcf())
+plt.close(plt.gcf())
 ```
 
 ## Exercise 1. Forward kinematics. Find angles at which the leg is on the ground
@@ -233,7 +234,7 @@ fig, _, plot_data = plot_leg_with_points(
 )
 
 
-def animate(frame, alpha=alpha, beta=beta, gamma=gamma):
+def animate(frame=0, alpha=alpha, beta=beta, gamma=gamma):
     if frame > 0:
         beta = np.interp(frame, [0, frames_to_animate / 2], [35, 55])
         gamma = np.interp(frame, [frames_to_animate / 2, frames_to_animate], [-110, -140])
@@ -326,16 +327,15 @@ def plot_leg_with_points_xy(model: list[Line], title: str):
 
 model = forward_kinematics_xy(coxa_len, femur_len, tibia_len, 0)
 
-with plt.ioff():
-    plot_leg_with_points_xy(model, 'XY plane (top view, neutral position)')
-    display(plt.gcf())
-
+plot_leg_with_points_xy(model, 'XY plane (top view, neutral position)')
+display(plt.gcf())
+plt.close(plt.gcf())
 
 model = forward_kinematics_xy(coxa_len, femur_len, tibia_len, 30)
 
-with plt.ioff():
-    plot_leg_with_points_xy(model, 'XY plane (top view)')
-    display(plt.gcf())
+plot_leg_with_points_xy(model, 'XY plane (top view)')
+display(plt.gcf())
+plt.close(plt.gcf())
 ```
 
 Finding angle $\alpha$ is a trivial problem, since we are dealing with a right triangle.
@@ -359,9 +359,9 @@ def plot_leg_with_points_xy_ik(model: list[Line], title: str):
 
 model = forward_kinematics_xy(coxa_len, femur_len, tibia_len, 30)
 
-with plt.ioff():
-    plot_leg_with_points_xy_ik(model, 'Coxa (alpha) IK')
-    display(plt.gcf())
+plot_leg_with_points_xy_ik(model, 'Coxa (alpha) IK')
+display(plt.gcf())
+plt.close(plt.gcf())
 ```
 
 Our right triangle is formed by lines $target_y$ and $target_x$ and hypotenuse $X'$ which is the leg itself. Therefore a simple $arctan$ will give us the angle:
@@ -377,13 +377,13 @@ import math
 
 
 def plot_xtick(alpha):
-    with plt.ioff():
-        model = forward_kinematics_xy(coxa_len, femur_len, tibia_len, alpha)
-        ax = plot_leg_with_points_xy(model, "Translating X to X'")
+    model = forward_kinematics_xy(coxa_len, femur_len, tibia_len, alpha)
+    ax = plot_leg_with_points_xy(model, "Translating X to X'")
 
-        foot = model[-1].end
-        ax.text(foot.x, foot.y + 1, f"X={foot.x:.2f}\nX'={math.hypot(foot.x, foot.y):.2f}")
+    foot = model[-1].end
+    ax.text(foot.x, foot.y + 1, f"X={foot.x:.2f}\nX'={math.hypot(foot.x, foot.y):.2f}")
     display(plt.gcf())
+    plt.close(plt.gcf())
 
 
 plot_xtick(0)
@@ -421,9 +421,9 @@ def plot_leg_ik_xy(foot_target: Point, plot_title='Inverse Kinematics solved'):
 
 foot_target_3d = Point3D(13, 15, -6)
 
-with plt.ioff():
-    plot_leg_ik_xy(foot_target_3d.xy)
-    display(plt.gcf())
+plot_leg_ik_xy(foot_target_3d.xy)
+display(plt.gcf())
+plt.close(plt.gcf())
 ```
 
 As you can see on the diagram above, coxa IK was solved correctly and leg is now aligned with the target foot position. However leg's foot is not at the target foot position. That will be solved by femur and tibia IK described below.
@@ -453,21 +453,21 @@ model = forward_kinematics(
     body_length=0,
 )
 
-with plt.ioff():
-    fig, ax, _ = plot_leg_with_points(
-        model,
-        'Inverse Kinematics trigonometry',
-        joint_labels='points',
-        link_labels='label',
-        no_cartesian_ticks=True,
-        x_label="X'",
-        y_label='Z',
-    )
+fig, ax, _ = plot_leg_with_points(
+    model,
+    'Inverse Kinematics trigonometry',
+    joint_labels='points',
+    link_labels='label',
+    no_cartesian_ticks=True,
+    x_label="X'",
+    y_label='Z',
+)
 
-    body, coxa, femur, tibia = model
-    plot_ik_lines(ax, femur, tibia)
+body, coxa, femur, tibia = model
+plot_ik_lines(ax, femur, tibia)
 
-    display(plt.gcf())
+display(plt.gcf())
+plt.close(plt.gcf())
 ```
 
 As you can see on the diagram above, there are 2 triangles formed by leg links and additional lines `D`, `T` and `L`.
@@ -583,11 +583,11 @@ def solve_and_plot_at_target_xz(
 
 alpha_ik, X_tick = coxa_ik(foot_target_3d.xy)
 
-with plt.ioff():
-    beta_ik, gamma_ik = solve_and_plot_at_target_xz(
-        Point(X_tick, foot_target_3d.z), 'Foot_target_3D in XZ plane', verbose=True
-    )
-    display(plt.gcf())
+beta_ik, gamma_ik = solve_and_plot_at_target_xz(
+    Point(X_tick, foot_target_3d.z), 'Foot_target_3D in XZ plane', verbose=True
+)
+display(plt.gcf())
+plt.close(plt.gcf())
 ```
 
 And that is all. We have solved inverse kinematics for a 3DOF leg.
@@ -601,26 +601,26 @@ print(f'gamma = {gamma_ik:.2f}')
 To understand where the offset values for beta and gamma in the computation above are coming from, let's plot straight leg and see what theta and phi are.
 
 ```{code-cell} ipython3
-with plt.ioff():
-    _ = solve_and_plot_at_target_xz(
-        Point(coxa_len + femur_len + tibia_len, 0), 'Straight leg out', verbose=True
-    )
-    display(plt.gcf())
+_ = solve_and_plot_at_target_xz(
+    Point(coxa_len + femur_len + tibia_len, 0), 'Straight leg out', verbose=True
+)
+display(plt.gcf())
+plt.close(plt.gcf())
 ```
 
 Now once we have the solution, let's play with it a little bit and solve for various target points.
 If math is working correctly, foot (magenta dot) should always overlap with the target (black dot).
 
 ```{code-cell} ipython3
-with plt.ioff():
-    _ = solve_and_plot_at_target_xz(Point(20.61, 6.14), verbose=True)
-    display(plt.gcf())
+_ = solve_and_plot_at_target_xz(Point(20.61, 6.14), verbose=True)
+display(plt.gcf())
+plt.close(plt.gcf())
 ```
 
 ```{code-cell} ipython3
-with plt.ioff():
-    _ = solve_and_plot_at_target_xz(Point(15, 0), verbose=True)
-    display(plt.gcf())
+_ = solve_and_plot_at_target_xz(Point(15, 0), verbose=True)
+display(plt.gcf())
+plt.close(plt.gcf())
 ```
 
 ### Putting it all together
@@ -675,35 +675,38 @@ for target in sequence_xz_little_circle:
 ```{code-cell} ipython3
 # Plot IK solutions and targets into an animation
 
-from matplotlib.animation import FuncAnimation
-import matplotlib.pyplot as plt
-
-plt.rcParams['animation.html'] = 'jshtml'
 
 model = solved_model[0]
 
-with plt.ioff():
-    fig, ax, plot_data = plot_leg_with_points(
-        model,
-        'IK Circle',
-        link_labels='none',
-        joint_labels='points',
-    )
+fig, ax, plot_data = plot_leg_with_points(
+    model,
+    'IK Circle',
+    link_labels='none',
+    joint_labels='points',
+)
 
-    def animate(frame):
-        even = not frame % 2
-        if even:
-            frame = frame // 2
-            target = sequence_xz_little_circle[frame]
-            ax.scatter(target.x, target.z, color='k', zorder=-100)
-        else:
-            frame = frame // 2
-            model = solved_model[frame]
-            plot_leg_update_lines(model, plot_data)
-            foot = solved_foot[frame]
-            ax.scatter(foot.x, foot.y, color='m', alpha=0.5, zorder=100)
 
-    display(FuncAnimation(fig, animate, frames=total_targets * 2, interval=50))
+def animate(frame):
+    even = not frame % 2
+    if even:
+        frame = frame // 2
+        target = sequence_xz_little_circle[frame]
+        ax.scatter(target.x, target.z, color='k', zorder=-100)
+    else:
+        frame = frame // 2
+        model = solved_model[frame]
+        plot_leg_update_lines(model, plot_data)
+        foot = solved_foot[frame]
+        ax.scatter(foot.x, foot.y, color='m', alpha=0.5, zorder=100)
+
+
+_ = animate_plot(
+    fig,
+    animate,
+    _interactive=False,
+    _frames=total_targets * 2,
+    _interval=50,
+)
 ```
 
  Woohoo! The entire IK chain works as expected and we can put the foot on a target!
@@ -774,11 +777,6 @@ With the safe capped version of acos function not only not throwing, but also pr
 Let's plot it to have better intuition about what's going on.
 
 ```{code-cell} ipython3
-import matplotlib.pyplot as plt
-
-plt.rcParams['animation.html'] = 'none'
-
-
 def safe_solve_and_plot_at_target(
     coxa,
     femur,
@@ -829,8 +827,9 @@ def safe_solve_and_plot_at_target(
     ax.legend().remove()
 
 
-with plt.ion():
-    safe_solve_and_plot_at_target(1, 1, 1, Point3D(5, 0, -2), verbose=False)
+safe_solve_and_plot_at_target(1, 1, 1, Point3D(5, 0, -2), verbose=False)
+display(plt.gcf())
+plt.close(plt.gcf())
 ```
 
-The chart above is a nice demonstration of how the safe algorithm works. Even though leg is clearly not reaching the target (leg foot is magenta dot), it is pointing exactly at the target as seen by the dotted line.
+The chart above is a nice demonstration of how the safe algorithm works. Even though leg is clearly not reaching the target (foot is the magenta dot), it is pointing exactly at the target as shown by the dotted line.

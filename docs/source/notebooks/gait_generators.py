@@ -20,6 +20,7 @@
 
 from abc import abstractmethod
 
+from IPython.display import display
 from models import HexapodLeg
 import numpy as np
 from point import Point3D
@@ -82,7 +83,8 @@ class GaitGenerator:
                 z_values[leg].append(offset.z)
 
         # Plot the data
-        fig, axs = plt.subplots(4, 1, figsize=(10, 12))
+        fig, axs = plt.subplots(4, 1)
+        fig.set_figheight(12, forward=True)
         # Adjust spacing between subplots to avoid title overlapping with ticks
         plt.subplots_adjust(hspace=0.8)  # Increased from 0.5 to 0.8 for more space between subplots
 
@@ -187,7 +189,8 @@ class GaitGenerator:
         ax.legend()
 
         plt.tight_layout()
-        plt.show()
+        display(fig)
+        plt.close(fig)
 
     def visualize_continuous_in_3d(
         self,
@@ -207,8 +210,8 @@ class GaitGenerator:
         phases = np.linspace(phase_start, phase_end, _steps, endpoint=True)
 
         if leg_centers is None:
-            base_offset = step_length / 1.6
-            side_offset = base_offset * 1.5
+            base_offset = step_length * 1.3
+            side_offset = base_offset * 1.6
             leg_centers = {
                 HexapodLeg.left_middle: Point3D([0.0, side_offset, 0.0]),
                 HexapodLeg.left_front: Point3D([base_offset, base_offset, 0.0]),
@@ -248,7 +251,8 @@ class GaitGenerator:
 
         # Plot the data
         if ax is None:
-            fig = plt.figure(figsize=(12, 10))
+            fig = plt.figure()
+            fig.set_figheight(7, forward=True)
             ax = fig.add_subplot(111, projection='3d')
 
             # Adjust view angle for better visibility of all legs
@@ -274,6 +278,7 @@ class GaitGenerator:
             ax.set_xlim(min_x - padding, max_x + padding)
             ax.set_ylim(min_y - padding, max_y + padding)
             ax.set_zlim(min_z, max_z + padding)
+            ax.set_aspect('equal')
 
         # Plot x offsets
         for leg in self.all_legs:
@@ -296,5 +301,6 @@ class GaitGenerator:
         if own_fig:
             ax.legend()
             plt.tight_layout()
-            plt.show()
+            display(fig)
+            plt.close(fig)
         return ax, plot_lines

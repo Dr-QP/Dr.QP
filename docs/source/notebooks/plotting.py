@@ -273,6 +273,7 @@ def plot_leg3d(
     subplot=111,
     fig=None,
     ax=None,
+    hide_grid=False,
 ):
     if fig is None:
         fig = plt.figure()
@@ -289,22 +290,22 @@ def plot_leg3d(
     # Doesn't really add anything to the plot
     # plot_cartesian_plane(ax, Point(-10, -10), Point(10, 10), no_ticks=True)
 
-    ax.set(aspect='equal')
-    # Hide grid lines
-    ax.grid(False)
-    # ax.grid(False, which='both', axis='z')
-
-    # Hide axes ticks
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.set_zticks([])
-
+    ax.set_aspect('equal')
     ax.set_facecolor('white')
-    ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-    ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-    ax.zaxis.set_pane_color((0, 0.2, 0, 0.5))
-    # ax.zaxis.line.set_visible(False)  # OFF to bypass ValueError: 'bboxes' cannot be empty in inline figures
-    ax.zaxis.gridlines.set_visible(False)
+    if hide_grid:
+        ax.grid(False)
+
+        # Hide axes ticks
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_zticks([])
+
+        ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.zaxis.set_pane_color((0, 0.2, 0, 0.5))
+
+        # Hide grid lines
+        ax.zaxis.gridlines.set_visible(False)
 
     return fig, ax, plot_data
 
@@ -345,7 +346,7 @@ def plot_leg_links(
 
     # Add inline labels for leg links
     if link_labels == 'legend':
-        axes.legend()
+        axes.legend(bbox_to_anchor=(1.0, 0.97), loc='upper right')
     elif link_labels == 'inline':
         add_inline_labels(axes, with_overall_progress=False, fontsize='medium')
 
@@ -623,9 +624,12 @@ def animate_plot(
     _save_animation_name=None,
     **interact_kwargs,
 ):
+    if is_sphinx_build_no_videos():
+        return
+
     anim = None
 
-    plt.rcParams['animation.html'] = 'jshtml'
+    plt.rcParams['animation.html'] = 'html5'
 
     if _interactive and not is_sphinx_build():
         with plt.ion():
@@ -635,6 +639,7 @@ def animate_plot(
         with plt.ioff():
             anim = FuncAnimation(_fig, _animate, frames=_frames, interval=_interval)
             display(anim)  # type: ignore # noqa: F821
+            plt.close(_fig)
 
             if _save_animation_name is not None:
                 animation_writer = FFMpegWriter(fps=24)
@@ -645,3 +650,7 @@ def animate_plot(
 
 def is_sphinx_build():
     return os.getenv('SPHINX_BUILD') == '1'
+
+
+def is_sphinx_build_no_videos():
+    return os.getenv('SPHINX_BUILD_NO_VIDEOS') == '1'

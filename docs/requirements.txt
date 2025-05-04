@@ -24,6 +24,7 @@ sphinx-copybutton
 sphinx-design
 sphinx-togglebutton
 sphinxext-rediraffe # Redirect from deleted files https://github.com/sphinx-doc/sphinxext-rediraffe
+sphinxcontrib-lightbox2
 
 -c constraints.txt
 

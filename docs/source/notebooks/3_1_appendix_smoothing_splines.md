@@ -37,6 +37,7 @@ The first step is to enable live python modules reloading, so changes in the pyt
 The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
 ```{code-cell} ipython3
+%config InlineBackend.figure_formats = ['svg']
 %matplotlib widget
 
 from IPython.display import display
@@ -61,7 +62,8 @@ y = np.sin(x) + 0.4 * rng.standard_normal(size=len(x))
 
 xnew = np.arange(0, 9 / 4, 1 / 50) * np.pi
 
-fig = plt.figure(figsize=(8, 6))
+fig = plt.figure()
+fig.set_figheight(6)
 plt.plot(xnew, np.sin(xnew), '-.', label='sin(x)')
 plt.plot(xnew, make_splrep(x, y, s=0, k=4)(xnew), '-', label='s=0')
 plt.plot(xnew, make_splrep(x, y, s=len(x), k=3)(xnew), '-', label=f's={len(x)}, k=3')
@@ -71,6 +73,7 @@ plt.plot(x, y, 'o')
 plt.legend()
 
 display(fig)
+plt.close(fig)
 ```
 
 ## BSpline in application to gaits trajectory approximation
@@ -109,7 +112,8 @@ t = np.linspace(0, 1, 100)
 curve_x = spline_x(t)
 curve_y = spline_y(t)
 
-fig = plt.figure(figsize=(8, 6))
+fig = plt.figure()
+fig.set_figheight(6)
 plt.plot(curve_x, curve_y, label='Spline Curve')
 plt.scatter(control_x, control_y, color='red', label='Control Points')
 plt.plot(control_x, control_y, 'r--', alpha=0.5)
@@ -118,6 +122,7 @@ plt.xlabel('X')
 plt.ylabel('Y')
 plt.title('Spline Interpolation Curve')
 display(fig)
+plt.close(fig)
 ```
 
 ## Bezier curve using B-spline
@@ -150,7 +155,8 @@ curve_points_x = spl_x(t)
 curve_points_y = spl_y(t)
 
 # Plot the curve and control points
-fig = plt.figure(figsize=(8, 6))
+fig = plt.figure()
+fig.set_figheight(6)
 plt.plot(curve_points_x, curve_points_y, label='Bézier Curve')
 plt.plot(control_points[:, 0], control_points[:, 1], 'o--', label='Control Points')
 plt.legend()
@@ -159,6 +165,7 @@ plt.ylabel('Y')
 plt.title('Cubic Bézier Curve using B-Spline')
 plt.grid()
 display(fig)
+plt.close(fig)
 ```
 
 ```{code-cell} ipython3
@@ -235,6 +242,7 @@ for num_items in range(2, len(spline_x_all) + 1):
     ax.scatter(spline_x, spline_z, c='r', label='Trajectory points')
     ax.legend()
     display(fig)
+    plt.close(fig)
 ```
 
 ## Pure python implementation of Bézier curve
@@ -277,7 +285,8 @@ points = [bezier_curve(control_pts, t) for t in t_values]
 curve_x, curve_y = zip(*points)
 control_x, control_y = zip(*control_pts)
 
-fig = plt.figure(figsize=(8, 6))
+fig = plt.figure()
+fig.set_figheight(6)
 plt.plot(curve_x, curve_y, label='Bézier Curve')
 plt.scatter(control_x, control_y, color='red', label='Control Points')
 plt.plot(control_x, control_y, 'r--', alpha=0.5)
@@ -286,6 +295,7 @@ plt.xlabel('X')
 plt.ylabel('Y')
 plt.title('Bézier Curve')
 display(fig)
+plt.close(fig)
 ```
 
 ```{code-cell} ipython3
@@ -322,6 +332,7 @@ ax[1].set_title('Z offset')
 ax[1].plot(phase, [leg_control_point(p)[1] for p in phase])
 
 display(fig)
+plt.close(fig)
 ```
 
 ```{code-cell} ipython3
@@ -361,6 +372,7 @@ ax[1].plot(phase, [leg_gait_point(p)[1] for p in phase])
 ax[1].plot(phase, [leg_control_point(p)[1] for p in phase])
 
 display(fig)
+plt.close(fig)
 ```
 
 ```{code-cell} ipython3
@@ -401,6 +413,7 @@ ax[1].plot(phase[0:-1], bezier_control_pts_pairs[:, 1], label='Bezier (Control P
 ax[1].legend()
 
 display(fig)
+plt.close(fig)
 ```
 
 ```{code-cell} ipython3
@@ -471,6 +484,7 @@ ax[2].plot(
 ax[2].legend()
 
 display(fig)
+plt.close(fig)
 ```
 
 ```{code-cell} ipython3
@@ -498,7 +512,8 @@ y_smooth = spline_y(t_fine)
 z_smooth = spline_z(t_fine)
 
 # Plot the results
-fig = plt.figure(figsize=(8, 6))
+fig = plt.figure()
+fig.set_figheight(6)
 ax = fig.add_subplot(111, projection='3d')
 
 ax.plot(x, y, z, 'ro', label='Waypoints')  # Original points
@@ -510,6 +525,7 @@ ax.set_zlabel('Z')
 ax.legend()
 
 display(fig)
+plt.close(fig)
 ```
 
 ```{code-cell} ipython3
@@ -566,7 +582,8 @@ def update_spline(new_waypoint):
 
         # Plot updated trajectory
         plt.clf()
-        fig = plt.figure(figsize=(8, 6))
+        fig = plt.figure()
+        fig.set_figheight(6)
         ax = fig.add_subplot(111, projection='3d')
         ax.plot(x, y, z, 'ro', label='Waypoints')
         ax.plot(x_smooth, y_smooth, z_smooth, 'b-', label='B-spline Trajectory')
@@ -575,8 +592,8 @@ def update_spline(new_waypoint):
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
         ax.legend()
-        plt.draw()
-        plt.pause(0.1)
+        display(fig)
+        plt.close(fig)
 
 
 # Simulate incoming new waypoints dynamically
@@ -638,7 +655,8 @@ def update_spline(new_waypoint):
 
     # Plot updated trajectory
     plt.clf()
-    fig = plt.figure(figsize=(8, 6))
+    fig = plt.figure()
+    fig.set_figheight(6)
     ax = fig.add_subplot(111, projection='3d')
     ax.plot(waypoints[:, 0], waypoints[:, 1], waypoints[:, 2], 'ro', label='Waypoints')
     ax.plot(x_smooth, y_smooth, z_smooth, 'b-', label='B-spline Trajectory')
@@ -647,8 +665,8 @@ def update_spline(new_waypoint):
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
     ax.legend()
-    plt.draw()
-    plt.pause(0.1)
+    display(fig)
+    plt.close(fig)
 
 
 # Simulate incoming waypoints dynamically
@@ -662,60 +680,50 @@ from smoothing_splines import plot_spline, SplineType
 t = np.array([0, 1, 2.5, 4, 6])  # Time values (not uniformly spaced)
 x = np.array([0, 2, 3, 5, 8])  # X trajectory
 y = np.array([1, 3, 1, 4, 6])  # Y trajectory
-
 control_points = np.array([x, y, t]).T
 
-fig, axes = plt.subplots(7, 1, figsize=(12, 20))
-plot_i = 0
 
-ax = axes[plot_i]
-plot_i += 1
-ax.scatter(x, y, c='k', label='Control points')
-plot_spline(ax, 0, control_points, 3, derivatives=2)
-ax.legend()
-
-ax = axes[plot_i]
-plot_i += 1
-ax.scatter(x, y, c='k', label='Control points')
-plot_spline(ax, 0, control_points, 3, derivatives=2, bc_type='natural')
-ax.legend()
-
-ax = axes[plot_i]
-plot_i += 1
-ax.scatter(x, y, c='k', label='Control points')
-plot_spline(ax, 0, control_points, 3, derivatives=2, bc_type='clamped')
-ax.legend()
+def plot_with_legend(plot: callable):
+    fig, ax = plt.subplots(1, 1)
+    fig.set_figheight(4, forward=True)
+    ax.scatter(x, y, c='k', label='Control points')
+    plot(ax)
+    ax.legend(bbox_to_anchor=(1.0, 0.97), loc='lower right')
+    display(fig)
+    plt.close(fig)
 
 
-ax = axes[plot_i]
-plot_i += 1
-ax.scatter(x, y, c='k', label='Control points')
-plot_spline(ax, 0, control_points, 0.5, derivatives=2, spline_type=SplineType.smoothing)
-ax.legend()
+plot_with_legend(lambda ax: plot_spline(ax, 0, control_points, 3, derivatives=2))
 
-ax = axes[plot_i]
-plot_i += 1
-ax.scatter(x, y, c='k', label='Control points')
-plot_spline(ax, 0, control_points, 0.5, derivatives=2, spline_type=SplineType.splrep)
-ax.legend()
+plot_with_legend(lambda ax: plot_spline(ax, 0, control_points, 3, derivatives=2, bc_type='natural'))
 
-ax = axes[plot_i]
-plot_i += 1
-ax.scatter(x, y, c='k', label='Control points')
-plot_spline(ax, 0, control_points, 0.01, spline_type=SplineType.smoothing)
-plot_spline(ax, 0, control_points, 0.5, spline_type=SplineType.splprep)
-plot_spline(ax, 0, control_points, 1, spline_type=SplineType.splprep)
-ax.legend()
+plot_with_legend(lambda ax: plot_spline(ax, 0, control_points, 3, derivatives=2, bc_type='clamped'))
 
-ax = axes[plot_i]
-plot_i += 1
-ax.scatter(x, y, c='k', label='Control points')
-plot_spline(ax, 0, control_points, 1, mix=1)
-plot_spline(ax, 0, control_points, 3, mix=0.5)
-plot_spline(ax, 0, control_points, 3, mix=1)
-ax.legend()
+plot_with_legend(
+    lambda ax: plot_spline(
+        ax, 0, control_points, 0.5, derivatives=2, spline_type=SplineType.smoothing
+    )
+)
 
-fig
+plot_with_legend(
+    lambda ax: plot_spline(ax, 0, control_points, 0.5, derivatives=2, spline_type=SplineType.splrep)
+)
+
+plot_with_legend(
+    lambda ax: (
+        plot_spline(ax, 0, control_points, 0.01, spline_type=SplineType.smoothing),
+        plot_spline(ax, 0, control_points, 0.5, spline_type=SplineType.splprep),
+        plot_spline(ax, 0, control_points, 1, spline_type=SplineType.splprep),
+    )
+)
+
+plot_with_legend(
+    lambda ax: (
+        plot_spline(ax, 0, control_points, 1, mix=1),
+        plot_spline(ax, 0, control_points, 3, mix=0.5),
+        plot_spline(ax, 0, control_points, 3, mix=1),
+    )
+)
 ```
 
 ## An abandoned attempt to use smoothing splines for gait generation
@@ -792,6 +800,7 @@ ax.plot(phase_new, bspline_trajectory(phase_new))
 ax.scatter(spline_x, spline_z, c='r')
 
 display(fig)
+plt.close(fig)
 ```
 
 For the sake of completeness, this is how bezier curve will look like. As you can see, it doesn't follow control points, and thus is not the best choice for our use case.
@@ -809,6 +818,7 @@ ax.plot(phase, [bezier_curve(points, t)[1] for t in phase])
 ax.scatter(points[:, 0], points[:, 1], c='r')
 
 display(fig)
+plt.close(fig)
 ```
 
 ### Defining gaits as b-spline control points

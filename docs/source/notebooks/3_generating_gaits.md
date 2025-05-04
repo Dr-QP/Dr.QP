@@ -45,6 +45,7 @@ The first step is to enable live python modules reloading, so changes in the pyt
 The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
 
 ```{code-cell} ipython3
+%config InlineBackend.figure_formats = ['svg']
 %matplotlib widget
 
 from IPython.display import display
@@ -459,7 +460,7 @@ directional_tripod_gen = DirectionalGaitGenerator(TripodGaitGenerator(step_lengt
 
 directional_tripod_gen.visualize_continuous_in_3d(direction=Point3D([1, 0, 0], 'Forward'))
 directional_tripod_gen.visualize_continuous_in_3d(direction=Point3D([0, 1, 0], 'Left'))
-directional_tripod_gen.visualize_continuous_in_3d(direction=Point3D([1, 1, 0], 'Forward-Left'))
+directional_tripod_gen.visualize_continuous_in_3d(direction=Point3D([1, -1, 0], 'Forward-right'))
 
 # stomp in place
 _ = directional_tripod_gen.visualize_continuous_in_3d(direction=Point3D([0, 0, 1], 'UP/Stomp'))
@@ -1011,7 +1012,8 @@ trajectory_points = np.array(
         [3, 3, frames_between_points * 8],
     ]
 )
-fig, ax = plt.subplots(2, 1, figsize=(8, 10))
+fig, ax = plt.subplots(2, 1)
+fig.set_figheight(10)
 ax[0].scatter(trajectory_points[::, 0], trajectory_points[::, 1], c='k', label='Trajectory points')
 
 current_t = trajectory_points[3, 2] + 20
@@ -1037,6 +1039,7 @@ ax[0].legend()
 ax[1].legend()
 
 display(fig)
+plt.close(fig)
 ```
 
 As you can see above, interpolating BSpline generates a smooth trajectory that follows the control points with smooth velocity changes, which will reduce strains on servos. However it comes at a cost of random overshooting that might be non desirable.
@@ -1048,7 +1051,8 @@ plt.rcParams['animation.embed_limit'] = 50
 
 
 plt.ioff()
-fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+fig, ax = plt.subplots(1, 1)
+fig.set_figheight(8)
 
 num_items = 4
 max_points = 7
