@@ -625,7 +625,7 @@ def animate_plot(
 ):
     if is_sphinx_build_no_videos():
         return
-
+    plt.close()  # Close all the previous figures to ensure best performance and least bugs
     anim = None
 
     plt.rcParams['animation.html'] = 'html5'

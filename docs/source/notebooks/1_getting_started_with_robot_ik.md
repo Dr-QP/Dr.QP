@@ -190,6 +190,7 @@ with plt.ioff():
         model, 'Lifted up (coxa) and bent down (femur, tibia)', link_labels='legend'
     )
     display(plt.gcf())
+    plt.close()
 ```
 
 ```{code-cell} ipython3
@@ -199,6 +200,7 @@ model = forward_kinematics(coxa_length, femur_length, tibia_length, 45, -55, -14
 with plt.ioff():
     _ = plot_leg_with_points(model, 'Foot on the ground', link_labels='legend')
     display(plt.gcf())
+    plt.close()
 ```
 
 ## Exercise 1. Forward kinematics. Find angles at which the leg is on the ground
@@ -234,7 +236,7 @@ fig, _, plot_data = plot_leg_with_points(
 )
 
 
-def animate(frame, alpha=alpha, beta=beta, gamma=gamma):
+def animate(frame=0, alpha=alpha, beta=beta, gamma=gamma):
     if frame > 0:
         beta = np.interp(frame, [0, frames_to_animate / 2], [35, 55])
         gamma = np.interp(frame, [frames_to_animate / 2, frames_to_animate], [-110, -140])
@@ -337,6 +339,8 @@ model = forward_kinematics_xy(coxa_len, femur_len, tibia_len, 30)
 with plt.ioff():
     plot_leg_with_points_xy(model, 'XY plane (top view)')
     display(plt.gcf())
+
+plt.close()
 ```
 
 Finding angle $\alpha$ is a trivial problem, since we are dealing with a right triangle.
@@ -363,6 +367,7 @@ model = forward_kinematics_xy(coxa_len, femur_len, tibia_len, 30)
 with plt.ioff():
     plot_leg_with_points_xy_ik(model, 'Coxa (alpha) IK')
     display(plt.gcf())
+plt.close()
 ```
 
 Our right triangle is formed by lines $target_y$ and $target_x$ and hypotenuse $X'$ which is the leg itself. Therefore a simple $arctan$ will give us the angle:
@@ -390,6 +395,7 @@ def plot_xtick(alpha):
 plot_xtick(0)
 plot_xtick(15)
 plot_xtick(30)
+plt.close()
 ```
 
 Putting all of this in code will look as follows
@@ -425,6 +431,7 @@ foot_target_3d = Point3D(13, 15, -6)
 with plt.ioff():
     plot_leg_ik_xy(foot_target_3d.xy)
     display(plt.gcf())
+plt.close()
 ```
 
 As you can see on the diagram above, coxa IK was solved correctly and leg is now aligned with the target foot position. However leg's foot is not at the target foot position. That will be solved by femur and tibia IK described below.
@@ -469,6 +476,7 @@ with plt.ioff():
     plot_ik_lines(ax, femur, tibia)
 
     display(plt.gcf())
+plt.close()
 ```
 
 As you can see on the diagram above, there are 2 triangles formed by leg links and additional lines `D`, `T` and `L`.
@@ -616,12 +624,14 @@ If math is working correctly, foot (magenta dot) should always overlap with the 
 with plt.ioff():
     _ = solve_and_plot_at_target_xz(Point(20.61, 6.14), verbose=True)
     display(plt.gcf())
+plt.close()
 ```
 
 ```{code-cell} ipython3
 with plt.ioff():
     _ = solve_and_plot_at_target_xz(Point(15, 0), verbose=True)
     display(plt.gcf())
+plt.close()
 ```
 
 ### Putting it all together
@@ -831,6 +841,7 @@ def safe_solve_and_plot_at_target(
 with plt.ioff():
     safe_solve_and_plot_at_target(1, 1, 1, Point3D(5, 0, -2), verbose=False)
     display(plt.gcf())
+plt.close()
 ```
 
-The chart above is a nice demonstration of how the safe algorithm works. Even though leg is clearly not reaching the target (leg foot is magenta dot), it is pointing exactly at the target as seen by the dotted line.
+The chart above is a nice demonstration of how the safe algorithm works. Even though leg is clearly not reaching the target (foot is the magenta dot), it is pointing exactly at the target as shown by the dotted line.
