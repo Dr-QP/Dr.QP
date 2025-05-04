@@ -623,6 +623,9 @@ def animate_plot(
     _save_animation_name=None,
     **interact_kwargs,
 ):
+    if is_sphinx_build_no_videos():
+        return
+
     anim = None
 
     plt.rcParams['animation.html'] = 'html5'
@@ -645,3 +648,7 @@ def animate_plot(
 
 def is_sphinx_build():
     return os.getenv('SPHINX_BUILD') == '1'
+
+
+def is_sphinx_build_no_videos():
+    return os.getenv('SPHINX_BUILD_NO_VIDEOS') == '1'
