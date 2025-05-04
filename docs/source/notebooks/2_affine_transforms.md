@@ -241,9 +241,17 @@ _ = plot_leg_with_points(
     subplot=223,
     fig=fig,
 )
-fig, ax, plot_data = plot_leg3d(model, 'Foot in 3D', link_labels='none', joint_labels='points', subplot=224, fig=fig, hide_grid=False)
-ax.plot(*zip([0, -5, 0], [0, 5, 0]), 'w:') # add depth
-ax.set_aspect('equal') # Upset the aspect ratio
+fig, ax, plot_data = plot_leg3d(
+    model,
+    'Foot in 3D',
+    link_labels='none',
+    joint_labels='points',
+    subplot=224,
+    fig=fig,
+    hide_grid=False,
+)
+ax.plot(*zip([0, -5, 0], [0, 5, 0]), 'w:')  # add depth
+ax.set_aspect('equal')  # Upset the aspect ratio
 display(fig)
 plt.close(fig)
 ```
