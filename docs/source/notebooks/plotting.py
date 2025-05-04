@@ -273,6 +273,7 @@ def plot_leg3d(
     subplot=111,
     fig=None,
     ax=None,
+    hide_grid=True,
 ):
     if fig is None:
         fig = plt.figure()
@@ -290,21 +291,21 @@ def plot_leg3d(
     # plot_cartesian_plane(ax, Point(-10, -10), Point(10, 10), no_ticks=True)
 
     ax.set_aspect('equal')
-    # Hide grid lines
-    ax.grid(False)
-    # ax.grid(False, which='both', axis='z')
-
-    # Hide axes ticks
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.set_zticks([])
-
     ax.set_facecolor('white')
-    ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-    ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-    ax.zaxis.set_pane_color((0, 0.2, 0, 0.5))
-    # ax.zaxis.line.set_visible(False)  # OFF to bypass ValueError: 'bboxes' cannot be empty in inline figures
-    ax.zaxis.gridlines.set_visible(False)
+    if hide_grid:
+        ax.grid(False)
+
+        # Hide axes ticks
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_zticks([])
+
+        ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.zaxis.set_pane_color((0, 0.2, 0, 0.5))
+
+        # Hide grid lines
+        ax.zaxis.gridlines.set_visible(False)
 
     return fig, ax, plot_data
 
