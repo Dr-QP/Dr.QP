@@ -2,7 +2,8 @@ name: Build act ubuntu docker images
 
 on:
   schedule:
-    - cron: 0 12 */7 * *
+    # Rerun workflow to pick up the latest base images
+    - cron: 0 12 */7 * * # “At 12:00 on every 7th day-of-month.” https://crontab.guru/#0_12_*/7_*_*
   push:
     paths:
       - .github/workflows/act-docker-build-image.yml

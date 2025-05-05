@@ -22,7 +22,9 @@ on:
     branches:
       - main
   schedule:
-    - cron: '32 17 * * 5'
+    # Schedule for codeql is needed in case new vulnerabilities are found in dependencies
+    # or new rules are added to CodeQL both of which happens outside of this repository.
+    - cron: '32 17 * * 5' # “At 17:32 on Friday.” https://crontab.guru/#32_17_*_*_5
   merge_group:
     types:
       - checks_requested
