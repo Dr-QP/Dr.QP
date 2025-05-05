@@ -278,7 +278,7 @@ ansible-playbook -i inventories/real-robots.yml playbooks/200_pair_controller.ym
 
 ## Migration from Shell Scripts
 
-The Ansible playbooks replace the following shell scripts:
+The Ansible playbooks replaced the following shell scripts:
 
 - `scripts/ros/ros-2-prep.sh` → `ansible/playbooks/20_ros_setup.yml`
 - `scripts/ros/ros-2-src-build.sh` → `ansible/playbooks/roles/ros_install_source`
