@@ -21,7 +21,6 @@ on:
   pull_request:
     branches:
       - main
-      - v*
   schedule:
     - cron: '32 17 * * 5'
   merge_group:
