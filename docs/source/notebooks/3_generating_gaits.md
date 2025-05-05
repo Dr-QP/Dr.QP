@@ -50,6 +50,7 @@ The next step is configuring matplotlib backend. Widget backend allows to intera
 
 from IPython.display import display
 import matplotlib.pyplot as plt
+from plotting import display_and_close
 
 plt.ioff()  # this is equivalent to using inline backend, but figures have to be displayed manually
 ```
@@ -1038,8 +1039,7 @@ ax[0].text(spline_x(current_t), spline_y(current_t) + 0.2, f'{current_t=}', colo
 ax[0].legend()
 ax[1].legend()
 
-display(fig)
-plt.close(fig)
+display_and_close(fig)
 ```
 
 As you can see above, interpolating BSpline generates a smooth trajectory that follows the control points with smooth velocity changes, which will reduce strains on servos. However it comes at a cost of random overshooting that might be non desirable.
