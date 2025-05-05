@@ -1,8 +1,6 @@
 name: reviewdog
+
 on:
-  release:
-    types:
-      - published
   push:
     branches:
       - main
@@ -11,7 +9,6 @@ on:
   pull_request:
     branches:
       - main
-      - v*
   merge_group:
     types:
       - checks_requested

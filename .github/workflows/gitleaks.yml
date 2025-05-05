@@ -1,8 +1,5 @@
 name: gitleaks
 on:
-  release:
-    types:
-      - published
   push:
     branches:
       - main
@@ -11,7 +8,6 @@ on:
   pull_request:
     branches:
       - main
-      - v*
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
