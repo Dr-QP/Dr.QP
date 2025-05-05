@@ -11,7 +11,7 @@ Setup ssh agent based authentication to avoid typing password every time
 As well as configure Raspberry Pi. See playbooks for details.
 
 ```bash
-cd scripts/ros/ansible
+cd docker/ros/ansible
 ansible-playbook playbooks/1_pam_ssh_agent_auth.yml --ask-become-pass
 ansible-playbook playbooks/5_raspberry_pi_setup.yml
 ```
@@ -19,7 +19,7 @@ ansible-playbook playbooks/5_raspberry_pi_setup.yml
 ## Install ROS and docker
 
 ```bash
-cd scripts/ros/ansible
+cd docker/ros/ansible
 ansible-playbook playbooks/10_install_docker.yml
 ansible-playbook playbooks/20_ros_setup.yml
 ```
@@ -30,6 +30,6 @@ Production docker container is deployed using Ansible.
 Run the following command on your dev host to install docker and setup autorun service
 
 ```bash
-cd scripts/ros/ansible
+cd docker/ros/ansible
 ansible-playbook playbooks/100_startup_service.yml
 ```

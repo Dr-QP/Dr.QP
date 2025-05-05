@@ -71,8 +71,8 @@ jobs:
         id: build
         uses: ./.github/actions/docker/build-push-action
         with:
-          context: scripts/ros
-          file: scripts/ros/desktop/ros-desktop.dockerfile
+          context: docker/ros
+          file: docker/ros/desktop/ros-desktop.dockerfile
           image: ${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop
           arch: ${{ matrix.arch }}
           registry: ${{ env.REGISTRY }}
@@ -271,7 +271,7 @@ jobs:
               id
               time sudo apt update
               time rosdep update
-              time ./scripts/ros/ros-dep.sh
+              time ./scripts/ros-dep.sh
               time colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+
               time colcon test --event-handlers=console_cohesion+
 
@@ -294,8 +294,8 @@ jobs:
       - name: Build deployment docker image
         uses: ./.github/actions/docker/build-push-action
         with:
-          context: scripts/ros/deploy
-          file: scripts/ros/deploy/ros-deploy.dockerfile
+          context: docker/ros/deploy
+          file: docker/ros/deploy/ros-deploy.dockerfile
           image: ${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-deploy
           arch: ${{ matrix.arch }}
           registry: ${{ env.REGISTRY }}

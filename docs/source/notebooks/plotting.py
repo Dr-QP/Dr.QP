@@ -22,8 +22,8 @@ import os
 from pathlib import Path
 from typing import Literal
 
-from IPython.display import display
 from inline_labels import add_inline_labels
+from IPython.display import display
 from ipywidgets import interact
 from matplotlib.animation import FFMpegWriter, FuncAnimation
 from matplotlib.patches import Arc

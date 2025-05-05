@@ -256,7 +256,7 @@
       {
         "label": "Dr.QP rosdep",
         "type": "RDE",
-        "command": "./scripts/ros/ros-dep.sh",
+        "command": "./scripts/ros-dep.sh",
         "problemMatcher": []
       },
       {
@@ -281,7 +281,7 @@
         "type": "shell",
         "command": "${workspaceFolder}/.venv/bin/ansible-playbook playbooks/20_ros_setup.yml -i inventories/localhost.yml",
         "options": {
-          "cwd": "${workspaceFolder}/scripts/ros/ansible",
+          "cwd": "${workspaceFolder}/docker/ros/ansible",
         },
         "problemMatcher": [
           "$python"
