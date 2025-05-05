@@ -2,7 +2,7 @@
 set -e
 
 script_dir=$(dirname $0)
-source "$script_dir/ros/__utils.sh"
+source "$script_dir/__utils.sh"
 
 if [[ -z $ROS_DISTRO ]]; then
   echo "Set ROS_DISTRO to required distribution or source setup file"

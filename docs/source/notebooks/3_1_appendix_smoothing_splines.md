@@ -40,7 +40,6 @@ The next step is configuring matplotlib backend. Widget backend allows to intera
 %config InlineBackend.figure_formats = ['svg']
 %matplotlib widget
 
-from IPython.display import display
 import matplotlib.pyplot as plt
 from plotting import display_and_close
 
