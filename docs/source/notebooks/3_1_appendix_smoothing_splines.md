@@ -42,6 +42,7 @@ The next step is configuring matplotlib backend. Widget backend allows to intera
 
 from IPython.display import display
 import matplotlib.pyplot as plt
+from plotting import display_and_close
 
 plt.ioff()  # this is equivalent to using inline backend, but figures have to be displayed manually
 ```
@@ -72,8 +73,7 @@ plt.plot(xnew, make_splrep(x, y, s=len(x), k=5)(xnew), '-', label=f's={len(x)}, 
 plt.plot(x, y, 'o')
 plt.legend()
 
-display(fig)
-plt.close(fig)
+display_and_close(fig)
 ```
 
 ## BSpline in application to gaits trajectory approximation
@@ -121,8 +121,7 @@ plt.legend()
 plt.xlabel('X')
 plt.ylabel('Y')
 plt.title('Spline Interpolation Curve')
-display(fig)
-plt.close(fig)
+display_and_close(fig)
 ```
 
 ## Bezier curve using B-spline
@@ -164,8 +163,7 @@ plt.xlabel('X')
 plt.ylabel('Y')
 plt.title('Cubic Bézier Curve using B-Spline')
 plt.grid()
-display(fig)
-plt.close(fig)
+display_and_close(fig)
 ```
 
 ```{code-cell} ipython3
@@ -241,8 +239,7 @@ for num_items in range(2, len(spline_x_all) + 1):
     )
     ax.scatter(spline_x, spline_z, c='r', label='Trajectory points')
     ax.legend()
-    display(fig)
-    plt.close(fig)
+    display_and_close(fig)
 ```
 
 ## Pure python implementation of Bézier curve
@@ -294,8 +291,7 @@ plt.legend()
 plt.xlabel('X')
 plt.ylabel('Y')
 plt.title('Bézier Curve')
-display(fig)
-plt.close(fig)
+display_and_close(fig)
 ```
 
 ```{code-cell} ipython3
@@ -331,8 +327,7 @@ ax[1].set_ylabel('z offset')
 ax[1].set_title('Z offset')
 ax[1].plot(phase, [leg_control_point(p)[1] for p in phase])
 
-display(fig)
-plt.close(fig)
+display_and_close(fig)
 ```
 
 ```{code-cell} ipython3
@@ -371,8 +366,7 @@ ax[1].set_title('Z offset')
 ax[1].plot(phase, [leg_gait_point(p)[1] for p in phase])
 ax[1].plot(phase, [leg_control_point(p)[1] for p in phase])
 
-display(fig)
-plt.close(fig)
+display_and_close(fig)
 ```
 
 ```{code-cell} ipython3
@@ -412,8 +406,7 @@ ax[1].plot(phase[0:-1], bezier_control_pts_pairs[:, 1], label='Bezier (Control P
 
 ax[1].legend()
 
-display(fig)
-plt.close(fig)
+display_and_close(fig)
 ```
 
 ```{code-cell} ipython3
@@ -483,8 +476,7 @@ ax[2].plot(
 )
 ax[2].legend()
 
-display(fig)
-plt.close(fig)
+display_and_close(fig)
 ```
 
 ```{code-cell} ipython3
@@ -524,8 +516,7 @@ ax.set_ylabel('Y')
 ax.set_zlabel('Z')
 ax.legend()
 
-display(fig)
-plt.close(fig)
+display_and_close(fig)
 ```
 
 ```{code-cell} ipython3
@@ -592,8 +583,7 @@ def update_spline(new_waypoint):
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
         ax.legend()
-        display(fig)
-        plt.close(fig)
+        display_and_close(fig)
 
 
 # Simulate incoming new waypoints dynamically
@@ -665,8 +655,7 @@ def update_spline(new_waypoint):
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
     ax.legend()
-    display(fig)
-    plt.close(fig)
+    display_and_close(fig)
 
 
 # Simulate incoming waypoints dynamically
@@ -689,8 +678,7 @@ def plot_with_legend(plot: callable):
     ax.scatter(x, y, c='k', label='Control points')
     plot(ax)
     ax.legend(bbox_to_anchor=(1.0, 0.97), loc='lower right')
-    display(fig)
-    plt.close(fig)
+    display_and_close(fig)
 
 
 plot_with_legend(lambda ax: plot_spline(ax, 0, control_points, 3, derivatives=2))
@@ -799,8 +787,7 @@ phase_new = np.linspace(0, spline_x[-1], 50)
 ax.plot(phase_new, bspline_trajectory(phase_new))
 ax.scatter(spline_x, spline_z, c='r')
 
-display(fig)
-plt.close(fig)
+display_and_close(fig)
 ```
 
 For the sake of completeness, this is how bezier curve will look like. As you can see, it doesn't follow control points, and thus is not the best choice for our use case.
@@ -817,8 +804,7 @@ points = np.array([spline_x, spline_z]).T
 ax.plot(phase, [bezier_curve(points, t)[1] for t in phase])
 ax.scatter(points[:, 0], points[:, 1], c='r')
 
-display(fig)
-plt.close(fig)
+display_and_close(fig)
 ```
 
 ### Defining gaits as b-spline control points

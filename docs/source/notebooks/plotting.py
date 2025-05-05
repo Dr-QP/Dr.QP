@@ -22,6 +22,7 @@ import os
 from pathlib import Path
 from typing import Literal
 
+from IPython.display import display
 from inline_labels import add_inline_labels
 from ipywidgets import interact
 from matplotlib.animation import FFMpegWriter, FuncAnimation
@@ -263,6 +264,11 @@ class AngleAnnotation(Arc):
 
 link_labels_type = Literal['inline', 'legend', 'label', 'none']
 joint_labels_type = Literal['annotated', 'points', 'none']
+
+
+def display_and_close(fig):
+    display(fig)
+    plt.close(fig)
 
 
 def plot_leg3d(
