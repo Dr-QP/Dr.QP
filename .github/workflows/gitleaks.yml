@@ -1,8 +1,5 @@
 name: gitleaks
 on:
-  release:
-    types:
-      - published
   push:
     branches:
       - main
