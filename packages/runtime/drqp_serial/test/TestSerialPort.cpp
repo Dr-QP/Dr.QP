@@ -9,15 +9,17 @@
 #include <string.h>
 
 int main() {
-    int master_fd, slave_fd;
-    char slave_name[256];
-    pid_t pid;
+    int master_fd = -1, slave_fd = -1;
+    char slave_name[256] = {};
+    pid_t pid = 0;
 
     // Open a pty
     if (openpty(&master_fd, &slave_fd, slave_name, nullptr, nullptr) == -1) {
         std::cerr << "Error opening pty: " << strerror(errno) << std::endl;
         return 1;
     }
+
+    std::cout << "Slave name: " << slave_name << std::endl;
 
     // Fork the process
     pid = fork();
