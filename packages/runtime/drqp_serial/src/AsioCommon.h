@@ -63,25 +63,25 @@ size_t doWithTimeout(
   timer.expires_from_now(boost::posix_time::milliseconds(timeoutMs));
   timer.async_wait([&timerResult](const auto& ec) { timerResult = ec; });
 
-  std::optional<boost::system::error_code> operationResult;
+  std::optional<boost::system::error_code> operationErrorCode;
   std::optional<std::size_t> bytesTransferred;
 
   AsyncOperation<operation>::perform(
-    stream, buffers, [&operationResult, &bytesTransferred](const auto& ec, std::size_t bt) {
-      operationResult = ec;
+    stream, buffers, [&operationErrorCode, &bytesTransferred](const auto& ec, std::size_t bt) {
+      operationErrorCode = ec;
       bytesTransferred = bt;
     });
 
   ioService.reset();
   while (ioService.run_one()) {
-    if (operationResult)
+    if (operationErrorCode)
       timer.cancel();
     else if (timerResult)
       stream.cancel();
   }
 
-  if (operationResult && *operationResult) {
-    throw boost::system::system_error(*operationResult);
+  if (operationErrorCode && *operationErrorCode) {
+    throw boost::system::system_error(*operationErrorCode);
     return 0;
   }
 
