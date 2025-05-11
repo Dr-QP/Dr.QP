@@ -14,7 +14,7 @@
   "containerEnv": {},
   "mounts": [
   ],
-  "postCreateCommand": "sudo chown rosdev:rosdev /home/rosdev/ros2_ws/.ansible /home/rosdev/ros2_ws/.cache /home/rosdev/ros2_ws/build /home/rosdev/ros2_ws/install /home/rosdev/ros2_ws/lcov /home/rosdev/ros2_ws/log /home/rosdev/ros2_ws/docs/_build /home/rosdev/ros2_ws/.micromamba /home/rosdev/ros2_ws/.venv && python3 -m venv /home/rosdev/ros2_ws/.venv && /home/rosdev/ros2_ws/.venv/bin/python3 -m pip install -r /home/rosdev/ros2_ws/requirements.txt",
+  "postCreateCommand": "sudo chown rosdev:rosdev /home/rosdev/ros2_ws/.ansible /home/rosdev/ros2_ws/.vscode /home/rosdev/ros2_ws/.cache /home/rosdev/ros2_ws/build /home/rosdev/ros2_ws/install /home/rosdev/ros2_ws/lcov /home/rosdev/ros2_ws/log /home/rosdev/ros2_ws/docs/_build /home/rosdev/ros2_ws/.micromamba /home/rosdev/ros2_ws/.venv && python3 -m venv /home/rosdev/ros2_ws/.venv && /home/rosdev/ros2_ws/.venv/bin/python3 -m pip install -r /home/rosdev/ros2_ws/requirements.txt",
   "runArgs": [
     // Commented out to allow Codespaces use
     // "--network", "host",
@@ -23,6 +23,7 @@
     // "--device", "/dev/ttySC0"
 
     "--mount", "type=volume,source=drqp-ansible,target=/home/rosdev/ros2_ws/.ansible",
+    "--mount", "type=volume,source=drqp-vscode,target=/home/rosdev/ros2_ws/.vscode",
     "--mount", "type=volume,source=drqp-clangd-cache,target=/home/rosdev/ros2_ws/.cache",
     "--mount", "type=volume,source=drqp-colcon-build,target=/home/rosdev/ros2_ws/build",
     "--mount", "type=volume,source=drqp-colcon-install,target=/home/rosdev/ros2_ws/install",
