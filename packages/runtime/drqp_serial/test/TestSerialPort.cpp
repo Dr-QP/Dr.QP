@@ -45,11 +45,12 @@ SCENARIO("test unix serial with pseudo terminal")
 
       THEN("data is readable from the master file descriptor")
       {
-        char buffer[1024];
-        size_t bytes_read = read(master_fd, buffer, sizeof(buffer) - 1);
+        std::string buffer;
+        buffer.resize(data.length() + 1, '\0');
+        size_t bytes_read = read(master_fd, buffer.data(), buffer.size() - 1);
         REQUIRE(bytes_read == data.length());
-        buffer[bytes_read] = '\0';
-        REQUIRE(std::string(buffer) == data);
+        buffer.resize(bytes_read);
+        REQUIRE(buffer == data);
       }
     }
 
@@ -60,12 +61,13 @@ SCENARIO("test unix serial with pseudo terminal")
 
       THEN("data is readable from the serial")
       {
-        char buffer[1024];
+        std::string buffer;
+        buffer.resize(data.length() + 1, '\0');
         size_t bytes_read = 0;
-        REQUIRE_NOTHROW(bytes_read = serial.readBytes(buffer, data.length()));
+        REQUIRE_NOTHROW(bytes_read = serial.readBytes(buffer.data(), buffer.size() - 1));
         REQUIRE(bytes_read == data.length());
-        buffer[bytes_read] = '\0';
-        REQUIRE(std::string(buffer) == data);
+        buffer.resize(bytes_read);
+        REQUIRE(buffer == data);
       }
     }
 
