@@ -30,7 +30,7 @@
 
 struct UnixSerial::Impl
 {
-  boost::posix_time::time_duration timeout_ = boost::posix_time::milliseconds{ 500 };
+  boost::posix_time::time_duration timeout_ = boost::posix_time::milliseconds{500};
   boost::asio::io_service ioService_;
   boost::asio::serial_port serial_;
 

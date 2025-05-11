@@ -48,5 +48,5 @@ public:
 private:
   boost::asio::io_service ioService_;
   tcp::socket socket_;
-  boost::posix_time::time_duration timeout_ = boost::posix_time::milliseconds{ 5000 };
+  boost::posix_time::time_duration timeout_ = boost::posix_time::milliseconds{5000};
 };
