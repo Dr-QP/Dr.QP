@@ -27,13 +27,14 @@
 SCENARIO("test unix serial with pseudo terminal")
 {
   int master_fd = -1, slave_fd = -1;
-  char slave_name[256] = {};
+  std::array<char, 256> slave_name_arr;
 
   // Open a pseudo terminal
-  REQUIRE(openpty(&master_fd, &slave_fd, slave_name, nullptr, nullptr) != -1);
+  REQUIRE(openpty(&master_fd, &slave_fd, slave_name_arr.data(), nullptr, nullptr) != -1);
 
   GIVEN("UnixSerial is created with slave name")
   {
+    std::string slave_name(slave_name_arr.data());
     INFO("Slave name: " << slave_name);
     UnixSerial serial(slave_name);
     serial.begin(115200);
