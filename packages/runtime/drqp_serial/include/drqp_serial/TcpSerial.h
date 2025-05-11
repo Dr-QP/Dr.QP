@@ -42,7 +42,11 @@ public:
   size_t writeBytes(const void* buffer, size_t size) override;
   size_t readBytes(void* buffer, size_t size) override;
 
+  void setTimeout(const std::chrono::milliseconds& timeout);
+  std::chrono::milliseconds getTimeout() const;
+
 private:
   boost::asio::io_service ioService_;
   tcp::socket socket_;
+  boost::posix_time::time_duration timeout_ = boost::posix_time::milliseconds{ 5000 };
 };

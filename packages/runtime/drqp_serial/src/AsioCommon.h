@@ -55,11 +55,11 @@ struct AsyncOperation<AsyncOp::Write>
 template <AsyncOp operation, typename MutableBufferSequence, typename Stream>
 size_t doWithTimeout(
   boost::asio::io_service& ioService, Stream& stream, const MutableBufferSequence& buffers,
-  uint64_t timeoutMs = 5000)
+  const boost::posix_time::time_duration& timeout)
 {
   std::optional<boost::system::error_code> timerResult;
   boost::asio::deadline_timer timer(ioService);
-  timer.expires_from_now(boost::posix_time::milliseconds(timeoutMs));
+  timer.expires_from_now(timeout);
   timer.async_wait([&timerResult](const auto& ec) { timerResult = ec; });
 
   std::optional<boost::system::error_code> operationErrorCode;

@@ -40,6 +40,7 @@ SCENARIO("test unix serial with pseudo terminal")
     INFO("Slave name: " << slave_name);
     UnixSerial serial(slave_name);
     serial.begin(115200);
+    serial.setTimeout(std::chrono::milliseconds{5});
 
     WHEN("data is written to the serial")
     {
