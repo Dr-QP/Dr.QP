@@ -85,7 +85,8 @@ SCENARIO("test unix serial with pseudo terminal")
       {
         std::string buffer;
         buffer.resize(10, '\0');
-        REQUIRE_THROWS_AS(serial.readBytes(buffer.data(), buffer.size()), boost::system::system_error);
+        REQUIRE_THROWS_AS(
+          serial.readBytes(buffer.data(), buffer.size()), boost::system::system_error);
       }
     }
   }
