@@ -1,79 +1,75 @@
-#include <iostream>
-#include <string>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/wait.h>
+// Copyright (c) 2017-2025 Anton Matosov
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 #include <pty.h>
-#include <errno.h>
-#include <string.h>
 
-int main() {
-    int master_fd = -1, slave_fd = -1;
-    char slave_name[256] = {};
-    pid_t pid = 0;
+#include <catch_ros2/catch.hpp>
 
-    // Open a pty
-    if (openpty(&master_fd, &slave_fd, slave_name, nullptr, nullptr) == -1) {
-        std::cerr << "Error opening pty: " << strerror(errno) << std::endl;
-        return 1;
-    }
+#include "drqp_serial/UnixSerial.h"
 
-    std::cout << "Slave name: " << slave_name << std::endl;
+SCENARIO("test unix serial with pseudo terminal")
+{
+  int master_fd = -1, slave_fd = -1;
+  char slave_name[256] = {};
 
-    // Fork the process
-    pid = fork();
-    if (pid == -1) {
-        std::cerr << "Error forking process: " << strerror(errno) << std::endl;
-        return 1;
-    }
+  // Open a pseudo terminal
+  REQUIRE(openpty(&master_fd, &slave_fd, slave_name, nullptr, nullptr) != -1);
 
-    if (pid == 0) {
-        // Child process: execute a command in the pty
-        close(master_fd); // Close the master end in the child
-        setsid(); // Create a new session
-        dup2(slave_fd, STDIN_FILENO);  // Duplicate slave to stdin
-        dup2(slave_fd, STDOUT_FILENO); // Duplicate slave to stdout
-        dup2(slave_fd, STDERR_FILENO); // Duplicate slave to stderr
-        close(slave_fd); // Close the original slave fd
+  GIVEN("UnixSerial is created with slave name")
+  {
+    INFO("Slave name: " << slave_name);
+    UnixSerial serial(slave_name);
+    serial.begin(115200);
 
-        // Execute a command (e.g., bash)
-        execlp("bash", "bash", nullptr);
-        std::cerr << "Error executing command: " << strerror(errno) << std::endl;
-        return 1;
-    } else {
-        // Parent process: communicate with the child through the pty
-        close(slave_fd); // Close the slave end in the parent
-        std::string command;
+    WHEN("data is written to the serial")
+    {
+      std::string data = "Hello, World!";
+      REQUIRE_NOTHROW(serial.writeBytes(data.c_str(), data.length()));
+
+      THEN("data is readable from the master file descriptor")
+      {
         char buffer[1024];
-        ssize_t bytes_read;
-
-        while (true) {
-            std::cout << "Enter command: ";
-            std::getline(std::cin, command);
-
-            // Send the command to the child process
-            write(master_fd, command.c_str(), command.length());
-            write(master_fd, "\n", 1); // Add newline character
-
-            // Read the output from the child process
-            while ((bytes_read = read(master_fd, buffer, sizeof(buffer) - 1)) > 0) {
-                buffer[bytes_read] = '\0';
-                std::cout << buffer;
-            }
-            if (bytes_read < 0) {
-              std::cerr << "Error reading from pty: " << strerror(errno) << std::endl;
-              break;
-            }
-            if (std::cin.eof()){
-                break;
-            }
-        }
-
-        // Wait for the child process to finish
-        wait(nullptr);
-        close(master_fd);
+        size_t bytes_read = read(master_fd, buffer, sizeof(buffer) - 1);
+        REQUIRE(bytes_read == data.length());
+        buffer[bytes_read] = '\0';
+        REQUIRE(std::string(buffer) == data);
+      }
     }
 
-    return 0;
+    WHEN("data is written to the master file descriptor")
+    {
+      std::string data = "Hello, World!";
+      write(master_fd, data.c_str(), data.length());
+
+      THEN("data is readable from the serial")
+      {
+        char buffer[1024];
+        size_t bytes_read = 0;
+        REQUIRE_NOTHROW(bytes_read = serial.readBytes(buffer, data.length()));
+        REQUIRE(bytes_read == data.length());
+        buffer[bytes_read] = '\0';
+        REQUIRE(std::string(buffer) == data);
+      }
+    }
+
+  }
+  close(master_fd);
+  close(slave_fd);
 }
