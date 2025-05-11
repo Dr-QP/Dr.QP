@@ -21,6 +21,7 @@
 #include <pty.h>
 #include <unistd.h>
 
+#include <boost/asio.hpp>
 #include <catch_ros2/catch.hpp>
 
 #include "drqp_serial/UnixSerial.h"
@@ -70,6 +71,21 @@ SCENARIO("test unix serial with pseudo terminal")
         REQUIRE(bytes_read == data.length());
         buffer.resize(bytes_read);
         REQUIRE(buffer == data);
+      }
+    }
+
+    WHEN("no data is written to the master file descriptor")
+    {
+      THEN("serial.available() returns false")
+      {
+        REQUIRE(!serial.available());
+      }
+
+      THEN("serial.readBytes() throws an exception on timeout")
+      {
+        std::string buffer;
+        buffer.resize(10, '\0');
+        REQUIRE_THROWS_AS(serial.readBytes(buffer.data(), buffer.size()), boost::system::system_error);
       }
     }
   }
