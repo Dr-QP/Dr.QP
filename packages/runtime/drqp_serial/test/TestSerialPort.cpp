@@ -71,7 +71,6 @@ SCENARIO("test unix serial with pseudo terminal")
         REQUIRE(buffer == data);
       }
     }
-
   }
   close(master_fd);
   close(slave_fd);
