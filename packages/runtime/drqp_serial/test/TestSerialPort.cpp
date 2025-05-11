@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include <pty.h>
+#include <unistd.h>
 
 #include <catch_ros2/catch.hpp>
 
@@ -48,7 +49,7 @@ SCENARIO("test unix serial with pseudo terminal")
       {
         std::string buffer;
         buffer.resize(data.length() + 1, '\0');
-        size_t bytes_read = read(master_fd, buffer.data(), buffer.size() - 1);
+        size_t bytes_read = ::read(master_fd, buffer.data(), buffer.size() - 1);
         REQUIRE(bytes_read == data.length());
         buffer.resize(bytes_read);
         REQUIRE(buffer == data);
@@ -58,7 +59,7 @@ SCENARIO("test unix serial with pseudo terminal")
     WHEN("data is written to the master file descriptor")
     {
       std::string data = "Hello, World!";
-      write(master_fd, data.c_str(), data.length());
+      ::write(master_fd, data.c_str(), data.length());
 
       THEN("data is readable from the serial")
       {
