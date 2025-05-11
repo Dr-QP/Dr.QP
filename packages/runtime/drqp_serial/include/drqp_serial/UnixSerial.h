@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <memory>
 #include <string>
 
@@ -39,6 +40,9 @@ public:
 
   size_t writeBytes(const void* buffer, size_t size) override;
   size_t readBytes(void* buffer, size_t size) override;
+
+  void setTimeout(const std::chrono::milliseconds& timeout);
+  std::chrono::milliseconds getTimeout() const;
 
 private:
   struct Impl;

@@ -30,6 +30,7 @@
 
 struct UnixSerial::Impl
 {
+  boost::posix_time::time_duration timeout_ = boost::posix_time::milliseconds{500};
   boost::asio::io_service ioService_;
   boost::asio::serial_port serial_;
 
@@ -95,7 +96,7 @@ void UnixSerial::begin(const uint32_t baudRate, const uint8_t transferConfig)
 size_t UnixSerial::writeBytes(const void* buffer, size_t size)
 {
   return doWithTimeout<AsyncOp::Write>(
-    impl_->ioService_, impl_->serial_, boost::asio::buffer(buffer, size));
+    impl_->ioService_, impl_->serial_, boost::asio::buffer(buffer, size), impl_->timeout_);
 }
 
 void UnixSerial::flushRead()
@@ -116,5 +117,15 @@ bool UnixSerial::available()
 size_t UnixSerial::readBytes(void* buffer, size_t size)
 {
   return doWithTimeout<AsyncOp::Read>(
-    impl_->ioService_, impl_->serial_, boost::asio::buffer(buffer, size));
+    impl_->ioService_, impl_->serial_, boost::asio::buffer(buffer, size), impl_->timeout_);
+}
+
+void UnixSerial::setTimeout(const std::chrono::milliseconds& timeout)
+{
+  impl_->timeout_ = boost::posix_time::milliseconds(timeout.count());
+}
+
+std::chrono::milliseconds UnixSerial::getTimeout() const
+{
+  return std::chrono::milliseconds(impl_->timeout_.total_milliseconds());
 }

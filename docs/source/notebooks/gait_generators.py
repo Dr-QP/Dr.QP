@@ -247,9 +247,8 @@ class GaitGenerator:
         else:
             subtitle = '\n' + ', '.join([f'{k}={v}' for k, v in gen_args.items()])
 
-        own_fig = ax is None
-
         # Plot the data
+        fig = None
         if ax is None:
             fig = plt.figure()
             fig.set_figheight(7, forward=True)
@@ -298,7 +297,7 @@ class GaitGenerator:
                     plot_lines = {}
                 plot_lines[leg] = lines[0]
 
-        if own_fig:
+        if fig is not None:
             ax.legend()
             plt.tight_layout()
             display(fig)

@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include <iostream>
 #include <utility>
 #include <optional>
 
@@ -56,34 +55,33 @@ struct AsyncOperation<AsyncOp::Write>
 template <AsyncOp operation, typename MutableBufferSequence, typename Stream>
 size_t doWithTimeout(
   boost::asio::io_service& ioService, Stream& stream, const MutableBufferSequence& buffers,
-  uint64_t timeoutMs = 5000)
+  const boost::posix_time::time_duration& timeout)
 {
   std::optional<boost::system::error_code> timerResult;
   boost::asio::deadline_timer timer(ioService);
-  timer.expires_from_now(boost::posix_time::milliseconds(timeoutMs));
+  timer.expires_from_now(timeout);
   timer.async_wait([&timerResult](const auto& ec) { timerResult = ec; });
 
-  std::optional<boost::system::error_code> operationResult;
-  std::optional<std::size_t> bytesTransferred;
+  std::optional<boost::system::error_code> operationErrorCode;
+  std::size_t bytesTransferred = 0;
 
   AsyncOperation<operation>::perform(
-    stream, buffers, [&operationResult, &bytesTransferred](const auto& ec, std::size_t bt) {
-      operationResult = ec;
+    stream, buffers, [&operationErrorCode, &bytesTransferred](const auto& ec, std::size_t bt) {
+      operationErrorCode = ec;
       bytesTransferred = bt;
     });
 
   ioService.reset();
   while (ioService.run_one()) {
-    if (operationResult)
+    if (operationErrorCode)
       timer.cancel();
     else if (timerResult)
       stream.cancel();
   }
 
-  if (operationResult && *operationResult) {
-    throw boost::system::system_error(*operationResult);
-    return 0;
+  if (operationErrorCode && *operationErrorCode) {
+    throw boost::system::system_error(*operationErrorCode);
   }
 
-  return *bytesTransferred;
+  return bytesTransferred;
 }
