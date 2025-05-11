@@ -250,7 +250,7 @@ class GaitGenerator:
         own_fig = ax is None
 
         # Plot the data
-        if ax is None:
+        if own_fig:
             fig = plt.figure()
             fig.set_figheight(7, forward=True)
             ax = fig.add_subplot(111, projection='3d')
