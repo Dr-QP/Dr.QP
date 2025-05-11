@@ -63,7 +63,7 @@ size_t doWithTimeout(
   timer.async_wait([&timerResult](const auto& ec) { timerResult = ec; });
 
   std::optional<boost::system::error_code> operationErrorCode;
-  std::optional<std::size_t> bytesTransferred;
+  std::size_t bytesTransferred = 0;
 
   AsyncOperation<operation>::perform(
     stream, buffers, [&operationErrorCode, &bytesTransferred](const auto& ec, std::size_t bt) {
@@ -81,8 +81,7 @@ size_t doWithTimeout(
 
   if (operationErrorCode && *operationErrorCode) {
     throw boost::system::system_error(*operationErrorCode);
-    return 0;
   }
 
-  return *bytesTransferred;
+  return bytesTransferred;
 }
