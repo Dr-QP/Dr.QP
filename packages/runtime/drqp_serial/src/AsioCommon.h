@@ -80,6 +80,12 @@ size_t doWithTimeout(
     }
   }
 
+  if (timerExpired && operationErrorCode == boost::asio::error::operation_aborted) {
+    // The operation was cancelled due to the timer expiring.
+    // We need to set the error code to indicate a timeout.
+    operationErrorCode = boost::asio::error::timed_out;
+  }
+
   if (operationErrorCode) {
     throw boost::system::system_error(operationErrorCode);
   }
