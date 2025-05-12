@@ -15,3 +15,10 @@ target_compile_definitions(drqp_a1_16_driver_tests PRIVATE TEST_DATA_DIR_IN_SOUR
 
 add_catch2_unit_test(drqp_a1_16_driver_tests)
 
+find_package(ament_cmake_ros REQUIRED)
+find_package(launch_testing_ament_cmake REQUIRED)
+function(add_ros_isolated_launch_test path)
+  set(RUNNER "${ament_cmake_ros_DIR}/run_test_isolated.py")
+  add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
+endfunction()
+add_ros_isolated_launch_test(test_integration.py)
