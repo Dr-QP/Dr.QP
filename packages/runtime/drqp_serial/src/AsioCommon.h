@@ -73,10 +73,11 @@ size_t doWithTimeout(
 
   ioService.reset();
   while (ioService.run_one()) {
-    if (operationErrorCode)
+    if (operationErrorCode) {
       timer.cancel();
-    else if (timerExpired)
+    } else if (timerExpired) {
       stream.cancel();
+    }
   }
 
   if (operationErrorCode) {
