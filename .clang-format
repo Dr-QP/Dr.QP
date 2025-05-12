@@ -16,6 +16,7 @@ Cpp11BracedListStyle: true
 AllowAllParametersOfDeclarationOnNextLine: false
 MaxEmptyLinesToKeep: 1
 InsertNewlineAtEOF: true
+InsertBraces: true
 
 SortIncludes: Never
 IncludeBlocks: Regroup
