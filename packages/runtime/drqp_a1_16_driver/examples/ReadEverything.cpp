@@ -145,194 +145,107 @@ CustomStatus48 readCustomStatus(XYZrobotServo& servo)
 
 void readAndPrintRAM(XYZrobotServo& servo)
 {
-  uint8_t ram[80];
-  servo.ramRead(0, ram, 30);
-  if (servo.isOk()) {
-    servo.ramRead(30, ram + 30, 30);
-  }
-  if (servo.isOk()) {
-    servo.ramRead(60, ram + 60, 20);
-  }
+  XYZrobotServoRAM ram;
+  servo.ramRead(0, &ram, sizeof(ram));
   if (servo.isFailed()) {
-    std::cout << "error reading RAM: ";
-    std::cout << servo.getLastError() << "\n";
+    std::cout << "error reading RAM: " << servo.getLastError() << "\n";
   } else {
-    std::cout << "RAM:" << "\n";
-    std::cout << "  sID: ";
-    std::cout << std::dec << ram[0] << "\n";
-    std::cout << "  ACK_Policy: ";
-    std::cout << std::dec << ram[1] << "\n";
-    std::cout << "  Alarm_LED_Policy: ";
-    std::cout << std::dec << ram[2] << "\n";
-    std::cout << "  Torque_Policy: ";
-    std::cout << std::dec << ram[3] << "\n";
-    std::cout << "  SPDctrl_Policy: ";
-    std::cout << std::dec << ram[4] << "\n";
-    std::cout << "  Max_Temperature: ";
-    std::cout << std::dec << ram[5] << "\n";
-    std::cout << "  Min_Voltage: ";
-    std::cout << std::dec << ram[6] << "\n";
-    std::cout << "  Max_Voltage: ";
-    std::cout << std::dec << ram[7] << "\n";
-    std::cout << "  Acceleration_Ratio: ";
-    std::cout << std::dec << ram[8] << "\n";
-    std::cout << "  Max_Wheel_Ref_Position: ";
-    std::cout << std::dec << ram[12] + (ram[13] << 8) << "\n";
-    std::cout << "  Max_PWM: ";
-    std::cout << std::dec << ram[16] + (ram[17] << 8) << "\n";
-    std::cout << "  Overload_Threshold: ";
-    std::cout << std::dec << ram[18] + (ram[19] << 8) << "\n";
-    std::cout << "  Min_Position: ";
-    std::cout << std::dec << ram[20] + (ram[21] << 8) << "\n";
-    std::cout << "  Max_Position: ";
-    std::cout << std::dec << ram[22] + (ram[23] << 8) << "\n";
-    std::cout << "  Position_Kp: ";
-    std::cout << std::dec << ram[24] + (ram[25] << 8) << "\n";
-    std::cout << "  Position_Kd: ";
-    std::cout << std::dec << ram[26] + (ram[27] << 8) << "\n";
-    std::cout << "  Position_Ki: ";
-    std::cout << std::dec << ram[28] + (ram[29] << 8) << "\n";
-    std::cout << "  Close_to_Open_Ref_Position: ";
-    std::cout << std::dec << ram[30] + (ram[31] << 8) << "\n";
-    std::cout << "  Open_to_Close_Ref_Position: ";
-    std::cout << std::dec << ram[32] + (ram[33] << 8) << "\n";
-    std::cout << "  Ramp_Speed: ";
-    std::cout << std::dec << ram[36] + (ram[37] << 8) << "\n";
-    std::cout << "  LED_Blink_Period: ";
-    std::cout << std::dec << ram[38] << "\n";
-    std::cout << "  Packet_Timeout_Detection_Period: ";
-    std::cout << std::dec << ram[40] << "\n";
-    std::cout << "  Overload_Detection_Period: ";
-    std::cout << std::dec << ram[42] << "\n";
-    std::cout << "  Inposition_Margin: ";
-    std::cout << std::dec << ram[44] << "\n";
-    std::cout << "  Over_Voltage_Detection_Period: ";
-    std::cout << std::dec << ram[45] << "\n";
-    std::cout << "  Over_Temperature_Detection_Period: ";
-    std::cout << std::dec << ram[46] << "\n";
-    std::cout << "  Calibration_Difference: ";
-    std::cout << std::dec << ram[47] << "\n";
-    std::cout << "  Status_Error: ";
-    std::cout << std::dec << ram[48] << "\n";
-    std::cout << "  Status_Detail: ";
-    std::cout << std::dec << ram[49] << "\n";
-    std::cout << "  LED_Control: ";
-    std::cout << std::dec << ram[53] << "\n";
-    std::cout << "  Voltage: ";
-    std::cout << std::dec << ram[54] << "\n";
-    std::cout << "  Temperature: ";
-    std::cout << std::dec << ram[55] << "\n";
-    std::cout << "  Current_Control_Mode: ";
-    std::cout << std::dec << ram[56] << "\n";
-    std::cout << "  Tick: ";
-    std::cout << std::dec << ram[57] << "\n";
-    std::cout << "  Joint_Position: ";
-    std::cout << std::dec << ram[60] + (ram[61] << 8) << "\n";
-    std::cout << "  PWM_Output_Duty: ";
-    std::cout << std::dec << ram[64] + (ram[65] << 8) << "\n";
-    std::cout << "  Bus_Current: ";
-    std::cout << std::dec << ram[66] + (ram[67] << 8) << "\n";
-    std::cout << "  Position_Goal: ";
-    std::cout << std::dec << ram[68] + (ram[69] << 8) << "\n";
-    std::cout << "  Position_Ref: ";
-    std::cout << std::dec << ram[70] + (ram[71] << 8) << "\n";
-    std::cout << "  Omega_Goal: ";
-    std::cout << std::dec << ram[72] + (ram[73] << 8) << "\n";
-    std::cout << "  Omega_Ref: ";
-    std::cout << std::dec << ram[74] + (ram[75] << 8) << "\n";
-    std::cout << "  Requested_Counts: ";
-    std::cout << std::dec << ram[76] + (ram[77] << 8) << "\n";
-    std::cout << "  ACK_Counts: ";
-    std::cout << std::dec << ram[78] + (ram[79] << 8) << "\n";
+    std::cout << "RAM:\n";
+    std::cout << "  sID: " << std::dec << static_cast<int>(ram.sID) << "\n";
+    std::cout << "  ACK_Policy: " << std::dec << static_cast<int>(ram.ACK_Policy) << "\n";
+    std::cout << "  Alarm_LED_Policy: " << std::dec << static_cast<int>(ram.Alarm_LED_Policy) << "\n";
+    std::cout << "  Torque_Policy: " << std::dec << static_cast<int>(ram.Torque_Policy) << "\n";
+    std::cout << "  SPDctrl_Policy: " << std::dec << static_cast<int>(ram.SPDctrl_Policy) << "\n";
+    std::cout << "  Max_Temperature: " << std::dec << static_cast<int>(ram.Max_Temperature) << "\n";
+    std::cout << "  Min_Voltage: " << std::dec << ram.Min_Voltage / 16.0 << "V\n";
+    std::cout << "  Max_Voltage: " << std::dec << ram.Max_Voltage / 16.0 << "V\n";
+    std::cout << "  Acceleration_Ratio: " << std::dec << static_cast<int>(ram.Acceleration_Ratio) << "\n";
+    std::cout << "  Max_Wheel_Ref_Position: " << std::dec << ram.Max_Wheel_Ref_Position << "\n";
+    std::cout << "  Max_PWM: " << std::dec << ram.Max_PWM << "\n";
+    std::cout << "  Overload_Threshold: " << std::dec << ram.Overload_Threshold << "\n";
+    std::cout << "  Min_Position: " << std::dec << ram.Min_Position << "\n";
+    std::cout << "  Max_Position: " << std::dec << ram.Max_Position << "\n";
+    std::cout << "  Position_Kp: " << std::dec << ram.Position_Kp << "\n";
+    std::cout << "  Position_Kd: " << std::dec << ram.Position_Kd << "\n";
+    std::cout << "  Position_Ki: " << std::dec << ram.Position_Ki << "\n";
+    std::cout << "  Close_to_Open_Ref_Position: " << std::dec << ram.Close_to_Open_Ref_Position << "\n";
+    std::cout << "  Open_to_Close_Ref_Position: " << std::dec << ram.Open_to_Close_Ref_Position << "\n";
+    std::cout << "  Ramp_Speed: " << std::dec << ram.Ramp_Speed << "\n";
+    std::cout << "  LED_Blink_Period: " << std::dec << static_cast<int>(ram.LED_Blink_Period) << "\n";
+    std::cout << "  Packet_Timeout_Detection_Period: " << std::dec << static_cast<int>(ram.Packet_Timeout_Detection_Period) << "\n";
+    std::cout << "  Overload_Detection_Period: " << std::dec << static_cast<int>(ram.Overload_Detection_Period) << "\n";
+    std::cout << "  Inposition_Margin: " << std::dec << static_cast<int>(ram.Inposition_Margin) << "\n";
+    std::cout << "  Over_Voltage_Detection_Period: " << std::dec << static_cast<int>(ram.Over_Voltage_Detection_Period) << "\n";
+    std::cout << "  Over_Temperature_Detection_Period: " << std::dec << static_cast<int>(ram.Over_Temperature_Detection_Period) << "\n";
+    std::cout << "  Calibration_Difference: " << std::dec << static_cast<int>(ram.Calibration_Difference) << "\n";
+    std::cout << "  Status_Error: " << std::dec << static_cast<int>(ram.Status_Error) << "\n";
+    std::cout << "  Status_Detail: " << std::dec << static_cast<int>(ram.Status_Detail) << "\n";
+    std::cout << "  LED_Control: " << std::dec << static_cast<int>(ram.LED_Control) << "\n";
+    std::cout << "  Voltage: " << std::dec << ram.Voltage / 16.0 << "V\n";
+    std::cout << "  Temperature: " << std::dec << static_cast<int>(ram.Temperature) << "˚C\n";
+    std::cout << "  Current_Control_Mode: " << std::dec << static_cast<int>(ram.Current_Control_Mode) << "\n";
+    std::cout << "  Tick: " << std::dec << static_cast<int>(ram.Tick) * 10 << "ms\n";
+    std::cout << "  Joint_Position: " << std::dec << ram.Joint_Position << "\n";
+    std::cout << "  PWM_Output_Duty: " << std::dec << ram.PWM_Output_Duty << "\n";
+    std::cout << "  Bus_Current: " << std::dec << ram.Bus_Current / 200.0 << "A\n";
+    std::cout << "  Position_Goal: " << std::dec << ram.Position_Goal << "\n";
+    std::cout << "  Position_Ref: " << std::dec << ram.Position_Ref << "\n";
+    std::cout << "  Omega_Goal: " << std::dec << ram.Omega_Goal << "\n";
+    std::cout << "  Omega_Ref: " << std::dec << ram.Omega_Ref << "\n";
+    std::cout << "  Requested_Counts: " << std::dec << ram.Requested_Counts << "\n";
+    std::cout << "  ACK_Counts: " << std::dec << ram.ACK_Counts << "\n";
   }
 }
 
 void readAndPrintEEPROM(XYZrobotServo& servo)
 {
-  uint8_t eeprom[54];
-  servo.eepromRead(0, eeprom, 30);
-  if (servo.isOk()) {
-    servo.eepromRead(30, eeprom + 30, 24);
-  }
+  XYZrobotServoEEPROM eeprom;
+  servo.eepromRead(0, &eeprom, sizeof(eeprom));
   if (servo.isFailed()) {
-    std::cout << "error reading EEPROM: ";
-    std::cout << std::dec << servo.getLastError() << "\n";
+    std::cout << "error reading EEPROM: " << servo.getLastError() << "\n";
   } else {
-    std::cout << "EEPROM:" << "\n";
-    std::cout << "  Model_No: ";
-    std::cout << std::dec << eeprom[0] << "\n";
-    std::cout << "  Date: ";
-    std::cout << std::dec << eeprom[1];  // Year
-    std::cout << '-';
-    std::cout << std::dec << (eeprom[2] & 0xF);  // Month
-    std::cout << '-';
-    std::cout << std::dec << eeprom[3];  // D << "\n"y
-    std::cout << "  Firmware_Version: ";
-    std::cout << std::dec << (eeprom[2] >> 4 & 0xF) << "\n";
-    std::cout << "  Baud_Rate: ";
-    std::cout << std::dec << eeprom[5] << "\n";
-    std::cout << "  sID: ";
-    std::cout << std::dec << eeprom[6] << "\n";
-    std::cout << "  ACK_Policy: ";
-    std::cout << std::dec << eeprom[7] << "\n";
-    std::cout << "  Alarm_LED_Policy: ";
-    std::cout << std::dec << eeprom[8] << "\n";
-    std::cout << "  Torque_Policy: ";
-    std::cout << std::dec << eeprom[9] << "\n";
-    std::cout << "  SPDctrl_Policy: ";
-    std::cout << std::dec << eeprom[10] << "\n";
-    std::cout << "  Max_Temperature: ";
-    std::cout << std::dec << eeprom[11] << "\n";
-    std::cout << "  Min_Voltage: ";
-    std::cout << std::dec << eeprom[12] << "\n";
-    std::cout << "  Max_Voltage: ";
-    std::cout << std::dec << eeprom[13] << "\n";
-    std::cout << "  Acceleration_Ratio: ";
-    std::cout << std::dec << eeprom[14] << "\n";
-    std::cout << "  Max_Wheel_Ref_Position: ";
-    std::cout << std::dec << eeprom[18] + (eeprom[19] << 8) << "\n";
-    std::cout << "  Max_PWM: ";
-    std::cout << std::dec << eeprom[22] + (eeprom[23] << 8) << "\n";
-    std::cout << "  Overload_Threshold: ";
-    std::cout << std::dec << eeprom[24] + (eeprom[25] << 8) << "\n";
-    std::cout << "  Min_Position: ";
-    std::cout << std::dec << eeprom[26] + (eeprom[27] << 8) << "\n";
-    std::cout << "  Max_Position: ";
-    std::cout << std::dec << eeprom[28] + (eeprom[29] << 8) << "\n";
-    std::cout << "  Position_Kp: ";
-    std::cout << std::dec << eeprom[30] + (eeprom[31] << 8) << "\n";
-    std::cout << "  Position_Kd: ";
-    std::cout << std::dec << eeprom[32] + (eeprom[33] << 8) << "\n";
-    std::cout << "  Position_Ki: ";
-    std::cout << std::dec << eeprom[34] + (eeprom[35] << 8) << "\n";
-    std::cout << "  Close_to_Open_Ref_Position: ";
-    std::cout << std::dec << eeprom[36] + (eeprom[37] << 8) << "\n";
-    std::cout << "  Open_to_Close_Ref_Position: ";
-    std::cout << std::dec << eeprom[38] + (eeprom[39] << 8) << "\n";
-    std::cout << "  Ramp_Speed: ";
-    std::cout << std::dec << eeprom[42] + (eeprom[43] << 8) << "\n";
-    std::cout << "  LED_Blink_Period: ";
-    std::cout << std::dec << eeprom[44] << "\n";
-    std::cout << "  Packet_Timeout_Detection_Period: ";
-    std::cout << std::dec << eeprom[46] << "\n";
-    std::cout << "  Overload_Detection_Period: ";
-    std::cout << std::dec << eeprom[48] << "\n";
-    std::cout << "  Inposition_Margin: ";
-    std::cout << std::dec << eeprom[50] << "\n";
-    std::cout << "  Over_Voltage_Detection_Period: ";
-    std::cout << std::dec << eeprom[51] << "\n";
-    std::cout << "  Over_Temperature_Detection_Period: ";
-    std::cout << std::dec << eeprom[52] << "\n";
-    std::cout << "  Calibration_Difference: ";
-    std::cout << std::dec << eeprom[53] << "\n";
+    std::cout << "EEPROM:\n";
+    std::cout << "  Model_No: " << std::dec << static_cast<int>(eeprom.Model_Number) << "\n";
+    std::cout << "  Date: " << std::dec << static_cast<int>(eeprom.Year) << "-"
+              << static_cast<int>(eeprom.Version_Month & 0xF) << "-"
+              << static_cast<int>(eeprom.Day) << "\n";
+    std::cout << "  Firmware_Version: " << std::dec << ((eeprom.Version_Month >> 4) & 0xF) << "\n";
+    std::cout << "  Baud_Rate: " << XYZrobotServoBaudRateToInt(eeprom.Baud_Rate) << "\n";
+    std::cout << "  sID: " << std::dec << static_cast<int>(eeprom.sID) << "\n";
+    std::cout << "  ACK_Policy: " << std::dec << static_cast<int>(eeprom.ACK_Policy) << "\n";
+    std::cout << "  Alarm_LED_Policy: " << std::dec << static_cast<int>(eeprom.Alarm_LED_Policy) << "\n";
+    std::cout << "  Torque_Policy: " << std::dec << static_cast<int>(eeprom.Torque_Policy) << "\n";
+    std::cout << "  SPDctrl_Policy: " << std::dec << static_cast<int>(eeprom.SPDctrl_Policy) << "\n";
+    std::cout << "  Max_Temperature: " << std::dec << static_cast<int>(eeprom.Max_Temperature) << "\n";
+    std::cout << "  Min_Voltage: " << std::dec << eeprom.Min_Voltage / 16.0 << "V\n";
+    std::cout << "  Max_Voltage: " << std::dec << eeprom.Max_Voltage / 16.0 << "V\n";
+    std::cout << "  Acceleration_Ratio: " << std::dec << static_cast<int>(eeprom.Acceleration_Ratio) << "\n";
+    std::cout << "  Max_Wheel_Ref_Position: " << std::dec << eeprom.Max_Wheel_Ref_Position << "\n";
+    std::cout << "  Max_PWM: " << std::dec << eeprom.Max_PWM << "\n";
+    std::cout << "  Overload_Threshold: " << std::dec << eeprom.Overload_Threshold << "\n";
+    std::cout << "  Min_Position: " << std::dec << eeprom.Min_Position << "\n";
+    std::cout << "  Max_Position: " << std::dec << eeprom.Max_Position << "\n";
+    std::cout << "  Position_Kp: " << std::dec << eeprom.Position_Kp << "\n";
+    std::cout << "  Position_Kd: " << std::dec << eeprom.Position_Kd << "\n";
+    std::cout << "  Position_Ki: " << std::dec << eeprom.Position_Ki << "\n";
+    std::cout << "  Close_to_Open_Ref_Position: " << std::dec << eeprom.Close_to_Open_Ref_Position << "\n";
+    std::cout << "  Open_to_Close_Ref_Position: " << std::dec << eeprom.Open_to_Close_Ref_Position << "\n";
+    std::cout << "  Ramp_Speed: " << std::dec << eeprom.Ramp_Speed << "\n";
+    std::cout << "  LED_Blink_Period: " << std::dec << static_cast<int>(eeprom.LED_Blink_Period) << "\n";
+    std::cout << "  Packet_Timeout_Detection_Period: " << std::dec << static_cast<int>(eeprom.Packet_Timeout_Detection_Period) << "\n";
+    std::cout << "  Overload_Detection_Period: " << std::dec << static_cast<int>(eeprom.Overload_Detection_Period) << "\n";
+    std::cout << "  Inposition_Margin: " << std::dec << static_cast<int>(eeprom.Inposition_Margin) << "\n";
+    std::cout << "  Over_Voltage_Detection_Period: " << std::dec << static_cast<int>(eeprom.Over_Voltage_Detection_Period) << "\n";
+    std::cout << "  Over_Temperature_Detection_Period: " << std::dec << static_cast<int>(eeprom.Over_Temperature_Detection_Period) << "\n";
+    std::cout << "  Calibration_Difference: " << std::dec << static_cast<int>(eeprom.Calibration_Difference) << "\n";
   }
 }
 
 void readEverything(XYZrobotServo& servo)
 {
   // readAndPrintStatus(servo);
-  // readAndPrintRAM(servo);
-  // readAndPrintEEPROM(servo);
+  readAndPrintRAM(servo);
+  readAndPrintEEPROM(servo);
   readCustomStatus(servo);
 
   std::cout << "\n";
