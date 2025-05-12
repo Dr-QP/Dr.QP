@@ -28,14 +28,9 @@
 #include <ctime>
 #include <iostream>
 #include <thread>
-#include <type_traits>
 
 #include "drqp_a1_16_driver/SerialFactory.h"
 #include "drqp_a1_16_driver/XYZrobotServo.h"
-// #include "drqp_serial/TcpSerial.h"
-#include "drqp_serial/UnixSerial.h"
-
-// #define servoSerial Serial1
 
 const uint8_t servoId = 5;
 
@@ -49,21 +44,6 @@ std::unique_ptr<SerialProtocol> servoSerial = makeSerialForDevice("/dev/ttySC0")
 
 XYZrobotServo servo(*servoSerial, servoId);
 
-void setup()
-{
-  // Serial.begin(115200); // console output
-
-  // 115200 8N1 => 11520 B/s / 24 frames = 480 Bytes Per Frame / 18 servos = 26
-  // bytes per servo per frame
-
-  // Turn on the serial port and set its baud rate.
-  servoSerial.begin(115200);
-  // servoSerial.setTimeout(20);
-
-  // To receive data, a pull-up is needed on the RX line because
-  // the servos do not pull the line high while idle.
-  // pinMode(DDD2, INPUT_PULLUP);
-}
 
 void readAndPrintStatus(XYZrobotServo& servo)
 {
@@ -294,28 +274,6 @@ uint8_t randomByte()
   return rand_r(&seed) % 255;
 }
 
-void testWrite()
-{
-  uint8_t byte = randomByte();
-  std::cout << "write " << std::dec << byte << "\n";
-  servoSerial.writeBytes(&byte, 1);
-}
-
-void testRoundtrip()
-{
-  using namespace std::chrono_literals;
-
-  std::this_thread::sleep_for(500ms);
-
-  uint8_t byte = randomByte();
-  std::cout << "write " << std::dec << byte << "\n";
-  servoSerial.writeBytes(&byte, 1);
-
-  std::this_thread::sleep_for(10ms);
-  servoSerial.readBytes(&byte, 1);
-  std::cout << "read " << std::dec << byte << "\n";
-}
-
 void signal_callback_handler(int signum)
 {
   std::cout << "Caught signal " << signum << std::endl;
@@ -328,12 +286,7 @@ int main()
   signal(SIGINT, signal_callback_handler);
   signal(SIGHUP, signal_callback_handler);
 
-  setup();
-
-  servo.torqueOff();
   for (;;) {
-    // testRoundtrip();
-    // testWrite();
     readLoop();
     // setPos();
   }
