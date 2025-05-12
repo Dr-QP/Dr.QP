@@ -57,13 +57,13 @@ size_t doWithTimeout(
   boost::asio::io_service& ioService, Stream& stream, const MutableBufferSequence& buffers,
   const boost::posix_time::time_duration& timeout)
 {
-  std::optional<boost::system::error_code> timerResult;
+  bool timerExpired = false;
   boost::asio::deadline_timer timer(ioService);
   timer.expires_from_now(timeout);
-  timer.async_wait([&timerResult](const auto& ec) { timerResult = ec; });
+  timer.async_wait([&timerExpired](const auto& ec) { timerExpired = true; });
 
-  std::optional<boost::system::error_code> operationErrorCode;
-  std::size_t bytesTransferred = 0;
+  boost::system::error_code operationErrorCode{};
+  std::size_t bytesTransferred{};
 
   AsyncOperation<operation>::perform(
     stream, buffers, [&operationErrorCode, &bytesTransferred](const auto& ec, std::size_t bt) {
@@ -75,12 +75,12 @@ size_t doWithTimeout(
   while (ioService.run_one()) {
     if (operationErrorCode)
       timer.cancel();
-    else if (timerResult)
+    else if (timerExpired)
       stream.cancel();
   }
 
-  if (operationErrorCode && *operationErrorCode) {
-    throw boost::system::system_error(*operationErrorCode);
+  if (operationErrorCode) {
+    throw boost::system::system_error(operationErrorCode);
   }
 
   return bytesTransferred;
