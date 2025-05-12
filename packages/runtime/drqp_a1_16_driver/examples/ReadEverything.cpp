@@ -28,70 +28,22 @@
 #include <ctime>
 #include <iostream>
 #include <thread>
-#include <type_traits>
 
+#include "drqp_a1_16_driver/SerialFactory.h"
 #include "drqp_a1_16_driver/XYZrobotServo.h"
-// #include "drqp_serial/TcpSerial.h"
-#include "drqp_serial/UnixSerial.h"
-
-// #define servoSerial Serial1
 
 const uint8_t kServoId = 5;
-
-// UnixSerial servoSerial("/dev/cu.SLAB_USBtoUART");
-UnixSerial servoSerial("/dev/ttySC0");  // on Dr.QP raspi
-// UnixSerial servoSerial("/dev/ttySC1"); // extra one on Dr.QP raspi
 
 // https://techtinkering.com/2013/04/02/connecting-to-a-remote-serial-port-over-tcpip/
 // connection: &con00
 //   accepter: tcp,2022
 //   connector: serialdev,/dev/ttySC0,115200n81,local
 //   trace-both: '/var/log/trace-\p'
-// TcpSerial servoSerial("192.168.1.136", 2022);
+// std::unique_ptr<SerialProtocol> servoSerial = makeSerialForDevice("192.168.1.136:2022");
+std::unique_ptr<SerialProtocol> servoSerial = makeSerialForDevice("/dev/ttySC0");  // on Dr.QP raspi
 
-// OR
-// socat pty,link=$HOME/dev/ttyVSC0,waitslave tcp:192.168.1.136:2022
-// UnixSerial servoSerial("/Users/antonmatosov/dev/ttyVSC0"); // virtual port
-// forward on macOS
+XYZrobotServo servo(*servoSerial, kServoId);
 
-XYZrobotServo servo(servoSerial, kServoId);
-
-void setup()
-{
-  // Serial.begin(115200); // console output
-
-  // 115200 8N1 => 11520 B/s / 24 frames = 480 Bytes Per Frame / 18 servos = 26
-  // bytes per servo per frame
-
-  // Turn on the serial port and set its baud rate.
-  servoSerial.begin(115200);
-  // servoSerial.setTimeout(20);
-
-  // To receive data, a pull-up is needed on the RX line because
-  // the servos do not pull the line high while idle.
-  // pinMode(DDD2, INPUT_PULLUP);
-}
-
-struct CustomStatus48
-{
-  uint8_t statusError;
-  uint8_t statusDetail;
-  uint8_t reserved[3];
-  uint8_t ledControl;
-  uint8_t voltage;
-  uint8_t temperature;
-  uint8_t currentControlMode;
-  uint8_t tick;  // 8
-  uint16_t reserved2;
-  uint16_t jointPosition;
-  uint16_t reserved3;
-  uint16_t pwmOutputDuty;
-  uint16_t busCurrent;
-  uint16_t posGoal;
-  uint16_t posRef;
-  uint16_t speedGoal;
-  uint16_t speedRef;  // 18 + 8 = 26
-} __attribute__((packed));
 
 void readAndPrintStatus(XYZrobotServo& servo)
 {
@@ -115,32 +67,37 @@ void readAndPrintStatus(XYZrobotServo& servo)
   }
 }
 
-CustomStatus48 readCustomStatus(XYZrobotServo& servo)
+void readCustomStatus(XYZrobotServo& servo)
 {
-  CustomStatus48 status;
-  const size_t statusSize = sizeof(CustomStatus48);
-  servo.ramRead(48, reinterpret_cast<uint8_t*>(&status), statusSize);
+  XYZrobotServoRAM ram;
+  const size_t offset = offsetof(XYZrobotServoRAM, Status_Error);
+  const size_t size = sizeof(ram.Status_Error) + sizeof(ram.Status_Detail) + sizeof(ram.LED_Control) +
+                      sizeof(ram.Voltage) + sizeof(ram.Temperature) + sizeof(ram.Current_Control_Mode) +
+                      sizeof(ram.Tick) + sizeof(ram.Joint_Position) + sizeof(ram.PWM_Output_Duty) +
+                      sizeof(ram.Bus_Current) + sizeof(ram.Position_Goal) + sizeof(ram.Position_Ref) +
+                      sizeof(ram.Omega_Goal) + sizeof(ram.Omega_Ref);
+
+  servo.ramRead(offset, reinterpret_cast<uint8_t*>(&ram) + offset, size);
+
   if (servo.isFailed()) {
     std::cout << "error reading custom status: " << servo.getLastError() << std::endl;
   } else {
-    std::cout << "status:\n";
-    std::cout << "  statusError: 0x" << std::hex << std::dec << status.statusError << "\n";
-    std::cout << "  statusDetail: 0x" << std::hex << std::dec << status.statusDetail << "\n";
-    std::cout << "  ledControl: " << std::dec << status.ledControl << "\n";
-    std::cout << "  voltage: " << std::dec << status.voltage / 16 << "V\n";
-    std::cout << "  temperature: " << std::dec << status.temperature << "˚C\n";
-    std::cout << "  currentControlMode: " << std::dec << status.currentControlMode << "\n";
-    std::cout << "  tick: " << std::dec << status.tick * 10 << "ms\n";
-    std::cout << "  jointPosition: " << std::dec << status.jointPosition << "\n";
-    std::cout << "  pwmOutputDuty: " << std::dec << status.pwmOutputDuty << "\n";
-    std::cout << "  busCurrent: " << static_cast<float>(status.busCurrent) / 200.f << "A\n";
-    std::cout << "  posGoal: " << std::dec << status.posGoal << "\n";
-    std::cout << "  posRef: " << std::dec << status.posRef << "\n";
-    std::cout << "  speedGoal: " << std::dec << status.speedGoal << "\n";
-    std::cout << "  speedRef: " << std::dec << status.speedRef << "\n";
+    std::cout << "Custom Status:\n";
+    std::cout << "  statusError: 0x" << std::hex << static_cast<int>(ram.Status_Error) << "\n";
+    std::cout << "  statusDetail: 0x" << std::hex << static_cast<int>(ram.Status_Detail) << "\n";
+    std::cout << "  ledControl: " << std::dec << static_cast<int>(ram.LED_Control) << "\n";
+    std::cout << "  voltage: " << std::dec << ram.Voltage / 16.0 << "V\n";
+    std::cout << "  temperature: " << std::dec << static_cast<int>(ram.Temperature) << "˚C\n";
+    std::cout << "  currentControlMode: " << std::dec << static_cast<int>(ram.Current_Control_Mode) << "\n";
+    std::cout << "  tick: " << std::dec << static_cast<int>(ram.Tick) * 10 << "ms\n";
+    std::cout << "  jointPosition: " << std::dec << ram.Joint_Position << "\n";
+    std::cout << "  pwmOutputDuty: " << std::dec << ram.PWM_Output_Duty << "\n";
+    std::cout << "  busCurrent: " << std::dec << ram.Bus_Current / 200.0 << "A\n";
+    std::cout << "  posGoal: " << std::dec << ram.Position_Goal << "\n";
+    std::cout << "  posRef: " << std::dec << ram.Position_Ref << "\n";
+    std::cout << "  speedGoal: " << std::dec << ram.Omega_Goal << "\n";
+    std::cout << "  speedRef: " << std::dec << ram.Omega_Ref << "\n";
   }
-
-  return status;
 }
 
 void readAndPrintRAM(XYZrobotServo& servo)
@@ -318,28 +275,6 @@ uint8_t randomByte()
   return rand_r(&seed) % 255;
 }
 
-void testWrite()
-{
-  uint8_t byte = randomByte();
-  std::cout << "write " << std::dec << byte << "\n";
-  servoSerial.writeBytes(&byte, 1);
-}
-
-void testRoundtrip()
-{
-  using namespace std::chrono_literals;
-
-  std::this_thread::sleep_for(500ms);
-
-  uint8_t byte = randomByte();
-  std::cout << "write " << std::dec << byte << "\n";
-  servoSerial.writeBytes(&byte, 1);
-
-  std::this_thread::sleep_for(10ms);
-  servoSerial.readBytes(&byte, 1);
-  std::cout << "read " << std::dec << byte << "\n";
-}
-
 void signal_callback_handler(int signum)
 {
   std::cout << "Caught signal " << signum << std::endl;
@@ -353,13 +288,8 @@ int main()
     signal(SIGINT, signal_callback_handler);
     signal(SIGHUP, signal_callback_handler);
 
-    setup();
 
-    servo.torqueOff();
-    if (servo.isFailed()) {
-      std::cerr << "Torque OFF failed: " + to_string(servo.getLastError()) << std::endl;
-      return 1;
-    }
+
     for (;;) {
       // testRoundtrip();
       // testWrite();
