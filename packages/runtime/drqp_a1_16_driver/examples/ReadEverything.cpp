@@ -36,7 +36,7 @@
 
 // #define servoSerial Serial1
 
-const uint8_t servoId = 5;
+const uint8_t kServoId = 5;
 
 // UnixSerial servoSerial("/dev/cu.SLAB_USBtoUART");
 UnixSerial servoSerial("/dev/ttySC0");  // on Dr.QP raspi
@@ -54,7 +54,7 @@ UnixSerial servoSerial("/dev/ttySC0");  // on Dr.QP raspi
 // UnixSerial servoSerial("/Users/antonmatosov/dev/ttyVSC0"); // virtual port
 // forward on macOS
 
-XYZrobotServo servo(servoSerial, servoId);
+XYZrobotServo servo(servoSerial, kServoId);
 
 void setup()
 {
@@ -244,8 +244,8 @@ void readAndPrintEEPROM(XYZrobotServo& servo)
 void readEverything(XYZrobotServo& servo)
 {
   // readAndPrintStatus(servo);
-  readAndPrintRAM(servo);
-  readAndPrintEEPROM(servo);
+  // readAndPrintRAM(servo);
+  // readAndPrintEEPROM(servo);
   readCustomStatus(servo);
 
   std::cout << "\n";
@@ -348,17 +348,27 @@ void signal_callback_handler(int signum)
 
 int main()
 {
-  std::atexit([]() { servo.torqueOff(); });
-  signal(SIGINT, signal_callback_handler);
-  signal(SIGHUP, signal_callback_handler);
+  try {
+    std::atexit([]() { servo.torqueOff(); });
+    signal(SIGINT, signal_callback_handler);
+    signal(SIGHUP, signal_callback_handler);
 
-  setup();
+    setup();
 
-  servo.torqueOff();
-  for (;;) {
-    // testRoundtrip();
-    // testWrite();
-    readLoop();
-    // setPos();
+    servo.torqueOff();
+    if (servo.isFailed()) {
+      std::cerr << "Torque OFF failed: " + to_string(servo.getLastError()) << std::endl;
+      return 1;
+    }
+    for (;;) {
+      // testRoundtrip();
+      // testWrite();
+      readLoop();
+      // setPos();
+    }
+  } catch (const std::exception& e) {
+    std::cerr << "Exception: " << e.what() << std::endl;
+  } catch (...) {
+    std::cerr << "Unknown exception" << std::endl;
   }
 }
