@@ -72,27 +72,6 @@ void setup()
   // pinMode(DDD2, INPUT_PULLUP);
 }
 
-struct CustomStatus48
-{
-  uint8_t statusError;
-  uint8_t statusDetail;
-  uint8_t reserved[3];
-  uint8_t ledControl;
-  uint8_t voltage;
-  uint8_t temperature;
-  uint8_t currentControlMode;
-  uint8_t tick;  // 8
-  uint16_t reserved2;
-  uint16_t jointPosition;
-  uint16_t reserved3;
-  uint16_t pwmOutputDuty;
-  uint16_t busCurrent;
-  uint16_t posGoal;
-  uint16_t posRef;
-  uint16_t speedGoal;
-  uint16_t speedRef;  // 18 + 8 = 26
-} __attribute__((packed));
-
 void readAndPrintStatus(XYZrobotServo& servo)
 {
   XYZrobotServoStatus status = servo.readStatus();
@@ -115,32 +94,37 @@ void readAndPrintStatus(XYZrobotServo& servo)
   }
 }
 
-CustomStatus48 readCustomStatus(XYZrobotServo& servo)
+void readCustomStatus(XYZrobotServo& servo)
 {
-  CustomStatus48 status;
-  const size_t statusSize = sizeof(CustomStatus48);
-  servo.ramRead(48, reinterpret_cast<uint8_t*>(&status), statusSize);
+  XYZrobotServoRAM ram;
+  const size_t offset = offsetof(XYZrobotServoRAM, Status_Error);
+  const size_t size = sizeof(ram.Status_Error) + sizeof(ram.Status_Detail) + sizeof(ram.LED_Control) +
+                      sizeof(ram.Voltage) + sizeof(ram.Temperature) + sizeof(ram.Current_Control_Mode) +
+                      sizeof(ram.Tick) + sizeof(ram.Joint_Position) + sizeof(ram.PWM_Output_Duty) +
+                      sizeof(ram.Bus_Current) + sizeof(ram.Position_Goal) + sizeof(ram.Position_Ref) +
+                      sizeof(ram.Omega_Goal) + sizeof(ram.Omega_Ref);
+
+  servo.ramRead(offset, reinterpret_cast<uint8_t*>(&ram) + offset, size);
+
   if (servo.isFailed()) {
     std::cout << "error reading custom status: " << servo.getLastError() << std::endl;
   } else {
-    std::cout << "status:\n";
-    std::cout << "  statusError: 0x" << std::hex << std::dec << status.statusError << "\n";
-    std::cout << "  statusDetail: 0x" << std::hex << std::dec << status.statusDetail << "\n";
-    std::cout << "  ledControl: " << std::dec << status.ledControl << "\n";
-    std::cout << "  voltage: " << std::dec << status.voltage / 16 << "V\n";
-    std::cout << "  temperature: " << std::dec << status.temperature << "˚C\n";
-    std::cout << "  currentControlMode: " << std::dec << status.currentControlMode << "\n";
-    std::cout << "  tick: " << std::dec << status.tick * 10 << "ms\n";
-    std::cout << "  jointPosition: " << std::dec << status.jointPosition << "\n";
-    std::cout << "  pwmOutputDuty: " << std::dec << status.pwmOutputDuty << "\n";
-    std::cout << "  busCurrent: " << static_cast<float>(status.busCurrent) / 200.f << "A\n";
-    std::cout << "  posGoal: " << std::dec << status.posGoal << "\n";
-    std::cout << "  posRef: " << std::dec << status.posRef << "\n";
-    std::cout << "  speedGoal: " << std::dec << status.speedGoal << "\n";
-    std::cout << "  speedRef: " << std::dec << status.speedRef << "\n";
+    std::cout << "Custom Status:\n";
+    std::cout << "  statusError: 0x" << std::hex << static_cast<int>(ram.Status_Error) << "\n";
+    std::cout << "  statusDetail: 0x" << std::hex << static_cast<int>(ram.Status_Detail) << "\n";
+    std::cout << "  ledControl: " << std::dec << static_cast<int>(ram.LED_Control) << "\n";
+    std::cout << "  voltage: " << std::dec << ram.Voltage / 16.0 << "V\n";
+    std::cout << "  temperature: " << std::dec << static_cast<int>(ram.Temperature) << "˚C\n";
+    std::cout << "  currentControlMode: " << std::dec << static_cast<int>(ram.Current_Control_Mode) << "\n";
+    std::cout << "  tick: " << std::dec << static_cast<int>(ram.Tick) * 10 << "ms\n";
+    std::cout << "  jointPosition: " << std::dec << ram.Joint_Position << "\n";
+    std::cout << "  pwmOutputDuty: " << std::dec << ram.PWM_Output_Duty << "\n";
+    std::cout << "  busCurrent: " << std::dec << ram.Bus_Current / 200.0 << "A\n";
+    std::cout << "  posGoal: " << std::dec << ram.Position_Goal << "\n";
+    std::cout << "  posRef: " << std::dec << ram.Position_Ref << "\n";
+    std::cout << "  speedGoal: " << std::dec << ram.Omega_Goal << "\n";
+    std::cout << "  speedRef: " << std::dec << ram.Omega_Ref << "\n";
   }
-
-  return status;
 }
 
 void readAndPrintRAM(XYZrobotServo& servo)
@@ -243,7 +227,6 @@ void readAndPrintEEPROM(XYZrobotServo& servo)
 
 void readEverything(XYZrobotServo& servo)
 {
-  // readAndPrintStatus(servo);
   readAndPrintRAM(servo);
   readAndPrintEEPROM(servo);
   readCustomStatus(servo);
