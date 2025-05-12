@@ -108,11 +108,20 @@
       {
         "type": "lldb",
         "request": "launch",
-        "name": "drqp pose_reader",
+        "name": "drqp_a1_16_driver pose_reader",
         "program": "build/drqp_a1_16_driver/pose_reader",
         "args": [],
         "cwd": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/",
         "preLaunchTask": "Dr.QP colcon build",
+      },
+      {
+        "type": "lldb",
+        "request": "attach",
+        "name": "drqp_a1_16_driver read_everything",
+        "program": "build/drqp_a1_16_driver/examples/read_everything",
+        // "args": [],
+        // "cwd": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/examples/",
+        // "preLaunchTask": "Dr.QP colcon build",
       },
       {
         "type": "bashdb",
