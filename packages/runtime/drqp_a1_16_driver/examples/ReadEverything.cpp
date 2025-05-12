@@ -30,6 +30,7 @@
 #include <thread>
 #include <type_traits>
 
+#include "drqp_a1_16_driver/SerialFactory.h"
 #include "drqp_a1_16_driver/XYZrobotServo.h"
 // #include "drqp_serial/TcpSerial.h"
 #include "drqp_serial/UnixSerial.h"
@@ -38,23 +39,15 @@
 
 const uint8_t servoId = 5;
 
-// UnixSerial servoSerial("/dev/cu.SLAB_USBtoUART");
-UnixSerial servoSerial("/dev/ttySC0");  // on Dr.QP raspi
-// UnixSerial servoSerial("/dev/ttySC1"); // extra one on Dr.QP raspi
-
 // https://techtinkering.com/2013/04/02/connecting-to-a-remote-serial-port-over-tcpip/
 // connection: &con00
 //   accepter: tcp,2022
 //   connector: serialdev,/dev/ttySC0,115200n81,local
 //   trace-both: '/var/log/trace-\p'
-// TcpSerial servoSerial("192.168.1.136", 2022);
+// std::unique_ptr<SerialProtocol> servoSerial = makeSerialForDevice("192.168.1.136:2022");
+std::unique_ptr<SerialProtocol> servoSerial = makeSerialForDevice("/dev/ttySC0");  // on Dr.QP raspi
 
-// OR
-// socat pty,link=$HOME/dev/ttyVSC0,waitslave tcp:192.168.1.136:2022
-// UnixSerial servoSerial("/Users/antonmatosov/dev/ttyVSC0"); // virtual port
-// forward on macOS
-
-XYZrobotServo servo(servoSerial, servoId);
+XYZrobotServo servo(*servoSerial, servoId);
 
 void setup()
 {
