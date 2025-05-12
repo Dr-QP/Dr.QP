@@ -208,14 +208,6 @@ void readEverything(XYZrobotServo& servo)
   std::cout << "\n";
 }
 
-void readLoop()
-{
-  using namespace std::chrono_literals;
-
-  std::this_thread::sleep_for(1s);
-  readEverything(servo);
-}
-
 const int MinPosition = 250;
 const int MaxPosition = 830;
 
@@ -288,13 +280,13 @@ int main()
     signal(SIGINT, signal_callback_handler);
     signal(SIGHUP, signal_callback_handler);
 
-
-
     for (;;) {
-      // testRoundtrip();
-      // testWrite();
-      readLoop();
+      using namespace std::chrono_literals;
+
+      readEverything(servo);
       // setPos();
+
+      std::this_thread::sleep_for(1s);
     }
   } catch (const std::exception& e) {
     std::cerr << "Exception: " << e.what() << std::endl;
