@@ -40,7 +40,9 @@ SCENARIO("test unix serial with pseudo terminal")
     INFO("Slave name: " << slave_name);
     UnixSerial serial(slave_name);
     serial.begin(115200);
-    serial.setTimeout(std::chrono::milliseconds{5});
+    auto const timeout = std::chrono::milliseconds{5};
+    serial.setTimeout(timeout);
+    REQUIRE(serial.getTimeout() == timeout);
 
     WHEN("data is written to the serial")
     {
@@ -73,6 +75,16 @@ SCENARIO("test unix serial with pseudo terminal")
         buffer.resize(bytes_read);
         REQUIRE(buffer == data);
       }
+
+      WHEN("data is all flushed from the serial")
+      {
+        serial.flushRead();
+
+        THEN("serial.available() returns false")
+        {
+          REQUIRE(!serial.available());
+        }
+      }
     }
 
     WHEN("no data is written to the master file descriptor")
@@ -88,6 +100,19 @@ SCENARIO("test unix serial with pseudo terminal")
         buffer.resize(10, '\0');
         REQUIRE_THROWS_AS(
           serial.readBytes(buffer.data(), buffer.size()), boost::system::system_error);
+      }
+    }
+
+    WHEN("descriptors are closed")
+    {
+      close(master_fd);
+      master_fd = -1;
+      close(slave_fd);
+      slave_fd = -1;
+
+      THEN("serial.available() throws system_error")
+      {
+        REQUIRE_THROWS_AS(serial.available(), boost::system::system_error);
       }
     }
   }
