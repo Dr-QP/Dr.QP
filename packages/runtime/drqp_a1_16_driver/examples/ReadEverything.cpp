@@ -304,7 +304,7 @@ int main()
     try {
       ackPolicy = servo.readAckPolicyRam();
       ackPolicyEEP = servo.readAckPolicyEeprom();
-      std::cout << "Ack policy RAM: " << static_cast<int>(ackPolicy) << "\nAck policy EEPROM"
+      std::cout << "Ack policy RAM: " << static_cast<int>(ackPolicy) << "\nAck policy EEPROM: "
                 << static_cast<int>(ackPolicyEEP) << "\n";
     } catch (const std::exception& e) {
       std::cerr << "Failed to read ack policy: " << e.what() << std::endl;
