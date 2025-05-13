@@ -272,8 +272,40 @@ int main()
     signal(SIGINT, signal_callback_handler);
     signal(SIGHUP, signal_callback_handler);
 
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(3s);
+
+    XYZrobotServoAckPolicy ackPolicy = XYZrobotServoAckPolicy::OnlyStat;
+    // try {
+    //   ackPolicy = servo.readAckPolicyRam();
+    // } catch (const std::exception& e) {
+    //   std::cerr << "Failed to read ack policy: " << e.what() << std::endl;
+    // }
+
+    // readAndPrintStatus(servo);
+    if (servo.isFailed() || ackPolicy != XYZrobotServoAckPolicy::OnlyReadAndStat) {
+      std::cout << "Setting ack policy to OnlyReadAndStat in RAM\n";
+      servo.writeAckPolicyRam(XYZrobotServoAckPolicy::OnlyReadAndStat);
+      // readAndPrintStatus(servo);
+
+      std::cout << "Setting ack policy to OnlyReadAndStat in EEPROM\n";
+      servo.writeAckPolicyEeprom(XYZrobotServoAckPolicy::OnlyReadAndStat);
+      // readAndPrintStatus(servo);
+
+      std::cout << "Rebooting\n";
+      servo.reboot();
+      std::this_thread::sleep_for(3s);
+      std::cout << "Rebooted\n";
+    }
+    try {
+      ackPolicy = servo.readAckPolicyRam();
+    } catch (const std::exception& e) {
+      std::cerr << "Failed to read ack policy still...: " << e.what() << std::endl;
+      // readAndPrintStatus(servo);
+      return 1;
+    }
+
     for (;;) {
-      using namespace std::chrono_literals;
 
       readEverything(servo);
       // setPos();
