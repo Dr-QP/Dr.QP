@@ -312,12 +312,14 @@ int main()
 
     readAndPrintStatus(servo);
     const XYZrobotServoAckPolicy kAckPolicyNew = XYZrobotServoAckPolicy::OnlyReadAndStat;
-    if (servo.isFailed() || ackPolicy != kAckPolicyNew || ackPolicyEEP != kAckPolicyNew) {
+    if (ackPolicy != kAckPolicyNew) {
       std::cout << "Setting ack policy to " << static_cast<int>(kAckPolicyNew) << " in RAM\n";
       servo.writeAckPolicyRam(kAckPolicyNew);
       std::this_thread::sleep_for(1s);
       readAndPrintStatus(servo);
+    }
 
+    if (ackPolicyEEP != kAckPolicyNew) {
       std::cout << "Setting ack policy to " << static_cast<int>(kAckPolicyNew) << " in EEPROM\n";
       servo.writeAckPolicyEeprom(kAckPolicyNew);
       std::this_thread::sleep_for(2s);
