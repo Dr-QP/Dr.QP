@@ -270,6 +270,17 @@ TEST_CASE("A1-16 servo read all RAM")
     REQUIRE_THAT(ram.Position_Goal, GoalPositionWithin(kStartGoal));
     REQUIRE_THAT(ram.Position_Ref, GoalPositionWithin(kStartGoal));
   }
+}
+
+TEST_CASE("A1-16 servo read all RAM and write back")
+{
+  std::unique_ptr<SerialProtocol> serial = makeSerial("read-ram-write-back");
+  XYZrobotServo servo(*serial, kTestServo);
+
+  XYZrobotServoRAM ram;
+  servo.ramRead(0, &ram, sizeof(ram));
+
+  REQUIRE(servo.isOk());
 
   THEN("Write back to RAM")
   {
@@ -298,6 +309,23 @@ TEST_CASE("A1-16 servo read all EEPROM")
     REQUIRE(eeprom.sID == kTestServo);
     REQUIRE(eeprom.Min_Position == 23);
     REQUIRE(eeprom.Max_Position == 1000);
+  }
+}
+
+TEST_CASE("A1-16 servo read all EEPROM and write back")
+{
+  std::unique_ptr<SerialProtocol> serial = makeSerial("read-eeprom-write-back");
+  XYZrobotServo servo(*serial, kTestServo);
+
+  XYZrobotServoEEPROM eeprom;
+  servo.eepromRead(0, &eeprom, sizeof(eeprom));
+
+  REQUIRE(servo.isOk());
+
+  THEN("Write back to EEPROM")
+  {
+    servo.eepromWrite(0, &eeprom, sizeof(eeprom));
+    REQUIRE(servo.isOk());
   }
 }
 
