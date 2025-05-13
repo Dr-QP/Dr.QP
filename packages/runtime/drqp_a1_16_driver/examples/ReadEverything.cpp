@@ -44,7 +44,6 @@ std::unique_ptr<SerialProtocol> servoSerial = makeSerialForDevice("/dev/ttySC0")
 
 XYZrobotServo servo(*servoSerial, kServoId);
 
-
 void readAndPrintStatus(XYZrobotServo& servo)
 {
   XYZrobotServoStatus status = servo.readStatus();
@@ -85,7 +84,8 @@ void readCustomStatus(XYZrobotServo& servo)
     std::cout << "  ledControl: " << std::dec << static_cast<int>(ram.LED_Control) << "\n";
     std::cout << "  voltage: " << std::dec << ram.Voltage / 16.0 << "V\n";
     std::cout << "  temperature: " << std::dec << static_cast<int>(ram.Temperature) << "˚C\n";
-    std::cout << "  currentControlMode: " << std::dec << static_cast<int>(ram.Current_Control_Mode) << "\n";
+    std::cout << "  currentControlMode: " << std::dec << static_cast<int>(ram.Current_Control_Mode)
+              << "\n";
     std::cout << "  tick: " << std::dec << static_cast<int>(ram.Tick) * 10 << "ms\n";
     std::cout << "  jointPosition: " << std::dec << ram.Joint_Position << "\n";
     std::cout << "  pwmOutputDuty: " << std::dec << ram.PWM_Output_Duty << "\n";
@@ -107,13 +107,15 @@ void readAndPrintRAM(XYZrobotServo& servo)
     std::cout << "RAM:\n";
     std::cout << "  sID: " << std::dec << static_cast<int>(ram.sID) << "\n";
     std::cout << "  ACK_Policy: " << std::dec << static_cast<int>(ram.ACK_Policy) << "\n";
-    std::cout << "  Alarm_LED_Policy: " << std::dec << static_cast<int>(ram.Alarm_LED_Policy) << "\n";
+    std::cout << "  Alarm_LED_Policy: " << std::dec << static_cast<int>(ram.Alarm_LED_Policy)
+              << "\n";
     std::cout << "  Torque_Policy: " << std::dec << static_cast<int>(ram.Torque_Policy) << "\n";
     std::cout << "  SPDctrl_Policy: " << std::dec << static_cast<int>(ram.SPDctrl_Policy) << "\n";
     std::cout << "  Max_Temperature: " << std::dec << static_cast<int>(ram.Max_Temperature) << "\n";
     std::cout << "  Min_Voltage: " << std::dec << ram.Min_Voltage / 16.0 << "V\n";
     std::cout << "  Max_Voltage: " << std::dec << ram.Max_Voltage / 16.0 << "V\n";
-    std::cout << "  Acceleration_Ratio: " << std::dec << static_cast<int>(ram.Acceleration_Ratio) << "\n";
+    std::cout << "  Acceleration_Ratio: " << std::dec << static_cast<int>(ram.Acceleration_Ratio)
+              << "\n";
     std::cout << "  Max_Wheel_Ref_Position: " << std::dec << ram.Max_Wheel_Ref_Position << "\n";
     std::cout << "  Max_PWM: " << std::dec << ram.Max_PWM << "\n";
     std::cout << "  Overload_Threshold: " << std::dec << ram.Overload_Threshold << "\n";
@@ -122,22 +124,32 @@ void readAndPrintRAM(XYZrobotServo& servo)
     std::cout << "  Position_Kp: " << std::dec << ram.Position_Kp << "\n";
     std::cout << "  Position_Kd: " << std::dec << ram.Position_Kd << "\n";
     std::cout << "  Position_Ki: " << std::dec << ram.Position_Ki << "\n";
-    std::cout << "  Close_to_Open_Ref_Position: " << std::dec << ram.Close_to_Open_Ref_Position << "\n";
-    std::cout << "  Open_to_Close_Ref_Position: " << std::dec << ram.Open_to_Close_Ref_Position << "\n";
+    std::cout << "  Close_to_Open_Ref_Position: " << std::dec << ram.Close_to_Open_Ref_Position
+              << "\n";
+    std::cout << "  Open_to_Close_Ref_Position: " << std::dec << ram.Open_to_Close_Ref_Position
+              << "\n";
     std::cout << "  Ramp_Speed: " << std::dec << ram.Ramp_Speed << "\n";
-    std::cout << "  LED_Blink_Period: " << std::dec << static_cast<int>(ram.LED_Blink_Period) << "\n";
-    std::cout << "  Packet_Timeout_Detection_Period: " << std::dec << static_cast<int>(ram.Packet_Timeout_Detection_Period) << "\n";
-    std::cout << "  Overload_Detection_Period: " << std::dec << static_cast<int>(ram.Overload_Detection_Period) << "\n";
-    std::cout << "  Inposition_Margin: " << std::dec << static_cast<int>(ram.Inposition_Margin) << "\n";
-    std::cout << "  Over_Voltage_Detection_Period: " << std::dec << static_cast<int>(ram.Over_Voltage_Detection_Period) << "\n";
-    std::cout << "  Over_Temperature_Detection_Period: " << std::dec << static_cast<int>(ram.Over_Temperature_Detection_Period) << "\n";
-    std::cout << "  Calibration_Difference: " << std::dec << static_cast<int>(ram.Calibration_Difference) << "\n";
+    std::cout << "  LED_Blink_Period: " << std::dec << static_cast<int>(ram.LED_Blink_Period)
+              << "\n";
+    std::cout << "  Packet_Timeout_Detection_Period: " << std::dec
+              << static_cast<int>(ram.Packet_Timeout_Detection_Period) << "\n";
+    std::cout << "  Overload_Detection_Period: " << std::dec
+              << static_cast<int>(ram.Overload_Detection_Period) << "\n";
+    std::cout << "  Inposition_Margin: " << std::dec << static_cast<int>(ram.Inposition_Margin)
+              << "\n";
+    std::cout << "  Over_Voltage_Detection_Period: " << std::dec
+              << static_cast<int>(ram.Over_Voltage_Detection_Period) << "\n";
+    std::cout << "  Over_Temperature_Detection_Period: " << std::dec
+              << static_cast<int>(ram.Over_Temperature_Detection_Period) << "\n";
+    std::cout << "  Calibration_Difference: " << std::dec
+              << static_cast<int>(ram.Calibration_Difference) << "\n";
     std::cout << "  Status_Error: " << std::dec << static_cast<int>(ram.Status_Error) << "\n";
     std::cout << "  Status_Detail: " << std::dec << static_cast<int>(ram.Status_Detail) << "\n";
     std::cout << "  LED_Control: " << std::dec << static_cast<int>(ram.LED_Control) << "\n";
     std::cout << "  Voltage: " << std::dec << ram.Voltage / 16.0 << "V\n";
     std::cout << "  Temperature: " << std::dec << static_cast<int>(ram.Temperature) << "˚C\n";
-    std::cout << "  Current_Control_Mode: " << std::dec << static_cast<int>(ram.Current_Control_Mode) << "\n";
+    std::cout << "  Current_Control_Mode: " << std::dec
+              << static_cast<int>(ram.Current_Control_Mode) << "\n";
     std::cout << "  Tick: " << std::dec << static_cast<int>(ram.Tick) * 10 << "ms\n";
     std::cout << "  Joint_Position: " << std::dec << ram.Joint_Position << "\n";
     std::cout << "  PWM_Output_Duty: " << std::dec << ram.PWM_Output_Duty << "\n";
@@ -161,19 +173,23 @@ void readAndPrintEEPROM(XYZrobotServo& servo)
     std::cout << "EEPROM:\n";
     std::cout << "  Model_No: " << std::dec << static_cast<int>(eeprom.Model_Number) << "\n";
     std::cout << "  Date: " << std::dec << static_cast<int>(eeprom.Year) << "-"
-              << static_cast<int>(eeprom.Version_Month & 0xF) << "-"
-              << static_cast<int>(eeprom.Day) << "\n";
+              << static_cast<int>(eeprom.Version_Month & 0xF) << "-" << static_cast<int>(eeprom.Day)
+              << "\n";
     std::cout << "  Firmware_Version: " << std::dec << ((eeprom.Version_Month >> 4) & 0xF) << "\n";
     std::cout << "  Baud_Rate: " << XYZrobotServoBaudRateToInt(eeprom.Baud_Rate) << "\n";
     std::cout << "  sID: " << std::dec << static_cast<int>(eeprom.sID) << "\n";
     std::cout << "  ACK_Policy: " << std::dec << static_cast<int>(eeprom.ACK_Policy) << "\n";
-    std::cout << "  Alarm_LED_Policy: " << std::dec << static_cast<int>(eeprom.Alarm_LED_Policy) << "\n";
+    std::cout << "  Alarm_LED_Policy: " << std::dec << static_cast<int>(eeprom.Alarm_LED_Policy)
+              << "\n";
     std::cout << "  Torque_Policy: " << std::dec << static_cast<int>(eeprom.Torque_Policy) << "\n";
-    std::cout << "  SPDctrl_Policy: " << std::dec << static_cast<int>(eeprom.SPDctrl_Policy) << "\n";
-    std::cout << "  Max_Temperature: " << std::dec << static_cast<int>(eeprom.Max_Temperature) << "\n";
+    std::cout << "  SPDctrl_Policy: " << std::dec << static_cast<int>(eeprom.SPDctrl_Policy)
+              << "\n";
+    std::cout << "  Max_Temperature: " << std::dec << static_cast<int>(eeprom.Max_Temperature)
+              << "\n";
     std::cout << "  Min_Voltage: " << std::dec << eeprom.Min_Voltage / 16.0 << "V\n";
     std::cout << "  Max_Voltage: " << std::dec << eeprom.Max_Voltage / 16.0 << "V\n";
-    std::cout << "  Acceleration_Ratio: " << std::dec << static_cast<int>(eeprom.Acceleration_Ratio) << "\n";
+    std::cout << "  Acceleration_Ratio: " << std::dec << static_cast<int>(eeprom.Acceleration_Ratio)
+              << "\n";
     std::cout << "  Max_Wheel_Ref_Position: " << std::dec << eeprom.Max_Wheel_Ref_Position << "\n";
     std::cout << "  Max_PWM: " << std::dec << eeprom.Max_PWM << "\n";
     std::cout << "  Overload_Threshold: " << std::dec << eeprom.Overload_Threshold << "\n";
@@ -182,16 +198,25 @@ void readAndPrintEEPROM(XYZrobotServo& servo)
     std::cout << "  Position_Kp: " << std::dec << eeprom.Position_Kp << "\n";
     std::cout << "  Position_Kd: " << std::dec << eeprom.Position_Kd << "\n";
     std::cout << "  Position_Ki: " << std::dec << eeprom.Position_Ki << "\n";
-    std::cout << "  Close_to_Open_Ref_Position: " << std::dec << eeprom.Close_to_Open_Ref_Position << "\n";
-    std::cout << "  Open_to_Close_Ref_Position: " << std::dec << eeprom.Open_to_Close_Ref_Position << "\n";
+    std::cout << "  Close_to_Open_Ref_Position: " << std::dec << eeprom.Close_to_Open_Ref_Position
+              << "\n";
+    std::cout << "  Open_to_Close_Ref_Position: " << std::dec << eeprom.Open_to_Close_Ref_Position
+              << "\n";
     std::cout << "  Ramp_Speed: " << std::dec << eeprom.Ramp_Speed << "\n";
-    std::cout << "  LED_Blink_Period: " << std::dec << static_cast<int>(eeprom.LED_Blink_Period) << "\n";
-    std::cout << "  Packet_Timeout_Detection_Period: " << std::dec << static_cast<int>(eeprom.Packet_Timeout_Detection_Period) << "\n";
-    std::cout << "  Overload_Detection_Period: " << std::dec << static_cast<int>(eeprom.Overload_Detection_Period) << "\n";
-    std::cout << "  Inposition_Margin: " << std::dec << static_cast<int>(eeprom.Inposition_Margin) << "\n";
-    std::cout << "  Over_Voltage_Detection_Period: " << std::dec << static_cast<int>(eeprom.Over_Voltage_Detection_Period) << "\n";
-    std::cout << "  Over_Temperature_Detection_Period: " << std::dec << static_cast<int>(eeprom.Over_Temperature_Detection_Period) << "\n";
-    std::cout << "  Calibration_Difference: " << std::dec << static_cast<int>(eeprom.Calibration_Difference) << "\n";
+    std::cout << "  LED_Blink_Period: " << std::dec << static_cast<int>(eeprom.LED_Blink_Period)
+              << "\n";
+    std::cout << "  Packet_Timeout_Detection_Period: " << std::dec
+              << static_cast<int>(eeprom.Packet_Timeout_Detection_Period) << "\n";
+    std::cout << "  Overload_Detection_Period: " << std::dec
+              << static_cast<int>(eeprom.Overload_Detection_Period) << "\n";
+    std::cout << "  Inposition_Margin: " << std::dec << static_cast<int>(eeprom.Inposition_Margin)
+              << "\n";
+    std::cout << "  Over_Voltage_Detection_Period: " << std::dec
+              << static_cast<int>(eeprom.Over_Voltage_Detection_Period) << "\n";
+    std::cout << "  Over_Temperature_Detection_Period: " << std::dec
+              << static_cast<int>(eeprom.Over_Temperature_Detection_Period) << "\n";
+    std::cout << "  Calibration_Difference: " << std::dec
+              << static_cast<int>(eeprom.Calibration_Difference) << "\n";
   }
 }
 
@@ -273,40 +298,33 @@ int main()
     signal(SIGHUP, signal_callback_handler);
 
     using namespace std::chrono_literals;
-    std::this_thread::sleep_for(3s);
 
-    XYZrobotServoAckPolicy ackPolicy = XYZrobotServoAckPolicy::OnlyStat;
-    // try {
-    //   ackPolicy = servo.readAckPolicyRam();
-    // } catch (const std::exception& e) {
-    //   std::cerr << "Failed to read ack policy: " << e.what() << std::endl;
-    // }
-
-    // readAndPrintStatus(servo);
-    if (servo.isFailed() || ackPolicy != XYZrobotServoAckPolicy::OnlyReadAndStat) {
-      std::cout << "Setting ack policy to OnlyReadAndStat in RAM\n";
-      servo.writeAckPolicyRam(XYZrobotServoAckPolicy::OnlyReadAndStat);
-      // readAndPrintStatus(servo);
-
-      std::cout << "Setting ack policy to OnlyReadAndStat in EEPROM\n";
-      servo.writeAckPolicyEeprom(XYZrobotServoAckPolicy::OnlyReadAndStat);
-      // readAndPrintStatus(servo);
-
-      std::cout << "Rebooting\n";
-      servo.reboot();
-      std::this_thread::sleep_for(3s);
-      std::cout << "Rebooted\n";
-    }
+    XYZrobotServoAckPolicy ackPolicy = XYZrobotServoAckPolicy::OnlyStat,
+                           ackPolicyEEP = XYZrobotServoAckPolicy::OnlyStat;
     try {
       ackPolicy = servo.readAckPolicyRam();
+      ackPolicyEEP = servo.readAckPolicyEeprom();
+      std::cout << "Ack policy RAM: " << static_cast<int>(ackPolicy) << "\nAck policy EEPROM"
+                << static_cast<int>(ackPolicyEEP) << "\n";
     } catch (const std::exception& e) {
-      std::cerr << "Failed to read ack policy still...: " << e.what() << std::endl;
-      // readAndPrintStatus(servo);
-      return 1;
+      std::cerr << "Failed to read ack policy: " << e.what() << std::endl;
+    }
+
+    readAndPrintStatus(servo);
+    const XYZrobotServoAckPolicy kAckPolicyNew = XYZrobotServoAckPolicy::OnlyReadAndStat;
+    if (servo.isFailed() || ackPolicy != kAckPolicyNew || ackPolicyEEP != kAckPolicyNew) {
+      std::cout << "Setting ack policy to " << static_cast<int>(kAckPolicyNew) << " in RAM\n";
+      servo.writeAckPolicyRam(kAckPolicyNew);
+      std::this_thread::sleep_for(1s);
+      readAndPrintStatus(servo);
+
+      std::cout << "Setting ack policy to " << static_cast<int>(kAckPolicyNew) << " in EEPROM\n";
+      servo.writeAckPolicyEeprom(kAckPolicyNew);
+      std::this_thread::sleep_for(2s);
+      readAndPrintStatus(servo);
     }
 
     for (;;) {
-
       readEverything(servo);
       // setPos();
 
