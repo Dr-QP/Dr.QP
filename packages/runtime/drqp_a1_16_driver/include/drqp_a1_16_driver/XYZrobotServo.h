@@ -685,6 +685,7 @@ private:
   void memoryWrite(uint8_t cmd, uint8_t startAddress, const void* data, uint8_t dataSize);
 
   void memoryRead(uint8_t cmd, uint8_t startAddress, void* data, uint8_t dataSize);
+  void memoryReadImpl(uint8_t cmd, uint8_t startAddress, void* data, uint8_t dataSize);
 
   void sendIJog(IJogData data);
 
