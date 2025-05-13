@@ -225,8 +225,8 @@ void readAndPrintEEPROM(XYZrobotServo& servo)
 void readEverything(XYZrobotServo& servo)
 {
   readAndPrintStatus(servo);
-  // readAndPrintRAM(servo);
-  // readAndPrintEEPROM(servo);
+  readAndPrintRAM(servo);
+  readAndPrintEEPROM(servo);
   readCustomStatus(servo);
 
   std::cout << "\n";
