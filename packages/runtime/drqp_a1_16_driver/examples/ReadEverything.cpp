@@ -32,6 +32,8 @@
 #include "drqp_a1_16_driver/SerialFactory.h"
 #include "drqp_a1_16_driver/XYZrobotServo.h"
 
+#pragma clang diagnostic ignored "-Winvalid-offsetof"
+
 const uint8_t kServoId = 5;
 
 // https://techtinkering.com/2013/04/02/connecting-to-a-remote-serial-port-over-tcpip/
@@ -40,7 +42,7 @@ const uint8_t kServoId = 5;
 //   connector: serialdev,/dev/ttySC0,115200n81,local
 //   trace-both: '/var/log/trace-\p'
 // std::unique_ptr<SerialProtocol> servoSerial = makeSerialForDevice("192.168.1.136:2022");
-std::unique_ptr<SerialProtocol> servoSerial = makeSerialForDevice("/dev/ttySC0");  // on Dr.QP raspi
+std::unique_ptr<SerialProtocol> servoSerial = makeSerialForDevice("/dev/ttySC0");  // on Dr.QP RPi
 
 XYZrobotServo servo(*servoSerial, kServoId);
 
