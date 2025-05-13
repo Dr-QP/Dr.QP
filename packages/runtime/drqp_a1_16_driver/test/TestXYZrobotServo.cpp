@@ -259,35 +259,28 @@ TEST_CASE("A1-16 servo read all RAM")
 
   XYZrobotServoRAM ram;
   servo.ramRead(0, &ram, sizeof(ram));
-
   REQUIRE(servo.isOk());
 
-  THEN("should have correct values")
-  {
-    REQUIRE(ram.sID == kTestServo);
-
-    REQUIRE_THAT(ram.Joint_Position, GoalPositionWithin(kStartGoal));
-    REQUIRE_THAT(ram.Position_Goal, GoalPositionWithin(kStartGoal));
-    REQUIRE_THAT(ram.Position_Ref, GoalPositionWithin(kStartGoal));
-  }
+  REQUIRE(ram.sID == kTestServo);
+  REQUIRE_THAT(ram.Joint_Position, GoalPositionWithin(kStartGoal));
+  REQUIRE_THAT(ram.Position_Goal, GoalPositionWithin(kStartGoal));
+  REQUIRE_THAT(ram.Position_Ref, GoalPositionWithin(kStartGoal));
 }
 
-TEST_CASE("A1-16 servo read all RAM and write back")
-{
-  std::unique_ptr<SerialProtocol> serial = makeSerial("read-ram-write-back");
-  XYZrobotServo servo(*serial, kTestServo);
+// This is a bad test, because it will write back the RAM and might brick the servo
+// TEST_CASE("A1-16 servo read all RAM and write back")
+// {
+//   std::unique_ptr<SerialProtocol> serial = makeSerial("read-ram-write-back");
+//   XYZrobotServo servo(*serial, kTestServo);
 
-  XYZrobotServoRAM ram;
-  servo.ramRead(0, &ram, sizeof(ram));
+//   XYZrobotServoRAM ram;
+//   servo.ramRead(0, &ram, sizeof(ram));
 
-  REQUIRE(servo.isOk());
+//   REQUIRE(servo.isOk());
 
-  THEN("Write back to RAM")
-  {
-    servo.ramWrite(0, &ram, sizeof(ram));
-    REQUIRE(servo.isOk());
-  }
-}
+//   servo.ramWrite(0, &ram, sizeof(ram));
+//   REQUIRE(servo.isOk());
+// }
 
 TEST_CASE("A1-16 servo read all EEPROM")
 {
@@ -299,35 +292,29 @@ TEST_CASE("A1-16 servo read all EEPROM")
 
   REQUIRE(servo.isOk());
 
-  THEN("should have correct values")
-  {
-    REQUIRE(eeprom.Model_Number == 0x01);  // Model number
-    REQUIRE(eeprom.Year == 0x0F);  // Year
-    REQUIRE(eeprom.Version_Month == 0x3A);  // Version/Month
-    REQUIRE(eeprom.Day == 0x01);  // Day
+  REQUIRE(eeprom.Model_Number == 0x01);  // Model number
+  REQUIRE(eeprom.Year == 0x0F);  // Year
+  REQUIRE(eeprom.Version_Month == 0x3A);  // Version/Month
+  REQUIRE(eeprom.Day == 0x01);  // Day
 
-    REQUIRE(eeprom.sID == kTestServo);
-    REQUIRE(eeprom.Min_Position == 23);
-    REQUIRE(eeprom.Max_Position == 1000);
-  }
+  REQUIRE(eeprom.sID == kTestServo);
+  REQUIRE(eeprom.Min_Position == 23);
+  REQUIRE(eeprom.Max_Position == 1000);
 }
 
-TEST_CASE("A1-16 servo read all EEPROM and write back")
-{
-  std::unique_ptr<SerialProtocol> serial = makeSerial("read-eeprom-write-back");
-  XYZrobotServo servo(*serial, kTestServo);
+// This is a bad test, because it will write back the EEPROM and brick the servo
+// TEST_CASE("A1-16 servo read all EEPROM and write back")
+// {
+//   std::unique_ptr<SerialProtocol> serial = makeSerial("read-eeprom-write-back");
+//   XYZrobotServo servo(*serial, kTestServo);
 
-  XYZrobotServoEEPROM eeprom;
-  servo.eepromRead(0, &eeprom, sizeof(eeprom));
+//   XYZrobotServoEEPROM eeprom;
+//   servo.eepromRead(0, &eeprom, sizeof(eeprom));
+//   REQUIRE(servo.isOk());
 
-  REQUIRE(servo.isOk());
-
-  THEN("Write back to EEPROM")
-  {
-    servo.eepromWrite(0, &eeprom, sizeof(eeprom));
-    REQUIRE(servo.isOk());
-  }
-}
+//   servo.eepromWrite(0, &eeprom, sizeof(eeprom));
+//   REQUIRE(servo.isOk());
+// }
 
 TEST_CASE("A1-16 servo set position")
 {
