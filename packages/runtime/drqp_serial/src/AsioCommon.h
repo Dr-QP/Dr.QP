@@ -62,18 +62,20 @@ size_t doWithTimeout(
   timer.expires_from_now(timeout);
   timer.async_wait([&timerExpired](const auto& ec) { timerExpired = true; });
 
+  bool completed = false;
   boost::system::error_code operationErrorCode{};
   std::size_t bytesTransferred{};
 
   AsyncOperation<operation>::perform(
-    stream, buffers, [&operationErrorCode, &bytesTransferred](const auto& ec, std::size_t bt) {
+    stream, buffers, [&operationErrorCode, &bytesTransferred, &completed](const auto& ec, std::size_t bt) {
       operationErrorCode = ec;
       bytesTransferred = bt;
+      completed = true;
     });
 
   ioService.reset();
   while (ioService.run_one()) {
-    if (operationErrorCode) {
+    if (completed) {
       timer.cancel();
     } else if (timerExpired) {
       stream.cancel();
