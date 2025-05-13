@@ -315,14 +315,14 @@ int main()
     if (ackPolicy != kAckPolicyNew) {
       std::cout << "Setting ack policy to " << static_cast<int>(kAckPolicyNew) << " in RAM\n";
       servo.writeAckPolicyRam(kAckPolicyNew);
-      std::this_thread::sleep_for(1s);
+      std::this_thread::sleep_for(10ms);
       readAndPrintStatus(servo);
     }
 
     if (ackPolicyEEP != kAckPolicyNew) {
       std::cout << "Setting ack policy to " << static_cast<int>(kAckPolicyNew) << " in EEPROM\n";
       servo.writeAckPolicyEeprom(kAckPolicyNew);
-      std::this_thread::sleep_for(2s);
+      std::this_thread::sleep_for(10ms);
       readAndPrintStatus(servo);
     }
 
