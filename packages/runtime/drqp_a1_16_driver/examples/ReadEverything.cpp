@@ -71,12 +71,9 @@ void readCustomStatus(XYZrobotServo& servo)
 {
   XYZrobotServoRAM ram;
   const size_t offset = offsetof(XYZrobotServoRAM, Status_Error);
-  const size_t size = sizeof(ram.Status_Error) + sizeof(ram.Status_Detail) + sizeof(ram.LED_Control) +
-                      sizeof(ram.Voltage) + sizeof(ram.Temperature) + sizeof(ram.Current_Control_Mode) +
-                      sizeof(ram.Tick) + sizeof(ram.Joint_Position) + sizeof(ram.PWM_Output_Duty) +
-                      sizeof(ram.Bus_Current) + sizeof(ram.Position_Goal) + sizeof(ram.Position_Ref) +
-                      sizeof(ram.Omega_Goal) + sizeof(ram.Omega_Ref);
+  const size_t size = offsetof(XYZrobotServoRAM, Omega_Ref) + sizeof(ram.Omega_Ref) - offset;
 
+  servo.readMaxPwmRam();
   servo.ramRead(offset, reinterpret_cast<uint8_t*>(&ram) + offset, size);
 
   if (servo.isFailed()) {
@@ -200,7 +197,7 @@ void readAndPrintEEPROM(XYZrobotServo& servo)
 
 void readEverything(XYZrobotServo& servo)
 {
-  // readAndPrintStatus(servo);
+  readAndPrintStatus(servo);
   // readAndPrintRAM(servo);
   // readAndPrintEEPROM(servo);
   readCustomStatus(servo);
@@ -219,19 +216,14 @@ void setPos()
 {
   using namespace std::chrono_literals;
 
-  // readCustomStatus(servo);
-  // readAndPrintStatus(servo);
-
   // XYZrobotServoStatus status = servo.readStatus();
   // std::cout << "Current pos " << status.position << "\n";
 
   // int pos = -1;
   // if ((status.position + 3) >= MaxPosition) {
   //   pos = MinPosition;
-  //   // readCustomStatus(servo);
   // } else if ((status.position - 3) <= MinPosition) {
   //   pos = MaxPosition;
-  //   // readCustomStatus(servo);
   // }
   namespace chrono = std::chrono;
 
