@@ -290,6 +290,34 @@ void signal_callback_handler(int signum)
   std::exit(signum);
 }
 
+void setAckPolicy(XYZrobotServo& servo, const XYZrobotServoAckPolicy kAckPolicyNew)
+{
+  using namespace std::chrono_literals;
+
+  XYZrobotServoAckPolicy ackPolicy = XYZrobotServoAckPolicy::OnlyStat,
+                         ackPolicyEEP = XYZrobotServoAckPolicy::OnlyStat;
+  try {
+    ackPolicy = servo.readAckPolicyRam();
+    ackPolicyEEP = servo.readAckPolicyEeprom();
+    std::cout << "Ack policy RAM: " << static_cast<int>(ackPolicy)
+              << "\nAck policy EEPROM: " << static_cast<int>(ackPolicyEEP) << "\n";
+  } catch (const std::exception& e) {
+    std::cerr << "Failed to read ack policy: " << e.what() << std::endl;
+  }
+
+  if (ackPolicy != kAckPolicyNew) {
+    std::cout << "Setting ack policy to " << static_cast<int>(kAckPolicyNew) << " in RAM\n";
+    servo.writeAckPolicyRam(kAckPolicyNew);
+    std::this_thread::sleep_for(10ms);
+  }
+
+  if (ackPolicyEEP != kAckPolicyNew) {
+    std::cout << "Setting ack policy to " << static_cast<int>(kAckPolicyNew) << " in EEPROM\n";
+    servo.writeAckPolicyEeprom(kAckPolicyNew);
+    std::this_thread::sleep_for(10ms);
+  }
+}
+
 int main()
 {
   try {
@@ -297,39 +325,13 @@ int main()
     signal(SIGINT, signal_callback_handler);
     signal(SIGHUP, signal_callback_handler);
 
-    using namespace std::chrono_literals;
-
-    XYZrobotServoAckPolicy ackPolicy = XYZrobotServoAckPolicy::OnlyStat,
-                           ackPolicyEEP = XYZrobotServoAckPolicy::OnlyStat;
-    try {
-      ackPolicy = servo.readAckPolicyRam();
-      ackPolicyEEP = servo.readAckPolicyEeprom();
-      std::cout << "Ack policy RAM: " << static_cast<int>(ackPolicy) << "\nAck policy EEPROM: "
-                << static_cast<int>(ackPolicyEEP) << "\n";
-    } catch (const std::exception& e) {
-      std::cerr << "Failed to read ack policy: " << e.what() << std::endl;
-    }
-
-    readAndPrintStatus(servo);
-    const XYZrobotServoAckPolicy kAckPolicyNew = XYZrobotServoAckPolicy::OnlyReadAndStat;
-    if (ackPolicy != kAckPolicyNew) {
-      std::cout << "Setting ack policy to " << static_cast<int>(kAckPolicyNew) << " in RAM\n";
-      servo.writeAckPolicyRam(kAckPolicyNew);
-      std::this_thread::sleep_for(10ms);
-      readAndPrintStatus(servo);
-    }
-
-    if (ackPolicyEEP != kAckPolicyNew) {
-      std::cout << "Setting ack policy to " << static_cast<int>(kAckPolicyNew) << " in EEPROM\n";
-      servo.writeAckPolicyEeprom(kAckPolicyNew);
-      std::this_thread::sleep_for(10ms);
-      readAndPrintStatus(servo);
-    }
+    setAckPolicy(servo, XYZrobotServoAckPolicy::OnlyReadAndStat);
 
     for (;;) {
       readEverything(servo);
       // setPos();
 
+      using namespace std::chrono_literals;
       std::this_thread::sleep_for(1s);
     }
   } catch (const std::exception& e) {
