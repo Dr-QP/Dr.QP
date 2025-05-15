@@ -36,66 +36,42 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 import launch_testing
 from launch_testing.actions import ReadyToTest
+from launch_ros.actions import Node
+
+# drqp_interfaces/msg/multi_servo_state
+from drqp_interfaces.msg import MultiServoState
 
 
-# def generate_test_description():
-#     use_sim_time = LaunchConfiguration('use_sim_time')
-
-
-#     return LaunchDescription(
-#         [
-#             DeclareLaunchArgument(
-#                 name='use_sim_time',
-#                 default_value='false',
-#                 choices=['true', 'false'],
-#                 description='Use sim time if true',
-#             ),
-#             DeclareLaunchArgument(
-#                 name='load_drivers',
-#                 default_value='true',
-#                 choices=['true', 'false'],
-#                 description='Load drqp_a1_16_driver pose_setter',
-#             ),
-#             IncludeLaunchDescription(
-#                 PythonLaunchDescriptionSource(
-#                     [
-#                         'launch',
-#                         '/pose_setter.launch.py',
-#                     ]
-#                 ),
-#                 launch_arguments={'use_sim_time': use_sim_time}.items(),
-#             ),
-#             # Launch tests 0.5 s later
-#             TimerAction(period=0.5, actions=[ReadyToTest()]),
-#         ]
-#     )
 def generate_test_description():
-    return (
-        launch.LaunchDescription(
-            [
-                # Nodes under test
-                # Can also reference here to a launch file in `app/launch`
-                # to avoid duplication
-                # Just a simple node here, yet can launch anything, e.g. Gazebo
-                launch_ros.actions.Node(
-                    package='turtlesim',
-                    namespace='',
-                    executable='turtlesim_node',
-                    name='turtle1',
-                ),
-                # Launch tests 0.5 s later
-                launch.actions.TimerAction(
-                    period=0.5, actions=[launch_testing.actions.ReadyToTest()]
-                ),
-            ]
-        ),
-        # context
-        {},
+    use_sim_time = LaunchConfiguration('use_sim_time')
+
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument(
+                name='use_sim_time',
+                default_value='false',
+                choices=['true', 'false'],
+                description='Use sim time if true',
+            ),
+            # Node(
+            #     package='drqp_a1_16_driver',
+            #     executable='pose_setter',
+            #     output='screen',
+            #     parameters=[{'use_sim_time': use_sim_time, 'device_address': '192.168.0.190'}],
+            # ),
+            Node(
+                package='drqp_a1_16_driver',
+                executable='pose_reader',
+                output='screen',
+                parameters=[{'use_sim_time': use_sim_time, 'device_address': '192.168.0.190'}],
+            ),
+            # Launch tests 0.5 s later
+            TimerAction(period=0.5, actions=[ReadyToTest()]),
+        ]
     )
 
 
-# Active tests
-class TestTurtleSim(unittest.TestCase):
+class TestPoseReader(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         rclpy.init()
@@ -105,28 +81,26 @@ class TestTurtleSim(unittest.TestCase):
         rclpy.shutdown()
 
     def setUp(self):
-        self.node = rclpy.create_node('test_turtlesim')
+        self.node = rclpy.create_node('test_pose_reader')
+        self.run_duration = 10
+        self.max_messages = 10
 
     def tearDown(self):
         self.node.destroy_node()
 
-    def test_logs_spawning(self, proc_output):
-        """Check whether logging properly."""
-        proc_output.assertWaitFor('Spawning turtle [turtle1] at x=', timeout=15, stream='stderr')
-
-    def test_publishes_pose(self, proc_output):
-        """Check whether pose messages published."""
+    def test_publishes_servo_states(self, proc_output):
+        """Check whether servo_states messages published."""
         msgs_rx = []
         sub = self.node.create_subscription(
-            Pose, 'turtle1/pose', lambda msg: msgs_rx.append(msg), 10
+            MultiServoState, '/servo_states', lambda msg: msgs_rx.append(msg), 10
         )
         try:
-            end_time = time.time() + 10
+            end_time = time.time() + self.run_duration
             while time.time() < end_time:
                 rclpy.spin_once(self.node, timeout_sec=1)
-                if len(msgs_rx) > 30:
+                if len(msgs_rx) > self.max_messages:
                     break
-            self.assertGreater(len(msgs_rx), 30)
+            self.assertGreater(len(msgs_rx), self.max_messages)
         finally:
             self.node.destroy_subscription(sub)
 
