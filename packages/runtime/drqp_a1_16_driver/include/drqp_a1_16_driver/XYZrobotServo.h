@@ -446,7 +446,7 @@ struct EEPROM_header
   // Day
   uint8_t Day;
 
-  uint8_t reserved1;
+  uint8_t eeprom_reserved1;
 
   // Baud rate
   XYZrobotServoBaudRate Baud_Rate;
