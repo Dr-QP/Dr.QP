@@ -219,6 +219,20 @@ void readAndPrintEEPROM(XYZrobotServo& servo)
               << static_cast<int>(eeprom.Over_Temperature_Detection_Period) << "\n";
     std::cout << "  Calibration_Difference: " << std::dec
               << static_cast<int>(eeprom.Calibration_Difference) << "\n";
+
+    // All reserved bits
+    std::cout << "\n\n Reserved:\n";
+    std::cout << "  Reserved1[0]: " << static_cast<int>(eeprom.reserved1[0]) << "\n";
+    std::cout << "  Reserved1[1]: " << static_cast<int>(eeprom.reserved1[1]) << "\n";
+    std::cout << "  Reserved1[2]: " << static_cast<int>(eeprom.reserved1[2]) << "\n";
+    std::cout << "  Reserved2[0]: " << static_cast<int>(eeprom.reserved2[0]) << "\n";
+    std::cout << "  Reserved2[1]: " << static_cast<int>(eeprom.reserved2[1]) << "\n";
+    std::cout << "  Reserved3[0]: " << static_cast<int>(eeprom.reserved3[0]) << "\n";
+    std::cout << "  Reserved3[1]: " << static_cast<int>(eeprom.reserved3[1]) << "\n";
+    std::cout << "  Reserved4: " << static_cast<int>(eeprom.reserved4) << "\n";
+    std::cout << "  Reserved5: " << static_cast<int>(eeprom.reserved5) << "\n";
+    std::cout << "  Reserved6: " << static_cast<int>(eeprom.reserved6) << "\n";
+    std::cout << "  EEPROM reserved1: " << static_cast<int>(eeprom.eeprom_reserved1) << "\n";
   }
 }
 
