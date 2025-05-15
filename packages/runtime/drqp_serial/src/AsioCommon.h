@@ -67,7 +67,8 @@ size_t doWithTimeout(
   std::size_t bytesTransferred{};
 
   AsyncOperation<operation>::perform(
-    stream, buffers, [&operationErrorCode, &bytesTransferred, &completed](const auto& ec, std::size_t bt) {
+    stream, buffers,
+    [&operationErrorCode, &bytesTransferred, &completed](const auto& ec, std::size_t bt) {
       operationErrorCode = ec;
       bytesTransferred = bt;
       completed = true;
