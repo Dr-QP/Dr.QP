@@ -370,11 +370,21 @@ void XYZrobotServo::readAck(
 void XYZrobotServo::memoryWrite(
   uint8_t cmd, uint8_t startAddress, const void* data, uint8_t dataSize)
 {
-  uint8_t request[2];
-  request[0] = startAddress;
-  request[1] = dataSize;
+  do {
+    uint8_t batchSize = std::min(dataSize, kMemoryBatchSize);
 
-  sendRequest(id, cmd, request, sizeof(request), data, dataSize);
+    uint8_t request[2];
+    request[0] = startAddress;
+    request[1] = dataSize;
+    sendRequest(id, cmd, request, sizeof(request), data, dataSize);
+    if (isFailed()) {
+      return;
+    }
+
+    startAddress += batchSize;
+    data = static_cast<const uint8_t*>(data) + batchSize;
+    dataSize -= batchSize;
+  } while (dataSize > 0);
 }
 
 void XYZrobotServo::memoryRead(uint8_t cmd, uint8_t startAddress, void* data, uint8_t dataSize)
