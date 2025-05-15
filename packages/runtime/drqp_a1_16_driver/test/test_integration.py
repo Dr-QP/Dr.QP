@@ -41,10 +41,13 @@ from launch_ros.actions import Node
 # drqp_interfaces/msg/multi_servo_state
 from drqp_interfaces.msg import MultiServoState
 
+recording = False
+
 
 def generate_test_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
 
+    device_address = '192.168.0.190' if recording else 'playback'
     return LaunchDescription(
         [
             DeclareLaunchArgument(
@@ -66,7 +69,7 @@ def generate_test_description():
                 parameters=[
                     {
                         'use_sim_time': use_sim_time,
-                        'device_address': '192.168.0.190|integration-pose-reader.json',
+                        'device_address': device_address + '|integration-pose-reader.json',
                     }
                 ],
             ),
@@ -87,8 +90,8 @@ class TestPoseReader(unittest.TestCase):
 
     def setUp(self):
         self.node = rclpy.create_node('test_pose_reader')
-        self.run_duration = 10
-        self.max_messages = 10
+        self.run_duration = 20 if recording else 10
+        self.max_messages = 20 if recording else 10
 
     def tearDown(self):
         self.node.destroy_node()
