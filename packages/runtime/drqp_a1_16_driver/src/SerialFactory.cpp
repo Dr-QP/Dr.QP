@@ -20,6 +20,7 @@
 
 #include "drqp_a1_16_driver/SerialFactory.h"
 
+#include <drqp_serial/SerialPlayer.h>
 #include <drqp_serial/SerialRecordingProxy.h>
 #include <drqp_serial/TcpSerial.h>
 #include <drqp_serial/UnixSerial.h>
@@ -32,6 +33,10 @@ std::unique_ptr<SerialProtocol> makeSerialForDevice(std::string deviceAddress)
     recordingFile = deviceAddress.substr(pos + 1);
     deviceAddress.erase(pos);
   }
+  if (deviceAddress == "playback") {
+    return std::make_unique<RecordingProxy::SerialPlayer>(recordingFile);
+  }
+
   std::unique_ptr<SerialProtocol> servoSerial;
   if (deviceAddress.at(0) == '/') {
     servoSerial = std::make_unique<UnixSerial>(deviceAddress);
