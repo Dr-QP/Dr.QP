@@ -18,6 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import argparse
+from pathlib import Path
 import unittest
 import os
 import sys
@@ -48,6 +50,17 @@ def generate_test_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
 
     device_address = '192.168.0.190' if recording else 'playback'
+    # --test-data-dir
+    # test_data_dir =
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--test-data-dir',
+        type=Path,
+        default=Path(__file__).parent / 'test_data',
+        help='Path to the test data directory',
+    )
+    args, unknown = parser.parse_known_args()
+    test_data_dir = args.test_data_dir
     return LaunchDescription(
         [
             DeclareLaunchArgument(
@@ -69,7 +82,7 @@ def generate_test_description():
                 parameters=[
                     {
                         'use_sim_time': use_sim_time,
-                        'device_address': device_address + '|integration-pose-reader.json',
+                        'device_address': f'{device_address}|{test_data_dir / "integration-pose-reader.json"}',
                     }
                 ],
             ),
