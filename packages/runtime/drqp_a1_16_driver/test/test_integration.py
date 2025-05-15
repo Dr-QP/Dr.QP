@@ -63,7 +63,12 @@ def generate_test_description():
                 package='drqp_a1_16_driver',
                 executable='pose_reader',
                 output='screen',
-                parameters=[{'use_sim_time': use_sim_time, 'device_address': '192.168.0.190'}],
+                parameters=[
+                    {
+                        'use_sim_time': use_sim_time,
+                        'device_address': '192.168.0.190|integration-pose-reader.json',
+                    }
+                ],
             ),
             # Launch tests 0.5 s later
             TimerAction(period=0.5, actions=[ReadyToTest()]),
