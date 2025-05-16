@@ -84,12 +84,15 @@ class TestServoDriverNodes(unittest.TestCase):
 
     def test_pose_setter_subscribes_servo_goals(self, proc_output):
         """Check whether servo_goals messages are read by pose_setter node."""
-        msgs_received = []
+        msgs_received: list[MultiServoState] = []
         pub_goals = self.node.create_publisher(MultiServoPositionGoal, '/servo_goals', 10)
         sub_states = self.node.create_subscription(
             MultiServoState, '/servo_states', lambda msg: msgs_received.append(msg), 10
         )
 
+        servo_count = 18
+        position = 534
+        playtime = 150
         try:
             end_time = time.time() + self.run_duration
             while time.time() < end_time:
@@ -98,7 +101,8 @@ class TestServoDriverNodes(unittest.TestCase):
                 test_goal.header.frame_id = 'test_frame'
                 test_goal.mode = MultiServoPositionGoal.MODE_SYNC
                 test_goal.goals = [
-                    ServoPositionGoal(id=i, position=534, playtime=150) for i in range(18)
+                    ServoPositionGoal(id=i, position=position, playtime=playtime)
+                    for i in range(servo_count)
                 ]
 
                 pub_goals.publish(test_goal)
@@ -107,6 +111,14 @@ class TestServoDriverNodes(unittest.TestCase):
                 if len(msgs_received) > self.max_messages:
                     break
             self.assertGreater(len(msgs_received), self.max_messages)
+
+            for msg in msgs_received:
+                self.assertEqual(len(msg.servos), servo_count)
+                servo_ids = [i for i in range(servo_count)]
+                for servo in msg.servos:
+                    self.assertEqual(servo.position, position)
+                    servo_ids.remove(servo.id)
+                self.assertListEqual(servo_ids, [], 'Not all servos were received')
         finally:
             self.node.destroy_subscription(sub_states)
             self.node.destroy_publisher(pub_goals)
