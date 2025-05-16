@@ -39,6 +39,7 @@ def generate_test_description():
 
     device_address_name = '192.168.0.190' if recording else 'playback'
     test_data_dir = Path(__file__).parent / 'test_data'
+    pose_reader_device = f'{device_address_name}|{test_data_dir / "integration-pose-reader.json"}'
 
     return LaunchDescription(
         [
@@ -55,7 +56,7 @@ def generate_test_description():
                 parameters=[
                     {
                         'use_sim_time': use_sim_time,
-                        'device_address': f'{device_address_name}|{test_data_dir / "integration-pose-reader.json"}',
+                        'device_address': pose_reader_device,
                     }
                 ],
             ),
@@ -66,6 +67,8 @@ def generate_test_description():
 
 
 class TestServoDriverNodes(unittest.TestCase):
+    """Test the pose_reader node."""
+
     @classmethod
     def setUpClass(cls):
         rclpy.init()
@@ -102,6 +105,8 @@ class TestServoDriverNodes(unittest.TestCase):
 # Post-shutdown tests
 @post_shutdown_test()
 class TesPoseReaderShutdown(unittest.TestCase):
+    """Test the pose_reader node shutdown."""
+
     def test_exit_codes(self, proc_info):
         """Check if the processes exited normally."""
         asserts.assertExitCodes(proc_info)
