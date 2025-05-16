@@ -75,27 +75,27 @@ SCENARIO("test unix serial with pseudo terminal")
         buffer.resize(bytes_read);
         REQUIRE(buffer == data);
       }
+    }
 
-      WHEN("data is all flushed from the serial")
+    WHEN("data is all flushed from the serial")
+    {
+      std::string data = "Hello, World!";
+      ::write(master_fd, data.c_str(), data.length());
+
+      serial.flushRead();
+
+      THEN("serial.available() returns false")
       {
-        serial.flushRead();
-
-        THEN("serial.available() returns false")
-        {
-          REQUIRE(!serial.available());
-        }
+        REQUIRE(!serial.available());
       }
     }
 
     WHEN("no data is written to the master file descriptor")
     {
-      THEN("serial.available() returns false")
-      {
-        REQUIRE(!serial.available());
-      }
-
       THEN("serial.readBytes() throws an exception on timeout")
       {
+        REQUIRE(!serial.available());
+
         std::string buffer;
         buffer.resize(10, '\0');
         REQUIRE_THROWS_AS(
