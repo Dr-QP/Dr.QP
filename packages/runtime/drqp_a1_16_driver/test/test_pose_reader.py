@@ -18,30 +18,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import argparse
 from pathlib import Path
-import unittest
-import os
-import sys
 import time
 import unittest
 
-import rclpy
-from turtlesim.msg import Pose
-
-import launch
-import launch_ros
-import launch_testing.actions
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
-import launch_testing
-from launch_testing.actions import ReadyToTest
-from launch_ros.actions import Node
-
-# drqp_interfaces/msg/multi_servo_state
 from drqp_interfaces.msg import MultiServoState
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, TimerAction
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+from launch_testing.actions import asserts, post_shutdown_test, ReadyToTest
+
+import rclpy
+
 
 recording = False
 
@@ -61,12 +50,6 @@ def generate_test_description():
                 choices=['true', 'false'],
                 description='Use sim time if true',
             ),
-            # Node(
-            #     package='drqp_a1_16_driver',
-            #     executable='pose_setter',
-            #     output='screen',
-            #     parameters=[{'use_sim_time': use_sim_time, 'device_address': '192.168.0.190'}],
-            # ),
             Node(
                 package='drqp_a1_16_driver',
                 executable='pose_reader',
@@ -119,8 +102,8 @@ class TestPoseReader(unittest.TestCase):
 
 
 # Post-shutdown tests
-@launch_testing.post_shutdown_test()
+@post_shutdown_test()
 class TestTurtleSimShutdown(unittest.TestCase):
     def test_exit_codes(self, proc_info):
         """Check if the processes exited normally."""
-        launch_testing.asserts.assertExitCodes(proc_info)
+        asserts.assertExitCodes(proc_info)
