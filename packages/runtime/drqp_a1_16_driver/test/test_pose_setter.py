@@ -22,7 +22,7 @@ from pathlib import Path
 import time
 import unittest
 
-from drqp_interfaces.msg import MultiServoState
+from drqp_interfaces.msg import MultiServoPositionGoal, MultiServoState
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, TimerAction
 from launch.substitutions import LaunchConfiguration
@@ -31,7 +31,7 @@ from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
 import rclpy
 
-recording = False
+recording = True
 
 
 def generate_test_description():
@@ -50,12 +50,12 @@ def generate_test_description():
             ),
             Node(
                 package='drqp_a1_16_driver',
-                executable='pose_reader',
+                executable='pose_setter',
                 output='screen',
                 parameters=[
                     {
                         'use_sim_time': use_sim_time,
-                        'device_address': f'{device_address_name}|{test_data_dir / "integration-pose-reader.json"}',
+                        'device_address': f'{device_address_name}|{test_data_dir / "integration-pose-setter.json"}',
                     }
                 ],
             ),
@@ -82,21 +82,32 @@ class TestServoDriverNodes(unittest.TestCase):
     def tearDown(self):
         self.node.destroy_node()
 
-    def test_pose_reader_publishes_servo_states(self, proc_output):
-        """Check whether servo_states messages published."""
+    def test_pose_setter_subscribes_servo_goals(self, proc_output):
+        """Check whether servo_goals messages are read by pose_setter node."""
         msgs_received = []
-        sub = self.node.create_subscription(
+        pub_goals = self.node.create_publisher(MultiServoPositionGoal, '/servo_goals', 10)
+        sub_states = self.node.create_subscription(
             MultiServoState, '/servo_states', lambda msg: msgs_received.append(msg), 10
         )
+
         try:
             end_time = time.time() + self.run_duration
             while time.time() < end_time:
+                test_goal = MultiServoPositionGoal()
+                test_goal.header.stamp = self.node.get_clock().now().to_msg()
+                test_goal.header.frame_id = 'test_frame'
+                test_goal.mode = 0
+                test_goal.goals = [0.0] * 18
+
+                pub_goals.publish(test_goal)
+
                 rclpy.spin_once(self.node, timeout_sec=1)
                 if len(msgs_received) > self.max_messages:
                     break
             self.assertGreater(len(msgs_received), self.max_messages)
         finally:
-            self.node.destroy_subscription(sub)
+            self.node.destroy_subscription(sub_states)
+            self.node.destroy_publisher(pub_goals)
 
 
 # Post-shutdown tests

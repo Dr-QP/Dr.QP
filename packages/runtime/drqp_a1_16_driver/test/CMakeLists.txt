@@ -23,3 +23,4 @@ function(add_ros_isolated_launch_test path)
 endfunction()
 
 add_ros_isolated_launch_test(test_pose_reader.py)
+add_ros_isolated_launch_test(test_pose_setter.py)
