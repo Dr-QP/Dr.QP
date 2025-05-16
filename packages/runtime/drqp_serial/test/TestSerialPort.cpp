@@ -89,13 +89,10 @@ SCENARIO("test unix serial with pseudo terminal")
 
     WHEN("no data is written to the master file descriptor")
     {
-      THEN("serial.available() returns false")
-      {
-        REQUIRE(!serial.available());
-      }
-
       THEN("serial.readBytes() throws an exception on timeout")
       {
+        REQUIRE(!serial.available());
+
         std::string buffer;
         buffer.resize(10, '\0');
         REQUIRE_THROWS_AS(
