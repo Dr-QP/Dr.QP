@@ -17,8 +17,6 @@ cmake-build-*
 .history
 
 .vscode/*
-!.vscode/extensions.json
-!.vscode/launch.json
 !.vscode/*.code-snippets
 
 src/crab_description

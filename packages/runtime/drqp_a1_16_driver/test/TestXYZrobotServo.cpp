@@ -257,58 +257,64 @@ TEST_CASE("A1-16 servo read all RAM")
   std::unique_ptr<SerialProtocol> serial = makeSerial("read-ram");
   XYZrobotServo servo(*serial, kTestServo);
 
-  uint8_t ram[80] = {};
-
-  servo.ramRead(0, ram, 30);
+  XYZrobotServoRAM ram;
+  servo.ramRead(0, &ram, sizeof(ram));
   REQUIRE(servo.isOk());
 
-  servo.ramRead(30, ram + 30, 30);
-  REQUIRE(servo.isOk());
-
-  servo.ramRead(60, ram + 60, 20);
-  REQUIRE(servo.isOk());
-
-  THEN("should have correct values")
-  {
-    REQUIRE(ram[0] == kTestServo);
-
-    uint16_t jointPosition = ram[60] + (ram[61] << 8);
-    REQUIRE_THAT(jointPosition, GoalPositionWithin(kStartGoal));
-
-    uint16_t positionGoal = ram[68] + (ram[69] << 8);
-    REQUIRE_THAT(positionGoal, GoalPositionWithin(kStartGoal));
-
-    uint16_t positionRef = ram[60] + (ram[71] << 8);
-    REQUIRE_THAT(positionRef, GoalPositionWithin(kStartGoal));
-  }
+  REQUIRE(ram.sID == kTestServo);
+  REQUIRE_THAT(ram.Joint_Position, GoalPositionWithin(kStartGoal));
+  REQUIRE_THAT(ram.Position_Goal, GoalPositionWithin(kStartGoal));
+  REQUIRE_THAT(ram.Position_Ref, GoalPositionWithin(kStartGoal));
 }
+
+// This is a bad test, because it will write back the RAM and might brick the servo
+// TEST_CASE("A1-16 servo read all RAM and write back")
+// {
+//   std::unique_ptr<SerialProtocol> serial = makeSerial("read-ram-write-back");
+//   XYZrobotServo servo(*serial, kTestServo);
+
+//   XYZrobotServoRAM ram;
+//   servo.ramRead(0, &ram, sizeof(ram));
+
+//   REQUIRE(servo.isOk());
+
+//   servo.ramWrite(0, &ram, sizeof(ram));
+//   REQUIRE(servo.isOk());
+// }
 
 TEST_CASE("A1-16 servo read all EEPROM")
 {
   std::unique_ptr<SerialProtocol> serial = makeSerial("read-eeprom");
   XYZrobotServo servo(*serial, kTestServo);
 
-  uint8_t eeprom[54];
-  servo.eepromRead(0, eeprom, 30);
+  XYZrobotServoEEPROM eeprom;
+  servo.eepromRead(0, &eeprom, sizeof(eeprom));
+
   REQUIRE(servo.isOk());
 
-  servo.eepromRead(30, eeprom + 30, 24);
-  REQUIRE(servo.isOk());
+  REQUIRE(eeprom.Model_Number == 0x01);   // Model number
+  REQUIRE(eeprom.Year == 0x0F);           // Year
+  REQUIRE(eeprom.Version_Month == 0x3A);  // Version/Month
+  REQUIRE(eeprom.Day == 0x01);            // Day
 
-  THEN("should have correct values")
-  {
-    REQUIRE(eeprom[0] == 0x01);  // Model number
-    REQUIRE(eeprom[1] == 0x0F);  // Year
-    REQUIRE(eeprom[2] == 0x3A);  // Version/Month
-    REQUIRE(eeprom[3] == 0x01);  // Day
-    REQUIRE(eeprom[6] == kTestServo);
-
-    uint16_t minPosition = eeprom[26] + (eeprom[27] << 8);
-    uint16_t maxPosition = eeprom[28] + (eeprom[29] << 8);
-    REQUIRE(minPosition == 23);
-    REQUIRE(maxPosition == 1000);
-  }
+  REQUIRE(eeprom.sID == kTestServo);
+  REQUIRE(eeprom.Min_Position == 23);
+  REQUIRE(eeprom.Max_Position == 1000);
 }
+
+// This is a bad test, because it will write back the EEPROM and brick the servo
+// TEST_CASE("A1-16 servo read all EEPROM and write back")
+// {
+//   std::unique_ptr<SerialProtocol> serial = makeSerial("read-eeprom-write-back");
+//   XYZrobotServo servo(*serial, kTestServo);
+
+//   XYZrobotServoEEPROM eeprom;
+//   servo.eepromRead(0, &eeprom, sizeof(eeprom));
+//   REQUIRE(servo.isOk());
+
+//   servo.eepromWrite(0, &eeprom, sizeof(eeprom));
+//   REQUIRE(servo.isOk());
+// }
 
 TEST_CASE("A1-16 servo set position")
 {
@@ -568,6 +574,98 @@ static_assert(offsetof(XYZrobotServoEEPROM, Day) == 3, "XYZrobotServoEEPROM::Day
 static_assert(
   offsetof(XYZrobotServoEEPROM, Baud_Rate) == 5, "XYZrobotServoEEPROM::Baud_Rate has wrong offset");
 static_assert(offsetof(XYZrobotServoEEPROM, sID) == 6, "XYZrobotServoEEPROM::sID has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, ACK_Policy) == 7,
+  "XYZrobotServoEEPROM::ACK_Policy has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Alarm_LED_Policy) == 8,
+  "XYZrobotServoEEPROM::Alarm_LED_Policy has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Torque_Policy) == 9,
+  "XYZrobotServoEEPROM::Torque_Policy has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, SPDctrl_Policy) == 10,
+  "XYZrobotServoEEPROM::SPDctrl_Policy has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Max_Temperature) == 11,
+  "XYZrobotServoEEPROM::Max_Temperature has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Min_Voltage) == 12,
+  "XYZrobotServoEEPROM::Min_Voltage has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Max_Voltage) == 13,
+  "XYZrobotServoEEPROM::Max_Voltage has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Acceleration_Ratio) == 14,
+  "XYZrobotServoEEPROM::Acceleration_Ratio has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, reserved1) == 15,
+  "XYZrobotServoEEPROM::reserved1 has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Max_Wheel_Ref_Position) == 18,
+  "XYZrobotServoEEPROM::Max_Wheel_Ref_Position has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, reserved2) == 20,
+  "XYZrobotServoEEPROM::reserved2 has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Max_PWM) == 22, "XYZrobotServoEEPROM::Max_PWM has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Overload_Threshold) == 24,
+  "XYZrobotServoEEPROM::Overload_Threshold has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Min_Position) == 26,
+  "XYZrobotServoEEPROM::Min_Position has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Max_Position) == 28,
+  "XYZrobotServoEEPROM::Max_Position has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Position_Kp) == 30,
+  "XYZrobotServoEEPROM::Position_Kp has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Position_Kd) == 32,
+  "XYZrobotServoEEPROM::Position_Kd has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Position_Ki) == 34,
+  "XYZrobotServoEEPROM::Position_Ki has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Close_to_Open_Ref_Position) == 36,
+  "XYZrobotServoEEPROM::Close_to_Open_Ref_Position has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Open_to_Close_Ref_Position) == 38,
+  "XYZrobotServoEEPROM::Open_to_Close_Ref_Position has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, reserved3) == 40,
+  "XYZrobotServoEEPROM::reserved3 has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Ramp_Speed) == 42,
+  "XYZrobotServoEEPROM::Ramp_Speed has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, LED_Blink_Period) == 44,
+  "XYZrobotServoEEPROM::LED_Blink_Period has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, reserved4) == 45,
+  "XYZrobotServoEEPROM::reserved4 has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Packet_Timeout_Detection_Period) == 46,
+  "XYZrobotServoEEPROM::Packet_Timeout_Detection_Period has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, reserved5) == 47,
+  "XYZrobotServoEEPROM::reserved5 has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Overload_Detection_Period) == 48,
+  "XYZrobotServoEEPROM::Overload_Detection_Period has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, reserved6) == 49,
+  "XYZrobotServoEEPROM::reserved6 has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Inposition_Margin) == 50,
+  "XYZrobotServoEEPROM::Inposition_Margin has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Over_Voltage_Detection_Period) == 51,
+  "XYZrobotServoEEPROM::Over_Voltage_Detection_Period has wrong offset");
+static_assert(
+  offsetof(XYZrobotServoEEPROM, Over_Temperature_Detection_Period) == 52,
+  "XYZrobotServoEEPROM::Over_Temperature_Detection_Period has wrong offset");
 static_assert(
   offsetof(XYZrobotServoEEPROM, Calibration_Difference) == 53,
   "XYZrobotServoEEPROM::Calibration_Difference has wrong offset");

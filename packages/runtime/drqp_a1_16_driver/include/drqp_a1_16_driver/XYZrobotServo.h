@@ -446,7 +446,7 @@ struct EEPROM_header
   // Day
   uint8_t Day;
 
-  uint8_t reserved1;
+  uint8_t eeprom_reserved1;
 
   // Baud rate
   XYZrobotServoBaudRate Baud_Rate;
@@ -685,6 +685,7 @@ private:
   void memoryWrite(uint8_t cmd, uint8_t startAddress, const void* data, uint8_t dataSize);
 
   void memoryRead(uint8_t cmd, uint8_t startAddress, void* data, uint8_t dataSize);
+  void memoryReadImpl(uint8_t cmd, uint8_t startAddress, void* data, uint8_t dataSize);
 
   void sendIJog(IJogData data);
 

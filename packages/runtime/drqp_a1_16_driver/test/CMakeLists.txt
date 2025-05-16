@@ -14,4 +14,3 @@ set(TEST_DATA_DIR_IN_SOURCE_TREE ${CMAKE_CURRENT_SOURCE_DIR}/test_data)
 target_compile_definitions(drqp_a1_16_driver_tests PRIVATE TEST_DATA_DIR_IN_SOURCE_TREE="${TEST_DATA_DIR_IN_SOURCE_TREE}")
 
 add_catch2_unit_test(drqp_a1_16_driver_tests)
-

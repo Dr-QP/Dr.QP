@@ -57,30 +57,40 @@ size_t doWithTimeout(
   boost::asio::io_service& ioService, Stream& stream, const MutableBufferSequence& buffers,
   const boost::posix_time::time_duration& timeout)
 {
-  std::optional<boost::system::error_code> timerResult;
+  bool timerExpired = false;
   boost::asio::deadline_timer timer(ioService);
   timer.expires_from_now(timeout);
-  timer.async_wait([&timerResult](const auto& ec) { timerResult = ec; });
+  timer.async_wait([&timerExpired](const auto& ec) { timerExpired = true; });
 
-  std::optional<boost::system::error_code> operationErrorCode;
-  std::size_t bytesTransferred = 0;
+  bool completed = false;
+  boost::system::error_code operationErrorCode{};
+  std::size_t bytesTransferred{};
 
   AsyncOperation<operation>::perform(
-    stream, buffers, [&operationErrorCode, &bytesTransferred](const auto& ec, std::size_t bt) {
+    stream, buffers,
+    [&operationErrorCode, &bytesTransferred, &completed](const auto& ec, std::size_t bt) {
       operationErrorCode = ec;
       bytesTransferred = bt;
+      completed = true;
     });
 
   ioService.reset();
   while (ioService.run_one()) {
-    if (operationErrorCode)
+    if (completed) {
       timer.cancel();
-    else if (timerResult)
+    } else if (timerExpired) {
       stream.cancel();
+    }
   }
 
-  if (operationErrorCode && *operationErrorCode) {
-    throw boost::system::system_error(*operationErrorCode);
+  if (timerExpired && operationErrorCode == boost::asio::error::operation_aborted) {
+    // The operation was cancelled due to the timer expiring.
+    // We need to set the error code to indicate a timeout.
+    operationErrorCode = boost::asio::error::timed_out;
+  }
+
+  if (operationErrorCode) {
+    throw boost::system::system_error(operationErrorCode);
   }
 
   return bytesTransferred;

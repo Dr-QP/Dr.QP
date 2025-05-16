@@ -26,6 +26,12 @@
 static_assert(
   __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__, "This code assumes little-endian byte order.");
 
+// Above 37 - the response header will be wrong, servo will hang.
+// 37 - the response header will be wrong, but the servo will keep running.
+// 36 - fails for RAM, works for EEPROM.
+// 35 - works for RAM and EEPROM.
+constexpr uint8_t kMemoryBatchSize = 35;
+
 std::string to_string(XYZrobotServoError errorCode)
 {
 #define TO_STR_PREFIX "A1-16 servo error "
@@ -92,6 +98,7 @@ XYZrobotServo::XYZrobotServo(Stream& stream, uint8_t id)
   this->lastError = XYZrobotServoError::None;
 }
 
+// Note: EEP_WRITE: 4 <= start addr. <= 53, , 5 <= start adds. + length <= 54
 void XYZrobotServo::eepromWrite(uint8_t startAddress, const void* data, uint8_t dataSize)
 {
   memoryWrite(CMD_EEPROM_WRITE, startAddress, data, dataSize);
@@ -102,6 +109,7 @@ void XYZrobotServo::eepromRead(uint8_t startAddress, void* data, uint8_t dataSiz
   memoryRead(CMD_EEPROM_READ, startAddress, data, dataSize);
 }
 
+// Note: RAM_WRITE: 0 <= start addr. <= 47, 1 <= start adds. + length <= 48
 void XYZrobotServo::ramWrite(uint8_t startAddress, const void* data, uint8_t dataSize)
 {
   memoryWrite(CMD_RAM_WRITE, startAddress, data, dataSize);
@@ -362,14 +370,38 @@ void XYZrobotServo::readAck(
 void XYZrobotServo::memoryWrite(
   uint8_t cmd, uint8_t startAddress, const void* data, uint8_t dataSize)
 {
-  uint8_t request[2];
-  request[0] = startAddress;
-  request[1] = dataSize;
+  do {
+    uint8_t batchSize = std::min(dataSize, kMemoryBatchSize);
 
-  sendRequest(id, cmd, request, sizeof(request), data, dataSize);
+    uint8_t request[2];
+    request[0] = startAddress;
+    request[1] = dataSize;
+    sendRequest(id, cmd, request, sizeof(request), data, dataSize);
+    if (isFailed()) {
+      return;
+    }
+
+    startAddress += batchSize;
+    data = static_cast<const uint8_t*>(data) + batchSize;
+    dataSize -= batchSize;
+  } while (dataSize > 0);
 }
 
 void XYZrobotServo::memoryRead(uint8_t cmd, uint8_t startAddress, void* data, uint8_t dataSize)
+{
+  do {
+    uint8_t batchSize = std::min(dataSize, kMemoryBatchSize);
+    memoryReadImpl(cmd, startAddress, data, batchSize);
+    if (isFailed()) {
+      return;
+    }
+    startAddress += batchSize;
+    data = static_cast<uint8_t*>(data) + batchSize;
+    dataSize -= batchSize;
+  } while (dataSize > 0);
+}
+
+void XYZrobotServo::memoryReadImpl(uint8_t cmd, uint8_t startAddress, void* data, uint8_t dataSize)
 {
   flushRead();
 

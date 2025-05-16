@@ -87,8 +87,10 @@
         "type": "lldb",
         "request": "launch",
         "name": "drqp_serial_tests",
-        "program": "build/drqp_serial/test/drqp_serial_tests",
-        "args": [],
+        "program": "${workspaceFolder:Dr.QP}/build/drqp_serial/test/drqp_serial_tests",
+        "args": [
+          // "--order", "rand"
+        ],
         "cwd": "${workspaceFolder:Dr.QP}/build/drqp_serial/test/",
         "preLaunchTask": "Dr.QP colcon build",
       },
@@ -96,11 +98,11 @@
         "type": "lldb",
         "request": "launch",
         "name": "drqp_a1_16_driver_tests",
-        "program": "build/drqp_a1_16_driver/test/drqp_a1_16_driver_tests",
+        "program": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/test/drqp_a1_16_driver_tests",
         "args": [
-          "--use-real-hardware",
+          // "--use-real-hardware",
           // "--device", "192.168.0.181:2022",
-          // "[focus]",
+          "[focus]",
         ],
         "cwd": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/test/",
         "preLaunchTask": "Dr.QP colcon build",
@@ -108,11 +110,20 @@
       {
         "type": "lldb",
         "request": "launch",
-        "name": "drqp pose_reader",
-        "program": "build/drqp_a1_16_driver/pose_reader",
+        "name": "drqp_a1_16_driver pose_reader",
+        "program": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/pose_reader",
         "args": [],
         "cwd": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/",
         "preLaunchTask": "Dr.QP colcon build",
+      },
+      {
+        "type": "lldb",
+        "request": "attach",
+        "name": "drqp_a1_16_driver read_everything",
+        "program": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/examples/read_everything",
+        // "args": [],
+        // "cwd": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/examples/",
+        // "preLaunchTask": "Dr.QP colcon build",
       },
       {
         "type": "bashdb",
@@ -229,7 +240,7 @@
       {
         "label": "Dr.QP clean",
         "type": "shell",
-        "command": "rm -rf build install log lcov .cache docs/_build",
+        "command": "rm -rf build/* install/* log/* lcov/* .cache/* docs/_build/*",
         "options": {
           "cwd": "${workspaceFolder}"
         },
