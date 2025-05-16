@@ -49,18 +49,10 @@ recording = False
 def generate_test_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
 
-    device_address = '192.168.0.190' if recording else 'playback'
-    # --test-data-dir
-    # test_data_dir =
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--test-data-dir',
-        type=Path,
-        default=Path(__file__).parent / 'test_data',
-        help='Path to the test data directory',
-    )
-    args, unknown = parser.parse_known_args()
-    test_data_dir = args.test_data_dir
+    device_address_name = '192.168.0.190' if recording else 'playback'
+    test_data_dir = Path(__file__).parent / 'test_data'
+    device_address = f'{device_address_name}|{test_data_dir / "integration-pose-reader.json"}'
+
     return LaunchDescription(
         [
             DeclareLaunchArgument(
@@ -82,7 +74,7 @@ def generate_test_description():
                 parameters=[
                     {
                         'use_sim_time': use_sim_time,
-                        'device_address': f'{device_address}|{test_data_dir / "integration-pose-reader.json"}',
+                        'device_address': device_address,
                     }
                 ],
             ),
