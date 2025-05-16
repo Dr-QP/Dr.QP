@@ -6,8 +6,8 @@
     },
   ],
   "extensions": {
+    // cSpell:disable
     "recommendations": [
-      // cSpell:disable
       "chrisdias.vscode-opennewinstance",
       "dlech.chmod",
       "eamodio.gitlens",
@@ -37,7 +37,7 @@
       "sanjulaganepola.github-local-actions",
       "streetsidesoftware.code-spell-checker",
       "iliazeus.vscode-ansi",
-      "ms-azuretools.vscode-docker",
+      "ms-azuretools.vscode-containers",
       "1password.op-vscode",
       "rogalmic.bash-debug",
       "mads-hartmann.bash-ide-vscode",
@@ -65,8 +65,9 @@
       "redhat.ansible",
       "davidkol.fastcompare",
       "samuelcolvin.jinjahtml",
-      // cSpell:enable
+      "ms-azuretools.vscode-containers"
     ]
+    // cSpell:enable
   },
   "launch": {
     "version": "0.2.0",
