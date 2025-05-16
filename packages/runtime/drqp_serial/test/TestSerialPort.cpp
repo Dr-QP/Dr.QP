@@ -75,17 +75,19 @@ SCENARIO("test unix serial with pseudo terminal")
         buffer.resize(bytes_read);
         REQUIRE(buffer == data);
       }
+    }
 
-      // This specific test is failing on GHA runners for yet unknown reason
-      // WHEN("data is all flushed from the serial")
-      // {
-      //   serial.flushRead();
+    WHEN("data is all flushed from the serial")
+    {
+      std::string data = "Hello, World!";
+      ::write(master_fd, data.c_str(), data.length());
 
-      //   THEN("serial.available() returns false")
-      //   {
-      //     REQUIRE(!serial.available());
-      //   }
-      // }
+      serial.flushRead();
+
+      THEN("serial.available() returns false")
+      {
+        REQUIRE(!serial.available());
+      }
     }
 
     WHEN("no data is written to the master file descriptor")
