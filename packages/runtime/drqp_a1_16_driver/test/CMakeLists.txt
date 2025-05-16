@@ -21,4 +21,5 @@ function(add_ros_isolated_launch_test path)
   set(RUNNER "${ament_cmake_ros_DIR}/run_test_isolated.py")
   add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
 endfunction()
-add_ros_isolated_launch_test(test_integration.py)
+
+add_ros_isolated_launch_test(test_pose_reader.py)

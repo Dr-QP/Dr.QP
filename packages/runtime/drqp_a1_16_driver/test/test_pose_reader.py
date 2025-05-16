@@ -27,10 +27,9 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, TimerAction
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-from launch_testing.actions import asserts, post_shutdown_test, ReadyToTest
-
+from launch_testing import asserts, post_shutdown_test
+from launch_testing.actions import ReadyToTest
 import rclpy
-
 
 recording = False
 
@@ -103,7 +102,7 @@ class TestPoseReader(unittest.TestCase):
 
 # Post-shutdown tests
 @post_shutdown_test()
-class TestTurtleSimShutdown(unittest.TestCase):
+class TesPoseReaderShutdown(unittest.TestCase):
     def test_exit_codes(self, proc_info):
         """Check if the processes exited normally."""
         asserts.assertExitCodes(proc_info)
