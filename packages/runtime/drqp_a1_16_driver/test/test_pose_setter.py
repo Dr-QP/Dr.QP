@@ -22,7 +22,7 @@ from pathlib import Path
 import time
 import unittest
 
-from drqp_interfaces.msg import MultiServoPositionGoal, MultiServoState
+from drqp_interfaces.msg import MultiServoPositionGoal, MultiServoState, ServoPositionGoal
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, TimerAction
 from launch.substitutions import LaunchConfiguration
@@ -31,7 +31,7 @@ from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
 import rclpy
 
-recording = True
+recording = False
 
 
 def generate_test_description():
@@ -96,8 +96,10 @@ class TestServoDriverNodes(unittest.TestCase):
                 test_goal = MultiServoPositionGoal()
                 test_goal.header.stamp = self.node.get_clock().now().to_msg()
                 test_goal.header.frame_id = 'test_frame'
-                test_goal.mode = 0
-                test_goal.goals = [0.0] * 18
+                test_goal.mode = MultiServoPositionGoal.MODE_SYNC
+                test_goal.goals = [
+                    ServoPositionGoal(id=i, position=534, playtime=150) for i in range(18)
+                ]
 
                 pub_goals.publish(test_goal)
 
