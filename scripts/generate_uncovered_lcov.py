@@ -8,18 +8,37 @@ def parse_args():
         description='Generate LCOV info file marking all code lines as uncovered.'
     )
     parser.add_argument(
+        '--repo-root',
+        type=Path,
+        default=Path(__file__).parent.parent,
+        help='Repository root directory',
+    )
+    parser.add_argument(
         '--target-dir',
-        type=str,
-        default=str(Path(__file__).parent.parent / 'packages' / 'runtime'),
-        help='Directory to scan for source files (default: ../packages/runtime)',
+        type=Path,
+        default=Path('packages') / 'runtime',
+        help='Directory to scan for source files',
     )
     parser.add_argument(
         '--output',
-        type=str,
-        default=str(Path(__file__).parent.parent / 'lcov.info'),
-        help='Output LCOV file (default: ../lcov.info)',
+        type=Path,
+        default=Path('lcov') / 'lcov-all.info',
+        help='Output LCOV file',
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    # Ensure paths are absolute
+    args.repo_root = args.repo_root.resolve()
+    if not args.target_dir.is_absolute():
+        args.target_dir = (args.repo_root / args.target_dir).resolve()
+
+    if not args.output.is_absolute():
+        args.output = (args.repo_root / args.output).resolve()
+
+    # Ensure output dir exists
+    if not args.output.parent.exists():
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+
+    return args
 
 
 # File extensions to include
