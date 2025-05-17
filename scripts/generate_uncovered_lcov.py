@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 import os
+import argparse
 
-# Directory to scan
-TARGET_DIR = os.path.join(os.path.dirname(__file__), '../packages/runtime')
-# Output file
-OUTPUT_FILE = os.path.join(os.path.dirname(__file__), '../lcov.info')
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Generate LCOV info file marking all code lines as uncovered.')
+    parser.add_argument('--target-dir', type=str, default=os.path.join(os.path.dirname(__file__), '../packages/runtime'),
+                        help='Directory to scan for source files (default: ../packages/runtime)')
+    parser.add_argument('--output', type=str, default=os.path.join(os.path.dirname(__file__), '../lcov.info'),
+                        help='Output LCOV file (default: ../lcov.info)')
+    return parser.parse_args()
 
 # File extensions to include
 CPP_EXTS = {'.cpp', '.cc', '.cxx', '.c', '.h', '.hpp', '.hxx'}
@@ -58,17 +63,18 @@ def lcov_section_for_file(filepath):
 
 
 def main():
+    args = parse_args()
     lcov_sections = []
-    for root, _, files in os.walk(TARGET_DIR):
+    for root, _, files in os.walk(args.target_dir):
         for file in files:
             if is_source_file(file):
                 full_path = os.path.join(root, file)
                 section = lcov_section_for_file(full_path)
                 if section:
                     lcov_sections.append(section)
-    with open(OUTPUT_FILE, 'w', encoding='utf-8') as out:
+    with open(args.output, 'w', encoding='utf-8') as out:
         out.write('\n'.join(lcov_sections))
-    print(f'LCOV info written to {OUTPUT_FILE}')
+    print(f'LCOV info written to {args.output}')
 
 
 if __name__ == '__main__':
