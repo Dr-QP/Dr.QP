@@ -152,6 +152,11 @@ jobs:
         shell: bash
         run: ./packages/cmake/llvm-cov-export-all.py ./ros_ws/build
 
+      - name: Add all files lcov
+        shell: bash
+        run:
+          ./scripts/generate_uncovered_lcov.py
+
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         if: ${{ env.ACT == '' && !cancelled() }}
