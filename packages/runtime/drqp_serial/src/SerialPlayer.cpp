@@ -29,6 +29,11 @@
 
 namespace RecordingProxy
 {
+SerialPlayer::SerialPlayer(const std::filesystem::path& fileName) : SerialPlayer()
+{
+  load(fileName);
+}
+
 SerialPlayer::~SerialPlayer()
 {
   if (beforeDestructionCallback_) {

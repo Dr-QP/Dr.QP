@@ -36,6 +36,8 @@ namespace RecordingProxy
 class SerialPlayer : public SerialProtocol
 {
 public:
+  SerialPlayer() = default;
+  explicit SerialPlayer(const std::filesystem::path& fileName);
   ~SerialPlayer();
 
   void begin(const uint32_t baudRate, const uint8_t transferConfig) override;
