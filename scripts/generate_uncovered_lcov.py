@@ -22,7 +22,7 @@ def parse_args():
     parser.add_argument(
         '--output',
         type=Path,
-        default=Path('lcov') / 'all-uncovered' / 'lcov.info',
+        default=Path('build') / 'coverage' / 'all-uncovered' / 'lcov.info',
         help='Output LCOV file',
     )
     args = parser.parse_args()
