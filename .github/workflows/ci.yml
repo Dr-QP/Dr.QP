@@ -155,7 +155,7 @@ jobs:
       - name: Add all files lcov
         shell: bash
         run:
-          ./scripts/generate_uncovered_lcov.py
+          ./scripts/generate_uncovered_lcov.py --output ros_ws/build/coverage/coverage-all-uncovered.info
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
