@@ -20,6 +20,7 @@
 
 #include <pty.h>
 #include <unistd.h>
+#include <thread>
 
 #include <boost/asio.hpp>
 #include <catch_ros2/catch.hpp>
@@ -46,8 +47,9 @@ SCENARIO("test unix serial with pseudo terminal")
 
     WHEN("data is written to the serial")
     {
-      std::string data = "Hello, World!";
+      std::string data = "Hello, World 1!";
       REQUIRE_NOTHROW(serial.writeBytes(data.c_str(), data.length()));
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
       THEN("data is readable from the master file descriptor")
       {
@@ -62,8 +64,9 @@ SCENARIO("test unix serial with pseudo terminal")
 
     WHEN("data is written to the master file descriptor")
     {
-      std::string data = "Hello, World!";
+      std::string data = "Hello, World 2!";
       ::write(master_fd, data.c_str(), data.length());
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
       THEN("data is readable from the serial")
       {
@@ -79,14 +82,25 @@ SCENARIO("test unix serial with pseudo terminal")
 
     WHEN("data is all flushed from the serial")
     {
-      std::string data = "Hello, World!";
+      std::string data = "Hello, World 3!";
       ::write(master_fd, data.c_str(), data.length());
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
       serial.flushRead();
 
-      THEN("serial.available() returns false")
+      THEN("serial.available() returns false and read times out")
       {
-        REQUIRE(!serial.available());
+        CHECK(!serial.available());
+        std::string buffer;
+        buffer.resize(data.length() + 1, '\0');
+        size_t bytes_read = 0;
+        CHECK_THROWS_AS(
+          bytes_read = serial.readBytes(buffer.data(), buffer.size() - 1),
+          boost::system::system_error);
+        if (bytes_read > 0) {
+          buffer.resize(bytes_read);
+          FAIL("Buffer is not empty: " << buffer);
+        }
       }
     }
 
