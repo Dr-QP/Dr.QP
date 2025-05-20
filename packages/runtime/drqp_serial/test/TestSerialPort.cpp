@@ -49,7 +49,8 @@ SCENARIO("test unix serial with pseudo terminal")
     {
       std::string data = "Hello, World 1!";
       REQUIRE_NOTHROW(serial.writeBytes(data.c_str(), data.length()));
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      ::fsync(slave_fd);
 
       THEN("data is readable from the master file descriptor")
       {
@@ -66,7 +67,8 @@ SCENARIO("test unix serial with pseudo terminal")
     {
       std::string data = "Hello, World 2!";
       ::write(master_fd, data.c_str(), data.length());
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      ::fsync(master_fd);
 
       THEN("data is readable from the serial")
       {
@@ -84,7 +86,8 @@ SCENARIO("test unix serial with pseudo terminal")
     {
       std::string data = "Hello, World 3!";
       ::write(master_fd, data.c_str(), data.length());
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      ::fsync(master_fd);
 
       serial.flushRead();
 
