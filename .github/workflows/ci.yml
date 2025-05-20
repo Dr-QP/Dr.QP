@@ -135,9 +135,11 @@ jobs:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
           no-symlink-install: true
           extra-cmake-args: ' -D DRQP_ENABLE_COVERAGE=ON'
-          # pin the repository in the workflow to a specific commit to avoid
-          # changes in colcon-mixin-repository from breaking your tests.
-          colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml
+          # devcontianer includes the default mixins already, so we don't need to add them here
+          # moreover, the recent change to rate limit on GitHub unauthenticated access is causing
+          # the build to fail frequently with 429 errors
+          # https://github.com/orgs/community/discussions/157887#discussioncomment-13193098
+          colcon-mixin-repository: ""
           colcon-defaults: |
             {
               "build": {
