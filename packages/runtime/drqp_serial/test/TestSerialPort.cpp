@@ -20,6 +20,7 @@
 
 #include <pty.h>
 #include <unistd.h>
+#include <thread>
 
 #include <boost/asio.hpp>
 #include <catch_ros2/catch.hpp>
@@ -48,6 +49,7 @@ SCENARIO("test unix serial with pseudo terminal")
     {
       std::string data = "Hello, World 1!";
       REQUIRE_NOTHROW(serial.writeBytes(data.c_str(), data.length()));
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
       THEN("data is readable from the master file descriptor")
       {
@@ -64,6 +66,7 @@ SCENARIO("test unix serial with pseudo terminal")
     {
       std::string data = "Hello, World 2!";
       ::write(master_fd, data.c_str(), data.length());
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
       THEN("data is readable from the serial")
       {
@@ -81,6 +84,7 @@ SCENARIO("test unix serial with pseudo terminal")
     {
       std::string data = "Hello, World 3!";
       ::write(master_fd, data.c_str(), data.length());
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
       serial.flushRead();
 
