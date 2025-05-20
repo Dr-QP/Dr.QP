@@ -46,7 +46,7 @@ SCENARIO("test unix serial with pseudo terminal")
 
     WHEN("data is written to the serial")
     {
-      std::string data = "Hello, World!";
+      std::string data = "Hello, World 1!";
       REQUIRE_NOTHROW(serial.writeBytes(data.c_str(), data.length()));
 
       THEN("data is readable from the master file descriptor")
@@ -62,7 +62,7 @@ SCENARIO("test unix serial with pseudo terminal")
 
     WHEN("data is written to the master file descriptor")
     {
-      std::string data = "Hello, World!";
+      std::string data = "Hello, World 2!";
       ::write(master_fd, data.c_str(), data.length());
 
       THEN("data is readable from the serial")
@@ -79,7 +79,7 @@ SCENARIO("test unix serial with pseudo terminal")
 
     WHEN("data is all flushed from the serial")
     {
-      std::string data = "Hello, World!";
+      std::string data = "Hello, World 3!";
       ::write(master_fd, data.c_str(), data.length());
 
       serial.flushRead();
