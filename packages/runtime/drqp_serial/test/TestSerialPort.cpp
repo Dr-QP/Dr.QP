@@ -84,9 +84,18 @@ SCENARIO("test unix serial with pseudo terminal")
 
       serial.flushRead();
 
-      THEN("serial.available() returns false")
+      THEN("serial.available() returns false and read times out")
       {
-        REQUIRE(!serial.available());
+        CHECK(!serial.available());
+        std::string buffer;
+        buffer.resize(data.length() + 1, '\0');
+        size_t bytes_read = 0;
+        CHECK_THROWS_AS(bytes_read = serial.readBytes(buffer.data(), buffer.size() - 1), boost::system::system_error);
+        if (bytes_read > 0)
+        {
+          buffer.resize(bytes_read);
+          FAIL("Buffer is not empty: " << buffer);
+        }
       }
     }
 
