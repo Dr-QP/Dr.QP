@@ -158,6 +158,14 @@ jobs:
               }
             }
 
+      - name: Build and test ROS workspace again
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
+          colcon build --mixin coverage-pytest ninja --event-handlers=console_cohesion+ --cmake-args -D DRQP_ENABLE_COVERAGE=ON
+          colcon test --mixin coverage-pytest --event-handlers=console_cohesion+
+
       - name: Process llvm coverage
         shell: bash
         run: ./packages/cmake/llvm-cov-export-all.py ./ros_ws/build
