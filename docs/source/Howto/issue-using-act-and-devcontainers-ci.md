@@ -4,9 +4,9 @@ The problem is that the **mounted workspace** in the
 `devcontainers/ci` docker container is **from the host file system**.
 
 `act` is creating its own docker container with the workspace copied
-into its container’s file system. `devcontainers/ci` docker ntainer is
+into its container’s file system. `devcontainers/ci` docker container is
 not created inside `act`’s container (no docker-in-docker), but
-besides it. Therefore `devcontainers/ci`’s workspace mount is t
+besides it. Therefore `devcontainers/ci`’s workspace mount is not
 pointing to `act`’s workspace copy, but to the original workspace on
 the host file system.
 
@@ -14,7 +14,7 @@ This is why the devcontainer cannot start. Path
 `/var/run/act/workflow/` exists in `act`’s container but not on
 your host system:
 
-```
+```shell
 | [2023-11-17T09:14:55.111Z] Start: Run: docker run
 ...
 --mount type=bind,src=/var/run/act/workflow/outputcmd.txt,dst=/mnt/github/output
