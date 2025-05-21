@@ -129,6 +129,11 @@ jobs:
       image: ${{ needs.merge-dev-image.outputs.image }}
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
     steps:
+      - name: copy .colcon $HOME
+        shell: bash
+        run: |
+          cp -r /home/rosdev/.colcon $HOME
+
       - uses: actions/checkout@v4
 
       - name: Build and test ROS workspace
