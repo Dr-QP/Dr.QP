@@ -132,9 +132,23 @@ jobs:
       - name: copy .colcon $HOME
         shell: bash
         run: |
+          env | sort
           cp -r /home/rosdev/.colcon $HOME
 
       - uses: actions/checkout@v4
+
+      - name: Build and test ROS workspace
+        shell: bash
+        run: |
+          env | sort
+          echo PWD="$PWD"
+          colcon mixin list
+          colcon mixin show
+          colcon mixin update default
+          ls -al
+          source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
+          colcon build --mixin coverage-pytest ninja --event-handlers=console_cohesion+ --cmake-args -D DRQP_ENABLE_COVERAGE=ON
+          colcon test --mixin coverage-pytest --event-handlers=console_cohesion+
 
       - uses: ros-tooling/action-ros-ci@v0.4
         with:
