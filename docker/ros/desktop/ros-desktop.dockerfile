@@ -4,13 +4,6 @@ FROM $FROM_IMAGE
 
 ARG ROS_DISTRO=jazzy
 ENV ROS_DISTRO=$ROS_DISTRO
-
-# TODO (anton-matosov): Investigate if its really needed for devcontainer to use non root user
-# https://docs.github.com/en/actions/sharing-automations/creating-actions/dockerfile-support-for-github-actions#user
-# Docker actions must be run by the default Docker user (root). Do not use the USER instruction in your Dockerfile,
-# because you won't be able to access the GITHUB_WORKSPACE directory. For more information, see [Store information]
-# (https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables)
-# in variables and [USER](https://docs.docker.com/engine/reference/builder/#user) reference in the Docker documentation.
 ARG ROS_USERNAME=rosdev
 
 # UID should be 1001 to match ubuntu-latest in order for file writing to work for @action/checkout

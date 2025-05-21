@@ -129,26 +129,11 @@ jobs:
       image: ${{ needs.merge-dev-image.outputs.image }}
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
     steps:
-      - name: copy .colcon $HOME
+      - name: copy .colcon to GHA's $HOME
         shell: bash
         run: |
-          set -x
-          set +e
-
-          echo PWD="$PWD"
-          env | sort
-
+          cp -r /home/rosdev/.colcon "$HOME"
           colcon mixin list
-          colcon mixin show
-          colcon mixin update default || true
-
-          ls -al /home/rosdev/.colcon $HOME
-          cp -r /home/rosdev/.colcon $HOME
-          ls -al $HOME/.colcon
-
-          colcon mixin list
-          colcon mixin show
-          colcon mixin update default
 
       - uses: actions/checkout@v4
 
