@@ -129,28 +129,45 @@ jobs:
       image: ${{ needs.merge-dev-image.outputs.image }}
       options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
     steps:
+      - name: copy .colcon $HOME
+        shell: bash
+        run: |
+          set -x
+          set +e
+
+          echo PWD="$PWD"
+          env | sort
+
+          colcon mixin list
+          colcon mixin show
+          colcon mixin update default || true
+
+          ls -al /home/rosdev/.colcon $HOME
+          cp -r /home/rosdev/.colcon $HOME
+          ls -al $HOME/.colcon
+
+          colcon mixin list
+          colcon mixin show
+          colcon mixin update default
+
       - uses: actions/checkout@v4
-      - uses: ros-tooling/action-ros-ci@v0.4
-        with:
-          target-ros2-distro: ${{ env.ROS_DISTRO }}
-          no-symlink-install: true
-          extra-cmake-args: ' -D DRQP_ENABLE_COVERAGE=ON'
-          # pin the repository in the workflow to a specific commit to avoid
-          # changes in colcon-mixin-repository from breaking your tests.
-          colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/b8436aa16c0bdbc01081b12caa253cbf16e0fb82/index.yaml
-          colcon-defaults: |
-            {
-              "build": {
-                "mixin": ["coverage-pytest", "ninja"]
-              },
-              "test": {
-                "mixin": ["coverage-pytest"]
-              }
-            }
+
+      - name: Build and test ROS workspace
+        shell: bash
+        run: |
+          set -x
+          set -e
+
+          source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
+          time sudo apt update
+          time rosdep update
+          time ./scripts/ros-dep.sh
+          time colcon build --mixin coverage-pytest ninja rel-with-deb-info --event-handlers=console_cohesion+ --cmake-args -D DRQP_ENABLE_COVERAGE=ON
+          time colcon test --mixin coverage-pytest --event-handlers=console_cohesion+
 
       - name: Process llvm coverage
         shell: bash
-        run: ./packages/cmake/llvm-cov-export-all.py ./ros_ws/build
+        run: ./packages/cmake/llvm-cov-export-all.py ./build
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
@@ -159,19 +176,19 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: unittests-${{ matrix.arch }}
           name: codecov-umbrella
-          directory: ros_ws/build/
+          directory: build/
 
       - name: Test Summary
         uses: test-summary/action@v2
         if: ${{ env.ACT == '' && !cancelled() }}
         with:
-          paths: "ros_ws/build/*/test_results/*/*.xunit.xml"
+          paths: "build/*/test_results/*/*.xunit.xml"
 
       - name: Discover test reports
         if: ${{ !cancelled() }}
         run: |
           set -x
-          test_reports=$(find ros_ws/build -name "*.xunit.xml" | tr '\n' ',')
+          test_reports=$(find build -name "*.xunit.xml" | tr '\n' ',')
           test_reports=${test_reports%,}  # Remove trailing comma
 
           echo "result=$test_reports" >> "$GITHUB_OUTPUT"
@@ -191,22 +208,8 @@ jobs:
         if: always()
         with:
           name: colcon-logs-${{ matrix.arch }}
-          path: ros_ws/log
+          path: log
           retention-days: 90
-
-      - name: Troubleshoot
-        if: failure()
-        shell: bash
-        run: |
-          set -x
-          set +e
-          ls -al ${{ github.workspace }}
-          ls -al .
-          ls -al ros_ws
-          cd ros_ws
-          find src/ -print0 | xargs -0 ls -al
-          cat package.repo
-          vcs import --force --recursive src/ < package.repo
 
   dev-container-ci:
       name: Devcontainer image
