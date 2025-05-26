@@ -241,7 +241,7 @@
       {
         "label": "Dr.QP clean",
         "type": "shell",
-        "command": "rm -rf build/* install/* log/* lcov/* .cache/* docs/_build/*",
+        "command": "rm -rf build/* install/* log/* lcov/* .cache/* docs/_build/* **/__pycache__/",
         "options": {
           "cwd": "${workspaceFolder}"
         },
