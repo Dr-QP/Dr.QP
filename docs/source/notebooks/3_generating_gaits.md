@@ -28,23 +28,29 @@ Fig 1. Four typical hexapodal gaits, depicting each of the six legs as either su
 
 The two most common gaits for hexapods are the tripod gait and the ripple gait. The tripod gait is a simple gait where the robot legs move in two groups of three, lifting one group of three legs at a time. While the ripple gait is a more complex gait where the legs move in a wave-like motion, lifting one leg at a time.
 
++++ {"tags": ["remove-cell"]}
+
 ## Setting up the Jupyter notebook for experimentation
 
-This documentation has been generated from a Jupyter notebook and is available in the repo source code.
-
-The next couple of cells are designated to the setup of the notebook environment. If you are not interested in the experimentation and only want to read the documentation, feel free to skip them.
+The next couple of cells are designated to the setup of the notebook environment.
 
 The first step is to enable live python modules reloading, so changes in the python code of imported files are immediately reflected in the notebook without restarting the kernel.
 
 ```{code-cell} ipython3
+:tags: [remove-cell]
+
 # Enable python modules live reloading
 %load_ext autoreload
 %autoreload 2
 ```
 
-The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
++++ {"tags": ["remove-cell"]}
+
+The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode. SVG format is used for the plots to make them look good in the hosted sphinx documentation.
 
 ```{code-cell} ipython3
+:tags: [remove-cell]
+
 %config InlineBackend.figure_formats = ['svg']
 %matplotlib widget
 

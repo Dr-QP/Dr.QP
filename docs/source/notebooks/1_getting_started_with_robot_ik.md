@@ -28,23 +28,29 @@ Inverse Kinematics is important because it allows robots to perform complex move
 
 To use Inverse Kinematics, you need to have a model of your robot's kinematics. This model includes the lengths of the robot's links and the joints. Once you have this model, you can use it to calculate the joint angles required to achieve a desired end-effector position.
 
++++ {"tags": ["remove-cell"]}
+
 ## Setting up the Jupyter notebook for experimentation
 
-This documentation has been generated from a Jupyter notebook and is available in the repo source code.
-
-The next couple of cells are designated to the setup of the notebook environment. If you are not interested in the experimentation and only want to read the documentation, feel free to skip them.
+The next couple of cells are designated to the setup of the notebook environment.
 
 The first step is to enable live python modules reloading, so changes in the python code of imported files are immediately reflected in the notebook without restarting the kernel.
 
 ```{code-cell} ipython3
+:tags: [remove-cell]
+
 # Enable python modules live reloading
 %load_ext autoreload
 %autoreload 2
 ```
 
-The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
++++ {"tags": ["remove-cell"]}
+
+The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode. SVG format is used for the plots to make them look good in the hosted sphinx documentation.
 
 ```{code-cell} ipython3
+:tags: [remove-cell]
+
 %config InlineBackend.figure_formats = ['svg']
 %matplotlib widget
 
