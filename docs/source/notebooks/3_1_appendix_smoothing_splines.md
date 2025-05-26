@@ -43,7 +43,7 @@ The next step is configuring matplotlib backend. Widget backend allows to intera
 import matplotlib.pyplot as plt
 from plotting import display_and_close
 
-plt.ioff()  # this is equivalent to using inline backend, but figures have to be displayed manually
+plt.ioff();  # this is equivalent to using inline backend, but figures have to be displayed manually
 ```
 
 ## BSpline

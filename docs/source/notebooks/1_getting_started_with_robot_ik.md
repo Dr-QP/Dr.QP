@@ -22,11 +22,11 @@ Inverse Kinematics (IK) is a technique used in robotics to determine the joint a
 
 ## Why is Inverse Kinematics Important?
 
-Inverse Kinematics is important because it allows robots to perform complex movements and tasks. By calculating the joint angles required to reach a specific position, robots can navigate their environment and interact with objects more effectively.
+Inverse Kinematics is important because it allows robots to perform complex movements and tasks. By calculating the joint angles required to reach a specific position, robots can navigate their environment and interact with objects more effectively. In case of Dr.QP robot, it allows to generate gaits and move around in a desired way as well as moving its body in space.
 
 ## How to Use Inverse Kinematics
 
-To use Inverse Kinematics, you need to have a model of your robot's kinematics. This model includes the lengths of the robot's links and the joint angles. Once you have this model, you can use it to calculate the joint angles required to achieve a desired end-effector position.
+To use Inverse Kinematics, you need to have a model of your robot's kinematics. This model includes the lengths of the robot's links and the joints. Once you have this model, you can use it to calculate the joint angles required to achieve a desired end-effector position.
 
 ## Setting up the Jupyter notebook for experimentation
 
@@ -51,7 +51,7 @@ The next step is configuring matplotlib backend. Widget backend allows to intera
 import matplotlib.pyplot as plt
 from plotting import display_and_close
 
-plt.ioff()  # this is equivalent to using inline backend, but figures have to be displayed manually
+plt.ioff();  # this is equivalent to using inline backend, but figures have to be displayed manually
 ```
 
 ## The robot model
