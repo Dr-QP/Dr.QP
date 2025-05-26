@@ -22,7 +22,7 @@ Make sure to read <https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothi
 
 ## Setting up the Jupyter notebook for experimentation
 
-This documentation has been generated from a Jupyter notebook and is available in the repo source code (see link below).
+This documentation has been generated from a Jupyter notebook and is available in the repo source code.
 
 The next couple of cells are designated to the setup of the notebook environment. If you are not interested in the experimentation and only want to read the documentation, feel free to skip them.
 
