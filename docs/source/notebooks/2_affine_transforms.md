@@ -283,8 +283,9 @@ With full 3D kinematics model and plotting support lets setup a 6 legged robot.
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from point import Line3D, Point3D
 from models import LegModel
-from plotting import plot_update_leg3d_lines
+from plotting import plot_leg3d, plot_update_leg3d_lines
 
 drqp_front_offset = 0.116924  # x offset for the front and back legs
 drqp_side_offset = 0.063871  # y offset fo the front and back legs
@@ -532,6 +533,7 @@ sequence_xyz_little_circle = [
 # Plot IK solutions and targets into an animation
 
 import matplotlib.pyplot as plt
+from plotting.hexapod import update_drqp_plot
 from plotting import animate_plot, is_sphinx_build
 from scipy.interpolate import interp1d
 
