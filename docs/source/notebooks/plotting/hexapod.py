@@ -26,7 +26,7 @@ from mpl_toolkits.mplot3d.art3d import Line3DCollection
 import numpy as np
 from point import Leg3D
 
-from plotting import LegPlotData, plot_leg3d, plot_leg_links, plot_update_leg3d_lines
+from .leg import LegPlotData, plot_leg_links
 
 
 class HexapodPlotData:
@@ -102,56 +102,3 @@ def update_hexapod_plot(hexapod: HexapodModel, plot_data: HexapodPlotData):
             segments = leg_tips_to_segments(plot_data.leg_tips[leg.label])
             lc = plot_data.leg_tip_collections[leg.label]
             lc.set_segments(segments)
-
-
-def plot_update_leg3d_lines(leg: Leg3D, leg_plot_data: LegPlotData):
-    for line, line_model in zip(leg_plot_data.lines, leg.lines):
-        line.set_data_3d(*zip(line_model.start, line_model.end))
-
-    for joint, line_model in zip(leg_plot_data.joints, leg.lines):
-        joint._offsets3d = ([line_model.end.x], [line_model.end.y], [line_model.end.z])
-
-
-def plot_leg3d(
-    model: Leg3D,
-    title: str,
-    link_labels: Literal['legend', 'label', 'none'] = 'legend',
-    joint_labels: Literal['points', 'none'] = 'points',
-    subplot=111,
-    fig=None,
-    ax=None,
-    hide_grid=False,
-):
-    if fig is None:
-        fig = plt.figure()
-
-    if ax is None:
-        ax = fig.add_subplot(subplot, projection='3d')
-        ax.set_title(title)
-
-    assert link_labels != 'inline', 'Inline labels not supported in 3D plots'
-    assert joint_labels != 'annotated', 'Joint annotations not supported in 3D plots'
-
-    plot_data = plot_leg_links(ax, model.lines, link_labels=link_labels, joint_labels=joint_labels)
-
-    # Doesn't really add anything to the plot
-    # plot_cartesian_plane(ax, Point(-10, -10), Point(10, 10), no_ticks=True)
-
-    ax.set_aspect('equal')
-    ax.set_facecolor('white')
-    if hide_grid:
-        ax.grid(False)
-
-        # Hide axes ticks
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.set_zticks([])
-
-        ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-        ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-        ax.zaxis.set_pane_color((0, 0.2, 0, 0.5))
-
-        # Hide grid lines
-        ax.zaxis.gridlines.set_visible(False)
-
-    return fig, ax, plot_data

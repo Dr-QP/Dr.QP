@@ -65,7 +65,7 @@ classmethod-decorators = [
 
 [lint.per-file-ignores]
 # Ignore unused imports in __init__.py files
-"__init__.py" = ["F401"]
+"__init__.py" = ["F401", "F403"]
 
 [lint.pydocstyle]
 convention = "google"

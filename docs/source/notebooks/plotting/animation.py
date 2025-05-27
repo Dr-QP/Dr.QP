@@ -18,19 +18,41 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import os
-from IPython.display import display
-import matplotlib.pyplot as plt
+from .utils import is_sphinx_build_no_videos, is_sphinx_build
+from ipywidgets import interact
+from matplotlib.animation import FFMpegWriter, FuncAnimation
+from matplotlib import pyplot as plt
+from pathlib import Path
 
 
-def is_sphinx_build():
-    return os.getenv('SPHINX_BUILD') == '1'
+def animate_plot(
+    _fig,
+    _animate: callable,
+    _frames,
+    _interval=16,  # 60 fps
+    _interactive=False,
+    _save_animation_name=None,
+    **interact_kwargs,
+):
+    if is_sphinx_build_no_videos():
+        return
 
+    anim = None
 
-def is_sphinx_build_no_videos():
-    return os.getenv('SPHINX_BUILD_NO_VIDEOS') == '1'
+    plt.rcParams['animation.html'] = 'html5'
 
+    if _interactive and not is_sphinx_build():
+        with plt.ion():
+            anim = interact(_animate, frame=(0, _frames), **interact_kwargs)
+            plt.show()
+    else:
+        with plt.ioff():
+            anim = FuncAnimation(_fig, _animate, frames=_frames, interval=_interval)
+            display(anim)  # type: ignore # noqa: F821
+            plt.close(_fig)
 
-def display_and_close(fig):
-    display(fig)
-    plt.close(fig)
+            if _save_animation_name is not None:
+                animation_writer = FFMpegWriter(fps=24)
+                anim.save(Path(_save_animation_name).with_suffix('.mp4'), writer=animation_writer)
+
+    return anim
