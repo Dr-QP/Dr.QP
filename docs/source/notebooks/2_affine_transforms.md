@@ -261,21 +261,22 @@ display_and_close(fig)
 
 With full 3D kinematics model and plotting support lets setup a 6 legged robot.
 
-Code from `plotting/hexapod.py`:
+Code from `models.py`:
 
 ```{code-cell} ipython3
 :tags: [remove-cell]
 
 import jupyter_utils
-jupyter_utils.display_file('plotting/hexapod.py', start_after='THE SOFTWARE.')
+jupyter_utils.display_file('models.py', start_after='THE SOFTWARE.')
 ```
 
-```{literalinclude} plotting/hexapod.py
+```{literalinclude} models.py
 :start-after: THE SOFTWARE.
 ```
 
 ```{code-cell} ipython3
-from plotting.hexapod import HexapodModel, plot_hexapod, update_hexapod_plot
+from models import HexapodModel
+from plotting import plot_hexapod, update_hexapod_plot
 
 # Dr.QP Dimensions
 drqp_front_offset = 0.116924  # x offset for the front and back legs
@@ -302,10 +303,6 @@ drqp = DrQP()
 drqp.forward_kinematics(0, -25, 110)
 fig, ax, plot_data = plot_hexapod(drqp)
 display_and_close(fig)
-```
-
-```{code-cell} ipython3
-
 ```
 
 With the ability to do forward kinematics for a full robot, we can now start to work on the inverse kinematics. 1_getting_started_with_robot_ik.ipynb notebook covers the full 3D case of a single leg IK, however it works in the leg's local coordinate frame. In order to use it for the full robot, each leg global target position needs to be converted to the leg's local coordinate frame. Since we used matrix transformations for the forward kinematics, we can use the inverse of the body transform to convert the global target to the local coordinate frame.
