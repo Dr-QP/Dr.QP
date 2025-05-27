@@ -264,6 +264,8 @@ _ = animate_plot(
     beta=(-180, 180, 0.1),
     gamma=(-180, 180, 0.1),
 )
+
+# If plot is not responding to changes in sliders, most likely figure was closed. Rerun this cell to reactivate it.
 ```
 
 That was a fun little exercise, but it takes some effort to find just the right angle, and you might have noticed that there are more than one solution to it.
