@@ -18,15 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from typing import Literal
-
-import matplotlib.pyplot as plt
 from models import HexapodModel
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 import numpy as np
-from point import Leg3D
 
-from .leg import LegPlotData, plot_leg_links
+from .leg import plot_leg3d, plot_update_leg3d_lines
 
 
 class HexapodPlotData:
