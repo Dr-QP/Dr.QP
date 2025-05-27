@@ -18,118 +18,33 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from point import Line3D, Point3D
-from models import LegModel
-from plotting import plot_leg3d, plot_update_leg3d_lines
+from typing import Literal
 
-drqp_front_offset = 0.116924  # x offset for the front and back legs
-drqp_side_offset = 0.063871  # y offset fo the front and back legs
-drqp_middle_offset = 0.103  # x offset for the middle legs
+import matplotlib.pyplot as plt
+from models import HexapodModel
+from mpl_toolkits.mplot3d.art3d import Line3DCollection
+import numpy as np
+from point import Leg3D
 
-drqp_coxa = 0.053
-drqp_femur = 0.066225
-drqp_tibia = 0.123
+from plotting import LegPlotData, plot_leg3d, plot_leg_links, plot_update_leg3d_lines
 
 
-class DrQP:
-    def __init__(self, coxa_len=drqp_coxa, femur_len=drqp_femur, tibia_len=drqp_tibia):
-        self.left_front_leg = LegModel(
-            coxa_len,
-            femur_len,
-            tibia_len,
-            label='left_front',
-            rotation=[0, 0, 45],
-            location_on_body=[drqp_front_offset, drqp_side_offset, 0.0],
-        )
-        self.left_middle_leg = LegModel(
-            coxa_len,
-            femur_len,
-            tibia_len,
-            label='left_middle',
-            rotation=[0, 0, 90],
-            location_on_body=[0.0, drqp_middle_offset, 0.0],
-        )
-        self.left_back_leg = LegModel(
-            coxa_len,
-            femur_len,
-            tibia_len,
-            label='left_back',
-            rotation=[0, 0, 135],
-            location_on_body=[-drqp_front_offset, drqp_side_offset, 0.0],
-        )
-
-        self.right_front_leg = LegModel(
-            coxa_len,
-            femur_len,
-            tibia_len,
-            label='right_front',
-            rotation=[0, 0, -45],
-            location_on_body=[drqp_front_offset, -drqp_side_offset, 0.0],
-        )
-        self.right_middle_leg = LegModel(
-            coxa_len,
-            femur_len,
-            tibia_len,
-            label='right_middle',
-            rotation=[0, 0, -90],
-            location_on_body=[0.0, -drqp_middle_offset, 0.0],
-        )
-        self.right_back_leg = LegModel(
-            coxa_len,
-            femur_len,
-            tibia_len,
-            label='right_back',
-            rotation=[0, 0, -135],
-            location_on_body=[-drqp_front_offset, -drqp_side_offset, 0.0],
-        )
-        self.update_head()
-
-    def forward_kinematics(self, alpha, beta, gamma):
-        for leg in self.legs:
-            leg.forward_kinematics(alpha, beta, gamma)
-
-    @property
-    def legs(self):
-        return [
-            self.left_front_leg,
-            self.left_middle_leg,
-            self.left_back_leg,
-            self.right_front_leg,
-            self.right_middle_leg,
-            self.right_back_leg,
-        ]
-
-    @property
-    def body_transform(self):
-        return self.left_front_leg.body_transform
-
-    @body_transform.setter
-    def body_transform(self, value):
-        for leg in self.legs:
-            leg.body_transform = value
-
-        self.update_head()
-
-    def update_head(self):
-        # Head, x-forward
-        self.head = Line3D(
-            self.body_transform.apply_point(Point3D([0, 0, 0])),
-            self.body_transform.apply_point(Point3D([drqp_front_offset, 0, 0])),
-            'Head',
-        )
+class HexapodPlotData:
+    def __init__(self):
+        self.leg_plot_data = []
+        self.head_line = None
+        self.leg_tips = {}
+        self.leg_tip_collections = {}
+        self.feet_trails_frames = False
 
 
-def plot_drqp(drqp, targets=None):
+def plot_hexapod(hexapod: HexapodModel, targets=None, feet_trails_frames=0):
     fig, ax = None, None
 
-    class PlotData:
-        def __init__(self):
-            self.leg_plot_data = []
-            self.head_line = None
+    plot_data = HexapodPlotData()
+    plot_data.feet_trails_frames = feet_trails_frames
 
-    plot_data = PlotData()
-
-    for leg in drqp.legs:
+    for leg in hexapod.legs:
         fig, ax, leg_plot_data = plot_leg3d(
             leg,
             'Hexapod in 3D',
@@ -141,22 +56,102 @@ def plot_drqp(drqp, targets=None):
         )
         plot_data.leg_plot_data.append(leg_plot_data)
 
-    plot_data.head_line = ax.plot(*zip(drqp.head.start, drqp.head.end), 'c')[0]
+        if feet_trails_frames > 0:
+            plot_data.leg_tips[leg.label] = [leg.tibia_end.numpy()]
+            segments = leg_tips_to_segments(plot_data.leg_tips[leg.label])
+
+            lc = Line3DCollection(segments, cmap='plasma')
+
+            colors = np.linspace(1, 0, plot_data.feet_trails_frames)
+            lc.set_array(colors)
+            lc.set_linewidth(2)
+
+            plot_data.leg_tip_collections[leg.label] = ax.add_collection(lc)
+
+    plot_data.head_line = ax.plot(*zip(hexapod.head.start, hexapod.head.end), 'c')[0]
 
     if targets:
         ax.scatter(
-            *zip(*[target.numpy() for target in targets]),
-            color='k',
-            label='unreachable target',
+            *zip(*[target.numpy() for target in targets]), color='k', label='unreachable target'
         )
 
     ax.view_init(elev=44.0, azim=-160)
     return fig, ax, plot_data
 
 
-def update_drqp_plot(drqp, plot_data):
-    for leg, leg_plot_data in zip(drqp.legs, plot_data.leg_plot_data):
+def leg_tips_to_segments(leg_tips):
+    points = np.array(leg_tips)
+    segments = np.concatenate([points[:-1], points[1:]], axis=1)
+    segments = segments.reshape(-1, 2, 3)
+    return segments
+
+
+def update_hexapod_plot(hexapod: HexapodModel, plot_data: HexapodPlotData):
+    for leg, leg_plot_data in zip(hexapod.legs, plot_data.leg_plot_data):
         plot_update_leg3d_lines(leg, leg_plot_data)
 
     if plot_data.head_line:
-        plot_data.head_line.set_data_3d(*zip(drqp.head.start, drqp.head.end))
+        plot_data.head_line.set_data_3d(*zip(hexapod.head.start, hexapod.head.end))
+
+    if plot_data.feet_trails_frames > 0:
+        for leg in hexapod.legs:
+            if len(plot_data.leg_tips[leg.label]) > plot_data.feet_trails_frames:
+                plot_data.leg_tips[leg.label].pop(0)
+            plot_data.leg_tips[leg.label].append(leg.tibia_end.numpy())
+
+            segments = leg_tips_to_segments(plot_data.leg_tips[leg.label])
+            lc = plot_data.leg_tip_collections[leg.label]
+            lc.set_segments(segments)
+
+
+def plot_update_leg3d_lines(leg: Leg3D, leg_plot_data: LegPlotData):
+    for line, line_model in zip(leg_plot_data.lines, leg.lines):
+        line.set_data_3d(*zip(line_model.start, line_model.end))
+
+    for joint, line_model in zip(leg_plot_data.joints, leg.lines):
+        joint._offsets3d = ([line_model.end.x], [line_model.end.y], [line_model.end.z])
+
+
+def plot_leg3d(
+    model: Leg3D,
+    title: str,
+    link_labels: Literal['legend', 'label', 'none'] = 'legend',
+    joint_labels: Literal['points', 'none'] = 'points',
+    subplot=111,
+    fig=None,
+    ax=None,
+    hide_grid=False,
+):
+    if fig is None:
+        fig = plt.figure()
+
+    if ax is None:
+        ax = fig.add_subplot(subplot, projection='3d')
+        ax.set_title(title)
+
+    assert link_labels != 'inline', 'Inline labels not supported in 3D plots'
+    assert joint_labels != 'annotated', 'Joint annotations not supported in 3D plots'
+
+    plot_data = plot_leg_links(ax, model.lines, link_labels=link_labels, joint_labels=joint_labels)
+
+    # Doesn't really add anything to the plot
+    # plot_cartesian_plane(ax, Point(-10, -10), Point(10, 10), no_ticks=True)
+
+    ax.set_aspect('equal')
+    ax.set_facecolor('white')
+    if hide_grid:
+        ax.grid(False)
+
+        # Hide axes ticks
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_zticks([])
+
+        ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.zaxis.set_pane_color((0, 0.2, 0, 0.5))
+
+        # Hide grid lines
+        ax.zaxis.gridlines.set_visible(False)
+
+    return fig, ax, plot_data
