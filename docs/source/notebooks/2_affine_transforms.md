@@ -261,6 +261,19 @@ display_and_close(fig)
 
 With full 3D kinematics model and plotting support lets setup a 6 legged robot.
 
+Code from `plotting/hexapod.py`:
+
+```{code-cell} ipython3
+:tags: [remove-cell]
+
+import jupyter_utils
+jupyter_utils.display_file('plotting/hexapod.py', start_after='THE SOFTWARE.')
+```
+
+```{literalinclude} plotting/hexapod.py
+:start-after: THE SOFTWARE.
+```
+
 ```{code-cell} ipython3
 from plotting.hexapod import HexapodModel, plot_hexapod, update_hexapod_plot
 
