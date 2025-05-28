@@ -141,7 +141,7 @@ display_and_close(plt.gcf())
 
 This was a good start, but code is hard to read and understand due to excessive repetitions. Let's introduce a transform system, similar to the one used in ROS TF2 library.
 
-With this `Transform` class we can now create a chain of transformations instead of hand crafting them.
+Code from `transforms.py`:
 
 ```{code-cell} ipython3
 :tags: [remove-cell]
@@ -153,6 +153,8 @@ jupyter_utils.display_file('transforms.py', start_after='THE SOFTWARE.')
 ```{literalinclude} transforms.py
 :start-after: THE SOFTWARE.
 ```
+
+With this `Transform` class we can now create a chain of transformations instead of hand crafting them. Let's rewrite the forward kinematics code using transforms.
 
 ```{code-cell} ipython3
 from plotting import plot_leg3d
@@ -270,7 +272,7 @@ ax.set_aspect('equal')  # Upset the aspect ratio
 display_and_close(fig)
 ```
 
-With full 3D kinematics model and plotting support lets setup a 6 legged robot.
+With full 3D kinematics model and plotting support lets put it all together and create a 6 legged robot model.
 
 Code from `models.py`:
 
