@@ -144,6 +144,17 @@ This was a good start, but code is hard to read and understand due to excessive 
 With this `Transform` class we can now create a chain of transformations instead of hand crafting them.
 
 ```{code-cell} ipython3
+:tags: [remove-cell]
+
+import jupyter_utils
+jupyter_utils.display_file('transforms.py', start_after='THE SOFTWARE.')
+```
+
+```{literalinclude} transforms.py
+:start-after: THE SOFTWARE.
+```
+
+```{code-cell} ipython3
 from plotting import plot_leg3d
 from transforms import Transform
 
@@ -469,7 +480,7 @@ if not skip_in_local_runs_because_its_slow:
       animate,
       _frames=len(transforms),
       _interval=20,
-      _interactive=False,
+      _interactive=False, # Interactive animation doesn't work well due to number of frames, rendering video works much better
       _save_animation_name='animation' if save_animation else None,
   )
 ```
