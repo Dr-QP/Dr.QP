@@ -276,7 +276,7 @@ jupyter_utils.display_file('models.py', start_after='THE SOFTWARE.')
 
 ```{code-cell} ipython3
 from models import HexapodModel
-from plotting import plot_hexapod, update_hexapod_plot
+from plotting import plot_hexapod
 
 # Dr.QP Dimensions
 drqp_front_offset = 0.116924  # x offset for the front and back legs
@@ -401,16 +401,8 @@ sequence_xyz_little_circle = [
 ```{code-cell} ipython3
 # Plot IK solutions and targets into an animation
 
-import matplotlib.pyplot as plt
-from plotting.hexapod import update_hexapod_plot
-from plotting import animate_plot, is_sphinx_build
+from plotting import animate_plot, update_hexapod_plot, is_sphinx_build
 from scipy.interpolate import interp1d
-
-plt.rcParams['animation.html'] = 'jshtml'
-
-skip = not is_sphinx_build()
-interactive = False
-save_animation = False
 
 orig_alpha, orig_beta, orig_gamma = 0, -25, 110
 drqp = DrQP()
@@ -468,16 +460,18 @@ def animate(frame):
         leg.move_to(target)
     update_hexapod_plot(drqp, plot_data)
 
+save_animation = False
+skip_in_local_runs_because_its_slow = not is_sphinx_build()
 
-if not skip:
-    animate_plot(
-        fig,
-        animate,
-        _frames=len(transforms),
-        _interval=20,
-        _interactive=interactive,
-        _save_animation_name='animation' if save_animation else None,
-    )
+if not skip_in_local_runs_because_its_slow:
+  animate_plot(
+      fig,
+      animate,
+      _frames=len(transforms),
+      _interval=20,
+      _interactive=False,
+      _save_animation_name='animation' if save_animation else None,
+  )
 ```
 
 To make all the learnings and findings reusable in other notebooks, lets move all the code into modules and double check it works.
