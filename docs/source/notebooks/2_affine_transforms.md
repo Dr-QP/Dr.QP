@@ -55,6 +55,9 @@ The first step is to convert our forward kinematics code from custom Points and 
 
 Alongside the conversion, we are going to bring all the algorithms to work in full 3D space, not just 2D projections.
 
+As a first step in conversion, let's replace hand crafted rotations with rotation matrices.
+
+
 ```{code-cell} ipython3
 import numpy as np
 from point import Leg3D, Line3D, Point3D
