@@ -293,7 +293,7 @@ class LegModel:
         return solvable, alpha, beta, gamma
 
     def to_local(self, point):
-        return self.body_joint.inverse().apply_point(point)
+        return self.body_joint.inverse.apply_point(point)
 
     @staticmethod
     def _inverse_kinematics_xy(localized_foot_target: Point3D):

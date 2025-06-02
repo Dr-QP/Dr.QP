@@ -32,6 +32,7 @@ class Transform:
 
     def __init__(self, matrix):
         self._matrix = matrix
+        self._inverse = None
 
     @classmethod
     def make(cls, rotation, translation):
@@ -79,6 +80,12 @@ class Transform:
     def matrix(self):
         return self._matrix
 
+    @property
+    def inverse(self):
+        if self._inverse is None:
+            self._inverse = Transform(np.linalg.inv(self._matrix))
+        return self._inverse
+
     def apply_point(self, point):
         return Point3D(self.apply_nd(point.numpy()))
 
@@ -89,9 +96,6 @@ class Transform:
         point4d = np.append(nd_point, 1)
         transformed_point = self._matrix @ point4d
         return transformed_point[:3]
-
-    def inverse(self):
-        return Transform(np.linalg.inv(self._matrix))
 
     # operator @
     def __matmul__(self, other):
