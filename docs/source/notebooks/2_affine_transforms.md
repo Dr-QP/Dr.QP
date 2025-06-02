@@ -57,7 +57,6 @@ Alongside the conversion, we are going to bring all the algorithms to work in fu
 
 As a first step in conversion, let's replace hand crafted rotations with rotation matrices.
 
-
 ```{code-cell} ipython3
 import numpy as np
 from point import Leg3D, Line3D, Point3D
