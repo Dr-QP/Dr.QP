@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from leg import Leg3D
-from line import Line, Line3D
-
-from geometry import Point, Point3D, SimplePoint3D
+from .leg import *
+from .line import *
+from .point import *
+from .transforms import *

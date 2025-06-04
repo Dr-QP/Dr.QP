@@ -143,17 +143,17 @@ display_and_close(plt.gcf())
 
 This was a good start, but code is hard to read and understand due to excessive repetitions. Let's introduce a transform system, similar to the one used in ROS TF2 library.
 
-Code from `transforms.py`:
+Code from `geometry/transforms.py`:
 
 ```{code-cell} ipython3
 :tags: [remove-cell]
 
 import jupyter_utils
 
-jupyter_utils.display_file('transforms.py', start_after='THE SOFTWARE.')
+jupyter_utils.display_file('geometry/transforms.py', start_after='THE SOFTWARE.')
 ```
 
-```{literalinclude} transforms.py
+```{literalinclude} geometry/transforms.py
 :start-after: THE SOFTWARE.
 ```
 

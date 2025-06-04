@@ -21,7 +21,8 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from geometry import Line3D, Point3D
+from .line import Line3D
+from .point import Point3D
 
 
 class AffineTransform:
