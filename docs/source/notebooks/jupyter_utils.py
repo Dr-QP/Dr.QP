@@ -4,7 +4,9 @@ from pygments.formatters import HtmlFormatter
 from pygments.lexers import PythonLexer
 
 
-def display_file(file_path, start_line=-1, end_line=-1, start_after=None, style='default'):
+def display_file(
+    file_path, start_line=-1, end_line=-1, start_after=None, end_before=None, style='default'
+):
     with open(file_path) as f:
         code = f.readlines()
         if start_line > 0:
@@ -12,7 +14,11 @@ def display_file(file_path, start_line=-1, end_line=-1, start_after=None, style=
         code_str = ''.join(code)
 
         if start_after:
-            code_str = code_str[code_str.index(start_after) + len(start_after) :]
+            end_index = -1
+            if end_before:
+                end_index = code_str.index(end_before)
+
+            code_str = code_str[code_str.index(start_after) + len(start_after) : end_index]
 
     formatter = HtmlFormatter(style=style)
     return IPython.display.HTML(

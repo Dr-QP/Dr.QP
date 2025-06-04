@@ -161,9 +161,21 @@ With this `AffineTransform` class we can now create a chain of transformations i
 
 The code below is an excerpt from `LegModel` class in `models.py` file:
 
+```{code-cell} ipython3
+:tags: [remove-cell]
+
+import jupyter_utils
+
+jupyter_utils.display_file(
+    'models.py',
+    start_after='# Leg Forward kinematics - START',
+    end_before='# Leg Forward kinematics - END',
+)
+```
+
 ```{literalinclude} models.py
-:start-after: Leg Forward kinematics - START
-:end-before: Leg Forward kinematics - END
+:start-after: '# Leg Forward kinematics - START'
+:end-before: '# Leg Forward kinematics - END'
 ```
 
 ```{code-cell} ipython3
