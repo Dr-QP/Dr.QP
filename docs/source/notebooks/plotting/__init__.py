@@ -18,14 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-# codeql[py/polluting-import]
-from .animation import *
-
-# codeql[py/polluting-import]
-from .hexapod import *
-
-# codeql[py/polluting-import]
-from .leg import *
-
-# codeql[py/polluting-import]
-from .utils import *
+from .animation import animate_plot
+from .hexapod import HexapodPlotData, plot_hexapod, update_hexapod_plot
+from .leg import LegPlotData, plot_leg3d, plot_update_leg3d_lines
+from .utils import display_and_close, is_sphinx_build, is_sphinx_build_no_videos
