@@ -158,78 +158,24 @@ jupyter_utils.display_file('transforms.py', start_after='THE SOFTWARE.')
 
 With this `Transform` class we can now create a chain of transformations instead of hand crafting them. Let's rewrite the forward kinematics code using transforms.
 
+The code below is an excerpt from `LegModel` class in `models.py` file:
+
+```{literalinclude} models.py
+:start-after: Leg Forward kinematics - START
+:end-before: Leg Forward kinematics - END
+```
+
 ```{code-cell} ipython3
+from models import LegModel
 from plotting import plot_leg3d
-from transforms import Transform
-
-
-def forward_kinematics_transforms(
-    coxa_length,
-    femur_length,
-    tibia_length,
-    alpha,
-    beta,
-    gamma,
-    leg_location_on_body=[0, 0, 0],
-    leg_rotation=[0, 0, 0],
-    body_transform=Transform.identity(),
-    verbose=False,
-):
-    # Create rotation matrices and transforms
-    body_link = body_transform @ Transform.from_translation(leg_location_on_body)
-    body_joint = body_link @ Transform.from_rotvec(leg_rotation, degrees=True)
-
-    coxa_joint = body_joint @ Transform.from_rotvec([0, 0, alpha], degrees=True)
-    coxa_link = coxa_joint @ Transform.from_translation([coxa_length, 0, 0])
-
-    femur_joint = coxa_link @ Transform.from_rotvec([0, beta, 0], degrees=True)
-    femur_link = femur_joint @ Transform.from_translation([femur_length, 0, 0])
-
-    tibia_joint = femur_link @ Transform.from_rotvec([0, gamma, 0], degrees=True)
-    tibia_link = tibia_joint @ Transform.from_translation([tibia_length, 0, 0])
-
-    # Calculate global positions using transformations
-    identity_point = Point3D([0, 0, 0])
-
-    body_start = body_transform.apply_point(identity_point)
-
-    body_end = body_link.apply_point(identity_point)
-    body_end.label = rf'$\alpha$={alpha}°'
-
-    coxa_end = coxa_link.apply_point(identity_point)
-    coxa_end.label = rf'$\beta$={beta}°'
-
-    femur_end = femur_link.apply_point(identity_point)
-    femur_end.label = rf'$\gamma$={gamma}°'
-
-    tibia_end = tibia_link.apply_point(identity_point)
-    tibia_end.label = 'Foot'
-
-    result = Leg3D(
-        [
-            Line3D(body_start, body_end, 'Body'),
-            Line3D(body_end, coxa_end, 'Coxa'),
-            Line3D(coxa_end, femur_end, 'Femur'),
-            Line3D(femur_end, tibia_end, 'Tibia'),
-        ]
-    )
-
-    if verbose:
-        print(f'{body_end=}')
-        print(f'{coxa_end=}')
-        print(f'{femur_end=}')
-        print(f'{tibia_end=}')
-        for line in result:
-            print(line)
-
-    return result
-
 
 coxa = 5
 femur = 8
 tibia = 10
 
-model = forward_kinematics_transforms(coxa, femur, tibia, 0, -25, 110)
+# model = forward_kinematics_transforms(coxa, femur, tibia, 0, -25, 110)
+model = LegModel(coxa, femur, tibia)
+model.forward_kinematics(0, -25, 110)
 
 fig, _, _ = plot_leg_with_points(
     model.xy,
@@ -360,6 +306,8 @@ The algorithm is as follows:
  3. Run inverse kinematics for all legs with the foot positions captured in step 1.
 
 ```{code-cell} ipython3
+from transforms import Transform
+
 orig_alpha, orig_beta, orig_gamma = 0, -25, 110
 drqp = DrQP()
 drqp.forward_kinematics(orig_alpha, orig_beta, orig_gamma)

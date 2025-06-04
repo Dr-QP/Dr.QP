@@ -235,6 +235,7 @@ class LegModel:
     def __repr__(self):
         return f'LegModel(body_start={self.body_start}, body_end={self.body_end}, coxa_end={self.coxa_end}, femur_end={self.femur_end}, tibia_end={self.tibia_end})'
 
+    # Leg Forward kinematics - START
     def forward_kinematics(
         self,
         alpha,
@@ -272,6 +273,7 @@ class LegModel:
 
         self.tibia_end = self.tibia_link.apply_point(identity_point)
         self.tibia_end.label = 'Foot'
+        # Leg Forward kinematics - END
 
     def move_to(self, foot_target: Point3D, verbose=False):
         reached_target, alpha, beta, gamma = self.inverse_kinematics(foot_target, verbose)
