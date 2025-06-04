@@ -20,9 +20,8 @@
 
 import enum
 
+from geometry import AffineTransform, Line3D, Point3D
 import numpy as np
-from point import Line3D, Point3D
-from transforms import Transform
 
 
 class HexapodLeg(enum.Enum):
@@ -52,7 +51,7 @@ class HexapodModel:
         coxa_len=100,
         femur_len=100,
         tibia_len=100,
-        body_transform=Transform.identity(),
+        body_transform=AffineTransform.identity(),
         leg_rotation=[0, 0, 45],
     ):
         leg_rotation = np.array(leg_rotation)
@@ -165,7 +164,7 @@ class LegModel:
         tibia_length: float,
         location_on_body=[0, 0, 0],
         rotation=[0, 0, 0],
-        body_transform=Transform.identity(),
+        body_transform=AffineTransform.identity(),
         label='',
     ):
         self.coxa_length = coxa_length
@@ -205,8 +204,10 @@ class LegModel:
         self.update_base_transforms()
 
     def update_base_transforms(self):
-        self.body_link = self.body_transform @ Transform.from_translation(self.location_on_body)
-        self.body_joint = self.body_link @ Transform.from_rotvec(self.rotation, degrees=True)
+        self.body_link = self.body_transform @ AffineTransform.from_translation(
+            self.location_on_body
+        )
+        self.body_joint = self.body_link @ AffineTransform.from_rotvec(self.rotation, degrees=True)
 
     @property
     def lines(self):
@@ -248,14 +249,22 @@ class LegModel:
         self.femur_angle = beta
         self.tibia_angle = gamma
 
-        self.coxa_joint = self.body_joint @ Transform.from_rotvec([0, 0, alpha], degrees=True)
-        self.coxa_link = self.coxa_joint @ Transform.from_translation([self.coxa_length, 0, 0])
+        self.coxa_joint = self.body_joint @ AffineTransform.from_rotvec([0, 0, alpha], degrees=True)
+        self.coxa_link = self.coxa_joint @ AffineTransform.from_translation(
+            [self.coxa_length, 0, 0]
+        )
 
-        self.femur_joint = self.coxa_link @ Transform.from_rotvec([0, beta, 0], degrees=True)
-        self.femur_link = self.femur_joint @ Transform.from_translation([self.femur_length, 0, 0])
+        self.femur_joint = self.coxa_link @ AffineTransform.from_rotvec([0, beta, 0], degrees=True)
+        self.femur_link = self.femur_joint @ AffineTransform.from_translation(
+            [self.femur_length, 0, 0]
+        )
 
-        self.tibia_joint = self.femur_link @ Transform.from_rotvec([0, gamma, 0], degrees=True)
-        self.tibia_link = self.tibia_joint @ Transform.from_translation([self.tibia_length, 0, 0])
+        self.tibia_joint = self.femur_link @ AffineTransform.from_rotvec(
+            [0, gamma, 0], degrees=True
+        )
+        self.tibia_link = self.tibia_joint @ AffineTransform.from_translation(
+            [self.tibia_length, 0, 0]
+        )
 
         # Calculate global positions using transformations
         identity_point = Point3D([0, 0, 0])

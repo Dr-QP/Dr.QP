@@ -57,7 +57,7 @@ The next step is configuring matplotlib backend. Widget backend allows to intera
 import matplotlib.pyplot as plt
 from plotting import display_and_close
 
-plt.ioff();  # this is equivalent to using inline backend, but figures have to be displayed manually
+plt.ioff()  # this is equivalent to using inline backend, but figures have to be displayed manually
 ```
 
 ## The robot model
@@ -99,7 +99,7 @@ Before we dive into the details of how inverse kinematics works, let's first get
 Coxa, femur and tibia are represented with vector that is rotated at its base. Each next link starts at the ened of the previous link.
 
 ```{code-cell} ipython3
-from point import Line, Point
+from geometry import Line, Point
 
 
 # unused
@@ -395,7 +395,7 @@ plot_xtick(30)
 Putting all of this in code will look as follows
 
 ```{code-cell} ipython3
-from point import SimplePoint3D as Point3D
+from geometry import SimplePoint3D as Point3D
 
 
 def coxa_ik(foot_target):

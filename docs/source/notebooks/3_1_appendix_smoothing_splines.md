@@ -49,7 +49,7 @@ The next step is configuring matplotlib backend. Widget backend allows to intera
 import matplotlib.pyplot as plt
 from plotting import display_and_close
 
-plt.ioff();  # this is equivalent to using inline backend, but figures have to be displayed manually
+plt.ioff()  # this is equivalent to using inline backend, but figures have to be displayed manually
 ```
 
 ## BSpline
@@ -835,8 +835,8 @@ from abc import abstractmethod
 import enum
 
 from gait_generators import GaitGenerator
+from geometry import Point3D
 from models import HexapodLeg
-from point import Point3D
 from scipy.interpolate import make_interp_spline
 
 

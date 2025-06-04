@@ -18,20 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import os
+from leg import Leg3D
+from line import Line, Line3D
 
-from IPython.display import display
-import matplotlib.pyplot as plt
-
-
-def is_sphinx_build():
-    return os.getenv('SPHINX_BUILD') == '1'
-
-
-def is_sphinx_build_no_videos():
-    return os.getenv('SPHINX_BUILD_NO_VIDEOS') == '1'
-
-
-def display_and_close(fig):
-    display(fig)
-    plt.close(fig)
+from geometry import Point, Point3D, SimplePoint3D

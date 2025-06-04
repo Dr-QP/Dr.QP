@@ -19,8 +19,8 @@
 # THE SOFTWARE.
 import logging
 
+from geometry import Point3D
 import numpy as np
-from point import Point3D
 import pygame
 
 

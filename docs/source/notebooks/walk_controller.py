@@ -18,10 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from geometry import AffineTransform, Point3D
 import numpy as np
 from parametric_gait_generator import GaitType, ParametricGaitGenerator
-from point import Point3D
-from transforms import Transform
 
 
 class WalkController:
@@ -139,7 +138,9 @@ class WalkController:
                 rotation_degrees = (
                     self.rotation_speed_degrees * self.current_rotation_ratio * gait_offsets.x
                 )
-                rotation_transform = Transform.from_rotvec([0, 0, rotation_degrees], degrees=True)
+                rotation_transform = AffineTransform.from_rotvec(
+                    [0, 0, rotation_degrees], degrees=True
+                )
                 foot_target = rotation_transform.apply_point(foot_target)
 
             if has_stride or has_rotation:
@@ -164,7 +165,7 @@ class WalkController:
 
         # Create rotation matrix to align direction with x-axis
         # Ignore z-component as robot can't walk up. This also allows to generate stepping in place
-        direction_transform = Transform.from_rotmatrix(
+        direction_transform = AffineTransform.from_rotmatrix(
             [
                 [norm_direction[0], -norm_direction[1], 0],
                 [norm_direction[1], norm_direction[0], 0],

@@ -46,7 +46,7 @@ The next step is configuring matplotlib backend. Widget backend allows to intera
 import matplotlib.pyplot as plt
 from plotting import display_and_close
 
-plt.ioff();  # this is equivalent to using inline backend, but figures have to be displayed manually
+plt.ioff()  # this is equivalent to using inline backend, but figures have to be displayed manually
 ```
 
 ## Affine transforms
@@ -58,8 +58,8 @@ Alongside the conversion, we are going to bring all the algorithms to work in fu
 As a first step in conversion, let's replace hand crafted rotations with rotation matrices.
 
 ```{code-cell} ipython3
+from geometry import Leg3D, Line3D, Point3D
 import numpy as np
-from point import Leg3D, Line3D, Point3D
 from scipy.spatial.transform import Rotation as R
 
 
@@ -149,6 +149,7 @@ Code from `transforms.py`:
 :tags: [remove-cell]
 
 import jupyter_utils
+
 jupyter_utils.display_file('transforms.py', start_after='THE SOFTWARE.')
 ```
 
@@ -156,7 +157,7 @@ jupyter_utils.display_file('transforms.py', start_after='THE SOFTWARE.')
 :start-after: THE SOFTWARE.
 ```
 
-With this `Transform` class we can now create a chain of transformations instead of hand crafting them. Let's rewrite the forward kinematics code using transforms.
+With this `AffineTransform` class we can now create a chain of transformations instead of hand crafting them. Let's rewrite the forward kinematics code using transforms.
 
 The code below is an excerpt from `LegModel` class in `models.py` file:
 
@@ -228,6 +229,7 @@ Code from `models.py`:
 :tags: [remove-cell]
 
 import jupyter_utils
+
 jupyter_utils.display_file('models.py', start_after='THE SOFTWARE.')
 ```
 
@@ -248,6 +250,7 @@ drqp_coxa = 0.053
 drqp_femur = 0.066225
 drqp_tibia = 0.123
 
+
 class DrQP(HexapodModel):
     def __init__(self):
         super().__init__(
@@ -259,6 +262,7 @@ class DrQP(HexapodModel):
             tibia_len=drqp_tibia,
             leg_rotation=[0, 0, 45],
         )
+
 
 drqp = DrQP()
 drqp.forward_kinematics(0, -25, 110)
@@ -306,7 +310,7 @@ The algorithm is as follows:
  3. Run inverse kinematics for all legs with the foot positions captured in step 1.
 
 ```{code-cell} ipython3
-from transforms import Transform
+from geometry import AffineTransform
 
 orig_alpha, orig_beta, orig_gamma = 0, -25, 110
 drqp = DrQP()
@@ -314,9 +318,9 @@ drqp.forward_kinematics(orig_alpha, orig_beta, orig_gamma)
 
 targets = [leg.tibia_end.copy() for leg in drqp.legs]
 
-drqp.body_transform = Transform.from_translation([0.05, 0, -0.01]) @ Transform.from_rotvec(
-    [10, 10, 10], degrees=True
-)
+drqp.body_transform = AffineTransform.from_translation(
+    [0.05, 0, -0.01]
+) @ AffineTransform.from_rotvec([10, 10, 10], degrees=True)
 
 unreachable_targets = []
 for leg, target in zip(drqp.legs, targets):
@@ -339,22 +343,22 @@ y = 0.0
 z = 0.0
 scalar = 0.05
 sequence_xy_little_circle = [
-    Transform.from_translation([x + math.cos(i) * scalar, y + math.sin(i) * scalar, z])
+    AffineTransform.from_translation([x + math.cos(i) * scalar, y + math.sin(i) * scalar, z])
     for i in np.linspace(np.pi, np.pi * 3, steps)
 ]
 
 sequence_xz_little_circle = [
-    Transform.from_translation([x + math.sin(i) * scalar, y, z + math.cos(i) * scalar])
+    AffineTransform.from_translation([x + math.sin(i) * scalar, y, z + math.cos(i) * scalar])
     for i in np.linspace(0, np.pi * 2, steps)
 ]
 
 sequence_yz_little_circle = [
-    Transform.from_translation([x, y + math.sin(i) * scalar, z + math.cos(i) * scalar])
+    AffineTransform.from_translation([x, y + math.sin(i) * scalar, z + math.cos(i) * scalar])
     for i in np.linspace(0, np.pi * 2, steps)
 ]
 
 sequence_xyz_little_circle = [
-    Transform.from_translation(
+    AffineTransform.from_translation(
         [x + math.cos(i) * scalar, y + math.sin(i) * scalar, z + math.cos(i) * scalar]
     )
     for i in np.linspace(0, np.pi * 2, steps)
@@ -364,7 +368,7 @@ sequence_xyz_little_circle = [
 ```{code-cell} ipython3
 # Plot IK solutions and targets into an animation
 
-from plotting import animate_plot, update_hexapod_plot, is_sphinx_build
+from plotting import animate_plot, is_sphinx_build, update_hexapod_plot
 from scipy.interpolate import interp1d
 
 orig_alpha, orig_beta, orig_gamma = 0, -25, 110
@@ -373,13 +377,13 @@ drqp.forward_kinematics(orig_alpha, orig_beta, orig_gamma)
 
 targets = [leg.tibia_end.copy() for leg in drqp.legs]
 
-transforms = [Transform.identity()]
+transforms = [AffineTransform.identity()]
 
 
-def interpolate(tf1: Transform, tf2: Transform, steps=10):
+def interpolate(tf1: AffineTransform, tf2: AffineTransform, steps=10):
     interp_func = interp1d([0, steps], np.stack([tf1.matrix, tf2.matrix]), axis=0)
     for i in range(steps):
-        transforms.append(Transform(interp_func(i)))
+        transforms.append(AffineTransform(interp_func(i)))
 
 
 def extend_transforms(ohter_transforms, steps=10):
@@ -390,13 +394,13 @@ def extend_transforms(ohter_transforms, steps=10):
 def turn_transforms(axis, turn_degrees=10):
     axis = np.array(axis)
     for i in range(0, turn_degrees):
-        transforms.append(Transform.from_rotvec(axis * i, degrees=True))
+        transforms.append(AffineTransform.from_rotvec(axis * i, degrees=True))
 
     for i in range(turn_degrees, -turn_degrees, -1):
-        transforms.append(Transform.from_rotvec(axis * i, degrees=True))
+        transforms.append(AffineTransform.from_rotvec(axis * i, degrees=True))
 
     for i in range(-turn_degrees, 0):
-        transforms.append(Transform.from_rotvec(axis * i, degrees=True))
+        transforms.append(AffineTransform.from_rotvec(axis * i, degrees=True))
 
 
 turn_transforms([0, 0, 1])
@@ -423,18 +427,19 @@ def animate(frame):
         leg.move_to(target)
     update_hexapod_plot(drqp, plot_data)
 
+
 save_animation = False
 skip_in_local_runs_because_its_slow = not is_sphinx_build()
 
 if not skip_in_local_runs_because_its_slow:
-  animate_plot(
-      fig,
-      animate,
-      _frames=len(transforms),
-      _interval=20,
-      _interactive=False, # Interactive animation doesn't work well due to number of frames, rendering video works much better
-      _save_animation_name='animation' if save_animation else None,
-  )
+    animate_plot(
+        fig,
+        animate,
+        _frames=len(transforms),
+        _interval=20,
+        _interactive=False,  # Interactive animation doesn't work well due to number of frames, rendering video works much better
+        _save_animation_name='animation' if save_animation else None,
+    )
 ```
 
 To make all the learnings and findings reusable in other notebooks, lets move all the code into modules and double check it works.
@@ -449,9 +454,9 @@ fig, ax, plot_data = plot_hexapod(hexapod)
 
 leg_tips = [leg.tibia_end.copy() for leg in hexapod.legs]
 
-hexapod.body_transform = Transform.from_translation([0.05, 0, -0.01]) @ Transform.from_rotvec(
-    [10, 10, 10], degrees=True
-)
+hexapod.body_transform = AffineTransform.from_translation(
+    [0.05, 0, -0.01]
+) @ AffineTransform.from_rotvec([10, 10, 10], degrees=True)
 hexapod.move_legs_to(leg_tips)
 update_hexapod_plot(hexapod, plot_data)
 display_and_close(fig)

@@ -21,9 +21,9 @@
 from enum import auto, Enum
 
 from gait_generators import GaitGenerator
+from geometry import Point3D
 from models import HexapodLeg
 import numpy as np
-from point import Point3D
 
 
 class GaitType(Enum):
