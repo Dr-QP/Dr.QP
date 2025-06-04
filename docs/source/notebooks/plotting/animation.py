@@ -37,7 +37,7 @@ def animate_plot(
     **interact_kwargs,
 ):
     if is_sphinx_build_no_videos():
-        return
+        return None
 
     anim = None
 

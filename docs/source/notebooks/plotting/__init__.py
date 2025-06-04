@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from .animation import *
-from .hexapod import *
-from .leg import *
-from .utils import *
+from .animation import *  # codeql[py/polluting-import]
+from .hexapod import *  # codeql[py/polluting-import]
+from .leg import *  # codeql[py/polluting-import]
+from .utils import *  # codeql[py/polluting-import]

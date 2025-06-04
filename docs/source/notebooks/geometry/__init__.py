@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from .leg import *
-from .line import *
-from .point import *
-from .transforms import *
+from .leg import *  # codeql[py/polluting-import]
+from .line import *  # codeql[py/polluting-import]
+from .point import *  # codeql[py/polluting-import]
+from .transforms import *  # codeql[py/polluting-import]
