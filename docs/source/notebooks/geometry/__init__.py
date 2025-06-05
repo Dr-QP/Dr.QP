@@ -20,5 +20,5 @@
 
 from .leg import Leg3D
 from .line import Line, Line3D
-from .point import Point, Point3D
+from .point import Point, Point3D, SimplePoint3D
 from .transforms import AffineTransform
