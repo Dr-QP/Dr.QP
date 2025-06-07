@@ -23,9 +23,9 @@
 import argparse
 from enum import auto, Enum
 
+from geometry import Point3D
 from models import HexapodModel
 import numpy as np
-from point import Point3D
 import rclpy
 import rclpy.node
 import sensor_msgs.msg

@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.17.1
+    jupytext_version: 1.17.2
 kernelspec:
   display_name: .venv
   language: python
@@ -22,29 +22,35 @@ Inverse Kinematics (IK) is a technique used in robotics to determine the joint a
 
 ## Why is Inverse Kinematics Important?
 
-Inverse Kinematics is important because it allows robots to perform complex movements and tasks. By calculating the joint angles required to reach a specific position, robots can navigate their environment and interact with objects more effectively.
+Inverse Kinematics is important because it allows robots to perform complex movements and tasks. By calculating the joint angles required to reach a specific position, robots can navigate their environment and interact with objects more effectively. In case of Dr.QP robot, it allows to generate gaits and move around in a desired way as well as moving its body in space.
 
 ## How to Use Inverse Kinematics
 
-To use Inverse Kinematics, you need to have a model of your robot's kinematics. This model includes the lengths of the robot's links and the joint angles. Once you have this model, you can use it to calculate the joint angles required to achieve a desired end-effector position.
+To use Inverse Kinematics, you need to have a model of your robot's kinematics. This model includes the lengths of the robot's links and the joints. Once you have this model, you can use it to calculate the joint angles required to achieve a desired end-effector position.
+
++++ {"tags": ["remove-cell"]}
 
 ## Setting up the Jupyter notebook for experimentation
 
-This documentation has been generated from a Jupyter notebook and is available in the repo source code (see link below).
-
-The next couple of cells are designated to the setup of the notebook environment. If you are not interested in the experimentation and only want to read the documentation, feel free to skip them.
+The next couple of cells are designated to the setup of the notebook environment.
 
 The first step is to enable live python modules reloading, so changes in the python code of imported files are immediately reflected in the notebook without restarting the kernel.
 
 ```{code-cell} ipython3
+:tags: [remove-cell]
+
 # Enable python modules live reloading
 %load_ext autoreload
 %autoreload 2
 ```
 
-The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
++++ {"tags": ["remove-cell"]}
+
+The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode. SVG format is used for the plots to make them look good in the hosted sphinx documentation.
 
 ```{code-cell} ipython3
+:tags: [remove-cell]
+
 %config InlineBackend.figure_formats = ['svg']
 %matplotlib widget
 
@@ -93,7 +99,7 @@ Before we dive into the details of how inverse kinematics works, let's first get
 Coxa, femur and tibia are represented with vector that is rotated at its base. Each next link starts at the ened of the previous link.
 
 ```{code-cell} ipython3
-from point import Line, Point
+from geometry import Line, Point
 
 
 # unused
@@ -258,6 +264,8 @@ _ = animate_plot(
     beta=(-180, 180, 0.1),
     gamma=(-180, 180, 0.1),
 )
+
+# If plot is not responding to changes in sliders, most likely figure was closed. Rerun this cell to reactivate it.
 ```
 
 That was a fun little exercise, but it takes some effort to find just the right angle, and you might have noticed that there are more than one solution to it.
@@ -387,7 +395,7 @@ plot_xtick(30)
 Putting all of this in code will look as follows
 
 ```{code-cell} ipython3
-from point import SimplePoint3D as Point3D
+from geometry import SimplePoint3D as Point3D
 
 
 def coxa_ik(foot_target):

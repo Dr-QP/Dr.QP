@@ -49,5 +49,6 @@
       - python3-vcstool
       - python3-venv
       - ros-dev-tools
+      - ffmpeg # for rendering notebooks animations
     state: present
     install_recommends: false

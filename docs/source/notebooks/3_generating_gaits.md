@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.17.1
+    jupytext_version: 1.17.2
 kernelspec:
   display_name: .venv
   language: python
@@ -28,23 +28,29 @@ Fig 1. Four typical hexapodal gaits, depicting each of the six legs as either su
 
 The two most common gaits for hexapods are the tripod gait and the ripple gait. The tripod gait is a simple gait where the robot legs move in two groups of three, lifting one group of three legs at a time. While the ripple gait is a more complex gait where the legs move in a wave-like motion, lifting one leg at a time.
 
++++ {"tags": ["remove-cell"]}
+
 ## Setting up the Jupyter notebook for experimentation
 
-This documentation has been generated from a Jupyter notebook and is available in the repo source code (see link below).
-
-The next couple of cells are designated to the setup of the notebook environment. If you are not interested in the experimentation and only want to read the documentation, feel free to skip them.
+The next couple of cells are designated to the setup of the notebook environment.
 
 The first step is to enable live python modules reloading, so changes in the python code of imported files are immediately reflected in the notebook without restarting the kernel.
 
 ```{code-cell} ipython3
+:tags: [remove-cell]
+
 # Enable python modules live reloading
 %load_ext autoreload
 %autoreload 2
 ```
 
-The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode.
++++ {"tags": ["remove-cell"]}
+
+The next step is configuring matplotlib backend. Widget backend allows to interact with the plots in the notebook and is supported in Google Colab and VSCode. SVG format is used for the plots to make them look good in the hosted sphinx documentation.
 
 ```{code-cell} ipython3
+:tags: [remove-cell]
+
 %config InlineBackend.figure_formats = ['svg']
 %matplotlib widget
 
@@ -67,10 +73,10 @@ Lets build the simplest tripod gait generator, it will generate offsets for each
 
 ```{code-cell} ipython3
 from gait_generators import GaitGenerator
+from geometry import Point3D
 import matplotlib.pyplot as plt
 from models import HexapodLeg
 import numpy as np
-from point import Point3D
 
 
 class TripodGaitGenerator(GaitGenerator):
@@ -412,7 +418,7 @@ dy & dx
 \end{equation}
 
 ```{code-cell} ipython3
-from transforms import Transform
+from geometry import AffineTransform
 
 
 class DirectionalGaitGenerator(GaitGenerator):
@@ -439,7 +445,7 @@ class DirectionalGaitGenerator(GaitGenerator):
 
         # Create rotation matrix to align direction with x-axis
         # Ignore z-component as robot can't walk up. This also allows to generate steering in place
-        direction_transform = Transform.from_rotmatrix(
+        direction_transform = AffineTransform.from_rotmatrix(
             [
                 [norm_direction[0], -norm_direction[1], 0],
                 [norm_direction[1], norm_direction[0], 0],
@@ -522,9 +528,9 @@ def animate_hexapod_gait_with_direction(
     def update(frame=0, direction_degrees=direction_degrees):
         if animate_direction_degrees:
             direction_degrees = (frame / (total_steps * repeat)) * 360
-        direction = Transform.from_rotvec([0, 0, direction_degrees], degrees=True).apply_point(
-            Point3D([1, 0, 0])
-        )
+        direction = AffineTransform.from_rotvec(
+            [0, 0, direction_degrees], degrees=True
+        ).apply_point(Point3D([1, 0, 0]))
         set_pose(frame, direction)
         update_hexapod_plot(hexapod, plot_data)
         dir_line = direction * direction_vector_length
@@ -1128,9 +1134,9 @@ Let's put it all together and generate some gaits!
 from enum import auto, Enum
 
 from gait_generators import GaitGenerator
+from geometry import Point3D
 from models import HexapodLeg
 import numpy as np
-from point import Point3D
 
 
 class GaitType(Enum):
@@ -1293,7 +1299,7 @@ def animate_hexapod_rotation_gait(
             offsets = gaits_gen.get_offsets_at_phase_for_leg(leg.label, phase)
 
             #### <<<   NEW CODE START   >>>>> #####
-            rotation_transform = Transform.from_rotvec([0, 0, offsets.x], degrees=True)
+            rotation_transform = AffineTransform.from_rotvec([0, 0, offsets.x], degrees=True)
             leg_tip_target = rotation_transform.apply_point(leg_tip) + Point3D([0, 0, offsets.z])
             leg.move_to(leg_tip_target)
             #### <<<   NEW CODE END     >>>>> #####
@@ -1363,10 +1369,9 @@ Now that we have all the pieces in place, we can put them together to create a f
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from geometry import AffineTransform, Point3D
 import numpy as np
 from parametric_gait_generator import GaitType, ParametricGaitGenerator
-from point import Point3D
-from transforms import Transform
 
 
 class WalkController:
@@ -1484,7 +1489,9 @@ class WalkController:
                 rotation_degrees = (
                     self.rotation_speed_degrees * self.current_rotation_ratio * gait_offsets.x
                 )
-                rotation_transform = Transform.from_rotvec([0, 0, rotation_degrees], degrees=True)
+                rotation_transform = AffineTransform.from_rotvec(
+                    [0, 0, rotation_degrees], degrees=True
+                )
                 foot_target = rotation_transform.apply_point(foot_target)
 
             if has_stride or has_rotation:
@@ -1509,7 +1516,7 @@ class WalkController:
 
         # Create rotation matrix to align direction with x-axis
         # Ignore z-component as robot can't walk up. This also allows to generate stepping in place
-        direction_transform = Transform.from_rotmatrix(
+        direction_transform = AffineTransform.from_rotmatrix(
             [
                 [norm_direction[0], -norm_direction[1], 0],
                 [norm_direction[1], norm_direction[0], 0],
@@ -1581,7 +1588,7 @@ def animate_hexapod_walk(
             )
 
         stride_direction = Point3D([1, 0, 0])
-        stride_direction = Transform.from_rotvec(
+        stride_direction = AffineTransform.from_rotvec(
             [0, 0, direction_degrees], degrees=True
         ).apply_point(stride_direction)
 

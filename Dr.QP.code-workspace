@@ -47,7 +47,6 @@
       "slevesque.vscode-3dviewer",
       "corker.vscode-micromamba",
       "github.vscode-pull-request-github",
-      "swyddfa.esbonio",
       "augment.vscode-augment",
       "charliermarsh.ruff",
       "tamasfe.even-better-toml",
@@ -241,7 +240,7 @@
       {
         "label": "Dr.QP clean",
         "type": "shell",
-        "command": "rm -rf build/* install/* log/* lcov/* .cache/* docs/_build/*",
+        "command": "rm -rf build/*; rm -rf install/*; rm -rf log/*; rm -rf lcov/*; rm -rf .cache/*; rm -rf docs/_build/*; rm -rf **/__pycache__/",
         "options": {
           "cwd": "${workspaceFolder}"
         },

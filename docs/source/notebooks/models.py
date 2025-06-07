@@ -20,9 +20,8 @@
 
 import enum
 
+from geometry import AffineTransform, Line3D, Point3D
 import numpy as np
-from point import Line3D, Point3D
-from transforms import Transform
 
 
 class HexapodLeg(enum.Enum):
@@ -52,7 +51,7 @@ class HexapodModel:
         coxa_len=100,
         femur_len=100,
         tibia_len=100,
-        body_transform=Transform.identity(),
+        body_transform=AffineTransform.identity(),
         leg_rotation=[0, 0, 45],
     ):
         leg_rotation = np.array(leg_rotation)
@@ -165,7 +164,7 @@ class LegModel:
         tibia_length: float,
         location_on_body=[0, 0, 0],
         rotation=[0, 0, 0],
-        body_transform=Transform.identity(),
+        body_transform=AffineTransform.identity(),
         label='',
     ):
         self.coxa_length = coxa_length
@@ -205,8 +204,10 @@ class LegModel:
         self.update_base_transforms()
 
     def update_base_transforms(self):
-        self.body_link = self.body_transform @ Transform.from_translation(self.location_on_body)
-        self.body_joint = self.body_link @ Transform.from_rotvec(self.rotation, degrees=True)
+        self.body_link = self.body_transform @ AffineTransform.from_translation(
+            self.location_on_body
+        )
+        self.body_joint = self.body_link @ AffineTransform.from_rotvec(self.rotation, degrees=True)
 
     @property
     def lines(self):
@@ -235,6 +236,7 @@ class LegModel:
     def __repr__(self):
         return f'LegModel(body_start={self.body_start}, body_end={self.body_end}, coxa_end={self.coxa_end}, femur_end={self.femur_end}, tibia_end={self.tibia_end})'
 
+    # Leg Forward kinematics - START
     def forward_kinematics(
         self,
         alpha,
@@ -247,14 +249,22 @@ class LegModel:
         self.femur_angle = beta
         self.tibia_angle = gamma
 
-        self.coxa_joint = self.body_joint @ Transform.from_rotvec([0, 0, alpha], degrees=True)
-        self.coxa_link = self.coxa_joint @ Transform.from_translation([self.coxa_length, 0, 0])
+        self.coxa_joint = self.body_joint @ AffineTransform.from_rotvec([0, 0, alpha], degrees=True)
+        self.coxa_link = self.coxa_joint @ AffineTransform.from_translation(
+            [self.coxa_length, 0, 0]
+        )
 
-        self.femur_joint = self.coxa_link @ Transform.from_rotvec([0, beta, 0], degrees=True)
-        self.femur_link = self.femur_joint @ Transform.from_translation([self.femur_length, 0, 0])
+        self.femur_joint = self.coxa_link @ AffineTransform.from_rotvec([0, beta, 0], degrees=True)
+        self.femur_link = self.femur_joint @ AffineTransform.from_translation(
+            [self.femur_length, 0, 0]
+        )
 
-        self.tibia_joint = self.femur_link @ Transform.from_rotvec([0, gamma, 0], degrees=True)
-        self.tibia_link = self.tibia_joint @ Transform.from_translation([self.tibia_length, 0, 0])
+        self.tibia_joint = self.femur_link @ AffineTransform.from_rotvec(
+            [0, gamma, 0], degrees=True
+        )
+        self.tibia_link = self.tibia_joint @ AffineTransform.from_translation(
+            [self.tibia_length, 0, 0]
+        )
 
         # Calculate global positions using transformations
         identity_point = Point3D([0, 0, 0])
@@ -272,6 +282,7 @@ class LegModel:
 
         self.tibia_end = self.tibia_link.apply_point(identity_point)
         self.tibia_end.label = 'Foot'
+        # Leg Forward kinematics - END
 
     def move_to(self, foot_target: Point3D, verbose=False):
         reached_target, alpha, beta, gamma = self.inverse_kinematics(foot_target, verbose)
@@ -293,7 +304,7 @@ class LegModel:
         return solvable, alpha, beta, gamma
 
     def to_local(self, point):
-        return self.body_joint.inverse().apply_point(point)
+        return self.body_joint.inverse.apply_point(point)
 
     @staticmethod
     def _inverse_kinematics_xy(localized_foot_target: Point3D):

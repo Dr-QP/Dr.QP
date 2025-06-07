@@ -20,11 +20,10 @@
 
 from abc import abstractmethod
 
+from geometry import AffineTransform, Point3D
 from IPython.display import display
 from models import HexapodLeg
 import numpy as np
-from point import Point3D
-from transforms import Transform
 
 
 class GaitGenerator:
@@ -232,7 +231,7 @@ class GaitGenerator:
             for leg, offset in offsets.items():
                 leg_tip = leg_centers[leg]
                 if rotation_gaits:
-                    rotation_transform = Transform.from_rotvec([0, 0, offset.x], degrees=True)
+                    rotation_transform = AffineTransform.from_rotvec([0, 0, offset.x], degrees=True)
                     leg_tip = rotation_transform.apply_point(leg_tip) + Point3D([0, 0, offset.z])
                 else:
                     leg_tip = leg_tip + offset

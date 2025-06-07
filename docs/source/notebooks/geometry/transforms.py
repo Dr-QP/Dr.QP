@@ -19,11 +19,13 @@
 # THE SOFTWARE.
 
 import numpy as np
-from point import Line3D, Point3D
 from scipy.spatial.transform import Rotation as R
 
+from .line import Line3D
+from .point import Point3D
 
-class Transform:
+
+class AffineTransform:
     """
     An affine transform class.
 
@@ -32,6 +34,7 @@ class Transform:
 
     def __init__(self, matrix):
         self._matrix = matrix
+        self._inverse = None
 
     @classmethod
     def make(cls, rotation, translation):
@@ -79,6 +82,12 @@ class Transform:
     def matrix(self):
         return self._matrix
 
+    @property
+    def inverse(self):
+        if self._inverse is None:
+            self._inverse = AffineTransform(np.linalg.inv(self._matrix))
+        return self._inverse
+
     def apply_point(self, point):
         return Point3D(self.apply_nd(point.numpy()))
 
@@ -90,14 +99,11 @@ class Transform:
         transformed_point = self._matrix @ point4d
         return transformed_point[:3]
 
-    def inverse(self):
-        return Transform(np.linalg.inv(self._matrix))
-
     # operator @
     def __matmul__(self, other):
-        return Transform(self._matrix @ other._matrix)
+        return AffineTransform(self._matrix @ other._matrix)
 
     def __repr__(self):
         rotation = R.from_matrix(self.rotation).as_rotvec(degrees=True)
         translation = self.translation
-        return f'Transform({translation=}, {rotation=}, as matrix:\n{self._matrix})'
+        return f'AffineTransform({translation=}, {rotation=}, as matrix:\n{self._matrix})'
