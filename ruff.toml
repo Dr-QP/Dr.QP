@@ -65,7 +65,9 @@ classmethod-decorators = [
 
 [lint.per-file-ignores]
 # Ignore unused imports in __init__.py files
-"__init__.py" = ["F401", "F403"]
+# Ignoring F403 is not an option as codeql will complain about
+# polluting imports and there seems to be no way to turn it off
+"__init__.py" = ["F401"]
 
 [lint.pydocstyle]
 convention = "google"
