@@ -778,7 +778,7 @@ The WaveGaitGenerator implements a wave gait with these key characteristics:
  7. During swing, the leg lifts in a parabolic trajectory while moving forward
 
 ```{code-cell} ipython3
-class WaveGaitGenerator(GaitGenerator):
+class WaveGaitGenerator:
     def __init__(
         self,
         step_length=50,  # Length of each step in meters
@@ -943,8 +943,10 @@ class WaveGaitGenerator(GaitGenerator):
 
 
 wave_generator = WaveGaitGenerator(step_length=120, step_height=50)
-wave_generator.visualize_continuous(_steps=100)
-_ = wave_generator.visualize_continuous_in_3d(_steps=100)
+
+visualizer = GaitsVisualizer()
+visualizer.visualize_continuous(wave_generator, _steps=100)
+_ = visualizer.visualize_continuous_in_3d(wave_generator, _steps=100)
 ```
 
 ```{code-cell} ipython3
@@ -1099,142 +1101,24 @@ Let's put it all together and generate some gaits!
 ![Hexapod wave and ripple gaits](hexapod_wave_ripple_gait.png)
 
 ```{code-cell} ipython3
-%%writefile parametric_gait_generator.py
-# Copyright (c) 2017-2025 Anton Matosov
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-
-from enum import auto, Enum
-
-from gait_generators import GaitGenerator
-from geometry import Point3D
-from models import HexapodLeg
-import numpy as np
-
-
-class GaitType(Enum):
-    ripple = auto()
-    wave = auto()
-    tripod = auto()
-
-
-class ParametricGaitGenerator(GaitGenerator):
-    class GaitPhaseParams:
-        def __init__(
-            self,
-            gait_type: GaitType,
-            leg_phase_offsets: dict[HexapodLeg, float],
-            swing_duration: float = None,
-        ):
-            self.gait_type = gait_type
-            self.leg_phase_offsets = leg_phase_offsets
-            self.swing_duration = swing_duration
-
-    def __init__(self, step_length=1, step_height=1, gait=GaitType.wave):
-        super().__init__()
-
-        self.step_length = step_length
-        self.step_height = step_height
-        self.current_gait = gait
-
-        self.gaits = {
-            GaitType.wave: self.GaitPhaseParams(
-                GaitType.wave,
-                leg_phase_offsets={
-                    HexapodLeg.right_back: 0,
-                    HexapodLeg.right_middle: 1 / 6,
-                    HexapodLeg.right_front: 2 / 6,
-                    HexapodLeg.left_back: 3 / 6,
-                    HexapodLeg.left_middle: 4 / 6,
-                    HexapodLeg.left_front: 5 / 6,
-                },
-                swing_duration=1 / 6,
-            ),
-            GaitType.ripple: self.GaitPhaseParams(
-                GaitType.ripple,
-                leg_phase_offsets={
-                    HexapodLeg.right_back: 0,
-                    HexapodLeg.right_middle: 2 / 6,
-                    HexapodLeg.right_front: 4 / 6,
-                    HexapodLeg.left_back: 3 / 6,
-                    HexapodLeg.left_middle: 5 / 6,
-                    HexapodLeg.left_front: 1 / 6,
-                },
-                swing_duration=1 / 3,
-            ),
-            GaitType.tripod: self.GaitPhaseParams(
-                GaitType.tripod,
-                leg_phase_offsets={
-                    HexapodLeg.right_back: 0,
-                    HexapodLeg.right_middle: 1 / 2,
-                    HexapodLeg.right_front: 0,
-                    HexapodLeg.left_back: 1 / 2,
-                    HexapodLeg.left_middle: 0,
-                    HexapodLeg.left_front: 1 / 2,
-                },
-                swing_duration=1 / 2,
-            ),
-        }
-
-    def get_offsets_at_phase_for_leg(self, leg, phase) -> Point3D:
-        gait = self.gaits[self.current_gait]
-        leg_phase = phase - gait.leg_phase_offsets[leg]
-        leg_phase %= 1
-
-        half_step = self.step_length / 2
-        if leg_phase < gait.swing_duration:
-            # Swing phase - leg in air moving forward
-            t = np.interp(leg_phase, [0, gait.swing_duration], [0, 1])
-            x_offset = np.interp(leg_phase, [0, gait.swing_duration], [-half_step, half_step])
-            z_offset = np.sin(t * np.pi) * self.step_height
-        else:
-            # Stance phase - leg on ground moving backward
-            x_offset = np.interp(leg_phase, [gait.swing_duration, 1], [half_step, -half_step])
-            z_offset = 0  # On ground
-
-        return Point3D(
-            [
-                x_offset,
-                0,
-                z_offset,
-            ]
-        )
-```
-
-```{code-cell} ipython3
 import matplotlib.pyplot as plt
 from parametric_gait_generator import GaitType, ParametricGaitGenerator
 
 gait_gen = ParametricGaitGenerator()
+visualizer = GaitsVisualizer()
 
 gait_gen.current_gait = GaitType.wave
-axs = gait_gen.visualize_continuous(_steps=500, _subtitle=' Wave gait')
-_ = gait_gen.visualize_continuous_in_3d(_steps=100, step_length=gait_gen.step_length)
+axs = visualizer.visualize_continuous(gait_gen, _steps=500, _subtitle=' Wave gait')
+_ = visualizer.visualize_continuous_in_3d(gait_gen, _steps=100, _step_length=gait_gen.step_length)
 
 gait_gen.current_gait = GaitType.ripple
-axs = gait_gen.visualize_continuous(_steps=500, _subtitle=' Ripple gait', _num_phases=3)
-_ = gait_gen.visualize_continuous_in_3d(_steps=100, step_length=gait_gen.step_length)
+axs = visualizer.visualize_continuous(gait_gen, _steps=500, _subtitle=' Ripple gait', _num_phases=3)
+_ = visualizer.visualize_continuous_in_3d(gait_gen, _steps=100, _step_length=gait_gen.step_length)
 
 
 gait_gen.current_gait = GaitType.tripod
-axs = gait_gen.visualize_continuous(_steps=500, _subtitle=' Tripod gait')
-_ = gait_gen.visualize_continuous_in_3d(_steps=100, step_length=gait_gen.step_length)
+axs = visualizer.visualize_continuous(gait_gen, _steps=500, _subtitle=' Tripod gait')
+_ = visualizer.visualize_continuous_in_3d(gait_gen, _steps=100, _step_length=gait_gen.step_length)
 ```
 
 ```{code-cell} ipython3
@@ -1262,7 +1146,7 @@ from plotting import animate_plot, is_sphinx_build
 
 def animate_hexapod_rotation_gait(
     hexapod: HexapodModel,
-    gaits_gen: GaitGenerator,
+    gaits_gen,
     interactive=False,
     skip=False,
     total_steps=60,
@@ -1296,8 +1180,14 @@ def animate_hexapod_rotation_gait(
     fig, ax, plot_data = plot_hexapod(hexapod, feet_trails_frames=feet_trails_frames)
     ax.view_init(elev=view_elev, azim=view_azim)
 
-    gaits_gen.visualize_continuous_in_3d(
-        _steps=total_steps, ax=ax, plot_lines=None, leg_centers=leg_centers, rotation_gaits=True
+    visualizer = GaitsVisualizer()
+    visualizer.visualize_continuous_in_3d(
+        _gait_generator=gaits_gen,
+        _steps=total_steps,
+        _ax=ax,
+        _plot_lines=None,
+        _leg_centers=leg_centers,
+        _rotation_gaits=True
     )
 
     def animate(frame=0):
