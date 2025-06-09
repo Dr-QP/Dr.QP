@@ -104,30 +104,37 @@ jupyter_utils.display_file(
 :end-before: '# Gait params - END'
 ```
 
+The base class `GaitGenerator` defines the basic interface for the gait generators. The `get_offsets_at_phase` method returns the leg offsets at a specific phase of the gait cycle. The `get_offsets_at_phase_for_leg` method returns the leg offset for a specific leg at a specific phase.
+
+The `visualize_continuous` and `visualize_continuous_in_3d` methods are used to visualize the gait in 2D and 3D.
+
 ```{code-cell} ipython3
 from parametric_gait_generator import ParametricGaitGenerator, GaitType
 from models import HexapodModel
+from plotting import GaitsVisualizer
 
 hexapod = HexapodModel()
 hexapod.forward_kinematics(0, -25, 110)
 
 gait_gen = ParametricGaitGenerator(step_length=120, step_height=50)
-gait_gen.current_gait = GaitType.wave
+
+visualizer = GaitsVisualizer()
 ```
 
 ```{code-cell} ipython3
-gait_gen.visualize_continuous(_steps=100)
-_ = gait_gen.visualize_continuous_in_3d(_steps=100)
+gait_gen.current_gait = GaitType.wave
+visualizer.visualize_continuous(gait_gen, _steps=100)
+_ = visualizer.visualize_continuous_in_3d(gait_gen, _steps=100)
 ```
 
 ```{code-cell} ipython3
 gait_gen.current_gait = GaitType.ripple
-gait_gen.visualize_continuous(_steps=100)
-_ = gait_gen.visualize_continuous_in_3d(_steps=100)
+visualizer.visualize_continuous(gait_gen, _steps=100)
+_ = visualizer.visualize_continuous_in_3d(gait_gen, _steps=100)
 ```
 
 ```{code-cell} ipython3
 gait_gen.current_gait = GaitType.tripod
-gait_gen.visualize_continuous(_steps=100)
-_ = gait_gen.visualize_continuous_in_3d(_steps=100)
+visualizer.visualize_continuous(gait_gen, _steps=100)
+_ = visualizer.visualize_continuous_in_3d(gait_gen, _steps=100)
 ```

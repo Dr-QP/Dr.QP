@@ -20,7 +20,6 @@
 
 from enum import auto, Enum
 
-from gait_generators import GaitGenerator
 from geometry import Point3D
 from models import HexapodLeg
 import numpy as np
@@ -32,7 +31,7 @@ class GaitType(Enum):
     tripod = auto()
 
 
-class ParametricGaitGenerator(GaitGenerator):
+class ParametricGaitGenerator:
     """
     Parametric gait generator for hexapod robot.
 

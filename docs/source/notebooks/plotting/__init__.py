@@ -29,3 +29,4 @@ from .leg import (
     plot_update_leg3d_lines,
 )
 from .utils import display_and_close, is_sphinx_build, is_sphinx_build_no_videos
+from .gaits import GaitsVisualizer
