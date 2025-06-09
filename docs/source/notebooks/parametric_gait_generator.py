@@ -50,19 +50,16 @@ class ParametricGaitGenerator(GaitGenerator):
 
         Parameters:
         -----------
-            gait_type: Gait type
-            swing_phase_offsets: Dictionary of swing phase offsets per leg
+            swing_phase_start_offsets: Dictionary of swing phase offsets per leg
             swing_duration: Duration of the swing phase
         """
 
         def __init__(
             self,
-            gait_type: GaitType,
             swing_duration: float,
-            swing_phase_offsets: dict[HexapodLeg, float],
+            swing_phase_start_offsets: dict[HexapodLeg, float],
         ):
-            self.gait_type = gait_type
-            self.swing_phase_offsets = swing_phase_offsets
+            self.swing_phase_start_offsets = swing_phase_start_offsets
             self.swing_duration = swing_duration
 
     def __init__(self, step_length=1, step_height=1, gait=GaitType.wave):
@@ -72,11 +69,11 @@ class ParametricGaitGenerator(GaitGenerator):
         self.step_height = step_height
         self.current_gait = gait
 
+        # Gait params - START
         self.gaits = {
             GaitType.wave: self.GaitPhaseParams(
-                GaitType.wave,
                 swing_duration=1 / 6,
-                swing_phase_offsets={
+                swing_phase_start_offsets={
                     HexapodLeg.right_back: 0,
                     HexapodLeg.right_middle: 1 / 6,
                     HexapodLeg.right_front: 2 / 6,
@@ -86,9 +83,8 @@ class ParametricGaitGenerator(GaitGenerator):
                 },
             ),
             GaitType.ripple: self.GaitPhaseParams(
-                GaitType.ripple,
                 swing_duration=1 / 3,
-                swing_phase_offsets={
+                swing_phase_start_offsets={
                     HexapodLeg.right_back: 0,
                     HexapodLeg.right_middle: 2 / 6,
                     HexapodLeg.right_front: 4 / 6,
@@ -98,9 +94,8 @@ class ParametricGaitGenerator(GaitGenerator):
                 },
             ),
             GaitType.tripod: self.GaitPhaseParams(
-                GaitType.tripod,
                 swing_duration=1 / 2,
-                swing_phase_offsets={
+                swing_phase_start_offsets={
                     HexapodLeg.right_back: 0,
                     HexapodLeg.right_middle: 1 / 2,
                     HexapodLeg.right_front: 0,
@@ -110,10 +105,12 @@ class ParametricGaitGenerator(GaitGenerator):
                 },
             ),
         }
+        # Gait params - END
 
+    # Parametric function - START
     def get_offsets_at_phase_for_leg(self, leg, phase) -> Point3D:
         gait = self.gaits[self.current_gait]
-        leg_phase = phase - gait.swing_phase_offsets[leg]
+        leg_phase = phase - gait.swing_phase_start_offsets[leg]
         leg_phase %= 1
 
         half_step = self.step_length / 2
@@ -134,3 +131,4 @@ class ParametricGaitGenerator(GaitGenerator):
                 z_offset,
             ]
         )
+        # Parametric function - END

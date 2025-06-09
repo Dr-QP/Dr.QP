@@ -60,3 +60,74 @@ from plotting import display_and_close
 plt.ioff()  # this is equivalent to using inline backend, but figures have to be displayed manually
 ```
 
+## Parametric gait generator
+
+The easiest generic way to implement gait generation is to use a parametric function. The parametric function is defined in the leg's local coordinate system, with the origin at the leg's base and the X axis pointing forward. The function takes a single parameter, the phase of the gait cycle, and returns the leg's offset in the local coordinate system at that phase.
+
+The parametric function is defined as a piecewise function that describes the leg's movement in the swing and stance phases. In the swing phase, the leg moves forward in the X direction and up in the Z direction. In the stance phase, the leg moves backward in the X direction and stays at the ground level (Z=0).
+
+The swing and stance phases are defined by the `swing_duration` parameter, which is the fraction of the gait cycle that the leg is in the air. The swing phase starts at the beginning of the gait cycle and ends at `swing_duration`. The stance phase starts at `swing_duration` and ends at the end of the gait cycle.
+
+The parametric function is defined as follows:
+
+```{code-cell} ipython3
+:tags: [remove-cell]
+
+import jupyter_utils
+
+jupyter_utils.display_file(
+    'parametric_gait_generator.py',
+    start_after='# Parametric function - START',
+    end_before='# Parametric function - END',
+)
+```
+
+```{literalinclude} parametric_gait_generator.py
+:start-after: '# Parametric function - START'
+:end-before: '# Parametric function - END'
+```
+
+With this function in place, we can now implement the gait generators for the three gaits. The gait generators are defined in the `gaits` dictionary in the `ParametricGaitGenerator` class. The keys of the dictionary are the gait types, and the values are the parameters of the gait. The parameters include the swing duration and the swing phase start offsets for each leg. The swing phase start offsets define the phase at which the leg starts the swing phase.
+
+```{code-cell} ipython3
+:tags: [remove-cell]
+
+jupyter_utils.display_file(
+    'parametric_gait_generator.py',
+    start_after='# Gait params - START',
+    end_before='# Gait params - END',
+)
+```
+
+```{literalinclude} parametric_gait_generator.py
+:start-after: '# Gait params - START'
+:end-before: '# Gait params - END'
+```
+
+```{code-cell} ipython3
+from parametric_gait_generator import ParametricGaitGenerator, GaitType
+from models import HexapodModel
+
+hexapod = HexapodModel()
+hexapod.forward_kinematics(0, -25, 110)
+
+gait_gen = ParametricGaitGenerator(step_length=120, step_height=50)
+gait_gen.current_gait = GaitType.wave
+```
+
+```{code-cell} ipython3
+gait_gen.visualize_continuous(_steps=100)
+_ = gait_gen.visualize_continuous_in_3d(_steps=100)
+```
+
+```{code-cell} ipython3
+gait_gen.current_gait = GaitType.ripple
+gait_gen.visualize_continuous(_steps=100)
+_ = gait_gen.visualize_continuous_in_3d(_steps=100)
+```
+
+```{code-cell} ipython3
+gait_gen.current_gait = GaitType.tripod
+gait_gen.visualize_continuous(_steps=100)
+_ = gait_gen.visualize_continuous_in_3d(_steps=100)
+```
