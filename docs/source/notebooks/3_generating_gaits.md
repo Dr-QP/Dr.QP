@@ -104,9 +104,9 @@ jupyter_utils.display_file(
 :end-before: '# Gait params - END'
 ```
 
-The base class `GaitGenerator` defines the basic interface for the gait generators. The `get_offsets_at_phase` method returns the leg offsets at a specific phase of the gait cycle. The `get_offsets_at_phase_for_leg` method returns the leg offset for a specific leg at a specific phase.
+## Visualizing the gaits
 
-The `visualize_continuous` and `visualize_continuous_in_3d` methods are used to visualize the gait in 2D and 3D.
+The `GaitsVisualizer` class provides a convenient way to visualize the gaits. The `visualize_continuous` method visualizes each axis of the gait in 2D, while the `visualize_continuous_in_3d` method visualizes the gait in 3D.
 
 ```{code-cell} ipython3
 from parametric_gait_generator import ParametricGaitGenerator, GaitType
@@ -121,17 +121,23 @@ gait_gen = ParametricGaitGenerator(step_length=120, step_height=50)
 visualizer = GaitsVisualizer()
 ```
 
+### Wave gait
+
 ```{code-cell} ipython3
 gait_gen.current_gait = GaitType.wave
 visualizer.visualize_continuous(gait_gen, _steps=100)
 _ = visualizer.visualize_continuous_in_3d(gait_gen, _steps=100)
 ```
 
+### Ripple gait
+
 ```{code-cell} ipython3
 gait_gen.current_gait = GaitType.ripple
 visualizer.visualize_continuous(gait_gen, _steps=100)
 _ = visualizer.visualize_continuous_in_3d(gait_gen, _steps=100)
 ```
+
+### Tripod gait
 
 ```{code-cell} ipython3
 gait_gen.current_gait = GaitType.tripod
