@@ -188,6 +188,8 @@ def animate_hexapod_gait(
 
 ### Wave gait
 
+Wave gait is the simplest gait where only one leg is in swing phase at a time. The swing phase progresses from one leg to the next in a wave-like manner.
+
 ```{code-cell} ipython3
 gait_gen.current_gait = GaitType.wave
 visualizer.visualize_continuous(gait_gen, _steps=100)
@@ -198,6 +200,8 @@ anim = animate_hexapod_gait(hexapod, gait_gen, interactive=True, skip=False)
 
 ### Ripple gait
 
+Ripple gait is similar to wave gait, but two legs are in swing phase at a time. The swing phase progresses from one leg to the next with a half-phase offset.
+
 ```{code-cell} ipython3
 gait_gen.current_gait = GaitType.ripple
 visualizer.visualize_continuous(gait_gen, _steps=100)
@@ -207,7 +211,7 @@ anim = animate_hexapod_gait(hexapod, gait_gen, interactive=True, skip=False)
 
 ### Tripod gait
 
-The tripod gait is a simple gait where the robot legs move in two groups of three:
+In tripod gait, the robot legs move in two groups of three:
 
 - group A: left-front, right-middle, and left-back
 - group B: right-front, left-middle, and right-back.
