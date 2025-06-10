@@ -19,7 +19,8 @@
 # THE SOFTWARE.
 
 from .animation import animate_plot
-from .hexapod import HexapodPlotData, plot_hexapod, update_hexapod_plot
+from .gaits import GaitsVisualizer
+from .hexapod import animate_hexapod_gait, HexapodPlotData, plot_hexapod, update_hexapod_plot
 from .leg import (
     LegPlotData,
     plot_ik_lines,

@@ -22,7 +22,10 @@ from models import HexapodModel
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 import numpy as np
 
+from .animation import animate_plot
+from .gaits import GaitsVisualizer
 from .leg import plot_leg3d, plot_update_leg3d_lines
+from .utils import is_sphinx_build
 
 
 class HexapodPlotData:
@@ -98,3 +101,60 @@ def update_hexapod_plot(hexapod: HexapodModel, plot_data: HexapodPlotData):
             segments = leg_tips_to_segments(plot_data.leg_tips[leg.label])
             lc = plot_data.leg_tip_collections[leg.label]
             lc.set_segments(segments)
+
+
+# Animate gait - START
+def animate_hexapod_gait(
+    hexapod: HexapodModel,
+    gaits_gen,
+    interactive=False,
+    skip=False,
+    total_steps=60,
+    interval=16,
+    view_elev=47.0,
+    view_azim=-160,
+    repeat=1,
+    feet_trails_frames=0,
+):
+    if skip:
+        return
+
+    if is_sphinx_build():
+        repeat = 1
+
+    hexapod.forward_kinematics(0, -25, 110)
+    leg_centers = {leg.label: leg.tibia_end.copy() for leg in hexapod.legs}
+    leg_tips = [leg.tibia_end.copy() for leg in hexapod.legs]
+
+    def set_pose(step):
+        step = step % total_steps  # handle repeats
+        phase = step / total_steps  # interpolation phase
+        for leg, leg_tip in zip(hexapod.legs, leg_tips):
+            offsets = gaits_gen.get_offsets_at_phase_for_leg(leg.label, phase)
+            leg.move_to(leg_tip + offsets)
+
+    fig, ax, plot_data = plot_hexapod(hexapod, feet_trails_frames=feet_trails_frames)
+    ax.view_init(elev=view_elev, azim=view_azim)
+
+    visualizer = GaitsVisualizer()
+    visualizer.visualize_continuous_in_3d(
+        _gait_generator=gaits_gen,
+        _steps=total_steps,
+        _ax=ax,
+        _plot_lines=None,
+        _leg_centers=leg_centers,
+    )
+
+    def update(frame=0):
+        set_pose(frame)
+        update_hexapod_plot(hexapod, plot_data)
+        fig.canvas.draw_idle()
+
+    animate_plot(
+        fig,
+        update,
+        _interactive=interactive,
+        _frames=total_steps * repeat,
+        _interval=interval,
+    )
+    # Animate gait - END
