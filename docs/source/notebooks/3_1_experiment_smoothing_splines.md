@@ -12,7 +12,7 @@ kernelspec:
   name: python3
 ---
 
-# 3.1 Appendix: Smoothing Splines
+# 3.1 Experiment: Smoothing Splines
 
 This notebook shows several examples of smoothing splines.
 
