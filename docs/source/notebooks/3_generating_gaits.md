@@ -405,6 +405,7 @@ jupyter_utils.display_file(
 ```{code-cell} ipython3
 import importlib
 
+import numpy as np
 from models import HexapodModel
 from plotting import animate_plot, is_sphinx_build
 import walk_controller
@@ -429,7 +430,8 @@ def animate_hexapod_walk(
         repeat = 100
 
     if is_sphinx_build():
-        repeat = 1
+        repeat = 8
+        interactive = False
 
     fig, ax, plot_data = plot_hexapod(
         walk_controller.hexapod, feet_trails_frames=feet_trails_frames
@@ -458,6 +460,15 @@ def animate_hexapod_walk(
             walk_speed = np.interp(
                 frame, [0, total_frames * 0.25, total_frames * 0.75, total_frames], [0, 1, 1, 0]
             )
+            if frame < total_frames * 0.25 or frame > total_frames * 0.60:
+                direction_degrees = 0
+            else:
+                direction_degrees = 30
+
+            if frame < total_frames * 0.60:
+                rotation_ratio = 0
+            else:
+                rotation_ratio = 1.
 
         stride_direction = Point3D([1, 0, 0])
         stride_direction = AffineTransform.from_rotvec(
