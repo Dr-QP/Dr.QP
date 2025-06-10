@@ -61,7 +61,7 @@ class ParametricGaitGenerator:
             self.swing_phase_start_offsets = swing_phase_start_offsets
             self.swing_duration = swing_duration
 
-    def __init__(self, step_length=1, step_height=1, gait=GaitType.wave):
+    def __init__(self, step_length=1.0, step_height=1.0, gait=GaitType.wave):
         super().__init__()
 
         self.step_length = step_length
