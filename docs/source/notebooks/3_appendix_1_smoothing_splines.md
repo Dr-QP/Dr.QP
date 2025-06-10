@@ -812,9 +812,9 @@ ax.scatter(points[:, 0], points[:, 1], c='r')
 display_and_close(fig)
 ```
 
-
 ## Using splines for trajectory interpolation
 
++++
 
 In order to achieve transitioning we need to implement trajectory interpolation. The simplest approach would be to use linear interpolation, however it may create jerkiness cause by sudden trajectory changes causing high deceleration and acceleration. Much better results can be achieved using [smoothing spline functions](https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html), e.g. a 2nd degree [B-spline](https://en.wikipedia.org/wiki/B-spline). B-spline allows a smooth transition between control points while remaining stable if some of the control points are changed, e.g. when new goal point is added. 2nd degree B-spline has continuous first derivative, which means that the velocity is smooth and has no sudden changes in direction.
 
@@ -869,6 +869,8 @@ As you can see above, interpolating BSpline generates a smooth trajectory that f
 One of the approaches is to reduce smoothness by mixing in a linear trajectory. Animation below shows how it affects the trajectory.
 
 ```{code-cell} ipython3
+from plotting import animate_plot
+
 # Animation size has reached 21028704 bytes, exceeding the limit of 20971520.0. If you're sure you want a larger animation embedded, set the animation.embed_limit rc parameter to a larger value (in MB). This and further frames will be dropped.
 plt.rcParams['animation.embed_limit'] = 50
 
@@ -923,7 +925,6 @@ frames = len(trajectory_points) - 1
 _ = animate_plot(fig, update, frames * frames_between_points, _interval=16, _interactive=False)
 ```
 
-
 ### Defining gaits as b-spline control points
 
 Having BSplines as interpolation mechanism it is easy to define gaits as a sequence of control points.
@@ -946,9 +947,9 @@ To keep things simple for the first iteration we are going to keep speed constan
 from abc import abstractmethod
 import enum
 
-from plotting import GaitsVisualizer
 from geometry import Point3D
 from models import HexapodLeg
+from plotting import GaitsVisualizer
 from scipy.interpolate import make_interp_spline
 
 
@@ -1115,7 +1116,6 @@ gait_gen = SplineGaitGenerator()
 visualizer = GaitsVisualizer()
 visualizer.visualize_continuous(gait_gen, _steps=100, return_control_points=True)
 _ = visualizer.visualize_continuous_in_3d(gait_gen, _steps=100, return_control_points=True)
-
 ```
 
 Visualization above is using the interpolation between control points in the current gait.
@@ -1127,11 +1127,9 @@ In order to smooth out the gait transitions we are going to interpolate the traj
 This however creates artifacts in the transition from swing to stance phase.
 
 ```{code-cell} ipython3
-from plotting import animate_hexapod_gait
 
 gait_gen = SplineGaitGenerator()
 visualizer = GaitsVisualizer()
 visualizer.visualize_continuous(gait_gen, _steps=100, return_control_points=False)
 _ = visualizer.visualize_continuous_in_3d(gait_gen, _steps=100, return_control_points=False)
 ```
-

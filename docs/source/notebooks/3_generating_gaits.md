@@ -432,7 +432,7 @@ def animate_hexapod_rotation_gait(
         _ax=ax,
         _plot_lines=None,
         _leg_centers=leg_centers,
-        _rotation_gaits=True
+        _rotation_gaits=True,
     )
 
     def animate(frame=0):
