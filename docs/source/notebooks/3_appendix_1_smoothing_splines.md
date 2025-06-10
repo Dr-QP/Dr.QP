@@ -812,6 +812,118 @@ ax.scatter(points[:, 0], points[:, 1], c='r')
 display_and_close(fig)
 ```
 
+
+## Using splines for trajectory interpolation
+
+
+In order to achieve transitioning we need to implement trajectory interpolation. The simplest approach would be to use linear interpolation, however it may create jerkiness cause by sudden trajectory changes causing high deceleration and acceleration. Much better results can be achieved using [smoothing spline functions](https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html), e.g. a 2nd degree [B-spline](https://en.wikipedia.org/wiki/B-spline). B-spline allows a smooth transition between control points while remaining stable if some of the control points are changed, e.g. when new goal point is added. 2nd degree B-spline has continuous first derivative, which means that the velocity is smooth and has no sudden changes in direction.
+
+```{code-cell} ipython3
+from smoothing_splines import plot_spline, SplineType
+
+frames_between_points = 30
+# x, y, t
+trajectory_points = np.array(
+    [
+        [0, 0, 0],
+        [2, 1, frames_between_points * 0.5],
+        [3, 1, frames_between_points * 0.75],
+        [5, 2, frames_between_points * 2],
+        [6, 0, frames_between_points * 5],
+        [1, 4, frames_between_points * 6],
+        [2, 5, frames_between_points * 7],
+        [5, 3, frames_between_points * 7.5],
+        [3, 3, frames_between_points * 8],
+    ]
+)
+fig, ax = plt.subplots(2, 1)
+fig.set_figheight(10)
+ax[0].scatter(trajectory_points[::, 0], trajectory_points[::, 1], c='k', label='Trajectory points')
+
+current_t = trajectory_points[3, 2] + 20
+plot_spline(ax[0], current_t, trajectory_points, k=1)
+spline_x, spline_y = plot_spline(
+    ax[0],
+    current_t,
+    trajectory_points,
+    k=3,
+    derivatives=4,
+    derivatives_ax=ax[1],
+    bc_type='natural',
+    spline_type=SplineType.interp,
+    color='green',
+)
+
+for x, y, t in trajectory_points:
+    ax[0].text(x, y + 0.2, f'{t=}')
+
+ax[0].text(spline_x(current_t), spline_y(current_t) + 0.2, f'{current_t=}', color='green')
+
+ax[0].legend()
+ax[1].legend()
+
+display_and_close(fig)
+```
+
+As you can see above, interpolating BSpline generates a smooth trajectory that follows the control points with smooth velocity changes, which will reduce strains on servos. However it comes at a cost of random overshooting that might be non desirable.
+One of the approaches is to reduce smoothness by mixing in a linear trajectory. Animation below shows how it affects the trajectory.
+
+```{code-cell} ipython3
+# Animation size has reached 21028704 bytes, exceeding the limit of 20971520.0. If you're sure you want a larger animation embedded, set the animation.embed_limit rc parameter to a larger value (in MB). This and further frames will be dropped.
+plt.rcParams['animation.embed_limit'] = 50
+
+
+plt.ioff()
+fig, ax = plt.subplots(1, 1)
+fig.set_figheight(8)
+
+num_items = 4
+max_points = 7
+
+
+def update(frame=0):
+    ax.clear()
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_title('Trajectory smoothing using interpolating B-spline (time points are not uniform)')
+    ax.set(xlim=(-1, 10), ylim=(-1, 10), aspect='equal')
+    ax.grid(which='both', color='grey', linewidth=1, linestyle='-', alpha=0.2)
+
+    first_point = frame // frames_between_points
+    last_point = min(first_point + num_items, len(trajectory_points))
+    control_points = trajectory_points[0 : last_point + 1]
+    if len(control_points) > max_points:
+        control_points = control_points[-max_points:]
+    ##############################
+    ax.scatter(trajectory_points[::, 0], trajectory_points[::, 1], c='k', label='All points')
+    ax.scatter(control_points[::, 0], control_points[::, 1], c='r', label='Active points')
+
+    for x, y, t in trajectory_points:
+        ax.text(x, y + 0.2, f't={t}')
+
+    ##############################
+    # Uncomment to see other splines
+    # spline_x, spline_y = plot_spline(ax, frame, control_points, 1, color='blue')
+    # ax.text(spline_x(frame), spline_y(frame) + .2, f'curr_t={frame}', color='blue')
+
+    # spline_x, spline_y = plot_spline(ax, frame, control_points, 2, color='orange')
+    # ax.text(spline_x(frame), spline_y(frame) + .2, f'curr_t={frame}', color='orange')
+
+    spline_x, spline_y = plot_spline(
+        ax, frame, control_points, 3, color='green', bc_type='natural', mix=0.5
+    )
+    ax.text(spline_x(frame), spline_y(frame) + 0.2, f'curr_t={frame}', color='green')
+
+    ax.legend()
+    fig.canvas.draw_idle()
+
+
+frames = len(trajectory_points) - 1
+
+_ = animate_plot(fig, update, frames * frames_between_points, _interval=16, _interactive=False)
+```
+
+
 ### Defining gaits as b-spline control points
 
 Having BSplines as interpolation mechanism it is easy to define gaits as a sequence of control points.
@@ -1022,3 +1134,4 @@ visualizer = GaitsVisualizer()
 visualizer.visualize_continuous(gait_gen, _steps=100, return_control_points=False)
 _ = visualizer.visualize_continuous_in_3d(gait_gen, _steps=100, return_control_points=False)
 ```
+

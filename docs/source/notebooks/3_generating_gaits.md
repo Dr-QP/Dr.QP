@@ -378,3 +378,381 @@ animate_hexapod_gait_with_direction(
 ```
 
 That is a fully functional tripod gait generator with full steering capabilities.
+
+
+## Turning robot
+
+To make robot turn we need to mix in circular movement to the gait. Let's first make it turn in place. This can be achieved by using existing gait generator and treating X offsets as a rotation angle of the foot around center of the body.
+
+```{code-cell} ipython3
+from models import HexapodModel
+from plotting import animate_plot, is_sphinx_build
+
+
+def animate_hexapod_rotation_gait(
+    hexapod: HexapodModel,
+    gaits_gen,
+    interactive=False,
+    skip=False,
+    total_steps=60,
+    interval=16,
+    view_elev=47.0,
+    view_azim=-160,
+    repeat=1,
+    feet_trails_frames=0,
+):
+    if skip:
+        return
+
+    if is_sphinx_build():
+        repeat = 1
+
+    leg_centers = {leg.label: leg.tibia_end.copy() for leg in hexapod.legs}
+    leg_tips = [leg.tibia_end.copy() for leg in hexapod.legs]
+
+    def set_pose(step):
+        step = step % total_steps  # handle repeats
+        phase = step / total_steps  # interpolation phase
+        for leg, leg_tip in zip(hexapod.legs, leg_tips):
+            offsets = gaits_gen.get_offsets_at_phase_for_leg(leg.label, phase)
+
+            #### <<<   NEW CODE START   >>>>> #####
+            rotation_transform = AffineTransform.from_rotvec([0, 0, offsets.x], degrees=True)
+            leg_tip_target = rotation_transform.apply_point(leg_tip) + Point3D([0, 0, offsets.z])
+            leg.move_to(leg_tip_target)
+            #### <<<   NEW CODE END     >>>>> #####
+
+    fig, ax, plot_data = plot_hexapod(hexapod, feet_trails_frames=feet_trails_frames)
+    ax.view_init(elev=view_elev, azim=view_azim)
+
+    visualizer = GaitsVisualizer()
+    visualizer.visualize_continuous_in_3d(
+        _gait_generator=gaits_gen,
+        _steps=total_steps,
+        _ax=ax,
+        _plot_lines=None,
+        _leg_centers=leg_centers,
+        _rotation_gaits=True
+    )
+
+    def animate(frame=0):
+        set_pose(frame)
+        update_hexapod_plot(hexapod, plot_data)
+        fig.canvas.draw_idle()
+
+    animate_plot(
+        fig,
+        animate,
+        _interactive=interactive,
+        _frames=total_steps * repeat,
+        _interval=interval,
+    )
+
+
+hexapod = HexapodModel()
+hexapod.forward_kinematics(0, -25, 110)
+
+rotation_direction = 45  # exaggerated to see the effect
+rotation_gen = ParametricGaitGenerator(step_length=rotation_direction, step_height=60)
+# rotation_gen.current_gait = GaitType.tripod
+# rotation_gen.current_gait = GaitType.ripple
+rotation_gen.current_gait = GaitType.wave
+
+anim = animate_hexapod_rotation_gait(hexapod, rotation_gen, interactive=False, skip=False)
+```
+
+### Putting it all together
+
+Now that we have all the pieces in place, we can put them together to create a full walk controller. The controller will take care of the following:
+
+1. Process input command of the walk direction and rotation
+2. Generate a walk trajectory based on the input direction
+3. Generate a turn trajectory based on the input rotation
+4. Combine the two trajectories into a single walk trajectory
+5. Apply the walk trajectory to the robot based on the current robot legs position
+
+```{code-cell} ipython3
+%%writefile walk_controller.py
+# Copyright (c) 2017-2025 Anton Matosov
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+from geometry import AffineTransform, Point3D
+import numpy as np
+from parametric_gait_generator import GaitType, ParametricGaitGenerator
+
+
+class WalkController:
+    def __init__(
+        self,
+        hexapod,
+        step_length=60,
+        step_height=40,
+        rotation_speed_degrees=10,
+        phase_steps_per_cycle=30,
+        gait=GaitType.wave,
+    ):
+        self.hexapod = hexapod
+        self.step_length = step_length
+        self.step_height = step_height
+        self.rotation_speed_degrees = rotation_speed_degrees
+        self.gait_gen = ParametricGaitGenerator(step_length=1.0, step_height=1.0, gait=gait)
+
+        self.current_phase = 0.0
+        self.last_stop_phase = 0.0
+        self.phase_step = 1 / phase_steps_per_cycle
+
+        self.leg_tips_on_ground = [(leg, leg.tibia_end.copy()) for leg in hexapod.legs]
+
+        self.current_direction = Point3D([1, 0, 0])
+        self.current_stride_ratio = 0
+        self.current_rotation_ratio = 0
+
+    @property
+    def current_gait(self):
+        return self.gait_gen.current_gait
+
+    @current_gait.setter
+    def current_gait(self, gait):
+        self.gait_gen.current_gait = gait
+
+    def next(
+        self,
+        stride_direction=Point3D([1, 0, 0]),
+        stride_ratio=1.0,
+        rotation_ratio=0.0,
+        phase_override=None,
+        verbose=False,
+    ):
+        self.__next_phase(phase_override)
+        feet_targets = self.__next_feet_targets(
+            stride_direction, stride_ratio, rotation_ratio, verbose
+        )
+        self.__move_feet(feet_targets)
+
+    def __next_phase(self, phase_override=None):
+        if phase_override is not None:
+            self.current_phase = phase_override
+        else:
+            self.current_phase += self.phase_step
+
+    def __next_feet_targets(self, stride_direction, stride_ratio, rotation_ratio, verbose):
+        ###############################################################
+        ## All if this mixing, smoothing and clipping is a hot garbage,
+        # TODO(anton-matosov) switch to proper trajectory mixing
+        stride_ratio = np.clip(stride_ratio, 0, 1)
+        rotation_ratio = np.clip(rotation_ratio, -1, 1)
+
+        no_motion_eps = 0.05
+        had_stride = abs(self.current_stride_ratio) > no_motion_eps
+        had_rotation = abs(self.current_rotation_ratio) > no_motion_eps
+
+        self.current_stride_ratio = np.interp(
+            0.3, [0, 1], [self.current_stride_ratio, stride_ratio]
+        )
+        self.current_rotation_ratio = np.interp(
+            0.3, [0, 1], [self.current_rotation_ratio, rotation_ratio]
+        )
+        self.current_direction = self.current_direction.interpolate(stride_direction, 0.3)
+
+        self.current_stride_ratio = np.clip(self.current_stride_ratio, 0, 1)
+        self.current_rotation_ratio = np.clip(self.current_rotation_ratio, -1, 1)
+
+        has_stride = abs(self.current_stride_ratio) > no_motion_eps
+        has_rotation = abs(self.current_rotation_ratio) > no_motion_eps
+
+        had_motion = had_stride or had_rotation
+        has_motion = has_stride or has_rotation
+
+        stopping = had_motion and not has_motion
+        starting = not had_motion and has_motion
+        stopped = not had_motion and not has_motion
+
+        if starting or stopped:
+            self.current_phase = 0
+
+        height_ratio = 1
+        if stopping:
+            self.last_stop_phase = self.current_phase
+        else:
+            self.last_stop_phase = 0.0
+        ###############################################################
+
+        result = []
+        direction_transform = self.__make_direction_transform(self.current_direction)
+        for leg, leg_tip in self.leg_tips_on_ground:
+            foot_target = leg_tip
+            gait_offsets = self.gait_gen.get_offsets_at_phase_for_leg(leg.label, self.current_phase)
+
+            # Apply steering
+            if has_stride:
+                stride_offsets = gait_offsets * Point3D(
+                    [self.step_length * self.current_stride_ratio, 0, 0]
+                )
+                direction_offsets = direction_transform.apply_point(stride_offsets)
+                foot_target = foot_target + direction_offsets
+
+            # Apply rotation
+            if has_rotation:
+                rotation_degrees = (
+                    self.rotation_speed_degrees * self.current_rotation_ratio * gait_offsets.x
+                )
+                rotation_transform = AffineTransform.from_rotvec(
+                    [0, 0, rotation_degrees], degrees=True
+                )
+                foot_target = rotation_transform.apply_point(foot_target)
+
+            if has_stride or has_rotation:
+                foot_target.z += gait_offsets.z * self.step_height * height_ratio
+
+            if verbose:
+                print(f'{leg.label} {self.current_phase=}')
+                print(f'{leg.tibia_end=}')
+                print(f'{gait_offsets=}')
+                print(f'{stride_offsets=}')
+                print(f'{direction_offsets=}')
+                print(f'{foot_target=}')
+                print()
+            result.append((leg, foot_target))
+
+        return result
+
+    @staticmethod
+    def __make_direction_transform(direction):
+        # Normalize direction vector
+        norm_direction = direction.normalized().numpy()
+
+        # Create rotation matrix to align direction with x-axis
+        # Ignore z-component as robot can't walk up. This also allows to generate stepping in place
+        direction_transform = AffineTransform.from_rotmatrix(
+            [
+                [norm_direction[0], -norm_direction[1], 0],
+                [norm_direction[1], norm_direction[0], 0],
+                [0, 0, 1],
+            ]
+        )
+        return direction_transform
+
+    def __move_feet(self, legs_and_targets):
+        for leg, foot_target in legs_and_targets:
+            leg.move_to(foot_target)
+```
+
+```{code-cell} ipython3
+import importlib
+
+from models import HexapodModel
+from plotting import animate_plot, is_sphinx_build
+import walk_controller
+
+importlib.reload(walk_controller)  # autoreload fails with files written by notebook for some reason
+
+
+def animate_hexapod_walk(
+    walk_controller: walk_controller.WalkController,
+    interactive=False,
+    skip=False,
+    fps=30,
+    view_elev=47.0,
+    view_azim=-160,
+    repeat=1,
+    feet_trails_frames=0,
+):
+    if skip:
+        return
+
+    if interactive:
+        repeat = 100
+
+    if is_sphinx_build():
+        repeat = 1
+
+    fig, ax, plot_data = plot_hexapod(
+        walk_controller.hexapod, feet_trails_frames=feet_trails_frames
+    )
+    ax.view_init(elev=view_elev, azim=view_azim)
+
+    total_frames = fps * repeat
+
+    last_frame = 0
+
+    def animate(
+        frame=0,
+        direction_degrees=0,
+        walk_speed=1,
+        rotation_ratio=0,
+    ):
+        nonlocal last_frame
+        if interactive and frame == last_frame:
+            # other params are changing, don't update walker
+            return
+
+        phase = frame % fps
+        phase = phase / fps
+
+        if not interactive:
+            walk_speed = np.interp(
+                frame, [0, total_frames * 0.25, total_frames * 0.75, total_frames], [0, 1, 1, 0]
+            )
+
+        stride_direction = Point3D([1, 0, 0])
+        stride_direction = AffineTransform.from_rotvec(
+            [0, 0, direction_degrees], degrees=True
+        ).apply_point(stride_direction)
+
+        walk_controller.next(
+            phase_override=phase,
+            stride_direction=stride_direction,
+            stride_ratio=walk_speed,
+            rotation_ratio=rotation_ratio,
+            verbose=False,
+        )
+        update_hexapod_plot(hexapod, plot_data)
+        fig.canvas.draw_idle()
+        last_frame = frame
+
+    animate_plot(
+        fig,
+        animate,
+        _interactive=interactive,
+        _frames=total_frames,
+        _interval=1000 / fps,
+        walk_speed=(0, 2, 0.1),
+        direction_degrees=(-180, 180, 1),
+        rotation_ratio=(-2, 2, 0.1),
+    )
+
+
+hexapod = HexapodModel()
+hexapod.forward_kinematics(0, -25, 110)
+walker = walk_controller.WalkController(
+    hexapod, step_length=120, step_height=60, rotation_speed_degrees=10, gait=GaitType.ripple
+)
+
+anim = animate_hexapod_walk(
+    walker,
+    interactive=True,
+    skip=False,
+    feet_trails_frames=40,
+    repeat=5,
+    view_elev=70,
+    view_azim=180,
+    fps=30,
+)
+```
