@@ -107,7 +107,7 @@ class ParametricGaitGenerator:
         # Gait params - END
 
     # Parametric function - START
-    def get_offsets_at_phase_for_leg(self, leg, phase) -> Point3D:
+    def get_offsets_at_phase_for_leg(self, leg: HexapodLeg, phase: float) -> Point3D:
         gait = self.gaits[self.current_gait]
         leg_phase = phase - gait.swing_phase_start_offsets[leg]
         leg_phase %= 1

@@ -18,7 +18,7 @@ This notebook shows several examples of smoothing splines.
 
 ## Deep dive into smoothing splines
 
-Make sure to read <https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html> from Scipy docs that explains smoothing splines in detail.
+Make sure to read <https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html> from SciPy docs that explains smoothing splines in detail.
 
 +++ {"tags": ["remove-cell"]}
 
@@ -1127,7 +1127,6 @@ In order to smooth out the gait transitions we are going to interpolate the traj
 This however creates artifacts in the transition from swing to stance phase.
 
 ```{code-cell} ipython3
-
 gait_gen = SplineGaitGenerator()
 visualizer = GaitsVisualizer()
 visualizer.visualize_continuous(gait_gen, _steps=100, return_control_points=False)
