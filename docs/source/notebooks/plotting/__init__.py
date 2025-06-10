@@ -19,7 +19,8 @@
 # THE SOFTWARE.
 
 from .animation import animate_plot
-from .hexapod import HexapodPlotData, plot_hexapod, update_hexapod_plot
+from .gaits import GaitsVisualizer
+from .hexapod import animate_hexapod_gait, HexapodPlotData, plot_hexapod, update_hexapod_plot
 from .leg import (
     LegPlotData,
     plot_ik_lines,
@@ -29,4 +30,3 @@ from .leg import (
     plot_update_leg3d_lines,
 )
 from .utils import display_and_close, is_sphinx_build, is_sphinx_build_no_videos
-from .gaits import GaitsVisualizer

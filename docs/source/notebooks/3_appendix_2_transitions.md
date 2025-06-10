@@ -40,7 +40,6 @@ The next step is configuring matplotlib backend. Widget backend allows to intera
 %matplotlib widget
 
 import matplotlib.pyplot as plt
-from plotting import display_and_close
 
 plt.ioff()  # this is equivalent to using inline backend, but figures have to be displayed manually
 ```
@@ -62,8 +61,8 @@ Transition out of gait is similar, but starts at 0 and ends at 0.25 or X and Z c
 Below is the implementation of the transition. This kind of code works for the animation and is suitable for tripod gait, but with increase of gait complexity and with joystick style controls it would be impossible to implement it this way. We are going to explore a different approach later in this notebook.
 
 ```{code-cell} ipython3
-from parametric_gait_generator import ParametricGaitGenerator, GaitType
 from models import HexapodModel
+from parametric_gait_generator import GaitType, ParametricGaitGenerator
 
 hexapod = HexapodModel()
 hexapod.forward_kinematics(0, -25, 110)
@@ -73,8 +72,10 @@ gait_gen.current_gait = GaitType.tripod
 ```
 
 ```{code-cell} ipython3
+from geometry import Point3D
 import numpy as np
 from plotting import animate_plot, plot_hexapod, update_hexapod_plot
+
 
 def animate_hexapod_gait_with_transitions(
     hexapod: HexapodModel,

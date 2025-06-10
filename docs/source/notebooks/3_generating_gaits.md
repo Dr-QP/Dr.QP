@@ -55,7 +55,6 @@ The next step is configuring matplotlib backend. Widget backend allows to intera
 %matplotlib widget
 
 import matplotlib.pyplot as plt
-from plotting import display_and_close
 
 plt.ioff()  # this is equivalent to using inline backend, but figures have to be displayed manually
 ```
@@ -109,9 +108,9 @@ jupyter_utils.display_file(
 The `GaitsVisualizer` class provides a convenient way to visualize the gaits. The `visualize_continuous` method visualizes each axis of the gait in 2D, while the `visualize_continuous_in_3d` method visualizes the gait in 3D.
 
 ```{code-cell} ipython3
-from parametric_gait_generator import ParametricGaitGenerator, GaitType
 from models import HexapodModel
-from plotting import GaitsVisualizer
+from parametric_gait_generator import GaitType, ParametricGaitGenerator
+from plotting import animate_hexapod_gait, GaitsVisualizer, is_sphinx_build
 
 hexapod = HexapodModel()
 hexapod.forward_kinematics(0, -25, 110)
@@ -125,65 +124,9 @@ visualizer = GaitsVisualizer()
 
 In order to better understand how the gait works in 3D, we can animate the hexapod moving in the gait. The `animate_hexapod_gait` function below does exactly that. It takes the hexapod model, the gait generator, and the number of steps to animate. It then animates the hexapod moving in the gait for the specified number of steps.
 
-```{code-cell} ipython3
-from models import HexapodModel
-from plotting import animate_plot, is_sphinx_build, plot_hexapod, update_hexapod_plot
-
-
-def animate_hexapod_gait(
-    hexapod: HexapodModel,
-    gaits_gen,
-    interactive=False,
-    skip=False,
-    total_steps=60,
-    interval=16,
-    view_elev=47.0,
-    view_azim=-160,
-    repeat=1,
-    feet_trails_frames=0,
-):
-    if skip:
-        return
-
-    if is_sphinx_build():
-        repeat = 1
-
-
-    hexapod.forward_kinematics(0, -25, 110)
-    leg_centers = {leg.label: leg.tibia_end.copy() for leg in hexapod.legs}
-    leg_tips = [leg.tibia_end.copy() for leg in hexapod.legs]
-
-    def set_pose(step):
-        step = step % total_steps  # handle repeats
-        phase = step / total_steps  # interpolation phase
-        for leg, leg_tip in zip(hexapod.legs, leg_tips):
-            offsets = gaits_gen.get_offsets_at_phase_for_leg(leg.label, phase)
-            leg.move_to(leg_tip + offsets)
-
-    fig, ax, plot_data = plot_hexapod(hexapod, feet_trails_frames=feet_trails_frames)
-    ax.view_init(elev=view_elev, azim=view_azim)
-
-    visualizer = GaitsVisualizer()
-    visualizer.visualize_continuous_in_3d(
-        _gait_generator=gaits_gen,
-        _steps=total_steps,
-        _ax=ax,
-        _plot_lines=None,
-        _leg_centers=leg_centers
-    )
-
-    def update(frame=0):
-        set_pose(frame)
-        update_hexapod_plot(hexapod, plot_data)
-        fig.canvas.draw_idle()
-
-    animate_plot(
-        fig,
-        update,
-        _interactive=interactive,
-        _frames=total_steps * repeat,
-        _interval=interval,
-    )
+```{literalinclude} plotting/hexapod.py
+:start-after: '# Animate gait - START'
+:end-before: '# Animate gait - END'
 ```
 
 ### Wave gait
@@ -307,17 +250,28 @@ class DirectionalGaitGenerator:
 directional_tripod_gen = DirectionalGaitGenerator(gait_gen)
 
 visualizer = GaitsVisualizer()
-visualizer.visualize_continuous_in_3d(_gait_generator=directional_tripod_gen, direction=Point3D([1, 0, 0], 'Forward'))
-visualizer.visualize_continuous_in_3d(_gait_generator=directional_tripod_gen, direction=Point3D([0, 1, 0], 'Left'))
-visualizer.visualize_continuous_in_3d(_gait_generator=directional_tripod_gen, direction=Point3D([1, -1, 0], 'Forward-right'))
+visualizer.visualize_continuous_in_3d(
+    _gait_generator=directional_tripod_gen, direction=Point3D([1, 0, 0], 'Forward')
+)
+visualizer.visualize_continuous_in_3d(
+    _gait_generator=directional_tripod_gen, direction=Point3D([0, 1, 0], 'Left')
+)
+visualizer.visualize_continuous_in_3d(
+    _gait_generator=directional_tripod_gen, direction=Point3D([1, -1, 0], 'Forward-right')
+)
 
 # stomp in place
-_ = visualizer.visualize_continuous_in_3d(_gait_generator=directional_tripod_gen, direction=Point3D([0, 0, 1], 'UP/Stomp'))
+_ = visualizer.visualize_continuous_in_3d(
+    _gait_generator=directional_tripod_gen, direction=Point3D([0, 0, 1], 'UP/Stomp')
+)
 ```
 
 Adding a direction vector did the trick, at least charts look good. Let's see it on the hexapod.
 
 ```{code-cell} ipython3
+from plotting import animate_plot, is_sphinx_build, plot_hexapod, update_hexapod_plot
+
+
 def animate_hexapod_gait_with_direction(
     hexapod: HexapodModel,
     gaits_gen,
@@ -421,7 +375,6 @@ animate_hexapod_gait_with_direction(
     animate_trajectory=True,
     animate_direction_degrees=True,
 )
-
 ```
 
 That is a fully functional tripod gait generator with full steering capabilities.

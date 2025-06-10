@@ -41,15 +41,6 @@ from plotting import display_and_close
 plt.ioff()  # this is equivalent to using inline backend, but figures have to be displayed manually
 ```
 
-Our new approach should satisfy the following requirements:
-
- 1. Allow defining a gait trajectory.
- 2. Allow defining a gait sequence.
- 3. Allow defining a gait generator function that will combine the two above given a set of parameters.
- 4. Allow steering, turing and transitioning between gaits and positions.
-
-Gait trajectory are fairly straightforward and we have seen some solution using trigonometrical functions and polynomials already. Gait sequencing has been formulated mathematically before, however it can be expressed as phase offsets per leg. Each phase starts with lift and ends with push. By offsetting the leg phase we can define the sequence.
-
 In order to achieve transitioning we need to implement trajectory interpolation. The simplest approach would be to use linear interpolation, however it may create jerkiness cause by sudden trajectory changes causing high deceleration and acceleration. Much better results can be achieved using [smoothing spline functions](https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html), e.g. a 2nd degree [B-spline](https://en.wikipedia.org/wiki/B-spline). B-spline allows a smooth transition between control points while remaining stable if some of the control points are changed, e.g. when new goal point is added. 2nd degree B-spline has continuous first derivative, which means that the velocity is smooth and has no sudden changes in direction.
 
 ```{code-cell} ipython3
