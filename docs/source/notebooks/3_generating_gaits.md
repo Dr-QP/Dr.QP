@@ -214,7 +214,6 @@ The tripod gait is a simple gait where the robot legs move in two groups of thre
 
 while one group is in stance phase, the other group is in swing phase and cycle repeats.
 
-
 ```{code-cell} ipython3
 gait_gen.current_gait = GaitType.tripod
 visualizer.visualize_continuous(gait_gen, _steps=100)
@@ -268,7 +267,7 @@ dy & dx
 \end{equation}
 
 ```{code-cell} ipython3
-from geometry import AffineTransform
+from geometry import AffineTransform, Point3D
 
 
 class DirectionalGaitGenerator:
@@ -323,8 +322,8 @@ def animate_hexapod_gait_with_direction(
     skip=False,
     total_steps=60,
     interval=16,
-    view_elev=10.0,
-    view_azim=-112,
+    view_elev=47.0,
+    view_azim=-160,
     repeat=1,
     gait_lines=None,
     direction_degrees=0,
@@ -338,7 +337,7 @@ def animate_hexapod_gait_with_direction(
         return
 
     if is_sphinx_build():
-        repeat = 1
+        repeat = 4
 
     leg_tips = [leg.tibia_end.copy() for leg in hexapod.legs]
     leg_centers = {leg.label: leg.tibia_end.copy() for leg in hexapod.legs}
@@ -416,14 +415,10 @@ hexapod.forward_kinematics(0, -25, 110)
 animate_hexapod_gait_with_direction(
     hexapod,
     directional_tripod_gen,
-    skip=True,  ######
     animate_trajectory=True,
-    animate_direction_degrees=False,
-    repeat=1,
+    animate_direction_degrees=True,
 )
-animate_hexapod_gait_with_direction(
-    hexapod, directional_tripod_gen, interactive=True, skip=False, animate_trajectory=True
-)
+
 ```
 
-That is a fully functional tripod gait generator with full steering capabilities. Time to move to the ripple gait generator.
+That is a fully functional tripod gait generator with full steering capabilities.

@@ -11,6 +11,10 @@ kernelspec:
   name: python3
 ---
 
+# 3.2 Appendix: Transitions
+
+This notebook is an appendix to the `3_generating_gaits.ipynb` notebook. It contains some experiments with transitions in and out of gaits.
+
 +++ {"tags": ["remove-cell"]}
 
 ## Setting up the Jupyter notebook for experimentation
