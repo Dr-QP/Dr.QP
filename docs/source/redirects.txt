@@ -1,1 +1,2 @@
 GettingStarted/installation-ros.md GettingStarted/installation.md
+notebooks/3_1_appendix_smoothing_splines.md notebooks/3_1_experiment_smoothing_splines.md
