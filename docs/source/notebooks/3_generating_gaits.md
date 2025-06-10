@@ -384,7 +384,6 @@ def animate_hexapod_gait_with_direction(
             step = frame % total_steps  # handle repeats
             trajectory_animation_end = step / total_steps  # interpolation phase
 
-        visualizer = GaitsVisualizer()
         _, gait_lines = visualizer.visualize_continuous_in_3d(
             _gait_generator=gaits_gen,
             _steps=total_steps,
