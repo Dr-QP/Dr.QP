@@ -11,3 +11,7 @@ typeguard>=4.1.5  # Required by generate-parameter-library-py
 Pygments>=2.17.2
 
 jupytext==1.17.2
+
+
+
+-e packages/runtime/drqp_brain
