@@ -209,7 +209,7 @@ class HexapodController(rclpy.node.Node):
         self.joint_state_pub.publish(msg)
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser('Dr.QP Robot controller ROS node')
     filtered_args = rclpy.utilities.remove_ros_args()
     args = parser.parse_args(args=filtered_args[1:])
@@ -222,3 +222,7 @@ if __name__ == '__main__':
     finally:
         node.destroy_node()
         rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()

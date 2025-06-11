@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'one_leg_ik = drqp_brain.one_leg_ik:main',
+            'run_hexapod = drqp_brain.run_hexapod_ros:main',
         ],
     },
 )
