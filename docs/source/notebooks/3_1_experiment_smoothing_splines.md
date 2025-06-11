@@ -948,7 +948,7 @@ from abc import abstractmethod
 import enum
 
 from drqp_brain.geometry import Point3D
-from models import HexapodLeg
+from drqp_brain.models import HexapodLeg
 from plotting import GaitsVisualizer
 from scipy.interpolate import make_interp_spline
 

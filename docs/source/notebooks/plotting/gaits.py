@@ -21,7 +21,7 @@
 
 from drqp_brain.geometry import AffineTransform, Point3D
 from IPython.display import display
-from models import HexapodLeg
+from drqp_brain.models import HexapodLeg
 import numpy as np
 
 

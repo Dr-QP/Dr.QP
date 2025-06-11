@@ -61,7 +61,7 @@ Transition out of gait is similar, but starts at 0 and ends at 0.25 or X and Z c
 Below is the implementation of the transition. This kind of code works for the animation and is suitable for tripod gait, but with increase of gait complexity and with joystick style controls it would be impossible to implement it this way. We are going to explore a different approach later in this notebook.
 
 ```{code-cell} ipython3
-from models import HexapodModel
+from drqp_brain.models import HexapodModel
 from parametric_gait_generator import GaitType, ParametricGaitGenerator
 
 hexapod = HexapodModel()

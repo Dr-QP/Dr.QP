@@ -159,7 +159,7 @@ jupyter_utils.display_file('../../../packages/runtime/drqp_brain/drqp_brain/geom
 
 With this `AffineTransform` class we can now create a chain of transformations instead of hand crafting them. Let's rewrite the forward kinematics code using transforms.
 
-The code below is an excerpt from `LegModel` class in `models.py` file:
+The code below is an excerpt from `LegModel` class in `drqp_brain/models.py` file:
 
 ```{code-cell} ipython3
 :tags: [remove-cell]
@@ -167,19 +167,19 @@ The code below is an excerpt from `LegModel` class in `models.py` file:
 import jupyter_utils
 
 jupyter_utils.display_file(
-    'models.py',
+    '../../../packages/runtime/drqp_brain/drqp_brain/models.py',
     start_after='# Leg Forward kinematics - START',
     end_before='# Leg Forward kinematics - END',
 )
 ```
 
-```{literalinclude} models.py
+```{literalinclude} ../../../packages/runtime/drqp_brain/drqp_brain/models.py
 :start-after: '# Leg Forward kinematics - START'
 :end-before: '# Leg Forward kinematics - END'
 ```
 
 ```{code-cell} ipython3
-from models import LegModel
+from drqp_brain.models import LegModel
 from plotting import plot_leg3d
 
 coxa = 5
@@ -235,22 +235,22 @@ display_and_close(fig)
 
 With full 3D kinematics model and plotting support lets put it all together and create a 6 legged robot model.
 
-Code from `models.py`:
+Code from `drqp_brain/models.py`:
 
 ```{code-cell} ipython3
 :tags: [remove-cell]
 
 import jupyter_utils
 
-jupyter_utils.display_file('models.py', start_after='THE SOFTWARE.')
+jupyter_utils.display_file('../../../packages/runtime/drqp_brain/drqp_brain/models.py', start_after='THE SOFTWARE.')
 ```
 
-```{literalinclude} models.py
+```{literalinclude} ../../../packages/runtime/drqp_brain/drqp_brain/models.py
 :start-after: THE SOFTWARE.
 ```
 
 ```{code-cell} ipython3
-from models import HexapodModel
+from drqp_brain.models import HexapodModel
 from plotting import plot_hexapod
 
 # Dr.QP Dimensions
@@ -457,7 +457,7 @@ if not skip_in_local_runs_because_its_slow:
 To make all the learnings and findings reusable in other notebooks, lets move all the code into modules and double check it works.
 
 ```{code-cell} ipython3
-from models import HexapodModel
+from drqp_brain.models import HexapodModel
 from plotting import plot_hexapod, update_hexapod_plot
 
 hexapod = HexapodModel()
