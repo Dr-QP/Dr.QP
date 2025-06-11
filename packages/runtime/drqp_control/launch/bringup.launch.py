@@ -84,5 +84,11 @@ def generate_launch_description():
                 output='screen',
                 parameters=[{'use_sim_time': use_sim_time}],
             ),
+            Node(
+                package='drqp_brain',
+                executable='run_hexapod',
+                output='screen',
+                parameters=[{'use_sim_time': use_sim_time}],
+            ),
         ]
     )
