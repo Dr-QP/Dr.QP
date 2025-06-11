@@ -30,7 +30,7 @@ ARG OVERLAY_WS
 WORKDIR $OVERLAY_WS
 COPY --from=cacher $OVERLAY_WS/src/ $OVERLAY_WS
 
-ARG DEPLOY_PACKAGE="drqp_control"
+ARG DEPLOY_PACKAGE="drqp_brain"
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     sudo apt-get update \
@@ -68,4 +68,4 @@ ENV ROS_DISTRO=$ROS_DISTRO
 COPY ./ros_entrypoint.sh /
 ENTRYPOINT ["/ros_entrypoint.sh"]
 
-CMD ["ros2", "launch", "drqp_control", "bringup.launch.py"]
+CMD ["ros2", "launch", "drqp_brain", "bringup.launch.py"]
