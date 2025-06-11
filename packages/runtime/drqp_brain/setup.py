@@ -16,9 +16,4 @@ setup(
     maintainer_email='anton.matosov@gmail.com',
     description='IK solvers and other high level control algorithms',
     license='MIT',
-    entry_points={
-        'console_scripts': [
-            'run_hexapod = drqp_brain.run_hexapod_ros:main',
-        ],
-    },
 )
