@@ -20,8 +20,8 @@
 
 
 from drqp_brain.geometry import AffineTransform, Point3D
-from IPython.display import display
 from drqp_brain.models import HexapodLeg
+from IPython.display import display
 import numpy as np
 
 

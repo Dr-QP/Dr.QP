@@ -403,12 +403,11 @@ jupyter_utils.display_file(
 ```
 
 ```{code-cell} ipython3
-import importlib
-
-import numpy as np
 from drqp_brain.models import HexapodModel
 from drqp_brain.walk_controller import WalkController
+import numpy as np
 from plotting import animate_plot, is_sphinx_build
+
 
 def animate_hexapod_walk(
     walk_controller: WalkController,
@@ -465,7 +464,7 @@ def animate_hexapod_walk(
             if frame < total_frames * 0.60:
                 rotation_ratio = 0
             else:
-                rotation_ratio = 1.
+                rotation_ratio = 1.0
 
         stride_direction = Point3D([1, 0, 0])
         stride_direction = AffineTransform.from_rotvec(

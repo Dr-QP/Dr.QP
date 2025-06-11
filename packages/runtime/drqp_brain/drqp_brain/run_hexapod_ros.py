@@ -25,11 +25,11 @@ from enum import auto, Enum
 
 from drqp_brain.geometry import Point3D
 from drqp_brain.models import HexapodModel
+from drqp_brain.walk_controller import GaitType, WalkController
 import numpy as np
 import rclpy
 import rclpy.node
 import sensor_msgs.msg
-from drqp_brain.walk_controller import GaitType, WalkController
 
 kFemurOffsetAngle = -13.11
 kTibiaOffsetAngle = -32.9

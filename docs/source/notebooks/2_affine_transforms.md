@@ -150,7 +150,10 @@ Code from `drqp_brain/geometry/transforms.py`:
 
 import jupyter_utils
 
-jupyter_utils.display_file('../../../packages/runtime/drqp_brain/drqp_brain/geometry/transforms.py', start_after='THE SOFTWARE.')
+jupyter_utils.display_file(
+    '../../../packages/runtime/drqp_brain/drqp_brain/geometry/transforms.py',
+    start_after='THE SOFTWARE.',
+)
 ```
 
 ```{literalinclude} ../../../packages/runtime/drqp_brain/drqp_brain/geometry/transforms.py
@@ -242,7 +245,9 @@ Code from `drqp_brain/models.py`:
 
 import jupyter_utils
 
-jupyter_utils.display_file('../../../packages/runtime/drqp_brain/drqp_brain/models.py', start_after='THE SOFTWARE.')
+jupyter_utils.display_file(
+    '../../../packages/runtime/drqp_brain/drqp_brain/models.py', start_after='THE SOFTWARE.'
+)
 ```
 
 ```{literalinclude} ../../../packages/runtime/drqp_brain/drqp_brain/models.py

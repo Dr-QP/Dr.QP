@@ -22,11 +22,11 @@
 
 import argparse
 
-from matplotlib import pyplot as plt
 from drqp_brain.models import HexapodModel
+from drqp_brain.walk_controller import GaitType, WalkController
+from matplotlib import pyplot as plt
 from plotting import plot_hexapod, update_hexapod_plot
 import ps5_controller
-from drqp_brain.walk_controller import GaitType, WalkController
 
 
 def main():
