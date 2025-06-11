@@ -62,7 +62,7 @@ Below is the implementation of the transition. This kind of code works for the a
 
 ```{code-cell} ipython3
 from drqp_brain.models import HexapodModel
-from parametric_gait_generator import GaitType, ParametricGaitGenerator
+from drqp_brain.parametric_gait_generator import GaitType, ParametricGaitGenerator
 
 hexapod = HexapodModel()
 hexapod.forward_kinematics(0, -25, 110)

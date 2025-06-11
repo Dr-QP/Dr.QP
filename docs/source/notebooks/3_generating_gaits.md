@@ -109,7 +109,7 @@ The `GaitsVisualizer` class provides a convenient way to visualize the gaits. Th
 
 ```{code-cell} ipython3
 from drqp_brain.models import HexapodModel
-from parametric_gait_generator import GaitType, ParametricGaitGenerator
+from drqp_brain.parametric_gait_generator import GaitType, ParametricGaitGenerator
 from plotting import animate_hexapod_gait, GaitsVisualizer, is_sphinx_build
 
 hexapod = HexapodModel()
@@ -407,14 +407,11 @@ import importlib
 
 import numpy as np
 from drqp_brain.models import HexapodModel
+from drqp_brain.walk_controller import WalkController
 from plotting import animate_plot, is_sphinx_build
-import drqp_brain.walk_controller
-
-importlib.reload(walk_controller)  # autoreload fails with files written by notebook for some reason
-
 
 def animate_hexapod_walk(
-    walk_controller: walk_controller.WalkController,
+    walk_controller: WalkController,
     interactive=False,
     skip=False,
     fps=30,
@@ -500,7 +497,7 @@ def animate_hexapod_walk(
 
 hexapod = HexapodModel()
 hexapod.forward_kinematics(0, -25, 110)
-walker = walk_controller.WalkController(
+walker = WalkController(
     hexapod, step_length=120, step_height=60, rotation_speed_degrees=10, gait=GaitType.ripple
 )
 
