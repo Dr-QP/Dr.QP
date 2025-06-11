@@ -10,6 +10,7 @@ setup(
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
     ],
+    requirements=['numpy', 'scipy'],
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='Anton Matosov',

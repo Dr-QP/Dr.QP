@@ -20,7 +20,7 @@
 
 from typing import Literal
 
-from geometry import Leg3D, Line, Line3D, Point
+from drqp_brain.geometry import Leg3D, Line, Line3D, Point
 from inline_labels import add_inline_labels
 import matplotlib.pyplot as plt
 import numpy as np

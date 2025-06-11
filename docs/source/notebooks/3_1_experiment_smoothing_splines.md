@@ -947,7 +947,7 @@ To keep things simple for the first iteration we are going to keep speed constan
 from abc import abstractmethod
 import enum
 
-from geometry import Point3D
+from drqp_brain.geometry import Point3D
 from models import HexapodLeg
 from plotting import GaitsVisualizer
 from scipy.interpolate import make_interp_spline

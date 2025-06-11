@@ -99,7 +99,7 @@ Before we dive into the details of how inverse kinematics works, let's first get
 Coxa, femur and tibia are represented with vector that is rotated at its base. Each next link starts at the ened of the previous link.
 
 ```{code-cell} ipython3
-from geometry import Line, Point
+from drqp_brain.geometry import Line, Point
 
 
 # unused
@@ -395,7 +395,7 @@ plot_xtick(30)
 Putting all of this in code will look as follows
 
 ```{code-cell} ipython3
-from geometry import SimplePoint3D as Point3D
+from drqp_brain.geometry import SimplePoint3D as Point3D
 
 
 def coxa_ik(foot_target):

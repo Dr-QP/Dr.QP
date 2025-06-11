@@ -214,7 +214,7 @@ dy & dx
 \end{equation}
 
 ```{code-cell} ipython3
-from geometry import AffineTransform, Point3D
+from drqp_brain.geometry import AffineTransform, Point3D
 
 
 class DirectionalGaitGenerator:

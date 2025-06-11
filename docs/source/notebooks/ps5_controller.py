@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 import logging
 
-from geometry import Point3D
+from drqp_brain.geometry import Point3D
 import numpy as np
 import pygame
 

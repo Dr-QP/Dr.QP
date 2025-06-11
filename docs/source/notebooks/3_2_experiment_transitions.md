@@ -72,7 +72,7 @@ gait_gen.current_gait = GaitType.tripod
 ```
 
 ```{code-cell} ipython3
-from geometry import Point3D
+from drqp_brain.geometry import Point3D
 import numpy as np
 from plotting import animate_plot, plot_hexapod, update_hexapod_plot
 

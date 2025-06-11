@@ -58,7 +58,7 @@ Alongside the conversion, we are going to bring all the algorithms to work in fu
 As a first step in conversion, let's replace hand crafted rotations with rotation matrices.
 
 ```{code-cell} ipython3
-from geometry import Leg3D, Line3D, Point3D
+from drqp_brain.geometry import Leg3D, Line3D, Point3D
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
@@ -322,7 +322,7 @@ The algorithm is as follows:
  3. Run inverse kinematics for all legs with the foot positions captured in step 1.
 
 ```{code-cell} ipython3
-from geometry import AffineTransform
+from drqp_brain.geometry import AffineTransform
 
 orig_alpha, orig_beta, orig_gamma = 0, -25, 110
 drqp = DrQP()

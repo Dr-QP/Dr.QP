@@ -20,7 +20,7 @@
 
 from enum import auto, Enum
 
-from geometry import Point3D
+from drqp_brain.geometry import Point3D
 from models import HexapodLeg
 import numpy as np
 

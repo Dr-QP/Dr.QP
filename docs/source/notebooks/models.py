@@ -20,7 +20,7 @@
 
 import enum
 
-from geometry import AffineTransform, Line3D, Point3D
+from drqp_brain.geometry import AffineTransform, Line3D, Point3D
 import numpy as np
 
 
