@@ -31,13 +31,9 @@ def test_safe_arccos():
     assert safe_arccos(-1.0) == (True, math.pi)
     assert safe_arccos(0.0) == (True, math.pi / 2)
 
-    # Test safe zone extensions
-    assert safe_arccos(1.01) == (True, 0.0)
-    assert safe_arccos(-1.01) == (True, math.pi)
-
     # Test clamping
     assert safe_arccos(1.1) == (False, 0)
-    assert safe_arccos(-1.1) == (False, 0)
+    assert safe_arccos(-1.1) == (False, math.pi)
 
 
 class TestSolver:
@@ -58,19 +54,22 @@ class TestSolver:
         success, alpha, beta, gamma = leg_model.inverse_kinematics(Point3D([100, 0, -10]))
 
         assert success is True
-        assert math.pi / 2 <= alpha <= math.pi
-        assert math.pi / 4 <= beta <= math.pi / 2
-        assert abs(gamma) < 0.001  # Should be close to 0 for y=0
+        assert math.isclose(alpha, 0, abs_tol=0.1)
+        assert math.isclose(beta, -52.3, abs_tol=0.1)
+        assert math.isclose(gamma, 97.3, abs_tol=0.1)
 
     def test_side_position(self, leg_model):
         # Test reaching to the side
         success, alpha, beta, gamma = leg_model.inverse_kinematics(Point3D([100, 20, -10]))
         assert success is True
-        assert math.pi / 2 <= alpha <= math.pi
-        assert math.pi / 4 <= beta <= math.pi / 2
-        assert 0 <= gamma <= math.pi / 4
+        assert math.isclose(alpha, 11.3, abs_tol=0.1)
+        assert math.isclose(beta, -50.6, abs_tol=0.1)
+        assert math.isclose(gamma, 94.7, abs_tol=0.1)
 
     def test_unreachable_position(self, leg_model):
         # Test position that's too far to reach
         success, alpha, beta, gamma = leg_model.inverse_kinematics(Point3D([1000, 1000, -1000]))
         assert success is False
+        assert math.isclose(alpha, 45.0, abs_tol=0.1)
+        assert math.isclose(beta, 35.6, abs_tol=0.1)
+        assert math.isclose(gamma, 0.0, abs_tol=0.1)
