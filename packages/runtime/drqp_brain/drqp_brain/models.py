@@ -323,13 +323,17 @@ class LegModel:
 
         Math as described above
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         z_offset:
-        z offset from the coxa joint of the foot target in meters
+          z offset from the coxa joint of the foot target in meters
 
         X_tick:
-            X distance from the coxa joint of the foot target in meters, returned by the inverse_kinematics_xy
+          X distance from the coxa joint of the foot target in meters, returned by the inverse_kinematics_xy
+
+        verbose:
+          print debug information
+
         """
         D = -z_offset
         T = X_tick - self.coxa_length

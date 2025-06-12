@@ -984,8 +984,8 @@ class SplineGaitGenerator:
         """
         Initialize the SplineGaitGenerator.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
             step_length: Length of each step in meters
             step_height: Height of leg lift in meters
         """
