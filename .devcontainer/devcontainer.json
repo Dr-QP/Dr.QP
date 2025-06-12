@@ -15,9 +15,10 @@
   "mounts": [
   ],
   // Second venv command with --system-site-packages turns on access to system packages to allow ROS2 builds to work
-  "postCreateCommand": "sudo chown rosdev:rosdev /home/rosdev/ros2_ws/.ansible /home/rosdev/ros2_ws/.vscode /home/rosdev/ros2_ws/.cache /home/rosdev/ros2_ws/build /home/rosdev/ros2_ws/install /home/rosdev/ros2_ws/lcov /home/rosdev/ros2_ws/log /home/rosdev/ros2_ws/docs/_build /home/rosdev/ros2_ws/.micromamba /home/rosdev/ros2_ws/.venv && python3 -m venv /home/rosdev/ros2_ws/.venv && /home/rosdev/ros2_ws/.venv/bin/python3 -m pip install -r /home/rosdev/ros2_ws/requirements.txt && python3 -m venv /home/rosdev/ros2_ws/.venv --system-site-packages",
+  "postCreateCommand": "sudo chown rosdev:rosdev /home/rosdev/ros2_ws/.ansible /home/rosdev/ros2_ws/.vscode /home/rosdev/ros2_ws/.cache /home/rosdev/ros2_ws/build /home/rosdev/ros2_ws/install /home/rosdev/ros2_ws/lcov /home/rosdev/ros2_ws/log /home/rosdev/ros2_ws/docs/_build /home/rosdev/ros2_ws/.micromamba /home/rosdev/ros2_ws/.venv",
   "postAttachCommand": {
-    "git.ssh.program": "git config --global gpg.ssh.program ssh-keygen"
+    "git.ssh.program": "git config --global gpg.ssh.program ssh-keygen",
+    "python-venv": "python3 -m venv /home/rosdev/ros2_ws/.venv && /home/rosdev/ros2_ws/.venv/bin/python3 -m pip install -r /home/rosdev/ros2_ws/requirements.txt && python3 -m venv /home/rosdev/ros2_ws/.venv --system-site-packages"
   },
   "runArgs": [
     // Commented out to allow Codespaces use
