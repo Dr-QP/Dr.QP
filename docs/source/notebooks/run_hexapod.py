@@ -68,7 +68,7 @@ def main():
 
     while plt.get_fignums():  # window(s) open
         inputs = ps5_controller.get_controls()
-        walker.next(
+        walker.next_step(
             stride_direction=inputs.direction,
             stride_ratio=inputs.walk_speed,
             rotation_ratio=inputs.rotation_speed,

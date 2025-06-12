@@ -74,6 +74,18 @@ class ButtonAxis(Enum):
 
 
 class JoystickButton:
+    """
+    Helper class for processing joystick buttons.
+
+    Parameters
+    ----------
+    button_index: ButtonIndex
+        Index of the button to process
+    event_handler: callable
+        Callback to call when button is pressed
+
+    """
+
     def __init__(self, button_index: ButtonIndex, event_handler: callable):
         self.button_index = button_index
         self.event_handler = event_handler
@@ -93,6 +105,14 @@ class JoystickButton:
 
 
 class HexapodController(rclpy.node.Node):
+    """
+    ROS node for controlling Dr.QP hexapod robot.
+
+    Subscribes to /joy topic for joystick input, processes it with WalkController,
+    and publishes joint states to /joint_states topic.
+
+    """
+
     def __init__(self):
         super().__init__('drqp_hexapod_joint_state_publisher')
 
@@ -166,7 +186,8 @@ class HexapodController(rclpy.node.Node):
         left_y = joy.axes[ButtonAxis.LeftY.value]
         right_x = joy.axes[ButtonAxis.RightX.value]
 
-        # On some platforms default value for trigger is -1 (robobook with ubuntu 24.04) but on raspi with ubutnu 24.04 it is 0
+        # On some platforms default value for trigger is -1 (robobook with ubuntu 24.04)
+        # but on raspi with ubutnu 24.04 it is 0
         left_trigger = np.interp(joy.axes[ButtonAxis.TriggerLeft.value], [-1, 0], [1, 0])
         self.direction = Point3D([left_y, left_x, left_trigger])
         self.walk_speed = abs(left_x) + abs(left_y) + abs(left_trigger)
@@ -186,7 +207,7 @@ class HexapodController(rclpy.node.Node):
     def loop(self):
         self.walker.current_gait = self.gaits[self.gait_index]
         self.walker.phase_step = 1 / self.phase_steps_per_cycle[self.gait_index]
-        self.walker.next(
+        self.walker.next_step(
             stride_direction=self.direction,
             stride_ratio=self.walk_speed,
             rotation_ratio=self.rotation_speed,

@@ -57,7 +57,7 @@ class WalkController:
     def current_gait(self, gait):
         self.gait_gen.current_gait = gait
 
-    def next(
+    def next_step(
         self,
         stride_direction=Point3D([1, 0, 0]),
         stride_ratio=1.0,
@@ -79,7 +79,7 @@ class WalkController:
 
     def __next_feet_targets(self, stride_direction, stride_ratio, rotation_ratio, verbose):
         ###############################################################
-        ## All if this mixing, smoothing and clipping is a hot garbage,
+        # All if this mixing, smoothing and clipping is a hot garbage,
         # TODO(anton-matosov) switch to proper trajectory mixing
         stride_ratio = np.clip(stride_ratio, 0, 1)
         rotation_ratio = np.clip(rotation_ratio, -1, 1)
@@ -123,7 +123,10 @@ class WalkController:
         direction_transform = self.__make_direction_transform(self.current_direction)
         for leg, leg_tip in self.leg_tips_on_ground:
             foot_target = leg_tip
-            gait_offsets = self.gait_gen.get_offsets_at_phase_for_leg(leg.label, self.current_phase)
+            gait_offsets = self.gait_gen.get_offsets_at_phase_for_leg(
+                leg.label,
+                self.current_phase,
+            )
 
             # Apply steering
             if has_stride:
