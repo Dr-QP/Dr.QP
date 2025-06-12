@@ -20,9 +20,9 @@
 
 import math
 
-import pytest
 from drqp_brain.geometry.point import Point3D
-from drqp_brain.models import safe_arccos, LegModel
+from drqp_brain.models import LegModel, safe_arccos
+import pytest
 
 
 def test_safe_arccos():
