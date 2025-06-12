@@ -12,6 +12,7 @@ setup(
         ('share/' + package_name + '/launch', ['launch/bringup.launch.py']),
     ],
     install_requires=['setuptools'],
+    tests_require=['pytest'],  # must be here, otherwise colcon will skip tests
     zip_safe=True,
     maintainer='Anton Matosov',
     maintainer_email='anton.matosov@gmail.com',
