@@ -14,20 +14,23 @@
     mode: "0755"
     owner: "{{ ros_user_setup_uid }}"
     group: "{{ ros_user_setup_gid }}"
-  become: false
+  become: true
+  become_user: "{{ ros_user }}"
 
 - name: Create temporary directory for downloads
   ansible.builtin.tempfile:
     state: directory
   register: temp_dir
-  become: false
+  become: true
+  become_user: "{{ ros_user }}"
 
 - name: Download fisher (fish package manager)
   ansible.builtin.get_url:
     url: https://git.io/fisher
     dest: "{{ temp_dir.path }}/fisher.fish"
     mode: "0755"
-  become: false
+  become: true
+  become_user: "{{ ros_user }}"
 
 - name: Install fisher
   ansible.builtin.shell:
@@ -35,7 +38,8 @@
     chdir: "{{ temp_dir.path }}"
     executable: fish
     creates: "{{ user_home }}/.config/fish/functions/fisher.fish"
-  become: false
+  become: true
+  become_user: "{{ ros_user }}"
 
 - name: Install bass (for sourcing bash scripts in fish)
   ansible.builtin.shell:
@@ -43,7 +47,8 @@
     chdir: "{{ temp_dir.path }}"
     executable: fish
     creates: "{{ user_home }}/.config/fish/functions/bass.fish"
-  become: false
+  become: true
+  become_user: "{{ ros_user }}"
 
 - name: Copy ROS fish configuration
   ansible.builtin.template:

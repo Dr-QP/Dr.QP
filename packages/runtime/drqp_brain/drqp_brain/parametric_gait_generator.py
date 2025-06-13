@@ -20,8 +20,8 @@
 
 from enum import auto, Enum
 
-from geometry import Point3D
-from models import HexapodLeg
+from drqp_brain.geometry import Point3D
+from drqp_brain.models import HexapodLeg
 import numpy as np
 
 
@@ -37,20 +37,22 @@ class ParametricGaitGenerator:
 
     Generates leg tip offsets in right-hand coordinate system (x-forward, y-left, z-up).
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
         step_length: Length of each step in meters
         step_height: Height of leg lift in meters
+
     """
 
     class GaitPhaseParams:
         """
         Parameters for a specific gait.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
             swing_phase_start_offsets: Dictionary of swing phase offsets per leg
             swing_duration: Duration of the swing phase
+
         """
 
         def __init__(

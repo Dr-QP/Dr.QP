@@ -9,17 +9,13 @@ setup(
     data_files=[
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name + '/launch', ['launch/bringup.launch.py']),
     ],
     install_requires=['setuptools'],
+    tests_require=['pytest'],  # must be here, otherwise colcon will skip tests
     zip_safe=True,
     maintainer='Anton Matosov',
     maintainer_email='anton.matosov@gmail.com',
     description='IK solvers and other high level control algorithms',
     license='MIT',
-    tests_require=['pytest'],
-    entry_points={
-        'console_scripts': [
-            'one_leg_ik = drqp_brain.one_leg_ik:main',
-        ],
-    },
 )

@@ -669,7 +669,7 @@ for new_wp in [(8, 6, 3), (10, 9, 5), (12, 11, 7)]:
 ```
 
 ```{code-cell} ipython3
-from smoothing_splines import plot_spline, SplineType
+from plotting.smoothing_splines import plot_spline, SplineType
 
 t = np.array([0, 1, 2.5, 4, 6])  # Time values (not uniformly spaced)
 x = np.array([0, 2, 3, 5, 8])  # X trajectory
@@ -819,7 +819,7 @@ display_and_close(fig)
 In order to achieve transitioning we need to implement trajectory interpolation. The simplest approach would be to use linear interpolation, however it may create jerkiness cause by sudden trajectory changes causing high deceleration and acceleration. Much better results can be achieved using [smoothing spline functions](https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html), e.g. a 2nd degree [B-spline](https://en.wikipedia.org/wiki/B-spline). B-spline allows a smooth transition between control points while remaining stable if some of the control points are changed, e.g. when new goal point is added. 2nd degree B-spline has continuous first derivative, which means that the velocity is smooth and has no sudden changes in direction.
 
 ```{code-cell} ipython3
-from smoothing_splines import plot_spline, SplineType
+from plotting.smoothing_splines import plot_spline, SplineType
 
 frames_between_points = 30
 # x, y, t
@@ -947,8 +947,8 @@ To keep things simple for the first iteration we are going to keep speed constan
 from abc import abstractmethod
 import enum
 
-from geometry import Point3D
-from models import HexapodLeg
+from drqp_brain.geometry import Point3D
+from drqp_brain.models import HexapodLeg
 from plotting import GaitsVisualizer
 from scipy.interpolate import make_interp_spline
 
@@ -984,8 +984,8 @@ class SplineGaitGenerator:
         """
         Initialize the SplineGaitGenerator.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
             step_length: Length of each step in meters
             step_height: Height of leg lift in meters
         """

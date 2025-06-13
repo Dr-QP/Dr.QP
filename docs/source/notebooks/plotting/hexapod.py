@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from models import HexapodModel
+from drqp_brain.models import HexapodModel
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 import numpy as np
 

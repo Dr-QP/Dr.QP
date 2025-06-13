@@ -22,11 +22,11 @@
 
 import argparse
 
+from drqp_brain.models import HexapodModel
+from drqp_brain.walk_controller import GaitType, WalkController
 from matplotlib import pyplot as plt
-from models import HexapodModel
 from plotting import plot_hexapod, update_hexapod_plot
 import ps5_controller
-from walk_controller import GaitType, WalkController
 
 
 def main():
@@ -68,7 +68,7 @@ def main():
 
     while plt.get_fignums():  # window(s) open
         inputs = ps5_controller.get_controls()
-        walker.next(
+        walker.next_step(
             stride_direction=inputs.direction,
             stride_ratio=inputs.walk_speed,
             rotation_ratio=inputs.rotation_speed,

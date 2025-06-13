@@ -169,15 +169,16 @@ class Point3D:
         """
         Interpolates between two points.
 
-        Parameters:
+        Parameters
         ----------
-            other: Point3D
-                The other point to interpolate to.
-            alpha: float
-                The interpolation factor. 0.0 is this point, 1.0 is the other point.
+        other: Point3D
+          The other point to interpolate to.
 
-        Returns:
-        --------
+        alpha: float
+          The interpolation factor. 0.0 is this point, 1.0 is the other point.
+
+        Returns
+        -------
             Point3D
 
         """

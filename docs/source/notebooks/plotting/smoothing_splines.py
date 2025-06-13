@@ -29,8 +29,8 @@ def plot_spline(
     """
     Plot control points and current position at t.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     ax: Axis to plot on
     current_t: current time point
     control_points: Array of control points [x, y, t]

@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from .leg import Leg3D
-from .line import Line, Line3D
-from .point import Point, Point3D, SimplePoint3D
-from .transforms import AffineTransform
+from .leg import Leg3D  # noqa: F401
+from .line import Line, Line3D  # noqa: F401
+from .point import Point, Point3D, SimplePoint3D  # noqa: F401
+from .transforms import AffineTransform  # noqa: F401

@@ -75,13 +75,13 @@ The parametric function is defined as follows:
 import jupyter_utils
 
 jupyter_utils.display_file(
-    'parametric_gait_generator.py',
+    '../../../packages/runtime/drqp_brain/drqp_brain/parametric_gait_generator.py',
     start_after='# Parametric function - START',
     end_before='# Parametric function - END',
 )
 ```
 
-```{literalinclude} parametric_gait_generator.py
+```{literalinclude} ../../../packages/runtime/drqp_brain/drqp_brain/parametric_gait_generator.py
 :start-after: '# Parametric function - START'
 :end-before: '# Parametric function - END'
 ```
@@ -92,13 +92,13 @@ With this function in place, we can now implement the gait generators for the th
 :tags: [remove-cell]
 
 jupyter_utils.display_file(
-    'parametric_gait_generator.py',
+    '../../../packages/runtime/drqp_brain/drqp_brain/parametric_gait_generator.py',
     start_after='# Gait params - START',
     end_before='# Gait params - END',
 )
 ```
 
-```{literalinclude} parametric_gait_generator.py
+```{literalinclude} ../../../packages/runtime/drqp_brain/drqp_brain/parametric_gait_generator.py
 :start-after: '# Gait params - START'
 :end-before: '# Gait params - END'
 ```
@@ -108,8 +108,8 @@ jupyter_utils.display_file(
 The `GaitsVisualizer` class provides a convenient way to visualize the gaits. The `visualize_continuous` method visualizes each axis of the gait in 2D, while the `visualize_continuous_in_3d` method visualizes the gait in 3D.
 
 ```{code-cell} ipython3
-from models import HexapodModel
-from parametric_gait_generator import GaitType, ParametricGaitGenerator
+from drqp_brain.models import HexapodModel
+from drqp_brain.parametric_gait_generator import GaitType, ParametricGaitGenerator
 from plotting import animate_hexapod_gait, GaitsVisualizer, is_sphinx_build
 
 hexapod = HexapodModel()
@@ -214,7 +214,7 @@ dy & dx
 \end{equation}
 
 ```{code-cell} ipython3
-from geometry import AffineTransform, Point3D
+from drqp_brain.geometry import AffineTransform, Point3D
 
 
 class DirectionalGaitGenerator:
@@ -393,28 +393,24 @@ Now that we have all the pieces in place, we can put them together to create a f
 import jupyter_utils
 
 jupyter_utils.display_file(
-    'walk_controller.py',
+    '../../../packages/runtime/drqp_brain/drqp_brain/walk_controller.py',
     start_after='# THE SOFTWARE.',
 )
 ```
 
-```{literalinclude} walk_controller.py
+```{literalinclude} ../../../packages/runtime/drqp_brain/drqp_brain/walk_controller.py
 :start-after: '# THE SOFTWARE.'
 ```
 
 ```{code-cell} ipython3
-import importlib
-
+from drqp_brain.models import HexapodModel
+from drqp_brain.walk_controller import WalkController
 import numpy as np
-from models import HexapodModel
 from plotting import animate_plot, is_sphinx_build
-import walk_controller
-
-importlib.reload(walk_controller)  # autoreload fails with files written by notebook for some reason
 
 
 def animate_hexapod_walk(
-    walk_controller: walk_controller.WalkController,
+    walk_controller: WalkController,
     interactive=False,
     skip=False,
     fps=30,
@@ -468,7 +464,7 @@ def animate_hexapod_walk(
             if frame < total_frames * 0.60:
                 rotation_ratio = 0
             else:
-                rotation_ratio = 1.
+                rotation_ratio = 1.0
 
         stride_direction = Point3D([1, 0, 0])
         stride_direction = AffineTransform.from_rotvec(
@@ -500,7 +496,7 @@ def animate_hexapod_walk(
 
 hexapod = HexapodModel()
 hexapod.forward_kinematics(0, -25, 110)
-walker = walk_controller.WalkController(
+walker = WalkController(
     hexapod, step_length=120, step_height=60, rotation_speed_degrees=10, gait=GaitType.ripple
 )
 

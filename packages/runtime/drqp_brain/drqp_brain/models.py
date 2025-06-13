@@ -20,7 +20,7 @@
 
 import enum
 
-from geometry import AffineTransform, Line3D, Point3D
+from drqp_brain.geometry import AffineTransform, Line3D, Point3D
 import numpy as np
 
 
@@ -234,7 +234,11 @@ class LegModel:
         return iter(self.lines)
 
     def __repr__(self):
-        return f'LegModel(body_start={self.body_start}, body_end={self.body_end}, coxa_end={self.coxa_end}, femur_end={self.femur_end}, tibia_end={self.tibia_end})'
+        return f'LegModel(body_start={self.body_start},\
+            body_end={self.body_end}, \
+            coxa_end={self.coxa_end}, \
+            femur_end={self.femur_end}, \
+            tibia_end={self.tibia_end})'
 
     # Leg Forward kinematics - START
     def forward_kinematics(
@@ -249,18 +253,25 @@ class LegModel:
         self.femur_angle = beta
         self.tibia_angle = gamma
 
-        self.coxa_joint = self.body_joint @ AffineTransform.from_rotvec([0, 0, alpha], degrees=True)
+        self.coxa_joint = self.body_joint @ AffineTransform.from_rotvec(
+            [0, 0, alpha],
+            degrees=True,
+        )
         self.coxa_link = self.coxa_joint @ AffineTransform.from_translation(
             [self.coxa_length, 0, 0]
         )
 
-        self.femur_joint = self.coxa_link @ AffineTransform.from_rotvec([0, beta, 0], degrees=True)
+        self.femur_joint = self.coxa_link @ AffineTransform.from_rotvec(
+            [0, beta, 0],
+            degrees=True,
+        )
         self.femur_link = self.femur_joint @ AffineTransform.from_translation(
             [self.femur_length, 0, 0]
         )
 
         self.tibia_joint = self.femur_link @ AffineTransform.from_rotvec(
-            [0, gamma, 0], degrees=True
+            [0, gamma, 0],
+            degrees=True,
         )
         self.tibia_link = self.tibia_joint @ AffineTransform.from_translation(
             [self.tibia_length, 0, 0]
@@ -288,7 +299,8 @@ class LegModel:
         reached_target, alpha, beta, gamma = self.inverse_kinematics(foot_target, verbose)
         if verbose:
             print(
-                f'{self.label} moving to {foot_target}. new angles: {alpha=:.4f}\t{beta=:.4f}\t{gamma=:.4f}'
+                f'{self.label} moving to {foot_target}. \
+                  new angles: {alpha=:.4f}\t{beta=:.4f}\t{gamma=:.4f}'
             )
         self.forward_kinematics(alpha, beta, gamma)
         return reached_target
@@ -323,13 +335,18 @@ class LegModel:
 
         Math as described above
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         z_offset:
-        z offset from the coxa joint of the foot target in meters
+          z offset from the coxa joint of the foot target in meters
 
         X_tick:
-            X distance from the coxa joint of the foot target in meters, returned by the inverse_kinematics_xy
+          X distance from the coxa joint of the foot target in meters,
+          returned by the inverse_kinematics_xy
+
+        verbose:
+          print debug information
+
         """
         D = -z_offset
         T = X_tick - self.coxa_length
@@ -352,6 +369,9 @@ class LegModel:
         gamma = 180 - phi
         if verbose:
             print(
-                f'{theta1=} - solvable={solvable_theta1}\n{theta2=}\n{phi=} - solvable={solvable_phi}\n\n{beta=}\n{gamma=}'
+                f'{theta1=} - solvable={solvable_theta1}\n\
+                {theta2=}\n{phi=} - solvable={solvable_phi}\n\n\
+                {beta=}\n\
+                {gamma=}'
             )
         return solvable_theta1 and solvable_phi, beta, gamma

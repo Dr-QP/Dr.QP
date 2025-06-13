@@ -62,10 +62,6 @@ ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 # Export dependencies
 ament_export_dependencies(${${PROJECT_NAME}_BUILD_EXPORT_DEPENDS})
 
-install(
-  DIRECTORY launch
-  DESTINATION share/${PROJECT_NAME}
-)
 
 if(BUILD_TESTING)
   include(../../cmake/ClangFormatConfig.cmake)
