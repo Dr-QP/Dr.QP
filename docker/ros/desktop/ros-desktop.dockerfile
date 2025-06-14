@@ -19,7 +19,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       -e "ci_mode=true clang_version=$CLANG_VERSION ros_distro=$ROS_DISTRO"
 
 WORKDIR /opt/ros/overlay_ws
-USER $ROS_USERNAME
 
 # Force clang installed by llvm.sh in /usr/lib/llvm-${CLANG_VERSION}/bin to be the default in docker
 ENV PATH="/usr/lib/llvm-${CLANG_VERSION}/bin:/root/.local/bin:$PATH"
