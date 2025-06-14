@@ -36,8 +36,7 @@ jobs:
     if: needs.paths-filter.outputs.pass == 'true'
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     container:
-      image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
-      options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
+      image: ghcr.io/dr-qp/jazzy-ros-desktop:pr-199
     permissions:
       # Give the default GITHUB_TOKEN write permission to commit and push the
       # added or changed files to the repository.
