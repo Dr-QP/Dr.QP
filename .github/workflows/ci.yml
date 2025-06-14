@@ -245,7 +245,7 @@ jobs:
 
         - name: Patch devcontainer.json to use image built in this workflow
           run: |
-            sed -i "s|ghcr.io/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop:edge|${{ needs.merge-dev-image.outputs.image }}|g" .devcontainer/devcontainer.json
+            sed -i "s|ghcr.io/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop:pr-199|${{ needs.merge-dev-image.outputs.image }}|g" .devcontainer/devcontainer.json
 
         - name: Build and test dev container image
           uses: devcontainers/ci@v0.3
