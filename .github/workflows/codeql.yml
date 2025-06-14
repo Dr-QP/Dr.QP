@@ -66,8 +66,7 @@ jobs:
     # Consider using larger runners or machines with greater resources for possible analysis time improvements.
     runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
-      options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
+      image: ghcr.io/dr-qp/jazzy-ros-desktop:edgepr-199
     permissions:
       # required for all workflows
       security-events: write
