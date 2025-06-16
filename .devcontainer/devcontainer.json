@@ -16,7 +16,7 @@
   // Second venv command with --system-site-packages turns on access to system packages to allow ROS2 builds to work
   "postCreateCommand": "sudo chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /opt/ros/overlay_ws/.venv",
   "postAttachCommand": {
-    "git config": "git config --global gpg.ssh.program ssh-keygen && git config --global --add safe.directory /opt/ros/overlay_ws",
+    "git config": "git config --global gpg.ssh.program ssh-keygen",
     "python-venv": "python3 -m venv /opt/ros/overlay_ws/.venv && /opt/ros/overlay_ws/.venv/bin/python3 -m pip install -r /opt/ros/overlay_ws/requirements.txt && python3 -m venv /opt/ros/overlay_ws/.venv --system-site-packages"
   },
   "runArgs": [
