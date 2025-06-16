@@ -67,7 +67,7 @@ jobs:
           ./scripts/python-reformat.sh || true
 
       # Commit all changed files back to the repository
-      - uses: stefanzweifel/git-auto-commit-action@v5
+      - uses: stefanzweifel/git-auto-commit-action@v6
         if: ${{ github.event_name == 'pull_request' }}
         with:
           commit_message: Reformatted code
