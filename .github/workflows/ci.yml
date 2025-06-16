@@ -127,12 +127,11 @@ jobs:
       packages: read
     container:
       image: ${{ needs.merge-dev-image.outputs.image }}
-      options: --user rosdev # Mandatory! Sets user:group matching the one of the runner, allowing access to mounted paths
     steps:
       - name: copy .colcon to GHA's $HOME
         shell: bash
         run: |
-          cp -r /home/rosdev/.colcon "$HOME"
+          cp -r /root/.colcon "$HOME"
           colcon mixin list
 
       - uses: actions/checkout@v4
@@ -246,7 +245,7 @@ jobs:
 
         - name: Patch devcontainer.json to use image built in this workflow
           run: |
-            sed -i "s|ghcr.io/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop:edge|${{ needs.merge-dev-image.outputs.image }}|g" .devcontainer/devcontainer.json
+            sed -i "s|ghcr.io/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop:pr-199|${{ needs.merge-dev-image.outputs.image }}|g" .devcontainer/devcontainer.json
 
         - name: Build and test dev container image
           uses: devcontainers/ci@v0.3
@@ -256,7 +255,8 @@ jobs:
             runCmd: |
               set -x
               set -e
-              id
+
+              source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
               time sudo apt update
               time rosdep update
               time ./scripts/ros-dep.sh

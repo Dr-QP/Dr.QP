@@ -1,24 +1,23 @@
 {
   "name": "Dr.QP ROS 2 jazzy",
-  "remoteUser": "rosdev",
-  "image": "ghcr.io/dr-qp/jazzy-ros-desktop:edge",
+  "image": "ghcr.io/dr-qp/jazzy-ros-desktop:pr-199",
   "customizations": {
     "vscode": {
       "extensions": [
-        // Open the /home/rosdev/ros2_ws/Dr.QP.code-workspace to install the recommended extensions
+        // Open the /opt/ros/overlay_ws/Dr.QP.code-workspace to install the recommended extensions
       ]
     }
   },
-  "workspaceFolder": "/home/rosdev/ros2_ws/",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/home/rosdev/ros2_ws/,type=bind",
+  "workspaceFolder": "/opt/ros/overlay_ws/",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/opt/ros/overlay_ws/,type=bind",
   "containerEnv": {},
   "mounts": [
   ],
   // Second venv command with --system-site-packages turns on access to system packages to allow ROS2 builds to work
-  "postCreateCommand": "sudo chown rosdev:rosdev /home/rosdev/ros2_ws/.ansible /home/rosdev/ros2_ws/.vscode /home/rosdev/ros2_ws/.cache /home/rosdev/ros2_ws/build /home/rosdev/ros2_ws/install /home/rosdev/ros2_ws/lcov /home/rosdev/ros2_ws/log /home/rosdev/ros2_ws/docs/_build /home/rosdev/ros2_ws/.micromamba /home/rosdev/ros2_ws/.venv",
+  "postCreateCommand": "chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /opt/ros/overlay_ws/.venv",
   "postAttachCommand": {
     "git.ssh.program": "git config --global gpg.ssh.program ssh-keygen",
-    "python-venv": "python3 -m venv /home/rosdev/ros2_ws/.venv && /home/rosdev/ros2_ws/.venv/bin/python3 -m pip install -r /home/rosdev/ros2_ws/requirements.txt && python3 -m venv /home/rosdev/ros2_ws/.venv --system-site-packages"
+    "python-venv": "python3 -m venv /opt/ros/overlay_ws/.venv && /opt/ros/overlay_ws/.venv/bin/python3 -m pip install -r /opt/ros/overlay_ws/requirements.txt && python3 -m venv /opt/ros/overlay_ws/.venv --system-site-packages"
   },
   "runArgs": [
     // Commented out to allow Codespaces use
@@ -27,16 +26,16 @@
     // "--pid", "host",
     // "--device", "/dev/ttySC0"
 
-    "--mount", "type=volume,source=drqp-ansible,target=/home/rosdev/ros2_ws/.ansible",
-    "--mount", "type=volume,source=drqp-vscode,target=/home/rosdev/ros2_ws/.vscode",
-    "--mount", "type=volume,source=drqp-clangd-cache,target=/home/rosdev/ros2_ws/.cache",
-    "--mount", "type=volume,source=drqp-colcon-build,target=/home/rosdev/ros2_ws/build",
-    "--mount", "type=volume,source=drqp-colcon-install,target=/home/rosdev/ros2_ws/install",
-    "--mount", "type=volume,source=drqp-colcon-lcov,target=/home/rosdev/ros2_ws/lcov",
-    "--mount", "type=volume,source=drqp-colcon-log,target=/home/rosdev/ros2_ws/log",
-    "--mount", "type=volume,source=drqp-docs-build,target=/home/rosdev/ros2_ws/docs/_build",
-    "--mount", "type=volume,source=drqp-python-micromamba,target=/home/rosdev/ros2_ws/.micromamba",
-    "--mount", "type=volume,source=drqp-python-venv,target=/home/rosdev/ros2_ws/.venv",
+    "--mount", "type=volume,source=drqp-ansible,target=/opt/ros/overlay_ws/.ansible",
+    "--mount", "type=volume,source=drqp-vscode,target=/opt/ros/overlay_ws/.vscode",
+    "--mount", "type=volume,source=drqp-clangd-cache,target=/opt/ros/overlay_ws/.cache",
+    "--mount", "type=volume,source=drqp-colcon-build,target=/opt/ros/overlay_ws/build",
+    "--mount", "type=volume,source=drqp-colcon-install,target=/opt/ros/overlay_ws/install",
+    "--mount", "type=volume,source=drqp-colcon-lcov,target=/opt/ros/overlay_ws/lcov",
+    "--mount", "type=volume,source=drqp-colcon-log,target=/opt/ros/overlay_ws/log",
+    "--mount", "type=volume,source=drqp-docs-build,target=/opt/ros/overlay_ws/docs/_build",
+    "--mount", "type=volume,source=drqp-python-micromamba,target=/opt/ros/overlay_ws/.micromamba",
+    "--mount", "type=volume,source=drqp-python-venv,target=/opt/ros/overlay_ws/.venv",
   ],
   "features": {
   }
