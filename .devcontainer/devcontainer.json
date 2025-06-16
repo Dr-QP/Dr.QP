@@ -1,6 +1,6 @@
 {
   "name": "Dr.QP ROS 2 jazzy",
-  "image": "ghcr.io/dr-qp/jazzy-ros-desktop:pr-199",
+  "image": "ghcr.io/dr-qp/jazzy-ros-desktop:edge",
   "customizations": {
     "vscode": {
       "extensions": [
