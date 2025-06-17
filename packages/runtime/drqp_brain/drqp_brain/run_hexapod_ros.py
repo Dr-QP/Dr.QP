@@ -22,6 +22,7 @@
 
 import argparse
 from enum import auto, Enum
+from typing import Callable
 
 from drqp_brain.geometry import Point3D
 from drqp_brain.models import HexapodModel
@@ -81,12 +82,12 @@ class JoystickButton:
     ----------
     button_index: ButtonIndex
         Index of the button to process
-    event_handler: callable
+    event_handler: Callable
         Callback to call when button is pressed
 
     """
 
-    def __init__(self, button_index: ButtonIndex, event_handler: callable):
+    def __init__(self, button_index: ButtonIndex, event_handler: Callable):
         self.button_index = button_index
         self.event_handler = event_handler
 
