@@ -24,8 +24,10 @@
     "--network", "host",
     "--ipc", "host",
     "--pid", "host",
-    "--user", "1001:1001", // Change to match primary user on the host
     "--privileged",
+
+    // Uncomment to allow shared memory based DDS communication
+    // "--user", "1001:1001", // Change to match primary user on the host
 
     "--mount", "type=volume,source=drqp-ansible,target=/opt/ros/overlay_ws/.ansible",
     "--mount", "type=volume,source=drqp-vscode,target=/opt/ros/overlay_ws/.vscode",
