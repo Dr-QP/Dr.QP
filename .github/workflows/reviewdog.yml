@@ -20,7 +20,8 @@ concurrency:
 jobs:
   actionlint:
     timeout-minutes: 10
-    permissions: {}
+    permissions:
+      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,6 +30,5 @@ jobs:
 
       - uses: reviewdog/action-actionlint@v1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review # can use Markdown and add a link to rule page in reviewdog reports.
           fail_level: warning
