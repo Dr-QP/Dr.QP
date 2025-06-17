@@ -49,6 +49,9 @@ RUN . /opt/ros/$ROS_DISTRO/setup.sh \
 FROM ros:$ROS_DISTRO-ros-base AS deploy
 
 ARG OVERLAY_WS
+ARG DEPLOY_USER=rosdeploy
+ARG DEPLOY_UID=1001
+ARG DEPLOY_GID=1001
 
 WORKDIR $OVERLAY_WS
 COPY --from=builder $OVERLAY_WS/install $OVERLAY_WS/install
@@ -64,6 +67,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 ENV OVERLAY_WS=$OVERLAY_WS
 ENV ROS_DISTRO=$ROS_DISTRO
+
+RUN groupadd -g $DEPLOY_GID $DEPLOY_USER \
+    && useradd -m -u $DEPLOY_UID -g $DEPLOY_GID $DEPLOY_USER \
+    && sudo chown -R $DEPLOY_USER:$DEPLOY_USER $OVERLAY_WS
+USER $DEPLOY_USER
 
 COPY ./ros_entrypoint.sh /
 ENTRYPOINT ["/ros_entrypoint.sh"]

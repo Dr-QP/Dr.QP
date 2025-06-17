@@ -66,7 +66,7 @@ jobs:
     # Consider using larger runners or machines with greater resources for possible analysis time improvements.
     runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/dr-qp/jazzy-ros-desktop:pr-199
+      image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
     permissions:
       # required for all workflows
       security-events: write
@@ -129,8 +129,11 @@ jobs:
       if: matrix.build-mode == 'manual'
       shell: bash
       run: |
+        set -x
+        set -e
+
+        source "/opt/ros/${{ env.ROS_DISTRO }}/setup.bash"
         sudo apt-get update
-        source "/opt/ros/$ROS_DISTRO/setup.bash"
         rosdep update
         ./scripts/ros-dep.sh
         colcon build --cmake-args -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo

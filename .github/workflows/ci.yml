@@ -142,7 +142,7 @@ jobs:
           set -x
           set -e
 
-          source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
+          source "/opt/ros/${{ env.ROS_DISTRO }}/setup.bash"
           time sudo apt update
           time rosdep update
           time ./scripts/ros-dep.sh
@@ -245,7 +245,7 @@ jobs:
 
         - name: Patch devcontainer.json to use image built in this workflow
           run: |
-            sed -i "s|ghcr.io/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop:pr-199|${{ needs.merge-dev-image.outputs.image }}|g" .devcontainer/devcontainer.json
+            sed -i "s|ghcr.io/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop:edge|${{ needs.merge-dev-image.outputs.image }}|g" .devcontainer/devcontainer.json
 
         - name: Build and test dev container image
           uses: devcontainers/ci@v0.3
@@ -256,7 +256,7 @@ jobs:
               set -x
               set -e
 
-              source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
+              source "/opt/ros/${{ env.ROS_DISTRO }}/setup.bash"
               time sudo apt update
               time rosdep update
               time ./scripts/ros-dep.sh

@@ -1,6 +1,6 @@
 {
   "name": "Dr.QP ROS 2 jazzy",
-  "image": "ghcr.io/dr-qp/jazzy-ros-desktop:pr-199",
+  "image": "ghcr.io/dr-qp/jazzy-ros-desktop:edge",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -14,17 +14,20 @@
   "mounts": [
   ],
   // Second venv command with --system-site-packages turns on access to system packages to allow ROS2 builds to work
-  "postCreateCommand": "chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /opt/ros/overlay_ws/.venv",
+  "postCreateCommand": "sudo chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /opt/ros/overlay_ws/.venv",
   "postAttachCommand": {
-    "git.ssh.program": "git config --global gpg.ssh.program ssh-keygen",
+    "git config": "git config --global gpg.ssh.program ssh-keygen",
     "python-venv": "python3 -m venv /opt/ros/overlay_ws/.venv && /opt/ros/overlay_ws/.venv/bin/python3 -m pip install -r /opt/ros/overlay_ws/requirements.txt && python3 -m venv /opt/ros/overlay_ws/.venv --system-site-packages"
   },
   "runArgs": [
     // Commented out to allow Codespaces use
-    // "--network", "host",
-    // "--ipc", "host",
-    // "--pid", "host",
-    // "--device", "/dev/ttySC0"
+    "--network", "host",
+    "--ipc", "host",
+    "--pid", "host",
+    "--privileged",
+
+    // Uncomment to allow shared memory based DDS communication
+    // "--user", "1001:1001", // Change to match primary user on the host
 
     "--mount", "type=volume,source=drqp-ansible,target=/opt/ros/overlay_ws/.ansible",
     "--mount", "type=volume,source=drqp-vscode,target=/opt/ros/overlay_ws/.vscode",
