@@ -30,6 +30,7 @@ from drqp_brain.walk_controller import GaitType, WalkController
 import numpy as np
 import rclpy
 import rclpy.node
+import rclpy.utilities
 import sensor_msgs.msg
 
 kFemurOffsetAngle = -13.11
@@ -189,7 +190,7 @@ class HexapodController(rclpy.node.Node):
 
         # On some platforms default value for trigger is -1 (robobook with ubuntu 24.04)
         # but on raspi with ubutnu 24.04 it is 0
-        left_trigger = np.interp(joy.axes[ButtonAxis.TriggerLeft.value], [-1, 0], [1, 0])
+        left_trigger = float(np.interp(joy.axes[ButtonAxis.TriggerLeft.value], [-1, 0], [1, 0]))
         self.direction = Point3D([left_y, left_x, left_trigger])
         self.walk_speed = abs(left_x) + abs(left_y) + abs(left_trigger)
         self.rotation_speed = right_x
@@ -218,6 +219,8 @@ class HexapodController(rclpy.node.Node):
     def publish_joint_states(self):
         msg = sensor_msgs.msg.JointState()
         msg.header.stamp = self.get_clock().now().to_msg()
+        msg.name = []
+        msg.position = []
 
         for leg in self.hexapod.legs:
             for joint, angle in [

@@ -162,10 +162,10 @@ class LegModel:
         coxa_length: float,
         femur_length: float,
         tibia_length: float,
+        label: HexapodLeg,
         location_on_body=[0, 0, 0],
         rotation=[0, 0, 0],
         body_transform=AffineTransform.identity(),
-        label: HexapodLeg | None = None,
     ):
         self.coxa_length = coxa_length
         self.femur_length = femur_length
