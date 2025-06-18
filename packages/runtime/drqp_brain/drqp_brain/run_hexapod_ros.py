@@ -55,8 +55,8 @@ class ButtonIndex(Enum):
     Select = 4
     PS = 5
     Start = 6
-    LeftStick = 7
-    RightStick = 8
+    L3 = 7
+    R3 = 8
     L1 = 9
     R1 = 10
     DpadUp = 11
