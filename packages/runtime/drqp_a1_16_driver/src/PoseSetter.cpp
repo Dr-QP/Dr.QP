@@ -28,6 +28,7 @@
 #include <memory>
 #include <string>
 
+#include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <drqp_interfaces/msg/multi_servo_position_goal.hpp>
@@ -56,7 +57,7 @@ public:
         "/servo_goals", 10, [this](const drqp_interfaces::msg::MultiServoPositionGoal& msg) {
           try {
             if (killModeActive_) {
-              RCLCPP_INFO(get_logger(), "Kill switch is on, not setting pose");
+              RCLCPP_DEBUG(get_logger(), "Kill switch is on, not setting pose");
               return;
             }
 
