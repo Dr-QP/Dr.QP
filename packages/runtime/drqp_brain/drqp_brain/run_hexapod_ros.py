@@ -198,7 +198,6 @@ class HexapodController(rclpy.node.Node):
         self.walk_speed = abs(left_x) + abs(left_y) + abs(left_trigger)
         self.rotation_speed = right_x
 
-        self.get_logger().info(f'Buttons: {joy.buttons}')
         for button in self.joystick_buttons:
             button.update(joy.buttons)
 
