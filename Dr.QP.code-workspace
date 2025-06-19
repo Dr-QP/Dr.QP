@@ -159,7 +159,7 @@
 
       {
         "label": "Dr.QP colcon build",
-        "type": "ROS2",
+        "type": "RDE",
         "command": "colcon",
         "args": [
           "build",
@@ -199,7 +199,7 @@
       },
       {
         "label": "Dr.QP colcon test",
-        "type": "ROS2",
+        "type": "RDE",
         "command": "colcon",
         "args": [
           "test",
@@ -267,7 +267,7 @@
       },
       {
         "label": "Dr.QP rosdep",
-        "type": "ROS2",
+        "type": "RDE",
         "command": "./scripts/ros-dep.sh",
         "problemMatcher": []
       },
