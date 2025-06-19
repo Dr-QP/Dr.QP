@@ -276,6 +276,16 @@ or
 ansible-playbook -i inventories/real-robots.yml playbooks/200_pair_controller.yml -e "controller_mac=XX:XX:XX:XX:XX:XX"
 ```
 
+#### Putting a PS5 Dualsense Controller into Pairing Mode
+
+To put a PS5 Dualsense controller into pairing mode, press and hold the PS button and the Create (or Share) button simultaneously until the light bar starts flashing. This indicates that the controller is discoverable for pairing with other devices, such as a PC or a smartphone.
+
+Here's a more detailed breakdown:
+
+1. Ensure the controller is off: If the controller is already on, hold the PS button until it turns off.
+2. Initiate pairing mode: Press and hold both the PS button and the Create (or Share) button at the same time.
+3. Observe the light bar: The light bar on the controller will start flashing, indicating that it's in pairing mode.
+
 ## Migration from Shell Scripts
 
 The Ansible playbooks replaced the following shell scripts:
