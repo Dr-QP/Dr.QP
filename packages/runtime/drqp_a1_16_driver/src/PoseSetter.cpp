@@ -83,9 +83,11 @@ public:
             killModeActive_ = true;
             XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
             servo.torqueOff();
+            RCLCPP_INFO(get_logger(), "Kill mode activated");
           } else {
             killModeActive_ = false;
             unkillTimestamp = msg.header.stamp;
+            RCLCPP_INFO(get_logger(), "Kill mode deactivated");
           }
         } catch (std::exception& e) {
           RCLCPP_ERROR(get_logger(), "Exception occurred in kill_switch handler %s", e.what());
