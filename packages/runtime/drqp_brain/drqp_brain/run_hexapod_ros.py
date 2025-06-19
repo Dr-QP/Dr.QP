@@ -62,7 +62,7 @@ class ButtonIndex(Enum):
     DpadDown = 12
     DpadLeft = 13
     DpadRight = 14
-    TouchpadButton = 15
+    # TouchpadButton = 20 # DOES NOT WORK WITH DEFAULT ROS joy node https://github.com/Dr-QP/Dr.QP/issues/207
 
 
 class ButtonAxis(Enum):
@@ -134,7 +134,7 @@ class HexapodController(rclpy.node.Node):
         self.joystick_buttons = [
             JoystickButton(ButtonIndex.DpadLeft, lambda b, e: self.prev_gait()),
             JoystickButton(ButtonIndex.DpadRight, lambda b, e: self.next_gait()),
-            JoystickButton(ButtonIndex.TouchpadButton, lambda b, e: self.kill_switch()),
+            JoystickButton(ButtonIndex.PS, lambda b, e: self.kill_switch()),
         ]
 
         self.joint_state_pub = self.create_publisher(
@@ -198,6 +198,7 @@ class HexapodController(rclpy.node.Node):
         self.walk_speed = abs(left_x) + abs(left_y) + abs(left_trigger)
         self.rotation_speed = right_x
 
+        self.get_logger().info(f'Buttons: {joy.buttons}')
         for button in self.joystick_buttons:
             button.update(joy.buttons)
 
