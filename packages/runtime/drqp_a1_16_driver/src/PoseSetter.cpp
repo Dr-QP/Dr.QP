@@ -23,7 +23,6 @@
 #include <drqp_a1_16_driver/SerialFactory.h>
 #include <drqp_a1_16_driver/XYZrobotServo.h>
 
-#include <cstdint>
 #include <exception>
 #include <memory>
 #include <string>
