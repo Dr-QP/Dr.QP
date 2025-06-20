@@ -20,8 +20,26 @@
         state: present
         update_cache: true
 
+    - name: Create temporary directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: bt_pair_
+      register: temp_dir
+
+    - name: Copy bt_pair.expect script to remote host
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../../../../scripts/bt_pair.expect"
+        dest: "{{ temp_dir.path }}/bt_pair.expect"
+        mode: "0755"
+
     - name: Pair controller by MAC or name
       register: pairing_result
       changed_when: "'already paired' not in pairing_result.stdout and 'Paired successfully' in pairing_result.stdout"
-      ansible.builtin.script:
-        cmd: '{{ playbook_dir }}/../../scripts/bt_pair.expect --mac "{{ controller_mac }}" --name "{{ controller_name }}"'
+      ansible.builtin.command:
+        cmd: '{{ temp_dir.path }}/bt_pair.expect --mac "{{ controller_mac }}" --name "{{ controller_name }}"'
+
+    - name: Clean up temporary directory
+      ansible.builtin.file:
+        path: "{{ temp_dir.path }}"
+        state: absent
+      when: temp_dir.path is defined

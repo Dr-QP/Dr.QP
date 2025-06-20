@@ -24,6 +24,7 @@ import argparse
 from enum import auto, Enum
 from typing import Callable
 
+import drqp_interfaces.msg
 from drqp_brain.geometry import Point3D
 from drqp_brain.models import HexapodModel
 from drqp_brain.walk_controller import GaitType, WalkController
@@ -63,7 +64,7 @@ class ButtonIndex(Enum):
     DpadDown = 12
     DpadLeft = 13
     DpadRight = 14
-    TouchpadButton = 15
+    # TouchpadButton = 20 # DOES NOT WORK WITH DEFAULT ROS joy node https://github.com/Dr-QP/Dr.QP/issues/207
 
 
 class ButtonAxis(Enum):
@@ -135,10 +136,14 @@ class HexapodController(rclpy.node.Node):
         self.joystick_buttons = [
             JoystickButton(ButtonIndex.DpadLeft, lambda b, e: self.prev_gait()),
             JoystickButton(ButtonIndex.DpadRight, lambda b, e: self.next_gait()),
+            JoystickButton(ButtonIndex.PS, lambda b, e: self.kill_switch()),
         ]
 
         self.joint_state_pub = self.create_publisher(
             sensor_msgs.msg.JointState, '/joint_states', qos_profile=50
+        )
+        self.kill_switch_pub = self.create_publisher(
+            drqp_interfaces.msg.KillSwitch, '/kill_switch', qos_profile=1
         )
         self.setup_hexapod()
 
@@ -232,6 +237,12 @@ class HexapodController(rclpy.node.Node):
                 msg.position.append(np.radians(angle))
 
         self.joint_state_pub.publish(msg)
+
+    def kill_switch(self):
+        self.get_logger().info('Kill switch pressed')
+        msg = drqp_interfaces.msg.KillSwitch()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        self.kill_switch_pub.publish(msg)
 
 
 def main():

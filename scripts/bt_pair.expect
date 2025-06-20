@@ -50,8 +50,10 @@ expect {
         if {($mac ne "" && $found_mac eq $mac) || ($name ne "" && [string match "*$name*" $found_name])} {
             set device_mac $found_mac
             set full_device_name $found_name
-            puts "✅ Device '$full_device_name' ($device_mac) already paired!"
-            exit 0
+            puts "✅ Device '$full_device_name' ($device_mac) already paired. Removing pairing..."
+            send "remove $device_mac\r"
+            expect "#"
+            puts "✅ Removed pairing."
         }
         exp_continue
     }
