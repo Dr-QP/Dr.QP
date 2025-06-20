@@ -22,6 +22,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/ServoState.msg
   msg/MultiServoState.msg
 
+  msg/KillSwitch.msg
+
   DEPENDENCIES std_msgs
 )
 

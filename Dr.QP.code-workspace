@@ -156,9 +156,10 @@
   "tasks": {
     "version": "2.0.0",
     "tasks": [
+
       {
         "label": "Dr.QP colcon build",
-        "type": "RDE",
+        "type": "ROS2",
         "command": "colcon",
         "args": [
           "build",
@@ -198,7 +199,7 @@
       },
       {
         "label": "Dr.QP colcon test",
-        "type": "RDE",
+        "type": "ROS2",
         "command": "colcon",
         "args": [
           "test",
@@ -266,7 +267,7 @@
       },
       {
         "label": "Dr.QP rosdep",
-        "type": "RDE",
+        "type": "ROS2",
         "command": "./scripts/ros-dep.sh",
         "problemMatcher": []
       },
@@ -367,13 +368,12 @@
     "cmake.generator": "Ninja",
     "cmake.exportCompileCommandsFile": true,
 
-    "RDE.distro": "jazzy",
+    "ROS2.distro": "jazzy",
     "ament-task-provider.envSetup": "source /opt/ros/jazzy/setup.bash",
 
     // Draft for .micromamba ros-jazzy, but still doesn't work
-    // "ros2.rosRootDir": ".micromamba/envs/ros-jazzy/",
-    // "ros.rosSetupScript": ".micromamba/envs/ros-jazzy/setup.bash",
-    // "RDE.rosSetupScript": ".micromamba/envs/ros-jazzy/setup.bash",
+    // "ROS2.rosRootDir": ".micromamba/envs/ros-jazzy/",
+    // "ROS2.rosSetupScript": ".micromamba/envs/ros-jazzy/setup.bash",
     // "ament-task-provider.envSetup": "source .micromamba/envs/ros-jazzy/setup.bash",
     "python.autoComplete.extraPaths": [
       "/opt/ros/jazzy/lib/python3.12/site-packages",
