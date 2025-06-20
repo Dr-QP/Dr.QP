@@ -59,6 +59,9 @@ public:
             if (killModeActive_) {
               RCLCPP_DEBUG(get_logger(), "Kill switch is on, not setting pose");
               return;
+            } else if (rclcpp::Time(msg.header.stamp) < unkillTimestamp) {
+              RCLCPP_DEBUG(get_logger(), "Message is older than kill switch, not setting pose");
+              return;
             }
 
             auto multiServoStates = drqp_interfaces::msg::MultiServoState{};
@@ -83,10 +86,15 @@ public:
             killModeActive_ = true;
             XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
             servo.torqueOff();
+
             RCLCPP_INFO(get_logger(), "Kill mode activated");
           } else {
             killModeActive_ = false;
             unkillTimestamp = msg.header.stamp;
+
+            XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
+            servo.torqueOn();
+
             RCLCPP_INFO(get_logger(), "Kill mode deactivated");
           }
         } catch (std::exception& e) {
@@ -95,6 +103,9 @@ public:
           RCLCPP_ERROR(get_logger(), "Unknown exception occurred in kill_switch handler.");
         }
       });
+
+    XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
+    servo.torqueOn();
   }
 
   void handleSyncPose(const drqp_interfaces::msg::MultiServoPositionGoal& msg)
