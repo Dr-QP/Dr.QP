@@ -29,13 +29,11 @@
 
 #include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp/subscription_base.hpp>
-
-#include <std_msgs/msg/bool.hpp>
 
 #include <drqp_interfaces/msg/multi_servo_position_goal.hpp>
 #include <drqp_interfaces/msg/multi_servo_state.hpp>
 #include <drqp_interfaces/msg/kill_switch.hpp>
+#include <rclcpp/subscription_base.hpp>
 
 using namespace std::chrono_literals;
 
@@ -96,25 +94,6 @@ public:
             torqueOn();
 
             RCLCPP_INFO(get_logger(), "Kill mode deactivated");
-          }
-        } catch (std::exception& e) {
-          RCLCPP_ERROR(get_logger(), "Exception occurred in kill_switch handler %s", e.what());
-        } catch (...) {
-          RCLCPP_ERROR(get_logger(), "Unknown exception occurred in kill_switch handler.");
-        }
-      });
-
-    torqueOnSubscription_ = create_subscription<std_msgs::msg::Bool>(
-      "/torque_on", 10, [this](const std_msgs::msg::Bool requestedState) {
-        try {
-          if (requestedState.data) {
-            torqueOn();
-
-            RCLCPP_INFO(get_logger(), "Torque is on");
-          } else {
-            torqueOff();
-
-            RCLCPP_INFO(get_logger(), "Torque is off");
           }
         } catch (std::exception& e) {
           RCLCPP_ERROR(get_logger(), "Exception occurred in kill_switch handler %s", e.what());
@@ -195,8 +174,6 @@ public:
     multiServoPositionGoalSubscription_;
 
   rclcpp::Subscription<drqp_interfaces::msg::KillSwitch>::SharedPtr killSwitchSubscription_;
-  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr torqueOnSubscription_;
-
   bool killModeActive_ = false;
   rclcpp::Time unkillTimestamp = this->get_clock()->now();
 
