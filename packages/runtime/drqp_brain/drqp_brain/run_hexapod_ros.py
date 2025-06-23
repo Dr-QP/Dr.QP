@@ -33,6 +33,7 @@ import rclpy
 import rclpy.node
 import rclpy.utilities
 import sensor_msgs.msg
+from rclpy.executors import ExternalShutdownException
 
 kFemurOffsetAngle = -13.11
 kTibiaOffsetAngle = -32.9
@@ -253,8 +254,8 @@ def main():
     node = HexapodController(**vars(args))
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
-        node.get_logger().info('Keyboard interrupt. Shutting down')
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass  # codeql[py/empty-except]
     finally:
         node.destroy_node()
         # Only call shutdown if ROS is still initialized
