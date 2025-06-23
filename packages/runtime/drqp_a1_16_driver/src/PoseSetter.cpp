@@ -83,16 +83,15 @@ public:
         try {
           if (!killModeActive_) {
             killModeActive_ = true;
-            XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
-            servo.torqueOff();
+
+            torqueOff();
 
             RCLCPP_INFO(get_logger(), "Kill mode activated");
           } else {
             killModeActive_ = false;
             unkillTimestamp = msg.header.stamp;
 
-            XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
-            servo.torqueOn();
+            torqueOn();
 
             RCLCPP_INFO(get_logger(), "Kill mode deactivated");
           }
@@ -103,8 +102,24 @@ public:
         }
       });
 
+    torqueOn();
+  }
+
+  ~PoseSetter()
+  {
+    torqueOff();
+  }
+
+  void torqueOn()
+  {
     XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
     servo.torqueOn();
+  }
+
+  void torqueOff()
+  {
+    XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
+    servo.torqueOff();
   }
 
   void handleSyncPose(const drqp_interfaces::msg::MultiServoPositionGoal& msg)
