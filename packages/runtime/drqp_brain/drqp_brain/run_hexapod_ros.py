@@ -254,10 +254,12 @@ def main():
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
-        pass  # codeql[py/empty-except]
+        node.get_logger().info('Keyboard interrupt. Shutting down')
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        # Only call shutdown if ROS is still initialized
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':
