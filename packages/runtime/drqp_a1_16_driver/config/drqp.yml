@@ -1,9 +1,10 @@
 robot:
-  name: Dr.QP
-  device_address: 192.168.0.190:2022 # via ser2net
-  # device_address: /dev/ttySC0
-  baud_rate: 115200
-  servos:
+  ros__parameters:
+    name: Dr.QP
+    device_address: 192.168.0.190:2022 # via ser2net
+    # device_address: /dev/ttySC0
+    baud_rate: 115200
+    servos:
       left_front_coxa:
         id: 1
       left_front_femur:
@@ -60,6 +61,7 @@ robot:
         inverted: true
 
 joint_state_publisher:
-  update_rate: 30
-  publish_states: true
-  topic_name: joint_states
+  ros__parameters:
+    update_rate: 30
+    publish_states: true
+    topic_name: joint_states
