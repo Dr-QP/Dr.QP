@@ -126,18 +126,23 @@ def plot_spline(
         line_x = SplineWrapper(make_interp_spline(t, x, k=1))
         line_y = SplineWrapper(make_interp_spline(t, y, k=1))
 
-        class MixedSplineWrapper:
-            def __init__(self, spline_func: Callable, line_func: Callable, mix_ratio):
+        class MixedSplineWrapper(SplineObjectLike):
+            def __init__(self, spline_func: SplineCallable, line_func: SplineCallable, mix_ratio):
                 self._spline_func = spline_func
                 self._line_func = line_func
                 self._mix_ratio = mix_ratio
 
             def __call__(self, t_fine):
+                if not callable(self._spline_func):
+                    raise TypeError(f'self._spline_func is not callable: {type(self._spline_func)}')
+                if not callable(self._line_func):
+                    raise TypeError(f'self._line_func is not callable: {type(self._line_func)}')
+
                 return self._mix_ratio * self._spline_func(t_fine) + (
                     1.0 - self._mix_ratio
                 ) * self._line_func(t_fine)
 
-            def derivative(self, _n):
+            def derivative(self, n) -> SplineCallable:
                 # For mixed splines, derivatives are not implemented
                 raise NotImplementedError('Derivatives not implemented for mixed splines')
 
