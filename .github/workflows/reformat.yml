@@ -77,6 +77,7 @@ jobs:
       # Commit all changed files back to the repository
       - uses: stefanzweifel/git-auto-commit-action@v6
         if: ${{ github.event_name == 'pull_request' }}
+        id: commit
         with:
           commit_message: Reformatted code
 
@@ -88,5 +89,18 @@ jobs:
 
           git diff --exit-code
           git diff --exit-code --cached
-          git diff --exit-code FETCH_HEAD
+
+          COMMIT_SHA='${{ steps.commit.outputs.commit_hash }}'
+          CHANGES_DETECTED='${{ steps.commit.outputs.CHANGES_DETECTED }}'
+
+          if [[ $CHANGES_DETECTED == 'true' ]]; then
+            echo "Changes were committed and pushed to the repository."
+            echo "Commit SHA: $COMMIT_SHA"
+            git log -3
+
+            cat .git/FETCH_HEAD
+          else
+            echo "No changes were detected."
+          fi
+          exit 1
 
