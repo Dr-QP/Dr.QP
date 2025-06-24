@@ -1,21 +1,7 @@
 from enum import auto, Enum
-from typing import Callable
-from abc import abstractmethod
 
 import numpy as np
 from scipy.interpolate import make_interp_spline, make_smoothing_spline, make_splprep, make_splrep
-
-
-class SplineCallable:
-    @abstractmethod
-    def __call__(self, t_fine) -> np.ndarray:
-        pass
-
-
-class SplineObjectLike(SplineCallable):
-    @abstractmethod
-    def derivative(self, n) -> SplineCallable:
-        pass
 
 
 # See https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html for full details
@@ -54,8 +40,6 @@ def plot_spline(
     if derivatives_ax is None:
         derivatives_ax = ax
 
-    lam = k
-    s = k
     if not label:
         if spline_type == SplineType.interp:
             label = f'InterpSpline {k=}'
@@ -86,30 +70,15 @@ def plot_spline(
     t_fine_x = np.linspace(t[0], t[-1], num_fine_t_points)
     t_fine_y = t_fine_x
 
-    # Create a wrapper class to ensure consistent callable interface
-    class SplineWrapper(SplineObjectLike):
-        def __init__(self, spline):
-            self._spline = spline
-
-        def __call__(self, t_fine):
-            assert callable(self._spline), f'self._spline is not callable: {type(self._spline)}'
-            return np.array(self._spline(t_fine))
-
-        def derivative(self, n):
-            assert hasattr(self._spline, 'derivative'), (
-                f'spline has no derivative method: {type(self._spline)}'
-            )
-            return SplineWrapper(self._spline.derivative(n))
-
     if spline_type == SplineType.interp:
-        spline_x = SplineWrapper(make_interp_spline(t, x, k=k, bc_type=bc_type))
-        spline_y = SplineWrapper(make_interp_spline(t, y, k=k, bc_type=bc_type))
+        spline_x = make_interp_spline(t, x, k=k, bc_type=bc_type)
+        spline_y = make_interp_spline(t, y, k=k, bc_type=bc_type)
     elif spline_type == SplineType.smoothing:
-        spline_x = SplineWrapper(make_smoothing_spline(t, x, lam=lam))
-        spline_y = SplineWrapper(make_smoothing_spline(t, y, lam=lam))
+        spline_x = make_smoothing_spline(t, x, lam=lam)
+        spline_y = make_smoothing_spline(t, y, lam=lam)
     elif spline_type == SplineType.splrep:
-        spline_x = SplineWrapper(make_splrep(t, x, s=s, k=k))
-        spline_y = SplineWrapper(make_splrep(t, y, s=s, k=k))
+        spline_x = make_splrep(t, x, s=s, k=k)
+        spline_y = make_splrep(t, y, s=s, k=k)
     elif spline_type == SplineType.splprep:
         _spline_x, tx = make_splprep([x, t], s=s, k=k)
         _spline_y, ty = make_splprep([y, t], s=s, k=k)
@@ -117,37 +86,34 @@ def plot_spline(
         t_fine_x = np.linspace(tx[0], tx[-1], num_fine_t_points)
         t_fine_y = np.linspace(ty[0], ty[-1], num_fine_t_points)
 
-        spline_x = SplineWrapper(_spline_x)
-        spline_y = SplineWrapper(_spline_y)
+        class Spline:
+            def __init__(self, spline):
+                self.spline = spline
+
+            def __call__(self, t):
+                return self.spline(t)[0]
+
+            def derivative(self, n):
+                return Spline(self.spline.derivative(n))
+
+        spline_x = Spline(_spline_x)
+        spline_y = Spline(_spline_y)
     else:
         raise ValueError(f'Unknown spline type {spline_type}')
 
     if mix < 1:
-        line_x = SplineWrapper(make_interp_spline(t, x, k=1))
-        line_y = SplineWrapper(make_interp_spline(t, y, k=1))
+        _spline_x = spline_x  # codeql[py/uninitialized-local-variable]
+        _spline_y = spline_y  # codeql[py/uninitialized-local-variable]
+        line_x = make_interp_spline(t, x, k=1)
+        line_y = make_interp_spline(t, y, k=1)
 
-        class MixedSplineWrapper(SplineObjectLike):
-            def __init__(self, spline_func: SplineCallable, line_func: SplineCallable, mix_ratio):
-                self._spline_func = spline_func
-                self._line_func = line_func
-                self._mix_ratio = mix_ratio
+        def spline_x(t_fine):
+            mixed = mix * _spline_x(t_fine) + (1 - mix) * line_x(t_fine)
+            return mixed
 
-            def __call__(self, t_fine):
-                if not callable(self._spline_func):
-                    raise TypeError(f'self._spline_func is not callable: {type(self._spline_func)}')
-                if not callable(self._line_func):
-                    raise TypeError(f'self._line_func is not callable: {type(self._line_func)}')
-
-                return self._mix_ratio * self._spline_func(t_fine) + (
-                    1.0 - self._mix_ratio
-                ) * self._line_func(t_fine)
-
-            def derivative(self, n) -> SplineCallable:
-                # For mixed splines, derivatives are not implemented
-                raise NotImplementedError('Derivatives not implemented for mixed splines')
-
-        spline_x = MixedSplineWrapper(spline_x, line_x, mix)
-        spline_y = MixedSplineWrapper(spline_y, line_y, mix)
+        def spline_y(t_fine):
+            mixed = mix * _spline_y(t_fine) + (1 - mix) * line_y(t_fine)
+            return mixed
 
     ax.plot(
         spline_x(t_fine_x),  # codeql[py/call-to-non-callable]
@@ -157,8 +123,8 @@ def plot_spline(
     )
 
     ax.scatter(
-        spline_x(current_t),
-        spline_y(current_t),
+        spline_x(current_t),  # codeql[py/call-to-non-callable]
+        spline_y(current_t),  # codeql[py/call-to-non-callable]
         label=f'{label} (current point)',
         color=color,
     )
