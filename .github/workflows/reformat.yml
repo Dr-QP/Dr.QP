@@ -80,3 +80,9 @@ jobs:
         with:
           commit_message: Reformatted code
 
+      - name: Verify changes were committed and pushed
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          git diff --exit-code
+          git diff --exit-code --cached
+
