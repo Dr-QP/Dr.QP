@@ -74,14 +74,14 @@ def plot_spline(
         spline_x = make_interp_spline(t, x, k=k, bc_type=bc_type)
         spline_y = make_interp_spline(t, y, k=k, bc_type=bc_type)
     elif spline_type == SplineType.smoothing:
-        spline_x = make_smoothing_spline(t, x, lam=lam)
-        spline_y = make_smoothing_spline(t, y, lam=lam)
+        spline_x = make_smoothing_spline(t, x, lam=lam)  # type: ignore
+        spline_y = make_smoothing_spline(t, y, lam=lam)  # type: ignore
     elif spline_type == SplineType.splrep:
-        spline_x = make_splrep(t, x, s=s, k=k)
-        spline_y = make_splrep(t, y, s=s, k=k)
+        spline_x = make_splrep(t, x, s=s, k=k)  # type: ignore
+        spline_y = make_splrep(t, y, s=s, k=k)  # type: ignore
     elif spline_type == SplineType.splprep:
-        _spline_x, tx = make_splprep([x, t], s=s, k=k)
-        _spline_y, ty = make_splprep([y, t], s=s, k=k)
+        _spline_x, tx = make_splprep([x, t], s=s, k=k)  # type: ignore
+        _spline_y, ty = make_splprep([y, t], s=s, k=k)  # type: ignore
 
         t_fine_x = np.linspace(tx[0], tx[-1], num_fine_t_points)
         t_fine_y = np.linspace(ty[0], ty[-1], num_fine_t_points)
@@ -96,8 +96,8 @@ def plot_spline(
             def derivative(self, n):
                 return Spline(self.spline.derivative(n))
 
-        spline_x = Spline(_spline_x)
-        spline_y = Spline(_spline_y)
+        spline_x = Spline(_spline_x)  # type: ignore
+        spline_y = Spline(_spline_y)  # type: ignore
     else:
         raise ValueError(f'Unknown spline type {spline_type}')
 
@@ -142,8 +142,8 @@ def plot_spline(
         derivatives = min(derivatives, k)
         for d in range(1, derivatives + 1):
             name, color = names[d]
-            deriv_x = spline_x.derivative(d)
-            deriv_y = spline_y.derivative(d)
+            deriv_x = spline_x.derivative(d)  # type: ignore
+            deriv_y = spline_y.derivative(d)  # type: ignore
             _t_deriv_plot_x = t_fine_x
             _t_deriv_plot_y = t_fine_y
             if spline_type == SplineType.splprep:

@@ -52,8 +52,6 @@
       "tamasfe.even-better-toml",
       "davidanson.vscode-markdownlint",
       "elagil.pre-commit-helper",
-      "ranch-hand-robotics.rde-ros-2",
-      "ranch-hand-robotics.urdf-editor",
       "ms-toolsai.jupyter",
       "ms-toolsai.vscode-jupyter-cell-tags",
       "dotjoshjohnson.xml",
@@ -64,7 +62,8 @@
       "redhat.ansible",
       "davidkol.fastcompare",
       "samuelcolvin.jinjahtml",
-      "ms-azuretools.vscode-containers"
+      "ms-azuretools.vscode-containers",
+      "ranch-hand-robotics.rde-pack"
     ]
     // cSpell:enable
   },
@@ -280,7 +279,7 @@
       {
         "label": "Dr.QP venv",
         "type": "shell",
-        "command": "python3 -m venv .venv && .venv/bin/python3 -m pip install -r requirements.txt",
+        "command": "python3 -m venv ${workspaceFolder}/.venv && ${workspaceFolder}/.venv/bin/python3 -m pip install -r ${workspaceFolder}/requirements.txt", // Keep in sync with the command in .devcontainer/devcontainer.json
         "options": {
           "cwd": "${workspaceFolder}"
         },
@@ -313,7 +312,7 @@
       {
         "label": "Dr.QP build docs server",
         "type": "shell",
-        "command": ".venv/bin/sphinx-autobuild -nW --keep-going -b html docs/source/ docs/_build/html --port 8000",
+        "command": "${workspaceFolder}/.venv/bin/sphinx-autobuild -nW --keep-going -b html docs/source/ docs/_build/html --port 8000",
         "options": {
           "cwd": "${workspaceFolder}"
         },
@@ -502,6 +501,8 @@
     "files.associations": {
       "**/ansible/**/*.yml": "ansible",
       "**/ansible/**/*.yaml": "ansible",
-    }
+    },
+    "python.analysis.typeCheckingMode": "standard",
+    "python.defaultInterpreterPath": "/usr/bin/python3",
   }
 }

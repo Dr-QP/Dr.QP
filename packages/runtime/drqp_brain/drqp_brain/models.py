@@ -45,12 +45,12 @@ def safe_arccos(num):
 class HexapodModel:
     def __init__(
         self,
-        front_offset=100,  # x offset for the front and back legs
-        side_offset=100,  # y offset fo the front and back legs
-        middle_offset=100,  # x offset for the middle legs
-        coxa_len=100,
-        femur_len=100,
-        tibia_len=100,
+        front_offset=100.0,  # x offset for the front and back legs
+        side_offset=100.0,  # y offset fo the front and back legs
+        middle_offset=100.0,  # x offset for the middle legs
+        coxa_len=100.0,
+        femur_len=100.0,
+        tibia_len=100.0,
         body_transform=AffineTransform.identity(),
         leg_rotation=[0, 0, 45],
     ):
@@ -162,10 +162,10 @@ class LegModel:
         coxa_length: float,
         femur_length: float,
         tibia_length: float,
+        label: HexapodLeg,
         location_on_body=[0, 0, 0],
         rotation=[0, 0, 0],
         body_transform=AffineTransform.identity(),
-        label='',
     ):
         self.coxa_length = coxa_length
         self.femur_length = femur_length
@@ -178,21 +178,8 @@ class LegModel:
         self._body_transform = body_transform
         self.update_base_transforms()
 
-        self.coxa_angle = 0
-        self.femur_angle = 0
-        self.tibia_angle = 0
-
-        self.coxa_link = None
-        self.coxa_joint = None
-        self.femur_link = None
-        self.femur_joint = None
-        self.tibia_link = None
-
-        self.body_start = None
-        self.body_end = None
-        self.coxa_end = None
-        self.femur_end = None
-        self.tibia_end = None
+        # Initialize leg to neutral position
+        self.forward_kinematics(0, 0, 0)
 
     @property
     def body_transform(self):

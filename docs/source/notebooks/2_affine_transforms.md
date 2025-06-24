@@ -182,7 +182,7 @@ jupyter_utils.display_file(
 ```
 
 ```{code-cell} ipython3
-from drqp_brain.models import LegModel
+from drqp_brain.models import LegModel, HexapodLeg
 from plotting import plot_leg3d
 
 coxa = 5
@@ -190,7 +190,7 @@ femur = 8
 tibia = 10
 
 # model = forward_kinematics_transforms(coxa, femur, tibia, 0, -25, 110)
-model = LegModel(coxa, femur, tibia)
+model = LegModel(coxa, femur, tibia, HexapodLeg.left_front)
 model.forward_kinematics(0, -25, 110)
 
 fig, _, _ = plot_leg_with_points(

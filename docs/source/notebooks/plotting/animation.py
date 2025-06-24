@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 from pathlib import Path
+from typing import Callable
 
 from ipywidgets import interact
 from matplotlib import pyplot as plt
@@ -29,7 +30,7 @@ from .utils import is_sphinx_build, is_sphinx_build_no_videos
 
 def animate_plot(
     _fig,
-    _animate: callable,
+    _animate: Callable,
     _frames,
     _interval=16,  # 60 fps
     _interactive=False,

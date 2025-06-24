@@ -21,7 +21,7 @@
 import math
 
 from drqp_brain.geometry.point import Point3D
-from drqp_brain.models import LegModel, safe_arccos
+from drqp_brain.models import HexapodLeg, LegModel, safe_arccos
 import pytest
 
 
@@ -42,7 +42,9 @@ class TestSolver:
     @pytest.fixture
     def leg_model(self):
         # Standard dimensions for a medium-sized leg
-        return LegModel(coxa_length=20, femur_length=50, tibia_length=70)
+        return LegModel(
+            coxa_length=20, femur_length=50, tibia_length=70, label=HexapodLeg.left_front
+        )
 
     def test_initialization(self, leg_model):
         assert leg_model.coxa_length == 20

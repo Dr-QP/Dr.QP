@@ -23,7 +23,6 @@
 #include <drqp_a1_16_driver/SerialFactory.h>
 #include <drqp_a1_16_driver/XYZrobotServo.h>
 
-#include <cstdint>
 #include <exception>
 #include <memory>
 #include <string>
@@ -59,6 +58,9 @@ public:
             if (killModeActive_) {
               RCLCPP_DEBUG(get_logger(), "Kill switch is on, not setting pose");
               return;
+            } else if (rclcpp::Time(msg.header.stamp) < unkillTimestamp) {
+              RCLCPP_DEBUG(get_logger(), "Message is older than kill switch, not setting pose");
+              return;
             }
 
             auto multiServoStates = drqp_interfaces::msg::MultiServoState{};
@@ -81,12 +83,16 @@ public:
         try {
           if (!killModeActive_) {
             killModeActive_ = true;
-            XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
-            servo.torqueOff();
+
+            torqueOff();
+
             RCLCPP_INFO(get_logger(), "Kill mode activated");
           } else {
             killModeActive_ = false;
             unkillTimestamp = msg.header.stamp;
+
+            torqueOn();
+
             RCLCPP_INFO(get_logger(), "Kill mode deactivated");
           }
         } catch (std::exception& e) {
@@ -95,6 +101,25 @@ public:
           RCLCPP_ERROR(get_logger(), "Unknown exception occurred in kill_switch handler.");
         }
       });
+
+    torqueOn();
+  }
+
+  ~PoseSetter()
+  {
+    torqueOff();
+  }
+
+  void torqueOn()
+  {
+    XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
+    servo.torqueOn();
+  }
+
+  void torqueOff()
+  {
+    XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
+    servo.torqueOff();
   }
 
   void handleSyncPose(const drqp_interfaces::msg::MultiServoPositionGoal& msg)

@@ -27,10 +27,10 @@ class WalkController:
     def __init__(
         self,
         hexapod,
-        step_length=60,
-        step_height=40,
-        rotation_speed_degrees=10,
-        phase_steps_per_cycle=30,
+        step_length=60.0,
+        step_height=40.0,
+        rotation_speed_degrees=10.0,
+        phase_steps_per_cycle=30.0,
         gait=GaitType.wave,
     ):
         self.hexapod = hexapod

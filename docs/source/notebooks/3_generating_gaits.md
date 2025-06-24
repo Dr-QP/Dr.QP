@@ -471,7 +471,7 @@ def animate_hexapod_walk(
             [0, 0, direction_degrees], degrees=True
         ).apply_point(stride_direction)
 
-        walk_controller.next(
+        walk_controller.next_step(
             phase_override=phase,
             stride_direction=stride_direction,
             stride_ratio=walk_speed,
