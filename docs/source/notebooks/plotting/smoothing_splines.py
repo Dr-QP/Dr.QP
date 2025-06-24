@@ -149,11 +149,9 @@ def plot_spline(
         spline_x = MixedSplineWrapper(spline_x, line_x, mix)
         spline_y = MixedSplineWrapper(spline_y, line_y, mix)
 
-    assert callable(spline_x), f'spline_x is not callable: {type(spline_x)}'
-    assert callable(spline_y), f'spline_y is not callable: {type(spline_y)}'
     ax.plot(
-        spline_x(t_fine_x),
-        spline_y(t_fine_y),
+        spline_x(t_fine_x),  # codeql[py/call-to-non-callable]
+        spline_y(t_fine_y),  # codeql[py/call-to-non-callable]
         label=label,
         color=color,
     )
