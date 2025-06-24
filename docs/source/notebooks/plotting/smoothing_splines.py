@@ -1,4 +1,5 @@
 from enum import auto, Enum
+from typing import Callable
 
 import numpy as np
 from scipy.interpolate import make_interp_spline, make_smoothing_spline, make_splprep, make_splrep
@@ -105,29 +106,29 @@ def plot_spline(
         raise ValueError(f'Unknown spline type {spline_type}')
 
     if mix < 1:
-        _spline_x = spline_x  # codeql[py/uninitialized-local-variable]
-        _spline_y = spline_y  # codeql[py/uninitialized-local-variable]
         line_x = SplineWrapper(make_interp_spline(t, x, k=1))
         line_y = SplineWrapper(make_interp_spline(t, y, k=1))
 
         class MixedSplineWrapper:
-            def __init__(self, spline_func, line_func, mix_ratio):
+            def __init__(self, spline_func: Callable, line_func: Callable, mix_ratio):
                 self._spline_func = spline_func
                 self._line_func = line_func
                 self._mix_ratio = mix_ratio
 
             def __call__(self, t_fine):
                 return self._mix_ratio * self._spline_func(t_fine) + (
-                    1 - self._mix_ratio
+                    1.0 - self._mix_ratio
                 ) * self._line_func(t_fine)
 
             def derivative(self, _n):
                 # For mixed splines, derivatives are not implemented
                 raise NotImplementedError('Derivatives not implemented for mixed splines')
 
-        spline_x = MixedSplineWrapper(_spline_x, line_x, mix)
-        spline_y = MixedSplineWrapper(_spline_y, line_y, mix)
+        spline_x = MixedSplineWrapper(spline_x, line_x, mix)
+        spline_y = MixedSplineWrapper(spline_y, line_y, mix)
 
+    assert callable(spline_x), f'spline_x is not callable: {type(spline_x)}'
+    assert callable(spline_y), f'spline_y is not callable: {type(spline_y)}'
     ax.plot(
         spline_x(t_fine_x),  # codeql[py/call-to-non-callable]
         spline_y(t_fine_y),  # codeql[py/call-to-non-callable]
