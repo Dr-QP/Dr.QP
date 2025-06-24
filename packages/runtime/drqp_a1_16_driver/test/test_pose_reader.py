@@ -104,7 +104,7 @@ class TestServoDriverNodes(unittest.TestCase):
 
 # Post-shutdown tests
 @post_shutdown_test()
-class TesPoseReaderShutdown(unittest.TestCase):
+class TestPoseReaderShutdown(unittest.TestCase):
     """Test the pose_reader node shutdown."""
 
     def test_exit_codes(self, proc_info):
