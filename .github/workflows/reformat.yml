@@ -82,6 +82,7 @@ jobs:
           commit_message: Reformatted code
 
       - name: Verify changes were committed and pushed
+        shell: bash -le {0}
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           set -x
