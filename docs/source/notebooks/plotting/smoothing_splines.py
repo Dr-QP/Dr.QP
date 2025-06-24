@@ -1,8 +1,19 @@
 from enum import auto, Enum
 from typing import Callable
+from abc import abstractmethod
 
 import numpy as np
 from scipy.interpolate import make_interp_spline, make_smoothing_spline, make_splprep, make_splrep
+
+
+class SplineObjectLike:
+    @abstractmethod
+    def __call__(self, t_fine):
+        pass
+
+    @abstractmethod
+    def derivative(self, n):
+        pass
 
 
 # See https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html for full details
@@ -74,8 +85,10 @@ def plot_spline(
     t_fine_y = t_fine_x
 
     # Create a wrapper class to ensure consistent callable interface
-    class SplineWrapper:
-        def __init__(self, spline):
+    class SplineWrapper(SplineObjectLike):
+        def __init__(self, spline: SplineObjectLike):
+            assert callable(spline), f'spline is not callable: {type(spline)}'
+            assert hasattr(spline, 'derivative'), f'spline has no derivative method: {type(spline)}'
             self._spline = spline
 
         def __call__(self, t_fine):
