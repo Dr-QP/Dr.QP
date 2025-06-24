@@ -6,13 +6,15 @@ import numpy as np
 from scipy.interpolate import make_interp_spline, make_smoothing_spline, make_splprep, make_splrep
 
 
-class SplineObjectLike:
+class SplineCallable:
     @abstractmethod
-    def __call__(self, t_fine):
+    def __call__(self, t_fine) -> np.ndarray:
         pass
 
+
+class SplineObjectLike(SplineCallable):
     @abstractmethod
-    def derivative(self, n):
+    def derivative(self, n) -> SplineCallable:
         pass
 
 
@@ -86,15 +88,17 @@ def plot_spline(
 
     # Create a wrapper class to ensure consistent callable interface
     class SplineWrapper(SplineObjectLike):
-        def __init__(self, spline: SplineObjectLike):
-            assert callable(spline), f'spline is not callable: {type(spline)}'
-            assert hasattr(spline, 'derivative'), f'spline has no derivative method: {type(spline)}'
+        def __init__(self, spline):
             self._spline = spline
 
         def __call__(self, t_fine):
-            return self._spline(t_fine)
+            assert callable(self._spline), f'self._spline is not callable: {type(self._spline)}'
+            return np.array(self._spline(t_fine))
 
         def derivative(self, n):
+            assert hasattr(self._spline, 'derivative'), (
+                f'spline has no derivative method: {type(self._spline)}'
+            )
             return SplineWrapper(self._spline.derivative(n))
 
     if spline_type == SplineType.interp:
@@ -143,15 +147,15 @@ def plot_spline(
     assert callable(spline_x), f'spline_x is not callable: {type(spline_x)}'
     assert callable(spline_y), f'spline_y is not callable: {type(spline_y)}'
     ax.plot(
-        spline_x(t_fine_x),  # codeql[py/call-to-non-callable]
-        spline_y(t_fine_y),  # codeql[py/call-to-non-callable]
+        spline_x(t_fine_x),
+        spline_y(t_fine_y),
         label=label,
         color=color,
     )
 
     ax.scatter(
-        spline_x(current_t),  # codeql[py/call-to-non-callable]
-        spline_y(current_t),  # codeql[py/call-to-non-callable]
+        spline_x(current_t),
+        spline_y(current_t),
         label=f'{label} (current point)',
         color=color,
     )
