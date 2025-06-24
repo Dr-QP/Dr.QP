@@ -81,7 +81,7 @@ jobs:
         with:
           commit_message: Reformatted code
 
-      - name: Verify changes were committed and pushed
+      - name: Verify changes were committed
         shell: bash -le {0}
         if: ${{ github.event_name == 'pull_request' }}
         run: |
@@ -91,17 +91,4 @@ jobs:
           git diff --exit-code
           git diff --exit-code --cached
 
-          COMMIT_SHA='${{ steps.commit.outputs.commit_hash }}'
-          CHANGES_DETECTED='${{ steps.commit.outputs.CHANGES_DETECTED }}'
-
-          if [[ $CHANGES_DETECTED == 'true' ]]; then
-            echo "Changes were committed and pushed to the repository."
-            echo "Commit SHA: $COMMIT_SHA"
-            git log -3
-
-            cat .git/FETCH_HEAD
-          else
-            echo "No changes were detected."
-          fi
-          exit 1
 
