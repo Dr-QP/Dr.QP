@@ -102,12 +102,12 @@ public:
         }
       });
 
-    torqueOn();
+    // torqueOn();
   }
 
   ~PoseSetter()
   {
-    torqueOff();
+    // torqueOff();
   }
 
   void torqueOn()
