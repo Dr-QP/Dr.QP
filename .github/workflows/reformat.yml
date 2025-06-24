@@ -85,4 +85,5 @@ jobs:
         run: |
           git diff --exit-code
           git diff --exit-code --cached
+          git diff --exit-code FETCH_HEAD
 
