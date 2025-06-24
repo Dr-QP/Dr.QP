@@ -83,6 +83,9 @@ jobs:
       - name: Verify changes were committed and pushed
         if: ${{ github.event_name == 'pull_request' }}
         run: |
+          set -x
+          set -e
+
           git diff --exit-code
           git diff --exit-code --cached
           git diff --exit-code FETCH_HEAD
