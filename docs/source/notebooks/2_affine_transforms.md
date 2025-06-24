@@ -182,7 +182,7 @@ jupyter_utils.display_file(
 ```
 
 ```{code-cell} ipython3
-from drqp_brain.models import LegModel, HexapodLeg
+from drqp_brain.models import HexapodLeg, LegModel
 from plotting import plot_leg3d
 
 coxa = 5
