@@ -52,8 +52,11 @@ public:
 
   using AssertEqual =
     std::function<void(const uint8_t expected, const uint8_t actual, const size_t pos)>;
-  AssertEqual assertEqual = [](const uint8_t expected, const uint8_t actual, const size_t) {
-    assert(expected == actual);
+  AssertEqual assertEqual = [](const uint8_t expected, const uint8_t actual, const size_t pos) {
+    if(expected != actual) {
+      throw std::runtime_error("Expected " + std::to_string(expected) + " but got " +
+                              std::to_string(actual) + " at position " + std::to_string(pos));
+    }
   };
 
   using BeforeDestructionCallback = std::function<void(RecordingProxy::SerialPlayer& player)>;
