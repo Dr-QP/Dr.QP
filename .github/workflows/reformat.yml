@@ -49,7 +49,7 @@ jobs:
 
       - name: Add workspace to safe directories
         run: |
-          git config --global --add safe.directory "__$GITHUB_WORKSPACE__"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - uses: getsentry/action-setup-venv@v2.1.1
         id: venv
@@ -75,10 +75,10 @@ jobs:
           ./scripts/python-reformat.sh || true
 
       # Commit all changed files back to the repository
-      - uses: stefanzweifel/git-auto-commit-action@v6
-        if: ${{ github.event_name == 'pull_request' }}
-        with:
-          commit_message: Reformatted code
+      # - uses: stefanzweifel/git-auto-commit-action@v6
+      #   if: ${{ github.event_name == 'pull_request' }}
+      #   with:
+      #     commit_message: Reformatted code
 
       - name: Verify changes were committed and pushed
         if: ${{ github.event_name == 'pull_request' }}
