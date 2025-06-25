@@ -90,12 +90,6 @@ def generate_launch_description():
                 condition=IfCondition(load_joystick),
             ),
             Node(
-                package='drqp_control',
-                executable='joint_state_to_pose',
-                output='screen',
-                parameters=[{'use_sim_time': use_sim_time}],
-            ),
-            Node(
                 package='drqp_brain',
                 executable='run_hexapod',
                 output='screen',
