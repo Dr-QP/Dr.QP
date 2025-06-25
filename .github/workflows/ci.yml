@@ -147,7 +147,7 @@ jobs:
           time rosdep update
           time ./scripts/ros-dep.sh
           time colcon build --mixin coverage-pytest ninja rel-with-deb-info --event-handlers=console_cohesion+ --cmake-args -D DRQP_ENABLE_COVERAGE=ON
-          time colcon test --mixin coverage-pytest --event-handlers=console_cohesion+
+          time colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure
 
       - name: Process llvm coverage
         shell: bash
@@ -261,7 +261,7 @@ jobs:
               time rosdep update
               time ./scripts/ros-dep.sh
               time colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+
-              time colcon test --event-handlers=console_cohesion+
+              time colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure
 
   build-deploy-image:
     name: Deployment image

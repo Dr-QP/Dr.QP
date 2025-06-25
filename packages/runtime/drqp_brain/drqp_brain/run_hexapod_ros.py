@@ -24,16 +24,16 @@ import argparse
 from enum import auto, Enum
 from typing import Callable
 
-import drqp_interfaces.msg
 from drqp_brain.geometry import Point3D
 from drqp_brain.models import HexapodModel
 from drqp_brain.walk_controller import GaitType, WalkController
+import drqp_interfaces.msg
 import numpy as np
 import rclpy
+from rclpy.executors import ExternalShutdownException
 import rclpy.node
 import rclpy.utilities
 import sensor_msgs.msg
-from rclpy.executors import ExternalShutdownException
 
 kFemurOffsetAngle = -13.11
 kTibiaOffsetAngle = -32.9
@@ -65,7 +65,8 @@ class ButtonIndex(Enum):
     DpadDown = 12
     DpadLeft = 13
     DpadRight = 14
-    # TouchpadButton = 20 # DOES NOT WORK WITH DEFAULT ROS joy node https://github.com/Dr-QP/Dr.QP/issues/207
+    # DOES NOT WORK WITH DEFAULT ROS joy node https://github.com/Dr-QP/Dr.QP/issues/207
+    # TouchpadButton = 20
 
 
 class ButtonAxis(Enum):
