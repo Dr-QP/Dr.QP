@@ -29,7 +29,7 @@
 #include <iostream>
 #include <thread>
 
-#include "drqp_a1_16_driver/SerialFactory.h"
+#include "drqp_serial/SerialFactory.h"
 #include "drqp_a1_16_driver/XYZrobotServo.h"
 
 #pragma clang diagnostic ignored "-Winvalid-offsetof"

@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "drqp_a1_16_driver/SerialFactory.h"
+#include <drqp_serial/SerialFactory.h>
 
 #include <drqp_serial/SerialPlayer.h>
 #include <drqp_serial/SerialRecordingProxy.h>
