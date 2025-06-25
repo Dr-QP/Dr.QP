@@ -28,7 +28,7 @@
 #include "drqp_control/DrQp.h"
 
 #include "drqp_a1_16_driver/XYZrobotServo.h"
-#include "drqp_a1_16_driver/SerialFactory.h"
+#include "drqp_serial/SerialFactory.h"
 
 void forEachServo(
   uint64_t millisecondsBetweenLegs, std::function<void(ServoId servoId, int servoIndexInLeg)> func)

@@ -20,7 +20,7 @@
 
 #include <drqp_serial/SerialProtocol.h>
 #include <drqp_serial/TcpSerial.h>
-#include <drqp_a1_16_driver/SerialFactory.h>
+#include <drqp_serial/SerialFactory.h>
 #include <drqp_a1_16_driver/XYZrobotServo.h>
 
 #include <chrono>

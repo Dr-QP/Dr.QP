@@ -109,10 +109,10 @@
       {
         "type": "lldb",
         "request": "launch",
-        "name": "drqp_a1_16_driver pose_reader",
-        "program": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/pose_reader",
+        "name": "drqp_control pose_reader",
+        "program": "${workspaceFolder:Dr.QP}/build/drqp_control/pose_reader",
         "args": [],
-        "cwd": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/",
+        "cwd": "${workspaceFolder:Dr.QP}/build/drqp_control/",
         "preLaunchTask": "Dr.QP colcon build",
       },
       {

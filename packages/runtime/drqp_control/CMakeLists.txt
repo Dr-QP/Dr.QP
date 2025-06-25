@@ -35,6 +35,14 @@ target_link_libraries(joint_state_to_pose drqp_control)
 ament_target_dependencies(joint_state_to_pose ${${PROJECT_NAME}_BUILD_DEPENDS})
 
 
+add_executable(pose_reader src/PoseReader.cpp)
+ament_target_dependencies(pose_reader drqp_a1_16_driver)
+
+add_executable(pose_setter src/PoseSetter.cpp)
+ament_target_dependencies(pose_setter drqp_a1_16_driver)
+
+
+add_subdirectory(test)
 
 # Install headers
 install(DIRECTORY include/
@@ -45,6 +53,8 @@ install(TARGETS
   control
   pose_to_joint_state
   joint_state_to_pose
+  pose_reader
+  pose_setter
   DESTINATION lib/${PROJECT_NAME})
 
 # Install libraries

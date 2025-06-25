@@ -22,7 +22,7 @@ from pathlib import Path
 import time
 import unittest
 
-from drqp_interfaces.msg import MultiServoState
+from drqp_interfaces.msg import MultiServoPositionGoal, MultiServoState, ServoPositionGoal
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, TimerAction
 from launch.substitutions import LaunchConfiguration
@@ -39,8 +39,7 @@ def generate_test_description():
 
     device_address_name = '192.168.0.190' if recording else 'playback'
     test_data_dir = Path(__file__).parent / 'test_data'
-    pose_reader_device = f'{device_address_name}|{test_data_dir / "integration-pose-reader.json"}'
-
+    pose_setter_device = f'{device_address_name}|{test_data_dir / "integration-pose-setter.json"}'
     return LaunchDescription(
         [
             DeclareLaunchArgument(
@@ -50,13 +49,13 @@ def generate_test_description():
                 description='Use sim time if true',
             ),
             Node(
-                package='drqp_a1_16_driver',
-                executable='pose_reader',
+                package='drqp_control',
+                executable='pose_setter',
                 output='screen',
                 parameters=[
                     {
                         'use_sim_time': use_sim_time,
-                        'device_address': pose_reader_device,
+                        'device_address': pose_setter_device,
                     }
                 ],
             ),
@@ -67,7 +66,7 @@ def generate_test_description():
 
 
 class TestServoDriverNodes(unittest.TestCase):
-    """Test the pose_reader node."""
+    """Test the pose_setter node."""
 
     @classmethod
     def setUpClass(cls):
@@ -79,33 +78,58 @@ class TestServoDriverNodes(unittest.TestCase):
 
     def setUp(self):
         self.node = rclpy.create_node('test_servo_driver')
-        self.run_duration = 20 if recording else 10
-        self.max_messages = 20 if recording else 10
+        self.run_duration = 20
+        self.max_messages = 10
 
     def tearDown(self):
         self.node.destroy_node()
 
-    def test_pose_reader_publishes_servo_states(self, proc_output):
-        """Check whether servo_states messages published."""
-        msgs_received = []
-        sub = self.node.create_subscription(
+    def test_pose_setter_subscribes_servo_goals(self, proc_output):
+        """Check whether servo_goals messages are read by pose_setter node."""
+        msgs_received: list[MultiServoState] = []
+        pub_goals = self.node.create_publisher(MultiServoPositionGoal, '/servo_goals', 10)
+        sub_states = self.node.create_subscription(
             MultiServoState, '/servo_states', lambda msg: msgs_received.append(msg), 10
         )
+
+        servo_count = 18
+        position = 534
+        playtime = 150
         try:
             end_time = time.time() + self.run_duration
             while time.time() < end_time:
+                test_goal = MultiServoPositionGoal()
+                test_goal.header.stamp = self.node.get_clock().now().to_msg()
+                test_goal.header.frame_id = 'test_frame'
+                test_goal.mode = MultiServoPositionGoal.MODE_SYNC
+                test_goal.goals = [
+                    ServoPositionGoal(id=i, position=position, playtime=playtime)
+                    for i in range(servo_count)
+                ]
+
+                pub_goals.publish(test_goal)
+
                 rclpy.spin_once(self.node, timeout_sec=1)
                 if len(msgs_received) > self.max_messages:
                     break
             self.assertGreater(len(msgs_received), self.max_messages)
+
+            for msg in msgs_received:
+                self.assertEqual(len(msg.servos), servo_count)
+                servo_ids = list(range(servo_count))
+                for servo in msg.servos:
+                    self.assertEqual(servo.position, position)
+                    servo_ids.remove(servo.id)
+                self.assertListEqual(servo_ids, [], 'Not all servos were received')
         finally:
-            self.node.destroy_subscription(sub)
+            self.node.destroy_subscription(sub_states)
+            self.node.destroy_publisher(pub_goals)
 
 
 # Post-shutdown tests
 @post_shutdown_test()
-class TestPoseReaderShutdown(unittest.TestCase):
-    """Test the pose_reader node shutdown."""
+class TestPoseSetterShutdown(unittest.TestCase):
+    """Test the pose_setter node shutdown."""
 
     def test_exit_codes(self, proc_info):
         """Check if the processes exited normally."""

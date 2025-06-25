@@ -24,6 +24,7 @@ find_package(Threads REQUIRED)
 add_library(drqp_serial STATIC
     src/RecordingProxy.cpp
     src/SerialDecorator.cpp
+    src/SerialFactory.cpp
     src/SerialPlayer.cpp
     src/SerialRecordingProxy.cpp
     src/TcpSerial.cpp
