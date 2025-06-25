@@ -79,7 +79,7 @@ class TestServoDriverNodes(unittest.TestCase):
     def setUp(self):
         self.node = rclpy.create_node('test_servo_driver')
         self.run_duration = 20
-        self.max_messages = 5
+        self.max_messages = 10
 
     def tearDown(self):
         self.node.destroy_node()
