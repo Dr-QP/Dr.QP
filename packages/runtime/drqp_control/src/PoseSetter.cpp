@@ -138,12 +138,12 @@ public:
 
     for (size_t index = 0; index < msg.goals.size(); ++index) {
       auto pos = msg.goals.at(index);
-      std::optional<ServoValues> servo = jointToServo({pos.joint_name, pos.position_as_radians});
-      if (!servo) {
+      std::optional<ServoValues> servoValues = jointToServo({pos.joint_name, pos.position_as_radians});
+      if (!servoValues) {
         RCLCPP_ERROR(get_logger(), "Unknown joint name %s", pos.joint_name.c_str());
         continue;
       }
-      sposCmd.at(index) = {servo->position, SET_POSITION_CONTROL, servo->id};
+      sposCmd.at(index) = {servoValues->position, SET_POSITION_CONTROL, servoValues->id};
     }
 
     servo.sendJogCommand(sposCmd);
@@ -179,10 +179,10 @@ public:
       servoState.name = posGoal.joint_name;
       servoState.position_as_radians = posGoal.position_as_radians;
       if (
-        std::optional<ServoValues> servo =
+        std::optional<ServoValues> servoValues =
           jointToServo({posGoal.joint_name, posGoal.position_as_radians})) {
-        servoState.raw.id = servo->id;
-        servoState.raw.position = servo->position;
+        servoState.raw.id = servoValues->id;
+        servoState.raw.position = servoValues->position;
       }
 
       multiServoStates.servos.emplace_back(servoState);
