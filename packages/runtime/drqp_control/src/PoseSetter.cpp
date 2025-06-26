@@ -73,7 +73,6 @@ public:
             } else {
               RCLCPP_ERROR(get_logger(), "Unknown pose mode %i", msg.mode);
             }
-
           } catch (std::exception& e) {
             RCLCPP_ERROR(get_logger(), "Exception occurred in servo_goals handler %s", e.what());
           } catch (...) {
