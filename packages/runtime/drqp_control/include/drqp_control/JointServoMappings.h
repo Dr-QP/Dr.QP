@@ -25,6 +25,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <algorithm>
+#include <optional>
 
 #include "drqp_control/DrQp.h"
 
@@ -62,3 +63,42 @@ static const auto [kJointToServoId, kServoIdToJoint] = []() {
   }
   return std::make_tuple(jointToServoId, servoIdToJoint);
 }();
+
+struct JointValues
+{
+  std::string name;
+  double position_as_radians;
+};
+
+struct ServoValues
+{
+  uint8_t id;
+  uint16_t position;
+};
+
+static inline std::optional<ServoValues> jointToServo(const JointValues& joint)
+{
+  if (kJointToServoId.count(joint.name) == 0) {
+    return std::nullopt;
+  }
+
+  const ServoParams servoParams = kJointToServoId.at(joint.name);
+  const uint16_t position = radiansToPosition(joint.position_as_radians * servoParams.ratio);
+  return ServoValues{servoParams.id, position};
+}
+
+static inline std::optional<JointValues> servoToJoint(const ServoValues& servo)
+{
+  if (kServoIdToJoint.count(servo.id) == 0) {
+    return std::nullopt;
+  }
+
+  const JointParams jointParams = kServoIdToJoint.at(servo.id);
+  const double positionAsRadians = positionToRadians(servo.position * jointParams.ratio);
+  return JointValues{jointParams.jointName, positionAsRadians};
+}
+
+static inline uint8_t millisToPlaytime(const uint16_t millis)
+{
+  return millis / 10;
+}

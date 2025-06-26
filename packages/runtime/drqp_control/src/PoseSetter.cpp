@@ -35,6 +35,8 @@
 #include <drqp_interfaces/msg/kill_switch.hpp>
 #include <rclcpp/subscription_base.hpp>
 
+#include "drqp_control/JointServoMappings.h"
+
 using namespace std::chrono_literals;
 
 class PoseSetter : public rclcpp::Node
@@ -63,7 +65,6 @@ public:
               return;
             }
 
-            auto multiServoStates = drqp_interfaces::msg::MultiServoState{};
             if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_SYNC) {
               handleSyncPose(msg);
             } else if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_ASYNC) {
@@ -131,11 +132,17 @@ public:
     XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
 
     DynamicSJogCommand sposCmd(msg.goals.size());
-    sposCmd.setPlaytime(msg.goals.at(0).playtime);
+    sposCmd.setPlaytime(millisToPlaytime(msg.goals.at(0).playtime_ms));
 
     for (size_t index = 0; index < msg.goals.size(); ++index) {
       auto pos = msg.goals.at(index);
-      sposCmd.at(index) = {pos.position, SET_POSITION_CONTROL, pos.id};
+      std::optional<ServoValues> servoValues =
+        jointToServo({pos.joint_name, pos.position_as_radians});
+      if (!servoValues) {
+        RCLCPP_ERROR(get_logger(), "Unknown joint name %s", pos.joint_name.c_str());
+        continue;
+      }
+      sposCmd.at(index) = {servoValues->position, SET_POSITION_CONTROL, servoValues->id};
     }
 
     servo.sendJogCommand(sposCmd);
@@ -149,7 +156,13 @@ public:
     DynamicIJogCommand iposCmd(msg.goals.size());
     for (size_t index = 0; index < msg.goals.size(); ++index) {
       auto pos = msg.goals.at(index);
-      iposCmd.at(index) = {pos.position, SET_POSITION_CONTROL, pos.id, pos.playtime};
+      std::optional<ServoValues> servo = jointToServo({pos.joint_name, pos.position_as_radians});
+      if (!servo) {
+        RCLCPP_ERROR(get_logger(), "Unknown joint name %s", pos.joint_name.c_str());
+        continue;
+      }
+      iposCmd.at(index) = {
+        servo->position, SET_POSITION_CONTROL, servo->id, millisToPlaytime(pos.playtime_ms)};
     }
 
     servo.sendJogCommand(iposCmd);
@@ -161,8 +174,16 @@ public:
     auto multiServoStates = drqp_interfaces::msg::MultiServoState{};
     for (const auto& posGoal : msg.goals) {
       auto servoState = drqp_interfaces::msg::ServoState{};
-      servoState.id = posGoal.id;
-      servoState.position = posGoal.position;
+
+      servoState.joint_name = posGoal.joint_name;
+      servoState.position_as_radians = posGoal.position_as_radians;
+      if (
+        std::optional<ServoValues> servoValues =
+          jointToServo({posGoal.joint_name, posGoal.position_as_radians})) {
+        servoState.raw.id = servoValues->id;
+        servoState.raw.position = servoValues->position;
+      }
+
       multiServoStates.servos.emplace_back(servoState);
     }
     servoStatesPublisher_->publish(multiServoStates);
