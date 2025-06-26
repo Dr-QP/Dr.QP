@@ -35,12 +35,14 @@
 #include <drqp_interfaces/msg/kill_switch.hpp>
 #include <rclcpp/subscription_base.hpp>
 
+#include "drqp_control/JointStatePublisher.h"
+
 using namespace std::chrono_literals;
 
 class PoseSetter : public rclcpp::Node
 {
 public:
-  PoseSetter() : Node("drqp_pose_setter")
+  PoseSetter() : Node("drqp_pose_setter"), jointStatePublisher_(*this)
   {
     declare_parameter("device_address", "/dev/ttySC0");
     declare_parameter("baud_rate", 115200);
@@ -63,7 +65,6 @@ public:
               return;
             }
 
-            auto multiServoStates = drqp_interfaces::msg::MultiServoState{};
             if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_SYNC) {
               handleSyncPose(msg);
             } else if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_ASYNC) {
@@ -71,6 +72,7 @@ public:
             } else {
               RCLCPP_ERROR(get_logger(), "Unknown pose mode %i", msg.mode);
             }
+
           } catch (std::exception& e) {
             RCLCPP_ERROR(get_logger(), "Exception occurred in servo_goals handler %s", e.what());
           } catch (...) {
@@ -166,6 +168,8 @@ public:
       multiServoStates.servos.emplace_back(servoState);
     }
     servoStatesPublisher_->publish(multiServoStates);
+
+    jointStatePublisher_.publish(*this, multiServoStates);
   }
 
   rclcpp::Publisher<drqp_interfaces::msg::MultiServoState>::SharedPtr servoStatesPublisher_;
@@ -178,6 +182,7 @@ public:
   rclcpp::Time unkillTimestamp = this->get_clock()->now();
 
   std::unique_ptr<SerialProtocol> servoSerial_;
+  JointStatePublisher jointStatePublisher_;
 };
 
 int main(int argc, char* argv[])
