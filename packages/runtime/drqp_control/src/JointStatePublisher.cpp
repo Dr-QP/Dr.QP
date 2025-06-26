@@ -18,15 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <cstdint>
 #include <exception>
-#include <memory>
 #include <string>
-#include <unordered_map>
-#include <algorithm>
-
-#include "drqp_control/DrQp.h"
-#include "drqp_control/JointServoMappings.h"
 
 #include "drqp_control/JointStatePublisher.h"
 
