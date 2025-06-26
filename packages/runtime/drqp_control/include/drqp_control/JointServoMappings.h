@@ -83,7 +83,7 @@ static inline std::optional<ServoValues> jointToServo(const JointValues& joint)
   }
 
   const ServoParams servoParams = kJointToServoId.at(joint.name);
-  const uint16_t position = radiansToPosition(joint.position_as_radians) * servoParams.ratio;
+  const uint16_t position = radiansToPosition(joint.position_as_radians * servoParams.ratio);
   return ServoValues{servoParams.id, position};
 }
 
@@ -94,7 +94,7 @@ static inline std::optional<JointValues> servoToJoint(const ServoValues& servo)
   }
 
   const JointParams jointParams = kServoIdToJoint.at(servo.id);
-  const double positionAsRadians = positionToRadians(servo.position) * jointParams.ratio;
+  const double positionAsRadians = positionToRadians(servo.position * jointParams.ratio);
   return JointValues{jointParams.jointName, positionAsRadians};
 }
 
