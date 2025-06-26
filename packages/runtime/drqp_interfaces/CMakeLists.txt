@@ -20,6 +20,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/MultiServoPositionGoal.msg
 
   msg/ServoState.msg
+  msg/ServoRawState.msg
   msg/MultiServoState.msg
 
   msg/KillSwitch.msg

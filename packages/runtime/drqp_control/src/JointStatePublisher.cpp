@@ -30,20 +30,6 @@
 
 #include "drqp_control/JointStatePublisher.h"
 
-void addJointServo(rclcpp::Node& node, sensor_msgs::msg::JointState& jointState, ServoId servoId, uint16_t position)
-{
-  if (kServoIdToJoint.count(servoId) == 0) {
-    RCLCPP_ERROR(node.get_logger(), "Skipping unknown servo id %i", servoId);
-    return;
-  }
-
-  const JointParams params = kServoIdToJoint.at(servoId);
-  const double positionInRadians = params.ratio * positionToRadians(position);
-
-  jointState.name.push_back(params.jointName);
-  jointState.position.push_back(positionInRadians);
-}
-
 JointStatePublisher::JointStatePublisher(rclcpp::Node& node)
 {
   jointStatesPublisher_ = node.create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
@@ -56,7 +42,8 @@ void JointStatePublisher::publish(rclcpp::Node& node, const drqp_interfaces::msg
     jointState.header.stamp = node.get_clock()->now();
 
     for (const auto& servoState : servoStates.servos) {
-      addJointServo(node, jointState, servoState.id, servoState.position);
+      jointState.name.push_back(servoState.name);
+      jointState.position.push_back(servoState.position_as_radians);
     }
 
     jointStatesPublisher_->publish(jointState);

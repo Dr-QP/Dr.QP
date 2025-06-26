@@ -141,8 +141,8 @@ class HexapodController(rclpy.node.Node):
             JoystickButton(ButtonIndex.PS, lambda b, e: self.kill_switch()),
         ]
 
-        self.joint_state_pub = self.create_publisher(
-            sensor_msgs.msg.JointState, '/joint_states', qos_profile=50
+        self.servo_goals_pub = self.create_publisher(
+            drqp_interfaces.msg.MultiServoPositionGoal, '/servo_goals', qos_profile=50
         )
         self.kill_switch_pub = self.create_publisher(
             drqp_interfaces.msg.KillSwitch, '/kill_switch', qos_profile=1
@@ -224,10 +224,10 @@ class HexapodController(rclpy.node.Node):
         self.publish_joint_states()
 
     def publish_joint_states(self):
-        msg = sensor_msgs.msg.JointState()
+        msg = drqp_interfaces.msg.MultiServoPositionGoal()
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.name = []
-        msg.position = []
+        msg.mode = drqp_interfaces.msg.MultiServoPositionGoal.MODE_ASYNC
+        msg.goals = []
 
         for leg in self.hexapod.legs:
             for joint, angle in [
@@ -235,10 +235,14 @@ class HexapodController(rclpy.node.Node):
                 ('femur', leg.femur_angle + kFemurOffsetAngle),
                 ('tibia', leg.tibia_angle + kTibiaOffsetAngle),
             ]:
-                msg.name.append(f'dr_qp/{leg.label.name}_{joint}')
-                msg.position.append(np.radians(angle))
+                goal = drqp_interfaces.msg.ServoPositionGoal(
+                    joint_name=f'dr_qp/{leg.label.name}_{joint}',
+                    position_as_radians=np.radians(angle),
+                    playtime_ms=10,
+                )
+                msg.goals.append(goal)
 
-        self.joint_state_pub.publish(msg)
+        self.servo_goals_pub.publish(msg)
 
     def kill_switch(self):
         self.get_logger().info('Kill switch pressed')

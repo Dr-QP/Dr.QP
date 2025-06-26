@@ -32,6 +32,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <drqp_interfaces/msg/multi_servo_state.hpp>
+#include "drqp_control/JointServoMappings.h"
 
 using namespace std::chrono_literals;
 
@@ -75,12 +76,17 @@ public:
           auto endTime = this->get_clock()->now();
 
           servoState.read_duration_microsec = (endTime - startTime).nanoseconds() / 1000;
-          servoState.id = servoId;
-          servoState.position = status.position;
-          servoState.goal = status.posRef;
-          servoState.status_error = static_cast<uint8_t>(status.statusError);
-          servoState.status_detail = static_cast<uint8_t>(status.statusDetail);
-          servoState.torque = status.pwm;
+          servoState.raw.id = servoId;
+          servoState.raw.position = status.position;
+          servoState.raw.goal = status.posRef;
+          servoState.raw.status_error = static_cast<uint8_t>(status.statusError);
+          servoState.raw.status_detail = static_cast<uint8_t>(status.statusDetail);
+          servoState.raw.torque = status.pwm;
+
+          if (std::optional<JointValues> joint = servoToJoint({servoId, status.position})) {
+            servoState.name = joint->name;
+            servoState.position_as_radians = joint->position_as_radians;
+          }
 
           multiServoStates.servos.emplace_back(std::move(servoState));
         }
