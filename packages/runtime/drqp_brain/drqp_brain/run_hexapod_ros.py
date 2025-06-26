@@ -238,8 +238,9 @@ class HexapodController(rclpy.node.Node):
                 goal = drqp_interfaces.msg.ServoPositionGoal(
                     joint_name=f'dr_qp/{leg.label.name}_{joint}',
                     position_as_radians=float(np.radians(angle)),
-                    playtime_ms=10,
+                    playtime_ms=0,
                 )
+                # self.get_logger().info(f'Publishing {goal.joint_name} {goal.position_as_radians}')
                 msg.goals.append(goal)
 
         self.servo_goals_pub.publish(msg)
