@@ -28,7 +28,8 @@ JointStatePublisher::JointStatePublisher(rclcpp::Node& node)
   jointStatesPublisher_ = node.create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
 }
 
-void JointStatePublisher::publish(rclcpp::Node& node, const drqp_interfaces::msg::MultiServoState& servoStates)
+void JointStatePublisher::publish(
+  rclcpp::Node& node, const drqp_interfaces::msg::MultiServoState& servoStates)
 {
   try {
     sensor_msgs::msg::JointState jointState;

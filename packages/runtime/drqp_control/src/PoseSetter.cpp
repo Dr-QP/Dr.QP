@@ -162,7 +162,8 @@ public:
         RCLCPP_ERROR(get_logger(), "Unknown joint name %s", pos.joint_name.c_str());
         continue;
       }
-      iposCmd.at(index) = {servo->position, SET_POSITION_CONTROL, servo->id, millisToPlaytime(pos.playtime_ms)};
+      iposCmd.at(index) = {
+        servo->position, SET_POSITION_CONTROL, servo->id, millisToPlaytime(pos.playtime_ms)};
     }
 
     servo.sendJogCommand(iposCmd);
@@ -177,7 +178,9 @@ public:
 
       servoState.name = posGoal.joint_name;
       servoState.position_as_radians = posGoal.position_as_radians;
-      if (std::optional<ServoValues> servo = jointToServo({posGoal.joint_name, posGoal.position_as_radians})) {
+      if (
+        std::optional<ServoValues> servo =
+          jointToServo({posGoal.joint_name, posGoal.position_as_radians})) {
         servoState.raw.id = servo->id;
         servoState.raw.position = servo->position;
       }
