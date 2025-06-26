@@ -84,7 +84,7 @@ public:
           servoState.raw.torque = status.pwm;
 
           if (std::optional<JointValues> joint = servoToJoint({servoId, status.position})) {
-            servoState.name = joint->name;
+            servoState.joint_name = joint->name;
             servoState.position_as_radians = joint->position_as_radians;
           }
 

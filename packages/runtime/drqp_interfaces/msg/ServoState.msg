@@ -1,4 +1,4 @@
-string name
+string joint_name
 float32 position_as_radians
 
 ServoRawState raw

@@ -36,7 +36,7 @@ void JointStatePublisher::publish(
     jointState.header.stamp = node.get_clock()->now();
 
     for (const auto& servoState : servoStates.servos) {
-      jointState.name.push_back(servoState.name);
+      jointState.name.push_back(servoState.joint_name);
       jointState.position.push_back(servoState.position_as_radians);
     }
 

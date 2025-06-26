@@ -177,7 +177,7 @@ public:
     for (const auto& posGoal : msg.goals) {
       auto servoState = drqp_interfaces::msg::ServoState{};
 
-      servoState.name = posGoal.joint_name;
+      servoState.joint_name = posGoal.joint_name;
       servoState.position_as_radians = posGoal.position_as_radians;
       if (
         std::optional<ServoValues> servoValues =
