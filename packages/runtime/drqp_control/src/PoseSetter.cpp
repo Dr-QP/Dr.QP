@@ -138,7 +138,8 @@ public:
 
     for (size_t index = 0; index < msg.goals.size(); ++index) {
       auto pos = msg.goals.at(index);
-      std::optional<ServoValues> servoValues = jointToServo({pos.joint_name, pos.position_as_radians});
+      std::optional<ServoValues> servoValues =
+        jointToServo({pos.joint_name, pos.position_as_radians});
       if (!servoValues) {
         RCLCPP_ERROR(get_logger(), "Unknown joint name %s", pos.joint_name.c_str());
         continue;
