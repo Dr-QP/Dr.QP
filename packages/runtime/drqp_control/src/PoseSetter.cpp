@@ -35,7 +35,6 @@
 #include <drqp_interfaces/msg/kill_switch.hpp>
 #include <rclcpp/subscription_base.hpp>
 
-#include "drqp_control/JointStatePublisher.h"
 #include "drqp_control/JointServoMappings.h"
 
 using namespace std::chrono_literals;
@@ -43,7 +42,7 @@ using namespace std::chrono_literals;
 class PoseSetter : public rclcpp::Node
 {
 public:
-  PoseSetter() : Node("drqp_pose_setter"), jointStatePublisher_(*this)
+  PoseSetter() : Node("drqp_pose_setter")
   {
     declare_parameter("device_address", "/dev/ttySC0");
     declare_parameter("baud_rate", 115200);
@@ -188,8 +187,6 @@ public:
       multiServoStates.servos.emplace_back(servoState);
     }
     servoStatesPublisher_->publish(multiServoStates);
-
-    jointStatePublisher_.publish(*this, multiServoStates);
   }
 
   rclcpp::Publisher<drqp_interfaces::msg::MultiServoState>::SharedPtr servoStatesPublisher_;
@@ -202,7 +199,6 @@ public:
   rclcpp::Time unkillTimestamp = this->get_clock()->now();
 
   std::unique_ptr<SerialProtocol> servoSerial_;
-  JointStatePublisher jointStatePublisher_;
 };
 
 int main(int argc, char* argv[])

@@ -42,13 +42,14 @@ public:
       this->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
 
     multiServoStateSubscription_ = this->create_subscription<drqp_interfaces::msg::MultiServoState>(
-      "/servo_states", 10, [this](const drqp_interfaces::msg::MultiServoState& msg) {
+      "/servo_states", 10, [this](const drqp_interfaces::msg::MultiServoState& servoStates) {
         try {
           sensor_msgs::msg::JointState jointState;
           jointState.header.stamp = this->get_clock()->now();
 
-          for (const auto& servoState : msg.servos) {
-            addJointServo(jointState, servoState.id, servoState.position);
+          for (const auto& servoState : servoStates.servos) {
+            jointState.name.push_back(servoState.joint_name);
+            jointState.position.push_back(servoState.position_as_radians);
           }
 
           jointStatesPublisher_->publish(jointState);
@@ -61,20 +62,6 @@ public:
   }
 
 private:
-  void addJointServo(sensor_msgs::msg::JointState& jointState, ServoId servoId, uint16_t position)
-  {
-    if (kServoIdToJoint.count(servoId) == 0) {
-      RCLCPP_ERROR(get_logger(), "Skipping unknown servo id %i", servoId);
-      return;
-    }
-
-    const JointParams params = kServoIdToJoint.at(servoId);
-    const double positionInRadians = params.ratio * positionToRadians(position);
-
-    jointState.name.push_back(params.jointName);
-    jointState.position.push_back(positionInRadians);
-  }
-
   rclcpp::Subscription<drqp_interfaces::msg::MultiServoState>::SharedPtr
     multiServoStateSubscription_;
 

@@ -221,9 +221,9 @@ class HexapodController(rclpy.node.Node):
             stride_ratio=self.walk_speed,
             rotation_ratio=self.rotation_speed,
         )
-        self.publish_joint_states()
+        self.publish_servo_goals()
 
-    def publish_joint_states(self):
+    def publish_servo_goals(self):
         msg = drqp_interfaces.msg.MultiServoPositionGoal()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.mode = drqp_interfaces.msg.MultiServoPositionGoal.MODE_ASYNC
