@@ -237,7 +237,7 @@ class HexapodController(rclpy.node.Node):
             ]:
                 goal = drqp_interfaces.msg.ServoPositionGoal(
                     joint_name=f'dr_qp/{leg.label.name}_{joint}',
-                    position_as_radians=np.radians(angle),
+                    position_as_radians=float(np.radians(angle)),
                     playtime_ms=10,
                 )
                 msg.goals.append(goal)
