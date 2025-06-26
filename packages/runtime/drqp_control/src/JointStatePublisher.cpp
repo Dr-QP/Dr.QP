@@ -25,12 +25,15 @@
 #include <unordered_map>
 #include <algorithm>
 
+#include "drqp_control/DrQp.h"
+#include "drqp_control/JointServoMappings.h"
+
 #include "drqp_control/JointStatePublisher.h"
 
-void addJointServo(sensor_msgs::msg::JointState& jointState, ServoId servoId, uint16_t position)
+void addJointServo(rclcpp::Node& node, sensor_msgs::msg::JointState& jointState, ServoId servoId, uint16_t position)
 {
   if (kServoIdToJoint.count(servoId) == 0) {
-    RCLCPP_ERROR(get_logger(), "Skipping unknown servo id %i", servoId);
+    RCLCPP_ERROR(node.get_logger(), "Skipping unknown servo id %i", servoId);
     return;
   }
 
@@ -41,25 +44,25 @@ void addJointServo(sensor_msgs::msg::JointState& jointState, ServoId servoId, ui
   jointState.position.push_back(positionInRadians);
 }
 
-JointStatePublisher::JointStatePublisher(rclcpp::Node& node);
+JointStatePublisher::JointStatePublisher(rclcpp::Node& node)
 {
-  jointStatesPublisher_ = node->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
+  jointStatesPublisher_ = node.create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
 }
 
 void JointStatePublisher::publish(rclcpp::Node& node, const drqp_interfaces::msg::MultiServoState& servoStates)
 {
   try {
     sensor_msgs::msg::JointState jointState;
-    jointState.header.stamp = this->get_clock()->now();
+    jointState.header.stamp = node.get_clock()->now();
 
     for (const auto& servoState : servoStates.servos) {
-      addJointServo(jointState, servoState.id, servoState.position);
+      addJointServo(node, jointState, servoState.id, servoState.position);
     }
 
     jointStatesPublisher_->publish(jointState);
   } catch (std::exception& e) {
-    RCLCPP_ERROR(get_logger(), "Exception occurred in pose handler %s", e.what());
+    RCLCPP_ERROR(node.get_logger(), "Exception occurred in pose handler %s", e.what());
   } catch (...) {
-    RCLCPP_ERROR(get_logger(), "Unknown exception occurred in pose handler.");
+    RCLCPP_ERROR(node.get_logger(), "Unknown exception occurred in pose handler.");
   }
 }

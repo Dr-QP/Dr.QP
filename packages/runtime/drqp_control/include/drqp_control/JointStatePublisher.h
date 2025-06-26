@@ -28,7 +28,7 @@ class JointStatePublisher
 public:
   JointStatePublisher(rclcpp::Node& node);
 
-  void publish(const drqp_interfaces::msg::MultiServoState& msg);
+  void publish(rclcpp::Node& node, const drqp_interfaces::msg::MultiServoState& msg);
 
 private:
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr jointStatesPublisher_;
