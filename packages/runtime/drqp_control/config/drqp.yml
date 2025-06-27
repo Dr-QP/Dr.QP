@@ -9,55 +9,56 @@ robot:
         id: 1
       left_front_femur:
         id: 3
-        offset_angle: -13.11
+        offset_rads: -0.2288
+        inverted: true
       left_front_tibia:
         id: 5
-        offset_angle: -32.9
+        offset_rads: -0.5742
       left_middle_coxa:
         id: 13
       left_middle_femur:
         id: 15
-        offset_angle: -13.11
+        offset_rads: -0.2288
       left_middle_tibia:
         id: 17
-        offset_angle: -32.9
+        offset_rads: -0.5742
       left_back_coxa:
         id: 7
       left_back_femur:
         id: 9
-        offset_angle: -13.11
+        offset_rads: -0.2288
       left_back_tibia:
         id: 11
-        offset_angle: -32.9
+        offset_rads: -0.5742
       right_front_coxa:
         id: 2
       right_front_femur:
         id: 4
-        offset_angle: -13.11
+        offset_rads: -0.2288
         inverted: true
       right_front_tibia:
         id: 6
-        offset_angle: -32.9
+        offset_rads: -0.5742
         inverted: true
       right_middle_coxa:
         id: 14
       right_middle_femur:
         id: 16
-        offset_angle: -13.11
+        offset_rads: -0.2288
         inverted: true
       right_middle_tibia:
         id: 18
-        offset_angle: -32.9
+        offset_rads: -0.5742
         inverted: true
       right_back_coxa:
         id: 8
       right_back_femur:
         id: 10
-        offset_angle: -13.11
+        offset_rads: -0.2288
         inverted: true
       right_back_tibia:
         id: 12
-        offset_angle: -32.9
+        offset_rads: -0.5742
         inverted: true
 
 joint_state_publisher:
