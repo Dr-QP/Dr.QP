@@ -28,6 +28,10 @@
 #include <exception>
 #include <memory>
 #include <string>
+#include <filesystem>
+namespace fs = std::filesystem;
+
+#include <ament_index_cpp/get_package_share_directory.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -46,6 +50,10 @@ public:
     declare_parameter("first_id", 1);
     declare_parameter("last_id", 18);
     declare_parameter("period_ms", 100);
+    declare_parameter("config", "");
+
+    const auto configPath = getConfigPath();
+    loadConfig(configPath);
 
     servoStatesPublisher_ =
       this->create_publisher<drqp_interfaces::msg::MultiServoState>("/servo_states", 10);
@@ -100,6 +108,41 @@ public:
         RCLCPP_ERROR(get_logger(), "Unknown exception occurred in pose read handler.");
       }
     });
+  }
+
+  fs::path getConfigPath() {
+    fs::path yamlPath = get_parameter("config").as_string();
+    if (yamlPath.empty()) {
+      const fs::path packageShareDir = ament_index_cpp::get_package_share_directory(
+      "drqp_control");
+      yamlPath = packageShareDir / "config" / "drqp.yml";
+    }
+    if (!fs::exists(yamlPath)) {
+      RCLCPP_ERROR(this->get_logger(), "%s could not be found. Exiting.", yamlPath.c_str());
+      throw std::runtime_error("Robot config parsing failure.");
+    }
+    return yamlPath;
+  }
+
+  void loadConfig(const fs::path& configPath)
+  {
+    // bool rcl_parse_yaml_file(const char *file_path, rcl_params_t *params_st)
+    rcl_params_t* params = rcl_yaml_node_struct_init(rcutils_get_default_allocator());;
+    if (!rcl_parse_yaml_file(configPath.c_str(), params))
+    {
+      RCLCPP_ERROR(get_logger(), "Failed to parse config file %s", configPath.c_str());
+      return;
+    }
+
+    // const std::string dimensions_param = "dimensions." + object_name_;
+    // rcl_variant_t * dimensions =
+    //   rcl_yaml_node_struct_get("dope", dimensions_param.c_str(), dope_params);
+    // if (!dimensions->double_array_value) {
+    //   RCLCPP_ERROR(
+    //     this->get_logger(), "No dimensions parameter found for object name: %s",
+    //     object_name_.c_str());
+    //   throw std::runtime_error("Parameter parsing failure.");
+    // }
   }
 
   std::unique_ptr<SerialProtocol> servoSerial_;

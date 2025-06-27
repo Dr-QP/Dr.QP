@@ -64,6 +64,12 @@ install(TARGETS
   RUNTIME DESTINATION bin # These executables will be runnable directly, aka added to PATH
 )
 
+# Install configs
+install(
+  DIRECTORY config
+  DESTINATION share/${PROJECT_NAME}
+)
+
 # Export modern CMake targets
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
