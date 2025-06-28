@@ -31,7 +31,6 @@
 
 namespace fs = std::filesystem;
 
-
 class RobotConfig
 {
 public:
