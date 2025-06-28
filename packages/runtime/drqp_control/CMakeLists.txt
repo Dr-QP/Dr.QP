@@ -4,6 +4,7 @@ project(drqp_control)
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
+include(../../cmake/ClangCoverage.cmake)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -20,6 +21,7 @@ add_library(drqp_control STATIC
 target_compile_features(drqp_control PUBLIC cxx_std_20)
 target_link_libraries(drqp_control yaml-cpp)
 ament_target_dependencies(drqp_control ${${PROJECT_NAME}_BUILD_DEPENDS})
+drqp_library_enable_coverage(drqp_control)
 
 target_include_directories(drqp_control PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
@@ -42,9 +44,6 @@ add_executable(pose_setter
 )
 target_link_libraries(pose_setter drqp_control)
 ament_target_dependencies(pose_setter ${${PROJECT_NAME}_BUILD_DEPENDS})
-
-
-add_subdirectory(test)
 
 # Install headers
 install(DIRECTORY include/
@@ -82,6 +81,9 @@ ament_export_dependencies(${${PROJECT_NAME}_BUILD_EXPORT_DEPENDS})
 
 if(BUILD_TESTING)
   include(../../cmake/ClangFormatConfig.cmake)
+  include(../../cmake/Catch2Extras.cmake)
+
+  add_subdirectory(test)
 
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
