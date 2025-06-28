@@ -24,6 +24,27 @@
 
 #include "drqp_control/DrQp.h"
 
+struct RobotConfig::ServoParams
+{
+  uint8_t id;
+  double ratio = 1.;
+  double offset_rads = 0.;
+};
+
+struct RobotConfig::JointParams
+{
+  std::string jointName;
+  double ratio = 1.;
+  double offset_rads = 0.;
+};
+
+RobotConfig::RobotConfig(rclcpp::Node* node) : node_(node)
+{
+  node_->declare_parameter("config", "");
+}
+
+RobotConfig::~RobotConfig() = default;
+
 fs::path RobotConfig::getConfigPath()
 {
   fs::path yamlPath = node_->get_parameter("config").as_string();

@@ -30,19 +30,7 @@
 #include <ament_index_cpp/get_package_share_directory.hpp>
 
 namespace fs = std::filesystem;
-struct ServoParams
-{
-  uint8_t id;
-  double ratio = 1.;
-  double offset_rads = 0.;
-};
 
-struct JointParams
-{
-  std::string jointName;
-  double ratio = 1.;
-  double offset_rads = 0.;
-};
 
 struct JointValues
 {
@@ -58,7 +46,8 @@ struct ServoValues
 class RobotConfig
 {
 public:
-  RobotConfig(rclcpp::Node* node) : node_(node) {}
+  explicit RobotConfig(rclcpp::Node* node);
+  ~RobotConfig();
 
   fs::path getConfigPath();
 
@@ -69,6 +58,9 @@ public:
   std::optional<JointValues> servoToJoint(const ServoValues& servo);
 
 private:
+  struct ServoParams;
+  struct JointParams;
+
   rclcpp::Node* node_;
   std::unordered_map<std::string, ServoParams> jointToServoId_;
   std::unordered_map<uint8_t, JointParams> servoIdToJoint_;
