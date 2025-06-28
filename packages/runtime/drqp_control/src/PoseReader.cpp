@@ -28,14 +28,8 @@
 #include <exception>
 #include <memory>
 #include <string>
-#include <filesystem>
-namespace fs = std::filesystem;
-
-#include <ament_index_cpp/get_package_share_directory.hpp>
 
 #include <rclcpp/rclcpp.hpp>
-
-#include <yaml-cpp/yaml.h>
 
 #include <drqp_interfaces/msg/multi_servo_state.hpp>
 #include "drqp_control/JointServoMappings.h"
@@ -45,7 +39,7 @@ using namespace std::chrono_literals;
 class PoseReader : public rclcpp::Node
 {
 public:
-  PoseReader() : Node("drqp_pose_reader")
+  PoseReader() : Node("drqp_pose_reader"), robotConfig_(this)
   {
     declare_parameter("device_address", "/dev/ttySC0");
     declare_parameter("baud_rate", 115200);
@@ -54,8 +48,7 @@ public:
     declare_parameter("period_ms", 100);
     declare_parameter("config", "");
 
-    const auto configPath = getConfigPath();
-    loadConfig(configPath);
+    robotConfig_.loadConfig();
 
     servoStatesPublisher_ =
       this->create_publisher<drqp_interfaces::msg::MultiServoState>("/servo_states", 10);
@@ -112,100 +105,7 @@ public:
     });
   }
 
-  fs::path getConfigPath()
-  {
-    fs::path yamlPath = get_parameter("config").as_string();
-    if (yamlPath.empty()) {
-      const fs::path packageShareDir = ament_index_cpp::get_package_share_directory("drqp_control");
-      yamlPath = packageShareDir / "config" / "drqp.yml";
-    }
-    if (!fs::exists(yamlPath)) {
-      RCLCPP_ERROR(this->get_logger(), "%s could not be found. Exiting.", yamlPath.c_str());
-      throw std::runtime_error("Robot config parsing failure.");
-    }
-    return yamlPath;
-  }
-
-  void loadConfig(const fs::path& configPath)
-  {
-    try {
-      YAML::Node config = YAML::LoadFile(configPath.string());
-      if (!config) {
-        throw std::runtime_error("Robot config parsing failure.");
-      }
-      YAML::Node robot = config["robot"];
-      if (!robot) {
-        throw std::runtime_error("Robot config parsing failure. No 'robot' section.");
-      }
-
-      // namespace
-      std::string robotNamespace = "";
-      if (YAML::Node namespaceNode = robot["namespace"]; namespaceNode) {
-        robotNamespace = namespaceNode.as<std::string>() + "/";
-        RCLCPP_INFO(this->get_logger(), "Robot namespace: %s", robotNamespace.c_str());
-      }
-
-      // device_address
-      if (YAML::Node deviceAddress = robot["device_address"]; deviceAddress) {
-        set_parameter(rclcpp::Parameter("device_address", deviceAddress.as<std::string>()));
-      }
-      // baud_rate
-      if (YAML::Node baudRate = robot["baud_rate"]; baudRate) {
-        set_parameter(rclcpp::Parameter("baud_rate", baudRate.as<int>()));
-      }
-
-      // servos
-      YAML::Node servos = robot["servos"];
-      if (!servos) {
-        throw std::runtime_error("Robot config parsing failure. No 'servos' section.");
-      }
-      for (const auto& servo : servos) {
-        const std::string name = robotNamespace + servo.first.as<std::string>();
-        const uint8_t id = servo.second["id"].as<uint8_t>();
-        double offset_rads = 0.;
-        if (servo.second["offset_rads"]) {
-          offset_rads = servo.second["offset_rads"].as<double>();
-        }
-        bool inverted = false;
-        if (servo.second["inverted"]) {
-          inverted = servo.second["inverted"].as<bool>();
-        }
-
-        const double ratio = inverted ? -1. : 1.;
-
-        jointToServoId_[name] = ServoParams{id, ratio, offset_rads};
-        servoIdToJoint_[id] = JointParams{name, ratio, offset_rads};
-      }
-    } catch (const std::exception& e) {
-      RCLCPP_ERROR(this->get_logger(), "Failed to load config %s", e.what());
-      throw;
-    }
-  }
-
-  std::optional<ServoValues> jointToServo(const JointValues& joint)
-  {
-    if (jointToServoId_.count(joint.name) == 0) {
-      return std::nullopt;
-    }
-
-    const ServoParams servoParams = jointToServoId_.at(joint.name);
-    const uint16_t position = radiansToPosition(joint.position_as_radians * servoParams.ratio + servoParams.offset_rads);
-    return ServoValues{servoParams.id, position};
-  }
-
-  std::optional<JointValues> servoToJoint(const ServoValues& servo)
-  {
-    if (servoIdToJoint_.count(servo.id) == 0) {
-      return std::nullopt;
-    }
-
-    const JointParams jointParams = servoIdToJoint_.at(servo.id);
-    const double positionAsRadians = positionToRadians(servo.position) * jointParams.ratio - jointParams.offset_rads;
-    return JointValues{jointParams.jointName, positionAsRadians};
-  }
-
-  std::unordered_map<std::string, ServoParams> jointToServoId_;
-  std::unordered_map<uint8_t, JointParams> servoIdToJoint_;
+  RobotConfig robotConfig_;
 
   std::unique_ptr<SerialProtocol> servoSerial_;
   rclcpp::TimerBase::SharedPtr timer_;

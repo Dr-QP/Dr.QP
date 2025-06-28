@@ -56,17 +56,6 @@ static const auto [kJointToServoId, kServoIdToJoint] = []() {
   return std::make_tuple(jointToServoId, servoIdToJoint);
 }();
 
-struct JointValues
-{
-  std::string name;
-  double position_as_radians;
-};
-
-struct ServoValues
-{
-  uint8_t id;
-  uint16_t position;
-};
 
 static inline std::optional<ServoValues> jointToServo(const JointValues& joint)
 {

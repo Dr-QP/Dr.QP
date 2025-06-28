@@ -18,8 +18,10 @@ add_library(drqp_control STATIC
   src/RobotConfig.cpp
 )
 target_compile_features(drqp_control PUBLIC cxx_std_20)
+target_link_libraries(drqp_control yaml-cpp)
+ament_target_dependencies(drqp_control ${${PROJECT_NAME}_BUILD_DEPENDS})
 
-target_include_directories(drqp_control INTERFACE
+target_include_directories(drqp_control PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
@@ -29,18 +31,16 @@ ament_target_dependencies(control drqp_a1_16_driver)
 
 add_executable(pose_to_joint_state src/PoseToJointsState.cpp)
 target_link_libraries(pose_to_joint_state drqp_control)
-ament_target_dependencies(pose_to_joint_state ${${PROJECT_NAME}_BUILD_DEPENDS})
 
 add_executable(pose_reader
   src/PoseReader.cpp
 )
-target_link_libraries(pose_reader drqp_control yaml-cpp)
-ament_target_dependencies(pose_reader ${${PROJECT_NAME}_BUILD_DEPENDS})
+target_link_libraries(pose_reader drqp_control)
 
 add_executable(pose_setter
   src/PoseSetter.cpp
 )
-target_link_libraries(pose_setter drqp_control yaml-cpp)
+target_link_libraries(pose_setter drqp_control)
 ament_target_dependencies(pose_setter ${${PROJECT_NAME}_BUILD_DEPENDS})
 
 

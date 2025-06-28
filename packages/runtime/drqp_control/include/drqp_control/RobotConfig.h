@@ -26,8 +26,14 @@
 #include <unordered_map>
 #include <algorithm>
 #include <optional>
+#include <filesystem>
+
+#include <rclcpp/rclcpp.hpp>
+#include <ament_index_cpp/get_package_share_directory.hpp>
+
 #include "drqp_control/DrQp.h"
 
+namespace fs = std::filesystem;
 struct ServoParams
 {
   uint8_t id;
@@ -40,4 +46,34 @@ struct JointParams
   std::string jointName;
   double ratio = 1.;
   double offset_rads = 0.;
+};
+
+struct JointValues
+{
+  std::string name;
+  double position_as_radians;
+};
+
+struct ServoValues
+{
+  uint8_t id;
+  uint16_t position;
+};
+class RobotConfig
+{
+public:
+  RobotConfig(rclcpp::Node* node) : node_(node) {}
+
+  fs::path getConfigPath();
+
+  void loadConfig(fs::path configPath = {});
+
+  std::optional<ServoValues> jointToServo(const JointValues& joint);
+
+  std::optional<JointValues> servoToJoint(const ServoValues& servo);
+
+private:
+  rclcpp::Node* node_;
+  std::unordered_map<std::string, ServoParams> jointToServoId_;
+  std::unordered_map<uint8_t, JointParams> servoIdToJoint_;
 };
