@@ -35,17 +35,21 @@
 #include <drqp_interfaces/msg/kill_switch.hpp>
 #include <rclcpp/subscription_base.hpp>
 
-#include "drqp_control/JointServoMappings.h"
+#include "drqp_control/RobotConfig.h"
+#include "drqp_control/DrQp.h"
+
 
 using namespace std::chrono_literals;
 
 class PoseSetter : public rclcpp::Node
 {
 public:
-  PoseSetter() : Node("drqp_pose_setter")
+  PoseSetter() : Node("drqp_pose_setter"), robotConfig_(this)
   {
     declare_parameter("device_address", "/dev/ttySC0");
     declare_parameter("baud_rate", 115200);
+
+    robotConfig_.loadConfig();
 
     servoSerial_ = makeSerialForDevice(get_parameter("device_address").as_string());
     servoSerial_->begin(get_parameter("baud_rate").as_int());
@@ -136,8 +140,8 @@ public:
 
     for (size_t index = 0; index < msg.goals.size(); ++index) {
       auto pos = msg.goals.at(index);
-      std::optional<ServoValues> servoValues =
-        jointToServo({pos.joint_name, pos.position_as_radians});
+      auto servoValues =
+        robotConfig_.jointToServo({pos.joint_name, pos.position_as_radians});
       if (!servoValues) {
         RCLCPP_ERROR(get_logger(), "Unknown joint name %s", pos.joint_name.c_str());
         continue;
@@ -156,13 +160,13 @@ public:
     DynamicIJogCommand iposCmd(msg.goals.size());
     for (size_t index = 0; index < msg.goals.size(); ++index) {
       auto pos = msg.goals.at(index);
-      std::optional<ServoValues> servo = jointToServo({pos.joint_name, pos.position_as_radians});
-      if (!servo) {
+      auto servoValues = robotConfig_.jointToServo({pos.joint_name, pos.position_as_radians});
+      if (!servoValues) {
         RCLCPP_ERROR(get_logger(), "Unknown joint name %s", pos.joint_name.c_str());
         continue;
       }
       iposCmd.at(index) = {
-        servo->position, SET_POSITION_CONTROL, servo->id, millisToPlaytime(pos.playtime_ms)};
+        servoValues->position, SET_POSITION_CONTROL, servoValues->id, millisToPlaytime(pos.playtime_ms)};
     }
 
     servo.sendJogCommand(iposCmd);
@@ -178,8 +182,8 @@ public:
       servoState.joint_name = posGoal.joint_name;
       servoState.position_as_radians = posGoal.position_as_radians;
       if (
-        std::optional<ServoValues> servoValues =
-          jointToServo({posGoal.joint_name, posGoal.position_as_radians})) {
+        auto servoValues =
+          robotConfig_.jointToServo({posGoal.joint_name, posGoal.position_as_radians})) {
         servoState.raw.id = servoValues->id;
         servoState.raw.position = servoValues->position;
       }
@@ -188,6 +192,8 @@ public:
     }
     servoStatesPublisher_->publish(multiServoStates);
   }
+
+  RobotConfig robotConfig_;
 
   rclcpp::Publisher<drqp_interfaces::msg::MultiServoState>::SharedPtr servoStatesPublisher_;
 

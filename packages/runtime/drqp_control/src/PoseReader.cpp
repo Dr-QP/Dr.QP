@@ -32,20 +32,23 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <drqp_interfaces/msg/multi_servo_state.hpp>
-#include "drqp_control/JointServoMappings.h"
+#include "drqp_control/RobotConfig.h"
 
 using namespace std::chrono_literals;
 
 class PoseReader : public rclcpp::Node
 {
 public:
-  PoseReader() : Node("drqp_pose_reader")
+  PoseReader() : Node("drqp_pose_reader"), robotConfig_(this)
   {
     declare_parameter("device_address", "/dev/ttySC0");
     declare_parameter("baud_rate", 115200);
     declare_parameter("first_id", 1);
     declare_parameter("last_id", 18);
     declare_parameter("period_ms", 100);
+    declare_parameter("config", "");
+
+    robotConfig_.loadConfig();
 
     servoStatesPublisher_ =
       this->create_publisher<drqp_interfaces::msg::MultiServoState>("/servo_states", 10);
@@ -83,9 +86,9 @@ public:
           servoState.raw.status_detail = static_cast<uint8_t>(status.statusDetail);
           servoState.raw.torque = status.pwm;
 
-          if (std::optional<JointValues> joint = servoToJoint({servoId, status.position})) {
-            servoState.joint_name = joint->name;
-            servoState.position_as_radians = joint->position_as_radians;
+          if (auto jointValues = robotConfig_.servoToJoint({servoId, status.position})) {
+            servoState.joint_name = jointValues->name;
+            servoState.position_as_radians = jointValues->position_as_radians;
           }
 
           multiServoStates.servos.emplace_back(std::move(servoState));
@@ -101,6 +104,8 @@ public:
       }
     });
   }
+
+  RobotConfig robotConfig_;
 
   std::unique_ptr<SerialProtocol> servoSerial_;
   rclcpp::TimerBase::SharedPtr timer_;
