@@ -28,19 +28,9 @@
 #include <optional>
 
 #include "drqp_control/DrQp.h"
+#include "drqp_control/RobotConfig.h"
 
-struct ServoParams
-{
-  uint8_t id;
-  double ratio = 1.;
-  double offset_rads = 0.;
-};
-struct JointParams
-{
-  std::string jointName;
-  double ratio = 1.;
-  double offset_rads = 0.;
-};
+
 static const auto [kJointToServoId, kServoIdToJoint] = []() {
   std::unordered_map<std::string, ServoParams> jointToServoId;
   std::unordered_map<uint8_t, JointParams> servoIdToJoint;

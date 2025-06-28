@@ -13,8 +13,11 @@ foreach(dep ${${PROJECT_NAME}_BUILD_DEPENDS})
   find_package(${dep} REQUIRED)
 endforeach()
 
-add_library(drqp_control INTERFACE)
-target_compile_features(drqp_control INTERFACE cxx_std_20)
+add_library(drqp_control STATIC
+  include/drqp_control/RobotConfig.h
+  src/RobotConfig.cpp
+)
+target_compile_features(drqp_control PUBLIC cxx_std_20)
 
 target_include_directories(drqp_control INTERFACE
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
