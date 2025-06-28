@@ -110,11 +110,11 @@ public:
     });
   }
 
-  fs::path getConfigPath() {
+  fs::path getConfigPath()
+  {
     fs::path yamlPath = get_parameter("config").as_string();
     if (yamlPath.empty()) {
-      const fs::path packageShareDir = ament_index_cpp::get_package_share_directory(
-      "drqp_control");
+      const fs::path packageShareDir = ament_index_cpp::get_package_share_directory("drqp_control");
       yamlPath = packageShareDir / "config" / "drqp.yml";
     }
     if (!fs::exists(yamlPath)) {
@@ -127,9 +127,9 @@ public:
   void loadConfig(const fs::path& configPath)
   {
     // bool rcl_parse_yaml_file(const char *file_path, rcl_params_t *params_st)
-    rcl_params_t* params = rcl_yaml_node_struct_init(rcutils_get_default_allocator());;
-    if (!rcl_parse_yaml_file(configPath.c_str(), params))
-    {
+    rcl_params_t* params = rcl_yaml_node_struct_init(rcutils_get_default_allocator());
+    ;
+    if (!rcl_parse_yaml_file(configPath.c_str(), params)) {
       RCLCPP_ERROR(get_logger(), "Failed to parse config file %s", configPath.c_str());
       return;
     }
