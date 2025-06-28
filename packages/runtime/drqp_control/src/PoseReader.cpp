@@ -126,23 +126,38 @@ public:
 
   void loadConfig(const fs::path& configPath)
   {
-    // bool rcl_parse_yaml_file(const char *file_path, rcl_params_t *params_st)
-    rcl_params_t* params = rcl_yaml_node_struct_init(rcutils_get_default_allocator());
-    ;
-    if (!rcl_parse_yaml_file(configPath.c_str(), params)) {
+    using ParamsPtr = std::unique_ptr<rcl_params_t, decltype(&rcl_yaml_node_struct_fini)>;
+
+    ParamsPtr params(rcl_yaml_node_struct_init(rcutils_get_default_allocator()), &rcl_yaml_node_struct_fini);
+
+    if (!rcl_parse_yaml_file(configPath.c_str(), params.get())) {
       RCLCPP_ERROR(get_logger(), "Failed to parse config file %s", configPath.c_str());
       return;
     }
+    rcl_yaml_node_struct_print(params.get());
 
-    // const std::string dimensions_param = "dimensions." + object_name_;
-    // rcl_variant_t * dimensions =
-    //   rcl_yaml_node_struct_get("dope", dimensions_param.c_str(), dope_params);
-    // if (!dimensions->double_array_value) {
-    //   RCLCPP_ERROR(
-    //     this->get_logger(), "No dimensions parameter found for object name: %s",
-    //     object_name_.c_str());
-    //   throw std::runtime_error("Parameter parsing failure.");
+    rcl_variant_t * robot_name = rcl_yaml_node_struct_get("robot", "name", params.get());
+    if (robot_name->string_value) {
+      RCLCPP_INFO(get_logger(), "Robot name: %s", robot_name->string_value);
+    }
+
+    rcl_variant_t * device_address = rcl_yaml_node_struct_get("robot", "device_address", params.get());
+    if (device_address->string_value) {
+      RCLCPP_INFO(get_logger(), "Device address: %s", device_address->string_value);
+    }
+
+    rcl_variant_t * baud_rate = rcl_yaml_node_struct_get("robot", "baud_rate", params.get());
+    if (baud_rate->integer_value) {
+      RCLCPP_INFO(get_logger(), "Baud rate: %d", baud_rate->integer_value);
+    }
+
+
+    // rcl_variant_t * servos = rcl_yaml_node_struct_get("robot", "servos", params.get());
+    // if (servos->map_value) {
+    //   RCLCPP_INFO(get_logger(), "Servos: %zu", servos->map_value->size);
     // }
+
+
   }
 
   std::unique_ptr<SerialProtocol> servoSerial_;
