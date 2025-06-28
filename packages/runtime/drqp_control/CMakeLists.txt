@@ -5,6 +5,16 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+include(FetchContent)
+
+FetchContent_Declare(
+  yaml-cpp
+  GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+  GIT_TAG 2f86d13775d119edbb69af52e5f566fd65c6953b # master as of 2025-06-27
+)
+FetchContent_MakeAvailable(yaml-cpp)
+
+
 # find dependencies
 find_package(ament_cmake REQUIRED)
 
@@ -31,7 +41,7 @@ ament_target_dependencies(pose_to_joint_state ${${PROJECT_NAME}_BUILD_DEPENDS})
 add_executable(pose_reader
   src/PoseReader.cpp
 )
-target_link_libraries(pose_reader drqp_control)
+target_link_libraries(pose_reader drqp_control yaml-cpp::yaml-cpp)
 ament_target_dependencies(pose_reader ${${PROJECT_NAME}_BUILD_DEPENDS})
 
 add_executable(pose_setter

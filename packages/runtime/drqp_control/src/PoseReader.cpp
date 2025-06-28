@@ -35,6 +35,8 @@ namespace fs = std::filesystem;
 
 #include <rclcpp/rclcpp.hpp>
 
+#include <yaml-cpp/yaml.h>
+
 #include <drqp_interfaces/msg/multi_servo_state.hpp>
 #include "drqp_control/JointServoMappings.h"
 
@@ -126,39 +128,53 @@ public:
 
   void loadConfig(const fs::path& configPath)
   {
-    using ParamsPtr = std::unique_ptr<rcl_params_t, decltype(&rcl_yaml_node_struct_fini)>;
+    try {
+      YAML::Node config = YAML::LoadFile(configPath.string());
+      if (!config["robot"] || !config["robot"]["servos"]) {
+        throw std::runtime_error("Robot config parsing failure.");
+      }
+      // name
+      if (config["robot"]["name"]) {
+        robotName_ = config["robot"]["name"].as<std::string>();
+      }
+      RCLCPP_INFO(this->get_logger(), "Robot name: %s", robotName_.c_str());
+      // device_address
+      if (config["robot"]["device_address"]) {
+        set_parameter(rclcpp::Parameter("device_address", config["robot"]["device_address"].as<std::string>()));
+      }
+      // baud_rate
+      if (config["robot"]["baud_rate"]) {
+        set_parameter(rclcpp::Parameter("baud_rate", config["robot"]["baud_rate"].as<int>()));
+      }
 
-    ParamsPtr params(rcl_yaml_node_struct_init(rcutils_get_default_allocator()), &rcl_yaml_node_struct_fini);
+      // servos
+      YAML::Node servos = config["robot"]["servos"];
+      for (const auto& servo : servos) {
+        const std::string name = servo.first.as<std::string>();
+        const uint8_t id = servo.second["id"].as<uint8_t>();
+        double offset_rads = 0.;
+        if (servo.second["offset_rads"]) {
+          offset_rads = servo.second["offset_rads"].as<double>();
+        }
+        bool inverted = false;
+        if (servo.second["inverted"]) {
+          inverted = servo.second["inverted"].as<bool>();
+        }
 
-    if (!rcl_parse_yaml_file(configPath.c_str(), params.get())) {
-      RCLCPP_ERROR(get_logger(), "Failed to parse config file %s", configPath.c_str());
-      return;
+        const double ratio = inverted ? -1. : 1.;
+
+        jointToServoId_[name] = ServoParams{id, ratio, offset_rads};
+        servoIdToJoint_[id] = JointParams{name, ratio, offset_rads};
+      }
+    } catch (const std::exception& e) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to load config %s", e.what());
+      throw;
     }
-    rcl_yaml_node_struct_print(params.get());
-
-    rcl_variant_t * robot_name = rcl_yaml_node_struct_get("robot", "name", params.get());
-    if (robot_name->string_value) {
-      RCLCPP_INFO(get_logger(), "Robot name: %s", robot_name->string_value);
-    }
-
-    rcl_variant_t * device_address = rcl_yaml_node_struct_get("robot", "device_address", params.get());
-    if (device_address->string_value) {
-      RCLCPP_INFO(get_logger(), "Device address: %s", device_address->string_value);
-    }
-
-    rcl_variant_t * baud_rate = rcl_yaml_node_struct_get("robot", "baud_rate", params.get());
-    if (baud_rate->integer_value) {
-      RCLCPP_INFO(get_logger(), "Baud rate: %d", baud_rate->integer_value);
-    }
-
-
-    // rcl_variant_t * servos = rcl_yaml_node_struct_get("robot", "servos", params.get());
-    // if (servos->map_value) {
-    //   RCLCPP_INFO(get_logger(), "Servos: %zu", servos->map_value->size);
-    // }
-
-
   }
+
+  std::string robotName_;
+  std::unordered_map<std::string, ServoParams> jointToServoId_;
+  std::unordered_map<uint8_t, JointParams> servoIdToJoint_;
 
   std::unique_ptr<SerialProtocol> servoSerial_;
   rclcpp::TimerBase::SharedPtr timer_;
