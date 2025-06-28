@@ -140,7 +140,7 @@ public:
 
       // namespace
       std::string robotNamespace = "";
-      if (YAML::Node namespaceNode = robot["name"]; namespaceNode) {
+      if (YAML::Node namespaceNode = robot["namespace"]; namespaceNode) {
         robotNamespace = namespaceNode.as<std::string>() + "/";
         RCLCPP_INFO(this->get_logger(), "Robot namespace: %s", robotNamespace.c_str());
       }
