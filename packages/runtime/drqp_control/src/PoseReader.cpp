@@ -189,7 +189,7 @@ public:
     }
 
     const ServoParams servoParams = jointToServoId_.at(joint.name);
-    const uint16_t position = radiansToPosition(joint.position_as_radians * servoParams.ratio);
+    const uint16_t position = radiansToPosition(joint.position_as_radians * servoParams.ratio + servoParams.offset_rads);
     return ServoValues{servoParams.id, position};
   }
 
@@ -200,7 +200,7 @@ public:
     }
 
     const JointParams jointParams = servoIdToJoint_.at(servo.id);
-    const double positionAsRadians = positionToRadians(servo.position) * jointParams.ratio;
+    const double positionAsRadians = positionToRadians(servo.position) * jointParams.ratio - jointParams.offset_rads;
     return JointValues{jointParams.jointName, positionAsRadians};
   }
 
