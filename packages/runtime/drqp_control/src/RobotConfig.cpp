@@ -118,7 +118,7 @@ void RobotConfig::loadConfig(fs::path configPath)
   }
 }
 
-std::optional<ServoValues> RobotConfig::jointToServo(const JointValues& joint)
+std::optional<RobotConfig::ServoValues> RobotConfig::jointToServo(const JointValues& joint)
 {
   if (jointToServoId_.count(joint.name) == 0) {
     return std::nullopt;
@@ -129,7 +129,7 @@ std::optional<ServoValues> RobotConfig::jointToServo(const JointValues& joint)
   return ServoValues{servoParams.id, position};
 }
 
-std::optional<JointValues> RobotConfig::servoToJoint(const ServoValues& servo)
+std::optional<RobotConfig::JointValues> RobotConfig::servoToJoint(const ServoValues& servo)
 {
   if (servoIdToJoint_.count(servo.id) == 0) {
     return std::nullopt;

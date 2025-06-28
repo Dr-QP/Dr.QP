@@ -32,17 +32,6 @@
 namespace fs = std::filesystem;
 
 
-struct JointValues
-{
-  std::string name;
-  double position_as_radians;
-};
-
-struct ServoValues
-{
-  uint8_t id;
-  uint16_t position;
-};
 class RobotConfig
 {
 public:
@@ -50,11 +39,21 @@ public:
   ~RobotConfig();
 
   fs::path getConfigPath();
-
   void loadConfig(fs::path configPath = {});
 
-  std::optional<ServoValues> jointToServo(const JointValues& joint);
+  struct JointValues
+  {
+    std::string name;
+    double position_as_radians;
+  };
 
+  struct ServoValues
+  {
+    uint8_t id;
+    uint16_t position;
+  };
+
+  std::optional<ServoValues> jointToServo(const JointValues& joint);
   std::optional<JointValues> servoToJoint(const ServoValues& servo);
 
 private:

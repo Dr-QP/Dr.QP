@@ -140,7 +140,7 @@ public:
 
     for (size_t index = 0; index < msg.goals.size(); ++index) {
       auto pos = msg.goals.at(index);
-      std::optional<ServoValues> servoValues =
+      auto servoValues =
         robotConfig_.jointToServo({pos.joint_name, pos.position_as_radians});
       if (!servoValues) {
         RCLCPP_ERROR(get_logger(), "Unknown joint name %s", pos.joint_name.c_str());
@@ -160,13 +160,13 @@ public:
     DynamicIJogCommand iposCmd(msg.goals.size());
     for (size_t index = 0; index < msg.goals.size(); ++index) {
       auto pos = msg.goals.at(index);
-      std::optional<ServoValues> servo = robotConfig_.jointToServo({pos.joint_name, pos.position_as_radians});
-      if (!servo) {
+      auto servoValues = robotConfig_.jointToServo({pos.joint_name, pos.position_as_radians});
+      if (!servoValues) {
         RCLCPP_ERROR(get_logger(), "Unknown joint name %s", pos.joint_name.c_str());
         continue;
       }
       iposCmd.at(index) = {
-        servo->position, SET_POSITION_CONTROL, servo->id, millisToPlaytime(pos.playtime_ms)};
+        servoValues->position, SET_POSITION_CONTROL, servoValues->id, millisToPlaytime(pos.playtime_ms)};
     }
 
     servo.sendJogCommand(iposCmd);
@@ -182,7 +182,7 @@ public:
       servoState.joint_name = posGoal.joint_name;
       servoState.position_as_radians = posGoal.position_as_radians;
       if (
-        std::optional<ServoValues> servoValues =
+        auto servoValues =
           robotConfig_.jointToServo({posGoal.joint_name, posGoal.position_as_radians})) {
         servoState.raw.id = servoValues->id;
         servoState.raw.position = servoValues->position;

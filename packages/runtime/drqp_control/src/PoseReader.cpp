@@ -86,9 +86,9 @@ public:
           servoState.raw.status_detail = static_cast<uint8_t>(status.statusDetail);
           servoState.raw.torque = status.pwm;
 
-          if (std::optional<JointValues> joint = robotConfig_.servoToJoint({servoId, status.position})) {
-            servoState.joint_name = joint->name;
-            servoState.position_as_radians = joint->position_as_radians;
+          if (auto jointValues = robotConfig_.servoToJoint({servoId, status.position})) {
+            servoState.joint_name = jointValues->name;
+            servoState.position_as_radians = jointValues->position_as_radians;
           }
 
           multiServoStates.servos.emplace_back(std::move(servoState));
