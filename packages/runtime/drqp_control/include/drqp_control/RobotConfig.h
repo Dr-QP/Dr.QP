@@ -22,16 +22,12 @@
 
 #include <cstdint>
 #include <string>
-#include <tuple>
 #include <unordered_map>
-#include <algorithm>
 #include <optional>
 #include <filesystem>
 
 #include <rclcpp/rclcpp.hpp>
 #include <ament_index_cpp/get_package_share_directory.hpp>
-
-#include "drqp_control/DrQp.h"
 
 namespace fs = std::filesystem;
 struct ServoParams

@@ -32,7 +32,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <drqp_interfaces/msg/multi_servo_state.hpp>
-#include "drqp_control/JointServoMappings.h"
+#include "drqp_control/RobotConfig.h"
 
 using namespace std::chrono_literals;
 
@@ -86,7 +86,7 @@ public:
           servoState.raw.status_detail = static_cast<uint8_t>(status.statusDetail);
           servoState.raw.torque = status.pwm;
 
-          if (std::optional<JointValues> joint = servoToJoint({servoId, status.position})) {
+          if (std::optional<JointValues> joint = robotConfig_.servoToJoint({servoId, status.position})) {
             servoState.joint_name = joint->name;
             servoState.position_as_radians = joint->position_as_radians;
           }

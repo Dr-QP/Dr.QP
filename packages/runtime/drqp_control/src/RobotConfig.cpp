@@ -22,6 +22,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include "drqp_control/DrQp.h"
 
 fs::path RobotConfig::getConfigPath()
 {
