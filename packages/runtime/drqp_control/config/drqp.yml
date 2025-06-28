@@ -49,7 +49,3 @@ robot:
       id: 12
       inverted: true
 
-joint_state_publisher:
-  update_rate: 30
-  publish_states: true
-  topic_name: joint_states
