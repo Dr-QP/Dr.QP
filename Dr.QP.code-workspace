@@ -359,6 +359,15 @@
           }
         ]
       },
+      {
+        "label": "Dr.QP workspace extensions",
+        "type": "shell",
+        "command": "${workspaceFolder}/scripts/workspace-extensions.sh",
+        "options": {
+          "cwd": "${workspaceFolder}/scripts"
+        },
+        "problemMatcher": []
+      }
     ]
   },
   "settings": {
