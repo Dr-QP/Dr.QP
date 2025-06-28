@@ -200,7 +200,7 @@ public:
     }
 
     const JointParams jointParams = servoIdToJoint_.at(servo.id);
-    const double positionAsRadians = positionToRadians(servo.position * jointParams.ratio);
+    const double positionAsRadians = positionToRadians(servo.position) * jointParams.ratio;
     return JointValues{jointParams.jointName, positionAsRadians};
   }
 

@@ -96,7 +96,7 @@ static inline std::optional<JointValues> servoToJoint(const ServoValues& servo)
   }
 
   const JointParams jointParams = kServoIdToJoint.at(servo.id);
-  const double positionAsRadians = positionToRadians(servo.position * jointParams.ratio);
+  const double positionAsRadians = positionToRadians(servo.position) * jointParams.ratio;
   return JointValues{jointParams.jointName, positionAsRadians};
 }
 
