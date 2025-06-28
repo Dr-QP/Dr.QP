@@ -138,10 +138,11 @@ public:
         throw std::runtime_error("Robot config parsing failure. No 'robot' section.");
       }
 
-      // name
-      if (YAML::Node name = robot["name"]; name) {
-        robotName_ = name.as<std::string>();
-        RCLCPP_INFO(this->get_logger(), "Robot name: %s", robotName_.c_str());
+      // namespace
+      std::string robotNamespace = "";
+      if (YAML::Node namespaceNode = robot["name"]; namespaceNode) {
+        robotNamespace = namespaceNode.as<std::string>() + "/";
+        RCLCPP_INFO(this->get_logger(), "Robot namespace: %s", robotNamespace.c_str());
       }
 
       // device_address
@@ -159,7 +160,7 @@ public:
         throw std::runtime_error("Robot config parsing failure. No 'servos' section.");
       }
       for (const auto& servo : servos) {
-        const std::string name = servo.first.as<std::string>();
+        const std::string name = robotNamespace + servo.first.as<std::string>();
         const uint8_t id = servo.second["id"].as<uint8_t>();
         double offset_rads = 0.;
         if (servo.second["offset_rads"]) {
@@ -203,7 +204,6 @@ public:
     return JointValues{jointParams.jointName, positionAsRadians};
   }
 
-  std::string robotName_;
   std::unordered_map<std::string, ServoParams> jointToServoId_;
   std::unordered_map<uint8_t, JointParams> servoIdToJoint_;
 
