@@ -130,25 +130,34 @@ public:
   {
     try {
       YAML::Node config = YAML::LoadFile(configPath.string());
-      if (!config["robot"] || !config["robot"]["servos"]) {
+      if (!config) {
         throw std::runtime_error("Robot config parsing failure.");
       }
-      // name
-      if (config["robot"]["name"]) {
-        robotName_ = config["robot"]["name"].as<std::string>();
+      YAML::Node robot = config["robot"];
+      if (!robot) {
+        throw std::runtime_error("Robot config parsing failure. No 'robot' section.");
       }
-      RCLCPP_INFO(this->get_logger(), "Robot name: %s", robotName_.c_str());
+
+      // name
+      if (YAML::Node name = robot["name"]; name) {
+        robotName_ = name.as<std::string>();
+        RCLCPP_INFO(this->get_logger(), "Robot name: %s", robotName_.c_str());
+      }
+
       // device_address
-      if (config["robot"]["device_address"]) {
-        set_parameter(rclcpp::Parameter("device_address", config["robot"]["device_address"].as<std::string>()));
+      if (YAML::Node deviceAddress = robot["device_address"]; deviceAddress) {
+        set_parameter(rclcpp::Parameter("device_address", deviceAddress.as<std::string>()));
       }
       // baud_rate
-      if (config["robot"]["baud_rate"]) {
-        set_parameter(rclcpp::Parameter("baud_rate", config["robot"]["baud_rate"].as<int>()));
+      if (YAML::Node baudRate = robot["baud_rate"]; baudRate) {
+        set_parameter(rclcpp::Parameter("baud_rate", baudRate.as<int>()));
       }
 
       // servos
-      YAML::Node servos = config["robot"]["servos"];
+      YAML::Node servos = robot["servos"];
+      if (!servos) {
+        throw std::runtime_error("Robot config parsing failure. No 'servos' section.");
+      }
       for (const auto& servo : servos) {
         const std::string name = servo.first.as<std::string>();
         const uint8_t id = servo.second["id"].as<uint8_t>();
@@ -170,6 +179,28 @@ public:
       RCLCPP_ERROR(this->get_logger(), "Failed to load config %s", e.what());
       throw;
     }
+  }
+
+  std::optional<ServoValues> jointToServo(const JointValues& joint)
+  {
+    if (jointToServoId_.count(joint.name) == 0) {
+      return std::nullopt;
+    }
+
+    const ServoParams servoParams = jointToServoId_.at(joint.name);
+    const uint16_t position = radiansToPosition(joint.position_as_radians * servoParams.ratio);
+    return ServoValues{servoParams.id, position};
+  }
+
+  std::optional<JointValues> servoToJoint(const ServoValues& servo)
+  {
+    if (servoIdToJoint_.count(servo.id) == 0) {
+      return std::nullopt;
+    }
+
+    const JointParams jointParams = servoIdToJoint_.at(servo.id);
+    const double positionAsRadians = positionToRadians(servo.position * jointParams.ratio);
+    return JointValues{jointParams.jointName, positionAsRadians};
   }
 
   std::string robotName_;
