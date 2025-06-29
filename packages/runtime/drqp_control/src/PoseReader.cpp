@@ -46,7 +46,6 @@ public:
     declare_parameter("first_id", 1);
     declare_parameter("last_id", 18);
     declare_parameter("period_ms", 100);
-    declare_parameter("config", "");
 
     robotConfig_.loadConfig();
 
