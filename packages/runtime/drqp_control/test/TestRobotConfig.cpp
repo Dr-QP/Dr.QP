@@ -38,7 +38,7 @@ SCENARIO("ROS node")
 
     THEN("Default config file should be found")
     {
-      CHECK(robotConfig.getConfigPath() != "");
+      CHECK_FALSE(robotConfig.getConfigPath().empty());
       CHECK(fs::exists(robotConfig.getConfigPath()));
     }
 
