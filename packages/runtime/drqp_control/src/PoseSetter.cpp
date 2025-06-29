@@ -38,7 +38,6 @@
 #include "drqp_control/RobotConfig.h"
 #include "drqp_control/DrQp.h"
 
-
 using namespace std::chrono_literals;
 
 class PoseSetter : public rclcpp::Node
@@ -140,8 +139,7 @@ public:
 
     for (size_t index = 0; index < msg.goals.size(); ++index) {
       auto pos = msg.goals.at(index);
-      auto servoValues =
-        robotConfig_.jointToServo({pos.joint_name, pos.position_as_radians});
+      auto servoValues = robotConfig_.jointToServo({pos.joint_name, pos.position_as_radians});
       if (!servoValues) {
         RCLCPP_ERROR(get_logger(), "Unknown joint name %s", pos.joint_name.c_str());
         continue;
@@ -166,7 +164,8 @@ public:
         continue;
       }
       iposCmd.at(index) = {
-        servoValues->position, SET_POSITION_CONTROL, servoValues->id, millisToPlaytime(pos.playtime_ms)};
+        servoValues->position, SET_POSITION_CONTROL, servoValues->id,
+        millisToPlaytime(pos.playtime_ms)};
     }
 
     servo.sendJogCommand(iposCmd);
