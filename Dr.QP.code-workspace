@@ -371,6 +371,7 @@
       {
         "label": "Dr.QP xmlunit viewer",
         "type": "shell",
+        // xunit-viewer supports only a single folder for -r argument, so ignores is the only way to reduce noise
         "command": "npx -y xunit-viewer -r build --server -o build/xunit-index.html -i Test.xml -i coverage.xml -i package.xml --watch",
         "options": {
           "cwd": "${workspaceFolder}"
