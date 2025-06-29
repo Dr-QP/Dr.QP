@@ -367,6 +367,16 @@
           "cwd": "${workspaceFolder}/scripts"
         },
         "problemMatcher": []
+      },
+      {
+        "label": "Dr.QP xmlunit viewer",
+        "type": "shell",
+        "command": "npx -y xunit-viewer -r build --server -o build/xunit-index.html -i Test.xml -i coverage.xml -i package.xml --watch",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": [],
+        "isBackground": true
       }
     ]
   },
