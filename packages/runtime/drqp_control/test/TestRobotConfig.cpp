@@ -26,12 +26,59 @@
 SCENARIO("ROS node")
 {
   rclcpp::init(0, nullptr);
-  SECTION("Robot config load")
+  GIVEN("Robot config")
   {
     rclcpp::Node node("test_robot_config");
     RobotConfig robotConfig(&node);
 
-    REQUIRE_NOTHROW(robotConfig.loadConfig(TEST_DATA_DIR_IN_SOURCE_TREE "/test_robot_config.yml"));
+    THEN("Config parameter should be declared")
+    {
+      CHECK_NOTHROW(node.get_parameter("config").as_string());
+    }
+
+    THEN("Default config file should be found")
+    {
+      CHECK(robotConfig.getConfigPath() != "");
+      CHECK(fs::exists(robotConfig.getConfigPath()));
+    }
+
+    WHEN("Config file is provided")
+    {
+      node.set_parameter(rclcpp::Parameter("config", "path that does not exist"));
+
+      THEN("Config file should not be found")
+      {
+        CHECK_THROWS(robotConfig.getConfigPath());
+      }
+    }
+
+    WHEN("Config file exists and is loaded")
+    {
+      REQUIRE_NOTHROW(
+        robotConfig.loadConfig(TEST_DATA_DIR_IN_SOURCE_TREE "/test_robot_config.yml"));
+
+      THEN("Parameters should be declared")
+      {
+        CHECK(node.get_parameter("device_address").as_string() == "/dev/ttySC0");
+        CHECK(node.get_parameter("baud_rate").as_int() == 115200);
+      }
+
+      THEN("Joint to servo mapping should work")
+      {
+        RobotConfig::JointValues joint{"test_robot/left_front_coxa", 0.0};
+        RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
+        CHECK(servo.id == 1);
+        CHECK(servo.position == 511);
+      }
+
+      THEN("Servo to joint mapping should work")
+      {
+        RobotConfig::ServoValues servo{1, 511};
+        RobotConfig::JointValues joint = robotConfig.servoToJoint(servo).value();
+        CHECK(joint.name == "test_robot/left_front_coxa");
+        CHECK_THAT(joint.position_as_radians, Catch::Matchers::WithinAbs(0.0, 0.01));
+      }
+    }
   }
 
   rclcpp::shutdown();
