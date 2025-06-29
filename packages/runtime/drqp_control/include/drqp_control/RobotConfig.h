@@ -59,7 +59,13 @@ private:
   struct ServoParams;
   struct JointParams;
 
+  void declareParameters();
+
   rclcpp::Node* node_;
+
   std::unordered_map<std::string, ServoParams> jointToServoId_;
   std::unordered_map<uint8_t, JointParams> servoIdToJoint_;
+
+  std::string deviceAddress_ = "/dev/ttySC0";
+  int baudRate_ = 115200;
 };

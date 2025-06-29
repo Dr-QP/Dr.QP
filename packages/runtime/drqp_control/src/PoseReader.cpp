@@ -41,8 +41,6 @@ class PoseReader : public rclcpp::Node
 public:
   PoseReader() : Node("drqp_pose_reader"), robotConfig_(this)
   {
-    declare_parameter("device_address", "/dev/ttySC0");
-    declare_parameter("baud_rate", 115200);
     declare_parameter("first_id", 1);
     declare_parameter("last_id", 18);
     declare_parameter("period_ms", 100);

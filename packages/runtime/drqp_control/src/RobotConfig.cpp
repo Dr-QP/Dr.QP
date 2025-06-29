@@ -83,11 +83,12 @@ void RobotConfig::loadConfig(fs::path configPath)
 
     // device_address
     if (YAML::Node deviceAddress = robot["device_address"]; deviceAddress) {
-      node_->set_parameter(rclcpp::Parameter("device_address", deviceAddress.as<std::string>()));
+      deviceAddress_ = deviceAddress.as<std::string>();
     }
+
     // baud_rate
     if (YAML::Node baudRate = robot["baud_rate"]; baudRate) {
-      node_->set_parameter(rclcpp::Parameter("baud_rate", baudRate.as<int>()));
+      baudRate_ = baudRate.as<int>();
     }
 
     // servos
@@ -112,10 +113,18 @@ void RobotConfig::loadConfig(fs::path configPath)
       jointToServoId_[name] = ServoParams{id, ratio, offset_rads};
       servoIdToJoint_[id] = JointParams{name, ratio, offset_rads};
     }
+
+    declareParameters();
   } catch (const std::exception& e) {
     RCLCPP_ERROR(node_->get_logger(), "Failed to load config %s", e.what());
     throw;
   }
+}
+
+void RobotConfig::declareParameters()
+{
+  node_->declare_parameter("device_address", deviceAddress_);
+  node_->declare_parameter("baud_rate", baudRate_);
 }
 
 std::optional<RobotConfig::ServoValues> RobotConfig::jointToServo(const JointValues& joint)

@@ -45,9 +45,6 @@ class PoseSetter : public rclcpp::Node
 public:
   PoseSetter() : Node("drqp_pose_setter"), robotConfig_(this)
   {
-    declare_parameter("device_address", "/dev/ttySC0");
-    declare_parameter("baud_rate", 115200);
-
     robotConfig_.loadConfig();
 
     servoSerial_ = makeSerialForDevice(get_parameter("device_address").as_string());

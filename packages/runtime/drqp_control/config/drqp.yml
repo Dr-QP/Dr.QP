@@ -1,6 +1,6 @@
 robot:
   namespace: dr_qp
-  device_address: 192.168.0.190:2022 # via ser2net
+  # device_address: 192.168.0.190:2022 # via ser2net
   # device_address: /dev/ttySC0
   baud_rate: 115200
   servos:

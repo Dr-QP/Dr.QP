@@ -18,14 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <catch_amalgamated.hpp>
 #include <catch_ros2/catch.hpp>
 
 #include "drqp_control/RobotConfig.h"
 
-TEST_CASE("Robot config load")
+SCENARIO("ROS node")
 {
-  rclcpp::Node node("test_robot_config");
-  RobotConfig robotConfig(&node);
+  rclcpp::init(0, nullptr);
+  SECTION("Robot config load")
+  {
+    rclcpp::Node node("test_robot_config");
+    RobotConfig robotConfig(&node);
 
-  robotConfig.loadConfig(TEST_DATA_DIR_IN_SOURCE_TREE "/test_robot_config.yml");
+    REQUIRE_NOTHROW(robotConfig.loadConfig(TEST_DATA_DIR_IN_SOURCE_TREE "/test_robot_config.yml"));
+  }
+
+  rclcpp::shutdown();
 }
