@@ -42,6 +42,11 @@ SCENARIO("ROS node")
       CHECK(fs::exists(robotConfig.getConfigPath()));
     }
 
+    THEN("Default config file should be loaded")
+    {
+      CHECK_NOTHROW(robotConfig.loadConfig());
+    }
+
     WHEN("Config file is provided")
     {
       node.set_parameter(rclcpp::Parameter("config", "path that does not exist"));
@@ -112,6 +117,14 @@ SCENARIO("ROS node")
       {
         RobotConfig::ServoValues servo{99, 0};
         CHECK_FALSE(robotConfig.servoToJoint(servo));
+      }
+    }
+
+    WHEN("Config file is invalid")
+    {
+      THEN("Loading should throw")
+      {
+        CHECK_THROWS(robotConfig.loadConfig(TEST_DATA_DIR_IN_SOURCE_TREE "/invalid_robot_config.yml"));
       }
     }
   }
