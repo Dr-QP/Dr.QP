@@ -87,12 +87,20 @@ SCENARIO("ROS node")
         CHECK(servo.position == 0);
       }
 
-      THEN("Offset should work")
+      THEN("Offset should work from angle")
       {
         RobotConfig::JointValues joint{"test_robot/left_front_femur", 0.0};
         RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
         CHECK(servo.id == 2);
         CHECK(servo.position == 544);
+      }
+
+      THEN("Offset should work to angle")
+      {
+        RobotConfig::ServoValues servo{2, 544};
+        RobotConfig::JointValues joint = robotConfig.servoToJoint(servo).value();
+        CHECK(joint.name == "test_robot/left_front_femur");
+        CHECK_THAT(joint.position_as_radians, Catch::Matchers::WithinAbs(0.0, 0.01));
       }
 
       THEN("Invalid joint name should return nullopt")
