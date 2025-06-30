@@ -1,0 +1,13 @@
+robot:
+  namespace: test_robot
+  device_address: /dev/ttySC0
+  baud_rate: 115200
+  servos:
+    left_front_coxa:
+      id: 1
+    left_front_femur:
+      id: 2
+      offset_rads: 0.2 # Calibration offset
+    left_front_tibia:
+      id: 18
+      inverted: true

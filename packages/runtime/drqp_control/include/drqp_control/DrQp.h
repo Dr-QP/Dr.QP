@@ -128,6 +128,11 @@ inline double positionToRadians(uint16_t position)
   return mapToRange(position, 0, 1023, -M_PI, M_PI);
 }
 
+static inline uint8_t millisToPlaytime(const uint16_t millis)
+{
+  return millis / 10;
+}
+
 // Leg joins in the straight line
 // right_front     servo: 2:       516 // Coxa
 // right_front     servo: 4:       554 // Femur
