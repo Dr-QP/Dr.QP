@@ -126,6 +126,16 @@ SCENARIO("ROS node")
       {
         CHECK_THROWS(
           robotConfig.loadConfig(TEST_DATA_DIR_IN_SOURCE_TREE "/invalid_robot_config.yml"));
+        CHECK_THROWS(robotConfig.loadConfig(TEST_DATA_DIR_IN_SOURCE_TREE "/non_robot_config.yml"));
+      }
+    }
+
+    WHEN("Config file is not found")
+    {
+      THEN("Loading should throw")
+      {
+        CHECK_THROWS(
+          robotConfig.loadConfig(TEST_DATA_DIR_IN_SOURCE_TREE "/non_existing_config.yml"));
       }
     }
   }
