@@ -65,18 +65,45 @@ SCENARIO("ROS node")
 
       THEN("Joint to servo mapping should work")
       {
-        RobotConfig::JointValues joint{"test_robot/left_front_coxa", 0.0};
+        RobotConfig::JointValues joint{"test_robot/left_front_coxa", M_PI};
         RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
         CHECK(servo.id == 1);
-        CHECK(servo.position == 511);
+        CHECK(servo.position == 1023);
       }
 
       THEN("Servo to joint mapping should work")
       {
-        RobotConfig::ServoValues servo{1, 511};
+        RobotConfig::ServoValues servo{1, 1023};
         RobotConfig::JointValues joint = robotConfig.servoToJoint(servo).value();
         CHECK(joint.name == "test_robot/left_front_coxa");
-        CHECK_THAT(joint.position_as_radians, Catch::Matchers::WithinAbs(0.0, 0.01));
+        CHECK_THAT(joint.position_as_radians, Catch::Matchers::WithinAbs(M_PI, 0.01));
+      }
+
+      THEN("Inverted servo should work")
+      {
+        RobotConfig::JointValues joint{"test_robot/left_front_tibia", M_PI};
+        RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
+        CHECK(servo.id == 18);
+        CHECK(servo.position == 0);
+      }
+
+      THEN("Offset should work")
+      {
+        RobotConfig::JointValues joint{"test_robot/left_front_femur", 0.0};
+        RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
+        CHECK(servo.id == 2);
+        CHECK(servo.position == 544);
+      }
+
+      THEN("Invalid joint name should return nullopt")
+      {
+        RobotConfig::JointValues joint{"test_robot/invalid_joint", 0.0};
+        CHECK_FALSE(robotConfig.jointToServo(joint));
+      }
+      THEN("Invalid servo id should return nullopt")
+      {
+        RobotConfig::ServoValues servo{99, 0};
+        CHECK_FALSE(robotConfig.servoToJoint(servo));
       }
     }
   }
