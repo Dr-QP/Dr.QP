@@ -124,7 +124,8 @@ SCENARIO("ROS node")
     {
       THEN("Loading should throw")
       {
-        CHECK_THROWS(robotConfig.loadConfig(TEST_DATA_DIR_IN_SOURCE_TREE "/invalid_robot_config.yml"));
+        CHECK_THROWS(
+          robotConfig.loadConfig(TEST_DATA_DIR_IN_SOURCE_TREE "/invalid_robot_config.yml"));
       }
     }
   }
