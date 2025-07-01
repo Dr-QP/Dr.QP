@@ -18,12 +18,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from .robot_state_machine import RobotStateMachine, State
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 import std_msgs.msg
+
+from .robot_state_machine import RobotStateMachine, State
 
 
 class RobotStateNode(Node):
