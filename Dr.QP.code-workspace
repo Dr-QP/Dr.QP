@@ -241,7 +241,7 @@
       {
         "label": "Dr.QP clean",
         "type": "shell",
-        "command": "rm -rf build/*; rm -rf install/*; rm -rf log/*; rm -rf lcov/*; rm -rf .cache/*; rm -rf docs/_build/*; rm -rf **/__pycache__/",
+        "command": "${workspaceFolder}/scripts/clean.fish",
         "options": {
           "cwd": "${workspaceFolder}"
         },
