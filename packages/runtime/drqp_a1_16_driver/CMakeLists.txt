@@ -17,7 +17,6 @@ endforeach()
 add_library(drqp_a1_16_driver STATIC
     include/drqp_a1_16_driver/XYZrobotServo.h
 
-    src/SerialFactory.cpp
     src/XYZrobotServo.cpp
 )
 drqp_library_enable_coverage(drqp_a1_16_driver)
@@ -42,20 +41,6 @@ install(TARGETS
   RUNTIME DESTINATION bin
 )
 
-add_executable(pose_reader src/PoseReader.cpp)
-target_link_libraries(pose_reader drqp_a1_16_driver)
-
-add_executable(pose_setter src/PoseSetter.cpp)
-target_link_libraries(pose_setter drqp_a1_16_driver)
-
-# Install executables for `ros2 run`
-install(TARGETS
-  pose_reader
-  pose_setter
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-
 # Export modern CMake targets
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
@@ -72,10 +57,5 @@ if(BUILD_TESTING)
 endif()
 
 add_subdirectory(examples)
-
-install(
-  DIRECTORY launch
-  DESTINATION share/${PROJECT_NAME}
-)
 
 ament_package()

@@ -27,7 +27,7 @@
 #include <catch_ros2/catch.hpp>
 
 #include "drqp_serial/SerialProtocol.h"
-#include "drqp_a1_16_driver/SerialFactory.h"
+#include "drqp_serial/SerialFactory.h"
 #include "drqp_a1_16_driver/XYZrobotServo.h"
 
 #include "drqp_serial/SerialPlayer.h"

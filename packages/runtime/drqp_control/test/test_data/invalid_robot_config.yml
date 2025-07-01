@@ -1,0 +1,4 @@
+robot:
+  namespace: test_robot
+  # This is the invalid config for testing purposes
+  # Servos section is missing intentionally

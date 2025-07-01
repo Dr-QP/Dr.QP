@@ -57,7 +57,7 @@ def generate_launch_description():
                 name='load_drivers',
                 default_value='true',
                 choices=['true', 'false'],
-                description='Load drqp_a1_16_driver pose_setter',
+                description='Load drqp_control pose_setter',
             ),
             DeclareLaunchArgument(
                 name='servo_device',
@@ -65,13 +65,24 @@ def generate_launch_description():
                 description='Serial device for servos',
             ),
             Node(
-                package='drqp_a1_16_driver',
+                package='drqp_control',
                 executable='pose_setter',
                 output='screen',
                 parameters=[
                     {
                         'use_sim_time': use_sim_time,
                         'device_address': servo_device,
+                    }
+                ],
+                condition=IfCondition(load_drivers),
+            ),
+            Node(
+                package='drqp_control',
+                executable='pose_to_joint_state',
+                output='screen',
+                parameters=[
+                    {
+                        'use_sim_time': use_sim_time,
                     }
                 ],
                 condition=IfCondition(load_drivers),
@@ -88,12 +99,6 @@ def generate_launch_description():
                 output='screen',
                 parameters=[{'use_sim_time': use_sim_time}],
                 condition=IfCondition(load_joystick),
-            ),
-            Node(
-                package='drqp_control',
-                executable='joint_state_to_pose',
-                output='screen',
-                parameters=[{'use_sim_time': use_sim_time}],
             ),
             Node(
                 package='drqp_brain',

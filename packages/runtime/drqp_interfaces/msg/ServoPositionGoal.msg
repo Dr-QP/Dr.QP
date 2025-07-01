@@ -1,3 +1,3 @@
-uint8 id
-uint16 position
-uint8 playtime
+string joint_name
+float32 position_as_radians
+uint16 playtime_ms

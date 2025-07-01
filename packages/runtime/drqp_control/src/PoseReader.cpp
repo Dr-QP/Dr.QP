@@ -20,7 +20,7 @@
 
 #include <drqp_serial/SerialProtocol.h>
 #include <drqp_serial/TcpSerial.h>
-#include <drqp_a1_16_driver/SerialFactory.h>
+#include <drqp_serial/SerialFactory.h>
 #include <drqp_a1_16_driver/XYZrobotServo.h>
 
 #include <chrono>
@@ -32,19 +32,20 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <drqp_interfaces/msg/multi_servo_state.hpp>
+#include "drqp_control/RobotConfig.h"
 
 using namespace std::chrono_literals;
 
 class PoseReader : public rclcpp::Node
 {
 public:
-  PoseReader() : Node("drqp_pose_reader")
+  PoseReader() : Node("drqp_pose_reader"), robotConfig_(this)
   {
-    declare_parameter("device_address", "/dev/ttySC0");
-    declare_parameter("baud_rate", 115200);
     declare_parameter("first_id", 1);
     declare_parameter("last_id", 18);
     declare_parameter("period_ms", 100);
+
+    robotConfig_.loadConfig();
 
     servoStatesPublisher_ =
       this->create_publisher<drqp_interfaces::msg::MultiServoState>("/servo_states", 10);
@@ -74,18 +75,23 @@ public:
           auto servoState = drqp_interfaces::msg::ServoState{};
           auto endTime = this->get_clock()->now();
 
-          servoState.read_time_microsec = (endTime - startTime).nanoseconds() / 1000;
-          servoState.id = servoId;
-          servoState.position = status.position;
-          servoState.goal = status.posRef;
-          servoState.status_error = static_cast<uint8_t>(status.statusError);
-          servoState.status_detail = static_cast<uint8_t>(status.statusDetail);
-          servoState.torque = status.pwm;
+          servoState.read_duration_microsec = (endTime - startTime).nanoseconds() / 1000;
+          servoState.raw.id = servoId;
+          servoState.raw.position = status.position;
+          servoState.raw.goal = status.posRef;
+          servoState.raw.status_error = static_cast<uint8_t>(status.statusError);
+          servoState.raw.status_detail = static_cast<uint8_t>(status.statusDetail);
+          servoState.raw.torque = status.pwm;
+
+          if (auto jointValues = robotConfig_.servoToJoint({servoId, status.position})) {
+            servoState.joint_name = jointValues->name;
+            servoState.position_as_radians = jointValues->position_as_radians;
+          }
 
           multiServoStates.servos.emplace_back(std::move(servoState));
         }
         auto endTime = this->get_clock()->now();
-        multiServoStates.read_time_microsec =
+        multiServoStates.read_duration_microsec =
           (endTime - multiServoStates.header.stamp).nanoseconds() / 1000;
         servoStatesPublisher_->publish(multiServoStates);
       } catch (std::exception& e) {
@@ -95,6 +101,8 @@ public:
       }
     });
   }
+
+  RobotConfig robotConfig_;
 
   std::unique_ptr<SerialProtocol> servoSerial_;
   rclcpp::TimerBase::SharedPtr timer_;

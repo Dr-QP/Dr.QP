@@ -50,7 +50,7 @@ def generate_test_description():
                 description='Use sim time if true',
             ),
             Node(
-                package='drqp_a1_16_driver',
+                package='drqp_control',
                 executable='pose_reader',
                 output='screen',
                 parameters=[
@@ -104,7 +104,7 @@ class TestServoDriverNodes(unittest.TestCase):
 
 # Post-shutdown tests
 @post_shutdown_test()
-class TesPoseReaderShutdown(unittest.TestCase):
+class TestPoseReaderShutdown(unittest.TestCase):
     """Test the pose_reader node shutdown."""
 
     def test_exit_codes(self, proc_info):

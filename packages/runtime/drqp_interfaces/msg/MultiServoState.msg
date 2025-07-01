@@ -1,3 +1,3 @@
 std_msgs/Header header
-uint32 read_time_microsec
+uint32 read_duration_microsec
 drqp_interfaces/ServoState[] servos

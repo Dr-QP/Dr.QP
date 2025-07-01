@@ -37,7 +37,7 @@ recording = False
 def generate_test_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
 
-    device_address_name = '192.168.0.190' if recording else 'playback'
+    device_address_name = '/dev/ttySC0' if recording else 'playback'
     test_data_dir = Path(__file__).parent / 'test_data'
     pose_setter_device = f'{device_address_name}|{test_data_dir / "integration-pose-setter.json"}'
     return LaunchDescription(
@@ -49,7 +49,7 @@ def generate_test_description():
                 description='Use sim time if true',
             ),
             Node(
-                package='drqp_a1_16_driver',
+                package='drqp_control',
                 executable='pose_setter',
                 output='screen',
                 parameters=[
@@ -78,8 +78,8 @@ class TestServoDriverNodes(unittest.TestCase):
 
     def setUp(self):
         self.node = rclpy.create_node('test_servo_driver')
-        self.run_duration = 20 if recording else 10
-        self.max_messages = 20 if recording else 10
+        self.run_duration = 20
+        self.max_messages = 10
 
     def tearDown(self):
         self.node.destroy_node()
@@ -92,9 +92,29 @@ class TestServoDriverNodes(unittest.TestCase):
             MultiServoState, '/servo_states', lambda msg: msgs_received.append(msg), 10
         )
 
-        servo_count = 18
-        position = 534
-        playtime = 150
+        joints = [
+            'dr_qp/left_front_coxa',
+            'dr_qp/left_front_femur',
+            'dr_qp/left_front_tibia',
+            'dr_qp/right_front_coxa',
+            'dr_qp/right_front_femur',
+            'dr_qp/right_front_tibia',
+            'dr_qp/left_middle_coxa',
+            'dr_qp/left_middle_femur',
+            'dr_qp/left_middle_tibia',
+            'dr_qp/right_middle_coxa',
+            'dr_qp/right_middle_femur',
+            'dr_qp/right_middle_tibia',
+            'dr_qp/left_back_coxa',
+            'dr_qp/left_back_femur',
+            'dr_qp/left_back_tibia',
+            'dr_qp/right_back_coxa',
+            'dr_qp/right_back_femur',
+            'dr_qp/right_back_tibia',
+        ]
+        servo_count = len(joints)
+        position_as_radians = 0.1
+        playtime_ms = 1500
         try:
             end_time = time.time() + self.run_duration
             while time.time() < end_time:
@@ -103,24 +123,33 @@ class TestServoDriverNodes(unittest.TestCase):
                 test_goal.header.frame_id = 'test_frame'
                 test_goal.mode = MultiServoPositionGoal.MODE_SYNC
                 test_goal.goals = [
-                    ServoPositionGoal(id=i, position=position, playtime=playtime)
-                    for i in range(servo_count)
+                    ServoPositionGoal(
+                        joint_name=joint,
+                        position_as_radians=position_as_radians,
+                        playtime_ms=playtime_ms,
+                    )
+                    for joint in joints
                 ]
 
                 pub_goals.publish(test_goal)
 
-                rclpy.spin_once(self.node, timeout_sec=1)
+                for _ in range(10):
+                    rclpy.spin_once(self.node, timeout_sec=0.01)
                 if len(msgs_received) > self.max_messages:
                     break
             self.assertGreater(len(msgs_received), self.max_messages)
 
             for msg in msgs_received:
                 self.assertEqual(len(msg.servos), servo_count)
-                servo_ids = list(range(servo_count))
+                joints_to_check = list(joints)
                 for servo in msg.servos:
-                    self.assertEqual(servo.position, position)
-                    servo_ids.remove(servo.id)
-                self.assertListEqual(servo_ids, [], 'Not all servos were received')
+                    self.assertAlmostEqual(
+                        servo.position_as_radians,
+                        position_as_radians,
+                        delta=0.01,
+                    )
+                    joints_to_check.remove(servo.joint_name)
+                self.assertListEqual(joints_to_check, [], 'Not all servos were received')
         finally:
             self.node.destroy_subscription(sub_states)
             self.node.destroy_publisher(pub_goals)
@@ -128,7 +157,7 @@ class TestServoDriverNodes(unittest.TestCase):
 
 # Post-shutdown tests
 @post_shutdown_test()
-class TesPoseSetterShutdown(unittest.TestCase):
+class TestPoseSetterShutdown(unittest.TestCase):
     """Test the pose_setter node shutdown."""
 
     def test_exit_codes(self, proc_info):

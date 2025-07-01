@@ -109,10 +109,10 @@
       {
         "type": "lldb",
         "request": "launch",
-        "name": "drqp_a1_16_driver pose_reader",
-        "program": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/pose_reader",
+        "name": "drqp_control pose_reader",
+        "program": "${workspaceFolder:Dr.QP}/build/drqp_control/pose_reader",
         "args": [],
-        "cwd": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/",
+        "cwd": "${workspaceFolder:Dr.QP}/build/drqp_control/",
         "preLaunchTask": "Dr.QP colcon build",
       },
       {
@@ -206,8 +206,9 @@
           "console_cohesion+",
           "summary+",
           "status+",
-          // "--mixin",
-          // "coverage-pytest",
+          "--return-code-on-test-failure",
+          "--mixin",
+          "coverage-pytest",
           // "--packages-up-to",
           // "drqp_serial",
         ],
@@ -358,6 +359,26 @@
           }
         ]
       },
+      {
+        "label": "Dr.QP workspace extensions",
+        "type": "shell",
+        "command": "${workspaceFolder}/scripts/workspace-extensions.sh",
+        "options": {
+          "cwd": "${workspaceFolder}/scripts"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Dr.QP xmlunit viewer",
+        "type": "shell",
+        // xunit-viewer supports only a single folder for -r argument, so ignores is the only way to reduce noise
+        "command": "npx -y xunit-viewer -r build --server -o build/xunit-index.html -i Test.xml -i coverage.xml -i package.xml --watch",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": [],
+        "isBackground": true
+      }
     ]
   },
   "settings": {
