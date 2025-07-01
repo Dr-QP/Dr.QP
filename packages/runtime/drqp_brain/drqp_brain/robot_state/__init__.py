@@ -18,4 +18,4 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from .robot_state_node import RobotState  # noqa: F401
+from .robot_state_node import RobotStateNode  # noqa: F401

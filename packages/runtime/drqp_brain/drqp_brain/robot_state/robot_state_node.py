@@ -26,7 +26,7 @@ from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 import std_msgs.msg
 
 
-class RobotState(Node):
+class RobotStateNode(Node):
     """A robot state node."""
 
     def __init__(self):
@@ -55,7 +55,7 @@ class RobotState(Node):
 
 def main():
     rclpy.init()
-    node = RobotState()
+    node = RobotStateNode()
     try:
         rclpy.spin(node)
     except (KeyboardInterrupt, ExternalShutdownException):
