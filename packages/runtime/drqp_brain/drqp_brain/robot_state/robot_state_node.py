@@ -18,31 +18,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from drqp_brain.robot_state.robot_state_node import RobotStateMachine, State
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
-from statemachine import State, StateMachine
 import std_msgs.msg
 
 
-class RobotStateMachine(StateMachine):
-    """A robot state machine."""
-
-    torque_off = State(initial=True)
-    initializing = State()
-    torque_on = State()
-    finalizing = State()
-    finalized = State(final=True)
-
-    initialize = torque_off.to(initializing)
-    turn_on = initializing.to(torque_on)
-    turn_off = torque_on.to(torque_off)
-    finalize = torque_on.to(finalizing)
-    done = finalizing.to(finalized)
-
-
 class RobotState(Node):
+    """A robot state node."""
+
     def __init__(self):
         super().__init__('drqp_robot_state')
 

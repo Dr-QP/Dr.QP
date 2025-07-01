@@ -18,4 +18,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from .robot_state_node import RobotState  # noqa: F401
+
+from statemachine import State, StateMachine
+
+
+class RobotStateMachine(StateMachine):
+    """A robot state machine."""
+
+    torque_off = State(initial=True)
+    initializing = State()
+    torque_on = State()
+    finalizing = State()
+    finalized = State(final=True)
+
+    initialize = torque_off.to(initializing)
+    turn_on = initializing.to(torque_on)
+    turn_off = torque_on.to(torque_off)
+    finalize = torque_on.to(finalizing)
+    done = finalizing.to(finalized)
