@@ -14,4 +14,9 @@ if [[ -f "~/ros2_ws/install/local_setup.bash" ]]; then
   source ~/ros2_ws/install/local_setup.bash --
 fi
 
+# activate python venv
+if [[ -f "$OVERLAY_PATH/.venv-prod/bin/activate" ]]; then
+  source $OVERLAY_PATH/.venv-prod/bin/activate
+fi
+
 exec "$@"
