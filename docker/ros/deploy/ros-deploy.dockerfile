@@ -59,6 +59,9 @@ COPY --from=builder $OVERLAY_WS/install $OVERLAY_WS/install
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     sudo apt-get update \
+    && sudo apt-get install -y --no-install-recommends \
+      python3-venv \
+      python3-pip \
     && rosdep update \
     && rm -f $OVERLAY_WS/install/COLCON_IGNORE \
     && rosdep install --ignore-src -y \
