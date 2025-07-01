@@ -289,6 +289,17 @@
         ]
       },
       {
+        "label": "Dr.QP prod-venv",
+        "type": "shell",
+        "command": "${workspaceFolder}/docker/ros/deploy/prod-venv.sh",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": [
+          "$python"
+        ]
+      },
+      {
         "label": "Dr.QP setup ROS",
         "type": "shell",
         "command": "${workspaceFolder}/.venv/bin/ansible-playbook playbooks/20_ros_setup.yml -i inventories/localhost.yml",
@@ -525,5 +536,7 @@
     },
     "python.analysis.typeCheckingMode": "standard",
     "python.defaultInterpreterPath": "/usr/bin/python3",
+
+    "ros2-topic-viewer.rosSetupScript": "/media/anton/dev/ros_workspaces/drqp_ws/src/Dr.QP/install/setup.bash",
   }
 }

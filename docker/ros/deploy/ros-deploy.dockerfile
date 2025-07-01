@@ -73,6 +73,9 @@ RUN groupadd -g $DEPLOY_GID $DEPLOY_USER \
     && sudo chown -R $DEPLOY_USER:$DEPLOY_USER $OVERLAY_WS
 USER $DEPLOY_USER
 
+RUN --mount=type=bind,readonly,source=.,target=/deploy-scripts \
+    /deploy-scripts/prod-venv.sh "$OVERLAY_WS/install"
+
 COPY ./ros_entrypoint.sh /
 ENTRYPOINT ["/ros_entrypoint.sh"]
 
