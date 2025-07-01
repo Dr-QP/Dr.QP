@@ -21,6 +21,7 @@
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
+import std_msgs.msg
 
 from statemachine import State, StateMachine
 
@@ -45,7 +46,18 @@ class RobotState(Node):
     def __init__(self):
         super().__init__('drqp_robot_state')
 
+        self.state_pub = self.create_publisher(std_msgs.msg.String, '/robot_state', qos_profile=1)
         self.robot_state_machine = RobotStateMachine()
+
+        self.robot_state_machine.add_listener(self)
+        # self.robot_state_machine.add_state_changed_listener(self.state_changed)
+
+        self.robot_state_machine.activate_initial_state()
+
+    def on_enter_state(self, target_state: State):
+        msg = std_msgs.msg.String()
+        msg.data = target_state.name
+        self.state_pub.publish(msg)
 
 
 def main():
