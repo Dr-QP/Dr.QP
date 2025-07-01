@@ -148,8 +148,8 @@ jobs:
           time ./scripts/ros-dep.sh
           time colcon build --mixin coverage-pytest ninja rel-with-deb-info --event-handlers=console_cohesion+ --cmake-args -D DRQP_ENABLE_COVERAGE=ON
           /prod-venv.sh "$PWD/install"
-          source "$PWD/install/setup.bash"
-          source "$PWD.venv-prod/bin/activate"
+          source "install/setup.bash"
+          source ".venv-prod/bin/activate"
           time colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure
 
       - name: Process llvm coverage
@@ -265,8 +265,8 @@ jobs:
               time ./scripts/ros-dep.sh
               time colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+
               /prod-venv.sh "$PWD/install"
-              source "$PWD/install/setup.bash"
-              source "$PWD.venv-prod/bin/activate"
+              source "install/setup.bash"
+              source ".venv-prod/bin/activate"
               time colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure
 
   build-deploy-image:
