@@ -22,8 +22,6 @@ import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 
-from statemachine import State, StateMachine
-
 
 class RobotState(Node):
     def __init__(self):
