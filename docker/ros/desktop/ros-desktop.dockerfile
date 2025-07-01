@@ -28,6 +28,7 @@ ENV CXX=clang++
 
 # Setup entrypoint
 COPY ../deploy/ros_entrypoint.sh /
+COPY ../deploy/prod-venv.sh /
 ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["bash"]
 
