@@ -57,14 +57,13 @@ class RobotState(Node):
         self.robot_state_machine = RobotStateMachine()
 
         self.robot_state_machine.add_listener(self)
-        # self.robot_state_machine.add_state_changed_listener(self.state_changed)
 
-        self.robot_state_machine.activate_initial_state()
+        self.on_enter_state(self.robot_state_machine.current_state)
 
-    def on_enter_state(self, target_state: State):
-        self.get_logger().info(f'Robot state changed to {target_state.name}')
+    def on_enter_state(self, target: State):
+        self.get_logger().info(f'Robot state changed to {target.value}')
         msg = std_msgs.msg.String()
-        msg.data = target_state.name
+        msg.data = target.value
         self.state_pub.publish(msg)
 
 
