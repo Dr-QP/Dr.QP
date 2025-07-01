@@ -28,7 +28,7 @@ class RobotState(Node):
         super().__init__('drqp_robot_state')
 
 
-if __name__ == '__main__':
+def main():
     rclpy.init()
     node = RobotState()
     try:
@@ -40,3 +40,7 @@ if __name__ == '__main__':
         # Only call shutdown if ROS is still initialized
         if rclpy.ok():
             rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()
