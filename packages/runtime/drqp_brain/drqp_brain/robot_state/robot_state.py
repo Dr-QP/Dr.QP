@@ -25,9 +25,19 @@ from rclpy.node import Node
 from statemachine import State, StateMachine
 
 
+class RobotStateMachine(StateMachine):
+    """A robot state machine."""
+
+    torque_off = State(initial=True)
+    initializing = State()
+    torque_on = State()
+
+
 class RobotState(Node):
     def __init__(self):
         super().__init__('drqp_robot_state')
+
+        self.robot_state_machine = RobotStateMachine()
 
 
 def main():
