@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from drqp_brain.robot_state.robot_state_node import RobotStateMachine, State
+from .robot_state_node import RobotStateMachine, State
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
