@@ -22,7 +22,7 @@ import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 import std_msgs.msg
-
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 from statemachine import State, StateMachine
 
 
@@ -46,7 +46,14 @@ class RobotState(Node):
     def __init__(self):
         super().__init__('drqp_robot_state')
 
-        self.state_pub = self.create_publisher(std_msgs.msg.String, '/robot_state', qos_profile=1)
+        qos_profile = QoSProfile(depth=1)
+        qos_profile.durability = (
+            QoSDurabilityPolicy.TRANSIENT_LOCAL
+        )  # make state available to late joiners
+        self.state_pub = self.create_publisher(
+            std_msgs.msg.String, '/robot_state', qos_profile=qos_profile
+        )
+
         self.robot_state_machine = RobotStateMachine()
 
         self.robot_state_machine.add_listener(self)
@@ -55,6 +62,7 @@ class RobotState(Node):
         self.robot_state_machine.activate_initial_state()
 
     def on_enter_state(self, target_state: State):
+        self.get_logger().info(f'Robot state changed to {target_state.name}')
         msg = std_msgs.msg.String()
         msg.data = target_state.name
         self.state_pub.publish(msg)
