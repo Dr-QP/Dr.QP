@@ -21,9 +21,9 @@
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
-import std_msgs.msg
-from rclpy.qos import QoSProfile, QoSDurabilityPolicy
+from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 from statemachine import State, StateMachine
+import std_msgs.msg
 
 
 class RobotStateMachine(StateMachine):
