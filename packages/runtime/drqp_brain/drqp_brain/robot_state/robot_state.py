@@ -23,6 +23,8 @@ from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 import std_msgs.msg
 
+from statemachine import State, StateMachine
+
 
 class RobotStateMachine(StateMachine):
     """A robot state machine."""
