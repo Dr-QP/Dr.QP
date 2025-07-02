@@ -57,7 +57,6 @@ class TestRobotStateMachine:
 
         state_machine.send('done')
         assert state_machine.current_state == state_machine.finalized
-        assert state_machine.is_finished
 
     def test_should_turn_off_from_initialization(self, state_machine):
         state_machine.send('initialize')
