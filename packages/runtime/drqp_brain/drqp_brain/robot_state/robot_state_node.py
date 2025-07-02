@@ -25,6 +25,7 @@ from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 import std_msgs.msg
 
 from .robot_state_machine import RobotStateMachine, State
+from statemachine.exceptions import TransitionNotAllowed
 
 
 class RobotStateNode(Node):
@@ -59,10 +60,10 @@ class RobotStateNode(Node):
 
     def process_event(self, msg: std_msgs.msg.String):
         self.get_logger().info(f'Robot event received: {msg.data}')
-        if msg.data not in self.robot_state_machine.events:
-            self.get_logger().error(f'Unknown event: {msg.data}')
-            return
-        self.robot_state_machine.send(msg.data)
+        try:
+            self.robot_state_machine.send(msg.data)
+        except TransitionNotAllowed as e:
+            self.get_logger().error(f'Failed to process event {msg.data}: {e}')
 
 
 def main():

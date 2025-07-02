@@ -34,6 +34,7 @@ from rclpy.executors import ExternalShutdownException
 import rclpy.node
 import rclpy.utilities
 import sensor_msgs.msg
+import std_msgs.msg
 
 kFemurOffsetAngle = -13.11
 kTibiaOffsetAngle = -32.9
@@ -132,20 +133,26 @@ class HexapodController(rclpy.node.Node):
         self.gaits = [GaitType.tripod, GaitType.ripple, GaitType.wave]
         self.phase_steps_per_cycle = [20, 25, 40]  # per gait
 
-        self.joystick_sub = self.create_subscription(
-            sensor_msgs.msg.Joy, '/joy', self.process_inputs, qos_profile=10
-        )
         self.joystick_buttons = [
             JoystickButton(ButtonIndex.DpadLeft, lambda b, e: self.prev_gait()),
             JoystickButton(ButtonIndex.DpadRight, lambda b, e: self.next_gait()),
-            JoystickButton(ButtonIndex.PS, lambda b, e: self.kill_switch()),
+            JoystickButton(ButtonIndex.PS, lambda b, e: self.process_kill_switch()),
         ]
+        self.joystick_sub = self.create_subscription(
+            sensor_msgs.msg.Joy, '/joy', self.process_inputs, qos_profile=10
+        )
+
+        self.kill_switch_enabled = False
+        self.robot_state = None
+        self.robot_state_sub = self.create_subscription(
+            std_msgs.msg.String, '/robot_state', self.process_robot_state, qos_profile=10
+        )
+        self.robot_event_pub = self.create_publisher(
+            std_msgs.msg.String, '/robot_event', qos_profile=10
+        )
 
         self.servo_goals_pub = self.create_publisher(
             drqp_interfaces.msg.MultiServoPositionGoal, '/servo_goals', qos_profile=50
-        )
-        self.kill_switch_pub = self.create_publisher(
-            drqp_interfaces.msg.KillSwitch, '/kill_switch', qos_profile=1
         )
         self.setup_hexapod()
 
@@ -244,11 +251,27 @@ class HexapodController(rclpy.node.Node):
 
         self.servo_goals_pub.publish(msg)
 
-    def kill_switch(self):
+    def process_robot_state(self, msg: std_msgs.msg.String):
+        self.robot_state = msg.data
+
+        if self.robot_state == 'torque_off':
+            self.get_logger().info('Torque is off, stopping')
+            self.timer.cancel()
+            self.kill_switch_enabled = True
+        else:
+            self.kill_switch_enabled = False
+
+        if self.robot_state == 'torque_on':
+            self.get_logger().info('Torque is on, starting')
+            self.timer.reset()
+
+    def process_kill_switch(self):
         self.get_logger().info('Kill switch pressed')
-        msg = drqp_interfaces.msg.KillSwitch()
-        msg.header.stamp = self.get_clock().now().to_msg()
-        self.kill_switch_pub.publish(msg)
+
+        if self.kill_switch_enabled:
+            self.robot_event_pub.publish(std_msgs.msg.String(data='turn_off'))
+        else:
+            self.robot_event_pub.publish(std_msgs.msg.String(data='turn_on'))
 
 
 def main():
