@@ -41,6 +41,10 @@ class RobotStateNode(Node):
             std_msgs.msg.String, '/robot_state', qos_profile=qos_profile
         )
 
+        self.event_sub = self.create_subscription(
+            std_msgs.msg.String, '/robot_event', self.process_event, qos_profile=10
+        )
+
         self.robot_state_machine = RobotStateMachine()
 
         self.robot_state_machine.add_listener(self)
@@ -52,6 +56,13 @@ class RobotStateNode(Node):
         msg = std_msgs.msg.String()
         msg.data = target.value
         self.state_pub.publish(msg)
+
+    def process_event(self, msg: std_msgs.msg.String):
+        self.get_logger().info(f'Robot event received: {msg.data}')
+        if msg.data not in self.robot_state_machine.events:
+            self.get_logger().error(f'Unknown event: {msg.data}')
+            return
+        self.robot_state_machine.send(msg.data)
 
 
 def main():
