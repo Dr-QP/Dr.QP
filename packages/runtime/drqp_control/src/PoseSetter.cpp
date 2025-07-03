@@ -58,6 +58,11 @@ public:
       create_subscription<drqp_interfaces::msg::MultiServoPositionGoal>(
         "/servo_goals", 10, [this](const drqp_interfaces::msg::MultiServoPositionGoal& msg) {
           try {
+            if (!torqueIsOn_) {
+              RCLCPP_INFO(get_logger(), "Torque is off, turning on to avoid jerking.");
+              torqueOn();
+            }
+
             if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_SYNC) {
               handleSyncPose(msg);
             } else if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_ASYNC) {
@@ -101,12 +106,16 @@ public:
   {
     XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
     servo.torqueOn();
+
+    torqueIsOn_ = true;
   }
 
   void torqueOff()
   {
     XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
     servo.torqueOff();
+
+    torqueIsOn_ = false;
   }
 
   void handleSyncPose(const drqp_interfaces::msg::MultiServoPositionGoal& msg)
@@ -182,6 +191,7 @@ public:
   rclcpp::Subscription<drqp_interfaces::msg::MultiServoPositionGoal>::SharedPtr
     multiServoPositionGoalSubscription_;
 
+  bool torqueIsOn_ = false;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr torqueOnSubscription_;
 
   std::unique_ptr<SerialProtocol> servoSerial_;
