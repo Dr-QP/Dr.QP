@@ -159,6 +159,10 @@ class HexapodController(rclpy.node.Node):
         self.servo_goals_pub = self.create_publisher(
             drqp_interfaces.msg.MultiServoPositionGoal, '/servo_goals', qos_profile=50
         )
+        self.servo_torque_on_pub = self.create_publisher(
+            std_msgs.msg.Bool, '/servo_torque_on', qos_profile=10
+        )
+
         self.setup_hexapod()
 
         self.loop_timer = self.create_timer(1 / self.fps, self.loop, autostart=False)
@@ -265,6 +269,8 @@ class HexapodController(rclpy.node.Node):
             self.kill_switch_enabled = True
         else:
             self.kill_switch_enabled = False
+
+        self.servo_torque_on_pub.publish(std_msgs.msg.Bool(data=not self.kill_switch_enabled))
 
         if self.robot_state == 'torque_on':
             self.get_logger().info('Torque is on, starting')

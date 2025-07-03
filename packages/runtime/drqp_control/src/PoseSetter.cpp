@@ -73,7 +73,7 @@ public:
         });
 
     torqueOnSubscription_ = create_subscription<std_msgs::msg::Bool>(
-      "/torque_on", 10, [this](const std_msgs::msg::Bool requestedState) {
+      "/servo_torque_on", 10, [this](const std_msgs::msg::Bool requestedState) {
         try {
           if (requestedState.data) {
             torqueOn();
@@ -90,8 +90,6 @@ public:
           RCLCPP_ERROR(get_logger(), "Unknown exception occurred in kill_switch handler.");
         }
       });
-
-    torqueOn();
   }
 
   ~PoseSetter()
