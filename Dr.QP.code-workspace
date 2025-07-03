@@ -163,7 +163,7 @@
         "command": "colcon",
         "args": [
           "build",
-          "--symlink-install",
+          // "--symlink-install", // It has to be off for the drqp_brain/setup.cfg/build_script/executable setting to be respected. No idea why it doesn't work with symlink install
           "--event-handlers",
           "console_cohesion+",
           "--base-paths",
