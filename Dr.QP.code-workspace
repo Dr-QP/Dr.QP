@@ -292,7 +292,7 @@
       {
         "label": "Dr.QP prod-venv",
         "type": "shell",
-        "command": "${workspaceFolder}/docker/ros/deploy/prod-venv.sh",
+        "command": "${workspaceFolder}/docker/ros/deploy/prod-venv.sh build", // In case of symlink-install files are in build folder
         "options": {
           "cwd": "${workspaceFolder}"
         },
