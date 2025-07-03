@@ -22,10 +22,10 @@ import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
+from statemachine.exceptions import TransitionNotAllowed
 import std_msgs.msg
 
 from .robot_state_machine import RobotStateMachine, State
-from statemachine.exceptions import TransitionNotAllowed
 
 
 class RobotStateNode(Node):
