@@ -63,7 +63,8 @@
       "davidkol.fastcompare",
       "samuelcolvin.jinjahtml",
       "ms-azuretools.vscode-containers",
-      "ranch-hand-robotics.rde-pack"
+      "Ranch-Hand-Robotics.rde-ros-2",
+      "Ranch-Hand-Robotics.urdf-editor"
     ]
     // cSpell:enable
   },
