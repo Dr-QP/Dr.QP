@@ -121,7 +121,7 @@ class HexapodController(rclpy.node.Node):
     """
 
     def __init__(self):
-        super().__init__('drqp_hexapod_controller')
+        super().__init__('drqp_brain')
 
         self.direction = Point3D([0, 0, 0])
         self.rotation = 0
