@@ -32,6 +32,7 @@ import numpy as np
 import rclpy
 from rclpy.executors import ExternalShutdownException
 import rclpy.node
+from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 import rclpy.utilities
 import sensor_msgs.msg
 import std_msgs.msg
@@ -144,8 +145,12 @@ class HexapodController(rclpy.node.Node):
 
         self.kill_switch_enabled = False
         self.robot_state = None
+
+        qos_profile = QoSProfile(depth=1)
+        # make state available to late joiners
+        qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
         self.robot_state_sub = self.create_subscription(
-            std_msgs.msg.String, '/robot_state', self.process_robot_state, qos_profile=10
+            std_msgs.msg.String, '/robot_state', self.process_robot_state, qos_profile=qos_profile
         )
         self.robot_event_pub = self.create_publisher(
             std_msgs.msg.String, '/robot_event', qos_profile=10
@@ -269,9 +274,9 @@ class HexapodController(rclpy.node.Node):
         self.get_logger().info('Kill switch pressed')
 
         if self.kill_switch_enabled:
-            self.robot_event_pub.publish(std_msgs.msg.String(data='turn_off'))
-        else:
             self.robot_event_pub.publish(std_msgs.msg.String(data='turn_on'))
+        else:
+            self.robot_event_pub.publish(std_msgs.msg.String(data='turn_off'))
 
 
 def main():
