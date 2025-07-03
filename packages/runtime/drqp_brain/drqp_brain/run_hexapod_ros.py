@@ -116,12 +116,12 @@ class HexapodController(rclpy.node.Node):
     ROS node for controlling Dr.QP hexapod robot.
 
     Subscribes to /joy topic for joystick input, processes it with WalkController,
-    and publishes joint states to /joint_states topic.
+    and publishes positions to /servo_goals topic.
 
     """
 
     def __init__(self):
-        super().__init__('drqp_hexapod_joint_state_publisher')
+        super().__init__('drqp_hexapod_controller')
 
         self.direction = Point3D([0, 0, 0])
         self.rotation = 0

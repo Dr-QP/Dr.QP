@@ -34,7 +34,12 @@ class RobotStateMachine(StateMachine):
 
     # Transitions/Events
     initialize = torque_off.to(initializing)
-    turn_on = initializing.to(torque_on)
+    turn_on = (
+        initializing.to(torque_on)
+        | torque_off.to(
+            torque_on
+        )  # allow to turn on from torque off state until init sequence is built
+    )
     turn_off = torque_on.to(torque_off) | initializing.to(torque_off) | finalizing.to(torque_off)
     finalize = torque_on.to(finalizing)
     done = finalizing.to(finalized)
