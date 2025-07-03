@@ -161,7 +161,7 @@ class HexapodController(rclpy.node.Node):
         )
         self.setup_hexapod()
 
-        self.timer = self.create_timer(1 / self.fps, self.loop)
+        self.timer = self.create_timer(1 / self.fps, self.loop, autostart=False)
 
     def setup_hexapod(self):
         drqp_coxa = 0.053  # in meters
