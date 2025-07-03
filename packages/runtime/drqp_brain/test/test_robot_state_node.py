@@ -29,6 +29,7 @@ from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
 import pytest
 import rclpy
+from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 import std_msgs.msg
 
 
@@ -84,16 +85,18 @@ class TestRobotStateMachineNode(unittest.TestCase):
     def test_publishes_state(self, proc_output):
         """Check whether state is published."""
         msgs_received = []
+        qos_profile = QoSProfile(depth=1)
+        # make state available to late joiners
+        qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
         self.robot_state_sub = self.node.create_subscription(
-            std_msgs.msg.String, '/robot_state', lambda msg: msgs_received.append(msg), 10
+            std_msgs.msg.String, '/robot_state', lambda msg: msgs_received.append(msg), qos_profile
         )
 
         try:
             end_time = time.time() + 5
-            while time.time() < end_time:
+            while time.time() < end_time and len(msgs_received) == 0:
                 rclpy.spin_once(self.node, timeout_sec=0.01)
-                if len(msgs_received) > 0:
-                    break
+
             self.assertGreater(len(msgs_received), 0)
             self.assertEqual(msgs_received[0].data, 'torque_off')
         finally:
