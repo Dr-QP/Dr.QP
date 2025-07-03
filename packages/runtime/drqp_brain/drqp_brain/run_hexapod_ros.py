@@ -161,7 +161,7 @@ class HexapodController(rclpy.node.Node):
         )
         self.setup_hexapod()
 
-        self.timer = self.create_timer(1 / self.fps, self.loop, autostart=False)
+        self.loop_timer = self.create_timer(1 / self.fps, self.loop, autostart=False)
 
     def setup_hexapod(self):
         drqp_coxa = 0.053  # in meters
@@ -261,14 +261,14 @@ class HexapodController(rclpy.node.Node):
 
         if self.robot_state == 'torque_off':
             self.get_logger().info('Torque is off, stopping')
-            self.timer.cancel()
+            self.loop_timer.cancel()
             self.kill_switch_enabled = True
         else:
             self.kill_switch_enabled = False
 
         if self.robot_state == 'torque_on':
             self.get_logger().info('Torque is on, starting')
-            self.timer.reset()
+            self.loop_timer.reset()
 
     def process_kill_switch(self):
         self.get_logger().info('Kill switch pressed')
