@@ -146,10 +146,10 @@ jobs:
           sudo apt update
           rosdep update
           ./scripts/ros-dep.sh
-          colcon build --mixin coverage-pytest ninja rel-with-deb-info --event-handlers=console_cohesion+ --cmake-args -D DRQP_ENABLE_COVERAGE=ON
-          /prod-venv.sh "$PWD/install"
-          source "install/setup.bash"
-          source ".venv-prod/bin/activate"
+          source "scripts/setup.bash"
+          python -m colcon build --mixin coverage-pytest ninja rel-with-deb-info --event-handlers=console_cohesion+ --cmake-args -D DRQP_ENABLE_COVERAGE=ON
+
+          source "scripts/setup.bash"
           python -m colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure
 
       - name: Process llvm coverage
@@ -263,10 +263,10 @@ jobs:
               sudo apt update
               rosdep update
               ./scripts/ros-dep.sh
-              colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+
-              /prod-venv.sh "$PWD/install"
-              source "install/setup.bash"
-              source ".venv-prod/bin/activate"
+              source "scripts/setup.bash"
+              python -m colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+
+
+              source "scripts/setup.bash"
               python -m colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure
 
   build-deploy-image:

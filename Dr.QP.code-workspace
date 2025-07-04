@@ -160,8 +160,10 @@
       {
         "label": "Dr.QP colcon build",
         "type": "ROS2",
-        "command": "colcon",
+        "command": "python3",
         "args": [
+          "-m",
+          "colcon",
           "build",
           // "--symlink-install", // It has to be off for the drqp_brain/setup.cfg/build_script/executable setting to be respected. No idea why it doesn't work with symlink install
           "--event-handlers",
@@ -200,8 +202,10 @@
       {
         "label": "Dr.QP colcon test",
         "type": "ROS2",
-        "command": "colcon",
+        "command": "python3",
         "args": [
+          "-m",
+          "colcon",
           "test",
           "--event-handlers",
           "console_cohesion+",
@@ -400,7 +404,8 @@
     "cmake.generator": "Ninja",
     "cmake.exportCompileCommandsFile": true,
 
-    "ROS2.distro": "jazzy",
+    // "ROS2.distro": "jazzy",
+    "ROS2.rosSetupScript": "${workspaceFolder}/scripts/setup.bash",
     "ament-task-provider.envSetup": "source /opt/ros/jazzy/setup.bash",
 
     // Draft for .micromamba ros-jazzy, but still doesn't work
