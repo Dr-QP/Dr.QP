@@ -63,7 +63,8 @@
       "davidkol.fastcompare",
       "samuelcolvin.jinjahtml",
       "ms-azuretools.vscode-containers",
-      "ranch-hand-robotics.rde-pack"
+      "Ranch-Hand-Robotics.rde-ros-2",
+      "Ranch-Hand-Robotics.urdf-editor"
     ]
     // cSpell:enable
   },
@@ -159,8 +160,10 @@
       {
         "label": "Dr.QP colcon build",
         "type": "ROS2",
-        "command": "colcon",
+        "command": "python3",
         "args": [
+          "-m",
+          "colcon",
           "build",
           "--symlink-install",
           "--event-handlers",
@@ -199,8 +202,10 @@
       {
         "label": "Dr.QP colcon test",
         "type": "ROS2",
-        "command": "colcon",
+        "command": "python3",
         "args": [
+          "-m",
+          "colcon",
           "test",
           "--event-handlers",
           "console_cohesion+",
@@ -241,7 +246,7 @@
       {
         "label": "Dr.QP clean",
         "type": "shell",
-        "command": "rm -rf build/*; rm -rf install/*; rm -rf log/*; rm -rf lcov/*; rm -rf .cache/*; rm -rf docs/_build/*; rm -rf **/__pycache__/",
+        "command": "${workspaceFolder}/scripts/clean.fish",
         "options": {
           "cwd": "${workspaceFolder}"
         },
@@ -281,6 +286,17 @@
         "label": "Dr.QP venv",
         "type": "shell",
         "command": "python3 -m venv ${workspaceFolder}/.venv && ${workspaceFolder}/.venv/bin/python3 -m pip install -r ${workspaceFolder}/requirements.txt", // Keep in sync with the command in .devcontainer/devcontainer.json
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": [
+          "$python"
+        ]
+      },
+      {
+        "label": "Dr.QP prod-venv",
+        "type": "shell",
+        "command": "${workspaceFolder}/docker/ros/deploy/prod-venv.sh build && ${workspaceFolder}/docker/ros/deploy/prod-venv.sh install",
         "options": {
           "cwd": "${workspaceFolder}"
         },
@@ -388,7 +404,8 @@
     "cmake.generator": "Ninja",
     "cmake.exportCompileCommandsFile": true,
 
-    "ROS2.distro": "jazzy",
+    // "ROS2.distro": "jazzy",
+    "ROS2.rosSetupScript": "${workspaceFolder}/scripts/setup.bash",
     "ament-task-provider.envSetup": "source /opt/ros/jazzy/setup.bash",
 
     // Draft for .micromamba ros-jazzy, but still doesn't work
@@ -525,5 +542,7 @@
     },
     "python.analysis.typeCheckingMode": "standard",
     "python.defaultInterpreterPath": "/usr/bin/python3",
+
+    "ros2-topic-viewer.rosSetupScript": "/media/anton/dev/ros_workspaces/drqp_ws/src/Dr.QP/install/setup.bash",
   }
 }

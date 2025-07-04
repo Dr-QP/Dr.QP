@@ -32,8 +32,10 @@ import numpy as np
 import rclpy
 from rclpy.executors import ExternalShutdownException
 import rclpy.node
+from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 import rclpy.utilities
 import sensor_msgs.msg
+import std_msgs.msg
 
 kFemurOffsetAngle = -13.11
 kTibiaOffsetAngle = -32.9
@@ -114,12 +116,12 @@ class HexapodController(rclpy.node.Node):
     ROS node for controlling Dr.QP hexapod robot.
 
     Subscribes to /joy topic for joystick input, processes it with WalkController,
-    and publishes joint states to /joint_states topic.
+    and publishes positions to /servo_goals topic.
 
     """
 
     def __init__(self):
-        super().__init__('drqp_hexapod_joint_state_publisher')
+        super().__init__('drqp_brain')
 
         self.direction = Point3D([0, 0, 0])
         self.rotation = 0
@@ -132,24 +134,37 @@ class HexapodController(rclpy.node.Node):
         self.gaits = [GaitType.tripod, GaitType.ripple, GaitType.wave]
         self.phase_steps_per_cycle = [20, 25, 40]  # per gait
 
-        self.joystick_sub = self.create_subscription(
-            sensor_msgs.msg.Joy, '/joy', self.process_inputs, qos_profile=10
-        )
         self.joystick_buttons = [
             JoystickButton(ButtonIndex.DpadLeft, lambda b, e: self.prev_gait()),
             JoystickButton(ButtonIndex.DpadRight, lambda b, e: self.next_gait()),
-            JoystickButton(ButtonIndex.PS, lambda b, e: self.kill_switch()),
+            JoystickButton(ButtonIndex.PS, lambda b, e: self.process_kill_switch()),
         ]
+        self.joystick_sub = self.create_subscription(
+            sensor_msgs.msg.Joy, '/joy', self.process_inputs, qos_profile=10
+        )
+
+        self.robot_state = None
+
+        qos_profile = QoSProfile(depth=1)
+        # make state available to late joiners
+        qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
+        self.robot_state_sub = self.create_subscription(
+            std_msgs.msg.String, '/robot_state', self.process_robot_state, qos_profile=qos_profile
+        )
+        self.robot_event_pub = self.create_publisher(
+            std_msgs.msg.String, '/robot_event', qos_profile=10
+        )
 
         self.servo_goals_pub = self.create_publisher(
             drqp_interfaces.msg.MultiServoPositionGoal, '/servo_goals', qos_profile=50
         )
-        self.kill_switch_pub = self.create_publisher(
-            drqp_interfaces.msg.KillSwitch, '/kill_switch', qos_profile=1
+        self.servo_torque_on_pub = self.create_publisher(
+            std_msgs.msg.Bool, '/servo_torque_on', qos_profile=10
         )
+
         self.setup_hexapod()
 
-        self.timer = self.create_timer(1 / self.fps, self.loop)
+        self.loop_timer = self.create_timer(1 / self.fps, self.loop, autostart=False)
 
     def setup_hexapod(self):
         drqp_coxa = 0.053  # in meters
@@ -244,11 +259,27 @@ class HexapodController(rclpy.node.Node):
 
         self.servo_goals_pub.publish(msg)
 
-    def kill_switch(self):
+    def process_robot_state(self, msg: std_msgs.msg.String):
+        self.robot_state = msg.data
+
+        torque_on = True
+        if self.robot_state == 'torque_off':
+            self.get_logger().info('Torque is off, stopping')
+            self.loop_timer.cancel()
+            torque_on = False
+        elif self.robot_state == 'torque_on':
+            self.get_logger().info('Torque is on, starting')
+            self.loop_timer.reset()
+
+        self.servo_torque_on_pub.publish(std_msgs.msg.Bool(data=torque_on))
+
+    def process_kill_switch(self):
         self.get_logger().info('Kill switch pressed')
-        msg = drqp_interfaces.msg.KillSwitch()
-        msg.header.stamp = self.get_clock().now().to_msg()
-        self.kill_switch_pub.publish(msg)
+
+        if self.robot_state == 'torque_off':
+            self.robot_event_pub.publish(std_msgs.msg.String(data='kill_switch_off'))
+        else:
+            self.robot_event_pub.publish(std_msgs.msg.String(data='kill_switch_on'))
 
 
 def main():

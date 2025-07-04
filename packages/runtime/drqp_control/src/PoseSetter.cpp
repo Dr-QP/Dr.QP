@@ -29,11 +29,12 @@
 
 #include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp/subscription_base.hpp>
+
+#include <std_msgs/msg/bool.hpp>
 
 #include <drqp_interfaces/msg/multi_servo_position_goal.hpp>
 #include <drqp_interfaces/msg/multi_servo_state.hpp>
-#include <drqp_interfaces/msg/kill_switch.hpp>
-#include <rclcpp/subscription_base.hpp>
 
 #include "drqp_control/RobotConfig.h"
 #include "drqp_control/DrQp.h"
@@ -57,12 +58,9 @@ public:
       create_subscription<drqp_interfaces::msg::MultiServoPositionGoal>(
         "/servo_goals", 10, [this](const drqp_interfaces::msg::MultiServoPositionGoal& msg) {
           try {
-            if (killModeActive_) {
-              RCLCPP_DEBUG(get_logger(), "Kill switch is on, not setting pose");
-              return;
-            } else if (rclcpp::Time(msg.header.stamp) < unkillTimestamp) {
-              RCLCPP_DEBUG(get_logger(), "Message is older than kill switch, not setting pose");
-              return;
+            if (!torqueIsOn_) {
+              RCLCPP_INFO(get_logger(), "Torque is off, turning on to avoid jerking.");
+              torqueOn();
             }
 
             if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_SYNC) {
@@ -79,22 +77,17 @@ public:
           }
         });
 
-    killSwitchSubscription_ = create_subscription<drqp_interfaces::msg::KillSwitch>(
-      "/kill_switch", 10, [this](const drqp_interfaces::msg::KillSwitch& msg) {
+    torqueOnSubscription_ = create_subscription<std_msgs::msg::Bool>(
+      "/servo_torque_on", 10, [this](const std_msgs::msg::Bool requestedState) {
         try {
-          if (!killModeActive_) {
-            killModeActive_ = true;
-
-            torqueOff();
-
-            RCLCPP_INFO(get_logger(), "Kill mode activated");
-          } else {
-            killModeActive_ = false;
-            unkillTimestamp = msg.header.stamp;
-
+          if (requestedState.data) {
             torqueOn();
 
-            RCLCPP_INFO(get_logger(), "Kill mode deactivated");
+            RCLCPP_INFO(get_logger(), "Torque is on");
+          } else {
+            torqueOff();
+
+            RCLCPP_INFO(get_logger(), "Torque is off");
           }
         } catch (std::exception& e) {
           RCLCPP_ERROR(get_logger(), "Exception occurred in kill_switch handler %s", e.what());
@@ -102,8 +95,6 @@ public:
           RCLCPP_ERROR(get_logger(), "Unknown exception occurred in kill_switch handler.");
         }
       });
-
-    torqueOn();
   }
 
   ~PoseSetter()
@@ -115,12 +106,16 @@ public:
   {
     XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
     servo.torqueOn();
+
+    torqueIsOn_ = true;
   }
 
   void torqueOff()
   {
     XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
     servo.torqueOff();
+
+    torqueIsOn_ = false;
   }
 
   void handleSyncPose(const drqp_interfaces::msg::MultiServoPositionGoal& msg)
@@ -196,9 +191,8 @@ public:
   rclcpp::Subscription<drqp_interfaces::msg::MultiServoPositionGoal>::SharedPtr
     multiServoPositionGoalSubscription_;
 
-  rclcpp::Subscription<drqp_interfaces::msg::KillSwitch>::SharedPtr killSwitchSubscription_;
-  bool killModeActive_ = false;
-  rclcpp::Time unkillTimestamp = this->get_clock()->now();
+  bool torqueIsOn_ = false;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr torqueOnSubscription_;
 
   std::unique_ptr<SerialProtocol> servoSerial_;
 };

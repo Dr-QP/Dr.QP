@@ -6,6 +6,7 @@ ARG ROS_DISTRO=jazzy
 ENV ROS_DISTRO=$ROS_DISTRO
 
 ARG CLANG_VERSION=20
+ARG OVERLAY_WS=/opt/ros/overlay_ws
 
 # Install ROS
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -18,7 +19,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       -vvv \
       -e "ci_mode=true clang_version=$CLANG_VERSION ros_distro=$ROS_DISTRO"
 
-WORKDIR /opt/ros/overlay_ws
+WORKDIR $OVERLAY_WS
 
 # Force clang installed by llvm.sh in /usr/lib/llvm-${CLANG_VERSION}/bin to be the default in docker
 ENV PATH="/usr/lib/llvm-${CLANG_VERSION}/bin:/root/.local/bin:$PATH"
@@ -27,6 +28,7 @@ ENV CXX=clang++
 
 # Setup entrypoint
 COPY ../deploy/ros_entrypoint.sh /
+
 ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["bash"]
 
