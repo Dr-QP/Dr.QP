@@ -147,11 +147,11 @@ jobs:
           rosdep update
           ./scripts/ros-dep.sh
           source "scripts/setup.bash"
-          python -m colcon build --mixin coverage-pytest ninja rel-with-deb-info --event-handlers=console_cohesion+ --cmake-args -D DRQP_ENABLE_COVERAGE=ON
+          python3 -m colcon build --mixin coverage-pytest ninja rel-with-deb-info --event-handlers=console_cohesion+ --cmake-args -D DRQP_ENABLE_COVERAGE=ON
 
           ./docker/ros/deploy/prod-venv.sh install # Update venv with dependencies from the build
 
-          python -m colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure
+          python3 -m colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure
 
       - name: Process llvm coverage
         shell: bash
@@ -265,11 +265,11 @@ jobs:
               rosdep update
               ./scripts/ros-dep.sh
               source "scripts/setup.bash"
-              python -m colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+
+              python3 -m colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+
 
               ./docker/ros/deploy/prod-venv.sh install # Update venv with dependencies from the build
 
-              python -m colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure
+              python3 -m colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure
 
   build-deploy-image:
     name: Deployment image
