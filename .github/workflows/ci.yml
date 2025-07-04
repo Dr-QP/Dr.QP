@@ -149,7 +149,8 @@ jobs:
           source "scripts/setup.bash"
           python -m colcon build --mixin coverage-pytest ninja rel-with-deb-info --event-handlers=console_cohesion+ --cmake-args -D DRQP_ENABLE_COVERAGE=ON
 
-          source "scripts/setup.bash"
+          ./docker/ros/deploy/prod-venv.sh install # Update venv with dependencies from the build
+
           python -m colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure
 
       - name: Process llvm coverage
@@ -266,7 +267,8 @@ jobs:
               source "scripts/setup.bash"
               python -m colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+
 
-              source "scripts/setup.bash"
+              ./docker/ros/deploy/prod-venv.sh install # Update venv with dependencies from the build
+
               python -m colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure
 
   build-deploy-image:
