@@ -143,7 +143,6 @@ class HexapodController(rclpy.node.Node):
             sensor_msgs.msg.Joy, '/joy', self.process_inputs, qos_profile=10
         )
 
-        self.kill_switch_enabled = False
         self.robot_state = None
 
         qos_profile = QoSProfile(depth=1)
@@ -263,26 +262,24 @@ class HexapodController(rclpy.node.Node):
     def process_robot_state(self, msg: std_msgs.msg.String):
         self.robot_state = msg.data
 
+        torque_on = True
         if self.robot_state == 'torque_off':
             self.get_logger().info('Torque is off, stopping')
             self.loop_timer.cancel()
-            self.kill_switch_enabled = True
-        else:
-            self.kill_switch_enabled = False
-
-        self.servo_torque_on_pub.publish(std_msgs.msg.Bool(data=not self.kill_switch_enabled))
-
-        if self.robot_state == 'torque_on':
+            torque_on = False
+        elif self.robot_state == 'torque_on':
             self.get_logger().info('Torque is on, starting')
             self.loop_timer.reset()
+
+        self.servo_torque_on_pub.publish(std_msgs.msg.Bool(data=torque_on))
 
     def process_kill_switch(self):
         self.get_logger().info('Kill switch pressed')
 
-        if self.kill_switch_enabled:
-            self.robot_event_pub.publish(std_msgs.msg.String(data='turn_on'))
+        if self.robot_state == 'torque_off':
+            self.robot_event_pub.publish(std_msgs.msg.String(data='kill_switch_off'))
         else:
-            self.robot_event_pub.publish(std_msgs.msg.String(data='turn_off'))
+            self.robot_event_pub.publish(std_msgs.msg.String(data='kill_switch_on'))
 
 
 def main():
