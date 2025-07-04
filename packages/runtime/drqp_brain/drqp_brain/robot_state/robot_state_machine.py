@@ -43,3 +43,6 @@ class RobotStateMachine(StateMachine):
     turn_off = torque_on.to(torque_off) | initializing.to(torque_off) | finalizing.to(torque_off)
     finalize = torque_on.to(finalizing)
     done = finalizing.to(finalized)
+
+    kill_switch_on = turn_off
+    kill_switch_off = turn_on
