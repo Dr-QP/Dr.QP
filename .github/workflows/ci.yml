@@ -149,8 +149,7 @@ jobs:
           source "scripts/setup.bash"
           python3 -m colcon build --mixin coverage-pytest ninja rel-with-deb-info --event-handlers=console_cohesion+ --cmake-args -D DRQP_ENABLE_COVERAGE=ON
 
-          ./docker/ros/deploy/prod-venv.sh install # Update venv with dependencies from the build
-          source "scripts/setup.bash"
+          source "scripts/setup.bash" --update-venv
 
           python3 -m colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure
 
@@ -268,8 +267,7 @@ jobs:
               source "scripts/setup.bash"
               python3 -m colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+
 
-              ./docker/ros/deploy/prod-venv.sh install # Update venv with dependencies from the build
-              source "scripts/setup.bash"
+              source "scripts/setup.bash" --update-venv
 
               python3 -m colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure
 
