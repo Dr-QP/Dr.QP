@@ -139,17 +139,19 @@
         "request": "launch",
         "program": "${workspaceFolder}/docs/source/notebooks/run_hexapod.py",
         "console": "integratedTerminal",
+        "python": "${workspaceFolder}/.venv/bin/python3",
       },
       {
         "name": "ROS run_hexapod.py",
         "type": "debugpy",
         "request": "launch",
-        "program": "${workspaceFolder}/docs/source/notebooks/run_hexapod_ros.py",
+        "program": "${workspaceFolder}/packages/runtime/drqp_brain/drqp_brain/run_hexapod_ros.py",
         "console": "integratedTerminal",
         "env": {
           // Force network mode for DDS network https://robotics.stackexchange.com/a/114955/38643
           // "FASTDDS_BUILTIN_TRANSPORTS": "UDPv4"
-        }
+        },
+        "python": "${workspaceFolder}/.venv-prod/bin/python3",
       }
     ]
   },
@@ -285,7 +287,7 @@
       {
         "label": "Dr.QP venv",
         "type": "shell",
-        "command": "python3 -m venv ${workspaceFolder}/.venv && ${workspaceFolder}/.venv/bin/python3 -m pip install -r ${workspaceFolder}/requirements.txt", // Keep in sync with the command in .devcontainer/devcontainer.json
+        "command": "python3 -m venv ${workspaceFolder}/.venv && ${workspaceFolder}/.venv/bin/python3 -m pip install -r ${workspaceFolder}/requirements.txt --use-pep517", // Keep in sync with the command in .devcontainer/devcontainer.json
         "options": {
           "cwd": "${workspaceFolder}"
         },
