@@ -142,6 +142,14 @@
         "python": "${workspaceFolder}/.venv/bin/python3",
       },
       {
+        "name": "ps5_dualsense.py",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${workspaceFolder}/docs/source/notebooks/ps5_dualsense.py",
+        "console": "integratedTerminal",
+        "python": "${workspaceFolder}/.venv/bin/python3",
+      },
+      {
         "name": "ROS run_hexapod.py",
         "type": "debugpy",
         "request": "launch",
@@ -537,7 +545,7 @@
       "ztick"
     ],
     "ansible.ansible.path": ".venv/bin/ansible",
-    "ansible.python.interpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "ansible.python.interpreterPath": "/home/anton/develop/Dr.QP/.venv-prod/bin/python",
     "files.associations": {
       "**/ansible/**/*.yml": "ansible",
       "**/ansible/**/*.yaml": "ansible",
