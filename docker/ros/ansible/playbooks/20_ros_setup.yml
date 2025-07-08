@@ -25,3 +25,4 @@
     - { role: nodejs, tags: ["nodejs"] }
     - { role: cmake_kitware, tags: ["cmake"] }
     - { role: clang, tags: ["clang"] }
+    - { role: dualsense_hidapi, tags: ["dualsense_hidapi"] }
