@@ -25,10 +25,18 @@
 #
 # linux:
 # # sudo apt install libhidapi-dev
-import numpy as np
+import curses
+import time
 
 from drqp_brain.geometry import Point3D
+import numpy as np
 from pydualsense import pydualsense
+
+
+def clear_console():
+    # print('\033[4A\033[2K', end='')
+    print('\033[2K', end='')
+
 
 ds = pydualsense()  # open controller
 ds.init()  # initialize controller
@@ -71,14 +79,36 @@ def close():
     ds.close()  # closing the controller
 
 
-def main():
+def print_trackpad_touch(stdscr, touch):
+    # 'Dualsense Touchpad class. Contains X and Y position of touch and if the touch isActive'
+    stdscr.addstr(f'id={touch.ID}, x={touch.X}, y={touch.Y}, isActive={touch.isActive}\n')
+
+
+def main(stdscr):
     loop = True
     while loop:
         inputs = get_controls()
-        print(f'{inputs.touchpad0=}, {inputs.touchpad1=}')
+
+        stdscr.clear()
+        print_trackpad_touch(stdscr, inputs.touchpad0)
+        print_trackpad_touch(stdscr, inputs.touchpad1)
+        stdscr.addstr(f'ps: {ds.state.ps}\n')
+        stdscr.addstr(f'share: {ds.state.share}\n')
+        stdscr.addstr(f'options: {ds.state.options}\n')
+        stdscr.addstr(f'micBtn: {ds.state.micBtn}\n')
+        stdscr.addstr(f'touch1: {ds.state.touch1}\n')
+        stdscr.addstr(f'touch2: {ds.state.touch2}\n')
+        stdscr.addstr(f'touchBtn: {ds.state.touchBtn}\n')
+        stdscr.addstr(f'touchFinger1: {ds.state.touchFinger1}\n')
+        stdscr.addstr(f'touchFinger2: {ds.state.touchFinger2}\n')
+        stdscr.addstr(f'touchLeft: {ds.state.touchLeft}\n')
+        stdscr.addstr(f'touchRight: {ds.state.touchRight}\n')
+        stdscr.refresh()
+
+        time.sleep(0.01)
         loop = not inputs.exit
     close()
 
 
 if __name__ == '__main__':
-    main()
+    curses.wrapper(main)
