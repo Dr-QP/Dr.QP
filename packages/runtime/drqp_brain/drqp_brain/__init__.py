@@ -22,6 +22,7 @@
 
 import argparse
 from enum import auto, Enum
+import time
 from typing import Callable
 
 from drqp_brain.geometry import Point3D
@@ -238,7 +239,23 @@ class HexapodBrain(rclpy.node.Node):
         )
         self.publish_servo_goals()
 
-    def publish_servo_goals(self):
+    def initialization_sequence(self):
+        self.hexapod.forward_kinematics(0, -105, 95)
+        self.publish_servo_goals(playtime_ms=900)
+        time.sleep(1.0)
+
+        # - Turn torque on for femur
+        # - Move all femur to -105
+        # - Turn torque on for tibia
+        # - Move all tibia to 0
+        # - Turn torque on for coxa
+        # - Move all coxa to 0
+        # - Move all tibia to 95
+        # - Use walk controller to move to default position slowly increasing body height
+
+        self.robot_event_pub.publish(std_msgs.msg.String(data='initializing_done'))
+
+    def publish_servo_goals(self, playtime_ms=0):
         msg = drqp_interfaces.msg.MultiServoPositionGoal()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.mode = drqp_interfaces.msg.MultiServoPositionGoal.MODE_ASYNC
@@ -253,7 +270,7 @@ class HexapodBrain(rclpy.node.Node):
                 goal = drqp_interfaces.msg.ServoPositionGoal(
                     joint_name=f'dr_qp/{leg.label.name}_{joint}',
                     position_as_radians=float(np.radians(angle)),
-                    playtime_ms=0,
+                    playtime_ms=playtime_ms,
                 )
                 msg.goals.append(goal)
 
@@ -267,6 +284,9 @@ class HexapodBrain(rclpy.node.Node):
             self.get_logger().info('Torque is off, stopping')
             self.loop_timer.cancel()
             torque_on = False
+        elif self.robot_state == 'initializing':
+            self.get_logger().info('Initializing')
+            self.initialization_sequence()
         elif self.robot_state == 'torque_on':
             self.get_logger().info('Torque is on, starting')
             self.loop_timer.reset()

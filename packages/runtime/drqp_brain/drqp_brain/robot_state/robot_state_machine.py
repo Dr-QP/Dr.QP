@@ -45,4 +45,6 @@ class RobotStateMachine(StateMachine):
     done = finalizing.to(finalized)
 
     kill_switch_on = turn_off
-    kill_switch_off = turn_on
+    kill_switch_off = initialize
+    initializing_done = turn_on
+    finalizing_done = done
