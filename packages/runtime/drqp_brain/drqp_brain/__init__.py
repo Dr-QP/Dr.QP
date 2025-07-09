@@ -355,6 +355,9 @@ class HexapodBrain(rclpy.node.Node):
         if self.robot_state == 'torque_off':
             self.get_logger().info('Torque is off, stopping')
             self.loop_timer.cancel()
+            torque_on_msg = drqp_interfaces.msg.TorqueOn()
+            torque_on_msg.torque_on.append(False)
+            self.servo_torque_on_pub.publish(torque_on_msg)
         elif self.robot_state == 'initializing':
             self.get_logger().info('Initializing')
             self.initialization_sequence()
