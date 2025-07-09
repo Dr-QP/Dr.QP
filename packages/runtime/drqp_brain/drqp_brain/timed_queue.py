@@ -39,16 +39,13 @@ class TimedQueue:
         if not self.queue or self.timer:
             return
 
-        delay, _ = self.queue[0]
+        delay, action = self.queue.pop(0)
         self.timer = self.node.create_timer(delay, self.execute)
+        action()
 
     def execute(self):
         if self.timer:
             self.timer.destroy()
             self.timer = None
-
-        if len(self.queue) > 0:
-            _, action = self.queue.pop(0)
-            action()
 
         self.__next()
