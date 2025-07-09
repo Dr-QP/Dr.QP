@@ -23,6 +23,7 @@
 #include <drqp_serial/SerialFactory.h>
 #include <drqp_a1_16_driver/XYZrobotServo.h>
 
+#include <array>
 #include <exception>
 #include <memory>
 #include <string>
@@ -59,11 +60,6 @@ public:
       create_subscription<drqp_interfaces::msg::MultiServoPositionGoal>(
         "/servo_goals", 10, [this](const drqp_interfaces::msg::MultiServoPositionGoal& msg) {
           try {
-            if (!torqueIsOn_) {
-              RCLCPP_INFO(get_logger(), "Torque is off, turning on to avoid jerking.");
-              torqueOn();
-            }
-
             if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_SYNC) {
               handleSyncPose(msg);
             } else if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_ASYNC) {
@@ -145,7 +141,11 @@ public:
     XYZrobotServo servo(*servoSerial_, servoId);
     servo.torqueOn();
 
-    torqueIsOn_ = true;
+    if (servoId == XYZrobotServo::kBroadcastId) {
+      torqueIsOn_.fill(true);
+    } else {
+      torqueIsOn_[servoId] = true;
+    }
   }
 
   void torqueOff(const uint8_t servoId = XYZrobotServo::kBroadcastId)
@@ -153,7 +153,11 @@ public:
     XYZrobotServo servo(*servoSerial_, servoId);
     servo.torqueOff();
 
-    torqueIsOn_ = false;
+    if (servoId == XYZrobotServo::kBroadcastId) {
+      torqueIsOn_.fill(false);
+    } else {
+      torqueIsOn_[servoId] = false;
+    }
   }
 
   void rebootServos()
@@ -180,6 +184,9 @@ public:
         RCLCPP_ERROR(get_logger(), "Unknown joint name %s", pos.joint_name.c_str());
         continue;
       }
+      if (!torqueIsOn_[servoValues->id]) {
+        continue;
+      }
       sposCmd.at(index) = {servoValues->position, SET_POSITION_CONTROL, servoValues->id};
     }
 
@@ -199,6 +206,9 @@ public:
         RCLCPP_ERROR(get_logger(), "Unknown joint name %s", pos.joint_name.c_str());
         continue;
       }
+      if (!torqueIsOn_[servoValues->id]) {
+        continue;
+      }
       iposCmd.at(index) = {
         servoValues->position, SET_POSITION_CONTROL, servoValues->id,
         millisToPlaytime(pos.playtime_ms)};
@@ -216,14 +226,17 @@ public:
 
       servoState.joint_name = posGoal.joint_name;
       servoState.position_as_radians = posGoal.position_as_radians;
+
       if (
         auto servoValues =
           robotConfig_.jointToServo({posGoal.joint_name, posGoal.position_as_radians})) {
         servoState.raw.id = servoValues->id;
         servoState.raw.position = servoValues->position;
+
+        servoState.torque_on = torqueIsOn_[servoValues->id];
       }
 
-      multiServoStates.servos.emplace_back(servoState);
+      multiServoStates.servos.emplace_back(std::move(servoState));
     }
     servoStatesPublisher_->publish(multiServoStates);
   }
@@ -235,7 +248,7 @@ public:
   rclcpp::Subscription<drqp_interfaces::msg::MultiServoPositionGoal>::SharedPtr
     multiServoPositionGoalSubscription_;
 
-  bool torqueIsOn_ = false;
+  std::array<bool, 255> torqueIsOn_;
   rclcpp::Subscription<drqp_interfaces::msg::TorqueOn>::SharedPtr torqueOnSubscription_;
 
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr rebootServoSubscription_;
