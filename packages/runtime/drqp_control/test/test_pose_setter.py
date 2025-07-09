@@ -22,7 +22,12 @@ from pathlib import Path
 import time
 import unittest
 
-from drqp_interfaces.msg import MultiServoPositionGoal, MultiServoState, ServoPositionGoal, TorqueOn
+from drqp_interfaces.msg import (
+    MultiServoPositionGoal,
+    MultiServoState,
+    ServoPositionGoal,
+    TorqueOn,
+)
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, TimerAction
 from launch.substitutions import LaunchConfiguration

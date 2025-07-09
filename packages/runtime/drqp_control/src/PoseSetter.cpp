@@ -114,7 +114,6 @@ public:
               }
             }
           }
-
         } catch (std::exception& e) {
           RCLCPP_ERROR(get_logger(), "Exception occurred in kill_switch handler %s", e.what());
         } catch (...) {

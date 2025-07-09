@@ -22,7 +22,6 @@
 
 import argparse
 from enum import auto, Enum
-import time
 from typing import Callable
 
 from drqp_brain.geometry import Point3D
