@@ -167,6 +167,7 @@ public:
   {
     XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
     servo.reboot();
+    torqueIsOn_.fill(false);
   }
 
   void handleSyncPose(const drqp_interfaces::msg::MultiServoPositionGoal& msg)
