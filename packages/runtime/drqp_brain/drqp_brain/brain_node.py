@@ -26,6 +26,7 @@ from typing import Callable
 
 from drqp_brain.geometry import Point3D
 from drqp_brain.models import HexapodModel
+from drqp_brain.timed_queue import TimedQueue
 from drqp_brain.walk_controller import GaitType, WalkController
 import drqp_interfaces.msg
 import numpy as np
@@ -109,37 +110,6 @@ class JoystickButton:
 
         if self.last_state == ButtonState.Released and self.current_state == ButtonState.Pressed:
             self.event_handler(self, ButtonEvent.Tapped)
-
-
-class TimedQueue:
-    """A queue that allows to execute a sequence of actions with a delay between them."""
-
-    def __init__(self, node: rclpy.node.Node):
-        self.node = node
-        self.queue = []
-        self.timer = None
-
-    def add(self, delay: float, action: Callable):
-        self.queue.append((delay, action))
-        self.__next()
-
-    def __next(self):
-        if not self.queue or self.timer:
-            return
-
-        delay, _ = self.queue[0]
-        self.timer = self.node.create_timer(delay, self.execute)
-
-    def execute(self):
-        if self.timer:
-            self.timer.destroy()
-            self.timer = None
-
-        if len(self.queue) > 0:
-            _, action = self.queue.pop(0)
-            action()
-
-        self.__next()
 
 
 class HexapodBrain(rclpy.node.Node):
