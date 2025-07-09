@@ -81,3 +81,13 @@ class TestRobotStateMachine:
 
         state_machine.send('turn_off')
         assert state_machine.current_state == state_machine.torque_off
+
+    def test_should_turn_off_from_finalized(self, state_machine):
+        state_machine.send('initialize')
+        state_machine.send('turn_on')
+        state_machine.send('finalize')
+        state_machine.send('done')
+        assert state_machine.current_state == state_machine.finalized
+
+        state_machine.send('turn_off')
+        assert state_machine.current_state == state_machine.torque_off
