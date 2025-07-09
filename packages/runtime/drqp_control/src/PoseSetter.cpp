@@ -96,16 +96,19 @@ public:
           } else {
             if (msg.torque_on.size() != msg.joint_names.size()) {
               RCLCPP_ERROR(
-                get_logger(), "Torque on message has to have the same number of elements as joint names");
+                get_logger(),
+                "Torque on message has to have the same number of elements as joint names");
               return;
             }
             for (size_t i = 0; i < msg.joint_names.size(); ++i) {
               if (auto servoValues = robotConfig_.jointToServo({msg.joint_names[i], 0.0})) {
                 if (msg.torque_on[i]) {
-                  RCLCPP_DEBUG(get_logger(), "Turning torque on for %s", msg.joint_names[i].c_str());
+                  RCLCPP_DEBUG(
+                    get_logger(), "Turning torque on for %s", msg.joint_names[i].c_str());
                   torqueOn(servoValues->id);
                 } else {
-                  RCLCPP_DEBUG(get_logger(), "Turning torque off for %s", msg.joint_names[i].c_str());
+                  RCLCPP_DEBUG(
+                    get_logger(), "Turning torque off for %s", msg.joint_names[i].c_str());
                   torqueOff(servoValues->id);
                 }
               }
