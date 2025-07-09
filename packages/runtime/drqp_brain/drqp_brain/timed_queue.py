@@ -31,16 +31,16 @@ class TimedQueue:
         self.queue = []
         self.timer = None
 
-    def add(self, delay: float, action: Callable):
-        self.queue.append((delay, action))
+    def add(self, duration: float, action: Callable):
+        self.queue.append((duration, action))
         self.__next()
 
     def __next(self):
         if not self.queue or self.timer:
             return
 
-        delay, action = self.queue.pop(0)
-        self.timer = self.node.create_timer(delay, self.execute)
+        duration, action = self.queue.pop(0)
+        self.timer = self.node.create_timer(duration, self.execute)
         action()
 
     def execute(self):
