@@ -51,7 +51,7 @@ def main():
     hexapod.forward_kinematics(0, -25, 110)
 
     walker = WalkController(
-        hexapod,
+        hexapod.legs,
         step_length=0.13,  # in meters
         step_height=0.06,  # in meters
         rotation_speed_degrees=25,

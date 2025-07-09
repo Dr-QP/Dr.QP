@@ -497,7 +497,11 @@ def animate_hexapod_walk(
 hexapod = HexapodModel()
 hexapod.forward_kinematics(0, -25, 110)
 walker = WalkController(
-    hexapod, step_length=120, step_height=60, rotation_speed_degrees=10, gait=GaitType.ripple
+    hexapod.legs,
+    step_length=120,
+    step_height=60,
+    rotation_speed_degrees=10,
+    gait=GaitType.ripple,
 )
 
 anim = animate_hexapod_walk(

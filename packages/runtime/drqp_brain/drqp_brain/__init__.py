@@ -197,7 +197,7 @@ class HexapodBrain(rclpy.node.Node):
         step_height = 0.03  # in meters
 
         self.walker = WalkController(
-            self.hexapod,
+            self.hexapod.legs,
             step_length=step_length,
             step_height=step_height,
             rotation_speed_degrees=20,
