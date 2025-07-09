@@ -139,6 +139,7 @@ class HexapodBrain(rclpy.node.Node):
             JoystickButton(ButtonIndex.DpadLeft, lambda b, e: self.prev_gait()),
             JoystickButton(ButtonIndex.DpadRight, lambda b, e: self.next_gait()),
             JoystickButton(ButtonIndex.PS, lambda b, e: self.process_kill_switch()),
+            JoystickButton(ButtonIndex.Start, lambda b, e: self.reboot_servos()),
         ]
         self.joystick_sub = self.create_subscription(
             sensor_msgs.msg.Joy, '/joy', self.process_inputs, qos_profile=10
@@ -160,7 +161,10 @@ class HexapodBrain(rclpy.node.Node):
             drqp_interfaces.msg.MultiServoPositionGoal, '/servo_goals', qos_profile=50
         )
         self.servo_torque_on_pub = self.create_publisher(
-            std_msgs.msg.Bool, '/servo_torque_on', qos_profile=10
+            drqp_interfaces.msg.TorqueOn, '/servo_torque_on', qos_profile=10
+        )
+        self.servo_reboot_pub = self.create_publisher(
+            std_msgs.msg.Empty, '/servo_reboot', qos_profile=10
         )
 
         self.setup_hexapod()
@@ -291,7 +295,9 @@ class HexapodBrain(rclpy.node.Node):
             self.get_logger().info('Torque is on, starting')
             self.loop_timer.reset()
 
-        self.servo_torque_on_pub.publish(std_msgs.msg.Bool(data=torque_on))
+        torque_on_msg = drqp_interfaces.msg.TorqueOn()
+        torque_on_msg.torque_on.append(torque_on)
+        self.servo_torque_on_pub.publish(torque_on_msg)
 
     def process_kill_switch(self):
         self.get_logger().info('Kill switch pressed')
@@ -300,6 +306,11 @@ class HexapodBrain(rclpy.node.Node):
             self.robot_event_pub.publish(std_msgs.msg.String(data='kill_switch_off'))
         else:
             self.robot_event_pub.publish(std_msgs.msg.String(data='kill_switch_on'))
+
+    def reboot_servos(self):
+        self.get_logger().info('Rebooting servos')
+        reboot_msg = std_msgs.msg.Empty()
+        self.servo_reboot_pub.publish(reboot_msg)
 
 
 def main():
