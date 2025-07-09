@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-#
 # Copyright (c) 2017-2025 Anton Matosov
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
