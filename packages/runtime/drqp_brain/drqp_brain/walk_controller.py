@@ -26,14 +26,13 @@ import numpy as np
 class WalkController:
     def __init__(
         self,
-        hexapod,
+        hexapod_legs_on_ground,
         step_length=60.0,
         step_height=40.0,
         rotation_speed_degrees=10.0,
         phase_steps_per_cycle=30.0,
         gait=GaitType.wave,
     ):
-        self.hexapod = hexapod
         self.step_length = step_length
         self.step_height = step_height
         self.rotation_speed_degrees = rotation_speed_degrees
@@ -43,7 +42,7 @@ class WalkController:
         self.last_stop_phase = 0.0
         self.phase_step = 1 / phase_steps_per_cycle
 
-        self.leg_tips_on_ground = [(leg, leg.tibia_end.copy()) for leg in hexapod.legs]
+        self.leg_tips_on_ground = [(leg, leg.tibia_end.copy()) for leg in hexapod_legs_on_ground]
 
         self.current_direction = Point3D([1, 0, 0])
         self.current_stride_ratio = 0

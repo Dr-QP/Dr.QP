@@ -23,6 +23,7 @@
 #include <drqp_serial/SerialFactory.h>
 #include <drqp_a1_16_driver/XYZrobotServo.h>
 
+#include <array>
 #include <exception>
 #include <memory>
 #include <string>
@@ -31,10 +32,11 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/subscription_base.hpp>
 
-#include <std_msgs/msg/bool.hpp>
+#include <std_msgs/msg/empty.hpp>
 
 #include <drqp_interfaces/msg/multi_servo_position_goal.hpp>
 #include <drqp_interfaces/msg/multi_servo_state.hpp>
+#include <drqp_interfaces/msg/torque_on.hpp>
 
 #include "drqp_control/RobotConfig.h"
 #include "drqp_control/DrQp.h"
@@ -58,11 +60,6 @@ public:
       create_subscription<drqp_interfaces::msg::MultiServoPositionGoal>(
         "/servo_goals", 10, [this](const drqp_interfaces::msg::MultiServoPositionGoal& msg) {
           try {
-            if (!torqueIsOn_) {
-              RCLCPP_INFO(get_logger(), "Torque is off, turning on to avoid jerking.");
-              torqueOn();
-            }
-
             if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_SYNC) {
               handleSyncPose(msg);
             } else if (msg.mode == drqp_interfaces::msg::MultiServoPositionGoal::MODE_ASYNC) {
@@ -77,18 +74,55 @@ public:
           }
         });
 
-    torqueOnSubscription_ = create_subscription<std_msgs::msg::Bool>(
-      "/servo_torque_on", 10, [this](const std_msgs::msg::Bool requestedState) {
+    torqueOnSubscription_ = create_subscription<drqp_interfaces::msg::TorqueOn>(
+      "/servo_torque_on", 10, [this](const drqp_interfaces::msg::TorqueOn msg) {
         try {
-          if (requestedState.data) {
-            torqueOn();
-
-            RCLCPP_INFO(get_logger(), "Torque is on");
-          } else {
-            torqueOff();
-
-            RCLCPP_INFO(get_logger(), "Torque is off");
+          if (msg.torque_on.empty()) {
+            RCLCPP_ERROR(get_logger(), "Torque on message has to have at least 1 element");
+            return;
           }
+          if (msg.joint_names.empty()) {
+            if (msg.torque_on.size() != 1) {
+              RCLCPP_ERROR(get_logger(), "Torque on message has to have only 1 element");
+              return;
+            }
+            if (msg.torque_on[0]) {
+              RCLCPP_INFO(get_logger(), "Turning torque on for all servos");
+              torqueOn();
+            } else {
+              RCLCPP_INFO(get_logger(), "Turning torque off for all servos");
+              torqueOff();
+            }
+          } else {
+            if (msg.torque_on.size() != msg.joint_names.size()) {
+              RCLCPP_ERROR(
+                get_logger(), "Torque on message has to have the same number of elements as joint names");
+              return;
+            }
+            for (size_t i = 0; i < msg.joint_names.size(); ++i) {
+              if (auto servoValues = robotConfig_.jointToServo({msg.joint_names[i], 0.0})) {
+                if (msg.torque_on[i]) {
+                  RCLCPP_DEBUG(get_logger(), "Turning torque on for %s", msg.joint_names[i].c_str());
+                  torqueOn(servoValues->id);
+                } else {
+                  RCLCPP_DEBUG(get_logger(), "Turning torque off for %s", msg.joint_names[i].c_str());
+                  torqueOff(servoValues->id);
+                }
+              }
+            }
+          }
+
+        } catch (std::exception& e) {
+          RCLCPP_ERROR(get_logger(), "Exception occurred in kill_switch handler %s", e.what());
+        } catch (...) {
+          RCLCPP_ERROR(get_logger(), "Unknown exception occurred in kill_switch handler.");
+        }
+      });
+
+    rebootServoSubscription_ = create_subscription<std_msgs::msg::Empty>(
+      "/servo_reboot", 10, [this](const std_msgs::msg::Empty) {
+        try {
+          rebootServos();
         } catch (std::exception& e) {
           RCLCPP_ERROR(get_logger(), "Exception occurred in kill_switch handler %s", e.what());
         } catch (...) {
@@ -102,20 +136,34 @@ public:
     torqueOff();
   }
 
-  void torqueOn()
+  void torqueOn(const uint8_t servoId = XYZrobotServo::kBroadcastId)
   {
-    XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
+    XYZrobotServo servo(*servoSerial_, servoId);
     servo.torqueOn();
 
-    torqueIsOn_ = true;
+    if (servoId == XYZrobotServo::kBroadcastId) {
+      torqueIsOn_.fill(true);
+    } else {
+      torqueIsOn_[servoId] = true;
+    }
   }
 
-  void torqueOff()
+  void torqueOff(const uint8_t servoId = XYZrobotServo::kBroadcastId)
   {
-    XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
+    XYZrobotServo servo(*servoSerial_, servoId);
     servo.torqueOff();
 
-    torqueIsOn_ = false;
+    if (servoId == XYZrobotServo::kBroadcastId) {
+      torqueIsOn_.fill(false);
+    } else {
+      torqueIsOn_[servoId] = false;
+    }
+  }
+
+  void rebootServos()
+  {
+    XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
+    servo.reboot();
   }
 
   void handleSyncPose(const drqp_interfaces::msg::MultiServoPositionGoal& msg)
@@ -134,6 +182,9 @@ public:
       auto servoValues = robotConfig_.jointToServo({pos.joint_name, pos.position_as_radians});
       if (!servoValues) {
         RCLCPP_ERROR(get_logger(), "Unknown joint name %s", pos.joint_name.c_str());
+        continue;
+      }
+      if (!torqueIsOn_[servoValues->id]) {
         continue;
       }
       sposCmd.at(index) = {servoValues->position, SET_POSITION_CONTROL, servoValues->id};
@@ -155,6 +206,9 @@ public:
         RCLCPP_ERROR(get_logger(), "Unknown joint name %s", pos.joint_name.c_str());
         continue;
       }
+      if (!torqueIsOn_[servoValues->id]) {
+        continue;
+      }
       iposCmd.at(index) = {
         servoValues->position, SET_POSITION_CONTROL, servoValues->id,
         millisToPlaytime(pos.playtime_ms)};
@@ -172,14 +226,17 @@ public:
 
       servoState.joint_name = posGoal.joint_name;
       servoState.position_as_radians = posGoal.position_as_radians;
+
       if (
         auto servoValues =
           robotConfig_.jointToServo({posGoal.joint_name, posGoal.position_as_radians})) {
         servoState.raw.id = servoValues->id;
         servoState.raw.position = servoValues->position;
+
+        servoState.torque_on = torqueIsOn_[servoValues->id];
       }
 
-      multiServoStates.servos.emplace_back(servoState);
+      multiServoStates.servos.emplace_back(std::move(servoState));
     }
     servoStatesPublisher_->publish(multiServoStates);
   }
@@ -191,8 +248,10 @@ public:
   rclcpp::Subscription<drqp_interfaces::msg::MultiServoPositionGoal>::SharedPtr
     multiServoPositionGoalSubscription_;
 
-  bool torqueIsOn_ = false;
-  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr torqueOnSubscription_;
+  std::array<bool, 255> torqueIsOn_;
+  rclcpp::Subscription<drqp_interfaces::msg::TorqueOn>::SharedPtr torqueOnSubscription_;
+
+  rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr rebootServoSubscription_;
 
   std::unique_ptr<SerialProtocol> servoSerial_;
 };
