@@ -250,6 +250,7 @@ class HexapodBrain(rclpy.node.Node):
         self.sequence_queue.add(0.6, self.initialization_sequence_step3)
         self.sequence_queue.add(0.6, self.initialization_sequence_step4)
         self.sequence_queue.add(0.6, self.initialization_sequence_step5)
+        self.sequence_queue.add(0.0, self.initialization_sequence_done)
 
     # - Turn torque on for femur
     # - Move all femur to -105
@@ -281,7 +282,10 @@ class HexapodBrain(rclpy.node.Node):
 
     # - Use walk controller to move to default position slowly increasing body height
     def initialization_sequence_step5(self):
-        # self.hexapod.forward_kinematics(0, -35, 130)
+        self.hexapod.forward_kinematics(0, -35, 130)
+        self.publish_servo_goals(playtime_ms=400)
+
+    def initialization_sequence_done(self):
         self.robot_event_pub.publish(std_msgs.msg.String(data='initializing_done'))
 
     def turn_torque_on(self, joints):
@@ -324,6 +328,7 @@ class HexapodBrain(rclpy.node.Node):
         if self.robot_state == 'torque_off':
             self.get_logger().info('Torque is off, stopping')
             self.loop_timer.cancel()
+            self.sequence_queue.clear()
             torque_on_msg = drqp_interfaces.msg.TorqueOn()
             torque_on_msg.torque_on.append(False)
             self.servo_torque_on_pub.publish(torque_on_msg)

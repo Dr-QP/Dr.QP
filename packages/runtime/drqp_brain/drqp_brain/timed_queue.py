@@ -49,3 +49,9 @@ class TimedQueue:
             self.timer = None
 
         self.__next()
+
+    def clear(self):
+        if self.timer:
+            self.timer.destroy()
+            self.timer = None
+        self.queue.clear()
