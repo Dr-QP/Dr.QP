@@ -40,10 +40,10 @@ class TimedQueue:
             return
 
         duration, action = self.queue.pop(0)
-        self.timer = self.node.create_timer(duration, self.execute)
+        self.timer = self.node.create_timer(duration, self.__execute)
         action()
 
-    def execute(self):
+    def __execute(self):
         if self.timer:
             self.timer.destroy()
             self.timer = None
