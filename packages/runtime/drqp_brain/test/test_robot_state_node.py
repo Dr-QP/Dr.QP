@@ -84,13 +84,13 @@ class TestRobotStateMachineNode(unittest.TestCase):
     def tearDown(self):
         self.node.destroy_node()
 
-    def test_can_accept_events(self, proc_output):
-        """Check whether events are accepted."""
-        pass
-
-    def test_publishes_state(self, proc_output):
-        """Check whether state is published."""
+    def test_processes_events_and_publishes_state(self, proc_output):
+        """Check whether events are processed."""
         msgs_received = []
+
+        self.event_pub = self.node.create_publisher(
+            std_msgs.msg.String, '/robot_event', qos_profile=10
+        )
         qos_profile = QoSProfile(depth=1)
         # make state available to late joiners
         qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
@@ -100,13 +100,19 @@ class TestRobotStateMachineNode(unittest.TestCase):
 
         try:
             end_time = time.time() + 5
-            while time.time() < end_time and len(msgs_received) == 0:
+
+            while time.time() < end_time:
                 rclpy.spin_once(self.node, timeout_sec=0.01)
+                self.event_pub.publish(std_msgs.msg.String(data='initialize'))
+
+                if len(msgs_received) > 0 and msgs_received[-1].data == 'initializing':
+                    break
 
             self.assertGreater(len(msgs_received), 0)
-            self.assertEqual(msgs_received[0].data, 'torque_off')
+            self.assertEqual(msgs_received[-1].data, 'initializing')
         finally:
             self.node.destroy_subscription(self.robot_state_sub)
+            self.node.destroy_publisher(self.event_pub)
 
 
 # Post-shutdown tests
