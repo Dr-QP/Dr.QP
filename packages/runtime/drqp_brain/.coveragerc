@@ -1,0 +1,20 @@
+[run]
+branch = True
+source = drqp_brain
+concurrency = multiprocessing
+omit =
+    */test/*
+    */build/*
+    */install/*
+    */ros_ws/*
+    */opt/ros/*
+    */usr/lib/python*
+    */site-packages/*
+    */dist-packages/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if __name__ == .__main__.:

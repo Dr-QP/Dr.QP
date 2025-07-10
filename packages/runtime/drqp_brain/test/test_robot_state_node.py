@@ -23,8 +23,9 @@ import unittest
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, TimerAction
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import FindExecutable, LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.substitutions import ExecutableInPackage
 from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
 import pytest
@@ -46,8 +47,13 @@ def generate_test_description():
                 description='Use sim time if true',
             ),
             Node(
-                package='drqp_brain',
-                executable='drqp_robot_state',
+                executable=FindExecutable(name='python3'),
+                arguments=[
+                    '-m',
+                    'coverage',
+                    'run',
+                    ExecutableInPackage(package='drqp_brain', executable='drqp_robot_state'),
+                ],
                 output='screen',
                 parameters=[
                     {
