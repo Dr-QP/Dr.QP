@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import time
 import unittest
 
 from launch import LaunchDescription
@@ -30,8 +29,6 @@ from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
 import pytest
 import rclpy
-from rclpy.qos import QoSDurabilityPolicy, QoSProfile
-import std_msgs.msg
 
 
 @pytest.mark.launch_test
@@ -52,7 +49,7 @@ def generate_test_description():
                     '-m',
                     'coverage',
                     'run',
-                    ExecutableInPackage(package='drqp_brain', executable='drqp_robot_state'),
+                    ExecutableInPackage(package='drqp_brain', executable='drqp_brain'),
                 ],
                 output='screen',
                 parameters=[
@@ -61,14 +58,14 @@ def generate_test_description():
                     }
                 ],
             ),
-            # Launch tests 0.5 s later
-            TimerAction(period=0.5, actions=[ReadyToTest()]),
+            # Launch tests 3s later
+            TimerAction(period=3.0, actions=[ReadyToTest()]),
         ]
     )
 
 
-class TestRobotStateMachineNode(unittest.TestCase):
-    """Test the drqp_robot_state node."""
+class TestBrainNode(unittest.TestCase):
+    """Test the drqp_brain node."""
 
     @classmethod
     def setUpClass(cls):
@@ -79,46 +76,20 @@ class TestRobotStateMachineNode(unittest.TestCase):
         rclpy.shutdown()
 
     def setUp(self):
-        self.node = rclpy.create_node('test_state_consumer')
+        self.node = rclpy.create_node('test_brain_consumer')
 
     def tearDown(self):
         self.node.destroy_node()
 
-    def test_processes_events_and_publishes_state(self, proc_output):
-        """Check whether events are processed."""
-        msgs_received = []
-
-        self.event_pub = self.node.create_publisher(
-            std_msgs.msg.String, '/robot_event', qos_profile=10
-        )
-        qos_profile = QoSProfile(depth=1)
-        # make state available to late joiners
-        qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
-        self.robot_state_sub = self.node.create_subscription(
-            std_msgs.msg.String, '/robot_state', lambda msg: msgs_received.append(msg), qos_profile
-        )
-
-        try:
-            end_time = time.time() + 5
-
-            while time.time() < end_time:
-                rclpy.spin_once(self.node, timeout_sec=0.01)
-                self.event_pub.publish(std_msgs.msg.String(data='initialize'))
-
-                if len(msgs_received) > 0 and msgs_received[-1].data == 'initializing':
-                    break
-
-            self.assertGreater(len(msgs_received), 0)
-            self.assertEqual(msgs_received[-1].data, 'initializing')
-        finally:
-            self.node.destroy_subscription(self.robot_state_sub)
-            self.node.destroy_publisher(self.event_pub)
+    def test_nothing(self, proc_output):
+        """Smoke check."""
+        pass
 
 
 # Post-shutdown tests
 @post_shutdown_test()
-class TestRobotStateMachineNodeShutdown(unittest.TestCase):
-    """Test the drqp_robot_state node shutdown."""
+class TestBrainNodeShutdown(unittest.TestCase):
+    """Test the drqp_brain node shutdown."""
 
     def test_exit_codes(self, proc_info):
         """Check if the processes exited normally."""

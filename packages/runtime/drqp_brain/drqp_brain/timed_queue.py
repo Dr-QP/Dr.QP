@@ -18,33 +18,40 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from typing import Callable
 
-from statemachine import State, StateMachine
+import rclpy.node
 
 
-class RobotStateMachine(StateMachine):
-    """A robot state machine."""
+class TimedQueue:
+    """A queue that allows to execute a sequence of actions with a delay between them."""
 
-    # States
-    torque_off = State(initial=True)
-    initializing = State()
-    torque_on = State()
-    finalizing = State()
-    finalized = State()
+    def __init__(self, node: rclpy.node.Node):
+        self.node = node
+        self.queue = []
+        self.timer = None
 
-    # Transitions/Events
-    initialize = torque_off.to(initializing) | finalized.to(initializing)
-    turn_on = initializing.to(torque_on)
-    turn_off = (
-        torque_on.to(torque_off)
-        | initializing.to(torque_off)
-        | finalizing.to(torque_off)
-        | finalized.to(torque_off)
-    )
-    finalize = torque_on.to(finalizing)
-    done = finalizing.to(finalized)
+    def add(self, duration: float, action: Callable):
+        self.queue.append((duration, action))
+        self.__next()
 
-    kill_switch_on = turn_off
-    kill_switch_off = initialize
-    initializing_done = turn_on
-    finalizing_done = done
+    def __next(self):
+        if not self.queue or self.timer:
+            return
+
+        duration, action = self.queue.pop(0)
+        self.timer = self.node.create_timer(duration, self.__execute)
+        action()
+
+    def __execute(self):
+        if self.timer:
+            self.timer.destroy()
+            self.timer = None
+
+        self.__next()
+
+    def clear(self):
+        if self.timer:
+            self.timer.destroy()
+            self.timer = None
+        self.queue.clear()

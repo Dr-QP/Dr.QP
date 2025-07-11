@@ -26,6 +26,7 @@ from typing import Callable
 
 from drqp_brain.geometry import Point3D
 from drqp_brain.models import HexapodModel
+from drqp_brain.timed_queue import TimedQueue
 from drqp_brain.walk_controller import GaitType, WalkController
 import drqp_interfaces.msg
 import numpy as np
@@ -111,7 +112,7 @@ class JoystickButton:
             self.event_handler(self, ButtonEvent.Tapped)
 
 
-class HexapodController(rclpy.node.Node):
+class HexapodBrain(rclpy.node.Node):
     """
     ROS node for controlling Dr.QP hexapod robot.
 
@@ -138,6 +139,7 @@ class HexapodController(rclpy.node.Node):
             JoystickButton(ButtonIndex.DpadLeft, lambda b, e: self.prev_gait()),
             JoystickButton(ButtonIndex.DpadRight, lambda b, e: self.next_gait()),
             JoystickButton(ButtonIndex.PS, lambda b, e: self.process_kill_switch()),
+            JoystickButton(ButtonIndex.Start, lambda b, e: self.reboot_servos()),
         ]
         self.joystick_sub = self.create_subscription(
             sensor_msgs.msg.Joy, '/joy', self.process_inputs, qos_profile=10
@@ -159,12 +161,16 @@ class HexapodController(rclpy.node.Node):
             drqp_interfaces.msg.MultiServoPositionGoal, '/servo_goals', qos_profile=50
         )
         self.servo_torque_on_pub = self.create_publisher(
-            std_msgs.msg.Bool, '/servo_torque_on', qos_profile=10
+            drqp_interfaces.msg.TorqueOn, '/servo_torque_on', qos_profile=10
+        )
+        self.servo_reboot_pub = self.create_publisher(
+            std_msgs.msg.Empty, '/servo_reboot', qos_profile=10
         )
 
         self.setup_hexapod()
 
         self.loop_timer = self.create_timer(1 / self.fps, self.loop, autostart=False)
+        self.sequence_queue = TimedQueue(self)
 
     def setup_hexapod(self):
         drqp_coxa = 0.053  # in meters
@@ -238,7 +244,59 @@ class HexapodController(rclpy.node.Node):
         )
         self.publish_servo_goals()
 
-    def publish_servo_goals(self):
+    def initialization_sequence(self):
+        self.sequence_queue.add(0.6, self.initialization_sequence_step1)
+        self.sequence_queue.add(0.6, self.initialization_sequence_step2)
+        self.sequence_queue.add(0.6, self.initialization_sequence_step3)
+        self.sequence_queue.add(0.6, self.initialization_sequence_step4)
+        self.sequence_queue.add(0.6, self.initialization_sequence_step5)
+        self.sequence_queue.add(0.0, self.initialization_sequence_done)
+
+    # - Turn torque on for femur
+    # - Move all femur to -105
+    def initialization_sequence_step1(self):
+        self.get_logger().info('Initialization sequence started')
+
+        self.hexapod.forward_kinematics(0, -105, 0)
+        self.turn_torque_on(['femur'])
+        self.publish_servo_goals(playtime_ms=900, joint_mask=['femur'])
+
+    # - Turn torque on for tibia
+    # - Move all tibia to 0
+    def initialization_sequence_step2(self):
+        self.hexapod.forward_kinematics(0, -105, 0)
+        self.turn_torque_on(['femur', 'tibia'])
+        self.publish_servo_goals(playtime_ms=500, joint_mask=['femur', 'tibia'])
+
+    # - Turn torque on for coxa
+    # - Move all coxa to 0
+    def initialization_sequence_step3(self):
+        self.hexapod.forward_kinematics(0, -105, 0)
+        self.turn_torque_on(['femur', 'tibia', 'coxa'])
+        self.publish_servo_goals(playtime_ms=500, joint_mask=['femur', 'tibia', 'coxa'])
+
+    # - Move all tibia to 95
+    def initialization_sequence_step4(self):
+        self.hexapod.forward_kinematics(0, -105, 95)
+        self.publish_servo_goals(playtime_ms=500)
+
+    # - Use walk controller to move to default position slowly increasing body height
+    def initialization_sequence_step5(self):
+        self.hexapod.forward_kinematics(0, -35, 130)
+        self.publish_servo_goals(playtime_ms=400)
+
+    def initialization_sequence_done(self):
+        self.robot_event_pub.publish(std_msgs.msg.String(data='initializing_done'))
+
+    def turn_torque_on(self, joints):
+        msg = drqp_interfaces.msg.TorqueOn()
+        for leg in self.hexapod.legs:
+            for joint in joints:
+                msg.joint_names.append(f'dr_qp/{leg.label.name}_{joint}')
+                msg.torque_on.append(True)
+        self.servo_torque_on_pub.publish(msg)
+
+    def publish_servo_goals(self, playtime_ms=0, joint_mask=None):
         msg = drqp_interfaces.msg.MultiServoPositionGoal()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.mode = drqp_interfaces.msg.MultiServoPositionGoal.MODE_ASYNC
@@ -250,28 +308,36 @@ class HexapodController(rclpy.node.Node):
                 ('femur', leg.femur_angle + kFemurOffsetAngle),
                 ('tibia', leg.tibia_angle + kTibiaOffsetAngle),
             ]:
+                if joint_mask is not None and joint not in joint_mask:
+                    continue
                 goal = drqp_interfaces.msg.ServoPositionGoal(
                     joint_name=f'dr_qp/{leg.label.name}_{joint}',
                     position_as_radians=float(np.radians(angle)),
-                    playtime_ms=0,
+                    playtime_ms=playtime_ms,
                 )
                 msg.goals.append(goal)
 
         self.servo_goals_pub.publish(msg)
 
     def process_robot_state(self, msg: std_msgs.msg.String):
+        if self.robot_state == msg.data:
+            return
+
         self.robot_state = msg.data
 
-        torque_on = True
         if self.robot_state == 'torque_off':
             self.get_logger().info('Torque is off, stopping')
             self.loop_timer.cancel()
-            torque_on = False
+            self.sequence_queue.clear()
+            torque_on_msg = drqp_interfaces.msg.TorqueOn()
+            torque_on_msg.torque_on.append(False)
+            self.servo_torque_on_pub.publish(torque_on_msg)
+        elif self.robot_state == 'initializing':
+            self.get_logger().info('Initializing')
+            self.initialization_sequence()
         elif self.robot_state == 'torque_on':
             self.get_logger().info('Torque is on, starting')
             self.loop_timer.reset()
-
-        self.servo_torque_on_pub.publish(std_msgs.msg.Bool(data=torque_on))
 
     def process_kill_switch(self):
         self.get_logger().info('Kill switch pressed')
@@ -281,19 +347,26 @@ class HexapodController(rclpy.node.Node):
         else:
             self.robot_event_pub.publish(std_msgs.msg.String(data='kill_switch_on'))
 
+    def reboot_servos(self):
+        self.get_logger().info('Rebooting servos')
+        reboot_msg = std_msgs.msg.Empty()
+        self.servo_reboot_pub.publish(reboot_msg)
+
 
 def main():
-    parser = argparse.ArgumentParser('Dr.QP Robot controller ROS node')
-    filtered_args = rclpy.utilities.remove_ros_args()
-    args = parser.parse_args(args=filtered_args[1:])
-    rclpy.init()
-    node = HexapodController(**vars(args))
+    node = None
     try:
+        parser = argparse.ArgumentParser('Dr.QP Robot controller ROS node')
+        filtered_args = rclpy.utilities.remove_ros_args()
+        args = parser.parse_args(args=filtered_args[1:])
+        rclpy.init()
+        node = HexapodBrain(**vars(args))
         rclpy.spin(node)
     except (KeyboardInterrupt, ExternalShutdownException):
         pass  # codeql[py/empty-except]
     finally:
-        node.destroy_node()
+        if node is not None:
+            node.destroy_node()
         # Only call shutdown if ROS is still initialized
         if rclpy.ok():
             rclpy.shutdown()

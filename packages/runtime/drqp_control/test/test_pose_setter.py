@@ -22,7 +22,12 @@ from pathlib import Path
 import time
 import unittest
 
-from drqp_interfaces.msg import MultiServoPositionGoal, MultiServoState, ServoPositionGoal
+from drqp_interfaces.msg import (
+    MultiServoPositionGoal,
+    MultiServoState,
+    ServoPositionGoal,
+    TorqueOn,
+)
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, TimerAction
 from launch.substitutions import LaunchConfiguration
@@ -91,6 +96,7 @@ class TestServoDriverNodes(unittest.TestCase):
         sub_states = self.node.create_subscription(
             MultiServoState, '/servo_states', lambda msg: msgs_received.append(msg), 10
         )
+        pub_torque_on = self.node.create_publisher(TorqueOn, '/servo_torque_on', 10)
 
         joints = [
             'dr_qp/left_front_coxa',
@@ -118,6 +124,11 @@ class TestServoDriverNodes(unittest.TestCase):
         try:
             end_time = time.time() + self.run_duration
             while time.time() < end_time:
+                torque_on = TorqueOn()
+                torque_on.joint_names = joints
+                torque_on.torque_on = [True] * servo_count
+                pub_torque_on.publish(torque_on)
+
                 test_goal = MultiServoPositionGoal()
                 test_goal.header.stamp = self.node.get_clock().now().to_msg()
                 test_goal.header.frame_id = 'test_frame'
