@@ -11,6 +11,7 @@ omit =
     */usr/lib/python*
     */site-packages/*
     */dist-packages/*
+    */setup.py
 
 [report]
 exclude_lines =
