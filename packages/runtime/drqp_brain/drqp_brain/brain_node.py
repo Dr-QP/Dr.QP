@@ -354,17 +354,19 @@ class HexapodBrain(rclpy.node.Node):
 
 
 def main():
-    parser = argparse.ArgumentParser('Dr.QP Robot controller ROS node')
-    filtered_args = rclpy.utilities.remove_ros_args()
-    args = parser.parse_args(args=filtered_args[1:])
-    rclpy.init()
-    node = HexapodBrain(**vars(args))
+    node = None
     try:
+        parser = argparse.ArgumentParser('Dr.QP Robot controller ROS node')
+        filtered_args = rclpy.utilities.remove_ros_args()
+        args = parser.parse_args(args=filtered_args[1:])
+        rclpy.init()
+        node = HexapodBrain(**vars(args))
         rclpy.spin(node)
     except (KeyboardInterrupt, ExternalShutdownException):
         pass  # codeql[py/empty-except]
     finally:
-        node.destroy_node()
+        if node is not None:
+            node.destroy_node()
         # Only call shutdown if ROS is still initialized
         if rclpy.ok():
             rclpy.shutdown()
