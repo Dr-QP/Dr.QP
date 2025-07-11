@@ -263,7 +263,9 @@ jobs:
               rosdep update
               ./scripts/ros-dep.sh
               source "scripts/setup.bash"
-              python3 -m colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+
+
+              # symlink-install is a must to collect proper coverage for python nodes
+              python3 -m colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+ --symlink-install
 
               source "scripts/setup.bash" --update-venv
 
