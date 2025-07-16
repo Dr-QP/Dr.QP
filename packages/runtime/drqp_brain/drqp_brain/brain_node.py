@@ -140,6 +140,7 @@ class HexapodBrain(rclpy.node.Node):
             JoystickButton(ButtonIndex.DpadRight, lambda b, e: self.next_gait()),
             JoystickButton(ButtonIndex.PS, lambda b, e: self.process_kill_switch()),
             JoystickButton(ButtonIndex.Start, lambda b, e: self.reboot_servos()),
+            JoystickButton(ButtonIndex.Select, lambda b, e: self.finalize()),
         ]
         self.joystick_sub = self.create_subscription(
             sensor_msgs.msg.Joy, '/joy', self.process_inputs, qos_profile=10
@@ -245,11 +246,12 @@ class HexapodBrain(rclpy.node.Node):
         self.publish_servo_goals()
 
     def initialization_sequence(self):
-        self.sequence_queue.add(0.6, self.initialization_sequence_step1)
+        self.sequence_queue.clear()
+        self.sequence_queue.add(1.0, self.initialization_sequence_step1)
         self.sequence_queue.add(0.6, self.initialization_sequence_step2)
         self.sequence_queue.add(0.6, self.initialization_sequence_step3)
         self.sequence_queue.add(0.6, self.initialization_sequence_step4)
-        self.sequence_queue.add(0.6, self.initialization_sequence_step5)
+        self.sequence_queue.add(0.5, self.initialization_sequence_step5)
         self.sequence_queue.add(0.0, self.initialization_sequence_done)
 
     # - Turn torque on for femur
@@ -287,6 +289,25 @@ class HexapodBrain(rclpy.node.Node):
 
     def initialization_sequence_done(self):
         self.robot_event_pub.publish(std_msgs.msg.String(data='initializing_done'))
+
+    def finalization_sequence(self):
+        self.sequence_queue.clear()
+        self.sequence_queue.add(1.1, self.finalization_sequence_step1)
+        self.sequence_queue.add(0.6, self.finalization_sequence_step2)
+        self.sequence_queue.add(0.0, self.finalization_sequence_done)
+
+    def finalization_sequence_step1(self):
+        self.get_logger().info('Finalization sequence started')
+
+        self.hexapod.forward_kinematics(0, -105, 0)
+        self.publish_servo_goals(playtime_ms=1000)
+
+    def finalization_sequence_step2(self):
+        self.hexapod.forward_kinematics(0, -105, -60)
+        self.publish_servo_goals(playtime_ms=500)
+
+    def finalization_sequence_done(self):
+        self.robot_event_pub.publish(std_msgs.msg.String(data='finalizing_done'))
 
     def turn_torque_on(self, joints):
         msg = drqp_interfaces.msg.TorqueOn()
@@ -327,17 +348,29 @@ class HexapodBrain(rclpy.node.Node):
 
         if self.robot_state == 'torque_off':
             self.get_logger().info('Torque is off, stopping')
-            self.loop_timer.cancel()
-            self.sequence_queue.clear()
-            torque_on_msg = drqp_interfaces.msg.TorqueOn()
-            torque_on_msg.torque_on.append(False)
-            self.servo_torque_on_pub.publish(torque_on_msg)
+            self.stop_walk_controller()
+            self.publish_torque_off()
         elif self.robot_state == 'initializing':
-            self.get_logger().info('Initializing')
             self.initialization_sequence()
         elif self.robot_state == 'torque_on':
             self.get_logger().info('Torque is on, starting')
             self.loop_timer.reset()
+        elif self.robot_state == 'finalizing':
+            self.stop_walk_controller()
+            self.finalization_sequence()
+        elif self.robot_state == 'finalized':
+            self.get_logger().info('Finalized')
+            self.publish_torque_off()
+
+    def stop_walk_controller(self):
+        self.get_logger().info('Stopping')
+        self.loop_timer.cancel()
+        self.sequence_queue.clear()
+
+    def publish_torque_off(self):
+        torque_on_msg = drqp_interfaces.msg.TorqueOn()
+        torque_on_msg.torque_on.append(False)
+        self.servo_torque_on_pub.publish(torque_on_msg)
 
     def process_kill_switch(self):
         self.get_logger().info('Kill switch pressed')
@@ -346,6 +379,9 @@ class HexapodBrain(rclpy.node.Node):
             self.robot_event_pub.publish(std_msgs.msg.String(data='kill_switch_off'))
         else:
             self.robot_event_pub.publish(std_msgs.msg.String(data='kill_switch_on'))
+
+    def finalize(self):
+        self.robot_event_pub.publish(std_msgs.msg.String(data='finalize'))
 
     def reboot_servos(self):
         self.get_logger().info('Rebooting servos')
