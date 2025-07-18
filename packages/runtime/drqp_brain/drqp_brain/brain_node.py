@@ -373,12 +373,7 @@ class HexapodBrain(rclpy.node.Node):
         self.servo_torque_on_pub.publish(torque_on_msg)
 
     def process_kill_switch(self):
-        self.get_logger().info('Kill switch pressed')
-
-        if self.robot_state == 'torque_off':
-            self.robot_event_pub.publish(std_msgs.msg.String(data='kill_switch_off'))
-        else:
-            self.robot_event_pub.publish(std_msgs.msg.String(data='kill_switch_on'))
+        self.robot_event_pub.publish(std_msgs.msg.String(data='kill_switch_pressed'))
 
     def finalize(self):
         self.robot_event_pub.publish(std_msgs.msg.String(data='finalize'))

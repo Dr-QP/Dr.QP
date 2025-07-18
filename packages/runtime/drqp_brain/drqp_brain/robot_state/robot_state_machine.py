@@ -44,5 +44,4 @@ class RobotStateMachine(StateMachine):
     finalize = torque_on.to(finalizing)
     finalizing_done = finalizing.to(finalized)
 
-    kill_switch_on = turn_off
-    kill_switch_off = initialize
+    kill_switch_pressed = turn_off | initialize
