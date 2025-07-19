@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="drqp_ros2_control" params="robot_name prefix">
+    <ros2_control name="${robot_name}" type="system">
+      <hardware>
+        <plugin>drqp_control/a1_16_hardware_interface</plugin>
+      </hardware>
+
+      <joint name="${robot_name}/${prefix}_coxa">
+        <command_interface name="position">
+          <param name="min">${radians(-90)}</param>
+          <param name="max">${radians(90)}</param>
+        </command_interface>
+        <state_interface name="position"/>
+      </joint>
+
+      <joint name="${robot_name}/${prefix}_femur">
+        <command_interface name="position">
+          <param name="min">${radians(-98)}</param>
+          <param name="max">${radians(90)}</param>
+        </command_interface>
+        <state_interface name="position"/>
+      </joint>
+
+      <joint name="${robot_name}/${prefix}_tibia">
+        <command_interface name="position">
+          <param name="min">${radians(-80)}</param>
+          <param name="max">${radians(110)}</param>
+        </command_interface>
+        <state_interface name="position"/>
+      </joint>
+    </ros2_control>
+  </xacro:macro>
+</robot>

@@ -1,0 +1,38 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 30  # Hz
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+
+drqp_position_controller:
+  ros__parameters:
+    type: forward_command_controller/ForwardCommandController
+    joints:
+      - dr_qp/left_front_coxa
+      - dr_qp/left_front_femur
+      - dr_qp/left_front_tibia
+
+      - dr_qp/left_middle_coxa
+      - dr_qp/left_middle_femur
+      - dr_qp/left_middle_tibia
+
+      - dr_qp/left_back_coxa
+      - dr_qp/left_back_femur
+      - dr_qp/left_back_tibia
+
+
+      - dr_qp/right_front_coxa
+      - dr_qp/right_front_femur
+      - dr_qp/right_front_tibia
+
+      - dr_qp/right_middle_coxa
+      - dr_qp/right_middle_femur
+      - dr_qp/right_middle_tibia
+
+      - dr_qp/right_back_coxa
+      - dr_qp/right_back_femur
+      - dr_qp/right_back_tibia
+
+    interface_name: position

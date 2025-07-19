@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-
   <xacro:include filename="$(find drqp_description)/urdf/inertial_macros.xacro"/>
   <xacro:macro name="inertial_stub" params="">
     <xacro:property name="tiny_value" value="0.01"/>
@@ -276,6 +275,9 @@
 
 
   <link name="${robot_name}/${prefix}_foot_link"/>
+
+  <xacro:include filename="$(find drqp_description)/urdf/ros2_control.urdf.xacro"/>
+  <xacro:drqp_ros2_control robot_name="${robot_name}" prefix="${prefix}"/>
 
 </xacro:macro>
 </robot>
