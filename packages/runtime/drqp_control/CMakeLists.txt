@@ -45,12 +45,16 @@ add_executable(pose_setter
 target_link_libraries(pose_setter drqp_control)
 ament_target_dependencies(pose_setter ${${PROJECT_NAME}_BUILD_DEPENDS})
 
-add_executable(drqp_ros2_control
+add_library(drqp_ros2_control
+  SHARED
+
   include/drqp_control/a1_16_hardware_interface.h
   src/a1_16_hardware_interface.cpp
 )
 target_link_libraries(drqp_ros2_control drqp_control)
 ament_target_dependencies(drqp_ros2_control ${${PROJECT_NAME}_BUILD_DEPENDS})
+
+pluginlib_export_plugin_description_file(hardware_interface drqp_control_plugin.xml)
 
 # Install headers
 install(DIRECTORY include/
@@ -67,6 +71,7 @@ install(TARGETS
 # Install libraries
 install(TARGETS
   drqp_control
+  drqp_ros2_control
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib

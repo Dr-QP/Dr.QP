@@ -20,6 +20,8 @@
 
 #include "drqp_control/a1_16_hardware_interface.h"
 
+namespace drqp_control
+{
 a1_16_hardware_interface::a1_16_hardware_interface() = default;
 a1_16_hardware_interface::~a1_16_hardware_interface() = default;
 
@@ -99,3 +101,9 @@ hardware_interface::return_type a1_16_hardware_interface::write(
 {
   return hardware_interface::return_type::OK;
 }
+}
+
+#include "pluginlib/class_list_macros.hpp"
+
+PLUGINLIB_EXPORT_CLASS(
+  drqp_control::a1_16_hardware_interface, hardware_interface::SystemInterface)

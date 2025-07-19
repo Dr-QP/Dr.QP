@@ -28,6 +28,9 @@
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
+namespace drqp_control
+{
+
 class a1_16_hardware_interface : public hardware_interface::SystemInterface
 {
 public:
@@ -90,3 +93,4 @@ public:
   hardware_interface::return_type  write(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
 };
+}
