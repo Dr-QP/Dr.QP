@@ -8,6 +8,7 @@
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>hardware_interface</depend>
   <depend>ros2_control</depend>
   <depend>ros2_controllers</depend>
   <depend>rclcpp</depend>
