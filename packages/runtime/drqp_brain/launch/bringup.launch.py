@@ -23,8 +23,9 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
@@ -36,8 +37,39 @@ def generate_launch_description():
 
     description_launch_path = get_package_share_path('drqp_description') / 'launch'
 
+    ############################################################################
+    # TODO(anton-matosov): Move to drqp_control and use launch file here
+    robot_controllers = PathJoinSubstitution(
+        [
+            FindPackageShare('drqp_control'),
+            'config',
+            'drqp_controllers.yaml',
+        ]
+    )
+    control_node = Node(
+        package='controller_manager',
+        executable='ros2_control_node',
+        parameters=[robot_controllers],
+        output='both',
+    )
+    joint_state_broadcaster_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['joint_state_broadcaster'],
+    )
+
+    robot_controller_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['drqp_position_controller', '--param-file', robot_controllers],
+    )
+    ############################################################################
+
     return LaunchDescription(
         [
+            control_node,
+            joint_state_broadcaster_spawner,
+            robot_controller_spawner,
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(str(description_launch_path / 'rsp.launch.py'))
             ),
