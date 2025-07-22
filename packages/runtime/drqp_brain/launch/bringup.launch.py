@@ -43,7 +43,7 @@ def generate_launch_description():
         [
             FindPackageShare('drqp_control'),
             'config',
-            'drqp_controllers.yaml',
+            'drqp_controllers.yml',
         ]
     )
     control_node = Node(

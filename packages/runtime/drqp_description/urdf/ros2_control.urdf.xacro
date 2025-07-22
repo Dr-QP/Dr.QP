@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:macro name="drqp_ros2_control" params="robot_name prefix">
-    <ros2_control name="${robot_name}" type="system">
+    <ros2_control name="${robot_name}_${prefix}" type="system">
       <hardware>
         <plugin>drqp_control/a1_16_hardware_interface</plugin>
       </hardware>
