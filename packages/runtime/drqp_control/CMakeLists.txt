@@ -99,6 +99,9 @@ if(BUILD_TESTING)
 
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+
+  #TODO: Add gmock tests for hardware interface from https://github.com/ros-controls/ros2_control/blob/jazzy/hardware_interface/CMakeLists.txt
+
 endif()
 
 ament_package()
