@@ -30,11 +30,28 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
 {
   if (auto status = hardware_interface::SystemInterface::on_init(info);
       status != hardware_interface::CallbackReturn::SUCCESS) {
+    RCLCPP_FATAL(get_logger(), "Failed to initialize hardware interface.");
     return status;
   }
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
-    // RRBotSystemPositionOnly has exactly one state and command interface on each joint
+    // Dr.QP has exactly one state and command interface on each joint
+
+    RCLCPP_INFO(get_logger(), "Joint %s", joint.name.c_str());
+    RCLCPP_INFO(get_logger(), "  Command interfaces:");
+    for (const auto& commandInterface : joint.command_interfaces) {
+      RCLCPP_INFO(get_logger(), "    %s", commandInterface.name.c_str());
+    }
+    RCLCPP_INFO(get_logger(), "  State interfaces:");
+    for (const auto& stateInterface : joint.state_interfaces) {
+      RCLCPP_INFO(get_logger(), "    %s", stateInterface.name.c_str());
+    }
+    RCLCPP_INFO(get_logger(), "  Parameters:");
+    for (const auto& [name, value] : joint.parameters) {
+      RCLCPP_INFO(get_logger(), "    %s = %s", name.c_str(), value.c_str());
+    }
+
+
     if (joint.command_interfaces.size() != 1) {
       RCLCPP_FATAL(
         get_logger(), "Joint '%s' has %zu command interfaces found. 1 expected.",
