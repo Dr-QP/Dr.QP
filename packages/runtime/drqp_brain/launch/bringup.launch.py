@@ -108,17 +108,17 @@ def generate_launch_description():
                 ],
                 condition=IfCondition(load_drivers),
             ),
-            Node(
-                package='drqp_control',
-                executable='pose_to_joint_state',
-                output='screen',
-                parameters=[
-                    {
-                        'use_sim_time': use_sim_time,
-                    }
-                ],
-                condition=IfCondition(load_drivers),
-            ),
+            # Node(
+            #     package='drqp_control',
+            #     executable='pose_to_joint_state',
+            #     output='screen',
+            #     parameters=[
+            #         {
+            #             'use_sim_time': use_sim_time,
+            #         }
+            #     ],
+            #     condition=IfCondition(load_drivers),
+            # ),
             DeclareLaunchArgument(
                 name='load_joystick',
                 default_value='false',

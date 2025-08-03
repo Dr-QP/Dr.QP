@@ -38,6 +38,9 @@
       <child link="$(arg robot_name)/base_link"/>
   </joint>
 
+  <xacro:include filename="$(find drqp_description)/urdf/ros2_control.urdf.xacro"/>
+  <xacro:drqp_ros2_control robot_name="$(arg robot_name)" />
+
   <gazebo reference="">
     <self_collide>1</self_collide>
 
