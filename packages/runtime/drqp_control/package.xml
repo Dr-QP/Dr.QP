@@ -22,7 +22,7 @@
   <depend>yaml-cpp</depend>
   <exec_depend>joy</exec_depend>
   <exec_depend>ros2_controllers_test_nodes</exec_depend>
-  <!-- <depend>rqt_joint_trajectory_controller</depend> --> <!-- https://github.com/ros-controls/ros2_controllers/tree/master/rqt_joint_trajectory_controller -->
+  <exec_depend>rqt_joint_trajectory_controller</exec_depend>
 
 
   <test_depend>ament_lint_auto</test_depend>
