@@ -76,6 +76,15 @@ public:
   override;
 
   /**
+   * @brief Callback for configuring the hardware interface.
+   * @param previous_state Previous lifecycle state.
+   * @return Callback return indicating success or error.
+   */
+  hardware_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state)
+  override;
+
+
+  /**
    * @brief Reads data from the hardware.
    * @param time Current time.
    * @param period Duration since the last read.

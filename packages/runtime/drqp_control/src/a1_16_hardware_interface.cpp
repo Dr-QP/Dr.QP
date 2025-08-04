@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "drqp_control/a1_16_hardware_interface.h"
+#include <rclcpp/logging.hpp>
 
 namespace drqp_control
 {
@@ -37,18 +38,26 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     // Dr.QP has exactly one state and command interface on each joint
 
-    RCLCPP_INFO(get_logger(), "Joint %s", joint.name.c_str());
-    RCLCPP_INFO(get_logger(), "  Command interfaces:");
+    RCLCPP_DEBUG(get_logger(), "Joint %s", joint.name.c_str());
+    RCLCPP_DEBUG(get_logger(), "  Command interfaces:");
     for (const auto& commandInterface : joint.command_interfaces) {
-      RCLCPP_INFO(get_logger(), "    %s", commandInterface.name.c_str());
+      RCLCPP_DEBUG(get_logger(), "    %s", commandInterface.name.c_str());
+      RCLCPP_DEBUG(get_logger(), "      Command interface parameters:");
+      for (const auto& [name, value] : commandInterface.parameters) {
+        RCLCPP_DEBUG(get_logger(), "      %s = %s", name.c_str(), value.c_str());
+      }
     }
-    RCLCPP_INFO(get_logger(), "  State interfaces:");
+    RCLCPP_DEBUG(get_logger(), "  State interfaces:");
     for (const auto& stateInterface : joint.state_interfaces) {
-      RCLCPP_INFO(get_logger(), "    %s", stateInterface.name.c_str());
+      RCLCPP_DEBUG(get_logger(), "    %s", stateInterface.name.c_str());
+      RCLCPP_DEBUG(get_logger(), "      State interface parameters:");
+      for (const auto& [name, value] : stateInterface.parameters) {
+        RCLCPP_DEBUG(get_logger(), "      %s = %s", name.c_str(), value.c_str());
+      }
     }
-    RCLCPP_INFO(get_logger(), "  Parameters:");
+    RCLCPP_DEBUG(get_logger(), "  Parameters:");
     for (const auto& [name, value] : joint.parameters) {
-      RCLCPP_INFO(get_logger(), "    %s = %s", name.c_str(), value.c_str());
+      RCLCPP_DEBUG(get_logger(), "    %s = %s", name.c_str(), value.c_str());
     }
 
 
@@ -107,15 +116,60 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_deactivate(
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-hardware_interface::return_type a1_16_hardware_interface::read(
-  const rclcpp::Time& time, const rclcpp::Duration& period)
+hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
+  const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  // reset values always when configuring hardware
+  for (const auto & [name, descr] : joint_state_interfaces_)
+  {
+    set_state(name, 0.0);
+  }
+  for (const auto & [name, descr] : joint_command_interfaces_)
+  {
+    set_command(name, 0.0);
+  }
+  RCLCPP_INFO(get_logger(), "Successfully configured!");
+
+  return hardware_interface::CallbackReturn::SUCCESS;
+}
+
+hardware_interface::return_type a1_16_hardware_interface::read(
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+{
+  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
+  std::stringstream ss;
+  ss << "Reading states:";
+  auto hw_slowdown_ = 100.;
+  for (const auto & [name, descr] : joint_state_interfaces_)
+  {
+    // Simulate RRBot's movement
+    auto new_value = get_state(name) + (get_command(name) - get_state(name)) / hw_slowdown_;
+    set_state(name, new_value);
+    ss << std::fixed << std::setprecision(2) << std::endl
+       << "\t" << get_state(name) << " for joint '" << name << "'";
+  }
+  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
+  // END: This part here is for exemplary purposes - Please do not copy to your production code
+
   return hardware_interface::return_type::OK;
 }
 
 hardware_interface::return_type a1_16_hardware_interface::write(
-  const rclcpp::Time& time, const rclcpp::Duration& period)
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
+  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
+  std::stringstream ss;
+  ss << "Writing commands:";
+
+  for (const auto & [name, descr] : joint_command_interfaces_)
+  {
+    // Simulate sending commands to the hardware
+    ss << std::fixed << std::setprecision(2) << std::endl
+       << "\t" << get_command(name) << " for joint '" << name << "'";
+  }
+  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
+  // END: This part here is for exemplary purposes - Please do not copy to your production code
+
   return hardware_interface::return_type::OK;
 }
 }
