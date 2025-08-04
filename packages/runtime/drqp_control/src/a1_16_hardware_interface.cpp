@@ -127,18 +127,18 @@ hardware_interface::return_type a1_16_hardware_interface::read(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  std::stringstream ss;
-  ss << "Reading states:";
-  auto hw_slowdown_ = 10.;
-  for (const auto & [name, descr] : joint_state_interfaces_)
-  {
-    // Simulate RRBot's movement
-    auto new_value = get_state(name) + (get_command(name) - get_state(name)) / hw_slowdown_;
-    set_state(name, new_value);
-    ss << std::fixed << std::setprecision(2) << std::endl
-       << "\t" << get_state(name) << " for joint '" << name << "'";
-  }
-  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
+  // std::stringstream ss;
+  // ss << "Reading states:";
+  // auto hw_slowdown_ = 10.;
+  // for (const auto & [name, descr] : joint_state_interfaces_)
+  // {
+  //   // Simulate RRBot's movement
+  //   auto new_value = get_state(name) + (get_command(name) - get_state(name)) / hw_slowdown_;
+  //   set_state(name, new_value);
+  //   ss << std::fixed << std::setprecision(2) << std::endl
+  //      << "\t" << get_state(name) << " for joint '" << name << "'";
+  // }
+  // RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
   // END: This part here is for exemplary purposes - Please do not copy to your production code
 
   return hardware_interface::return_type::OK;
@@ -156,6 +156,8 @@ hardware_interface::return_type a1_16_hardware_interface::write(
     // Simulate sending commands to the hardware
     ss << std::fixed << std::setprecision(2) << std::endl
        << "\t" << get_command(name) << " for joint '" << name << "'";
+
+    set_state(name, get_command(name));
   }
   RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
   // END: This part here is for exemplary purposes - Please do not copy to your production code
