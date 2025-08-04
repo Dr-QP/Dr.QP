@@ -27,7 +27,7 @@
   </xacro:macro>
 
   <xacro:macro name="drqp_ros2_control" params="robot_name">
-    <ros2_control name="${robot_name}" type="system">
+    <ros2_control name="${robot_name}" type="system" rw_rate="20" is_async="true" thread_priority="30">
       <hardware>
         <plugin>drqp_control/a1_16_hardware_interface</plugin>
       </hardware>
