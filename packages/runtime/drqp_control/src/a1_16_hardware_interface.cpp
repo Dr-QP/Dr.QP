@@ -21,17 +21,13 @@
 #include "drqp_control/a1_16_hardware_interface.h"
 #include <rclcpp/logging.hpp>
 
-
 #include <drqp_serial/SerialFactory.h>
 #include <drqp_a1_16_driver/XYZrobotServo.h>
 
 #include "drqp_control/DrQp.h"
 namespace drqp_control
 {
-a1_16_hardware_interface::a1_16_hardware_interface()
-{
-
-}
+a1_16_hardware_interface::a1_16_hardware_interface() {}
 a1_16_hardware_interface::~a1_16_hardware_interface() = default;
 
 hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
@@ -55,7 +51,8 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
         RCLCPP_DEBUG(get_logger(), "      %s = %s", name.c_str(), value.c_str());
       }
 
-      robotConfig_.addServo(joint.name, std::stoi(commandInterface.parameters.at("id")),
+      robotConfig_.addServo(
+        joint.name, std::stoi(commandInterface.parameters.at("id")),
         commandInterface.parameters.at("inverted") == "true",
         std::stod(commandInterface.parameters.at("offset_rads")));
     }
@@ -71,7 +68,6 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
     for (const auto& [name, value] : joint.parameters) {
       RCLCPP_DEBUG(get_logger(), "    %s = %s", name.c_str(), value.c_str());
     }
-
 
     if (joint.command_interfaces.size() != 1) {
       RCLCPP_FATAL(
@@ -122,15 +118,13 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_deactivate(
 }
 
 hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
-  const rclcpp_lifecycle::State & /*previous_state*/)
+  const rclcpp_lifecycle::State& /*previous_state*/)
 {
   // reset values always when configuring hardware
-  for (const auto & [name, descr] : joint_state_interfaces_)
-  {
+  for (const auto& [name, descr] : joint_state_interfaces_) {
     set_state(name, 0.0);
   }
-  for (const auto & [name, descr] : joint_command_interfaces_)
-  {
+  for (const auto& [name, descr] : joint_command_interfaces_) {
     set_command(name, 0.0);
   }
   RCLCPP_INFO(get_logger(), "Successfully configured!");
@@ -139,7 +133,7 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
 }
 
 hardware_interface::return_type a1_16_hardware_interface::read(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+  const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
 {
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
   // std::stringstream ss;
@@ -160,14 +154,13 @@ hardware_interface::return_type a1_16_hardware_interface::read(
 }
 
 hardware_interface::return_type a1_16_hardware_interface::write(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+  const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
 {
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
   std::stringstream ss;
   ss << "Writing commands:";
 
-  for (const auto & [name, descr] : joint_command_interfaces_)
-  {
+  for (const auto& [name, descr] : joint_command_interfaces_) {
     // Simulate sending commands to the hardware
     ss << std::fixed << std::setprecision(2) << std::endl
        << "\t" << get_command(name) << " for joint '" << name << "'";
@@ -179,9 +172,8 @@ hardware_interface::return_type a1_16_hardware_interface::write(
 
   return hardware_interface::return_type::OK;
 }
-}
+}  // namespace drqp_control
 
 #include "pluginlib/class_list_macros.hpp"
 
-PLUGINLIB_EXPORT_CLASS(
-  drqp_control::a1_16_hardware_interface, hardware_interface::SystemInterface)
+PLUGINLIB_EXPORT_CLASS(drqp_control::a1_16_hardware_interface, hardware_interface::SystemInterface)

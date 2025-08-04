@@ -98,8 +98,8 @@ void RobotConfig::loadConfig(fs::path configPath)
   }
 }
 
-void RobotConfig::addServo(const std::string& jointName, uint8_t id, bool inverted,
-  double offset_rads)
+void RobotConfig::addServo(
+  const std::string& jointName, uint8_t id, bool inverted, double offset_rads)
 {
   const double ratio = inverted ? -1. : 1.;
   jointToServoId_[jointName] = ServoParams{id, ratio, offset_rads};

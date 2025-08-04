@@ -31,7 +31,6 @@
 #include <drqp_control/RobotConfig.h>
 #include <drqp_serial/SerialProtocol.h>
 
-
 namespace drqp_control
 {
 
@@ -48,33 +47,31 @@ public:
    * @param info Hardware information for the system.
    * @return Callback return indicating success or error.
    */
-  hardware_interface::CallbackReturn on_init(const hardware_interface::HardwareInfo & info)
-  override;
+  hardware_interface::CallbackReturn on_init(const hardware_interface::HardwareInfo& info) override;
 
   /**
    * @brief Callback for activating the hardware interface.
    * @param previous_state Previous lifecycle state.
    * @return Callback return indicating success or error.
    */
-  hardware_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State & previous_state)
-  override;
+  hardware_interface::CallbackReturn on_activate(
+    const rclcpp_lifecycle::State& previous_state) override;
 
   /**
    * @brief Callback for deactivating the hardware interface.
    * @param previous_state Previous lifecycle state.
    * @return Callback return indicating success or error.
    */
-  hardware_interface::CallbackReturn on_deactivate(const rclcpp_lifecycle::State & previous_state)
-  override;
+  hardware_interface::CallbackReturn on_deactivate(
+    const rclcpp_lifecycle::State& previous_state) override;
 
   /**
    * @brief Callback for configuring the hardware interface.
    * @param previous_state Previous lifecycle state.
    * @return Callback return indicating success or error.
    */
-  hardware_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state)
-  override;
-
+  hardware_interface::CallbackReturn on_configure(
+    const rclcpp_lifecycle::State& previous_state) override;
 
   /**
    * @brief Reads data from the hardware.
@@ -82,8 +79,8 @@ public:
    * @param period Duration since the last read.
    * @return Hardware interface return type indicating success or error.
    */
-  hardware_interface::return_type  read(
-    const rclcpp::Time & time, const rclcpp::Duration & period) override;
+  hardware_interface::return_type read(
+    const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
   /**
    * @brief Writes data to the hardware.
@@ -91,11 +88,11 @@ public:
    * @param period Duration since the last write.
    * @return Hardware interface return type indicating success or error.
    */
-  hardware_interface::return_type  write(
-    const rclcpp::Time & time, const rclcpp::Duration & period) override;
+  hardware_interface::return_type write(
+    const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
 private:
   RobotConfig robotConfig_;
   std::unique_ptr<SerialProtocol> servoSerial_;
 };
-}
+}  // namespace drqp_control
