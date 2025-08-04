@@ -94,24 +94,14 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-// std::vector<hardware_interface::StateInterface> a1_16_hardware_interface::export_state_interfaces()
-// {
-//   return {};
-// }
-
-// std::vector<hardware_interface::CommandInterface> a1_16_hardware_interface::export_command_interfaces()
-// {
-//   return {};
-// }
-
 hardware_interface::CallbackReturn a1_16_hardware_interface::on_activate(
-  const rclcpp_lifecycle::State& previous_state)
+  const rclcpp_lifecycle::State& /*previous_state*/)
 {
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn a1_16_hardware_interface::on_deactivate(
-  const rclcpp_lifecycle::State& previous_state)
+  const rclcpp_lifecycle::State& /*previous_state*/)
 {
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -139,7 +129,7 @@ hardware_interface::return_type a1_16_hardware_interface::read(
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
   std::stringstream ss;
   ss << "Reading states:";
-  auto hw_slowdown_ = 100.;
+  auto hw_slowdown_ = 10.;
   for (const auto & [name, descr] : joint_state_interfaces_)
   {
     // Simulate RRBot's movement

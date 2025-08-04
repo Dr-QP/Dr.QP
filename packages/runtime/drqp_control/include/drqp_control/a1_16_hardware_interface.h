@@ -47,18 +47,6 @@ public:
   hardware_interface::CallbackReturn on_init(const hardware_interface::HardwareInfo & info)
   override;
 
-  // /**
-  //  * @brief Exports state interfaces for ROS2.
-  //  * @return A vector of state interfaces.
-  //  */
-  // std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
-
-  // /**
-  //  * @brief Exports command interfaces for ROS2.
-  //  * @return A vector of command interfaces.
-  //  */
-  // std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
-
   /**
    * @brief Callback for activating the hardware interface.
    * @param previous_state Previous lifecycle state.
