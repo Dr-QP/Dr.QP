@@ -29,7 +29,7 @@ SCENARIO("ROS node")
   GIVEN("Robot config")
   {
     rclcpp::Node node("test_robot_config");
-    RobotConfig robotConfig(&node);
+    NodeRobotConfig robotConfig(&node);
 
     THEN("Config parameter should be declared")
     {

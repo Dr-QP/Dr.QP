@@ -1,8 +1,9 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:macro name="drqp_leg_ros2_control" params="robot_name leg_name">
+  <xacro:macro name="drqp_leg_ros2_control" params="robot_name leg_name coxa_servo_id servo_inverted">
     <joint name="${robot_name}/${leg_name}_coxa">
       <command_interface name="position">
+        <param name="servo_id">${coxa_servo_id}</param>
         <param name="min">${radians(-90)}</param>
         <param name="max">${radians(90)}</param>
       </command_interface>
@@ -11,6 +12,8 @@
 
     <joint name="${robot_name}/${leg_name}_femur">
       <command_interface name="position">
+        <param name="servo_id">${coxa_servo_id + 2}</param>
+        <param name="inverted">${servo_inverted}</param>
         <param name="min">${radians(-98)}</param>
         <param name="max">${radians(90)}</param>
       </command_interface>
@@ -19,6 +22,8 @@
 
     <joint name="${robot_name}/${leg_name}_tibia">
       <command_interface name="position">
+        <param name="servo_id">${coxa_servo_id + 4}</param>
+        <param name="inverted">${servo_inverted}</param>
         <param name="min">${radians(-80)}</param>
         <param name="max">${radians(110)}</param>
       </command_interface>
@@ -30,13 +35,15 @@
     <ros2_control name="${robot_name}" type="system" rw_rate="20" is_async="true" thread_priority="30">
       <hardware>
         <plugin>drqp_control/a1_16_hardware_interface</plugin>
+        <param name="device_address">/dev/ttySC0</param>
+        <param name="baud_rate">115200</param>
       </hardware>
-      <xacro:drqp_leg_ros2_control robot_name="${robot_name}" leg_name="left_front"/>
-      <xacro:drqp_leg_ros2_control robot_name="${robot_name}" leg_name="right_front"/>
-      <xacro:drqp_leg_ros2_control robot_name="${robot_name}" leg_name="left_middle"/>
-      <xacro:drqp_leg_ros2_control robot_name="${robot_name}" leg_name="right_middle"/>
-      <xacro:drqp_leg_ros2_control robot_name="${robot_name}" leg_name="left_back"/>
-      <xacro:drqp_leg_ros2_control robot_name="${robot_name}" leg_name="right_back"/>
+      <xacro:drqp_leg_ros2_control robot_name="${robot_name}" leg_name="left_front" coxa_servo_id="1"/>
+      <xacro:drqp_leg_ros2_control robot_name="${robot_name}" leg_name="right_front" coxa_servo_id="2" servo_inverted="true"/>
+      <xacro:drqp_leg_ros2_control robot_name="${robot_name}" leg_name="left_middle" coxa_servo_id="13"/>
+      <xacro:drqp_leg_ros2_control robot_name="${robot_name}" leg_name="right_middle" coxa_servo_id="14" servo_inverted="true"/>
+      <xacro:drqp_leg_ros2_control robot_name="${robot_name}" leg_name="left_back" coxa_servo_id="7"/>
+      <xacro:drqp_leg_ros2_control robot_name="${robot_name}" leg_name="right_back" coxa_servo_id="8" servo_inverted="true"/>
     </ros2_control>
   </xacro:macro>
 </robot>

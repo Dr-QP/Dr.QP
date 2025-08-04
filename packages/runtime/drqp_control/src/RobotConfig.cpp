@@ -38,33 +38,15 @@ struct RobotConfig::JointParams
   double offset_rads = 0.;
 };
 
-RobotConfig::RobotConfig(rclcpp::Node* node) : node_(node)
-{
-  node_->declare_parameter("config", "");
-}
+RobotConfig::RobotConfig() : logger_(rclcpp::get_logger("RobotConfig")) {}
+
+RobotConfig::RobotConfig(rclcpp::Logger logger) : logger_(logger) {}
 
 RobotConfig::~RobotConfig() = default;
-
-fs::path RobotConfig::getConfigPath()
-{
-  fs::path yamlPath = node_->get_parameter("config").as_string();
-  if (yamlPath.empty()) {
-    const fs::path packageShareDir = ament_index_cpp::get_package_share_directory("drqp_control");
-    yamlPath = packageShareDir / "config" / "drqp.yml";
-  }
-  if (!fs::exists(yamlPath)) {
-    RCLCPP_ERROR(node_->get_logger(), "%s could not be found. Exiting.", yamlPath.c_str());
-    throw std::runtime_error("Robot config parsing failure.");
-  }
-  return yamlPath;
-}
 
 void RobotConfig::loadConfig(fs::path configPath)
 {
   try {
-    if (configPath.empty()) {
-      configPath = getConfigPath();
-    }
     YAML::Node config = YAML::LoadFile(configPath.string());
     if (!config) {
       throw std::runtime_error("Robot config parsing failure.");
@@ -78,7 +60,7 @@ void RobotConfig::loadConfig(fs::path configPath)
     std::string robotNamespace = "";
     if (YAML::Node namespaceNode = robot["namespace"]; namespaceNode) {
       robotNamespace = namespaceNode.as<std::string>() + "/";
-      RCLCPP_INFO(node_->get_logger(), "Robot namespace: %s", robotNamespace.c_str());
+      RCLCPP_INFO(get_logger(), "Robot namespace: %s", robotNamespace.c_str());
     }
 
     // device_address
@@ -108,23 +90,20 @@ void RobotConfig::loadConfig(fs::path configPath)
         inverted = servo.second["inverted"].as<bool>();
       }
 
-      const double ratio = inverted ? -1. : 1.;
-
-      jointToServoId_[name] = ServoParams{id, ratio, offset_rads};
-      servoIdToJoint_[id] = JointParams{name, ratio, offset_rads};
+      addServo(name, id, inverted, offset_rads);
     }
-
-    declareParameters();
   } catch (const std::exception& e) {
-    RCLCPP_ERROR(node_->get_logger(), "Failed to load config %s", e.what());
+    RCLCPP_ERROR(get_logger(), "Failed to load config %s", e.what());
     throw;
   }
 }
 
-void RobotConfig::declareParameters()
+void RobotConfig::addServo(const std::string& jointName, uint8_t id, bool inverted,
+  double offset_rads)
 {
-  node_->declare_parameter("device_address", deviceAddress_);
-  node_->declare_parameter("baud_rate", baudRate_);
+  const double ratio = inverted ? -1. : 1.;
+  jointToServoId_[jointName] = ServoParams{id, ratio, offset_rads};
+  servoIdToJoint_[id] = JointParams{jointName, ratio, offset_rads};
 }
 
 std::optional<RobotConfig::ServoValues> RobotConfig::jointToServo(const JointValues& joint)
@@ -149,4 +128,42 @@ std::optional<RobotConfig::JointValues> RobotConfig::servoToJoint(const ServoVal
   const double positionAsRadians =
     positionToRadians(servo.position) * jointParams.ratio - jointParams.offset_rads;
   return JointValues{jointParams.jointName, positionAsRadians};
+}
+
+////////////////////////////////////////////////////////////////////////
+
+NodeRobotConfig::NodeRobotConfig(rclcpp::Node* node) : RobotConfig(node->get_logger()), node_(node)
+{
+  node_->declare_parameter("config", "");
+}
+
+fs::path NodeRobotConfig::getConfigPath()
+{
+  fs::path yamlPath = node_->get_parameter("config").as_string();
+  if (yamlPath.empty()) {
+    const fs::path packageShareDir = ament_index_cpp::get_package_share_directory("drqp_control");
+    yamlPath = packageShareDir / "config" / "drqp.yml";
+  }
+  if (!fs::exists(yamlPath)) {
+    RCLCPP_ERROR(get_logger(), "%s could not be found. Exiting.", yamlPath.c_str());
+    throw std::runtime_error("Robot config parsing failure.");
+  }
+  return yamlPath;
+}
+
+void NodeRobotConfig::loadConfig()
+{
+  loadConfig(getConfigPath());
+}
+
+void NodeRobotConfig::loadConfig(fs::path configPath)
+{
+  RobotConfig::loadConfig(configPath);
+  declareParameters();
+}
+
+void NodeRobotConfig::declareParameters()
+{
+  node_->declare_parameter("device_address", deviceAddress_);
+  node_->declare_parameter("baud_rate", baudRate_);
 }

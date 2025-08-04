@@ -244,7 +244,7 @@ public:
     servoStatesPublisher_->publish(multiServoStates);
   }
 
-  RobotConfig robotConfig_;
+  NodeRobotConfig robotConfig_;
 
   rclcpp::Publisher<drqp_interfaces::msg::MultiServoState>::SharedPtr servoStatesPublisher_;
 

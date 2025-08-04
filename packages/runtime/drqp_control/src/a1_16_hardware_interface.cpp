@@ -21,9 +21,17 @@
 #include "drqp_control/a1_16_hardware_interface.h"
 #include <rclcpp/logging.hpp>
 
+
+#include <drqp_serial/SerialFactory.h>
+#include <drqp_a1_16_driver/XYZrobotServo.h>
+
+#include "drqp_control/DrQp.h"
 namespace drqp_control
 {
-a1_16_hardware_interface::a1_16_hardware_interface() = default;
+a1_16_hardware_interface::a1_16_hardware_interface()
+{
+
+}
 a1_16_hardware_interface::~a1_16_hardware_interface() = default;
 
 hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
@@ -46,6 +54,10 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
       for (const auto& [name, value] : commandInterface.parameters) {
         RCLCPP_DEBUG(get_logger(), "      %s = %s", name.c_str(), value.c_str());
       }
+
+      robotConfig_.addServo(joint.name, std::stoi(commandInterface.parameters.at("id")),
+        commandInterface.parameters.at("inverted") == "true",
+        std::stod(commandInterface.parameters.at("offset_rads")));
     }
     RCLCPP_DEBUG(get_logger(), "  State interfaces:");
     for (const auto& stateInterface : joint.state_interfaces) {
@@ -90,6 +102,9 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
       return hardware_interface::CallbackReturn::ERROR;
     }
   }
+
+  servoSerial_ = makeSerialForDevice(info.hardware_parameters.at("device_address"));
+  servoSerial_->begin(std::stoi(info.hardware_parameters.at("baud_rate")));
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }

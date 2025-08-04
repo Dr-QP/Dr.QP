@@ -102,7 +102,7 @@ public:
     });
   }
 
-  RobotConfig robotConfig_;
+  NodeRobotConfig robotConfig_;
 
   std::unique_ptr<SerialProtocol> servoSerial_;
   rclcpp::TimerBase::SharedPtr timer_;

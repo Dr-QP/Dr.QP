@@ -34,11 +34,11 @@ namespace fs = std::filesystem;
 class RobotConfig
 {
 public:
-  explicit RobotConfig(rclcpp::Node* node);
-  ~RobotConfig();
+  RobotConfig();
+  explicit RobotConfig(rclcpp::Logger logger);
+  virtual ~RobotConfig();
 
-  fs::path getConfigPath();
-  void loadConfig(fs::path configPath = {});
+  virtual void loadConfig(fs::path configPath );
 
   struct JointValues
   {
@@ -55,17 +55,35 @@ public:
   std::optional<ServoValues> jointToServo(const JointValues& joint);
   std::optional<JointValues> servoToJoint(const ServoValues& servo);
 
+  void addServo(const std::string& jointName, uint8_t id, bool inverted, double offset_rads = 0.);
+protected:
+  rclcpp::Logger get_logger() const { return logger_; }
+
+  std::string deviceAddress_ = "/dev/ttySC0";
+  int baudRate_ = 115200;
+
 private:
   struct ServoParams;
   struct JointParams;
 
+  rclcpp::Logger logger_;
+
+  std::unordered_map<std::string, ServoParams> jointToServoId_;
+  std::unordered_map<uint8_t, JointParams> servoIdToJoint_;
+};
+
+class NodeRobotConfig: public RobotConfig
+{
+public:
+  explicit NodeRobotConfig(rclcpp::Node* node);
+
+  fs::path getConfigPath();
+  void loadConfig();
+  void loadConfig(fs::path configPath ) override;
+
+private:
   void declareParameters();
 
   rclcpp::Node* node_;
 
-  std::unordered_map<std::string, ServoParams> jointToServoId_;
-  std::unordered_map<uint8_t, JointParams> servoIdToJoint_;
-
-  std::string deviceAddress_ = "/dev/ttySC0";
-  int baudRate_ = 115200;
 };

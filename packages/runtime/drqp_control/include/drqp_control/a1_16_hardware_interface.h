@@ -28,6 +28,10 @@
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
+#include <drqp_control/RobotConfig.h>
+#include <drqp_serial/SerialProtocol.h>
+
+
 namespace drqp_control
 {
 
@@ -89,5 +93,9 @@ public:
    */
   hardware_interface::return_type  write(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
+
+private:
+  RobotConfig robotConfig_;
+  std::unique_ptr<SerialProtocol> servoSerial_;
 };
 }
