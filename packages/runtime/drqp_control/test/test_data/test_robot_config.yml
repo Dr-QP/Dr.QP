@@ -5,9 +5,22 @@ robot:
   servos:
     left_front_coxa:
       id: 1
+
+    left_front_coxa_with_limits:
+      id: 10
+      min_rads: -1.0
+      max_rads: 1.62
     left_front_femur:
       id: 2
       offset_rads: 0.2 # Calibration offset
+      min_rads: -1.0
+      max_rads: 1.62
     left_front_tibia:
       id: 18
       inverted: true
+
+    left_front_tibia_with_limits:
+      id: 18
+      inverted: true
+      min_rads: -1.0
+      max_rads: 1.62

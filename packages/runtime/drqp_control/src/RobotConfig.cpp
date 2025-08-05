@@ -93,6 +93,14 @@ void RobotConfig::loadConfig(fs::path configPath)
       if (servo.second["inverted"]) {
         inverted = servo.second["inverted"].as<bool>();
       }
+      double min_rads = -M_PI;
+      if (servo.second["min_rads"]) {
+        min_rads = servo.second["min_rads"].as<double>();
+      }
+      double max_rads = M_PI;
+      if (servo.second["max_rads"]) {
+        max_rads = servo.second["max_rads"].as<double>();
+      }
 
       addServo(
         ServoJointParams{
@@ -100,8 +108,8 @@ void RobotConfig::loadConfig(fs::path configPath)
           .servo_id = id,
           .inverted = inverted,
           .offset_radians = offset_rads,
-          .min_angle_radians = -M_PI,
-          .max_angle_radians = M_PI,
+          .min_angle_radians = min_rads,
+          .max_angle_radians = max_rads,
         });
     }
   } catch (const std::exception& e) {
@@ -113,19 +121,24 @@ void RobotConfig::loadConfig(fs::path configPath)
 void RobotConfig::addServo(const ServoJointParams& params)
 {
   const double ratio = params.inverted ? -1. : 1.;
+  const auto min_rads = params.inverted ? -params.max_angle_radians : params.min_angle_radians;
+  const auto max_rads = params.inverted ? -params.min_angle_radians : params.max_angle_radians;
+
+  const auto true_min_rads = std::min(min_rads, max_rads);
+  const auto true_max_rads = std::max(min_rads, max_rads);
 
   jointToServoId_[params.joint_name] = ServoParams{
     .id = params.servo_id,
     .ratio = ratio,
     .offset_rads = params.offset_radians,
-    .min_angle_rads = params.min_angle_radians,
-    .max_angle_rads = params.max_angle_radians};
+    .min_angle_rads = true_min_rads,
+    .max_angle_rads = true_max_rads};
   servoIdToJoint_[params.servo_id] = JointParams{
     .joint_name = params.joint_name,
     .ratio = ratio,
     .offset_rads = params.offset_radians,
-    .min_angle_rads = params.min_angle_radians,
-    .max_angle_rads = params.max_angle_radians};
+    .min_angle_rads = true_min_rads,
+    .max_angle_rads = true_max_rads};
 }
 
 std::optional<RobotConfig::ServoValues> RobotConfig::jointToServo(const JointValues& joint)

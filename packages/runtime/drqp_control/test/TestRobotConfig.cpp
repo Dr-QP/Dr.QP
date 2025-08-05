@@ -68,12 +68,36 @@ SCENARIO("ROS node")
         CHECK(node.get_parameter("baud_rate").as_int() == 115200);
       }
 
-      THEN("Joint to servo mapping should work")
+      THEN("Joint to servo mapping should work with default limits")
       {
         RobotConfig::JointValues joint{"test_robot/left_front_coxa", M_PI};
         RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
         CHECK(servo.id == 1);
         CHECK(servo.position == 1023);
+      }
+
+      THEN("Joint to servo mapping should work within limits")
+      {
+        RobotConfig::JointValues joint{"test_robot/left_front_coxa_with_limits", 1.0};
+        RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
+        CHECK(servo.id == 10);
+        CHECK(servo.position == 674);
+      }
+
+      THEN("Joint to servo mapping should have max clamping")
+      {
+        RobotConfig::JointValues joint{"test_robot/left_front_coxa_with_limits", 3.0};
+        RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
+        CHECK(servo.id == 10);
+        CHECK(servo.position == 775);
+      }
+
+      THEN("Joint to servo mapping should have min clamping")
+      {
+        RobotConfig::JointValues joint{"test_robot/left_front_coxa_with_limits", -3.0};
+        RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
+        CHECK(servo.id == 10);
+        CHECK(servo.position == 348);
       }
 
       THEN("Servo to joint mapping should work")
