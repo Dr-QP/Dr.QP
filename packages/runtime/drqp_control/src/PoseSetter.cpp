@@ -68,9 +68,9 @@ public:
               RCLCPP_ERROR(get_logger(), "Unknown pose mode %i", msg.mode);
             }
           } catch (std::exception& e) {
-            RCLCPP_ERROR(get_logger(), "Exception occurred in servo_goals handler %s", e.what());
+            RCLCPP_ERROR(get_logger(), "Exception occurred in /servo_goals handler %s", e.what());
           } catch (...) {
-            RCLCPP_ERROR(get_logger(), "Unknown exception occurred in servo_goals handler.");
+            RCLCPP_ERROR(get_logger(), "Unknown exception occurred in /servo_goals handler.");
           }
         });
 
@@ -115,9 +115,9 @@ public:
             }
           }
         } catch (std::exception& e) {
-          RCLCPP_ERROR(get_logger(), "Exception occurred in kill_switch handler %s", e.what());
+          RCLCPP_ERROR(get_logger(), "Exception occurred in /servo_torque_on handler %s", e.what());
         } catch (...) {
-          RCLCPP_ERROR(get_logger(), "Unknown exception occurred in kill_switch handler.");
+          RCLCPP_ERROR(get_logger(), "Unknown exception occurred in /servo_torque_on handler.");
         }
       });
 
@@ -126,9 +126,9 @@ public:
         try {
           rebootServos();
         } catch (std::exception& e) {
-          RCLCPP_ERROR(get_logger(), "Exception occurred in kill_switch handler %s", e.what());
+          RCLCPP_ERROR(get_logger(), "Exception occurred in /servo_reboot handler %s", e.what());
         } catch (...) {
-          RCLCPP_ERROR(get_logger(), "Unknown exception occurred in kill_switch handler.");
+          RCLCPP_ERROR(get_logger(), "Unknown exception occurred in /servo_reboot handler.");
         }
       });
   }
