@@ -154,7 +154,7 @@ hardware_interface::return_type a1_16_hardware_interface::write(
   size_t index = 0;
   for (const auto& [name, descr] : joint_command_interfaces_) {
     auto pos = get_command(name);
-    set_state(name, pos);
+
 
     auto servoValues = robotConfig_.jointToServo({descr.prefix_name, pos});
     if (!servoValues) {
@@ -166,6 +166,8 @@ hardware_interface::return_type a1_16_hardware_interface::write(
     // }
     iposCmd.at(index) = {servoValues->position, SET_POSITION_CONTROL, servoValues->id, 0};
     index++;
+
+    set_state(name, servoValues->clamped_position_as_radians);
   }
   servo.sendJogCommand(iposCmd);
 

@@ -139,7 +139,8 @@ std::optional<RobotConfig::ServoValues> RobotConfig::jointToServo(const JointVal
   const double clampedPosition =
     std::clamp(rawPosition, servoParams.min_angle_rads, servoParams.max_angle_rads);
   const uint16_t position = radiansToPosition(clampedPosition);
-  return ServoValues{servoParams.id, position};
+  return ServoValues{
+    .id = servoParams.id, .position = position, .clamped_position_as_radians = clampedPosition};
 }
 
 std::optional<RobotConfig::JointValues> RobotConfig::servoToJoint(const ServoValues& servo)
@@ -153,7 +154,7 @@ std::optional<RobotConfig::JointValues> RobotConfig::servoToJoint(const ServoVal
     positionToRadians(servo.position) * jointParams.ratio - jointParams.offset_rads;
   const double clampedPosition =
     std::clamp(positionAsRadians, jointParams.min_angle_rads, jointParams.max_angle_rads);
-  return JointValues{jointParams.joint_name, clampedPosition};
+  return JointValues{.name = jointParams.joint_name, .position_as_radians = clampedPosition};
 }
 
 ////////////////////////////////////////////////////////////////////////

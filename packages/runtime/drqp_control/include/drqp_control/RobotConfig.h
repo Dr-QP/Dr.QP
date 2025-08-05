@@ -50,6 +50,8 @@ public:
   {
     uint8_t id;
     uint16_t position;
+
+    double clamped_position_as_radians;
   };
 
   std::optional<ServoValues> jointToServo(const JointValues& joint);
