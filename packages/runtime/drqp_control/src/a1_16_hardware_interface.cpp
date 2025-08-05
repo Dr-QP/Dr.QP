@@ -39,6 +39,16 @@ std::string get_param(
   return parameters.at(key);
 }
 
+bool get_bool_param(
+  const std::unordered_map<std::string, std::string>& parameters, const std::string& key)
+{
+  auto value = get_param(parameters, key);
+  if (value != "True" && value != "False") {
+    throw std::runtime_error("Invalid boolean value " + value + " for parameter " + key + ". Expected True or False.");
+  }
+  return value == "True";
+}
+
 hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
   const hardware_interface::HardwareInfo& info)
 {
@@ -70,11 +80,12 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
       RobotConfig::ServoJointParams{
         .joint_name = joint.name,
         .servo_id = servoId,
-        .inverted = get_param(commandInterface.parameters, "inverted") == "true",
+        .inverted = get_bool_param(commandInterface.parameters, "inverted"),
         .offset_radians = std::stod(get_param(commandInterface.parameters, "offset_rads")),
         .min_angle_radians = std::stod(get_param(commandInterface.parameters, "min")),
         .max_angle_radians = std::stod(get_param(commandInterface.parameters, "max")),
       });
+    RCLCPP_INFO(get_logger(), "Added servo %d for joint %s. Inverted: %s", servoId, joint.name.c_str(), get_param(commandInterface.parameters, "inverted").c_str());
 
     if (joint.state_interfaces.size() != 1) {
       RCLCPP_FATAL(
