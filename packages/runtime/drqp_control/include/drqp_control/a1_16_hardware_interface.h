@@ -20,16 +20,12 @@
 
 #pragma once
 
-#include "rclcpp/rclcpp.hpp"
-
-#include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
-#include "hardware_interface/types/hardware_interface_type_values.hpp"
 
-#include <drqp_control/RobotConfig.h>
-#include <drqp_serial/SerialProtocol.h>
+#include "drqp_control/RobotConfig.h"
+#include "drqp_serial/SerialProtocol.h"
 
 namespace drqp_control
 {

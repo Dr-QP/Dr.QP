@@ -82,6 +82,9 @@ SCENARIO("ROS node")
         RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
         CHECK(servo.id == 10);
         CHECK(servo.position == 674);
+
+        RobotConfig::JointValues joint2 = robotConfig.servoToJoint(servo).value();
+        CHECK_THAT(joint2.position_as_radians, Catch::Matchers::WithinAbs(1.0, 0.01));
       }
 
       THEN("Joint to servo mapping should have max clamping")
@@ -90,6 +93,9 @@ SCENARIO("ROS node")
         RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
         CHECK(servo.id == 10);
         CHECK(servo.position == 775);
+
+        RobotConfig::JointValues joint2 = robotConfig.servoToJoint(servo).value();
+        CHECK_THAT(joint2.position_as_radians, Catch::Matchers::WithinAbs(1.62, 0.01));
       }
 
       THEN("Joint to servo mapping should have min clamping")
@@ -98,6 +104,9 @@ SCENARIO("ROS node")
         RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
         CHECK(servo.id == 10);
         CHECK(servo.position == 348);
+
+        RobotConfig::JointValues joint2 = robotConfig.servoToJoint(servo).value();
+        CHECK_THAT(joint2.position_as_radians, Catch::Matchers::WithinAbs(-1.0, 0.01));
       }
 
       THEN("Servo to joint mapping should work")
@@ -114,6 +123,39 @@ SCENARIO("ROS node")
         RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
         CHECK(servo.id == 18);
         CHECK(servo.position == 0);
+      }
+
+      THEN("Inverted servo should work within limits")
+      {
+        RobotConfig::JointValues joint{"test_robot/left_front_tibia_with_limits", 1.0};
+        RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
+        CHECK(servo.id == 18);
+        CHECK(servo.position == 348);
+
+        RobotConfig::JointValues joint2 = robotConfig.servoToJoint(servo).value();
+        CHECK_THAT(joint2.position_as_radians, Catch::Matchers::WithinAbs(1.0, 0.01));
+      }
+
+      THEN("Inverted servo should have max clamping")
+      {
+        RobotConfig::JointValues joint{"test_robot/left_front_tibia_with_limits", 3.0};
+        RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
+        CHECK(servo.id == 18);
+        CHECK(servo.position == 247);
+
+        RobotConfig::JointValues joint2 = robotConfig.servoToJoint(servo).value();
+        CHECK_THAT(joint2.position_as_radians, Catch::Matchers::WithinAbs(1.62, 0.01));
+      }
+
+      THEN("Inverted servo should have min clamping")
+      {
+        RobotConfig::JointValues joint{"test_robot/left_front_tibia_with_limits", -3.0};
+        RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
+        CHECK(servo.id == 18);
+        CHECK(servo.position == 674);
+
+        RobotConfig::JointValues joint2 = robotConfig.servoToJoint(servo).value();
+        CHECK_THAT(joint2.position_as_radians, Catch::Matchers::WithinAbs(-1.0, 0.01));
       }
 
       THEN("Offset should work from angle")

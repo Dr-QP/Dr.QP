@@ -121,11 +121,9 @@ void RobotConfig::loadConfig(fs::path configPath)
 void RobotConfig::addServo(const ServoJointParams& params)
 {
   const double ratio = params.inverted ? -1. : 1.;
-  const auto min_rads = params.inverted ? -params.max_angle_radians : params.min_angle_radians;
-  const auto max_rads = params.inverted ? -params.min_angle_radians : params.max_angle_radians;
 
-  const auto true_min_rads = std::min(min_rads, max_rads);
-  const auto true_max_rads = std::max(min_rads, max_rads);
+  const auto true_min_rads = std::min(params.min_angle_radians, params.max_angle_radians);
+  const auto true_max_rads = std::max(params.min_angle_radians, params.max_angle_radians);
 
   jointToServoId_[params.joint_name] = ServoParams{
     .id = params.servo_id,
@@ -148,10 +146,10 @@ std::optional<RobotConfig::ServoValues> RobotConfig::jointToServo(const JointVal
   }
 
   const ServoParams servoParams = jointToServoId_.at(joint.name);
-  const auto rawPosition = joint.position_as_radians * servoParams.ratio + servoParams.offset_rads;
+  const auto rawPosition = joint.position_as_radians + servoParams.offset_rads;
   const double clampedPosition =
     std::clamp(rawPosition, servoParams.min_angle_rads, servoParams.max_angle_rads);
-  const uint16_t position = radiansToPosition(clampedPosition);
+  const uint16_t position = radiansToPosition(clampedPosition * servoParams.ratio);
   return ServoValues{.id = servoParams.id, .position = position};
 }
 
@@ -164,9 +162,7 @@ std::optional<RobotConfig::JointValues> RobotConfig::servoToJoint(const ServoVal
   const JointParams jointParams = servoIdToJoint_.at(servo.id);
   const double positionAsRadians =
     positionToRadians(servo.position) * jointParams.ratio - jointParams.offset_rads;
-  const double clampedPosition =
-    std::clamp(positionAsRadians, jointParams.min_angle_rads, jointParams.max_angle_rads);
-  return JointValues{.name = jointParams.joint_name, .position_as_radians = clampedPosition};
+  return JointValues{.name = jointParams.joint_name, .position_as_radians = positionAsRadians};
 }
 
 ////////////////////////////////////////////////////////////////////////
