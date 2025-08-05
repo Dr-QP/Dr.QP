@@ -44,7 +44,8 @@ bool get_bool_param(
 {
   auto value = get_param(parameters, key);
   if (value != "True" && value != "False") {
-    throw std::runtime_error("Invalid boolean value " + value + " for parameter " + key + ". Expected True or False.");
+    throw std::runtime_error(
+      "Invalid boolean value " + value + " for parameter " + key + ". Expected True or False.");
   }
   return value == "True";
 }
@@ -164,7 +165,6 @@ hardware_interface::return_type a1_16_hardware_interface::write(
   size_t index = 0;
   for (const auto& [name, descr] : joint_command_interfaces_) {
     auto pos = get_command(name);
-
 
     auto servoValues = robotConfig_.jointToServo({descr.prefix_name, pos});
     if (!servoValues) {
