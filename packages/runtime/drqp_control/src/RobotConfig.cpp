@@ -113,21 +113,19 @@ void RobotConfig::loadConfig(fs::path configPath)
 void RobotConfig::addServo(const ServoJointParams& params)
 {
   const double ratio = params.inverted ? -1. : 1.;
-  const double min = params.inverted ? params.max_angle_radians : params.min_angle_radians;
-  const double max = params.inverted ? params.min_angle_radians : params.max_angle_radians;
 
   jointToServoId_[params.joint_name] = ServoParams{
     .id = params.servo_id,
     .ratio = ratio,
     .offset_rads = params.offset_radians,
-    .min_angle_rads = min,
-    .max_angle_rads = max};
+    .min_angle_rads = params.min_angle_radians,
+    .max_angle_rads = params.max_angle_radians};
   servoIdToJoint_[params.servo_id] = JointParams{
     .joint_name = params.joint_name,
     .ratio = ratio,
     .offset_rads = params.offset_radians,
-    .min_angle_rads = min,
-    .max_angle_rads = max};
+    .min_angle_rads = params.min_angle_radians,
+    .max_angle_rads = params.max_angle_radians};
 }
 
 std::optional<RobotConfig::ServoValues> RobotConfig::jointToServo(const JointValues& joint)
