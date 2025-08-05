@@ -31,7 +31,7 @@ a1_16_hardware_interface::a1_16_hardware_interface() {}
 a1_16_hardware_interface::~a1_16_hardware_interface() = default;
 
 std::string get_param(
-  std::unordered_map<std::string, std::string> parameters, const std::string& key)
+  const std::unordered_map<std::string, std::string>& parameters, const std::string& key)
 {
   if (parameters.count(key) == 0) {
     throw std::runtime_error("Missing parameter " + key);
