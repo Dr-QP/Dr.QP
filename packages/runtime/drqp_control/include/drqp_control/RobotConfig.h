@@ -55,7 +55,18 @@ public:
   std::optional<ServoValues> jointToServo(const JointValues& joint);
   std::optional<JointValues> servoToJoint(const ServoValues& servo);
 
-  void addServo(const std::string& jointName, uint8_t id, bool inverted, double offset_rads = 0.);
+  struct ServoJointParams
+  {
+    std::string joint_name;
+    uint8_t servo_id;
+    bool inverted;
+    double offset_radians;
+
+    double min_angle_radians;
+    double max_angle_radians;
+  };
+
+  void addServo(const ServoJointParams& params);
 
 protected:
   rclcpp::Logger get_logger() const

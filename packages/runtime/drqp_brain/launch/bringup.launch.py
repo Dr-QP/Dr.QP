@@ -30,8 +30,8 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
-    load_drivers = LaunchConfiguration('load_drivers')
-    servo_device = LaunchConfiguration('servo_device')
+    # load_drivers = LaunchConfiguration('load_drivers')
+    # servo_device = LaunchConfiguration('servo_device')
     load_joystick = LaunchConfiguration('load_joystick')
     show_rviz = LaunchConfiguration('show_rviz')
 
@@ -102,18 +102,18 @@ def generate_launch_description():
                 default_value='/dev/ttySC0',
                 description='Serial device for servos',
             ),
-            Node(
-                package='drqp_control',
-                executable='pose_setter',
-                output='screen',
-                parameters=[
-                    {
-                        'use_sim_time': use_sim_time,
-                        'device_address': servo_device,
-                    }
-                ],
-                condition=IfCondition(load_drivers),
-            ),
+            # Node(
+            #     package='drqp_control',
+            #     executable='pose_setter',
+            #     output='screen',
+            #     parameters=[
+            #         {
+            #             'use_sim_time': use_sim_time,
+            #             'device_address': servo_device,
+            #         }
+            #     ],
+            #     condition=IfCondition(load_drivers),
+            # ),
             # Node(
             #     package='drqp_control',
             #     executable='pose_to_joint_state',

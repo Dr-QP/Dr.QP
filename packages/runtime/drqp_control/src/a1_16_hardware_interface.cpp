@@ -30,6 +30,15 @@ namespace drqp_control
 a1_16_hardware_interface::a1_16_hardware_interface() {}
 a1_16_hardware_interface::~a1_16_hardware_interface() = default;
 
+std::string get_param(
+  std::unordered_map<std::string, std::string> parameters, const std::string& key)
+{
+  if (parameters.count(key) == 0) {
+    throw std::runtime_error("Missing parameter " + key);
+  }
+  return parameters.at(key);
+}
+
 hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
   const hardware_interface::HardwareInfo& info)
 {
@@ -41,34 +50,6 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     // Dr.QP has exactly one state and command interface on each joint
-
-    RCLCPP_DEBUG(get_logger(), "Joint %s", joint.name.c_str());
-    RCLCPP_DEBUG(get_logger(), "  Command interfaces:");
-    for (const auto& commandInterface : joint.command_interfaces) {
-      RCLCPP_DEBUG(get_logger(), "    %s", commandInterface.name.c_str());
-      RCLCPP_DEBUG(get_logger(), "      Command interface parameters:");
-      for (const auto& [name, value] : commandInterface.parameters) {
-        RCLCPP_DEBUG(get_logger(), "      %s = %s", name.c_str(), value.c_str());
-      }
-
-      robotConfig_.addServo(
-        joint.name, std::stoi(commandInterface.parameters.at("id")),
-        commandInterface.parameters.at("inverted") == "true",
-        std::stod(commandInterface.parameters.at("offset_rads")));
-    }
-    RCLCPP_DEBUG(get_logger(), "  State interfaces:");
-    for (const auto& stateInterface : joint.state_interfaces) {
-      RCLCPP_DEBUG(get_logger(), "    %s", stateInterface.name.c_str());
-      RCLCPP_DEBUG(get_logger(), "      State interface parameters:");
-      for (const auto& [name, value] : stateInterface.parameters) {
-        RCLCPP_DEBUG(get_logger(), "      %s = %s", name.c_str(), value.c_str());
-      }
-    }
-    RCLCPP_DEBUG(get_logger(), "  Parameters:");
-    for (const auto& [name, value] : joint.parameters) {
-      RCLCPP_DEBUG(get_logger(), "    %s = %s", name.c_str(), value.c_str());
-    }
-
     if (joint.command_interfaces.size() != 1) {
       RCLCPP_FATAL(
         get_logger(), "Joint '%s' has %zu command interfaces found. 1 expected.",
@@ -76,13 +57,24 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
       return hardware_interface::CallbackReturn::ERROR;
     }
 
-    if (joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
+    const auto& commandInterface = joint.command_interfaces[0];
+    if (commandInterface.name != hardware_interface::HW_IF_POSITION) {
       RCLCPP_FATAL(
         get_logger(), "Joint '%s' have %s command interfaces found. '%s' expected.",
-        joint.name.c_str(), joint.command_interfaces[0].name.c_str(),
-        hardware_interface::HW_IF_POSITION);
+        joint.name.c_str(), commandInterface.name.c_str(), hardware_interface::HW_IF_POSITION);
       return hardware_interface::CallbackReturn::ERROR;
     }
+
+    uint8_t servoId = std::stoi(get_param(commandInterface.parameters, "servo_id"));
+    robotConfig_.addServo(
+      RobotConfig::ServoJointParams{
+        .joint_name = joint.name,
+        .servo_id = servoId,
+        .inverted = get_param(commandInterface.parameters, "inverted") == "true",
+        .offset_radians = std::stod(get_param(commandInterface.parameters, "offset_rads")),
+        .min_angle_radians = std::stod(get_param(commandInterface.parameters, "min")),
+        .max_angle_radians = std::stod(get_param(commandInterface.parameters, "max")),
+      });
 
     if (joint.state_interfaces.size() != 1) {
       RCLCPP_FATAL(
@@ -99,8 +91,8 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
     }
   }
 
-  servoSerial_ = makeSerialForDevice(info.hardware_parameters.at("device_address"));
-  servoSerial_->begin(std::stoi(info.hardware_parameters.at("baud_rate")));
+  servoSerial_ = makeSerialForDevice(get_param(info.hardware_parameters, "device_address"));
+  servoSerial_->begin(std::stoi(get_param(info.hardware_parameters, "baud_rate")));
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -156,19 +148,26 @@ hardware_interface::return_type a1_16_hardware_interface::read(
 hardware_interface::return_type a1_16_hardware_interface::write(
   const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
 {
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  std::stringstream ss;
-  ss << "Writing commands:";
+  XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
 
+  DynamicIJogCommand iposCmd(joint_command_interfaces_.size());
+  size_t index = 0;
   for (const auto& [name, descr] : joint_command_interfaces_) {
-    // Simulate sending commands to the hardware
-    ss << std::fixed << std::setprecision(2) << std::endl
-       << "\t" << get_command(name) << " for joint '" << name << "'";
+    auto pos = get_command(name);
+    set_state(name, pos);
 
-    set_state(name, get_command(name));
+    auto servoValues = robotConfig_.jointToServo({descr.prefix_name, pos});
+    if (!servoValues) {
+      RCLCPP_ERROR(get_logger(), "Unknown joint name %s", descr.prefix_name.c_str());
+      continue;
+    }
+    // if (!torqueIsOn_[servoValues->id]) {
+    //   continue;
+    // }
+    iposCmd.at(index) = {servoValues->position, SET_POSITION_CONTROL, servoValues->id, 0};
+    index++;
   }
-  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
+  servo.sendJogCommand(iposCmd);
 
   return hardware_interface::return_type::OK;
 }

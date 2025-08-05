@@ -29,13 +29,17 @@ struct RobotConfig::ServoParams
   uint8_t id;
   double ratio = 1.;
   double offset_rads = 0.;
+  double min_angle_rads = -M_PI;
+  double max_angle_rads = M_PI;
 };
 
 struct RobotConfig::JointParams
 {
-  std::string jointName;
+  std::string joint_name;
   double ratio = 1.;
   double offset_rads = 0.;
+  double min_angle_rads = -M_PI;
+  double max_angle_rads = M_PI;
 };
 
 RobotConfig::RobotConfig() : logger_(rclcpp::get_logger("RobotConfig")) {}
@@ -90,7 +94,15 @@ void RobotConfig::loadConfig(fs::path configPath)
         inverted = servo.second["inverted"].as<bool>();
       }
 
-      addServo(name, id, inverted, offset_rads);
+      addServo(
+        ServoJointParams{
+          .joint_name = name,
+          .servo_id = id,
+          .inverted = inverted,
+          .offset_radians = offset_rads,
+          .min_angle_radians = -M_PI,
+          .max_angle_radians = M_PI,
+        });
     }
   } catch (const std::exception& e) {
     RCLCPP_ERROR(get_logger(), "Failed to load config %s", e.what());
@@ -98,12 +110,24 @@ void RobotConfig::loadConfig(fs::path configPath)
   }
 }
 
-void RobotConfig::addServo(
-  const std::string& jointName, uint8_t id, bool inverted, double offset_rads)
+void RobotConfig::addServo(const ServoJointParams& params)
 {
-  const double ratio = inverted ? -1. : 1.;
-  jointToServoId_[jointName] = ServoParams{id, ratio, offset_rads};
-  servoIdToJoint_[id] = JointParams{jointName, ratio, offset_rads};
+  const double ratio = params.inverted ? -1. : 1.;
+  const double min = params.inverted ? params.max_angle_radians : params.min_angle_radians;
+  const double max = params.inverted ? params.min_angle_radians : params.max_angle_radians;
+
+  jointToServoId_[params.joint_name] = ServoParams{
+    .id = params.servo_id,
+    .ratio = ratio,
+    .offset_rads = params.offset_radians,
+    .min_angle_rads = min,
+    .max_angle_rads = max};
+  servoIdToJoint_[params.servo_id] = JointParams{
+    .joint_name = params.joint_name,
+    .ratio = ratio,
+    .offset_rads = params.offset_radians,
+    .min_angle_rads = min,
+    .max_angle_rads = max};
 }
 
 std::optional<RobotConfig::ServoValues> RobotConfig::jointToServo(const JointValues& joint)
@@ -113,8 +137,10 @@ std::optional<RobotConfig::ServoValues> RobotConfig::jointToServo(const JointVal
   }
 
   const ServoParams servoParams = jointToServoId_.at(joint.name);
-  const uint16_t position =
-    radiansToPosition(joint.position_as_radians * servoParams.ratio + servoParams.offset_rads);
+  const auto rawPosition = joint.position_as_radians * servoParams.ratio + servoParams.offset_rads;
+  const double clampedPosition =
+    std::clamp(rawPosition, servoParams.min_angle_rads, servoParams.max_angle_rads);
+  const uint16_t position = radiansToPosition(clampedPosition);
   return ServoValues{servoParams.id, position};
 }
 
@@ -127,7 +153,9 @@ std::optional<RobotConfig::JointValues> RobotConfig::servoToJoint(const ServoVal
   const JointParams jointParams = servoIdToJoint_.at(servo.id);
   const double positionAsRadians =
     positionToRadians(servo.position) * jointParams.ratio - jointParams.offset_rads;
-  return JointValues{jointParams.jointName, positionAsRadians};
+  const double clampedPosition =
+    std::clamp(positionAsRadians, jointParams.min_angle_rads, jointParams.max_angle_rads);
+  return JointValues{jointParams.joint_name, clampedPosition};
 }
 
 ////////////////////////////////////////////////////////////////////////
