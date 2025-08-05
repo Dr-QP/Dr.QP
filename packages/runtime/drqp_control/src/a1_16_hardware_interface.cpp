@@ -85,7 +85,6 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
         .min_angle_radians = std::stod(get_param(commandInterface.parameters, "min")),
         .max_angle_radians = std::stod(get_param(commandInterface.parameters, "max")),
       });
-    RCLCPP_INFO(get_logger(), "Added servo %d for joint %s. Inverted: %s", servoId, joint.name.c_str(), get_param(commandInterface.parameters, "inverted").c_str());
 
     if (joint.state_interfaces.size() != 1) {
       RCLCPP_FATAL(
@@ -178,7 +177,9 @@ hardware_interface::return_type a1_16_hardware_interface::write(
     iposCmd.at(index) = {servoValues->position, SET_POSITION_CONTROL, servoValues->id, 0};
     index++;
 
-    set_state(name, servoValues->clamped_position_as_radians);
+    // Convert back, this will handle invertion, clamping and offset
+    auto jointState = robotConfig_.servoToJoint({servoValues->id, servoValues->position});
+    set_state(name, jointState->position_as_radians);
   }
   servo.sendJogCommand(iposCmd);
 
