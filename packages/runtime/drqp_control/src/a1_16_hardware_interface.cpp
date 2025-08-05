@@ -21,10 +21,9 @@
 #include "drqp_control/a1_16_hardware_interface.h"
 #include <rclcpp/logging.hpp>
 
-#include <drqp_serial/SerialFactory.h>
-#include <drqp_a1_16_driver/XYZrobotServo.h>
+#include "drqp_serial/SerialFactory.h"
+#include "drqp_a1_16_driver/XYZrobotServo.h"
 
-#include "drqp_control/DrQp.h"
 namespace drqp_control
 {
 a1_16_hardware_interface::a1_16_hardware_interface() {}
