@@ -45,7 +45,8 @@ bool get_bool_param(
   auto value = get_param(parameters, key);
   if (value != "True" && value != "False") {
     throw std::runtime_error(
-      "Invalid boolean value " + value + " for parameter " + key + ". Expected True or False.");
+      "Invalid boolean value '" + value + "' for parameter '" + key +
+      "'. Expected 'True' or 'False'.");
   }
   return value == "True";
 }
