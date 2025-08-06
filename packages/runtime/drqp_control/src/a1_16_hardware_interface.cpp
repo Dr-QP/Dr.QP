@@ -139,14 +139,14 @@ hardware_interface::return_type a1_16_hardware_interface::write(
   DynamicIJogCommand iposCmd;
   iposCmd.reserve(robotConfig_.numServos());
   for (const auto& jointName : robotConfig_.getJointNames()) {
-    const auto torqueEnabled = get_command(jointName + "/effort");
+    const auto effort = get_command(jointName + "/effort");
 
     auto pos = get_command(jointName + "/position");
 
     auto servoValues = robotConfig_.jointToServo({jointName, pos});
     assert(servoValues);
     uint8_t servoCommand = SET_POSITION_CONTROL;
-    if (torqueEnabled < 0.999) {
+    if (effort < 0.1) {
       torqueIsOn_[servoValues->id] = false;
       servoCommand = SET_TORQUE_OFF;
     } else if (!torqueIsOn_[servoValues->id]) {
