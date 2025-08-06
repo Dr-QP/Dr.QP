@@ -19,6 +19,8 @@
 // THE SOFTWARE.
 
 #include "drqp_control/a1_16_hardware_interface.h"
+#include <cassert>
+#include <chrono>
 #include <rclcpp/logging.hpp>
 
 #include "drqp_serial/SerialFactory.h"
@@ -60,32 +62,20 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
   }
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
-    // Dr.QP has exactly one state and command interface on each joint
-    if (joint.command_interfaces.size() != 1) {
-      RCLCPP_FATAL(
-        get_logger(), "Joint '%s' has %zu command interfaces found. 1 expected.",
-        joint.name.c_str(), joint.command_interfaces.size());
-      return hardware_interface::CallbackReturn::ERROR;
+    for (const auto& commandInterface : joint.command_interfaces) {
+      if (commandInterface.name == hardware_interface::HW_IF_POSITION) {
+        uint8_t servoId = std::stoi(get_param(commandInterface.parameters, "servo_id"));
+        robotConfig_.addServo(
+          RobotConfig::ServoJointParams{
+            .joint_name = joint.name,
+            .servo_id = servoId,
+            .inverted = get_bool_param(commandInterface.parameters, "inverted"),
+            .offset_radians = std::stod(get_param(commandInterface.parameters, "offset_rads")),
+            .min_angle_radians = std::stod(get_param(commandInterface.parameters, "min")),
+            .max_angle_radians = std::stod(get_param(commandInterface.parameters, "max")),
+          });
+      }
     }
-
-    const auto& commandInterface = joint.command_interfaces[0];
-    if (commandInterface.name != hardware_interface::HW_IF_POSITION) {
-      RCLCPP_FATAL(
-        get_logger(), "Joint '%s' have %s command interfaces found. '%s' expected.",
-        joint.name.c_str(), commandInterface.name.c_str(), hardware_interface::HW_IF_POSITION);
-      return hardware_interface::CallbackReturn::ERROR;
-    }
-
-    uint8_t servoId = std::stoi(get_param(commandInterface.parameters, "servo_id"));
-    robotConfig_.addServo(
-      RobotConfig::ServoJointParams{
-        .joint_name = joint.name,
-        .servo_id = servoId,
-        .inverted = get_bool_param(commandInterface.parameters, "inverted"),
-        .offset_radians = std::stod(get_param(commandInterface.parameters, "offset_rads")),
-        .min_angle_radians = std::stod(get_param(commandInterface.parameters, "min")),
-        .max_angle_radians = std::stod(get_param(commandInterface.parameters, "max")),
-      });
 
     if (joint.state_interfaces.size() != 1) {
       RCLCPP_FATAL(
@@ -138,48 +128,35 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
 hardware_interface::return_type a1_16_hardware_interface::read(
   const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
 {
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  // std::stringstream ss;
-  // ss << "Reading states:";
-  // auto hw_slowdown_ = 10.;
-  // for (const auto & [name, descr] : joint_state_interfaces_)
-  // {
-  //   // Simulate RRBot's movement
-  //   auto new_value = get_state(name) + (get_command(name) - get_state(name)) / hw_slowdown_;
-  //   set_state(name, new_value);
-  //   ss << std::fixed << std::setprecision(2) << std::endl
-  //      << "\t" << get_state(name) << " for joint '" << name << "'";
-  // }
-  // RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
-
   return hardware_interface::return_type::OK;
 }
 
 hardware_interface::return_type a1_16_hardware_interface::write(
-  const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
+  const rclcpp::Time& /*time*/, const rclcpp::Duration& period)
 {
   XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
 
-  DynamicIJogCommand iposCmd(joint_command_interfaces_.size());
+  DynamicIJogCommand iposCmd(robotConfig_.numServos());
   size_t index = 0;
-  for (const auto& [name, descr] : joint_command_interfaces_) {
-    auto pos = get_command(name);
-
-    auto servoValues = robotConfig_.jointToServo({descr.prefix_name, pos});
-    if (!servoValues) {
-      RCLCPP_ERROR(get_logger(), "Unknown joint name %s", descr.prefix_name.c_str());
+  for (const auto& jointName : robotConfig_.getJointNames()) {
+    const auto torqueEnabled = get_command(jointName + "/torque_enabled");
+    if (torqueEnabled < 0.999) {
       continue;
     }
-    // if (!torqueIsOn_[servoValues->id]) {
-    //   continue;
-    // }
-    iposCmd.at(index) = {servoValues->position, SET_POSITION_CONTROL, servoValues->id, 0};
+
+    auto pos = get_command(jointName + "/position");
+
+    auto servoValues = robotConfig_.jointToServo({jointName, pos});
+    assert(servoValues);
+
+    iposCmd.at(index) = {
+      servoValues->position, SET_POSITION_CONTROL, servoValues->id,
+      toPlaytime(period.to_chrono<std::chrono::milliseconds>())};
     index++;
 
     // Convert back, this will handle invertion, clamping and offset
     auto jointState = robotConfig_.servoToJoint({servoValues->id, servoValues->position});
-    set_state(name, jointState->position_as_radians);
+    set_state(jointName + "/position", jointState->position_as_radians);
   }
   servo.sendJogCommand(iposCmd);
 

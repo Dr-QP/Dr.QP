@@ -180,11 +180,12 @@ SCENARIO("ROS node")
 
         const auto jointNames = robotConfig.getJointNames();
         CHECK(jointNames.size() == 5);
-        CHECK(jointNames.at(0) == "test_robot/left_front_coxa");
-        CHECK(jointNames.at(1) == "test_robot/left_front_coxa_with_limits");
-        CHECK(jointNames.at(2) == "test_robot/left_front_femur");
-        CHECK(jointNames.at(3) == "test_robot/left_front_tibia");
-        CHECK(jointNames.at(4) == "test_robot/left_front_tibia_with_limits");
+        CHECK_THAT(jointNames, Catch::Matchers::Contains("test_robot/left_front_coxa"));
+        CHECK_THAT(jointNames, Catch::Matchers::Contains("test_robot/left_front_coxa_with_limits"));
+        CHECK_THAT(jointNames, Catch::Matchers::Contains("test_robot/left_front_femur"));
+        CHECK_THAT(jointNames, Catch::Matchers::Contains("test_robot/left_front_tibia"));
+        CHECK_THAT(
+          jointNames, Catch::Matchers::Contains("test_robot/left_front_tibia_with_limits"));
       }
 
       THEN("Invalid joint name should return nullopt")

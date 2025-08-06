@@ -9,6 +9,7 @@
         <param name="max">${radians(90)}</param>
         <param name="offset_rads">${offset_coxa}</param>
       </command_interface>
+      <command_interface name="torque_enabled" />
       <state_interface name="position"/>
     </joint>
 
@@ -20,6 +21,7 @@
         <param name="max">${radians(90)}</param>
         <param name="offset_rads">${offset_femur}</param>
       </command_interface>
+      <command_interface name="torque_enabled" />
       <state_interface name="position"/>
     </joint>
 
@@ -31,6 +33,7 @@
         <param name="max">${radians(110)}</param>
         <param name="offset_rads">${offset_tibia}</param>
       </command_interface>
+      <command_interface name="torque_enabled" />
       <state_interface name="position"/>
     </joint>
   </xacro:macro>
