@@ -140,23 +140,30 @@ hardware_interface::return_type a1_16_hardware_interface::write(
   iposCmd.reserve(robotConfig_.numServos());
   for (const auto& jointName : robotConfig_.getJointNames()) {
     const auto torqueEnabled = get_command(jointName + "/effort");
-    if (torqueEnabled < 0.999) {
-      continue;
-    }
 
     auto pos = get_command(jointName + "/position");
 
     auto servoValues = robotConfig_.jointToServo({jointName, pos});
     assert(servoValues);
+    uint8_t servoCommand = SET_POSITION_CONTROL;
+    if (torqueEnabled < 0.999) {
+      torqueIsOn_[servoValues->id] = false;
+      servoCommand = SET_TORQUE_OFF;
+    } else if (!torqueIsOn_[servoValues->id]) {
+      torqueIsOn_[servoValues->id] = true;
+      servoCommand = SET_POSITION_CONTROL_SERVO_ON;
+    }
 
     iposCmd.emplace_back({
-      servoValues->position, SET_POSITION_CONTROL, servoValues->id,
+      servoValues->position, servoCommand, servoValues->id,
       toPlaytime(period.to_chrono<std::chrono::milliseconds>())}
     );
 
-    // Convert back, this will handle invertion, clamping and offset
-    auto jointState = robotConfig_.servoToJoint({servoValues->id, servoValues->position});
-    set_state(jointName + "/position", jointState->position_as_radians);
+    if (torqueIsOn_[servoValues->id]) {
+      // Convert back, this will handle invertion, clamping and offset
+      auto jointState = robotConfig_.servoToJoint({servoValues->id, servoValues->position});
+      set_state(jointName + "/position", jointState->position_as_radians);
+    }
   }
   servo.sendJogCommand(iposCmd);
 

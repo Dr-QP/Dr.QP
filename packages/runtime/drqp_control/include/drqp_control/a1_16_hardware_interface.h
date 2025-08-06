@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <array>
 #include <memory>
 
 #include "hardware_interface/hardware_info.hpp"
@@ -91,6 +92,8 @@ public:
 
 private:
   RobotConfig robotConfig_;
+
+  std::array<bool, 255> torqueIsOn_;
   std::unique_ptr<SerialProtocol> servoSerial_;
 };
 }  // namespace drqp_control
