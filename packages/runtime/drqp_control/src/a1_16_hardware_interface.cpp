@@ -77,19 +77,19 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
       }
     }
 
-    if (joint.state_interfaces.size() != 1) {
-      RCLCPP_FATAL(
-        get_logger(), "Joint '%s' has %zu state interface. 1 expected.", joint.name.c_str(),
-        joint.state_interfaces.size());
-      return hardware_interface::CallbackReturn::ERROR;
-    }
+    // if (joint.state_interfaces.size() != 1) {
+    //   RCLCPP_FATAL(
+    //     get_logger(), "Joint '%s' has %zu state interface. 1 expected.", joint.name.c_str(),
+    //     joint.state_interfaces.size());
+    //   return hardware_interface::CallbackReturn::ERROR;
+    // }
 
-    if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
-      RCLCPP_FATAL(
-        get_logger(), "Joint '%s' have %s state interface. '%s' expected.", joint.name.c_str(),
-        joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
-      return hardware_interface::CallbackReturn::ERROR;
-    }
+    // if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
+    //   RCLCPP_FATAL(
+    //     get_logger(), "Joint '%s' have %s state interface. '%s' expected.", joint.name.c_str(),
+    //     joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
+    //   return hardware_interface::CallbackReturn::ERROR;
+    // }
   }
 
   servoSerial_ = makeSerialForDevice(get_param(info.hardware_parameters, "device_address"));
@@ -136,10 +136,10 @@ hardware_interface::return_type a1_16_hardware_interface::write(
 {
   XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
 
-  DynamicIJogCommand iposCmd(robotConfig_.numServos());
-  size_t index = 0;
+  DynamicIJogCommand iposCmd;
+  iposCmd.reserve(robotConfig_.numServos());
   for (const auto& jointName : robotConfig_.getJointNames()) {
-    const auto torqueEnabled = get_command(jointName + "/torque_enabled");
+    const auto torqueEnabled = get_command(jointName + "/effort");
     if (torqueEnabled < 0.999) {
       continue;
     }
@@ -149,10 +149,10 @@ hardware_interface::return_type a1_16_hardware_interface::write(
     auto servoValues = robotConfig_.jointToServo({jointName, pos});
     assert(servoValues);
 
-    iposCmd.at(index) = {
+    iposCmd.emplace_back({
       servoValues->position, SET_POSITION_CONTROL, servoValues->id,
-      toPlaytime(period.to_chrono<std::chrono::milliseconds>())};
-    index++;
+      toPlaytime(period.to_chrono<std::chrono::milliseconds>())}
+    );
 
     // Convert back, this will handle invertion, clamping and offset
     auto jointState = robotConfig_.servoToJoint({servoValues->id, servoValues->position});

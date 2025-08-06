@@ -71,9 +71,11 @@ joint_trajectory_position_controller:
 
     command_interfaces:
       - position
+      - effort
 
     state_interfaces:
       - position
+      - velocity
 
     action_monitor_rate: 20.0 # Defaults to 20
 
