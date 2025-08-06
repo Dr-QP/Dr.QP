@@ -165,6 +165,15 @@ std::optional<RobotConfig::JointValues> RobotConfig::servoToJoint(const ServoVal
   return JointValues{.name = jointParams.joint_name, .position_as_radians = positionAsRadians};
 }
 
+std::vector<std::string> RobotConfig::getJointNames() const
+{
+  std::vector<std::string> jointNames;
+  for (const auto& [name, _] : jointToServoId_) {
+    jointNames.push_back(name);
+  }
+  return jointNames;
+}
+
 ////////////////////////////////////////////////////////////////////////
 
 NodeRobotConfig::NodeRobotConfig(rclcpp::Node* node) : RobotConfig(node->get_logger()), node_(node)

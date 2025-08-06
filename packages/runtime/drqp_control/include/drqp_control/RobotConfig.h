@@ -25,6 +25,7 @@
 #include <unordered_map>
 #include <optional>
 #include <filesystem>
+#include <vector>
 
 #include <rclcpp/rclcpp.hpp>
 #include <ament_index_cpp/get_package_share_directory.hpp>
@@ -67,6 +68,13 @@ public:
   };
 
   void addServo(const ServoJointParams& params);
+
+  size_t numServos() const
+  {
+    return jointToServoId_.size();
+  }
+
+  std::vector<std::string> getJointNames() const;
 
 protected:
   rclcpp::Logger get_logger() const
