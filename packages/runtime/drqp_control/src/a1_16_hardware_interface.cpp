@@ -147,7 +147,6 @@ hardware_interface::return_type a1_16_hardware_interface::write(
     assert(servoValues);
     uint8_t servoCommand = SET_POSITION_CONTROL;
     if (effort < 0.0) {
-      RCLCPP_INFO(get_logger(), "Rebooting servo %s. Effort %lf", jointName.c_str(), effort);
       torqueIsOn_[servoValues->id] = false;
       XYZrobotServo servo(*servoSerial_, servoValues->id);
       servo.reboot();
