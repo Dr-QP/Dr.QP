@@ -31,12 +31,14 @@ from drqp_brain.walk_controller import GaitType, WalkController
 import drqp_interfaces.msg
 import numpy as np
 import rclpy
+import rclpy.time
 from rclpy.executors import ExternalShutdownException
 import rclpy.node
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 import rclpy.utilities
 import sensor_msgs.msg
 import std_msgs.msg
+import trajectory_msgs.msg
 
 kFemurOffsetAngle = -13.11
 kTibiaOffsetAngle = -32.9
@@ -157,14 +159,10 @@ class HexapodBrain(rclpy.node.Node):
             std_msgs.msg.String, '/robot_event', qos_profile=10
         )
 
-        self.servo_goals_pub = self.create_publisher(
-            drqp_interfaces.msg.MultiServoPositionGoal, '/servo_goals', qos_profile=50
-        )
-        self.servo_torque_on_pub = self.create_publisher(
-            drqp_interfaces.msg.TorqueOn, '/servo_torque_on', qos_profile=10
-        )
-        self.servo_reboot_pub = self.create_publisher(
-            std_msgs.msg.Empty, '/servo_reboot', qos_profile=10
+        self.joint_trajectory_pub = self.create_publisher(
+            trajectory_msgs.msg.JointTrajectory,
+            '/joint_trajectory_position_controller/joint_trajectory',
+            qos_profile=10,
         )
 
         self.setup_hexapod()
@@ -242,7 +240,7 @@ class HexapodBrain(rclpy.node.Node):
             stride_ratio=self.walk_speed,
             rotation_ratio=self.rotation_speed,
         )
-        self.publish_servo_goals()
+        self.publish_joint_position_trajectory()
 
     def initialization_sequence(self):
         self.sequence_queue.add(0.6, self.initialization_sequence_step1)
@@ -259,49 +257,69 @@ class HexapodBrain(rclpy.node.Node):
 
         self.hexapod.forward_kinematics(0, -105, 0)
         self.turn_torque_on(['femur'])
-        self.publish_servo_goals(playtime_ms=900, joint_mask=['femur'])
+        self.publish_joint_position_trajectory(playtime_ms=900, joint_mask=['femur'])
 
     # - Turn torque on for tibia
     # - Move all tibia to 0
     def initialization_sequence_step2(self):
         self.hexapod.forward_kinematics(0, -105, 0)
         self.turn_torque_on(['femur', 'tibia'])
-        self.publish_servo_goals(playtime_ms=500, joint_mask=['femur', 'tibia'])
+        self.publish_joint_position_trajectory(playtime_ms=500, joint_mask=['femur', 'tibia'])
 
     # - Turn torque on for coxa
     # - Move all coxa to 0
     def initialization_sequence_step3(self):
         self.hexapod.forward_kinematics(0, -105, 0)
         self.turn_torque_on(['femur', 'tibia', 'coxa'])
-        self.publish_servo_goals(playtime_ms=500, joint_mask=['femur', 'tibia', 'coxa'])
+        self.publish_joint_position_trajectory(
+            playtime_ms=500, joint_mask=['femur', 'tibia', 'coxa']
+        )
 
     # - Move all tibia to 95
     def initialization_sequence_step4(self):
         self.hexapod.forward_kinematics(0, -105, 95)
-        self.publish_servo_goals(playtime_ms=500)
+        self.publish_joint_position_trajectory(playtime_ms=500)
 
     # - Use walk controller to move to default position slowly increasing body height
     def initialization_sequence_step5(self):
         self.hexapod.forward_kinematics(0, -35, 130)
-        self.publish_servo_goals(playtime_ms=400)
+        self.publish_joint_position_trajectory(playtime_ms=400)
 
     def initialization_sequence_done(self):
         self.robot_event_pub.publish(std_msgs.msg.String(data='initializing_done'))
 
-    def turn_torque_on(self, joints):
-        msg = drqp_interfaces.msg.TorqueOn()
+    def turn_torque_off(self):
+        self.publish_joint_effort_trajectory([0.0])
+
+    def turn_torque_on(self, joints=['coxa', 'femur', 'tibia']):
+        self.publish_joint_effort_trajectory([1.0], joints)
+
+    def reboot_servos(self):
+        self.publish_joint_effort_trajectory([-1.0, 0.0])
+
+    def publish_joint_effort_trajectory(
+        self, effort_points: list[float], joints=['coxa', 'femur', 'tibia']
+    ):
+        joint_names = []
         for leg in self.hexapod.legs:
             for joint in joints:
-                msg.joint_names.append(f'dr_qp/{leg.label.name}_{joint}')
-                msg.torque_on.append(True)
-        self.servo_torque_on_pub.publish(msg)
+                joint_names.append(f'dr_qp/{leg.label.name}_{joint}')
 
-    def publish_servo_goals(self, playtime_ms=0, joint_mask=None):
-        msg = drqp_interfaces.msg.MultiServoPositionGoal()
-        msg.header.stamp = self.get_clock().now().to_msg()
-        msg.mode = drqp_interfaces.msg.MultiServoPositionGoal.MODE_ASYNC
-        msg.goals = []
+        points = []
+        for i, effort_point in enumerate(effort_points):
+            points.append(
+                trajectory_msgs.msg.JointTrajectoryPoint(
+                    effort=[effort_point] * len(joint_names),
+                    time_from_start=rclpy.time.Duration(seconds=0.001 * i).to_msg(),
+                )
+            )
+        self.publish_joint_trajectory(joint_names, points)
 
+    def publish_joint_position_trajectory(self, playtime_ms=0, joint_mask=None):
+        joint_names = []
+        positions = []
+
+        time_from_start = rclpy.time.Duration(seconds=playtime_ms / 1000.0).to_msg()
         for leg in self.hexapod.legs:
             for joint, angle in [
                 ('coxa', leg.coxa_angle),
@@ -310,14 +328,21 @@ class HexapodBrain(rclpy.node.Node):
             ]:
                 if joint_mask is not None and joint not in joint_mask:
                     continue
-                goal = drqp_interfaces.msg.ServoPositionGoal(
-                    joint_name=f'dr_qp/{leg.label.name}_{joint}',
-                    position_as_radians=float(np.radians(angle)),
-                    playtime_ms=playtime_ms,
-                )
-                msg.goals.append(goal)
+                joint_names.append(f'dr_qp/{leg.label.name}_{joint}')
+                positions.append(float(np.radians(angle)))
 
-        self.servo_goals_pub.publish(msg)
+        points = [
+            trajectory_msgs.msg.JointTrajectoryPoint(
+                positions=positions,
+                time_from_start=time_from_start,
+            )
+        ]
+
+        self.publish_joint_trajectory(joint_names, points)
+
+    def publish_joint_trajectory(self, joint_names, points):
+        msg = trajectory_msgs.msg.JointTrajectory(joint_names=joint_names, points=points)
+        self.joint_trajectory_pub.publish(msg)
 
     def process_robot_state(self, msg: std_msgs.msg.String):
         if self.robot_state == msg.data:
@@ -329,9 +354,7 @@ class HexapodBrain(rclpy.node.Node):
             self.get_logger().info('Torque is off, stopping')
             self.loop_timer.cancel()
             self.sequence_queue.clear()
-            torque_on_msg = drqp_interfaces.msg.TorqueOn()
-            torque_on_msg.torque_on.append(False)
-            self.servo_torque_on_pub.publish(torque_on_msg)
+            self.turn_torque_off()
         elif self.robot_state == 'initializing':
             self.get_logger().info('Initializing')
             self.initialization_sequence()
@@ -346,11 +369,6 @@ class HexapodBrain(rclpy.node.Node):
             self.robot_event_pub.publish(std_msgs.msg.String(data='kill_switch_off'))
         else:
             self.robot_event_pub.publish(std_msgs.msg.String(data='kill_switch_on'))
-
-    def reboot_servos(self):
-        self.get_logger().info('Rebooting servos')
-        reboot_msg = std_msgs.msg.Empty()
-        self.servo_reboot_pub.publish(reboot_msg)
 
 
 def main():
