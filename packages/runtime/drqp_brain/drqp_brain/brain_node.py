@@ -309,6 +309,7 @@ class HexapodBrain(rclpy.node.Node):
         for i, effort_point in enumerate(effort_points):
             points.append(
                 trajectory_msgs.msg.JointTrajectoryPoint(
+                    positions=[0.0] * len(joint_names),
                     effort=[effort_point] * len(joint_names),
                     time_from_start=rclpy.time.Duration(seconds=0.001 * i).to_msg(),
                 )
@@ -334,8 +335,9 @@ class HexapodBrain(rclpy.node.Node):
         points = [
             trajectory_msgs.msg.JointTrajectoryPoint(
                 positions=positions,
+                effort=[1.0] * len(positions),
                 time_from_start=time_from_start,
-            )
+            ),
         ]
 
         self.publish_joint_trajectory(joint_names, points)
