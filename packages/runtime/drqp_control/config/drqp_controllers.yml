@@ -6,7 +6,7 @@ controller_manager:
       type: joint_state_broadcaster/JointStateBroadcaster
 
 
-drqp_position_controller:
+forward_position_controller:
   ros__parameters:
     type: forward_command_controller/ForwardCommandController
     joints:
