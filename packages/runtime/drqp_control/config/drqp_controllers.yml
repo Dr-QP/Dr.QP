@@ -68,7 +68,7 @@ forward_effort_controller:
       - dr_qp/right_back_tibia
 
 
-joint_trajectory_position_controller:
+joint_trajectory_controller:
   ros__parameters:
     type: joint_trajectory_controller/JointTrajectoryController
 

@@ -161,7 +161,7 @@ class HexapodBrain(rclpy.node.Node):
 
         self.joint_trajectory_pub = self.create_publisher(
             trajectory_msgs.msg.JointTrajectory,
-            '/joint_trajectory_position_controller/joint_trajectory',
+            '/joint_trajectory_controller/joint_trajectory',
             qos_profile=10,
         )
 
