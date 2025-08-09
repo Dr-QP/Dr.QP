@@ -159,10 +159,9 @@ hardware_interface::return_type a1_16_hardware_interface::write(
       servoCommand = SET_POSITION_CONTROL_SERVO_ON;
     }
 
-    iposCmd.emplace_back({
-      servoValues->position, servoCommand, servoValues->id,
-      toPlaytime(period.to_chrono<std::chrono::milliseconds>())}
-    );
+    iposCmd.emplace_back(
+      {servoValues->position, servoCommand, servoValues->id,
+       toPlaytime(period.to_chrono<std::chrono::milliseconds>())});
 
     if (torqueIsOn_[servoValues->id]) {
       // Convert back, this will handle invertion, clamping and offset

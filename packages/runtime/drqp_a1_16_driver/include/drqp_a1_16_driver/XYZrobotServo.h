@@ -680,8 +680,7 @@ public:
 
   void sendJogCommand(const DynamicIJogCommand& cmd)
   {
-    if (cmd.size() == 0)
-    {
+    if (cmd.size() == 0) {
       return;
     }
     sendRequest(kBroadcastId, CMD_I_JOG, cmd.data(), cmd.size());
