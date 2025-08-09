@@ -22,6 +22,7 @@
 
 import argparse
 from enum import auto, Enum
+import math
 from typing import Callable
 
 from drqp_brain.geometry import Point3D
@@ -240,7 +241,9 @@ class HexapodBrain(rclpy.node.Node):
             stride_ratio=self.walk_speed,
             rotation_ratio=self.rotation_speed,
         )
-        self.publish_joint_position_trajectory()
+        self.publish_joint_position_trajectory(
+            playtime_ms=math.floor(1000 * self.walker.phase_step)
+        )
 
     def initialization_sequence(self):
         self.sequence_queue.clear()
@@ -371,6 +374,7 @@ class HexapodBrain(rclpy.node.Node):
         self.get_logger().info('Stopping')
         self.loop_timer.cancel()
         self.sequence_queue.clear()
+        self.walker.reset()
 
     def process_kill_switch(self):
         self.robot_event_pub.publish(std_msgs.msg.String(data='kill_switch_pressed'))
