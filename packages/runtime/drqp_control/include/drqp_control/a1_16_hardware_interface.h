@@ -102,6 +102,6 @@ private:
   std::array<ServoTorque, 255> torqueIsOn_;
   std::unique_ptr<SerialProtocol> servoSerial_;
 
-  rclcpp::Time lastReadTime_;
+  size_t servoIndexLastRead_ = 0;
 };
 }  // namespace drqp_control

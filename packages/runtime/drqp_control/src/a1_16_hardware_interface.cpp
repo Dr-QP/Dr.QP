@@ -82,8 +82,6 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
   servoSerial_ = makeSerialForDevice(get_param(info.hardware_parameters, "device_address"));
   servoSerial_->begin(std::stoi(get_param(info.hardware_parameters, "baud_rate")));
 
-  lastReadTime_ = rclcpp::Time(0, 0, RCL_STEADY_TIME);
-
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -115,14 +113,11 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
 }
 
 hardware_interface::return_type a1_16_hardware_interface::read(
-  const rclcpp::Time& time, const rclcpp::Duration& /*period*/)
+  const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
 {
-  if ((time - lastReadTime_) < std::chrono::seconds(1)) {
-    return hardware_interface::return_type::OK;
-  }
-  lastReadTime_ = time;
-
-  for (const uint8_t servoId : robotConfig_.getServoIds()) {
+  const auto servoIds = robotConfig_.getServoIds();
+  const uint8_t servoId = servoIds[servoIndexLastRead_];
+  {
     XYZrobotServo servo(*servoSerial_, servoId);
 
     XYZrobotServoStatus status = servo.readStatus();
@@ -130,16 +125,18 @@ hardware_interface::return_type a1_16_hardware_interface::read(
       RCLCPP_ERROR(
         get_logger(), "Failed to read status for servo %i: %s", servoId,
         to_string(servo.getLastError()).c_str());
-      continue;
+      return hardware_interface::return_type::OK;
     }
 
     auto jointValues = robotConfig_.servoToJoint({servoId, status.position});
     if (!jointValues) {
       RCLCPP_ERROR(get_logger(), "Failed to convert servo %i position to joint", servoId);
-      continue;
+      return hardware_interface::return_type::OK;
     }
     set_state(jointValues->name + "/position", jointValues->position_as_radians);
   }
+  servoIndexLastRead_ = (servoIndexLastRead_ + 1) % servoIds.size();
+
   return hardware_interface::return_type::OK;
 }
 
