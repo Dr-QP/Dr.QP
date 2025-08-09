@@ -269,9 +269,7 @@ class HexapodBrain(rclpy.node.Node):
     # - Move all coxa to 0
     def initialization_sequence_step3(self):
         self.hexapod.forward_kinematics(0, -105, 0)
-        self.publish_joint_position_trajectory(
-            playtime_ms=500, joint_mask=['femur', 'tibia', 'coxa']
-        )
+        self.publish_joint_position_trajectory(playtime_ms=500)
 
     # - Move all tibia to 95
     def initialization_sequence_step4(self):
@@ -325,13 +323,14 @@ class HexapodBrain(rclpy.node.Node):
             ]:
                 if joint_mask is not None and joint not in joint_mask:
                     continue
+
                 joint_names.append(f'dr_qp/{leg.label.name}_{joint}')
                 positions.append(float(np.radians(angle)))
 
         points = []
+        time_offset_seconds_step = playtime_ms / 1000.0 / len(effort_points)
         for i, effort_point in enumerate(effort_points, 1):
-            time_offset_seconds = playtime_ms / 1000.0 / len(effort_points) * i
-            time_from_start = rclpy.time.Duration(seconds=time_offset_seconds).to_msg()
+            time_from_start = rclpy.time.Duration(seconds=time_offset_seconds_step * i).to_msg()
             points.append(
                 trajectory_msgs.msg.JointTrajectoryPoint(
                     positions=positions,
