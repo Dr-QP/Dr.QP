@@ -75,6 +75,7 @@ public:
   }
 
   std::vector<std::string> getJointNames() const;
+  std::vector<uint8_t> getServoIds() const;
 
 protected:
   rclcpp::Logger get_logger() const

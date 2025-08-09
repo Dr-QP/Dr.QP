@@ -174,6 +174,14 @@ std::vector<std::string> RobotConfig::getJointNames() const
   return jointNames;
 }
 
+std::vector<uint8_t> RobotConfig::getServoIds() const
+{
+  std::vector<uint8_t> servoIds;
+  for (const auto& [id, _] : servoIdToJoint_) {
+    servoIds.push_back(id);
+  }
+  return servoIds;
+}
 ////////////////////////////////////////////////////////////////////////
 
 NodeRobotConfig::NodeRobotConfig(rclcpp::Node* node) : RobotConfig(node->get_logger()), node_(node)

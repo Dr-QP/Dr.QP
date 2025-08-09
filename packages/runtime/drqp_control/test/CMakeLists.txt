@@ -6,10 +6,6 @@ function(add_ros_isolated_launch_test path)
   add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
 endfunction()
 
-add_ros_isolated_launch_test(test_pose_reader.py)
-add_ros_isolated_launch_test(test_pose_setter.py)
-
-
 
 find_package(catch_ros2 REQUIRED)
 add_executable(drqp_control_tests

@@ -31,20 +31,6 @@ add_executable(control src/Control.cpp)
 target_link_libraries(control drqp_control)
 ament_target_dependencies(control drqp_a1_16_driver)
 
-add_executable(pose_to_joint_state src/PoseToJointsState.cpp)
-target_link_libraries(pose_to_joint_state drqp_control)
-
-add_executable(pose_reader
-  src/PoseReader.cpp
-)
-target_link_libraries(pose_reader drqp_control)
-
-add_executable(pose_setter
-  src/PoseSetter.cpp
-)
-target_link_libraries(pose_setter drqp_control)
-ament_target_dependencies(pose_setter ${${PROJECT_NAME}_BUILD_DEPENDS})
-
 add_library(drqp_ros2_control
   SHARED
 
@@ -64,9 +50,6 @@ install(DIRECTORY include/
 # Install executables for `ros2 run`
 install(TARGETS
   control
-  pose_to_joint_state
-  pose_reader
-  pose_setter
   DESTINATION lib/${PROJECT_NAME})
 
 # Install libraries
