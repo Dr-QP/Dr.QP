@@ -34,16 +34,16 @@ class TestRobotStateMachine:
         # img_path = './robot_state_machine.png'
         # state_machine._graph().write_png(img_path)
 
-    def test_should_turn_on_from_initialization(self, state_machine):
+    def test_should_initializing_done_from_initialization(self, state_machine):
         state_machine.send('initialize')
         assert state_machine.current_state == state_machine.initializing
 
-        state_machine.send('turn_on', state_machine)
+        state_machine.send('initializing_done', state_machine)
         assert state_machine.current_state == state_machine.torque_on
 
     def test_should_finalize_from_turned_on(self, state_machine):
         state_machine.send('initialize')
-        state_machine.send('turn_on')
+        state_machine.send('initializing_done')
         assert state_machine.current_state == state_machine.torque_on
 
         state_machine.send('finalize')
@@ -51,11 +51,11 @@ class TestRobotStateMachine:
 
     def test_should_done_from_finalizing(self, state_machine):
         state_machine.send('initialize')
-        state_machine.send('turn_on')
+        state_machine.send('initializing_done')
         state_machine.send('finalize')
         assert state_machine.current_state == state_machine.finalizing
 
-        state_machine.send('done')
+        state_machine.send('finalizing_done')
         assert state_machine.current_state == state_machine.finalized
 
     def test_should_turn_off_from_initialization(self, state_machine):
@@ -67,7 +67,7 @@ class TestRobotStateMachine:
 
     def test_should_turn_off_from_turned_on(self, state_machine):
         state_machine.send('initialize')
-        state_machine.send('turn_on')
+        state_machine.send('initializing_done')
         assert state_machine.current_state == state_machine.torque_on
 
         state_machine.send('turn_off')
@@ -75,7 +75,7 @@ class TestRobotStateMachine:
 
     def test_should_turn_off_from_finalizing(self, state_machine):
         state_machine.send('initialize')
-        state_machine.send('turn_on')
+        state_machine.send('initializing_done')
         state_machine.send('finalize')
         assert state_machine.current_state == state_machine.finalizing
 
@@ -84,9 +84,9 @@ class TestRobotStateMachine:
 
     def test_should_turn_off_from_finalized(self, state_machine):
         state_machine.send('initialize')
-        state_machine.send('turn_on')
+        state_machine.send('initializing_done')
         state_machine.send('finalize')
-        state_machine.send('done')
+        state_machine.send('finalizing_done')
         assert state_machine.current_state == state_machine.finalized
 
         state_machine.send('turn_off')
