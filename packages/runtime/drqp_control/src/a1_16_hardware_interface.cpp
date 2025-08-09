@@ -147,15 +147,22 @@ hardware_interface::return_type a1_16_hardware_interface::write(
     assert(servoValues);
     uint8_t servoCommand = SET_POSITION_CONTROL;
     if (effort < 0.0) {
-      torqueIsOn_[servoValues->id] = false;
+      if (torqueIsOn_[servoValues->id] == ServoTorque::Reboot) {
+        continue;
+      }
+      torqueIsOn_[servoValues->id] = ServoTorque::Reboot;
       XYZrobotServo servo(*servoSerial_, servoValues->id);
       servo.reboot();
       continue;
     } else if (effort < 0.1) {
-      torqueIsOn_[servoValues->id] = false;
+      if (torqueIsOn_[servoValues->id] == ServoTorque::Off) {
+        // Servo is already off, no need to do anything
+        continue;
+      }
+      torqueIsOn_[servoValues->id] = ServoTorque::Off;
       servoCommand = SET_TORQUE_OFF;
-    } else if (!torqueIsOn_[servoValues->id]) {
-      torqueIsOn_[servoValues->id] = true;
+    } else if (torqueIsOn_[servoValues->id] != ServoTorque::On) {
+      torqueIsOn_[servoValues->id] = ServoTorque::On;
       servoCommand = SET_POSITION_CONTROL_SERVO_ON;
     }
 
@@ -163,7 +170,7 @@ hardware_interface::return_type a1_16_hardware_interface::write(
       {servoValues->position, servoCommand, servoValues->id,
        toPlaytime(period.to_chrono<std::chrono::milliseconds>())});
 
-    if (torqueIsOn_[servoValues->id]) {
+    if (torqueIsOn_[servoValues->id] == ServoTorque::On) {
       // Convert back, this will handle invertion, clamping and offset
       auto jointState = robotConfig_.servoToJoint({servoValues->id, servoValues->position});
       set_state(jointName + "/position", jointState->position_as_radians);

@@ -21,6 +21,7 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
 #include <memory>
 
 #include "hardware_interface/hardware_info.hpp"
@@ -93,7 +94,12 @@ public:
 private:
   RobotConfig robotConfig_;
 
-  std::array<bool, 255> torqueIsOn_;
+  enum class ServoTorque : uint8_t {
+    Off = 0,
+    On = 1,
+    Reboot = 2,
+  };
+  std::array<ServoTorque, 255> torqueIsOn_;
   std::unique_ptr<SerialProtocol> servoSerial_;
 };
 }  // namespace drqp_control
