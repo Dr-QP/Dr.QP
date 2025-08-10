@@ -66,8 +66,8 @@ def generate_test_description():
                     'hardware_device_address': hardware_device_address,
                 }.items(),
             ),
-            # Launch tests 0.5 s later
-            TimerAction(period=0.5, actions=[ReadyToTest()]),
+            # Launch tests after delay
+            TimerAction(period=4.0, actions=[ReadyToTest()]),
         ]
     )
 
