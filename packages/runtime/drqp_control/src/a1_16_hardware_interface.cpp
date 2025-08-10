@@ -134,6 +134,7 @@ hardware_interface::return_type a1_16_hardware_interface::read(
       return hardware_interface::return_type::OK;
     }
     set_state(jointValues->name + "/position", jointValues->position_as_radians);
+    set_state(jointValues->name + "/pwm", status.pwm / 1023.0);
   }
   servoIndexLastRead_ = (servoIndexLastRead_ + 1) % servoIds.size();
 

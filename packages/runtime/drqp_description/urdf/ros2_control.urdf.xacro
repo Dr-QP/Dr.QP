@@ -12,6 +12,7 @@
       <command_interface name="effort" />
       <state_interface name="velocity" />
       <state_interface name="position"/>
+      <state_interface name="pwm"/>
     </joint>
 
     <joint name="${robot_name}/${leg_name}_femur">
@@ -25,6 +26,7 @@
       <command_interface name="effort" />
       <state_interface name="velocity" />
       <state_interface name="position"/>
+      <state_interface name="pwm"/>
     </joint>
 
     <joint name="${robot_name}/${leg_name}_tibia">
@@ -38,6 +40,7 @@
       <command_interface name="effort" />
       <state_interface name="velocity" />
       <state_interface name="position"/>
+      <state_interface name="pwm"/>
     </joint>
   </xacro:macro>
 
