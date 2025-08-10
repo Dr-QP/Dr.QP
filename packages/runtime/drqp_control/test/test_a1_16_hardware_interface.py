@@ -92,7 +92,12 @@ class TestA116HardwareInterface(unittest.TestCase):
         self.node.destroy_node()
 
     def test_write_position_control_interface(self, proc_output):
-        """Check whether servo goals are written to the servos when using position control interface."""
+        """
+        Test position control interface.
+
+        Run a ros2_control system and check that it responds to position commands
+        via action interface and that goal is reached.
+        """
         self.issue_move_command()
         #     end_time = time.time() + self.run_duration
         #     while time.time() < end_time:
