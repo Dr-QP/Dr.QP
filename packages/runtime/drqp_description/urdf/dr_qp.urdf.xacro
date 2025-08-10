@@ -3,6 +3,8 @@
 
   <xacro:arg name="robot_name" default = "dr_qp"/>
   <xacro:arg name="load_gazebo_configs" default="false"/>
+  <xacro:arg name="hardware_device_address" default="/dev/ttySC0"/>
+
 
   <xacro:if value="$(arg load_gazebo_configs)">
     <xacro:include filename="$(find drqp_gazebo)/config/drqp_texture.gazebo"/>
@@ -39,7 +41,7 @@
   </joint>
 
   <xacro:include filename="$(find drqp_description)/urdf/ros2_control.urdf.xacro"/>
-  <xacro:drqp_ros2_control robot_name="$(arg robot_name)" />
+  <xacro:drqp_ros2_control robot_name="$(arg robot_name)" device_address="$(arg hardware_device_address)" />
 
   <gazebo reference="">
     <self_collide>1</self_collide>

@@ -44,11 +44,11 @@
     </joint>
   </xacro:macro>
 
-  <xacro:macro name="drqp_ros2_control" params="robot_name">
+  <xacro:macro name="drqp_ros2_control" params="robot_name device_address:=/dev/ttySC0">
     <ros2_control name="${robot_name}" type="system" rw_rate="20" is_async="true" thread_priority="30">
       <hardware>
         <plugin>drqp_control/a1_16_hardware_interface</plugin>
-        <param name="device_address">/dev/ttySC0</param>
+        <param name="device_address">${device_address}</param>
         <param name="baud_rate">115200</param>
       </hardware>
       <xacro:drqp_leg_ros2_control robot_name="${robot_name}" leg_name="left_front" coxa_servo_id="1"/>
