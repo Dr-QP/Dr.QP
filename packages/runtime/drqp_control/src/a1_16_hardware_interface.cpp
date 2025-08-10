@@ -114,7 +114,7 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
 
   try {
     // Read all servos and set commands to current position
-    for (const auto servoId: robotConfig_.getServoIds()) {
+    for (const auto servoId : robotConfig_.getServoIds()) {
       RCLCPP_INFO(get_logger(), "Reading servo %i", servoId);
       read_servo_status(servoId);
     }
