@@ -35,7 +35,7 @@ from rclpy.action import ActionClient
 import rclpy.time
 from trajectory_msgs.msg import JointTrajectoryPoint
 
-recording = False
+recording = True
 
 
 def generate_test_description():
@@ -156,14 +156,19 @@ class TestA116HardwareInterface(unittest.TestCase):
         ]
         position_as_radians = 0.5
 
+        start_point = JointTrajectoryPoint()
+        start_point.time_from_start = rclpy.time.Duration(seconds=0).to_msg()
+        start_point.positions = [position_as_radians] * len(joint_names)
+        start_point.effort = [1.0] * len(joint_names)
+
         target_point = JointTrajectoryPoint()
-        target_point.time_from_start = rclpy.time.Duration(seconds=1.5).to_msg()
+        target_point.time_from_start = rclpy.time.Duration(seconds=0.5).to_msg()
         target_point.positions = [position_as_radians] * len(joint_names)
         target_point.effort = [1.0] * len(joint_names)
 
         trajectory_goal = FollowJointTrajectory.Goal()
         trajectory_goal.trajectory.joint_names = joint_names
-        trajectory_goal.trajectory.points = [target_point]
+        trajectory_goal.trajectory.points = [start_point, target_point]
         trajectory_goal.trajectory.header.stamp = self.node.get_clock().now().to_msg()
         trajectory_goal.trajectory.header.frame_id = 'test_frame'
 
