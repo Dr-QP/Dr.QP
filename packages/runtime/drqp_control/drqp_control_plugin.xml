@@ -1,0 +1,9 @@
+<library path="drqp_ros2_control">
+  <class name="drqp_control/a1_16_hardware_interface"
+         type="drqp_control::a1_16_hardware_interface"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      The ros2_control hardware interface for Dr.QP A1-16 servos.
+    </description>
+  </class>
+</library>

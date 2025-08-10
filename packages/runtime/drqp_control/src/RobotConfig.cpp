@@ -29,42 +29,28 @@ struct RobotConfig::ServoParams
   uint8_t id;
   double ratio = 1.;
   double offset_rads = 0.;
+  double min_angle_rads = -M_PI;
+  double max_angle_rads = M_PI;
 };
 
 struct RobotConfig::JointParams
 {
-  std::string jointName;
+  std::string joint_name;
   double ratio = 1.;
   double offset_rads = 0.;
+  double min_angle_rads = -M_PI;
+  double max_angle_rads = M_PI;
 };
 
-RobotConfig::RobotConfig(rclcpp::Node* node) : node_(node)
-{
-  node_->declare_parameter("config", "");
-}
+RobotConfig::RobotConfig() : logger_(rclcpp::get_logger("RobotConfig")) {}
+
+RobotConfig::RobotConfig(rclcpp::Logger logger) : logger_(logger) {}
 
 RobotConfig::~RobotConfig() = default;
-
-fs::path RobotConfig::getConfigPath()
-{
-  fs::path yamlPath = node_->get_parameter("config").as_string();
-  if (yamlPath.empty()) {
-    const fs::path packageShareDir = ament_index_cpp::get_package_share_directory("drqp_control");
-    yamlPath = packageShareDir / "config" / "drqp.yml";
-  }
-  if (!fs::exists(yamlPath)) {
-    RCLCPP_ERROR(node_->get_logger(), "%s could not be found. Exiting.", yamlPath.c_str());
-    throw std::runtime_error("Robot config parsing failure.");
-  }
-  return yamlPath;
-}
 
 void RobotConfig::loadConfig(fs::path configPath)
 {
   try {
-    if (configPath.empty()) {
-      configPath = getConfigPath();
-    }
     YAML::Node config = YAML::LoadFile(configPath.string());
     if (!config) {
       throw std::runtime_error("Robot config parsing failure.");
@@ -78,7 +64,7 @@ void RobotConfig::loadConfig(fs::path configPath)
     std::string robotNamespace = "";
     if (YAML::Node namespaceNode = robot["namespace"]; namespaceNode) {
       robotNamespace = namespaceNode.as<std::string>() + "/";
-      RCLCPP_INFO(node_->get_logger(), "Robot namespace: %s", robotNamespace.c_str());
+      RCLCPP_INFO(get_logger(), "Robot namespace: %s", robotNamespace.c_str());
     }
 
     // device_address
@@ -107,24 +93,50 @@ void RobotConfig::loadConfig(fs::path configPath)
       if (servo.second["inverted"]) {
         inverted = servo.second["inverted"].as<bool>();
       }
+      double min_rads = -M_PI;
+      if (servo.second["min_rads"]) {
+        min_rads = servo.second["min_rads"].as<double>();
+      }
+      double max_rads = M_PI;
+      if (servo.second["max_rads"]) {
+        max_rads = servo.second["max_rads"].as<double>();
+      }
 
-      const double ratio = inverted ? -1. : 1.;
-
-      jointToServoId_[name] = ServoParams{id, ratio, offset_rads};
-      servoIdToJoint_[id] = JointParams{name, ratio, offset_rads};
+      addServo(
+        ServoJointParams{
+          .joint_name = name,
+          .servo_id = id,
+          .inverted = inverted,
+          .offset_radians = offset_rads,
+          .min_angle_radians = min_rads,
+          .max_angle_radians = max_rads,
+        });
     }
-
-    declareParameters();
   } catch (const std::exception& e) {
-    RCLCPP_ERROR(node_->get_logger(), "Failed to load config %s", e.what());
+    RCLCPP_ERROR(get_logger(), "Failed to load config %s", e.what());
     throw;
   }
 }
 
-void RobotConfig::declareParameters()
+void RobotConfig::addServo(const ServoJointParams& params)
 {
-  node_->declare_parameter("device_address", deviceAddress_);
-  node_->declare_parameter("baud_rate", baudRate_);
+  const double ratio = params.inverted ? -1. : 1.;
+
+  const auto true_min_rads = std::min(params.min_angle_radians, params.max_angle_radians);
+  const auto true_max_rads = std::max(params.min_angle_radians, params.max_angle_radians);
+
+  jointToServoId_[params.joint_name] = ServoParams{
+    .id = params.servo_id,
+    .ratio = ratio,
+    .offset_rads = params.offset_radians,
+    .min_angle_rads = true_min_rads,
+    .max_angle_rads = true_max_rads};
+  servoIdToJoint_[params.servo_id] = JointParams{
+    .joint_name = params.joint_name,
+    .ratio = ratio,
+    .offset_rads = params.offset_radians,
+    .min_angle_rads = true_min_rads,
+    .max_angle_rads = true_max_rads};
 }
 
 std::optional<RobotConfig::ServoValues> RobotConfig::jointToServo(const JointValues& joint)
@@ -134,9 +146,11 @@ std::optional<RobotConfig::ServoValues> RobotConfig::jointToServo(const JointVal
   }
 
   const ServoParams servoParams = jointToServoId_.at(joint.name);
-  const uint16_t position =
-    radiansToPosition(joint.position_as_radians * servoParams.ratio + servoParams.offset_rads);
-  return ServoValues{servoParams.id, position};
+  const auto rawPosition = joint.position_as_radians + servoParams.offset_rads;
+  const double clampedPosition =
+    std::clamp(rawPosition, servoParams.min_angle_rads, servoParams.max_angle_rads);
+  const uint16_t position = radiansToPosition(clampedPosition * servoParams.ratio);
+  return ServoValues{.id = servoParams.id, .position = position};
 }
 
 std::optional<RobotConfig::JointValues> RobotConfig::servoToJoint(const ServoValues& servo)
@@ -148,5 +162,60 @@ std::optional<RobotConfig::JointValues> RobotConfig::servoToJoint(const ServoVal
   const JointParams jointParams = servoIdToJoint_.at(servo.id);
   const double positionAsRadians =
     positionToRadians(servo.position) * jointParams.ratio - jointParams.offset_rads;
-  return JointValues{jointParams.jointName, positionAsRadians};
+  return JointValues{.name = jointParams.joint_name, .position_as_radians = positionAsRadians};
+}
+
+std::vector<std::string> RobotConfig::getJointNames() const
+{
+  std::vector<std::string> jointNames;
+  for (const auto& [name, _] : jointToServoId_) {
+    jointNames.push_back(name);
+  }
+  return jointNames;
+}
+
+std::vector<uint8_t> RobotConfig::getServoIds() const
+{
+  std::vector<uint8_t> servoIds;
+  for (const auto& [id, _] : servoIdToJoint_) {
+    servoIds.push_back(id);
+  }
+  return servoIds;
+}
+////////////////////////////////////////////////////////////////////////
+
+NodeRobotConfig::NodeRobotConfig(rclcpp::Node* node) : RobotConfig(node->get_logger()), node_(node)
+{
+  node_->declare_parameter("config", "");
+}
+
+fs::path NodeRobotConfig::getConfigPath()
+{
+  fs::path yamlPath = node_->get_parameter("config").as_string();
+  if (yamlPath.empty()) {
+    const fs::path packageShareDir = ament_index_cpp::get_package_share_directory("drqp_control");
+    yamlPath = packageShareDir / "config" / "drqp.yml";
+  }
+  if (!fs::exists(yamlPath)) {
+    RCLCPP_ERROR(get_logger(), "%s could not be found. Exiting.", yamlPath.c_str());
+    throw std::runtime_error("Robot config parsing failure.");
+  }
+  return yamlPath;
+}
+
+void NodeRobotConfig::loadConfig()
+{
+  loadConfig(getConfigPath());
+}
+
+void NodeRobotConfig::loadConfig(fs::path configPath)
+{
+  RobotConfig::loadConfig(configPath);
+  declareParameters();
+}
+
+void NodeRobotConfig::declareParameters()
+{
+  node_->declare_parameter("device_address", deviceAddress_);
+  node_->declare_parameter("baud_rate", baudRate_);
 }

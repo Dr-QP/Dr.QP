@@ -1,0 +1,54 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 30  # Hz
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+joint_trajectory_controller:
+  ros__parameters:
+    type: joint_trajectory_controller/JointTrajectoryController
+
+    joints:
+      - dr_qp/left_front_coxa
+      - dr_qp/left_front_femur
+      - dr_qp/left_front_tibia
+
+      - dr_qp/right_front_coxa
+      - dr_qp/right_front_femur
+      - dr_qp/right_front_tibia
+
+
+      - dr_qp/left_middle_coxa
+      - dr_qp/left_middle_femur
+      - dr_qp/left_middle_tibia
+
+      - dr_qp/right_middle_coxa
+      - dr_qp/right_middle_femur
+      - dr_qp/right_middle_tibia
+
+
+      - dr_qp/left_back_coxa
+      - dr_qp/left_back_femur
+      - dr_qp/left_back_tibia
+
+      - dr_qp/right_back_coxa
+      - dr_qp/right_back_femur
+      - dr_qp/right_back_tibia
+
+    command_interfaces:
+      - position
+      - effort
+
+    state_interfaces:
+      - position
+      - velocity
+
+    action_monitor_rate: 20.0 # Defaults to 20
+
+    allow_partial_joints_goal: true # Defaults to false
+    interpolate_from_desired_state: true
+    allow_integration_in_goal_trajectories: true
+    constraints:
+      stopped_velocity_tolerance: 0.01 # Defaults to 0.01
+      goal_time: 0.0 # Defaults to 0.0 (start immediately)

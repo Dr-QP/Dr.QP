@@ -31,19 +31,17 @@ add_executable(control src/Control.cpp)
 target_link_libraries(control drqp_control)
 ament_target_dependencies(control drqp_a1_16_driver)
 
-add_executable(pose_to_joint_state src/PoseToJointsState.cpp)
-target_link_libraries(pose_to_joint_state drqp_control)
+add_library(drqp_ros2_control
+  SHARED
 
-add_executable(pose_reader
-  src/PoseReader.cpp
+  include/drqp_control/a1_16_hardware_interface.h
+  src/a1_16_hardware_interface.cpp
 )
-target_link_libraries(pose_reader drqp_control)
 
-add_executable(pose_setter
-  src/PoseSetter.cpp
-)
-target_link_libraries(pose_setter drqp_control)
-ament_target_dependencies(pose_setter ${${PROJECT_NAME}_BUILD_DEPENDS})
+target_link_libraries(drqp_ros2_control drqp_control)
+ament_target_dependencies(drqp_ros2_control ${${PROJECT_NAME}_BUILD_DEPENDS})
+
+pluginlib_export_plugin_description_file(hardware_interface drqp_control_plugin.xml)
 
 # Install headers
 install(DIRECTORY include/
@@ -52,14 +50,12 @@ install(DIRECTORY include/
 # Install executables for `ros2 run`
 install(TARGETS
   control
-  pose_to_joint_state
-  pose_reader
-  pose_setter
   DESTINATION lib/${PROJECT_NAME})
 
 # Install libraries
 install(TARGETS
   drqp_control
+  drqp_ros2_control
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
@@ -68,7 +64,9 @@ install(TARGETS
 
 # Install configs
 install(
-  DIRECTORY config
+  DIRECTORY
+    config
+    launch
   DESTINATION share/${PROJECT_NAME}
 )
 
@@ -87,6 +85,10 @@ if(BUILD_TESTING)
 
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+
+  #TODO: Add gmock tests for hardware interface from
+  # https://github.com/ros-controls/ros2_control/blob/jazzy/hardware_interface/CMakeLists.txt
+
 endif()
 
 ament_package()
