@@ -98,16 +98,17 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_deactivate(
 }
 
 hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
-  const rclcpp_lifecycle::State& /*previous_state*/)
+  const rclcpp_lifecycle::State& previousState)
 {
-  // reset values always when configuring hardware
+  RCLCPP_INFO(get_logger(), "Configuring hardware interface. Current state: %s, previous state: %s",
+    this->get_lifecycle_state().label().c_str(), previousState.label().c_str());
+
   for (const auto& [name, descr] : joint_state_interfaces_) {
     set_state(name, 0.0);
   }
   for (const auto& [name, descr] : joint_command_interfaces_) {
     set_command(name, 0.0);
   }
-  RCLCPP_INFO(get_logger(), "Successfully configured!");
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
