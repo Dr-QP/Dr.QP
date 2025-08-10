@@ -1,6 +1,0 @@
-string joint_name
-float32 position_as_radians
-bool torque_on
-
-ServoRawState raw
-uint32 read_duration_microsec

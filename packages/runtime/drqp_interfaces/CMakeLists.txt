@@ -15,18 +15,11 @@ foreach(dep ${${PROJECT_NAME}_BUILD_DEPENDS} ${${PROJECT_NAME}_BUILDTOOL_DEPENDS
   find_package(${dep} REQUIRED)
 endforeach()
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-  msg/ServoPositionGoal.msg
-  msg/MultiServoPositionGoal.msg
-
-  msg/ServoState.msg
-  msg/ServoRawState.msg
-  msg/MultiServoState.msg
-
-  msg/TorqueOn.msg
-
-  DEPENDENCIES std_msgs
-)
+# Uncomment when we have messages
+# rosidl_generate_interfaces(${PROJECT_NAME}
+#   msg/Message.msg
+#   DEPENDENCIES std_msgs
+# )
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
