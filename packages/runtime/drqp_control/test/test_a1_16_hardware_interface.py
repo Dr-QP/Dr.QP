@@ -98,48 +98,6 @@ class TestA116HardwareInterface(unittest.TestCase):
         Run a ros2_control system and check that it responds to position commands
         via action interface and that goal is reached.
         """
-        self.issue_move_command()
-        #     end_time = time.time() + self.run_duration
-        #     while time.time() < end_time:
-        #         torque_on = TorqueOn()
-        #         torque_on.joint_names = joints
-        #         torque_on.torque_on = [True] * servo_count
-        #         pub_torque_on.publish(torque_on)
-
-        #         test_goal = MultiServoPositionGoal()
-        #         test_goal.header.stamp = self.node.get_clock().now().to_msg()
-        #         test_goal.header.frame_id = 'test_frame'
-        #         test_goal.mode = MultiServoPositionGoal.MODE_SYNC
-        #         test_goal.goals = [
-        #             ServoPositionGoal(
-        #                 joint_name=joint,
-        #                 position_as_radians=position_as_radians,
-        #                 playtime_ms=playtime_ms,
-        #             )
-        #             for joint in joints
-        #         ]
-
-        #         pub_goals.publish(test_goal)
-
-        #         for _ in range(10):
-        #             rclpy.spin_once(self.node, timeout_sec=0.01)
-        #         if len(msgs_received) > self.max_messages:
-        #             break
-        #     self.assertGreater(len(msgs_received), self.max_messages)
-
-        #     for msg in msgs_received:
-        #         self.assertEqual(len(msg.servos), servo_count)
-        #         joints_to_check = list(joints)
-        #         for servo in msg.servos:
-        #             self.assertAlmostEqual(
-        #                 servo.position_as_radians,
-        #                 position_as_radians,
-        #                 delta=0.01,
-        #             )
-        #             joints_to_check.remove(servo.joint_name)
-        #         self.assertListEqual(joints_to_check, [], 'Not all servos were received')
-
-    def issue_move_command(self):
         joint_names = [
             'dr_qp/left_front_coxa',
             'dr_qp/left_front_femur',
