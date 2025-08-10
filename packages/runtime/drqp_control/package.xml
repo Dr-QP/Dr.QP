@@ -8,9 +8,12 @@
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>hardware_interface</depend>
+  <depend>pluginlib</depend>
   <depend>ros2_control</depend>
   <depend>ros2_controllers</depend>
   <depend>rclcpp</depend>
+  <depend>rclcpp_lifecycle</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>drqp_a1_16_driver</depend>
@@ -18,11 +21,13 @@
   <depend>ament_index_cpp</depend>
   <depend>yaml-cpp</depend>
   <exec_depend>joy</exec_depend>
-  <!-- <depend>rqt_joint_trajectory_controller</depend> --> <!-- https://github.com/ros-controls/ros2_controllers/tree/master/rqt_joint_trajectory_controller -->
+  <exec_depend>ros2_controllers_test_nodes</exec_depend>
+  <exec_depend>rqt_joint_trajectory_controller</exec_depend>
 
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>drqp_lint_common</test_depend>
+  <test_depend>ament_cmake_gmock</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

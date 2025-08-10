@@ -29,7 +29,7 @@ SCENARIO("ROS node")
   GIVEN("Robot config")
   {
     rclcpp::Node node("test_robot_config");
-    RobotConfig robotConfig(&node);
+    NodeRobotConfig robotConfig(&node);
 
     THEN("Config parameter should be declared")
     {
@@ -68,12 +68,45 @@ SCENARIO("ROS node")
         CHECK(node.get_parameter("baud_rate").as_int() == 115200);
       }
 
-      THEN("Joint to servo mapping should work")
+      THEN("Joint to servo mapping should work with default limits")
       {
         RobotConfig::JointValues joint{"test_robot/left_front_coxa", M_PI};
         RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
         CHECK(servo.id == 1);
         CHECK(servo.position == 1023);
+      }
+
+      THEN("Joint to servo mapping should work within limits")
+      {
+        RobotConfig::JointValues joint{"test_robot/left_front_coxa_with_limits", 1.0};
+        RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
+        CHECK(servo.id == 10);
+        CHECK(servo.position == 674);
+
+        RobotConfig::JointValues joint2 = robotConfig.servoToJoint(servo).value();
+        CHECK_THAT(joint2.position_as_radians, Catch::Matchers::WithinAbs(1.0, 0.01));
+      }
+
+      THEN("Joint to servo mapping should have max clamping")
+      {
+        RobotConfig::JointValues joint{"test_robot/left_front_coxa_with_limits", 3.0};
+        RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
+        CHECK(servo.id == 10);
+        CHECK(servo.position == 775);
+
+        RobotConfig::JointValues joint2 = robotConfig.servoToJoint(servo).value();
+        CHECK_THAT(joint2.position_as_radians, Catch::Matchers::WithinAbs(1.62, 0.01));
+      }
+
+      THEN("Joint to servo mapping should have min clamping")
+      {
+        RobotConfig::JointValues joint{"test_robot/left_front_coxa_with_limits", -3.0};
+        RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
+        CHECK(servo.id == 10);
+        CHECK(servo.position == 348);
+
+        RobotConfig::JointValues joint2 = robotConfig.servoToJoint(servo).value();
+        CHECK_THAT(joint2.position_as_radians, Catch::Matchers::WithinAbs(-1.0, 0.01));
       }
 
       THEN("Servo to joint mapping should work")
@@ -92,6 +125,39 @@ SCENARIO("ROS node")
         CHECK(servo.position == 0);
       }
 
+      THEN("Inverted servo should work within limits")
+      {
+        RobotConfig::JointValues joint{"test_robot/left_front_tibia_with_limits", 1.0};
+        RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
+        CHECK(servo.id == 18);
+        CHECK(servo.position == 348);
+
+        RobotConfig::JointValues joint2 = robotConfig.servoToJoint(servo).value();
+        CHECK_THAT(joint2.position_as_radians, Catch::Matchers::WithinAbs(1.0, 0.01));
+      }
+
+      THEN("Inverted servo should have max clamping")
+      {
+        RobotConfig::JointValues joint{"test_robot/left_front_tibia_with_limits", 3.0};
+        RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
+        CHECK(servo.id == 18);
+        CHECK(servo.position == 247);
+
+        RobotConfig::JointValues joint2 = robotConfig.servoToJoint(servo).value();
+        CHECK_THAT(joint2.position_as_radians, Catch::Matchers::WithinAbs(1.62, 0.01));
+      }
+
+      THEN("Inverted servo should have min clamping")
+      {
+        RobotConfig::JointValues joint{"test_robot/left_front_tibia_with_limits", -3.0};
+        RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
+        CHECK(servo.id == 18);
+        CHECK(servo.position == 674);
+
+        RobotConfig::JointValues joint2 = robotConfig.servoToJoint(servo).value();
+        CHECK_THAT(joint2.position_as_radians, Catch::Matchers::WithinAbs(-1.0, 0.01));
+      }
+
       THEN("Offset should work from angle")
       {
         RobotConfig::JointValues joint{"test_robot/left_front_femur", 0.0};
@@ -106,6 +172,20 @@ SCENARIO("ROS node")
         RobotConfig::JointValues joint = robotConfig.servoToJoint(servo).value();
         CHECK(joint.name == "test_robot/left_front_femur");
         CHECK_THAT(joint.position_as_radians, Catch::Matchers::WithinAbs(0.0, 0.01));
+      }
+
+      THEN("getJointNames should return all joints defined in config")
+      {
+        CHECK(robotConfig.numServos() == 5);
+
+        const auto jointNames = robotConfig.getJointNames();
+        CHECK(jointNames.size() == 5);
+        CHECK_THAT(jointNames, Catch::Matchers::Contains("test_robot/left_front_coxa"));
+        CHECK_THAT(jointNames, Catch::Matchers::Contains("test_robot/left_front_coxa_with_limits"));
+        CHECK_THAT(jointNames, Catch::Matchers::Contains("test_robot/left_front_femur"));
+        CHECK_THAT(jointNames, Catch::Matchers::Contains("test_robot/left_front_tibia"));
+        CHECK_THAT(
+          jointNames, Catch::Matchers::Contains("test_robot/left_front_tibia_with_limits"));
       }
 
       THEN("Invalid joint name should return nullopt")

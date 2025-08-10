@@ -31,7 +31,7 @@ def generate_launch_description():
 
     # Check if we're told to use sim time
     use_sim_time = LaunchConfiguration('use_sim_time')
-    use_ros2_control = LaunchConfiguration('use_ros2_control')
+    hardware_device_address = LaunchConfiguration('hardware_device_address')
 
     # Process the URDF file
 
@@ -41,8 +41,8 @@ def generate_launch_description():
             [
                 'xacro ',
                 str(pkg_share_path / 'urdf' / 'dr_qp.urdf.xacro'),
-                ' use_ros2_control:=',
-                use_ros2_control,
+                ' hardware_device_address:=',
+                hardware_device_address,
                 ' use_sim_time:=',
                 use_sim_time,
             ]
@@ -65,7 +65,9 @@ def generate_launch_description():
                 'use_sim_time', default_value='false', description='Use sim time if true'
             ),
             DeclareLaunchArgument(
-                'use_ros2_control', default_value='true', description='Use ros2_control if true'
+                'hardware_device_address',
+                default_value='/dev/ttySC0',
+                description='Hardware device address for ros2_control',
             ),
             node_robot_state_publisher,
         ]
