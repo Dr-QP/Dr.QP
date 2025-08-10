@@ -81,7 +81,9 @@ class TestA116HardwareInterface(unittest.TestCase):
     def setUp(self):
         self.node = rclpy.create_node('test_servo_driver')
         self.trajectory_client = ActionClient(
-            self.node, FollowJointTrajectory, '/joint_trajectory_controller/follow_joint_trajectory'
+            self.node,
+            FollowJointTrajectory,
+            '/joint_trajectory_controller/follow_joint_trajectory',
         )
         self.run_duration = 20
         self.max_messages = 10
@@ -91,7 +93,6 @@ class TestA116HardwareInterface(unittest.TestCase):
 
     def test_write_position_control_interface(self, proc_output):
         """Check whether servo goals are written to the servos when using position control interface."""
-
         self.issue_move_command()
         #     end_time = time.time() + self.run_duration
         #     while time.time() < end_time:
