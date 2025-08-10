@@ -100,7 +100,8 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_deactivate(
 hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
   const rclcpp_lifecycle::State& previousState)
 {
-  RCLCPP_INFO(get_logger(), "Configuring hardware interface. Current state: %s, previous state: %s",
+  RCLCPP_INFO(
+    get_logger(), "Configuring hardware interface. Current state: %s, previous state: %s",
     this->get_lifecycle_state().label().c_str(), previousState.label().c_str());
 
   for (const auto& [name, descr] : joint_state_interfaces_) {
@@ -119,8 +120,7 @@ hardware_interface::return_type a1_16_hardware_interface::read(
   const auto servoIds = robotConfig_.getServoIds();
   const uint8_t servoId = servoIds[servoIndexLastRead_];
 
-  if (torqueIsOn_[servoId] == ServoTorque::On)
-  {
+  if (torqueIsOn_[servoId] == ServoTorque::On) {
     return hardware_interface::return_type::OK;
   }
   servoIndexLastRead_ = (servoIndexLastRead_ + 1) % servoIds.size();

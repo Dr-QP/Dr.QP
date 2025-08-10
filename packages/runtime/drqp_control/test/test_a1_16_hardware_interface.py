@@ -91,7 +91,6 @@ class TestA116HardwareInterface(unittest.TestCase):
 
     def test_write_position_control_interface(self, proc_output):
         """Check whether servo goals are written to the servos when using position control interface."""
-
         self.issue_move_command()
         #     end_time = time.time() + self.run_duration
         #     while time.time() < end_time:
