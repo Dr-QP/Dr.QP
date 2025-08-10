@@ -20,27 +20,22 @@
 
 
 from pathlib import Path
-import time
 import unittest
 
-import trajectory_msgs.msg
+from control_msgs.action import FollowJointTrajectory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, TimerAction
-from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
+from launch.actions import IncludeLaunchDescription, TimerAction
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
 from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
 import rclpy
+from rclpy.action import ActionClient
+import rclpy.time
+from trajectory_msgs.msg import JointTrajectoryPoint
 
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import IfCondition
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
-
-recording = True
+recording = False
 
 
 def generate_test_description():
@@ -85,45 +80,19 @@ class TestA116HardwareInterface(unittest.TestCase):
 
     def setUp(self):
         self.node = rclpy.create_node('test_servo_driver')
+        self.trajectory_client = ActionClient(
+            self.node, FollowJointTrajectory, '/joint_trajectory_controller/follow_joint_trajectory'
+        )
         self.run_duration = 20
         self.max_messages = 10
 
     def tearDown(self):
         self.node.destroy_node()
 
-    def test_position_control(self, proc_output):
-        """Check whether servo_goals messages are read by pose_setter node."""
-        # msgs_received: list[MultiServoState] = []
-        # pub_goals = self.node.create_publisher(MultiServoPositionGoal, '/servo_goals', 10)
-        # sub_states = self.node.create_subscription(
-        #     MultiServoState, '/servo_states', lambda msg: msgs_received.append(msg), 10
-        # )
-        # pub_torque_on = self.node.create_publisher(TorqueOn, '/servo_torque_on', 10)
+    def test_write_position_control_interface(self, proc_output):
+        """Check whether servo goals are written to the servos when using position control interface."""
 
-        joints = [
-            'dr_qp/left_front_coxa',
-            'dr_qp/left_front_femur',
-            'dr_qp/left_front_tibia',
-            'dr_qp/right_front_coxa',
-            'dr_qp/right_front_femur',
-            'dr_qp/right_front_tibia',
-            'dr_qp/left_middle_coxa',
-            'dr_qp/left_middle_femur',
-            'dr_qp/left_middle_tibia',
-            'dr_qp/right_middle_coxa',
-            'dr_qp/right_middle_femur',
-            'dr_qp/right_middle_tibia',
-            'dr_qp/left_back_coxa',
-            'dr_qp/left_back_femur',
-            'dr_qp/left_back_tibia',
-            'dr_qp/right_back_coxa',
-            'dr_qp/right_back_femur',
-            'dr_qp/right_back_tibia',
-        ]
-        servo_count = len(joints)
-        position_as_radians = 0.1
-        playtime_ms = 1500
-        # try:
+        self.issue_move_command()
         #     end_time = time.time() + self.run_duration
         #     while time.time() < end_time:
         #         torque_on = TorqueOn()
@@ -163,10 +132,57 @@ class TestA116HardwareInterface(unittest.TestCase):
         #             )
         #             joints_to_check.remove(servo.joint_name)
         #         self.assertListEqual(joints_to_check, [], 'Not all servos were received')
-        # finally:
-        #     self.node.destroy_subscription(sub_states)
-        #     self.node.destroy_publisher(pub_goals)
-        pass
+
+    def issue_move_command(self):
+        joint_names = [
+            'dr_qp/left_front_coxa',
+            'dr_qp/left_front_femur',
+            'dr_qp/left_front_tibia',
+            'dr_qp/right_front_coxa',
+            'dr_qp/right_front_femur',
+            'dr_qp/right_front_tibia',
+            'dr_qp/left_middle_coxa',
+            'dr_qp/left_middle_femur',
+            'dr_qp/left_middle_tibia',
+            'dr_qp/right_middle_coxa',
+            'dr_qp/right_middle_femur',
+            'dr_qp/right_middle_tibia',
+            'dr_qp/left_back_coxa',
+            'dr_qp/left_back_femur',
+            'dr_qp/left_back_tibia',
+            'dr_qp/right_back_coxa',
+            'dr_qp/right_back_femur',
+            'dr_qp/right_back_tibia',
+        ]
+        position_as_radians = 0.5
+
+        target_point = JointTrajectoryPoint()
+        target_point.time_from_start = rclpy.time.Duration(seconds=1.5).to_msg()
+        target_point.positions = [position_as_radians] * len(joint_names)
+        target_point.effort = [1.0] * len(joint_names)
+
+        trajectory_goal = FollowJointTrajectory.Goal()
+        trajectory_goal.trajectory.joint_names = joint_names
+        trajectory_goal.trajectory.points = [target_point]
+        trajectory_goal.trajectory.header.stamp = self.node.get_clock().now().to_msg()
+        trajectory_goal.trajectory.header.frame_id = 'test_frame'
+
+        goal_handle_future = self.trajectory_client.send_goal_async(trajectory_goal)
+        rclpy.spin_until_future_complete(self.node, goal_handle_future)
+        goal_handle = goal_handle_future.result()
+        self.assertIsNotNone(goal_handle)
+        if goal_handle is None:
+            return
+        result_future = goal_handle.get_result_async()
+        rclpy.spin_until_future_complete(self.node, result_future)
+
+        result: FollowJointTrajectory.Result | None = None
+        result = result_future.result().result
+
+        self.assertIsNotNone(result)
+        if result is None:
+            return
+        self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
 
 
 # Post-shutdown tests
