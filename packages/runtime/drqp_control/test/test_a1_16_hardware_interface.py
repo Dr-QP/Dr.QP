@@ -35,7 +35,7 @@ from rclpy.action import ActionClient
 import rclpy.time
 from trajectory_msgs.msg import JointTrajectoryPoint
 
-recording = True
+recording = False
 
 
 def generate_test_description():
