@@ -112,13 +112,19 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
     set_command(name, 0.0);
   }
 
-  // Read all servos and set commands to current position
-  for (const auto servoId: robotConfig_.getServoIds()) {
-    read_servo_status(servoId);
-  }
-  for (const auto& jointName : robotConfig_.getJointNames()) {
-    const auto position = get_state(jointName + "/position");
-    set_command(jointName + "/position", position);
+  try {
+    // Read all servos and set commands to current position
+    for (const auto servoId: robotConfig_.getServoIds()) {
+      RCLCPP_INFO(get_logger(), "Reading servo %i", servoId);
+      read_servo_status(servoId);
+    }
+    for (const auto& jointName : robotConfig_.getJointNames()) {
+      const auto position = get_state(jointName + "/position");
+      set_command(jointName + "/position", position);
+    }
+  } catch (const std::exception& e) {
+    RCLCPP_ERROR(get_logger(), "Failed to configure hardware interface: %s", e.what());
+    return hardware_interface::CallbackReturn::ERROR;
   }
   return hardware_interface::CallbackReturn::SUCCESS;
 }
