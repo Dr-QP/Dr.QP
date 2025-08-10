@@ -103,5 +103,7 @@ private:
   std::unique_ptr<SerialProtocol> servoSerial_;
 
   size_t servoIndexLastRead_ = 0;
+
+  hardware_interface::return_type read_servo_status(uint8_t servoId);
 };
 }  // namespace drqp_control

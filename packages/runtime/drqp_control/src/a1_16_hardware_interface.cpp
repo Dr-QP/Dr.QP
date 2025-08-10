@@ -104,6 +104,7 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
     get_logger(), "Configuring hardware interface. Current state: %s, previous state: %s",
     this->get_lifecycle_state().label().c_str(), previousState.label().c_str());
 
+  // Reset all interfaces to 0.0
   for (const auto& [name, descr] : joint_state_interfaces_) {
     set_state(name, 0.0);
   }
@@ -111,20 +112,19 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
     set_command(name, 0.0);
   }
 
+  // Read all servos and set commands to current position
+  for (const auto servoId: robotConfig_.getServoIds()) {
+    read_servo_status(servoId);
+  }
+  for (const auto& jointName : robotConfig_.getJointNames()) {
+    const auto position = get_state(jointName + "/position");
+    set_command(jointName + "/position", position);
+  }
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-hardware_interface::return_type a1_16_hardware_interface::read(
-  const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
+hardware_interface::return_type a1_16_hardware_interface::read_servo_status(uint8_t servoId)
 {
-  const auto servoIds = robotConfig_.getServoIds();
-  const uint8_t servoId = servoIds[servoIndexLastRead_];
-
-  if (torqueIsOn_[servoId] == ServoTorque::On) {
-    return hardware_interface::return_type::OK;
-  }
-  servoIndexLastRead_ = (servoIndexLastRead_ + 1) % servoIds.size();
-
   XYZrobotServo servo(*servoSerial_, servoId);
 
   XYZrobotServoStatus status = servo.readStatus();
@@ -144,6 +144,20 @@ hardware_interface::return_type a1_16_hardware_interface::read(
   set_state(jointValues->name + "/pwm", status.pwm / 1023.0);
 
   return hardware_interface::return_type::OK;
+}
+
+hardware_interface::return_type a1_16_hardware_interface::read(
+  const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
+{
+  const auto servoIds = robotConfig_.getServoIds();
+  const uint8_t servoId = servoIds[servoIndexLastRead_];
+
+  if (torqueIsOn_[servoId] == ServoTorque::On) {
+    return hardware_interface::return_type::OK;
+  }
+  servoIndexLastRead_ = (servoIndexLastRead_ + 1) % servoIds.size();
+
+  return read_servo_status(servoId);
 }
 
 hardware_interface::return_type a1_16_hardware_interface::write(
