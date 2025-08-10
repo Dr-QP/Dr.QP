@@ -117,26 +117,30 @@ hardware_interface::return_type a1_16_hardware_interface::read(
 {
   const auto servoIds = robotConfig_.getServoIds();
   const uint8_t servoId = servoIds[servoIndexLastRead_];
+
+  if (torqueIsOn_[servoId] == ServoTorque::On)
   {
-    XYZrobotServo servo(*servoSerial_, servoId);
-
-    XYZrobotServoStatus status = servo.readStatus();
-    if (servo.isFailed()) {
-      RCLCPP_ERROR(
-        get_logger(), "Failed to read status for servo %i: %s", servoId,
-        to_string(servo.getLastError()).c_str());
-      return hardware_interface::return_type::OK;
-    }
-
-    auto jointValues = robotConfig_.servoToJoint({servoId, status.position});
-    if (!jointValues) {
-      RCLCPP_ERROR(get_logger(), "Failed to convert servo %i position to joint", servoId);
-      return hardware_interface::return_type::OK;
-    }
-    set_state(jointValues->name + "/position", jointValues->position_as_radians);
-    set_state(jointValues->name + "/pwm", status.pwm / 1023.0);
+    return hardware_interface::return_type::OK;
   }
   servoIndexLastRead_ = (servoIndexLastRead_ + 1) % servoIds.size();
+
+  XYZrobotServo servo(*servoSerial_, servoId);
+
+  XYZrobotServoStatus status = servo.readStatus();
+  if (servo.isFailed()) {
+    RCLCPP_ERROR(
+      get_logger(), "Failed to read status for servo %i: %s", servoId,
+      to_string(servo.getLastError()).c_str());
+    return hardware_interface::return_type::OK;
+  }
+
+  auto jointValues = robotConfig_.servoToJoint({servoId, status.position});
+  if (!jointValues) {
+    RCLCPP_ERROR(get_logger(), "Failed to convert servo %i position to joint", servoId);
+    return hardware_interface::return_type::OK;
+  }
+  set_state(jointValues->name + "/position", jointValues->position_as_radians);
+  set_state(jointValues->name + "/pwm", status.pwm / 1023.0);
 
   return hardware_interface::return_type::OK;
 }
