@@ -17,6 +17,7 @@ endforeach()
 add_library(drqp_a1_16_driver STATIC
     include/drqp_a1_16_driver/XYZrobotServo.h
 
+    src/MockServo.cpp
     src/XYZrobotServo.cpp
 )
 drqp_library_enable_coverage(drqp_a1_16_driver)

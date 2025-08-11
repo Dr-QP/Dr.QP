@@ -24,60 +24,15 @@
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <string>
+#include <chrono>
 #include <array>
+#include <vector>
 #include <memory>
 #include <stdexcept>
-#include <string>
-#include <vector>
-#include <chrono>
-#include <utility>
 
 #include "drqp_serial/Stream.h"
-
-/// The possible communication errors that can happen when reading the
-/// acknowledgment packet from a servo.
-enum class XYZrobotServoError {
-  /// No error.
-  None = 0,
-
-  /// There was a timeout waiting to receive the 7-byte acknowledgment header.
-  HeaderTimeout = 1,
-
-  /// The first byte of received header was not 0xFF.
-  HeaderByte1Wrong = 2,
-
-  /// The second byte of the received header was not 0xFF.
-  HeaderByte2Wrong = 3,
-
-  /// The ID byte in the received header was wrong.
-  IdWrong = 4,
-
-  /// The CMD bytes in the received header was wrong.
-  CmdWrong = 5,
-
-  /// The size byte in the received header was wrong.
-  SizeWrong = 6,
-
-  /// There was a timeout reading the first expected block of data in the
-  /// acknowledgment.
-  Data1Timeout = 7,
-
-  /// There was a timeout reading the second expected block of data in the
-  /// acknowledgment.
-  Data2Timeout = 8,
-
-  /// The first byte of the checksum was wrong.
-  Checksum1Wrong = 9,
-
-  /// The second byte of the checksum was wrong.
-  Checksum2Wrong = 10,
-
-  /// The offset byte returned by an EEPROM Read or RAM Read command was wrong.
-  ReadOffsetWrong = 16,
-
-  /// The length byte returned by an EEPROM Read or RAM Read command was wrong.
-  ReadLengthWrong = 17,
-};
+#include "drqp_a1_16_driver/ServoProtocol.h"
 
 std::string to_string(XYZrobotServoError errorCode);
 
@@ -111,86 +66,6 @@ static inline uint32_t XYZrobotServoBaudRateToInt(XYZrobotServoBaudRate baud)
   }
 }
 
-/// The possible values for the ACK_Policy parameter stored in the servo's
-/// EEPROM and RAM.  This parameter determins which commands the servo will send
-/// an acknowledgment response for.
-enum class XYZrobotServoAckPolicy {
-  // The servo only responds to STAT commands.
-  OnlyStat = 0,
-
-  // The servo only responds to STAT, EEPROM Read, and RAM Read commands.
-  OnlyReadAndStat = 1,
-
-  // The servo responds to all commands.
-  All = 2,
-};
-
-enum class XYZrobotServoSpdctrlPolicy {
-  OpenLoop = 0,
-  CloseLoop = 1,
-};
-
-template <class DurationT>
-uint8_t toPlaytime(const DurationT& duration)
-{
-  return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() / 10;
-}
-
-enum class XYZrobotServoStatusError : uint8_t {
-  None = 0,
-
-  // Exceed Potentiometer Range Error. Blue LED on
-  ExceedPotentiometerRangeError = 0x01,
-
-  // Over Voltage Limits Error. Red LED on/ White LED off
-  OverVoltageLimitsError = 0x02,
-
-  // Over Temperature Error. Red LED on/ White LED off
-  OverTemperatureError = 0x04,
-
-  // Overload/Over-current Error. Red LED on/ White LED off
-  OverloadOvercurrentError = 0x08,
-
-  // Reserved
-  Reserved = 0x10,
-
-  // Requested Packet Checksum Error. Green LED on
-  RequestedPacketChecksumError = 0x20,
-
-  // Requested Packet Data Error. Green LED on
-  RequestedPacketDataError = 0x40,
-
-  // Requested Packet RX FIFO Error. Green LED on
-  RequestedPacketRxFifoError = 0x80,
-};
-
-enum class XYZrobotServoStatusDetail : uint8_t {
-  None = 0,
-
-  // Motor Moving
-  MotorMoving = 0x10,
-
-  // Motor In-Position (Position control mode only)
-  MotorInPosition = 0x20,
-
-  // 1: Torque on (Position/Speed control), 0: Torque off
-  TorqueOn = 0x40,
-
-  // Motor Braked
-  MotorBraked = 0x80,
-};
-
-/// This struct represents the data returned by a STAT command.
-struct XYZrobotServoStatus
-{
-  XYZrobotServoStatusError statusError;
-  XYZrobotServoStatusDetail statusDetail;
-  uint16_t pwm;     // The torque applied to motor
-  uint16_t posRef;  /// Servo position goal. If no goal, this is just its current measured position.
-  uint16_t position;  // Servo current position
-  uint16_t iBus;      // ：The Current applied to motor. The Value is 200 times the actual current.
-} __attribute__((packed));
-
 struct SJogData
 {
   uint16_t goal;
@@ -220,7 +95,7 @@ public:
   {
     return data_.get();
   }
-  size_t size() const
+  size_t dataSize() const
   {
     return size_;
   }
@@ -246,55 +121,30 @@ private:
   size_t count_;
 };
 
-struct IJogData
-{
-  uint16_t goal;
-  uint8_t type;
-  uint8_t id;
-  uint8_t playtime;  // play time may be modified for a long movement
-} __attribute__((packed));
+/// The possible values for the ACK_Policy parameter stored in the servo's
+/// EEPROM and RAM.  This parameter determins which commands the servo will send
+/// an acknowledgment response for.
+enum class XYZrobotServoAckPolicy {
+  // The servo only responds to STAT commands.
+  OnlyStat = 0,
 
-// I-JOG - independent control move
-// Stops once the goal is reached, even if it requires more time then specified in playtime
-template <size_t ServoCount>
-struct IJogCommand
-{
-  std::array<IJogData, ServoCount> data;
+  // The servo only responds to STAT, EEPROM Read, and RAM Read commands.
+  OnlyReadAndStat = 1,
+
+  // The servo responds to all commands.
+  All = 2,
 };
-class DynamicIJogCommand
-{
-public:
-  DynamicIJogCommand() = default;
-  explicit DynamicIJogCommand(size_t count) : data_(count) {}
 
-  const IJogData* data() const
-  {
-    return data_.data();
-  }
-
-  void reserve(size_t n)
-  {
-    data_.reserve(n);
-  }
-
-  size_t size() const
-  {
-    return data_.size() * sizeof(data_[0]);
-  }
-
-  IJogData& at(size_t pos)
-  {
-    return data_.at(pos);
-  }
-
-  void emplace_back(IJogData entry)
-  {
-    data_.emplace_back(std::move(entry));
-  }
-
-private:
-  std::vector<IJogData> data_;
+enum class XYZrobotServoSpdctrlPolicy {
+  OpenLoop = 0,
+  CloseLoop = 1,
 };
+
+template <class DurationT>
+uint8_t toPlaytime(const DurationT& duration)
+{
+  return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() / 10;
+}
 
 #define SET_POSITION_CONTROL 0
 #define SET_SPEED_CONTROL 1
@@ -468,11 +318,9 @@ struct XYZrobotServoEEPROM : public EEPROM_header, public SharedMemData
 {
 } __attribute__((packed));
 
-class XYZrobotServo
+class XYZrobotServo : public ServoProtocol
 {
 public:
-  static constexpr uint8_t kBroadcastId = 0xFE;
-
   XYZrobotServo(Stream&, uint8_t id);
 
   /// Writes data from the specified buffer to the servo's EEPROM.
@@ -585,7 +433,7 @@ public:
   XYZrobotServoAckPolicy readAckPolicyRam();
 
   /// Sends a STAT command to the servo and returns the results.
-  XYZrobotServoStatus readStatus();
+  XYZrobotServoStatus readStatus() override;
 
   /// Sends an I-JOG command to set the target/goal position for this servo.
   ///
@@ -638,12 +486,12 @@ public:
   // After running this command, we recommend delaying for 2500 ms before
   // sending the next command to this servo, since it takes the servo a while to
   // restart.
-  void reboot();
+  void reboot() override;
 
   /// Returns the communication error from the last command.  The return value
   /// will be 0 if there was no error and non-zero if there was an error.  The
   /// return value will be one of the values of the XYZrobotServoError enum.
-  XYZrobotServoError getLastError() const
+  XYZrobotServoError getLastError() const override
   {
     return lastError;
   }
@@ -651,7 +499,7 @@ public:
   {
     return getLastError() == XYZrobotServoError::None;
   }
-  bool isFailed() const
+  bool isFailed() const override
   {
     return getLastError() != XYZrobotServoError::None;
   }
@@ -670,7 +518,7 @@ public:
 
   void sendJogCommand(const DynamicSJogCommand& cmd)
   {
-    sendRequest(kBroadcastId, CMD_S_JOG, cmd.data(), cmd.size());
+    sendRequest(kBroadcastId, CMD_S_JOG, cmd.data(), cmd.dataSize());
   }
 
   template <size_t ServoCount>
@@ -679,12 +527,12 @@ public:
     sendRequest(kBroadcastId, CMD_I_JOG, &cmd, sizeof(cmd));
   }
 
-  void sendJogCommand(const DynamicIJogCommand& cmd)
+  void sendJogCommand(const std::vector<IJogData>& cmd) override
   {
     if (cmd.size() == 0) {
       return;
     }
-    sendRequest(kBroadcastId, CMD_I_JOG, cmd.data(), cmd.size());
+    sendRequest(kBroadcastId, CMD_I_JOG, cmd.data(), cmd.size() * sizeof(cmd[0]));
   }
 
 private:

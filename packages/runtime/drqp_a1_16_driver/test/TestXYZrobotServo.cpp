@@ -156,7 +156,7 @@ void neutralPoseDynamicIJog(SerialProtocol& servoSerial)
 {
   XYZrobotServo servo(servoSerial, XYZrobotServo::kBroadcastId);
 
-  DynamicIJogCommand posCmd(kServoCount);
+  std::vector<IJogData> posCmd(kServoCount);
   posCmd.at(0) = IJogData{kStartGoal, SET_POSITION_CONTROL, kTestServo, 30};
   posCmd.at(1) = IJogData{kStartGoal, SET_POSITION_CONTROL, kTestServoOther, 30};
   servo.sendJogCommand(posCmd);

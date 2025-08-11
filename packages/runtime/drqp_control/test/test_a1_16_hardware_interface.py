@@ -19,12 +19,11 @@
 # THE SOFTWARE.
 
 
-from pathlib import Path
 import unittest
 
 from control_msgs.action import FollowJointTrajectory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, TimerAction
+from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
@@ -35,15 +34,8 @@ from rclpy.action import ActionClient
 import rclpy.time
 from trajectory_msgs.msg import JointTrajectoryPoint
 
-recording = True
-
 
 def generate_test_description():
-    device_address_name = '/dev/ttySC0' if recording else 'playback'
-    test_data_dir = Path(__file__).parent / 'test_data'
-    hardware_device_address = (
-        f'{device_address_name}|{test_data_dir / "integration-a1_16_hardware_interface.json"}'
-    )
     drqp_control_launch_path = PathJoinSubstitution(
         [
             FindPackageShare('drqp_control'),
@@ -58,11 +50,11 @@ def generate_test_description():
                 ),
                 launch_arguments={
                     'use_sim_time': 'false',
-                    'hardware_device_address': hardware_device_address,
+                    'hardware_device_address': 'mock_servo',
                 }.items(),
             ),
-            # Launch tests after delay
-            TimerAction(period=4.0, actions=[ReadyToTest()]),
+            # Wait is done by trajectory_client.wait_for_server()
+            ReadyToTest(),
         ]
     )
 
@@ -85,8 +77,7 @@ class TestA116HardwareInterface(unittest.TestCase):
             FollowJointTrajectory,
             '/joint_trajectory_controller/follow_joint_trajectory',
         )
-        self.run_duration = 20
-        self.max_messages = 10
+        self.trajectory_client.wait_for_server()
 
     def tearDown(self):
         self.node.destroy_node()

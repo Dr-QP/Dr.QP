@@ -22,10 +22,12 @@
 #include <cassert>
 #include <chrono>
 #include <cstdint>
+#include <memory>
 #include <rclcpp/logging.hpp>
 
 #include "drqp_serial/SerialFactory.h"
 #include "drqp_a1_16_driver/XYZrobotServo.h"
+#include "drqp_a1_16_driver/MockServo.h"
 
 namespace drqp_control
 {
@@ -51,6 +53,14 @@ bool get_bool_param(
       "'. Expected 'True' or 'False'.");
   }
   return value == "True";
+}
+
+a1_16_hardware_interface::ServoPtr a1_16_hardware_interface::makeServo(uint8_t id)
+{
+  if (useMockServo_) {
+    return std::make_unique<MockServo>(id);
+  }
+  return std::make_unique<XYZrobotServo>(*servoSerial_, id);
 }
 
 hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
@@ -79,8 +89,15 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
     }
   }
 
-  servoSerial_ = makeSerialForDevice(get_param(info.hardware_parameters, "device_address"));
-  servoSerial_->begin(std::stoi(get_param(info.hardware_parameters, "baud_rate")));
+  auto deviceAddress = get_param(info.hardware_parameters, "device_address");
+  RCLCPP_INFO(get_logger(), "Connecting to %s", deviceAddress.c_str());
+  if (deviceAddress == "mock_servo") {
+    useMockServo_ = true;
+  } else {
+    useMockServo_ = false;
+    servoSerial_ = makeSerialForDevice(deviceAddress);
+    servoSerial_->begin(std::stoi(get_param(info.hardware_parameters, "baud_rate")));
+  }
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -98,12 +115,8 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_deactivate(
 }
 
 hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
-  const rclcpp_lifecycle::State& previousState)
+  const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  RCLCPP_INFO(
-    get_logger(), "Configuring hardware interface. Current state: %s, previous state: %s",
-    this->get_lifecycle_state().label().c_str(), previousState.label().c_str());
-
   // Reset all interfaces to 0.0
   for (const auto& [name, descr] : joint_state_interfaces_) {
     set_state(name, 0.0);
@@ -115,8 +128,7 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
   try {
     // Read all servos and set commands to current position
     for (const auto servoId : robotConfig_.getServoIds()) {
-      RCLCPP_INFO(get_logger(), "Reading servo %i", servoId);
-      read_servo_status(servoId);
+      readServoStatus(servoId);
     }
     for (const auto& jointName : robotConfig_.getJointNames()) {
       const auto position = get_state(jointName + "/position");
@@ -126,52 +138,66 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
     RCLCPP_ERROR(get_logger(), "Failed to configure hardware interface: %s", e.what());
     return hardware_interface::CallbackReturn::ERROR;
   }
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-hardware_interface::return_type a1_16_hardware_interface::read_servo_status(uint8_t servoId)
+hardware_interface::return_type a1_16_hardware_interface::readServoStatus(uint8_t servoId)
 {
-  XYZrobotServo servo(*servoSerial_, servoId);
+  try {
+    ServoPtr servo = makeServo(servoId);
 
-  XYZrobotServoStatus status = servo.readStatus();
-  if (servo.isFailed()) {
-    RCLCPP_ERROR(
-      get_logger(), "Failed to read status for servo %i: %s", servoId,
-      to_string(servo.getLastError()).c_str());
-    return hardware_interface::return_type::OK;
+    XYZrobotServoStatus status = servo->readStatus();
+    if (servo->isFailed()) {
+      RCLCPP_ERROR(
+        get_logger(), "Failed to read status for servo %i: %s", servoId,
+        to_string(servo->getLastError()).c_str());
+      return hardware_interface::return_type::OK;
+    }
+
+    auto jointValues = robotConfig_.servoToJoint({servoId, status.position});
+    if (!jointValues) {
+      RCLCPP_ERROR(get_logger(), "Failed to convert servo %i position to joint", servoId);
+      return hardware_interface::return_type::OK;
+    }
+    set_state(jointValues->name + "/position", jointValues->position_as_radians);
+    set_state(jointValues->name + "/pwm", status.pwm / 1023.0);
+  } catch (const std::exception& e) {
+    RCLCPP_ERROR(get_logger(), "Failed to read servo %i: %s", servoId, e.what());
+  } catch (...) {
+    RCLCPP_ERROR(get_logger(), "Failed to read servo %i: unknown exception", servoId);
   }
-
-  auto jointValues = robotConfig_.servoToJoint({servoId, status.position});
-  if (!jointValues) {
-    RCLCPP_ERROR(get_logger(), "Failed to convert servo %i position to joint", servoId);
-    return hardware_interface::return_type::OK;
-  }
-  set_state(jointValues->name + "/position", jointValues->position_as_radians);
-  set_state(jointValues->name + "/pwm", status.pwm / 1023.0);
-
   return hardware_interface::return_type::OK;
 }
 
 hardware_interface::return_type a1_16_hardware_interface::read(
   const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
 {
-  const auto servoIds = robotConfig_.getServoIds();
-  const uint8_t servoId = servoIds[servoIndexLastRead_];
+  // Read one servo at a time, round robin
+  try {
+    const auto servoIds = robotConfig_.getServoIds();
+    const uint8_t servoId = servoIds[servoIndexLastRead_];
 
-  if (torqueIsOn_[servoId] == ServoTorque::On) {
-    return hardware_interface::return_type::OK;
+    if (torqueIsOn_[servoId] == ServoTorque::On) {
+      return hardware_interface::return_type::OK;
+    }
+    servoIndexLastRead_ = (servoIndexLastRead_ + 1) % servoIds.size();
+
+    return readServoStatus(servoId);
+  } catch (const std::exception& e) {
+    RCLCPP_ERROR(get_logger(), "Failed to read: %s", e.what());
+  } catch (...) {
+    RCLCPP_ERROR(get_logger(), "Failed to read: unknown exception");
   }
-  servoIndexLastRead_ = (servoIndexLastRead_ + 1) % servoIds.size();
-
-  return read_servo_status(servoId);
+  return hardware_interface::return_type::OK;
 }
 
 hardware_interface::return_type a1_16_hardware_interface::write(
   const rclcpp::Time& /*time*/, const rclcpp::Duration& period)
 {
-  XYZrobotServo servo(*servoSerial_, XYZrobotServo::kBroadcastId);
+  ServoPtr servo = makeServo(XYZrobotServo::kBroadcastId);
 
-  DynamicIJogCommand iposCmd;
+  std::vector<IJogData> iposCmd;
   iposCmd.reserve(robotConfig_.numServos());
   for (const auto& jointName : robotConfig_.getJointNames()) {
     const auto effort = get_command(jointName + "/effort");
@@ -187,8 +213,8 @@ hardware_interface::return_type a1_16_hardware_interface::write(
         continue;
       }
       torqueIsOn_[servoValues->id] = ServoTorque::Reboot;
-      XYZrobotServo servo(*servoSerial_, servoValues->id);
-      servo.reboot();
+      ServoPtr servo = makeServo(servoValues->id);
+      servo->reboot();
       continue;
     } else if (effort < 0.1) {
       if (torqueIsOn_[servoValues->id] == ServoTorque::Off) {
@@ -203,8 +229,9 @@ hardware_interface::return_type a1_16_hardware_interface::write(
     }
 
     iposCmd.emplace_back(
-      {servoValues->position, servoCommand, servoValues->id,
-       toPlaytime(period.to_chrono<std::chrono::milliseconds>())});
+      IJogData{
+        servoValues->position, servoCommand, servoValues->id,
+        toPlaytime(period.to_chrono<std::chrono::milliseconds>())});
 
     if (torqueIsOn_[servoValues->id] == ServoTorque::On) {
       // Convert back, this will handle invertion, clamping and offset
@@ -212,7 +239,7 @@ hardware_interface::return_type a1_16_hardware_interface::write(
       set_state(jointName + "/position", jointState->position_as_radians);
     }
   }
-  servo.sendJogCommand(iposCmd);
+  servo->sendJogCommand(iposCmd);
 
   return hardware_interface::return_type::OK;
 }

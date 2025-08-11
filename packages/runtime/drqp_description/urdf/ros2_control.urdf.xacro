@@ -8,6 +8,7 @@
         <param name="min">${radians(-90)}</param>
         <param name="max">${radians(90)}</param>
         <param name="offset_rads">${offset_coxa}</param>
+        <param name="initial_value">0.0</param> <!-- Initial value for mock_hardware -->
       </command_interface>
       <command_interface name="effort" />
       <state_interface name="velocity" />
@@ -22,6 +23,7 @@
         <param name="min">${radians(-98)}</param>
         <param name="max">${radians(90)}</param>
         <param name="offset_rads">${offset_femur}</param>
+        <param name="initial_value">0.0</param> <!-- Initial value for mock_hardware -->
       </command_interface>
       <command_interface name="effort" />
       <state_interface name="velocity" />
@@ -36,6 +38,7 @@
         <param name="min">${radians(-80)}</param>
         <param name="max">${radians(110)}</param>
         <param name="offset_rads">${offset_tibia}</param>
+        <param name="initial_value">0.0</param> <!-- Initial value for mock_hardware -->
       </command_interface>
       <command_interface name="effort" />
       <state_interface name="velocity" />
