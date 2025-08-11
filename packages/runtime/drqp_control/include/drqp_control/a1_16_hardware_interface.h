@@ -30,6 +30,7 @@
 
 #include "drqp_control/RobotConfig.h"
 #include "drqp_serial/SerialProtocol.h"
+#include "drqp_a1_16_driver/ServoProtocol.h"
 
 namespace drqp_control
 {
@@ -104,6 +105,10 @@ private:
 
   size_t servoIndexLastRead_ = 0;
 
-  hardware_interface::return_type read_servo_status(uint8_t servoId);
+  using ServoPtr = std::unique_ptr<ServoProtocol>;
+  ServoPtr makeServo(uint8_t id);
+  bool useMockServo_ = false;
+
+  hardware_interface::return_type readServoStatus(uint8_t servoId);
 };
 }  // namespace drqp_control

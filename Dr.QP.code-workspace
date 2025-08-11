@@ -119,11 +119,8 @@
       {
         "type": "lldb",
         "request": "attach",
-        "name": "drqp_a1_16_driver read_everything",
-        "program": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/examples/read_everything",
-        // "args": [],
-        // "cwd": "${workspaceFolder:Dr.QP}/build/drqp_a1_16_driver/examples/",
-        // "preLaunchTask": "Dr.QP colcon build",
+        "name": "ros2_control_node",
+        "program": "ros2_control_node",
       },
       {
         "type": "bashdb",

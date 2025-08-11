@@ -6,8 +6,7 @@ function(add_ros_isolated_launch_test path)
   add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
 endfunction()
 
-# #224: Implement mock servo to enable HW system tests
-# add_ros_isolated_launch_test(test_a1_16_hardware_interface.py)
+add_ros_isolated_launch_test(test_a1_16_hardware_interface.py)
 
 find_package(catch_ros2 REQUIRED)
 add_executable(drqp_control_tests
