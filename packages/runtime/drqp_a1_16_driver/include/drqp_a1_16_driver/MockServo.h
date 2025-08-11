@@ -20,9 +20,11 @@
 
 #pragma once
 
+#include <assert.h>
+
 #include <cstdint>
 #include <unordered_map>
-#include <assert.h>
+#include <vector>
 
 #include "drqp_a1_16_driver/ServoProtocol.h"
 

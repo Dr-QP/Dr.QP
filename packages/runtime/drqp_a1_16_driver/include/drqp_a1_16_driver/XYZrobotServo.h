@@ -27,6 +27,7 @@
 #include <string>
 #include <chrono>
 #include <array>
+#include <vector>
 #include <memory>
 #include <stdexcept>
 
