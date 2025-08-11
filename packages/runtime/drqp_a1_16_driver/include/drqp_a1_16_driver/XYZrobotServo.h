@@ -30,6 +30,7 @@
 #include <string>
 #include <vector>
 #include <chrono>
+#include <utility>
 
 #include "drqp_serial/Stream.h"
 
@@ -263,11 +264,17 @@ struct IJogCommand
 class DynamicIJogCommand
 {
 public:
+  DynamicIJogCommand() = default;
   explicit DynamicIJogCommand(size_t count) : data_(count) {}
 
   const IJogData* data() const
   {
     return data_.data();
+  }
+
+  void reserve(size_t n)
+  {
+    data_.reserve(n);
   }
 
   size_t size() const
@@ -278,6 +285,11 @@ public:
   IJogData& at(size_t pos)
   {
     return data_.at(pos);
+  }
+
+  void emplace_back(IJogData entry)
+  {
+    data_.emplace_back(std::move(entry));
   }
 
 private:
@@ -669,6 +681,9 @@ public:
 
   void sendJogCommand(const DynamicIJogCommand& cmd)
   {
+    if (cmd.size() == 0) {
+      return;
+    }
     sendRequest(kBroadcastId, CMD_I_JOG, cmd.data(), cmd.size());
   }
 

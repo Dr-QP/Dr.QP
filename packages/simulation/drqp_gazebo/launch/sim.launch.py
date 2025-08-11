@@ -35,7 +35,6 @@ def generate_launch_description():
         ),
         launch_arguments={
             'use_sim_time': 'True',
-            'use_ros2_control': 'True',
         }.items(),
     )
 

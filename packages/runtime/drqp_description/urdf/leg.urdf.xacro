@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-
   <xacro:include filename="$(find drqp_description)/urdf/inertial_macros.xacro"/>
   <xacro:macro name="inertial_stub" params="">
     <xacro:property name="tiny_value" value="0.01"/>

@@ -34,20 +34,15 @@ class WalkController:
         gait=GaitType.wave,
     ):
         self.hexapod = hexapod
+        self.leg_tips_on_ground = [(leg, leg.tibia_end.copy()) for leg in hexapod.legs]
+
         self.step_length = step_length
         self.step_height = step_height
         self.rotation_speed_degrees = rotation_speed_degrees
         self.gait_gen = ParametricGaitGenerator(step_length=1.0, step_height=1.0, gait=gait)
 
-        self.current_phase = 0.0
-        self.last_stop_phase = 0.0
         self.phase_step = 1 / phase_steps_per_cycle
-
-        self.leg_tips_on_ground = [(leg, leg.tibia_end.copy()) for leg in hexapod.legs]
-
-        self.current_direction = Point3D([1, 0, 0])
-        self.current_stride_ratio = 0
-        self.current_rotation_ratio = 0
+        self.reset()
 
     @property
     def current_gait(self):
@@ -56,6 +51,13 @@ class WalkController:
     @current_gait.setter
     def current_gait(self, gait):
         self.gait_gen.current_gait = gait
+
+    def reset(self):
+        self.current_direction = Point3D([1, 0, 0])
+        self.current_stride_ratio = 0
+        self.current_rotation_ratio = 0
+        self.current_phase = 0.0
+        self.last_stop_phase = 0.0
 
     def next_step(
         self,

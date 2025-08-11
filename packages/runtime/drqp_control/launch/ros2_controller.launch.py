@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-
+from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
@@ -31,60 +31,74 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
     show_rviz = LaunchConfiguration('show_rviz')
-    load_joystick = LaunchConfiguration('load_joystick')
-    drqp_control_launch_path = PathJoinSubstitution(
+
+    description_launch_path = get_package_share_path('drqp_description') / 'launch'
+
+    robot_controllers = PathJoinSubstitution(
         [
             FindPackageShare('drqp_control'),
-            'launch',
+            'config',
+            'drqp_controllers.yml',
         ]
     )
+    control_node = Node(
+        package='controller_manager',
+        executable='ros2_control_node',
+        parameters=[
+            {
+                'use_sim_time': use_sim_time,
+            },
+            robot_controllers,
+        ],
+        output='both',
+    )
+    joint_state_broadcaster_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['joint_state_broadcaster'],
+        parameters=[
+            {
+                'use_sim_time': use_sim_time,
+            },
+        ],
+    )
+
+    robot_controller_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['joint_trajectory_controller', '--param-file', robot_controllers],
+        parameters=[
+            {
+                'use_sim_time': use_sim_time,
+            },
+        ],
+    )
+
     return LaunchDescription(
         [
-            DeclareLaunchArgument(
-                name='use_sim_time',
-                default_value='false',
-                choices=['true', 'false'],
-                description='Use sim time if true',
-            ),
             DeclareLaunchArgument(
                 name='show_rviz',
                 default_value='false',
                 choices=['true', 'false'],
                 description='Show rviz',
             ),
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    drqp_control_launch_path / 'ros2_controller.launch.py'
-                ),
-                launch_arguments={
-                    'use_sim_time': use_sim_time,
-                    'show_rviz': show_rviz,
-                }.items(),
-            ),
             DeclareLaunchArgument(
-                name='load_joystick',
+                name='use_sim_time',
                 default_value='false',
                 choices=['true', 'false'],
-                description='Load joy game_controller_node',
+                description='Use sim time if true',
             ),
-            Node(
-                package='joy',
-                executable='game_controller_node',
-                output='screen',
-                parameters=[{'use_sim_time': use_sim_time}],
-                condition=IfCondition(load_joystick),
+            control_node,
+            joint_state_broadcaster_spawner,
+            robot_controller_spawner,
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(str(description_launch_path / 'rsp.launch.py'))
             ),
-            Node(
-                package='drqp_brain',
-                executable='drqp_brain',
-                output='screen',
-                parameters=[{'use_sim_time': use_sim_time}],
-            ),
-            Node(
-                package='drqp_brain',
-                executable='drqp_robot_state',
-                output='screen',
-                parameters=[{'use_sim_time': use_sim_time}],
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    str(description_launch_path / 'rviz.launch.py'),
+                ),
+                condition=IfCondition(show_rviz),
             ),
         ]
     )
