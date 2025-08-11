@@ -19,7 +19,6 @@
 # THE SOFTWARE.
 
 
-from pathlib import Path
 import unittest
 
 from control_msgs.action import FollowJointTrajectory
