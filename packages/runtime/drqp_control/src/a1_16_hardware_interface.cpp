@@ -183,6 +183,7 @@ hardware_interface::return_type a1_16_hardware_interface::write(
     uint8_t servoCommand = SET_POSITION_CONTROL;
     if (effort < 0.0) {
       if (torqueIsOn_[servoValues->id] == ServoTorque::Reboot) {
+        // Servo is already rebooting, no need to do anything
         continue;
       }
       torqueIsOn_[servoValues->id] = ServoTorque::Reboot;
