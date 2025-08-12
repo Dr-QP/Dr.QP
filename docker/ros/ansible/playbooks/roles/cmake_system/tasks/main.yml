@@ -56,8 +56,9 @@
 
 - name: Fail if cmake version is not in the allowed range
   ansible.builtin.fail:
-    msg: "cmake version must be {{ cmake_system_min_version }} <= and <= {{ cmake_system_max_version }}, but found {{ cmake_system_version.stdout | default('not installed')
-      }}"
+    msg: >-
+      "cmake version must be {{ cmake_system_min_version }} <= and <= {{ cmake_system_max_version }}, "
+      "but found {{ cmake_system_version.stdout | default('not installed') }}"
   when: >-
     source_install and
     cmake_system_version.stdout is defined and not (
