@@ -3,7 +3,7 @@
 - name: Temp dir for colcon logs
   ansible.builtin.tempfile:
     state: directory
-  register: temp_dir
+  register: colcon_setup_temp_dir
   become: true
   become_user: "{{ ros_user }}"
 
@@ -18,9 +18,9 @@
   become_user: "{{ ros_user }}"
 
 - name: Remove colcon logs
-  when: temp_dir.path is defined
+  when: colcon_setup_temp_dir.path is defined
   ansible.builtin.file:
-    path: "{{ temp_dir.path }}"
+    path: "{{ colcon_setup_temp_dir.path }}"
     state: absent
   become: true
   become_user: "{{ ros_user }}"

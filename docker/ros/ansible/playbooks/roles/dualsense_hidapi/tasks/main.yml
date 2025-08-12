@@ -21,8 +21,8 @@
       KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0666", TAG+="uaccess"
       # PS5 DualSense Edge controller over bluetooth hidraw
       KERNEL=="hidraw*", KERNELS=="*054C:0DF2*", MODE="0666", TAG+="uaccess"
-  register: udev_rules_updated
-  changed_when: udev_rules_updated.changed
+  register: dualsense_hidapi_udev_rules_updated
+  changed_when: dualsense_hidapi_udev_rules_updated.changed
   notify: Reload udev rules
 
 - name: Install hidapi for DualSense controller support

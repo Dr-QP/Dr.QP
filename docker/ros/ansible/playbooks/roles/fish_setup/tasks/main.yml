@@ -20,22 +20,22 @@
 - name: Create temporary directory for downloads
   ansible.builtin.tempfile:
     state: directory
-  register: temp_dir
+  register: fish_setup_temp_dir
   become: true
   become_user: "{{ ros_user }}"
 
 - name: Download fisher (fish package manager)
   ansible.builtin.get_url:
     url: https://git.io/fisher
-    dest: "{{ temp_dir.path }}/fisher.fish"
+    dest: "{{ fish_setup_temp_dir.path }}/fisher.fish"
     mode: "0755"
   become: true
   become_user: "{{ ros_user }}"
 
 - name: Install fisher
   ansible.builtin.shell:
-    cmd: source {{ temp_dir.path }}/fisher.fish && fisher install jorgebucaran/fisher
-    chdir: "{{ temp_dir.path }}"
+    cmd: source {{ fish_setup_temp_dir.path }}/fisher.fish && fisher install jorgebucaran/fisher
+    chdir: "{{ fish_setup_temp_dir.path }}"
     executable: fish
     creates: "{{ user_home }}/.config/fish/functions/fisher.fish"
   become: true
@@ -44,7 +44,7 @@
 - name: Install bass (for sourcing bash scripts in fish)
   ansible.builtin.shell:
     cmd: fisher install edc/bass
-    chdir: "{{ temp_dir.path }}"
+    chdir: "{{ fish_setup_temp_dir.path }}"
     executable: fish
     creates: "{{ user_home }}/.config/fish/functions/bass.fish"
   become: true
@@ -61,7 +61,7 @@
 
 - name: Clean up temporary directory
   ansible.builtin.file:
-    path: "{{ temp_dir.path }}"
+    path: "{{ fish_setup_temp_dir.path }}"
     state: absent
   become: false
-  when: temp_dir.path is defined
+  when: fish_setup_temp_dir.path is defined

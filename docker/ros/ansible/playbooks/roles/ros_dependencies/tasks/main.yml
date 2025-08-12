@@ -13,14 +13,14 @@
 - name: Check policy for all ROS packages at once
   ansible.builtin.command:
     cmd: apt-cache policy --quiet=0 {{ ros_dependencies_known_packages | join(' ') }}
-  register: pkg_policy
+  register: ros_dependencies_pkg_policy
   changed_when: false
   failed_when: false
 
 - name: Extract only the header names (i.e. found packages)
   ansible.builtin.set_fact:
-    not_available_packages: >-
-      {{ pkg_policy.stderr_lines
+    ros_dependencies_not_available_packages: >-
+      {{ ros_dependencies_pkg_policy.stderr_lines
          | select('match', '^.*Unable to locate package.*$')
          | map('regex_replace', 'N: Unable to locate package ','')
          | list }}
@@ -28,24 +28,24 @@
 
 - name: Debug
   ansible.builtin.debug:
-    msg: "not_available_packages: {{ not_available_packages }}"
+    msg: "not_available_packages: {{ ros_dependencies_not_available_packages }}"
 
 - name: Remove not available packages
   ansible.builtin.set_fact:
-    available_packages_list: >-
+    ros_dependencies_available_packages_list: >-
       {{ ros_dependencies_known_packages
-         | difference(not_available_packages) }}
+         | difference(ros_dependencies_not_available_packages) }}
 
 - name: Available packages
   ansible.builtin.debug:
     msg: "{{ item }}"
-  when: available_packages_list | default([]) | length > 0
+  when: ros_dependencies_available_packages_list | default([]) | length > 0
   loop:
-    - "{{ available_packages_list }}"
+    - "{{ ros_dependencies_available_packages_list }}"
 
 - name: Install available ROS packages
   ansible.builtin.apt:
-    name: "{{ available_packages_list }}"
+    name: "{{ ros_dependencies_available_packages_list }}"
     state: present
     install_recommends: false
-  when: available_packages_list | default([]) | length > 0
+  when: ros_dependencies_available_packages_list | default([]) | length > 0

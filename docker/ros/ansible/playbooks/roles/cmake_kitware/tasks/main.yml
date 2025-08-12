@@ -3,37 +3,37 @@
 - name: Check if Kitware archive keyring is installed
   ansible.builtin.stat:
     path: /usr/share/doc/kitware-archive-keyring/copyright
-  register: kitware_keyring
+  register: cmake_kitware_keyring
 
 - name: Create temporary directory for downloads
   ansible.builtin.tempfile:
     state: directory
-  register: temp_dir
-  when: not kitware_keyring.stat.exists
+  register: cmake_kitware_temp_dir
+  when: not cmake_kitware_keyring.stat.exists
 
 - name: Download Kitware archive key
   ansible.builtin.get_url:
     url: https://apt.kitware.com/keys/kitware-archive-latest.asc
-    dest: "{{ temp_dir.path }}/kitware-archive-latest.asc"
+    dest: "{{ cmake_kitware_temp_dir.path }}/kitware-archive-latest.asc"
     mode: "0644"
-  when: not kitware_keyring.stat.exists
+  when: not cmake_kitware_keyring.stat.exists
 
 - name: Dearmor and install Kitware archive key
   ansible.builtin.shell: >-
-    set -o pipefail && cat '{{ temp_dir.path }}/kitware-archive-latest.asc'
+    set -o pipefail && cat '{{ cmake_kitware_temp_dir.path }}/kitware-archive-latest.asc'
     | gpg --dearmor -
     | sudo tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null
   args:
     executable: /bin/bash
-  register: dearmor_key
-  changed_when: dearmor_key.rc == 0
-  when: not kitware_keyring.stat.exists
+  register: cmake_kitware_dearmor_key
+  changed_when: cmake_kitware_dearmor_key.rc == 0
+  when: not cmake_kitware_keyring.stat.exists
 
 - name: Clean up temporary directory
   ansible.builtin.file:
-    path: "{{ temp_dir.path }}"
+    path: "{{ cmake_kitware_temp_dir.path }}"
     state: absent
-  when: temp_dir.path is defined
+  when: cmake_kitware_temp_dir.path is defined
 
 - name: Add Kitware repository
   ansible.builtin.apt_repository:
@@ -56,16 +56,16 @@
   ansible.builtin.shell:
     cmd: dpkg-query -W -f='${Version}' cmake
     executable: /bin/bash
-  register: cmake_old_version
+  register: cmake_kitware_old_version
   changed_when: false
   failed_when: false
 
 - name: Set CMake check result
   ansible.builtin.set_fact:
-    is_kitware_cmake: "{{ cmake_old_version.stdout is defined and cmake_old_version.stdout is search('kitware') }}"
+    cmake_kitware_is_kitware_cmake: "{{ cmake_kitware_old_version.stdout is defined and cmake_kitware_old_version.stdout is search('kitware') }}"
 
 - name: Remove old cmake if not Kitware
-  when: not is_kitware_cmake
+  when: not cmake_kitware_is_kitware_cmake
   ansible.builtin.apt:
     name:
       - cmake
@@ -73,7 +73,7 @@
     state: absent
 
 - name: Install latest Kitware CMake
-  when: not is_kitware_cmake
+  when: not cmake_kitware_is_kitware_cmake
   ansible.builtin.apt:
     name:
       - cmake
@@ -82,7 +82,7 @@
     install_recommends: false
 
 - name: Upgrade if Kitware CMake
-  when: is_kitware_cmake
+  when: cmake_kitware_is_kitware_cmake
   ansible.builtin.apt:
     name:
       - cmake
@@ -92,23 +92,23 @@
     install_recommends: false
 
 - name: Capture New CMake version
-  when: not is_kitware_cmake
+  when: not cmake_kitware_is_kitware_cmake
   ansible.builtin.shell:
     cmd: dpkg-query -W -f='${Version}' cmake
     executable: /bin/bash
-  register: cmake_new_version
+  register: cmake_kitware_new_version
   changed_when: false
 
 - name: Set CMake check result
-  when: cmake_new_version.stdout is defined
+  when: cmake_kitware_new_version.stdout is defined
   ansible.builtin.set_fact:
-    is_kitware_cmake: "{{ cmake_new_version.stdout is defined and cmake_new_version.stdout is search('kitware') }}"
+    cmake_kitware_is_kitware_cmake: "{{ cmake_kitware_new_version.stdout is defined and cmake_kitware_new_version.stdout is search('kitware') }}"
 
 - name: Warn for source installs
   ansible.builtin.debug:
     msg:
-      - The CMake has been upgraded from {{ cmake_old_version.stdout }}
-      - to the latest version {{ cmake_new_version.stdout }} which is required by the Dr.QP project
+      - The CMake has been upgraded from {{ cmake_kitware_old_version.stdout }}
+      - to the latest version {{ cmake_kitware_new_version.stdout }} which is required by the Dr.QP project
       - It is not compatible with source installation of ROS 2
       - If you need to install ROS 2 from source, please use the system packaged version instead
-  when: source_install and cmake_new_version.stdout is defined
+  when: source_install and cmake_kitware_new_version.stdout is defined

@@ -39,7 +39,7 @@
 - name: Swap user variables to {{ ros_user_setup_username }}
   ansible.builtin.set_fact:
     user_home: "/home/{{ ros_user_setup_username }}"
-    ros_user: "{{ ros_user_setup_username }}"
+    ros_user: "{{ ros_user_setup_username }}" # noqa: var-naming[no-role-prefix]
 
 - name: Add ROS setup to .bashrc
   ansible.builtin.lineinfile:

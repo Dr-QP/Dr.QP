@@ -4,20 +4,20 @@
 - name: Desired CMake version
   ansible.builtin.set_fact:
     # From https://www.ros.org/reps/rep-2000.html#id50
-    cmake_min_version: "{{ '3.25.1' if ros_distro == 'jazzy' or ros_distro == 'rolling' else '3.16.3' if ros_distro == 'humble' else 'x.xx.x' }}"
-    cmake_max_version: "{{ '3.28.3' if ros_distro == 'jazzy' or ros_distro == 'rolling' else '3.22.3' if ros_distro == 'humble' else 'x.xx.x' }}"
+    cmake_system_min_version: "{{ '3.25.1' if ros_distro == 'jazzy' or ros_distro == 'rolling' else '3.16.3' if ros_distro == 'humble' else 'x.xx.x' }}"
+    cmake_system_max_version: "{{ '3.28.3' if ros_distro == 'jazzy' or ros_distro == 'rolling' else '3.22.3' if ros_distro == 'humble' else 'x.xx.x' }}"
 
 - name: Capture Old CMake version
   ansible.builtin.shell:
     cmd: dpkg-query -W -f='${Version}' cmake
     executable: /bin/bash
-  register: cmake_old_version
+  register: cmake_system_old_version
   changed_when: false
   failed_when: false
 
 - name: Set IS_KITWARE_CMAKE check result
   ansible.builtin.set_fact:
-    is_kitware_cmake: "{{ cmake_old_version.stdout is defined and cmake_old_version.stdout is search('kitware') }}"
+    cmake_system_is_kitware_cmake: "{{ cmake_system_old_version.stdout is defined and cmake_system_old_version.stdout is search('kitware') }}"
 
 - name: Remove Kitware repository
   ansible.builtin.apt_repository:
@@ -34,7 +34,7 @@
       - cmake
       - cmake-data
     state: absent
-  when: is_kitware_cmake
+  when: cmake_system_is_kitware_cmake
 
 - name: Install system packaged CMake
   ansible.builtin.apt:
@@ -50,16 +50,17 @@
   ansible.builtin.shell:
     cmd: set -o pipefail && dpkg-query -W -f='${Version}' cmake | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'
     executable: /bin/bash
-  register: cmake_version
+  register: cmake_system_version
   changed_when: false
   failed_when: false
 
 - name: Fail if cmake version is not in the allowed range
   ansible.builtin.fail:
-    msg: "cmake version must be {{ cmake_min_version }} <= and <= {{ cmake_max_version }}, but found {{ cmake_version.stdout | default('not installed') }}"
+    msg: "cmake version must be {{ cmake_system_min_version }} <= and <= {{ cmake_system_max_version }}, but found {{ cmake_system_version.stdout | default('not installed')
+      }}"
   when: >-
     source_install and
-    cmake_version.stdout is defined and not (
-      cmake_version.stdout is version(operator='>=', version=cmake_min_version) and
-      cmake_version.stdout is version(operator='<=', version=cmake_max_version)
+    cmake_system_version.stdout is defined and not (
+      cmake_system_version.stdout is version(operator='>=', version=cmake_system_min_version) and
+      cmake_system_version.stdout is version(operator='<=', version=cmake_system_max_version)
     )
