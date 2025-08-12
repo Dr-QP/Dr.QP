@@ -2,43 +2,43 @@
 # ROS 2 source installation
 - name: ROS 2 source installation facts
   ansible.builtin.set_fact:
-    ros2_workspace_path: "{{ user_home }}/ros2_{{ ros_distro }}"
+    ros_install_source_ros2_workspace_path: "{{ user_home }}/ros2_{{ ros_distro }}"
 
 - name: Create ROS 2 source directory
   ansible.builtin.file:
-    path: "{{ ros2_workspace_path }}/src"
+    path: "{{ ros_install_source_ros2_workspace_path }}/src"
     state: directory
     mode: "0755"
   become: false
 
 - name: Import ROS 2 repositories
   ansible.builtin.command:
-    chdir: "{{ ros2_workspace_path }}"
+    chdir: "{{ ros_install_source_ros2_workspace_path }}"
     cmd: vcs import --input https://raw.githubusercontent.com/ros2/ros2/{{ ros_distro }}/ros2.repos src
-  register: vcs_import
-  changed_when: vcs_import.stdout is not search('All repositories already up-to-date')
+  register: ros_install_source_vcs_import
+  changed_when: ros_install_source_vcs_import.stdout is not search('All repositories already up-to-date')
   become: false
 
 - name: Pull ROS 2 repositories
   ansible.builtin.command:
-    chdir: "{{ ros2_workspace_path }}"
+    chdir: "{{ ros_install_source_ros2_workspace_path }}"
     cmd: vcs pull src
-  register: vcs_pull
-  changed_when: vcs_pull.stdout is not search('All up-to-date')
+  register: ros_install_source_vcs_pull
+  changed_when: ros_install_source_vcs_pull.stdout is not search('All up-to-date')
   become: false
 
 - name: Install ROS 2 dependencies
   ansible.builtin.command:
-    chdir: "{{ ros2_workspace_path }}"
+    chdir: "{{ ros_install_source_ros2_workspace_path }}"
     cmd: rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 urdfdom_headers ignition-cmake2 ignition-math6"
-  register: rosdep_install
-  changed_when: rosdep_install.stdout is not search('All required rosdeps installed')
+  register: ros_install_source_rosdep_install
+  changed_when: ros_install_source_rosdep_install.stdout is not search('All required rosdeps installed')
   become: false
 
 - name: Build ROS 2 from source
   ansible.builtin.command:
-    chdir: "{{ ros2_workspace_path }}"
+    chdir: "{{ ros_install_source_ros2_workspace_path }}"
     cmd: colcon build --symlink-install
-  register: colcon_build
-  changed_when: colcon_build.rc == 0
+  register: ros_install_source_colcon_build
+  changed_when: ros_install_source_colcon_build.rc == 0
   become: false

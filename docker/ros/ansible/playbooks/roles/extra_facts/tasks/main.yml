@@ -1,11 +1,11 @@
 ---
 - name: Normalize architecture
-  ansible.builtin.set_fact:
+  ansible.builtin.set_fact: # noqa: var-naming[no-role-prefix]
     system_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' if ansible_architecture == 'x86_64' else ansible_architecture }}"
     system_dist: "{{ ansible_distribution_release | lower }}"
 
 - name: Set user variables
-  ansible.builtin.set_fact:
+  ansible.builtin.set_fact: # noqa: var-naming[no-role-prefix]
     user_home: "{{ ansible_env.HOME }}"
     ros_user: "{{ ansible_env.USER | default(ansible_user) | default('root') }}"
 

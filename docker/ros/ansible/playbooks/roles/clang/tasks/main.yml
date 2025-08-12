@@ -3,20 +3,20 @@
 - name: Create temporary directory for downloads
   ansible.builtin.tempfile:
     state: directory
-  register: temp_dir
+  register: clang_temp_dir
   become: false
 
 - name: Download LLVM installation script
   ansible.builtin.get_url:
     url: https://apt.llvm.org/llvm.sh
-    dest: "{{ temp_dir.path }}/llvm.sh"
+    dest: "{{ clang_temp_dir.path }}/llvm.sh"
     mode: "0755"
   become: false
 
 - name: Run LLVM installation script
-  ansible.builtin.command: bash "{{ temp_dir.path }}/llvm.sh" {{ clang_version }} all
-  register: llvm_install
-  changed_when: llvm_install.stdout is search('Installing')
+  ansible.builtin.command: bash "{{ clang_temp_dir.path }}/llvm.sh" {{ clang_version }} all
+  register: clang_llvm_install
+  changed_when: clang_llvm_install.stdout is search('Installing')
 
 - name: Install libstdc++ development package
   ansible.builtin.apt:
@@ -58,7 +58,7 @@
 
 - name: Clean up temporary directory
   ansible.builtin.file:
-    path: "{{ temp_dir.path }}"
+    path: "{{ clang_temp_dir.path }}"
     state: absent
   become: false
-  when: temp_dir.path is defined
+  when: clang_temp_dir.path is defined
