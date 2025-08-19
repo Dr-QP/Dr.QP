@@ -21,10 +21,9 @@
 # THE SOFTWARE.
 
 import argparse
-from enum import auto, Enum
 import math
-from typing import Callable
 
+from drqp_brain.joystick_button import ButtonAxis, ButtonIndex, JoystickButton
 from drqp_brain.geometry import Point3D
 from drqp_brain.models import HexapodModel
 from drqp_brain.timed_queue import TimedQueue
@@ -42,77 +41,6 @@ import trajectory_msgs.msg
 
 kFemurOffsetAngle = -13.11
 kTibiaOffsetAngle = -32.9
-
-
-class ButtonState(Enum):
-    Released = 0  # match ROS joy states
-    Pressed = 1  # match ROS joy states
-
-
-class ButtonEvent(Enum):
-    Tapped = auto()
-
-
-# https://docs.ros.org/en/ros2_packages/jazzy/api/joy/
-class ButtonIndex(Enum):
-    Cross = 0
-    Circle = 1
-    Square = 2
-    Triangle = 3
-    Select = 4
-    PS = 5
-    Start = 6
-    L3 = 7
-    R3 = 8
-    L1 = 9
-    R1 = 10
-    DpadUp = 11
-    DpadDown = 12
-    DpadLeft = 13
-    DpadRight = 14
-    # DOES NOT WORK WITH DEFAULT ROS joy node https://github.com/Dr-QP/Dr.QP/issues/207
-    # TouchpadButton = 20
-
-
-class ButtonAxis(Enum):
-    LeftX = 0
-    LeftY = 1
-    RightX = 2
-    RightY = 3
-    TriggerLeft = 4
-    TriggerRight = 5
-
-
-class JoystickButton:
-    """
-    Helper class for processing joystick buttons.
-
-    Parameters
-    ----------
-    button_index: ButtonIndex
-        Index of the button to process
-    event_handler: Callable
-        Callback to call when button is pressed
-
-    """
-
-    def __init__(self, button_index: ButtonIndex, event_handler: Callable):
-        self.button_index = button_index
-        self.event_handler = event_handler
-
-        self.current_state = ButtonState.Released
-        self.last_state = ButtonState.Released
-
-    def update(self, joy_buttons_array):
-        self.last_state = self.current_state
-        self.current_state = ButtonState(joy_buttons_array[self.button_index.value])
-
-        if not self.event_handler:
-            return
-
-        if self.last_state == ButtonState.Released and self.current_state == ButtonState.Pressed:
-            self.event_handler(self, ButtonEvent.Tapped)
-
 
 class HexapodBrain(rclpy.node.Node):
     """
