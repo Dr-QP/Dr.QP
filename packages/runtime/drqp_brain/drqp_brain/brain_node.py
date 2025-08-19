@@ -23,8 +23,8 @@
 import argparse
 import math
 
-from drqp_brain.joystick_button import ButtonAxis, ButtonIndex, JoystickButton
 from drqp_brain.geometry import Point3D
+from drqp_brain.joystick_button import ButtonAxis, ButtonIndex, JoystickButton
 from drqp_brain.models import HexapodModel
 from drqp_brain.timed_queue import TimedQueue
 from drqp_brain.walk_controller import GaitType, WalkController
@@ -41,6 +41,7 @@ import trajectory_msgs.msg
 
 kFemurOffsetAngle = -13.11
 kTibiaOffsetAngle = -32.9
+
 
 class HexapodBrain(rclpy.node.Node):
     """
