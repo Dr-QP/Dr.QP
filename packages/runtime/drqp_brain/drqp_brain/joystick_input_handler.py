@@ -41,6 +41,7 @@ class JoystickInputHandler:
         button_callbacks : dict, optional
             Dictionary mapping ButtonIndex to callback functions.
             Each callback should accept (button, event) parameters.
+
         """
         self.reset()
 
@@ -58,6 +59,7 @@ class JoystickInputHandler:
         ----------
         joy : sensor_msgs.msg.Joy
             The joystick message to process
+
         """
         self._process_axes(joy.axes)
         self._process_buttons(joy.buttons)
@@ -96,6 +98,7 @@ class JoystickInputHandler:
             The button to handle
         callback : callable
             Function to call when button is pressed. Should accept (button, event) parameters.
+
         """
         self.joystick_buttons.append(JoystickButton(button_index, callback))
 
@@ -107,6 +110,7 @@ class JoystickInputHandler:
         ----------
         button_index : ButtonIndex
             The button handler to remove
+
         """
         self.joystick_buttons = [
             button for button in self.joystick_buttons if button.button_index != button_index
