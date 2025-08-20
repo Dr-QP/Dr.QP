@@ -75,11 +75,11 @@ class TestJoystickInputHandler:
         input_handler.process_joy_message(joy_msg)
 
         # Direction should be forward (left_y maps to x)
-        assert input_handler.direction.x == 0.8
-        assert input_handler.direction.y == 0.0
-        assert input_handler.direction.z == 1.0  # left_trigger default processing
-        assert input_handler.walk_speed == 0.8 + 1.0  # sum of absolute values
-        assert input_handler.rotation_speed == 0.0
+        assert input_handler.direction.x == pytest.approx(0.8)
+        assert input_handler.direction.y == pytest.approx(0.0)
+        assert input_handler.direction.z == pytest.approx(1.0)  # left_trigger default processing
+        assert input_handler.walk_speed == pytest.approx(0.8 + 1.0)  # sum of absolute values
+        assert input_handler.rotation_speed == pytest.approx(0.0)
 
     def test_axes_processing_left_movement(self, input_handler):
         """Test processing of joystick axes for left movement."""

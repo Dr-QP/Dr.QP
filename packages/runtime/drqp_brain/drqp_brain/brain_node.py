@@ -24,7 +24,8 @@ import argparse
 import math
 
 from drqp_brain.geometry import Point3D
-from drqp_brain.joystick_button import ButtonAxis, ButtonIndex, JoystickButton
+from drqp_brain.joystick_button import ButtonIndex
+from drqp_brain.joystick_input_handler import JoystickInputHandler
 from drqp_brain.models import HexapodModel
 from drqp_brain.timed_queue import TimedQueue
 from drqp_brain.walk_controller import GaitType, WalkController
@@ -55,26 +56,27 @@ class HexapodBrain(rclpy.node.Node):
     def __init__(self):
         super().__init__('drqp_brain')
 
-        self.direction = Point3D([0, 0, 0])
-        self.rotation = 0
-        self.walk_speed = 0
-        self.rotation_speed = 0
-
         self.fps = 30
 
         self.gait_index = 0
         self.gaits = [GaitType.tripod, GaitType.ripple, GaitType.wave]
         self.phase_steps_per_cycle = [20, 25, 40]  # per gait
 
-        self.joystick_buttons = [
-            JoystickButton(ButtonIndex.DpadLeft, lambda b, e: self.prev_gait()),
-            JoystickButton(ButtonIndex.DpadRight, lambda b, e: self.next_gait()),
-            JoystickButton(ButtonIndex.PS, lambda b, e: self.process_kill_switch()),
-            JoystickButton(ButtonIndex.Start, lambda b, e: self.reboot_servos()),
-            JoystickButton(ButtonIndex.Select, lambda b, e: self.finalize()),
-        ]
+        # Set up joystick input handler with button callbacks
+        button_callbacks = {
+            ButtonIndex.DpadLeft: lambda b, e: self.prev_gait(),
+            ButtonIndex.DpadRight: lambda b, e: self.next_gait(),
+            ButtonIndex.PS: lambda b, e: self.process_kill_switch(),
+            ButtonIndex.Start: lambda b, e: self.reboot_servos(),
+            ButtonIndex.Select: lambda b, e: self.finalize(),
+        }
+        self.joystick_input_handler = JoystickInputHandler(button_callbacks=button_callbacks)
+
         self.joystick_sub = self.create_subscription(
-            sensor_msgs.msg.Joy, '/joy', self.process_inputs, qos_profile=10
+            sensor_msgs.msg.Joy,
+            '/joy',
+            self.joystick_input_handler.process_joy_message,
+            qos_profile=10,
         )
 
         self.robot_state = None
@@ -139,21 +141,6 @@ class HexapodBrain(rclpy.node.Node):
             phase_steps_per_cycle=self.fps / 2.5,
         )
 
-    def process_inputs(self, joy: sensor_msgs.msg.Joy):
-        left_x = joy.axes[ButtonAxis.LeftX.value]
-        left_y = joy.axes[ButtonAxis.LeftY.value]
-        right_x = joy.axes[ButtonAxis.RightX.value]
-
-        # On some platforms default value for trigger is -1 (robobook with ubuntu 24.04)
-        # but on raspi with ubutnu 24.04 it is 0
-        left_trigger = float(np.interp(joy.axes[ButtonAxis.TriggerLeft.value], [-1, 0], [1, 0]))
-        self.direction = Point3D([left_y, left_x, left_trigger])
-        self.walk_speed = abs(left_x) + abs(left_y) + abs(left_trigger)
-        self.rotation_speed = right_x
-
-        for button in self.joystick_buttons:
-            button.update(joy.buttons)
-
     def prev_gait(self):
         self.gait_index = (self.gait_index - 1) % len(self.gaits)
         self.get_logger().info(f'Switching gait: {self.gaits[self.gait_index].name}')
@@ -166,9 +153,9 @@ class HexapodBrain(rclpy.node.Node):
         self.walker.current_gait = self.gaits[self.gait_index]
         self.walker.phase_step = 1 / self.phase_steps_per_cycle[self.gait_index]
         self.walker.next_step(
-            stride_direction=self.direction,
-            stride_ratio=self.walk_speed,
-            rotation_ratio=self.rotation_speed,
+            stride_direction=self.joystick_input_handler.direction,
+            stride_ratio=self.joystick_input_handler.walk_speed,
+            rotation_ratio=self.joystick_input_handler.rotation_speed,
         )
         self.publish_joint_position_trajectory(
             playtime_ms=math.floor(1000 * self.walker.phase_step)

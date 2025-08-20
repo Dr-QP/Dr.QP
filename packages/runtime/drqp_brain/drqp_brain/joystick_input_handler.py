@@ -42,9 +42,7 @@ class JoystickInputHandler:
             Dictionary mapping ButtonIndex to callback functions.
             Each callback should accept (button, event) parameters.
         """
-        self.direction = Point3D([0, 0, 0])
-        self.walk_speed = 0
-        self.rotation_speed = 0
+        self.reset()
 
         # Set up button handlers
         self.joystick_buttons = []
@@ -87,22 +85,6 @@ class JoystickInputHandler:
         """Process joystick buttons and trigger callbacks."""
         for button in self.joystick_buttons:
             button.update(buttons)
-
-    def get_movement_state(self):
-        """
-        Get the current movement state.
-
-        Returns
-        -------
-        dict
-            Dictionary containing direction, walk_speed, and rotation_speed
-
-        """
-        return {
-            'direction': self.direction,
-            'walk_speed': self.walk_speed,
-            'rotation_speed': self.rotation_speed,
-        }
 
     def add_button_handler(self, button_index: ButtonIndex, callback):
         """
