@@ -23,7 +23,6 @@
 import argparse
 import math
 
-from drqp_brain.geometry import Point3D
 from drqp_brain.joystick_button import ButtonIndex
 from drqp_brain.joystick_input_handler import JoystickInputHandler
 from drqp_brain.models import HexapodModel

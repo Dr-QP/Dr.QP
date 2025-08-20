@@ -56,6 +56,9 @@ class Point:
         else:
             return Point(self.x / other, self.y / other, self.label)
 
+    def __eq__(self, other):
+        return np.allclose(self.numpy(), other.numpy())
+
     def __iter__(self):
         return iter(self.numpy())
 
@@ -213,6 +216,9 @@ class Point3D:
             return Point3D(self._array / other._array, other.label)
         else:
             return Point3D(self._array / other, self.label)
+
+    def __eq__(self, other):
+        return np.allclose(self._array, other._array)
 
     def copy(self):
         return Point3D(self._array, self.label)
