@@ -25,7 +25,7 @@ import std_msgs.msg
 class SequenceManager:
     """
     Manages initialization and finalization sequences for the hexapod robot.
-    
+
     This class encapsulates the logic for robot startup and shutdown sequences,
     making them easier to test and maintain.
     """
@@ -33,7 +33,7 @@ class SequenceManager:
     def __init__(self, node, hexapod, trajectory_publisher, event_publisher, logger):
         """
         Initialize the sequence manager.
-        
+
         Parameters
         ----------
         node : rclpy.node.Node

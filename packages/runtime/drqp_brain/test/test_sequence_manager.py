@@ -36,25 +36,25 @@ class TestSequenceManager:
         trajectory_publisher = Mock()
         event_publisher = Mock()
         logger = Mock()
-        
+
         return {
             'node': node,
             'hexapod': hexapod,
             'trajectory_publisher': trajectory_publisher,
             'event_publisher': event_publisher,
-            'logger': logger
+            'logger': logger,
         }
 
     @pytest.fixture
     def sequence_manager(self, mock_dependencies):
         """Create a SequenceManager instance for testing."""
-        with patch('drqp_brain.sequence_manager.TimedQueue') as mock_timed_queue:
+        with patch('drqp_brain.sequence_manager.TimedQueue'):
             manager = SequenceManager(
                 node=mock_dependencies['node'],
                 hexapod=mock_dependencies['hexapod'],
                 trajectory_publisher=mock_dependencies['trajectory_publisher'],
                 event_publisher=mock_dependencies['event_publisher'],
-                logger=mock_dependencies['logger']
+                logger=mock_dependencies['logger'],
             )
             manager.sequence_queue = Mock()  # Replace with mock for easier testing
             return manager
@@ -62,18 +62,21 @@ class TestSequenceManager:
     def test_initialization(self, sequence_manager, mock_dependencies):
         """Test that SequenceManager initializes correctly."""
         assert sequence_manager.hexapod == mock_dependencies['hexapod']
-        assert sequence_manager.publish_joint_position_trajectory == mock_dependencies['trajectory_publisher']
+        assert (
+            sequence_manager.publish_joint_position_trajectory
+            == mock_dependencies['trajectory_publisher']
+        )
         assert sequence_manager.robot_event_pub == mock_dependencies['event_publisher']
         assert sequence_manager.logger == mock_dependencies['logger']
 
     def test_start_initialization_sequence(self, sequence_manager):
         """Test starting the initialization sequence."""
         sequence_manager.start_initialization_sequence()
-        
+
         # Verify sequence queue was cleared and steps added
         sequence_manager.sequence_queue.clear.assert_called_once()
         assert sequence_manager.sequence_queue.add.call_count == 6
-        
+
         # Verify timing of each step
         expected_timings = [1.0, 0.6, 0.6, 0.6, 0.5, 0.0]
         for i, expected_time in enumerate(expected_timings):
@@ -83,11 +86,11 @@ class TestSequenceManager:
     def test_start_finalization_sequence(self, sequence_manager):
         """Test starting the finalization sequence."""
         sequence_manager.start_finalization_sequence()
-        
+
         # Verify sequence queue was cleared and steps added
         sequence_manager.sequence_queue.clear.assert_called_once()
         assert sequence_manager.sequence_queue.add.call_count == 3
-        
+
         # Verify timing of each step
         expected_timings = [1.1, 0.6, 0.0]
         for i, expected_time in enumerate(expected_timings):
@@ -102,13 +105,13 @@ class TestSequenceManager:
     def test_initialization_step1(self, sequence_manager):
         """Test initialization step 1."""
         sequence_manager._initialization_step1()
-        
+
         # Verify logging
         sequence_manager.logger.info.assert_called_with('Initialization sequence started')
-        
+
         # Verify hexapod positioning
         sequence_manager.hexapod.forward_kinematics.assert_called_with(0, -105, 0)
-        
+
         # Verify trajectory publishing
         sequence_manager.publish_joint_position_trajectory.assert_called_with(
             playtime_ms=900, joint_mask=['femur']
@@ -117,10 +120,10 @@ class TestSequenceManager:
     def test_initialization_step2(self, sequence_manager):
         """Test initialization step 2."""
         sequence_manager._initialization_step2()
-        
+
         # Verify hexapod positioning
         sequence_manager.hexapod.forward_kinematics.assert_called_with(0, -105, 0)
-        
+
         # Verify trajectory publishing
         sequence_manager.publish_joint_position_trajectory.assert_called_with(
             playtime_ms=500, joint_mask=['femur', 'tibia']
@@ -129,37 +132,37 @@ class TestSequenceManager:
     def test_initialization_step3(self, sequence_manager):
         """Test initialization step 3."""
         sequence_manager._initialization_step3()
-        
+
         # Verify hexapod positioning
         sequence_manager.hexapod.forward_kinematics.assert_called_with(0, -105, 0)
-        
+
         # Verify trajectory publishing (no joint mask)
         sequence_manager.publish_joint_position_trajectory.assert_called_with(playtime_ms=500)
 
     def test_initialization_step4(self, sequence_manager):
         """Test initialization step 4."""
         sequence_manager._initialization_step4()
-        
+
         # Verify hexapod positioning
         sequence_manager.hexapod.forward_kinematics.assert_called_with(0, -105, 95)
-        
+
         # Verify trajectory publishing
         sequence_manager.publish_joint_position_trajectory.assert_called_with(playtime_ms=500)
 
     def test_initialization_step5(self, sequence_manager):
         """Test initialization step 5."""
         sequence_manager._initialization_step5()
-        
+
         # Verify hexapod positioning
         sequence_manager.hexapod.forward_kinematics.assert_called_with(0, -35, 130)
-        
+
         # Verify trajectory publishing
         sequence_manager.publish_joint_position_trajectory.assert_called_with(playtime_ms=400)
 
     def test_initialization_done(self, sequence_manager):
         """Test initialization completion."""
         sequence_manager._initialization_done()
-        
+
         # Verify event publication
         sequence_manager.robot_event_pub.publish.assert_called_once()
         published_msg = sequence_manager.robot_event_pub.publish.call_args[0][0]
@@ -169,30 +172,30 @@ class TestSequenceManager:
     def test_finalization_step1(self, sequence_manager):
         """Test finalization step 1."""
         sequence_manager._finalization_step1()
-        
+
         # Verify logging
         sequence_manager.logger.info.assert_called_with('Finalization sequence started')
-        
+
         # Verify hexapod positioning
         sequence_manager.hexapod.forward_kinematics.assert_called_with(0, -105, 0)
-        
+
         # Verify trajectory publishing
         sequence_manager.publish_joint_position_trajectory.assert_called_with(playtime_ms=1000)
 
     def test_finalization_step2(self, sequence_manager):
         """Test finalization step 2."""
         sequence_manager._finalization_step2()
-        
+
         # Verify hexapod positioning
         sequence_manager.hexapod.forward_kinematics.assert_called_with(0, -105, -60)
-        
+
         # Verify trajectory publishing
         sequence_manager.publish_joint_position_trajectory.assert_called_with(playtime_ms=500)
 
     def test_finalization_done(self, sequence_manager):
         """Test finalization completion."""
         sequence_manager._finalization_done()
-        
+
         # Verify event publication
         sequence_manager.robot_event_pub.publish.assert_called_once()
         published_msg = sequence_manager.robot_event_pub.publish.call_args[0][0]
@@ -202,14 +205,14 @@ class TestSequenceManager:
     def test_get_initialization_steps(self, sequence_manager):
         """Test getting initialization steps for testing."""
         steps = sequence_manager.get_initialization_steps()
-        
+
         assert len(steps) == 6
-        
+
         # Verify timing values
         expected_timings = [1.0, 0.6, 0.6, 0.6, 0.5, 0.0]
         for i, (timing, _) in enumerate(steps):
             assert timing == expected_timings[i]
-        
+
         # Verify step functions
         assert steps[0][1] == sequence_manager._initialization_step1
         assert steps[1][1] == sequence_manager._initialization_step2
@@ -221,14 +224,14 @@ class TestSequenceManager:
     def test_get_finalization_steps(self, sequence_manager):
         """Test getting finalization steps for testing."""
         steps = sequence_manager.get_finalization_steps()
-        
+
         assert len(steps) == 3
-        
+
         # Verify timing values
         expected_timings = [1.1, 0.6, 0.0]
         for i, (timing, _) in enumerate(steps):
             assert timing == expected_timings[i]
-        
+
         # Verify step functions
         assert steps[0][1] == sequence_manager._finalization_step1
         assert steps[1][1] == sequence_manager._finalization_step2
@@ -244,7 +247,7 @@ class TestSequenceManager:
             (sequence_manager._initialization_step4, (0, -105, 95)),
             (sequence_manager._initialization_step5, (0, -35, 130)),
         ]
-        
+
         for step_func, expected_angles in steps:
             sequence_manager.hexapod.forward_kinematics.reset_mock()
             step_func()
@@ -257,7 +260,7 @@ class TestSequenceManager:
             (sequence_manager._finalization_step1, (0, -105, 0)),
             (sequence_manager._finalization_step2, (0, -105, -60)),
         ]
-        
+
         for step_func, expected_angles in steps:
             sequence_manager.hexapod.forward_kinematics.reset_mock()
             step_func()
@@ -272,11 +275,11 @@ class TestSequenceManager:
             (sequence_manager._initialization_step4, 500),
             (sequence_manager._initialization_step5, 400),
         ]
-        
+
         for step_func, expected_playtime in steps_and_playtimes:
             sequence_manager.publish_joint_position_trajectory.reset_mock()
             step_func()
-            
+
             # Check that playtime_ms was called with expected value
             call_args = sequence_manager.publish_joint_position_trajectory.call_args
             assert 'playtime_ms' in call_args.kwargs
@@ -288,11 +291,11 @@ class TestSequenceManager:
             (sequence_manager._finalization_step1, 1000),
             (sequence_manager._finalization_step2, 500),
         ]
-        
+
         for step_func, expected_playtime in steps_and_playtimes:
             sequence_manager.publish_joint_position_trajectory.reset_mock()
             step_func()
-            
+
             # Check that playtime_ms was called with expected value
             call_args = sequence_manager.publish_joint_position_trajectory.call_args
             assert 'playtime_ms' in call_args.kwargs
@@ -301,13 +304,13 @@ class TestSequenceManager:
     def test_error_handling_in_steps(self, sequence_manager):
         """Test error handling in sequence steps."""
         # Mock hexapod to raise an exception
-        sequence_manager.hexapod.forward_kinematics.side_effect = Exception("Kinematics error")
-        
+        sequence_manager.hexapod.forward_kinematics.side_effect = Exception('Kinematics error')
+
         # Steps should propagate the exception
-        with pytest.raises(Exception, match="Kinematics error"):
+        with pytest.raises(Exception, match='Kinematics error'):
             sequence_manager._initialization_step1()
-        
-        with pytest.raises(Exception, match="Kinematics error"):
+
+        with pytest.raises(Exception, match='Kinematics error'):
             sequence_manager._finalization_step1()
 
     def test_sequence_manager_with_real_timed_queue(self, mock_dependencies):
@@ -318,9 +321,9 @@ class TestSequenceManager:
             hexapod=mock_dependencies['hexapod'],
             trajectory_publisher=mock_dependencies['trajectory_publisher'],
             event_publisher=mock_dependencies['event_publisher'],
-            logger=mock_dependencies['logger']
+            logger=mock_dependencies['logger'],
         )
-        
+
         # Should have a real TimedQueue instance
         assert hasattr(manager.sequence_queue, 'add')
         assert hasattr(manager.sequence_queue, 'clear')

@@ -32,10 +32,10 @@ class TestWalkController:
     """Test the WalkController class."""
 
     def assert_point3d_equal(self, p1, p2, tolerance=1e-6):
-        """Helper method to compare Point3D objects with tolerance."""
-        assert abs(p1.x - p2.x) < tolerance, f'X mismatch: {p1.x} != {p2.x}'
-        assert abs(p1.y - p2.y) < tolerance, f'Y mismatch: {p1.y} != {p2.y}'
-        assert abs(p1.z - p2.z) < tolerance, f'Z mismatch: {p1.z} != {p2.z}'
+        """Compare Point3D objects with tolerance."""
+        assert p1.x == pytest.approx(p2.x, tolerance)
+        assert p1.y == pytest.approx(p2.y, tolerance)
+        assert p1.z == pytest.approx(p2.z, tolerance)
 
     @pytest.fixture
     def mock_hexapod(self):

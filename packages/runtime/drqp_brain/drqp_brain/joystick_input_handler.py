@@ -27,7 +27,7 @@ import sensor_msgs.msg
 class JoystickInputHandler:
     """
     Handles joystick input processing for the hexapod robot.
-    
+
     Processes joystick axes and buttons, converting them to movement commands
     and triggering appropriate callbacks for button presses.
     """
@@ -35,7 +35,7 @@ class JoystickInputHandler:
     def __init__(self, button_callbacks=None):
         """
         Initialize the joystick input handler.
-        
+
         Parameters
         ----------
         button_callbacks : dict, optional
@@ -45,7 +45,7 @@ class JoystickInputHandler:
         self.direction = Point3D([0, 0, 0])
         self.walk_speed = 0
         self.rotation_speed = 0
-        
+
         # Set up button handlers
         self.joystick_buttons = []
         if button_callbacks:
@@ -55,7 +55,7 @@ class JoystickInputHandler:
     def process_joy_message(self, joy: sensor_msgs.msg.Joy):
         """
         Process a ROS Joy message and update movement parameters.
-        
+
         Parameters
         ----------
         joy : sensor_msgs.msg.Joy
@@ -73,13 +73,13 @@ class JoystickInputHandler:
         # On some platforms default value for trigger is -1 (robobook with ubuntu 24.04)
         # but on raspi with ubuntu 24.04 it is 0
         left_trigger = float(np.interp(axes[ButtonAxis.TriggerLeft.value], [-1, 0], [1, 0]))
-        
+
         # Update direction (note: left_y maps to x, left_x maps to y)
         self.direction = Point3D([left_y, left_x, left_trigger])
-        
+
         # Calculate walk speed as sum of absolute axis values
         self.walk_speed = abs(left_x) + abs(left_y) + abs(left_trigger)
-        
+
         # Right stick X controls rotation
         self.rotation_speed = right_x
 
@@ -91,22 +91,23 @@ class JoystickInputHandler:
     def get_movement_state(self):
         """
         Get the current movement state.
-        
+
         Returns
         -------
         dict
             Dictionary containing direction, walk_speed, and rotation_speed
+
         """
         return {
             'direction': self.direction,
             'walk_speed': self.walk_speed,
-            'rotation_speed': self.rotation_speed
+            'rotation_speed': self.rotation_speed,
         }
 
     def add_button_handler(self, button_index: ButtonIndex, callback):
         """
         Add a button handler.
-        
+
         Parameters
         ----------
         button_index : ButtonIndex
@@ -119,15 +120,14 @@ class JoystickInputHandler:
     def remove_button_handler(self, button_index: ButtonIndex):
         """
         Remove a button handler.
-        
+
         Parameters
         ----------
         button_index : ButtonIndex
             The button handler to remove
         """
         self.joystick_buttons = [
-            button for button in self.joystick_buttons 
-            if button.button_index != button_index
+            button for button in self.joystick_buttons if button.button_index != button_index
         ]
 
     def reset(self):
