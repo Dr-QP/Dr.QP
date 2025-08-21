@@ -69,6 +69,8 @@ def trajectory_builder(hexapod):
 
 
 class TestJointTrajectoryBuilder:
+    """Test the JointTrajectoryBuilder class."""
+
     def test_initialization(self, trajectory_builder, hexapod):
         """Test that JointTrajectoryBuilder initializes correctly."""
         assert trajectory_builder.hexapod is hexapod
