@@ -282,10 +282,10 @@ class HexapodBrain(rclpy.node.Node):
         trajectory = JointTrajectoryBuilder(self.hexapod)
 
         self.hexapod.forward_kinematics(0, -105, 0)
-        trajectory.add_point_from_hexapod(seconds_from_start=1000.0)
+        trajectory.add_point_from_hexapod(seconds_from_start=1.0)
 
         self.hexapod.forward_kinematics(0, -105, -60)
-        trajectory.add_point_from_hexapod(seconds_from_start=1500.0)
+        trajectory.add_point_from_hexapod(seconds_from_start=1.5)
 
         trajectory.publish_action(self.trajectory_client, self)
 
