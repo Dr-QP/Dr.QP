@@ -21,99 +21,22 @@
 # THE SOFTWARE.
 
 import argparse
-import math
-from typing import Callable
 
+from control_msgs.action import FollowJointTrajectory
+from drqp_brain.joint_trajectory_builder import JointTrajectoryBuilder
 from drqp_brain.joystick_button import ButtonIndex
 from drqp_brain.joystick_input_handler import JoystickInputHandler
 from drqp_brain.models import HexapodModel
-from drqp_brain.timed_queue import TimedQueue
 from drqp_brain.walk_controller import GaitType, WalkController
-import numpy as np
 import rclpy
+from rclpy.action import ActionClient
 from rclpy.executors import ExternalShutdownException
 import rclpy.node
-import rclpy.publisher
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
-import rclpy.time
 import rclpy.utilities
 import sensor_msgs.msg
 import std_msgs.msg
 import trajectory_msgs.msg
-from rclpy.action import ActionClient
-from control_msgs.action import FollowJointTrajectory
-
-kFemurOffsetAngle = -13.11
-kTibiaOffsetAngle = -32.9
-
-
-class JointTrajectoryBuilder:
-    def __init__(self, hexapod: HexapodModel):
-        self.hexapod = hexapod
-        self.points = []
-
-    def add_point_from_hexapod(self, seconds_from_start, effort=1.0, joint_mask=None):
-        positions = []
-        efforts = []
-        self.joint_names = []
-
-        for leg in self.hexapod.legs:
-            for joint, angle in [
-                ('coxa', leg.coxa_angle),
-                ('femur', leg.femur_angle + kFemurOffsetAngle),
-                ('tibia', leg.tibia_angle + kTibiaOffsetAngle),
-            ]:
-                if joint_mask is not None and joint not in joint_mask:
-                    efforts.append(0.0)
-                else:
-                    efforts.append(effort)
-                positions.append(float(np.radians(angle)))
-                self.joint_names.append(f'dr_qp/{leg.label.name}_{joint}')
-
-        self.add_point(positions, efforts, seconds_from_start)
-
-    def add_point(self, positions, effort, seconds_from_start):
-        self.points.append(
-            trajectory_msgs.msg.JointTrajectoryPoint(
-                positions=positions,
-                effort=effort,
-                time_from_start=rclpy.time.Duration(seconds=seconds_from_start).to_msg(),
-            )
-        )
-
-    def publish(self, pub: rclpy.publisher.Publisher):
-        msg = trajectory_msgs.msg.JointTrajectory(joint_names=self.joint_names, points=self.points)
-        pub.publish(msg)
-
-    def publish_action(
-        self,
-        action_client: ActionClient,
-        node: rclpy.node.Node,
-        result_callback: Callable,
-    ):
-        goal = FollowJointTrajectory.Goal()
-        goal.trajectory = trajectory_msgs.msg.JointTrajectory(
-            joint_names=self.joint_names, points=self.points
-        )
-
-        goal_handle_future = action_client.send_goal_async(goal)
-
-        def result_response_callback(future):
-            node.get_logger().debug(f'Result received: {future.result().result}')
-            result_callback()
-
-        def goal_response_callback(future):
-            goal_handle = future.result()
-            if not goal_handle.accepted:
-                node.get_logger().error('Goal rejected')
-                return
-
-            node.get_logger().debug('Goal accepted')
-
-            result_future = goal_handle.get_result_async()
-            result_future.add_done_callback(result_response_callback)
-
-        goal_handle_future.add_done_callback(goal_response_callback)
 
 
 class HexapodBrain(rclpy.node.Node):
@@ -177,7 +100,6 @@ class HexapodBrain(rclpy.node.Node):
         self.setup_hexapod()
 
         self.loop_timer = self.create_timer(1 / self.fps, self.loop, autostart=False)
-        self.sequence_queue = TimedQueue(self)
 
     def setup_hexapod(self):
         drqp_coxa = 0.053  # in meters
@@ -319,7 +241,6 @@ class HexapodBrain(rclpy.node.Node):
     def stop_walk_controller(self):
         self.get_logger().info('Stopping')
         self.loop_timer.cancel()
-        self.sequence_queue.clear()
         self.walker.reset()
 
     def process_kill_switch(self):
