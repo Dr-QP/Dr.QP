@@ -34,6 +34,8 @@ kTibiaOffsetAngle = -32.9
 
 
 class JointTrajectoryBuilder:
+    """Builds a joint trajectory message one point at a time."""
+
     def __init__(self, hexapod: HexapodModel):
         self.hexapod = hexapod
         self.points = []
