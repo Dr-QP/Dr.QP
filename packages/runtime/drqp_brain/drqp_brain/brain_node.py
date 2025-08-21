@@ -239,19 +239,12 @@ class HexapodBrain(rclpy.node.Node):
             stride_ratio=self.joystick_input_handler.walk_speed,
             rotation_ratio=self.joystick_input_handler.rotation_speed,
         )
-        self.publish_joint_position_trajectory(
-            playtime_ms=math.floor(1000 * self.walker.phase_step)
-        )
+
+        trajectory = JointTrajectoryBuilder(self.hexapod)
+        trajectory.add_point_from_hexapod(seconds_from_start=self.walker.phase_step)
+        trajectory.publish(self.joint_trajectory_pub)
 
     def initialization_sequence(self):
-        # self.sequence_queue.clear()
-        # self.sequence_queue.add(1.0, self.initialization_sequence_step1)
-        # self.sequence_queue.add(0.6, self.initialization_sequence_step2)
-        # self.sequence_queue.add(0.6, self.initialization_sequence_step3)
-        # self.sequence_queue.add(0.6, self.initialization_sequence_step4)
-        # self.sequence_queue.add(0.5, self.initialization_sequence_step5)
-        # self.sequence_queue.add(0.0, self.initialization_sequence_done)
-
         trajectory = JointTrajectoryBuilder(self.hexapod)
 
         # - Turn torque on for femur
@@ -296,50 +289,15 @@ class HexapodBrain(rclpy.node.Node):
         )
 
     def turn_torque_off(self):
-        self.publish_joint_position_trajectory(effort_points=[0.0])
+        trajectory = JointTrajectoryBuilder(self.hexapod)
+        trajectory.add_point_from_hexapod(seconds_from_start=0.0, effort=0.0)
+        trajectory.publish(self.joint_trajectory_pub)
 
     def reboot_servos(self):
-        self.publish_joint_position_trajectory(effort_points=[-1.0, 0.0], playtime_ms=1000)
-
-    def publish_joint_position_trajectory(
-        self, playtime_ms=0, joint_mask=None, effort_points=[1.0]
-    ):
-        points = []
-        joint_names = []
-        time_offset_seconds_step = playtime_ms / 1000.0 / len(effort_points)
-
-        for i, effort_point in enumerate(effort_points, 1):
-            joint_names = []
-            positions = []
-            effort = []
-            for leg in self.hexapod.legs:
-                for joint, angle in [
-                    ('coxa', leg.coxa_angle),
-                    ('femur', leg.femur_angle + kFemurOffsetAngle),
-                    ('tibia', leg.tibia_angle + kTibiaOffsetAngle),
-                ]:
-                    if joint_mask is not None and joint not in joint_mask:
-                        effort.append(0.0)
-                    else:
-                        effort.append(effort_point)
-
-                    joint_names.append(f'dr_qp/{leg.label.name}_{joint}')
-                    positions.append(float(np.radians(angle)))
-
-            time_from_start = rclpy.time.Duration(seconds=time_offset_seconds_step * i).to_msg()
-            points.append(
-                trajectory_msgs.msg.JointTrajectoryPoint(
-                    positions=positions,
-                    effort=effort,
-                    time_from_start=time_from_start,
-                )
-            )
-
-        self.publish_joint_trajectory(joint_names, points)
-
-    def publish_joint_trajectory(self, joint_names, points):
-        msg = trajectory_msgs.msg.JointTrajectory(joint_names=joint_names, points=points)
-        self.joint_trajectory_pub.publish(msg)
+        trajectory = JointTrajectoryBuilder(self.hexapod)
+        trajectory.add_point_from_hexapod(seconds_from_start=0.0, effort=-1.0)
+        trajectory.add_point_from_hexapod(seconds_from_start=1.0, effort=0.0)
+        trajectory.publish(self.joint_trajectory_pub)
 
     def process_robot_state(self, msg: std_msgs.msg.String):
         if self.robot_state == msg.data:
