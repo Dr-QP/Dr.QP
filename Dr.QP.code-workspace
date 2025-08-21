@@ -294,7 +294,7 @@
       {
         "label": "Dr.QP venv",
         "type": "shell",
-        "command": "python3 -m venv ${workspaceFolder}/.venv && ${workspaceFolder}/.venv/bin/python3 -m pip install -r ${workspaceFolder}/requirements.txt --use-pep517", // Keep in sync with the command in .devcontainer/devcontainer.json
+        "command": "python3 -m venv ${workspaceFolder}/.venv && ${workspaceFolder}/.venv/bin/python3 -m pip install -r ${workspaceFolder}/requirements.txt --use-pep517 --upgrade", // Keep in sync with the command in .devcontainer/devcontainer.json
         "options": {
           "cwd": "${workspaceFolder}"
         },

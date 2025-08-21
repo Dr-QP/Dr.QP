@@ -21,26 +21,22 @@
 # THE SOFTWARE.
 
 import argparse
-import math
 
+from control_msgs.action import FollowJointTrajectory
+from drqp_brain.joint_trajectory_builder import JointTrajectoryBuilder
 from drqp_brain.joystick_button import ButtonIndex
 from drqp_brain.joystick_input_handler import JoystickInputHandler
 from drqp_brain.models import HexapodModel
-from drqp_brain.timed_queue import TimedQueue
 from drqp_brain.walk_controller import GaitType, WalkController
-import numpy as np
 import rclpy
+from rclpy.action import ActionClient
 from rclpy.executors import ExternalShutdownException
 import rclpy.node
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
-import rclpy.time
 import rclpy.utilities
 import sensor_msgs.msg
 import std_msgs.msg
 import trajectory_msgs.msg
-
-kFemurOffsetAngle = -13.11
-kTibiaOffsetAngle = -32.9
 
 
 class HexapodBrain(rclpy.node.Node):
@@ -95,11 +91,15 @@ class HexapodBrain(rclpy.node.Node):
             '/joint_trajectory_controller/joint_trajectory',
             qos_profile=10,
         )
+        self.trajectory_client = ActionClient(
+            self,
+            FollowJointTrajectory,
+            '/joint_trajectory_controller/follow_joint_trajectory',
+        )
 
         self.setup_hexapod()
 
         self.loop_timer = self.create_timer(1 / self.fps, self.loop, autostart=False)
-        self.sequence_queue = TimedQueue(self)
 
     def setup_hexapod(self):
         drqp_coxa = 0.053  # in meters
@@ -156,112 +156,65 @@ class HexapodBrain(rclpy.node.Node):
             stride_ratio=self.joystick_input_handler.walk_speed,
             rotation_ratio=self.joystick_input_handler.rotation_speed,
         )
-        self.publish_joint_position_trajectory(
-            playtime_ms=math.floor(1000 * self.walker.phase_step)
-        )
+
+        trajectory = JointTrajectoryBuilder(self.hexapod)
+        trajectory.add_point_from_hexapod(seconds_from_start=self.walker.phase_step)
+        trajectory.publish(self.joint_trajectory_pub)
 
     def initialization_sequence(self):
-        self.sequence_queue.clear()
-        self.sequence_queue.add(1.0, self.initialization_sequence_step1)
-        self.sequence_queue.add(0.6, self.initialization_sequence_step2)
-        self.sequence_queue.add(0.6, self.initialization_sequence_step3)
-        self.sequence_queue.add(0.6, self.initialization_sequence_step4)
-        self.sequence_queue.add(0.5, self.initialization_sequence_step5)
-        self.sequence_queue.add(0.0, self.initialization_sequence_done)
+        trajectory = JointTrajectoryBuilder(self.hexapod)
 
-    # - Turn torque on for femur
-    # - Move all femur to -105
-    def initialization_sequence_step1(self):
-        self.get_logger().info('Initialization sequence started')
-
+        # - Turn torque on for femur
+        # - Move all femur to -105
         self.hexapod.forward_kinematics(0, -105, 0)
-        self.publish_joint_position_trajectory(playtime_ms=900, joint_mask=['femur'])
+        trajectory.add_point_from_hexapod(seconds_from_start=1.0, joint_mask=['femur'])
 
-    # - Turn torque on for tibia
-    # - Move all tibia to 0
-    def initialization_sequence_step2(self):
-        self.hexapod.forward_kinematics(0, -105, 0)
-        self.publish_joint_position_trajectory(playtime_ms=500, joint_mask=['femur', 'tibia'])
+        # - Turn torque on for tibia
+        # - Move all tibia to 0
+        trajectory.add_point_from_hexapod(seconds_from_start=1.6, joint_mask=['femur', 'tibia'])
 
-    # - Turn torque on for coxa
-    # - Move all coxa to 0
-    def initialization_sequence_step3(self):
-        self.hexapod.forward_kinematics(0, -105, 0)
-        self.publish_joint_position_trajectory(playtime_ms=500)
+        # - Turn torque on for coxa
+        trajectory.add_point_from_hexapod(seconds_from_start=2.2)
 
-    # - Move all tibia to 95
-    def initialization_sequence_step4(self):
+        # - Move all tibia to 95
         self.hexapod.forward_kinematics(0, -105, 95)
-        self.publish_joint_position_trajectory(playtime_ms=500)
+        trajectory.add_point_from_hexapod(seconds_from_start=2.8)
 
-    # - Use walk controller to move to default position slowly increasing body height
-    def initialization_sequence_step5(self):
+        # Get into default stance for walk controller to take from here
         self.hexapod.forward_kinematics(0, -35, 130)
-        self.publish_joint_position_trajectory(playtime_ms=400)
+        trajectory.add_point_from_hexapod(seconds_from_start=3.2)
 
-    def initialization_sequence_done(self):
-        self.robot_event_pub.publish(std_msgs.msg.String(data='initializing_done'))
+        trajectory.publish_action(
+            self.trajectory_client,
+            self,
+            lambda: self.robot_event_pub.publish(std_msgs.msg.String(data='initializing_done')),
+        )
 
     def finalization_sequence(self):
-        self.sequence_queue.clear()
-        self.sequence_queue.add(1.1, self.finalization_sequence_step1)
-        self.sequence_queue.add(0.6, self.finalization_sequence_step2)
-        self.sequence_queue.add(0.0, self.finalization_sequence_done)
-
-    def finalization_sequence_step1(self):
-        self.get_logger().info('Finalization sequence started')
+        trajectory = JointTrajectoryBuilder(self.hexapod)
 
         self.hexapod.forward_kinematics(0, -105, 0)
-        self.publish_joint_position_trajectory(playtime_ms=1000)
+        trajectory.add_point_from_hexapod(seconds_from_start=1.0)
 
-    def finalization_sequence_step2(self):
         self.hexapod.forward_kinematics(0, -105, -60)
-        self.publish_joint_position_trajectory(playtime_ms=500)
+        trajectory.add_point_from_hexapod(seconds_from_start=1.5)
 
-    def finalization_sequence_done(self):
-        self.robot_event_pub.publish(std_msgs.msg.String(data='finalizing_done'))
+        trajectory.publish_action(
+            self.trajectory_client,
+            self,
+            lambda: self.robot_event_pub.publish(std_msgs.msg.String(data='finalizing_done')),
+        )
 
     def turn_torque_off(self):
-        self.publish_joint_position_trajectory(effort_points=[0.0])
+        trajectory = JointTrajectoryBuilder(self.hexapod)
+        trajectory.add_point_from_hexapod(seconds_from_start=0.0, effort=0.0)
+        trajectory.publish(self.joint_trajectory_pub)
 
     def reboot_servos(self):
-        self.publish_joint_position_trajectory(effort_points=[-1.0, 0.0], playtime_ms=1000)
-
-    def publish_joint_position_trajectory(
-        self, playtime_ms=0, joint_mask=None, effort_points=[1.0]
-    ):
-        joint_names = []
-        positions = []
-
-        for leg in self.hexapod.legs:
-            for joint, angle in [
-                ('coxa', leg.coxa_angle),
-                ('femur', leg.femur_angle + kFemurOffsetAngle),
-                ('tibia', leg.tibia_angle + kTibiaOffsetAngle),
-            ]:
-                if joint_mask is not None and joint not in joint_mask:
-                    continue
-
-                joint_names.append(f'dr_qp/{leg.label.name}_{joint}')
-                positions.append(float(np.radians(angle)))
-
-        points = []
-        time_offset_seconds_step = playtime_ms / 1000.0 / len(effort_points)
-        for i, effort_point in enumerate(effort_points, 1):
-            time_from_start = rclpy.time.Duration(seconds=time_offset_seconds_step * i).to_msg()
-            points.append(
-                trajectory_msgs.msg.JointTrajectoryPoint(
-                    positions=positions,
-                    effort=[effort_point] * len(positions),
-                    time_from_start=time_from_start,
-                )
-            )
-
-        self.publish_joint_trajectory(joint_names, points)
-
-    def publish_joint_trajectory(self, joint_names, points):
-        msg = trajectory_msgs.msg.JointTrajectory(joint_names=joint_names, points=points)
-        self.joint_trajectory_pub.publish(msg)
+        trajectory = JointTrajectoryBuilder(self.hexapod)
+        trajectory.add_point_from_hexapod(seconds_from_start=0.0, effort=-1.0)
+        trajectory.add_point_from_hexapod(seconds_from_start=1.0, effort=0.0)
+        trajectory.publish(self.joint_trajectory_pub)
 
     def process_robot_state(self, msg: std_msgs.msg.String):
         if self.robot_state == msg.data:
@@ -288,7 +241,6 @@ class HexapodBrain(rclpy.node.Node):
     def stop_walk_controller(self):
         self.get_logger().info('Stopping')
         self.loop_timer.cancel()
-        self.sequence_queue.clear()
         self.walker.reset()
 
     def process_kill_switch(self):
