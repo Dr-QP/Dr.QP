@@ -50,19 +50,13 @@ kTibiaOffsetAngle = -32.9
 class JointTrajectoryBuilder:
     def __init__(self, hexapod: HexapodModel):
         self.hexapod = hexapod
-        self.joint_names = self.make_joint_names()
         self.points = []
-
-    def make_joint_names(self):
-        joint_names = []
-        for leg in self.hexapod.legs:
-            for joint in ['coxa', 'femur', 'tibia']:
-                joint_names.append(f'dr_qp/{leg.label.name}_{joint}')
-        return joint_names
 
     def add_point_from_hexapod(self, seconds_from_start, effort=1.0, joint_mask=None):
         positions = []
         efforts = []
+        self.joint_names = []
+
         for leg in self.hexapod.legs:
             for joint, angle in [
                 ('coxa', leg.coxa_angle),
@@ -74,6 +68,7 @@ class JointTrajectoryBuilder:
                 else:
                     efforts.append(effort)
                 positions.append(float(np.radians(angle)))
+                self.joint_names.append(f'dr_qp/{leg.label.name}_{joint}')
 
         self.add_point(positions, efforts, seconds_from_start)
 
