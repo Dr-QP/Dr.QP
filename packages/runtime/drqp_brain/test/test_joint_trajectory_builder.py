@@ -82,7 +82,7 @@ class TestJointTrajectoryBuilder:
         # Check that we have 18 joints (6 legs * 3 joints)
         assert len(point.positions) == 18
         assert len(point.effort) == 18
-        assert all(effort == 0.8 for effort in point.effort)
+        assert all(effort == pytest.approx(0.8) for effort in point.effort)
 
     def test_add_point_from_hexapod_with_joint_mask(self, trajectory_builder):
         """Test adding a point with joint mask."""
@@ -92,7 +92,7 @@ class TestJointTrajectoryBuilder:
         point = trajectory_builder.points[0]
         # Should have effort=0.5 for coxa and femur, 0.0 for tibia
         expected_efforts = [0.5, 0.5, 0.0] * 6  # 6 legs
-        assert point.effort == expected_efforts
+        assert point.effort == pytest.approx(expected_efforts)
 
     def test_joint_names_generation(self, trajectory_builder):
         """Test that joint names are generated correctly."""
@@ -112,10 +112,7 @@ class TestJointTrajectoryBuilder:
     def test_angle_offsets_applied(self, trajectory_builder):
         """Test that femur and tibia offsets are applied correctly."""
         # Set known angles for testing
-        for leg in trajectory_builder.hexapod.legs:
-            leg.coxa_angle = 0.0
-            leg.femur_angle = 10.0
-            leg.tibia_angle = 20.0
+        trajectory_builder.hexapod.forward_kinematics(0, 10, 20)
 
         trajectory_builder.add_point_from_hexapod(1.0)
         point = trajectory_builder.points[0]
@@ -140,8 +137,8 @@ class TestJointTrajectoryBuilder:
 
         assert len(trajectory_builder.points) == 1
         point = trajectory_builder.points[0]
-        assert point.positions == positions
-        assert point.effort == effort
+        assert point.positions.tolist() == pytest.approx(positions)
+        assert point.effort.tolist() == pytest.approx(effort)
         assert point.time_from_start == rclpy.time.Duration(seconds=seconds).to_msg()
 
     def test_publish(self, trajectory_builder, mock_publisher):
