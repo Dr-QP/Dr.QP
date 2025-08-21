@@ -82,7 +82,7 @@ class Point:
 class SimplePoint3D:
     """A simple 3D point class for getting_started_with_robot_ik."""
 
-    def __init__(self, x: float, y: float, z: float, label: str = None):
+    def __init__(self, x: float, y: float, z: float, label: str | None = None):
         self.x = x
         self.y = y
         self.z = z
@@ -113,7 +113,7 @@ class SimplePoint3D:
 class Point3D:
     """A thin wrapper on numpy array for 3D point class."""
 
-    def __init__(self, a: np.ndarray | list[float], label: str = None):
+    def __init__(self, a: np.ndarray | list[float], label: str | None = None):
         assert len(a) == 3
         self._array = np.array(a, dtype=np.float32)
         self.label = label
