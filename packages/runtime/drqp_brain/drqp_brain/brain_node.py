@@ -32,15 +32,82 @@ import numpy as np
 import rclpy
 from rclpy.executors import ExternalShutdownException
 import rclpy.node
+import rclpy.publisher
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 import rclpy.time
 import rclpy.utilities
 import sensor_msgs.msg
 import std_msgs.msg
 import trajectory_msgs.msg
+from rclpy.action import ActionClient
+from control_msgs.action import FollowJointTrajectory
 
 kFemurOffsetAngle = -13.11
 kTibiaOffsetAngle = -32.9
+
+
+class JointTrajectoryBuilder:
+    def __init__(self, hexapod: HexapodModel):
+        self.hexapod = hexapod
+        self.joint_names = self.make_joint_names()
+        self.points = []
+
+    def make_joint_names(self):
+        joint_names = []
+        for leg in self.hexapod.legs:
+            for joint in ['coxa', 'femur', 'tibia']:
+                joint_names.append(f'dr_qp/{leg.label.name}_{joint}')
+        return joint_names
+
+    def add_point_from_hexapod(self, seconds_from_start, effort=1.0, joint_mask=None):
+        positions = []
+        efforts = []
+        for leg in self.hexapod.legs:
+            for joint, angle in [
+                ('coxa', leg.coxa_angle),
+                ('femur', leg.femur_angle + kFemurOffsetAngle),
+                ('tibia', leg.tibia_angle + kTibiaOffsetAngle),
+            ]:
+                if joint_mask is not None and joint not in joint_mask:
+                    efforts.append(0.0)
+                else:
+                    efforts.append(effort)
+                positions.append(float(np.radians(angle)))
+
+        self.add_point(positions, efforts, seconds_from_start)
+
+    def add_point(self, positions, effort, seconds_from_start):
+        self.points.append(
+            trajectory_msgs.msg.JointTrajectoryPoint(
+                positions=positions,
+                effort=effort,
+                time_from_start=rclpy.time.Duration(seconds=seconds_from_start).to_msg(),
+            )
+        )
+
+    def publish(self, pub: rclpy.publisher.Publisher):
+        msg = trajectory_msgs.msg.JointTrajectory(joint_names=self.joint_names, points=self.points)
+        pub.publish(msg)
+
+    def publish_action(self, action_client: ActionClient, node: rclpy.node.Node):
+        goal = FollowJointTrajectory.Goal()
+        goal.trajectory = trajectory_msgs.msg.JointTrajectory(
+            joint_names=self.joint_names, points=self.points
+        )
+
+        goal_handle_future = action_client.send_goal_async(goal)
+        rclpy.spin_until_future_complete(node, goal_handle_future)
+        goal_handle = goal_handle_future.result()
+
+        if goal_handle is None:
+            return
+        result_future = goal_handle.get_result_async()
+        rclpy.spin_until_future_complete(node, result_future)
+
+        result: FollowJointTrajectory.Result | None = None
+        result = result_future.result().result
+
+        return result
 
 
 class HexapodBrain(rclpy.node.Node):
@@ -94,6 +161,11 @@ class HexapodBrain(rclpy.node.Node):
             trajectory_msgs.msg.JointTrajectory,
             '/joint_trajectory_controller/joint_trajectory',
             qos_profile=10,
+        )
+        self.trajectory_client = ActionClient(
+            self,
+            FollowJointTrajectory,
+            '/joint_trajectory_controller/follow_joint_trajectory',
         )
 
         self.setup_hexapod()
@@ -204,9 +276,20 @@ class HexapodBrain(rclpy.node.Node):
 
     def finalization_sequence(self):
         self.sequence_queue.clear()
-        self.sequence_queue.add(1.1, self.finalization_sequence_step1)
-        self.sequence_queue.add(0.6, self.finalization_sequence_step2)
-        self.sequence_queue.add(0.0, self.finalization_sequence_done)
+        # self.sequence_queue.add(1.1, self.finalization_sequence_step1)
+        # self.sequence_queue.add(0.6, self.finalization_sequence_step2)
+        # self.sequence_queue.add(0.0, self.finalization_sequence_done)
+        trajectory = JointTrajectoryBuilder(self.hexapod)
+
+        self.hexapod.forward_kinematics(0, -105, 0)
+        trajectory.add_point_from_hexapod(seconds_from_start=1000.0)
+
+        self.hexapod.forward_kinematics(0, -105, -60)
+        trajectory.add_point_from_hexapod(seconds_from_start=1500.0)
+
+        trajectory.publish_action(self.trajectory_client, self)
+
+        self.robot_event_pub.publish(std_msgs.msg.String(data='finalizing_done'))
 
     def finalization_sequence_step1(self):
         self.get_logger().info('Finalization sequence started')
@@ -230,29 +313,33 @@ class HexapodBrain(rclpy.node.Node):
     def publish_joint_position_trajectory(
         self, playtime_ms=0, joint_mask=None, effort_points=[1.0]
     ):
-        joint_names = []
-        positions = []
-
-        for leg in self.hexapod.legs:
-            for joint, angle in [
-                ('coxa', leg.coxa_angle),
-                ('femur', leg.femur_angle + kFemurOffsetAngle),
-                ('tibia', leg.tibia_angle + kTibiaOffsetAngle),
-            ]:
-                if joint_mask is not None and joint not in joint_mask:
-                    continue
-
-                joint_names.append(f'dr_qp/{leg.label.name}_{joint}')
-                positions.append(float(np.radians(angle)))
-
         points = []
+        joint_names = []
         time_offset_seconds_step = playtime_ms / 1000.0 / len(effort_points)
+
         for i, effort_point in enumerate(effort_points, 1):
+            joint_names = []
+            positions = []
+            effort = []
+            for leg in self.hexapod.legs:
+                for joint, angle in [
+                    ('coxa', leg.coxa_angle),
+                    ('femur', leg.femur_angle + kFemurOffsetAngle),
+                    ('tibia', leg.tibia_angle + kTibiaOffsetAngle),
+                ]:
+                    if joint_mask is not None and joint not in joint_mask:
+                        effort.append(0.0)
+                    else:
+                        effort.append(effort_point)
+
+                    joint_names.append(f'dr_qp/{leg.label.name}_{joint}')
+                    positions.append(float(np.radians(angle)))
+
             time_from_start = rclpy.time.Duration(seconds=time_offset_seconds_step * i).to_msg()
             points.append(
                 trajectory_msgs.msg.JointTrajectoryPoint(
                     positions=positions,
-                    effort=[effort_point] * len(positions),
+                    effort=effort,
                     time_from_start=time_from_start,
                 )
             )
