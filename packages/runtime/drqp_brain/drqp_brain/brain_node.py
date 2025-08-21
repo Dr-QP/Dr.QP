@@ -244,52 +244,43 @@ class HexapodBrain(rclpy.node.Node):
         )
 
     def initialization_sequence(self):
-        self.sequence_queue.clear()
-        self.sequence_queue.add(1.0, self.initialization_sequence_step1)
-        self.sequence_queue.add(0.6, self.initialization_sequence_step2)
-        self.sequence_queue.add(0.6, self.initialization_sequence_step3)
-        self.sequence_queue.add(0.6, self.initialization_sequence_step4)
-        self.sequence_queue.add(0.5, self.initialization_sequence_step5)
-        self.sequence_queue.add(0.0, self.initialization_sequence_done)
+        # self.sequence_queue.clear()
+        # self.sequence_queue.add(1.0, self.initialization_sequence_step1)
+        # self.sequence_queue.add(0.6, self.initialization_sequence_step2)
+        # self.sequence_queue.add(0.6, self.initialization_sequence_step3)
+        # self.sequence_queue.add(0.6, self.initialization_sequence_step4)
+        # self.sequence_queue.add(0.5, self.initialization_sequence_step5)
+        # self.sequence_queue.add(0.0, self.initialization_sequence_done)
 
-    # - Turn torque on for femur
-    # - Move all femur to -105
-    def initialization_sequence_step1(self):
-        self.get_logger().info('Initialization sequence started')
+        trajectory = JointTrajectoryBuilder(self.hexapod)
 
+        # - Turn torque on for femur
+        # - Move all femur to -105
         self.hexapod.forward_kinematics(0, -105, 0)
-        self.publish_joint_position_trajectory(playtime_ms=900, joint_mask=['femur'])
+        trajectory.add_point_from_hexapod(seconds_from_start=1.0, joint_mask=['femur'])
 
-    # - Turn torque on for tibia
-    # - Move all tibia to 0
-    def initialization_sequence_step2(self):
-        self.hexapod.forward_kinematics(0, -105, 0)
-        self.publish_joint_position_trajectory(playtime_ms=500, joint_mask=['femur', 'tibia'])
+        # - Turn torque on for tibia
+        # - Move all tibia to 0
+        trajectory.add_point_from_hexapod(seconds_from_start=1.6, joint_mask=['femur', 'tibia'])
 
-    # - Turn torque on for coxa
-    # - Move all coxa to 0
-    def initialization_sequence_step3(self):
-        self.hexapod.forward_kinematics(0, -105, 0)
-        self.publish_joint_position_trajectory(playtime_ms=500)
+        # - Turn torque on for coxa
+        trajectory.add_point_from_hexapod(seconds_from_start=2.2)
 
-    # - Move all tibia to 95
-    def initialization_sequence_step4(self):
+        # - Move all tibia to 95
         self.hexapod.forward_kinematics(0, -105, 95)
-        self.publish_joint_position_trajectory(playtime_ms=500)
+        trajectory.add_point_from_hexapod(seconds_from_start=2.8)
 
-    # - Use walk controller to move to default position slowly increasing body height
-    def initialization_sequence_step5(self):
+        # Get into default stance for walk controller to take from here
         self.hexapod.forward_kinematics(0, -35, 130)
-        self.publish_joint_position_trajectory(playtime_ms=400)
+        trajectory.add_point_from_hexapod(seconds_from_start=3.2)
 
-    def initialization_sequence_done(self):
-        self.robot_event_pub.publish(std_msgs.msg.String(data='initializing_done'))
+        trajectory.publish_action(
+            self.trajectory_client,
+            self,
+            lambda: self.robot_event_pub.publish(std_msgs.msg.String(data='initializing_done')),
+        )
 
     def finalization_sequence(self):
-        self.sequence_queue.clear()
-        # self.sequence_queue.add(1.1, self.finalization_sequence_step1)
-        # self.sequence_queue.add(0.6, self.finalization_sequence_step2)
-        # self.sequence_queue.add(0.0, self.finalization_sequence_done)
         trajectory = JointTrajectoryBuilder(self.hexapod)
 
         self.hexapod.forward_kinematics(0, -105, 0)
@@ -298,20 +289,11 @@ class HexapodBrain(rclpy.node.Node):
         self.hexapod.forward_kinematics(0, -105, -60)
         trajectory.add_point_from_hexapod(seconds_from_start=1.5)
 
-        trajectory.publish_action(self.trajectory_client, self, self.finalization_sequence_done)
-
-    def finalization_sequence_step1(self):
-        self.get_logger().info('Finalization sequence started')
-
-        self.hexapod.forward_kinematics(0, -105, 0)
-        self.publish_joint_position_trajectory(playtime_ms=1000)
-
-    def finalization_sequence_step2(self):
-        self.hexapod.forward_kinematics(0, -105, -60)
-        self.publish_joint_position_trajectory(playtime_ms=500)
-
-    def finalization_sequence_done(self):
-        self.robot_event_pub.publish(std_msgs.msg.String(data='finalizing_done'))
+        trajectory.publish_action(
+            self.trajectory_client,
+            self,
+            lambda: self.robot_event_pub.publish(std_msgs.msg.String(data='finalizing_done')),
+        )
 
     def turn_torque_off(self):
         self.publish_joint_position_trajectory(effort_points=[0.0])
