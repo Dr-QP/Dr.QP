@@ -123,13 +123,13 @@ class ParametricGaitGenerator:
         else:
             # Stance phase - leg on ground moving backward
             x_offset = np.interp(leg_phase, [gait.swing_duration, 1], [half_step, -half_step])
-            z_offset = 0  # On ground
+            z_offset = 0.0  # On ground
 
         return Point3D(
             [
-                x_offset,
-                0,
-                z_offset,
+                float(x_offset),
+                0.0,
+                float(z_offset),
             ]
         )
         # Parametric function - END

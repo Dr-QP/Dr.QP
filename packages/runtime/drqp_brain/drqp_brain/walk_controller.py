@@ -98,7 +98,7 @@ class WalkController:
         )
         self.current_direction = self.current_direction.interpolate(stride_direction, 0.3)
 
-        self.current_stride_ratio = np.clip(self.current_stride_ratio, 0, 1)
+        self.current_stride_ratio = float(np.clip(self.current_stride_ratio, 0, 1))
         self.current_rotation_ratio = np.clip(self.current_rotation_ratio, -1, 1)
 
         has_stride = abs(self.current_stride_ratio) > no_motion_eps
@@ -131,9 +131,11 @@ class WalkController:
             )
 
             # Apply steering
+            stride_offsets = Point3D([0, 0, 0])
+            direction_offsets = Point3D([0, 0, 0])
             if has_stride:
                 stride_offsets = gait_offsets * Point3D(
-                    [self.step_length * self.current_stride_ratio, 0, 0]
+                    [self.step_length * self.current_stride_ratio, 0.0, 0.0]
                 )
                 direction_offsets = direction_transform.apply_point(stride_offsets)
                 foot_target = foot_target + direction_offsets
@@ -169,7 +171,7 @@ class WalkController:
         norm_direction = direction.normalized().numpy()
 
         # Create rotation matrix to align direction with x-axis
-        # Ignore z-component as robot can't walk up. This also allows to generate stepping in place
+        # Ignore z-component as robot can't walk up
         direction_transform = AffineTransform.from_rotmatrix(
             [
                 [norm_direction[0], -norm_direction[1], 0],
