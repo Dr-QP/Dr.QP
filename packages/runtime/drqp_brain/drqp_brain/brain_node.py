@@ -22,6 +22,7 @@
 
 import argparse
 import math
+from typing import Callable
 
 from drqp_brain.joystick_button import ButtonIndex
 from drqp_brain.joystick_input_handler import JoystickInputHandler
@@ -89,25 +90,35 @@ class JointTrajectoryBuilder:
         msg = trajectory_msgs.msg.JointTrajectory(joint_names=self.joint_names, points=self.points)
         pub.publish(msg)
 
-    def publish_action(self, action_client: ActionClient, node: rclpy.node.Node):
+    def publish_action(
+        self,
+        action_client: ActionClient,
+        node: rclpy.node.Node,
+        result_callback: Callable,
+    ):
         goal = FollowJointTrajectory.Goal()
         goal.trajectory = trajectory_msgs.msg.JointTrajectory(
             joint_names=self.joint_names, points=self.points
         )
 
         goal_handle_future = action_client.send_goal_async(goal)
-        rclpy.spin_until_future_complete(node, goal_handle_future)
-        goal_handle = goal_handle_future.result()
 
-        if goal_handle is None:
-            return
-        result_future = goal_handle.get_result_async()
-        rclpy.spin_until_future_complete(node, result_future)
+        def result_response_callback(future):
+            node.get_logger().debug(f'Result received: {future.result().result}')
+            result_callback()
 
-        result: FollowJointTrajectory.Result | None = None
-        result = result_future.result().result
+        def goal_response_callback(future):
+            goal_handle = future.result()
+            if not goal_handle.accepted:
+                node.get_logger().error('Goal rejected')
+                return
 
-        return result
+            node.get_logger().debug('Goal accepted')
+
+            result_future = goal_handle.get_result_async()
+            result_future.add_done_callback(result_response_callback)
+
+        goal_handle_future.add_done_callback(goal_response_callback)
 
 
 class HexapodBrain(rclpy.node.Node):
@@ -287,9 +298,7 @@ class HexapodBrain(rclpy.node.Node):
         self.hexapod.forward_kinematics(0, -105, -60)
         trajectory.add_point_from_hexapod(seconds_from_start=1.5)
 
-        trajectory.publish_action(self.trajectory_client, self)
-
-        self.robot_event_pub.publish(std_msgs.msg.String(data='finalizing_done'))
+        trajectory.publish_action(self.trajectory_client, self, self.finalization_sequence_done)
 
     def finalization_sequence_step1(self):
         self.get_logger().info('Finalization sequence started')
