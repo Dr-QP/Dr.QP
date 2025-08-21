@@ -61,7 +61,8 @@ class TestJoystickInputHandler:
         assert len(input_handler_with_callbacks.joystick_buttons) == 2
 
         # Check that buttons were created with correct indices
-        button_indices = [btn.button_index for btn in input_handler_with_callbacks.joystick_buttons]
+        buttons = input_handler_with_callbacks.joystick_buttons
+        button_indices = [btn.button_index for btn in buttons]
         assert ButtonIndex.Cross in button_indices
         assert ButtonIndex.PS in button_indices
 
@@ -125,7 +126,8 @@ class TestJoystickInputHandler:
         """Test processing of combined joystick movements."""
         # Create joy message with combined movement
         joy_msg = sensor_msgs.msg.Joy()
-        joy_msg.axes = [0.3, 0.4, 0.2, 0.0, -0.8, 0.0]  # left_x, left_y, right_x, ..., left_trigger
+        # left_x, left_y, right_x, ..., left_trigger
+        joy_msg.axes = [0.3, 0.4, 0.2, 0.0, -0.8, 0.0]
         joy_msg.buttons = []
 
         input_handler.process_joy_message(joy_msg)
@@ -177,7 +179,8 @@ class TestJoystickInputHandler:
         assert len(input_handler_with_callbacks.joystick_buttons) == initial_count - 1
 
         # Verify Cross button was removed
-        button_indices = [btn.button_index for btn in input_handler_with_callbacks.joystick_buttons]
+        buttons = input_handler_with_callbacks.joystick_buttons
+        button_indices = [btn.button_index for btn in buttons]
         assert ButtonIndex.Cross not in button_indices
         assert ButtonIndex.PS in button_indices  # PS should still be there
 
