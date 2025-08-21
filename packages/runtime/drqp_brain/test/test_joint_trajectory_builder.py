@@ -18,15 +18,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import pytest
+from unittest.mock import Mock
+
+from control_msgs.action import FollowJointTrajectory
+from drqp_brain.joint_trajectory_builder import (
+    JointTrajectoryBuilder,
+    kFemurOffsetAngle,
+    kTibiaOffsetAngle,
+)
+from drqp_brain.models import HexapodModel
 import numpy as np
-from unittest.mock import Mock, MagicMock, call
+import pytest
 import rclpy.time
 import trajectory_msgs.msg
-from control_msgs.action import FollowJointTrajectory
-
-from drqp_brain.joint_trajectory_builder import JointTrajectoryBuilder, kFemurOffsetAngle, kTibiaOffsetAngle
-from drqp_brain.models import HexapodModel
 
 
 @pytest.fixture
@@ -99,7 +103,6 @@ class TestJointTrajectoryBuilder:
         trajectory_builder.add_point_from_hexapod(1.0)
 
         # Check that joint names follow the expected pattern
-        expected_pattern = ['dr_qp/{}_coxa', 'dr_qp/{}_femur', 'dr_qp/{}_tibia']
         leg_names = [leg.label.name for leg in trajectory_builder.hexapod.legs]
 
         expected_names = []
@@ -209,9 +212,18 @@ class TestJointTrajectoryBuilder:
         assert len(trajectory_builder.points) == 3
 
         # Check timing
-        assert trajectory_builder.points[0].time_from_start == rclpy.time.Duration(seconds=1.0).to_msg()
-        assert trajectory_builder.points[1].time_from_start == rclpy.time.Duration(seconds=2.0).to_msg()
-        assert trajectory_builder.points[2].time_from_start == rclpy.time.Duration(seconds=3.0).to_msg()
+        assert (
+            trajectory_builder.points[0].time_from_start
+            == rclpy.time.Duration(seconds=1.0).to_msg()
+        )
+        assert (
+            trajectory_builder.points[1].time_from_start
+            == rclpy.time.Duration(seconds=2.0).to_msg()
+        )
+        assert (
+            trajectory_builder.points[2].time_from_start
+            == rclpy.time.Duration(seconds=3.0).to_msg()
+        )
 
         # Check efforts
         assert all(e == 0.5 for e in trajectory_builder.points[0].effort)
