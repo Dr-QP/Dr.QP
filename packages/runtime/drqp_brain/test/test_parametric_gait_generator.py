@@ -42,25 +42,28 @@ class TestParametricGaitGenerator:
     def gait_gen(self):
         return ParametricGaitGenerator(step_length=1.0, step_height=1.0)
 
+    def _gait_stages(self, gait_gen, hexapod_legs, phase):
+        offsets = {}
+        for leg in hexapod_legs:
+            offsets[leg] = gait_gen.get_offsets_at_phase_for_leg(leg, phase)
+
+        # Count how many legs are in swing phase and stance phase
+        swing_count = 0
+        stance_count = 0
+        for leg in hexapod_legs:
+            if offsets[leg].z > 0:
+                swing_count += 1
+            else:
+                stance_count += 1
+        return swing_count, stance_count
+
     def test_get_offsets_at_phase_for_leg_tripod(self, gait_gen, hexapod_legs):
         """Test that offsets are calculated correctly for tripod gait."""
         gait_gen.current_gait = GaitType.tripod
 
         on_ground = np.array([0.0, 0.5, 1.0])
-
         for phase in np.arange(0.0, 1.0, 0.01):
-            offsets = {}
-            for leg in hexapod_legs:
-                offsets[leg] = gait_gen.get_offsets_at_phase_for_leg(leg, phase)
-
-            # Count how many legs are in swing phase and stance phase
-            swing_count = 0
-            stance_count = 0
-            for leg in hexapod_legs:
-                if offsets[leg].z > 0:
-                    swing_count += 1
-                else:
-                    stance_count += 1
+            swing_count, stance_count = self._gait_stages(gait_gen, hexapod_legs, phase)
 
             if phase in on_ground:
                 assert swing_count == 0, f'Phase: {phase}'
