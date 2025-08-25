@@ -86,3 +86,16 @@ class TestParametricGaitGenerator:
             else:
                 assert swing_count == 1, f'Phase: {phase}'
                 assert stance_count == 5, f'Phase: {phase}'
+
+    def test_ripple(self, gait_gen, hexapod_legs):
+        """Test that offsets are calculated correctly for ripple gait."""
+        gait_gen.current_gait = GaitType.ripple
+        on_ground = np.array([0.0, 1 / 6, 2 / 6, 3 / 6, 4 / 6, 5 / 6, 1.0])
+        for phase in np.arange(0.0, 1.0, 0.01):
+            swing_count, stance_count = self._gait_stages(gait_gen, hexapod_legs, phase)
+            if phase in on_ground:
+                assert swing_count == 1, f'Phase: {phase}'
+                assert stance_count == 5, f'Phase: {phase}'
+            else:
+                assert swing_count == 2, f'Phase: {phase}'
+                assert stance_count == 4, f'Phase: {phase}'
