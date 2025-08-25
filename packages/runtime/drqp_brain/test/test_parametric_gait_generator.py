@@ -51,13 +51,13 @@ class TestParametricGaitGenerator:
         swing_count = 0
         stance_count = 0
         for leg in hexapod_legs:
-            if offsets[leg].z > 0:
+            if offsets[leg].z > 0.0001:
                 swing_count += 1
             else:
                 stance_count += 1
         return swing_count, stance_count
 
-    def test_get_offsets_at_phase_for_leg_tripod(self, gait_gen, hexapod_legs):
+    def test_tripod(self, gait_gen, hexapod_legs):
         """Test that offsets are calculated correctly for tripod gait."""
         gait_gen.current_gait = GaitType.tripod
 
@@ -71,3 +71,18 @@ class TestParametricGaitGenerator:
             else:
                 assert swing_count == 3, f'Phase: {phase}'
                 assert stance_count == 3, f'Phase: {phase}'
+
+    def test_wave(self, gait_gen, hexapod_legs):
+        """Test that offsets are calculated correctly for wave gait."""
+        gait_gen.current_gait = GaitType.wave
+
+        on_ground = np.array([0.0, 1 / 6, 2 / 6, 3 / 6, 4 / 6, 5 / 6, 1.0])
+        for phase in np.arange(0.0, 1.0, 0.01):
+            swing_count, stance_count = self._gait_stages(gait_gen, hexapod_legs, phase)
+
+            if phase in on_ground:
+                assert swing_count == 0, f'Phase: {phase}'
+                assert stance_count == 6, f'Phase: {phase}'
+            else:
+                assert swing_count == 1, f'Phase: {phase}'
+                assert stance_count == 5, f'Phase: {phase}'
