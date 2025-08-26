@@ -47,20 +47,17 @@ class TestWalkController:
         assert walker.current_direction == Point3D([0, 0, 0])
         assert walker.current_rotation_direction == 0.0
         assert walker.current_phase == 0.0
-        assert walker.last_stop_phase == 0.0
 
     def test_reset(self, walker):
         walker.current_direction = Point3D([0, 1, 0])
         walker.current_rotation_ratio = 1.0
         walker.current_phase = 1.0
-        walker.last_stop_phase = 1.0
 
         walker.reset()
 
         assert walker.current_direction == Point3D([0, 0, 0])
         assert walker.current_rotation_direction == 0.0
         assert walker.current_phase == 0.0
-        assert walker.last_stop_phase == 0.0
 
     def test_current_phase(self, walker):
         walker.current_phase = 0.5
@@ -133,3 +130,10 @@ class TestWalkController:
         assert walker.current_rotation_direction == pytest.approx(0.2253, rel=1e-3), (
             'Rotation ratio is ramping down 3'
         )
+
+    def test_leg_targets(self, walker, hexapod):
+        feet_before_step = [leg.tibia_end.copy() for leg in hexapod.legs]
+        walker.next_step(Point3D([1, 0, 0]), 0.0, 0.0)
+        feet_after_step = [leg.tibia_end.copy() for leg in hexapod.legs]
+
+        assert feet_before_step != feet_after_step

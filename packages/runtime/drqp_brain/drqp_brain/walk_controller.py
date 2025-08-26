@@ -56,7 +56,6 @@ class WalkController:
         self.current_direction = Point3D([0, 0, 0])
         self.current_rotation_direction = 0
         self.current_phase = 0.0
-        self.last_stop_phase = 0.0
 
     def next_step(
         self,
@@ -110,17 +109,11 @@ class WalkController:
         had_motion = had_stride or had_rotation
         has_motion = has_stride or has_rotation
 
-        stopping = had_motion and not has_motion
         starting = not had_motion and has_motion
         stopped = not had_motion and not has_motion
 
         if starting or stopped:
             self.current_phase = 0
-
-        if stopping:
-            self.last_stop_phase = self.current_phase
-        else:
-            self.last_stop_phase = 0.0
         ###############################################################
 
         result = []
