@@ -218,7 +218,7 @@ class Point3D:
             return Point3D(self._array / other, self.label)
 
     def __eq__(self, other):
-        return np.allclose(self._array, other._array)
+        return np.allclose(self._array, other._array, atol=1e-3)
 
     def copy(self):
         return Point3D(self._array, self.label)

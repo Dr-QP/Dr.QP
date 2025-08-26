@@ -53,7 +53,7 @@ class WalkController:
         self.gait_gen.current_gait = gait
 
     def reset(self):
-        self.current_direction = Point3D([1, 0, 0])
+        self.current_direction = Point3D([0, 0, 0])
         self.current_stride_ratio = 0
         self.current_rotation_ratio = 0
         self.current_phase = 0.0
