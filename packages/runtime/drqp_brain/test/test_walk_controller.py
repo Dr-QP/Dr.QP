@@ -42,6 +42,7 @@ class TestWalkController:
         assert walker.step_height == 40.0
         assert walker.rotation_speed_degrees == 10.0
         assert walker.gait_gen.current_gait == GaitType.wave
+        assert walker.current_gait == GaitType.wave
         assert walker.phase_step == 1 / 30.0
         assert walker.current_direction == Point3D([1, 0, 0])
         assert walker.current_stride_ratio == 0.0
@@ -64,7 +65,7 @@ class TestWalkController:
         assert walker.current_phase == 0.0
         assert walker.last_stop_phase == 0.0
 
-    def test_next_step_current_phase(self, walker):
+    def test_next_phase(self, walker):
         walker.next_step()
         assert walker.current_phase == 0
 
