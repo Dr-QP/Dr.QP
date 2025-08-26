@@ -187,9 +187,9 @@ class Point3D:
         """
         return Point3D(
             [
-                np.interp(alpha, [0, 1], [self.x, other.x]),
-                np.interp(alpha, [0, 1], [self.y, other.y]),
-                np.interp(alpha, [0, 1], [self.z, other.z]),
+                float(np.interp(alpha, [0, 1], [self.x, other.x])),
+                float(np.interp(alpha, [0, 1], [self.y, other.y])),
+                float(np.interp(alpha, [0, 1], [self.z, other.z])),
             ]
         )
 
