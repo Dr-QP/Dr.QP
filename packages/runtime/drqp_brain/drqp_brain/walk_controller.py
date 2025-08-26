@@ -61,11 +61,11 @@ class WalkController:
 
     def next_step(
         self,
-        stride_direction=Point3D([1, 0, 0]),
-        stride_ratio=1.0,
-        rotation_ratio=0.0,
-        phase_override=None,
-        verbose=False,
+        stride_direction: Point3D,
+        stride_ratio: float,
+        rotation_ratio: float,
+        phase_override: float | None = None,
+        verbose: bool = False,
     ):
         self.__next_phase(phase_override)
         feet_targets = self.__next_feet_targets(
@@ -73,13 +73,15 @@ class WalkController:
         )
         self.__move_feet(feet_targets)
 
-    def __next_phase(self, phase_override=None):
+    def __next_phase(self, phase_override: float | None = None):
         if phase_override is not None:
             self.current_phase = phase_override
         else:
             self.current_phase += self.phase_step
 
-    def __next_feet_targets(self, stride_direction, stride_ratio, rotation_ratio, verbose):
+    def __next_feet_targets(
+        self, stride_direction: Point3D, stride_ratio: float, rotation_ratio: float, verbose: bool
+    ):
         ###############################################################
         # All if this mixing, smoothing and clipping is a hot garbage,
         # TODO(anton-matosov) switch to proper trajectory mixing
