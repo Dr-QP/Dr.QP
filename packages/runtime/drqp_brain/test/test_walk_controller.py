@@ -46,7 +46,7 @@ class TestWalkController:
         assert walker.phase_step == 1 / 30.0
         assert walker.current_direction == Point3D([0, 0, 0])
         assert walker.current_stride_ratio == 0.0
-        assert walker.current_rotation_ratio == 0.0
+        assert walker.current_rotation_direction == 0.0
         assert walker.current_phase == 0.0
         assert walker.last_stop_phase == 0.0
 
@@ -61,7 +61,7 @@ class TestWalkController:
 
         assert walker.current_direction == Point3D([0, 0, 0])
         assert walker.current_stride_ratio == 0.0
-        assert walker.current_rotation_ratio == 0.0
+        assert walker.current_rotation_direction == 0.0
         assert walker.current_phase == 0.0
         assert walker.last_stop_phase == 0.0
 
@@ -123,34 +123,34 @@ class TestWalkController:
         )
 
     def test_current_rotation(self, walker):
-        walker.current_rotation_ratio = 0.0
+        walker.current_rotation_direction = 0.0
 
         walker.next_step(Point3D([0, 0, 0]), 1.0, 0.0)
-        assert walker.current_rotation_ratio == pytest.approx(0.3, rel=1e-3), (
+        assert walker.current_rotation_direction == pytest.approx(0.3, rel=1e-3), (
             'Rotation ratio is ramping up 1'
         )
 
         walker.next_step(Point3D([0, 0, 0]), 1.0, 0.0)
-        assert walker.current_rotation_ratio == pytest.approx(0.51, rel=1e-3), (
+        assert walker.current_rotation_direction == pytest.approx(0.51, rel=1e-3), (
             'Rotation ratio is ramping up 2'
         )
 
         walker.next_step(Point3D([0, 0, 0]), 1.0, 0.0)
-        assert walker.current_rotation_ratio == pytest.approx(0.657, rel=1e-3), (
+        assert walker.current_rotation_direction == pytest.approx(0.657, rel=1e-3), (
             'Rotation ratio is ramping up 3'
         )
 
         walker.next_step(Point3D([0, 0, 0]), 0.0, 0.0)
-        assert walker.current_rotation_ratio == pytest.approx(0.4599, rel=1e-3), (
+        assert walker.current_rotation_direction == pytest.approx(0.4599, rel=1e-3), (
             'Rotation ratio is ramping down 1'
         )
 
         walker.next_step(Point3D([0, 0, 0]), 0.0, 0.0)
-        assert walker.current_rotation_ratio == pytest.approx(0.3219, rel=1e-3), (
+        assert walker.current_rotation_direction == pytest.approx(0.3219, rel=1e-3), (
             'Rotation ratio is ramping down 2'
         )
 
         walker.next_step(Point3D([0, 0, 0]), 0.0, 0.0)
-        assert walker.current_rotation_ratio == pytest.approx(0.2253, rel=1e-3), (
+        assert walker.current_rotation_direction == pytest.approx(0.2253, rel=1e-3), (
             'Rotation ratio is ramping down 3'
         )

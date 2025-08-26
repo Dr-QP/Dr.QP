@@ -55,7 +55,7 @@ class WalkController:
     def reset(self):
         self.current_direction = Point3D([0, 0, 0])
         self.current_stride_ratio = 0
-        self.current_rotation_ratio = 0
+        self.current_rotation_direction = 0
         self.current_phase = 0.0
         self.last_stop_phase = 0.0
 
@@ -88,21 +88,21 @@ class WalkController:
 
         no_motion_eps = 0.05
         had_stride = abs(self.current_stride_ratio) > no_motion_eps
-        had_rotation = abs(self.current_rotation_ratio) > no_motion_eps
+        had_rotation = abs(self.current_rotation_direction) > no_motion_eps
 
         self.current_stride_ratio = np.interp(
             0.3, [0, 1], [self.current_stride_ratio, stride_ratio]
         )
-        self.current_rotation_ratio = np.interp(
-            0.3, [0, 1], [self.current_rotation_ratio, rotation_direction]
+        self.current_rotation_direction = np.interp(
+            0.3, [0, 1], [self.current_rotation_direction, rotation_direction]
         )
         self.current_direction = self.current_direction.interpolate(stride_direction, 0.3)
 
         self.current_stride_ratio = float(np.clip(self.current_stride_ratio, 0, 1))
-        self.current_rotation_ratio = np.clip(self.current_rotation_ratio, -1, 1)
+        self.current_rotation_direction = np.clip(self.current_rotation_direction, -1, 1)
 
         has_stride = abs(self.current_stride_ratio) > no_motion_eps
-        has_rotation = abs(self.current_rotation_ratio) > no_motion_eps
+        has_rotation = abs(self.current_rotation_direction) > no_motion_eps
 
         had_motion = had_stride or had_rotation
         has_motion = has_stride or has_rotation
@@ -143,7 +143,7 @@ class WalkController:
             # Apply rotation
             if has_rotation:
                 rotation_degrees = (
-                    self.rotation_speed_degrees * self.current_rotation_ratio * gait_offsets.x
+                    self.rotation_speed_degrees * self.current_rotation_direction * gait_offsets.x
                 )
                 rotation_transform = AffineTransform.from_rotvec(
                     [0, 0, rotation_degrees], degrees=True
