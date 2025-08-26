@@ -121,3 +121,36 @@ class TestWalkController:
         assert walker.current_stride_ratio == pytest.approx(0.2253, rel=1e-3), (
             'Stride ratio is ramping down 3'
         )
+
+    def test_current_rotation(self, walker):
+        walker.current_rotation_ratio = 0.0
+
+        walker.next_step(Point3D([0, 0, 0]), 1.0, 0.0)
+        assert walker.current_rotation_ratio == pytest.approx(0.3, rel=1e-3), (
+            'Rotation ratio is ramping up 1'
+        )
+
+        walker.next_step(Point3D([0, 0, 0]), 1.0, 0.0)
+        assert walker.current_rotation_ratio == pytest.approx(0.51, rel=1e-3), (
+            'Rotation ratio is ramping up 2'
+        )
+
+        walker.next_step(Point3D([0, 0, 0]), 1.0, 0.0)
+        assert walker.current_rotation_ratio == pytest.approx(0.657, rel=1e-3), (
+            'Rotation ratio is ramping up 3'
+        )
+
+        walker.next_step(Point3D([0, 0, 0]), 0.0, 0.0)
+        assert walker.current_rotation_ratio == pytest.approx(0.4599, rel=1e-3), (
+            'Rotation ratio is ramping down 1'
+        )
+
+        walker.next_step(Point3D([0, 0, 0]), 0.0, 0.0)
+        assert walker.current_rotation_ratio == pytest.approx(0.3219, rel=1e-3), (
+            'Rotation ratio is ramping down 2'
+        )
+
+        walker.next_step(Point3D([0, 0, 0]), 0.0, 0.0)
+        assert walker.current_rotation_ratio == pytest.approx(0.2253, rel=1e-3), (
+            'Rotation ratio is ramping down 3'
+        )
