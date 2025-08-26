@@ -68,13 +68,13 @@ class TestWalkController:
     def test_current_phase(self, walker):
         walker.current_phase = 0.5
 
-        walker.next_step(Point3D([1, 0, 0]), 1.0, 0.0)
+        walker.next_step(Point3D([1, 0, 0]), 0.0)
         assert walker.current_phase == 0, 'Starting resets phase to 0'
 
-        walker.next_step(Point3D([1, 0, 0]), 1.0, 0.0)
+        walker.next_step(Point3D([1, 0, 0]), 0.0)
         assert walker.current_phase == 1 / 30.0
 
-        walker.next_step(Point3D([1, 0, 0]), 1.0, 0.0)
+        walker.next_step(Point3D([1, 0, 0]), 0.0)
         assert walker.current_phase == 2 / 30.0
 
         # Phase out takes some steps

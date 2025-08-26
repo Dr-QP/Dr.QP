@@ -57,13 +57,15 @@ class HexapodBrain(rclpy.node.Node):
         self.gaits = [GaitType.tripod, GaitType.ripple, GaitType.wave]
         self.phase_steps_per_cycle = [20, 25, 40]  # per gait
 
-        self.joystick_input_handler = JoystickInputHandler(button_callbacks={
-            ButtonIndex.DpadLeft: lambda b, e: self.prev_gait(),
-            ButtonIndex.DpadRight: lambda b, e: self.next_gait(),
-            ButtonIndex.PS: lambda b, e: self.process_kill_switch(),
-            ButtonIndex.Start: lambda b, e: self.reboot_servos(),
-            ButtonIndex.Select: lambda b, e: self.finalize(),
-        })
+        self.joystick_input_handler = JoystickInputHandler(
+            button_callbacks={
+                ButtonIndex.DpadLeft: lambda b, e: self.prev_gait(),
+                ButtonIndex.DpadRight: lambda b, e: self.next_gait(),
+                ButtonIndex.PS: lambda b, e: self.process_kill_switch(),
+                ButtonIndex.Start: lambda b, e: self.reboot_servos(),
+                ButtonIndex.Select: lambda b, e: self.finalize(),
+            }
+        )
         self.joystick_sub = self.create_subscription(
             sensor_msgs.msg.Joy,
             '/joy',
@@ -150,8 +152,7 @@ class HexapodBrain(rclpy.node.Node):
         self.walker.phase_step = 1 / self.phase_steps_per_cycle[self.gait_index]
         self.walker.next_step(
             stride_direction=self.joystick_input_handler.direction,
-            stride_ratio=self.joystick_input_handler.walk_speed,
-            rotation_ratio=self.joystick_input_handler.rotation_speed,
+            rotation_direction=self.joystick_input_handler.rotation_speed,
         )
 
         trajectory = JointTrajectoryBuilder(self.hexapod)
