@@ -117,7 +117,6 @@ class WalkController:
         if starting or stopped:
             self.current_phase = 0
 
-        height_ratio = 1
         if stopping:
             self.last_stop_phase = self.current_phase
         else:
@@ -154,7 +153,7 @@ class WalkController:
                 foot_target = rotation_transform.apply_point(foot_target)
 
             if has_stride or has_rotation:
-                foot_target.z += gait_offsets.z * self.step_height * height_ratio
+                foot_target.z += gait_offsets.z * self.step_height
 
             if verbose:
                 print(f'{leg.label} {self.current_phase=}')
