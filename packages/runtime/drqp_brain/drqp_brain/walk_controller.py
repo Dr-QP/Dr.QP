@@ -76,13 +76,15 @@ class WalkController:
         else:
             self.current_phase += self.phase_step
 
-    def __next_feet_targets(self, stride_direction: Point3D, rotation_ratio: float, verbose: bool):
+    def __next_feet_targets(
+        self, stride_direction: Point3D, rotation_direction: float, verbose: bool
+    ):
         stride_ratio = abs(stride_direction.x) + abs(stride_direction.y) + abs(stride_direction.z)
         ###############################################################
         # All if this mixing, smoothing and clipping is a hot garbage,
         # TODO(anton-matosov) switch to proper trajectory mixing
         stride_ratio = np.clip(stride_ratio, 0, 1)
-        rotation_ratio = np.clip(rotation_ratio, -1, 1)
+        rotation_direction = np.clip(rotation_direction, -1, 1)
 
         no_motion_eps = 0.05
         had_stride = abs(self.current_stride_ratio) > no_motion_eps
@@ -92,7 +94,7 @@ class WalkController:
             0.3, [0, 1], [self.current_stride_ratio, stride_ratio]
         )
         self.current_rotation_ratio = np.interp(
-            0.3, [0, 1], [self.current_rotation_ratio, rotation_ratio]
+            0.3, [0, 1], [self.current_rotation_ratio, rotation_direction]
         )
         self.current_direction = self.current_direction.interpolate(stride_direction, 0.3)
 
