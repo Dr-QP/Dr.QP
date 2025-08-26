@@ -53,56 +53,59 @@ class WalkController:
         self.gait_gen.current_gait = gait
 
     def reset(self):
-        self.current_direction = Point3D([1, 0, 0])
-        self.current_stride_ratio = 0
-        self.current_rotation_ratio = 0
+        self.current_direction = Point3D([0, 0, 0])
+        self.current_rotation_direction = 0
         self.current_phase = 0.0
         self.last_stop_phase = 0.0
 
     def next_step(
         self,
-        stride_direction=Point3D([1, 0, 0]),
-        stride_ratio=1.0,
-        rotation_ratio=0.0,
-        phase_override=None,
-        verbose=False,
+        stride_direction: Point3D,
+        rotation_direction: float,
+        phase_override: float | None = None,
+        verbose: bool = False,
     ):
         self.__next_phase(phase_override)
-        feet_targets = self.__next_feet_targets(
-            stride_direction, stride_ratio, rotation_ratio, verbose
-        )
+        feet_targets = self.__next_feet_targets(stride_direction, rotation_direction, verbose)
         self.__move_feet(feet_targets)
 
-    def __next_phase(self, phase_override=None):
+    def __next_phase(self, phase_override: float | None = None):
         if phase_override is not None:
             self.current_phase = phase_override
         else:
             self.current_phase += self.phase_step
 
-    def __next_feet_targets(self, stride_direction, stride_ratio, rotation_ratio, verbose):
+    def __next_feet_targets(
+        self, stride_direction: Point3D, rotation_direction: float, verbose: bool
+    ):
+        current_stride_ratio = (
+            abs(self.current_direction.x)
+            + abs(self.current_direction.y)
+            + abs(self.current_direction.z)
+        )
+        no_motion_eps = 0.05
+        had_stride = abs(current_stride_ratio) > no_motion_eps
+        had_rotation = abs(self.current_rotation_direction) > no_motion_eps
+
         ###############################################################
         # All if this mixing, smoothing and clipping is a hot garbage,
         # TODO(anton-matosov) switch to proper trajectory mixing
-        stride_ratio = np.clip(stride_ratio, 0, 1)
-        rotation_ratio = np.clip(rotation_ratio, -1, 1)
-
-        no_motion_eps = 0.05
-        had_stride = abs(self.current_stride_ratio) > no_motion_eps
-        had_rotation = abs(self.current_rotation_ratio) > no_motion_eps
-
-        self.current_stride_ratio = np.interp(
-            0.3, [0, 1], [self.current_stride_ratio, stride_ratio]
-        )
-        self.current_rotation_ratio = np.interp(
-            0.3, [0, 1], [self.current_rotation_ratio, rotation_ratio]
+        rotation_direction = np.clip(rotation_direction, -1, 1)
+        self.current_rotation_direction = np.interp(
+            0.3, [0, 1], [self.current_rotation_direction, rotation_direction]
         )
         self.current_direction = self.current_direction.interpolate(stride_direction, 0.3)
+        current_stride_ratio = (
+            abs(self.current_direction.x)
+            + abs(self.current_direction.y)
+            + abs(self.current_direction.z)
+        )
 
-        self.current_stride_ratio = np.clip(self.current_stride_ratio, 0, 1)
-        self.current_rotation_ratio = np.clip(self.current_rotation_ratio, -1, 1)
+        current_stride_ratio = float(np.clip(current_stride_ratio, 0, 1))
+        self.current_rotation_direction = np.clip(self.current_rotation_direction, -1, 1)
 
-        has_stride = abs(self.current_stride_ratio) > no_motion_eps
-        has_rotation = abs(self.current_rotation_ratio) > no_motion_eps
+        has_stride = abs(current_stride_ratio) > no_motion_eps
+        has_rotation = abs(self.current_rotation_direction) > no_motion_eps
 
         had_motion = had_stride or had_rotation
         has_motion = has_stride or has_rotation
@@ -114,7 +117,6 @@ class WalkController:
         if starting or stopped:
             self.current_phase = 0
 
-        height_ratio = 1
         if stopping:
             self.last_stop_phase = self.current_phase
         else:
@@ -131,9 +133,11 @@ class WalkController:
             )
 
             # Apply steering
+            stride_offsets = Point3D([0, 0, 0])
+            direction_offsets = Point3D([0, 0, 0])
             if has_stride:
                 stride_offsets = gait_offsets * Point3D(
-                    [self.step_length * self.current_stride_ratio, 0, 0]
+                    [self.step_length * current_stride_ratio, 0.0, 0.0]
                 )
                 direction_offsets = direction_transform.apply_point(stride_offsets)
                 foot_target = foot_target + direction_offsets
@@ -141,7 +145,7 @@ class WalkController:
             # Apply rotation
             if has_rotation:
                 rotation_degrees = (
-                    self.rotation_speed_degrees * self.current_rotation_ratio * gait_offsets.x
+                    self.rotation_speed_degrees * self.current_rotation_direction * gait_offsets.x
                 )
                 rotation_transform = AffineTransform.from_rotvec(
                     [0, 0, rotation_degrees], degrees=True
@@ -149,7 +153,7 @@ class WalkController:
                 foot_target = rotation_transform.apply_point(foot_target)
 
             if has_stride or has_rotation:
-                foot_target.z += gait_offsets.z * self.step_height * height_ratio
+                foot_target.z += gait_offsets.z * self.step_height
 
             if verbose:
                 print(f'{leg.label} {self.current_phase=}')
@@ -169,7 +173,7 @@ class WalkController:
         norm_direction = direction.normalized().numpy()
 
         # Create rotation matrix to align direction with x-axis
-        # Ignore z-component as robot can't walk up. This also allows to generate stepping in place
+        # Ignore z-component as robot can't walk up
         direction_transform = AffineTransform.from_rotmatrix(
             [
                 [norm_direction[0], -norm_direction[1], 0],

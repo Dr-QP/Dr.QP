@@ -52,7 +52,6 @@ class TestJoystickInputHandler:
     def test_initialization(self, input_handler):
         """Test that JoystickInputHandler initializes correctly."""
         assert input_handler.direction == Point3D([0, 0, 0])
-        assert input_handler.walk_speed == pytest.approx(0.0)
         assert input_handler.rotation_speed == pytest.approx(0.0)
         assert len(input_handler.joystick_buttons) == 0
 
@@ -79,7 +78,6 @@ class TestJoystickInputHandler:
         assert input_handler.direction.x == pytest.approx(0.8)
         assert input_handler.direction.y == pytest.approx(0.0)
         assert input_handler.direction.z == pytest.approx(0.0)
-        assert input_handler.walk_speed == pytest.approx(0.8)
         assert input_handler.rotation_speed == pytest.approx(0.0)
 
     def test_axes_processing_left_movement(self, input_handler):
@@ -95,7 +93,6 @@ class TestJoystickInputHandler:
         assert input_handler.direction.x == pytest.approx(0.0)
         assert input_handler.direction.y == pytest.approx(-0.6)
         assert input_handler.direction.z == pytest.approx(0.0)
-        assert input_handler.walk_speed == pytest.approx(0.6)
         assert input_handler.rotation_speed == pytest.approx(0.0)
 
     def test_axes_processing_rotation(self, input_handler):
@@ -135,10 +132,6 @@ class TestJoystickInputHandler:
         assert input_handler.direction.x == pytest.approx(0.4)  # left_y
         assert input_handler.direction.y == pytest.approx(0.3)  # left_x
         assert input_handler.rotation_speed == pytest.approx(0.2)  # right_x
-
-        # Walk speed should be sum of absolute values
-        expected_walk_speed = abs(0.3) + abs(0.4) + abs(input_handler.direction.z)
-        assert input_handler.walk_speed == pytest.approx(expected_walk_speed)
 
     def test_button_processing(self, input_handler_with_callbacks, mock_callback):
         """Test processing of joystick buttons."""
@@ -188,7 +181,6 @@ class TestJoystickInputHandler:
         """Test resetting the input handler."""
         # Set some values
         input_handler.direction = Point3D([0.5, -0.3, 0.2])
-        input_handler.walk_speed = pytest.approx(0.8)
         input_handler.rotation_speed = pytest.approx(0.1)
 
         # Reset
@@ -196,7 +188,6 @@ class TestJoystickInputHandler:
 
         # Values should be back to defaults
         assert input_handler.direction == Point3D([0, 0, 0])
-        assert input_handler.walk_speed == pytest.approx(0)
         assert input_handler.rotation_speed == pytest.approx(0)
 
     def test_trigger_interpolation_edge_cases(self, input_handler):
@@ -213,18 +204,6 @@ class TestJoystickInputHandler:
         joy_msg.axes[4] = 0.0
         input_handler.process_joy_message(joy_msg)
         assert input_handler.direction.z == pytest.approx(0.0)  # Should map to 0.0
-
-    def test_walk_speed_calculation(self, input_handler):
-        """Test walk speed calculation with various inputs."""
-        # Test with all axes at maximum
-        joy_msg = sensor_msgs.msg.Joy()
-        joy_msg.axes = [1.0, 1.0, 0.0, 0.0, -1.0, 0.0]  # left_x=1, left_y=1, left_trigger=-1
-        joy_msg.buttons = []
-
-        input_handler.process_joy_message(joy_msg)
-
-        # Walk speed should be sum of absolute values: |1| + |1| + |1| = 3
-        assert input_handler.walk_speed == pytest.approx(3.0)
 
     def test_no_button_callbacks_initialization(self):
         """Test initialization with no button callbacks."""

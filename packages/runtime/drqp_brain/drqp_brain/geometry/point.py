@@ -187,9 +187,9 @@ class Point3D:
         """
         return Point3D(
             [
-                np.interp(alpha, [0, 1], [self.x, other.x]),
-                np.interp(alpha, [0, 1], [self.y, other.y]),
-                np.interp(alpha, [0, 1], [self.z, other.z]),
+                float(np.interp(alpha, [0, 1], [self.x, other.x])),
+                float(np.interp(alpha, [0, 1], [self.y, other.y])),
+                float(np.interp(alpha, [0, 1], [self.z, other.z])),
             ]
         )
 
@@ -218,7 +218,7 @@ class Point3D:
             return Point3D(self._array / other, self.label)
 
     def __eq__(self, other):
-        return np.allclose(self._array, other._array)
+        return np.allclose(self._array, other._array, atol=1e-3)
 
     def copy(self):
         return Point3D(self._array, self.label)

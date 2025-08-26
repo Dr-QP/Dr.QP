@@ -51,6 +51,11 @@ class JoystickInputHandler:
             for button_index, callback in button_callbacks.items():
                 self.joystick_buttons.append(JoystickButton(button_index, callback))
 
+    def reset(self):
+        """Reset all movement parameters to zero."""
+        self.direction = Point3D([0, 0, 0])
+        self.rotation_speed = 0
+
     def process_joy_message(self, joy: sensor_msgs.msg.Joy):
         """
         Process a ROS Joy message and update movement parameters.
@@ -74,13 +79,7 @@ class JoystickInputHandler:
         # but on raspi with ubuntu 24.04 it is 0
         left_trigger = float(np.interp(axes[ButtonAxis.TriggerLeft.value], [-1, 0], [1, 0]))
 
-        # Update direction (note: left_y maps to x, left_x maps to y)
         self.direction = Point3D([left_y, left_x, left_trigger])
-
-        # Calculate walk speed as sum of absolute axis values
-        self.walk_speed = abs(left_x) + abs(left_y) + abs(left_trigger)
-
-        # Right stick X controls rotation
         self.rotation_speed = right_x
 
     def _process_buttons(self, buttons):
@@ -115,9 +114,3 @@ class JoystickInputHandler:
         self.joystick_buttons = [
             button for button in self.joystick_buttons if button.button_index != button_index
         ]
-
-    def reset(self):
-        """Reset all movement parameters to zero."""
-        self.direction = Point3D([0, 0, 0])
-        self.walk_speed = 0
-        self.rotation_speed = 0
