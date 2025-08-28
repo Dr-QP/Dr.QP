@@ -24,7 +24,7 @@ import numpy as np
 import pytest
 
 
-def is_swing(offsets: Point3D):
+def is_swing_phase(offsets: Point3D):
     return offsets.label == 'swing'
 
 
@@ -105,14 +105,14 @@ class TestParametricGaitGenerator:
         swing_legs = []
         stance_legs = []
         for leg in hexapod_legs:
-            is_swing = offsets[leg].label == 'swing'
+            is_swing = is_swing_phase(offsets[leg])
             if is_swing:
                 swing_legs += [leg]
             else:
                 stance_legs += [leg]
 
             if leg in prev_offsets:
-                was_swing = prev_offsets[leg].label == 'swing'  # Check label
+                was_swing = is_swing_phase(prev_offsets[leg])
                 shift = offsets[leg] - prev_offsets[leg]
                 all_swing = is_swing and was_swing
                 all_stance = not is_swing and not was_swing
