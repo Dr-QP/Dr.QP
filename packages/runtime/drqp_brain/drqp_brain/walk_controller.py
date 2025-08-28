@@ -77,13 +77,13 @@ class WalkController:
     def __next_feet_targets(
         self, stride_direction: Point3D, rotation_direction: float, verbose: bool
     ):
-        current_stride_ratio = (
+        old_stride_ratio = (
             abs(self.current_direction.x)
             + abs(self.current_direction.y)
             + abs(self.current_direction.z)
         )
         no_motion_eps = 0.05
-        had_stride = abs(current_stride_ratio) > no_motion_eps
+        had_stride = abs(old_stride_ratio) > no_motion_eps
         had_rotation = abs(self.current_rotation_direction) > no_motion_eps
 
         ###############################################################
@@ -94,16 +94,16 @@ class WalkController:
             0.3, [0, 1], [self.current_rotation_direction, rotation_direction]
         )
         self.current_direction = self.current_direction.interpolate(stride_direction, 0.3)
-        current_stride_ratio = (
+        new_stride_ratio = (
             abs(self.current_direction.x)
             + abs(self.current_direction.y)
             + abs(self.current_direction.z)
         )
 
-        current_stride_ratio = float(np.clip(current_stride_ratio, 0, 1))
+        new_stride_ratio = float(np.clip(new_stride_ratio, 0, 1))
         self.current_rotation_direction = np.clip(self.current_rotation_direction, -1, 1)
 
-        has_stride = abs(current_stride_ratio) > no_motion_eps
+        has_stride = abs(new_stride_ratio) > no_motion_eps
         has_rotation = abs(self.current_rotation_direction) > no_motion_eps
 
         had_motion = had_stride or had_rotation
@@ -130,7 +130,7 @@ class WalkController:
             direction_offsets = Point3D([0, 0, 0])
             if has_stride:
                 stride_offsets = gait_offsets * Point3D(
-                    [self.step_length * current_stride_ratio, 0.0, 0.0]
+                    [self.step_length * new_stride_ratio, 0.0, 0.0]
                 )
                 direction_offsets = direction_transform.apply_point(stride_offsets)
                 foot_target = foot_target + direction_offsets
