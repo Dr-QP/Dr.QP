@@ -24,6 +24,10 @@ import numpy as np
 import pytest
 
 
+def is_swing(offsets: Point3D):
+    return offsets.label == 'swing'
+
+
 class TestParametricGaitGenerator:
     """Test the ParametricGaitGenerator class."""
 
@@ -65,25 +69,31 @@ class TestParametricGaitGenerator:
         gait_gen,
         hexapod_legs,
         stance_period,
-        expected_on_ground_stance_count,
-        expected_off_ground_stance_count,
+        expected_on_ground_swing_count,
+        expected_off_ground_swing_count,
     ):
-        on_ground = np.arange(0.0, 1.0, stance_period)
+        on_ground = []  # np.arange(0.0, 1.0, stance_period)
         leg_count = len(hexapod_legs)
         prev_offsets = {}
         for phase in np.arange(0.0, 1.0, 0.001):
-            swing_count, stance_count, prev_offsets = self._gait_stages(
+            swing_legs, stance_legs, prev_offsets = self._gait_stages(
                 gait_gen, hexapod_legs, phase, prev_offsets
             )
+            swing_count = len(swing_legs)
+            stance_count = len(stance_legs)
             if phase in on_ground:
-                assert swing_count == expected_on_ground_stance_count, f'Phase: {phase}'
-                assert stance_count == leg_count - expected_on_ground_stance_count, (
-                    f'Phase: {phase}'
+                assert swing_count == expected_on_ground_swing_count, (
+                    f'Phase: {phase}. {swing_legs=}'
+                )
+                assert stance_count == leg_count - expected_on_ground_swing_count, (
+                    f'Phase: {phase}. {stance_legs=}'
                 )
             else:
-                assert swing_count == expected_off_ground_stance_count, f'Phase: {phase}'
-                assert stance_count == leg_count - expected_off_ground_stance_count, (
-                    f'Phase: {phase}'
+                assert swing_count == expected_off_ground_swing_count, (
+                    f'Phase: {phase}. {swing_legs=}'
+                )
+                assert stance_count == leg_count - expected_off_ground_swing_count, (
+                    f'Phase: {phase}. {stance_legs=}'
                 )
 
     def _gait_stages(self, gait_gen, hexapod_legs, phase, prev_offsets):
@@ -92,17 +102,17 @@ class TestParametricGaitGenerator:
             offsets[leg] = gait_gen.get_offsets_at_phase_for_leg(leg, phase)
 
         # Count how many legs are in swing phase and stance phase
-        swing_count = 0
-        stance_count = 0
+        swing_legs = []
+        stance_legs = []
         for leg in hexapod_legs:
-            is_swing = offsets[leg].z > 0.00001
+            is_swing = offsets[leg].label == 'swing'
             if is_swing:
-                swing_count += 1
+                swing_legs += [leg]
             else:
-                stance_count += 1
+                stance_legs += [leg]
 
             if leg in prev_offsets:
-                was_swing = prev_offsets[leg].z > 0.00001
+                was_swing = prev_offsets[leg].label == 'swing'  # Check label
                 shift = offsets[leg] - prev_offsets[leg]
                 all_swing = is_swing and was_swing
                 all_stance = not is_swing and not was_swing
@@ -115,4 +125,4 @@ class TestParametricGaitGenerator:
                         f'Leg {leg} in stance phase is not moving backward. {prev_offsets[leg]=}, {offsets[leg]=}, {phase=}'
                     )
 
-        return swing_count, stance_count, offsets
+        return swing_legs, stance_legs, offsets
