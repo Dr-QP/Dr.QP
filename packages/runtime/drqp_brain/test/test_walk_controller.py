@@ -133,18 +133,42 @@ class TestWalkController:
             'Rotation ratio is ramping down 3'
         )
 
-    def test_step_length_in_full_stride(self, walker, hexapod, gait, ramp_up_steps):
+    def test_step_stride(self, walker, hexapod):
         walker.current_gait = GaitType.tripod
 
+        feet_at_rest = [leg.tibia_end.copy() for leg in hexapod.legs]
+
         # Ramp up walking
-        for _ in range(10):
+        for _ in range(100):
             walker.next_step(stride_direction=Point3D([1, 0, 0]), rotation_direction=0.0)
 
-        feet_before_step = [leg.tibia_end.copy() for leg in hexapod.legs]
+        assert walker.current_direction == Point3D([1, 0, 0]), 'Direction is at full stride'
+        assert walker.current_rotation_direction == pytest.approx(0.0, abs=1e-3), (
+            'Rotation is at rest'
+        )
 
         walker.next_step(
             stride_direction=Point3D([1, 0, 0]), rotation_direction=0.0, phase_override=0.25
         )
-        feet_after_step = [leg.tibia_end.copy() for leg in hexapod.legs]
+        feet_at_quarter_phase = [leg.tibia_end.copy() for leg in hexapod.legs]
 
-        assert feet_before_step != feet_after_step
+        for at_rest, after_step in zip(feet_at_rest, feet_at_quarter_phase):
+            diff = after_step - at_rest
+            assert diff.x == pytest.approx(0, abs=1e-3)
+            if diff.z > 0:
+                assert diff.z == pytest.approx(walker.step_height, abs=1e-3)
+            else:
+                assert diff.z == pytest.approx(0, abs=1e-3)
+
+        walker.next_step(
+            stride_direction=Point3D([1, 0, 0]), rotation_direction=0.0, phase_override=0.5
+        )
+        feet_at_half_phase = [leg.tibia_end.copy() for leg in hexapod.legs]
+
+        for at_rest, after_step in zip(feet_at_rest, feet_at_half_phase):
+            diff = after_step - at_rest
+            assert diff.z == pytest.approx(0, abs=1e-3)
+            if diff.x > 0:
+                assert diff.x == pytest.approx(walker.step_length / 2, abs=1e-3)
+            else:
+                assert diff.x == pytest.approx(-walker.step_length / 2, abs=1e-3)
