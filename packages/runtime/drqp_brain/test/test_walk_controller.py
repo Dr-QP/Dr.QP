@@ -136,7 +136,6 @@ class TestWalkController:
     def test_step_length_in_full_stride(self, walker, hexapod, gait, ramp_up_steps):
         walker.current_gait = GaitType.tripod
 
-        
         # Ramp up walking
         for _ in range(10):
             walker.next_step(stride_direction=Point3D([1, 0, 0]), rotation_direction=0.0)
