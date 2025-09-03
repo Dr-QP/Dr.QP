@@ -118,11 +118,13 @@ class TestParametricGaitGenerator:
                 all_stance = not is_swing and not was_swing
                 if all_swing:
                     assert shift.x >= 0.0, (
-                        f'Leg {leg} in swing phase is not moving forward. {prev_offsets[leg]=}, {offsets[leg]=}, {phase=}'
+                        f'Leg {leg} in swing phase is not moving forward. '
+                        f'{prev_offsets[leg]=}, {offsets[leg]=}, {phase=}'
                     )
                 elif all_stance:
                     assert shift.x <= 0.0, (
-                        f'Leg {leg} in stance phase is not moving backward. {prev_offsets[leg]=}, {offsets[leg]=}, {phase=}'
+                        f'Leg {leg} in stance phase is not moving backward. '
+                        f'{prev_offsets[leg]=}, {offsets[leg]=}, {phase=}'
                     )
 
         return swing_legs, stance_legs, offsets
