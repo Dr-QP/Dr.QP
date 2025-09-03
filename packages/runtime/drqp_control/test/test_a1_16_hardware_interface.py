@@ -190,8 +190,10 @@ class TestA116HardwareInterface(unittest.TestCase):
         #             np.array([expected_position] * len(joint_names)),
         #             atol=1,
         #         ),
-        #         msg=f'Requested position {position} with effort {effort}, Expected position {expected_position}, '
-        #         f'got {last_feedback.feedback.actual.positions}, desired {last_feedback.feedback.desired.positions}',
+        #         msg=f'Requested position {position} with effort {effort},'
+        #         f' Expected position {expected_position},'
+        #         f' got {last_feedback.feedback.actual.positions},'
+        #         f' desired {last_feedback.feedback.desired.positions}',
         #     )
 
 
