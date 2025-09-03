@@ -87,9 +87,12 @@ SCENARIO("ROS node")
         CHECK_THAT(joint2.position_as_radians, Catch::Matchers::WithinAbs(1.0, 0.01));
       }
 
-      THEN("Joint to servo mapping should have max clamping")
+      using double_limits = std::numeric_limits<double>;
+      THEN("Joint to servo mapping should have upper clamping.")
       {
-        RobotConfig::JointValues joint{"test_robot/left_front_coxa_with_limits", 3.0};
+        const double outOfBoundUpper = GENERATE(3.0, 100000.0, double_limits::infinity());
+        CAPTURE(outOfBoundUpper);
+        RobotConfig::JointValues joint{"test_robot/left_front_coxa_with_limits", outOfBoundUpper};
         RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
         CHECK(servo.id == 10);
         CHECK(servo.position == 775);
@@ -98,9 +101,11 @@ SCENARIO("ROS node")
         CHECK_THAT(joint2.position_as_radians, Catch::Matchers::WithinAbs(1.62, 0.01));
       }
 
-      THEN("Joint to servo mapping should have min clamping")
+      THEN("Joint to servo mapping should have lower clamping")
       {
-        RobotConfig::JointValues joint{"test_robot/left_front_coxa_with_limits", -3.0};
+        const double outOfBoundLower = GENERATE(-3.0, -100000.0, -double_limits::infinity(), double_limits::quiet_NaN(), double_limits::signaling_NaN());
+        CAPTURE(outOfBoundLower);
+        RobotConfig::JointValues joint{"test_robot/left_front_coxa_with_limits", outOfBoundLower};
         RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();
         CHECK(servo.id == 10);
         CHECK(servo.position == 348);
