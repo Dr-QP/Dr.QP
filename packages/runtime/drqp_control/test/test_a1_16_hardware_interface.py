@@ -93,7 +93,8 @@ class TestA116HardwareInterface(unittest.TestCase):
         self._check_position_control(position=1, effort=1, expected_position=1)
 
     def test_position_control_effort_reboot(self):
-        self._check_position_control(position=0, effort=-1, expected_position=0)
+        self._check_position_control(position=0, effort=1, expected_position=0)
+        self._check_position_control(position=0.5, effort=-1, expected_position=0)
 
     def test_position_control_infinite_position(self):
         self._check_position_control(position=float('inf'), effort=112321, expected_position=1.5)
