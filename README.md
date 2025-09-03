@@ -1,8 +1,11 @@
 # Dr.QP
 
-[![ci](https://github.com/Dr-QP/Dr.QP/actions/workflows/ci.yml/badge.svg)](https://github.com/Dr-QP/Dr.QP/actions/workflows/ci.yml?query=branch%3Amain)
+[![ci](https://github.com/Dr-QP/Dr.QP/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Dr-QP/Dr.QP/actions/workflows/ci.yml?query=branch%3Amain)
 [![CodeQL Advanced](https://github.com/Dr-QP/Dr.QP/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/Dr-QP/Dr.QP/actions/workflows/codeql.yml?query=branch%3Amain)
-[![Devcontainer CI](https://github.com/Dr-QP/Dr.QP/actions/workflows/devcontainer.yml/badge.svg?branch=main)](https://github.com/Dr-QP/Dr.QP/actions/workflows/devcontainer.yml?query=branch%3Amain)
+[![Docs](https://github.com/Dr-QP/Dr.QP/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/Dr-QP/Dr.QP/actions/workflows/docs.yml?query=branch%3Amain)
+[![GitLeaks](https://github.com/Dr-QP/Dr.QP/actions/workflows/gitleaks.yml/badge.svg?branch=main)](https://github.com/Dr-QP/Dr.QP/actions/workflows/gitleaks.yml?query=branch%3Amain)
+
+[![Reviewdog](https://github.com/Dr-QP/Dr.QP/actions/workflows/reviewdog.yml/badge.svg?branch=main)](https://github.com/Dr-QP/Dr.QP/actions/workflows/reviewdog.yml?query=branch%3Amain)
 [![Build act ubuntu docker images](https://github.com/Dr-QP/Dr.QP/actions/workflows/act-docker-build-image.yml/badge.svg?branch=main)](https://github.com/Dr-QP/Dr.QP/actions/workflows/act-docker-build-image.yml?query=branch%3Amain)
 
 [![codecov](https://codecov.io/gh/Dr-QP/Dr.QP/branch/main/graph/badge.svg?token=MSNH7AK8XX)](https://app.codecov.io/gh/Dr-QP/Dr.QP/tree/main)
