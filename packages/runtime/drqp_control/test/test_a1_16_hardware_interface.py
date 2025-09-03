@@ -61,6 +61,9 @@ def generate_test_description():
     )
 
 
+default_interface_value = -123.321
+
+
 class TestA116HardwareInterface(unittest.TestCase):
     """Test the pose_setter node."""
 
@@ -107,13 +110,13 @@ class TestA116HardwareInterface(unittest.TestCase):
             'dr_qp/right_back_femur',
             'dr_qp/right_back_tibia',
         ]
-        self.joint_positions = [float('nan')] * len(self.joint_names)
-        self.joint_efforts = [float('nan')] * len(self.joint_names)
+        self.joint_positions = [default_interface_value] * len(self.joint_names)
+        self.joint_efforts = [default_interface_value] * len(self.joint_names)
         self.last_feedback = self.node.get_clock().now()
 
     def dynamic_joint_states_callback(self, msg: DynamicJointState):
-        joint_positions = [float('nan')] * len(self.joint_names)
-        joint_efforts = [float('nan')] * len(self.joint_names)
+        joint_positions = [default_interface_value] * len(self.joint_names)
+        joint_efforts = [default_interface_value] * len(self.joint_names)
 
         interface_values = list[InterfaceValue](msg.interface_values)
         for name, values in zip(msg.joint_names, interface_values):
@@ -175,7 +178,7 @@ class TestA116HardwareInterface(unittest.TestCase):
         goal_handle = goal_handle_future.result()
         self.assertIsNotNone(goal_handle)
         if goal_handle is None:
-            assert False, 'Goal handle is None'
+            self.fail('Goal handle is None')
             return
         result_future = goal_handle.get_result_async()
         rclpy.spin_until_future_complete(self.node, result_future)
@@ -185,13 +188,16 @@ class TestA116HardwareInterface(unittest.TestCase):
 
         self.assertIsNotNone(result)
         if result is None:
-            assert False, 'Result is None'
+            self.fail('Result is None')
             return
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
 
         # Wait for the feedback to be updated
-        while self.node.get_clock().now() < self.last_feedback + rclpy.time.Duration(seconds=1):
+        now = self.node.get_clock().now()
+        timeout = now + rclpy.time.Duration(seconds=3)
+        while now > self.last_feedback:
             rclpy.spin_once(self.node, timeout_sec=0.1)
+            self.assertLess(self.node.get_clock().now(), timeout)
 
         self.assertTrue(
             np.all(np.isfinite(self.joint_positions)),
