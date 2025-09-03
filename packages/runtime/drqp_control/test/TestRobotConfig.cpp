@@ -103,7 +103,9 @@ SCENARIO("ROS node")
 
       THEN("Joint to servo mapping should have lower clamping")
       {
-        const double outOfBoundLower = GENERATE(-3.0, -100000.0, -double_limits::infinity(), double_limits::quiet_NaN(), double_limits::signaling_NaN());
+        const double outOfBoundLower = GENERATE(
+          -3.0, -100000.0, -double_limits::infinity(), double_limits::quiet_NaN(),
+          double_limits::signaling_NaN());
         CAPTURE(outOfBoundLower);
         RobotConfig::JointValues joint{"test_robot/left_front_coxa_with_limits", outOfBoundLower};
         RobotConfig::ServoValues servo = robotConfig.jointToServo(joint).value();

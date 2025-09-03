@@ -29,7 +29,6 @@ from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
-import numpy as np
 import rclpy
 from rclpy.action import ActionClient
 import rclpy.time
