@@ -86,9 +86,6 @@ class WalkController:
         had_stride = abs(old_stride_ratio) > no_motion_eps
         had_rotation = abs(self.current_rotation_direction) > no_motion_eps
 
-        ###############################################################
-        # All if this mixing, smoothing and clipping is a hot garbage,
-        # TODO(anton-matosov) switch to proper trajectory mixing
         rotation_direction = np.clip(rotation_direction, -1, 1)
         self.current_rotation_direction = np.interp(
             0.3, [0, 1], [self.current_rotation_direction, rotation_direction]
