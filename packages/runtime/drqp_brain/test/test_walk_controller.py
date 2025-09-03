@@ -80,8 +80,14 @@ class TestWalkController:
 
         assert walker.current_phase == 0, 'Stopping resets phase to 0'
 
-    def test_current_direction_ramping(self, walker):
+    def test_current_direction_ramping(self, walker, hexapod):
         walker.current_direction = Point3D([0, 0, 0])
+        feet_at_rest = [leg.tibia_end.copy() for leg in hexapod.legs]
+
+        walker.next_step(stride_direction=Point3D([0, 0, 0]), rotation_direction=0.0)
+        feet_at_zero_step = [leg.tibia_end.copy() for leg in hexapod.legs]
+        for at_rest, after_step in zip(feet_at_rest, feet_at_zero_step):
+            assert at_rest == after_step
 
         walker.next_step(stride_direction=Point3D([1, 0, 0]), rotation_direction=0.0)
         assert walker.current_direction == Point3D([0.3, 0, 0]), 'Direction is ramping up 1'
@@ -101,8 +107,21 @@ class TestWalkController:
         walker.next_step(stride_direction=Point3D([0, 0, 0]), rotation_direction=0.0)
         assert walker.current_direction == Point3D([0.2253, 0, 0]), 'Direction is ramping down 3'
 
-    def test_current_rotation_ramping(self, walker):
+        for _ in range(10):
+            walker.next_step(stride_direction=Point3D([0, 0, 0]), rotation_direction=0.0)
+
+        feet_at_end = [leg.tibia_end.copy() for leg in hexapod.legs]
+        for at_rest, at_end in zip(feet_at_rest, feet_at_end):
+            assert at_rest == at_end
+
+    def test_current_rotation_ramping(self, walker, hexapod):
         walker.current_rotation_direction = 0.0
+        feet_at_rest = [leg.tibia_end.copy() for leg in hexapod.legs]
+
+        walker.next_step(stride_direction=Point3D([0, 0, 0]), rotation_direction=0.0)
+        feet_at_zero_step = [leg.tibia_end.copy() for leg in hexapod.legs]
+        for at_rest, after_step in zip(feet_at_rest, feet_at_zero_step):
+            assert at_rest == after_step
 
         walker.next_step(stride_direction=Point3D([0, 0, 0]), rotation_direction=1.0)
         assert walker.current_rotation_direction == pytest.approx(0.3, rel=1e-3), (
@@ -134,6 +153,13 @@ class TestWalkController:
             'Rotation ratio is ramping down 3'
         )
 
+        for _ in range(10):
+            walker.next_step(stride_direction=Point3D([0, 0, 0]), rotation_direction=0.0)
+
+        feet_at_end = [leg.tibia_end.copy() for leg in hexapod.legs]
+        for at_rest, at_end in zip(feet_at_rest, feet_at_end):
+            assert at_rest == at_end
+
     def test_step_stride(self, walker, hexapod):
         walker.current_gait = GaitType.tripod
 
@@ -149,19 +175,14 @@ class TestWalkController:
         )
 
         walker.next_step(
-            stride_direction=Point3D([1, 0, 0]), rotation_direction=0.0, phase_override=0.25
+            stride_direction=Point3D([1, 0, 0]),
+            rotation_direction=0.0,
+            phase_override=0.25,
+            verbose=True,
         )
         feet_at_quarter_phase = [leg.tibia_end.copy() for leg in hexapod.legs]
 
-        for at_rest, after_step in zip(feet_at_rest, feet_at_quarter_phase):
-            diff = after_step - at_rest
-            assert diff.x == pytest.approx(0, abs=1e-3)
-            if diff.z > 0:
-                assert diff.z == pytest.approx(walker.step_height, abs=1e-3), (
-                    f'Leg {at_rest.label} is fully lifted'
-                )
-            else:
-                assert diff.z == pytest.approx(0, abs=1e-3)
+        self._check_legs_lifted(feet_at_rest, feet_at_quarter_phase, walker.step_height)
 
         walker.next_step(
             stride_direction=Point3D([1, 0, 0]),
@@ -178,6 +199,21 @@ class TestWalkController:
             assert abs(diff.x) == pytest.approx(walker.step_length / 2, abs=1e-3), (
                 f'Leg {at_rest.label} is fully extended forward'
             )
+
+    def _check_legs_lifted(self, feet_at_rest, feet_raised, step_height):
+        lifted_legs_count = 0
+        for at_rest, after_step in zip(feet_at_rest, feet_raised):
+            diff = after_step - at_rest
+            assert diff.x == pytest.approx(0, abs=1e-3)
+            if diff.z > 0:
+                lifted_legs_count += 1
+                assert diff.z == pytest.approx(step_height, abs=1e-3), (
+                    f'Leg {at_rest.label} is fully lifted'
+                )
+            else:
+                assert diff.z == pytest.approx(0, abs=1e-3)
+
+        assert lifted_legs_count == 3, 'Tripod gait lifts 3 legs at 0.25 phase'
 
     def test_step_rotation(self, walker, hexapod):
         walker.current_gait = GaitType.tripod
@@ -196,15 +232,7 @@ class TestWalkController:
             stride_direction=Point3D([0, 0, 0]), rotation_direction=1.0, phase_override=0.25
         )
         feet_at_quarter_phase = [leg.tibia_end.copy() for leg in hexapod.legs]
-        for at_rest, after_step in zip(feet_at_rest, feet_at_quarter_phase):
-            diff = after_step - at_rest
-            assert diff.x == pytest.approx(0, abs=1e-3)
-            if diff.z > 0:
-                assert diff.z == pytest.approx(walker.step_height, abs=1e-3), (
-                    f'Leg {at_rest.label} is fully lifted'
-                )
-            else:
-                assert diff.z == pytest.approx(0, abs=1e-3)
+        self._check_legs_lifted(feet_at_rest, feet_at_quarter_phase, walker.step_height)
 
         walker.next_step(
             stride_direction=Point3D([0, 0, 0]),
@@ -248,15 +276,7 @@ class TestWalkController:
         )
         feet_at_quarter_phase = [leg.tibia_end.copy() for leg in hexapod.legs]
 
-        for at_rest, after_step in zip(feet_at_rest, feet_at_quarter_phase):
-            diff = after_step - at_rest
-            assert diff.x == pytest.approx(0, abs=1e-3)
-            if diff.z > 0:
-                assert diff.z == pytest.approx(walker.step_height, abs=1e-3), (
-                    f'Leg {at_rest.label} is fully lifted'
-                )
-            else:
-                assert diff.z == pytest.approx(0, abs=1e-3)
+        self._check_legs_lifted(feet_at_rest, feet_at_quarter_phase, walker.step_height)
 
         walker.next_step(
             stride_direction=Point3D([0, 0, 0]),

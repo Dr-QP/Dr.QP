@@ -146,13 +146,15 @@ class WalkController:
                 )
                 rotation_target = rotation_transform.apply_point(rotation_target)
 
-            mix_weights = np.array([new_stride_ratio, abs(self.current_rotation_direction)])
-            mix_weights /= mix_weights.sum()
-            stride_weight, rotation_weight = mix_weights
-            foot_target = stride_target * stride_weight + rotation_target * rotation_weight
-
             if has_stride or has_rotation:
+                mix_weights = np.array([new_stride_ratio, abs(self.current_rotation_direction)])
+                mix_weights /= mix_weights.sum()
+                stride_weight, rotation_weight = mix_weights
+                foot_target = stride_target * stride_weight + rotation_target * rotation_weight
+
                 foot_target.z += gait_offsets.z * self.step_height
+            else:
+                foot_target = leg_tip
 
             if verbose:
                 print(f'{leg.label} {self.current_phase=}')
