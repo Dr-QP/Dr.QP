@@ -205,18 +205,17 @@ class TestA116HardwareInterface(unittest.TestCase):
         )
 
         # # TODO(anton-matosov): Use dynamic_joint_state to check the actual position
-        # if expected_position is not None:
-        #     self.assertTrue(
-        #         np.allclose(
-        #             np.array(last_feedback.feedback.actual.positions),
-        #             np.array([expected_position] * len(joint_names)),
-        #             atol=1,
-        #         ),
-        #         msg=f'Requested position {position} with effort {effort},'
-        #         f' Expected position {expected_position},'
-        #         f' got {last_feedback.feedback.actual.positions},'
-        #         f' desired {last_feedback.feedback.desired.positions}',
-        #     )
+        if expected_position is not None:
+            self.assertTrue(
+                np.allclose(
+                    np.array(self.joint_positions),
+                    np.array([expected_position] * len(self.joint_names)),
+                    atol=1e-3,
+                ),
+                msg=f'Requested position {position} with effort {effort},'
+                f' Expected position {expected_position},'
+                f' got {self.joint_positions},',
+            )
 
 
 # Post-shutdown tests
