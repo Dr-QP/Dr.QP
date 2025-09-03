@@ -22,6 +22,7 @@ from drqp_brain.geometry import Point3D
 from drqp_brain.models import HexapodModel
 from drqp_brain.parametric_gait_generator import GaitType
 from drqp_brain.walk_controller import WalkController
+import numpy as np
 import pytest
 
 
@@ -156,12 +157,17 @@ class TestWalkController:
             diff = after_step - at_rest
             assert diff.x == pytest.approx(0, abs=1e-3)
             if diff.z > 0:
-                assert diff.z == pytest.approx(walker.step_height, abs=1e-3)
+                assert diff.z == pytest.approx(walker.step_height, abs=1e-3), (
+                    f'Leg {at_rest.label} is fully lifted'
+                )
             else:
                 assert diff.z == pytest.approx(0, abs=1e-3)
 
         walker.next_step(
-            stride_direction=Point3D([1, 0, 0]), rotation_direction=0.0, phase_override=0.5
+            stride_direction=Point3D([1, 0, 0]),
+            rotation_direction=0.0,
+            phase_override=0.5,
+            verbose=True,
         )
         feet_at_half_phase = [leg.tibia_end.copy() for leg in hexapod.legs]
 
@@ -169,6 +175,92 @@ class TestWalkController:
             diff = after_step - at_rest
             assert diff.z == pytest.approx(0, abs=1e-3)
             if diff.x > 0:
-                assert diff.x == pytest.approx(walker.step_length / 2, abs=1e-3)
+                assert diff.x == pytest.approx(walker.step_length / 2, abs=1e-3), (
+                    f'Leg {at_rest.label} is fully extended forward'
+                )
             else:
-                assert diff.x == pytest.approx(-walker.step_length / 2, abs=1e-3)
+                assert diff.x == pytest.approx(-walker.step_length / 2, abs=1e-3), (
+                    f'Leg {at_rest.label} is fully extended backward'
+                )
+
+    def test_step_rotation(self, walker, hexapod):
+        walker.current_gait = GaitType.tripod
+        feet_at_rest = [leg.tibia_end.copy() for leg in hexapod.legs]
+
+        # Ramp up rotation
+        for _ in range(20):
+            walker.next_step(stride_direction=Point3D([0, 0, 0]), rotation_direction=1.0)
+
+        assert walker.current_rotation_direction == pytest.approx(1.0, abs=1e-3), (
+            'Rotation is at full speed'
+        )
+        assert walker.current_direction == Point3D([0, 0, 0]), 'Direction is at rest'
+
+        walker.next_step(
+            stride_direction=Point3D([0, 0, 0]), rotation_direction=1.0, phase_override=0.25
+        )
+        feet_at_quarter_phase = [leg.tibia_end.copy() for leg in hexapod.legs]
+        for at_rest, after_step in zip(feet_at_rest, feet_at_quarter_phase):
+            diff = after_step - at_rest
+            assert diff.x == pytest.approx(0, abs=1e-3)
+            if diff.z > 0:
+                assert diff.z == pytest.approx(walker.step_height, abs=1e-3), (
+                    f'Leg {at_rest.label} is fully lifted'
+                )
+            else:
+                assert diff.z == pytest.approx(0, abs=1e-3)
+
+        walker.next_step(
+            stride_direction=Point3D([0, 0, 0]),
+            rotation_direction=1.0,
+            phase_override=0.5,
+            verbose=True,
+        )
+        feet_at_half_phase = [leg.tibia_end.copy() for leg in hexapod.legs]
+        for at_rest, after_step in zip(feet_at_rest, feet_at_half_phase):
+            diff = after_step - at_rest
+            assert diff.z == pytest.approx(0, abs=1e-3)
+            assert abs(diff.x) > 0
+            assert abs(diff.y) > 0
+
+            angular_distance = np.rad2deg(
+                np.arctan2(after_step.y, after_step.x) - np.arctan2(at_rest.y, at_rest.x)
+            )
+
+            assert abs(angular_distance) == pytest.approx(
+                walker.rotation_speed_degrees / 2, abs=1e-2
+            )
+
+    # def test_step_rotation_and_stride(self, walker, hexapod):
+    #     walker.current_gait = GaitType.tripod
+    #     feet_at_rest = [leg.tibia_end.copy() for leg in hexapod.legs]
+
+    #     # Ramp up rotation
+    #     for _ in range(10):
+    #         walker.next_step(stride_direction=Point3D([1, 0, 0]), rotation_direction=1.0)
+
+    #     assert walker.current_direction == Point3D([1, 0, 0]), 'Direction is at full stride'
+    #     assert walker.current_rotation_direction == pytest.approx(1.0, abs=1e-3), (
+    #         'Rotation is at full speed'
+    #     )
+
+    #     walker.next_step(
+    #         stride_direction=Point3D([1, 0, 0]), rotation_direction=1.0, phase_override=0.25
+    #     )
+    #     feet_at_quarter_phase = [leg.tibia_end.copy() for leg in hexapod.legs]
+
+    #     for at_rest, after_step in zip(feet_at_rest, feet_at_quarter_phase):
+    #         diff = after_step - at_rest
+    #         assert diff.x == pytest.approx(0, abs=1e-3)
+    #         assert diff.y == pytest.approx(0, abs=1e-3)
+    #         assert diff.z == pytest.approx(0, abs=1e-3)
+
+    #     walker.next_step(
+    #         stride_direction=Point3D([1, 0, 0]), rotation_direction=1.0, phase_override=0.5
+    #     )
+    #     feet_at_half_phase = [leg.tibia_end.copy() for leg in hexapod.legs]
+    #     for at_rest, after_step in zip(feet_at_rest, feet_at_half_phase):
+    #         diff = after_step - at_rest
+    #         assert diff.x == pytest.approx(0, abs=1e-3)
+    #         assert diff.y == pytest.approx(0, abs=1e-3)
+    #         assert diff.z == pytest.approx(0, abs=1e-3)
