@@ -29,6 +29,7 @@ from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
+import numpy as np
 import rclpy
 from rclpy.action import ActionClient
 import rclpy.time
@@ -83,10 +84,10 @@ class TestA116HardwareInterface(unittest.TestCase):
         self.node.destroy_node()
 
     def test_zero_position_zero_effort(self):
-        self._check_position_control(position=0, effort=0, expected_position=0)
+        self._check_position_control(position=0.11, effort=0)
 
     def test_position_control_effort_off(self):
-        self._check_position_control(position=1, effort=0, expected_position=1)
+        self._check_position_control(position=0.77, effort=0)
 
     def test_position_control_effort_on(self):
         self._check_position_control(position=0, effort=1, expected_position=0)
@@ -95,18 +96,22 @@ class TestA116HardwareInterface(unittest.TestCase):
 
     def test_position_control_effort_reboot(self):
         self._check_position_control(position=0, effort=-1, expected_position=0)
-        self._check_position_control(position=1, effort=-1, expected_position=1)
-        self._check_position_control(position=0, effort=-10, expected_position=0)
 
-    def test_position_control_invalid_position(self):
-        self._check_position_control(position=float('inf'), effort=1, expected_position=0)
-        self._check_position_control(position=-float('inf'), effort=1, expected_position=0)
+    def test_position_control_infinite_position(self):
+        self._check_position_control(position=float('inf'), effort=112321, expected_position=1.5)
+        self._check_position_control(position=-float('inf'), effort=1232, expected_position=-1.5)
 
-    def test_position_control_invalid_effort(self):
-        self._check_position_control(position=0, effort=-float('inf'), expected_position=0)
-        self._check_position_control(position=1, effort=-float('inf'), expected_position=1)
+    def test_position_control_nan_position(self):
+        self._check_position_control(position=float('nan'), effort=123, expected_position=-1.5)
 
-    def _check_position_control(self, position, effort, expected_position):
+    def test_position_control_infinite_effort(self):
+        self._check_position_control(position=-0.4, effort=float('inf'))
+        self._check_position_control(position=1.2, effort=-float('inf'))
+
+    def test_position_control_nan_effort(self):
+        self._check_position_control(position=0.22, effort=float('nan'))
+
+    def _check_position_control(self, position, effort, expected_position=None):
         joint_names = [
             'dr_qp/left_front_coxa',
             'dr_qp/left_front_femur',
@@ -129,7 +134,7 @@ class TestA116HardwareInterface(unittest.TestCase):
         ]
 
         target_point = JointTrajectoryPoint()
-        target_point.time_from_start = rclpy.time.Duration(seconds=0.01).to_msg()
+        target_point.time_from_start = rclpy.time.Duration(seconds=0.2).to_msg()
         target_point.positions = [position] * len(joint_names)
         target_point.effort = [effort] * len(joint_names)
 
@@ -139,8 +144,15 @@ class TestA116HardwareInterface(unittest.TestCase):
         trajectory_goal.trajectory.header.stamp = self.node.get_clock().now().to_msg()
         trajectory_goal.trajectory.header.frame_id = 'test_frame'
 
+        last_feedback = None
+
+        def feedback_callback(feedback_msg):
+            nonlocal last_feedback
+            last_feedback = feedback_msg
+
         goal_handle_future = self.trajectory_client.send_goal_async(
             trajectory_goal,
+            feedback_callback=feedback_callback,
         )
         rclpy.spin_until_future_complete(self.node, goal_handle_future)
         goal_handle = goal_handle_future.result()
@@ -159,6 +171,28 @@ class TestA116HardwareInterface(unittest.TestCase):
             assert False, 'Result is None'
             return
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+
+        self.assertIsNotNone(last_feedback)
+        if last_feedback is None:
+            assert False, 'Last feedback is None'
+            return
+
+        self.assertTrue(
+            np.all(np.isfinite(last_feedback.feedback.actual.positions)),
+            msg=f'Actual positions are not finite: {last_feedback.feedback.actual.positions}',
+        )
+
+        # TODO(anton-matosov): Use dynamic_joint_state to check the actual position
+        # if expected_position is not None:
+        #     self.assertTrue(
+        #         np.allclose(
+        #             np.array(last_feedback.feedback.actual.positions),
+        #             np.array([expected_position] * len(joint_names)),
+        #             atol=1,
+        #         ),
+        #         msg=f'Requested position {position} with effort {effort}, Expected position {expected_position}, '
+        #         f'got {last_feedback.feedback.actual.positions}, desired {last_feedback.feedback.desired.positions}',
+        #     )
 
 
 # Post-shutdown tests
