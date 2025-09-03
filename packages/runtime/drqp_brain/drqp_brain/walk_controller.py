@@ -151,6 +151,7 @@ class WalkController:
             if verbose:
                 print(f'{leg.label} {self.current_phase=}')
                 print(f'{leg.tibia_end=}')
+                print(f'{leg_tip=}')
                 print(f'{gait_offsets=}')
                 print(f'{stride_offsets=}')
                 print(f'{direction_offsets=}')
