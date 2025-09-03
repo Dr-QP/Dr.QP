@@ -110,3 +110,4 @@ private:
 
   rclcpp::Node* node_;
 };
+double safeClamp(double value, double min, double max);

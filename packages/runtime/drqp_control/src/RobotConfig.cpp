@@ -138,7 +138,7 @@ void RobotConfig::addServo(const ServoJointParams& params)
     .max_angle_rads = true_max_rads};
 }
 
-static double safeClamp(double value, double min, double max)
+double safeClamp(double value, double min, double max)
 {
   if (std::isnan(value)) {
     return min;

@@ -200,7 +200,8 @@ hardware_interface::return_type a1_16_hardware_interface::write(
   std::vector<IJogData> iposCmd;
   iposCmd.reserve(robotConfig_.numServos());
   for (const auto& jointName : robotConfig_.getJointNames()) {
-    const auto effort = get_command(jointName + "/effort");
+    auto effort = get_command(jointName + "/effort");
+    effort = safeClamp(effort, -1.0, 1.0);
 
     auto pos = get_command(jointName + "/position");
 
