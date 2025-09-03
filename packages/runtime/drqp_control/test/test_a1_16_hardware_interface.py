@@ -82,13 +82,31 @@ class TestA116HardwareInterface(unittest.TestCase):
     def tearDown(self):
         self.node.destroy_node()
 
-    def test_write_position_control_interface(self, proc_output):
-        """
-        Test position control interface.
+    # def test_zero_position_zero_effort(self):
+    #     self._check_position_control(position=0, effort=0, expected_position=0)
 
-        Run a ros2_control system and check that it responds to position commands
-        via action interface and that goal is reached.
-        """
+    # def test_position_control_effort_off(self):
+    #     self._check_position_control(position=1, effort=0, expected_position=1)
+
+    def test_position_control_effort_on(self):
+        self._check_position_control(position=0, effort=1, expected_position=0)
+        self._check_position_control(position=0.5, effort=1, expected_position=0.5)
+        self._check_position_control(position=1, effort=1, expected_position=1)
+
+    # def test_position_control_effort_reboot(self):
+    #     self._check_position_control(position=0, effort=-1, expected_position=0)
+    #     self._check_position_control(position=1, effort=-1, expected_position=1)
+    #     self._check_position_control(position=0, effort=-10, expected_position=0)
+
+    # def test_position_control_invalid_position(self):
+    #     self._check_position_control(position=float('inf'), effort=1, expected_position=0)
+    #     self._check_position_control(position=-float('inf'), effort=1, expected_position=0)
+
+    # def test_position_control_invalid_effort(self):
+    #     self._check_position_control(position=0, effort=-float('inf'), expected_position=0)
+    #     self._check_position_control(position=1, effort=-float('inf'), expected_position=1)
+
+    def _check_position_control(self, position, effort, expected_position):
         joint_names = [
             'dr_qp/left_front_coxa',
             'dr_qp/left_front_femur',
@@ -109,12 +127,11 @@ class TestA116HardwareInterface(unittest.TestCase):
             'dr_qp/right_back_femur',
             'dr_qp/right_back_tibia',
         ]
-        position_as_radians = 0.5
 
         target_point = JointTrajectoryPoint()
         target_point.time_from_start = rclpy.time.Duration(seconds=1.5).to_msg()
-        target_point.positions = [position_as_radians] * len(joint_names)
-        target_point.effort = [1.0] * len(joint_names)
+        target_point.positions = [position] * len(joint_names)
+        target_point.effort = [effort] * len(joint_names)
 
         trajectory_goal = FollowJointTrajectory.Goal()
         trajectory_goal.trajectory.joint_names = joint_names
