@@ -29,6 +29,7 @@ from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
+import numpy as np
 import rclpy
 from rclpy.action import ActionClient
 import rclpy.time
@@ -139,11 +140,21 @@ class TestA116HardwareInterface(unittest.TestCase):
         trajectory_goal.trajectory.header.stamp = self.node.get_clock().now().to_msg()
         trajectory_goal.trajectory.header.frame_id = 'test_frame'
 
-        goal_handle_future = self.trajectory_client.send_goal_async(trajectory_goal)
+        last_feedback = None
+
+        def feedback_callback(feedback_msg):
+            nonlocal last_feedback
+            last_feedback = feedback_msg
+
+        goal_handle_future = self.trajectory_client.send_goal_async(
+            trajectory_goal,
+            feedback_callback=feedback_callback,
+        )
         rclpy.spin_until_future_complete(self.node, goal_handle_future)
         goal_handle = goal_handle_future.result()
         self.assertIsNotNone(goal_handle)
         if goal_handle is None:
+            assert False, 'Goal handle is None'
             return
         result_future = goal_handle.get_result_async()
         rclpy.spin_until_future_complete(self.node, result_future)
@@ -151,10 +162,25 @@ class TestA116HardwareInterface(unittest.TestCase):
         result: FollowJointTrajectory.Result | None = None
         result = result_future.result().result
 
+        self.assertIsNotNone(last_feedback)
+        if last_feedback is None:
+            assert False, 'Last feedback is None'
+            return
+
         self.assertIsNotNone(result)
         if result is None:
+            assert False, 'Result is None'
             return
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+        self.assertTrue(
+            np.allclose(
+                np.array(last_feedback.feedback.actual.positions),
+                np.array([expected_position] * len(joint_names)),
+                atol=0.01,
+            ),
+            msg=f'Requested position {position} with effort {effort}, Expected position {expected_position}, '
+            f'got {last_feedback.feedback.actual.positions}',
+        )
 
 
 # Post-shutdown tests
