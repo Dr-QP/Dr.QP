@@ -173,15 +173,11 @@ class TestWalkController:
 
         for at_rest, after_step in zip(feet_at_rest, feet_at_half_phase):
             diff = after_step - at_rest
+
             assert diff.z == pytest.approx(0, abs=1e-3)
-            if diff.x > 0:
-                assert diff.x == pytest.approx(walker.step_length / 2, abs=1e-3), (
-                    f'Leg {at_rest.label} is fully extended forward'
-                )
-            else:
-                assert diff.x == pytest.approx(-walker.step_length / 2, abs=1e-3), (
-                    f'Leg {at_rest.label} is fully extended backward'
-                )
+            assert abs(diff.x) == pytest.approx(walker.step_length / 2, abs=1e-3), (
+                f'Leg {at_rest.label} is fully extended forward'
+            )
 
     def test_step_rotation(self, walker, hexapod):
         walker.current_gait = GaitType.tripod
