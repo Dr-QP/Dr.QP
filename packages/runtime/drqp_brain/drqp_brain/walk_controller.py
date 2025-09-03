@@ -119,7 +119,6 @@ class WalkController:
         result = []
         direction_transform = self.__make_direction_transform(self.current_direction)
         for leg, leg_tip in self.leg_tips_on_ground:
-            foot_target = leg_tip
             gait_offsets = self.gait_gen.get_offsets_at_phase_for_leg(
                 leg.label,
                 self.current_phase,
@@ -128,14 +127,16 @@ class WalkController:
             # Apply steering
             stride_offsets = Point3D([0, 0, 0])
             direction_offsets = Point3D([0, 0, 0])
+            stride_target = leg_tip
             if has_stride:
                 stride_offsets = gait_offsets * Point3D(
                     [self.step_length * new_stride_ratio, 0.0, 0.0]
                 )
                 direction_offsets = direction_transform.apply_point(stride_offsets)
-                foot_target = foot_target + direction_offsets
+                stride_target = stride_target + direction_offsets
 
             # Apply rotation
+            rotation_target = leg_tip
             if has_rotation:
                 rotation_degrees = (
                     self.rotation_speed_degrees * self.current_rotation_direction * gait_offsets.x
@@ -143,7 +144,12 @@ class WalkController:
                 rotation_transform = AffineTransform.from_rotvec(
                     [0, 0, rotation_degrees], degrees=True
                 )
-                foot_target = rotation_transform.apply_point(foot_target)
+                rotation_target = rotation_transform.apply_point(rotation_target)
+
+            mix_weights = np.array([new_stride_ratio, abs(self.current_rotation_direction)])
+            mix_weights /= mix_weights.sum()
+            stride_weight, rotation_weight = mix_weights
+            foot_target = stride_target * stride_weight + rotation_target * rotation_weight
 
             if has_stride or has_rotation:
                 foot_target.z += gait_offsets.z * self.step_height
