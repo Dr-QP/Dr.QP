@@ -34,6 +34,7 @@ import rclpy
 from rclpy.action import ActionClient
 import rclpy.time
 from trajectory_msgs.msg import JointTrajectoryPoint
+from control_msgs.msg import DynamicJointState, InterfaceValue
 
 
 def generate_test_description():
@@ -80,6 +81,53 @@ class TestA116HardwareInterface(unittest.TestCase):
         )
         self.trajectory_client.wait_for_server()
 
+        self.dynamic_joint_states_sub = self.node.create_subscription(
+            DynamicJointState,
+            '/dynamic_joint_states',
+            self.dynamic_joint_states_callback,
+            10,
+        )
+        self.joint_names = [
+            'dr_qp/left_front_coxa',
+            'dr_qp/left_front_femur',
+            'dr_qp/left_front_tibia',
+            'dr_qp/right_front_coxa',
+            'dr_qp/right_front_femur',
+            'dr_qp/right_front_tibia',
+            'dr_qp/left_middle_coxa',
+            'dr_qp/left_middle_femur',
+            'dr_qp/left_middle_tibia',
+            'dr_qp/right_middle_coxa',
+            'dr_qp/right_middle_femur',
+            'dr_qp/right_middle_tibia',
+            'dr_qp/left_back_coxa',
+            'dr_qp/left_back_femur',
+            'dr_qp/left_back_tibia',
+            'dr_qp/right_back_coxa',
+            'dr_qp/right_back_femur',
+            'dr_qp/right_back_tibia',
+        ]
+        self.joint_positions = [float('nan')] * len(self.joint_names)
+        self.joint_efforts = [float('nan')] * len(self.joint_names)
+        self.last_feedback = self.node.get_clock().now()
+
+    def dynamic_joint_states_callback(self, msg: DynamicJointState):
+        joint_positions = [float('nan')] * len(self.joint_names)
+        joint_efforts = [float('nan')] * len(self.joint_names)
+
+        interface_values = list[InterfaceValue](msg.interface_values)
+        for name, values in zip(msg.joint_names, interface_values):
+            joint_index = self.joint_names.index(name)
+            for interface_name, value in zip(values.interface_names, values.values):
+                if interface_name == 'position':
+                    joint_positions[joint_index] = value
+                elif interface_name == 'effort':
+                    joint_efforts[joint_index] = value
+
+        self.joint_positions = joint_positions
+        self.joint_efforts = joint_efforts
+        self.last_feedback = rclpy.time.Time.from_msg(msg.header.stamp)
+
     def tearDown(self):
         self.node.destroy_node()
 
@@ -111,48 +159,18 @@ class TestA116HardwareInterface(unittest.TestCase):
         self._check_position_control(position=0.22, effort=float('nan'))
 
     def _check_position_control(self, position, effort, expected_position=None):
-        joint_names = [
-            'dr_qp/left_front_coxa',
-            'dr_qp/left_front_femur',
-            'dr_qp/left_front_tibia',
-            'dr_qp/right_front_coxa',
-            'dr_qp/right_front_femur',
-            'dr_qp/right_front_tibia',
-            'dr_qp/left_middle_coxa',
-            'dr_qp/left_middle_femur',
-            'dr_qp/left_middle_tibia',
-            'dr_qp/right_middle_coxa',
-            'dr_qp/right_middle_femur',
-            'dr_qp/right_middle_tibia',
-            'dr_qp/left_back_coxa',
-            'dr_qp/left_back_femur',
-            'dr_qp/left_back_tibia',
-            'dr_qp/right_back_coxa',
-            'dr_qp/right_back_femur',
-            'dr_qp/right_back_tibia',
-        ]
-
         target_point = JointTrajectoryPoint()
         target_point.time_from_start = rclpy.time.Duration(seconds=0.2).to_msg()
-        target_point.positions = [position] * len(joint_names)
-        target_point.effort = [effort] * len(joint_names)
+        target_point.positions = [position] * len(self.joint_names)
+        target_point.effort = [effort] * len(self.joint_names)
 
         trajectory_goal = FollowJointTrajectory.Goal()
-        trajectory_goal.trajectory.joint_names = joint_names
+        trajectory_goal.trajectory.joint_names = self.joint_names
         trajectory_goal.trajectory.points = [target_point]
         trajectory_goal.trajectory.header.stamp = self.node.get_clock().now().to_msg()
         trajectory_goal.trajectory.header.frame_id = 'test_frame'
 
-        last_feedback = None
-
-        def feedback_callback(feedback_msg):
-            nonlocal last_feedback
-            last_feedback = feedback_msg
-
-        goal_handle_future = self.trajectory_client.send_goal_async(
-            trajectory_goal,
-            feedback_callback=feedback_callback,
-        )
+        goal_handle_future = self.trajectory_client.send_goal_async(trajectory_goal)
         rclpy.spin_until_future_complete(self.node, goal_handle_future)
         goal_handle = goal_handle_future.result()
         self.assertIsNotNone(goal_handle)
@@ -171,15 +189,14 @@ class TestA116HardwareInterface(unittest.TestCase):
             return
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
 
-        # self.assertIsNotNone(last_feedback)
-        # if last_feedback is None:
-        #     assert False, 'Last feedback is None'
-        #     return
+        # Wait for the feedback to be updated
+        while self.node.get_clock().now() < self.last_feedback + rclpy.time.Duration(seconds=1):
+            rclpy.spin_once(self.node, timeout_sec=0.1)
 
-        # self.assertTrue(
-        #     np.all(np.isfinite(last_feedback.feedback.actual.positions)),
-        #     msg=f'Actual positions are not finite: {last_feedback.feedback.actual.positions}',
-        # )
+        self.assertTrue(
+            np.all(np.isfinite(self.joint_positions)),
+            msg=f'Actual positions are not finite: {self.joint_positions}',
+        )
 
         # # TODO(anton-matosov): Use dynamic_joint_state to check the actual position
         # if expected_position is not None:
