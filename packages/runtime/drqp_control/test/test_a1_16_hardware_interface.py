@@ -71,7 +71,7 @@ class TestA116HardwareInterface(unittest.TestCase):
         rclpy.shutdown()
 
     def setUp(self):
-        self.node = rclpy.create_node('test_servo_driver')
+        self.node = rclpy.create_node('test_servo_driver_' + self.id().replace('.', '_'))
         self.trajectory_client = ActionClient(
             self.node,
             FollowJointTrajectory,
