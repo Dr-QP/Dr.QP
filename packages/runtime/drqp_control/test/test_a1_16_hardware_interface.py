@@ -23,6 +23,7 @@ import unittest
 
 from control_msgs.action import FollowJointTrajectory
 from control_msgs.msg import DynamicJointState, InterfaceValue
+from controller_manager_msgs.srv import ListControllers
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -36,7 +37,6 @@ from rclpy.action import ActionClient
 from rclpy.client import Client
 import rclpy.time
 from trajectory_msgs.msg import JointTrajectoryPoint
-from controller_manager_msgs.srv import ListControllers
 
 
 def generate_test_description():
