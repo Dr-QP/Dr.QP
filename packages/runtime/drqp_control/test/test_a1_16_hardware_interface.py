@@ -62,6 +62,7 @@ def generate_test_description():
 
 
 default_interface_value = -123.321
+neutral_position = 0.1
 
 
 class TestA116HardwareInterface(unittest.TestCase):
@@ -112,6 +113,13 @@ class TestA116HardwareInterface(unittest.TestCase):
         ]
         self.reset_feedback()
 
+        # Get to the initial position
+        self._check_position_control(
+            position=neutral_position,
+            effort=1,
+            expected_position=neutral_position,
+        )
+
     def reset_feedback(self):
         self.joint_positions = [default_interface_value] * len(self.joint_names)
         self.joint_efforts = [default_interface_value] * len(self.joint_names)
@@ -143,29 +151,32 @@ class TestA116HardwareInterface(unittest.TestCase):
     def test_effort_off(self):
         self._effort_test(0)
 
-    def test_position_control_effort_reboot(self):
+    def test_effort_reboot(self):
         self._effort_test(-1)
 
-    def test_position_control_infinite_effort(self):
+    def test_effort_infinite(self):
         self._effort_test(float('inf'))
+
+    def test_effort_negative_infinite(self):
         self._effort_test(-float('inf'))
 
     def test_position_control_nan_effort(self):
         self._effort_test(float('nan'))
 
     def _effort_test(self, effort):
-        # Get to the initial position
-        self._check_position_control(position=0.0, effort=1, expected_position=0.0)
-
         # Go to the target effort
-        self._check_position_control(position=0.0, effort=effort, expected_position=0.0)
+        self._check_position_control(
+            position=neutral_position,
+            effort=effort,
+            expected_position=neutral_position,
+        )
 
         if effort > 0:
             position = 1.0
             expected_position = 1.0
         else:
             position = 1.0
-            expected_position = 0.0
+            expected_position = neutral_position
 
         # Try to change the position with effort under test
         # Check that the position didn't change
@@ -174,7 +185,6 @@ class TestA116HardwareInterface(unittest.TestCase):
         )
 
     def test_position_control_effort_on(self):
-        self._check_position_control(position=0, effort=1, expected_position=0)
         self._check_position_control(position=1, effort=1, expected_position=1)
 
     def test_position_control_infinite_position(self):
@@ -184,6 +194,8 @@ class TestA116HardwareInterface(unittest.TestCase):
             expected_position=1.5,
             tolerance=0.5,
         )
+
+    def test_position_control_negative_infinite_position(self):
         self._check_position_control(
             position=-float('inf'),
             effort=1,
@@ -192,6 +204,7 @@ class TestA116HardwareInterface(unittest.TestCase):
         )
 
     def test_position_control_nan_position(self):
+        # Sending NaN will move the servos to the minimum position
         self._check_position_control(
             position=float('nan'),
             effort=1,
@@ -231,7 +244,7 @@ class TestA116HardwareInterface(unittest.TestCase):
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
 
         # Wait for the feedback to be updated
-        now = self.node.get_clock().now() + rclpy.time.Duration(seconds=0.1)
+        now = self.node.get_clock().now() + rclpy.time.Duration(seconds=0.05)
         timeout = now + rclpy.time.Duration(seconds=3)
         while now > self.last_feedback:
             rclpy.spin_once(self.node, timeout_sec=0.1)
