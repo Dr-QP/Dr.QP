@@ -10,6 +10,8 @@ build:
   tools:
     nodejs: "20" # keep in sync with environment.yml
     python: "3.12" # keep in sync with environment.yml
+  apt_packages:
+    - ffmpeg
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:

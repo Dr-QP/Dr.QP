@@ -112,24 +112,28 @@ class ParametricGaitGenerator:
     def get_offsets_at_phase_for_leg(self, leg: HexapodLeg, phase: float) -> Point3D:
         gait = self.gaits[self.current_gait]
         leg_phase = phase - gait.swing_phase_start_offsets[leg]
-        leg_phase %= 1
+        leg_phase %= 1.000001  # Fractional part of the phase avoids overlap of 1.0 and 0.0
 
+        label = ''
         half_step = self.step_length / 2
         if leg_phase < gait.swing_duration:
             # Swing phase - leg in air moving forward
             t = np.interp(leg_phase, [0, gait.swing_duration], [0, 1])
             x_offset = np.interp(leg_phase, [0, gait.swing_duration], [-half_step, half_step])
             z_offset = np.sin(t * np.pi) * self.step_height
+            label = 'swing'
         else:
             # Stance phase - leg on ground moving backward
             x_offset = np.interp(leg_phase, [gait.swing_duration, 1], [half_step, -half_step])
             z_offset = 0.0  # On ground
+            label = 'stance'
 
         return Point3D(
             [
                 float(x_offset),
                 0.0,
                 float(z_offset),
-            ]
+            ],
+            label,
         )
         # Parametric function - END

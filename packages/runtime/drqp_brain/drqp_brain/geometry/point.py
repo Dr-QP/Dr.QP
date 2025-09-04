@@ -89,7 +89,7 @@ class SimplePoint3D:
         self.label = label
 
     def __repr__(self):
-        return f'Point3D({self.x}, {self.y}, {self.z}, {self.label})'
+        return f'Point3D({self.x:.4f}, {self.y:.4f}, {self.z:.4f}, {self.label})'
 
     @property
     def xy(self):
