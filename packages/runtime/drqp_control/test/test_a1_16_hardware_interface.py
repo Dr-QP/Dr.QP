@@ -140,7 +140,7 @@ class TestA116HardwareInterface(unittest.TestCase):
         self.joint_positions = joint_positions
         self.joint_efforts = joint_efforts
         self.last_feedback = rclpy.time.Time.from_msg(msg.header.stamp)
-        self.node.get_logger().info(f'Feedback received: {self.joint_positions}')
+        # self.node.get_logger().info(f'Feedback received: {self.joint_positions}')
 
     def tearDown(self):
         self.trajectory_client.destroy()
