@@ -22,6 +22,7 @@
 import unittest
 
 from control_msgs.action import FollowJointTrajectory
+from control_msgs.msg import DynamicJointState, InterfaceValue
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -34,7 +35,6 @@ import rclpy
 from rclpy.action import ActionClient
 import rclpy.time
 from trajectory_msgs.msg import JointTrajectoryPoint
-from control_msgs.msg import DynamicJointState, InterfaceValue
 
 
 def generate_test_description():
