@@ -24,7 +24,7 @@ import unittest
 from control_msgs.action import FollowJointTrajectory
 from control_msgs.msg import DynamicJointState, InterfaceValue
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
+from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
