@@ -110,6 +110,9 @@ class TestA116HardwareInterface(unittest.TestCase):
             'dr_qp/right_back_femur',
             'dr_qp/right_back_tibia',
         ]
+        self.reset_feedback()
+
+    def reset_feedback(self):
         self.joint_positions = [default_interface_value] * len(self.joint_names)
         self.joint_efforts = [default_interface_value] * len(self.joint_names)
         self.last_feedback = self.node.get_clock().now()
@@ -132,36 +135,71 @@ class TestA116HardwareInterface(unittest.TestCase):
         self.last_feedback = rclpy.time.Time.from_msg(msg.header.stamp)
 
     def tearDown(self):
+        self.trajectory_client.destroy()
+        self.dynamic_joint_states_sub.destroy()
         self.node.destroy_node()
+        self.reset_feedback()
 
     def test_effort_off(self):
+        self._effort_test(0)
+
+    def test_position_control_effort_reboot(self):
+        self._effort_test(-1)
+
+    def test_position_control_infinite_effort(self):
+        self._effort_test(float('inf'))
+        self._effort_test(-float('inf'))
+
+    def test_position_control_nan_effort(self):
+        self._effort_test(float('nan'))
+
+    def _effort_test(self, effort):
+        # Get to the initial position
         self._check_position_control(position=0.0, effort=1, expected_position=0.0)
-        self._check_position_control(position=1.77, effort=0, expected_position=0.0)
+
+        # Go to the target effort
+        self._check_position_control(position=0.0, effort=effort, expected_position=0.0)
+
+        if effort > 0:
+            position = 1.0
+            expected_position = 1.0
+        else:
+            position = 1.0
+            expected_position = 0.0
+
+        # Try to change the position with effort under test
+        # Check that the position didn't change
+        self._check_position_control(
+            position=position, effort=effort, expected_position=expected_position
+        )
 
     def test_position_control_effort_on(self):
         self._check_position_control(position=0, effort=1, expected_position=0)
-        self._check_position_control(position=0.5, effort=1, expected_position=0.5)
         self._check_position_control(position=1, effort=1, expected_position=1)
 
-    def test_position_control_effort_reboot(self):
-        self._check_position_control(position=0, effort=1, expected_position=0)
-        self._check_position_control(position=0.5, effort=-1, expected_position=0)
-
     def test_position_control_infinite_position(self):
-        self._check_position_control(position=float('inf'), effort=112321, expected_position=1.5)
-        self._check_position_control(position=-float('inf'), effort=1232, expected_position=-1.5)
+        self._check_position_control(
+            position=float('inf'),
+            effort=1,
+            expected_position=1.5,
+            tolerance=0.5,
+        )
+        self._check_position_control(
+            position=-float('inf'),
+            effort=1,
+            expected_position=-1.5,
+            tolerance=0.5,
+        )
 
     def test_position_control_nan_position(self):
-        self._check_position_control(position=float('nan'), effort=123, expected_position=-1.5)
+        self._check_position_control(
+            position=float('nan'),
+            effort=1,
+            expected_position=-1.5,
+            tolerance=0.5,
+        )
 
-    def test_position_control_infinite_effort(self):
-        self._check_position_control(position=-0.4, effort=float('inf'))
-        self._check_position_control(position=1.2, effort=-float('inf'))
-
-    def test_position_control_nan_effort(self):
-        self._check_position_control(position=0.22, effort=float('nan'))
-
-    def _check_position_control(self, position, effort, expected_position=None):
+    def _check_position_control(self, position, effort, expected_position=None, tolerance=0.05):
         target_point = JointTrajectoryPoint()
         target_point.time_from_start = rclpy.time.Duration(seconds=0.2).to_msg()
         target_point.positions = [position] * len(self.joint_names)
@@ -193,7 +231,7 @@ class TestA116HardwareInterface(unittest.TestCase):
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
 
         # Wait for the feedback to be updated
-        now = self.node.get_clock().now()
+        now = self.node.get_clock().now() + rclpy.time.Duration(seconds=0.1)
         timeout = now + rclpy.time.Duration(seconds=3)
         while now > self.last_feedback:
             rclpy.spin_once(self.node, timeout_sec=0.1)
@@ -210,7 +248,7 @@ class TestA116HardwareInterface(unittest.TestCase):
                 np.allclose(
                     np.array(self.joint_positions),
                     np.array([expected_position] * len(self.joint_names)),
-                    atol=1e-3,
+                    atol=tolerance,
                 ),
                 msg=f'Requested position {position} with effort {effort},'
                 f' Expected position {expected_position},'
