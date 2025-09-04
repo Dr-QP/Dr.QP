@@ -64,7 +64,6 @@ void RobotConfig::loadConfig(fs::path configPath)
     std::string robotNamespace = "";
     if (YAML::Node namespaceNode = robot["namespace"]; namespaceNode) {
       robotNamespace = namespaceNode.as<std::string>() + "/";
-      RCLCPP_INFO(get_logger(), "Robot namespace: %s", robotNamespace.c_str());
     }
 
     // device_address
@@ -139,6 +138,17 @@ void RobotConfig::addServo(const ServoJointParams& params)
     .max_angle_rads = true_max_rads};
 }
 
+double safeClamp(double value, double min, double max)
+{
+  if (std::isnan(value)) {
+    return min;
+  }
+  if (std::isinf(value)) {
+    return value > 0 ? max : min;
+  }
+  return std::clamp(value, min, max);
+}
+
 std::optional<RobotConfig::ServoValues> RobotConfig::jointToServo(const JointValues& joint)
 {
   if (jointToServoId_.count(joint.name) == 0) {
@@ -148,7 +158,7 @@ std::optional<RobotConfig::ServoValues> RobotConfig::jointToServo(const JointVal
   const ServoParams servoParams = jointToServoId_.at(joint.name);
   const auto rawPosition = joint.position_as_radians + servoParams.offset_rads;
   const double clampedPosition =
-    std::clamp(rawPosition, servoParams.min_angle_rads, servoParams.max_angle_rads);
+    safeClamp(rawPosition, servoParams.min_angle_rads, servoParams.max_angle_rads);
   const uint16_t position = radiansToPosition(clampedPosition * servoParams.ratio);
   return ServoValues{.id = servoParams.id, .position = position};
 }

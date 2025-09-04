@@ -22,17 +22,21 @@
 import unittest
 
 from control_msgs.action import FollowJointTrajectory
+from control_msgs.msg import DynamicJointState, InterfaceValue
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
+import numpy as np
 import rclpy
 from rclpy.action import ActionClient
+from rclpy.client import Client
 import rclpy.time
 from trajectory_msgs.msg import JointTrajectoryPoint
+from controller_manager_msgs.srv import ListControllers
 
 
 def generate_test_description():
@@ -53,10 +57,13 @@ def generate_test_description():
                     'hardware_device_address': 'mock_servo',
                 }.items(),
             ),
-            # Wait is done by trajectory_client.wait_for_server()
-            ReadyToTest(),
+            TimerAction(period=0.1, actions=[ReadyToTest()]),
         ]
     )
+
+
+default_interface_value = -123.321
+neutral_position = 0.1
 
 
 class TestA116HardwareInterface(unittest.TestCase):
@@ -71,25 +78,22 @@ class TestA116HardwareInterface(unittest.TestCase):
         rclpy.shutdown()
 
     def setUp(self):
-        self.node = rclpy.create_node('test_servo_driver')
+        self.node = rclpy.create_node('test_servo_driver_' + self.id().replace('.', '_'))
+        self._wait_for_controller(self.node)
         self.trajectory_client = ActionClient(
             self.node,
             FollowJointTrajectory,
             '/joint_trajectory_controller/follow_joint_trajectory',
         )
-        self.trajectory_client.wait_for_server()
+        self.assertTrue(self.trajectory_client.wait_for_server(timeout_sec=10.0))
 
-    def tearDown(self):
-        self.node.destroy_node()
-
-    def test_write_position_control_interface(self, proc_output):
-        """
-        Test position control interface.
-
-        Run a ros2_control system and check that it responds to position commands
-        via action interface and that goal is reached.
-        """
-        joint_names = [
+        self.dynamic_joint_states_sub = self.node.create_subscription(
+            DynamicJointState,
+            '/dynamic_joint_states',
+            self.dynamic_joint_states_callback,
+            10,
+        )
+        self.joint_names = [
             'dr_qp/left_front_coxa',
             'dr_qp/left_front_femur',
             'dr_qp/left_front_tibia',
@@ -109,15 +113,136 @@ class TestA116HardwareInterface(unittest.TestCase):
             'dr_qp/right_back_femur',
             'dr_qp/right_back_tibia',
         ]
-        position_as_radians = 0.5
+        self._reset_feedback()
 
+        # Get to the initial position
+        self._check_position_control(
+            position=neutral_position,
+            effort=1,
+            expected_position=neutral_position,
+        )
+
+    def _wait_for_controller(self, node):
+        list_controllers: Client = node.create_client(
+            ListControllers, '/controller_manager/list_controllers'
+        )
+        list_controllers.wait_for_service(timeout_sec=10.0)
+
+        needed_controllers = ['joint_trajectory_controller', 'joint_state_broadcaster']
+        while True:
+            response_future = list_controllers.call_async(ListControllers.Request())
+            rclpy.spin_until_future_complete(node, response_future, timeout_sec=10.0)
+            response = response_future.result()
+            if response is not None:
+                for controller in response.controller:
+                    if controller.name in needed_controllers:
+                        if controller.state == 'active':
+                            needed_controllers.remove(controller.name)
+                            if not needed_controllers:
+                                return
+            rclpy.spin_once(node, timeout_sec=0.1)
+
+    def _reset_feedback(self):
+        self.joint_positions = [default_interface_value] * len(self.joint_names)
+        self.joint_efforts = [default_interface_value] * len(self.joint_names)
+        self.last_feedback = rclpy.time.Time(clock_type=rclpy.time.ClockType.ROS_TIME)
+
+    def dynamic_joint_states_callback(self, msg: DynamicJointState):
+        joint_positions = [default_interface_value] * len(self.joint_names)
+        joint_efforts = [default_interface_value] * len(self.joint_names)
+
+        interface_values = list[InterfaceValue](msg.interface_values)
+        for name, values in zip(msg.joint_names, interface_values):
+            joint_index = self.joint_names.index(name)
+            for interface_name, value in zip(values.interface_names, values.values):
+                if interface_name == 'position':
+                    joint_positions[joint_index] = value
+                elif interface_name == 'effort':
+                    joint_efforts[joint_index] = value
+
+        self.joint_positions = joint_positions
+        self.joint_efforts = joint_efforts
+        self.last_feedback = rclpy.time.Time.from_msg(msg.header.stamp)
+        # self.node.get_logger().info(f'Feedback received: {self.joint_positions}')
+
+    def tearDown(self):
+        self.trajectory_client.destroy()
+        self.dynamic_joint_states_sub.destroy()
+        self.node.destroy_node()
+        self._reset_feedback()
+
+    def test_effort_off(self):
+        self._effort_test(0)
+
+    def test_effort_reboot(self):
+        self._effort_test(-1)
+
+    def test_effort_infinite(self):
+        self._effort_test(float('inf'))
+
+    def test_effort_negative_infinite(self):
+        self._effort_test(-float('inf'))
+
+    def test_position_control_nan_effort(self):
+        self._effort_test(float('nan'))
+
+    def _effort_test(self, effort):
+        # Go to the target effort
+        self._check_position_control(
+            position=neutral_position,
+            effort=effort,
+            expected_position=neutral_position,
+        )
+
+        if effort > 0:
+            position = 1.0
+            expected_position = 1.0
+        else:
+            position = 1.0
+            expected_position = neutral_position
+
+        # Try to change the position with effort under test
+        # Check that the position didn't change
+        self._check_position_control(
+            position=position, effort=effort, expected_position=expected_position
+        )
+
+    def test_position_control_effort_on(self):
+        self._check_position_control(position=1, effort=1, expected_position=1)
+
+    def test_position_control_infinite_position(self):
+        self._check_position_control(
+            position=float('inf'),
+            effort=1,
+            expected_position=1.5,
+            tolerance=0.5,
+        )
+
+    def test_position_control_negative_infinite_position(self):
+        self._check_position_control(
+            position=-float('inf'),
+            effort=1,
+            expected_position=-1.5,
+            tolerance=0.5,
+        )
+
+    def test_position_control_nan_position(self):
+        # Sending NaN will move the servos to the minimum position
+        self._check_position_control(
+            position=float('nan'),
+            effort=1,
+            expected_position=-1.5,
+            tolerance=0.5,
+        )
+
+    def _check_position_control(self, position, effort, expected_position=None, tolerance=0.05):
         target_point = JointTrajectoryPoint()
-        target_point.time_from_start = rclpy.time.Duration(seconds=1.5).to_msg()
-        target_point.positions = [position_as_radians] * len(joint_names)
-        target_point.effort = [1.0] * len(joint_names)
+        target_point.time_from_start = rclpy.time.Duration(seconds=0.02).to_msg()
+        target_point.positions = [position] * len(self.joint_names)
+        target_point.effort = [effort] * len(self.joint_names)
 
         trajectory_goal = FollowJointTrajectory.Goal()
-        trajectory_goal.trajectory.joint_names = joint_names
+        trajectory_goal.trajectory.joint_names = self.joint_names
         trajectory_goal.trajectory.points = [target_point]
         trajectory_goal.trajectory.header.stamp = self.node.get_clock().now().to_msg()
         trajectory_goal.trajectory.header.frame_id = 'test_frame'
@@ -127,17 +252,47 @@ class TestA116HardwareInterface(unittest.TestCase):
         goal_handle = goal_handle_future.result()
         self.assertIsNotNone(goal_handle)
         if goal_handle is None:
+            self.fail('Goal handle is None')
             return
         result_future = goal_handle.get_result_async()
         rclpy.spin_until_future_complete(self.node, result_future)
 
-        result: FollowJointTrajectory.Result | None = None
-        result = result_future.result().result
+        result: FollowJointTrajectory.Result | None = result_future.result().result
 
         self.assertIsNotNone(result)
         if result is None:
+            self.fail('Result is None')
             return
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+
+        # Wait for the feedback to be updated
+        result_time = self.node.get_clock().now() + rclpy.time.Duration(seconds=0.05)
+        timeout = result_time + rclpy.time.Duration(seconds=3)
+
+        while True:
+            rclpy.spin_once(self.node, timeout_sec=0.1)
+            if self.last_feedback > result_time:
+                joint_positions = self.joint_positions
+                break
+            self.assertLess(self.node.get_clock().now(), timeout)
+
+        self.assertTrue(
+            np.all(np.isfinite(joint_positions)),
+            msg=f'Actual positions are not finite: {joint_positions}',
+        )
+
+        # # TODO(anton-matosov): Use dynamic_joint_state to check the actual position
+        if expected_position is not None:
+            self.assertTrue(
+                np.allclose(
+                    np.array(joint_positions),
+                    np.array([expected_position] * len(self.joint_names)),
+                    atol=tolerance,
+                ),
+                msg=f'Requested position {position} with effort {effort},'
+                f' Expected position {expected_position},'
+                f' got {joint_positions},',
+            )
 
 
 # Post-shutdown tests
