@@ -33,8 +33,10 @@ from launch_testing.actions import ReadyToTest
 import numpy as np
 import rclpy
 from rclpy.action import ActionClient
+from rclpy.client import Client
 import rclpy.time
 from trajectory_msgs.msg import JointTrajectoryPoint
+from controller_manager_msgs.srv import ListControllers
 
 
 def generate_test_description():
@@ -55,7 +57,7 @@ def generate_test_description():
                     'hardware_device_address': 'mock_servo',
                 }.items(),
             ),
-            TimerAction(period=2.0, actions=[ReadyToTest()]),
+            TimerAction(period=0.1, actions=[ReadyToTest()]),
         ]
     )
 
@@ -77,6 +79,7 @@ class TestA116HardwareInterface(unittest.TestCase):
 
     def setUp(self):
         self.node = rclpy.create_node('test_servo_driver_' + self.id().replace('.', '_'))
+        self._wait_joint_trajectory_controller(self.node)
         self.trajectory_client = ActionClient(
             self.node,
             FollowJointTrajectory,
@@ -110,7 +113,7 @@ class TestA116HardwareInterface(unittest.TestCase):
             'dr_qp/right_back_femur',
             'dr_qp/right_back_tibia',
         ]
-        self.reset_feedback()
+        self._reset_feedback()
 
         # Get to the initial position
         self._check_position_control(
@@ -119,7 +122,24 @@ class TestA116HardwareInterface(unittest.TestCase):
             expected_position=neutral_position,
         )
 
-    def reset_feedback(self):
+    def _wait_joint_trajectory_controller(self, node):
+        list_controllers: Client = node.create_client(
+            ListControllers, '/controller_manager/list_controllers'
+        )
+        list_controllers.wait_for_service(timeout_sec=10.0)
+
+        while True:
+            response_future = list_controllers.call_async(ListControllers.Request())
+            rclpy.spin_until_future_complete(node, response_future, timeout_sec=10.0)
+            response = response_future.result()
+            if response is not None:
+                for controller in response.controller:
+                    if controller.name == 'joint_trajectory_controller':
+                        if controller.state == 'active':
+                            return
+            rclpy.spin_once(node, timeout_sec=0.1)
+
+    def _reset_feedback(self):
         self.joint_positions = [default_interface_value] * len(self.joint_names)
         self.joint_efforts = [default_interface_value] * len(self.joint_names)
         self.last_feedback = rclpy.time.Time(clock_type=rclpy.time.ClockType.ROS_TIME)
@@ -146,7 +166,7 @@ class TestA116HardwareInterface(unittest.TestCase):
         self.trajectory_client.destroy()
         self.dynamic_joint_states_sub.destroy()
         self.node.destroy_node()
-        self.reset_feedback()
+        self._reset_feedback()
 
     def test_effort_off(self):
         self._effort_test(0)
