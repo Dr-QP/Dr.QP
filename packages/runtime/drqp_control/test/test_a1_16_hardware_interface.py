@@ -79,7 +79,7 @@ class TestA116HardwareInterface(unittest.TestCase):
 
     def setUp(self):
         self.node = rclpy.create_node('test_servo_driver_' + self.id().replace('.', '_'))
-        self._wait_joint_trajectory_controller(self.node)
+        self._wait_for_controller(self.node)
         self.trajectory_client = ActionClient(
             self.node,
             FollowJointTrajectory,
@@ -122,21 +122,24 @@ class TestA116HardwareInterface(unittest.TestCase):
             expected_position=neutral_position,
         )
 
-    def _wait_joint_trajectory_controller(self, node):
+    def _wait_for_controller(self, node):
         list_controllers: Client = node.create_client(
             ListControllers, '/controller_manager/list_controllers'
         )
         list_controllers.wait_for_service(timeout_sec=10.0)
 
+        needed_controllers = ['joint_trajectory_controller', 'joint_state_broadcaster']
         while True:
             response_future = list_controllers.call_async(ListControllers.Request())
             rclpy.spin_until_future_complete(node, response_future, timeout_sec=10.0)
             response = response_future.result()
             if response is not None:
                 for controller in response.controller:
-                    if controller.name == 'joint_trajectory_controller':
+                    if controller.name in needed_controllers:
                         if controller.state == 'active':
-                            return
+                            needed_controllers.remove(controller.name)
+                            if not needed_controllers:
+                                return
             rclpy.spin_once(node, timeout_sec=0.1)
 
     def _reset_feedback(self):
