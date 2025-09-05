@@ -43,6 +43,7 @@ jobs:
     name: Need to run?
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions: {}
+    timeout-minutes: 10
     outputs:
       pass: ${{ steps.filter.outputs.pass }}
     steps:
@@ -73,7 +74,7 @@ jobs:
 
       # required to fetch internal or private CodeQL packs
       packages: read
-
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -201,6 +202,7 @@ jobs:
     needs: [analyze]
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions: {}
+    timeout-minutes: 10
     if: ${{ success() || cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}
     steps:
       - name: All jobs succeeded!
