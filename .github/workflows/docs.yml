@@ -30,7 +30,7 @@ jobs:
       - name: Install ffmpeg
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          sudo apt-get install -y ffmpeg --no-install-recommends
 
       - name: Filter
         id: filter
