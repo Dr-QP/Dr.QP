@@ -28,7 +28,9 @@ jobs:
           fetch-depth: 0 # all history for all branches and tags.
 
       - name: Install ffmpeg
-        run: sudo apt-get install -y ffmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
 
       - name: Filter
         id: filter
