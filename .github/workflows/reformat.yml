@@ -84,7 +84,7 @@ jobs:
           set -x
           set -e
 
-          if [[ $(git log -1 --pretty=%B) == $COMMIT_MESSAGE ]]; then
+          if [[ $(git log -1 --pretty=%B) == "$COMMIT_MESSAGE" ]]; then
             echo "Reformatted in previous commit. Skipping commit."
             echo "skip_commit=true" >> "$GITHUB_OUTPUT"
           fi
