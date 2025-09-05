@@ -29,10 +29,10 @@ from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
-from launch_testing.actions import ReadyToTest
 from launch_testing import asserts, post_shutdown_test
-import rclpy
+from launch_testing.actions import ReadyToTest
 import numpy as np
+import rclpy
 from rclpy.action import ActionClient
 from rclpy.client import Client
 import rclpy.time
