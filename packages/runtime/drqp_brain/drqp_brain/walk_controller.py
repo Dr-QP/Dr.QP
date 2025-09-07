@@ -56,7 +56,6 @@ class WalkController:
         self.current_direction = Point3D([0, 0, 0])
         self.current_rotation_direction = 0
         self.current_phase = 0.0
-        self.last_stop_phase = 0.0
 
     def next_step(
         self,
@@ -78,55 +77,45 @@ class WalkController:
     def __next_feet_targets(
         self, stride_direction: Point3D, rotation_direction: float, verbose: bool
     ):
-        current_stride_ratio = (
+        old_stride_ratio = (
             abs(self.current_direction.x)
             + abs(self.current_direction.y)
             + abs(self.current_direction.z)
         )
         no_motion_eps = 0.05
-        had_stride = abs(current_stride_ratio) > no_motion_eps
+        had_stride = abs(old_stride_ratio) > no_motion_eps
         had_rotation = abs(self.current_rotation_direction) > no_motion_eps
 
-        ###############################################################
-        # All if this mixing, smoothing and clipping is a hot garbage,
-        # TODO(anton-matosov) switch to proper trajectory mixing
         rotation_direction = np.clip(rotation_direction, -1, 1)
         self.current_rotation_direction = np.interp(
             0.3, [0, 1], [self.current_rotation_direction, rotation_direction]
         )
         self.current_direction = self.current_direction.interpolate(stride_direction, 0.3)
-        current_stride_ratio = (
+        new_stride_ratio = (
             abs(self.current_direction.x)
             + abs(self.current_direction.y)
             + abs(self.current_direction.z)
         )
 
-        current_stride_ratio = float(np.clip(current_stride_ratio, 0, 1))
+        new_stride_ratio = float(np.clip(new_stride_ratio, 0, 1))
         self.current_rotation_direction = np.clip(self.current_rotation_direction, -1, 1)
 
-        has_stride = abs(current_stride_ratio) > no_motion_eps
+        has_stride = abs(new_stride_ratio) > no_motion_eps
         has_rotation = abs(self.current_rotation_direction) > no_motion_eps
 
         had_motion = had_stride or had_rotation
         has_motion = has_stride or has_rotation
 
-        stopping = had_motion and not has_motion
         starting = not had_motion and has_motion
         stopped = not had_motion and not has_motion
 
         if starting or stopped:
             self.current_phase = 0
-
-        if stopping:
-            self.last_stop_phase = self.current_phase
-        else:
-            self.last_stop_phase = 0.0
         ###############################################################
 
         result = []
         direction_transform = self.__make_direction_transform(self.current_direction)
         for leg, leg_tip in self.leg_tips_on_ground:
-            foot_target = leg_tip
             gait_offsets = self.gait_gen.get_offsets_at_phase_for_leg(
                 leg.label,
                 self.current_phase,
@@ -135,14 +124,16 @@ class WalkController:
             # Apply steering
             stride_offsets = Point3D([0, 0, 0])
             direction_offsets = Point3D([0, 0, 0])
+            stride_target = leg_tip
             if has_stride:
                 stride_offsets = gait_offsets * Point3D(
-                    [self.step_length * current_stride_ratio, 0.0, 0.0]
+                    [self.step_length * new_stride_ratio, 0.0, 0.0]
                 )
                 direction_offsets = direction_transform.apply_point(stride_offsets)
-                foot_target = foot_target + direction_offsets
+                stride_target = stride_target + direction_offsets
 
             # Apply rotation
+            rotation_target = leg_tip
             if has_rotation:
                 rotation_degrees = (
                     self.rotation_speed_degrees * self.current_rotation_direction * gait_offsets.x
@@ -150,14 +141,22 @@ class WalkController:
                 rotation_transform = AffineTransform.from_rotvec(
                     [0, 0, rotation_degrees], degrees=True
                 )
-                foot_target = rotation_transform.apply_point(foot_target)
+                rotation_target = rotation_transform.apply_point(rotation_target)
 
             if has_stride or has_rotation:
+                mix_weights = np.array([new_stride_ratio, abs(self.current_rotation_direction)])
+                mix_weights /= mix_weights.sum()
+                stride_weight, rotation_weight = mix_weights
+                foot_target = stride_target * stride_weight + rotation_target * rotation_weight
+
                 foot_target.z += gait_offsets.z * self.step_height
+            else:
+                foot_target = leg_tip
 
             if verbose:
                 print(f'{leg.label} {self.current_phase=}')
                 print(f'{leg.tibia_end=}')
+                print(f'{leg_tip=}')
                 print(f'{gait_offsets=}')
                 print(f'{stride_offsets=}')
                 print(f'{direction_offsets=}')

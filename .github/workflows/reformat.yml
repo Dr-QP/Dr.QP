@@ -13,11 +13,15 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
 
+env:
+  COMMIT_MESSAGE: Reformatted code
+
 jobs:
   paths-filter:
     name: Need to run?
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions: {}
+    timeout-minutes: 10
     outputs:
       pass: ${{ steps.filter.outputs.pass }}
     steps:
@@ -37,15 +41,14 @@ jobs:
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     container:
       image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
-    permissions:
-      # Give the default GITHUB_TOKEN write permission to commit and push the
-      # added or changed files to the repository.
-      contents: write
+    permissions: {}
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.REPO_PAT }}
 
       - name: Add workspace to safe directories
         run: |
@@ -74,12 +77,23 @@ jobs:
           source /opt/ros/jazzy/setup.bash
           ./scripts/python-reformat.sh || true
 
+      - name: Verify if not recursive commit
+        id: verify
+        shell: bash -le {0}
+        run: |
+          set -x
+          set -e
+
+          if [[ $(git log -1 --pretty=%B) == "$COMMIT_MESSAGE" ]]; then
+            echo "Reformatted in previous commit. Skipping commit."
+            echo "skip_commit=true" >> "$GITHUB_OUTPUT"
+          fi
       # Commit all changed files back to the repository
       - uses: stefanzweifel/git-auto-commit-action@v6
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request' && steps.verify.outputs.skip_commit != 'true' }}
         id: commit
         with:
-          commit_message: Reformatted code
+          commit_message: ${{ env.COMMIT_MESSAGE }}
 
       - name: Verify changes were committed
         shell: bash -le {0}
