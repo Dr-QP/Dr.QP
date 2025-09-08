@@ -57,13 +57,13 @@ jobs:
         if: ${{ steps.filter.outputs.docs == 'true' }}
         shell: bash
         run: |
-          .venv/bin/sphinx-build -nW -b rediraffecheckdiff docs/source/ docs/_build/html
+          .venv/bin/sphinx-build -nW --keep-going -b rediraffecheckdiff docs/source/ docs/_build/html
 
       - name: sphinx - build html
         if: ${{ steps.filter.outputs.docs == 'true' }}
         shell: bash
         run: |
-          .venv/bin/sphinx-build -nW -b html docs/source/ docs/_build/html
+          .venv/bin/sphinx-build -nW --keep-going -b html docs/source/ docs/_build/html
 
   merge-all:
     name: Docs build finished
