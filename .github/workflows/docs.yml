@@ -65,6 +65,15 @@ jobs:
         run: |
           .venv/bin/sphinx-build -nW --keep-going -b html docs/source/ docs/_build/html
 
+      - name: Upload docs build error logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-build-logs
+          path: docs/_build/html/reports/notebooks
+          retention-days: 7
+          if-no-files-found: ignore
+
   merge-all:
     name: Docs build finished
     needs: [docs]
