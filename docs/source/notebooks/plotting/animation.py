@@ -44,6 +44,9 @@ def animate_plot(
 
     plt.rcParams['animation.html'] = 'html5'
 
+    # Call animate function once to test if it works/doesn't throw
+    _animate(0)
+
     if _interactive and not is_sphinx_build():
         with plt.ion():
             anim = interact(_animate, frame=(0, _frames), **interact_kwargs)
