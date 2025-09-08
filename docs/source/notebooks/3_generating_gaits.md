@@ -442,7 +442,7 @@ def animate_hexapod_walk(
         frame=0,
         direction_degrees=0,
         walk_speed=1,
-        rotation_direction=0,
+        rotation_ratio=0,
     ):
         nonlocal last_frame
         if interactive and frame == last_frame:
@@ -462,9 +462,9 @@ def animate_hexapod_walk(
                 direction_degrees = 30
 
             if frame < total_frames * 0.60:
-                rotation_direction = 0
+                rotation_ratio = 0
             else:
-                rotation_direction = 1.0
+                rotation_ratio = 1.0
 
         stride_direction = Point3D([1, 0, 0])
         stride_direction = AffineTransform.from_rotvec(
@@ -474,7 +474,7 @@ def animate_hexapod_walk(
         walk_controller.next_step(
             phase_override=phase,
             stride_direction=stride_direction * walk_speed,
-            rotation_direction=rotation_direction,
+            rotation_ratio=rotation_ratio,
             verbose=False,
         )
         update_hexapod_plot(hexapod, plot_data)
@@ -489,7 +489,7 @@ def animate_hexapod_walk(
         _interval=1000 / fps,
         walk_speed=(0, 2, 0.1),
         direction_degrees=(-180, 180, 1),
-        rotation_direction=(-2, 2, 0.1),
+        rotation_ratio=(-2, 2, 0.1),
     )
 
 

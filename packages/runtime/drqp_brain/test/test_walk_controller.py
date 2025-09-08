@@ -53,7 +53,7 @@ class TestWalkController:
 
     def test_reset(self, walker):
         walker.current_direction = Point3D([0, 1, 0])
-        walker.current_rotation_direction = 1.0
+        walker.current_rotation_ratio = 1.0
         walker.current_phase = 1.0
 
         walker.reset()

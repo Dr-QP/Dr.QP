@@ -70,7 +70,8 @@ def main():
         inputs = ps5_controller.get_controls()
         walker.next_step(
             stride_direction=inputs.direction,
-            rotation_direction=inputs.rotation_speed,
+            stride_ratio=inputs.walk_speed,
+            rotation_ratio=inputs.rotation_speed,
         )
 
         process_frame(0.001)
