@@ -56,6 +56,7 @@ def animate_plot(
 
             if _save_animation_name is not None:
                 animation_writer = FFMpegWriter(fps=24)
-                anim.save(Path(_save_animation_name).with_suffix('.mp4'), writer=animation_writer)
+                file_path = Path(_save_animation_name).with_suffix('.mp4')
+                anim.save(str(file_path.absolute()), writer=animation_writer)
 
     return anim
