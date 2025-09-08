@@ -39,6 +39,7 @@ jobs:
           filters: |
             docs:
               - docs/**
+              - .github/workflows/docs.yml
 
       - uses: getsentry/action-setup-venv@v2.1.1
         if: ${{ steps.filter.outputs.docs == 'true' }}
