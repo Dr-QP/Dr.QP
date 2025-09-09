@@ -44,6 +44,9 @@ def animate_plot(
 
     plt.rcParams['animation.html'] = 'html5'
 
+    # Call animate function once to test if it works/doesn't throw
+    _animate(0)
+
     if _interactive and not is_sphinx_build():
         with plt.ion():
             anim = interact(_animate, frame=(0, _frames), **interact_kwargs)
@@ -56,6 +59,7 @@ def animate_plot(
 
             if _save_animation_name is not None:
                 animation_writer = FFMpegWriter(fps=24)
-                anim.save(Path(_save_animation_name).with_suffix('.mp4'), writer=animation_writer)
+                file_path = Path(_save_animation_name).with_suffix('.mp4')
+                anim.save(str(file_path.absolute()), writer=animation_writer)
 
     return anim
