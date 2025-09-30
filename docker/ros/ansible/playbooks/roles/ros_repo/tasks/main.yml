@@ -23,6 +23,10 @@
     deb: /tmp/ros2-apt-source.deb
     state: present
 
+- name: Update APT cache
+  ansible.builtin.apt:
+    update_cache: true
+
 - name: Clean up downloaded package
   ansible.builtin.file:
     path: /tmp/ros2-apt-source.deb
