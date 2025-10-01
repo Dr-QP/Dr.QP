@@ -52,3 +52,4 @@
       - ffmpeg # for rendering notebooks animations
     state: present
     install_recommends: false
+    update_cache: true
