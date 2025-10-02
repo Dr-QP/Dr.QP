@@ -99,6 +99,17 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
     servoSerial_->begin(std::stoi(get_param(info.hardware_parameters, "baud_rate")));
   }
 
+  for (const hardware_interface::ComponentInfo& sensor : info_.sensors) {
+    for (const auto& stateInterface : sensor.state_interfaces) {
+      if (stateInterface.name == "voltage") {
+        batteryServoId_ = std::stoi(get_param(stateInterface.parameters, "servo_id"));
+        if (useMockServo_) {
+          set_state("battery_state/voltage", std::stod(get_param(stateInterface.parameters, "initial_value")));
+        }
+      }
+    }
+  }
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -146,6 +157,18 @@ hardware_interface::return_type a1_16_hardware_interface::readServoStatus(uint8_
 {
   try {
     ServoPtr servo = makeServo(servoId);
+
+    if (servoId == batteryServoId_) {
+      uint8_t voltage = 0;
+      servo->ramRead(offsetof(XYZrobotServoRAM, Voltage), &voltage, sizeof(voltage));
+      if (servo->isFailed()) {
+        RCLCPP_ERROR(
+          get_logger(), "Failed to read RAM for servo %i: %s", servoId,
+          to_string(servo->getLastError()).c_str());
+        return hardware_interface::return_type::OK;
+      }
+      set_state("battery_state/voltage", voltage / 16.0);
+    }
 
     XYZrobotServoStatus status = servo->readStatus();
     if (servo->isFailed()) {

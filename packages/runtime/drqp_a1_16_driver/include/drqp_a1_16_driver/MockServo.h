@@ -61,6 +61,14 @@ public:
     }
   }
 
+  void ramRead(uint8_t startAddress, void* data, uint8_t dataSize) override
+  {
+    uint8_t* dataPtr = static_cast<uint8_t*>(data);
+    for (uint8_t i = 0; i < dataSize; ++i) {
+      dataPtr[i] = 0xBE;
+    }
+  }
+
 private:
   uint8_t id_;
   static std::unordered_map<uint8_t, uint16_t> positions_;
