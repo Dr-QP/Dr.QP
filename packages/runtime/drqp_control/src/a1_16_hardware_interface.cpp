@@ -102,7 +102,11 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
   for (const hardware_interface::ComponentInfo& sensor : info_.sensors) {
     for (const auto& stateInterface : sensor.state_interfaces) {
       if (stateInterface.name == "voltage") {
-        batteryServoId_ = std::stoi(get_param(stateInterface.parameters, "servo_id"));
+        batteryParams_.sourceServoId = std::stoi(get_param(stateInterface.parameters, "servo_id"));
+        batteryParams_.min = std::stod(get_param(stateInterface.parameters, "min"));
+        batteryParams_.max = std::stod(get_param(stateInterface.parameters, "max"));
+        RCLCPP_INFO(get_logger(), "Battery voltage source servo id: %i", batteryParams_.sourceServoId);
+
         if (useMockServo_) {
           set_state(
             "battery_state/voltage",
@@ -160,16 +164,8 @@ hardware_interface::return_type a1_16_hardware_interface::readServoStatus(uint8_
   try {
     ServoPtr servo = makeServo(servoId);
 
-    if (servoId == batteryServoId_) {
-      uint8_t voltage = 0;
-      servo->ramRead(offsetof(XYZrobotServoRAM, Voltage), &voltage, sizeof(voltage));
-      if (servo->isFailed()) {
-        RCLCPP_ERROR(
-          get_logger(), "Failed to read RAM for servo %i: %s", servoId,
-          to_string(servo->getLastError()).c_str());
-        return hardware_interface::return_type::OK;
-      }
-      set_state("battery_state/voltage", voltage / 16.0);
+    if (servoId == batteryParams_.sourceServoId) {
+      readBatteryVoltage();
     }
 
     XYZrobotServoStatus status = servo->readStatus();
@@ -194,6 +190,32 @@ hardware_interface::return_type a1_16_hardware_interface::readServoStatus(uint8_
   }
   return hardware_interface::return_type::OK;
 }
+
+hardware_interface::return_type a1_16_hardware_interface::readBatteryVoltage()
+{
+  try {
+    ServoPtr servo = makeServo(batteryParams_.sourceServoId);
+
+      uint8_t voltage = 0;
+      servo->ramRead(offsetof(XYZrobotServoRAM, Voltage), &voltage, sizeof(voltage));
+      if (servo->isFailed()) {
+        RCLCPP_ERROR(
+          get_logger(), "Failed to read RAM for servo %i: %s", batteryParams_.sourceServoId,
+          to_string(servo->getLastError()).c_str());
+        return hardware_interface::return_type::OK;
+      }
+      const float voltageValue = voltage / 16.0;
+      set_state("battery_state/voltage", voltageValue);
+      set_state("battery_state/percentage", mapToRange(voltageValue, batteryParams_.min, batteryParams_.max, 0.0, 1.0));
+      return hardware_interface::return_type::OK;
+  } catch (const std::exception& e) {
+    RCLCPP_ERROR(get_logger(), "Failed to read battery voltage: %s", e.what());
+  } catch (...) {
+    RCLCPP_ERROR(get_logger(), "Failed to read battery voltage: unknown exception");
+  }
+  return hardware_interface::return_type::OK;
+}
+
 
 hardware_interface::return_type a1_16_hardware_interface::read(
   const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)

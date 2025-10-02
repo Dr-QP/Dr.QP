@@ -110,7 +110,12 @@ private:
   ServoPtr makeServo(uint8_t id);
   bool useMockServo_ = false;
 
-  ServoId batteryServoId_ = 0;
+  struct BatteryParams {
+    float min;
+    float max;
+    uint8_t sourceServoId;
+  } batteryParams_;
+  hardware_interface::return_type readBatteryVoltage();
 
   hardware_interface::return_type readServoStatus(uint8_t servoId);
 };
