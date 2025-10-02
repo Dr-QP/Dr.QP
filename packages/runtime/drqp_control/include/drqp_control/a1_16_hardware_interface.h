@@ -110,7 +110,8 @@ private:
   ServoPtr makeServo(uint8_t id);
   bool useMockServo_ = false;
 
-  struct BatteryParams {
+  struct BatteryParams
+  {
     float min;
     float max;
     uint8_t sourceServoId;

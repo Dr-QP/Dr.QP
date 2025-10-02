@@ -664,4 +664,3 @@ static_assert(
 static_assert(
   offsetof(XYZrobotServoEEPROM, Calibration_Difference) == 53,
   "XYZrobotServoEEPROM::Calibration_Difference has wrong offset");
-

@@ -105,7 +105,8 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
         batteryParams_.sourceServoId = std::stoi(get_param(stateInterface.parameters, "servo_id"));
         batteryParams_.min = std::stod(get_param(stateInterface.parameters, "min"));
         batteryParams_.max = std::stod(get_param(stateInterface.parameters, "max"));
-        RCLCPP_INFO(get_logger(), "Battery voltage source servo id: %i", batteryParams_.sourceServoId);
+        RCLCPP_INFO(
+          get_logger(), "Battery voltage source servo id: %i", batteryParams_.sourceServoId);
 
         if (useMockServo_) {
           set_state(
@@ -196,17 +197,17 @@ hardware_interface::return_type a1_16_hardware_interface::readBatteryVoltage()
   try {
     ServoPtr servo = makeServo(batteryParams_.sourceServoId);
 
-      uint8_t voltage = 0;
-      servo->ramRead(offsetof(XYZrobotServoRAM, Voltage), &voltage, sizeof(voltage));
-      if (servo->isFailed()) {
-        RCLCPP_ERROR(
-          get_logger(), "Failed to read RAM for servo %i: %s", batteryParams_.sourceServoId,
-          to_string(servo->getLastError()).c_str());
-        return hardware_interface::return_type::OK;
-      }
-      const double voltageValue = voltage / 16.0;
-      set_state("battery_state/voltage", voltageValue);
+    uint8_t voltage = 0;
+    servo->ramRead(offsetof(XYZrobotServoRAM, Voltage), &voltage, sizeof(voltage));
+    if (servo->isFailed()) {
+      RCLCPP_ERROR(
+        get_logger(), "Failed to read RAM for servo %i: %s", batteryParams_.sourceServoId,
+        to_string(servo->getLastError()).c_str());
       return hardware_interface::return_type::OK;
+    }
+    const double voltageValue = voltage / 16.0;
+    set_state("battery_state/voltage", voltageValue);
+    return hardware_interface::return_type::OK;
   } catch (const std::exception& e) {
     RCLCPP_ERROR(get_logger(), "Failed to read battery voltage: %s", e.what());
   } catch (...) {
@@ -214,7 +215,6 @@ hardware_interface::return_type a1_16_hardware_interface::readBatteryVoltage()
   }
   return hardware_interface::return_type::OK;
 }
-
 
 hardware_interface::return_type a1_16_hardware_interface::read(
   const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
