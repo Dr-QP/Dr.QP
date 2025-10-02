@@ -61,7 +61,7 @@ public:
     }
   }
 
-  void ramRead(uint8_t startAddress, void* data, uint8_t dataSize) override
+  void ramRead(uint8_t, void* data, uint8_t dataSize) override
   {
     uint8_t* dataPtr = static_cast<uint8_t*>(data);
     for (uint8_t i = 0; i < dataSize; ++i) {
