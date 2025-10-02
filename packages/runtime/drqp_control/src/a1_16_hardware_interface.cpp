@@ -104,7 +104,9 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
       if (stateInterface.name == "voltage") {
         batteryServoId_ = std::stoi(get_param(stateInterface.parameters, "servo_id"));
         if (useMockServo_) {
-          set_state("battery_state/voltage", std::stod(get_param(stateInterface.parameters, "initial_value")));
+          set_state(
+            "battery_state/voltage",
+            std::stod(get_param(stateInterface.parameters, "initial_value")));
         }
       }
     }
