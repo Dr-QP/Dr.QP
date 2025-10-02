@@ -22,7 +22,6 @@
   <depend>ament_index_cpp</depend>
   <depend>yaml-cpp</depend>
   <exec_depend>joy</exec_depend>
-  <exec_depend>battery_state_rviz_overlay</exec_depend>
   <exec_depend>ros2_controllers_test_nodes</exec_depend>
   <exec_depend>rqt_joint_trajectory_controller</exec_depend>
 
