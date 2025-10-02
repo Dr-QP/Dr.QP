@@ -205,9 +205,7 @@ hardware_interface::return_type a1_16_hardware_interface::readBatteryVoltage()
         return hardware_interface::return_type::OK;
       }
       const double voltageValue = voltage / 16.0;
-      const double percentage = mapToRange(voltageValue, batteryParams_.min, batteryParams_.max, 0.0, 1.0);
       set_state("battery_state/voltage", voltageValue);
-      set_state("battery_state/percentage", percentage);
       return hardware_interface::return_type::OK;
   } catch (const std::exception& e) {
     RCLCPP_ERROR(get_logger(), "Failed to read battery voltage: %s", e.what());

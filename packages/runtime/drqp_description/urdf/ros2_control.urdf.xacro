@@ -68,7 +68,6 @@
           <param name="min">10.5</param> <!-- 3.5V per cell, 3 cells -->
           <param name="max">12.6</param> <!-- 4.2V per cell, 3 cells -->
         </state_interface>
-        <state_interface name="percentage" />
       </sensor>
     </ros2_control>
   </xacro:macro>
