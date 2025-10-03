@@ -103,16 +103,13 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
     for (const auto& stateInterface : sensor.state_interfaces) {
       if (stateInterface.name == "voltage") {
         batteryParams_.sourceServoId = std::stoi(get_param(stateInterface.parameters, "servo_id"));
-        batteryParams_.min = std::stod(get_param(stateInterface.parameters, "min"));
-        batteryParams_.max = std::stod(get_param(stateInterface.parameters, "max"));
+        batteryParams_.min = std::stod(stateInterface.min);
+        batteryParams_.max = std::stod(stateInterface.max);
         RCLCPP_INFO(
-          get_logger(), "Battery voltage source servo id: %i", batteryParams_.sourceServoId);
-
-        if (useMockServo_) {
-          set_state(
-            "battery_state/voltage",
-            std::stod(get_param(stateInterface.parameters, "initial_value")));
-        }
+          get_logger(),
+          "Battery voltage source servo id: %i. Voltage min: %f, max: %f, initial: %s",
+          batteryParams_.sourceServoId, batteryParams_.min, batteryParams_.max,
+          stateInterface.initial_value.c_str());
       }
     }
   }
