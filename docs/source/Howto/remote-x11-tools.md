@@ -51,8 +51,9 @@ If ROS is running in docker, you need to run the following command to forward X1
 
 ```bash
 docker run -it \
-    --env="DISPLAY=$DISPLAY" \
+    -e DISPLAY \
     --env="QT_X11_NO_MITSHM=1" \
+    --env="FASTDDS_BUILTIN_TRANSPORTS=UDPv4" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
     --volume="$HOME/.Xauthority:/root/.Xauthority:rw" \
     --network host --ipc host --pid host \
