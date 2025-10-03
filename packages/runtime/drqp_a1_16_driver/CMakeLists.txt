@@ -23,6 +23,11 @@ add_library(drqp_a1_16_driver STATIC
 drqp_library_enable_coverage(drqp_a1_16_driver)
 
 target_compile_features(drqp_a1_16_driver PUBLIC cxx_std_17)
+
+# clang handles -Winvalid-offsetof just fine
+# https://github.com/llvm/llvm-project/issues/45267
+target_compile_options(drqp_a1_16_driver PUBLIC -Wno-invalid-offsetof)
+
 target_include_directories(drqp_a1_16_driver PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")

@@ -26,6 +26,8 @@
 #include <string>
 
 using ServoId = uint8_t;
+constexpr ServoId kServoIdMax = 253;
+
 enum LegId {
   // Head is at 12 o'clock
 

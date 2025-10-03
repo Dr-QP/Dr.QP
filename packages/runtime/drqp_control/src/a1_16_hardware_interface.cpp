@@ -99,6 +99,21 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
     servoSerial_->begin(std::stoi(get_param(info.hardware_parameters, "baud_rate")));
   }
 
+  for (const hardware_interface::ComponentInfo& sensor : info_.sensors) {
+    for (const auto& stateInterface : sensor.state_interfaces) {
+      if (stateInterface.name == "voltage") {
+        batteryParams_.sourceServoId = std::stoi(get_param(stateInterface.parameters, "servo_id"));
+        batteryParams_.min = std::stod(stateInterface.min);
+        batteryParams_.max = std::stod(stateInterface.max);
+        RCLCPP_INFO(
+          get_logger(),
+          "Battery voltage source servo id: %i. Voltage min: %f, max: %f, initial: %s",
+          batteryParams_.sourceServoId, batteryParams_.min, batteryParams_.max,
+          stateInterface.initial_value.c_str());
+      }
+    }
+  }
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -147,6 +162,10 @@ hardware_interface::return_type a1_16_hardware_interface::readServoStatus(uint8_
   try {
     ServoPtr servo = makeServo(servoId);
 
+    if (servoId == batteryParams_.sourceServoId) {
+      readBatteryVoltage();
+    }
+
     XYZrobotServoStatus status = servo->readStatus();
     if (servo->isFailed()) {
       RCLCPP_ERROR(
@@ -166,6 +185,30 @@ hardware_interface::return_type a1_16_hardware_interface::readServoStatus(uint8_
     RCLCPP_ERROR(get_logger(), "Failed to read servo %i: %s", servoId, e.what());
   } catch (...) {
     RCLCPP_ERROR(get_logger(), "Failed to read servo %i: unknown exception", servoId);
+  }
+  return hardware_interface::return_type::OK;
+}
+
+hardware_interface::return_type a1_16_hardware_interface::readBatteryVoltage()
+{
+  try {
+    ServoPtr servo = makeServo(batteryParams_.sourceServoId);
+
+    uint8_t voltage = 0;
+    servo->ramRead(offsetof(XYZrobotServoRAM, Voltage), &voltage, sizeof(voltage));
+    if (servo->isFailed()) {
+      RCLCPP_ERROR(
+        get_logger(), "Failed to read RAM for servo %i: %s", batteryParams_.sourceServoId,
+        to_string(servo->getLastError()).c_str());
+      return hardware_interface::return_type::OK;
+    }
+    const double voltageValue = voltage / 16.0;
+    set_state("battery_state/voltage", voltageValue);
+    return hardware_interface::return_type::OK;
+  } catch (const std::exception& e) {
+    RCLCPP_ERROR(get_logger(), "Failed to read battery voltage: %s", e.what());
+  } catch (...) {
+    RCLCPP_ERROR(get_logger(), "Failed to read battery voltage: unknown exception");
   }
   return hardware_interface::return_type::OK;
 }

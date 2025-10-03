@@ -344,7 +344,7 @@ public:
   ///
   /// The data size should be 35 or less: otherwise the A1-16 seems to return a
   /// response with an invalid CRC.
-  void ramRead(uint8_t startAddress, void* data, uint8_t dataSize);
+  void ramRead(uint8_t startAddress, void* data, uint8_t dataSize) override;
 
   /// Write the Baud_Rate parameter byte in EEPROM, which determines which baud
   /// rate the servo uses on its serial interface.

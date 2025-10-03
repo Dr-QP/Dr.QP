@@ -113,6 +113,7 @@ class TestA116HardwareInterface(unittest.TestCase):
             'dr_qp/right_back_femur',
             'dr_qp/right_back_tibia',
         ]
+        self.non_joint_interface_names = ['battery_state']
         self._reset_feedback()
 
         # Get to the initial position
@@ -153,6 +154,9 @@ class TestA116HardwareInterface(unittest.TestCase):
 
         interface_values = list[InterfaceValue](msg.interface_values)
         for name, values in zip(msg.joint_names, interface_values):
+            if name in self.non_joint_interface_names:
+                continue
+
             joint_index = self.joint_names.index(name)
             for interface_name, value in zip(values.interface_names, values.values):
                 if interface_name == 'position':
