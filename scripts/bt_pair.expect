@@ -68,6 +68,12 @@ expect {
 
 send "scan on\r"
 
+puts "Scanning for device..."
+puts "=================================================================================================="
+puts "||  To enter DualSense pair mode simultaneously press and hold the PS button (center)"
+puts "||  and the Create button (top left) for a few seconds until the light bar starts to strobe blue"
+puts "=================================================================================================="
+
 # Wait until the device appears in scan output
 expect {
     -re {.*NEW.*Device ([0-9A-Fa-f:]+) (.*)} {

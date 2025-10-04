@@ -48,8 +48,7 @@ class ButtonIndex(Enum):
     DpadDown = 12
     DpadLeft = 13
     DpadRight = 14
-    # DOES NOT WORK WITH DEFAULT ROS joy node https://github.com/Dr-QP/Dr.QP/issues/207
-    # TouchpadButton = 20
+    TouchpadButton = 20
 
 
 class ButtonAxis(Enum):
