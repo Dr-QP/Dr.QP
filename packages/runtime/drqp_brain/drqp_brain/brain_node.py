@@ -62,6 +62,7 @@ class HexapodBrain(rclpy.node.Node):
                 ButtonIndex.DpadLeft: lambda b, e: self.prev_gait(),
                 ButtonIndex.DpadRight: lambda b, e: self.next_gait(),
                 ButtonIndex.PS: lambda b, e: self.process_kill_switch(),
+                ButtonIndex.TouchpadButton: lambda b, e: self.process_kill_switch(),
                 ButtonIndex.Start: lambda b, e: self.reboot_servos(),
                 ButtonIndex.Select: lambda b, e: self.finalize(),
             }
