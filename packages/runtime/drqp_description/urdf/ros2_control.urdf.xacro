@@ -60,6 +60,15 @@
       <xacro:drqp_leg_ros2_control robot_name="${robot_name}" leg_name="right_middle" coxa_servo_id="14" servo_inverted="True"/>
       <xacro:drqp_leg_ros2_control robot_name="${robot_name}" leg_name="left_back" coxa_servo_id="7"/>
       <xacro:drqp_leg_ros2_control robot_name="${robot_name}" leg_name="right_back" coxa_servo_id="8" servo_inverted="True"/>
+
+      <sensor name="battery_state">
+        <state_interface name="voltage">
+          <param name="servo_id">1</param> <!-- Any servo to query voltage from -->
+          <param name="initial_value">12.0</param> <!-- Initial value for mock_hardware -->
+          <param name="min">10.5</param> <!-- 3.5V per cell, 3 cells -->
+          <param name="max">12.6</param> <!-- 4.2V per cell, 3 cells -->
+        </state_interface>
+      </sensor>
     </ros2_control>
   </xacro:macro>
 </robot>

@@ -442,11 +442,6 @@ TEST_CASE("A1-16 servo max PWM RAM")
 // {
 // }
 
-// clang handles -Winvalid-offsetof just fine
-// https://github.com/llvm/llvm-project/issues/45267
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Winvalid-offsetof"
-
 static_assert(sizeof(XYZrobotServoRAM) == 80, "XYZrobotServoRAM has wrong size");
 
 static_assert(offsetof(XYZrobotServoRAM, sID) == 0, "XYZrobotServoRAM::sID has wrong offset");
@@ -669,5 +664,3 @@ static_assert(
 static_assert(
   offsetof(XYZrobotServoEEPROM, Calibration_Difference) == 53,
   "XYZrobotServoEEPROM::Calibration_Difference has wrong offset");
-
-#pragma clang diagnostic pop

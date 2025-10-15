@@ -28,6 +28,7 @@
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 
+#include "drqp_control/DrQp.h"
 #include "drqp_control/RobotConfig.h"
 #include "drqp_serial/SerialProtocol.h"
 #include "drqp_a1_16_driver/ServoProtocol.h"
@@ -100,7 +101,7 @@ private:
     On = 1,
     Reboot = 2,
   };
-  std::array<ServoTorque, 255> torqueIsOn_;
+  std::array<ServoTorque, kServoIdMax> torqueIsOn_;
   std::unique_ptr<SerialProtocol> servoSerial_;
 
   size_t servoIndexLastRead_ = 0;
@@ -108,6 +109,14 @@ private:
   using ServoPtr = std::unique_ptr<ServoProtocol>;
   ServoPtr makeServo(uint8_t id);
   bool useMockServo_ = false;
+
+  struct BatteryParams
+  {
+    float min;
+    float max;
+    uint8_t sourceServoId;
+  } batteryParams_;
+  hardware_interface::return_type readBatteryVoltage();
 
   hardware_interface::return_type readServoStatus(uint8_t servoId);
 };

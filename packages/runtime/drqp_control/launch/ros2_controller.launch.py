@@ -62,6 +62,16 @@ def generate_launch_description():
             },
         ],
     )
+    battery_state_broadcaster_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['battery_state_broadcaster'],
+        parameters=[
+            {
+                'use_sim_time': use_sim_time,
+            },
+        ],
+    )
 
     robot_controller_spawner = Node(
         package='controller_manager',
@@ -90,6 +100,7 @@ def generate_launch_description():
             ),
             control_node,
             joint_state_broadcaster_spawner,
+            battery_state_broadcaster_spawner,
             robot_controller_spawner,
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(str(description_launch_path / 'rsp.launch.py'))
