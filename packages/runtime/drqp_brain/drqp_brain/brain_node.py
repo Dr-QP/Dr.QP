@@ -135,7 +135,7 @@ class HexapodBrain(rclpy.node.Node):
             self.hexapod,
             step_length=step_length,
             step_height=step_height,
-            rotation_speed_degrees=20,
+            rotation_speed_degrees=45,
             gait=self.gaits[self.gait_index],
             phase_steps_per_cycle=self.fps / 2.5,
         )
