@@ -18,10 +18,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from enum import auto, Enum
 from drqp_brain.geometry import Point3D
 from drqp_brain.joystick_button import ButtonAxis, ButtonIndex, JoystickButton
 import numpy as np
 import sensor_msgs.msg
+
+
+class ControlMode(Enum):
+    """Enum for control modes."""
+
+    Walk = auto()
+    Body = auto()
 
 
 class JoystickInputHandler:
@@ -55,6 +63,17 @@ class JoystickInputHandler:
         """Reset all movement parameters to zero."""
         self.direction = Point3D([0, 0, 0])
         self.rotation_speed = 0
+        self.control_mode = ControlMode.Walk
+
+        self.body_translation = Point3D([0, 0, 0])
+        self.body_rotation = Point3D([0, 0, 0])
+
+    def toggle_control_mode(self):
+        """Toggle between walk and body control modes."""
+        if self.control_mode == ControlMode.Walk:
+            self.control_mode = ControlMode.Body
+        else:
+            self.control_mode = ControlMode.Walk
 
     def process_joy_message(self, joy: sensor_msgs.msg.Joy):
         """
@@ -74,13 +93,20 @@ class JoystickInputHandler:
         left_x = axes[ButtonAxis.LeftX.value]
         left_y = axes[ButtonAxis.LeftY.value]
         right_x = axes[ButtonAxis.RightX.value]
+        right_y = axes[ButtonAxis.RightY.value]
+        left_trigger = axes[ButtonAxis.TriggerLeft.value]
+        right_trigger = axes[ButtonAxis.TriggerRight.value]
 
-        # On some platforms default value for trigger is -1 (robobook with ubuntu 24.04)
-        # but on raspi with ubuntu 24.04 it is 0
-        left_trigger = float(np.interp(axes[ButtonAxis.TriggerLeft.value], [-1, 0], [1, 0]))
+        if self.control_mode == ControlMode.Body:
+            self.body_translation = Point3D([left_y, left_x, left_trigger])
+            self.body_rotation = Point3D([right_y, right_trigger, right_x])
+        elif self.control_mode == ControlMode.Walk:
+            # On some platforms default value for trigger is -1 (robobook with ubuntu 24.04)
+            # but on raspi with ubuntu 24.04 it is 0
+            left_trigger = float(np.interp(left_trigger, [-1, 0], [1, 0]))
 
-        self.direction = Point3D([left_y, left_x, left_trigger])
-        self.rotation_speed = right_x
+            self.direction = Point3D([left_y, left_x, left_trigger])
+            self.rotation_speed = right_x
 
     def _process_buttons(self, buttons):
         """Process joystick buttons and trigger callbacks."""

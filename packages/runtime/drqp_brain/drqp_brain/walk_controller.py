@@ -62,8 +62,11 @@ class WalkController:
         stride_direction: Point3D,
         rotation_direction: float,
         phase_override: float | None = None,
+        body_direction: Point3D | None = None,
+        body_rotation: Point3D | None = None,
         verbose: bool = False,
     ):
+        self.__update_body_transform(body_direction, body_rotation)
         self.__next_phase(phase_override)
         feet_targets = self.__next_feet_targets(stride_direction, rotation_direction, verbose)
         self.__move_feet(feet_targets)
@@ -185,3 +188,17 @@ class WalkController:
     def __move_feet(self, legs_and_targets):
         for leg, foot_target in legs_and_targets:
             leg.move_to(foot_target)
+
+    def __update_body_transform(
+        self, body_direction: Point3D | None, body_rotation: Point3D | None
+    ):
+        self.hexapod.body_transform = AffineTransform.identity()
+        if body_direction is None and body_rotation is None:
+            return
+
+        if body_direction is not None:
+            self.hexapod.body_transform = AffineTransform.from_translation(body_direction.numpy())
+
+        if body_rotation is not None:
+            rotation_transform = AffineTransform.from_rotvec(body_rotation.numpy(), degrees=True)
+            self.hexapod.body_transform = rotation_transform @ self.hexapod.body_transform

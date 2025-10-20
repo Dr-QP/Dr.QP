@@ -67,6 +67,10 @@ class HexapodBrain(rclpy.node.Node):
                 ButtonIndex.Select: lambda b, e: self.finalize(),
             }
         )
+        self.joystick_input_handler.add_button_handler(
+            ButtonIndex.L1, lambda b, e: self.joystick_input_handler.toggle_control_mode()
+        )
+
         self.joystick_sub = self.create_subscription(
             sensor_msgs.msg.Joy,
             '/joy',
