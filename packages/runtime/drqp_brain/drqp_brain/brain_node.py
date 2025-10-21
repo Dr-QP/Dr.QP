@@ -158,6 +158,8 @@ class HexapodBrain(rclpy.node.Node):
         self.walker.next_step(
             stride_direction=self.joystick_input_handler.direction,
             rotation_direction=self.joystick_input_handler.rotation_speed,
+            body_direction=self.joystick_input_handler.body_translation / 8.0,
+            body_rotation=self.joystick_input_handler.body_rotation,
         )
 
         trajectory = JointTrajectoryBuilder(self.hexapod)

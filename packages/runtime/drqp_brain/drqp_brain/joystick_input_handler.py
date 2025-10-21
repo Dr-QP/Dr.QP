@@ -29,7 +29,11 @@ class ControlMode(Enum):
     """Enum for control modes."""
 
     Walk = auto()
-    Body = auto()
+    BodyPosition = auto()
+    BodyRotation = auto()
+
+
+all_control_modes = [ControlMode.Walk, ControlMode.BodyPosition, ControlMode.BodyRotation]
 
 
 class JoystickInputHandler:
@@ -69,11 +73,10 @@ class JoystickInputHandler:
         self.body_rotation = Point3D([0, 0, 0])
 
     def toggle_control_mode(self):
-        """Toggle between walk and body control modes."""
-        if self.control_mode == ControlMode.Walk:
-            self.control_mode = ControlMode.Body
-        else:
-            self.control_mode = ControlMode.Walk
+        """Toggle between control modes."""
+        current_index = all_control_modes.index(self.control_mode)
+        next_index = (current_index + 1) % len(all_control_modes)
+        self.control_mode = all_control_modes[next_index]
 
     def process_joy_message(self, joy: sensor_msgs.msg.Joy):
         """
@@ -94,13 +97,13 @@ class JoystickInputHandler:
         left_y = axes[ButtonAxis.LeftY.value]
         right_x = axes[ButtonAxis.RightX.value]
         right_y = axes[ButtonAxis.RightY.value]
-        left_trigger = axes[ButtonAxis.TriggerLeft.value]
-        right_trigger = axes[ButtonAxis.TriggerRight.value]
 
-        if self.control_mode == ControlMode.Body:
-            self.body_translation = Point3D([left_y, left_x, left_trigger])
-            self.body_rotation = Point3D([right_y, right_trigger, right_x])
+        if self.control_mode == ControlMode.BodyPosition:
+            self.body_translation = Point3D([left_y, left_x, right_y])
+        elif self.control_mode == ControlMode.BodyRotation:
+            self.body_rotation = Point3D([left_x, left_y, right_x])
         elif self.control_mode == ControlMode.Walk:
+            left_trigger = axes[ButtonAxis.TriggerLeft.value]
             # On some platforms default value for trigger is -1 (robobook with ubuntu 24.04)
             # but on raspi with ubuntu 24.04 it is 0
             left_trigger = float(np.interp(left_trigger, [-1, 0], [1, 0]))
