@@ -22,7 +22,7 @@ from unittest.mock import Mock
 
 from drqp_brain.geometry import Point3D
 from drqp_brain.joystick_button import ButtonIndex
-from drqp_brain.joystick_input_handler import all_control_modes, JoystickInputHandler
+from drqp_brain.joystick_input_handler import all_control_modes, ControlMode, JoystickInputHandler
 import pytest
 import sensor_msgs.msg
 
@@ -233,8 +233,35 @@ class TestJoystickInputHandler:
         """Test toggling between control modes."""
         modes = [mode.name for mode in all_control_modes]
 
-        while len(modes) > 0:
+        for _ in range(3):  # Should cycle through all modes
+            assert len(modes) > 0
             assert input_handler.control_mode.name in modes
             modes.remove(input_handler.control_mode.name)
 
             input_handler.next_control_mode()
+        assert len(modes) == 0
+
+    def test_body_position_control(self, input_handler):
+        """Test body position control."""
+        joy_msg = sensor_msgs.msg.Joy()
+        joy_msg.axes = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]  # left_x, left_y, right_x, ..., left_trigger
+        joy_msg.buttons = []
+
+        input_handler.control_mode = ControlMode.BodyPosition
+        input_handler.process_joy_message(joy_msg)
+
+        assert input_handler.body_translation.x == pytest.approx(0.2)  # left_y
+        assert input_handler.body_translation.y == pytest.approx(0.1)  # left_x
+        assert input_handler.body_translation.z == pytest.approx(0.4)  # right_y
+
+    def test_body_rotation_control(self, input_handler):
+        """Test body rotation control."""
+        joy_msg = sensor_msgs.msg.Joy()
+        joy_msg.axes = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]  # left_x, left_y, right_x, ..., left_trigger
+
+        input_handler.control_mode = ControlMode.BodyRotation
+        input_handler.process_joy_message(joy_msg)
+
+        assert input_handler.body_rotation.x == pytest.approx(0.1)  # left_x
+        assert input_handler.body_rotation.y == pytest.approx(0.2)  # left_y
+        assert input_handler.body_rotation.z == pytest.approx(0.3)  # right_x
