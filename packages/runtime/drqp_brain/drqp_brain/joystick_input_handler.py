@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 from enum import auto, Enum
+
 from drqp_brain.geometry import Point3D
 from drqp_brain.joystick_button import ButtonAxis, ButtonIndex, JoystickButton
 import numpy as np
