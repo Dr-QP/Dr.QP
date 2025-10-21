@@ -22,7 +22,7 @@ from unittest.mock import Mock
 
 from drqp_brain.geometry import Point3D
 from drqp_brain.joystick_button import ButtonIndex
-from drqp_brain.joystick_input_handler import JoystickInputHandler
+from drqp_brain.joystick_input_handler import all_control_modes, JoystickInputHandler
 import pytest
 import sensor_msgs.msg
 
@@ -228,3 +228,13 @@ class TestJoystickInputHandler:
             btn for btn in input_handler.joystick_buttons if btn.button_index == ButtonIndex.Cross
         ]
         assert len(cross_buttons) == 2
+
+    def test_control_mode_toggle(self, input_handler):
+        """Test toggling between control modes."""
+        modes = [mode.name for mode in all_control_modes]
+
+        while len(modes) > 0:
+            assert input_handler.control_mode.name in modes
+            modes.remove(input_handler.control_mode.name)
+
+            input_handler.next_control_mode()
