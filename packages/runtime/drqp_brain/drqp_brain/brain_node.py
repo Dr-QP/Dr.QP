@@ -68,7 +68,7 @@ class HexapodBrain(rclpy.node.Node):
             }
         )
         self.joystick_input_handler.add_button_handler(
-            ButtonIndex.L1, lambda b, e: self.joystick_input_handler.toggle_control_mode()
+            ButtonIndex.L1, lambda b, e: self.next_control_mode()
         )
 
         self.joystick_sub = self.create_subscription(
@@ -151,6 +151,12 @@ class HexapodBrain(rclpy.node.Node):
     def next_gait(self):
         self.gait_index = (self.gait_index + 1) % len(self.gaits)
         self.get_logger().info(f'Switching gait: {self.gaits[self.gait_index].name}')
+
+    def next_control_mode(self):
+        self.joystick_input_handler.next_control_mode()
+        self.get_logger().info(
+            f'Switching control mode: {self.joystick_input_handler.control_mode}'
+        )
 
     def loop(self):
         self.walker.current_gait = self.gaits[self.gait_index]

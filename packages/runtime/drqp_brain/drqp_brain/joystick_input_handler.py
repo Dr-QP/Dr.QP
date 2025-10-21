@@ -72,7 +72,7 @@ class JoystickInputHandler:
         self.body_translation = Point3D([0, 0, 0])
         self.body_rotation = Point3D([0, 0, 0])
 
-    def toggle_control_mode(self):
+    def next_control_mode(self):
         """Toggle between control modes."""
         current_index = all_control_modes.index(self.control_mode)
         next_index = (current_index + 1) % len(all_control_modes)
