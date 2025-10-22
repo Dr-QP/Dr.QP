@@ -89,8 +89,8 @@ class JoystickInputHandler:
             The joystick message to process
 
         """
-        self._process_axes(joy.axes)
         self._process_buttons(joy.buttons)
+        self._process_axes(joy.axes)
 
     def _process_axes(self, axes):
         """Process joystick axes to extract movement commands."""
