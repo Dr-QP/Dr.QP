@@ -234,6 +234,32 @@
           "isDefault": true
         },
       },
+
+      {
+        "label": "Dr.QP colcon test failed only",
+        "type": "ROS2",
+        "command": "python3",
+        "args": [
+          "-m",
+          "colcon",
+          "test",
+          "--event-handlers",
+          "console_cohesion+",
+          "summary+",
+          "status+",
+          "--return-code-on-test-failure",
+          "--packages-select-test-failures",
+          "--mixin",
+          "coverage-pytest",
+        ],
+        "problemMatcher": [
+          "$colcon-gcc"
+        ],
+        "group": {
+          "kind": "test",
+          "isDefault": true
+        },
+      },
       {
         "label": "Dr.QP coverage",
         "type": "shell",
