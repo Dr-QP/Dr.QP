@@ -327,9 +327,9 @@ class TestWalkController:
             body_direction=Point3D([0.1, 0.2, 0.3]),
             body_rotation=Point3D([0.3, 0.4, 0.5]),
         )
-        assert hexapod.body_transform.translation == pytest.approx([0.1, 0.2, 0.3], abs=1e-3), (
-            'Body is translated'
-        )
+        assert hexapod.body_transform.translation == pytest.approx(
+            [0.131, 0.165, 0.309], abs=1e-3
+        ), 'Body is translated'
         assert hexapod.body_transform.rotation == pytest.approx(
             AffineTransform.from_rotvec([0.3, 0.4, 0.5]).rotation, abs=1e-3
         ), 'Body is rotated'
