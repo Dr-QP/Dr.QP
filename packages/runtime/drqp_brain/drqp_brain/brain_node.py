@@ -61,14 +61,12 @@ class HexapodBrain(rclpy.node.Node):
             button_callbacks={
                 ButtonIndex.DpadLeft: lambda b, e: self.prev_gait(),
                 ButtonIndex.DpadRight: lambda b, e: self.next_gait(),
+                ButtonIndex.L1: lambda b, e: self.next_control_mode(),
                 ButtonIndex.PS: lambda b, e: self.process_kill_switch(),
                 ButtonIndex.TouchpadButton: lambda b, e: self.process_kill_switch(),
                 ButtonIndex.Start: lambda b, e: self.reboot_servos(),
                 ButtonIndex.Select: lambda b, e: self.finalize(),
             }
-        )
-        self.joystick_input_handler.add_button_handler(
-            ButtonIndex.L1, lambda b, e: self.next_control_mode()
         )
 
         self.joystick_sub = self.create_subscription(
