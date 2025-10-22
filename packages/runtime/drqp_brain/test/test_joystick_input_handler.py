@@ -163,20 +163,6 @@ class TestJoystickInputHandler:
         assert circle_button is not None
         assert circle_button.event_handler == mock_callback
 
-    def test_remove_button_handler(self, input_handler_with_callbacks):
-        """Test removing a button handler."""
-        initial_count = len(input_handler_with_callbacks.joystick_buttons)
-
-        input_handler_with_callbacks.remove_button_handler(ButtonIndex.Cross)
-
-        assert len(input_handler_with_callbacks.joystick_buttons) == initial_count - 1
-
-        # Verify Cross button was removed
-        buttons = input_handler_with_callbacks.joystick_buttons
-        button_indices = [btn.button_index for btn in buttons]
-        assert ButtonIndex.Cross not in button_indices
-        assert ButtonIndex.PS in button_indices  # PS should still be there
-
     def test_reset(self, input_handler):
         """Test resetting the input handler."""
         # Set some values

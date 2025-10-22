@@ -130,17 +130,3 @@ class JoystickInputHandler:
 
         """
         self.joystick_buttons.append(JoystickButton(button_index, callback))
-
-    def remove_button_handler(self, button_index: ButtonIndex):
-        """
-        Remove a button handler.
-
-        Parameters
-        ----------
-        button_index : ButtonIndex
-            The button handler to remove
-
-        """
-        self.joystick_buttons = [
-            button for button in self.joystick_buttons if button.button_index != button_index
-        ]
