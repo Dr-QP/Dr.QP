@@ -201,4 +201,4 @@ class WalkController:
 
         if body_rotation is not None:
             rotation_transform = AffineTransform.from_rotvec(body_rotation.numpy())
-            self.hexapod.body_transform = self.hexapod.body_transform @ rotation_transform
+            self.hexapod.body_transform = rotation_transform @ self.hexapod.body_transform
