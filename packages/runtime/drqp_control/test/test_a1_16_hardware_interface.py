@@ -40,18 +40,13 @@ from trajectory_msgs.msg import JointTrajectoryPoint
 
 
 def generate_test_description():
-    drqp_control_launch_path = PathJoinSubstitution(
-        [
-            FindPackageShare('drqp_control'),
-            'launch',
-        ]
+    drqp_controllers_launch_file = PathJoinSubstitution(
+        [FindPackageShare('drqp_control'), 'launch', 'ros2_controller.launch.py']
     )
     return LaunchDescription(
         [
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    drqp_control_launch_path / 'ros2_controller.launch.py'
-                ),
+                PythonLaunchDescriptionSource(drqp_controllers_launch_file),
                 launch_arguments={
                     'use_sim_time': 'false',
                     'hardware_device_address': 'mock_servo',

@@ -61,12 +61,14 @@ class HexapodBrain(rclpy.node.Node):
             button_callbacks={
                 ButtonIndex.DpadLeft: lambda b, e: self.prev_gait(),
                 ButtonIndex.DpadRight: lambda b, e: self.next_gait(),
+                ButtonIndex.L1: lambda b, e: self.next_control_mode(),
                 ButtonIndex.PS: lambda b, e: self.process_kill_switch(),
                 ButtonIndex.TouchpadButton: lambda b, e: self.process_kill_switch(),
                 ButtonIndex.Start: lambda b, e: self.reboot_servos(),
                 ButtonIndex.Select: lambda b, e: self.finalize(),
             }
         )
+
         self.joystick_sub = self.create_subscription(
             sensor_msgs.msg.Joy,
             '/joy',
@@ -135,7 +137,7 @@ class HexapodBrain(rclpy.node.Node):
             self.hexapod,
             step_length=step_length,
             step_height=step_height,
-            rotation_speed_degrees=20,
+            rotation_speed_degrees=45,
             gait=self.gaits[self.gait_index],
             phase_steps_per_cycle=self.fps / 2.5,
         )
@@ -148,12 +150,20 @@ class HexapodBrain(rclpy.node.Node):
         self.gait_index = (self.gait_index + 1) % len(self.gaits)
         self.get_logger().info(f'Switching gait: {self.gaits[self.gait_index].name}')
 
+    def next_control_mode(self):
+        self.joystick_input_handler.next_control_mode()
+        self.get_logger().info(
+            f'Switching control mode: {self.joystick_input_handler.control_mode}'
+        )
+
     def loop(self):
         self.walker.current_gait = self.gaits[self.gait_index]
         self.walker.phase_step = 1 / self.phase_steps_per_cycle[self.gait_index]
         self.walker.next_step(
             stride_direction=self.joystick_input_handler.direction,
             rotation_direction=self.joystick_input_handler.rotation_speed,
+            body_direction=self.joystick_input_handler.body_translation / 8.0,
+            body_rotation=self.joystick_input_handler.body_rotation,
         )
 
         trajectory = JointTrajectoryBuilder(self.hexapod)
