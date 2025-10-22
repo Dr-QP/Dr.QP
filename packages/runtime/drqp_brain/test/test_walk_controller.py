@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from drqp_brain.geometry import Point3D
+from drqp_brain.geometry import AffineTransform, Point3D
 from drqp_brain.models import HexapodModel
 from drqp_brain.parametric_gait_generator import GaitType
 from drqp_brain.walk_controller import WalkController
@@ -299,3 +299,37 @@ class TestWalkController:
             # assert abs(angular_distance) == pytest.approx(
             #     walker.rotation_speed_degrees / 4, abs=1e-2
             # )
+
+    def test_body_translation(self, walker, hexapod):
+        walker.next_step(
+            stride_direction=Point3D([0, 0, 0]),
+            rotation_direction=0.0,
+            body_direction=Point3D([0.1, 0.2, 0.3]),
+        )
+        assert hexapod.body_transform.translation == pytest.approx([0.1, 0.2, 0.3], abs=1e-3), (
+            'Body is translated'
+        )
+
+    def test_body_rotation(self, walker, hexapod):
+        walker.next_step(
+            stride_direction=Point3D([0, 0, 0]),
+            rotation_direction=0.0,
+            body_rotation=Point3D([0.1, 0.2, 0.3]),
+        )
+        assert hexapod.body_transform.rotation == pytest.approx(
+            AffineTransform.from_rotvec([0.1, 0.2, 0.3]).rotation, abs=1e-3
+        ), 'Body is rotated'
+
+    def test_body_translation_and_rotation(self, walker, hexapod):
+        walker.next_step(
+            stride_direction=Point3D([0, 0, 0]),
+            rotation_direction=0.0,
+            body_direction=Point3D([0.1, 0.2, 0.3]),
+            body_rotation=Point3D([0.3, 0.4, 0.5]),
+        )
+        assert hexapod.body_transform.translation == pytest.approx([0.1, 0.2, 0.3], abs=1e-3), (
+            'Body is translated'
+        )
+        assert hexapod.body_transform.rotation == pytest.approx(
+            AffineTransform.from_rotvec([0.3, 0.4, 0.5]).rotation, abs=1e-3
+        ), 'Body is rotated'
