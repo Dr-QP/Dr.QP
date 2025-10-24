@@ -23,7 +23,11 @@ import unittest
 
 from control_msgs.action import FollowJointTrajectory
 from control_msgs.msg import DynamicJointState, InterfaceValue
-from controller_manager_msgs.srv import ListControllers
+from controller_manager.test_utils import (
+    check_controllers_running,
+    check_if_js_published,
+    check_node_running,
+)
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -34,7 +38,6 @@ from launch_testing.actions import ReadyToTest
 import numpy as np
 import rclpy
 from rclpy.action import ActionClient
-from rclpy.client import Client
 import rclpy.time
 from trajectory_msgs.msg import JointTrajectoryPoint
 
@@ -119,24 +122,8 @@ class TestA116HardwareInterface(unittest.TestCase):
         )
 
     def _wait_for_controller(self, node):
-        list_controllers: Client = node.create_client(
-            ListControllers, '/controller_manager/list_controllers'
-        )
-        list_controllers.wait_for_service(timeout_sec=10.0)
-
         needed_controllers = ['joint_trajectory_controller', 'joint_state_broadcaster']
-        while True:
-            response_future = list_controllers.call_async(ListControllers.Request())
-            rclpy.spin_until_future_complete(node, response_future, timeout_sec=10.0)
-            response = response_future.result()
-            if response is not None:
-                for controller in response.controller:
-                    if controller.name in needed_controllers:
-                        if controller.state == 'active':
-                            needed_controllers.remove(controller.name)
-                            if not needed_controllers:
-                                return
-            rclpy.spin_once(node, timeout_sec=0.1)
+        check_controllers_running(node, needed_controllers)
 
     def _reset_feedback(self):
         self.joint_positions = [default_interface_value] * len(self.joint_names)
@@ -169,6 +156,16 @@ class TestA116HardwareInterface(unittest.TestCase):
         self.dynamic_joint_states_sub.destroy()
         self.node.destroy_node()
         self._reset_feedback()
+
+    def test_node_start(self):
+        check_node_running(self.node, 'robot_state_publisher')
+        check_node_running(self.node, 'controller_manager')
+        check_node_running(self.node, 'battery_state_broadcaster')
+        check_node_running(self.node, 'joint_state_broadcaster')
+        check_node_running(self.node, 'joint_trajectory_controller')
+
+    def test_joint_states_published(self):
+        check_if_js_published('/joint_states', self.joint_names)
 
     def test_effort_off(self):
         self._effort_test(0)
