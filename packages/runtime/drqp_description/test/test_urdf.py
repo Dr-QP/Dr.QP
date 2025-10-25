@@ -52,7 +52,9 @@ def test_urdf_file_is_valid(urdf_file):
             assert os.path.exists(temp_file.name)
 
             proc = subprocess.run(
-                ['check_urdf', temp_file.name], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+                ['check_urdf', temp_file.name],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
             )
             assert proc.returncode == 0, 'check_urdf failed:\n' + proc.stdout.decode()
         finally:
