@@ -43,10 +43,18 @@ def test_urdf_file_is_valid(urdf_file):
     """Check if URDF file is valid."""
     with tempfile.NamedTemporaryFile(suffix='.urdf') as temp_file:
         try:
-            subprocess.run(['xacro', urdf_file, '-o', temp_file.name], check=True)
+            proc = subprocess.run(
+                ['xacro', urdf_file, '-o', temp_file.name],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+            assert proc.returncode == 0, 'xacro failed:\n' + proc.stdout.decode()
             assert os.path.exists(temp_file.name)
 
-            subprocess.run(['check_urdf', temp_file.name], check=True)
+            proc = subprocess.run(
+                ['check_urdf', temp_file.name], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            )
+            assert proc.returncode == 0, 'check_urdf failed:\n' + proc.stdout.decode()
         finally:
             if os.path.exists(temp_file.name):
                 os.remove(temp_file.name)
