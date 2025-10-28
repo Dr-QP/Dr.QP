@@ -4,7 +4,7 @@ project(drqp_gazebo)
 find_package(ament_cmake REQUIRED)
 
 install(
-  DIRECTORY launch config
+  DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
 )
 

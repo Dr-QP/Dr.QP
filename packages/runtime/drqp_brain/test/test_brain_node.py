@@ -33,16 +33,8 @@ import rclpy
 
 @pytest.mark.launch_test
 def generate_test_description():
-    use_sim_time = LaunchConfiguration('use_sim_time')
-
     return LaunchDescription(
         [
-            DeclareLaunchArgument(
-                name='use_sim_time',
-                default_value='false',
-                choices=['true', 'false'],
-                description='Use sim time if true',
-            ),
             Node(
                 executable=FindExecutable(name='python3'),
                 arguments=[
@@ -52,11 +44,6 @@ def generate_test_description():
                     ExecutableInPackage(package='drqp_brain', executable='drqp_brain'),
                 ],
                 output='screen',
-                parameters=[
-                    {
-                        'use_sim_time': use_sim_time,
-                    }
-                ],
             ),
             # Launch tests 3s later
             TimerAction(period=3.0, actions=[ReadyToTest()]),
