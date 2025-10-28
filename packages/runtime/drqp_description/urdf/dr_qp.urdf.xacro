@@ -1,15 +1,11 @@
 <?xml version="1.0"?>
 <robot name="dr_qp" xmlns:xacro="http://ros.org/wiki/xacro">
-
   <xacro:arg name="robot_name" default = "dr_qp"/>
   <xacro:arg name="hardware_device_address" default="/dev/ttySC0"/>
   <xacro:arg name="use_gazebo" default="false" />
 
   <material name="drqp_black">
     <texture filename="package://drqp_description/meshes/drqp_black.png"/>
-  </material>
-  <material name="drqp_black_tmp">
-    <color rgba="0.5 0.5 0.5 0.2" />
   </material>
 
   <xacro:property name="robot_height" value="0.085" />
