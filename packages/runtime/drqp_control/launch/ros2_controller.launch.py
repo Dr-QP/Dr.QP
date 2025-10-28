@@ -21,7 +21,7 @@
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node, SetParameter
@@ -45,43 +45,26 @@ def generate_launch_description():
         package='controller_manager',
         executable='ros2_control_node',
         parameters=[
-            {
-                'use_sim_time': use_gazebo,
-            },
             robot_controllers,
         ],
         output='both',
+        condition=UnlessCondition(use_gazebo),
     )
     joint_state_broadcaster_spawner = Node(
         package='controller_manager',
         executable='spawner',
         arguments=['joint_state_broadcaster'],
-        parameters=[
-            {
-                'use_sim_time': use_gazebo,
-            },
-        ],
     )
     battery_state_broadcaster_spawner = Node(
         package='controller_manager',
         executable='spawner',
         arguments=['battery_state_broadcaster'],
-        parameters=[
-            {
-                'use_sim_time': use_gazebo,
-            },
-        ],
     )
 
     robot_controller_spawner = Node(
         package='controller_manager',
         executable='spawner',
         arguments=['joint_trajectory_controller', '--param-file', robot_controllers],
-        parameters=[
-            {
-                'use_sim_time': use_gazebo,
-            },
-        ],
     )
 
     return LaunchDescription(

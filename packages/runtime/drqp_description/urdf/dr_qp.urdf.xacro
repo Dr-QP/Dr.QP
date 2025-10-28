@@ -33,6 +33,9 @@
   <xacro:include filename="$(find drqp_description)/urdf/ros2_control.urdf.xacro"/>
   <xacro:drqp_ros2_control robot_name="$(arg robot_name)" device_address="$(arg hardware_device_address)" use_gazebo="$(arg use_gazebo)" />
 
+  <xacro:include filename="$(find drqp_description)/urdf/gazebo.xacro"/>
+  <xacro:gazebo />
+
   <gazebo reference="">
     <self_collide>1</self_collide>
 

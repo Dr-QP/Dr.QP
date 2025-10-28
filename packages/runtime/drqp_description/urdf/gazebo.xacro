@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:macro name="gazebo" params="robot_name">
-    <!-- Gazebo Classic definitions + plugin -->
-  <!-- <gazebo>
-    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
-      <parameters>$(find drqp_control)/config/drqp_controllers.yaml</parameters>
-    </plugin>
-  </gazebo> -->
+  <xacro:macro name="gazebo">
+    <!-- ros_control plugin -->
+    <gazebo>
+      <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <parameters>$(find drqp_control)/config/drqp_controllers.yml</parameters>
+      </plugin>
+    </gazebo>
   </xacro:macro>
 </robot>
