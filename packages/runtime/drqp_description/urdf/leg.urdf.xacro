@@ -10,7 +10,7 @@
 
   <xacro:macro name="leg" params="robot_name prefix x y yaw">
 
-  <joint name="${robot_name}/${prefix}_coxa_servo" type="fixed">
+  <joint name="${robot_name}/${prefix}_coxa_servo_joint" type="fixed">
     <origin rpy="0 0 ${yaw}" xyz="${x} ${y} 0"/>
     <parent link="${robot_name}/base_center_link"/>
     <child link="${robot_name}/${prefix}_coxa_servo"/>
@@ -223,7 +223,7 @@
     </inertial>
   </link>
 
-  <joint name="${robot_name}/${prefix}_tibia_leg" type="fixed">
+  <joint name="${robot_name}/${prefix}_tibia_leg_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0.0325 0 0"/>
     <parent link="${robot_name}/${prefix}_tibia_servo"/>
     <child link="${robot_name}/${prefix}_tibia_leg"/>
