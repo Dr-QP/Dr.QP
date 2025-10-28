@@ -105,7 +105,10 @@ def generate_launch_description():
                 ]
             )
         ),
-        launch_arguments={'use_sim_time': 'true', 'show_rviz': gui}.items(),
+        launch_arguments={
+            'show_rviz': gui,
+            'use_gazebo': 'true',
+        }.items(),
     )
     # Launch them all!
     return LaunchDescription(
