@@ -63,6 +63,7 @@ public:
     bool inverted;
     double offset_radians;
 
+    double max_torque; // 0..1
     double min_angle_radians;
     double max_angle_radians;
   };
@@ -76,6 +77,14 @@ public:
 
   std::vector<std::string> getJointNames() const;
   std::vector<uint8_t> getServoIds() const;
+
+  struct ServoLimitValues
+  {
+    uint16_t max_pwm;
+    uint16_t min_position;
+    uint16_t max_position;
+  };
+  std::optional<ServoLimitValues> getServoLimits(uint8_t servoId) const;
 
 protected:
   rclcpp::Logger get_logger() const
