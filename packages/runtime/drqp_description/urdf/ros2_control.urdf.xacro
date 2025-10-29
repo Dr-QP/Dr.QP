@@ -37,7 +37,7 @@
       <command_interface name="position">
         <param name="servo_id">${coxa_servo_id + 4}</param>
         <param name="inverted">${servo_inverted}</param>
-        <param name="offset_rads">${offset_coxa}</param>
+        <param name="offset_rads">${offset_tibia}</param>
         <param name="max_torque">${max_torque}</param>
         <param name="min">${radians(-80)}</param>
         <param name="max">${radians(110)}</param>
