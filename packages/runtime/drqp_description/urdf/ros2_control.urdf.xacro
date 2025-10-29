@@ -1,13 +1,14 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:macro name="drqp_leg_ros2_control" params="robot_name leg_name coxa_servo_id servo_inverted:=False offset_coxa:=0.0 offset_femur:=0.0 offset_tibia:=0.0">
+  <xacro:macro name="drqp_leg_ros2_control" params="robot_name leg_name coxa_servo_id servo_inverted:=False offset_coxa:=0.0 offset_femur:=0.0 offset_tibia:=0.0 max_torque:=0.2">
     <joint name="${robot_name}/${leg_name}_coxa">
       <command_interface name="position">
         <param name="servo_id">${coxa_servo_id}</param>
         <param name="inverted">False</param>
+        <param name="offset_rads">${offset_coxa}</param>
+        <param name="max_torque">${max_torque}</param>
         <param name="min">${radians(-90)}</param>
         <param name="max">${radians(90)}</param>
-        <param name="offset_rads">${offset_coxa}</param>
         <param name="initial_value">0.0</param> <!-- Initial value for mock_hardware -->
       </command_interface>
       <command_interface name="effort" />
@@ -20,9 +21,10 @@
       <command_interface name="position">
         <param name="servo_id">${coxa_servo_id + 2}</param>
         <param name="inverted">${servo_inverted}</param>
+        <param name="offset_rads">${offset_femur}</param>
+        <param name="max_torque">${max_torque}</param>
         <param name="min">${radians(-98)}</param>
         <param name="max">${radians(90)}</param>
-        <param name="offset_rads">${offset_femur}</param>
         <param name="initial_value">0.0</param> <!-- Initial value for mock_hardware -->
       </command_interface>
       <command_interface name="effort" />
@@ -35,9 +37,10 @@
       <command_interface name="position">
         <param name="servo_id">${coxa_servo_id + 4}</param>
         <param name="inverted">${servo_inverted}</param>
+        <param name="offset_rads">${offset_coxa}</param>
+        <param name="max_torque">${max_torque}</param>
         <param name="min">${radians(-80)}</param>
         <param name="max">${radians(110)}</param>
-        <param name="offset_rads">${offset_tibia}</param>
         <param name="initial_value">0.0</param> <!-- Initial value for mock_hardware -->
       </command_interface>
       <command_interface name="effort" />
