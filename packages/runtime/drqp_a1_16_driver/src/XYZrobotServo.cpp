@@ -197,7 +197,9 @@ void XYZrobotServo::writeMinMaxPositionRam(uint16_t min, uint16_t max)
   XYZrobotServoRAM ram = {};
   ram.Min_Position = min;
   ram.Max_Position = max;
-  ramWrite(offsetof(XYZrobotServoRAM, Min_Position), &ram.Min_Position, sizeof(ram.Min_Position) + sizeof(ram.Max_Position));
+  ramWrite(
+    offsetof(XYZrobotServoRAM, Min_Position), &ram.Min_Position,
+    sizeof(ram.Min_Position) + sizeof(ram.Max_Position));
 }
 
 void XYZrobotServo::writeLedControl(uint8_t control)

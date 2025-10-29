@@ -168,8 +168,9 @@ struct SharedMemData
   uint8_t Alarm_LED_Policy;  // see writeAlarmLedPolicyRam, default 0x00
 
   // Shut down Motor when Voltage/Load/Temperature. Torque Free Control: 0, Torque Limited: 1
-  uint8_t Torque_Policy; // default 0x01
-  uint8_t SPDctrl_Policy;  // Speed open/close loop control. Open loop: 0, Close loop: 1, default 0x01
+  uint8_t Torque_Policy;  // default 0x01
+  uint8_t
+    SPDctrl_Policy;  // Speed open/close loop control. Open loop: 0, Close loop: 1, default 0x01
 
   // The limit of A1-16 servo operating temperature. The value is in Degrees Celsius, default 0x48
   uint8_t Max_Temperature;
@@ -188,7 +189,8 @@ struct SharedMemData
 
   uint8_t reserved1[3];
 
-  uint16_t Max_Wheel_Ref_Position;  // Start virtual position for speed close loop control. default 0x042E
+  uint16_t
+    Max_Wheel_Ref_Position;  // Start virtual position for speed close loop control. default 0x042E
 
   uint8_t reserved2[2];
 
@@ -197,40 +199,45 @@ struct SharedMemData
   uint16_t Overload_Threshold;  // The max value of A1-16 servo output torque, default 0x00CC
   uint16_t Min_Position;        // Min operational angle, default 0x00
   uint16_t Max_Position;        // Max operational angle, default 0x03FF
-  uint16_t Position_Kp;  // The P control law is implemented below with a sampling time of 10 msec, default 0x0F00
-  uint16_t Position_Kd;  // The PD control law is implemented below with a sampling time of 10 msec, default 0x0800
-  uint16_t Position_Ki;  // The PID control law is implemented below with a sampling time of 10 msec, default 0x0000
-  uint16_t Close_to_Open_Ref_Position;  // close loop continuous rotate mode close to open position, default 0x03FF
-  uint16_t Open_to_Close_Ref_Position;  // close loop continuous rotate mode open to close position, default 0x00
+  uint16_t
+    Position_Kp;  // The P control law is implemented below with a sampling time of 10 msec, default 0x0F00
+  uint16_t
+    Position_Kd;  // The PD control law is implemented below with a sampling time of 10 msec, default 0x0800
+  uint16_t
+    Position_Ki;  // The PID control law is implemented below with a sampling time of 10 msec, default 0x0000
+  uint16_t
+    Close_to_Open_Ref_Position;  // close loop continuous rotate mode close to open position, default 0x03FF
+  uint16_t
+    Open_to_Close_Ref_Position;  // close loop continuous rotate mode open to close position, default 0x00
 
-  uint8_t reserved3[2]; // default 0x03FF
+  uint8_t reserved3[2];  // default 0x03FF
 
-  uint16_t Ramp_Speed;       // 0 (step position command), 1~1023 (slope of ramp-to-step), default 0x03FF
+  uint16_t Ramp_Speed;  // 0 (step position command), 1~1023 (slope of ramp-to-step), default 0x03FF
   uint8_t LED_Blink_Period;  // Blinking Period of LED with a sampling time of 10 msec., default 0x0
 
-  uint8_t reserved4; // default 0x00
+  uint8_t reserved4;  // default 0x00
 
   // Packet Timeout Detection Period of
   // LED with a sampling time of 10 msec. 1 = 10ms
-  uint8_t Packet_Timeout_Detection_Period; // default 0x0A
+  uint8_t Packet_Timeout_Detection_Period;  // default 0x0A
 
   uint8_t reserved5;
 
   // Overload Detection Period of servo with a
   // sampling time of 10 msec. 1 = 10ms
-  uint8_t Overload_Detection_Period; // default 0x19
+  uint8_t Overload_Detection_Period;  // default 0x19
 
   uint8_t reserved6;
 
-  uint8_t Inposition_Margin; // default 0x01
+  uint8_t Inposition_Margin;  // default 0x01
 
   // Over Voltage Detection Period of servo
   // with a sampling time of 10 msec. 1 = 10ms
-  uint8_t Over_Voltage_Detection_Period; // default 0xFF
+  uint8_t Over_Voltage_Detection_Period;  // default 0xFF
 
   // Over Temperature Detection Period of servo
   // with a sampling time of 10 msec. 1 = 10ms
-  uint8_t Over_Temperature_Detection_Period; // default 0x0A
+  uint8_t Over_Temperature_Detection_Period;  // default 0x0A
 
   // The difference between newtral point and position raw data.
   uint8_t Calibration_Difference;

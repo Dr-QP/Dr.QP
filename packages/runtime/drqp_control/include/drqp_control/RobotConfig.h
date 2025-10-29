@@ -63,7 +63,7 @@ public:
     bool inverted;
     double offset_radians;
 
-    double max_torque; // 0..1
+    double max_torque;  // 0..1
     double min_angle_radians;
     double max_angle_radians;
   };
