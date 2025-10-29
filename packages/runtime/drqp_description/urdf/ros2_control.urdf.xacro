@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:macro name="drqp_leg_ros2_control" params="robot_name leg_name coxa_servo_id servo_inverted:=False offset_coxa:=0.0 offset_femur:=0.0 offset_tibia:=0.0 max_torque:=0.5">
+  <xacro:macro name="drqp_leg_ros2_control" params="robot_name leg_name coxa_servo_id servo_inverted:=False offset_coxa:=0.0 offset_femur:=0.0 offset_tibia:=0.0 max_torque:=0.25">
     <joint name="${robot_name}/${leg_name}_coxa">
       <command_interface name="position">
         <param name="servo_id">${coxa_servo_id}</param>
