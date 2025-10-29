@@ -154,6 +154,9 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
       ServoPtr servo = makeServo(servoId);
       servo->writeMaxPwmRam(limits->max_pwm);
       servo->writeMinMaxPositionRam(limits->min_position, limits->max_position);
+      RCLCPP_INFO(
+        get_logger(), "Servo %i: Max PWM: %i, Min position: %i, Max position: %i ", servoId,
+        limits->max_pwm, limits->min_position, limits->max_position);
     }
     for (const auto& jointName : robotConfig_.getJointNames()) {
       const auto position = get_state(jointName + "/position");
