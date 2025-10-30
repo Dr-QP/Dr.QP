@@ -53,12 +53,12 @@ def generate_launch_description():
     joint_state_broadcaster_spawner = Node(
         package='controller_manager',
         executable='spawner',
-        arguments=['joint_state_broadcaster'],
+        arguments=['joint_state_broadcaster', '--param-file', robot_controllers],
     )
     battery_state_broadcaster_spawner = Node(
         package='controller_manager',
         executable='spawner',
-        arguments=['battery_state_broadcaster'],
+        arguments=['battery_state_broadcaster', '--param-file', robot_controllers],
     )
 
     robot_controller_spawner = Node(
