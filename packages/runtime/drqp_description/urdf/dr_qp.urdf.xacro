@@ -24,7 +24,7 @@
 
 
   <link name="world" />
-  <joint name="world_to_base_link=" type="fixed">
+  <joint name="world_to_base_link" type="fixed">
       <origin rpy="0 0 0" xyz="0 0 ${robot_height}"/>
       <parent link="world"/>
       <child link="$(arg robot_name)/base_link"/>
