@@ -211,8 +211,7 @@ std::optional<RobotConfig::ServoLimitValues> RobotConfig::getServoLimits(uint8_t
   const JointParams jointParams = servoIdToJoint_.at(servoId);
   const uint16_t minPosition = radiansToPosition(jointParams.min_angle_rads);
   const uint16_t maxPosition = radiansToPosition(jointParams.max_angle_rads);
-  const uint16_t maxPWM =
-    static_cast<uint16_t>(std::round(mapToRange(jointParams.max_torque, 0.0, 1.0, 0, 1023)));
+  const uint16_t maxPWM = mapToRange<uint16_t>(jointParams.max_torque, 0.0, 1.0, 0, 1023);
 
   return ServoLimitValues{
     .max_pwm = maxPWM,
