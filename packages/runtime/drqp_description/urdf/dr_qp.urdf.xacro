@@ -36,8 +36,8 @@
   <xacro:include filename="$(find drqp_description)/urdf/gazebo.xacro"/>
   <xacro:gazebo />
 
-  <gazebo reference="">
-    <self_collide>1</self_collide>
+  <gazebo>
+    <self_collide>true</self_collide>
 
     <!-- Params copied from https://www.youtube.com/watch?v=Gp3DF97yN7k&list=PL_0ePxMRfT22elbjPCf36MS02d6TK2sSk&index=1 -->
     <mu1>50</mu1>
