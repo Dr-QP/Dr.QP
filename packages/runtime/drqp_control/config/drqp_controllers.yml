@@ -1,15 +1,18 @@
 controller_manager:
   ros__parameters:
-    update_rate: 3000  # Hz
+    update_rate: 1000  # Hz
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
+      update_rate: 100  # Hz
 
     battery_state_broadcaster:
       type: battery_state_broadcaster/BatteryStateBroadcaster
+      update_rate: 10  # Hz
 
     joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
+      update_rate: 100  # Hz
 
 joint_trajectory_controller:
   ros__parameters:
