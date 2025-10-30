@@ -8,7 +8,7 @@
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-  <depend>ros2_controllers</depend>
+  <depend>drqp_brain</depend>
 
   <exec_depend>ros2launch</exec_depend>
   <exec_depend>ros_gz_bridge</exec_depend>

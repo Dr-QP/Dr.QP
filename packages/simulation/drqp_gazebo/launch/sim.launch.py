@@ -80,19 +80,19 @@ def generate_launch_description():
             '-topic',
             '/robot_description',
             '-name',
-            'drqp_system_position',
+            'drqp',
             '-allow_renaming',
             'true',
         ],
     )
 
-    ros2_controller = IncludeLaunchDescription(
+    drqp_system = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
                 [
-                    FindPackageShare('drqp_control'),
+                    FindPackageShare('drqp_brain'),
                     'launch',
-                    'ros2_controller.launch.py',
+                    'bringup.launch.py',
                 ]
             )
         ),
@@ -105,7 +105,7 @@ def generate_launch_description():
     return LaunchDescription(
         declared_arguments
         + [
-            ros2_controller,
+            drqp_system,
             gazebo,
             gazebo_bridge,
             gz_spawn_entity,
