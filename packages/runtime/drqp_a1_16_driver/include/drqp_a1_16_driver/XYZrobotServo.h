@@ -174,11 +174,11 @@ struct SharedMemData
 
   // The limit of A1-16 servo operating temperature. The value is in Degrees Celsius, default 0x48
   uint8_t Max_Temperature;
-  // The min value of A1-16 servo operating voltage. The value is 16 times the actual voltage, default 0x77
-  uint8_t Min_Voltage;
+  // The min value of A1-16 servo operating voltage. The value is 16 times the actual voltage
+  uint8_t Min_Voltage;  // default 0x77
 
-  // The max value of A1-16 servo operating voltage. The value is 16 times the actual voltage, default 0xE8
-  uint8_t Max_Voltage;
+  // The max value of A1-16 servo operating voltage. The value is 16 times the actual voltage
+  uint8_t Max_Voltage;  // default 0xE8
 
   // 0-50. Note: acceleration_time = deceleration_time = play_time * Acceleration_Ratio/100
   // Play time | Acceleration_Ratio | Reference position trajectory
@@ -194,21 +194,26 @@ struct SharedMemData
 
   uint8_t reserved2[2];
 
-  uint16_t Max_PWM;  // The max value of A1-16 servo output torque, default 0x03FF
-
+  uint16_t Max_PWM;             // The max value of A1-16 servo output torque, default 0x03FF
   uint16_t Overload_Threshold;  // The max value of A1-16 servo output torque, default 0x00CC
-  uint16_t Min_Position;        // Min operational angle, default 0x00
-  uint16_t Max_Position;        // Max operational angle, default 0x03FF
-  uint16_t
-    Position_Kp;  // The P control law is implemented below with a sampling time of 10 msec, default 0x0F00
-  uint16_t
-    Position_Kd;  // The PD control law is implemented below with a sampling time of 10 msec, default 0x0800
-  uint16_t
-    Position_Ki;  // The PID control law is implemented below with a sampling time of 10 msec, default 0x0000
-  uint16_t
-    Close_to_Open_Ref_Position;  // close loop continuous rotate mode close to open position, default 0x03FF
-  uint16_t
-    Open_to_Close_Ref_Position;  // close loop continuous rotate mode open to close position, default 0x00
+
+  uint16_t Min_Position;  // Min operational angle, default 0x00
+  uint16_t Max_Position;  // Max operational angle, default 0x03FF
+
+  // The P control law is implemented below with a sampling time of 10 msec
+  uint16_t Position_Kp;  // default 0x0F00
+
+  // The PD control law is implemented below with a sampling time of 10 msec
+  uint16_t Position_Kd;  // default 0x0800
+
+  // The PID control law is implemented below with a sampling time of 10 msec
+  uint16_t Position_Ki;  // default 0x0000
+
+  // close loop continuous rotate mode close to open position
+  uint16_t Close_to_Open_Ref_Position;  // default 0x03FF
+
+  // close loop continuous rotate mode open to close position
+  uint16_t Open_to_Close_Ref_Position;  // default 0x00
 
   uint8_t reserved3[2];  // default 0x03FF
 
