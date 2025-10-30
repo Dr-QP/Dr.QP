@@ -164,73 +164,85 @@ uint8_t toPlaytime(const DurationT& duration)
 struct SharedMemData
 {
   uint8_t sID;               // Servo ID 1-253
-  uint8_t ACK_Policy;        // see XYZrobotServoAckPolicy
-  uint8_t Alarm_LED_Policy;  // see writeAlarmLedPolicyRam
+  uint8_t ACK_Policy;        // see XYZrobotServoAckPolicy, default 0x02
+  uint8_t Alarm_LED_Policy;  // see writeAlarmLedPolicyRam, default 0x00
 
   // Shut down Motor when Voltage/Load/Temperature. Torque Free Control: 0, Torque Limited: 1
-  uint8_t Torque_Policy;
-  uint8_t SPDctrl_Policy;  // Speed open/close loop control. Open loop: 0, Close loop: 1
+  uint8_t Torque_Policy;  // default 0x01
+  uint8_t
+    SPDctrl_Policy;  // Speed open/close loop control. Open loop: 0, Close loop: 1, default 0x01
 
-  // The limit of A1-16 servo operating temperature. The value is in Degrees Celsius
+  // The limit of A1-16 servo operating temperature. The value is in Degrees Celsius, default 0x48
   uint8_t Max_Temperature;
   // The min value of A1-16 servo operating voltage. The value is 16 times the actual voltage
-  uint8_t Min_Voltage;
+  uint8_t Min_Voltage;  // default 0x77
 
   // The max value of A1-16 servo operating voltage. The value is 16 times the actual voltage
-  uint8_t Max_Voltage;
+  uint8_t Max_Voltage;  // default 0xE8
 
   // 0-50. Note: acceleration_time = deceleration_time = play_time * Acceleration_Ratio/100
   // Play time | Acceleration_Ratio | Reference position trajectory
-  // 0         | 0                  | Ramp-to-step position command, see (36)
+  // 0         | 0                  | Ramp-to-step position command, see (36) (default)
   // 1-255     | 0                  | Constant speed profile
   // 1-255     | 1-50               | T-curve speed profile
   uint8_t Acceleration_Ratio;
 
   uint8_t reserved1[3];
 
-  uint16_t Max_Wheel_Ref_Position;  // Start virtual position for speed close loop control.
+  uint16_t
+    Max_Wheel_Ref_Position;  // Start virtual position for speed close loop control. default 0x042E
 
   uint8_t reserved2[2];
 
-  uint16_t Max_PWM;  // The max value of A1-16 servo output torque
+  uint16_t Max_PWM;             // The max value of A1-16 servo output torque, default 0x03FF
+  uint16_t Overload_Threshold;  // The max value of A1-16 servo output torque, default 0x00CC
 
-  uint16_t Overload_Threshold;  // The max value of A1-16 servo output torque
-  uint16_t Min_Position;        // Min operational angle
-  uint16_t Max_Position;        // Max operational angle
-  uint16_t Position_Kp;  // The P control law is implemented below with a sampling time of 10 msec
-  uint16_t Position_Kd;  // The PD control law is implemented below with a sampling time of 10 msec
-  uint16_t Position_Ki;  // The PID control law is implemented below with a sampling time of 10 msec
-  uint16_t Close_to_Open_Ref_Position;  // close loop continuous rotate mode close to open position
-  uint16_t Open_to_Close_Ref_Position;  // close loop continuous rotate mode open to close position.
+  uint16_t Min_Position;  // Min operational angle, default 0x00
+  uint16_t Max_Position;  // Max operational angle, default 0x03FF
 
-  uint8_t reserved3[2];
+  // The P control law is implemented below with a sampling time of 10 msec
+  uint16_t Position_Kp;  // default 0x0F00
 
-  uint16_t Ramp_Speed;       // 0 (step position command), 1~1023 (slope of ramp-to-step)
-  uint8_t LED_Blink_Period;  // Blinking Period of LED with a sampling time of 10 msec.
+  // The PD control law is implemented below with a sampling time of 10 msec
+  uint16_t Position_Kd;  // default 0x0800
 
-  uint8_t reserved4;
+  // The PID control law is implemented below with a sampling time of 10 msec
+  uint16_t Position_Ki;  // default 0x0000
+
+  // close loop continuous rotate mode close to open position
+  uint16_t Close_to_Open_Ref_Position;  // default 0x03FF
+
+  // close loop continuous rotate mode open to close position
+  uint16_t Open_to_Close_Ref_Position;  // default 0x00
+
+  uint8_t reserved3[2];  // default 0x03FF
+
+  uint16_t Ramp_Speed;  // 0 (step position command), 1~1023 (slope of ramp-to-step), default 0x03FF
+  uint8_t LED_Blink_Period;  // Blinking Period of LED with a sampling time of 10 msec., default 0x0
+
+  uint8_t reserved4;  // default 0x00
 
   // Packet Timeout Detection Period of
   // LED with a sampling time of 10 msec. 1 = 10ms
-  uint8_t Packet_Timeout_Detection_Period;
+  uint8_t Packet_Timeout_Detection_Period;  // default 0x0A
 
   uint8_t reserved5;
 
   // Overload Detection Period of servo with a
   // sampling time of 10 msec. 1 = 10ms
-  uint8_t Overload_Detection_Period;
+  uint8_t Overload_Detection_Period;  // default 0x19
 
   uint8_t reserved6;
 
-  uint8_t Inposition_Margin;
+  uint8_t Inposition_Margin;  // default 0x01
 
   // Over Voltage Detection Period of servo
   // with a sampling time of 10 msec. 1 = 10ms
-  uint8_t Over_Voltage_Detection_Period;
+  uint8_t Over_Voltage_Detection_Period;  // default 0xFF
 
   // Over Temperature Detection Period of servo
   // with a sampling time of 10 msec. 1 = 10ms
-  uint8_t Over_Temperature_Detection_Period;
+  uint8_t Over_Temperature_Detection_Period;  // default 0x0A
 
   // The difference between newtral point and position raw data.
   uint8_t Calibration_Difference;
@@ -411,8 +423,10 @@ public:
   /// This should be a number between 0 and 1023 that indicates how strong the
   /// servo should be allowed to drive its motor, with 1023 corresponding to
   /// 100%.
-  void writeMaxPwmRam(uint16_t value);
+  void writeMaxPwmRam(uint16_t value) override;
   uint16_t readMaxPwmRam();
+
+  void writeMinMaxPositionRam(uint16_t min, uint16_t max) override;
 
   enum : uint8_t {
     kWhiteLedBit = 1,

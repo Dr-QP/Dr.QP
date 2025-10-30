@@ -82,6 +82,7 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
             .servo_id = servoId,
             .inverted = get_bool_param(commandInterface.parameters, "inverted"),
             .offset_radians = std::stod(get_param(commandInterface.parameters, "offset_rads")),
+            .max_torque = std::stod(get_param(commandInterface.parameters, "max_torque")),
             .min_angle_radians = std::stod(get_param(commandInterface.parameters, "min")),
             .max_angle_radians = std::stod(get_param(commandInterface.parameters, "max")),
           });
@@ -144,6 +145,18 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
     // Read all servos and set commands to current position
     for (const auto servoId : robotConfig_.getServoIds()) {
       readServoStatus(servoId);
+
+      const auto limits = robotConfig_.getServoLimits(servoId);
+      if (!limits) {
+        RCLCPP_ERROR(get_logger(), "Failed to get servo limits for servo %i", servoId);
+        continue;
+      }
+      ServoPtr servo = makeServo(servoId);
+      servo->writeMaxPwmRam(limits->max_pwm);
+      servo->writeMinMaxPositionRam(limits->min_position, limits->max_position);
+      RCLCPP_INFO(
+        get_logger(), "Servo %i: Max PWM: %i, Min position: %i, Max position: %i ", servoId,
+        limits->max_pwm, limits->min_position, limits->max_position);
     }
     for (const auto& jointName : robotConfig_.getJointNames()) {
       const auto position = get_state(jointName + "/position");
