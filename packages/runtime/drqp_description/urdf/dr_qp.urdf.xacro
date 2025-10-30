@@ -23,10 +23,10 @@
   <xacro:leg robot_name="$(arg robot_name)" prefix="right_back" x="-0.11692" y="-0.06387" yaw="${-3*pi/4}"/>
 
 
-  <link name="world" />
-  <joint name="world_to_base_link" type="fixed">
+  <link name="ground" />
+  <joint name="ground_to_base_link" type="fixed">
       <origin rpy="0 0 0" xyz="0 0 ${robot_height}"/>
-      <parent link="world"/>
+      <parent link="ground"/>
       <child link="$(arg robot_name)/base_link"/>
   </joint>
 
