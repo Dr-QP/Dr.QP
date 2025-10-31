@@ -21,8 +21,12 @@
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
+    ExecuteProcess,
     IncludeLaunchDescription,
+    RegisterEventHandler,
+    Shutdown,
 )
+from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
     IfElseSubstitution,
@@ -47,21 +51,21 @@ def generate_launch_description():
     # Initialize Arguments
     gui = LaunchConfiguration('gui')
 
-    # gazebo
-    gazebo = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([FindPackageShare('ros_gz_sim'), '/launch/gz_sim.launch.py']),
-        launch_arguments=[
-            (
-                'gz_args',
-                [
-                    IfElseSubstitution(
-                        gui,
-                        ' -r -v 3 empty.sdf',
-                        '--headless-rendering -s -r -v 3 empty.sdf',
-                    )
-                ],
-            )
+    # gazebo as ExecuteProcess instead of IncludeLaunchDescription to be able to target it with OnProcessExit
+    gz_args = 'gz_args:=-r -v 3 empty.sdf'
+    gazebo = ExecuteProcess(
+        cmd=[
+            'ros2',
+            'launch',
+            'ros_gz_sim',
+            'gz_sim.launch.py',
+            IfElseSubstitution(
+                gui,
+                gz_args,
+                gz_args + ' --headless-rendering -s',
+            ),
         ],
+        output='screen',
     )
 
     # Gazebo bridge
@@ -101,6 +105,15 @@ def generate_launch_description():
             'use_gazebo': 'true',
         }.items(),
     )
+
+    # Shutdown all nodes when Gazebo exits
+    shutdown_handler = RegisterEventHandler(
+        OnProcessExit(
+            target_action=gazebo,
+            on_exit=Shutdown(reason='Gazebo has exited'),
+        )
+    )
+
     # Launch them all!
     return LaunchDescription(
         declared_arguments
@@ -109,5 +122,6 @@ def generate_launch_description():
             gazebo,
             gazebo_bridge,
             gz_spawn_entity,
+            shutdown_handler,
         ]
     )
