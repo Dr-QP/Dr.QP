@@ -51,7 +51,6 @@ def generate_launch_description():
     # Initialize Arguments
     gui = LaunchConfiguration('gui')
 
-    # gazebo as ExecuteProcess instead of IncludeLaunchDescription to be able to target it with OnProcessExit
     gz_args = 'gz_args:=-r -v 3 empty.sdf'
     gazebo = ExecuteProcess(
         cmd=[
