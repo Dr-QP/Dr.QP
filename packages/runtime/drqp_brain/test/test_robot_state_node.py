@@ -22,8 +22,8 @@ import time
 import unittest
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, TimerAction
-from launch.substitutions import FindExecutable, LaunchConfiguration
+from launch.actions import TimerAction
+from launch.substitutions import FindExecutable
 from launch_ros.actions import Node
 from launch_ros.substitutions import ExecutableInPackage
 from launch_testing import asserts, post_shutdown_test
