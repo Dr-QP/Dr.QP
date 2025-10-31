@@ -69,21 +69,21 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            DeclareLaunchArgument(
+                name='show_rviz',
+                default_value='false',
+                choices=['true', 'false'],
+                description='Show rviz',
+            ),
+            DeclareLaunchArgument(
+                name='use_gazebo',
+                default_value='false',
+                choices=['true', 'false'],
+                description='Use gazebo if true',
+            ),
             GroupAction(
                 [
                     SetParameter('use_sim_time', value=use_gazebo),
-                    DeclareLaunchArgument(
-                        name='show_rviz',
-                        default_value='false',
-                        choices=['true', 'false'],
-                        description='Show rviz',
-                    ),
-                    DeclareLaunchArgument(
-                        name='use_gazebo',
-                        default_value='false',
-                        choices=['true', 'false'],
-                        description='Use gazebo if true',
-                    ),
                     control_node,
                     joint_state_broadcaster_spawner,
                     battery_state_broadcaster_spawner,
