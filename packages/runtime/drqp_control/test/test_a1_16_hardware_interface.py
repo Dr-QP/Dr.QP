@@ -55,7 +55,7 @@ def generate_test_description():
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(drqp_controllers_launch_file),
                 launch_arguments={
-                    'use_sim_time': 'false',
+                    'use_gazebo': 'false',
                     'hardware_device_address': 'mock_servo',
                 }.items(),
             ),
