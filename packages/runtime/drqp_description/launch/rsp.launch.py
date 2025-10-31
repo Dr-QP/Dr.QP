@@ -61,7 +61,10 @@ def generate_launch_description():
     return LaunchDescription(
         [
             DeclareLaunchArgument(
-                'use_gazebo', default_value='false', description='Use gazebo if true'
+                name='use_gazebo',
+                default_value='false',
+                choices=['true', 'false'],
+                description='Use gazebo if true',
             ),
             DeclareLaunchArgument(
                 'hardware_device_address',
