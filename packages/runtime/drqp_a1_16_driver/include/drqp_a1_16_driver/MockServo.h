@@ -69,7 +69,21 @@ public:
     }
   }
 
+  void writeMaxPwmRam(uint16_t value) override
+  {
+    maxPwm_ = value;
+  }
+
+  void writeMinMaxPositionRam(uint16_t min, uint16_t max) override
+  {
+    minPosition_ = min;
+    maxPosition_ = max;
+  }
+
 private:
   uint8_t id_;
   static std::unordered_map<uint8_t, uint16_t> positions_;
+  uint16_t maxPwm_ = 1023;
+  uint16_t minPosition_ = 0;
+  uint16_t maxPosition_ = 1023;
 };

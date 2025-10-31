@@ -153,54 +153,64 @@ void XYZrobotServo::writeIdRam(uint8_t id)
 void XYZrobotServo::writeAckPolicyEeprom(XYZrobotServoAckPolicy policy)
 {
   uint8_t p = (uint8_t)policy;
-  eepromWrite(7, &p, 1);
+  eepromWrite(offsetof(XYZrobotServoEEPROM, ACK_Policy), &p, 1);
 }
 
 XYZrobotServoAckPolicy XYZrobotServo::readAckPolicyEeprom()
 {
   uint8_t result = 0;
-  eepromRead(7, &result, 1);
+  eepromRead(offsetof(XYZrobotServoEEPROM, ACK_Policy), &result, 1);
   return (XYZrobotServoAckPolicy)result;
 }
 
 void XYZrobotServo::writeAckPolicyRam(XYZrobotServoAckPolicy policy)
 {
   uint8_t p = (uint8_t)policy;
-  ramWrite(1, &p, 1);
+  ramWrite(offsetof(XYZrobotServoRAM, ACK_Policy), &p, 1);
 }
 
 void XYZrobotServo::writeAlarmLedPolicyRam(uint8_t policy)
 {
-  ramWrite(2, &policy, 1);
+  ramWrite(offsetof(XYZrobotServoRAM, Alarm_LED_Policy), &policy, 1);
 }
 
 void XYZrobotServo::writeSpdctrlPolicyRam(XYZrobotServoSpdctrlPolicy policy)
 {
   uint8_t p = (uint8_t)policy;
-  ramWrite(4, &p, 1);
+  ramWrite(offsetof(XYZrobotServoRAM, SPDctrl_Policy), &p, 1);
 }
 
 void XYZrobotServo::writeMaxPwmRam(uint16_t value)
 {
-  ramWrite(16, &value, 2);
+  ramWrite(offsetof(XYZrobotServoRAM, Max_PWM), &value, 2);
 }
 
 uint16_t XYZrobotServo::readMaxPwmRam()
 {
   uint16_t result = 0;
-  ramRead(16, &result, 2);
+  ramRead(offsetof(XYZrobotServoRAM, Max_PWM), &result, 2);
   return result;
+}
+
+void XYZrobotServo::writeMinMaxPositionRam(uint16_t min, uint16_t max)
+{
+  XYZrobotServoRAM ram = {};
+  ram.Min_Position = min;
+  ram.Max_Position = max;
+  ramWrite(
+    offsetof(XYZrobotServoRAM, Min_Position), &ram.Min_Position,
+    sizeof(ram.Min_Position) + sizeof(ram.Max_Position));
 }
 
 void XYZrobotServo::writeLedControl(uint8_t control)
 {
-  ramWrite(53, &control, 1);
+  ramWrite(offsetof(XYZrobotServoRAM, LED_Control), &control, 1);
 }
 
 XYZrobotServoAckPolicy XYZrobotServo::readAckPolicyRam()
 {
   uint8_t result = 0;
-  ramRead(1, &result, 1);
+  ramRead(offsetof(XYZrobotServoRAM, ACK_Policy), &result, 1);
   return (XYZrobotServoAckPolicy)result;
 }
 

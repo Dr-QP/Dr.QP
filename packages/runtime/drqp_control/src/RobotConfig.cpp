@@ -21,7 +21,7 @@
 #include "drqp_control/RobotConfig.h"
 
 #include <yaml-cpp/yaml.h>
-
+#include <cmath>
 #include "drqp_control/DrQp.h"
 
 struct RobotConfig::ServoParams
@@ -29,6 +29,7 @@ struct RobotConfig::ServoParams
   uint8_t id;
   double ratio = 1.;
   double offset_rads = 0.;
+  double max_torque = 1.0;
   double min_angle_rads = -M_PI;
   double max_angle_rads = M_PI;
 };
@@ -38,6 +39,7 @@ struct RobotConfig::JointParams
   std::string joint_name;
   double ratio = 1.;
   double offset_rads = 0.;
+  double max_torque = 1.0;
   double min_angle_rads = -M_PI;
   double max_angle_rads = M_PI;
 };
@@ -100,6 +102,10 @@ void RobotConfig::loadConfig(fs::path configPath)
       if (servo.second["max_rads"]) {
         max_rads = servo.second["max_rads"].as<double>();
       }
+      double max_torque = 1.0;
+      if (servo.second["max_torque"]) {
+        max_torque = servo.second["max_torque"].as<double>();
+      }
 
       addServo(
         ServoJointParams{
@@ -107,6 +113,7 @@ void RobotConfig::loadConfig(fs::path configPath)
           .servo_id = id,
           .inverted = inverted,
           .offset_radians = offset_rads,
+          .max_torque = max_torque,
           .min_angle_radians = min_rads,
           .max_angle_radians = max_rads,
         });
@@ -128,12 +135,14 @@ void RobotConfig::addServo(const ServoJointParams& params)
     .id = params.servo_id,
     .ratio = ratio,
     .offset_rads = params.offset_radians,
+    .max_torque = params.max_torque,
     .min_angle_rads = true_min_rads,
     .max_angle_rads = true_max_rads};
   servoIdToJoint_[params.servo_id] = JointParams{
     .joint_name = params.joint_name,
     .ratio = ratio,
     .offset_rads = params.offset_radians,
+    .max_torque = params.max_torque,
     .min_angle_rads = true_min_rads,
     .max_angle_rads = true_max_rads};
 }
@@ -191,6 +200,24 @@ std::vector<uint8_t> RobotConfig::getServoIds() const
     servoIds.push_back(id);
   }
   return servoIds;
+}
+
+std::optional<RobotConfig::ServoLimitValues> RobotConfig::getServoLimits(uint8_t servoId) const
+{
+  if (servoIdToJoint_.count(servoId) == 0) {
+    return std::nullopt;
+  }
+
+  const JointParams jointParams = servoIdToJoint_.at(servoId);
+  const uint16_t minPosition = radiansToPosition(jointParams.min_angle_rads);
+  const uint16_t maxPosition = radiansToPosition(jointParams.max_angle_rads);
+  const uint16_t maxPWM = mapToRange<uint16_t>(jointParams.max_torque, 0.0, 1.0, 0, 1023);
+
+  return ServoLimitValues{
+    .max_pwm = maxPWM,
+    .min_position = minPosition,
+    .max_position = maxPosition,
+  };
 }
 ////////////////////////////////////////////////////////////////////////
 

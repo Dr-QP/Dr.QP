@@ -110,15 +110,15 @@ static inline std::string legNameForServo(ServoId id)
   return kAllLegsNames[kServoIdToLeg[id]];
 }
 
-inline double mapToRange(double x, double in_min, double in_max, double out_min, double out_max)
+template <typename T2 = double>
+inline T2 mapToRange(double x, double in_min, double in_max, T2 out_min, T2 out_max)
 {
-  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+  return static_cast<T2>((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min);
 }
 
 inline uint16_t radiansToPosition(double angle)
 {
-  const double result = mapToRange(angle, -M_PI, M_PI, 0, 1023);
-  return static_cast<uint16_t>(result);
+  return mapToRange<uint16_t>(angle, -M_PI, M_PI, 0, 1023);
 }
 
 // Position => Radians
