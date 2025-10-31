@@ -20,46 +20,26 @@
 
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    use_sim_time = LaunchConfiguration('use_sim_time')
-    show_rviz = LaunchConfiguration('show_rviz')
+    use_gazebo = LaunchConfiguration('use_gazebo')
     load_joystick = LaunchConfiguration('load_joystick')
-    drqp_control_launch_path = PathJoinSubstitution(
-        [
-            FindPackageShare('drqp_control'),
-            'launch',
-        ]
-    )
+    load_controllers = LaunchConfiguration('load_controllers')
+
     return LaunchDescription(
         [
             DeclareLaunchArgument(
-                name='use_sim_time',
+                name='use_gazebo',
                 default_value='false',
                 choices=['true', 'false'],
-                description='Use sim time if true',
-            ),
-            DeclareLaunchArgument(
-                name='show_rviz',
-                default_value='false',
-                choices=['true', 'false'],
-                description='Show rviz',
-            ),
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    drqp_control_launch_path / 'ros2_controller.launch.py'
-                ),
-                launch_arguments={
-                    'use_sim_time': use_sim_time,
-                    'show_rviz': show_rviz,
-                }.items(),
+                description='Use gazebo if true',
             ),
             DeclareLaunchArgument(
                 name='load_joystick',
@@ -67,24 +47,50 @@ def generate_launch_description():
                 choices=['true', 'false'],
                 description='Load joy game_controller_node',
             ),
-            Node(
-                package='joy',
-                executable='game_controller_node',
-                output='screen',
-                parameters=[{'use_sim_time': use_sim_time}],
-                condition=IfCondition(load_joystick),
+            DeclareLaunchArgument(
+                name='load_controllers',
+                default_value='true',
+                choices=['true', 'false'],
+                description='Load controllers',
             ),
-            Node(
-                package='drqp_brain',
-                executable='drqp_brain',
-                output='screen',
-                parameters=[{'use_sim_time': use_sim_time}],
-            ),
-            Node(
-                package='drqp_brain',
-                executable='drqp_robot_state',
-                output='screen',
-                parameters=[{'use_sim_time': use_sim_time}],
+            GroupAction(
+                [
+                    SetParameter('use_sim_time', value=use_gazebo),
+                    IncludeLaunchDescription(
+                        PythonLaunchDescriptionSource(
+                            PathJoinSubstitution(
+                                [
+                                    FindPackageShare('drqp_control'),
+                                    'launch',
+                                    'ros2_controller.launch.py',
+                                ]
+                            ),
+                        ),
+                        condition=IfCondition(load_controllers),
+                    ),
+                    DeclareLaunchArgument(
+                        name='load_joystick',
+                        default_value='false',
+                        choices=['true', 'false'],
+                        description='Load joy game_controller_node',
+                    ),
+                    Node(
+                        package='joy',
+                        executable='game_controller_node',
+                        output='screen',
+                        condition=IfCondition(load_joystick),
+                    ),
+                    Node(
+                        package='drqp_brain',
+                        executable='drqp_brain',
+                        output='screen',
+                    ),
+                    Node(
+                        package='drqp_brain',
+                        executable='drqp_robot_state',
+                        output='screen',
+                    ),
+                ]
             ),
         ]
     )

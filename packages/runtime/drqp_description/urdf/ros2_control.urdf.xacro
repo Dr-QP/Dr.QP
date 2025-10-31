@@ -50,12 +50,17 @@
     </joint>
   </xacro:macro>
 
-  <xacro:macro name="drqp_ros2_control" params="robot_name device_address:=/dev/ttySC0">
+  <xacro:macro name="drqp_ros2_control" params="robot_name device_address:=/dev/ttySC0 use_gazebo:=^|false">
     <ros2_control name="${robot_name}_servos" type="system" rw_rate="20" is_async="true" thread_priority="30">
       <hardware>
-        <plugin>drqp_control/a1_16_hardware_interface</plugin>
-        <param name="device_address">${device_address}</param>
-        <param name="baud_rate">115200</param>
+        <xacro:if value="${use_gazebo}">
+          <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+        </xacro:if>
+        <xacro:unless value="${use_gazebo}">
+          <plugin>drqp_control/a1_16_hardware_interface</plugin>
+          <param name="device_address">${device_address}</param>
+          <param name="baud_rate">115200</param>
+        </xacro:unless>
       </hardware>
       <xacro:drqp_leg_ros2_control robot_name="${robot_name}" leg_name="left_front" coxa_servo_id="1"/>
       <xacro:drqp_leg_ros2_control robot_name="${robot_name}" leg_name="right_front" coxa_servo_id="2" servo_inverted="True"/>

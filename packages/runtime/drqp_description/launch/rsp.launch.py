@@ -29,8 +29,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 def generate_launch_description():
     pkg_share_path = get_package_share_path('drqp_description')
 
-    # Check if we're told to use sim time
-    use_sim_time = LaunchConfiguration('use_sim_time')
+    use_gazebo = LaunchConfiguration('use_gazebo')
     hardware_device_address = LaunchConfiguration('hardware_device_address')
 
     # Process the URDF file
@@ -43,8 +42,8 @@ def generate_launch_description():
                 str(pkg_share_path / 'urdf' / 'dr_qp.urdf.xacro'),
                 ' hardware_device_address:=',
                 hardware_device_address,
-                ' use_sim_time:=',
-                use_sim_time,
+                ' use_gazebo:=',
+                use_gazebo,
             ]
         ),
         value_type=str,
@@ -55,14 +54,17 @@ def generate_launch_description():
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='screen',
-        parameters=[{'robot_description': robot_description_config, 'use_sim_time': use_sim_time}],
+        parameters=[{'robot_description': robot_description_config, 'use_sim_time': use_gazebo}],
     )
 
     # Launch!
     return LaunchDescription(
         [
             DeclareLaunchArgument(
-                'use_sim_time', default_value='false', description='Use sim time if true'
+                name='use_gazebo',
+                default_value='false',
+                choices=['true', 'false'],
+                description='Use gazebo if true',
             ),
             DeclareLaunchArgument(
                 'hardware_device_address',

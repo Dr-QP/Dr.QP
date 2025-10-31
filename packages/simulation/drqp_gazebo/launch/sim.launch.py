@@ -18,110 +18,109 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import os
-
-from ament_index_python.packages import get_package_share_directory as get_pkg_dir
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess, IncludeLaunchDescription, RegisterEventHandler
+from launch.actions import (
+    DeclareLaunchArgument,
+    ExecuteProcess,
+    IncludeLaunchDescription,
+    RegisterEventHandler,
+    Shutdown,
+)
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import (
+    IfElseSubstitution,
+    LaunchConfiguration,
+    PathJoinSubstitution,
+)
 from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    rsp = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [os.path.join(get_pkg_dir('drqp_description'), 'launch', 'rsp.launch.py')]
-        ),
-        launch_arguments={
-            'use_sim_time': 'True',
-        }.items(),
+    # Declare arguments
+    declared_arguments = []
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'gui',
+            default_value='true',
+            description='Start Gazebo GUI Client automatically with this launch file.',
+        )
     )
 
-    gazebo_params_file = os.path.join(get_pkg_dir('drqp_gazebo'), 'config', 'gazebo_params.yaml')
+    # Initialize Arguments
+    gui = LaunchConfiguration('gui')
 
-    # Include the Gazebo launch file, provided by the gazebo_ros package
-    gazebo = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [os.path.join(get_pkg_dir('gazebo_ros'), 'launch', 'gazebo.launch.py')]
-        ),
-        launch_arguments={
-            'verbose': 'true',
-            'extra_gazebo_args': '--ros-args --params-file ' + gazebo_params_file,
-            'gui_required': 'True',  # Set "true" to shut down launch script when GUI is terminated
-            # 'world': os.path.join(get_pkg_dir('drqp_gazebo'), 'worlds', 'drqp.world'),
-            # 'world': os.path.join(get_pkg_dir('gazebo_ros'), 'worlds', 'empty.world'),
-        }.items(),
+    gz_args = 'gz_args:=-r -v 3 empty.sdf'
+    gazebo = ExecuteProcess(
+        cmd=[
+            'ros2',
+            'launch',
+            'ros_gz_sim',
+            'gz_sim.launch.py',
+            IfElseSubstitution(
+                gui,
+                gz_args,
+                gz_args + ' --headless-rendering -s',
+            ),
+        ],
+        output='screen',
     )
 
-    entity_name = 'dr_qp'
-    # Run the spawner node from the gazebo_ros package. The entity name doesn't really
-    # matter if you only have a single robot.
-    spawn_entity = Node(
-        package='gazebo_ros',
-        executable='spawn_entity.py',
+    # Gazebo bridge
+    gazebo_bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
+        output='screen',
+    )
+
+    gz_spawn_entity = Node(
+        package='ros_gz_sim',
+        executable='create',
+        output='screen',
         arguments=[
             '-topic',
-            'robot_description',
-            '-entity',
-            entity_name,
-            '-package_to_model',
-            '-z',
-            '.15',  # initial Z possition
+            '/robot_description',
+            '-name',
+            'drqp',
+            '-allow_renaming',
+            'true',
         ],
-        output='screen',
     )
 
-    load_joint_state_controller = ExecuteProcess(
-        cmd=[
-            'ros2',
-            'control',
-            'load_controller',
-            '--set-state',
-            'active',
-            'joint_state_broadcaster',
-        ],
-        output='screen',
+    drqp_system = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [
+                    FindPackageShare('drqp_brain'),
+                    'launch',
+                    'bringup.launch.py',
+                ]
+            )
+        ),
+        launch_arguments={
+            'show_rviz': gui,
+            'use_gazebo': 'true',
+        }.items(),
     )
 
-    position_trajectory_controller = ExecuteProcess(
-        cmd=[
-            'ros2',
-            'control',
-            'load_controller',
-            '--set-state',
-            'active',
-            'position_trajectory_controller',
-        ],
-        output='screen',
+    # Shutdown all nodes when Gazebo exits
+    shutdown_handler = RegisterEventHandler(
+        OnProcessExit(
+            target_action=gazebo,
+            on_exit=Shutdown(reason='Gazebo has exited'),
+        )
     )
-    # velocity_controller = ExecuteProcess(
-    #     cmd=['ros2', 'control', 'load_controller',
-    #          '--set-state', 'active', 'velocity_controller'],
-    #     output='screen'
-    # )
-    # effort_controller = ExecuteProcess(
-    #     cmd=['ros2', 'control', 'load_controller',
-    #          '--set-state', 'active', 'effort_controller'],
-    #     output='screen'
-    # )
+
     # Launch them all!
     return LaunchDescription(
-        [
-            rsp,
+        declared_arguments
+        + [
+            drqp_system,
             gazebo,
-            spawn_entity,
-            RegisterEventHandler(
-                event_handler=OnProcessExit(
-                    target_action=spawn_entity,
-                    on_exit=[load_joint_state_controller],
-                )
-            ),
-            RegisterEventHandler(
-                event_handler=OnProcessExit(
-                    target_action=load_joint_state_controller,
-                    on_exit=[position_trajectory_controller],
-                )
-            ),
+            gazebo_bridge,
+            gz_spawn_entity,
+            shutdown_handler,
         ]
     )

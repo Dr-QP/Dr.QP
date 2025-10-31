@@ -4,13 +4,14 @@
   <name>drqp_gazebo</name>
   <version>0.1.0</version>
   <description>Dr.QP robot URDF</description>
-  <maintainer email="anton.matosov@gmail.com">Anton Matosovlear</maintainer>
+  <maintainer email="anton.matosov@gmail.com">Anton Matosov</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-  <depend>ros2_controllers</depend>
+  <depend>drqp_brain</depend>
 
   <exec_depend>ros2launch</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
   <exec_depend>ros_gz_sim</exec_depend>
   <exec_depend>gz_ros2_control</exec_depend>
 
@@ -19,22 +20,5 @@
 
   <export>
     <build_type>ament_cmake</build_type>
-    <!-- <gazebo_ros gazebo_model_path="${prefix}/.."/> This adds package path GAZEBO_MODEL_PATH which is required to load meshes with package_to_model conversion -->
-    <!-- <gazebo_ros gazebo_media_path="${prefix}/models"/>  This will override default resource path as GAZEBO_RESOURCE_PATH and break gazebo loading. Figure out why defautl is not preserved -->
-    <!-- <gazebo_ros plugin_path="${prefix}/plugin"/> -->
-
-    <!-- model, plugin, media = GazeboRosPaths.get_paths()
-    if 'GAZEBO_MODEL_PATH' in environ:
-        model += pathsep+environ['GAZEBO_MODEL_PATH']
-    if 'GAZEBO_PLUGIN_PATH' in environ:
-        plugin += pathsep+environ['GAZEBO_PLUGIN_PATH']
-    if 'GAZEBO_RESOURCE_PATH' in environ:
-        media += pathsep+environ['GAZEBO_RESOURCE_PATH']
-
-    env = {
-        'GAZEBO_MODEL_PATH': model,
-        'GAZEBO_PLUGIN_PATH': plugin,
-        'GAZEBO_RESOURCE_PATH': media,
-    } -->
   </export>
 </package>

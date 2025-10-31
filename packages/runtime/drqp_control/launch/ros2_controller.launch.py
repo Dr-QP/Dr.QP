@@ -20,16 +20,16 @@
 
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import IfCondition
+from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
+from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    use_sim_time = LaunchConfiguration('use_sim_time')
+    use_gazebo = LaunchConfiguration('use_gazebo')
     show_rviz = LaunchConfiguration('show_rviz')
 
     description_launch_path = get_package_share_path('drqp_description') / 'launch'
@@ -45,43 +45,26 @@ def generate_launch_description():
         package='controller_manager',
         executable='ros2_control_node',
         parameters=[
-            {
-                'use_sim_time': use_sim_time,
-            },
             robot_controllers,
         ],
         output='both',
+        condition=UnlessCondition(use_gazebo),
     )
     joint_state_broadcaster_spawner = Node(
         package='controller_manager',
         executable='spawner',
-        arguments=['joint_state_broadcaster'],
-        parameters=[
-            {
-                'use_sim_time': use_sim_time,
-            },
-        ],
+        arguments=['joint_state_broadcaster', '--param-file', robot_controllers],
     )
     battery_state_broadcaster_spawner = Node(
         package='controller_manager',
         executable='spawner',
-        arguments=['battery_state_broadcaster'],
-        parameters=[
-            {
-                'use_sim_time': use_sim_time,
-            },
-        ],
+        arguments=['battery_state_broadcaster', '--param-file', robot_controllers],
     )
 
     robot_controller_spawner = Node(
         package='controller_manager',
         executable='spawner',
         arguments=['joint_trajectory_controller', '--param-file', robot_controllers],
-        parameters=[
-            {
-                'use_sim_time': use_sim_time,
-            },
-        ],
     )
 
     return LaunchDescription(
@@ -93,23 +76,30 @@ def generate_launch_description():
                 description='Show rviz',
             ),
             DeclareLaunchArgument(
-                name='use_sim_time',
+                name='use_gazebo',
                 default_value='false',
                 choices=['true', 'false'],
-                description='Use sim time if true',
+                description='Use gazebo if true',
             ),
-            control_node,
-            joint_state_broadcaster_spawner,
-            battery_state_broadcaster_spawner,
-            robot_controller_spawner,
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(str(description_launch_path / 'rsp.launch.py'))
-            ),
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    str(description_launch_path / 'rviz.launch.py'),
-                ),
-                condition=IfCondition(show_rviz),
+            GroupAction(
+                [
+                    SetParameter('use_sim_time', value=use_gazebo),
+                    control_node,
+                    joint_state_broadcaster_spawner,
+                    battery_state_broadcaster_spawner,
+                    robot_controller_spawner,
+                    IncludeLaunchDescription(
+                        PythonLaunchDescriptionSource(
+                            str(description_launch_path / 'rsp.launch.py')
+                        )
+                    ),
+                    IncludeLaunchDescription(
+                        PythonLaunchDescriptionSource(
+                            str(description_launch_path / 'rviz.launch.py'),
+                        ),
+                        condition=IfCondition(show_rviz),
+                    ),
+                ]
             ),
         ]
     )

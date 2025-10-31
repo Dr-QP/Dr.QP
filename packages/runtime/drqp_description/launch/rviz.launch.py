@@ -50,7 +50,7 @@ def generate_launch_description():
                 name='use_sim_time', default_value='true', description='Use sim time if true'
             ),
             DeclareLaunchArgument(
-                name='rviz_frame', default_value='world', description='Base model frame in rviz'
+                name='rviz_frame', default_value='ground', description='Base model frame in rviz'
             ),
             DeclareLaunchArgument(
                 name='rviz_config',
