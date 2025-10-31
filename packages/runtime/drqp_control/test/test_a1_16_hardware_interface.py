@@ -44,7 +44,11 @@ from trajectory_msgs.msg import JointTrajectoryPoint
 
 def generate_test_description():
     drqp_controllers_launch_file = PathJoinSubstitution(
-        [FindPackageShare('drqp_control'), 'launch', 'ros2_controller.launch.py']
+        [
+            FindPackageShare('drqp_control'),
+            'launch',
+            'ros2_controller.launch.py',
+        ]
     )
     return LaunchDescription(
         [
