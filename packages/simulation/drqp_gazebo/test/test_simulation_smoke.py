@@ -85,7 +85,7 @@ class TestSimulationWiring(unittest.TestCase):
             ]
         )
 
-    def _wait_for_nodes(self, expected_names, timeout_sec=30.0):
+    def _wait_for_nodes(self, expected_names, timeout_sec=20.0):
         end_time = time.time() + timeout_sec
         names = set()
         while time.time() < end_time:
@@ -112,7 +112,7 @@ class TestSimulationWiring(unittest.TestCase):
         finally:
             self.node.destroy_subscription(subscription)
 
-    def _wait_for_controllers(self, expected_controllers, timeout_sec=60.0):
+    def _wait_for_controllers(self, expected_controllers, timeout_sec=20.0):
         service_name = self._find_list_controllers_service(timeout_sec=timeout_sec / 2)
         client = self.node.create_client(ListControllers, service_name)
         self.assertTrue(
@@ -125,7 +125,7 @@ class TestSimulationWiring(unittest.TestCase):
         last_states = {}
         while time.time() < end_time:
             future = client.call_async(request)
-            rclpy.spin_until_future_complete(self.node, future, timeout_sec=5.0)
+            rclpy.spin_until_future_complete(self.node, future, timeout_sec=1.0)
             result = future.result()
             if result:
                 last_states = {
