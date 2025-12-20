@@ -87,7 +87,6 @@ class TestSimulationWiring(unittest.TestCase):
             self.node,
             [
                 'joint_state_broadcaster',
-                'battery_state_broadcaster',
                 'joint_trajectory_controller',
             ],
             timeout=20.0,
