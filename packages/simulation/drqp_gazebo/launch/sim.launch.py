@@ -47,9 +47,25 @@ def generate_launch_description():
             description='Start Gazebo GUI Client automatically with this launch file.',
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'gazebo_sigterm_timeout',
+            default_value='20.0',
+            description='Seconds to wait after SIGINT before sending SIGTERM to Gazebo.',
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'gazebo_sigkill_timeout',
+            default_value='40.0',
+            description='Seconds to wait after SIGTERM before sending SIGKILL to Gazebo.',
+        )
+    )
 
     # Initialize Arguments
     gui = LaunchConfiguration('gui')
+    gazebo_sigterm_timeout = LaunchConfiguration('gazebo_sigterm_timeout')
+    gazebo_sigkill_timeout = LaunchConfiguration('gazebo_sigkill_timeout')
 
     gz_args = 'gz_args:=-r -v 3 empty.sdf'
     gazebo = ExecuteProcess(
@@ -65,6 +81,8 @@ def generate_launch_description():
             ),
         ],
         output='screen',
+        sigterm_timeout=gazebo_sigterm_timeout,
+        sigkill_timeout=gazebo_sigkill_timeout,
     )
 
     # Gazebo bridge
