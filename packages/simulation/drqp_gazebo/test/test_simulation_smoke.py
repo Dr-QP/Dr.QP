@@ -31,8 +31,8 @@ from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
-from launch_testing_ros import WaitForTopics
 from launch_testing.proc_info_handler import ProcInfoHandler
+from launch_testing_ros import WaitForTopics
 import pytest
 import rclpy
 from rosgraph_msgs.msg import Clock
