@@ -32,6 +32,7 @@ from launch_ros.substitutions import FindPackageShare
 from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
 from launch_testing_ros import WaitForTopics
+from launch_testing.proc_info_handler import ProcInfoHandler
 import pytest
 import rclpy
 from rosgraph_msgs.msg import Clock
@@ -104,4 +105,15 @@ class TestSimulationShutdown(unittest.TestCase):
     """Verify processes exit cleanly after the launch test finishes."""
 
     def test_exit_codes(self, proc_info):
+        """Check if the processes exited normally (except Gazebo)."""
+        # Gazebo is SIGTERMed by the launch file, so we need to filter it out
+        proc_info = self._filter_out_gazebo(proc_info)
         asserts.assertExitCodes(proc_info)
+
+    def _filter_out_gazebo(self, proc_info):
+        """Filter out Gazebo processes from the list."""
+        filtered_proc_info = ProcInfoHandler()
+        for proc_name in proc_info.process_names():
+            if 'gazebo' not in proc_name:
+                filtered_proc_info.append(proc_info[proc_name])
+        return filtered_proc_info
