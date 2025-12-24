@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import subprocess
 import unittest
 
 from controller_manager.test_utils import (
@@ -38,8 +39,17 @@ import rclpy
 from rosgraph_msgs.msg import Clock
 
 
+def ensure_gz_sim_not_running():
+    # Kill any remaining Gazebo processes
+    # See https://github.com/ros2/launch/issues/545 for details
+    shell_cmd = ['pkill', '-9', '-f', '^gz sim']
+    subprocess.run(shell_cmd, check=False)
+
+
 @pytest.mark.launch_test
 def generate_test_description():
+    ensure_gz_sim_not_running()
+
     simulation_launch = PathJoinSubstitution(
         [
             FindPackageShare('drqp_gazebo'),
@@ -100,6 +110,11 @@ class TestSimulationWiring(unittest.TestCase):
 @post_shutdown_test()
 class TestSimulationShutdown(unittest.TestCase):
     """Verify processes exit cleanly after the launch test finishes."""
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        super().tearDownClass()
+        ensure_gz_sim_not_running()
 
     def test_exit_codes(self, proc_info):
         """Check if the processes exited normally (except Gazebo)."""
