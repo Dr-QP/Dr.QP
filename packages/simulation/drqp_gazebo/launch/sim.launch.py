@@ -91,13 +91,33 @@ def generate_launch_description():
     )
 
     container_name = 'drqp_gazebo_container'
+    gz_args = '-r -v 3 empty.sdf'
+    gazebo = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [
+                    FindPackageShare('ros_gz_sim'),
+                    'launch',
+                    'gz_sim.launch.py',
+                ]
+            )
+        ),
+        launch_arguments={
+            'gz_args': IfElseSubstitution(
+                gui,
+                gz_args,
+                gz_args + ' --headless-rendering -s',
+            ),
+            'on_exit_shutdown': 'true',
+        }.items(),
+    )
     gazebo_bridge = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
                 [
-                    FindPackageShare('ros_gz_bridge'),
+                    FindPackageShare('ros_gz_sim'),
                     'launch',
-                    'ros_gz_bridge.launch.py',
+                    'ros_gz_sim.launch.py',
                 ]
             )
         ),
@@ -110,7 +130,7 @@ def generate_launch_description():
                     'drqp_gazebo_bridge.yml',
                 ]
             ),
-            'use_composition': 'true',
+            'use_composition': 'false',  # Composition throws an exception
             'create_own_container': 'true',
             'container_name': container_name,
         }.items(),
