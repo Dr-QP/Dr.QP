@@ -125,14 +125,8 @@ class TestSimulationShutdown(unittest.TestCase):
     def _filter_out_gazebo(self, proc_info):
         """Filter out Gazebo processes from the list."""
         filtered_proc_info = ProcInfoHandler()
+        skipped_procs = ('gazebo', 'gz', 'bridge_node')
         for proc_name in proc_info.process_names():
-            skip = False
-            for skipped_proc in ('gazebo', 'gz', 'bridge_node'):
-                if skipped_proc in proc_name:
-                    skip = True
-                    break
-            if skip:
-                continue
-
-            filtered_proc_info.append(proc_info[proc_name])
+            if not any(skip in proc_name for skip in skipped_procs):
+                filtered_proc_info.append(proc_info[proc_name])
         return filtered_proc_info
