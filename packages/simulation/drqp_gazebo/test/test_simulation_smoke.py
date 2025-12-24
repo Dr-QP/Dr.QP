@@ -93,11 +93,8 @@ class TestSimulationWiring(unittest.TestCase):
         )
 
     def _wait_for_clock(self, timeout_sec=20.0):
-        wait_for_topics = WaitForTopics([('/clock', Clock)], timeout=timeout_sec)
-        try:
+        with WaitForTopics([('/clock', Clock)], timeout=timeout_sec) as wait_for_topics:
             self.assertTrue(wait_for_topics.wait(), 'Did not receive /clock from Gazebo bridge')
-        finally:
-            wait_for_topics.shutdown()
 
 
 @post_shutdown_test()
