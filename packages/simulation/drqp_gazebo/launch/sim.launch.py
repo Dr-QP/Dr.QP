@@ -21,9 +21,13 @@
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
+    ExecuteProcess,
     GroupAction,
     IncludeLaunchDescription,
+    RegisterEventHandler,
+    Shutdown,
 )
+from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
     IfElseSubstitution,
@@ -62,37 +66,54 @@ def generate_launch_description():
     # Initialize Arguments
     gui = LaunchConfiguration('gui')
 
+    gazebo_sigterm_timeout = LaunchConfiguration('gazebo_sigterm_timeout')
+    gazebo_sigkill_timeout = LaunchConfiguration('gazebo_sigkill_timeout')
+    gazebo = ExecuteProcess(
+        cmd=[
+            'gz',
+            'sim',
+            '-r',
+            '-v',
+            '3',
+            'empty.sdf',
+            IfElseSubstitution(gui, '', ' --headless-rendering -s'),
+        ],
+        shell=True,
+        output='screen',
+        sigterm_timeout=gazebo_sigterm_timeout,
+        sigkill_timeout=gazebo_sigkill_timeout,
+    )
+    on_gazebo_shutdown = RegisterEventHandler(
+        OnProcessExit(
+            target_action=gazebo,
+            on_exit=[Shutdown(reason='Gazebo exited')],
+        )
+    )
+
     container_name = 'drqp_gazebo_container'
-    gz_args = '-r -v 3 empty.sdf'
-    gazebo = IncludeLaunchDescription(
+    gazebo_bridge = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
                 [
-                    FindPackageShare('ros_gz_sim'),
+                    FindPackageShare('ros_gz_bridge'),
                     'launch',
-                    'gz_sim.launch.py',
+                    'ros_gz_bridge.launch.py',
                 ]
             )
         ),
         launch_arguments={
-            'gz_args': IfElseSubstitution(
-                gui,
-                gz_args,
-                gz_args + ' --headless-rendering -s',
+            'bridge_name': 'drqp_gazebo_bridge',
+            'config_file': PathJoinSubstitution(
+                [
+                    FindPackageShare('drqp_gazebo'),
+                    'config',
+                    'drqp_gazebo_bridge.yml',
+                ]
             ),
-            'on_exit_shutdown': 'true',
             'use_composition': 'true',
             'create_own_container': 'true',
             'container_name': container_name,
         }.items(),
-    )
-
-    # Gazebo bridge
-    gazebo_bridge = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
-        output='screen',
     )
 
     gz_spawn_entity = Node(
@@ -133,6 +154,7 @@ def generate_launch_description():
                     SetParameter('use_sim_time', value=True),
                     drqp_system,
                     gazebo,
+                    on_gazebo_shutdown,
                     gazebo_bridge,
                     gz_spawn_entity,
                 ]
