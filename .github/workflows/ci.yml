@@ -159,7 +159,13 @@ jobs:
 
           source "scripts/setup.bash" --update-venv
 
+          echo ''
+          cat "$(ros2 pkg prefix drqp_brain)/lib/drqp_brain/drqp_robot_state"
+          echo ''
           which python3
+          echo ''
+          python3 -c 'import statemachine'
+          echo ''
           python3 -m colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure
 
       - name: Process llvm coverage
