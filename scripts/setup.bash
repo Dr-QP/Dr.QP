@@ -26,6 +26,4 @@ if [[ -f "$root_dir/install/local_setup.bash" ]]; then
   source "$root_dir/install/local_setup.bash"
 fi
 
-if [[ -f "$root_dir/.venv-prod/bin/activate" ]]; then
-  source "$root_dir/.venv-prod/bin/activate"
-fi
+source $root_dir/docker/ros/deploy/prod-venv.sh
