@@ -137,7 +137,7 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: Build and test ROS workspace
+      - name: Build ROS workspace
         shell: bash
         run: |
           set -x
@@ -151,8 +151,21 @@ jobs:
           # symlink-install is a must to collect proper coverage for python nodes
           python3 -m colcon build --mixin coverage-pytest ninja rel-with-deb-info --event-handlers=console_cohesion+ --symlink-install --cmake-args -D DRQP_ENABLE_COVERAGE=ON
 
+      - name: Test ROS workspace
+        shell: bash
+        run: |
+          set -x
+          set -e
+
           source "scripts/setup.bash" --update-venv
 
+          echo ''
+          cat "$(ros2 pkg prefix drqp_brain)/lib/drqp_brain/drqp_robot_state"
+          echo ''
+          which python3
+          echo ''
+          python3 -c 'import statemachine'
+          echo ''
           python3 -m colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure
 
       - name: Process llvm coverage
@@ -188,8 +201,9 @@ jobs:
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
+        uses: codecov/codecov-action@v5
         with:
+          report_type: test_results
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ steps.test_reports.outputs.result }}
 

@@ -44,7 +44,7 @@ fi
 sorted_packages=($(for element in "${packages[@]}"; do echo "$element"; done | sort))
 
 # Create ansible vars directory
-ansible_vars_dir="$root_dir/ansible/roles/ros_dependencies/vars"
+ansible_vars_dir="$root_dir/docker/ros/ansible/playbooks/roles/ros_dependencies/vars/"
 mkdir -p "$ansible_vars_dir"
 
 # Generate the variables file

@@ -22,6 +22,7 @@ from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
     ExecuteProcess,
+    GroupAction,
     IncludeLaunchDescription,
     RegisterEventHandler,
     Shutdown,
@@ -33,7 +34,7 @@ from launch.substitutions import (
     LaunchConfiguration,
     PathJoinSubstitution,
 )
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -47,32 +48,92 @@ def generate_launch_description():
             description='Start Gazebo GUI Client automatically with this launch file.',
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'gazebo_sigterm_timeout',
+            default_value='20.0',
+            description='Seconds to wait after SIGINT before sending SIGTERM to Gazebo.',
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'gazebo_sigkill_timeout',
+            default_value='40.0',
+            description='Seconds to wait after SIGTERM before sending SIGKILL to Gazebo.',
+        )
+    )
 
     # Initialize Arguments
     gui = LaunchConfiguration('gui')
 
-    gz_args = 'gz_args:=-r -v 3 empty.sdf'
+    gazebo_sigterm_timeout = LaunchConfiguration('gazebo_sigterm_timeout')
+    gazebo_sigkill_timeout = LaunchConfiguration('gazebo_sigkill_timeout')
     gazebo = ExecuteProcess(
         cmd=[
-            'ros2',
-            'launch',
-            'ros_gz_sim',
-            'gz_sim.launch.py',
-            IfElseSubstitution(
+            'gz',
+            'sim',
+            '-r',
+            '-v',
+            '3',
+            'empty.sdf',
+            IfElseSubstitution(gui, '', ' --headless-rendering -s'),
+        ],
+        shell=True,
+        output='screen',
+        sigterm_timeout=gazebo_sigterm_timeout,
+        sigkill_timeout=gazebo_sigkill_timeout,
+    )
+    on_gazebo_shutdown = RegisterEventHandler(
+        OnProcessExit(
+            target_action=gazebo,
+            on_exit=[Shutdown(reason='Gazebo exited')],
+        )
+    )
+
+    container_name = 'drqp_gazebo_container'
+    gz_args = '-r -v 3 empty.sdf'
+    gazebo = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [
+                    FindPackageShare('ros_gz_sim'),
+                    'launch',
+                    'gz_sim.launch.py',
+                ]
+            )
+        ),
+        launch_arguments={
+            'gz_args': IfElseSubstitution(
                 gui,
                 gz_args,
                 gz_args + ' --headless-rendering -s',
             ),
-        ],
-        output='screen',
+            'on_exit_shutdown': 'true',
+        }.items(),
     )
-
-    # Gazebo bridge
-    gazebo_bridge = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
-        output='screen',
+    gazebo_bridge = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [
+                    FindPackageShare('ros_gz_sim'),
+                    'launch',
+                    'ros_gz_sim.launch.py',
+                ]
+            )
+        ),
+        launch_arguments={
+            'bridge_name': 'drqp_gazebo_bridge',
+            'config_file': PathJoinSubstitution(
+                [
+                    FindPackageShare('drqp_gazebo'),
+                    'config',
+                    'drqp_gazebo_bridge.yml',
+                ]
+            ),
+            'use_composition': 'false',  # Composition throws an exception
+            'create_own_container': 'true',
+            'container_name': container_name,
+        }.items(),
     )
 
     gz_spawn_entity = Node(
@@ -105,22 +166,18 @@ def generate_launch_description():
         }.items(),
     )
 
-    # Shutdown all nodes when Gazebo exits
-    shutdown_handler = RegisterEventHandler(
-        OnProcessExit(
-            target_action=gazebo,
-            on_exit=Shutdown(reason='Gazebo has exited'),
-        )
-    )
-
-    # Launch them all!
     return LaunchDescription(
         declared_arguments
         + [
-            drqp_system,
-            gazebo,
-            gazebo_bridge,
-            gz_spawn_entity,
-            shutdown_handler,
+            GroupAction(
+                [
+                    SetParameter('use_sim_time', value=True),
+                    drqp_system,
+                    gazebo,
+                    on_gazebo_shutdown,
+                    gazebo_bridge,
+                    gz_spawn_entity,
+                ]
+            )
         ]
     )

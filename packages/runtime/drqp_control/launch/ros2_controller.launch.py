@@ -59,6 +59,7 @@ def generate_launch_description():
         package='controller_manager',
         executable='spawner',
         arguments=['battery_state_broadcaster', '--param-file', robot_controllers],
+        condition=UnlessCondition(use_gazebo),
     )
 
     robot_controller_spawner = Node(
