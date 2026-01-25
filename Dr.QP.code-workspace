@@ -297,6 +297,15 @@
         ],
       },
       {
+        "label": "Dr.QP ament mypy",
+        "type": "ament",
+        "task": "mypy",
+        "path": "${workspaceFolder}/packages/",
+        "problemMatcher": [
+          "$ament_mypy"
+        ],
+      },
+      {
         "label": "Dr.QP ament lint cmake",
         "type": "ament",
         "task": "lint_cmake",
@@ -461,7 +470,7 @@
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "[python]": {
-      "editor.formatOnSave": true,
+      "editor.formatOnSave": false,
       "editor.defaultFormatter": "charliermarsh.ruff" // cSpell:disable-line
     },
     "ruff.organizeImports": true,
