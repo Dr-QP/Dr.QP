@@ -1,5 +1,4 @@
-
-## General Instructions
+# General Instructions
 
 - Always prioritize readability and clarity.
 - For algorithm-related code, include explanations of the approach used.
@@ -16,3 +15,9 @@
 ## When in Doubt
 
 When in doubt consult with #subAgent principal-software-engineer
+
+## When doing code reviews
+
+- Always use neutral and positive language. Focus on the code, not the person who wrote it.
+- Always write in imperative mood.
+- Write down a full pull request description in the PR body, including what was changed and why.
