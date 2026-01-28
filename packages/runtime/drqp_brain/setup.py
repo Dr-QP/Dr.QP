@@ -27,6 +27,7 @@ setup(
         'console_scripts': [
             'drqp_brain = drqp_brain.brain_node:main',
             'drqp_robot_state = drqp_brain.robot_state.robot_state_node:main',
+            'joy_to_cmd_vel = drqp_brain.joy_to_cmd_vel:main',
         ],
     },
 )

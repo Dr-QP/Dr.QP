@@ -82,6 +82,12 @@ def generate_launch_description():
                     ),
                     Node(
                         package='drqp_brain',
+                        executable='joy_to_cmd_vel',
+                        output='screen',
+                        condition=IfCondition(load_joystick),
+                    ),
+                    Node(
+                        package='drqp_brain',
                         executable='drqp_brain',
                         output='screen',
                     ),
