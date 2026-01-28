@@ -590,5 +590,11 @@
 
     "ros2-topic-viewer.rosSetupScript": "/media/anton/dev/ros_workspaces/drqp_ws/src/Dr.QP/install/setup.bash",
     "ansibleVault.encryptVaultId": "",
+
+    "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+    "github.copilot.enable": {
+        "*": true
+    },
+    "chat.agent.enabled": true,
   }
 }
