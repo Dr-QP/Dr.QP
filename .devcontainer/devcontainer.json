@@ -17,7 +17,8 @@
   "postCreateCommand": "sudo chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /opt/ros/overlay_ws/.venv",
   "postAttachCommand": {
     "git config": "git config --global gpg.ssh.program ssh-keygen",
-    "python-venv": "python3 -m venv /opt/ros/overlay_ws/.venv && /opt/ros/overlay_ws/.venv/bin/python3 -m pip install -r /opt/ros/overlay_ws/requirements.txt --use-pep517" // Keep in sync with the task in Dr.QP.code-workspace
+    "python-venv": "python3 -m venv /opt/ros/overlay_ws/.venv && /opt/ros/overlay_ws/.venv/bin/python3 -m pip install -r /opt/ros/overlay_ws/requirements.txt --use-pep517", // Keep in sync with the task in Dr.QP.code-workspace
+    "rosdep": "./scripts/ros-dep.sh"
   },
   "runArgs": [
     // Commented out to allow Codespaces use
