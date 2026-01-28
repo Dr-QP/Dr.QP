@@ -66,13 +66,29 @@ class JoyToCmdVel(rclpy.node.Node):
             The joystick message to process
 
         """
+        # Validate axes array has sufficient elements
+        required_axes = max(
+            ButtonAxis.LeftX.value,
+            ButtonAxis.LeftY.value,
+            ButtonAxis.RightX.value,
+            ButtonAxis.TriggerLeft.value,
+        ) + 1
+
+        if len(joy.axes) < required_axes:
+            self.get_logger().warning(
+                f'Joystick message has insufficient axes: {len(joy.axes)} < {required_axes}'
+            )
+            return
+
         # Extract axes
         left_x = joy.axes[ButtonAxis.LeftX.value]
         left_y = joy.axes[ButtonAxis.LeftY.value]
         right_x = joy.axes[ButtonAxis.RightX.value]
         left_trigger = joy.axes[ButtonAxis.TriggerLeft.value]
 
-        # Normalize trigger from [-1, 0] to [1, 0] (platform dependent)
+        # Normalize trigger from [-1, 0] to [1, 0]
+        # Some platforms default to -1 (fully pressed), others to 0 (not pressed)
+        # We normalize so that -1 (pressed) -> 1.0 and 0 (not pressed) -> 0.0
         left_trigger = float(np.interp(left_trigger, [-1, 0], [1, 0]))
 
         # Create Twist message
@@ -92,9 +108,9 @@ def main():
     try:
         parser = argparse.ArgumentParser('Joy to cmd_vel converter')
         filtered_args = rclpy.utilities.remove_ros_args()
-        args = parser.parse_args(args=filtered_args[1:])
+        parser.parse_args(args=filtered_args[1:])
         rclpy.init()
-        node = JoyToCmdVel(**vars(args))
+        node = JoyToCmdVel()
         rclpy.spin(node)
     except (KeyboardInterrupt, ExternalShutdownException):
         pass  # codeql[py/empty-except]

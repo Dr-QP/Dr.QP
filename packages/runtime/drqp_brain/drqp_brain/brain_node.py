@@ -179,7 +179,7 @@ class HexapodBrain(rclpy.node.Node):
 
     def process_joy_buttons(self, joy: sensor_msgs.msg.Joy):
         """Process joystick buttons only."""
-        self.joystick_input_handler._process_buttons(joy.buttons)
+        self.joystick_input_handler.process_buttons(joy.buttons)
 
     def process_cmd_vel(self, twist: Twist):
         """

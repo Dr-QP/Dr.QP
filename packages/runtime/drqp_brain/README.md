@@ -74,8 +74,7 @@ ros2 launch drqp_brain bringup.launch.py load_joystick:=false
 
 # In terminal 2 - send velocity commands
 ros2 topic pub /cmd_vel geometry_msgs/Twist \
-  "linear: {x: 0.5, y: 0.0, z: 0.0}
-   angular: {z: 0.0}"
+  "{linear: {x: 0.5, y: 0.0, z: 0.0}, angular: {z: 0.0}}"
 ```
 
 ## License

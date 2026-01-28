@@ -130,8 +130,8 @@ class TestJoyToCmdVel:
         assert len(published_msgs) == 1
         twist = published_msgs[0]
         # Trigger should be interpolated from [-1, 0] to [1, 0]
-        expected_trigger = float(((-0.5) - (-1)) / (0 - (-1)))
-        assert abs(twist.linear.z - expected_trigger) < 1e-6
+        # -0.5 is halfway between -1 and 0, so it maps to 0.5
+        assert twist.linear.z == pytest.approx(0.5)
 
     def test_joy_to_cmd_vel_combined(self, node):
         """Test conversion of combined joystick movements to cmd_vel."""
@@ -154,3 +154,22 @@ class TestJoyToCmdVel:
         assert twist.linear.x == pytest.approx(0.4)
         assert twist.linear.y == pytest.approx(0.3)
         assert twist.angular.z == pytest.approx(0.2)
+
+    def test_joy_to_cmd_vel_insufficient_axes(self, node):
+        """Test handling of joystick messages with insufficient axes."""
+        published_msgs = []
+
+        def mock_publish(msg):
+            published_msgs.append(msg)
+
+        node.cmd_vel_pub.publish = mock_publish
+
+        # Create joy message with too few axes
+        joy_msg = sensor_msgs.msg.Joy()
+        joy_msg.axes = [0.0, 0.0]  # Only 2 axes, need at least 5
+        joy_msg.buttons = []
+
+        node.joy_callback(joy_msg)
+
+        # Should not publish anything due to insufficient axes
+        assert len(published_msgs) == 0

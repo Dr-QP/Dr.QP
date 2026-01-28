@@ -109,3 +109,41 @@ class TestBrainNodeCmdVel:
         assert node.body_translation == Point3D([0, 0, 0])
         assert node.body_rotation == Point3D([0, 0, 0])
         assert node.control_mode == ControlMode.Walk
+
+    def test_control_mode_state_isolation(self, node):
+        """Test that state doesn't carry over between control modes."""
+        # Set values in Walk mode
+        node.control_mode = ControlMode.Walk
+        twist = Twist()
+        twist.linear.x = 0.5
+        twist.angular.z = 0.3
+        node.process_cmd_vel(twist)
+
+        assert node.direction.x == pytest.approx(0.5)
+        assert node.rotation_speed == pytest.approx(0.3)
+
+        # Switch to BodyPosition mode and set different values
+        node.control_mode = ControlMode.BodyPosition
+        twist2 = Twist()
+        twist2.linear.x = 0.1
+        twist2.linear.y = 0.2
+        node.process_cmd_vel(twist2)
+
+        # Walk mode values should remain unchanged
+        assert node.direction.x == pytest.approx(0.5)
+        assert node.rotation_speed == pytest.approx(0.3)
+        # BodyPosition values should be updated
+        assert node.body_translation.x == pytest.approx(0.1)
+        assert node.body_translation.y == pytest.approx(0.2)
+
+        # Switch to BodyRotation mode
+        node.control_mode = ControlMode.BodyRotation
+        twist3 = Twist()
+        twist3.linear.x = 0.3
+        node.process_cmd_vel(twist3)
+
+        # Previous mode values should remain unchanged
+        assert node.direction.x == pytest.approx(0.5)
+        assert node.body_translation.x == pytest.approx(0.1)
+        # BodyRotation values should be updated
+        assert node.body_rotation.x == pytest.approx(0.3)
