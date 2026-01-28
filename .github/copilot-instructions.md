@@ -12,3 +12,7 @@
 - Avoid inlining existing code.
 - Prefer use of existing libraries and frameworks over custom implementations.
 - Follow Clean Code principles where applicable.
+
+## When in Doubt
+
+When in doubt consult with #subAgent principal-software-engineer
