@@ -1,1 +1,2 @@
-https://github.com/ngmor/catch_ros2 packages/vendor/catch_ros2
+https://github.com/ngmor/catch_ros2 packages/vendor/catch_ros2/
+https://github.com/anton-matosov/launch.git packages/vendor/launch/

@@ -17,6 +17,7 @@
     - { role: cmake_system, tags: ["cmake"], when: source_install }
     - { role: ros_repo, tags: ["ros_repo"] }
     - { role: dev_tools, tags: ["dev_tools"] }
+    - { role: github_cli, tags: ["github_cli"] }
     - { role: colcon_setup, tags: ["colcon_setup"] }
     - { role: rosdep, tags: ["rosdep"] }
     - { role: ros_install_prebuilt, tags: ["ros_install", "ros_install_prebuilt"], when: not source_install }

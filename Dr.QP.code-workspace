@@ -297,6 +297,15 @@
         ],
       },
       {
+        "label": "Dr.QP ament mypy",
+        "type": "ament",
+        "task": "mypy",
+        "path": "${workspaceFolder}/packages/",
+        "problemMatcher": [
+          "$ament_mypy"
+        ],
+      },
+      {
         "label": "Dr.QP ament lint cmake",
         "type": "ament",
         "task": "lint_cmake",
@@ -581,5 +590,11 @@
 
     "ros2-topic-viewer.rosSetupScript": "/media/anton/dev/ros_workspaces/drqp_ws/src/Dr.QP/install/setup.bash",
     "ansibleVault.encryptVaultId": "",
+
+    "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+    "github.copilot.enable": {
+        "*": true
+    },
+    "chat.agent.enabled": true,
   }
 }

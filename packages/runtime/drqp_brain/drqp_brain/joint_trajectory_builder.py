@@ -40,7 +40,7 @@ class JointTrajectoryBuilder:
         self.hexapod = hexapod
         self.points = []
 
-    def add_point_from_hexapod(self, seconds_from_start, effort=1.0, joint_mask=None):
+    def add_point_from_hexapod(self, reach_in_seconds_from_start, effort=1.0, joint_mask=None):
         positions = []
         efforts = []
         self.joint_names = []
@@ -58,14 +58,14 @@ class JointTrajectoryBuilder:
                 positions.append(float(np.radians(angle)))
                 self.joint_names.append(f'dr_qp/{leg.label.name}_{joint}')
 
-        self.add_point(positions, efforts, seconds_from_start)
+        self.add_point(positions, efforts, reach_in_seconds_from_start)
 
-    def add_point(self, positions, effort, seconds_from_start):
+    def add_point(self, positions, effort, reach_in_seconds_from_start):
         self.points.append(
             trajectory_msgs.msg.JointTrajectoryPoint(
                 positions=positions,
                 effort=effort,
-                time_from_start=rclpy.time.Duration(seconds=seconds_from_start).to_msg(),
+                time_from_start=rclpy.time.Duration(seconds=reach_in_seconds_from_start).to_msg(),
             )
         )
 
