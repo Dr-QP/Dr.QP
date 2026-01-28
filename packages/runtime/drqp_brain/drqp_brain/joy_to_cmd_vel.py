@@ -22,9 +22,8 @@
 
 import argparse
 
-from drqp_brain.joystick_button import ButtonAxis
+from drqp_brain.joystick_input_handler import JoystickInputHandler
 from geometry_msgs.msg import Twist
-import numpy as np
 import rclpy
 from rclpy.executors import ExternalShutdownException
 import rclpy.node
@@ -42,6 +41,8 @@ class JoyToCmdVel(rclpy.node.Node):
 
     def __init__(self):
         super().__init__('joy_to_cmd_vel')
+
+        self.joystick_input_handler = JoystickInputHandler()
 
         self.joy_sub = self.create_subscription(
             sensor_msgs.msg.Joy,
@@ -66,39 +67,17 @@ class JoyToCmdVel(rclpy.node.Node):
             The joystick message to process
 
         """
-        # Validate axes array has sufficient elements
-        required_axes = max(
-            ButtonAxis.LeftX.value,
-            ButtonAxis.LeftY.value,
-            ButtonAxis.RightX.value,
-            ButtonAxis.TriggerLeft.value,
-        ) + 1
+        # Use existing joystick input handler to process axes
+        self.joystick_input_handler.process_joy_message(joy)
 
-        if len(joy.axes) < required_axes:
-            self.get_logger().warning(
-                f'Joystick message has insufficient axes: {len(joy.axes)} < {required_axes}'
-            )
-            return
-
-        # Extract axes
-        left_x = joy.axes[ButtonAxis.LeftX.value]
-        left_y = joy.axes[ButtonAxis.LeftY.value]
-        right_x = joy.axes[ButtonAxis.RightX.value]
-        left_trigger = joy.axes[ButtonAxis.TriggerLeft.value]
-
-        # Normalize trigger from [-1, 0] to [1, 0]
-        # Some platforms default to -1 (fully pressed), others to 0 (not pressed)
-        # We normalize so that -1 (pressed) -> 1.0 and 0 (not pressed) -> 0.0
-        left_trigger = float(np.interp(left_trigger, [-1, 0], [1, 0]))
-
-        # Create Twist message
+        # Create Twist message from processed joystick data
         # Linear: x = forward/backward, y = left/right, z = up/down (trigger)
         # Angular: z = rotation (yaw)
         twist = Twist()
-        twist.linear.x = float(left_y)
-        twist.linear.y = float(left_x)
-        twist.linear.z = float(left_trigger)
-        twist.angular.z = float(right_x)
+        twist.linear.x = float(self.joystick_input_handler.direction.x)
+        twist.linear.y = float(self.joystick_input_handler.direction.y)
+        twist.linear.z = float(self.joystick_input_handler.direction.z)
+        twist.angular.z = float(self.joystick_input_handler.rotation_speed)
 
         self.cmd_vel_pub.publish(twist)
 

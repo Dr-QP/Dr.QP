@@ -112,18 +112,6 @@ class JoystickInputHandler:
             self.direction = Point3D([left_y, left_x, left_trigger])
             self.rotation_speed = right_x
 
-    def process_buttons(self, buttons):
-        """
-        Process joystick buttons and trigger callbacks.
-
-        Parameters
-        ----------
-        buttons : list
-            List of button states from Joy message
-
-        """
-        self._process_buttons(buttons)
-
     def _process_buttons(self, buttons):
         """Process joystick buttons and trigger callbacks."""
         for button in self.joystick_buttons:

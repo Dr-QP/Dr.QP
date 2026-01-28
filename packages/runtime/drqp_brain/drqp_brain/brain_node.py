@@ -59,13 +59,6 @@ class HexapodBrain(rclpy.node.Node):
         self.gaits = [GaitType.tripod, GaitType.ripple, GaitType.wave]
         self.phase_steps_per_cycle = [20, 25, 40]  # per gait
 
-        # Movement state from cmd_vel
-        self.direction = Point3D([0, 0, 0])
-        self.rotation_speed = 0.0
-        self.body_translation = Point3D([0, 0, 0])
-        self.body_rotation = Point3D([0, 0, 0])
-        self.control_mode = ControlMode.Walk
-
         self.joystick_input_handler = JoystickInputHandler(
             button_callbacks={
                 ButtonIndex.DpadLeft: lambda b, e: self.prev_gait(),
@@ -82,7 +75,7 @@ class HexapodBrain(rclpy.node.Node):
         self.joystick_sub = self.create_subscription(
             sensor_msgs.msg.Joy,
             '/joy',
-            self.process_joy_buttons,
+            self.joystick_input_handler.process_joy_message,
             qos_profile=10,
         )
 
@@ -169,17 +162,10 @@ class HexapodBrain(rclpy.node.Node):
         self.get_logger().info(f'Switching gait: {self.gaits[self.gait_index].name}')
 
     def next_control_mode(self):
-        if self.control_mode == ControlMode.Walk:
-            self.control_mode = ControlMode.BodyPosition
-        elif self.control_mode == ControlMode.BodyPosition:
-            self.control_mode = ControlMode.BodyRotation
-        else:
-            self.control_mode = ControlMode.Walk
-        self.get_logger().info(f'Switching control mode: {self.control_mode}')
-
-    def process_joy_buttons(self, joy: sensor_msgs.msg.Joy):
-        """Process joystick buttons only."""
-        self.joystick_input_handler.process_buttons(joy.buttons)
+        self.joystick_input_handler.next_control_mode()
+        self.get_logger().info(
+            f'Switching control mode: {self.joystick_input_handler.control_mode}'
+        )
 
     def process_cmd_vel(self, twist: Twist):
         """
@@ -191,22 +177,22 @@ class HexapodBrain(rclpy.node.Node):
             The velocity command with linear (x, y, z) and angular (z) components
 
         """
-        if self.control_mode == ControlMode.BodyPosition:
-            self.body_translation = Point3D([twist.linear.x, twist.linear.y, twist.linear.z])
-        elif self.control_mode == ControlMode.BodyRotation:
-            self.body_rotation = Point3D([twist.linear.x, twist.linear.y, twist.angular.z])
-        elif self.control_mode == ControlMode.Walk:
-            self.direction = Point3D([twist.linear.x, twist.linear.y, twist.linear.z])
-            self.rotation_speed = twist.angular.z
+        if self.joystick_input_handler.control_mode == ControlMode.BodyPosition:
+            self.joystick_input_handler.body_translation = Point3D([twist.linear.x, twist.linear.y, twist.linear.z])
+        elif self.joystick_input_handler.control_mode == ControlMode.BodyRotation:
+            self.joystick_input_handler.body_rotation = Point3D([twist.linear.x, twist.linear.y, twist.angular.z])
+        elif self.joystick_input_handler.control_mode == ControlMode.Walk:
+            self.joystick_input_handler.direction = Point3D([twist.linear.x, twist.linear.y, twist.linear.z])
+            self.joystick_input_handler.rotation_speed = twist.angular.z
 
     def loop(self):
         self.walker.current_gait = self.gaits[self.gait_index]
         self.walker.phase_step = 1 / self.phase_steps_per_cycle[self.gait_index]
         self.walker.next_step(
-            stride_direction=self.direction,
-            rotation_direction=self.rotation_speed,
-            body_direction=self.body_translation / 8.0,
-            body_rotation=self.body_rotation,
+            stride_direction=self.joystick_input_handler.direction,
+            rotation_direction=self.joystick_input_handler.rotation_speed,
+            body_direction=self.joystick_input_handler.body_translation / 8.0,
+            body_rotation=self.joystick_input_handler.body_rotation,
         )
 
         trajectory = JointTrajectoryBuilder(self.hexapod)
