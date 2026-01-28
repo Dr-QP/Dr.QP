@@ -178,11 +178,17 @@ class HexapodBrain(rclpy.node.Node):
 
         """
         if self.joystick_input_handler.control_mode == ControlMode.BodyPosition:
-            self.joystick_input_handler.body_translation = Point3D([twist.linear.x, twist.linear.y, twist.linear.z])
+            self.joystick_input_handler.body_translation = Point3D(
+                [twist.linear.x, twist.linear.y, twist.linear.z]
+            )
         elif self.joystick_input_handler.control_mode == ControlMode.BodyRotation:
-            self.joystick_input_handler.body_rotation = Point3D([twist.linear.x, twist.linear.y, twist.angular.z])
+            self.joystick_input_handler.body_rotation = Point3D(
+                [twist.linear.x, twist.linear.y, twist.angular.z]
+            )
         elif self.joystick_input_handler.control_mode == ControlMode.Walk:
-            self.joystick_input_handler.direction = Point3D([twist.linear.x, twist.linear.y, twist.linear.z])
+            self.joystick_input_handler.direction = Point3D(
+                [twist.linear.x, twist.linear.y, twist.linear.z]
+            )
             self.joystick_input_handler.rotation_speed = twist.angular.z
 
     def loop(self):

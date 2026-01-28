@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from unittest.mock import MagicMock
 
 from drqp_brain.joy_to_cmd_vel import JoyToCmdVel
 from geometry_msgs.msg import Twist
