@@ -22,6 +22,10 @@ applyTo: '**/*.py'
 - For libraries or external dependencies, mention their usage and purpose in comments.
 - Use consistent naming conventions and follow language-specific best practices.
 - Write concise, efficient, and idiomatic code that is also easily understandable.
+- Avoid deep nesting; refactor code into smaller functions when necessary.
+- Avoid inlining existing code.
+- Prefer use of existing libraries and frameworks over custom implementations.
+- Follow Clean Code principles where applicable.
 
 ## Code Style and Formatting
 
@@ -44,10 +48,10 @@ applyTo: '**/*.py'
 def calculate_area(radius: float) -> float:
     """
     Calculate the area of a circle given the radius.
-    
+
     Parameters:
     radius (float): The radius of the circle.
-    
+
     Returns:
     float: The area of the circle, calculated as π * radius^2.
     """
