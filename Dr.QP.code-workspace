@@ -448,8 +448,8 @@
     "cmake.generator": "Ninja",
     "cmake.exportCompileCommandsFile": true,
 
-    // "ROS2.distro": "jazzy",
-    "ROS2.rosSetupScript": "${workspaceFolder}/scripts/setup.bash",
+    "ROS2.distro": "jazzy",
+    // "ROS2.rosSetupScript": "${workspaceFolder}/scripts/setup.bash",
     "ament-task-provider.envSetup": "source /opt/ros/jazzy/setup.bash",
 
     // Draft for .micromamba ros-jazzy, but still doesn't work
