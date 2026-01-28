@@ -75,7 +75,7 @@ class HexapodBrain(rclpy.node.Node):
         self.joystick_sub = self.create_subscription(
             sensor_msgs.msg.Joy,
             '/joy',
-            self.joystick_input_handler.process_joy_message,
+            self.joystick_input_handler.process_joy_buttons,
             qos_profile=10,
         )
 

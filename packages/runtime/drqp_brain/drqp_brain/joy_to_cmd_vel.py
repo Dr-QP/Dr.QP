@@ -22,7 +22,7 @@
 
 import argparse
 
-from drqp_brain.joystick_input_handler import JoystickInputHandler
+from drqp_brain.joystick_input_handler import ControlMode, JoystickInputHandler
 from geometry_msgs.msg import Twist
 import rclpy
 from rclpy.executors import ExternalShutdownException
@@ -42,7 +42,9 @@ class JoyToCmdVel(rclpy.node.Node):
     def __init__(self):
         super().__init__('joy_to_cmd_vel')
 
+        # Use handler only in Walk mode for converting joystick to cmd_vel
         self.joystick_input_handler = JoystickInputHandler()
+        self.joystick_input_handler.control_mode = ControlMode.Walk
 
         self.joy_sub = self.create_subscription(
             sensor_msgs.msg.Joy,
@@ -67,10 +69,10 @@ class JoyToCmdVel(rclpy.node.Node):
             The joystick message to process
 
         """
-        # Use existing joystick input handler to process axes
+        # Use existing joystick input handler to process axes (Walk mode only)
         self.joystick_input_handler.process_joy_message(joy)
 
-        # Create Twist message from processed joystick data
+        # Publish Walk mode movement as Twist
         # Linear: x = forward/backward, y = left/right, z = up/down (trigger)
         # Angular: z = rotation (yaw)
         twist = Twist()

@@ -92,6 +92,18 @@ class JoystickInputHandler:
         self._process_buttons(joy.buttons)
         self._process_axes(joy.axes)
 
+    def process_joy_buttons(self, joy: sensor_msgs.msg.Joy):
+        """
+        Process only buttons from a ROS Joy message.
+
+        Parameters
+        ----------
+        joy : sensor_msgs.msg.Joy
+            The joystick message to process
+
+        """
+        self._process_buttons(joy.buttons)
+
     def _process_axes(self, axes):
         """Process joystick axes to extract movement commands."""
         left_x = axes[ButtonAxis.LeftX.value]
