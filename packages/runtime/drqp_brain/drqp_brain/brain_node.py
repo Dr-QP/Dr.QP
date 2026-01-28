@@ -167,7 +167,7 @@ class HexapodBrain(rclpy.node.Node):
         )
 
         trajectory = JointTrajectoryBuilder(self.hexapod)
-        trajectory.add_point_from_hexapod(seconds_from_start=self.walker.phase_step)
+        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=self.walker.phase_step)
         trajectory.publish(self.joint_trajectory_pub)
 
     def initialization_sequence(self):
@@ -176,23 +176,25 @@ class HexapodBrain(rclpy.node.Node):
         # - Turn torque on for femur
         # - Move all femur to -105
         self.hexapod.forward_kinematics(0, -105, 0)
-        trajectory.add_point_from_hexapod(seconds_from_start=1.0, joint_mask=['femur'])
+        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=1.0, joint_mask=['femur'])
 
         # - Turn torque on for tibia
         # - Move all tibia to 0
-        trajectory.add_point_from_hexapod(seconds_from_start=1.6, joint_mask=['femur', 'tibia'])
+        trajectory.add_point_from_hexapod(
+            reach_in_seconds_from_start=1.6, joint_mask=['femur', 'tibia']
+        )
 
         # - Turn torque on for coxa
         # - Move all coxa to 0
-        trajectory.add_point_from_hexapod(seconds_from_start=2.2)
+        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=2.2)
 
         # - Move all tibia to 95
         self.hexapod.forward_kinematics(0, -105, 95)
-        trajectory.add_point_from_hexapod(seconds_from_start=2.8)
+        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=2.8)
 
         # Get into default stance for walk controller to take from here
         self.hexapod.forward_kinematics(0, -35, 130)
-        trajectory.add_point_from_hexapod(seconds_from_start=3.2)
+        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=3.2)
 
         trajectory.publish_action(
             self.trajectory_client,
@@ -204,10 +206,10 @@ class HexapodBrain(rclpy.node.Node):
         trajectory = JointTrajectoryBuilder(self.hexapod)
 
         self.hexapod.forward_kinematics(0, -105, 0)
-        trajectory.add_point_from_hexapod(seconds_from_start=1.0)
+        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=1.0)
 
         self.hexapod.forward_kinematics(0, -105, -60)
-        trajectory.add_point_from_hexapod(seconds_from_start=1.5)
+        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=1.5)
 
         trajectory.publish_action(
             self.trajectory_client,
@@ -217,13 +219,13 @@ class HexapodBrain(rclpy.node.Node):
 
     def turn_torque_off(self):
         trajectory = JointTrajectoryBuilder(self.hexapod)
-        trajectory.add_point_from_hexapod(seconds_from_start=0.0, effort=0.0)
+        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=0.0, effort=0.0)
         trajectory.publish(self.joint_trajectory_pub)
 
     def reboot_servos(self):
         trajectory = JointTrajectoryBuilder(self.hexapod)
-        trajectory.add_point_from_hexapod(seconds_from_start=0.0, effort=-1.0)
-        trajectory.add_point_from_hexapod(seconds_from_start=1.0, effort=0.0)
+        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=0.0, effort=-1.0)
+        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=1.0, effort=0.0)
         trajectory.publish(self.joint_trajectory_pub)
 
     def process_robot_state(self, msg: std_msgs.msg.String):
