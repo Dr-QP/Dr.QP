@@ -1,6 +1,7 @@
 ---
 description: 'Refine the requirement or issue with Acceptance Criteria, Technical Considerations, Edge Cases, and NFRs'
-tools: [ 'list_issues','githubRepo', 'search', 'search_code', 'create_issue','create_issue_comment','update_issue','delete_issue','get_issue', 'search_issues', 'issue_write']
+tools:
+  ['read/readFile', 'search', 'web/githubRepo', 'github/issue_read', 'github/issue_write', 'github/list_issues', 'github/list_pull_requests', 'github/search_code', 'github/search_issues', 'github/search_repositories', 'github/sub_issue_write']
 ---
 
 # Refine Requirement or Issue Chat Mode
