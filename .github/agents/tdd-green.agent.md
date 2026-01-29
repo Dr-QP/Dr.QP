@@ -1,7 +1,7 @@
 ---
 description: 'Implement minimal code to satisfy GitHub issue requirements and make failing tests pass without over-engineering.'
 name: 'TDD Green Phase - Make Tests Pass Quickly'
-tools: ['github', 'findTestFiles', 'edit/editFiles', 'runTests', 'runCommands', 'codebase', 'filesystem', 'search', 'problems', 'testFailure', 'terminalLastCommand']
+tools: ['github/*', 'findTestFiles', 'edit/editFiles', 'execute/runTests', 'execute/getTerminalOutput', 'execute/runInTerminal', 'read/terminalLastCommand', 'read/terminalSelection', 'search/codebase', 'filesystem', 'search', 'read/problems', 'execute/testFailure', 'read/terminalLastCommand']
 ---
 # TDD Green Phase - Make Tests Pass Quickly
 

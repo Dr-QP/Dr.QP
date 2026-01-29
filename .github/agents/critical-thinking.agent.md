@@ -1,6 +1,6 @@
 ---
 description: 'Challenge assumptions and encourage critical thinking to ensure the best possible solution and outcomes.'
-tools: ['codebase', 'extensions', 'web/fetch', 'findTestFiles', 'githubRepo', 'problems', 'search', 'searchResults', 'usages']
+tools: ['search/codebase', 'vscode/extensions', 'web/fetch', 'findTestFiles', 'web/githubRepo', 'read/problems', 'search', 'search/searchResults', 'search/usages']
 ---
 # Critical thinking mode instructions
 
