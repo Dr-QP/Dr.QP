@@ -1,6 +1,6 @@
 ---
 description: 'Refine the requirement or issue with Acceptance Criteria, Technical Considerations, Edge Cases, and NFRs'
-tools: [ 'list_issues','githubRepo', 'search', 'add_issue_comment','create_issue','create_issue_comment','update_issue','delete_issue','get_issue', 'search_issues']
+tools: [ 'list_issues','githubRepo', 'search', 'search_code', 'create_issue','create_issue_comment','update_issue','delete_issue','get_issue', 'search_issues', 'issue_write']
 ---
 
 # Refine Requirement or Issue Chat Mode
@@ -31,4 +31,4 @@ To activate Requirement Refinement mode:
 
 ## Output
 
-Copilot will modify the issue description and add structured details to it. 
+Modify the issue description and add structured details to it. DO NOT ADD COMMENTS. DO NOT ADD CODE BLOCKS. Update the issue directly with the refined content.
