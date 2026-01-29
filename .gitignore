@@ -18,6 +18,7 @@ cmake-build-*
 
 .vscode/*
 !.vscode/*.code-snippets
+!.vscode/mcp.json
 
 src/crab_description
 src/urdf_tutorial
