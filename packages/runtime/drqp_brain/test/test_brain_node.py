@@ -82,6 +82,9 @@ class TestBrainNode(unittest.TestCase):
         # Publisher for robot state (brain node subscribes to this)
         self.state_pub = self.node.create_publisher(std_msgs.msg.String, '/robot_state', 10)
 
+    def tearDown(self):
+        self.node.destroy_node()
+
     def test_nothing(self, proc_output):
         """Smoke check."""
         pass
