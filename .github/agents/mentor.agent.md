@@ -2,12 +2,12 @@
 description: 'Help mentor the engineer by providing guidance and support.'
 tools:
   [
-    'search/codebase',
-    'web/fetch',
     'findTestFiles',
-    'web/githubRepo',
     'search',
+    'search/codebase',
     'search/usages',
+    'web/fetch',
+    'web/githubRepo',
   ]
 ---
 

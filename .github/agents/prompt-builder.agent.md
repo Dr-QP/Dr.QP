@@ -2,23 +2,23 @@
 description: 'Expert prompt engineering and validation system for creating high-quality prompts - Brought to you by microsoft/edge-ai'
 tools:
   [
-    'search/codebase',
+    'context7',
     'edit/editFiles',
-    'web/fetch',
-    'web/githubRepo',
-    'read/problems',
     'execute/getTerminalOutput',
     'execute/runInTerminal',
+    'Microsoft Docs',
+    'read/problems',
     'read/terminalLastCommand',
+    'read/terminalLastCommand',
+    'read/terminalSelection',
     'read/terminalSelection',
     'search',
+    'search/codebase',
     'search/searchResults',
-    'read/terminalLastCommand',
-    'read/terminalSelection',
     'search/usages',
     'terraform',
-    'Microsoft Docs',
-    'context7',
+    'web/fetch',
+    'web/githubRepo',
   ]
 ---
 

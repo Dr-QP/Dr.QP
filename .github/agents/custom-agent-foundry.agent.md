@@ -5,15 +5,15 @@ argument-hint: Describe the agent role, purpose, and required capabilities
 model: Claude Sonnet 4.5
 tools:
   [
-    'vscode',
-    'execute',
-    'read',
-    'edit',
-    'search',
-    'web',
     'agent',
+    'edit',
+    'execute',
     'github/*',
+    'read',
+    'search',
     'todo',
+    'vscode',
+    'web',
   ]
 ---
 

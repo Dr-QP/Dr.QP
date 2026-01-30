@@ -2,15 +2,15 @@
 description: 'Challenge assumptions and encourage critical thinking to ensure the best possible solution and outcomes.'
 tools:
   [
-    'search/codebase',
-    'vscode/extensions',
-    'web/fetch',
     'findTestFiles',
-    'web/githubRepo',
     'read/problems',
     'search',
+    'search/codebase',
     'search/searchResults',
     'search/usages',
+    'vscode/extensions',
+    'web/fetch',
+    'web/githubRepo',
   ]
 ---
 

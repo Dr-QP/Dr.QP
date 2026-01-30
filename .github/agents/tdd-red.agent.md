@@ -3,20 +3,20 @@ description: 'Guide test-first development by writing failing tests that describ
 name: 'TDD Red Phase - Write Failing Tests First'
 tools:
   [
-    'github/*',
-    'findTestFiles',
     'edit/editFiles',
-    'execute/runTests',
     'execute/getTerminalOutput',
     'execute/runInTerminal',
+    'execute/runTests',
+    'execute/testFailure',
+    'filesystem',
+    'findTestFiles',
+    'github/*',
+    'read/problems',
+    'read/terminalLastCommand',
     'read/terminalLastCommand',
     'read/terminalSelection',
-    'search/codebase',
-    'filesystem',
     'search',
-    'read/problems',
-    'execute/testFailure',
-    'read/terminalLastCommand',
+    'search/codebase',
   ]
 ---
 

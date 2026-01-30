@@ -2,9 +2,6 @@
 description: 'Refine the requirement or issue with Acceptance Criteria, Technical Considerations, Edge Cases, and NFRs'
 tools:
   [
-    'read/readFile',
-    'search',
-    'web/githubRepo',
     'github/issue_read',
     'github/issue_write',
     'github/list_issues',
@@ -13,6 +10,9 @@ tools:
     'github/search_issues',
     'github/search_repositories',
     'github/sub_issue_write',
+    'read/readFile',
+    'search',
+    'web/githubRepo',
   ]
 ---
 

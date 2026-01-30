@@ -3,20 +3,20 @@ description: 'Improve code quality, apply security best practices, and enhance d
 name: 'TDD Refactor Phase - Improve Quality & Security'
 tools:
   [
-    'github/*',
-    'findTestFiles',
     'edit/editFiles',
-    'execute/runTests',
     'execute/getTerminalOutput',
     'execute/runInTerminal',
+    'execute/runTests',
+    'execute/testFailure',
+    'filesystem',
+    'findTestFiles',
+    'github/*',
+    'read/problems',
+    'read/terminalLastCommand',
     'read/terminalLastCommand',
     'read/terminalSelection',
-    'search/codebase',
-    'filesystem',
     'search',
-    'read/problems',
-    'execute/testFailure',
-    'read/terminalLastCommand',
+    'search/codebase',
   ]
 ---
 

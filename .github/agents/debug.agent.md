@@ -3,17 +3,17 @@ description: 'Debug your application to find and fix a bug'
 tools:
   [
     'edit/editFiles',
-    'search',
     'execute/getTerminalOutput',
     'execute/runInTerminal',
+    'execute/runTests',
+    'execute/testFailure',
+    'read/problems',
     'read/terminalLastCommand',
     'read/terminalSelection',
+    'search',
     'search/usages',
-    'read/problems',
-    'execute/testFailure',
     'web/fetch',
     'web/githubRepo',
-    'execute/runTests',
   ]
 ---
 

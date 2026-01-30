@@ -3,16 +3,16 @@ name: technical-content-evaluator
 description: 'Elite technical content editor and curriculum architect for evaluating technical training materials, documentation, and educational content. Reviews for technical accuracy, pedagogical excellence, content flow, code validation, and ensures A-grade quality standards.'
 tools:
   [
+    'agent',
     'edit',
-    'search',
     'execute',
-    'web/fetch',
     'execute/createAndRunTask',
     'execute/runTask',
     'read/getTaskOutput',
-    'web/githubRepo',
+    'search',
     'todo',
-    'agent',
+    'web/fetch',
+    'web/githubRepo',
   ]
 model: Claude Sonnet 4.5 (copilot)
 ---
