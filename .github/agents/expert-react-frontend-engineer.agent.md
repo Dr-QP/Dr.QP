@@ -1,7 +1,38 @@
 ---
-description: "Expert React 19.2 frontend engineer specializing in modern hooks, Server Components, Actions, TypeScript, and performance optimization"
+description: 'Expert React 19.2 frontend engineer specializing in modern hooks, Server Components, Actions, TypeScript, and performance optimization'
 name: React Expert
-tools: ["search/changes", "search/codebase", "edit/editFiles", "vscode/extensions", "web/fetch", "findTestFiles", "web/githubRepo", "vscode/getProjectSetupInfo", "vscode/installExtension", "vscode/newWorkspace", "vscode/runCommand", "vscode/openSimpleBrowser", "read/problems", "execute/getTerminalOutput", "execute/runInTerminal", "read/terminalLastCommand", "read/terminalSelection", "execute/createAndRunTask", "execute/runTask", "read/getTaskOutput", "execute/runTests", "search", "search/searchResults", "read/terminalLastCommand", "read/terminalSelection", "execute/testFailure", "search/usages", "vscode/vscodeAPI", "microsoft.docs.mcp"]
+tools:
+  [
+    'search/changes',
+    'search/codebase',
+    'edit/editFiles',
+    'vscode/extensions',
+    'web/fetch',
+    'findTestFiles',
+    'web/githubRepo',
+    'vscode/getProjectSetupInfo',
+    'vscode/installExtension',
+    'vscode/newWorkspace',
+    'vscode/runCommand',
+    'vscode/openSimpleBrowser',
+    'read/problems',
+    'execute/getTerminalOutput',
+    'execute/runInTerminal',
+    'read/terminalLastCommand',
+    'read/terminalSelection',
+    'execute/createAndRunTask',
+    'execute/runTask',
+    'read/getTaskOutput',
+    'execute/runTests',
+    'search',
+    'search/searchResults',
+    'read/terminalLastCommand',
+    'read/terminalSelection',
+    'execute/testFailure',
+    'search/usages',
+    'vscode/vscodeAPI',
+    'microsoft.docs.mcp',
+  ]
 ---
 
 # Expert React Frontend Engineer

@@ -1,7 +1,39 @@
 ---
 description: 'Generate technical debt remediation plans for code, tests, and documentation.'
-tools: ['search/changes', 'search/codebase', 'edit/editFiles', 'vscode/extensions', 'web/fetch', 'findTestFiles', 'web/githubRepo', 'vscode/getProjectSetupInfo', 'vscode/installExtension', 'vscode/newWorkspace', 'vscode/runCommand', 'vscode/openSimpleBrowser', 'read/problems', 'execute/getTerminalOutput', 'execute/runInTerminal', 'read/terminalLastCommand', 'read/terminalSelection', 'execute/createAndRunTask', 'execute/runTask', 'read/getTaskOutput', 'execute/runTests', 'search', 'search/searchResults', 'read/terminalLastCommand', 'read/terminalSelection', 'execute/testFailure', 'search/usages', 'vscode/vscodeAPI', 'github/*']
+tools:
+  [
+    'search/changes',
+    'search/codebase',
+    'edit/editFiles',
+    'vscode/extensions',
+    'web/fetch',
+    'findTestFiles',
+    'web/githubRepo',
+    'vscode/getProjectSetupInfo',
+    'vscode/installExtension',
+    'vscode/newWorkspace',
+    'vscode/runCommand',
+    'vscode/openSimpleBrowser',
+    'read/problems',
+    'execute/getTerminalOutput',
+    'execute/runInTerminal',
+    'read/terminalLastCommand',
+    'read/terminalSelection',
+    'execute/createAndRunTask',
+    'execute/runTask',
+    'read/getTaskOutput',
+    'execute/runTests',
+    'search',
+    'search/searchResults',
+    'read/terminalLastCommand',
+    'read/terminalSelection',
+    'execute/testFailure',
+    'search/usages',
+    'vscode/vscodeAPI',
+    'github/*',
+  ]
 ---
+
 # Technical Debt Remediation Plan
 
 Generate comprehensive technical debt remediation plans. Analysis only - no code modifications. Keep recommendations concise and actionable. Do not provide verbose explanations or unnecessary details.

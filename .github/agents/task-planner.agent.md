@@ -1,7 +1,41 @@
 ---
-description: "Task planner for creating actionable implementation plans - Brought to you by microsoft/edge-ai"
-name: "Task Planner Instructions"
-tools: ["search/changes", "search/codebase", "edit/editFiles", "vscode/extensions", "web/fetch", "findTestFiles", "web/githubRepo", "vscode/getProjectSetupInfo", "vscode/installExtension", "vscode/newWorkspace", "vscode/runCommand", "vscode/openSimpleBrowser", "read/problems", "execute/getTerminalOutput", "execute/runInTerminal", "read/terminalLastCommand", "read/terminalSelection", "execute/runNotebookCell", "read/getNotebookSummary", "read/readNotebookCellOutput", "execute/runTests", "search", "search/searchResults", "read/terminalLastCommand", "read/terminalSelection", "execute/testFailure", "search/usages", "vscode/vscodeAPI", "terraform", "Microsoft Docs", "azure_get_schema_for_Bicep", "context7"]
+description: 'Task planner for creating actionable implementation plans - Brought to you by microsoft/edge-ai'
+name: 'Task Planner Instructions'
+tools:
+  [
+    'search/changes',
+    'search/codebase',
+    'edit/editFiles',
+    'vscode/extensions',
+    'web/fetch',
+    'findTestFiles',
+    'web/githubRepo',
+    'vscode/getProjectSetupInfo',
+    'vscode/installExtension',
+    'vscode/newWorkspace',
+    'vscode/runCommand',
+    'vscode/openSimpleBrowser',
+    'read/problems',
+    'execute/getTerminalOutput',
+    'execute/runInTerminal',
+    'read/terminalLastCommand',
+    'read/terminalSelection',
+    'execute/runNotebookCell',
+    'read/getNotebookSummary',
+    'read/readNotebookCellOutput',
+    'execute/runTests',
+    'search',
+    'search/searchResults',
+    'read/terminalLastCommand',
+    'read/terminalSelection',
+    'execute/testFailure',
+    'search/usages',
+    'vscode/vscodeAPI',
+    'terraform',
+    'Microsoft Docs',
+    'azure_get_schema_for_Bicep',
+    'context7',
+  ]
 ---
 
 # Task Planner Instructions
@@ -122,7 +156,7 @@ You WILL use these templates as the foundation for all planning files:
 
 ```markdown
 ---
-applyTo: ".copilot-tracking/changes/{{date}}-{{task_description}}-changes.md"
+applyTo: '.copilot-tracking/changes/{{date}}-{{task_description}}-changes.md'
 ---
 
 <!-- markdownlint-disable-file -->
@@ -160,7 +194,6 @@ applyTo: ".copilot-tracking/changes/{{date}}-{{task_description}}-changes.md"
 ### [ ] Phase 1: {{phase_1_name}}
 
 - [ ] Task 1.1: {{specific_action_1_1}}
-
   - Details: .copilot-tracking/details/{{date}}-{{task_description}}-details.md (Lines {{line_start}}-{{line_end}})
 
 - [ ] Task 1.2: {{specific_action_1_2}}
@@ -290,7 +323,6 @@ You WILL follow ALL project standards and conventions
 When ALL Phases are checked off (`[x]`) and completed you WILL do the following:
 
 1. You WILL provide a markdown style link and a summary of all changes from #file:../changes/{{date}}-{{task_description}}-changes.md to the user:
-
    - You WILL keep the overall summary brief
    - You WILL add spacing around any lists
    - You MUST wrap any reference to a file in a markdown style link

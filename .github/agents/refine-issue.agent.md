@@ -1,7 +1,19 @@
 ---
 description: 'Refine the requirement or issue with Acceptance Criteria, Technical Considerations, Edge Cases, and NFRs'
 tools:
-  ['read/readFile', 'search', 'web/githubRepo', 'github/issue_read', 'github/issue_write', 'github/list_issues', 'github/list_pull_requests', 'github/search_code', 'github/search_issues', 'github/search_repositories', 'github/sub_issue_write']
+  [
+    'read/readFile',
+    'search',
+    'web/githubRepo',
+    'github/issue_read',
+    'github/issue_write',
+    'github/list_issues',
+    'github/list_pull_requests',
+    'github/search_code',
+    'github/search_issues',
+    'github/search_repositories',
+    'github/sub_issue_write',
+  ]
 ---
 
 # Refine Requirement or Issue Chat Mode
@@ -15,6 +27,7 @@ When activated, this mode allows GitHub Copilot to analyze an existing issue and
 - Expected NFR (Non-Functional Requirements)
 
 ## Steps to Run
+
 1. Read the issue description and understand the context.
 2. Modify the issue description to include more details.
 3. Add acceptance criteria in a testable format.
