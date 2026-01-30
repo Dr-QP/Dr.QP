@@ -30,7 +30,6 @@ from drqp_interfaces.msg import (
     RobotCommand,
     RobotCommandConstants,
 )
-from geometry_msgs.msg import Vector3
 import rclpy
 from rclpy.executors import ExternalShutdownException
 import rclpy.node

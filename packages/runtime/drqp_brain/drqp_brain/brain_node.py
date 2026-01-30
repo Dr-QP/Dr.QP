@@ -32,7 +32,6 @@ from drqp_interfaces.msg import (
     RobotCommand,
     RobotCommandConstants,
 )
-from geometry_msgs.msg import Vector3
 import rclpy
 from rclpy.action import ActionClient
 from rclpy.executors import ExternalShutdownException
@@ -197,28 +196,34 @@ class HexapodBrain(rclpy.node.Node):
     def loop(self):
         self.walker.current_gait = self.gaits[self.gait_index]
         self.walker.phase_step = 1 / self.phase_steps_per_cycle[self.gait_index]
-        
+
         # Convert Vector3 messages to Point3D (or numpy arrays) for walker
         from drqp_brain.geometry import Point3D
-        
-        stride_direction = Point3D([
-            self.current_movement.stride_direction.x,
-            self.current_movement.stride_direction.y,
-            self.current_movement.stride_direction.z,
-        ])
-        
-        body_translation = Point3D([
-            self.current_movement.body_translation.x,
-            self.current_movement.body_translation.y,
-            self.current_movement.body_translation.z,
-        ])
-        
-        body_rotation = Point3D([
-            self.current_movement.body_rotation.x,
-            self.current_movement.body_rotation.y,
-            self.current_movement.body_rotation.z,
-        ])
-        
+
+        stride_direction = Point3D(
+            [
+                self.current_movement.stride_direction.x,
+                self.current_movement.stride_direction.y,
+                self.current_movement.stride_direction.z,
+            ]
+        )
+
+        body_translation = Point3D(
+            [
+                self.current_movement.body_translation.x,
+                self.current_movement.body_translation.y,
+                self.current_movement.body_translation.z,
+            ]
+        )
+
+        body_rotation = Point3D(
+            [
+                self.current_movement.body_rotation.x,
+                self.current_movement.body_rotation.y,
+                self.current_movement.body_rotation.z,
+            ]
+        )
+
         self.walker.next_step(
             stride_direction=stride_direction,
             rotation_direction=self.current_movement.rotation_speed,
