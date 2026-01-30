@@ -24,17 +24,16 @@ import argparse
 
 from control_msgs.action import FollowJointTrajectory
 from drqp_brain.joint_trajectory_builder import JointTrajectoryBuilder
-from drqp_brain.joystick_button import ButtonIndex
-from drqp_brain.joystick_input_handler import JoystickInputHandler
 from drqp_brain.models import HexapodModel
 from drqp_brain.walk_controller import GaitType, WalkController
+from drqp_interfaces.msg import MovementCommand, RobotCommand
+from geometry_msgs.msg import Vector3
 import rclpy
 from rclpy.action import ActionClient
 from rclpy.executors import ExternalShutdownException
 import rclpy.node
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 import rclpy.utilities
-import sensor_msgs.msg
 import std_msgs.msg
 import trajectory_msgs.msg
 
@@ -43,7 +42,7 @@ class HexapodBrain(rclpy.node.Node):
     """
     ROS node for controlling Dr.QP hexapod robot.
 
-    Subscribes to /joy topic for joystick input, processes it with WalkController,
+    Subscribes to semantic movement and robot command topics, processes them with WalkController,
     and publishes positions to /servo_goals topic.
 
     """
@@ -57,23 +56,25 @@ class HexapodBrain(rclpy.node.Node):
         self.gaits = [GaitType.tripod, GaitType.ripple, GaitType.wave]
         self.phase_steps_per_cycle = [20, 25, 40]  # per gait
 
-        self.joystick_input_handler = JoystickInputHandler(
-            button_callbacks={
-                ButtonIndex.DpadLeft: lambda b, e: self.prev_gait(),
-                ButtonIndex.DpadRight: lambda b, e: self.next_gait(),
-                ButtonIndex.L1: lambda b, e: self.next_control_mode(),
-                ButtonIndex.PS: lambda b, e: self.process_kill_switch(),
-                ButtonIndex.TouchpadButton: lambda b, e: self.process_kill_switch(),
-                ButtonIndex.Start: lambda b, e: self.reboot_servos(),
-                ButtonIndex.Select: lambda b, e: self.finalize(),
-            }
+        # Store current movement command state
+        self.current_movement = MovementCommand()
+        self.current_movement.stride_direction = Vector3(x=0.0, y=0.0, z=0.0)
+        self.current_movement.rotation_speed = 0.0
+        self.current_movement.body_translation = Vector3(x=0.0, y=0.0, z=0.0)
+        self.current_movement.body_rotation = Vector3(x=0.0, y=0.0, z=0.0)
+        self.current_movement.gait_type = 'tripod'
+
+        # Subscribe to semantic movement commands
+        self.movement_command_sub = self.create_subscription(
+            MovementCommand,
+            '/robot/movement_command',
+            self.process_movement_command,
+            qos_profile=10,
         )
 
-        self.joystick_sub = self.create_subscription(
-            sensor_msgs.msg.Joy,
-            '/joy',
-            self.joystick_input_handler.process_joy_message,
-            qos_profile=10,
+        # Subscribe to robot commands
+        self.robot_command_sub = self.create_subscription(
+            RobotCommand, '/robot/command', self.process_robot_command, qos_profile=10
         )
 
         self.robot_state = None
@@ -150,20 +151,76 @@ class HexapodBrain(rclpy.node.Node):
         self.gait_index = (self.gait_index + 1) % len(self.gaits)
         self.get_logger().info(f'Switching gait: {self.gaits[self.gait_index].name}')
 
+    def process_movement_command(self, msg: MovementCommand):
+        """
+        Process semantic movement command.
+
+        Parameters
+        ----------
+        msg : MovementCommand
+            Semantic movement command with stride, rotation, body position/orientation
+
+        """
+        self.current_movement = msg
+
+        # Update gait index based on gait type from message
+        gait_names = [g.name for g in self.gaits]
+        if msg.gait_type in gait_names:
+            self.gait_index = gait_names.index(msg.gait_type)
+
+    def process_robot_command(self, msg: RobotCommand):
+        """
+        Process semantic robot command.
+
+        Parameters
+        ----------
+        msg : RobotCommand
+            High-level robot command (e.g., 'kill_switch', 'finalize', 'reboot_servos')
+
+        """
+        if msg.command == 'kill_switch':
+            self.process_kill_switch()
+        elif msg.command == 'finalize':
+            self.finalize()
+        elif msg.command == 'reboot_servos':
+            self.reboot_servos()
+        else:
+            self.get_logger().warning(f'Unknown robot command: {msg.command}')
+
     def next_control_mode(self):
-        self.joystick_input_handler.next_control_mode()
-        self.get_logger().info(
-            f'Switching control mode: {self.joystick_input_handler.control_mode}'
-        )
+        """Log control mode changes (control mode is now handled by translator)."""
+        self.get_logger().info('Control mode changed in translator node')
 
     def loop(self):
         self.walker.current_gait = self.gaits[self.gait_index]
         self.walker.phase_step = 1 / self.phase_steps_per_cycle[self.gait_index]
+        
+        # Convert Vector3 messages to Point3D (or numpy arrays) for walker
+        from drqp_brain.geometry import Point3D
+        
+        stride_direction = Point3D([
+            self.current_movement.stride_direction.x,
+            self.current_movement.stride_direction.y,
+            self.current_movement.stride_direction.z,
+        ])
+        
+        body_translation = Point3D([
+            self.current_movement.body_translation.x,
+            self.current_movement.body_translation.y,
+            self.current_movement.body_translation.z,
+        ])
+        
+        body_rotation = Point3D([
+            self.current_movement.body_rotation.x,
+            self.current_movement.body_rotation.y,
+            self.current_movement.body_rotation.z,
+        ])
+        
         self.walker.next_step(
-            stride_direction=self.joystick_input_handler.direction,
-            rotation_direction=self.joystick_input_handler.rotation_speed,
-            body_direction=self.joystick_input_handler.body_translation / 8.0,
-            body_rotation=self.joystick_input_handler.body_rotation,
+            stride_direction=stride_direction,
+            rotation_direction=self.current_movement.rotation_speed,
+            body_direction=body_translation / 8.0,
+            body_rotation=body_rotation,
         )
 
         trajectory = JointTrajectoryBuilder(self.hexapod)
