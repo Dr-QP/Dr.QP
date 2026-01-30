@@ -26,7 +26,12 @@ from control_msgs.action import FollowJointTrajectory
 from drqp_brain.joint_trajectory_builder import JointTrajectoryBuilder
 from drqp_brain.models import HexapodModel
 from drqp_brain.walk_controller import GaitType, WalkController
-from drqp_interfaces.msg import MovementCommand, RobotCommand
+from drqp_interfaces.msg import (
+    MovementCommand,
+    MovementCommandConstants,
+    RobotCommand,
+    RobotCommandConstants,
+)
 from geometry_msgs.msg import Vector3
 import rclpy
 from rclpy.action import ActionClient
@@ -56,13 +61,11 @@ class HexapodBrain(rclpy.node.Node):
         self.gaits = [GaitType.tripod, GaitType.ripple, GaitType.wave]
         self.phase_steps_per_cycle = [20, 25, 40]  # per gait
 
-        # Store current movement command state
+        # Store current movement command state with defaults
         self.current_movement = MovementCommand()
-        self.current_movement.stride_direction = Vector3(x=0.0, y=0.0, z=0.0)
-        self.current_movement.rotation_speed = 0.0
-        self.current_movement.body_translation = Vector3(x=0.0, y=0.0, z=0.0)
-        self.current_movement.body_rotation = Vector3(x=0.0, y=0.0, z=0.0)
-        self.current_movement.gait_type = 'tripod'
+        # Message defaults are automatically initialized to zero values
+        # Set initial gait type
+        self.current_movement.gait_type = MovementCommandConstants.GAIT_TRIPOD
 
         # Subscribe to semantic movement commands
         self.movement_command_sub = self.create_subscription(
@@ -178,11 +181,11 @@ class HexapodBrain(rclpy.node.Node):
             High-level robot command (e.g., 'kill_switch', 'finalize', 'reboot_servos')
 
         """
-        if msg.command == 'kill_switch':
+        if msg.command == RobotCommandConstants.KILL_SWITCH:
             self.process_kill_switch()
-        elif msg.command == 'finalize':
+        elif msg.command == RobotCommandConstants.FINALIZE:
             self.finalize()
-        elif msg.command == 'reboot_servos':
+        elif msg.command == RobotCommandConstants.REBOOT_SERVOS:
             self.reboot_servos()
         else:
             self.get_logger().warning(f'Unknown robot command: {msg.command}')

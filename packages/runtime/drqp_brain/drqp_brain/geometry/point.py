@@ -222,3 +222,17 @@ class Point3D:
 
     def copy(self):
         return Point3D(self._array, self.label)
+
+    def to_vector3(self):
+        """
+        Convert Point3D to geometry_msgs/Vector3.
+
+        Returns
+        -------
+        geometry_msgs.msg.Vector3
+            Vector3 message with x, y, z from this point
+
+        """
+        from geometry_msgs.msg import Vector3
+
+        return Vector3(x=float(self.x), y=float(self.y), z=float(self.z))

@@ -17,7 +17,9 @@ endforeach()
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   msg/MovementCommand.msg
+  msg/MovementCommandConstants.msg
   msg/RobotCommand.msg
+  msg/RobotCommandConstants.msg
   DEPENDENCIES std_msgs geometry_msgs
 )
 

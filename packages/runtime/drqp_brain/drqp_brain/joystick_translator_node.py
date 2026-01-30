@@ -24,7 +24,12 @@ import argparse
 
 from drqp_brain.joystick_button import ButtonIndex
 from drqp_brain.joystick_input_handler import JoystickInputHandler
-from drqp_interfaces.msg import MovementCommand, RobotCommand
+from drqp_interfaces.msg import (
+    MovementCommand,
+    MovementCommandConstants,
+    RobotCommand,
+    RobotCommandConstants,
+)
 from geometry_msgs.msg import Vector3
 import rclpy
 from rclpy.executors import ExternalShutdownException
@@ -47,7 +52,11 @@ class JoystickTranslatorNode(rclpy.node.Node):
 
         # Track gait state for movement commands
         self.gait_index = 0
-        self.gaits = ['tripod', 'ripple', 'wave']
+        self.gaits = [
+            MovementCommandConstants.GAIT_TRIPOD,
+            MovementCommandConstants.GAIT_RIPPLE,
+            MovementCommandConstants.GAIT_WAVE,
+        ]
 
         # Set up joystick input handler with button callbacks
         self.joystick_input_handler = JoystickInputHandler(
@@ -55,10 +64,18 @@ class JoystickTranslatorNode(rclpy.node.Node):
                 ButtonIndex.DpadLeft: lambda b, e: self._prev_gait(),
                 ButtonIndex.DpadRight: lambda b, e: self._next_gait(),
                 ButtonIndex.L1: lambda b, e: self._publish_control_mode_change(),
-                ButtonIndex.PS: lambda b, e: self._publish_command('kill_switch'),
-                ButtonIndex.TouchpadButton: lambda b, e: self._publish_command('kill_switch'),
-                ButtonIndex.Start: lambda b, e: self._publish_command('reboot_servos'),
-                ButtonIndex.Select: lambda b, e: self._publish_command('finalize'),
+                ButtonIndex.PS: lambda b, e: self._publish_command(
+                    RobotCommandConstants.KILL_SWITCH
+                ),
+                ButtonIndex.TouchpadButton: lambda b, e: self._publish_command(
+                    RobotCommandConstants.KILL_SWITCH
+                ),
+                ButtonIndex.Start: lambda b, e: self._publish_command(
+                    RobotCommandConstants.REBOOT_SERVOS
+                ),
+                ButtonIndex.Select: lambda b, e: self._publish_command(
+                    RobotCommandConstants.FINALIZE
+                ),
             }
         )
 
@@ -98,26 +115,10 @@ class JoystickTranslatorNode(rclpy.node.Node):
         msg = MovementCommand()
 
         # Convert Point3D to Vector3
-        msg.stride_direction = Vector3(
-            x=float(self.joystick_input_handler.direction.x),
-            y=float(self.joystick_input_handler.direction.y),
-            z=float(self.joystick_input_handler.direction.z),
-        )
-
+        msg.stride_direction = self.joystick_input_handler.direction.to_vector3()
         msg.rotation_speed = float(self.joystick_input_handler.rotation_speed)
-
-        msg.body_translation = Vector3(
-            x=float(self.joystick_input_handler.body_translation.x),
-            y=float(self.joystick_input_handler.body_translation.y),
-            z=float(self.joystick_input_handler.body_translation.z),
-        )
-
-        msg.body_rotation = Vector3(
-            x=float(self.joystick_input_handler.body_rotation.x),
-            y=float(self.joystick_input_handler.body_rotation.y),
-            z=float(self.joystick_input_handler.body_rotation.z),
-        )
-
+        msg.body_translation = self.joystick_input_handler.body_translation.to_vector3()
+        msg.body_rotation = self.joystick_input_handler.body_rotation.to_vector3()
         msg.gait_type = self.gaits[self.gait_index]
 
         self.movement_command_pub.publish(msg)

@@ -21,7 +21,12 @@
 import unittest
 
 from drqp_brain.joystick_translator_node import JoystickTranslatorNode
-from drqp_interfaces.msg import MovementCommand, RobotCommand
+from drqp_interfaces.msg import (
+    MovementCommand,
+    MovementCommandConstants,
+    RobotCommand,
+    RobotCommandConstants,
+)
 import rclpy
 import sensor_msgs.msg
 
@@ -83,7 +88,7 @@ class TestJoystickTranslatorNode(unittest.TestCase):
         cmd = self.movement_commands[-1]
         # Check that stride direction reflects joystick input
         self.assertIsNotNone(cmd.stride_direction)
-        self.assertEqual(cmd.gait_type, 'tripod')  # Default gait
+        self.assertEqual(cmd.gait_type, MovementCommandConstants.GAIT_TRIPOD)  # Default gait
 
     def test_button_to_robot_command(self):
         """Test that button presses generate robot commands."""
@@ -104,7 +109,7 @@ class TestJoystickTranslatorNode(unittest.TestCase):
         self.assertGreater(len(self.robot_commands), 0, "Robot command should be published")
         
         cmd = self.robot_commands[-1]
-        self.assertEqual(cmd.command, 'finalize')
+        self.assertEqual(cmd.command, RobotCommandConstants.FINALIZE)
 
 
 if __name__ == '__main__':

@@ -20,7 +20,12 @@
 
 import unittest
 
-from drqp_interfaces.msg import MovementCommand, RobotCommand
+from drqp_interfaces.msg import (
+    MovementCommand,
+    MovementCommandConstants,
+    RobotCommand,
+    RobotCommandConstants,
+)
 from geometry_msgs.msg import Vector3
 from launch import LaunchDescription
 from launch.actions import TimerAction
@@ -89,7 +94,7 @@ class TestBrainNode(unittest.TestCase):
         cmd.rotation_speed = 0.5
         cmd.body_translation = Vector3(x=0.0, y=0.0, z=0.0)
         cmd.body_rotation = Vector3(x=0.0, y=0.0, z=0.0)
-        cmd.gait_type = 'tripod'
+        cmd.gait_type = MovementCommandConstants.GAIT_TRIPOD
         
         # Publish the command
         self.movement_pub.publish(cmd)
@@ -106,7 +111,7 @@ class TestBrainNode(unittest.TestCase):
         cmd = RobotCommand()
         cmd.header = std_msgs.msg.Header()
         cmd.header.stamp = self.node.get_clock().now().to_msg()
-        cmd.command = 'reboot_servos'
+        cmd.command = RobotCommandConstants.REBOOT_SERVOS
         
         # Publish the command
         self.command_pub.publish(cmd)
