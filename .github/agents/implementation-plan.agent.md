@@ -1,7 +1,38 @@
 ---
-description: "Generate an implementation plan for new features or refactoring existing code."
-name: "Implementation Plan Generation Mode"
-tools: ["search/codebase", "search/usages", "vscode/vscodeAPI", "think", "read/problems", "search/changes", "execute/testFailure", "read/terminalSelection", "read/terminalLastCommand", "vscode/openSimpleBrowser", "web/fetch", "findTestFiles", "search/searchResults", "web/githubRepo", "vscode/extensions", "edit/editFiles", "execute/runNotebookCell", "read/getNotebookSummary", "read/readNotebookCellOutput", "search", "vscode/getProjectSetupInfo", "vscode/installExtension", "vscode/newWorkspace", "vscode/runCommand", "execute/getTerminalOutput", "execute/runInTerminal", "execute/createAndRunTask", "execute/getTaskOutput", "execute/runTask"]
+description: 'Generate an implementation plan for new features or refactoring existing code.'
+name: 'Implementation Plan Generation Mode'
+tools:
+  [
+    'edit/editFiles',
+    'execute/createAndRunTask',
+    'execute/getTaskOutput',
+    'execute/getTerminalOutput',
+    'execute/runInTerminal',
+    'execute/runNotebookCell',
+    'execute/runTask',
+    'execute/testFailure',
+    'findTestFiles',
+    'read/getNotebookSummary',
+    'read/problems',
+    'read/readNotebookCellOutput',
+    'read/terminalLastCommand',
+    'read/terminalSelection',
+    'search',
+    'search/changes',
+    'search/codebase',
+    'search/searchResults',
+    'search/usages',
+    'think',
+    'vscode/extensions',
+    'vscode/getProjectSetupInfo',
+    'vscode/installExtension',
+    'vscode/newWorkspace',
+    'vscode/openSimpleBrowser',
+    'vscode/runCommand',
+    'vscode/vscodeAPI',
+    'web/fetch',
+    'web/githubRepo',
+  ]
 ---
 
 # Implementation Plan Generation Mode

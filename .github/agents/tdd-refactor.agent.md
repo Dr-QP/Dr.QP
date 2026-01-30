@@ -1,7 +1,23 @@
 ---
-description: "Improve code quality, apply security best practices, and enhance design whilst maintaining green tests and GitHub issue compliance."
-name: "TDD Refactor Phase - Improve Quality & Security"
-tools: ["github", "findTestFiles", "edit/editFiles", "runTests", "runCommands", "codebase", "filesystem", "search", "problems", "testFailure", "terminalLastCommand"]
+description: 'Improve code quality, apply security best practices, and enhance design whilst maintaining green tests and GitHub issue compliance.'
+name: 'TDD Refactor Phase - Improve Quality & Security'
+tools:
+  [
+    'edit/editFiles',
+    'execute/getTerminalOutput',
+    'execute/runInTerminal',
+    'execute/runTests',
+    'execute/testFailure',
+    'filesystem',
+    'findTestFiles',
+    'github/*',
+    'read/problems',
+    'read/terminalLastCommand',
+    'read/terminalLastCommand',
+    'read/terminalSelection',
+    'search',
+    'search/codebase',
+  ]
 ---
 
 # TDD Refactor Phase - Improve Quality & Security

@@ -1,7 +1,38 @@
 ---
-description: "Expert React 19.2 frontend engineer specializing in modern hooks, Server Components, Actions, TypeScript, and performance optimization"
-name: "Expert React Frontend Engineer"
-tools: ["changes", "codebase", "edit/editFiles", "extensions", "fetch", "findTestFiles", "githubRepo", "new", "openSimpleBrowser", "problems", "runCommands", "runTasks", "runTests", "search", "searchResults", "terminalLastCommand", "terminalSelection", "testFailure", "usages", "vscodeAPI", "microsoft.docs.mcp"]
+description: 'Expert React 19.2 frontend engineer specializing in modern hooks, Server Components, Actions, TypeScript, and performance optimization'
+name: React Expert
+tools:
+  [
+    'edit/editFiles',
+    'execute/createAndRunTask',
+    'execute/getTerminalOutput',
+    'execute/runInTerminal',
+    'execute/runTask',
+    'execute/runTests',
+    'execute/testFailure',
+    'findTestFiles',
+    'microsoft.docs.mcp',
+    'read/getTaskOutput',
+    'read/problems',
+    'read/terminalLastCommand',
+    'read/terminalLastCommand',
+    'read/terminalSelection',
+    'read/terminalSelection',
+    'search',
+    'search/changes',
+    'search/codebase',
+    'search/searchResults',
+    'search/usages',
+    'vscode/extensions',
+    'vscode/getProjectSetupInfo',
+    'vscode/installExtension',
+    'vscode/newWorkspace',
+    'vscode/openSimpleBrowser',
+    'vscode/runCommand',
+    'vscode/vscodeAPI',
+    'web/fetch',
+    'web/githubRepo',
+  ]
 ---
 
 # Expert React Frontend Engineer

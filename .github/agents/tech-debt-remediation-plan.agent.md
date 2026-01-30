@@ -1,7 +1,39 @@
 ---
 description: 'Generate technical debt remediation plans for code, tests, and documentation.'
-tools: ['changes', 'codebase', 'edit/editFiles', 'extensions', 'web/fetch', 'findTestFiles', 'githubRepo', 'new', 'openSimpleBrowser', 'problems', 'runCommands', 'runTasks', 'runTests', 'search', 'searchResults', 'terminalLastCommand', 'terminalSelection', 'testFailure', 'usages', 'vscodeAPI', 'github']
+tools:
+  [
+    'edit/editFiles',
+    'execute/createAndRunTask',
+    'execute/getTerminalOutput',
+    'execute/runInTerminal',
+    'execute/runTask',
+    'execute/runTests',
+    'execute/testFailure',
+    'findTestFiles',
+    'github/*',
+    'read/getTaskOutput',
+    'read/problems',
+    'read/terminalLastCommand',
+    'read/terminalLastCommand',
+    'read/terminalSelection',
+    'read/terminalSelection',
+    'search',
+    'search/changes',
+    'search/codebase',
+    'search/searchResults',
+    'search/usages',
+    'vscode/extensions',
+    'vscode/getProjectSetupInfo',
+    'vscode/installExtension',
+    'vscode/newWorkspace',
+    'vscode/openSimpleBrowser',
+    'vscode/runCommand',
+    'vscode/vscodeAPI',
+    'web/fetch',
+    'web/githubRepo',
+  ]
 ---
+
 # Technical Debt Remediation Plan
 
 Generate comprehensive technical debt remediation plans. Analysis only - no code modifications. Keep recommendations concise and actionable. Do not provide verbose explanations or unnecessary details.

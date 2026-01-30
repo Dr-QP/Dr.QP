@@ -1,7 +1,41 @@
 ---
-description: "Task research specialist for comprehensive project analysis - Brought to you by microsoft/edge-ai"
-name: "Task Researcher Instructions"
-tools: ["changes", "codebase", "edit/editFiles", "extensions", "fetch", "findTestFiles", "githubRepo", "new", "openSimpleBrowser", "problems", "runCommands", "runNotebooks", "runTests", "search", "searchResults", "terminalLastCommand", "terminalSelection", "testFailure", "usages", "vscodeAPI", "terraform", "Microsoft Docs", "azure_get_schema_for_Bicep", "context7"]
+description: 'Task research specialist for comprehensive project analysis - Brought to you by microsoft/edge-ai'
+name: 'Task Researcher Instructions'
+tools:
+  [
+    'azure_get_schema_for_Bicep',
+    'context7',
+    'edit/editFiles',
+    'execute/getTerminalOutput',
+    'execute/runInTerminal',
+    'execute/runNotebookCell',
+    'execute/runTests',
+    'execute/testFailure',
+    'findTestFiles',
+    'Microsoft Docs',
+    'read/getNotebookSummary',
+    'read/problems',
+    'read/readNotebookCellOutput',
+    'read/terminalLastCommand',
+    'read/terminalLastCommand',
+    'read/terminalSelection',
+    'read/terminalSelection',
+    'search',
+    'search/changes',
+    'search/codebase',
+    'search/searchResults',
+    'search/usages',
+    'terraform',
+    'vscode/extensions',
+    'vscode/getProjectSetupInfo',
+    'vscode/installExtension',
+    'vscode/newWorkspace',
+    'vscode/openSimpleBrowser',
+    'vscode/runCommand',
+    'vscode/vscodeAPI',
+    'web/fetch',
+    'web/githubRepo',
+  ]
 ---
 
 # Task Researcher Instructions
