@@ -54,7 +54,7 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 name='rviz_config',
-                default_value=str(pkg_share_path / 'rviz' / 'drqp_description.rviz'),
+                default_value=str(pkg_share_path / 'rviz' / 'drqp.rviz'),
                 description='Absolute path to rviz config file',
             ),
             rviz_node,
