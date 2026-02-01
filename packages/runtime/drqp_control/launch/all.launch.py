@@ -25,7 +25,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
 def generate_launch_description():
-    pkg_launch_path = get_package_share_path('drqp_description') / 'launch'
+    pkg_launch_path = get_package_share_path('drqp_control') / 'launch'
 
     return LaunchDescription(
         [

@@ -26,7 +26,7 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    pkg_share_path = get_package_share_path('drqp_description')
+    pkg_share_path = get_package_share_path('drqp_control')
 
     use_sim_time = LaunchConfiguration('use_sim_time')
 
