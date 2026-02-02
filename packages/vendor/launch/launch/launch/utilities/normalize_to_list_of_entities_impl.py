@@ -14,15 +14,15 @@
 
 """Module for the normalize_to_list_of_entities() utility function."""
 
-from typing import Iterable
-from typing import List
+from typing import Iterable, List
 
 from ..launch_description_entity import LaunchDescriptionEntity
 from ..some_entities_type import SomeEntitiesType
 
 
-def normalize_to_list_of_entities(entities: Iterable[SomeEntitiesType]) ->\
-        List[LaunchDescriptionEntity]:
+def normalize_to_list_of_entities(
+    entities: Iterable[SomeEntitiesType],
+) -> List[LaunchDescriptionEntity]:
     """Return a list of Substitutions given a variety of starting inputs."""
     flattened: List[LaunchDescriptionEntity] = []
     for entity in entities:

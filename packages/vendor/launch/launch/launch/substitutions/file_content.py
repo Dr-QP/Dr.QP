@@ -14,20 +14,13 @@
 
 """Module for the FileContent substitution."""
 
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Sequence
-from typing import Text
-from typing import Tuple
-from typing import Type
+from typing import Any, Dict, List, Sequence, Text, Tuple, Type
 
-
-from .substitution_failure import SubstitutionFailure
 from ..frontend import expose_substitution
 from ..launch_context import LaunchContext
 from ..some_substitutions_type import SomeSubstitutionsType
 from ..substitution import Substitution
+from .substitution_failure import SubstitutionFailure
 
 
 @expose_substitution('file-content')
@@ -43,11 +36,13 @@ class FileContent(Substitution):
         super().__init__()
 
         from ..utilities import normalize_to_list_of_substitutions
+
         self.__path = normalize_to_list_of_substitutions(path)
 
     @classmethod
-    def parse(cls, data: Sequence[SomeSubstitutionsType]
-              ) -> Tuple[Type['FileContent'], Dict[str, Any]]:
+    def parse(
+        cls, data: Sequence[SomeSubstitutionsType]
+    ) -> Tuple[Type['FileContent'], Dict[str, Any]]:
         """Parse `FileContent` substitution."""
         if not data or len(data) != 1:
             raise AttributeError('file content substitutions expect 1 argument')
@@ -61,12 +56,12 @@ class FileContent(Substitution):
 
     def describe(self) -> Text:
         """Return a description of this substitution as a string."""
-        return 'FileContent({})'.format(
-            ', '.join([sub.describe() for sub in self.path]))
+        return 'FileContent({})'.format(', '.join([sub.describe() for sub in self.path]))
 
     def perform(self, context: LaunchContext) -> Text:
         """Perform the substitution by evaluating the expression."""
         from ..utilities import perform_substitutions
+
         path = perform_substitutions(context, self.path)
         try:
             with open(path, 'r') as f:

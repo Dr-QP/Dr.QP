@@ -14,33 +14,21 @@
 
 """Module for the UnsetEnvironmentVariable action."""
 
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Tuple
-from typing import Type
-
+from typing import Any, Dict, List, Tuple, Type
 
 from ..action import Action
-from ..frontend import Entity
-from ..frontend import expose_action
-from ..frontend import Parser
+from ..frontend import Entity, expose_action, Parser
 from ..launch_context import LaunchContext
 from ..some_substitutions_type import SomeSubstitutionsType
 from ..substitution import Substitution
-from ..utilities import normalize_to_list_of_substitutions
-from ..utilities import perform_substitutions
+from ..utilities import normalize_to_list_of_substitutions, perform_substitutions
 
 
 @expose_action('unset_env')
 class UnsetEnvironmentVariable(Action):
     """Action that unsets an environment variable if it is set, otherwise does nothing."""
 
-    def __init__(
-        self,
-        name: SomeSubstitutionsType,
-        **kwargs: Any
-    ) -> None:
+    def __init__(self, name: SomeSubstitutionsType, **kwargs: Any) -> None:
         """Create an UnsetEnvironmentVariable action."""
         super().__init__(**kwargs)
         self.__name = normalize_to_list_of_substitutions(name)

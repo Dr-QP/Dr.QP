@@ -21,15 +21,16 @@ import platform
 import signal
 import socket
 import threading
-
 from types import TracebackType
-from typing import Callable
-from typing import ClassVar
-from typing import Dict
-from typing import Optional
-from typing import Tuple  # noqa: F401
-from typing import Type
-from typing import Union
+from typing import (
+    Callable,
+    ClassVar,
+    Dict,
+    Optional,
+    Tuple,  # noqa: F401
+    Type,
+    Union,
+)
 
 
 class AsyncSafeSignalManager:
@@ -68,10 +69,7 @@ class AsyncSafeSignalManager:
 
     __set_wakeup_fd: ClassVar[Callable[[int], int]] = signal.set_wakeup_fd
 
-    def __init__(
-        self,
-        loop: asyncio.AbstractEventLoop
-    ):
+    def __init__(self, loop: asyncio.AbstractEventLoop):
         """
         Instantiate manager.
 
@@ -111,9 +109,12 @@ class AsyncSafeSignalManager:
         self.__chain()
         return self
 
-    def __exit__(self, exc_type: Optional[Type[BaseException]],
-                 exc_value: Optional[BaseException],
-                 exc_traceback: Optional[TracebackType]) -> None:
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        exc_traceback: Optional[TracebackType],
+    ) -> None:
         try:
             try:
                 self.__uninstall_signal_writers()
@@ -138,9 +139,8 @@ class AsyncSafeSignalManager:
             # Emulate it.
             self.__background_loop = asyncio.SelectorEventLoop()
             self.__background_loop.add_reader(
-                self.__rsock.fileno(),
-                self.__loop.call_soon_threadsafe,
-                self.__handle_signal)
+                self.__rsock.fileno(), self.__loop.call_soon_threadsafe, self.__handle_signal
+            )
 
             def run_background_loop() -> None:
                 asyncio.set_event_loop(self.__background_loop)
@@ -148,8 +148,7 @@ class AsyncSafeSignalManager:
                     raise RuntimeError('AsyncSafeSignalManager has not been initialized.')
                 self.__background_loop.run_forever()
 
-            self.__background_thread = threading.Thread(
-                target=run_background_loop, daemon=True)
+            self.__background_thread = threading.Thread(target=run_background_loop, daemon=True)
             self.__background_thread.start()
 
     def __remove_signal_readers(self) -> None:
@@ -187,10 +186,10 @@ class AsyncSafeSignalManager:
             def modified_set_wakeup_fd(fd: int, *, warn_on_full_buffer: bool = True) -> int:
                 if threading.current_thread() is not threading.main_thread():
                     raise ValueError(
-                        'set_wakeup_fd only works in main'
-                        ' thread of the main interpreter'
+                        'set_wakeup_fd only works in main thread of the main interpreter'
                     )
                 return self.__chain_wakeup_handle(fd)
+
             signal.set_wakeup_fd = modified_set_wakeup_fd
 
     def __unchain(self):

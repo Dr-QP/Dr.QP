@@ -21,46 +21,43 @@ import os
 import platform
 import signal
 import traceback
-from typing import Any  # noqa: F401
-from typing import Callable
-from typing import cast
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Text
-from typing import Tuple  # noqa: F401
-from typing import Union
+from typing import (
+    Any,  # noqa: F401
+    Callable,
+    cast,
+    Dict,
+    List,
+    Optional,
+    Text,
+    Tuple,  # noqa: F401
+    Union,
+)
 
-import launch.logging
-
-from osrf_pycommon.process_utils import async_execute_process  # type: ignore
-from osrf_pycommon.process_utils import AsyncSubprocessProtocol
-
+from osrf_pycommon.process_utils import (
+    async_execute_process,  # type: ignore
+    AsyncSubprocessProtocol,
+)
 import psutil
 
-from .emit_event import EmitEvent
-from .opaque_function import OpaqueFunction
-from .timer_action import TimerAction
+import launch.logging
 
 from ..action import Action
 from ..conditions import evaluate_condition_expression
 from ..descriptions import Executable
 from ..event import Event
 from ..event_handler import EventHandler
-from ..event_handlers import OnProcessExit
-from ..event_handlers import OnProcessIO
-from ..event_handlers import OnProcessStart
-from ..event_handlers import OnShutdown
-from ..events import matches_action
-from ..events import Shutdown
-from ..events.process import ProcessExited
-from ..events.process import ProcessIO
-from ..events.process import ProcessStarted
-from ..events.process import ProcessStderr
-from ..events.process import ProcessStdin
-from ..events.process import ProcessStdout
-from ..events.process import ShutdownProcess
-from ..events.process import SignalProcess
+from ..event_handlers import OnProcessExit, OnProcessIO, OnProcessStart, OnShutdown
+from ..events import matches_action, Shutdown
+from ..events.process import (
+    ProcessExited,
+    ProcessIO,
+    ProcessStarted,
+    ProcessStderr,
+    ProcessStdin,
+    ProcessStdout,
+    ShutdownProcess,
+    SignalProcess,
+)
 from ..launch_context import LaunchContext
 from ..launch_description import LaunchDescription
 from ..launch_description_entity import LaunchDescriptionEntity
@@ -68,11 +65,11 @@ from ..some_entities_type import SomeEntitiesType
 from ..some_substitutions_type import SomeSubstitutionsType
 from ..substitution import Substitution
 from ..substitutions import LaunchConfiguration
-from ..utilities import is_a_subclass
-from ..utilities import normalize_to_list_of_substitutions
-from ..utilities import perform_substitutions
-from ..utilities.type_utils import normalize_typed_substitution
-from ..utilities.type_utils import perform_typed_substitution
+from ..utilities import is_a_subclass, normalize_to_list_of_substitutions, perform_substitutions
+from ..utilities.type_utils import normalize_typed_substitution, perform_typed_substitution
+from .emit_event import EmitEvent
+from .opaque_function import OpaqueFunction
+from .timer_action import TimerAction
 
 
 class ExecuteLocal(Action):
@@ -83,25 +80,26 @@ class ExecuteLocal(Action):
         *,
         process_description: Executable,
         shell: bool = False,
-        sigterm_timeout: SomeSubstitutionsType = LaunchConfiguration(
-            'sigterm_timeout', default=5),
-        sigkill_timeout: SomeSubstitutionsType = LaunchConfiguration(
-            'sigkill_timeout', default=5),
+        sigterm_timeout: SomeSubstitutionsType = LaunchConfiguration('sigterm_timeout', default=5),
+        sigkill_timeout: SomeSubstitutionsType = LaunchConfiguration('sigkill_timeout', default=5),
         signal_lingering_subprocesses: SomeSubstitutionsType = LaunchConfiguration(
-            'signal_lingering_subprocesses', default=True),
+            'signal_lingering_subprocesses', default=True
+        ),
         emulate_tty: bool = False,
         output: SomeSubstitutionsType = 'log',
         output_format: Text = '[{this.process_description.final_name}] {line}',
         cached_output: bool = False,
         log_cmd: bool = False,
-        on_exit: Optional[Union[
-            SomeEntitiesType,
-            Callable[[ProcessExited, LaunchContext], Optional[SomeEntitiesType]]
-        ]] = None,
+        on_exit: Optional[
+            Union[
+                SomeEntitiesType,
+                Callable[[ProcessExited, LaunchContext], Optional[SomeEntitiesType]],
+            ]
+        ] = None,
         respawn: Union[bool, SomeSubstitutionsType] = False,
         respawn_delay: Optional[float] = None,
         respawn_max_retries: int = -1,
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         Construct an ExecuteLocal action.
@@ -199,13 +197,12 @@ class ExecuteLocal(Action):
         self.__sigterm_timeout = normalize_to_list_of_substitutions(sigterm_timeout)
         self.__sigkill_timeout = normalize_to_list_of_substitutions(sigkill_timeout)
         self.__signal_lingering_subprocesses = normalize_to_list_of_substitutions(
-            signal_lingering_subprocesses)
+            signal_lingering_subprocesses
+        )
         self.__emulate_tty = emulate_tty
         # Note: we need to use a temporary here so that we don't assign values with different types
         # to the same variable
-        tmp_output: SomeSubstitutionsType = os.environ.get(
-                'OVERRIDE_LAUNCH_PROCESS_OUTPUT', output
-                )
+        tmp_output: SomeSubstitutionsType = os.environ.get('OVERRIDE_LAUNCH_PROCESS_OUTPUT', output)
         self.__output: Union[dict, List[Substitution]]
         if not isinstance(tmp_output, dict):
             self.__output = normalize_to_list_of_substitutions(tmp_output)
@@ -275,8 +272,9 @@ class ExecuteLocal(Action):
             return self.__on_exit
         return []
 
-    def _shutdown_process(self, context: LaunchContext, *, send_sigint: bool
-                          ) -> Optional[List[Action]]:
+    def _shutdown_process(
+        self, context: LaunchContext, *, send_sigint: bool
+    ) -> Optional[List[Action]]:
         if self.__shutdown_future is None or self.__shutdown_future.done():
             # Execution not started or already done, nothing to do.
             return None
@@ -292,12 +290,15 @@ class ExecuteLocal(Action):
             return None
 
         # Defer shut down if the process is scheduled to be started
-        if (self.process_details is None or self._subprocess_transport is None):
+        if self.process_details is None or self._subprocess_transport is None:
             # Do not set shutdown result, as event is postponed
             context.register_event_handler(
                 OnProcessStart(
-                    on_start=lambda event, context:
-                    self._shutdown_process(context, send_sigint=send_sigint)))
+                    on_start=lambda event, context: self._shutdown_process(
+                        context, send_sigint=send_sigint
+                    )
+                )
+            )
             return None
 
         self.__shutdown_future.set_result(None)
@@ -307,26 +308,21 @@ class ExecuteLocal(Action):
             {
                 'process_name': self.process_details['name'],
                 'process_pid': self.process_details['pid'],
-            })
+            }
+        )
         actions_to_return = self.__get_shutdown_timer_actions()
         if send_sigint:
             actions_to_return.append(self.__get_sigint_event())
         return actions_to_return
 
-    def __on_shutdown_process_event(
-        self,
-        context: LaunchContext
-    ) -> Optional[List[Action]]:
+    def __on_shutdown_process_event(self, context: LaunchContext) -> Optional[List[Action]]:
         typed_event = cast(ShutdownProcess, context.locals.event)
         if not typed_event.process_matcher(self):
             # this event was not intended for this process
             return None
         return self._shutdown_process(context, send_sigint=True)
 
-    def __on_signal_process_event(
-        self,
-        context: LaunchContext
-    ) -> Optional[LaunchDescription]:
+    def __on_signal_process_event(self, context: LaunchContext) -> Optional[LaunchDescription]:
         typed_event = cast(SignalProcess, context.locals.event)
         if not typed_event.process_matcher(self):
             # this event was not intended for this process
@@ -339,21 +335,25 @@ class ExecuteLocal(Action):
             # the process is done or is cleaning up, no need to signal
             self.__logger.debug(
                 "signal '{}' not set to '{}' because it is already closing".format(
-                    typed_event.signal_name, self.process_details['name']),
+                    typed_event.signal_name, self.process_details['name']
+                ),
             )
             return None
         if platform.system() == 'Windows' and typed_event.signal_name == 'SIGINT':
             # TODO(wjwwood): remove this when/if SIGINT is fixed on Windows
             self.__logger.warning(
-                "'SIGINT' sent to process[{}] not supported on Windows, escalating to 'SIGTERM'"
-                .format(self.process_details['name']),
+                "'SIGINT' sent to process[{}] not supported on Windows, escalating to 'SIGTERM'".format(
+                    self.process_details['name']
+                ),
             )
             typed_event = SignalProcess(
-                signal_number=signal.SIGTERM,
-                process_matcher=lambda process: True)
-        self.__logger.info("sending signal '{}' to process[{}]".format(
-            typed_event.signal_name, self.process_details['name']
-        ))
+                signal_number=signal.SIGTERM, process_matcher=lambda process: True
+            )
+        self.__logger.info(
+            "sending signal '{}' to process[{}]".format(
+                typed_event.signal_name, self.process_details['name']
+            )
+        )
         try:
             if typed_event.signal_name == 'SIGKILL':
                 self._subprocess_transport.kill()  # works on both Windows and POSIX
@@ -367,10 +367,7 @@ class ExecuteLocal(Action):
             )
         return None
 
-    def __on_process_stdin(
-        self,
-        event: ProcessIO
-    ) -> Optional[SomeEntitiesType]:
+    def __on_process_stdin(self, event: ProcessIO) -> Optional[SomeEntitiesType]:
         self.__logger.warning(
             "in ExecuteProcess('{}').__on_process_stdin_event()".format(id(self)),
         )
@@ -384,9 +381,7 @@ class ExecuteLocal(Action):
         if buffer.closed:
             # buffer was probably closed by __flush_buffers on shutdown.  Output without
             # buffering.
-            logger.info(
-                self.__output_format.format(line=to_write, this=self)
-            )
+            logger.info(self.__output_format.format(line=to_write, this=self))
         else:
             buffer.write(to_write)
             buffer.seek(0)
@@ -394,7 +389,7 @@ class ExecuteLocal(Action):
             for line in buffer:
                 if line.endswith(os.linesep):
                     logger.info(
-                        self.__output_format.format(line=line[:-len(os.linesep)], this=self)
+                        self.__output_format.format(line=line[: -len(os.linesep)], this=self)
                     )
                 else:
                     last_line = line
@@ -407,15 +402,11 @@ class ExecuteLocal(Action):
     def __flush_buffers(self, event, context):
         line = self.__stdout_buffer.getvalue()
         if line != '':
-            self.__stdout_logger.info(
-                self.__output_format.format(line=line, this=self)
-            )
+            self.__stdout_logger.info(self.__output_format.format(line=line, this=self))
 
         line = self.__stderr_buffer.getvalue()
         if line != '':
-            self.__stderr_logger.info(
-                self.__output_format.format(line=line, this=self)
-            )
+            self.__stderr_logger.info(self.__output_format.format(line=line, this=self))
 
         # the respawned process needs to reuse these StringIO resources,
         # close them only after receiving the shutdown
@@ -428,9 +419,7 @@ class ExecuteLocal(Action):
             self.__stderr_buffer.seek(0)
             self.__stderr_buffer.truncate(0)
 
-    def __on_process_output_cached(
-        self, event: ProcessIO, buffer, logger
-    ) -> None:
+    def __on_process_output_cached(self, event: ProcessIO, buffer, logger) -> None:
         to_write = event.text.decode(errors='replace')
         last_cursor = buffer.tell()
         buffer.seek(0, os.SEEK_END)  # go to end of buffer
@@ -441,21 +430,15 @@ class ExecuteLocal(Action):
             if not line.endswith(os.linesep):
                 break
             new_cursor = buffer.tell()
-            logger.info(
-                self.__output_format.format(line=line[:-len(os.linesep)], this=self)
-            )
+            logger.info(self.__output_format.format(line=line[: -len(os.linesep)], this=self))
         buffer.seek(new_cursor)
 
     def __flush_cached_buffers(self, event, context):
         for line in self.__stdout_buffer:
-            self.__stdout_logger.info(
-                self.__output_format.format(line=line, this=self)
-            )
+            self.__stdout_logger.info(self.__output_format.format(line=line, this=self))
 
         for line in self.__stderr_buffer:
-            self.__stderr_logger.info(
-                self.__output_format.format(line=line, this=self)
-            )
+            self.__stderr_logger.info(self.__output_format.format(line=line, this=self))
 
     def __on_shutdown(self, event: Event, context: LaunchContext) -> Optional[SomeEntitiesType]:
         due_to_sigint = cast(Shutdown, event).due_to_sigint
@@ -465,8 +448,9 @@ class ExecuteLocal(Action):
         )
 
     def __get_shutdown_timer_actions(self) -> List[Action]:
-        base_msg = \
+        base_msg = (
             "process[{}] failed to terminate '{}' seconds after receiving '{}', escalating to '{}'"
+        )
 
         def printer(context, msg):
             self.__logger.error(msg.format(context.locals.process_name))
@@ -520,10 +504,12 @@ class ExecuteLocal(Action):
         ]
 
     def __get_sigint_event(self) -> EmitEvent:
-        return EmitEvent(event=SignalProcess(
-            signal_number=signal.SIGINT,
-            process_matcher=matches_action(self),
-        ))
+        return EmitEvent(
+            event=SignalProcess(
+                signal_number=signal.SIGINT,
+                process_matcher=matches_action(self),
+            )
+        )
 
     def __cleanup_timers(self):
         if self.__sigterm_timer is not None:
@@ -547,7 +533,7 @@ class ExecuteLocal(Action):
             action: 'ExecuteLocal',
             context: LaunchContext,
             process_event_args: Dict[str, Any],
-            **kwargs: Any
+            **kwargs: Any,
         ) -> None:
             super().__init__(**kwargs)
             self.__context = context
@@ -576,9 +562,7 @@ class ExecuteLocal(Action):
         sigkill_timeout = self.__sigterm_timeout_value + self.__sigkill_timeout_value
         process_pid = self.process_details['pid']
         process_name = self.process_details['name']
-        log_prefix_format = (
-            'subprocess[pid={}] of process['
-            f'{process_name}, pid={process_pid}]: ')
+        log_prefix_format = f'subprocess[pid={{}}] of process[{process_name}, pid={process_pid}]: '
         next_signals = iter(((signal.SIGTERM, sigterm_timeout), (signal.SIGKILL, sigkill_timeout)))
         while True:
             for p in to_signal:
@@ -587,9 +571,7 @@ class ExecuteLocal(Action):
                 except psutil.NoSuchProcess:
                     continue
                 log_prefix = log_prefix_format.format(p.pid)
-                self.__logger.info(
-                    f'{log_prefix}sending {sig.name} to subprocess directly.'
-                )
+                self.__logger.info(f'{log_prefix}sending {sig.name} to subprocess directly.')
                 signaled.append(p)
             try:
                 sig, timeout = next(next_signals)
@@ -618,19 +600,19 @@ class ExecuteLocal(Action):
         cwd = process_event_args['cwd']
         env = process_event_args['env']
         if self.__log_cmd:
-            self.__logger.info("process details: cmd='{}', cwd='{}', custom_env?={}".format(
-                ' '.join(filter(lambda part: part.strip(), cmd)),
-                cwd,
-                'True' if env is not None else 'False'
-            ))
+            self.__logger.info(
+                "process details: cmd='{}', cwd='{}', custom_env?={}".format(
+                    ' '.join(filter(lambda part: part.strip(), cmd)),
+                    cwd,
+                    'True' if env is not None else 'False',
+                )
+            )
 
         emulate_tty = self.__emulate_tty
         if 'emulate_tty' in context.launch_configurations:
             emulate_tty = evaluate_condition_expression(
                 context,
-                normalize_to_list_of_substitutions(
-                    context.launch_configurations['emulate_tty']
-                ),
+                normalize_to_list_of_substitutions(context.launch_configurations['emulate_tty']),
             )
 
         try:
@@ -646,9 +628,9 @@ class ExecuteLocal(Action):
                 stderr_to_stdout=False,
             )
         except Exception:
-            self.__logger.error('exception occurred while executing process:\n{}'.format(
-                traceback.format_exc()
-            ))
+            self.__logger.error(
+                'exception occurred while executing process:\n{}'.format(traceback.format_exc())
+            )
             self.__cleanup()
             return
 
@@ -661,29 +643,30 @@ class ExecuteLocal(Action):
         if returncode == 0:
             self.__logger.info('process has finished cleanly [pid {}]'.format(pid))
         else:
-            self.__logger.error("process has died [pid {}, exit code {}, cmd '{}'].".format(
-                pid, returncode, ' '.join(filter(lambda part: part.strip(), cmd))
-            ))
-        await context.emit_event(
-                ProcessExited(returncode=returncode, **process_event_args)
+            self.__logger.error(
+                "process has died [pid {}, exit code {}, cmd '{}'].".format(
+                    pid, returncode, ' '.join(filter(lambda part: part.strip(), cmd))
                 )
+            )
+        await context.emit_event(ProcessExited(returncode=returncode, **process_event_args))
         # respawn the process if necessary
-        if not context.is_shutdown\
-                and self.__shutdown_future is not None\
-                and not self.__shutdown_future.done()\
-                and self.__respawn and \
-                (self.__respawn_max_retries < 0 or
-                 self.__respawn_retries < self.__respawn_max_retries):
+        if (
+            not context.is_shutdown
+            and self.__shutdown_future is not None
+            and not self.__shutdown_future.done()
+            and self.__respawn
+            and (
+                self.__respawn_max_retries < 0
+                or self.__respawn_retries < self.__respawn_max_retries
+            )
+        ):
             # Increase the respawn_retries counter
             self.__respawn_retries += 1
             if self.__respawn_delay is not None and self.__respawn_delay > 0.0:
                 # wait for a timeout(`self.__respawn_delay`) to respawn the process
                 # and handle shutdown event with future(`self.__shutdown_future`)
                 # to make sure `ros2 launch` exit in time
-                await asyncio.wait(
-                    (self.__shutdown_future,),
-                    timeout=self.__respawn_delay
-                )
+                await asyncio.wait((self.__shutdown_future,), timeout=self.__respawn_delay)
             if not self.__shutdown_future.done():
                 if self.__signal_lingering_subprocesses_value:
                     await self._signal_subprocesses(context)
@@ -754,9 +737,11 @@ class ExecuteLocal(Action):
                 target_action=self,
                 on_stdin=self.__on_process_stdin,
                 on_stdout=lambda event: on_output_method(
-                    event, self.__stdout_buffer, self.__stdout_logger),
+                    event, self.__stdout_buffer, self.__stdout_logger
+                ),
                 on_stderr=lambda event: on_output_method(
-                    event, self.__stderr_buffer, self.__stderr_logger),
+                    event, self.__stderr_buffer, self.__stderr_logger
+                ),
             ),
             OnShutdown(
                 on_shutdown=self.__on_shutdown,
@@ -791,13 +776,13 @@ class ExecuteLocal(Action):
             if name is None:
                 raise RuntimeError('Cannot get Ouput Loggers with None name')
             if not isinstance(self.__output, dict):
-                self.__stdout_logger, self.__stderr_logger = \
-                    launch.logging.get_output_loggers(
-                            name, perform_substitutions(context, self.__output)
-                            )
+                self.__stdout_logger, self.__stderr_logger = launch.logging.get_output_loggers(
+                    name, perform_substitutions(context, self.__output)
+                )
             else:
-                self.__stdout_logger, self.__stderr_logger = \
-                    launch.logging.get_output_loggers(name, self.__output)
+                self.__stdout_logger, self.__stderr_logger = launch.logging.get_output_loggers(
+                    name, self.__output
+                )
             context.asyncio_loop.create_task(self.__execute_process(context))
         except Exception:
             for event_handler in event_handlers:
@@ -818,7 +803,8 @@ class ExecuteLocal(Action):
         if not self.__cached_output:
             raise RuntimeError(
                 'cached output must be true to be able to get stdout,'
-                f" proc '{self.__process_description.name}'")
+                f" proc '{self.__process_description.name}'"
+            )
         return self.__stdout_buffer.getvalue()
 
     def get_stderr(self) -> str:
@@ -830,7 +816,8 @@ class ExecuteLocal(Action):
         if not self.__cached_output:
             raise RuntimeError(
                 'cached output must be true to be able to get stderr, proc'
-                f" '{self.__process_description.name}'")
+                f" '{self.__process_description.name}'"
+            )
         return self.__stderr_buffer.getvalue()
 
     @property

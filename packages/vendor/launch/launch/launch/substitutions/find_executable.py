@@ -14,22 +14,15 @@
 
 """Module for the FindExecutable substitution."""
 
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Sequence
-from typing import Text
-from typing import Tuple
-from typing import Type
+from typing import Any, Dict, List, Sequence, Text, Tuple, Type
 
 from osrf_pycommon.process_utils import which  # type: ignore
 
-
-from .substitution_failure import SubstitutionFailure
 from ..frontend import expose_substitution
 from ..launch_context import LaunchContext
 from ..some_substitutions_type import SomeSubstitutionsType
 from ..substitution import Substitution
+from .substitution_failure import SubstitutionFailure
 
 
 @expose_substitution('find-exec')
@@ -45,11 +38,13 @@ class FindExecutable(Substitution):
         super().__init__()
 
         from ..utilities import normalize_to_list_of_substitutions  # import here to avoid loop
+
         self.__name = normalize_to_list_of_substitutions(name)
 
     @classmethod
-    def parse(cls, data: Sequence[SomeSubstitutionsType]
-              ) -> Tuple[Type['FindExecutable'], Dict[str, Any]]:
+    def parse(
+        cls, data: Sequence[SomeSubstitutionsType]
+    ) -> Tuple[Type['FindExecutable'], Dict[str, Any]]:
         """Parse `FindExecutable` substitution."""
         if len(data) != 1:
             raise AttributeError('find-exec substitution expects 1 argument')
@@ -67,6 +62,7 @@ class FindExecutable(Substitution):
     def perform(self, context: LaunchContext) -> Text:
         """Perform the substitution by locating the executable on the PATH."""
         from ..utilities import perform_substitutions  # import here to avoid loop
+
         result = which(perform_substitutions(context, self.name))
         if result is None:
             raise SubstitutionFailure("executable '{}' not found on the PATH".format(self.name))

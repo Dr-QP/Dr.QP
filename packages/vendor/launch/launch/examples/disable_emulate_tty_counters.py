@@ -24,6 +24,7 @@ capabilities disabled."
 
 import os
 import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))  # noqa
 
 import launch  # noqa: E402
@@ -40,14 +41,16 @@ def generate_launch_description():
         for line in event.text.decode().splitlines():
             print('[{}] {}'.format(event.process_name, line))
 
-    ld.add_action(launch.actions.RegisterEventHandler(launch.event_handlers.OnProcessIO(
-        on_stdout=on_output,
-    )))
+    ld.add_action(
+        launch.actions.RegisterEventHandler(
+            launch.event_handlers.OnProcessIO(
+                on_stdout=on_output,
+            )
+        )
+    )
 
     # Execute
-    ld.add_action(launch.actions.ExecuteProcess(
-        cmd=[sys.executable, './counter.py']
-    ))
+    ld.add_action(launch.actions.ExecuteProcess(cmd=[sys.executable, './counter.py']))
     return ld
 
 

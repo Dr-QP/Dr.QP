@@ -15,13 +15,10 @@
 """Module for SignalProcess event."""
 
 import signal as signal_module  # to avoid confusion with .signal property in type annotations
-from typing import Callable
-from typing import Text
-from typing import TYPE_CHECKING
-from typing import Union
+from typing import Callable, Text, TYPE_CHECKING, Union
 
-from .process_targeted_event import ProcessTargetedEvent
 from ...utilities import ensure_argument_type
+from .process_targeted_event import ProcessTargetedEvent
 
 if TYPE_CHECKING:
     from ...actions import ExecuteLocal  # noqa: F401
@@ -33,9 +30,10 @@ class SignalProcess(ProcessTargetedEvent):
     name = 'launch.events.process.SignalProcess'
 
     def __init__(
-        self, *,
+        self,
+        *,
         signal_number: Union[Text, signal_module.Signals],
-        process_matcher: Callable[['ExecuteLocal'], bool]
+        process_matcher: Callable[['ExecuteLocal'], bool],
     ) -> None:
         """
         Create a SignalProcess event.
@@ -52,7 +50,8 @@ class SignalProcess(ProcessTargetedEvent):
         """
         super().__init__(process_matcher=process_matcher)
         ensure_argument_type(
-            signal_number, (str, signal_module.Signals), 'signal_number', 'SignalProcess')
+            signal_number, (str, signal_module.Signals), 'signal_number', 'SignalProcess'
+        )
         self.__signal = signal_number
 
     @property

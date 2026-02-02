@@ -16,13 +16,7 @@
 
 import asyncio
 import collections.abc
-from typing import Any
-from typing import Awaitable
-from typing import Callable
-from typing import Dict
-from typing import Iterable
-from typing import Optional
-from typing import Text
+from typing import Any, Awaitable, Callable, Dict, Iterable, Optional, Text
 
 from ..action import Action
 from ..event import Event
@@ -61,12 +55,13 @@ class OpaqueCoroutine(Action):
     """
 
     def __init__(
-        self, *,
+        self,
+        *,
         coroutine: Callable[..., Awaitable[None]],
         args: Optional[Iterable[Any]] = None,
         kwargs: Optional[Dict[Text, Any]] = None,
         ignore_context: bool = False,
-        **left_over_kwargs: Any
+        **left_over_kwargs: Any,
     ) -> None:
         """Create an OpaqueCoroutine action."""
         super().__init__(**left_over_kwargs)
@@ -102,12 +97,8 @@ class OpaqueCoroutine(Action):
         args = self.__args
         if not self.__ignore_context:
             args = [context, *self.__args]
-        self.__future = context.asyncio_loop.create_task(
-            self.__coroutine(*args, **self.__kwargs)
-        )
-        context.register_event_handler(
-            OnShutdown(on_shutdown=self.__on_shutdown)
-        )
+        self.__future = context.asyncio_loop.create_task(self.__coroutine(*args, **self.__kwargs))
+        context.register_event_handler(OnShutdown(on_shutdown=self.__on_shutdown))
         return None
 
     def get_asyncio_future(self) -> Optional[asyncio.Future[None]]:

@@ -14,8 +14,7 @@
 
 """Module for the LocalSubstitution substitution."""
 
-from typing import Optional
-from typing import Text
+from typing import Optional, Text
 
 from ..launch_context import LaunchContext
 from ..substitution import Substitution

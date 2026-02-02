@@ -15,25 +15,25 @@
 """Package for substitutions."""
 
 from .anon_name import AnonName
-from .boolean_substitution import AllSubstitution
-from .boolean_substitution import AndSubstitution
-from .boolean_substitution import AnySubstitution
-from .boolean_substitution import NotSubstitution
-from .boolean_substitution import OrSubstitution
+from .boolean_substitution import (
+    AllSubstitution,
+    AndSubstitution,
+    AnySubstitution,
+    NotSubstitution,
+    OrSubstitution,
+)
 from .command import Command
 from .environment_variable import EnvironmentVariable
 from .equals_substitution import EqualsSubstitution
 from .file_content import FileContent
 from .find_executable import FindExecutable
-from .for_loop_var import ForEachVar
-from .for_loop_var import ForLoopIndex
+from .for_loop_var import ForEachVar, ForLoopIndex
 from .if_else_substitution import IfElseSubstitution
 from .launch_configuration import LaunchConfiguration
 from .launch_log_dir import LaunchLogDir
 from .local_substitution import LocalSubstitution
 from .not_equals_substitution import NotEqualsSubstitution
-from .path_join_substitution import PathJoinSubstitution
-from .path_join_substitution import PathSubstitution
+from .path_join_substitution import PathJoinSubstitution, PathSubstitution
 from .python_expression import PythonExpression
 from .string_join_substitution import StringJoinSubstitution
 from .substitution_failure import SubstitutionFailure

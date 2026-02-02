@@ -15,23 +15,13 @@
 """Module for the LaunchConfiguration substitution."""
 
 import collections.abc
-from typing import Any
-from typing import Dict
-from typing import Iterable
-from typing import List
-from typing import Optional
-from typing import Sequence
-from typing import Text
-from typing import Tuple
-from typing import Type
-from typing import Union
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Text, Tuple, Type, Union
 
-
-from .substitution_failure import SubstitutionFailure
 from ..frontend import expose_substitution
 from ..launch_context import LaunchContext
 from ..some_substitutions_type import SomeSubstitutionsType
 from ..substitution import Substitution
+from .substitution_failure import SubstitutionFailure
 
 
 @expose_substitution('var')
@@ -42,12 +32,13 @@ class LaunchConfiguration(Substitution):
         self,
         variable_name: SomeSubstitutionsType,
         *,
-        default: Optional[Union[Any, Iterable[Any]]] = None
+        default: Optional[Union[Any, Iterable[Any]]] = None,
     ) -> None:
         """Create a LaunchConfiguration substitution."""
         super().__init__()
 
         from ..utilities import normalize_to_list_of_substitutions
+
         self.__variable_name = normalize_to_list_of_substitutions(variable_name)
         self.__default: Optional[List[Substitution]]
         if default is None:
@@ -69,8 +60,9 @@ class LaunchConfiguration(Substitution):
             self.__default = normalize_to_list_of_substitutions(str_normalized_default)
 
     @classmethod
-    def parse(cls, data: Sequence[SomeSubstitutionsType]
-              ) -> Tuple[Type['LaunchConfiguration'], Dict[str, Any]]:
+    def parse(
+        cls, data: Sequence[SomeSubstitutionsType]
+    ) -> Tuple[Type['LaunchConfiguration'], Dict[str, Any]]:
         """Parse `FindExecutable` substitution."""
         if len(data) < 1 or len(data) > 2:
             raise TypeError('var substitution expects 1 or 2 arguments')
@@ -96,11 +88,13 @@ class LaunchConfiguration(Substitution):
         the default will be returned, as a string.
         """
         from ..utilities import perform_substitutions
+
         expanded_variable_name = perform_substitutions(context, self.__variable_name)
         if expanded_variable_name not in context.launch_configurations:
             if self.__default is None:
                 raise SubstitutionFailure(
-                    "launch configuration '{}' does not exist".format(expanded_variable_name))
+                    "launch configuration '{}' does not exist".format(expanded_variable_name)
+                )
             else:
                 return perform_substitutions(context, self.__default)
         return context.launch_configurations[expanded_variable_name]

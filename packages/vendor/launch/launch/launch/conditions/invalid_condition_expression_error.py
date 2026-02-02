@@ -26,12 +26,12 @@ class InvalidConditionExpressionError(ValueError):
         self,
         expression: str,
         unexpanded_expression: List[Substitution],
-        valid_expressions: List[str]
+        valid_expressions: List[str],
     ) -> None:
         super().__init__(
-            "invalid condition expression, expected one of [{}] but got '{}', expanded from '{}'"
-            .format(
+            "invalid condition expression, expected one of [{}] but got '{}', expanded from '{}'".format(
                 ', '.join(valid_expressions),
                 expression,
-                ' + '.join([str(sub) for sub in unexpanded_expression]))
+                ' + '.join([str(sub) for sub in unexpanded_expression]),
+            )
         )

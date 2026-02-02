@@ -15,13 +15,7 @@
 """Module for LaunchDescriptionEntity class."""
 
 import asyncio
-from typing import Iterable
-from typing import List
-from typing import Optional
-from typing import Sequence
-from typing import Text
-from typing import Tuple
-from typing import TYPE_CHECKING
+from typing import Iterable, List, Optional, Sequence, Text, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .launch_context import LaunchContext  # noqa: F401
@@ -82,10 +76,14 @@ class LaunchDescriptionEntity:
         """
         return []
 
-    def describe_conditional_sub_entities(self) -> List[Tuple[
-        Text,  # text description of the condition
-        Iterable['LaunchDescriptionEntity'],  # list of conditional sub-entities
-    ]]:
+    def describe_conditional_sub_entities(
+        self,
+    ) -> List[
+        Tuple[
+            Text,  # text description of the condition
+            Iterable['LaunchDescriptionEntity'],  # list of conditional sub-entities
+        ]
+    ]:
         """
         Return a list of condition descriptions and lists of sub-entities.
 

@@ -14,22 +14,15 @@
 
 """Extra type utils for launch frontend implementations."""
 
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Text
-from typing import Type
-from typing import Union
+from typing import Dict, List, Optional, Text, Type, Union
 
+from ..utilities.type_utils import AllowedTypesType, is_typing_list
 from .entity import Entity
-from ..utilities.type_utils import AllowedTypesType
-from ..utilities.type_utils import is_typing_list
 
 
 def check_is_list_entity(data_type: Union[AllowedTypesType, Type[List[Entity]]]) -> bool:
     """Check if `data_type` is a `typing.List` with elements of `Entity` type or derived."""
-    return is_typing_list(data_type) and \
-        issubclass(data_type.__args__[0], Entity)  # type: ignore
+    return is_typing_list(data_type) and issubclass(data_type.__args__[0], Entity)  # type: ignore
 
 
 def get_data_type_from_identifier(type_identifier: Text) -> Optional[type]:

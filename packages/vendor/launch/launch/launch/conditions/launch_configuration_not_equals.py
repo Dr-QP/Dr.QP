@@ -14,12 +14,11 @@
 
 """Module for LaunchConfigurationNotEquals class."""
 
-from typing import Optional
-from typing import Text
+from typing import Optional, Text
 
-from .launch_configuration_equals import LaunchConfigurationEquals
 from ..launch_context import LaunchContext
 from ..some_substitutions_type import SomeSubstitutionsType
+from .launch_configuration_equals import LaunchConfigurationEquals
 
 
 class LaunchConfigurationNotEquals(LaunchConfigurationEquals):
@@ -41,9 +40,7 @@ class LaunchConfigurationNotEquals(LaunchConfigurationEquals):
     """
 
     def __init__(
-        self,
-        launch_configuration_name: Text,
-        expected_value: Optional[SomeSubstitutionsType]
+        self, launch_configuration_name: Text, expected_value: Optional[SomeSubstitutionsType]
     ) -> None:
         # This is deprecated! Use `NotEqualsSubstitution` instead!
         super().__init__(launch_configuration_name, expected_value)

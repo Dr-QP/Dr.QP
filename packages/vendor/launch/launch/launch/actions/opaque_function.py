@@ -15,13 +15,7 @@
 """Module for the OpaqueFunction action."""
 
 import collections.abc
-from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import Iterable
-from typing import List
-from typing import Optional
-from typing import Text
+from typing import Any, Callable, Dict, Iterable, List, Optional, Text
 
 from ..action import Action
 from ..launch_context import LaunchContext
@@ -47,20 +41,20 @@ class OpaqueFunction(Action):
     """
 
     def __init__(
-        self, *,
+        self,
+        *,
         function: Callable,
         args: Optional[Iterable[Any]] = None,
         kwargs: Optional[Dict[Text, Any]] = None,
-        **left_over_kwargs: Any
+        **left_over_kwargs: Any,
     ) -> None:
         """Create an OpaqueFunction action."""
         super().__init__(**left_over_kwargs)
         if not callable(function):
-            raise TypeError("OpaqueFunction expected a callable for 'function', got '{}'".format(
-                type(function)
-            ))
-        ensure_argument_type(
-            args, (collections.abc.Iterable, type(None)), 'args', 'OpaqueFunction')
+            raise TypeError(
+                "OpaqueFunction expected a callable for 'function', got '{}'".format(type(function))
+            )
+        ensure_argument_type(args, (collections.abc.Iterable, type(None)), 'args', 'OpaqueFunction')
         ensure_argument_type(kwargs, (dict, type(None)), 'kwargs', 'OpaqueFunction')
         self.__function = function
         self.__args = []  # type: Iterable[Any]

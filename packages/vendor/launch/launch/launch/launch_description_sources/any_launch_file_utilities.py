@@ -15,22 +15,17 @@
 """Python package utility functions related to loading Frontend Launch Files."""
 
 import os
-from typing import Callable
-from typing import List
-from typing import Text
-from typing import Type
+from typing import Callable, List, Text, Type
 
-from .frontend_launch_file_utilities import get_launch_description_from_frontend_launch_file
-from .python_launch_file_utilities import get_launch_description_from_python_launch_file
 from ..frontend import Parser
 from ..invalid_launch_file_error import InvalidLaunchFileError
 from ..launch_description import LaunchDescription
+from .frontend_launch_file_utilities import get_launch_description_from_frontend_launch_file
+from .python_launch_file_utilities import get_launch_description_from_python_launch_file
 
 
 def get_launch_description_from_any_launch_file(
-    launch_file_path: Text,
-    *,
-    parser: Type[Parser] = Parser
+    launch_file_path: Text, *, parser: Type[Parser] = Parser
 ) -> LaunchDescription:
     """
     Load a given launch file (by path), and return the launch description from it.
@@ -40,8 +35,9 @@ def get_launch_description_from_any_launch_file(
     :raises `SyntaxError`: Invalid file. The file may have a syntax error in it.
     :raises `ValueError`: Invalid file. The file may not be a text file.
     """
-    loaders: List[Callable[[str], LaunchDescription]] =\
-        [get_launch_description_from_frontend_launch_file]
+    loaders: List[Callable[[str], LaunchDescription]] = [
+        get_launch_description_from_frontend_launch_file
+    ]
 
     launch_file_name = os.path.basename(launch_file_path)
     extension = os.path.splitext(launch_file_name)[1]

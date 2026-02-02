@@ -15,9 +15,7 @@
 """Module for the class tools utility functions."""
 
 import inspect
-
-from typing import Any
-from typing import Type
+from typing import Any, Type
 
 
 # Can be redone properly with TypeIs once mypy version 1.10+ is available on all platforms

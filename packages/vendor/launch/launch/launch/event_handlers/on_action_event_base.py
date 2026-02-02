@@ -15,15 +15,17 @@
 """Module for OnActionEventBase class."""
 
 import collections.abc
-from typing import Any
-from typing import Callable
-from typing import List  # noqa
-from typing import Optional
-from typing import Text
-from typing import Tuple
-from typing import Type
-from typing import TYPE_CHECKING
-from typing import Union
+from typing import (
+    Any,
+    Callable,
+    List,  # noqa
+    Optional,
+    Text,
+    Tuple,
+    Type,
+    TYPE_CHECKING,
+    Union,
+)
 
 from ..event import Event
 from ..event_handler import BaseEventHandler
@@ -43,12 +45,11 @@ class OnActionEventBase(BaseEventHandler):
         *,
         action_matcher: Optional[Union[Callable[['Action'], bool], 'Action']],
         on_event: Union[
-            SomeEntitiesType,
-            Callable[[Event, LaunchContext], Optional[SomeEntitiesType]]
+            SomeEntitiesType, Callable[[Event, LaunchContext], Optional[SomeEntitiesType]]
         ],
         target_event_cls: Type[Event],
         target_action_cls: Type['Action'],
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """
         Construct a `OnActionEventBase` instance.
@@ -63,9 +64,8 @@ class OnActionEventBase(BaseEventHandler):
         """
         if not issubclass(target_event_cls, Event):
             raise TypeError("'target_event_cls' must be a subclass of 'Event'")
-        if (
-            not isinstance(action_matcher, (target_action_cls, type(None)))
-            and not callable(action_matcher)
+        if not isinstance(action_matcher, (target_action_cls, type(None))) and not callable(
+            action_matcher
         ):
             raise TypeError(
                 f"action_matcher must be an '{target_action_cls.__name__}' instance or a callable"
@@ -83,6 +83,7 @@ class OnActionEventBase(BaseEventHandler):
                 return event.action is action_matcher
             assert action_matcher is None
             return True
+
         super().__init__(matcher=event_matcher, **kwargs)
         self.__actions_on_event: List[LaunchDescriptionEntity] = []
         # TODO(wjwwood) check that it is not only callable, but also a callable that matches
@@ -99,7 +100,8 @@ class OnActionEventBase(BaseEventHandler):
                     if not isinstance(entity, LaunchDescriptionEntity):
                         raise TypeError(
                             "expected all items in 'on_event' iterable to be of type "
-                            "'LaunchDescriptionEntity' but got '{}'".format(type(entity)))
+                            "'LaunchDescriptionEntity' but got '{}'".format(type(entity))
+                        )
                 self.__actions_on_event = list(on_event)  # Outside list is to ensure type is List
             else:
                 self.__actions_on_event = [on_event]

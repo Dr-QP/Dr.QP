@@ -14,22 +14,14 @@
 
 """Module for the SetLaunchConfiguration action."""
 
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Tuple
-from typing import Type
-
+from typing import Any, Dict, List, Tuple, Type
 
 from ..action import Action
-from ..frontend import Entity
-from ..frontend import expose_action
-from ..frontend import Parser
+from ..frontend import Entity, expose_action, Parser
 from ..launch_context import LaunchContext
 from ..some_substitutions_type import SomeSubstitutionsType
 from ..substitution import Substitution
-from ..utilities import normalize_to_list_of_substitutions
-from ..utilities import perform_substitutions
+from ..utilities import normalize_to_list_of_substitutions, perform_substitutions
 
 
 @expose_action('let')
@@ -43,10 +35,7 @@ class SetLaunchConfiguration(Action):
     """
 
     def __init__(
-        self,
-        name: SomeSubstitutionsType,
-        value: SomeSubstitutionsType,
-        **kwargs: Any
+        self, name: SomeSubstitutionsType, value: SomeSubstitutionsType, **kwargs: Any
     ) -> None:
         """Create a SetLaunchConfiguration action."""
         super().__init__(**kwargs)
@@ -54,8 +43,9 @@ class SetLaunchConfiguration(Action):
         self.__value = normalize_to_list_of_substitutions(value)
 
     @classmethod
-    def parse(cls, entity: Entity, parser: Parser
-              ) -> Tuple[Type['SetLaunchConfiguration'], Dict[str, Any]]:
+    def parse(
+        cls, entity: Entity, parser: Parser
+    ) -> Tuple[Type['SetLaunchConfiguration'], Dict[str, Any]]:
         """Return `SetLaunchConfiguration` action and kwargs for constructing it."""
         name = parser.parse_substitution(entity.get_attr('name'))
         value = parser.parse_substitution(entity.get_attr('value'))
@@ -76,5 +66,6 @@ class SetLaunchConfiguration(Action):
 
     def execute(self, context: LaunchContext) -> None:
         """Execute the action."""
-        context.launch_configurations[perform_substitutions(context, self.name)] = \
+        context.launch_configurations[perform_substitutions(context, self.name)] = (
             perform_substitutions(context, self.value)
+        )

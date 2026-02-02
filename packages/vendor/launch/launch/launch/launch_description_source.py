@@ -15,16 +15,14 @@
 """Module for the LaunchDescriptionSource class."""
 
 import traceback
-from typing import Optional
-from typing import Text
+from typing import Optional, Text
 
 import launch.logging
 
 from .launch_context import LaunchContext
 from .launch_description import LaunchDescription
 from .some_substitutions_type import SomeSubstitutionsType
-from .utilities import normalize_to_list_of_substitutions
-from .utilities import perform_substitutions
+from .utilities import normalize_to_list_of_substitutions, perform_substitutions
 
 
 class LaunchDescriptionSource:
@@ -64,8 +62,7 @@ class LaunchDescriptionSource:
             # Try to expand the launch file path and load the launch file with a local context.
             try:
                 context = LaunchContext()
-                expanded_location = \
-                    perform_substitutions(context, self.__location)
+                expanded_location = perform_substitutions(context, self.__location)
                 return self._get_launch_description(expanded_location)
             except Exception as exc:
                 self.__logger.debug(traceback.format_exc())
@@ -77,11 +74,9 @@ class LaunchDescriptionSource:
     def get_launch_description(self, context: LaunchContext) -> LaunchDescription:
         """Get the LaunchDescription, loading it if necessary."""
         if self.__expanded_location is None:
-            self.__expanded_location = \
-                perform_substitutions(context, self.__location)
+            self.__expanded_location = perform_substitutions(context, self.__location)
         if self.__launch_description is None:
-            self.__launch_description = \
-                self._get_launch_description(self.__expanded_location)
+            self.__launch_description = self._get_launch_description(self.__expanded_location)
         return self.__launch_description
 
     def _get_launch_description(self, location: Text):

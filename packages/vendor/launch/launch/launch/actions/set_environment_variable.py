@@ -14,22 +14,14 @@
 
 """Module for the SetEnvironmentVariable action."""
 
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Tuple
-from typing import Type
-
+from typing import Any, Dict, List, Tuple, Type
 
 from ..action import Action
-from ..frontend import Entity
-from ..frontend import expose_action
-from ..frontend import Parser
+from ..frontend import Entity, expose_action, Parser
 from ..launch_context import LaunchContext
 from ..some_substitutions_type import SomeSubstitutionsType
 from ..substitution import Substitution
-from ..utilities import normalize_to_list_of_substitutions
-from ..utilities import perform_substitutions
+from ..utilities import normalize_to_list_of_substitutions, perform_substitutions
 
 
 @expose_action('set_env')
@@ -37,10 +29,7 @@ class SetEnvironmentVariable(Action):
     """Action that sets an environment variable."""
 
     def __init__(
-        self,
-        name: SomeSubstitutionsType,
-        value: SomeSubstitutionsType,
-        **kwargs: Any
+        self, name: SomeSubstitutionsType, value: SomeSubstitutionsType, **kwargs: Any
     ) -> None:
         """Create a SetEnvironmentVariable action."""
         super().__init__(**kwargs)
@@ -71,6 +60,7 @@ class SetEnvironmentVariable(Action):
 
     def execute(self, context: LaunchContext) -> None:
         """Execute the action."""
-        context.environment[perform_substitutions(context, self.name)] = \
-            perform_substitutions(context, self.value)
+        context.environment[perform_substitutions(context, self.name)] = perform_substitutions(
+            context, self.value
+        )
         return None

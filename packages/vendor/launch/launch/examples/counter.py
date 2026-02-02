@@ -27,31 +27,33 @@ def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
         description=(
             'Simple program outputting a counter. '
-            'Even values go to STDERR, odd values go to STDOUT.'))
+            'Even values go to STDERR, odd values go to STDOUT.'
+        )
+    )
     parser.add_argument(
-        '--limit',
-        type=int,
-        help='The upper limit of the counter when the program terminates.')
+        '--limit', type=int, help='The upper limit of the counter when the program terminates.'
+    )
     parser.add_argument(
         '--limit-return-code',
         type=int,
         default=0,
-        help='The return code when the program terminates because of reaching the limit.')
+        help='The return code when the program terminates because of reaching the limit.',
+    )
     parser.add_argument(
-        '--sleep',
-        type=float,
-        default=1.0,
-        help='The time to sleep between a counter increment.')
+        '--sleep', type=float, default=1.0, help='The time to sleep between a counter increment.'
+    )
     parser.add_argument(
         '--ignore-sigint',
         action='store_true',
         default=False,
-        help='Ignore SIGINT signal, and continue counting.')
+        help='Ignore SIGINT signal, and continue counting.',
+    )
     parser.add_argument(
         '--ignore-sigterm',
         action='store_true',
         default=False,
-        help='Ignore SIGTERM signal, and continue counting.')
+        help='Ignore SIGTERM signal, and continue counting.',
+    )
 
     args = parser.parse_args(argv)
 

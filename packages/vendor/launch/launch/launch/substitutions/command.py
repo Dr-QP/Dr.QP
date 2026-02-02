@@ -17,23 +17,15 @@
 import os
 import shlex
 import subprocess
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Sequence
-from typing import Text
-from typing import Tuple
-from typing import Type
-from typing import Union
+from typing import Any, Dict, List, Sequence, Text, Tuple, Type, Union
 
 import launch.logging
 
-
-from .substitution_failure import SubstitutionFailure
 from ..frontend.expose import expose_substitution
 from ..launch_context import LaunchContext
 from ..some_substitutions_type import SomeSubstitutionsType
 from ..substitution import Substitution
+from .substitution_failure import SubstitutionFailure
 
 
 @expose_substitution('command')
@@ -46,10 +38,7 @@ class Command(Substitution):
     """
 
     def __init__(
-        self,
-        command: SomeSubstitutionsType,
-        *,
-        on_stderr: SomeSubstitutionsType = 'fail'
+        self, command: SomeSubstitutionsType, *, on_stderr: SomeSubstitutionsType = 'fail'
     ) -> None:
         """
         Construct a command substitution.
@@ -67,12 +56,12 @@ class Command(Substitution):
         super().__init__()
 
         from ..utilities import normalize_to_list_of_substitutions  # import here to avoid loop
+
         self.__command = normalize_to_list_of_substitutions(command)
         self.__on_stderr = normalize_to_list_of_substitutions(on_stderr)
 
     @classmethod
-    def parse(cls, data: Sequence[SomeSubstitutionsType]
-              ) -> Tuple[Type['Command'], Dict[str, Any]]:
+    def parse(cls, data: Sequence[SomeSubstitutionsType]) -> Tuple[Type['Command'], Dict[str, Any]]:
         """Parse `Command` substitution."""
         if len(data) < 1 or len(data) > 2:
             raise ValueError('command substitution expects 1 or 2 arguments')
@@ -98,6 +87,7 @@ class Command(Substitution):
     def perform(self, context: LaunchContext) -> Text:
         """Perform the substitution by running the command and capturing its output."""
         from ..utilities import perform_substitutions  # import here to avoid loop
+
         command_str = perform_substitutions(context, self.command)
         command: Union[str, List[str]]
         if os.name != 'nt':
@@ -107,17 +97,16 @@ class Command(Substitution):
         on_stderr = perform_substitutions(context, self.on_stderr)
         if on_stderr not in ('fail', 'ignore', 'warn', 'capture'):
             raise SubstitutionFailure(
-                "expected 'on_stderr' to be one of: 'fail', 'ignore', 'warn' or 'capture'")
+                "expected 'on_stderr' to be one of: 'fail', 'ignore', 'warn' or 'capture'"
+            )
         stderr = subprocess.PIPE
         if on_stderr == 'capture':
             stderr = subprocess.STDOUT
 
         try:
             result = subprocess.run(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=stderr,
-                universal_newlines=True)
+                command, stdout=subprocess.PIPE, stderr=stderr, universal_newlines=True
+            )
         except FileNotFoundError as ex:
             raise SubstitutionFailure(f'file not found: {ex}')
         if result.returncode != 0:
@@ -126,9 +115,11 @@ class Command(Substitution):
                 on_error_message += f'\nCaptured stderr output: {result.stderr}'
             raise SubstitutionFailure(on_error_message)
         if result.stderr:
-            on_stderr_message = f'executed command showed stderr output.' \
-                f' Command: {command_str}\n' \
+            on_stderr_message = (
+                f'executed command showed stderr output.'
+                f' Command: {command_str}\n'
                 f'Captured stderr output:\n{result.stderr}'
+            )
             if on_stderr == 'fail':
                 raise SubstitutionFailure(on_stderr_message)
             elif on_stderr == 'warn':

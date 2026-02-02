@@ -16,10 +16,10 @@
 
 from typing import Text
 
-from .python_launch_file_utilities import get_launch_description_from_python_launch_file
 from ..launch_description import LaunchDescription
 from ..launch_description_source import LaunchDescriptionSource
 from ..some_substitutions_type import SomeSubstitutionsType
+from .python_launch_file_utilities import get_launch_description_from_python_launch_file
 
 
 class PythonLaunchDescriptionSource(LaunchDescriptionSource):
@@ -43,11 +43,7 @@ class PythonLaunchDescriptionSource(LaunchDescriptionSource):
 
         :param launch_file_path: the path to the launch file
         """
-        super().__init__(
-            None,
-            launch_file_path,
-            'interpreted python launch file'
-        )
+        super().__init__(None, launch_file_path, 'interpreted python launch file')
 
     def _get_launch_description(self, location: Text) -> LaunchDescription:
         """Get the LaunchDescription from location."""

@@ -15,17 +15,7 @@
 """Module for the ForLoop action."""
 
 from copy import deepcopy
-from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Mapping
-from typing import Optional
-from typing import Protocol
-from typing import Text
-from typing import Tuple
-from typing import Type
-
+from typing import Any, Callable, Dict, List, Mapping, Optional, Protocol, Text, Tuple, Type
 
 # yaml has type annotations in typeshed, but those cannot be installed via rosdep
 # since there is no definition for types-PyYAML
@@ -33,9 +23,7 @@ import yaml  # type: ignore
 
 from ..action import Action
 from ..actions.opaque_function import OpaqueFunction
-from ..frontend import Entity
-from ..frontend import expose_action
-from ..frontend import Parser
+from ..frontend import Entity, expose_action, Parser
 from ..launch_context import LaunchContext
 from ..launch_description_entity import LaunchDescriptionEntity
 from ..logging import get_logger
@@ -154,6 +142,7 @@ class ForEach(Action):
         super().__init__(**kwargs)
 
         from ..utilities import normalize_to_list_of_substitutions  # import here to avoid loop
+
         self._input_values = normalize_to_list_of_substitutions(input_values)
         self._function = function
         self._logger = get_logger(__name__)
@@ -168,13 +157,12 @@ class ForEach(Action):
 
     def describe(self) -> Text:
         return (
-            self.__class__.__name__ +
-            f"(input_values='{self._input_values}', function={self._function})"
+            self.__class__.__name__
+            + f"(input_values='{self._input_values}', function={self._function})"
         )
 
     @classmethod
-    def parse(cls, entity: Entity, parser: Parser
-              ) -> Tuple[Type['ForEach'], Dict[str, Any]]:
+    def parse(cls, entity: Entity, parser: Parser) -> Tuple[Type['ForEach'], Dict[str, Any]]:
         """Return `ForEach` action and kwargs for constructing it."""
         _, kwargs = super().parse(entity, parser)
         input_values = entity.get_attr('values')
@@ -184,6 +172,7 @@ class ForEach(Action):
 
         def for_each(**iteration_vars) -> List[LaunchDescriptionEntity]:
             return cls._get_iteration_entities(parsed_children, iteration_vars)
+
         kwargs['function'] = for_each
         return cls, kwargs
 
@@ -247,7 +236,8 @@ class ForEach(Action):
         args: Mapping[str, Any],
     ) -> Optional[List[LaunchDescriptionEntity]]:
         context.extend_locals(
-            {ForEachVar.get_local_arg_name(name): str(value) for name, value in args.items()})
+            {ForEachVar.get_local_arg_name(name): str(value) for name, value in args.items()}
+        )
         return None
 
 
@@ -325,7 +315,6 @@ class ForLoop(Action):
     """
 
     class _CallbackFunction(Protocol):
-
         def __call__(self, i: int) -> Optional[List[LaunchDescriptionEntity]]: ...
 
     def __init__(
@@ -348,6 +337,7 @@ class ForLoop(Action):
         super().__init__(**kwargs)
 
         from ..utilities import normalize_to_list_of_substitutions  # import here to avoid loop
+
         self._length = normalize_to_list_of_substitutions(length)
         self._function = function
         self._name = name
@@ -367,13 +357,12 @@ class ForLoop(Action):
 
     def describe(self) -> Text:
         return (
-            self.__class__.__name__ +
-            f"(length='{self._length}', name='{self._name}', function={self._function})"
+            self.__class__.__name__
+            + f"(length='{self._length}', name='{self._name}', function={self._function})"
         )
 
     @classmethod
-    def parse(cls, entity: Entity, parser: Parser
-              ) -> Tuple[Type['ForLoop'], Dict[str, Any]]:
+    def parse(cls, entity: Entity, parser: Parser) -> Tuple[Type['ForLoop'], Dict[str, Any]]:
         """Return `ForLoop` action and kwargs for constructing it."""
         _, kwargs = super().parse(entity, parser)
         length = entity.get_attr('len')
@@ -385,6 +374,7 @@ class ForLoop(Action):
 
         def for_i(i: int) -> List[LaunchDescriptionEntity]:
             return ForEach._get_iteration_entities(parsed_children, {name: i})
+
         kwargs['function'] = for_i
         return cls, kwargs
 
@@ -394,8 +384,7 @@ class ForLoop(Action):
         self._logger.debug(f'for-loop length={length}')
         # Create list of YAML (dict) strings
         input_values = ForEach.SEPARATOR.join(
-            yaml.dump({'i': i}, default_flow_style=True).strip()
-            for i in range(length)
+            yaml.dump({'i': i}, default_flow_style=True).strip() for i in range(length)
         )
         self._logger.debug(f'input_values={input_values}')
         return [ForEach(input_values, function=self._function)]

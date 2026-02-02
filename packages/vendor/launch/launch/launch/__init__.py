@@ -14,13 +14,7 @@
 
 """Main entry point for the `launch` package."""
 
-from . import actions
-from . import conditions
-from . import descriptions
-from . import events
-from . import frontend
-from . import logging
-from . import substitutions
+from . import actions, conditions, descriptions, events, frontend, logging, substitutions
 from .action import Action
 from .condition import Condition
 from .event import Event
@@ -32,10 +26,8 @@ from .launch_description_entity import LaunchDescriptionEntity
 from .launch_description_source import LaunchDescriptionSource
 from .launch_introspector import LaunchIntrospector
 from .launch_service import LaunchService
-from .some_entities_type import SomeEntitiesType
-from .some_entities_type import SomeEntitiesType_types_tuple
-from .some_substitutions_type import SomeSubstitutionsType
-from .some_substitutions_type import SomeSubstitutionsType_types_tuple
+from .some_entities_type import SomeEntitiesType, SomeEntitiesType_types_tuple
+from .some_substitutions_type import SomeSubstitutionsType, SomeSubstitutionsType_types_tuple
 from .substitution import Substitution
 
 __all__ = [

@@ -24,12 +24,15 @@ For an example of expected output, see the file next to this one called
 import os
 import platform
 import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))  # noqa
 
 import launch  # noqa: E402
-from launch import LaunchDescription  # noqa: E402
-from launch import LaunchIntrospector  # noqa: E402
-from launch import LaunchService  # noqa: E402
+from launch import (
+    LaunchDescription,  # noqa: E402
+    LaunchIntrospector,  # noqa: E402
+    LaunchService,  # noqa: E402
+)
 import launch.actions  # noqa: E402
 import launch.events  # noqa: E402
 import launch.substitutions  # noqa: E402
@@ -38,19 +41,27 @@ import launch.substitutions  # noqa: E402
 def main(argv=sys.argv[1:]):
     """Run Counter via launch."""
     # Configure rotating logs.
-    launch.logging.launch_config.log_handler_factory = \
+    launch.logging.launch_config.log_handler_factory = (
         lambda path, encoding=None: launch.logging.handlers.RotatingFileHandler(
-            path, maxBytes=1024, backupCount=3, encoding=encoding)
+            path, maxBytes=1024, backupCount=3, encoding=encoding
+        )
+    )
 
     # Any number of actions can optionally be given to the constructor of LaunchDescription.
     # Or actions/entities can be added after creating the LaunchDescription.
     user_env_var = 'USERNAME' if platform.system() == 'Windows' else 'USER'
-    ld = LaunchDescription([
-        launch.actions.LogInfo(msg='Hello World!'),
-        launch.actions.LogInfo(msg=(
-            'Is that you, ', launch.substitutions.EnvironmentVariable(name=user_env_var), '?'
-        )),
-    ])
+    ld = LaunchDescription(
+        [
+            launch.actions.LogInfo(msg='Hello World!'),
+            launch.actions.LogInfo(
+                msg=(
+                    'Is that you, ',
+                    launch.substitutions.EnvironmentVariable(name=user_env_var),
+                    '?',
+                )
+            ),
+        ]
+    )
 
     # Setup a custom event handler for all stdout/stderr from processes.
     # Later, this will be a configurable, but always present, extension to the LaunchService.
@@ -58,11 +69,15 @@ def main(argv=sys.argv[1:]):
         for line in event.text.decode().splitlines():
             print('[{}] {}'.format(event.process_name, line))
 
-    ld.add_action(launch.actions.RegisterEventHandler(launch.event_handlers.OnProcessIO(
-        # this is the action     ^              and this, the event handler ^
-        on_stdout=on_output,
-        on_stderr=on_output,
-    )))
+    ld.add_action(
+        launch.actions.RegisterEventHandler(
+            launch.event_handlers.OnProcessIO(
+                # this is the action     ^              and this, the event handler ^
+                on_stdout=on_output,
+                on_stderr=on_output,
+            )
+        )
+    )
 
     # Run whoami, and use its output to log the name of the user.
     # Prefix just the whoami process with `time`.
@@ -72,19 +87,20 @@ def main(argv=sys.argv[1:]):
         whoami_cmd = ['echo', '%USERNAME%']
     else:
         whoami_cmd = [launch.substitutions.FindExecutable(name='whoami')]
-    whoami_action = launch.actions.ExecuteProcess(
-        cmd=whoami_cmd,
-        shell=True
-    )
+    whoami_action = launch.actions.ExecuteProcess(cmd=whoami_cmd, shell=True)
     ld.add_action(whoami_action)
     # Make event handler that uses the output.
-    ld.add_action(launch.actions.RegisterEventHandler(launch.event_handlers.OnProcessIO(
-        target_action=whoami_action,
-        # The output of `time` will be skipped since `time`'s output always goes to stderr.
-        on_stdout=lambda event: launch.actions.LogInfo(
-            msg="whoami says you are '{}'.".format(event.text.decode().strip())
-        ),
-    )))
+    ld.add_action(
+        launch.actions.RegisterEventHandler(
+            launch.event_handlers.OnProcessIO(
+                target_action=whoami_action,
+                # The output of `time` will be skipped since `time`'s output always goes to stderr.
+                on_stdout=lambda event: launch.actions.LogInfo(
+                    msg="whoami says you are '{}'.".format(event.text.decode().strip())
+                ),
+            )
+        )
+    )
     # Unset launch prefix to prevent other process from getting this setting.
     ld.add_action(launch.actions.SetLaunchConfiguration('launch-prefix', ''))
 
@@ -96,31 +112,47 @@ def main(argv=sys.argv[1:]):
     def counter_output_handler(event):
         target_str = 'Counter: 4'
         if target_str in event.text.decode():
-            return launch.actions.EmitEvent(event=launch.events.Shutdown(
-                reason="saw '{}' from '{}'".format(target_str, event.process_name)
-            ))
+            return launch.actions.EmitEvent(
+                event=launch.events.Shutdown(
+                    reason="saw '{}' from '{}'".format(target_str, event.process_name)
+                )
+            )
 
-    ld.add_action(launch.actions.RegisterEventHandler(launch.event_handlers.OnProcessIO(
-        target_action=counter_action,
-        on_stdout=counter_output_handler,
-        on_stderr=counter_output_handler,
-    )))
+    ld.add_action(
+        launch.actions.RegisterEventHandler(
+            launch.event_handlers.OnProcessIO(
+                target_action=counter_action,
+                on_stdout=counter_output_handler,
+                on_stderr=counter_output_handler,
+            )
+        )
+    )
 
     # Run the counter a few more times, with various options.
-    ld.add_action(launch.actions.ExecuteProcess(
-        cmd=[sys.executable, '-u', './counter.py', '--ignore-sigint']
-    ))
-    ld.add_action(launch.actions.ExecuteProcess(
-        cmd=[sys.executable, '-u', './counter.py', '--ignore-sigint', '--ignore-sigterm']
-    ))
+    ld.add_action(
+        launch.actions.ExecuteProcess(cmd=[sys.executable, '-u', './counter.py', '--ignore-sigint'])
+    )
+    ld.add_action(
+        launch.actions.ExecuteProcess(
+            cmd=[sys.executable, '-u', './counter.py', '--ignore-sigint', '--ignore-sigterm']
+        )
+    )
 
     # Add our own message for when shutdown is requested.
-    ld.add_action(launch.actions.RegisterEventHandler(launch.event_handlers.OnShutdown(
-        on_shutdown=[launch.actions.LogInfo(msg=[
-            'Launch was asked to shutdown: ',
-            launch.substitutions.LocalSubstitution('event.reason'),
-        ])],
-    )))
+    ld.add_action(
+        launch.actions.RegisterEventHandler(
+            launch.event_handlers.OnShutdown(
+                on_shutdown=[
+                    launch.actions.LogInfo(
+                        msg=[
+                            'Launch was asked to shutdown: ',
+                            launch.substitutions.LocalSubstitution('event.reason'),
+                        ]
+                    )
+                ],
+            )
+        )
+    )
 
     print('Starting introspection of launch description...')
     print('')

@@ -14,8 +14,7 @@
 
 """Implementation of `InvalidLaunchFileError` class."""
 
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
 
 class InvalidLaunchFileError(Exception):
@@ -30,10 +29,10 @@ class InvalidLaunchFileError(Exception):
                 'The launch file may have a syntax error, or its format is unknown'
             )
         else:
-            self._error_message = (
-                'Caught {} when trying to load file of format [{}]:'
-            ).format('multiple exceptions' if len(self._likely_errors) > 1 else 'exception',
-                     self._extension)
+            self._error_message = ('Caught {} when trying to load file of format [{}]:').format(
+                'multiple exceptions' if len(self._likely_errors) > 1 else 'exception',
+                self._extension,
+            )
             for error in self._likely_errors:
                 self._error_message += '\n - {}: {}'.format(type(error).__name__, error)
 

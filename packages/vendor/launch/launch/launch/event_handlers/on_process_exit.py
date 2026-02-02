@@ -14,19 +14,13 @@
 
 """Module for OnProcessExit class."""
 
-from typing import Any
-from typing import Callable
-from typing import cast
-from typing import Optional
-from typing import TYPE_CHECKING
-from typing import Union
+from typing import Any, Callable, cast, Optional, TYPE_CHECKING, Union
 
-from .on_action_event_base import OnActionEventBase
 from ..event import Event
 from ..events.process import ProcessExited
 from ..launch_context import LaunchContext
 from ..some_entities_type import SomeEntitiesType
-
+from .on_action_event_base import OnActionEventBase
 
 if TYPE_CHECKING:
     from ..action import Action  # noqa: F401
@@ -44,26 +38,25 @@ class OnProcessExit(OnActionEventBase):
     def __init__(
         self,
         *,
-        target_action:
-            Optional[Union[Callable[['ExecuteLocal'], bool], 'ExecuteLocal']] = None,
-        on_exit:
-            Union[
-                SomeEntitiesType,
-                Callable[[ProcessExited, LaunchContext], Optional[SomeEntitiesType]]
-            ],
-        **kwargs: Any
+        target_action: Optional[Union[Callable[['ExecuteLocal'], bool], 'ExecuteLocal']] = None,
+        on_exit: Union[
+            SomeEntitiesType, Callable[[ProcessExited, LaunchContext], Optional[SomeEntitiesType]]
+        ],
+        **kwargs: Any,
     ) -> None:
         """Create an OnProcessExit event handler."""
         from ..actions import ExecuteLocal  # noqa: F811
+
         super().__init__(
             action_matcher=cast(
                 Optional[Union[Callable[['Action'], bool], 'Action']], target_action
-                ),
+            ),
             on_event=cast(
-                Union[SomeEntitiesType,
-                      Callable[[Event, LaunchContext], Optional[SomeEntitiesType]]],
-                on_exit
-                ),
+                Union[
+                    SomeEntitiesType, Callable[[Event, LaunchContext], Optional[SomeEntitiesType]]
+                ],
+                on_exit,
+            ),
             target_event_cls=ProcessExited,
             target_action_cls=ExecuteLocal,
             **kwargs,

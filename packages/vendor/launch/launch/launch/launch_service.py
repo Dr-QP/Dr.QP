@@ -23,29 +23,28 @@ import signal
 import sys
 import threading
 import traceback
-from typing import Coroutine
-from typing import Generator
-from typing import Iterable
-from typing import List  # noqa: F401
-from typing import Optional
-from typing import Text
-from typing import Tuple  # noqa: F401
-
-import launch.logging
+from typing import (
+    Coroutine,
+    Generator,
+    Iterable,
+    List,  # noqa: F401
+    Optional,
+    Text,
+    Tuple,  # noqa: F401
+)
 
 from osrf_pycommon import process_utils
 
+import launch.logging
+
 from .event import Event
-from .event_handlers import OnIncludeLaunchDescription
-from .event_handlers import OnShutdown
-from .events import IncludeLaunchDescription
-from .events import Shutdown
+from .event_handlers import OnIncludeLaunchDescription, OnShutdown
+from .events import IncludeLaunchDescription, Shutdown
 from .launch_context import LaunchContext
 from .launch_description import LaunchDescription
 from .launch_description_entity import LaunchDescriptionEntity
 from .some_entities_type import SomeEntitiesType
-from .utilities import AsyncSafeSignalManager
-from .utilities import visit_all_entities_and_collect_futures
+from .utilities import AsyncSafeSignalManager, visit_all_entities_and_collect_futures
 
 
 class LaunchService:
@@ -57,7 +56,7 @@ class LaunchService:
         argv: Optional[Iterable[Text]] = None,
         noninteractive: bool = False,
         debug: bool = False,
-        log_file_name: str = 'launch.log'
+        log_file_name: str = 'launch.log',
     ) -> None:
         """
         Create a LaunchService.
@@ -87,8 +86,7 @@ class LaunchService:
         self.__context.register_event_handler(OnShutdown(on_shutdown=self.__on_shutdown))
 
         # Setup storage for state.
-        self._entity_future_pairs = \
-            []  # type: List[Tuple[LaunchDescriptionEntity, asyncio.Future[None]]]
+        self._entity_future_pairs = []  # type: List[Tuple[LaunchDescriptionEntity, asyncio.Future[None]]]
 
         # Used to allow asynchronous use of self.__loop_from_run_thread without
         # it being set to None by run() as it exits.
@@ -114,8 +112,7 @@ class LaunchService:
             if self.__loop_from_run_thread is not None:
                 # loop is in use, asynchronously emit the event
                 future = asyncio.run_coroutine_threadsafe(
-                    self.__context.emit_event(event),
-                    self.__loop_from_run_thread
+                    self.__context.emit_event(event), self.__loop_from_run_thread
                 )
             else:
                 # loop is not in use, synchronously emit the event, and it will be processed later
@@ -139,8 +136,9 @@ class LaunchService:
             if pair[1].done():
                 needs_prune = True
         if needs_prune:
-            self._entity_future_pairs = \
-                [pair for pair in self._entity_future_pairs if not pair[1].done()]
+            self._entity_future_pairs = [
+                pair for pair in self._entity_future_pairs if not pair[1].done()
+            ]
         return len(self._entity_future_pairs)
 
     def _prune_and_count_context_completion_futures(self) -> int:
@@ -149,8 +147,9 @@ class LaunchService:
             if future.done():
                 needs_prune = True
         if needs_prune:
-            self.__context._completion_futures = \
-                [f for f in self.__context._completion_futures if not f.done()]
+            self.__context._completion_futures = [
+                f for f in self.__context._completion_futures if not f.done()
+            ]
         return len(self.__context._completion_futures)
 
     def _is_idle(self) -> bool:
@@ -160,15 +159,13 @@ class LaunchService:
 
     @contextlib.contextmanager
     def _prepare_run_loop(
-        self
+        self,
     ) -> Generator[Tuple[asyncio.AbstractEventLoop, Optional[asyncio.Task[None]]], None, None]:
         try:
             # Acquire the lock and initialize the loop.
             with self.__loop_from_run_thread_lock:
                 if self.__loop_from_run_thread is not None:
-                    raise RuntimeError(
-                        'LaunchService cannot be run multiple times concurrently.'
-                    )
+                    raise RuntimeError('LaunchService cannot be run multiple times concurrently.')
                 this_loop = process_utils.get_loop()
 
                 if self.__debug:
@@ -214,7 +211,8 @@ class LaunchService:
             def _on_sigterm(signum: int) -> None:
                 signame = signal.Signals(signum).name
                 self.__logger.error(
-                    'user interrupted with ctrl-\\ ({}), terminating...'.format(signame))
+                    'user interrupted with ctrl-\\ ({}), terminating...'.format(signame)
+                )
                 # TODO(wjwwood): try to terminate running subprocesses before exiting.
                 self.__logger.error('using {} can result in orphaned processes'.format(signame))
                 self.__logger.error('make sure no processes launched are still running')
@@ -244,21 +242,24 @@ class LaunchService:
         self.__logger.debug("processing event: '{}'".format(event))
         for event_handler in tuple(self.__context._event_handlers):
             if event_handler.matches(event):
-                self.__logger.debug(
-                    "processing event: '{}' ✓ '{}'".format(event, event_handler))
+                self.__logger.debug("processing event: '{}' ✓ '{}'".format(event, event_handler))
                 self.__context._push_locals()
                 entities = event_handler.handle(event, self.__context)
-                entities_iterable = \
+                entities_iterable = (
                     entities if isinstance(entities, collections.abc.Iterable) else (entities,)
+                )
                 for entity in [e for e in entities_iterable if e is not None]:
                     from .utilities import is_a_subclass
+
                     if not is_a_subclass(entity, LaunchDescriptionEntity):
                         raise RuntimeError(
-                            "expected a LaunchDescriptionEntity from event_handler, got '{}'"
-                            .format(entity)
+                            "expected a LaunchDescriptionEntity from event_handler, got '{}'".format(
+                                entity
+                            )
                         )
                     self._entity_future_pairs.extend(
-                        visit_all_entities_and_collect_futures(entity, self.__context))
+                        visit_all_entities_and_collect_futures(entity, self.__context)
+                    )
                 self.__context._pop_locals()
             else:
                 pass
@@ -279,9 +280,7 @@ class LaunchService:
         """
         # Make sure this has not been called from any thread but the main thread.
         if threading.current_thread() is not threading.main_thread():
-            raise RuntimeError(
-                'LaunchService can only be run in the main thread.'
-            )
+            raise RuntimeError('LaunchService can only be run in the main thread.')
 
         return_code = 0
         with self._prepare_run_loop() as (this_loop, this_task):
@@ -293,6 +292,7 @@ class LaunchService:
                 nonlocal return_code
                 return_code = 1
                 return loop.default_exception_handler(context)
+
             this_loop.set_exception_handler(_on_exception)
 
             process_one_event_task = None
@@ -310,10 +310,7 @@ class LaunchService:
 
                     # Stop running if we're shutting down and there's no more work
                     if self.__shutting_down and is_idle:
-                        if (
-                            process_one_event_task is not None and
-                            not process_one_event_task.done()
-                        ):
+                        if process_one_event_task is not None and not process_one_event_task.done():
                             process_one_event_task.cancel()
                         break
 
@@ -334,8 +331,7 @@ class LaunchService:
 
                     # Wait on events and futures
                     completed_tasks, _ = await asyncio.wait(
-                        entity_futures,
-                        return_when=asyncio.FIRST_COMPLETED
+                        entity_futures, return_when=asyncio.FIRST_COMPLETED
                     )
                     # Propagate exception from completed tasks
                     exception_to_raise = None
@@ -386,9 +382,7 @@ class LaunchService:
         :return: the return code (non-zero if there are any errors)
         """
         loop = process_utils.get_loop()
-        run_async_task = loop.create_task(self.run_async(
-            shutdown_when_idle=shutdown_when_idle
-        ))
+        run_async_task = loop.create_task(self.run_async(shutdown_when_idle=shutdown_when_idle))
         while True:
             try:
                 return loop.run_until_complete(run_async_task)
@@ -400,8 +394,9 @@ class LaunchService:
         self.__context._set_is_shutdown(True)
         return None
 
-    def _shutdown(self, *, reason: Text, due_to_sigint: bool, force_sync: bool = False
-                  ) -> Optional[Coroutine]:
+    def _shutdown(
+        self, *, reason: Text, due_to_sigint: bool, force_sync: bool = False
+    ) -> Optional[Coroutine]:
         # Assumption is that this method is only called when running.
         retval = None
         if not self.__shutting_down:
@@ -441,7 +436,8 @@ class LaunchService:
             if self.__loop_from_run_thread is not None:
                 return self._shutdown(
                     reason='LaunchService.shutdown() called',
-                    due_to_sigint=False, force_sync=force_sync
+                    due_to_sigint=False,
+                    force_sync=force_sync,
                 )
         return None
 

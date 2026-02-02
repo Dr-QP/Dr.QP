@@ -14,14 +14,7 @@
 
 """Module for the anonymous name substitution."""
 
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Sequence
-from typing import Text
-from typing import Tuple
-from typing import Type
-
+from typing import Any, Dict, List, Sequence, Text, Tuple, Type
 
 from ..frontend import expose_substitution
 from ..launch_context import LaunchContext
@@ -43,11 +36,13 @@ class AnonName(Substitution):
         super().__init__()
 
         from ..utilities import normalize_to_list_of_substitutions
+
         self.__name = normalize_to_list_of_substitutions(name)
 
     @classmethod
-    def parse(cls, data: Sequence[SomeSubstitutionsType]
-              ) -> Tuple[Type['AnonName'], Dict[str, Any]]:
+    def parse(
+        cls, data: Sequence[SomeSubstitutionsType]
+    ) -> Tuple[Type['AnonName'], Dict[str, Any]]:
         """Parse `AnonName` substitution."""
         if len(data) != 1:
             raise TypeError('anon substitution expects 1 argument')
@@ -65,6 +60,7 @@ class AnonName(Substitution):
     def perform(self, context: LaunchContext) -> Text:
         """Perform the substitution by creating/getting the anonymous name."""
         from ..utilities import perform_substitutions
+
         name = perform_substitutions(context, self.name)
 
         if 'anon' + name not in context.launch_configurations:
@@ -78,6 +74,7 @@ class AnonName(Substitution):
         import random
         import socket
         import sys
+
         name = f'{id_value}_{socket.gethostname()}_{os.getpid()}_{random.randint(0, sys.maxsize)}'
         name = name.replace('.', '_')
         name = name.replace('-', '_')

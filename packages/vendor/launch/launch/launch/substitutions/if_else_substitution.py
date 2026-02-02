@@ -14,23 +14,15 @@
 
 """Module for the IfElseSubstitution substitution."""
 
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Sequence
-from typing import Text
-from typing import Tuple
-from typing import Type
+from typing import Any, Dict, List, Sequence, Text, Tuple, Type
 
-
-from .substitution_failure import SubstitutionFailure
 from ..frontend import expose_substitution
 from ..launch_context import LaunchContext
 from ..some_substitutions_type import SomeSubstitutionsType
 from ..substitution import Substitution
-from ..utilities import normalize_to_list_of_substitutions
-from ..utilities import perform_substitutions
+from ..utilities import normalize_to_list_of_substitutions, perform_substitutions
 from ..utilities.type_utils import perform_typed_substitution
+from .substitution_failure import SubstitutionFailure
 
 
 @expose_substitution('if')
@@ -69,9 +61,12 @@ class IfElseSubstitution(Substitution):
 
     """
 
-    def __init__(self, condition: SomeSubstitutionsType,
-                 if_value: SomeSubstitutionsType = '',
-                 else_value: SomeSubstitutionsType = '') -> None:
+    def __init__(
+        self,
+        condition: SomeSubstitutionsType,
+        if_value: SomeSubstitutionsType = '',
+        else_value: SomeSubstitutionsType = '',
+    ) -> None:
         """Create a IfElseSubstitution substitution."""
         super().__init__()
         if if_value == else_value == '':
@@ -81,8 +76,9 @@ class IfElseSubstitution(Substitution):
         self._else_value = normalize_to_list_of_substitutions(else_value)
 
     @classmethod
-    def parse(cls, data: Sequence[SomeSubstitutionsType]
-              ) -> Tuple[Type['IfElseSubstitution'], Dict[str, Any]]:
+    def parse(
+        cls, data: Sequence[SomeSubstitutionsType]
+    ) -> Tuple[Type['IfElseSubstitution'], Dict[str, Any]]:
         """Parse `IfElseSubstitution` substitution."""
         if len(data) < 2 or len(data) > 3:
             raise TypeError('if substitution expects from 2 or 3 arguments')

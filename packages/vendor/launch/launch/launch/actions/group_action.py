@@ -14,15 +14,12 @@
 
 """Module for the GroupAction action."""
 
-from typing import Any
-from typing import Dict
-from typing import Iterable
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Type
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Type
 
-
+from ..action import Action
+from ..frontend import Entity, expose_action, Parser
+from ..launch_context import LaunchContext
+from ..some_substitutions_type import SomeSubstitutionsType
 from .pop_environment import PopEnvironment
 from .pop_launch_configurations import PopLaunchConfigurations
 from .push_environment import PushEnvironment
@@ -30,12 +27,6 @@ from .push_launch_configurations import PushLaunchConfigurations
 from .reset_environment import ResetEnvironment
 from .reset_launch_configurations import ResetLaunchConfigurations
 from .set_launch_configuration import SetLaunchConfiguration
-from ..action import Action
-from ..frontend import Entity
-from ..frontend import expose_action
-from ..frontend import Parser
-from ..launch_context import LaunchContext
-from ..some_substitutions_type import SomeSubstitutionsType
 
 
 @expose_action('group')
@@ -75,7 +66,7 @@ class GroupAction(Action):
         scoped: bool = True,
         forwarding: bool = True,
         launch_configurations: Optional[Dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None,
-        **left_over_kwargs: Any
+        **left_over_kwargs: Any,
     ) -> None:
         """Create a GroupAction."""
         super().__init__(**left_over_kwargs)
@@ -89,8 +80,7 @@ class GroupAction(Action):
         self.__actions_to_return: Optional[List[Action]] = None
 
     @classmethod
-    def parse(cls, entity: Entity, parser: Parser
-              ) -> Tuple[Type['GroupAction'], Dict[str, Any]]:
+    def parse(cls, entity: Entity, parser: Parser) -> Tuple[Type['GroupAction'], Dict[str, Any]]:
         """Return `GroupAction` action and kwargs for constructing it."""
         _, kwargs = super().parse(entity, parser)
         scoped = entity.get_attr('scoped', data_type=bool, optional=True)
@@ -102,13 +92,16 @@ class GroupAction(Action):
             kwargs['forwarding'] = forwarding
         if keeps is not None:
             kwargs['launch_configurations'] = {
-                    tuple(parser.parse_substitution(e.get_attr('name'))):
-                    parser.parse_substitution(e.get_attr('value')) for e in keeps
+                tuple(parser.parse_substitution(e.get_attr('name'))): parser.parse_substitution(
+                    e.get_attr('value')
+                )
+                for e in keeps
             }
             for e in keeps:
                 e.assert_entity_completely_parsed()
-        kwargs['actions'] = [parser.parse_action(e) for e in entity.children
-                             if e.type_name != 'keep']
+        kwargs['actions'] = [
+            parser.parse_action(e) for e in entity.children if e.type_name != 'keep'
+        ]
         return cls, kwargs
 
     def get_sub_entities(self) -> List[Action]:
@@ -126,7 +119,7 @@ class GroupAction(Action):
                         *configuration_sets,
                         *self.__actions_to_return,
                         PopEnvironment(),
-                        PopLaunchConfigurations()
+                        PopLaunchConfigurations(),
                     ]
                 else:
                     self.__actions_to_return = [
@@ -136,13 +129,10 @@ class GroupAction(Action):
                         ResetLaunchConfigurations(self.__launch_configurations),
                         *self.__actions_to_return,
                         PopEnvironment(),
-                        PopLaunchConfigurations()
+                        PopLaunchConfigurations(),
                     ]
             else:
-                self.__actions_to_return = [
-                    *configuration_sets,
-                    *self.__actions_to_return
-                ]
+                self.__actions_to_return = [*configuration_sets, *self.__actions_to_return]
         return self.__actions_to_return
 
     def execute(self, context: LaunchContext) -> List[Action]:

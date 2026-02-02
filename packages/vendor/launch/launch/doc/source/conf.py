@@ -28,6 +28,7 @@
 #
 import os
 import sys
+
 # The python interpreter that executes this conf.py file will not have this
 # package's modules in the system path which will lead to import failures when
 # running sphinx-autodoc. As a workaround, the sphinx_builder.py script in
@@ -167,8 +168,13 @@ htmlhelp_basename = 'launchdoc'
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'launch.tex', 'launch Documentation',
-     'Open Source Robotics Foundation, Inc.', 'manual'),
+    (
+        master_doc,
+        'launch.tex',
+        'launch Documentation',
+        'Open Source Robotics Foundation, Inc.',
+        'manual',
+    ),
 ]
 
 
@@ -176,10 +182,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'launch', 'launch Documentation',
-     [author], 1)
-]
+man_pages = [(master_doc, 'launch', 'launch Documentation', [author], 1)]
 
 
 # -- Options for Texinfo output ----------------------------------------------
@@ -188,9 +191,15 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'launch', 'launch Documentation',
-     author, 'launch', 'One line description of project.',
-     'Miscellaneous'),
+    (
+        master_doc,
+        'launch',
+        'launch Documentation',
+        author,
+        'launch',
+        'One line description of project.',
+        'Miscellaneous',
+    ),
 ]
 
 

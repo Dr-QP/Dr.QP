@@ -17,14 +17,7 @@
 import collections.abc
 import importlib
 from pathlib import Path
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Sequence
-from typing import Text
-from typing import Tuple
-from typing import Type
-
+from typing import Any, Dict, List, Sequence, Text, Tuple, Type
 
 from ..frontend import expose_substitution
 from ..launch_context import LaunchContext
@@ -43,8 +36,9 @@ class PythonExpression(Substitution):
     It also may contain math symbols and functions.
     """
 
-    def __init__(self, expression: SomeSubstitutionsType,
-                 python_modules: SomeSubstitutionsType = ['math']) -> None:
+    def __init__(
+        self, expression: SomeSubstitutionsType, python_modules: SomeSubstitutionsType = ['math']
+    ) -> None:
         """Create a PythonExpression substitution."""
         super().__init__()
 
@@ -52,21 +46,25 @@ class PythonExpression(Substitution):
             expression,
             (str, Substitution, collections.abc.Iterable),
             'expression',
-            'PythonExpression')
+            'PythonExpression',
+        )
 
         ensure_argument_type(
             python_modules,
             (str, Substitution, collections.abc.Iterable),
             'python_modules',
-            'PythonExpression')
+            'PythonExpression',
+        )
 
         from ..utilities import normalize_to_list_of_substitutions
+
         self.__expression = normalize_to_list_of_substitutions(expression)
         self.__python_modules = normalize_to_list_of_substitutions(python_modules)
 
     @classmethod
-    def parse(cls, data: Sequence[SomeSubstitutionsType]
-              ) -> Tuple[Type['PythonExpression'], Dict[str, Any]]:
+    def parse(
+        cls, data: Sequence[SomeSubstitutionsType]
+    ) -> Tuple[Type['PythonExpression'], Dict[str, Any]]:
         """Parse `PythonExpression` substitution."""
         if len(data) < 1 or len(data) > 2:
             raise TypeError('eval substitution expects 1 or 2 arguments')
@@ -106,11 +104,13 @@ class PythonExpression(Substitution):
         """Return a description of this substitution as a string."""
         return 'PythonExpr({}, [{}])'.format(
             ' + '.join([sub.describe() for sub in self.expression]),
-            ', '.join([sub.describe() for sub in self.python_modules]))
+            ', '.join([sub.describe() for sub in self.python_modules]),
+        )
 
     def perform(self, context: LaunchContext) -> Text:
         """Perform the substitution by evaluating the expression."""
         from ..utilities import perform_substitutions
+
         module_names = [context.perform_substitution(sub) for sub in self.python_modules]
         module_objects = [importlib.import_module(name) for name in module_names]
         expression_locals = {}

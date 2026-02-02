@@ -15,12 +15,10 @@
 """Python package utility functions related to loading Python Launch Files."""
 
 from importlib.machinery import SourceFileLoader
-from importlib.util import module_from_spec
-from importlib.util import spec_from_loader
+from importlib.util import module_from_spec, spec_from_loader
 from pathlib import Path
 from types import ModuleType
-from typing import Text
-from typing import Union
+from typing import Text, Union
 
 from ..launch_description import LaunchDescription
 
@@ -43,7 +41,7 @@ def load_python_launch_file_as_module(python_launch_file_path: Union[Text, Path]
 
 
 def get_launch_description_from_python_launch_file(
-    python_launch_file_path: Union[Text, Path]
+    python_launch_file_path: Union[Text, Path],
 ) -> LaunchDescription:
     """
     Load a given Python launch file (by path), and return the launch description from it.
@@ -68,5 +66,6 @@ def get_launch_description_from_python_launch_file(
         raise InvalidPythonLaunchFileError(
             "launch file at '{}' does not contain the required function '{}'".format(
                 python_launch_file_path, 'generate_launch_description()'
-            ))
+            )
+        )
     return getattr(launch_file_module, 'generate_launch_description')()

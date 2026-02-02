@@ -14,15 +14,7 @@
 
 """Module for the ForLoopIndex substitution."""
 
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Sequence
-from typing import Text
-from typing import Tuple
-from typing import Type
-
+from typing import Any, Dict, List, Optional, Sequence, Text, Tuple, Type
 
 from ..frontend import expose_substitution
 from ..launch_context import LaunchContext
@@ -52,11 +44,10 @@ class ForEachVar(Substitution):
         super().__init__()
 
         from ..utilities import normalize_to_list_of_substitutions  # import here to avoid loop
+
         self._name = normalize_to_list_of_substitutions(name)
         self._default_value = (
-            normalize_to_list_of_substitutions(default_value)
-            if default_value is not None
-            else None
+            normalize_to_list_of_substitutions(default_value) if default_value is not None else None
         )
         self._logger = get_logger(__name__)
 
@@ -70,17 +61,18 @@ class ForEachVar(Substitution):
 
     def describe(self) -> Text:
         return (
-            self.__class__.__name__ +
-            '(' +
-            f"name={' + '.join([sub.describe() for sub in self._name])}" +
-            ', ' +
-            f"default_value={' + '.join([sub.describe() for sub in self._default_value or []])}" +
-            ')'
+            self.__class__.__name__
+            + '('
+            + f'name={" + ".join([sub.describe() for sub in self._name])}'
+            + ', '
+            + f'default_value={" + ".join([sub.describe() for sub in self._default_value or []])}'
+            + ')'
         )
 
     @classmethod
-    def parse(cls, data: Sequence[SomeSubstitutionsType]
-              ) -> Tuple[Type['ForEachVar'], Dict[str, Any]]:
+    def parse(
+        cls, data: Sequence[SomeSubstitutionsType]
+    ) -> Tuple[Type['ForEachVar'], Dict[str, Any]]:
         if not any(len(data) == length for length in (1, 2)):
             raise ValueError(f'{cls.__name__} substitution expects 1 or 2 arguments')
         kwargs = {'name': data[0]}

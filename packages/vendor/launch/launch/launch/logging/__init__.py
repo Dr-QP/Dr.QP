@@ -22,8 +22,7 @@ import logging.handlers
 import os
 import socket
 import sys
-from typing import (Any, Dict, List, Literal, Optional, Protocol, Set, Tuple,
-                    Union)
+from typing import Any, Dict, List, Literal, Optional, Protocol, Set, Tuple, Union
 
 from typing_extensions import TypeAlias
 
@@ -39,7 +38,6 @@ __all__ = [
 
 
 class FactoryCallable(Protocol):
-
     def __call__(self, a: str, encoding: str) -> logging.Handler: ...
 
 
@@ -79,9 +77,7 @@ def _make_unique_log_dir(*, base_path: str) -> str:
     while True:
         now = datetime.datetime.now()
         datetime_str = now.strftime('%Y-%m-%d-%H-%M-%S-%f')
-        log_dirname = '{0}-{1}-{2}'.format(
-            datetime_str, socket.gethostname(), os.getpid()
-        )
+        log_dirname = '{0}-{1}-{2}'.format(datetime_str, socket.gethostname(), os.getpid())
         log_dir = os.path.join(base_path, log_dirname)
         # Check that filename does not exist
         # TODO(hidmic): fix (unlikely) TOCTTOU race
@@ -157,21 +153,18 @@ class LaunchConfig:
     def log_dir(self):
         """Get the current log directory, generating it if necessary."""
         if self._log_dir is None:
-            self._log_dir = _make_unique_log_dir(
-                base_path=_get_logging_directory()
-            )
+            self._log_dir = _make_unique_log_dir(base_path=_get_logging_directory())
             try:
                 success = _renew_latest_log_dir(log_dir=self._log_dir)
                 if not success:
                     import warnings
-                    warnings.warn(
-                        'Cannot create a symlink to latest log directory')
+
+                    warnings.warn('Cannot create a symlink to latest log directory')
 
             except OSError as e:
                 import warnings
-                warnings.warn(
-                    ('Cannot create a symlink to latest log directory: {}\n')
-                    .format(e))
+
+                warnings.warn(('Cannot create a symlink to latest log directory: {}\n').format(e))
 
         return self._log_dir
 
@@ -185,10 +178,13 @@ class LaunchConfig:
         if new_log_dir is not None:
             if any(self.file_handlers):
                 import warnings
-                warnings.warn((
-                    'Loggers have been already configured to output to log files below {}. '
-                    'Proceed at your own risk.'
-                ).format(self._log_dir))
+
+                warnings.warn(
+                    (
+                        'Loggers have been already configured to output to log files below {}. '
+                        'Proceed at your own risk.'
+                    ).format(self._log_dir)
+                )
             if not os.path.isdir(new_log_dir):
                 raise ValueError('{} is not a directory'.format(new_log_dir))
         self._log_dir = new_log_dir
@@ -198,8 +194,7 @@ class LaunchConfig:
         """Get the log_handler_factory, generating it if necessary."""
         if self._log_handler_factory is None:
             if os.name != 'nt':
-                self._log_handler_factory = \
-                    handlers.WatchedFileHandler  # type: ignore[attr-defined]
+                self._log_handler_factory = handlers.WatchedFileHandler  # type: ignore[attr-defined]
             else:
                 self._log_handler_factory = handlers.FileHandler  # type: ignore[attr-defined]
         return self._log_handler_factory
@@ -218,8 +213,9 @@ class LaunchConfig:
         """
         self._log_handler_factory = new_log_handler_factory
 
-    def set_screen_format(self, screen_format: str, *,
-                          screen_style: Optional[LogStyle] = None) -> None:
+    def set_screen_format(
+        self, screen_format: str, *, screen_style: Optional[LogStyle] = None
+    ) -> None:
         """
         Set up screen formats.
 
@@ -243,7 +239,8 @@ class LaunchConfig:
         if screen_format_env not in [None, '']:
             # encoded escape characters correctly
             screen_format = screen_format_env.encode(  # type: ignore[union-attr]
-                'latin1').decode('unicode_escape')
+                'latin1'
+            ).decode('unicode_escape')
             # Set the style correspondingly
             screen_style = '{'
         if screen_format is not None:
@@ -262,9 +259,7 @@ class LaunchConfig:
                     )
             if screen_style is None:
                 screen_style = '{'
-            self.screen_formatter = logging.Formatter(
-                screen_format, style=screen_style
-            )
+            self.screen_formatter = logging.Formatter(screen_format, style=screen_style)
             if self.screen_handler is not None:
                 self.screen_handler.setFormatter(self.screen_formatter)
         else:
@@ -280,8 +275,10 @@ class LaunchConfig:
             stream = codecs.StreamWriter(sys.stdout, errors='replace')
             stream.encode = lambda msg, errors='replace': (
                 msg.encode(locale.getpreferredencoding(False), errors).decode(
-                    locale.getpreferredencoding(False), errors=errors),
-                msg)
+                    locale.getpreferredencoding(False), errors=errors
+                ),
+                msg,
+            )
             self.screen_handler = handlers.StreamHandler(stream)
             self.screen_handler.setFormatter(self.screen_formatter)
         return self.screen_handler
@@ -305,7 +302,8 @@ class LaunchConfig:
         if log_format_env not in [None, '']:
             # encoded escape characters correctly
             log_format = log_format_env.encode(  # type: ignore[union-attr]
-                'latin1').decode('unicode_escape')
+                'latin1'
+            ).decode('unicode_escape')
             # Set the style correspondingly
             log_style = '{'
         if log_format is not None:
@@ -317,9 +315,7 @@ class LaunchConfig:
                     )
             if log_style is None:
                 log_style = '{'
-            self.file_formatter = logging.Formatter(
-                log_format, style=log_style
-            )
+            self.file_formatter = logging.Formatter(log_format, style=log_style)
             for handler in self.file_handlers.values():
                 handler.setFormatter(self.file_formatter)
         else:
@@ -361,9 +357,11 @@ def log_launch_config(*, logger: logging.Logger = logging.root) -> None:
     """Log logging configuration details relevant for a user with the given logger."""
     if any(launch_config.file_handlers):
         logger.info('All log files can be found below {}'.format(launch_config.log_dir))
-    logger.info('Default logging verbosity is set to {}'.format(logging.getLevelName(
-        logging.root.getEffectiveLevel()
-    )))
+    logger.info(
+        'Default logging verbosity is set to {}'.format(
+            logging.getLevelName(logging.root.getEffectiveLevel())
+        )
+    )
 
 
 def get_logger(name: Optional[str] = None) -> logging.Logger:
@@ -384,65 +382,58 @@ def _normalize_output_configuration(config: Union[str, Dict[str, Any]]) -> Dict[
 
     See `get_output_loggers()` documentation for further reference.
     """
-    normalized_config: Dict[str, Set[str]] = {
-        'both': set(), 'stdout': set(), 'stderr': set()
-    }
+    normalized_config: Dict[str, Set[str]] = {'both': set(), 'stdout': set(), 'stderr': set()}
     if isinstance(config, str):
         if config == 'screen':
-            normalized_config.update({
-                'both': {'screen'}
-            })
+            normalized_config.update({'both': {'screen'}})
         elif config == 'log':
-            normalized_config.update({
-                'both': {'log'},
-                'stderr': {'screen'}
-            })
+            normalized_config.update({'both': {'log'}, 'stderr': {'screen'}})
         elif config == 'both':
-            normalized_config.update({
-                'both': {'log', 'screen'},
-            })
+            normalized_config.update(
+                {
+                    'both': {'log', 'screen'},
+                }
+            )
         elif config == 'own_log':
-            normalized_config.update({
-                'both': {'own_log'},
-                'stdout': {'own_log'},
-                'stderr': {'own_log'}
-            })
+            normalized_config.update(
+                {'both': {'own_log'}, 'stdout': {'own_log'}, 'stderr': {'own_log'}}
+            )
         elif config == 'full':
-            normalized_config.update({
-                'both': {'screen', 'log', 'own_log'},
-                'stdout': {'own_log'},
-                'stderr': {'own_log'}
-            })
+            normalized_config.update(
+                {'both': {'screen', 'log', 'own_log'}, 'stdout': {'own_log'}, 'stderr': {'own_log'}}
+            )
         else:
-            raise ValueError((
-                '{} is not a valid standard output config '
-                'i.e. "screen", "log" or "both"'
-            ).format(config))
+            raise ValueError(
+                ('{} is not a valid standard output config i.e. "screen", "log" or "both"').format(
+                    config
+                )
+            )
     elif isinstance(config, dict):
         for source, destinations in config.items():
             if source not in ('stdout', 'stderr', 'both'):
-                raise ValueError((
-                    '{} is not a valid output source '
-                    'i.e. "stdout", "stderr" or "both"'
-                ).format(source))
+                raise ValueError(
+                    ('{} is not a valid output source i.e. "stdout", "stderr" or "both"').format(
+                        source
+                    )
+                )
             if isinstance(destinations, str):
                 destinations = {destinations}
             for destination in destinations:
                 if destination not in ('screen', 'log', 'own_log'):
-                    raise ValueError((
-                        '{} is not a valid output destination '
-                        'i.e. "screen", "log" or "own_log"'
-                    ).format(destination))
+                    raise ValueError(
+                        (
+                            '{} is not a valid output destination i.e. "screen", "log" or "own_log"'
+                        ).format(destination)
+                    )
             normalized_config[source] = set(destinations)
     else:
-        raise ValueError(
-            '{} is not a valid output configuration'.format(config)
-        )
+        raise ValueError('{} is not a valid output configuration'.format(config))
     return normalized_config
 
 
-def get_output_loggers(process_name: str, output_config: Union[str, Dict[str, Any]],
-                       main_log_file_name='launch.log') -> Tuple[logging.Logger, logging.Logger]:
+def get_output_loggers(
+    process_name: str, output_config: Union[str, Dict[str, Any]], main_log_file_name='launch.log'
+) -> Tuple[logging.Logger, logging.Logger]:
     """
     Get the stdout and stderr output loggers for the given process name.
 
@@ -496,9 +487,7 @@ def get_output_loggers(process_name: str, output_config: Union[str, Dict[str, An
             screen_handler = launch_config.get_screen_handler()
             # Add screen handler if necessary.
             if screen_handler not in logger.handlers:
-                screen_handler.setFormatterFor(
-                    logger, logging.Formatter('{msg}', style='{')
-                )
+                screen_handler.setFormatterFor(logger, logging.Formatter('{msg}', style='{'))
                 logger.addHandler(screen_handler)
 
         # If a 'log' output is configured for this source or for
@@ -533,7 +522,7 @@ def get_output_loggers(process_name: str, output_config: Union[str, Dict[str, An
     # Retrieve both loggers.
     return (
         logging.getLogger(process_name + '-stdout'),
-        logging.getLogger(process_name + '-stderr')
+        logging.getLogger(process_name + '-stderr'),
     )
 
 

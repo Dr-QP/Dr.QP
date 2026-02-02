@@ -18,26 +18,15 @@ from __future__ import annotations
 
 from itertools import chain
 from operator import and_, or_
-from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import Iterable
-from typing import List
-from typing import Optional
-from typing import Sequence
-from typing import Text
-from typing import Tuple
-from typing import Type
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Text, Tuple, Type
 
-
-from .substitution_failure import SubstitutionFailure
 from ..frontend import expose_substitution
 from ..launch_context import LaunchContext
 from ..some_substitutions_type import SomeSubstitutionsType
 from ..substitution import Substitution
 from ..utilities import normalize_to_list_of_substitutions
-from ..utilities.type_utils import perform_typed_substitution
-from ..utilities.type_utils import StrSomeValueType
+from ..utilities.type_utils import perform_typed_substitution, StrSomeValueType
+from .substitution_failure import SubstitutionFailure
 
 
 @expose_substitution('not')
@@ -51,8 +40,9 @@ class NotSubstitution(Substitution):
         self.__value = normalize_to_list_of_substitutions(value)
 
     @classmethod
-    def parse(cls, data: Sequence[SomeSubstitutionsType]
-              ) -> Tuple[Type[NotSubstitution], Dict[str, Any]]:
+    def parse(
+        cls, data: Sequence[SomeSubstitutionsType]
+    ) -> Tuple[Type[NotSubstitution], Dict[str, Any]]:
         """Parse `NotSubstitution` substitution."""
         if len(data) != 1:
             raise TypeError('not substitution expects 1 argument')
@@ -94,8 +84,9 @@ class LeftRightLogicalSubstitution(Substitution):
         self.__right = normalize_to_list_of_substitutions(right)
 
     @classmethod
-    def parse(cls, data: Sequence[SomeSubstitutionsType]
-              ) -> Tuple[Type[LeftRightLogicalSubstitution], Dict[str, Any]]:
+    def parse(
+        cls, data: Sequence[SomeSubstitutionsType]
+    ) -> Tuple[Type[LeftRightLogicalSubstitution], Dict[str, Any]]:
         """Parse `LeftRightLogicalSubstitution` substitution."""
         if len(data) != 2:
             raise TypeError(f'{cls.__name__} expects 2 arguments')
@@ -176,8 +167,9 @@ class ContainerSubstitution(Substitution):
         self.__args = [normalize_to_list_of_substitutions(arg) for arg in chain(args, container)]
 
     @classmethod
-    def parse(cls, data: Iterable[SomeSubstitutionsType]
-              ) -> Tuple[Type[ContainerSubstitution], Dict[str, Any]]:
+    def parse(
+        cls, data: Iterable[SomeSubstitutionsType]
+    ) -> Tuple[Type[ContainerSubstitution], Dict[str, Any]]:
         """Parse `ContainerSubstitution` substitution."""
         return cls, {'container': data}
 

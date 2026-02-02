@@ -16,11 +16,10 @@
 
 from typing import List
 
-from .invalid_condition_expression_error import InvalidConditionExpressionError
 from ..launch_context import LaunchContext
 from ..substitution import Substitution
 from ..utilities import perform_substitutions
-
+from .invalid_condition_expression_error import InvalidConditionExpressionError
 
 VALID_TRUE_EXPRESSIONS = ['true', '1']
 VALID_FALSE_EXPRESSIONS = ['false', '0']

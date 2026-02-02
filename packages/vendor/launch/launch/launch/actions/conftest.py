@@ -14,13 +14,13 @@
 
 from typing import Any, Dict
 
+import pytest
+
 # imports needed for doctests
 import launch
 import launch.actions
 import launch.conditions
 import launch.substitutions
-
-import pytest
 
 
 @pytest.fixture(autouse=True)

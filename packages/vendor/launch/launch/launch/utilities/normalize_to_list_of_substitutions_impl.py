@@ -15,15 +15,11 @@
 """Module for the normalize_to_list_of_substitutions() utility function."""
 
 from pathlib import Path
-from typing import cast
-from typing import Iterable
-from typing import List
-from typing import Text
-from typing import Union
+from typing import cast, Iterable, List, Text, Union
 
-from .class_tools_impl import is_a_subclass
 from ..some_substitutions_type import SomeSubstitutionsType
 from ..substitution import Substitution
+from .class_tools_impl import is_a_subclass
 
 
 def normalize_to_list_of_substitutions(subs: SomeSubstitutionsType) -> List[Substitution]:
@@ -38,7 +34,8 @@ def normalize_to_list_of_substitutions(subs: SomeSubstitutionsType) -> List[Subs
             return TextSubstitution(text=str(x))
         raise TypeError(
             "Failed to normalize given item of type '{}', when only "
-            "'str' or 'launch.Substitution' were expected.".format(type(x)))
+            "'str' or 'launch.Substitution' were expected.".format(type(x))
+        )
 
     if isinstance(subs, (str, Path)):
         return [TextSubstitution(text=str(subs))]

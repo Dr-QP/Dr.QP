@@ -17,17 +17,19 @@
 import asyncio
 import collections
 import os
-from typing import Any
-from typing import Deque
-from typing import Dict
-from typing import Iterable
-from typing import List  # noqa: F401
-from typing import Mapping
-from typing import MutableMapping
-from typing import NoReturn
-from typing import Optional
-from typing import Text
-from typing import Union
+from typing import (
+    Any,
+    Deque,
+    Dict,
+    Iterable,
+    List,  # noqa: F401
+    Mapping,
+    MutableMapping,
+    NoReturn,
+    Optional,
+    Text,
+    Union,
+)
 
 import launch.logging
 
@@ -40,10 +42,7 @@ class LaunchContext:
     """Runtime context used by various launch entities when being visited or executed."""
 
     def __init__(
-        self,
-        *,
-        argv: Optional[Iterable[Text]] = None,
-        noninteractive: bool = False
+        self, *, argv: Optional[Iterable[Text]] = None, noninteractive: bool = False
     ) -> None:
         """
         Create a LaunchContext.
@@ -146,8 +145,8 @@ class LaunchContext:
     @property  # noqa: A003
     def locals(self):  # noqa: A003
         """Getter for the locals."""
-        class AttributeDict:
 
+        class AttributeDict:
             def __init__(self, dict_in: Dict[Text, Any]):
                 self.__dict__['__dict'] = dict_in
 
@@ -156,8 +155,7 @@ class LaunchContext:
                 if key not in _dict:
                     raise AttributeError(
                         "context.locals does not contain attribute '{}', it contains: [{}]".format(
-                            key,
-                            ', '.join(_dict.keys())
+                            key, ', '.join(_dict.keys())
                         )
                     )
                 return _dict[key]
@@ -217,8 +215,7 @@ class LaunchContext:
         """Check whether an event would be handled or not."""
         return any(handler.matches(event) for handler in self._event_handlers)
 
-    def register_event_handler(self, event_handler: BaseEventHandler,
-                               append: bool = False) -> None:
+    def register_event_handler(self, event_handler: BaseEventHandler, append: bool = False) -> None:
         """
         Register a event handler.
 

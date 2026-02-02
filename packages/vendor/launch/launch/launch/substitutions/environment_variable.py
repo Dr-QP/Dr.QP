@@ -14,21 +14,13 @@
 
 """Module for the EnvironmentVariable substitution."""
 
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Sequence
-from typing import Text
-from typing import Tuple
-from typing import Type
+from typing import Any, Dict, List, Optional, Sequence, Text, Tuple, Type
 
-
-from .substitution_failure import SubstitutionFailure
 from ..frontend.expose import expose_substitution
 from ..launch_context import LaunchContext
 from ..some_substitutions_type import SomeSubstitutionsType
 from ..substitution import Substitution
+from .substitution_failure import SubstitutionFailure
 
 
 @expose_substitution('env')
@@ -44,10 +36,7 @@ class EnvironmentVariable(Substitution):
     """
 
     def __init__(
-        self,
-        name: SomeSubstitutionsType,
-        *,
-        default_value: Optional[SomeSubstitutionsType] = None
+        self, name: SomeSubstitutionsType, *, default_value: Optional[SomeSubstitutionsType] = None
     ) -> None:
         """
         Construct an environment variable substitution.
@@ -61,14 +50,16 @@ class EnvironmentVariable(Substitution):
         super().__init__()
 
         from ..utilities import normalize_to_list_of_substitutions  # import here to avoid loop
+
         self.__name = normalize_to_list_of_substitutions(name)
         if default_value is not None:
             default_value = normalize_to_list_of_substitutions(default_value)
         self.__default_value = default_value
 
     @classmethod
-    def parse(cls, data: Sequence[SomeSubstitutionsType]
-              ) -> Tuple[Type['EnvironmentVariable'], Dict[str, Any]]:
+    def parse(
+        cls, data: Sequence[SomeSubstitutionsType]
+    ) -> Tuple[Type['EnvironmentVariable'], Dict[str, Any]]:
         """Parse `EnviromentVariable` substitution."""
         if len(data) < 1 or len(data) > 2:
             raise TypeError('env substitution expects 1 or 2 arguments')
@@ -94,16 +85,12 @@ class EnvironmentVariable(Substitution):
     def perform(self, context: LaunchContext) -> Text:
         """Perform the substitution by looking up the environment variable."""
         from ..utilities import perform_substitutions  # import here to avoid loop
+
         default_value: Optional[str] = None
         if self.default_value is not None:
             default_value = perform_substitutions(context, self.default_value)
         name = perform_substitutions(context, self.name)
-        value = context.environment.get(
-            name,
-            default_value
-        )
+        value = context.environment.get(name, default_value)
         if value is None:
-            raise SubstitutionFailure(
-                "environment variable '{}' does not exist".format(name)
-            )
+            raise SubstitutionFailure("environment variable '{}' does not exist".format(name))
         return value

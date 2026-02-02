@@ -14,25 +14,20 @@
 
 """Module for the DeclareLaunchArgument action."""
 
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Text
-from typing import Tuple
-from typing import Type
+from typing import Any, Dict, List, Optional, Text, Tuple, Type
 
 import launch.logging
 
 from ..action import Action
-from ..frontend import Entity
-from ..frontend import expose_action
-from ..frontend import Parser  # noqa: F401
+from ..frontend import (
+    Entity,
+    expose_action,
+    Parser,  # noqa: F401
+)
 from ..launch_context import LaunchContext
 from ..some_substitutions_type import SomeSubstitutionsType
 from ..substitution import Substitution
-from ..utilities import normalize_to_list_of_substitutions
-from ..utilities import perform_substitutions
+from ..utilities import normalize_to_list_of_substitutions, perform_substitutions
 
 
 @expose_action('arg')
@@ -113,7 +108,7 @@ class DeclareLaunchArgument(Action):
         default_value: Optional[SomeSubstitutionsType] = None,
         description: Optional[Text] = None,
         choices: Optional[List[Text]] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """Create a DeclareLaunchArgument action."""
         super().__init__(**kwargs)
@@ -126,20 +121,25 @@ class DeclareLaunchArgument(Action):
         if choices is not None:
             if len(choices) == 0:
                 self.__logger.error(
-                    'Provided choices arg is empty. Use None to ignore the choice list.')
+                    'Provided choices arg is empty. Use None to ignore the choice list.'
+                )
                 raise RuntimeError(
-                    'Provided choices arg is empty. Use None to ignore the choice list.')
+                    'Provided choices arg is empty. Use None to ignore the choice list.'
+                )
 
             # Check if a non substitution default value is provided and is a valid choice
             if default_value is not None and not isinstance(default_value, (Substitution, list)):
                 if default_value not in choices:
                     self.__logger.error(
                         'Provided default_value "{}" is not in provided choices "{}".'.format(
-                            default_value, choices)
+                            default_value, choices
+                        )
                     )
                     raise RuntimeError(
                         'Provided default_value "{}" is not in provided choices "{}".'.format(
-                            default_value, choices))
+                            default_value, choices
+                        )
+                    )
 
         self.__description = ''
         if description is None:
@@ -164,9 +164,7 @@ class DeclareLaunchArgument(Action):
 
     @classmethod
     def parse(
-        cls,
-        entity: Entity,
-        parser: 'Parser'
+        cls, entity: Entity, parser: 'Parser'
     ) -> Tuple[Type['DeclareLaunchArgument'], Dict[str, Any]]:
         """Parse `arg` tag."""
         _, kwargs = super().parse(entity, parser)
@@ -210,18 +208,24 @@ class DeclareLaunchArgument(Action):
             if self.default_value is None:
                 # Argument not already set and no default value given, error.
                 self.__logger.error(
-                    'Required launch argument "{}" (description: "{}") was not provided'
-                    .format(self.name, self.description)
+                    'Required launch argument "{}" (description: "{}") was not provided'.format(
+                        self.name, self.description
+                    )
                 )
                 raise RuntimeError(
-                    'Required launch argument "{}" was not provided.'.format(self.name))
-            context.launch_configurations[self.name] = \
-                perform_substitutions(context, self.default_value)
+                    'Required launch argument "{}" was not provided.'.format(self.name)
+                )
+            context.launch_configurations[self.name] = perform_substitutions(
+                context, self.default_value
+            )
 
         if self.__choices is not None:
             value = context.launch_configurations[self.name]
             if value not in self.__choices:
-                error_msg = ('Argument "{}" provided value "{}" is not valid. Valid options '
-                             'are: {}'.format(self.name, value, self.__choices))
+                error_msg = (
+                    'Argument "{}" provided value "{}" is not valid. Valid options are: {}'.format(
+                        self.name, value, self.__choices
+                    )
+                )
                 self.__logger.error(error_msg)
                 raise RuntimeError(error_msg)

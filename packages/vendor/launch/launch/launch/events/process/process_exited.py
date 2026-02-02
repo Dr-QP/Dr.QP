@@ -24,12 +24,7 @@ class ProcessExited(RunningProcessEvent):
 
     name = 'launch.events.process.ProcessExited'
 
-    def __init__(
-        self,
-        *,
-        returncode: int,
-        **kwargs: Any
-    ) -> None:
+    def __init__(self, *, returncode: int, **kwargs: Any) -> None:
         """
         Create a ProcessExited event.
 

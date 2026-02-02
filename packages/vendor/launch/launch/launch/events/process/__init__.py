@@ -16,9 +16,7 @@
 
 from .process_exited import ProcessExited
 from .process_io import ProcessIO
-from .process_matchers import matches_executable
-from .process_matchers import matches_name
-from .process_matchers import matches_pid
+from .process_matchers import matches_executable, matches_name, matches_pid
 from .process_started import ProcessStarted
 from .process_stderr import ProcessStderr
 from .process_stdin import ProcessStdin

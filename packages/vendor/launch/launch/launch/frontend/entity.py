@@ -14,13 +14,7 @@
 
 """Module for Entity class."""
 
-from typing import List
-from typing import Optional
-from typing import overload
-from typing import Text
-from typing import Type
-from typing import TypeVar
-
+from typing import List, Optional, overload, Text, Type, TypeVar
 
 TargetType = TypeVar('TargetType')
 
@@ -51,19 +45,32 @@ class Entity:
     # possibilities: present or not present.
     # => 6 overloads to cover every combination
     @overload
-    def get_attr(self, name: Text, *, data_type: Type[TargetType],  # noqa: F811
-                 optional: bool, can_be_str: bool = True) -> Optional[TargetType]:
-        ...
+    def get_attr(
+        self,
+        name: Text,
+        *,
+        data_type: Type[TargetType],  # noqa: F811
+        optional: bool,
+        can_be_str: bool = True,
+    ) -> Optional[TargetType]: ...
 
     @overload
-    def get_attr(self, name: Text, *, data_type: Type[TargetType],  # noqa: F811
-                 can_be_str: bool = True) -> TargetType:
-        ...
+    def get_attr(
+        self,
+        name: Text,
+        *,
+        data_type: Type[TargetType],  # noqa: F811
+        can_be_str: bool = True,
+    ) -> TargetType: ...
 
     @overload
-    def get_attr(self, name: Text, *, optional: bool,  # noqa: F811
-                 can_be_str: bool = True) -> Optional[str]:
-        ...
+    def get_attr(
+        self,
+        name: Text,
+        *,
+        optional: bool,  # noqa: F811
+        can_be_str: bool = True,
+    ) -> Optional[str]: ...
 
     @overload
     def get_attr(self, name: Text, *, can_be_str: bool = True) -> str:  # noqa: F811

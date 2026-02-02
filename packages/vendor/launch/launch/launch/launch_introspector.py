@@ -14,22 +14,15 @@
 
 """Module for the LaunchIntrospector class."""
 
-from typing import cast
-from typing import Iterable
-from typing import List
-from typing import Text
+from typing import cast, Iterable, List, Text
 
 from .action import Action
-from .actions import EmitEvent
-from .actions import ExecuteProcess
-from .actions import LogInfo
-from .actions import RegisterEventHandler
+from .actions import EmitEvent, ExecuteProcess, LogInfo, RegisterEventHandler
 from .event_handler import BaseEventHandler
 from .launch_description import LaunchDescription
 from .launch_description_entity import LaunchDescriptionEntity
 from .some_substitutions_type import SomeSubstitutionsType
-from .utilities import is_a
-from .utilities import normalize_to_list_of_substitutions
+from .utilities import is_a, normalize_to_list_of_substitutions
 
 
 def indent(lines: List[Text], indention: Text = '    ') -> List[Text]:
@@ -51,7 +44,7 @@ def tree_like_indent(lines: List[Text]) -> List[Text]:
             if previous_first_non_whitespace <= first_non_whitespace:
                 result[-1] = result[-1].replace('└', '├', 1)
         previous_first_non_whitespace = first_non_whitespace
-        line = line[0:first_non_whitespace - 4] + '└── ' + line[first_non_whitespace:]
+        line = line[0 : first_non_whitespace - 4] + '└── ' + line[first_non_whitespace:]
         result.append(line)
     if result[-1].startswith('│'):
         result[-1] = ' ' + result[-1][1:]
@@ -93,7 +86,7 @@ def format_event_handler(event_handler: BaseEventHandler) -> List[Text]:
             # Note due to a bug in mypy ( https://github.com/python/mypy/issues/13709 ),
             # the variable is not correctly narrowed to Iterable[...] in this branch...
             result.extend(
-              indent(format_entities(cast(Iterable[LaunchDescriptionEntity], entities)))
+                indent(format_entities(cast(Iterable[LaunchDescriptionEntity], entities)))
             )
         return result
     else:
@@ -110,14 +103,22 @@ def format_action(action: Action) -> List[Text]:
         typed_action = cast(ExecuteProcess, action)
         msg = 'ExecuteProcess(cmd=[{}], cwd={}, env={}, shell={})'.format(
             ', '.join([format_substitutions(x) for x in typed_action.cmd]),
-            typed_action.cwd if typed_action.cwd is None else "'{}'".format(
-                format_substitutions(typed_action.cwd)
-            ),
-            typed_action.env if typed_action.env is None else '{' + ', '.join(
-                ['{}: {}'.format(format_substitutions(k),  # type:ignore[misc]
-                                 format_substitutions(v))
-                 for k, v in typed_action.env]
-                 ) + '}',
+            typed_action.cwd
+            if typed_action.cwd is None
+            else "'{}'".format(format_substitutions(typed_action.cwd)),
+            typed_action.env
+            if typed_action.env is None
+            else '{'
+            + ', '.join(
+                [
+                    '{}: {}'.format(
+                        format_substitutions(k),  # type:ignore[misc]
+                        format_substitutions(v),
+                    )
+                    for k, v in typed_action.env
+                ]
+            )
+            + '}',
             typed_action.shell,
         )
         return [msg]

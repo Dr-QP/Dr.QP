@@ -16,20 +16,17 @@
 
 import logging
 import sys
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Tuple
-from typing import Type
+from typing import Any, Dict, List, Tuple, Type
 import warnings
 
 import launch.logging
 
-
 from ..action import Action
-from ..frontend import Entity
-from ..frontend import expose_action
-from ..frontend import Parser  # noqa: F401
+from ..frontend import (
+    Entity,
+    expose_action,
+    Parser,  # noqa: F401
+)
 from ..launch_context import LaunchContext
 from ..some_substitutions_type import SomeSubstitutionsType
 from ..substitution import Substitution
@@ -37,9 +34,7 @@ from ..utilities import normalize_to_list_of_substitutions
 
 
 class LogInterface(Action):
-
-    def __init__(self, *, msg: SomeSubstitutionsType,
-                 level: SomeSubstitutionsType, **kwargs):
+    def __init__(self, *, msg: SomeSubstitutionsType, level: SomeSubstitutionsType, **kwargs):
         """Create a Log action."""
         super().__init__(**kwargs)
 
@@ -59,28 +54,29 @@ class LogInterface(Action):
 
     def execute(self, context: LaunchContext) -> None:
         """Execute the action."""
-        level_sub = ''.join([context.perform_substitution(sub)
-                             for sub in self.level]).upper()
+        level_sub = ''.join([context.perform_substitution(sub) for sub in self.level]).upper()
 
         if sys.version_info >= (3, 11):
             log_levels = logging.getLevelNamesMapping()
         else:
             # TODO: Remove after Python 3.11+ is minimum support
-            log_levels = {'NOTSET': logging.NOTSET,
-                          'DEBUG': logging.DEBUG,
-                          'INFO': logging.INFO,
-                          'WARNING': logging.WARNING,
-                          'ERROR': logging.ERROR,
-                          'CRITICAL': logging.CRITICAL}
+            log_levels = {
+                'NOTSET': logging.NOTSET,
+                'DEBUG': logging.DEBUG,
+                'INFO': logging.INFO,
+                'WARNING': logging.WARNING,
+                'ERROR': logging.ERROR,
+                'CRITICAL': logging.CRITICAL,
+            }
 
         if level_sub not in log_levels:
             raise KeyError(f"Invalid log level '{level_sub}', expected: {log_levels.keys()}")
 
         level_int = log_levels[level_sub]
 
-        self.__logger.log(level_int,
-                          ''.join([context.perform_substitution(sub) for sub in self.msg])
-                          )
+        self.__logger.log(
+            level_int, ''.join([context.perform_substitution(sub) for sub in self.msg])
+        )
         return None
 
 
@@ -89,11 +85,7 @@ class Log(LogInterface):
     """Action that logs a message when executed."""
 
     @classmethod
-    def parse(
-        cls,
-        entity: Entity,
-        parser: 'Parser'
-    ) -> Tuple[Type['Log'], Dict[str, Any]]:
+    def parse(cls, entity: Entity, parser: 'Parser') -> Tuple[Type['Log'], Dict[str, Any]]:
         """Parse `log` tag."""
         _, kwargs = super().parse(entity, parser)
         kwargs['msg'] = parser.parse_substitution(entity.get_attr('message'))
@@ -105,7 +97,8 @@ class Log(LogInterface):
             warnings.warn(
                 'The action log now expects a log level.'
                 ' Either provide one or switch to using the log_info action',
-                stacklevel=2)
+                stacklevel=2,
+            )
             level = 'INFO'
 
         kwargs['level'] = parser.parse_substitution(level)
@@ -113,12 +106,9 @@ class Log(LogInterface):
 
 
 class SharedLogSpecificParse(Action):
-
     @classmethod
     def parse(
-        cls,
-        entity: Entity,
-        parser: 'Parser'
+        cls, entity: Entity, parser: 'Parser'
     ) -> Tuple[Type['SharedLogSpecificParse'], Dict[str, Any]]:
         """Parse `log_*` tag."""
         _, kwargs = super().parse(entity, parser)

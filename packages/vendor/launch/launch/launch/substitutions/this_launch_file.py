@@ -14,19 +14,13 @@
 
 """Module for the ThisLaunchFile substitution."""
 
-from typing import Any
-from typing import Dict
-from typing import Sequence
-from typing import Text
-from typing import Tuple
-from typing import Type
+from typing import Any, Dict, Sequence, Text, Tuple, Type
 
-
-from .substitution_failure import SubstitutionFailure
 from ..frontend.expose import expose_substitution
 from ..launch_context import LaunchContext
 from ..some_substitutions_type import SomeSubstitutionsType
 from ..substitution import Substitution
+from .substitution_failure import SubstitutionFailure
 
 
 @expose_substitution('filename')
@@ -38,8 +32,9 @@ class ThisLaunchFile(Substitution):
         super().__init__()
 
     @classmethod
-    def parse(cls, data: Sequence[SomeSubstitutionsType]
-              ) -> Tuple[Type['ThisLaunchFile'], Dict[Any, Any]]:
+    def parse(
+        cls, data: Sequence[SomeSubstitutionsType]
+    ) -> Tuple[Type['ThisLaunchFile'], Dict[Any, Any]]:
         """Parse `ThisLaunchFile` substitution."""
         if len(data) != 0:
             raise TypeError("filename substitution doesn't expect arguments")
@@ -59,7 +54,8 @@ class ThisLaunchFile(Substitution):
         :raises: SubstitutionFailure if not in a launch file
         """
         subst_failure = SubstitutionFailure(
-                'ThisLaunchFile used outside of a launch file (in a script)')
+            'ThisLaunchFile used outside of a launch file (in a script)'
+        )
         if 'current_launch_file_path' not in context.get_locals_as_dict():
             raise subst_failure
         return context.locals.current_launch_file_path

@@ -15,12 +15,7 @@
 """Module for LaunchDescription class."""
 
 import sys
-from typing import Iterable
-from typing import List
-from typing import Optional
-from typing import Text
-from typing import Tuple
-from typing import TYPE_CHECKING
+from typing import Iterable, List, Optional, Text, Tuple, TYPE_CHECKING
 
 import launch.logging
 
@@ -55,7 +50,7 @@ class LaunchDescription(LaunchDescriptionEntity):
         self,
         initial_entities: Optional[Iterable[LaunchDescriptionEntity]] = None,
         *,
-        deprecated_reason: Optional[Text] = None
+        deprecated_reason: Optional[Text] = None,
     ) -> None:
         """Create a LaunchDescription."""
         self.__entities = list(initial_entities) if initial_entities is not None else []
@@ -78,8 +73,9 @@ class LaunchDescription(LaunchDescriptionEntity):
         """Override describe_sub_entities from LaunchDescriptionEntity to return sub entities."""
         return self.__entities
 
-    def get_launch_arguments(self, conditional_inclusion: bool = False
-                             ) -> List[DeclareLaunchArgument]:
+    def get_launch_arguments(
+        self, conditional_inclusion: bool = False
+    ) -> List[DeclareLaunchArgument]:
         """
         Return a list of :py:class:`launch.actions.DeclareLaunchArgument` actions.
 
@@ -87,9 +83,10 @@ class LaunchDescription(LaunchDescriptionEntity):
         for more details.
         """
         return [
-            item[0] for item in
-            self.get_launch_arguments_with_include_launch_description_actions(
-                conditional_inclusion)
+            item[0]
+            for item in self.get_launch_arguments_with_include_launch_description_actions(
+                conditional_inclusion
+            )
         ]
 
     def get_launch_arguments_with_include_launch_description_actions(
@@ -126,8 +123,10 @@ class LaunchDescription(LaunchDescriptionEntity):
         declaration is used.
         """
         from .actions import IncludeLaunchDescription  # noqa: F811
+
         declared_launch_arguments: List[
-            Tuple[DeclareLaunchArgument, List[IncludeLaunchDescription]]] = []
+            Tuple[DeclareLaunchArgument, List[IncludeLaunchDescription]]
+        ] = []
         from .actions import ResetLaunchConfigurations
 
         def process_entities(entities, *, _conditional_inclusion: bool, nested_ild_actions=None):
@@ -154,7 +153,8 @@ class LaunchDescription(LaunchDescriptionEntity):
                         process_entities(
                             entity.describe_sub_entities(),
                             _conditional_inclusion=False,
-                            nested_ild_actions=next_nested_ild_actions)
+                            nested_ild_actions=next_nested_ild_actions,
+                        )
                     except Exception as e:
                         if sys.version_info >= (3, 11):
                             e.add_note(f'processing sub-entities of entity: {entity}')
@@ -163,7 +163,8 @@ class LaunchDescription(LaunchDescriptionEntity):
                         process_entities(
                             conditional_sub_entity[1],
                             _conditional_inclusion=True,
-                            nested_ild_actions=next_nested_ild_actions)
+                            nested_ild_actions=next_nested_ild_actions,
+                        )
 
         process_entities(self.entities, _conditional_inclusion=conditional_inclusion)
 

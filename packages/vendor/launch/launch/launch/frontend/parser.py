@@ -20,28 +20,21 @@ import itertools
 import os.path
 import sys
 import traceback
-from typing import List
-from typing import Optional
-from typing import Set
-from typing import Text
-from typing import TextIO
-from typing import Tuple
-from typing import Type
-from typing import TYPE_CHECKING
-from typing import Union
+from typing import List, Optional, Set, Text, TextIO, Tuple, Type, TYPE_CHECKING, Union
 import warnings
 
-from .entity import Entity
-from .expose import instantiate_action
-from .parse_substitution import parse_if_substitutions
-from .parse_substitution import parse_substitution
-from .parse_substitution import replace_escaped_characters
 from ..action import Action
 from ..invalid_launch_file_error import InvalidLaunchFileError
 from ..substitution import Substitution
-from ..utilities.type_utils import NormalizedValueType
-from ..utilities.type_utils import StrSomeValueType
+from ..utilities.type_utils import NormalizedValueType, StrSomeValueType
 from ..utilities.typing_file_path import FilePath
+from .entity import Entity
+from .expose import instantiate_action
+from .parse_substitution import (
+    parse_if_substitutions,
+    parse_substitution,
+    replace_escaped_characters,
+)
 
 if TYPE_CHECKING:
     from ..launch_description import LaunchDescription
@@ -80,8 +73,10 @@ class Parser:
                 try:
                     entry_point.load()
                 except Exception:
-                    warnings.warn(f'Failed to load the launch extension: {entry_point.name}\n'
-                                  f'{traceback.format_exc()}')
+                    warnings.warn(
+                        f'Failed to load the launch extension: {entry_point.name}\n'
+                        f'{traceback.format_exc()}'
+                    )
             cls.extensions_loaded = True
 
     @classmethod
@@ -98,8 +93,10 @@ class Parser:
                 try:
                     parsers[entry_point.name] = entry_point.load()
                 except Exception:
-                    warnings.warn(f'Failed to load the parser extension: {entry_point.name}\n'
-                                  f'{traceback.format_exc()}')
+                    warnings.warn(
+                        f'Failed to load the parser extension: {entry_point.name}\n'
+                        f'{traceback.format_exc()}'
+                    )
             cls.frontend_parsers = dict(sorted(parsers.items()))
 
     def parse_action(self, entity: Entity) -> Action:
@@ -111,9 +108,7 @@ class Parser:
         """Parse a substitution."""
         return parse_substitution(value)
 
-    def parse_if_substitutions(
-        self, value: StrSomeValueType
-    ) -> NormalizedValueType:
+    def parse_if_substitutions(self, value: StrSomeValueType) -> NormalizedValueType:
         """See :py:func:`launch.frontend.parser.parse_if_substitutions`."""
         return parse_if_substitutions(value)
 
@@ -125,6 +120,7 @@ class Parser:
         """Parse a launch description."""
         # Avoid recursive import
         from ..launch_description import LaunchDescription  # noqa: F811
+
         if entity.type_name != 'launch':
             raise RuntimeError("Expected 'launch' as root tag")
         deprecated = entity.get_attr('deprecated', optional=True)
@@ -145,7 +141,8 @@ class Parser:
     ) -> bool:
         """Return an entity loaded with a markup file."""
         warnings.warn(
-            'Parser.is_extension_valid is deprecated, use Parser.is_filename_valid instead')
+            'Parser.is_extension_valid is deprecated, use Parser.is_filename_valid instead'
+        )
         cls.load_parser_implementations()
         assert cls.frontend_parsers is not None
         return extension in cls.frontend_parsers
@@ -158,7 +155,8 @@ class Parser:
         """Return an entity loaded with a markup file."""
         warnings.warn(
             'Parser.get_parser_from_extension is deprecated, '
-            'use Parser.get_parsers_from_filename instead')
+            'use Parser.get_parsers_from_filename instead'
+        )
         cls.load_parser_implementations()
         assert cls.frontend_parsers is not None
         try:
@@ -182,10 +180,7 @@ class Parser:
         """Return `True` if the filename is valid for any parser."""
         cls.load_parser_implementations()
         assert cls.frontend_parsers is not None
-        return any(
-            parser.may_parse(filename)
-            for parser in cls.frontend_parsers.values()
-        )
+        return any(parser.may_parse(filename) for parser in cls.frontend_parsers.values())
 
     @classmethod
     def get_parsers_from_filename(
@@ -195,20 +190,19 @@ class Parser:
         """Return a list of parsers which entity loaded with a markup file."""
         cls.load_parser_implementations()
         assert cls.frontend_parsers is not None
-        return [
-            parser for parser in cls.frontend_parsers.values()
-            if parser.may_parse(filename)
-        ]
+        return [parser for parser in cls.frontend_parsers.values() if parser.may_parse(filename)]
 
     @classmethod
     def get_file_extensions_from_parsers(cls) -> Set[Type['Parser']]:
         """Return a set of file extensions known to the parser implementations."""
         cls.load_parser_implementations()
         assert cls.frontend_parsers is not None
-        return set(itertools.chain.from_iterable(
-            parser_extension.get_file_extensions()
-            for parser_extension in cls.frontend_parsers.values()
-        ))
+        return set(
+            itertools.chain.from_iterable(
+                parser_extension.get_file_extensions()
+                for parser_extension in cls.frontend_parsers.values()
+            )
+        )
 
     @classmethod
     def load(
@@ -239,8 +233,7 @@ class Parser:
             implementations = cls.get_parsers_from_filename(filename)
             assert cls.frontend_parsers is not None
             implementations += [
-                parser for parser in cls.frontend_parsers.values()
-                if parser not in implementations
+                parser for parser in cls.frontend_parsers.values() if parser not in implementations
             ]
 
             exceptions = []

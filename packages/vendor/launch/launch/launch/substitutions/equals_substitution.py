@@ -15,19 +15,7 @@
 """Module for the EqualsSubstitution substitution."""
 
 import math
-
-from typing import Any
-from typing import cast
-from typing import Dict
-from typing import Iterable
-from typing import List
-from typing import Optional
-from typing import Sequence
-from typing import Text
-from typing import Tuple
-from typing import Type
-from typing import Union
-
+from typing import Any, cast, Dict, Iterable, List, Optional, Sequence, Text, Tuple, Type, Union
 
 from ..frontend import expose_substitution
 from ..launch_context import LaunchContext
@@ -64,9 +52,7 @@ class EqualsSubstitution(Substitution):
     """
 
     def __init__(
-        self,
-        left: Optional[Union[Any, Iterable[Any]]],
-        right: Optional[Union[Any, Iterable[Any]]]
+        self, left: Optional[Union[Any, Iterable[Any]]], right: Optional[Union[Any, Iterable[Any]]]
     ) -> None:
         """Create an EqualsSubstitution substitution."""
         super().__init__()
@@ -92,15 +78,16 @@ class EqualsSubstitution(Substitution):
         # way is_substitution is written, it's hard to get mypy to typecheck
         # it correctly, so cast here.
         self.__left = normalize_to_list_of_substitutions(
-                cast(Union[str, Substitution, Sequence[Union[str, Substitution]]], left)
-                )
+            cast(Union[str, Substitution, Sequence[Union[str, Substitution]]], left)
+        )
         self.__right = normalize_to_list_of_substitutions(
-                cast(Union[str, Substitution, Sequence[Union[str, Substitution]]], right)
-                )
+            cast(Union[str, Substitution, Sequence[Union[str, Substitution]]], right)
+        )
 
     @classmethod
-    def parse(cls, data: Sequence[SomeSubstitutionsType]
-              ) -> Tuple[Type['EqualsSubstitution'], Dict[str, Any]]:
+    def parse(
+        cls, data: Sequence[SomeSubstitutionsType]
+    ) -> Tuple[Type['EqualsSubstitution'], Dict[str, Any]]:
         """Parse `EqualsSubstitution` substitution."""
         if len(data) != 2:
             raise TypeError('and substitution expects 2 arguments')

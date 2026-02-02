@@ -16,21 +16,31 @@
 
 import asyncio
 import collections.abc
-from typing import Any  # noqa: F401
-from typing import cast
-from typing import Dict  # noqa: F401
-from typing import Iterable
-from typing import List
-from typing import Optional
-from typing import Text
-from typing import Tuple
-from typing import Type
-from typing import Union
+from typing import (
+    Any,  # noqa: F401
+    cast,
+    Dict,  # noqa: F401
+    Iterable,
+    List,
+    Optional,
+    Text,
+    Tuple,
+    Type,
+    Union,
+)
 import warnings
 
 import launch.logging
 
-
+from ..action import Action
+from ..event_handler import EventHandler
+from ..events import Shutdown, TimerEvent
+from ..frontend import Entity, expose_action, Parser
+from ..launch_context import LaunchContext
+from ..launch_description_entity import LaunchDescriptionEntity
+from ..some_entities_type import SomeEntitiesType
+from ..some_substitutions_type import SomeSubstitutionsType, SomeSubstitutionsType_types_tuple
+from ..utilities import ensure_argument_type, is_a_subclass, type_utils
 from .opaque_function import OpaqueFunction
 from .pop_environment import PopEnvironment
 from .pop_launch_configurations import PopLaunchConfigurations
@@ -38,22 +48,6 @@ from .push_environment import PushEnvironment
 from .push_launch_configurations import PushLaunchConfigurations
 from .replace_environment_variables import ReplaceEnvironmentVariables
 from .reset_launch_configurations import ResetLaunchConfigurations
-
-from ..action import Action
-from ..event_handler import EventHandler
-from ..events import Shutdown
-from ..events import TimerEvent
-from ..frontend import Entity
-from ..frontend import expose_action
-from ..frontend import Parser
-from ..launch_context import LaunchContext
-from ..launch_description_entity import LaunchDescriptionEntity
-from ..some_entities_type import SomeEntitiesType
-from ..some_substitutions_type import SomeSubstitutionsType
-from ..some_substitutions_type import SomeSubstitutionsType_types_tuple
-from ..utilities import ensure_argument_type
-from ..utilities import is_a_subclass
-from ..utilities import type_utils
 
 
 @expose_action('timer')
@@ -75,7 +69,7 @@ class TimerAction(Action):
         period: Union[float, SomeSubstitutionsType],
         actions: Iterable[LaunchDescriptionEntity],
         cancel_on_shutdown: Union[bool, SomeSubstitutionsType] = True,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """
         Create a TimerAction.
@@ -93,7 +87,8 @@ class TimerAction(Action):
             warnings.warn(
                 "The parameter 'period' must be a float or substitution,"
                 'passing a string literal was deprecated',
-                stacklevel=2)
+                stacklevel=2,
+            )
         self.__period = type_utils.normalize_typed_substitution(period, float)
         self.__actions = actions
         self.__context_locals: Dict[Text, Any] = {}
@@ -106,7 +101,8 @@ class TimerAction(Action):
         self._canceled_future: Optional[asyncio.Future[bool]] = None
 
         self.__cancel_on_shutdown = type_utils.normalize_typed_substitution(
-            cancel_on_shutdown, bool)
+            cancel_on_shutdown, bool
+        )
         self.__logger = launch.logging.get_logger(__name__)
 
     async def _wait_to_fire_event(self, context):
@@ -128,10 +124,12 @@ class TimerAction(Action):
         _, kwargs = super().parse(entity, parser)
 
         kwargs['period'] = parser.parse_if_substitutions(
-                entity.get_attr('period', data_type=float, can_be_str=True))
+            entity.get_attr('period', data_type=float, can_be_str=True)
+        )
         kwargs['actions'] = [parser.parse_action(child) for child in entity.children]
         cancel_on_shutdown = entity.get_attr(
-            'cancel_on_shutdown', optional=True, data_type=bool, can_be_str=True)
+            'cancel_on_shutdown', optional=True, data_type=bool, can_be_str=True
+        )
         if cancel_on_shutdown is not None:
             kwargs['cancel_on_shutdown'] = parser.parse_if_substitutions(cancel_on_shutdown)
         return cls, kwargs
@@ -148,10 +146,14 @@ class TimerAction(Action):
         """Return a description of this TimerAction."""
         return 'TimerAction(period={}, actions=<actions>)'.format(self.__period)
 
-    def describe_conditional_sub_entities(self) -> List[Tuple[
-        Text,
-        Iterable['LaunchDescriptionEntity'],
-    ]]:
+    def describe_conditional_sub_entities(
+        self,
+    ) -> List[
+        Tuple[
+            Text,
+            Iterable['LaunchDescriptionEntity'],
+        ]
+    ]:
         """Return the actions that will result when the timer expires, but was not canceled."""
         return [('{} seconds pass without being canceled'.format(self.__period), self.__actions)]
 
@@ -209,14 +211,16 @@ class TimerAction(Action):
 
         # Once per context, install the general purpose OnTimerEvent event handler.
         if not hasattr(context, '_TimerAction__event_handler_has_been_installed'):
-            context.register_event_handler(EventHandler(
-                matcher=lambda event: is_a_subclass(event, TimerEvent),
-                entities=OpaqueFunction(
-                    function=lambda context: (
-                        cast(TimerEvent, context.locals.event).timer_action.handle(context)
-                    )
-                ),
-            ))
+            context.register_event_handler(
+                EventHandler(
+                    matcher=lambda event: is_a_subclass(event, TimerEvent),
+                    entities=OpaqueFunction(
+                        function=lambda context: (
+                            cast(TimerEvent, context.locals.event).timer_action.handle(context)
+                        )
+                    ),
+                )
+            )
             setattr(context, '_TimerAction__event_handler_has_been_installed', True)
 
         # Capture the current context locals and launch configuration so the yielded actions can
@@ -234,7 +238,7 @@ class TimerAction(Action):
             context.register_event_handler(
                 EventHandler(
                     matcher=lambda event: is_a_subclass(event, Shutdown),
-                    entities=OpaqueFunction(function=lambda context: self.cancel())
+                    entities=OpaqueFunction(function=lambda context: self.cancel()),
                 )
             )
 

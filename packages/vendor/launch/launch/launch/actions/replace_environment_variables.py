@@ -14,17 +14,12 @@
 
 """Module for the ReplaceEnvironmentVariables action."""
 
-from typing import List
-from typing import Mapping
-from typing import Text
+from typing import List, Mapping, Text
 
 from ..action import Action
-from ..frontend import Entity
-from ..frontend import expose_action
-from ..frontend import Parser
+from ..frontend import Entity, expose_action, Parser
 from ..launch_context import LaunchContext
-from ..utilities import normalize_to_list_of_substitutions
-from ..utilities import perform_substitutions
+from ..utilities import normalize_to_list_of_substitutions, perform_substitutions
 
 
 @expose_action('rep_env')
@@ -44,19 +39,17 @@ class ReplaceEnvironmentVariables(Action):
         self.__environment = environment
 
     @classmethod
-    def parse(
-        cls,
-        entity: Entity,
-        parser: Parser
-    ):
+    def parse(cls, entity: Entity, parser: Parser):
         """Return the `ReplaceEnvironmentVariables` action and kwargs for constructing it."""
         _, kwargs = super().parse(entity, parser)
         env = entity.get_attr('env', data_type=List[Entity], optional=True)
 
         if env is not None:
             kwargs['environment'] = {
-                tuple(parser.parse_substitution(e.get_attr('name'))):
-                parser.parse_substitution(e.get_attr('value')) for e in env
+                tuple(parser.parse_substitution(e.get_attr('name'))): parser.parse_substitution(
+                    e.get_attr('value')
+                )
+                for e in env
             }
             for e in env:
                 e.assert_entity_completely_parsed()

@@ -14,13 +14,7 @@
 
 """Module for OnShutdown class."""
 
-from typing import Any
-from typing import Callable
-from typing import cast
-from typing import Optional
-from typing import Text
-from typing import TYPE_CHECKING
-from typing import Union
+from typing import Any, Callable, cast, Optional, Text, TYPE_CHECKING, Union
 
 from ..event import Event
 from ..event_handler import BaseEventHandler
@@ -33,10 +27,11 @@ if TYPE_CHECKING:
 
 
 def gen_handler(
-        entities: SomeEntitiesType
-        ) -> Callable[[Shutdown, 'LaunchContext'], SomeEntitiesType]:
+    entities: SomeEntitiesType,
+) -> Callable[[Shutdown, 'LaunchContext'], SomeEntitiesType]:
     def handler(event: Shutdown, context: 'LaunchContext') -> SomeEntitiesType:
         return entities
+
     return handler
 
 
@@ -46,9 +41,10 @@ class OnShutdown(BaseEventHandler):
     def __init__(
         self,
         *,
-        on_shutdown: Union[SomeEntitiesType,
-                           Callable[[Shutdown, 'LaunchContext'], Optional[SomeEntitiesType]]],
-        **kwargs: Any
+        on_shutdown: Union[
+            SomeEntitiesType, Callable[[Shutdown, 'LaunchContext'], Optional[SomeEntitiesType]]
+        ],
+        **kwargs: Any,
     ) -> None:
         """Create an OnShutdown event handler."""
         super().__init__(

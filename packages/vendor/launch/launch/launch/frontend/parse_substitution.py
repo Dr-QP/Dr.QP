@@ -19,15 +19,11 @@ import re
 from typing import Text
 
 from ament_index_python.packages import get_package_share_directory
+from lark import Lark, Token, Transformer
 
-from lark import Lark
-from lark import Token
-from lark import Transformer
-
-from .expose import instantiate_substitution
 from ..substitutions import TextSubstitution
-from ..utilities.type_utils import NormalizedValueType
-from ..utilities.type_utils import StrSomeValueType
+from ..utilities.type_utils import NormalizedValueType, StrSomeValueType
+from .expose import instantiate_substitution
 
 
 def replace_escaped_characters(data: Text) -> Text:
@@ -96,8 +92,7 @@ class ExtractSubstitution(Transformer):
 
 
 def get_grammar_path() -> str:
-    return os.path.join(
-        get_package_share_directory('launch'), 'frontend', 'grammar.lark')
+    return os.path.join(get_package_share_directory('launch'), 'frontend', 'grammar.lark')
 
 
 _parser = None
@@ -116,9 +111,7 @@ def parse_substitution(string_value):
     return transformer.transform(tree)
 
 
-def parse_if_substitutions(
-    value: StrSomeValueType
-) -> NormalizedValueType:
+def parse_if_substitutions(value: StrSomeValueType) -> NormalizedValueType:
     """
     Parse substitutions in `value`, if there are any, and return a normalized value type.
 
@@ -141,6 +134,7 @@ def parse_if_substitutions(
             return output
         data_types.add(type(value))
         return value
+
     if isinstance(value, list):
         output = [_parse_if(x) for x in value]
     else:

@@ -16,9 +16,7 @@
 
 import collections.abc
 from pathlib import Path
-from typing import Iterable
-from typing import Text
-from typing import Union
+from typing import Iterable, Text, Union
 
 from .substitution import Substitution
 
