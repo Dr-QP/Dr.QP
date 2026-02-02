@@ -17,20 +17,27 @@
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>drqp_a1_16_driver</depend>
-  <depend>drqp_description</depend>
   <depend>ament_index_cpp</depend>
   <depend>yaml-cpp</depend>
   <exec_depend>joy</exec_depend>
   <exec_depend>ros2_controllers_test_nodes</exec_depend>
   <exec_depend>rqt_joint_trajectory_controller</exec_depend>
   <exec_depend>battery_state_broadcaster</exec_depend>
+  <exec_depend>joint_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher_gui</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
 
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>drqp_lint_common</test_depend>
   <test_depend>ament_cmake_gmock</test_depend>
+  <test_depend>ament_cmake_pytest</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
+    <gazebo_ros gazebo_model_path="${prefix}/.."/> <!-- This adds package path GAZEBO_MODEL_PATH which is required to load meshes with package_to_model conversion-->
   </export>
 </package>

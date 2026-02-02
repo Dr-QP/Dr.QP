@@ -20,43 +20,23 @@
 
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
 def generate_launch_description():
-    pkg_share_path = get_package_share_path('drqp_description')
-
-    use_sim_time = LaunchConfiguration('use_sim_time')
-
-    rviz_node = Node(
-        package='rviz2',
-        executable='rviz2',
-        name='rviz2',
-        output='screen',
-        arguments=[
-            '-d',
-            LaunchConfiguration('rviz_config'),
-            '-f',
-            LaunchConfiguration('rviz_frame'),
-        ],
-        parameters=[{'use_sim_time': use_sim_time}],
-    )
+    pkg_launch_path = get_package_share_path('drqp_control') / 'launch'
 
     return LaunchDescription(
         [
-            DeclareLaunchArgument(
-                name='use_sim_time', default_value='true', description='Use sim time if true'
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(str(pkg_launch_path / 'rsp.launch.py'))
             ),
-            DeclareLaunchArgument(
-                name='rviz_frame', default_value='ground', description='Base model frame in rviz'
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(str(pkg_launch_path / 'jsp.launch.py'))
             ),
-            DeclareLaunchArgument(
-                name='rviz_config',
-                default_value=str(pkg_share_path / 'rviz' / 'drqp_description.rviz'),
-                description='Absolute path to rviz config file',
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(str(pkg_launch_path / 'rviz.launch.py'))
             ),
-            rviz_node,
         ]
     )

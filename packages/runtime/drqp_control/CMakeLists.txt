@@ -67,6 +67,9 @@ install(
   DIRECTORY
     config
     launch
+    urdf
+    meshes
+    rviz
   DESTINATION share/${PROJECT_NAME}
 )
 
@@ -85,6 +88,9 @@ if(BUILD_TESTING)
 
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+
+  find_package(ament_cmake_pytest REQUIRED)
+  ament_add_pytest_test(test_urdf test/test_urdf.py)
 
   #TODO: Add gmock tests for hardware interface from
   # https://github.com/ros-controls/ros2_control/blob/jazzy/hardware_interface/CMakeLists.txt
