@@ -32,7 +32,7 @@ def generate_launch_description():
     use_gazebo = LaunchConfiguration('use_gazebo')
     show_rviz = LaunchConfiguration('show_rviz')
 
-    description_launch_path = get_package_share_path('drqp_description') / 'launch'
+    description_launch_path = get_package_share_path('drqp_control') / 'launch'
 
     robot_controllers = PathJoinSubstitution(
         [
