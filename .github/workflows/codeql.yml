@@ -108,7 +108,7 @@ jobs:
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@v4
       with:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
@@ -140,7 +140,7 @@ jobs:
         colcon build --cmake-args -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@v4
       with:
         category: "/language:${{matrix.language}}"
         output: sarif-results
@@ -173,7 +173,7 @@ jobs:
           -**/node_modules/**
 
     - name: Upload SARIF
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       id: upload-sarif
       with:
         sarif_file: ${{ steps.sarif.outputs.file }}
