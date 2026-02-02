@@ -7,14 +7,14 @@
     <visual>
       <origin xyz="0 0 -${body_height/2}" rpy="${pi/2} 0 ${pi}" />
       <geometry>
-        <mesh filename="package://drqp_description/meshes/body-simple.stl" />
+        <mesh filename="package://drqp_control/meshes/body-simple.stl" />
       </geometry>
       <material name="drqp_black"/>
     </visual>
     <collision>
       <origin xyz="0 0 -${body_height/2}" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://drqp_description/meshes/body-collision.stl" />
+        <mesh filename="package://drqp_control/meshes/body-collision.stl" />
       </geometry>
     </collision>
     <inertial>

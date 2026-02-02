@@ -27,7 +27,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
-    pkg_share_path = get_package_share_path('drqp_description')
+    pkg_share_path = get_package_share_path('drqp_control')
 
     use_gazebo = LaunchConfiguration('use_gazebo')
     hardware_device_address = LaunchConfiguration('hardware_device_address')
