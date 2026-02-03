@@ -5,13 +5,13 @@
   <xacro:arg name="use_gazebo" default="false" />
 
   <material name="drqp_black">
-    <texture filename="package://drqp_description/meshes/drqp_black.png"/>
+    <texture filename="package://drqp_control/meshes/drqp_black.png"/>
   </material>
 
   <xacro:property name="robot_height" value="0.085" />
 
-  <xacro:include filename="$(find drqp_description)/urdf/body.urdf.xacro"/>
-  <xacro:include filename="$(find drqp_description)/urdf/leg.urdf.xacro"/>
+  <xacro:include filename="$(find drqp_control)/urdf/body.urdf.xacro"/>
+  <xacro:include filename="$(find drqp_control)/urdf/leg.urdf.xacro"/>
 
   <xacro:leg robot_name="$(arg robot_name)" prefix="left_front" x="0.11692" y="0.06387" yaw="${pi/4}"/>
   <xacro:leg robot_name="$(arg robot_name)" prefix="right_front" x="0.11692" y="-0.06387" yaw="${-pi/4}"/>
@@ -30,10 +30,10 @@
       <child link="$(arg robot_name)/base_link"/>
   </joint>
 
-  <xacro:include filename="$(find drqp_description)/urdf/ros2_control.urdf.xacro"/>
+  <xacro:include filename="$(find drqp_control)/urdf/ros2_control.urdf.xacro"/>
   <xacro:drqp_ros2_control robot_name="$(arg robot_name)" device_address="$(arg hardware_device_address)" use_gazebo="$(arg use_gazebo)" />
 
-  <xacro:include filename="$(find drqp_description)/urdf/gazebo.xacro"/>
+  <xacro:include filename="$(find drqp_control)/urdf/gazebo.xacro"/>
   <xacro:gazebo />
 
   <gazebo>
