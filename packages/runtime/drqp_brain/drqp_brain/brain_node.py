@@ -227,11 +227,10 @@ class HexapodBrain(rclpy.node.Node):
         trajectory = JointTrajectoryBuilder(self.hexapod)
         trajectory.add_point_from_hexapod(reach_in_seconds_from_start=0.0, effort=-1.0)
         trajectory.add_point_from_hexapod(reach_in_seconds_from_start=1.0, effort=0.0)
-        trajectory.publish_action(
-            self.trajectory_client,
-            self,
-            lambda: self.robot_event_pub.publish(std_msgs.msg.String(data='servos_rebooting_done')),
-        )
+        trajectory.publish_action(self.trajectory_client, self, self.publish_servos_rebooting_done)
+
+    def publish_servos_rebooting_done(self):
+        self.robot_event_pub.publish(std_msgs.msg.String(data='servos_rebooting_done'))
 
     def process_robot_state(self, msg: std_msgs.msg.String):
         if self.robot_state == msg.data:
