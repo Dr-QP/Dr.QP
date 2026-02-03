@@ -230,9 +230,7 @@ class HexapodBrain(rclpy.node.Node):
         trajectory.publish_action(
             self.trajectory_client,
             self,
-            lambda: self.robot_event_pub.publish(
-                std_msgs.msg.String(data='servos_rebooting_done')
-            ),
+            lambda: self.robot_event_pub.publish(std_msgs.msg.String(data='servos_rebooting_done')),
         )
 
     def process_robot_state(self, msg: std_msgs.msg.String):

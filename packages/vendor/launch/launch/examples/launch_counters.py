@@ -41,8 +41,8 @@ import launch.substitutions  # noqa: E402
 def main(argv=sys.argv[1:]):
     """Run Counter via launch."""
     # Configure rotating logs.
-    launch.logging.launch_config.log_handler_factory = (
-        lambda path, encoding=None: launch.logging.handlers.RotatingFileHandler(
+    launch.logging.launch_config.log_handler_factory = lambda path, encoding=None: (
+        launch.logging.handlers.RotatingFileHandler(
             path, maxBytes=1024, backupCount=3, encoding=encoding
         )
     )
