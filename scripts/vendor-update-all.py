@@ -78,11 +78,40 @@ def update_vendor_package(package_path):
         return
 
     # Extract the new revision from the git log.
-    # Last commit is merge commit
-    # In the right branch of merge commit is the git subtree commit that contains source info:
-    # git-subtree-dir: packages/vendor/launch
-    # git-subtree-split: 72e28a2e1e760a7f6a3010b8431db15436e8ae11
-    # Extract it as new_rev
+
+    # git show --no-patch --pretty=%P HEAD
+    git_show = subprocess.run(
+        ['git', 'show', '--no-patch', '--pretty=%P', 'HEAD'],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    parents = git_show.stdout.strip().split()
+    if len(parents) < 2:
+        print(f'Unexpected git log format, cannot extract new revision for {package_path}.')
+        return
+
+    new_rev = None
+    # get commit message of the both parents
+    for parent in parents:
+        git_log = subprocess.run(
+            ['git', 'log', '--pretty=%H', '-n', '1', parent],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        # git-subtree-split: <new_rev>
+        new_rev_regex = r'git-subtree-split:\s*([0-9a-fA-F]+)'
+        import re
+
+        match = re.search(new_rev_regex, git_log.stdout)
+        if match:
+            new_rev = match.group(1)
+            break
+
+    if not new_rev:
+        print(f'Could not find new revision in git log for {package_path}.')
+        return
 
     # Get the new revision (latest commit hash) from the remote repository
     source_info['rev'] = new_rev
