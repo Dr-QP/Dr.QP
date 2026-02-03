@@ -20,8 +20,9 @@
 # THE SOFTWARE.
 
 import os
-import sys
+import re
 import subprocess
+import sys
 import yaml
 
 
@@ -106,17 +107,16 @@ def update_source_info_after_subtree(package_path, source_info):
     new_rev = None
     # get commit message of the both parents
     for parent in parents:
-        git_log = subprocess.run(
-            ['git', 'log', '--pretty=%H', '-n', '1', parent],
+        parent_commit_msg = subprocess.run(
+            ['git', 'log', '-1', '--pretty=%B', parent],
             check=True,
             capture_output=True,
             text=True,
         )
         # git-subtree-split: <new_rev>
         new_rev_regex = r'git-subtree-split:\s*([0-9a-fA-F]+)'
-        import re
 
-        match = re.search(new_rev_regex, git_log.stdout)
+        match = re.search(new_rev_regex, parent_commit_msg.stdout)
         if match:
             new_rev = match.group(1)
             break
