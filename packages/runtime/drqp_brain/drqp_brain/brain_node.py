@@ -177,14 +177,10 @@ class HexapodBrain(rclpy.node.Node):
         Parameters
         ----------
         msg : RobotCommand
-            High-level robot command (e.g., 'kill_switch', 'finalize', 'reboot_servos')
+            High-level robot command (e.g., 'reboot_servos')
 
         """
-        if msg.command == RobotCommandConstants.KILL_SWITCH:
-            self.process_kill_switch()
-        elif msg.command == RobotCommandConstants.FINALIZE:
-            self.finalize()
-        elif msg.command == RobotCommandConstants.REBOOT_SERVOS:
+        if msg.command == RobotCommandConstants.REBOOT_SERVOS:
             self.reboot_servos()
         else:
             self.get_logger().warning(f'Unknown robot command: {msg.command}')
@@ -319,12 +315,6 @@ class HexapodBrain(rclpy.node.Node):
         self.get_logger().info('Stopping')
         self.loop_timer.cancel()
         self.walker.reset()
-
-    def process_kill_switch(self):
-        self.robot_event_pub.publish(std_msgs.msg.String(data='kill_switch_pressed'))
-
-    def finalize(self):
-        self.robot_event_pub.publish(std_msgs.msg.String(data='finalize'))
 
 
 def main():

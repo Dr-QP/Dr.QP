@@ -21,14 +21,10 @@
 import unittest
 
 from drqp_brain.joystick_translator_node import JoystickTranslatorNode
-from drqp_interfaces.msg import (
-    MovementCommand,
-    MovementCommandConstants,
-    RobotCommand,
-    RobotCommandConstants,
-)
+from drqp_interfaces.msg import MovementCommand, MovementCommandConstants, RobotCommand
 import rclpy
 import sensor_msgs.msg
+import std_msgs.msg
 
 
 class TestJoystickTranslatorNode(unittest.TestCase):
@@ -49,6 +45,7 @@ class TestJoystickTranslatorNode(unittest.TestCase):
         # Store received messages
         self.movement_commands = []
         self.robot_commands = []
+        self.robot_events = []
 
         # Subscribe to translator output
         self.movement_sub = self.test_node.create_subscription(
@@ -62,6 +59,13 @@ class TestJoystickTranslatorNode(unittest.TestCase):
             RobotCommand,
             '/robot/command',
             lambda msg: self.robot_commands.append(msg),
+            10,
+        )
+
+        self.event_sub = self.test_node.create_subscription(
+            std_msgs.msg.String,
+            '/robot_event',
+            lambda msg: self.robot_events.append(msg),
             10,
         )
 
@@ -90,9 +94,9 @@ class TestJoystickTranslatorNode(unittest.TestCase):
         self.assertIsNotNone(cmd.stride_direction)
         self.assertEqual(cmd.gait_type, MovementCommandConstants.GAIT_TRIPOD)  # Default gait
 
-    def test_button_to_robot_command(self):
-        """Test that button presses generate robot commands."""
-        # Create a joystick message with Select button pressed (finalize)
+    def test_button_to_robot_event(self):
+        """Test that button presses generate robot events for state machine."""
+        # Create a joystick message with Select button pressed (finalize event)
         joy_msg = sensor_msgs.msg.Joy()
         joy_msg.axes = [0.0] * 6
         joy_msg.buttons = [0] * 21
@@ -105,11 +109,11 @@ class TestJoystickTranslatorNode(unittest.TestCase):
         rclpy.spin_once(self.node, timeout_sec=0.1)
         rclpy.spin_once(self.test_node, timeout_sec=0.1)
 
-        # Verify robot command was published
-        self.assertGreater(len(self.robot_commands), 0, 'Robot command should be published')
+        # Verify robot event was published
+        self.assertGreater(len(self.robot_events), 0, 'Robot event should be published')
 
-        cmd = self.robot_commands[-1]
-        self.assertEqual(cmd.command, RobotCommandConstants.FINALIZE)
+        event = self.robot_events[-1]
+        self.assertEqual(event.data, 'finalize')
 
 
 if __name__ == '__main__':

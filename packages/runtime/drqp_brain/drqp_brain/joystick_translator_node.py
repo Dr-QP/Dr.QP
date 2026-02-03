@@ -42,8 +42,10 @@ class JoystickTranslatorNode(rclpy.node.Node):
     """
     ROS node that translates joystick input to semantic robot commands.
 
-    Subscribes to /joy topic and publishes MovementCommand and RobotCommand messages,
+    Subscribes to /joy topic and publishes MovementCommand messages and robot events,
     abstracting away hardware-specific joystick details into application-level semantics.
+    State machine events are published directly to /robot_event, while trajectory commands
+    are published as RobotCommand messages.
     """
 
     def __init__(self):
@@ -63,18 +65,14 @@ class JoystickTranslatorNode(rclpy.node.Node):
                 ButtonIndex.DpadLeft: lambda b, e: self._prev_gait(),
                 ButtonIndex.DpadRight: lambda b, e: self._next_gait(),
                 ButtonIndex.L1: lambda b, e: self._publish_control_mode_change(),
-                ButtonIndex.PS: lambda b, e: self._publish_command(
-                    RobotCommandConstants.KILL_SWITCH
-                ),
-                ButtonIndex.TouchpadButton: lambda b, e: self._publish_command(
-                    RobotCommandConstants.KILL_SWITCH
+                ButtonIndex.PS: lambda b, e: self._publish_event('kill_switch_pressed'),
+                ButtonIndex.TouchpadButton: lambda b, e: self._publish_event(
+                    'kill_switch_pressed'
                 ),
                 ButtonIndex.Start: lambda b, e: self._publish_command(
                     RobotCommandConstants.REBOOT_SERVOS
                 ),
-                ButtonIndex.Select: lambda b, e: self._publish_command(
-                    RobotCommandConstants.FINALIZE
-                ),
+                ButtonIndex.Select: lambda b, e: self._publish_event('finalize'),
             }
         )
 
@@ -89,6 +87,9 @@ class JoystickTranslatorNode(rclpy.node.Node):
         )
         self.robot_command_pub = self.create_publisher(
             RobotCommand, '/robot/command', qos_profile=10
+        )
+        self.robot_event_pub = self.create_publisher(
+            std_msgs.msg.String, '/robot_event', qos_profile=10
         )
 
         self.get_logger().info('Joystick translator node initialized')
@@ -129,7 +130,7 @@ class JoystickTranslatorNode(rclpy.node.Node):
         Parameters
         ----------
         command : str
-            Command identifier (e.g., 'kill_switch', 'finalize', 'reboot_servos')
+            Command identifier (e.g., 'reboot_servos')
 
         """
         msg = RobotCommand()
@@ -139,6 +140,22 @@ class JoystickTranslatorNode(rclpy.node.Node):
 
         self.robot_command_pub.publish(msg)
         self.get_logger().info(f'Published command: {command}')
+
+    def _publish_event(self, event: str):
+        """
+        Publish a robot state machine event.
+
+        Parameters
+        ----------
+        event : str
+            Event identifier (e.g., 'kill_switch_pressed', 'finalize')
+
+        """
+        msg = std_msgs.msg.String()
+        msg.data = event
+
+        self.robot_event_pub.publish(msg)
+        self.get_logger().info(f'Published event: {event}')
 
     def _prev_gait(self):
         """Switch to previous gait type."""
