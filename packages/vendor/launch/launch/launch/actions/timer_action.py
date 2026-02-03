@@ -215,9 +215,9 @@ class TimerAction(Action):
                 EventHandler(
                     matcher=lambda event: is_a_subclass(event, TimerEvent),
                     entities=OpaqueFunction(
-                        function=lambda context: (
-                            cast(TimerEvent, context.locals.event).timer_action.handle(context)
-                        )
+                        function=lambda context: cast(
+                            TimerEvent, context.locals.event
+                        ).timer_action.handle(context)
                     ),
                 )
             )
