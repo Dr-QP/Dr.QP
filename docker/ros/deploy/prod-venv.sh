@@ -11,6 +11,13 @@ if [[ -n $install_dir ]]; then
   readarray -t requires < <(find "$install_dir" -name requires.txt)
 
   for path in "${requires[@]}"; do
-      python3 -m pip install -r "$path"
+      # Filter out INI-style sections and non-package lines.
+      # pip does not understand [sections], so strip them before install.
+      filtered="$(mktemp)"
+      grep -v -E '^\s*(#|\[|$)' "$path" > "$filtered"
+      if [[ -s "$filtered" ]]; then
+        python3 -m pip install -r "$filtered"
+      fi
+      rm -f "$filtered"
   done
 fi

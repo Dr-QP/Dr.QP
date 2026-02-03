@@ -33,8 +33,10 @@
   <xacro:include filename="$(find drqp_control)/urdf/ros2_control.urdf.xacro"/>
   <xacro:drqp_ros2_control robot_name="$(arg robot_name)" device_address="$(arg hardware_device_address)" use_gazebo="$(arg use_gazebo)" />
 
-  <xacro:include filename="$(find drqp_control)/urdf/gazebo.xacro"/>
-  <xacro:gazebo />
+  <xacro:if value="$(arg use_gazebo)">
+    <xacro:include filename="$(find drqp_control)/urdf/gazebo.xacro"/>
+    <xacro:gazebo />
+  </xacro:if>
 
   <gazebo>
     <self_collide>true</self_collide>

@@ -180,6 +180,8 @@ jobs:
           flags: unittests-${{ matrix.arch }}
           name: codecov-umbrella
           directory: build/
+          exclude: |
+            packages/vendor/**
 
       - name: Test Summary
         uses: test-summary/action@v2
@@ -191,6 +193,7 @@ jobs:
         if: ${{ !cancelled() }}
         run: |
           set -x
+          set -e
           test_reports=$(find build -name "*.xunit.xml" | tr '\n' ',')
           test_reports=${test_reports%,}  # Remove trailing comma
 
