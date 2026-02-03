@@ -73,13 +73,25 @@ def update_vendor_package(package_path):
         capture_output=True,
         text=True,
     )
-    if subtree.stdout.strip().find('Subtree is already at commit'):
+    if subtree.stdout.strip().find('Subtree is already at commit') != -1:
         print(f'Package at {package_path} is already up to date.')
-        return
 
-    # Extract the new revision from the git log.
+    update_source_info_after_subtree(package_path, source_info)
+    commit_vendor_package_update(package_path, branch)
 
-    # git show --no-patch --pretty=%P HEAD
+
+def commit_vendor_package_update(package_path, branch):
+    commit_msg = f'Update vendor package {os.path.basename(package_path)} to latest {branch}'
+    subprocess.run(
+        ['git', 'commit', '-am', commit_msg],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
+def update_source_info_after_subtree(package_path, source_info):
+    """After a git subtree pull, update the source-info.yaml with the new revision."""
     git_show = subprocess.run(
         ['git', 'show', '--no-patch', '--pretty=%P', 'HEAD'],
         check=True,
