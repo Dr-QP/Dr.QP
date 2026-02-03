@@ -67,10 +67,15 @@ def update_vendor_package(package_path):
     repo_url = source_info.get('repo')
     branch = source_info.get('branch')
     print(f'Updating package at {package_path} from {repo_url} (branch: {branch})')
-    subprocess.run(
+    subtree = subprocess.run(
         ['git', 'subtree', 'pull', '--prefix', package_path, repo_url, branch, '--squash'],
         check=True,
+        capture_output=True,
+        text=True,
     )
+    if subtree.stdout.strip().find('Subtree is already at commit'):
+        print(f'Package at {package_path} is already up to date.')
+        return
     # Get the new revision (latest commit hash) from the remote repository
     source_info['rev'] = new_rev
 
