@@ -125,18 +125,18 @@ class TestRobotStateMachine:
         state_machine.send('servos_rebooting_done')
         assert state_machine.current_state == state_machine.torque_off
 
-    def test_should_not_reboot_servos_from_torque_off(self, state_machine):
+    def test_should_reboot_servos_from_torque_off(self, state_machine):
         assert state_machine.current_state == state_machine.torque_off
 
-        with pytest.raises(Exception):  # TransitionNotAllowed
-            state_machine.send('reboot_servos')
+        state_machine.send('reboot_servos')
+        assert state_machine.current_state == state_machine.servos_rebooting
 
-    def test_should_not_reboot_servos_from_finalized(self, state_machine):
+    def test_should_reboot_servos_from_finalized(self, state_machine):
         state_machine.send('initialize')
         state_machine.send('initializing_done')
         state_machine.send('finalize')
         state_machine.send('finalizing_done')
         assert state_machine.current_state == state_machine.finalized
 
-        with pytest.raises(Exception):  # TransitionNotAllowed
-            state_machine.send('reboot_servos')
+        state_machine.send('reboot_servos')
+        assert state_machine.current_state == state_machine.servos_rebooting
