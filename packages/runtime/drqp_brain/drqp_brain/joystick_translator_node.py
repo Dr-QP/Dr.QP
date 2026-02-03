@@ -66,9 +66,7 @@ class JoystickTranslatorNode(rclpy.node.Node):
                 ButtonIndex.DpadRight: lambda b, e: self._next_gait(),
                 ButtonIndex.L1: lambda b, e: self._publish_control_mode_change(),
                 ButtonIndex.PS: lambda b, e: self._publish_event('kill_switch_pressed'),
-                ButtonIndex.TouchpadButton: lambda b, e: self._publish_event(
-                    'kill_switch_pressed'
-                ),
+                ButtonIndex.TouchpadButton: lambda b, e: self._publish_event('kill_switch_pressed'),
                 ButtonIndex.Start: lambda b, e: self._publish_command(
                     RobotCommandConstants.REBOOT_SERVOS
                 ),
