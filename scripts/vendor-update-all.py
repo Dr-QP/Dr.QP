@@ -117,3 +117,23 @@ def update_vendor_package(package_path):
     source_info['rev'] = new_rev
 
     set_vendor_package_source_info(package_path, source_info)
+
+
+if __name__ == '__main__':
+    vendor_packages_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        '..',
+        'packages',
+        'vendor',
+    )
+    if not os.path.isdir(vendor_packages_dir):
+        print(f'Vendor packages directory {vendor_packages_dir} does not exist.')
+        sys.exit(1)
+
+    for package_name in os.listdir(vendor_packages_dir):
+        package_path = os.path.join(vendor_packages_dir, package_name)
+        if os.path.isdir(package_path):
+            try:
+                update_vendor_package(package_path)
+            except subprocess.CalledProcessError as e:
+                print(f'Error updating package at {package_path}: {e.stderr}')
