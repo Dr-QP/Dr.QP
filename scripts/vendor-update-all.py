@@ -76,6 +76,14 @@ def update_vendor_package(package_path):
     if subtree.stdout.strip().find('Subtree is already at commit'):
         print(f'Package at {package_path} is already up to date.')
         return
+
+    # Extract the new revision from the git log.
+    # Last commit is merge commit
+    # In the right branch of merge commit is the git subtree commit that contains source info:
+    # git-subtree-dir: packages/vendor/launch
+    # git-subtree-split: 72e28a2e1e760a7f6a3010b8431db15436e8ae11
+    # Extract it as new_rev
+
     # Get the new revision (latest commit hash) from the remote repository
     source_info['rev'] = new_rev
 
