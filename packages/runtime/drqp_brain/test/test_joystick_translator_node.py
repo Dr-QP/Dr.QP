@@ -96,6 +96,15 @@ class TestJoystickTranslatorNode(unittest.TestCase):
 
     def test_button_to_robot_event(self):
         """Test that button presses generate robot events for state machine."""
+        # Wait for publisher/subscriber connection to be established
+        # This is necessary because DDS discovery in ROS 2 is asynchronous
+        max_wait_iterations = 10
+        for _ in range(max_wait_iterations):
+            if self.node.robot_event_pub.get_subscription_count() > 0:
+                break
+            rclpy.spin_once(self.node, timeout_sec=0.01)
+            rclpy.spin_once(self.test_node, timeout_sec=0.01)
+
         # Create a joystick message with Select button pressed (finalize event)
         joy_msg = sensor_msgs.msg.Joy()
         joy_msg.axes = [0.0] * 6
@@ -105,9 +114,13 @@ class TestJoystickTranslatorNode(unittest.TestCase):
         # Process the message
         self.node._joy_callback(joy_msg)
 
-        # Spin to process callbacks
-        rclpy.spin_once(self.node, timeout_sec=0.1)
-        rclpy.spin_once(self.test_node, timeout_sec=0.1)
+        # Spin multiple times to allow message propagation through DDS
+        # ROS 2 publishing is asynchronous and may require multiple event loop iterations
+        for _ in range(5):
+            rclpy.spin_once(self.node, timeout_sec=0.02)
+            rclpy.spin_once(self.test_node, timeout_sec=0.02)
+            if len(self.robot_events) > 0:
+                break
 
         # Verify robot event was published
         self.assertGreater(len(self.robot_events), 0, 'Robot event should be published')
