@@ -284,7 +284,7 @@ python3 -m venv .venv
 Python production dependencies are managed via rosdep and specified in `package.xml` files.
 If python dependency is not available via rosdep registry it is managed via the `setup.py`/`setup.cfg` package dependencies.
 
-**Install ROS dependencies:**
+### Install ROS dependencies
 ```bash
 ./scripts/ros-dep.sh
 ```
