@@ -1,4 +1,5 @@
 ---
+name: 'Tech Debt Remediator'
 description: 'Generate technical debt remediation plans for code, tests, and documentation.'
 tools:
   [

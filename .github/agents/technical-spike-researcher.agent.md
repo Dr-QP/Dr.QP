@@ -1,6 +1,6 @@
 ---
 description: 'Systematically research and validate technical spike documents through exhaustive investigation and controlled experimentation.'
-name: 'Technical spike research mode'
+name: 'Technical Spike Researcher'
 tools:
   [
     'agent',

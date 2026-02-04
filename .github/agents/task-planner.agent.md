@@ -1,6 +1,6 @@
 ---
 description: 'Task planner for creating actionable implementation plans - Brought to you by microsoft/edge-ai'
-name: 'Task Planner Instructions'
+name: 'Task Planner'
 tools:
   [
     'azure_get_schema_for_Bicep',

@@ -1,6 +1,6 @@
 ---
 description: 'Task research specialist for comprehensive project analysis - Brought to you by microsoft/edge-ai'
-name: 'Task Researcher Instructions'
+name: 'Task Researcher'
 tools:
   [
     'azure_get_schema_for_Bicep',
