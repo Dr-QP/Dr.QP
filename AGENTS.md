@@ -42,11 +42,13 @@ source scripts/setup.bash
 ```
 
 The setup script does the following:
+
 1. Sources `/opt/ros/jazzy/setup.bash` (base ROS installation)
 2. Sources `install/local_setup.bash` (workspace overlay) if it exists
 3. Sets up the production Python virtual environment
 
 **Optional flags:**
+
 - `--update-venv`: Update the Python virtual environment with latest dependencies
 
 ### Devcontainer for Remote Development
@@ -54,12 +56,14 @@ The setup script does the following:
 When running as a remote agent or in GitHub Codespaces, **ALWAYS use the devcontainer** for testing and development.
 
 The devcontainer configuration is in `.devcontainer/devcontainer.json`:
+
 - **Base image**: `ghcr.io/dr-qp/jazzy-ros-desktop:edge`
 - **Workspace path**: `/opt/ros/overlay_ws/`
 - **Post-attach commands**: Automatically sets up Python venv and runs rosdep
 - **Volumes**: Persists build artifacts, install directory, logs, and caches across sessions
 
 The devcontainer provides a consistent environment with:
+
 - ROS 2 Jazzy fully installed
 - All system dependencies pre-configured
 - Proper network and IPC settings for ROS communication
@@ -80,6 +84,7 @@ python3 -m colcon build \
 ```
 
 **Common options:**
+
 - `--packages-up-to <pkg>`: Build package and all its dependencies
 - `--packages-select <pkg>`: Build only the specified package (no dependencies)
 - `--symlink-install`: Use symlinks for Python packages (faster iteration)
@@ -89,6 +94,7 @@ python3 -m colcon build \
 - `--cmake-args -D DRQP_ENABLE_COVERAGE=ON`: Enable coverage instrumentation
 
 **Examples:**
+
 ```bash
 # Build only drqp_serial and its dependencies
 python3 -m colcon build --symlink-install --packages-up-to drqp_serial
@@ -121,6 +127,7 @@ python3 -m colcon build \
 ```
 
 **Environment variables for the build:**
+
 ```bash
 export CMAKE_EXPORT_COMPILE_COMMANDS=1
 export CC=clang
@@ -149,6 +156,7 @@ python3 -m colcon test \
 ```
 
 **Common test options:**
+
 - `--packages-select <pkg>`: Test only the specified package
 - `--mixin coverage-pytest`: Enable coverage collection for Python/C++ tests
 - `--event-handlers console_cohesion+ summary+ status+`: Enhanced test output
@@ -156,6 +164,7 @@ python3 -m colcon test \
 - `--packages-select-test-failures`: Re-run only previously failed tests
 
 **Examples:**
+
 ```bash
 # Test only drqp_serial package
 python3 -m colcon test --packages-select drqp_serial \
@@ -190,19 +199,21 @@ python3 -m colcon test \
 
 - **Test results**: `build/<package_name>/test_results/<package_name>/*.xunit.xml`
 - **Test logs**: `log/latest_test/<package_name>/`
-- **Coverage data**: 
+- **Coverage data**:
   - C++: `build/<package_name>/coverage.info` (LCOV format)
   - Python: `build/<package_name>/.coverage` (Coverage.py format)
 
 ### Collecting and Viewing Test Results
 
 **View test summary:**
+
 ```bash
 python3 -m colcon test-result --all
 python3 -m colcon test-result --verbose  # Detailed output
 ```
 
 **Generate coverage reports:**
+
 ```bash
 # Process LLVM coverage for C++ packages
 ./packages/cmake/llvm-cov-export-all.py ./build
@@ -212,6 +223,7 @@ python3 -m colcon test-result --verbose  # Detailed output
 ```
 
 **View test results in browser:**
+
 ```bash
 # Launch xunit-viewer for interactive test result browsing
 npx -y xunit-viewer -r build --server -o build/xunit-index.html \
@@ -249,6 +261,7 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) runs:
 6. **Build deployment image** for production use
 
 **Key CI commands:**
+
 ```bash
 # Install dependencies
 ./scripts/ros-dep.sh
@@ -279,6 +292,7 @@ C++ and CMake dependencies are managed via rosdep.
 ### Python dependencies
 
 Development and docs dependencies are managed via `requirements.txt` and installed in `.venv/`:
+
 ```bash
 python3 -m venv .venv
 .venv/bin/python3 -m pip install -r requirements.txt --use-pep517
@@ -288,11 +302,13 @@ Python production dependencies are managed via rosdep and specified in `package.
 If python dependency is not available via rosdep registry it is managed via the `setup.py`/`setup.cfg` package dependencies.
 
 ### Install ROS dependencies
+
 ```bash
 ./scripts/ros-dep.sh
 ```
 
 This script:
+
 1. Runs `rosdep update`
 2. Installs all package dependencies from `package.xml` files
 3. Ensures system dependencies are satisfied
