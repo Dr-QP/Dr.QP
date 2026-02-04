@@ -1,4 +1,6 @@
-# General Instructions
+# Agents guidelines
+
+## General Instructions
 
 - Always prioritize readability and clarity.
 - For algorithm-related code, include explanations of the approach used.
@@ -12,11 +14,11 @@
 - Prefer use of existing libraries and frameworks over custom implementations.
 - Follow Clean Code principles where applicable.
 
-## When in Doubt
+### When in Doubt
 
 When in doubt consult with #subAgent principal-software-engineer
 
-## When doing code reviews
+### When doing code reviews
 
 - Always use neutral and positive language.
 - Always write PR description in imperative mood.
@@ -27,13 +29,13 @@ When in doubt consult with #subAgent principal-software-engineer
 - Never use invisible structures or html comments in PR description.
 - Treat PR description to the highest quality of git commit message.
 
-# ROS 2 Development Environment
+## ROS 2 Development Environment
 
 This is a ROS 2 Jazzy workspace using colcon build system for C++ and Python packages.
 
-## Environment Setup
+### Environment Setup
 
-### ROS Environment Initialization
+#### ROS Environment Initialization
 
 Always source the setup script before running builds or tests:
 
@@ -51,7 +53,7 @@ The setup script does the following:
 
 - `--update-venv`: Update the Python virtual environment with latest dependencies
 
-### Devcontainer for Remote Development
+#### Devcontainer for Remote Development
 
 When running as a remote agent or in GitHub Codespaces, **ALWAYS use the devcontainer** for testing and development.
 
@@ -69,9 +71,9 @@ The devcontainer provides a consistent environment with:
 - Proper network and IPC settings for ROS communication
 - Development tools (clangd, debuggers, test viewers)
 
-## Building the Workspace
+### Building the Workspace
 
-### Incremental Builds (Recommended for Development)
+#### Incremental Builds (Recommended for Development)
 
 For rapid iteration when developing a specific package, build **only that package and its dependencies**:
 
@@ -107,7 +109,7 @@ python3 -m colcon build --symlink-install --packages-up-to drqp_brain \
   --cmake-args -GNinja -D CMAKE_BUILD_TYPE=Debug -D DRQP_ENABLE_COVERAGE=ON
 ```
 
-### Full Workspace Build (Use Only When Requested)
+#### Full Workspace Build (Use Only When Requested)
 
 **WARNING: Full builds take significant time (10-20+ minutes). Only use when explicitly requested or when making cross-cutting changes affecting multiple packages.**
 
@@ -134,16 +136,16 @@ export CC=clang
 export CXX=clang++
 ```
 
-### Build Output Locations
+#### Build Output Locations
 
 - **Build artifacts**: `build/<package_name>/`
 - **Installed packages**: `install/<package_name>/`
 - **Build logs**: `log/latest_build/`
 - **Compile commands**: `build/compile_commands.json` (for clangd/IDE integration)
 
-## Testing the Workspace
+### Testing the Workspace
 
-### Test Specific Package (Recommended for Development)
+#### Test Specific Package (Recommended for Development)
 
 For rapid iteration, run tests **only for the package you're developing**:
 
@@ -183,7 +185,7 @@ python3 -m colcon test --packages-select-test-failures \
   --return-code-on-test-failure
 ```
 
-### Full Workspace Tests (Use Only When Requested)
+#### Full Workspace Tests (Use Only When Requested)
 
 **WARNING: Full test suite can take 10-20+ minutes. Only use when explicitly requested or before final integration.**
 
@@ -195,7 +197,7 @@ python3 -m colcon test \
   --mixin coverage-pytest
 ```
 
-### Test Output Locations
+#### Test Output Locations
 
 - **Test results**: `build/<package_name>/test_results/<package_name>/*.xunit.xml`
 - **Test logs**: `log/latest_test/<package_name>/`
@@ -203,7 +205,7 @@ python3 -m colcon test \
   - C++: `build/<package_name>/coverage.info` (LCOV format)
   - Python: `build/<package_name>/.coverage` (Coverage.py format)
 
-### Collecting and Viewing Test Results
+#### Collecting and Viewing Test Results
 
 **View test summary:**
 
@@ -249,7 +251,7 @@ The workspace contains the following package categories:
 
 - **cmake/**: CMake utilities and macros
 
-## CI/CD Pipeline
+### CI/CD Pipeline
 
 The GitHub Actions workflow (`.github/workflows/ci.yml`) runs:
 
@@ -279,17 +281,17 @@ python3 -m colcon test --mixin coverage-pytest \
 ./packages/cmake/llvm-cov-export-all.py ./build
 ```
 
-## Dependency Management
+### Dependency Management
 
-### Tool dependencies
+#### Tool dependencies
 
 Tool dependencies are managed via rosdep.
 
-### C++ dependencies
+#### C++ dependencies
 
 C++ and CMake dependencies are managed via rosdep.
 
-### Python dependencies
+#### Python dependencies
 
 Development and docs dependencies are managed via `requirements.txt` and installed in `.venv/`:
 
@@ -301,7 +303,7 @@ python3 -m venv .venv
 Python production dependencies are managed via rosdep and specified in `package.xml` files.
 If python dependency is not available via rosdep registry it is managed via the `setup.py`/`setup.cfg` package dependencies.
 
-### Install ROS dependencies
+#### Install ROS dependencies
 
 ```bash
 ./scripts/ros-dep.sh
@@ -313,7 +315,7 @@ This script:
 2. Installs all package dependencies from `package.xml` files
 3. Ensures system dependencies are satisfied
 
-## Cleaning Build Artifacts
+### Cleaning Build Artifacts
 
 ```bash
 # Clean build, install, and log directories
