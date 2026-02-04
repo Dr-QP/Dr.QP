@@ -36,7 +36,7 @@ Use #subAgent principal-software-engineer to review the refined issue for comple
 3. Add acceptance criteria in a testable format.
 4. Include technical considerations and dependencies.
 5. Add potential edge cases and risks.
-6. Review the refined requirement and make any necessary adjustments.
+5. Review the refined requirement and make any necessary adjustments.
 
 ## Usage
 
