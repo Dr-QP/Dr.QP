@@ -64,7 +64,7 @@ class HexapodBrain(rclpy.node.Node):
                 ButtonIndex.L1: lambda b, e: self.next_control_mode(),
                 ButtonIndex.PS: lambda b, e: self.process_kill_switch(),
                 ButtonIndex.TouchpadButton: lambda b, e: self.process_kill_switch(),
-                ButtonIndex.Start: lambda b, e: self.reboot_servos(),
+                ButtonIndex.Start: lambda b, e: self.publish_reboot_servos_event(),
                 ButtonIndex.Select: lambda b, e: self.finalize(),
             }
         )
@@ -223,10 +223,14 @@ class HexapodBrain(rclpy.node.Node):
         trajectory.publish(self.joint_trajectory_pub)
 
     def reboot_servos(self):
+        """Execute servo reboot sequence and publish completion event."""
         trajectory = JointTrajectoryBuilder(self.hexapod)
         trajectory.add_point_from_hexapod(reach_in_seconds_from_start=0.0, effort=-1.0)
         trajectory.add_point_from_hexapod(reach_in_seconds_from_start=1.0, effort=0.0)
-        trajectory.publish(self.joint_trajectory_pub)
+        trajectory.publish_action(self.trajectory_client, self, self.publish_servos_rebooting_done)
+
+    def publish_servos_rebooting_done(self):
+        self.robot_event_pub.publish(std_msgs.msg.String(data='servos_rebooting_done'))
 
     def process_robot_state(self, msg: std_msgs.msg.String):
         if self.robot_state == msg.data:
@@ -249,6 +253,10 @@ class HexapodBrain(rclpy.node.Node):
         elif self.robot_state == 'finalized':
             self.get_logger().info('Finalized')
             self.turn_torque_off()
+        elif self.robot_state == 'servos_rebooting':
+            self.get_logger().info('Rebooting servos')
+            self.stop_walk_controller()
+            self.reboot_servos()
 
     def stop_walk_controller(self):
         self.get_logger().info('Stopping')
@@ -257,6 +265,9 @@ class HexapodBrain(rclpy.node.Node):
 
     def process_kill_switch(self):
         self.robot_event_pub.publish(std_msgs.msg.String(data='kill_switch_pressed'))
+
+    def publish_reboot_servos_event(self):
+        self.robot_event_pub.publish(std_msgs.msg.String(data='reboot_servos'))
 
     def finalize(self):
         self.robot_event_pub.publish(std_msgs.msg.String(data='finalize'))
