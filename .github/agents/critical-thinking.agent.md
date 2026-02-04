@@ -1,4 +1,5 @@
 ---
+name: Critical thinker
 description: 'Challenge assumptions and encourage critical thinking to ensure the best possible solution and outcomes.'
 tools:
   [

@@ -18,6 +18,8 @@ When in doubt consult with #subAgent principal-software-engineer
 
 ## When doing code reviews
 
-- Always use neutral and positive language. Focus on the code, not the person who wrote it.
-- Always write in imperative mood.
-- Write down a full pull request description in the PR body, including what was changed and why.
+- Always use neutral and positive language.
+- Always write PR description in imperative mood.
+- Write a comprehensive pull request description in the PR body, including what was changed and why.
+- Never write per file changes table in PR description.
+- Never write line/change counts in PR description.
