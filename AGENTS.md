@@ -265,7 +265,26 @@ python3 -m colcon test --mixin coverage-pytest \
 
 ## Dependency Management
 
-**Update ROS dependencies:**
+### Tool dependencies
+
+Tool dependencies are managed via rosdep.
+
+### C++ dependencies
+
+C++ and CMake dependencies are managed via rosdep.
+
+### Python dependencies
+
+Development and docs dependencies are managed via `requirements.txt` and installed in `.venv/`:
+```bash
+python3 -m venv .venv
+.venv/bin/python3 -m pip install -r requirements.txt --use-pep517
+```
+
+Python production dependencies are managed via rosdep and specified in `package.xml` files.
+If python dependency is not available via rosdep registry it is managed via the `setup.py`/`setup.cfg` package dependencies.
+
+**Install ROS dependencies:**
 ```bash
 ./scripts/ros-dep.sh
 ```
@@ -274,13 +293,6 @@ This script:
 1. Runs `rosdep update`
 2. Installs all package dependencies from `package.xml` files
 3. Ensures system dependencies are satisfied
-
-**Python dependencies:**
-Managed via `requirements.txt` and installed in `.venv/`:
-```bash
-python3 -m venv .venv
-.venv/bin/python3 -m pip install -r requirements.txt --use-pep517
-```
 
 ## Cleaning Build Artifacts
 
