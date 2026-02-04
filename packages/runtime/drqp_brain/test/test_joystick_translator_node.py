@@ -21,7 +21,7 @@
 import unittest
 
 from drqp_brain.joystick_translator_node import JoystickTranslatorNode
-from drqp_interfaces.msg import MovementCommand, MovementCommandConstants, RobotCommand
+from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 import rclpy
 import sensor_msgs.msg
 import std_msgs.msg
@@ -44,7 +44,6 @@ class TestJoystickTranslatorNode(unittest.TestCase):
 
         # Store received messages
         self.movement_commands = []
-        self.robot_commands = []
         self.robot_events = []
 
         # Subscribe to translator output
@@ -52,13 +51,6 @@ class TestJoystickTranslatorNode(unittest.TestCase):
             MovementCommand,
             '/robot/movement_command',
             lambda msg: self.movement_commands.append(msg),
-            10,
-        )
-
-        self.command_sub = self.test_node.create_subscription(
-            RobotCommand,
-            '/robot/command',
-            lambda msg: self.robot_commands.append(msg),
             10,
         )
 

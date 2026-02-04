@@ -20,12 +20,7 @@
 
 import unittest
 
-from drqp_interfaces.msg import (
-    MovementCommand,
-    MovementCommandConstants,
-    RobotCommand,
-    RobotCommandConstants,
-)
+from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 from geometry_msgs.msg import Vector3
 from launch import LaunchDescription
 from launch.actions import TimerAction
@@ -77,7 +72,6 @@ class TestBrainNode(unittest.TestCase):
         self.movement_pub = self.node.create_publisher(
             MovementCommand, '/robot/movement_command', 10
         )
-        self.command_pub = self.node.create_publisher(RobotCommand, '/robot/command', 10)
 
         # Publisher for robot state (brain node subscribes to this)
         self.state_pub = self.node.create_publisher(std_msgs.msg.String, '/robot_state', 10)
@@ -107,22 +101,6 @@ class TestBrainNode(unittest.TestCase):
 
         # If we get here without errors, the test passes
         # (brain node should process the command without crashing)
-
-    def test_robot_command_processing(self, proc_output):
-        """Test that brain node can process robot commands."""
-        # Create a robot command
-        cmd = RobotCommand()
-        cmd.header = std_msgs.msg.Header()
-        cmd.header.stamp = self.node.get_clock().now().to_msg()
-        cmd.command = RobotCommandConstants.REBOOT_SERVOS
-
-        # Publish the command
-        self.command_pub.publish(cmd)
-
-        # Spin to allow processing
-        rclpy.spin_once(self.node, timeout_sec=0.1)
-
-        # If we get here without errors, the test passes
 
 
 # Post-shutdown tests

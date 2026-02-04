@@ -24,12 +24,7 @@ import argparse
 
 from drqp_brain.joystick_button import ButtonIndex
 from drqp_brain.joystick_input_handler import JoystickInputHandler
-from drqp_interfaces.msg import (
-    MovementCommand,
-    MovementCommandConstants,
-    RobotCommand,
-    RobotCommandConstants,
-)
+from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 import rclpy
 from rclpy.executors import ExternalShutdownException
 import rclpy.node
@@ -44,8 +39,7 @@ class JoystickTranslatorNode(rclpy.node.Node):
 
     Subscribes to /joy topic and publishes MovementCommand messages and robot events,
     abstracting away hardware-specific joystick details into application-level semantics.
-    State machine events are published directly to /robot_event, while trajectory commands
-    are published as RobotCommand messages.
+    State machine events are published directly to /robot_event.
     """
 
     def __init__(self):
@@ -66,9 +60,7 @@ class JoystickTranslatorNode(rclpy.node.Node):
             ButtonIndex.L1: lambda b, e: self._publish_control_mode_change(),
             ButtonIndex.PS: lambda b, e: self._publish_event('kill_switch_pressed'),
             ButtonIndex.TouchpadButton: lambda b, e: self._publish_event('kill_switch_pressed'),
-            ButtonIndex.Start: lambda b, e: self._publish_command(
-                RobotCommandConstants.REBOOT_SERVOS
-            ),
+            ButtonIndex.Start: lambda b, e: self._publish_event('reboot_servos'),
             ButtonIndex.Select: lambda b, e: self._publish_event('finalize'),
         }
         self.joystick_input_handler = JoystickInputHandler(button_callbacks=button_callbacks)
@@ -81,9 +73,6 @@ class JoystickTranslatorNode(rclpy.node.Node):
         # Publishers for semantic commands
         self.movement_command_pub = self.create_publisher(
             MovementCommand, '/robot/movement_command', qos_profile=10
-        )
-        self.robot_command_pub = self.create_publisher(
-            RobotCommand, '/robot/command', qos_profile=10
         )
         self.robot_event_pub = self.create_publisher(
             std_msgs.msg.String, '/robot_event', qos_profile=10
@@ -119,24 +108,6 @@ class JoystickTranslatorNode(rclpy.node.Node):
         msg.gait_type = self.gaits[self.gait_index]
 
         self.movement_command_pub.publish(msg)
-
-    def _publish_command(self, command: str):
-        """
-        Publish a robot command.
-
-        Parameters
-        ----------
-        command : str
-            Command identifier (e.g., 'reboot_servos')
-
-        """
-        msg = RobotCommand()
-        msg.header = std_msgs.msg.Header()
-        msg.header.stamp = self.get_clock().now().to_msg()
-        msg.command = command
-
-        self.robot_command_pub.publish(msg)
-        self.get_logger().info(f'Published command: {command}')
 
     def _publish_event(self, event: str):
         """

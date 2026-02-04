@@ -26,12 +26,7 @@ from control_msgs.action import FollowJointTrajectory
 from drqp_brain.joint_trajectory_builder import JointTrajectoryBuilder
 from drqp_brain.models import HexapodModel
 from drqp_brain.walk_controller import GaitType, WalkController
-from drqp_interfaces.msg import (
-    MovementCommand,
-    MovementCommandConstants,
-    RobotCommand,
-    RobotCommandConstants,
-)
+from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 import rclpy
 from rclpy.action import ActionClient
 from rclpy.executors import ExternalShutdownException
@@ -72,11 +67,6 @@ class HexapodBrain(rclpy.node.Node):
             '/robot/movement_command',
             self.process_movement_command,
             qos_profile=10,
-        )
-
-        # Subscribe to robot commands
-        self.robot_command_sub = self.create_subscription(
-            RobotCommand, '/robot/command', self.process_robot_command, qos_profile=10
         )
 
         self.robot_state = None
@@ -169,21 +159,6 @@ class HexapodBrain(rclpy.node.Node):
         gait_names = [g.name for g in self.gaits]
         if msg.gait_type in gait_names:
             self.gait_index = gait_names.index(msg.gait_type)
-
-    def process_robot_command(self, msg: RobotCommand):
-        """
-        Process semantic robot command.
-
-        Parameters
-        ----------
-        msg : RobotCommand
-            High-level robot command (e.g., 'reboot_servos')
-
-        """
-        if msg.command == RobotCommandConstants.REBOOT_SERVOS:
-            self.reboot_servos()
-        else:
-            self.get_logger().warning(f'Unknown robot command: {msg.command}')
 
     def next_control_mode(self):
         """Log control mode changes (control mode is now handled by translator)."""
@@ -284,10 +259,14 @@ class HexapodBrain(rclpy.node.Node):
         trajectory.publish(self.joint_trajectory_pub)
 
     def reboot_servos(self):
+        """Execute servo reboot sequence and publish completion event."""
         trajectory = JointTrajectoryBuilder(self.hexapod)
         trajectory.add_point_from_hexapod(reach_in_seconds_from_start=0.0, effort=-1.0)
         trajectory.add_point_from_hexapod(reach_in_seconds_from_start=1.0, effort=0.0)
-        trajectory.publish(self.joint_trajectory_pub)
+        trajectory.publish_action(self.trajectory_client, self, self.publish_servos_rebooting_done)
+
+    def publish_servos_rebooting_done(self):
+        self.robot_event_pub.publish(std_msgs.msg.String(data='servos_rebooting_done'))
 
     def process_robot_state(self, msg: std_msgs.msg.String):
         if self.robot_state == msg.data:
@@ -310,6 +289,10 @@ class HexapodBrain(rclpy.node.Node):
         elif self.robot_state == 'finalized':
             self.get_logger().info('Finalized')
             self.turn_torque_off()
+        elif self.robot_state == 'servos_rebooting':
+            self.get_logger().info('Rebooting servos')
+            self.stop_walk_controller()
+            self.reboot_servos()
 
     def stop_walk_controller(self):
         self.get_logger().info('Stopping')
