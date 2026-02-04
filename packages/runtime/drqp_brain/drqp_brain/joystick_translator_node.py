@@ -60,19 +60,18 @@ class JoystickTranslatorNode(rclpy.node.Node):
         ]
 
         # Set up joystick input handler with button callbacks
-        self.joystick_input_handler = JoystickInputHandler(
-            button_callbacks={
-                ButtonIndex.DpadLeft: lambda b, e: self._prev_gait(),
-                ButtonIndex.DpadRight: lambda b, e: self._next_gait(),
-                ButtonIndex.L1: lambda b, e: self._publish_control_mode_change(),
-                ButtonIndex.PS: lambda b, e: self._publish_event('kill_switch_pressed'),
-                ButtonIndex.TouchpadButton: lambda b, e: self._publish_event('kill_switch_pressed'),
-                ButtonIndex.Start: lambda b, e: self._publish_command(
-                    RobotCommandConstants.REBOOT_SERVOS
-                ),
-                ButtonIndex.Select: lambda b, e: self._publish_event('finalize'),
-            }
-        )
+        button_callbacks = {
+            ButtonIndex.DpadLeft: lambda b, e: self._prev_gait(),
+            ButtonIndex.DpadRight: lambda b, e: self._next_gait(),
+            ButtonIndex.L1: lambda b, e: self._publish_control_mode_change(),
+            ButtonIndex.PS: lambda b, e: self._publish_event('kill_switch_pressed'),
+            ButtonIndex.TouchpadButton: lambda b, e: self._publish_event('kill_switch_pressed'),
+            ButtonIndex.Start: lambda b, e: self._publish_command(
+                RobotCommandConstants.REBOOT_SERVOS
+            ),
+            ButtonIndex.Select: lambda b, e: self._publish_event('finalize'),
+        }
+        self.joystick_input_handler = JoystickInputHandler(button_callbacks=button_callbacks)
 
         # Subscribe to joystick input
         self.joystick_sub = self.create_subscription(
