@@ -5,5 +5,6 @@ ignore:
   - "packages/runtime/drqp_interfaces"
   - "packages/runtime/drqp_lint_common"
   - "packages/runtime/drqp_rapidjson"
+  - "packages/vendor/**"
   - "**/test/**"
   - "**/tests/**"

@@ -15,11 +15,13 @@ foreach(dep ${${PROJECT_NAME}_BUILD_DEPENDS} ${${PROJECT_NAME}_BUILDTOOL_DEPENDS
   find_package(${dep} REQUIRED)
 endforeach()
 
-# Uncomment when we have messages
-# rosidl_generate_interfaces(${PROJECT_NAME}
-#   msg/Message.msg
-#   DEPENDENCIES std_msgs
-# )
+rosidl_generate_interfaces(${PROJECT_NAME}
+  msg/MovementCommand.msg
+  msg/MovementCommandConstants.msg
+  msg/RobotCommand.msg
+  msg/RobotCommandConstants.msg
+  DEPENDENCIES std_msgs geometry_msgs
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

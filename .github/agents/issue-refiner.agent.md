@@ -27,7 +27,7 @@ When activated, this mode allows GitHub Copilot to analyze an existing issue and
 - Potential edge cases and risks
 - Expected NFR (Non-Functional Requirements)
 
-Use #subAgent implementation-plan to create a structured plan for refining the issue before making edits.
+Use #subAgent task-planner to create a structured plan for refining the issue before making edits.
 Use #subAgent principal-software-engineer to review the refined issue for completeness and clarity.
 
 ## Steps to Run
@@ -37,7 +37,7 @@ Use #subAgent principal-software-engineer to review the refined issue for comple
 3. Add acceptance criteria in a testable format.
 4. Include technical considerations and dependencies.
 5. Add potential edge cases and risks.
-6. Review the refined requirement and make any necessary adjustments.
+5. Review the refined requirement and make any necessary adjustments.
 
 ## Usage
 
