@@ -142,6 +142,17 @@ class TestPoint3D:
         point2 = Point3D([1, 2, 3], 'Test')
         assert point1 == point2
 
+    def test_to_vector3(self):
+        """Test conversion to geometry_msgs/Vector3."""
+        from geometry_msgs.msg import Vector3
+
+        point = Point3D([1.5, 2.5, 3.5], 'Test')
+        vec = point.to_vector3()
+        assert isinstance(vec, Vector3)
+        assert vec.x == 1.5
+        assert vec.y == 2.5
+        assert vec.z == 3.5
+
 
 class TestSimplePoint3D:
     """Test the SimplePoint3D class."""

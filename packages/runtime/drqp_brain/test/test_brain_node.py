@@ -20,6 +20,8 @@
 
 import unittest
 
+from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
+from geometry_msgs.msg import Vector3
 from launch import LaunchDescription
 from launch.actions import TimerAction
 from launch.substitutions import FindExecutable
@@ -29,6 +31,7 @@ from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
 import pytest
 import rclpy
+import std_msgs.msg
 
 
 @pytest.mark.launch_test
@@ -65,12 +68,39 @@ class TestBrainNode(unittest.TestCase):
     def setUp(self):
         self.node = rclpy.create_node('test_brain_consumer')
 
+        # Publishers for sending commands to brain node
+        self.movement_pub = self.node.create_publisher(
+            MovementCommand, '/robot/movement_command', 10
+        )
+
+        # Publisher for robot state (brain node subscribes to this)
+        self.state_pub = self.node.create_publisher(std_msgs.msg.String, '/robot_state', 10)
+
     def tearDown(self):
         self.node.destroy_node()
 
     def test_nothing(self, proc_output):
         """Smoke check."""
         pass
+
+    def test_movement_command_processing(self, proc_output):
+        """Test that brain node can process movement commands."""
+        # Create a movement command
+        cmd = MovementCommand()
+        cmd.stride_direction = Vector3(x=1.0, y=0.0, z=0.0)
+        cmd.rotation_speed = 0.5
+        cmd.body_translation = Vector3(x=0.0, y=0.0, z=0.0)
+        cmd.body_rotation = Vector3(x=0.0, y=0.0, z=0.0)
+        cmd.gait_type = MovementCommandConstants.GAIT_TRIPOD
+
+        # Publish the command
+        self.movement_pub.publish(cmd)
+
+        # Spin to allow processing
+        rclpy.spin_once(self.node, timeout_sec=0.1)
+
+        # If we get here without errors, the test passes
+        # (brain node should process the command without crashing)
 
 
 # Post-shutdown tests
