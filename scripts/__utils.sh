@@ -8,3 +8,6 @@ isCI()
 }
 
 export ROS_DISTRO=jazzy
+export CMAKE_EXPORT_COMPILE_COMMANDS=1
+export CC=clang
+export CXX=clang++
