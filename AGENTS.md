@@ -23,6 +23,9 @@ When in doubt consult with #subAgent principal-software-engineer
 - Write a comprehensive pull request description in the PR body, including what was changed and why.
 - Never write per file changes table in PR description.
 - Never write line/change counts in PR description.
+- Never add copilot advertisement text, requests for copilot improvement or any other AI tool info to the PR description.
+- Never use invisible structures or html comments in PR description.
+- Treat PR description to the highest quality of git commit message.
 
 # ROS 2 Development Environment
 
