@@ -1,4 +1,5 @@
 ---
+name: 'Principal Engineer'
 description: 'Provide principal-level software engineering guidance with focus on engineering excellence, technical leadership, and pragmatic implementation.'
 tools:
   [

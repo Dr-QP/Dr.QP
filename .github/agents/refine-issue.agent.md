@@ -1,4 +1,5 @@
 ---
+name: 'Issue Refiner'
 description: 'Refine the requirement or issue with Acceptance Criteria, Technical Considerations, Edge Cases, and NFRs'
 tools:
   [
