@@ -323,9 +323,5 @@ Clean up environment and start fresh.
 
 ## References
 
-- See [environment setup guide](./references/environment-setup-guide.md) for detailed configuration
-- See [devcontainer guide](./references/devcontainer-guide.md) for remote development setup
-- Use [setup-helper.sh](./scripts/setup-helper.sh) for automated environment configuration
 - Devcontainer configuration: `.devcontainer/devcontainer.json`
-- See [.env template](./templates/.env.template) for environment variable examples
 
