@@ -21,10 +21,9 @@
 
 """Validator for cross-references."""
 
-import os
+from pathlib import Path
 import re
 from typing import List, Optional
-from pathlib import Path
 
 from validate_skills.types import ValidationIssue, ValidationLevel
 
@@ -33,17 +32,20 @@ class CrossReferenceValidator:
     """Validates cross-references in skills."""
 
     def __init__(self, base_path: Optional[str] = None, show_warnings: bool = False):
-        """Initialize the validator.
+        """
+        Initialize the validator.
 
         Args:
             base_path: Base path for resolving relative references
             show_warnings: Whether to include warnings
+
         """
         self.base_path = base_path
         self.show_warnings = show_warnings
 
     def validate(self, skill_path: str, metadata: dict, content: str) -> List[ValidationIssue]:
-        """Validate cross-references.
+        """
+        Validate cross-references.
 
         Args:
             skill_path: Path to the skill file
@@ -52,6 +54,7 @@ class CrossReferenceValidator:
 
         Returns:
             List of validation issues
+
         """
         issues = []
 
@@ -72,7 +75,7 @@ class CrossReferenceValidator:
 
             # Try to find the referenced file
             ref_path = base / reference
-            
+
             # Normalize path
             try:
                 ref_path = ref_path.resolve()
@@ -81,7 +84,7 @@ class CrossReferenceValidator:
                 issues.append(
                     ValidationIssue(
                         level=ValidationLevel.WARNING,
-                        message=f"Broken reference: {reference}",
+                        message=f'Broken reference: {reference}',
                         section='cross_reference',
                     )
                 )
@@ -92,7 +95,7 @@ class CrossReferenceValidator:
                 issues.append(
                     ValidationIssue(
                         level=ValidationLevel.ERROR,
-                        message=f"Broken reference: {reference}",
+                        message=f'Broken reference: {reference}',
                         section='cross_reference',
                     )
                 )

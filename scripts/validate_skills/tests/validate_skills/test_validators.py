@@ -21,13 +21,12 @@
 
 """Unit tests for individual skill validators."""
 
-import pytest
+from validate_skills.validators.cross_reference import CrossReferenceValidator
 from validate_skills.validators.skill import (
     SkillFrontmatterValidator,
     SkillStructureValidator,
 )
 from validate_skills.validators.uniqueness import UniquenessValidator
-from validate_skills.validators.cross_reference import CrossReferenceValidator
 
 
 class TestSkillFrontmatterValidator:

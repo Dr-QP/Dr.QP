@@ -21,8 +21,9 @@
 
 """Unit tests for edge cases and error handling."""
 
-import pytest
 import os
+
+import pytest
 
 
 class TestErrorHandlingEdgeCases:
@@ -31,24 +32,24 @@ class TestErrorHandlingEdgeCases:
     def test_skill_with_no_frontmatter(self, tmp_path):
         """Should handle skill file with no frontmatter delimiter."""
         from validate_skills.loaders import safe_load_frontmatter
-        
-        skill_file = tmp_path / "SKILL.md"
-        skill_file.write_text("Just plain content without any YAML")
-        
+
+        skill_file = tmp_path / 'SKILL.md'
+        skill_file.write_text('Just plain content without any YAML')
+
         # Should either handle gracefully or raise informative error
         try:
             result = safe_load_frontmatter(str(skill_file))
             assert result is not None
         except Exception as e:
-            assert "yaml" in str(e).lower() or "front" in str(e).lower()
+            assert 'yaml' in str(e).lower() or 'front' in str(e).lower()
 
     def test_skill_with_incomplete_frontmatter(self, tmp_path):
         """Should handle incomplete frontmatter delimiters."""
         from validate_skills.loaders import safe_load_frontmatter
-        
-        skill_file = tmp_path / "SKILL.md"
-        skill_file.write_text("---\nname: test\nContent without closing delimiter")
-        
+
+        skill_file = tmp_path / 'SKILL.md'
+        skill_file.write_text('---\nname: test\nContent without closing delimiter')
+
         # Should raise error
         with pytest.raises(Exception):
             safe_load_frontmatter(str(skill_file))
@@ -56,12 +57,12 @@ class TestErrorHandlingEdgeCases:
     def test_extremely_large_file(self, tmp_path):
         """Should handle extremely large skill files."""
         from validate_skills.loaders import safe_load_frontmatter
-        
-        skill_file = tmp_path / "SKILL.md"
-        large_content = "---\nname: large-skill\ndescription: A comprehensive description.\n---\n"
-        large_content += "x" * (10 * 1024 * 1024)  # 10MB
+
+        skill_file = tmp_path / 'SKILL.md'
+        large_content = '---\nname: large-skill\ndescription: A comprehensive description.\n---\n'
+        large_content += 'x' * (10 * 1024 * 1024)  # 10MB
         skill_file.write_text(large_content)
-        
+
         # Should handle or fail gracefully
         try:
             result = safe_load_frontmatter(str(skill_file))
@@ -73,18 +74,14 @@ class TestErrorHandlingEdgeCases:
     def test_circular_reference_protection(self, tmp_path):
         """Should protect against circular references."""
         from validate_skills.validators.cross_reference import CrossReferenceValidator
-        
-        file_a = tmp_path / "a.md"
-        file_b = tmp_path / "b.md"
-        file_a.write_text("[Link](b.md)")
-        file_b.write_text("[Link](a.md)")
-        
+
+        file_a = tmp_path / 'a.md'
+        file_b = tmp_path / 'b.md'
+        file_a.write_text('[Link](b.md)')
+        file_b.write_text('[Link](a.md)')
+
         validator = CrossReferenceValidator(str(tmp_path))
-        issues = validator.validate(
-            skill_path=str(file_a),
-            metadata={},
-            content="[Link](b.md)"
-        )
+        issues = validator.validate(skill_path=str(file_a), metadata={}, content='[Link](b.md)')
         # Should handle without infinite loop
         assert isinstance(issues, list)
 
@@ -95,13 +92,13 @@ class TestCharacterEncodingEdgeCases:
     def test_utf8_with_bom(self, tmp_path):
         """Should handle UTF-8 with BOM."""
         from validate_skills.loaders import safe_load_frontmatter
-        
-        skill_file = tmp_path / "SKILL.md"
+
+        skill_file = tmp_path / 'SKILL.md'
         # Write UTF-8 BOM
         with open(skill_file, 'wb') as f:
             f.write(b'\xef\xbb\xbf')  # UTF-8 BOM
-            f.write("---\nname: test\ndescription: Descrip\n---\nBody".encode('utf-8'))
-        
+            f.write('---\nname: test\ndescription: Descrip\n---\nBody'.encode('utf-8'))
+
         # Should handle BOM
         metadata, body = safe_load_frontmatter(str(skill_file))
         assert 'name' in metadata
@@ -109,26 +106,26 @@ class TestCharacterEncodingEdgeCases:
     def test_mixed_line_endings(self, tmp_path):
         """Should handle mixed line endings (CRLF and LF)."""
         from validate_skills.loaders import safe_load_frontmatter
-        
-        skill_file = tmp_path / "SKILL.md"
-        content = "---\r\nname: test\ndescrip: Description\r\n---\r\nBody"
+
+        skill_file = tmp_path / 'SKILL.md'
+        content = '---\r\nname: test\ndescrip: Description\r\n---\r\nBody'
         skill_file.write_text(content)
-        
+
         metadata, body = safe_load_frontmatter(str(skill_file))
         assert metadata['name'] == 'test'
 
     def test_unicode_in_frontmatter(self, tmp_path):
         """Should handle unicode characters in YAML values."""
         from validate_skills.loaders import safe_load_frontmatter
-        
-        skill_file = tmp_path / "SKILL.md"
+
+        skill_file = tmp_path / 'SKILL.md'
         content = """---
 name: тест-skill
 description: 这是一个技能 🚀 with emoji and unicode: 中文 العربية
 ---
 Body with unicode: 日本語"""
         skill_file.write_text(content, encoding='utf-8')
-        
+
         metadata, body = safe_load_frontmatter(str(skill_file))
         assert 'тест' in metadata['name']
         assert '中文' in metadata['description']
@@ -140,7 +137,7 @@ class TestDataValidationEdgeCases:
     def test_extremely_long_name(self):
         """Should reject names exceeding maximum length."""
         from validate_skills.validators.skill import SkillFrontmatterValidator
-        
+
         validator = SkillFrontmatterValidator()
         frontmatter = {
             'name': 'x' * 1000,  # Far exceeds max length
@@ -152,7 +149,7 @@ class TestDataValidationEdgeCases:
     def test_extremely_long_description(self):
         """Should reject descriptions exceeding maximum length."""
         from validate_skills.validators.skill import SkillFrontmatterValidator
-        
+
         validator = SkillFrontmatterValidator()
         frontmatter = {
             'name': 'test-skill',
@@ -164,7 +161,7 @@ class TestDataValidationEdgeCases:
     def test_null_and_none_values(self):
         """Should handle None/null values properly."""
         from validate_skills.validators.skill import SkillFrontmatterValidator
-        
+
         validator = SkillFrontmatterValidator()
         frontmatter = {
             'name': None,
@@ -176,7 +173,7 @@ class TestDataValidationEdgeCases:
     def test_boolean_instead_of_string(self):
         """Should reject wrong data types."""
         from validate_skills.validators.skill import SkillFrontmatterValidator
-        
+
         validator = SkillFrontmatterValidator()
         frontmatter = {
             'name': True,
@@ -188,7 +185,7 @@ class TestDataValidationEdgeCases:
     def test_list_instead_of_string(self):
         """Should reject list values where strings expected."""
         from validate_skills.validators.skill import SkillFrontmatterValidator
-        
+
         validator = SkillFrontmatterValidator()
         frontmatter = {
             'name': ['not', 'a', 'string'],
@@ -204,33 +201,35 @@ class TestConcurrencyAndRaceConditions:
     def test_file_modified_during_validation(self, tmp_path):
         """Should handle file being modified during validation."""
         from validate_skills.loaders import safe_load_frontmatter
-        
-        skill_file = tmp_path / "SKILL.md"
-        original = "---\nname: test\ndescription: Description\n---\nBody"
+
+        skill_file = tmp_path / 'SKILL.md'
+        original = '---\nname: test\ndescription: Description\n---\nBody'
         skill_file.write_text(original)
-        
+
         # Read once
         metadata1, body1 = safe_load_frontmatter(str(skill_file))
-        
+
         # Modify file
-        skill_file.write_text("---\nname: modified\ndescription: Modified description\n---\nModified")
-        
+        skill_file.write_text(
+            '---\nname: modified\ndescription: Modified description\n---\nModified'
+        )
+
         # Read again
         metadata2, body2 = safe_load_frontmatter(str(skill_file))
-        
+
         # Should have different data
         assert metadata1['name'] != metadata2['name']
 
     def test_file_deleted_during_validation(self, tmp_path):
         """Should handle file being deleted during validation."""
         from validate_skills.loaders import safe_load_frontmatter
-        
-        skill_file = tmp_path / "SKILL.md"
-        skill_file.write_text("---\nname: test\n---\nBody")
-        
+
+        skill_file = tmp_path / 'SKILL.md'
+        skill_file.write_text('---\nname: test\n---\nBody')
+
         # Delete file
         os.remove(str(skill_file))
-        
+
         # Should raise appropriate error
         with pytest.raises(OSError):
             safe_load_frontmatter(str(skill_file))
@@ -242,34 +241,34 @@ class TestPathTraversalSecurity:
     def test_path_traversal_attempts(self, tmp_path):
         """Should prevent path traversal attacks."""
         from validate_skills.loaders import find_skill_files
-        
+
         # Try to traverse outside safe directory
-        result = find_skill_files(str(tmp_path / "../../etc/passwd"))
+        result = find_skill_files(str(tmp_path / '../../etc/passwd'))
         # Should either return empty or handle safely
         assert isinstance(result, list)
 
     def test_symlink_loops(self, tmp_path):
         """Should handle symlink loops safely."""
         if not hasattr(os, 'symlink'):
-            pytest.skip("Symlinks not supported")
-        
+            pytest.skip('Symlinks not supported')
+
         from validate_skills.loaders import find_skill_files
-        
-        dir_a = tmp_path / "a"
-        dir_b = tmp_path / "b"
+
+        dir_a = tmp_path / 'a'
+        dir_b = tmp_path / 'b'
         dir_a.mkdir()
         dir_b.mkdir()
-        
+
         try:
             # Create symlink loop: a -> b -> a
-            os.symlink(dir_b, dir_a / "link_to_b")
-            os.symlink(dir_a, dir_b / "link_to_a")
-            
+            os.symlink(dir_b, dir_a / 'link_to_b')
+            os.symlink(dir_a, dir_b / 'link_to_a')
+
             # Should handle without infinite loop
             result = find_skill_files(str(tmp_path))
             assert isinstance(result, list)
         except OSError:
-            pytest.skip("Cannot create symlink loops")
+            pytest.skip('Cannot create symlink loops')
 
 
 class TestResourceLimits:
@@ -277,30 +276,29 @@ class TestResourceLimits:
 
     def test_many_small_issues(self):
         """Should handle results with many issues."""
-        from validate_skills.core import ValidationResult, ValidationIssue, ValidationLevel
-        
+        from validate_skills.core import ValidationIssue, ValidationLevel, ValidationResult
+
         issues = [
-            ValidationIssue(level=ValidationLevel.ERROR, message=f"Issue {i}")
-            for i in range(1000)
+            ValidationIssue(level=ValidationLevel.ERROR, message=f'Issue {i}') for i in range(1000)
         ]
-        result = ValidationResult(skill_path="/path/SKILL.md", issues=issues)
-        
+        result = ValidationResult(skill_path='/path/SKILL.md', issues=issues)
+
         # Should not crash
         assert len(result.issues) == 1000
 
     def test_many_skill_files(self, tmp_path):
         """Should handle validating many skill files."""
-        from validate_skills.loaders import find_skill_files, load_all_skills
-        
+        from validate_skills.loaders import load_all_skills
+
         # Create 100 skill files
         skill_paths = []
         for i in range(100):
-            skill_dir = tmp_path / f"skill_{i}"
+            skill_dir = tmp_path / f'skill_{i}'
             skill_dir.mkdir()
-            skill_file = skill_dir / "SKILL.md"
-            skill_file.write_text(f"---\nname: skill-{i}\ndescription: Descip\n---\n")
+            skill_file = skill_dir / 'SKILL.md'
+            skill_file.write_text(f'---\nname: skill-{i}\ndescription: Descip\n---\n')
             skill_paths.append(str(skill_file))
-        
+
         # Should handle loading all
         all_skills = load_all_skills(skill_paths)
         assert len(all_skills) == 100
@@ -308,16 +306,16 @@ class TestResourceLimits:
     def test_deeply_nested_directories(self, tmp_path):
         """Should handle deeply nested directory structures."""
         from validate_skills.loaders import find_skill_files
-        
+
         # Create deeply nested structure
         current = tmp_path
         for i in range(50):
-            current = current / f"level_{i}"
+            current = current / f'level_{i}'
             current.mkdir()
-        
-        skill_file = current / "SKILL.md"
-        skill_file.write_text("---\nname: deep\ndescription: Descip\n---\n")
-        
+
+        skill_file = current / 'SKILL.md'
+        skill_file.write_text('---\nname: deep\ndescription: Descip\n---\n')
+
         result = find_skill_files(str(tmp_path))
         assert len(result) == 1
 
@@ -328,18 +326,18 @@ class TestRobustnessEdgeCases:
     def test_empty_yaml_frontmatter(self, tmp_path):
         """Should handle completely empty frontmatter."""
         from validate_skills.loaders import safe_load_frontmatter
-        
-        skill_file = tmp_path / "SKILL.md"
-        skill_file.write_text("---\n---\nBody only")
-        
+
+        skill_file = tmp_path / 'SKILL.md'
+        skill_file.write_text('---\n---\nBody only')
+
         metadata, body = safe_load_frontmatter(str(skill_file))
         assert metadata == {}
-        assert "Body" in body
+        assert 'Body' in body
 
     def test_only_whitespace_in_sections(self, tmp_path):
         """Should handle sections with only whitespace."""
         from validate_skills.validators.skill import SkillStructureValidator
-        
+
         body = """# Overview
    
 ## When to use this skill
@@ -354,7 +352,7 @@ class TestRobustnessEdgeCases:
     def test_malformed_markdown_syntax(self, tmp_path):
         """Should handle malformed markdown."""
         from validate_skills.validators.skill import SkillStructureValidator
-        
+
         body = """# Overview
 This is overview.
 
@@ -374,8 +372,8 @@ More content"""
     def test_skill_with_special_yaml_types(self, tmp_path):
         """Should handle YAML special types."""
         from validate_skills.loaders import safe_load_frontmatter
-        
-        skill_file = tmp_path / "SKILL.md"
+
+        skill_file = tmp_path / 'SKILL.md'
         content = """---
 name: test-skill
 dates: [2026-01-01, 2026-12-31]
@@ -385,8 +383,7 @@ version: 1.0
 ---
 Body"""
         skill_file.write_text(content)
-        
+
         metadata, body = safe_load_frontmatter(str(skill_file))
         # Should handle YAML type conversion
         assert 'name' in metadata
-

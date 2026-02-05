@@ -21,7 +21,7 @@
 
 """Validator for skill name uniqueness."""
 
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 from validate_skills.types import ValidationIssue, ValidationLevel
 
@@ -30,17 +30,20 @@ class UniquenessValidator:
     """Validates skill name uniqueness."""
 
     def __init__(self, all_skills: Optional[Dict] = None):
-        """Initialize the validator.
+        """
+        Initialize the validator.
 
         Args:
             all_skills: Dict of all skills for uniqueness comparison
+
         """
         self.all_skills = all_skills or {}
 
     def validate(
         self, skill_path: str, metadata: dict, content: str = '', all_skills: Optional[Dict] = None
     ) -> List[ValidationIssue]:
-        """Validate skill uniqueness.
+        """
+        Validate skill uniqueness.
 
         Args:
             skill_path: Path to the skill file
@@ -50,6 +53,7 @@ class UniquenessValidator:
 
         Returns:
             List of validation issues
+
         """
         issues = []
         skills_to_check = all_skills or self.all_skills

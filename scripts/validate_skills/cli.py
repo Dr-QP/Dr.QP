@@ -26,13 +26,15 @@ from typing import List, Optional
 
 
 def parse_arguments(args: Optional[List[str]] = None) -> argparse.Namespace:
-    """Parse command-line arguments.
+    """
+    Parse command-line arguments.
 
     Args:
         args: List of argument strings (if None, sys.argv is used)
 
     Returns:
         Parsed arguments as Namespace
+
     """
     parser = argparse.ArgumentParser(
         description='Validate agent skills for compliance with best practices'

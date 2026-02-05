@@ -21,9 +21,10 @@
 
 """Pytest configuration and shared fixtures."""
 
-import pytest
-import sys
 from pathlib import Path
+import sys
+
+import pytest
 
 # Add parent directory to path for imports
 test_dir = Path(__file__).parent
@@ -84,12 +85,12 @@ Invalid content
 @pytest.fixture
 def temp_skill_dir(tmp_path):
     """Create a temporary skill directory with sample skills."""
-    skill1 = tmp_path / "skill1" / "SKILL.md"
-    skill2 = tmp_path / "skill2" / "SKILL.md"
-    
+    skill1 = tmp_path / 'skill1' / 'SKILL.md'
+    skill2 = tmp_path / 'skill2' / 'SKILL.md'
+
     skill1.parent.mkdir()
     skill2.parent.mkdir()
-    
+
     skill1.write_text("""---
 name: first-skill
 description: A comprehensive description of the first test skill for validation.
@@ -100,7 +101,7 @@ First skill overview.
 ## When to use this skill
 Use when needed.
 """)
-    
+
     skill2.write_text("""---
 name: second-skill
 description: A comprehensive description of the second test skill for validation.
@@ -111,7 +112,7 @@ Second skill overview.
 ## When to use this skill
 Use when needed.
 """)
-    
+
     return tmp_path
 
 
@@ -119,20 +120,15 @@ Use when needed.
 def mock_logger(monkeypatch):
     """Provide a mock logger for testing."""
     messages = []
-    
+
     def log(msg):
         messages.append(msg)
-    
+
     return log
 
 
 # Hook to customize test output
 def pytest_configure(config):
     """Configure pytest with custom settings."""
-    config.addinivalue_line(
-        "markers", "slow: mark test as slow to run"
-    )
-    config.addinivalue_line(
-        "markers", "integration: mark test as integration test"
-    )
-
+    config.addinivalue_line('markers', 'slow: mark test as slow to run')
+    config.addinivalue_line('markers', 'integration: mark test as integration test')

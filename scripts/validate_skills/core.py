@@ -21,34 +21,37 @@
 
 """Core validation engine for skills."""
 
-from typing import Dict
 from pathlib import Path
+from typing import Dict
 
-from validate_skills.types import ValidationIssue, ValidationLevel, ValidationResult
 from validate_skills.loaders import safe_load_frontmatter
+from validate_skills.types import ValidationIssue, ValidationLevel, ValidationResult
+from validate_skills.validators.cross_reference import CrossReferenceValidator
 from validate_skills.validators.skill import (
     SkillFrontmatterValidator,
     SkillStructureValidator,
 )
 from validate_skills.validators.uniqueness import UniquenessValidator
-from validate_skills.validators.cross_reference import CrossReferenceValidator
 
 
 class ValidationEngine:
     """Orchestrates validation of skills."""
 
     def __init__(self, show_warnings: bool = False, show_info: bool = False):
-        """Initialize the validation engine.
+        """
+        Initialize the validation engine.
 
         Args:
             show_warnings: Whether to include warnings in results
             show_info: Whether to include info messages in results
+
         """
         self.show_warnings = show_warnings
         self.show_info = show_info
 
     def validate(self, skill_path: str, all_skills: Dict = None) -> ValidationResult:
-        """Validate a single skill file.
+        """
+        Validate a single skill file.
 
         Args:
             skill_path: Path to the skill file
@@ -56,6 +59,7 @@ class ValidationEngine:
 
         Returns:
             ValidationResult with any issues found
+
         """
         all_skills = all_skills or {}
         result = ValidationResult(skill_path=skill_path, issues=[])
