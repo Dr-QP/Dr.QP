@@ -39,12 +39,15 @@ from skill_validators.xref_validator import CrossReferenceValidator
 
 
 def find_skill_files(path: str) -> List[str]:
-    """Find all SKILL.md files in the given path."""
+    """Find all SKILL.md files in the given path, excluding test directories."""
     if os.path.isfile(path):
         return [path] if path.endswith('SKILL.md') else []
 
     skill_files = []
     for root, dirs, files in os.walk(path):
+        # Skip test directories
+        if 'scripts/test' in root or '/test/' in root:
+            continue
         for file in files:
             if file == 'SKILL.md':
                 skill_files.append(os.path.join(root, file))
