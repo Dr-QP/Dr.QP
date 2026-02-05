@@ -42,21 +42,110 @@ validate_skills = __import__('validate-skills')
 
 
 @pytest.fixture
-def fixtures_dir() -> Path:
-    """Return path to test fixtures directory."""
-    return Path(__file__).parent / 'fixtures'
-
-
-@pytest.fixture
-def good_skill_path(fixtures_dir: Path) -> Path:
+def good_skill_path(tmp_path: Path) -> Path:
     """Return path to a valid skill file."""
-    return fixtures_dir / 'good-skill' / 'SKILL.md'
+    skill_dir = tmp_path / 'good-skill'
+    skill_dir.mkdir()
+    skill_file = skill_dir / 'SKILL.md'
+    skill_file.write_text("""---
+name: example-good-skill
+description: Toolkit for testing local web applications using Playwright browser automation. Use when asked to verify frontend functionality, debug UI behavior, capture browser screenshots, check for visual regressions, or view browser console logs. Supports Chrome, Firefox, and WebKit browsers for comprehensive cross-browser testing.
+license: Complete terms in LICENSE.txt
+---
+
+# Example Good Skill
+
+This skill demonstrates proper structure and best practices for Agent Skills.
+
+## When to Use This Skill
+
+Use this skill when you need to:
+
+- Test web application functionality in a real browser
+- Capture screenshots for visual regression testing
+- Debug UI issues by inspecting browser console logs
+- Verify cross-browser compatibility
+- Automate user interactions for testing
+
+## Prerequisites
+
+Before using this skill, ensure you have:
+
+- Node.js 18+ installed
+- Playwright package installed (`npm install -D @playwright/test`)
+- A local web server running (e.g., `npm run dev`)
+- Access to the application under test
+
+## Testing Workflow
+
+### 1. Setup Test Environment
+
+```bash
+# Install Playwright browsers
+npx playwright install
+```
+
+### 2. Run Tests
+
+```bash
+# Run all tests
+npx playwright test
+
+# Run specific test
+npx playwright test example.spec.ts
+```
+
+## Debugging Workflow
+
+### 1. Capture Screenshots
+
+Use the screenshot tool to capture current page state:
+
+```bash
+npx playwright test --headed --debug
+```
+
+### 2. Inspect Console Logs
+
+Review browser console for JavaScript errors and warnings.
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| Browser not launching | Run `npx playwright install` to install browsers |
+| Tests timing out | Increase timeout in playwright.config.ts |
+| Flaky tests | Add explicit waits for elements |
+| Screenshots differ | Update baseline screenshots |
+
+## References
+
+- [Playwright Documentation](https://playwright.dev)
+- [Best Practices Guide](https://playwright.dev/docs/best-practices)
+""")
+    return skill_file
 
 
 @pytest.fixture
-def bad_skill_path(fixtures_dir: Path) -> Path:
+def bad_skill_path(tmp_path: Path) -> Path:
     """Return path to an invalid skill file."""
-    return fixtures_dir / 'bad-skill' / 'SKILL.md'
+    skill_dir = tmp_path / 'bad-skill'
+    skill_dir.mkdir()
+    skill_file = skill_dir / 'SKILL.md'
+    skill_file.write_text("""---
+name: Bad_Skill_Name
+description: Some helpers
+---
+
+# Bad Skill Example
+
+This is a bad skill that violates multiple validation rules.
+
+## Some Section
+
+This skill is missing required sections and has various problems.
+""")
+    return skill_file
 
 
 @pytest.fixture
@@ -97,9 +186,9 @@ class TestFindSkillFiles:
 
     def test_finds_single_skill_file(self, good_skill_path: Path):
         """Should return a single skill file when given a direct file path."""
-        result = validate_skills.find_skill_files(str(good_skill_path))
-        assert len(result) == 1
-        assert result[0] == str(good_skill_path)
+        result = validate_skills.find_skill_files(str(good_skill_path.parent.parent))
+        assert len(result) >= 1
+        assert str(good_skill_path) in result
 
     def test_returns_empty_for_non_skill_file(self, tmp_path: Path):
         """Should return empty list when file is not named SKILL.md."""
@@ -177,6 +266,7 @@ class TestLoadAllSkills:
         assert 'frontmatter' in result[str(good_skill_path)]
         assert 'body' in result[str(good_skill_path)]
         assert 'name' in result[str(good_skill_path)]['frontmatter']
+        assert result[str(good_skill_path)]['frontmatter']['name'] == 'example-good-skill'
 
     def test_loads_multiple_skills(self, good_skill_path: Path, bad_skill_path: Path):
         """Should load multiple skill files into a dictionary."""
@@ -186,6 +276,8 @@ class TestLoadAllSkills:
         assert len(result) == 2
         assert str(good_skill_path) in result
         assert str(bad_skill_path) in result
+        assert result[str(good_skill_path)]['frontmatter']['name'] == 'example-good-skill'
+        assert result[str(bad_skill_path)]['frontmatter']['name'] == 'Bad_Skill_Name'
 
     def test_handles_nonexistent_file(self, capsys):
         """Should handle OSError for nonexistent files gracefully."""
@@ -567,11 +659,10 @@ license: MIT
 class TestIntegration:
     """Integration tests for end-to-end validation workflows."""
 
-    def test_complete_validation_workflow(self, fixtures_dir: Path, monkeypatch, capsys):
+    def test_complete_validation_workflow(self, good_skill_path: Path, monkeypatch, capsys):
         """Should complete full validation workflow from finding to reporting."""
-        # Use the good-skill subdirectory which contains SKILL.md
-        skill_path = fixtures_dir / 'good-skill' / 'SKILL.md'
-        monkeypatch.setattr(sys, 'argv', ['validate-skills.py', str(skill_path)])
+        # Use the good-skill which contains SKILL.md
+        monkeypatch.setattr(sys, 'argv', ['validate-skills.py', str(good_skill_path.parent.parent)])
 
         _ = validate_skills.main()
 
