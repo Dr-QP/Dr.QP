@@ -593,15 +593,19 @@
     "ansibleVault.encryptVaultId": "",
 
     "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+    "github.copilot.chat.notebook.alternativeFormat": "markdown",
+    "github.copilot.nextEditSuggestions.enabled": true,
     "github.copilot.enable": {
         "*": true
     },
     "chat.agent.enabled": true,
-    "chat.tools.terminal.autoApprove": {
-      "*": true
-    },
-    "github.copilot.nextEditSuggestions.enabled": true,
+    "chat.agent.maxRequests": 250,
     "chat.mcp.gallery.enabled": true,
+    "chat.tools.terminal.autoApprove": {
+      "*": {
+        "approve": true,
+      }
+    },
     "chat.tools.urls.autoApprove": {
         "https://github.com": {
             "approveRequest": false,
