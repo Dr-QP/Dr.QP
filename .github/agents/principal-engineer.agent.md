@@ -4,7 +4,7 @@ description: 'Provide principal-level software engineering guidance with focus o
 infer: true
 tools:
   [
-    'agent/runSubagent',
+    'agent',
     'edit/editFiles',
     'execute/createAndRunTask',
     'execute/getTerminalOutput',
