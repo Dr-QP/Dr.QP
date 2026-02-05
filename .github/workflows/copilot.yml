@@ -50,8 +50,17 @@ jobs:
 
       - name: Test validate skills
         run: |
-          pytest scripts/validate_skills
+          pytest scripts/validate_skills/tests --cov=scripts/validate_skills --cov-report=xml
 
       - name: Validate Agent Skills
         run: |
           python3 scripts/validate-skills.py --recommend
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        if: ${{ !cancelled() }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: validate-skills
+          name: validate-skills-coverage
+          files: coverage.xml
