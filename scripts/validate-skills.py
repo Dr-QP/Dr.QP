@@ -164,9 +164,6 @@ Examples:
   # Validate specific skill
   ./scripts/validate-skills.py .github/skills/my-skill/SKILL.md
 
-  # CI mode (exit 1 on errors)
-  ./scripts/validate-skills.py --ci
-
   # Show recommendations (warnings)
   ./scripts/validate-skills.py --recommend
         """,
@@ -177,9 +174,6 @@ Examples:
         nargs='?',
         default='.',
         help='Path to skill file or directory to validate (default: current directory)',
-    )
-    parser.add_argument(
-        '--ci', action='store_true', help='CI mode: exit with code 1 if any errors found'
     )
     parser.add_argument(
         '--recommend',
@@ -254,7 +248,7 @@ Examples:
     print()
 
     # Exit code
-    if args.ci and failed_count > 0:
+    if failed_count > 0:
         return 1
 
     return 0
