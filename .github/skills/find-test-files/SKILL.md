@@ -18,6 +18,10 @@ Use this skill when you need to:
 - Prepare for test execution by building a list of test files
 - Search for tests matching specific patterns or technologies
 
+## Prerequisites
+
+- Workspace root directory available
+
 ## Supported Test File Patterns
 
 ### Python Test Patterns
