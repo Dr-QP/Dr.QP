@@ -54,16 +54,8 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      - uses: getsentry/action-setup-venv@v2.1.1
-        id: venv
-        with:
-          python-version: 3.12
-          cache-dependency-path: |
-            requirements.txt
-            docs/requirements.txt
-            docs/constraints.txt
-            docs/source/notebooks/requirements.txt
-          install-cmd: pip install -r requirements.txt
+      - name: Setup Python venv
+        uses: ./.github/actions/setup-python-venv
 
       - name: Reformat C++
         shell: bash -le {0}
