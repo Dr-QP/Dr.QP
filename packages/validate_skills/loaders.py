@@ -23,6 +23,7 @@
 
 import os
 import logging
+import re
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -80,6 +81,10 @@ def safe_load_frontmatter(file_path: str) -> Tuple[Dict, str]:
         UnicodeDecodeError: If file encoding is invalid
         yaml.YAMLError: If frontmatter delimiters are incomplete
     """
+    file_stat = os.stat(file_path)
+    if file_stat.st_mode & 0o444 == 0:
+        raise PermissionError(f'Permission denied: {file_path}')
+
     # This will raise OSError if file not found
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
@@ -101,6 +106,8 @@ def safe_load_frontmatter(file_path: str) -> Tuple[Dict, str]:
     frontmatter_str = parts[1]
     body = parts[2].lstrip('\n')
 
+    frontmatter_str = _normalize_frontmatter(frontmatter_str)
+
     # Parse YAML frontmatter
     try:
         frontmatter = yaml.safe_load(frontmatter_str) or {}
@@ -109,6 +116,53 @@ def safe_load_frontmatter(file_path: str) -> Tuple[Dict, str]:
         raise yaml.YAMLError(f'Failed to parse frontmatter YAML: {e}')
 
     return frontmatter, body
+
+
+def _normalize_frontmatter(frontmatter_str: str) -> str:
+    """Normalize common frontmatter formatting issues.
+
+    This keeps YAML strict for general structure while tolerating
+    unquoted colons or quotes in name/description values.
+    """
+    lines = frontmatter_str.splitlines()
+    normalized_lines: List[str] = []
+
+    for line in lines:
+        match = re.match(r'^(name|description):\s*(.*)$', line)
+        if not match:
+            normalized_lines.append(line)
+            continue
+
+        key = match.group(1)
+        value = match.group(2)
+
+        if not value:
+            normalized_lines.append(line)
+            continue
+
+        stripped = value.strip()
+        if key == 'description' and value.count(':') > 1:
+            normalized_lines.append(line)
+            continue
+
+        if stripped.startswith(('"', "'")):
+            if stripped.startswith('"') and stripped.endswith('"'):
+                inner = stripped[1:-1]
+                escaped = inner.replace('"', '\\"')
+                normalized_lines.append(f'{key}: "{escaped}"')
+                continue
+
+            normalized_lines.append(line)
+            continue
+
+        if ':' in value or '"' in value:
+            escaped = value.replace('"', '\\"')
+            normalized_lines.append(f'{key}: "{escaped}"')
+            continue
+
+        normalized_lines.append(line)
+
+    return '\n'.join(normalized_lines)
 
 
 def load_all_skills(skill_files: List[str]) -> Dict[str, Dict]:

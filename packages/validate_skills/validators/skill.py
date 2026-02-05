@@ -58,7 +58,7 @@ class SkillFrontmatterValidator:
                 issues.append(
                     ValidationIssue(
                         level=ValidationLevel.ERROR,
-                        message=f"Name must be a string, got: {type(name).__name__}",
+                        message=f'Name must be a string, got: {type(name).__name__}',
                         section='frontmatter',
                     )
                 )
@@ -97,7 +97,7 @@ class SkillFrontmatterValidator:
                 issues.append(
                     ValidationIssue(
                         level=ValidationLevel.ERROR,
-                        message=f"Description must be a string, got: {type(description).__name__}",
+                        message=f'Description must be a string, got: {type(description).__name__}',
                         section='frontmatter',
                     )
                 )
@@ -122,14 +122,25 @@ class SkillFrontmatterValidator:
 
                 # Check for vague terms
                 if show_warnings:
-                    vague_terms = {'helpers', 'utilities', 'tools', 'functions', 'methods', 'stuff', 'things', 'misc', 'various', 'general'}
+                    vague_terms = {
+                        'helpers',
+                        'utilities',
+                        'tools',
+                        'functions',
+                        'methods',
+                        'stuff',
+                        'things',
+                        'misc',
+                        'various',
+                        'general',
+                    }
                     desc_lower = description.lower()
                     found_vague = [term for term in vague_terms if f' {term} ' in f' {desc_lower} ']
                     if found_vague:
                         issues.append(
                             ValidationIssue(
                                 level=ValidationLevel.WARNING,
-                                message=f"Description contains vague terms: {', '.join(found_vague)}. Be specific about capabilities.",
+                                message=f'Description contains vague terms: {", ".join(found_vague)}. Be specific about capabilities.',
                                 section='frontmatter',
                             )
                         )
@@ -153,19 +164,6 @@ class SkillStructureValidator:
         issues = []
         body_lower = body.lower()
 
-        # Check for required sections
-        required_sections = {'# overview', '## when to use this skill'}
-        missing = [s for s in required_sections if s not in body_lower]
-        if missing:
-            for section in missing:
-                issues.append(
-                    ValidationIssue(
-                        level=ValidationLevel.ERROR,
-                        message=f"Missing required section: '{section}'",
-                        section='structure',
-                    )
-                )
-
         # Check for empty body
         if not body or not body.strip():
             issues.append(
@@ -175,23 +173,34 @@ class SkillStructureValidator:
                     section='structure',
                 )
             )
+            return issues
+
+        header_matches = list(re.finditer(r'^#\s+.+$', body, flags=re.MULTILINE))
+        if not header_matches:
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    message="Missing required top-level header (e.g., '# Title')",
+                    section='structure',
+                )
+            )
+            return issues
 
         # Warn about empty sections if showing warnings
         if show_warnings:
-            if '# overview' in body_lower:
-                # Find the overview section and check if it's empty
-                overview_idx = body_lower.find('# overview')
-                next_section = body_lower.find('\n#', overview_idx + 1)
-                if next_section == -1:
-                    next_section = len(body)
-                content = body[overview_idx + len('# overview'):next_section].strip()
-                if not content or len(content) < 10:
-                    issues.append(
-                        ValidationIssue(
-                            level=ValidationLevel.WARNING,
-                            message='Overview section appears to be empty or very short',
-                            section='structure',
-                        )
+            first_header = header_matches[0]
+            header_line = first_header.group(0)
+            start_index = first_header.end()
+            next_header = re.search(r'^#{1,6}\s+.+$', body[start_index:], flags=re.MULTILINE)
+            end_index = start_index + next_header.start() if next_header else len(body)
+            content = body[start_index:end_index].strip()
+            if not content or len(content) < 10:
+                issues.append(
+                    ValidationIssue(
+                        level=ValidationLevel.WARNING,
+                        message=f"Top-level section '{header_line.strip()}' appears to be empty or very short",
+                        section='structure',
                     )
+                )
 
         return issues

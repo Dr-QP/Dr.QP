@@ -102,8 +102,9 @@ class TestSkillFrontmatterValidator:
         validator = SkillFrontmatterValidator()
         issues = validator.validate(frontmatter, show_warnings=True)
         # Should have warnings about vague terms
-        assert any('vague' in str(issue).lower() or 'helper' in str(issue).lower() 
-                  for issue in issues)
+        assert any(
+            'vague' in str(issue).lower() or 'helper' in str(issue).lower() for issue in issues
+        )
 
     def test_validate_extra_fields_allowed(self):
         """Should allow extra fields in frontmatter."""
@@ -121,77 +122,51 @@ class TestSkillFrontmatterValidator:
 class TestSkillStructureValidator:
     """Tests for SkillStructure validation."""
 
-    def test_validate_valid_structure(self):
-        """Should accept well-formed skill structure."""
-        body = """# Overview
-This skill validates other skills.
+    def test_validate_empty_body(self):
+        """Should reject empty body content."""
+        validator = SkillStructureValidator()
+        issues = validator.validate('\n\n   \n')
+        assert len(issues) > 0
+        assert any('empty' in str(issue).lower() for issue in issues)
 
-## When to use this skill
-Use this when you need to validate Agent Skills.
+    def test_validate_missing_top_level_header(self):
+        """Should reject body missing a top-level H1 header."""
+        body = """## Details
+Some content.
+"""
+        validator = SkillStructureValidator()
+        issues = validator.validate(body)
+        assert len(issues) > 0
+        assert any(
+            'top-level header' in str(issue).lower() or 'h1' in str(issue).lower()
+            for issue in issues
+        )
 
-## Features
-- Validates frontmatter
-- Checks file structure
+    def test_validate_at_least_one_h1(self):
+        """Should accept body containing at least one H1 header."""
+        body = """# Summary
+This is a valid skill body.
+
+## Details
+Additional content.
 """
         validator = SkillStructureValidator()
         issues = validator.validate(body)
         assert len(issues) == 0
 
-    def test_validate_missing_overview(self):
-        """Should reject structure missing Overview section."""
-        body = """## When to use this skill
-Use this skill.
-"""
-        validator = SkillStructureValidator()
-        issues = validator.validate(body)
-        assert len(issues) > 0
-        assert any('overview' in str(issue).lower() for issue in issues)
+    def test_validate_warns_on_short_first_section(self):
+        """Should warn when the first H1 section is empty or very short."""
+        body = """# Summary
 
-    def test_validate_missing_when_to_use(self):
-        """Should reject structure missing 'When to use' section."""
-        body = """# Overview
-This is an overview.
-"""
-        validator = SkillStructureValidator()
-        issues = validator.validate(body)
-        assert len(issues) > 0
-
-    def test_validate_heading_hierarchy(self):
-        """Should validate proper markdown heading hierarchy."""
-        body = """# Overview
-This is an overview.
-
-## When to use this skill
-Use this.
-"""
-        validator = SkillStructureValidator()
-        issues = validator.validate(body)
-        # Should validate H1 -> H2 progression
-        assert isinstance(issues, list)
-
-    def test_validate_missing_subheadings(self):
-        """Should warn about missing helpful subheadings."""
-        body = """# Overview
-Some content.
-
-## When to use this skill
-When you need it.
-
-A lot of content without subheadings."""
-        validator = SkillStructureValidator()
-        issues = validator.validate(body, show_warnings=True)
-        # May have warnings about organization
-        assert isinstance(issues, list)
-
-    def test_validate_empty_sections(self):
-        """Should warn about empty sections."""
-        body = """# Overview
-
-## When to use this skill
+## Details
+More content here.
 """
         validator = SkillStructureValidator()
         issues = validator.validate(body, show_warnings=True)
         assert len(issues) > 0
+        assert any(
+            'short' in str(issue).lower() or 'empty' in str(issue).lower() for issue in issues
+        )
 
 
 class TestUniquenessValidator:
@@ -201,9 +176,7 @@ class TestUniquenessValidator:
         """Should accept skill with unique name."""
         validator = UniquenessValidator({})
         issues = validator.validate(
-            skill_path='/path/to/my-skill/SKILL.md',
-            metadata={'name': 'my-skill'},
-            all_skills={}
+            skill_path='/path/to/my-skill/SKILL.md', metadata={'name': 'my-skill'}, all_skills={}
         )
         assert len(issues) == 0
 
@@ -212,32 +185,30 @@ class TestUniquenessValidator:
         all_skills = {
             '/path/to/existing-skill/SKILL.md': {
                 'frontmatter': {'name': 'my-skill'},
-                'body': 'Content'
+                'body': 'Content',
             }
         }
         validator = UniquenessValidator(all_skills)
         issues = validator.validate(
             skill_path='/path/to/my-skill/SKILL.md',
             metadata={'name': 'my-skill'},
-            all_skills=all_skills
+            all_skills=all_skills,
         )
         assert len(issues) > 0
-        assert any('duplicate' in str(issue).lower() or 'unique' in str(issue).lower() 
-                  for issue in issues)
+        assert any(
+            'duplicate' in str(issue).lower() or 'unique' in str(issue).lower() for issue in issues
+        )
 
     def test_validate_case_insensitive_duplicates(self):
         """Should detect duplicates regardless of case."""
         all_skills = {
-            '/path/to/my-skill/SKILL.md': {
-                'frontmatter': {'name': 'my-skill'},
-                'body': 'Content'
-            }
+            '/path/to/my-skill/SKILL.md': {'frontmatter': {'name': 'my-skill'}, 'body': 'Content'}
         }
         validator = UniquenessValidator(all_skills)
         issues = validator.validate(
             skill_path='/path/to/other/SKILL.md',
             metadata={'name': 'MY-SKILL'},
-            all_skills=all_skills
+            all_skills=all_skills,
         )
         # Should detect case-insensitive duplicate
         assert len(issues) > 0
@@ -249,47 +220,42 @@ class TestCrossReferenceValidator:
     def test_validate_valid_references(self, tmp_path):
         """Should accept valid file references."""
         # Create sample files
-        skill_file = tmp_path / "SKILL.md"
-        referenced_file = tmp_path / "supporting.md"
-        skill_file.write_text("See [supporting](supporting.md)")
-        referenced_file.write_text("Content")
-        
+        skill_file = tmp_path / 'SKILL.md'
+        referenced_file = tmp_path / 'supporting.md'
+        skill_file.write_text('See [supporting](supporting.md)')
+        referenced_file.write_text('Content')
+
         validator = CrossReferenceValidator(str(tmp_path))
         issues = validator.validate(
-            skill_path=str(skill_file),
-            metadata={},
-            content="See [supporting](supporting.md)"
+            skill_path=str(skill_file), metadata={}, content='See [supporting](supporting.md)'
         )
         assert len(issues) == 0
 
     def test_validate_broken_references(self, tmp_path):
         """Should reject broken file references."""
-        skill_file = tmp_path / "SKILL.md"
-        skill_file.write_text("See [missing](nonexistent.md)")
-        
+        skill_file = tmp_path / 'SKILL.md'
+        skill_file.write_text('See [missing](nonexistent.md)')
+
         validator = CrossReferenceValidator(str(tmp_path))
         issues = validator.validate(
-            skill_path=str(skill_file),
-            metadata={},
-            content="See [missing](nonexistent.md)"
+            skill_path=str(skill_file), metadata={}, content='See [missing](nonexistent.md)'
         )
         assert len(issues) > 0
-        assert any('reference' in str(issue).lower() or 'broken' in str(issue).lower() 
-                  for issue in issues)
+        assert any(
+            'reference' in str(issue).lower() or 'broken' in str(issue).lower() for issue in issues
+        )
 
     def test_validate_absolute_path_references(self, tmp_path):
         """Should handle absolute path references."""
-        skill_file = tmp_path / "SKILL.md"
-        referenced = tmp_path / "docs" / "guide.md"
+        skill_file = tmp_path / 'SKILL.md'
+        referenced = tmp_path / 'docs' / 'guide.md'
         referenced.parent.mkdir()
-        referenced.write_text("Guide content")
-        skill_file.write_text("See [guide](/docs/guide.md)")
-        
+        referenced.write_text('Guide content')
+        skill_file.write_text('See [guide](/docs/guide.md)')
+
         validator = CrossReferenceValidator(str(tmp_path))
         issues = validator.validate(
-            skill_path=str(skill_file),
-            metadata={},
-            content="See [guide](/docs/guide.md)"
+            skill_path=str(skill_file), metadata={}, content='See [guide](/docs/guide.md)'
         )
         # Should either pass or warn appropriately
         assert isinstance(issues, list)
@@ -307,18 +273,21 @@ class TestValidatorsEdgeCases:
     def test_validators_none_values(self):
         """Should handle None values appropriately."""
         frontmatter_validator = SkillFrontmatterValidator()
-        issues = frontmatter_validator.validate({
-            'name': None,
-            'description': None,
-        })
+        issues = frontmatter_validator.validate(
+            {
+                'name': None,
+                'description': None,
+            }
+        )
         assert len(issues) > 0
 
     def test_validators_whitespace_only_values(self):
         """Should reject whitespace-only values."""
         frontmatter_validator = SkillFrontmatterValidator()
-        issues = frontmatter_validator.validate({
-            'name': '   ',
-            'description': '   ',
-        })
+        issues = frontmatter_validator.validate(
+            {
+                'name': '   ',
+                'description': '   ',
+            }
+        )
         assert len(issues) > 0
-
