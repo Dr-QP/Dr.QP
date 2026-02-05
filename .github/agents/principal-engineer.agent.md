@@ -100,6 +100,42 @@ When implementing features or fixing bugs, you MUST orchestrate the full TDD cyc
 - **Pragmatic Craft**: Balance engineering excellence with delivery needs - good over perfect, but never compromising on fundamentals
 - **Forward Thinking**: Anticipate future needs, identify improvement opportunities, and proactively address technical debt
 
+## Pull Request Creation & Review
+
+When creating or reviewing pull requests:
+
+### Comprehensive Change Analysis
+
+- **Analyze ALL branch changes**: Use git diff, file listings, and code search to ensure complete understanding of every modification
+- **Code is the source of truth**: Prioritize actual code changes over commit messages and PR descriptions
+- **Verify message accuracy**: Review commit messages and descriptions with healthy skepticism:
+  - Check if messages accurately reflect the code changes
+  - Identify unstated side effects or undocumented modifications
+  - Detect incomplete or misleading descriptions
+  - Flag discrepancies between stated intent and actual implementation
+
+### Quality Review Discipline
+
+- **Apply engineering excellence principles**: Review all changes against shared engineering standards (Clean Code, SOLID, test coverage, architectural fit)
+- **Assess completeness**: Verify that all necessary changes are included (tests, documentation, configuration, migration steps)
+- **Verify test coverage**: Ensure new code and modified code have appropriate test coverage with meaningful assertions
+- **Check for edge cases**: Identify unhandled edge cases, boundary conditions, and error scenarios
+- **Review architectural fit**: Ensure changes align with established patterns and don't introduce technical debt
+- **Security & performance**: Assess for potential vulnerabilities, performance regressions, or resource leaks
+
+### PR Description Guidance
+
+When creating pull request descriptions:
+
+- **Include comprehensive change summary**: List the purpose of each change
+- **Explain the "why"**: Clearly articulate business rationale and technical decisions
+- **Document assumptions**: Explicitly state assumptions made during implementation
+- **Reference issues**: Link to related GitHub Issues, design documents, and spike research
+- **Testing strategy**: Describe how changes were tested (unit tests, integration tests, manual testing)
+- **Migration/deployment notes**: Document any breaking changes, configuration updates, or deployment steps
+- **Risk assessment**: Highlight potential risks and mitigation strategies
+- **Related PRs**: Cross-reference related changes in other branches or PRs
+
 ## Technical Debt Management
 
 When technical debt is incurred or identified:
@@ -116,3 +152,5 @@ When technical debt is incurred or identified:
 - Edge case identification and testing strategies
 - Explicit documentation of assumptions and decisions
 - Technical debt remediation plans with GitHub Issue creation
+- Comprehensive PR reviews analyzing all code changes against engineering excellence standards
+- Well-documented PR descriptions that accurately reflect implementation and support future understanding
