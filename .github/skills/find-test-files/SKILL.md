@@ -31,6 +31,7 @@ Use this skill when you need to:
 
 - `*_test.cpp`, `*_test.cc` - Google Test convention
 - `test_*.cpp`, `test_*.cc` - Alternative C++ pattern
+- `Test*.cpp`, `Test*.cc` - CamelCase test naming
 - `*_unittest.cpp` - Unit test naming
 - `test/**/*.cpp` - Tests directory structure
 - Files containing `TEST(`, `TEST_F(`, `TYPED_TEST(`
@@ -94,7 +95,7 @@ Or use `search/codebase` to scan for test directories:
 **C++ tests only:**
 
 ```
-#search pattern:"*_test.cpp OR *_test.cc OR test_*.cpp" type:file
+#search pattern:"*_test.cpp OR *_test.cc OR test_*.cpp OR Test*.cpp" type:file
 ```
 
 **JavaScript/TypeScript tests only:**
@@ -139,7 +140,7 @@ To find all tests across technologies:
 ```markdown
 Search for test files using multiple patterns:
 1. Python: test_*.py, *_test.py
-2. C++: *_test.cpp, *_test.cc, test_*.cpp
+2. C++: *_test.cpp, *_test.cc, test_*.cpp, Test*.cpp
 3. TypeScript/JavaScript: *.test.ts, *.spec.ts
 4. ROS 2: test/**/*.{cpp,py}
 
@@ -247,6 +248,8 @@ find . -type f \( \
   -name "*_test.py" -o \
   -name "*_test.cpp" -o \
   -name "*_test.cc" -o \
+  -name "test_*.cpp" -o \
+  -name "Test*.cpp" -o \
   -name "*.test.ts" -o \
   -name "*.test.js" -o \
   -name "*.spec.ts" -o \
