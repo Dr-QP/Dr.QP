@@ -12,9 +12,47 @@ For comprehensive engineering standards and best practices, refer to [shared eng
 - Use consistent, idiomatic patterns
 - Follow language-specific conventions
 
+## Available Agents
+
+This workspace provides specialized agents for different development tasks. You can request a specific agent by name, or choose based on your task:
+
+### Planning & Analysis Agents
+
+- **[Task Planner](/.github/agents/task-planner.agent.md)** - Create actionable implementation plans
+- **[Task Researcher](/.github/agents/task-researcher.agent.md)** - Comprehensive project analysis and research
+- **[Technical Spike Researcher](/.github/agents/technical-spike-researcher.agent.md)** - Systematically research and validate technical spike documents
+- **[Issue Refiner](/.github/agents/issue-refiner.agent.md)** - Refine requirements with acceptance criteria, technical considerations, and edge cases
+
+### Development Agents
+
+- **[Code Alchemist](/.github/agents/code-alchemist.agent.md)** - Transform code with Clean Code principles and SOLID design
+- **[C++ Expert](/.github/agents/cpp-expert.agent.md)** - Expert C++ software engineering guidance using modern C++ practices
+- **[React Expert](/.github/agents/react-expert.agent.md)** - Expert React frontend engineer with modern hooks and performance optimization
+- **[Principal Engineer](/.github/agents/principal-engineer.agent.md)** - Principal-level software engineering guidance with focus on excellence and pragmatic implementation
+
+### Testing & Quality Agents
+
+- **[TDD Red](/.github/agents/tdd-red.agent.md)** - Write failing tests that describe desired behavior before implementation
+- **[TDD Green](/.github/agents/tdd-green.agent.md)** - Implement minimal code to satisfy requirements and make tests pass
+- **[TDD Refactor](/.github/agents/tdd-refactor.agent.md)** - Improve code quality while maintaining tests and compliance
+
+### Debugging & Review Agents
+
+- **[Debugger](/.github/agents/debug.agent.md)** - Debug your application to find and fix bugs
+- **[Security Sentinel](/.github/agents/security-sentinel.agent.md)** - Review code for security issues and vulnerabilities
+- **[Tech Debt Remediator](/.github/agents/tech-debt-remediator.agent.md)** - Generate technical debt remediation plans
+
+### Support Agents
+
+- **[Prompt Builder](/.github/agents/prompt-builder.agent.md)** - Expert prompt engineering and validation system
+- **[Mentor](/.github/agents/mentor.agent.md)** - Challenge assumptions and mentor engineers through Socratic questioning
+- **[Technical Content Evaluator](/.github/agents/technical-content-evaluator.agent.md)** - Review technical materials for accuracy and pedagogical excellence
+- **[Custom Agent Foundry](/.github/agents/custom-agent-foundry.agent.md)** - Design and create VS Code custom agents
+- **[Deep Thinker](/.github/agents/deep-thinker.agent.md)** - Advanced reasoning with creative freedom for complex problems
+
 ### When in Doubt
 
-Consult with #subAgent principal-software-engineer
+Consult with the **Principal Engineer** agent for senior-level guidance on architecture, design decisions, and implementation strategies.
 
 ## Available Skills
 
