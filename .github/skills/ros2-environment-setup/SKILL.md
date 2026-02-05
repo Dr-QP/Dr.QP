@@ -22,7 +22,7 @@ Initialize and configure the ROS 2 development environment for both local and re
 ## Prerequisites
 
 - ROS 2 Jazzy installed at `/opt/ros/jazzy/`
- - Workspace cloned to your workspace root
+- Workspace cloned to your workspace root
 - Bash shell available (sourcing scripts)
 - For local development: system dependencies installed (CMake, compilers, etc.)
 - For remote development: Docker and VS Code Remote Extensions
