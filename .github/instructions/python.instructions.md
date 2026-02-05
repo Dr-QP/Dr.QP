@@ -27,6 +27,9 @@ For general engineering principles, code quality standards, and best practices, 
 
 ### Edge Cases and Testing
 
+- Always use `pytest` for writing tests
+- Structure tests to be easily runnable in local environments
+- Limit number of tests per test file to maintain clarity and focus. Prefer multiple smaller, focused test files over large monolithic ones.
 - Always include test cases for critical paths of the application
 - Account for common edge cases like empty inputs, invalid data types, and large datasets
 - Include comments for edge cases and the expected behavior in those cases
