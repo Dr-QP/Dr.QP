@@ -1,237 +1,80 @@
-# Agents guidelines
+# Agents Guidelines
 
-## General Instructions
+## General Engineering Principles
 
-- Always prioritize readability and clarity.
-- For algorithm-related code, include explanations of the approach used.
-- Write code with good maintainability practices, including comments on why certain design decisions were made.
-- Handle edge cases and write clear exception handling.
-- For libraries or external dependencies, mention their usage and purpose in comments.
-- Use consistent naming conventions and follow language-specific best practices.
-- Write concise, efficient, and idiomatic code that is also easily understandable.
-- Avoid deep nesting; refactor code into smaller functions when necessary.
-- Avoid inlining existing code.
-- Prefer use of existing libraries and frameworks over custom implementations.
-- Follow Clean Code principles where applicable.
+For comprehensive engineering standards and best practices, refer to [shared engineering guidelines](/.github/instructions/engineering.instructions.md).
+
+**Quick reference**:
+
+- Prioritize readability and clarity
+- Apply Clean Code and SOLID principles
+- Handle edge cases and exceptions explicitly
+- Use consistent, idiomatic patterns
+- Follow language-specific conventions
+
+## Available Agents
+
+This workspace provides specialized agents for different development tasks. You can request a specific agent by name, or choose based on your task:
+
+### Planning & Analysis Agents
+
+- **[Task Planner](/.github/agents/task-planner.agent.md)** - Create actionable implementation plans
+- **[Task Researcher](/.github/agents/task-researcher.agent.md)** - Comprehensive project analysis and research
+- **[Technical Spike Researcher](/.github/agents/technical-spike-researcher.agent.md)** - Systematically research and validate technical spike documents
+- **[Issue Refiner](/.github/agents/issue-refiner.agent.md)** - Refine requirements with acceptance criteria, technical considerations, and edge cases
+
+### Development Agents
+
+- **[Code Alchemist](/.github/agents/code-alchemist.agent.md)** - Transform code with Clean Code principles and SOLID design
+- **[C++ Expert](/.github/agents/cpp-expert.agent.md)** - Expert C++ software engineering guidance using modern C++ practices
+- **[React Expert](/.github/agents/react-expert.agent.md)** - Expert React frontend engineer with modern hooks and performance optimization
+- **[Principal Engineer](/.github/agents/principal-engineer.agent.md)** - Principal-level software engineering guidance with focus on excellence and pragmatic implementation
+
+### Testing & Quality Agents
+
+- **[TDD Red](/.github/agents/tdd-red.agent.md)** - Write failing tests that describe desired behavior before implementation
+- **[TDD Green](/.github/agents/tdd-green.agent.md)** - Implement minimal code to satisfy requirements and make tests pass
+- **[TDD Refactor](/.github/agents/tdd-refactor.agent.md)** - Improve code quality while maintaining tests and compliance
+
+### Debugging & Review Agents
+
+- **[Debugger](/.github/agents/debug.agent.md)** - Debug your application to find and fix bugs
+- **[Security Sentinel](/.github/agents/security-sentinel.agent.md)** - Review code for security issues and vulnerabilities
+- **[Tech Debt Remediator](/.github/agents/tech-debt-remediator.agent.md)** - Generate technical debt remediation plans
+
+### Support Agents
+
+- **[Prompt Builder](/.github/agents/prompt-builder.agent.md)** - Expert prompt engineering and validation system
+- **[Mentor](/.github/agents/mentor.agent.md)** - Challenge assumptions and mentor engineers through Socratic questioning
+- **[Technical Content Evaluator](/.github/agents/technical-content-evaluator.agent.md)** - Review technical materials for accuracy and pedagogical excellence
+- **[Custom Agent Foundry](/.github/agents/custom-agent-foundry.agent.md)** - Design and create VS Code custom agents
+- **[Deep Thinker](/.github/agents/deep-thinker.agent.md)** - Advanced reasoning with creative freedom for complex problems
 
 ### When in Doubt
 
-When in doubt consult with #subAgent principal-software-engineer
+Consult with the **Principal Engineer** agent for senior-level guidance on architecture, design decisions, and implementation strategies.
 
-### When doing code reviews
+## Available Skills
 
-- Always use neutral and positive language.
-- Always write PR description in imperative mood.
-- Write a comprehensive pull request description in the PR body, including what was changed and why.
-- Never write per file changes table in PR description.
-- Never write line/change counts in PR description.
-- Never add copilot advertisement text, requests for copilot improvement or any other AI tool info to the PR description.
-- Never use invisible structures or html comments in PR description.
-- Treat PR description to the highest quality of git commit message.
+This workspace provides specialized Agent Skills that enhance your capabilities:
+
+- **[ros2-workspace-build](/.github/skills/ros2-workspace-build/SKILL.md)**: Build ROS 2 packages with colcon (incremental builds, debug symbols, coverage)
+- **[ros2-workspace-testing](/.github/skills/ros2-workspace-testing/SKILL.md)**: Test packages and generate coverage reports
+- **[ros2-dependency-management](/.github/skills/ros2-dependency-management/SKILL.md)**: Manage workspace dependencies via rosdep and pip
+- **[ros2-environment-setup](/.github/skills/ros2-environment-setup/SKILL.md)**: Initialize and configure the development environment
+- **[code-review-standards](/.github/skills/code-review-standards/SKILL.md)**: Write PR descriptions and conduct code reviews
+- **[find-test-files](/.github/skills/find-test-files/SKILL.md)**: Identify and summarize relevant test files for a given change or component
 
 ## ROS 2 Development Environment
 
 This is a ROS 2 Jazzy workspace using colcon build system for C++ and Python packages.
 
-### Environment Setup
+For detailed workflow guidance, use the relevant **Agent Skill** for your task:
 
-#### ROS Environment Initialization
-
-Always source the setup script before running builds or tests:
-
-```bash
-source scripts/setup.bash
-```
-
-The setup script does the following:
-
-1. Sources `/opt/ros/jazzy/setup.bash` (base ROS installation)
-2. Sources `install/local_setup.bash` (workspace overlay) if it exists
-3. Sets up the production Python virtual environment
-
-**Optional flags:**
-
-- `--update-venv`: Update the Python virtual environment with latest dependencies
-
-#### Devcontainer for Remote Development
-
-When running as a remote agent or in GitHub Codespaces, **ALWAYS use the devcontainer** for testing and development.
-
-The devcontainer configuration is in `.devcontainer/devcontainer.json`:
-
-- **Base image**: `ghcr.io/dr-qp/jazzy-ros-desktop:edge`
-- **Workspace path**: `/opt/ros/overlay_ws/`
-- **Post-attach commands**: Automatically sets up Python venv and runs rosdep
-- **Volumes**: Persists build artifacts, install directory, logs, and caches across sessions
-
-The devcontainer provides a consistent environment with:
-
-- ROS 2 Jazzy fully installed
-- All system dependencies pre-configured
-- Proper network and IPC settings for ROS communication
-- Development tools (clangd, debuggers, test viewers)
-
-### Building the Workspace
-
-#### Incremental Builds (Recommended for Development)
-
-For rapid iteration when developing a specific package, build **only that package and its dependencies**:
-
-```bash
-source scripts/setup.bash
-python3 -m colcon build \
-  --symlink-install \
-  --event-handlers console_cohesion+ \
-  --packages-up-to <package_name>
-```
-
-**Common options:**
-
-- `--packages-up-to <pkg>`: Build package and all its dependencies
-- `--packages-select <pkg>`: Build only the specified package (no dependencies)
-- `--symlink-install`: Use symlinks for Python packages (faster iteration)
-- `--event-handlers console_cohesion+`: Cleaner console output
-- `--cmake-args -GNinja`: Use Ninja build system (faster than Make)
-- `--cmake-args -D CMAKE_BUILD_TYPE=Debug`: Build with debug symbols
-- `--cmake-args -D DRQP_ENABLE_COVERAGE=ON`: Enable coverage instrumentation
-
-**Examples:**
-
-```bash
-# Build only drqp_serial and its dependencies
-python3 -m colcon build --symlink-install --packages-up-to drqp_serial
-
-# Build only drqp_control (no dependencies)
-python3 -m colcon build --symlink-install --packages-select drqp_control
-
-# Build with debug symbols and coverage
-python3 -m colcon build --symlink-install --packages-up-to drqp_brain \
-  --cmake-args -GNinja -D CMAKE_BUILD_TYPE=Debug -D DRQP_ENABLE_COVERAGE=ON
-```
-
-#### Full Workspace Build (Use Only When Requested)
-
-**WARNING: Full builds take significant time (10-20+ minutes). Only use when explicitly requested or when making cross-cutting changes affecting multiple packages.**
-
-Full build command from `Dr.QP.code-workspace`:
-
-```bash
-source scripts/setup.bash
-python3 -m colcon build \
-  --symlink-install \
-  --event-handlers console_cohesion+ \
-  --base-paths ${workspaceFolder} \
-  --cmake-args \
-    -GNinja \
-    -D CMAKE_BUILD_TYPE=Debug \
-    -D DRQP_ENABLE_COVERAGE=ON \
-    --no-warn-unused-cli
-```
-
-**Environment variables for the build:**
-
-```bash
-export CMAKE_EXPORT_COMPILE_COMMANDS=1
-export CC=clang
-export CXX=clang++
-```
-
-#### Build Output Locations
-
-- **Build artifacts**: `build/<package_name>/`
-- **Installed packages**: `install/<package_name>/`
-- **Build logs**: `log/latest_build/`
-- **Compile commands**: `build/compile_commands.json` (for clangd/IDE integration)
-
-### Testing the Workspace
-
-#### Test Specific Package (Recommended for Development)
-
-For rapid iteration, run tests **only for the package you're developing**:
-
-```bash
-source scripts/setup.bash --update-venv
-python3 -m colcon test \
-  --event-handlers console_cohesion+ summary+ status+ \
-  --return-code-on-test-failure \
-  --packages-select <package_name>
-```
-
-**Common test options:**
-
-- `--packages-select <pkg>`: Test only the specified package
-- `--mixin coverage-pytest`: Enable coverage collection for Python/C++ tests
-- `--event-handlers console_cohesion+ summary+ status+`: Enhanced test output
-- `--return-code-on-test-failure`: Exit with non-zero code on test failure
-- `--packages-select-test-failures`: Re-run only previously failed tests
-
-**Examples:**
-
-```bash
-# Test only drqp_serial package
-python3 -m colcon test --packages-select drqp_serial \
-  --event-handlers console_cohesion+ summary+ status+ \
-  --return-code-on-test-failure
-
-# Test with coverage enabled
-python3 -m colcon test --packages-select drqp_brain \
-  --mixin coverage-pytest \
-  --event-handlers console_cohesion+ summary+ status+ \
-  --return-code-on-test-failure
-
-# Re-run only failed tests
-python3 -m colcon test --packages-select-test-failures \
-  --event-handlers console_cohesion+ summary+ status+ \
-  --return-code-on-test-failure
-```
-
-#### Full Workspace Tests (Use Only When Requested)
-
-**WARNING: Full test suite can take 10-20+ minutes. Only use when explicitly requested or before final integration.**
-
-```bash
-source scripts/setup.bash --update-venv
-python3 -m colcon test \
-  --event-handlers console_cohesion+ summary+ status+ \
-  --return-code-on-test-failure \
-  --mixin coverage-pytest
-```
-
-#### Test Output Locations
-
-- **Test results**: `build/<package_name>/test_results/<package_name>/*.xunit.xml`
-- **Test logs**: `log/latest_test/<package_name>/`
-- **Coverage data**:
-  - C++: `build/<package_name>/coverage.info` (LCOV format)
-  - Python: `build/<package_name>/.coverage` (Coverage.py format)
-
-#### Collecting and Viewing Test Results
-
-**View test summary:**
-
-```bash
-python3 -m colcon test-result --all
-python3 -m colcon test-result --verbose  # Detailed output
-```
-
-**Generate coverage reports:**
-
-```bash
-# Process LLVM coverage for C++ packages
-./packages/cmake/llvm-cov-export-all.py ./build
-
-# View coverage in VS Code using Coverage Gutters extension
-# Coverage files are automatically discovered from build/**/*.info
-```
-
-**View test results in browser:**
-
-```bash
-# Launch xunit-viewer for interactive test result browsing
-npx -y xunit-viewer -r build --server -o build/xunit-index.html \
-  -i Test.xml -i coverage.xml -i package.xml --watch
-# Opens on http://localhost:3000
-```
+- **Environment Setup**: Use [ros2-environment-setup](/.github/skills/ros2-environment-setup/SKILL.md)
+- **Building**: Use [ros2-workspace-build](/.github/skills/ros2-workspace-build/SKILL.md)
+- **Testing**: Use [ros2-workspace-testing](/.github/skills/ros2-workspace-testing/SKILL.md)
+- **Dependencies**: Use [ros2-dependency-management](/.github/skills/ros2-dependency-management/SKILL.md)
 
 ## Package Structure
 
@@ -283,37 +126,7 @@ python3 -m colcon test --mixin coverage-pytest \
 
 ### Dependency Management
 
-#### Tool dependencies
-
-Tool dependencies are managed via rosdep.
-
-#### C++ dependencies
-
-C++ and CMake dependencies are managed via rosdep.
-
-#### Python dependencies
-
-Development and docs dependencies are managed via `requirements.txt` and installed in `.venv/`:
-
-```bash
-python3 -m venv .venv
-.venv/bin/python3 -m pip install -r requirements.txt --use-pep517
-```
-
-Python production dependencies are managed via rosdep and specified in `package.xml` files.
-If python dependency is not available via rosdep registry it is managed via the `setup.py`/`setup.cfg` package dependencies.
-
-#### Install ROS dependencies
-
-```bash
-./scripts/ros-dep.sh
-```
-
-This script:
-
-1. Runs `rosdep update`
-2. Installs all package dependencies from `package.xml` files
-3. Ensures system dependencies are satisfied
+For comprehensive dependency management guidance (C++, Python, rosdep, pip), see the [ros2-dependency-management](/.github/skills/ros2-dependency-management/SKILL.md) skill.
 
 ### Cleaning Build Artifacts
 
@@ -334,3 +147,7 @@ This script:
 8. **Use `--symlink-install`** for faster Python development iteration
 9. **Enable coverage** with `--mixin coverage-pytest` when testing
 10. **Re-run failed tests** with `--packages-select-test-failures` to save time
+
+## Code Review Standards
+
+For comprehensive code review guidance and PR description standards, see the [code-review-standards](/.github/skills/code-review-standards/SKILL.md) skill.

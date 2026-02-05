@@ -52,25 +52,30 @@ license: Complete terms in LICENSE.txt
 
 **CRITICAL**: The `description` field is the PRIMARY mechanism for automatic skill discovery. Copilot reads ONLY the `name` and `description` to decide whether to load a skill. If your description is vague, the skill will never be activated.
 
-**What to include in description:**
+**What to include in description** — Follow the **WHAT/WHEN/KEYWORDS pattern**:
 1. **WHAT** the skill does (capabilities)
 2. **WHEN** to use it (specific triggers, scenarios, file types, or user requests)
 3. **Keywords** that users might mention in their prompts
 
-**Good description:**
+**Example of excellent description:**
 ```yaml
 description: Toolkit for testing local web applications using Playwright. Use when asked to verify frontend functionality, debug UI behavior, capture browser screenshots, check for visual regressions, or view browser console logs. Supports Chrome, Firefox, and WebKit browsers.
 ```
 
-**Poor description:**
+**Example of poor description:**
 ```yaml
 description: Web testing helpers
 ```
+This fails because: no specific triggers, no keywords, no clear capabilities.
 
-The poor description fails because:
-- No specific triggers (when should Copilot load this?)
-- No keywords (what user prompts would match?)
-- No capabilities (what can it actually do?)
+### Common Skill Discovery Issues
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| Skill never activates | Vague/generic description | Rewrite using WHAT/WHEN/KEYWORDS pattern |
+| Activates on wrong requests | Keywords too broad | Use specific, narrow trigger phrases |
+| Conflicting skill activations | Multiple skills with overlapping descriptions | Differentiate trigger keywords and use cases |
+| Users don't know skill exists | Missing context in body | Add "When to Use" section with example prompts |
 
 ### Body Content
 
