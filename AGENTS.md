@@ -63,6 +63,7 @@ This workspace provides specialized Agent Skills that enhance your capabilities:
 - **[ros2-dependency-management](/.github/skills/ros2-dependency-management/SKILL.md)**: Manage workspace dependencies via rosdep and pip
 - **[ros2-environment-setup](/.github/skills/ros2-environment-setup/SKILL.md)**: Initialize and configure the development environment
 - **[code-review-standards](/.github/skills/code-review-standards/SKILL.md)**: Write PR descriptions and conduct code reviews
+- **[find-test-files](/.github/skills/find-test-files/SKILL.md)**: Identify and summarize relevant test files for a given change or component
 
 ## ROS 2 Development Environment
 
