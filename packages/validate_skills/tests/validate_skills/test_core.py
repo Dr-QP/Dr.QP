@@ -21,7 +21,6 @@
 
 """Unit tests for validation engine core."""
 
-import pytest
 from validate_skills.core import ValidationEngine, ValidationResult
 
 
@@ -35,7 +34,7 @@ class TestValidationEngineBasic:
 
     def test_validation_engine_validate_valid_skill(self, tmp_path):
         """Should validate a valid skill without errors."""
-        skill_file = tmp_path / "SKILL.md"
+        skill_file = tmp_path / 'SKILL.md'
         skill_file.write_text("""---
 name: test-skill
 description: A comprehensive description of what this skill does and when to use it.
@@ -45,39 +44,39 @@ This is an overview.
 
 ## When to use this skill
 Use this when you need it.""")
-        
+
         engine = ValidationEngine(show_warnings=False)
         result = engine.validate(str(skill_file), all_skills={})
-        
+
         assert isinstance(result, ValidationResult)
         assert result.skill_path == str(skill_file)
 
     def test_validation_engine_validate_invalid_frontmatter(self, tmp_path):
         """Should report errors for invalid frontmatter."""
-        skill_file = tmp_path / "SKILL.md"
+        skill_file = tmp_path / 'SKILL.md'
         skill_file.write_text("""---
 description: Missing name field
 ---
 Content""")
-        
+
         engine = ValidationEngine()
         result = engine.validate(str(skill_file), all_skills={})
-        
+
         assert not result.is_valid
         assert len(result.issues) > 0
 
     def test_validation_engine_validate_invalid_structure(self, tmp_path):
         """Should report errors for invalid structure."""
-        skill_file = tmp_path / "SKILL.md"
+        skill_file = tmp_path / 'SKILL.md'
         skill_file.write_text("""---
 name: test-skill
 description: A comprehensive description of what this skill does and when to use it.
 ---
 Missing sections""")
-        
+
         engine = ValidationEngine()
         result = engine.validate(str(skill_file), all_skills={})
-        
+
         assert not result.is_valid
         assert len(result.issues) > 0
 
@@ -87,7 +86,7 @@ class TestValidationEngineWarnings:
 
     def test_validation_engine_show_warnings_default(self, tmp_path):
         """Should include warnings by default."""
-        skill_file = tmp_path / "SKILL.md"
+        skill_file = tmp_path / 'SKILL.md'
         skill_file.write_text("""---
 name: test-skill
 description: A comprehensive description of what this skill does and when to use it.
@@ -97,16 +96,16 @@ Content here
 
 ## When to use this skill
 Content here""")
-        
+
         engine = ValidationEngine(show_warnings=True)
         result = engine.validate(str(skill_file), all_skills={})
-        
+
         # Result should include any warnings
         assert isinstance(result, ValidationResult)
 
     def test_validation_engine_exclude_warnings(self, tmp_path):
         """Should exclude warnings when show_warnings=False."""
-        skill_file = tmp_path / "SKILL.md"
+        skill_file = tmp_path / 'SKILL.md'
         skill_file.write_text("""---
 name: test-skill
 description: A comprehensive description of what this skill does and when to use it.
@@ -116,10 +115,10 @@ Overview content
 
 ## When to use this skill
 When to use content""")
-        
+
         engine = ValidationEngine(show_warnings=False)
         result = engine.validate(str(skill_file), all_skills={})
-        
+
         # Result should not include warnings
         assert all(issue.level != 'WARNING' for issue in result.issues)
 
@@ -129,32 +128,32 @@ class TestValidationEngineMultipleValidators:
 
     def test_validation_engine_runs_all_validators(self, tmp_path):
         """Should run all configured validators."""
-        skill_file = tmp_path / "SKILL.md"
+        skill_file = tmp_path / 'SKILL.md'
         skill_file.write_text("""---
 name: invalid@name
 description: Too short
 ---
 Content""")
-        
+
         engine = ValidationEngine()
         result = engine.validate(str(skill_file), all_skills={})
-        
+
         # Should have issues from multiple validators
         assert not result.is_valid
         assert len(result.issues) > 0
 
     def test_validation_engine_collects_all_issues(self, tmp_path):
         """Should collect issues from all validators."""
-        skill_file = tmp_path / "SKILL.md"
+        skill_file = tmp_path / 'SKILL.md'
         skill_file.write_text("""---
 name: bad_name
 description: Bad description value.
 ---
 Content""")
-        
+
         engine = ValidationEngine()
         result = engine.validate(str(skill_file), all_skills={})
-        
+
         # Should collect issues from:
         # - Frontmatter validator (name format, description length)
         # - Structure validator (missing sections)
@@ -168,11 +167,11 @@ class TestValidationEngineLoadedSkills:
 
     def test_validation_engine_with_all_skills(self, tmp_path):
         """Should check uniqueness against all loaded skills."""
-        skill1 = tmp_path / "skill1" / "SKILL.md"
-        skill2 = tmp_path / "skill2" / "SKILL.md"
+        skill1 = tmp_path / 'skill1' / 'SKILL.md'
+        skill2 = tmp_path / 'skill2' / 'SKILL.md'
         skill1.parent.mkdir()
         skill2.parent.mkdir()
-        
+
         skill1.write_text("""---
 name: unique-skill
 description: A comprehensive description of what this skill does and when to use it.
@@ -182,7 +181,7 @@ Content
 
 ## When to use this skill
 Content""")
-        
+
         skill2.write_text("""---
 name: unique-skill
 description: A comprehensive description of what this skill does and when to use it.
@@ -192,17 +191,12 @@ Content
 
 ## When to use this skill
 Content""")
-        
-        all_skills = {
-            str(skill1): {
-                'frontmatter': {'name': 'unique-skill'},
-                'body': 'Content'
-            }
-        }
-        
+
+        all_skills = {str(skill1): {'frontmatter': {'name': 'unique-skill'}, 'body': 'Content'}}
+
         engine = ValidationEngine()
         result = engine.validate(str(skill2), all_skills=all_skills)
-        
+
         # Should detect duplicate name
         assert not result.is_valid
 
@@ -213,32 +207,33 @@ class TestValidationEngineErrorHandling:
     def test_validation_engine_handles_missing_file(self):
         """Should handle missing file gracefully."""
         engine = ValidationEngine()
-        result = engine.validate("/nonexistent/skill/SKILL.md", all_skills={})
-        
+        result = engine.validate('/nonexistent/skill/SKILL.md', all_skills={})
+
         assert not result.is_valid
         assert len(result.issues) > 0
 
     def test_validation_engine_handles_invalid_yaml(self, tmp_path):
         """Should handle invalid YAML in frontmatter."""
-        skill_file = tmp_path / "SKILL.md"
+        skill_file = tmp_path / 'SKILL.md'
         skill_file.write_text("""---
 invalid: yaml: structure:
 ---
 Content""")
-        
+
         engine = ValidationEngine()
         result = engine.validate(str(skill_file), all_skills={})
-        
+
         assert not result.is_valid
         assert len(result.issues) > 0
 
     def test_validation_engine_handles_permission_denied(self, tmp_path):
         """Should handle permission denied errors."""
-        skill_file = tmp_path / "SKILL.md"
-        skill_file.write_text("---\nname: test\n---\nContent")
+        skill_file = tmp_path / 'SKILL.md'
+        skill_file.write_text('---\nname: test\n---\nContent')
         import os
+
         os.chmod(skill_file, 0o000)
-        
+
         try:
             engine = ValidationEngine()
             result = engine.validate(str(skill_file), all_skills={})
@@ -252,80 +247,74 @@ class TestValidationResult:
 
     def test_validation_result_is_valid_no_errors(self):
         """Should indicate valid when no error issues present."""
-        result = ValidationResult(
-            skill_path="/path/SKILL.md",
-            issues=[]
-        )
+        result = ValidationResult(skill_path='/path/SKILL.md', issues=[])
         assert result.is_valid is True
 
     def test_validation_result_is_valid_with_warnings(self):
         """Should indicate valid when only warnings present."""
         from validate_skills.core import ValidationIssue, ValidationLevel
+
         result = ValidationResult(
-            skill_path="/path/SKILL.md",
-            issues=[
-                ValidationIssue(level=ValidationLevel.WARNING, message="Warning")
-            ]
+            skill_path='/path/SKILL.md',
+            issues=[ValidationIssue(level=ValidationLevel.WARNING, message='Warning')],
         )
         assert result.is_valid is True
 
     def test_validation_result_is_valid_with_errors(self):
         """Should indicate invalid when errors present."""
         from validate_skills.core import ValidationIssue, ValidationLevel
+
         result = ValidationResult(
-            skill_path="/path/SKILL.md",
-            issues=[
-                ValidationIssue(level=ValidationLevel.ERROR, message="Error")
-            ]
+            skill_path='/path/SKILL.md',
+            issues=[ValidationIssue(level=ValidationLevel.ERROR, message='Error')],
         )
         assert result.is_valid is False
 
     def test_validation_result_has_warnings(self):
         """Should detect presence of warnings."""
         from validate_skills.core import ValidationIssue, ValidationLevel
+
         result = ValidationResult(
-            skill_path="/path/SKILL.md",
-            issues=[
-                ValidationIssue(level=ValidationLevel.WARNING, message="Warning")
-            ]
+            skill_path='/path/SKILL.md',
+            issues=[ValidationIssue(level=ValidationLevel.WARNING, message='Warning')],
         )
         assert result.has_warnings is True
 
     def test_validation_result_has_warnings_false(self):
         """Should indicate no warnings when none present."""
         from validate_skills.core import ValidationIssue, ValidationLevel
+
         result = ValidationResult(
-            skill_path="/path/SKILL.md",
-            issues=[
-                ValidationIssue(level=ValidationLevel.ERROR, message="Error")
-            ]
+            skill_path='/path/SKILL.md',
+            issues=[ValidationIssue(level=ValidationLevel.ERROR, message='Error')],
         )
         assert result.has_warnings is False
 
     def test_validation_result_issue_count(self):
         """Should count issues accurately."""
         from validate_skills.core import ValidationIssue, ValidationLevel
+
         result = ValidationResult(
-            skill_path="/path/SKILL.md",
+            skill_path='/path/SKILL.md',
             issues=[
-                ValidationIssue(level=ValidationLevel.ERROR, message="Error 1"),
-                ValidationIssue(level=ValidationLevel.ERROR, message="Error 2"),
-                ValidationIssue(level=ValidationLevel.WARNING, message="Warning"),
-            ]
+                ValidationIssue(level=ValidationLevel.ERROR, message='Error 1'),
+                ValidationIssue(level=ValidationLevel.ERROR, message='Error 2'),
+                ValidationIssue(level=ValidationLevel.WARNING, message='Warning'),
+            ],
         )
         assert len(result.issues) == 3
 
     def test_validation_result_error_count(self):
         """Should count errors separately."""
         from validate_skills.core import ValidationIssue, ValidationLevel
+
         result = ValidationResult(
-            skill_path="/path/SKILL.md",
+            skill_path='/path/SKILL.md',
             issues=[
-                ValidationIssue(level=ValidationLevel.ERROR, message="Error 1"),
-                ValidationIssue(level=ValidationLevel.ERROR, message="Error 2"),
-                ValidationIssue(level=ValidationLevel.WARNING, message="Warning"),
-            ]
+                ValidationIssue(level=ValidationLevel.ERROR, message='Error 1'),
+                ValidationIssue(level=ValidationLevel.ERROR, message='Error 2'),
+                ValidationIssue(level=ValidationLevel.WARNING, message='Warning'),
+            ],
         )
         error_count = len([i for i in result.issues if i.level == ValidationLevel.ERROR])
         assert error_count == 2
-

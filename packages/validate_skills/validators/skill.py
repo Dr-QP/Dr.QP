@@ -21,8 +21,8 @@
 
 """Validators for skill frontmatter and structure."""
 
-from typing import List
 import re
+from typing import List
 
 from validate_skills.types import ValidationIssue, ValidationLevel
 
@@ -31,7 +31,8 @@ class SkillFrontmatterValidator:
     """Validates skill frontmatter."""
 
     def validate(self, frontmatter: dict, show_warnings: bool = False) -> List[ValidationIssue]:
-        """Validate frontmatter content.
+        """
+        Validate frontmatter content.
 
         Args:
             frontmatter: Dictionary of frontmatter values
@@ -39,6 +40,7 @@ class SkillFrontmatterValidator:
 
         Returns:
             List of validation issues
+
         """
         issues = []
 
@@ -77,7 +79,7 @@ class SkillFrontmatterValidator:
                     issues.append(
                         ValidationIssue(
                             level=ValidationLevel.ERROR,
-                            message=f'Name exceeds maximum length of 64 characters',
+                            message='Name exceeds maximum length of 64 characters',
                             section='frontmatter',
                         )
                     )
@@ -152,7 +154,8 @@ class SkillStructureValidator:
     """Validates skill markdown structure."""
 
     def validate(self, body: str, show_warnings: bool = False) -> List[ValidationIssue]:
-        """Validate body content structure.
+        """
+        Validate body content structure.
 
         Args:
             body: The markdown body content
@@ -160,6 +163,7 @@ class SkillStructureValidator:
 
         Returns:
             List of validation issues
+
         """
         issues = []
         body_lower = body.lower()

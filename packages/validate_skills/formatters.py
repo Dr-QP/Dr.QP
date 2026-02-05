@@ -21,34 +21,37 @@
 
 """Output formatters for validation results."""
 
-import json
 import csv
 import io
+import json
 from typing import List
-from pathlib import Path
 
-from validate_skills.types import ValidationResult, ValidationLevel
+from validate_skills.types import ValidationLevel, ValidationResult
 
 
 class TextFormatter:
     """Formats results as readable text."""
 
     def __init__(self, use_colors: bool = False):
-        """Initialize the formatter.
+        """
+        Initialize the formatter.
 
         Args:
             use_colors: Whether to use ANSI color codes
+
         """
         self.use_colors = use_colors
 
     def format(self, result: ValidationResult) -> str:
-        """Format a single result.
+        """
+        Format a single result.
 
         Args:
             result: ValidationResult to format
 
         Returns:
             Formatted string
+
         """
         lines = []
         status = '✓' if result.is_valid else '✗'
@@ -60,13 +63,15 @@ class TextFormatter:
         return '\n'.join(lines)
 
     def format_summary(self, results: List[ValidationResult]) -> str:
-        """Format summary statistics.
+        """
+        Format summary statistics.
 
         Args:
             results: List of validation results
 
         Returns:
             Formatted summary
+
         """
         total = len(results)
         valid = sum(1 for r in results if r.is_valid)
@@ -85,13 +90,15 @@ class TextFormatter:
         return '\n'.join(lines)
 
     def format_batch(self, results: List[ValidationResult]) -> str:
-        """Format multiple results.
+        """
+        Format multiple results.
 
         Args:
             results: List of validation results
 
         Returns:
             Formatted batch output
+
         """
         if not results:
             return ''
@@ -104,13 +111,15 @@ class JSONFormatter:
     """Formats results as JSON."""
 
     def format(self, result: ValidationResult) -> str:
-        """Format a single result.
+        """
+        Format a single result.
 
         Args:
             result: ValidationResult to format
 
         Returns:
             JSON string
+
         """
         data = {
             'skill_path': result.skill_path,
@@ -128,13 +137,15 @@ class JSONFormatter:
         return json.dumps(data, indent=2)
 
     def format_batch(self, results: List[ValidationResult]) -> str:
-        """Format multiple results.
+        """
+        Format multiple results.
 
         Args:
             results: List of validation results
 
         Returns:
             JSON array string
+
         """
         data = [
             {
@@ -159,21 +170,25 @@ class CSVFormatter:
     """Formats results as CSV."""
 
     def get_header(self) -> str:
-        """Get CSV header row.
+        """
+        Get CSV header row.
 
         Returns:
             Header row string
+
         """
         return 'skill_path,is_valid,issue_level,issue_message,section'
 
     def format(self, result: ValidationResult) -> str:
-        """Format a single result.
+        """
+        Format a single result.
 
         Args:
             result: ValidationResult to format
 
         Returns:
             CSV row string
+
         """
         output = io.StringIO()
         writer = csv.writer(output)
@@ -196,7 +211,8 @@ class CSVFormatter:
 
 
 def format_results(results: List[ValidationResult], format: str = 'text') -> str:
-    """Format validation results in the requested format.
+    """
+    Format validation results in the requested format.
 
     Args:
         results: List of validation results
@@ -207,6 +223,7 @@ def format_results(results: List[ValidationResult], format: str = 'text') -> str
 
     Raises:
         ValueError: If format is not one of the supported types
+
     """
     if format not in ('text', 'json', 'csv'):
         raise ValueError(f"Invalid format '{format}'. Supported formats: text, json, csv")

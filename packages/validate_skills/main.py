@@ -26,18 +26,20 @@ from typing import List, Optional
 
 from validate_skills.cli import parse_arguments
 from validate_skills.core import ValidationEngine
-from validate_skills.loaders import SkillFileLoader, safe_load_frontmatter
 from validate_skills.formatters import format_results
+from validate_skills.loaders import safe_load_frontmatter, SkillFileLoader
 
 
 def main(args: Optional[List[str]] = None) -> int:
-    """Main entry point for the validate-skills tool.
+    """
+    Main entry point for the validate-skills tool.
 
     Args:
         args: Command-line arguments (if None, sys.argv is used)
 
     Returns:
         Exit code (0 for success, 1 for validation failures)
+
     """
     # Parse arguments
     parsed_args = parse_arguments(args)

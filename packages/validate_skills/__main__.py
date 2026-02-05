@@ -22,6 +22,7 @@
 """Entry point for running validate_skills as a module."""
 
 import sys
+
 from validate_skills.main import main
 
 if __name__ == '__main__':

@@ -21,10 +21,9 @@
 
 """File loading and parsing utilities for skill validation."""
 
-import os
 import logging
+import os
 import re
-from pathlib import Path
 from typing import Dict, List, Tuple
 
 import yaml
@@ -33,13 +32,15 @@ logger = logging.getLogger(__name__)
 
 
 def find_skill_files(path: str) -> List[str]:
-    """Find all SKILL.md files in a directory or return file if it's a SKILL.md file.
+    """
+    Find all SKILL.md files in a directory or return file if it's a SKILL.md file.
 
     Args:
         path: Path to directory or file
 
     Returns:
         List of paths to SKILL.md files
+
     """
     path = str(path)
 
@@ -68,7 +69,8 @@ def find_skill_files(path: str) -> List[str]:
 
 
 def safe_load_frontmatter(file_path: str) -> Tuple[Dict, str]:
-    """Safely load YAML frontmatter and body from a file.
+    """
+    Safely load YAML frontmatter and body from a file.
 
     Args:
         file_path: Path to the skill file
@@ -80,6 +82,7 @@ def safe_load_frontmatter(file_path: str) -> Tuple[Dict, str]:
         OSError: If file not found or cannot be read
         UnicodeDecodeError: If file encoding is invalid
         yaml.YAMLError: If frontmatter delimiters are incomplete
+
     """
     file_stat = os.stat(file_path)
     if file_stat.st_mode & 0o444 == 0:
@@ -119,7 +122,8 @@ def safe_load_frontmatter(file_path: str) -> Tuple[Dict, str]:
 
 
 def _normalize_frontmatter(frontmatter_str: str) -> str:
-    """Normalize common frontmatter formatting issues.
+    """
+    Normalize common frontmatter formatting issues.
 
     This keeps YAML strict for general structure while tolerating
     unquoted colons or quotes in name/description values.
@@ -166,13 +170,15 @@ def _normalize_frontmatter(frontmatter_str: str) -> str:
 
 
 def load_all_skills(skill_files: List[str]) -> Dict[str, Dict]:
-    """Load multiple skill files.
+    """
+    Load multiple skill files.
 
     Args:
         skill_files: List of paths to skill files
 
     Returns:
         Dict of {file_path: {frontmatter, body}}
+
     """
     skills = {}
 
@@ -197,23 +203,27 @@ class SkillFileLoader:
         pass
 
     def find_skill_files(self, path: str) -> List[str]:
-        """Find all SKILL.md files in a directory.
+        """
+        Find all SKILL.md files in a directory.
 
         Args:
             path: Path to search
 
         Returns:
             List of skill file paths
+
         """
         return find_skill_files(path)
 
     def load_skill(self, path: str) -> Tuple[Dict, str]:
-        """Load a single skill file.
+        """
+        Load a single skill file.
 
         Args:
             path: Path to the skill file
 
         Returns:
             Tuple of (frontmatter, body)
+
         """
         return safe_load_frontmatter(path)

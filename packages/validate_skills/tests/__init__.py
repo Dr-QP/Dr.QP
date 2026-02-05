@@ -20,4 +20,3 @@
 # THE SOFTWARE.
 
 """Tests for validate_skills package."""
-
