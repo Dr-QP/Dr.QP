@@ -169,7 +169,7 @@ Use when preparing to run tests with coverage analysis.
 
 ## References
 
-- See [colcon build reference](./references/colcon-build-reference.md) for complete option documentation
-- See [build configuration template](./templates/build-config.template) for custom build profiles
-- Use helper script [build-helper.sh](./scripts/build-helper.sh) for automated builds
+- Refer to the official colcon build documentation for a complete description of available options.
+- Define custom build profiles (e.g., debug, release, coverage) in your workspace configuration or project-level config files as needed.
+- If your repository provides helper scripts for automated builds, follow the usage instructions documented alongside those scripts.
 
