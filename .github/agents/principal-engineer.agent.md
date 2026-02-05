@@ -17,8 +17,6 @@ tools:
     'read/getTaskOutput',
     'read/problems',
     'read/terminalLastCommand',
-    'read/terminalLastCommand',
-    'read/terminalSelection',
     'read/terminalSelection',
     'search',
     'search/changes',
