@@ -62,6 +62,10 @@ This workspace provides specialized Agent Skills that enhance your capabilities:
 - **[ros2-workspace-testing](/.github/skills/ros2-workspace-testing/SKILL.md)**: Test packages and generate coverage reports
 - **[ros2-dependency-management](/.github/skills/ros2-dependency-management/SKILL.md)**: Manage workspace dependencies via rosdep and pip
 - **[ros2-environment-setup](/.github/skills/ros2-environment-setup/SKILL.md)**: Initialize and configure the development environment
+- **[ros2-launch-management](/.github/skills/ros2-launch-management/SKILL.md)**: Create, configure, and debug ROS 2 launch files with parameter passing and composition
+- **[ros2-parameter-tuning](/.github/skills/ros2-parameter-tuning/SKILL.md)**: Configure and tune node parameters using YAML files and runtime commands
+- **[ros2-diagnostics](/.github/skills/ros2-diagnostics/SKILL.md)**: Debug and troubleshoot ROS 2 systems using introspection and diagnostic tools
+- **[ros2-lifecycle-management](/.github/skills/ros2-lifecycle-management/SKILL.md)**: Manage lifecycle node state transitions and coordinate system startup
 - **[code-review-standards](/.github/skills/code-review-standards/SKILL.md)**: Write PR descriptions and conduct code reviews
 - **[find-test-files](/.github/skills/find-test-files/SKILL.md)**: Identify and summarize relevant test files for a given change or component
 
