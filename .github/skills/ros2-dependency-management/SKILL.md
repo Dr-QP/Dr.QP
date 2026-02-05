@@ -270,8 +270,8 @@ pip install "package_name==1.2.3"
 
 ## References
 
-- See [dependency management guide](./references/dependency-guide.md) for detailed workflows
-- See [rosdep reference](./references/rosdep-reference.md) for rosdep commands and options
-- Use [install-deps.sh](./scripts/install-deps.sh) helper for automated installation
-- See [package.xml template](./templates/package.xml.template) for dependency configuration examples
+- See the dependency management guide in your project documentation or official ROS 2 docs for detailed workflows
+- See the official rosdep reference documentation for rosdep commands and options
+- Optionally use an `./scripts/ros-dep.sh` helper script in your repository for automated installation
+- Refer to `package.xml` templates in ROS 2 documentation or your project for dependency configuration examples
 
