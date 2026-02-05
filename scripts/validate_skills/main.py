@@ -64,10 +64,12 @@ def main(args: Optional[List[str]] = None) -> int:
     for skill_path in skill_files:
         try:
             frontmatter, body = safe_load_frontmatter(skill_path)
+            with open(skill_path, 'r', encoding='utf-8') as f:
+                content = f.read()
             all_skills[skill_path] = {
                 'frontmatter': frontmatter,
                 'body': body,
-                'content': open(skill_path, 'r', encoding='utf-8').read(),
+                'content': content,
             }
         except Exception:
             # Skip skills that can't be loaded for cross-validation

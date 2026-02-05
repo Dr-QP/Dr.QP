@@ -145,7 +145,7 @@ def _normalize_frontmatter(frontmatter_str: str) -> str:
             continue
 
         stripped = value.strip()
-        if key == 'description' and value.count(':') > 1:
+        if key == 'description' and stripped.count(':') > 1:
             normalized_lines.append(line)
             continue
 

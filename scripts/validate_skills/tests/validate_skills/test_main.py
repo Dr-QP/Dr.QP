@@ -315,7 +315,7 @@ class TestMainEdgeCases:
         subdir.mkdir()
         import os
 
-        os.chmod(subdir, 0o000)
+        os.chmod(subdir, 0o700)
 
         try:
             exit_code = main([str(subdir)])

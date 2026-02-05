@@ -166,7 +166,6 @@ class SkillStructureValidator:
 
         """
         issues = []
-        body_lower = body.lower()
 
         # Check for empty body
         if not body or not body.strip():

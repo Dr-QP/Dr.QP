@@ -38,7 +38,8 @@ jobs:
     name: Validate Agent Skills
     runs-on: ubuntu-latest
     needs: paths-filter
-    permissions: {}
+    permissions:
+      contents: read
     if: needs.paths-filter.outputs.pass == 'true'
 
     steps:

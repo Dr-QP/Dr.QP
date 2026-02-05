@@ -23,7 +23,7 @@ Skills are validated against the following rules:
 #### 1. Frontmatter Requirements
 
 - **name**: Required, lowercase with hyphens, max 64 characters (e.g., `my-skill-name`)
-- **description**: Required, 100-1024 characters, must include WHAT/WHEN/KEYWORDS pattern
+- **description**: Required, 10-1024 characters, must include WHAT/WHEN/KEYWORDS pattern
 - **license**: Optional but recommended (e.g., `Complete terms in LICENSE.txt` or SPDX identifier)
 
 #### 2. Description Pattern (WHAT/WHEN/KEYWORDS)
@@ -116,9 +116,10 @@ See [`.github/workflows/validate-skills.yml`](../workflows/validate-skills.yml) 
 
 ## Example Skills
 
-See test fixtures for examples:
-- **Good skill**: [`scripts/test/fixtures/good-skill/SKILL.md`](../../scripts/test/fixtures/good-skill/SKILL.md)
-- **Bad skill**: [`scripts/test/fixtures/bad-skill/SKILL.md`](../../scripts/test/fixtures/bad-skill/SKILL.md)
+Example "good" and "bad" skills are defined inline in the unit tests using
+temporary directories (via `tmp_path` fixtures), rather than checked-in
+fixture files. Refer to the tests under `scripts/validate_skills/tests/` for concrete examples
+of valid and invalid `SKILL.md` definitions.
 
 ## Skill Catalog
 

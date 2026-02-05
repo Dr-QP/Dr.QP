@@ -232,7 +232,7 @@ Content""")
         skill_file.write_text('---\nname: test\n---\nContent')
         import os
 
-        os.chmod(skill_file, 0o000)
+        os.chmod(skill_file, 0o600)
 
         try:
             engine = ValidationEngine()
