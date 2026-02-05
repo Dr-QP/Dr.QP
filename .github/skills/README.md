@@ -125,7 +125,7 @@ of valid and invalid `SKILL.md` definitions.
 
 Currently, this repository has no production skills. Skills will be listed here as they are added.
 
-<!-- 
+<!--
 Example entry format:
 
 ### skill-name
