@@ -45,7 +45,7 @@ Complete dependency installation for the workspace.
 
 1. Navigate to workspace root:
    ```bash
-   cd /opt/ros/overlay_ws
+   cd <workspace_root>
    ```
 
 2. Run automated dependency installation:

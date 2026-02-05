@@ -22,7 +22,7 @@ Initialize and configure the ROS 2 development environment for both local and re
 ## Prerequisites
 
 - ROS 2 Jazzy installed at `/opt/ros/jazzy/`
-- Workspace cloned to `/opt/ros/overlay_ws/`
+ - Workspace cloned to your workspace root
 - Bash shell available (sourcing scripts)
 - For local development: system dependencies installed (CMake, compilers, etc.)
 - For remote development: Docker and VS Code Remote Extensions
@@ -51,7 +51,7 @@ Set up a fresh workspace for local development.
 
 1. Clone or navigate to workspace:
    ```bash
-   cd /opt/ros/overlay_ws
+   cd <workspace_root>
    ```
 
 2. Source the ROS environment setup script:
@@ -151,7 +151,7 @@ Set up VS Code devcontainer for remote/GitHub Codespaces development.
 
 1. Open workspace in VS Code:
    ```bash
-   code /opt/ros/overlay_ws
+   code <workspace_root>
    ```
 
 2. Install "Dev Containers" extension (if not already installed)
@@ -293,7 +293,7 @@ Clean up environment and start fresh.
 ## Directory Structure
 
 ```
-/opt/ros/overlay_ws/
+<workspace_root>/
 ├── scripts/
 │   └── setup.bash           # Main environment setup script
 ├── install/                 # Built/installed packages
