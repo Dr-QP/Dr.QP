@@ -192,8 +192,8 @@ Explore test results with interactive visualization.
 
 ## References
 
-- See [colcon test reference](./references/colcon-test-reference.md) for complete option documentation
-- See [coverage setup guide](./references/coverage-setup.md) for coverage instrumentation details
-- Use helper script [test-runner.sh](./scripts/test-runner.sh) for automated test execution
-- Use [coverage processor](./scripts/coverage-processor.py) to generate custom reports
+- Refer to the official colcon documentation for complete `colcon test` option details
+- Refer to ROS 2 and colcon coverage guides for coverage instrumentation best practices
+- If your workspace includes helper scripts for automated test execution, document how to use them here
+- If you use custom coverage processing tools, document their usage and configuration here
 
