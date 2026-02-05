@@ -44,8 +44,14 @@ def find_skill_files(path: str) -> List[str]:
     if os.path.isfile(path):
         return [path] if path.endswith('SKILL.md') else []
 
+    # Directories to exclude from skill file search
+    excluded_dirs = {'test', 'tests', 'fixtures', '__pycache__', '.pytest_cache'}
+
     skill_files = []
     for root, dirs, files in os.walk(path):
+        # Remove excluded directories from dirs list to prevent os.walk from descending into them
+        dirs[:] = [d for d in dirs if d not in excluded_dirs]
+
         for file in files:
             if file == 'SKILL.md':
                 skill_files.append(os.path.join(root, file))
