@@ -125,7 +125,7 @@ Use when preparing to run tests with coverage analysis.
    python3 -m colcon build \
      --symlink-install \
      --event-handlers console_cohesion+ \
-     --base-paths /opt/ros/overlay_ws \
+     --base-paths "$(pwd)" \
      --cmake-args \
        -GNinja \
        -D CMAKE_BUILD_TYPE=Debug \
