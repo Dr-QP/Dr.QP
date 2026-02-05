@@ -601,16 +601,15 @@
     "chat.agent.enabled": true,
     "chat.agent.maxRequests": 250,
     "chat.mcp.gallery.enabled": true,
+    "chat.mcp.autostart": "newAndOutdated",
     "chat.tools.terminal.autoApprove": {
       "*": {
         "approve": true,
       }
     },
     "chat.tools.urls.autoApprove": {
-        "https://github.com": {
-            "approveRequest": false,
-            "approveResponse": true
-        }
+      "https://github.com": true,
+      "https://www.google.com/search": true
     },
   }
 }
