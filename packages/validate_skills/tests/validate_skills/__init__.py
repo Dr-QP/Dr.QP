@@ -19,31 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Validate Agent Skill files for compliance with best practices.
+"""Test suite for validate_skills package."""
 
-This script provides a command-line interface to validate SKILL.md files
-in the workspace using comprehensive validation rules.
+__version__ = "0.1.0"
 
-Example:
-    # Validate all skills in current directory
-    ./scripts/validate-skills.py
-
-    # Validate specific directory with recommendations
-    ./scripts/validate-skills.py /path/to/skills --recommend
-
-    # Output results as JSON
-    ./scripts/validate-skills.py --json
-"""
-
-import sys
-import os
-from pathlib import Path
-
-# Add packages directory to path so we can import validate_skills
-packages_path = Path(__file__).parent.parent / "packages"
-sys.path.insert(0, str(packages_path))
-
-from validate_skills import main
-
-if __name__ == '__main__':
-    sys.exit(main())
