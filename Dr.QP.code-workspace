@@ -597,5 +597,8 @@
         "*": true
     },
     "chat.agent.enabled": true,
+    "chat.tools.terminal.autoApprove": {
+      "*": true
+    }
   }
 }
