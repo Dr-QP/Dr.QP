@@ -276,8 +276,8 @@ Before approving a PR, verify:
 
 ## References
 
-- See [PR template guide](./references/pr-template-guide.md) for detailed examples
-- See [Pull Request Template](./templates/PULL_REQUEST_TEMPLATE.md) for GitHub auto-fill template
-- Use [code review checklist](./references/code-review-checklist.md) for systematic reviews
-- Review [clean code principles](./references/clean-code-reference.md) for standards
+- See PR template guide for detailed examples
+- Use a Pull Request Template for GitHub auto-fill of standard sections
+- Use a code review checklist for systematic reviews
+- Review clean code principles and standards regularly
 
