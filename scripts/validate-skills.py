@@ -24,7 +24,6 @@
 import argparse
 import os
 import sys
-from pathlib import Path
 from typing import Dict, List
 
 import frontmatter
@@ -54,10 +53,12 @@ def find_skill_files(path: str) -> List[str]:
 
 
 def load_all_skills(skill_paths: List[str]) -> Dict[str, dict]:
-    """Load all skills for cross-validation.
+    """
+    Load all skills for cross-validation.
 
     Returns:
         Dict of {path: {frontmatter, body}}
+
     """
     all_skills = {}
 
@@ -65,14 +66,14 @@ def load_all_skills(skill_paths: List[str]) -> Dict[str, dict]:
         try:
             post = frontmatter.load(path)
             all_skills[path] = {'frontmatter': post.metadata, 'body': post.content}
-        except Exception as e:
+        except (OSError, UnicodeDecodeError, KeyError, AttributeError) as e:
             print(f'  ⚠ Error loading {path}: {e}')
 
     return all_skills
 
 
 def pydantic_errors_to_issues(
-    errors: List[dict], section: str = None
+    errors: List[dict], section: str
 ) -> List[skill_validators.ValidationIssue]:
     """Convert Pydantic validation errors to ValidationIssue objects."""
     issues = []
@@ -104,7 +105,7 @@ def validate_skill(
 
         # Validate frontmatter with Pydantic
         try:
-            skill_fm = SkillFrontmatter(**metadata)
+            SkillFrontmatter(**metadata)
         except ValidationError as e:
             issues.extend(pydantic_errors_to_issues(e.errors(), section='frontmatter'))
 
@@ -138,7 +139,7 @@ def validate_skill(
             validator_issues = validator.validate(skill_path, content, metadata, body)
             issues.extend(validator_issues)
 
-    except Exception as e:
+    except (OSError, UnicodeDecodeError, KeyError) as e:
         issues.append(
             skill_validators.ValidationIssue(
                 level=skill_validators.ValidationLevel.ERROR, message=f'Error validating skill: {e}'
@@ -218,7 +219,7 @@ Examples:
             result = validate_skill(skill_path, args.recommend, all_skills, repo_root)
             results.append(result)
 
-        except Exception as e:
+        except (OSError, RuntimeError, ValueError) as e:
             print(f'✗ {skill_path}')
             print(f'  ✗ Error: {e}')
             results.append(skill_validators.ValidationResult(skill_path, []))
