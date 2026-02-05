@@ -46,7 +46,6 @@ def main(args: Optional[List[str]] = None) -> int:
 
     # Determine which format to use
     output_format = parsed_args.format
-    use_colors = not parsed_args.ci
 
     # Find skill files
     loader = SkillFileLoader()
