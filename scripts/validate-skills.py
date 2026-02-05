@@ -24,9 +24,10 @@
 import argparse
 import os
 import sys
-from typing import Dict, List
+from typing import Dict, List, Optional, Tuple
 
 import frontmatter
+import yaml
 from pydantic import ValidationError
 
 # Add skill-validators to path
@@ -55,6 +56,30 @@ def find_skill_files(path: str) -> List[str]:
     return skill_files
 
 
+def safe_load_frontmatter(skill_path: str) -> Optional[Tuple[dict, str]]:
+    """
+    Safely load frontmatter and body from a skill file.
+
+    Args:
+        skill_path: Path to the skill file
+
+    Returns:
+        Tuple of (metadata, body) if successful, None otherwise
+
+    Raises:
+        OSError: If file cannot be read
+        UnicodeDecodeError: If file encoding is invalid
+        yaml.YAMLError: If YAML frontmatter is malformed
+
+    """
+    try:
+        post = frontmatter.load(skill_path)
+        return (post.metadata, post.content)
+    except (OSError, UnicodeDecodeError, yaml.YAMLError):
+        # Re-raise specific exceptions for proper handling
+        raise
+
+
 def load_all_skills(skill_paths: List[str]) -> Dict[str, dict]:
     """
     Load all skills for cross-validation.
@@ -67,9 +92,11 @@ def load_all_skills(skill_paths: List[str]) -> Dict[str, dict]:
 
     for path in skill_paths:
         try:
-            post = frontmatter.load(path)
-            all_skills[path] = {'frontmatter': post.metadata, 'body': post.content}
-        except (OSError, UnicodeDecodeError, KeyError, AttributeError) as e:
+            result = safe_load_frontmatter(path)
+            if result:
+                metadata, body = result
+                all_skills[path] = {'frontmatter': metadata, 'body': body}
+        except (OSError, UnicodeDecodeError, yaml.YAMLError) as e:
             print(f'  ⚠ Error loading {path}: {e}')
 
     return all_skills
@@ -101,10 +128,18 @@ def validate_skill(
     issues = []
 
     try:
-        # Parse frontmatter using python-frontmatter
-        post = frontmatter.load(skill_path)
-        metadata = post.metadata
-        body = post.content
+        # Parse frontmatter using safe helper function
+        result = safe_load_frontmatter(skill_path)
+        if not result:
+            issues.append(
+                skill_validators.ValidationIssue(
+                    level=skill_validators.ValidationLevel.ERROR,
+                    message='Failed to load skill file',
+                )
+            )
+            return skill_validators.ValidationResult(skill_path, issues)
+
+        metadata, body = result
 
         # Validate frontmatter with Pydantic
         try:
@@ -142,7 +177,7 @@ def validate_skill(
             validator_issues = validator.validate(skill_path, content, metadata, body)
             issues.extend(validator_issues)
 
-    except (OSError, UnicodeDecodeError, KeyError) as e:
+    except (OSError, UnicodeDecodeError, yaml.YAMLError) as e:
         issues.append(
             skill_validators.ValidationIssue(
                 level=skill_validators.ValidationLevel.ERROR, message=f'Error validating skill: {e}'
