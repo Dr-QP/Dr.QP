@@ -75,7 +75,6 @@ class TextFormatter:
         """
         total = len(results)
         valid = sum(1 for r in results if r.is_valid)
-        invalid = total - valid
         warnings = sum(
             1 for r in results for issue in r.issues if issue.level == ValidationLevel.WARNING
         )
