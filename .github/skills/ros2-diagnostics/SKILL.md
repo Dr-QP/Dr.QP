@@ -323,9 +323,10 @@ Diagnose performance issues and resource usage.
    ros2 topic echo /parameter_events
    ```
 
-7. Check system-wide resource usage:
+7. Check basic ROS 2 graph and daemon health:
    ```bash
-   ros2 wtf  # "Where's The Failure" - system diagnostics
+   ros2 daemon status  # Check ROS 2 daemon health
+   ros2 node list      # Verify nodes are visible
    ```
 
 **When to use**: Performance problems, high CPU usage, memory leaks
