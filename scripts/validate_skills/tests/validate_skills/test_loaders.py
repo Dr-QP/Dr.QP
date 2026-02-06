@@ -331,7 +331,7 @@ class TestLoadersEdgeCases:
         """Should handle permission denied errors."""
         skill_file = tmp_path / 'SKILL.md'
         skill_file.write_text('---\nname: test\n---\n')
-        os.chmod(skill_file, 0o600)
+        os.chmod(skill_file, 0o000)  # No permissions for anyone
 
         try:
             with pytest.raises(OSError):
