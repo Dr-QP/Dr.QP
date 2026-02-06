@@ -289,7 +289,7 @@ private:
 
 **Python Example:**
 ```python
-from rclcpp.node import Node
+from rclpy.node import Node
 
 class MyNode(Node):
     def __init__(self):
