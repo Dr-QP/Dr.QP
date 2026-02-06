@@ -258,7 +258,7 @@ public:
     robot_name_ = this->get_parameter("robot_name").as_string();
     
     // Initialize but don't start publishing
-    pub_ = this->create_publisher<std_msgs::msg::String>("output", 10);
+    pub_ = this->create_lifecycle_publisher<std_msgs::msg::String>("output", 10);
     
     RCLCPP_INFO(get_logger(), "Successfully configured");
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
