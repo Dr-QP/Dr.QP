@@ -46,9 +46,9 @@ One of the following:
 ### Step 1: Analyze Git Changes
 
 1. Determine what to analyze:
-   - If branch name provided: `git diff main..<branch_name>`
+   - If branch name provided: `git diff origin/main..<branch_name>`
    - If commit range provided: `git diff <commit_range>`
-   - Otherwise: `git diff main..HEAD`
+   - Otherwise: `git diff origin/main..HEAD`
 
 2. Collect comprehensive change information:
    ```bash
