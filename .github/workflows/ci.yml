@@ -38,7 +38,8 @@ jobs:
         uses: ./.github/actions/paths-filter
         id: filter
         with:
-          extra-filter: .github/workflows/ci.yml
+          extra-filter: |
+            .github/workflows/ci.yml
 
   build-dev-image:
     name: Development image
