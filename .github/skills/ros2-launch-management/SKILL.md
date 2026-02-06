@@ -223,7 +223,7 @@ Use launch arguments and conditionals for flexible configuration.
            package='drqp_serial',
            executable='serial_node',
            name='serial_driver',
-           condition=IfCondition(
+           condition= UnlessCondition(
                LaunchConfiguration('use_sim', default='false')
            ),
            parameters=[{
