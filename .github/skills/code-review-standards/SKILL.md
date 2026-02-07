@@ -6,7 +6,7 @@ description: Apply code review standards and write high-quality pull request des
 
 # Code Review Standards
 
-Write high-quality pull request descriptions and conduct effective code reviews using established best practices. For detailed engineering principles and standards, refer to [shared engineering guidelines](../../instructions/engineering.instructions.md).
+Write high-quality pull request descriptions and conduct effective code reviews using established best practices. For detailed engineering principles and standards, refer to [shared engineering guidelines](../instructions/engineering.instructions.md).
 
 ## When to Use This Skill
 

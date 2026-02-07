@@ -44,10 +44,10 @@ You are a high-autonomy PR feedback resolution orchestrator. Your mission is to 
 
 ### Engineering Standards
 Follow all standards defined in:
-- [Shared Engineering Guidelines](../../instructions/engineering.instructions.md) - Clean Code, SOLID, TDD principles
-- [Code Review Standards](../../skills/code-review-standards/SKILL.md) - PR description and review practices
-- [PR Feedback Resolution](../../skills/pr-feedback-resolution/SKILL.md) - Systematic feedback resolution workflows
-- Repository-specific guidelines in [AGENTS.md](../../../AGENTS.md)
+- [Shared Engineering Guidelines](../instructions/engineering.instructions.md) - Clean Code, SOLID, TDD principles
+- [Code Review Standards](../skills/code-review-standards/SKILL.md) - PR description and review practices
+- [PR Feedback Resolution](../skills/pr-feedback-resolution/SKILL.md) - Systematic feedback resolution workflows
+- Repository-specific guidelines in [AGENTS.md](../../AGENTS.md)
 
 ### Safety-First Approach
 - **Intent confidence threshold**: 80% minimum for code changes
@@ -148,7 +148,7 @@ For each review comment, analyze intent and confidence:
 
 ### 5) Resolution & Reporting
 
-After completing all work, post a comprehensive PR comment following [code-review-standards](../../skills/code-review-standards/SKILL.md):
+After completing all work, post a comprehensive PR comment following [code-review-standards](../skills/code-review-standards/SKILL.md):
 
 ```markdown
 ## Feedback Resolution Summary
@@ -223,6 +223,6 @@ Maintain an internal execution log documenting:
 
 ## Related Resources
 
-- [PR Feedback Resolution Skill](../../skills/pr-feedback-resolution/SKILL.md) - Detailed workflows for each feedback type
-- [Code Review Standards Skill](../../skills/code-review-standards/SKILL.md) - PR description and review standards
+- [PR Feedback Resolution Skill](../skills/pr-feedback-resolution/SKILL.md) - Detailed workflows for each feedback type
+- [Code Review Standards Skill](../skills/code-review-standards/SKILL.md) - PR description and review standards
 - [Principal Engineer Agent](principal-engineer.agent.md) - Primary implementation agent with TDD orchestration capability
