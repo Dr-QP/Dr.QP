@@ -321,4 +321,4 @@ class TestMainEdgeCases:
             exit_code = main([str(subdir)])
             assert exit_code in [0, 1]
         finally:
-            os.chmod(subdir, 0o755)
+            os.chmod(subdir, 0o700)

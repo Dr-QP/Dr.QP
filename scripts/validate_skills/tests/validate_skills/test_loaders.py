@@ -337,7 +337,7 @@ class TestLoadersEdgeCases:
             with pytest.raises(OSError):
                 safe_load_frontmatter(str(skill_file))
         finally:
-            os.chmod(skill_file, 0o644)  # Cleanup
+            os.chmod(skill_file, 0o600)  # Cleanup: owner read/write only
 
     def test_find_skill_files_hidden_directories(self, tmp_path):
         """Should handle hidden directories appropriately."""

@@ -239,7 +239,7 @@ Content""")
             result = engine.validate(str(skill_file), all_skills={})
             assert not result.is_valid
         finally:
-            os.chmod(skill_file, 0o644)
+            os.chmod(skill_file, 0o600)
 
 
 class TestValidationResult:
