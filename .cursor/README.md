@@ -11,6 +11,6 @@ Source of truth:
 Cursor symlinks:
 - .cursor/agents -> .github/agents
 - .cursor/skills -> .github/skills
-- .cursor/rules: Cursor rule files that mirror the instruction content
+- .cursor/rules -> .github/instructions
 
-Keep these in sync when updating the .github sources.
+Update the .github sources; the symlinks pick up changes automatically.

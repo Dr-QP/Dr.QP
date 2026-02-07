@@ -15,13 +15,13 @@ For comprehensive engineering standards and best practices, refer to [shared eng
 ## Cursor Compatibility
 
 This repository keeps GitHub Copilot customizations under `.github/`. Cursor
-reads from `.cursor/`, so we link the agent and skill catalogs there:
+reads from `.cursor/`, so we link the agent, skill, and instruction catalogs there:
 
 - **Agents**: `.cursor/agents/` (symlink to `.github/agents/`)
 - **Skills**: `.cursor/skills/` (symlink to `.github/skills/`)
-- **Instructions**: `.cursor/rules/` (Cursor rules that mirror `.github/instructions/`)
+- **Instructions**: `.cursor/rules/` (symlink to `.github/instructions/`)
 
-Update the `.github` sources first, then keep the `.cursor` mirror in sync.
+Update the `.github` sources; the symlinks pick up changes automatically.
 
 ## Available Agents
 
