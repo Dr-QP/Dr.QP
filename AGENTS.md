@@ -12,6 +12,17 @@ For comprehensive engineering standards and best practices, refer to [shared eng
 - Use consistent, idiomatic patterns
 - Follow language-specific conventions
 
+## Cursor Compatibility
+
+This repository keeps GitHub Copilot customizations under `.github/`. Cursor
+reads from `.cursor/`, so we mirror the agent/skill/instruction catalogs there:
+
+- **Agents**: `.cursor/agents/` (shim files that reference `.github/agents/`)
+- **Skills**: `.cursor/skills/` (shim files that reference `.github/skills/`)
+- **Instructions**: `.cursor/rules/` (Cursor rules that mirror `.github/instructions/`)
+
+Update the `.github` sources first, then keep the `.cursor` shims in sync.
+
 ## Available Agents
 
 This workspace provides specialized agents for different development tasks. You can request a specific agent by name, or choose based on your task:

@@ -1,6 +1,6 @@
 ---
 description: 'Guidelines for creating high-quality Agent Skills for GitHub Copilot'
-applyTo: '**/.github/skills/**/SKILL.md,**/.claude/skills/**/SKILL.md'
+applyTo: '**/.github/skills/**/SKILL.md,**/.cursor/skills/**/SKILL.md,**/.claude/skills/**/SKILL.md'
 ---
 
 # Agent Skills File Guidelines
@@ -24,6 +24,7 @@ Skills are stored in specific locations:
 | Location | Scope | Recommendation |
 |----------|-------|----------------|
 | `.github/skills/<skill-name>/` | Project/repository | Recommended for project skills |
+| `.cursor/skills/<skill-name>/` | Project/repository | Cursor-compatible mirror location |
 | `.claude/skills/<skill-name>/` | Project/repository | Legacy, for backward compatibility |
 | `~/.github/skills/<skill-name>/` | Personal (user-wide) | Recommended for personal skills |
 | `~/.claude/skills/<skill-name>/` | Personal (user-wide) | Legacy, for backward compatibility |
