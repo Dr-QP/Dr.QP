@@ -14,8 +14,6 @@ on:
     paths:
       - .github/workflows/act-docker-build-image.yml
       - docker/act/**
-    branches:
-      - main
   workflow_dispatch:
 
 concurrency:
