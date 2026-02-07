@@ -98,8 +98,8 @@ For each review comment, analyze intent and confidence:
 - Suggestions: "Consider using Y" → evaluate if optional or required
 
 **Confidence scoring**:
-- If $\ge 80\%$: Proceed with change, document rationale
-- If $< 80\%$: Reply in-thread requesting clarification, do not modify code
+- If >= 80%: Proceed with change, document rationale
+- If < 80%: Reply in-thread requesting clarification, do not modify code
 
 ### 3) Execution Strategy
 
