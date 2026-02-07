@@ -31,10 +31,15 @@ The Feedback Handler agent is specifically designed to:
 - **Track and document resolution** with evidence links and comprehensive reporting
 - **Meet quality standards** as defined in repository engineering guidelines
 
+### Who Should Use the Feedback Handler Agent
+
+**Remote/cloud agents**: MUST use the Feedback Handler agent when addressing PR feedback autonomously.
+
+**Local/interactive agents**: MAY use the Feedback Handler agent when the user explicitly requests PR feedback resolution (e.g., "address PR feedback", "fix CI failures", "resolve review comments").
+
 ### When NOT to Use the Feedback Handler Agent
 
 Do not use the Feedback Handler agent if:
-- You are NOT a remote/cloud agent (use it only when operating autonomously)
 - The task is purely informational (e.g., "explain what this PR comment means")
 - The user explicitly requests a different approach or agent
 - You are already operating AS the feedback-handler agent (avoid recursive delegation)
@@ -157,4 +162,8 @@ When working with the Feedback Handler agent, ensure:
 
 ## Summary
 
-**Key Takeaway**: When operating as a remote agent and the task involves PR feedback resolution, ALWAYS delegate to the Feedback Handler agent. This ensures systematic, safe, and standards-compliant resolution of all feedback types.
+**Key Takeaway**: 
+- **Remote agents**: MUST delegate PR feedback resolution to the Feedback Handler agent
+- **Local agents**: MAY use the Feedback Handler agent when explicitly requested by the user
+
+This ensures systematic, safe, and standards-compliant resolution of all feedback types including review comments, CI failures, security findings, and coverage gaps.
