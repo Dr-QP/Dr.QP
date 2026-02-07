@@ -69,6 +69,40 @@ This workspace provides specialized Agent Skills that enhance your capabilities:
 - **[code-review-standards](/.github/skills/code-review-standards/SKILL.md)**: Write PR descriptions and conduct code reviews
 - **[find-test-files](/.github/skills/find-test-files/SKILL.md)**: Identify and summarize relevant test files for a given change or component
 
+## Available Prompts
+
+This workspace provides reusable prompt files for streamlining common development workflows. Prompts are pre-configured templates that guide GitHub Copilot through multi-step tasks.
+
+### Package and Project Setup
+
+- **[create-ros2-package](/.github/prompts/create-ros2-package.prompt.md)**: Create new ROS 2 package with proper structure, build files, and test scaffolding (C++, Python, or mixed)
+- **[add-ci-workflow](/.github/prompts/add-ci-workflow.prompt.md)**: Generate GitHub Actions workflows for build, test, coverage, or documentation automation
+
+### Development Patterns
+
+- **[implement-publisher-subscriber](/.github/prompts/implement-publisher-subscriber.prompt.md)**: Create ROS 2 publisher/subscriber nodes with proper QoS configuration and message handling
+- **[create-state-machine](/.github/prompts/create-state-machine.prompt.md)**: Generate state machine implementation with states, transitions, events, and lifecycle management
+
+### Testing and Quality
+
+- **[add-test-file](/.github/prompts/add-test-file.prompt.md)**: Add unit or integration test file with fixtures, test cases, and build integration
+- **[generate-pr-description](/.github/prompts/generate-pr-description.prompt.md)**: Create comprehensive pull request description following code-review-standards
+
+### How to Use Prompts
+
+In GitHub Copilot Chat:
+1. Type `/` to see available prompts
+2. Select a prompt or type the prompt name
+3. Provide required inputs when prompted
+4. Review and apply generated output
+
+Example:
+```
+/create-ros2-package drqp_sensors --type cpp --deps rclcpp,sensor_msgs
+```
+
+For detailed documentation, see [Prompts README](/.github/prompts/README.md).
+
 ## ROS 2 Development Environment
 
 This is a ROS 2 Jazzy workspace using colcon build system for C++ and Python packages.
