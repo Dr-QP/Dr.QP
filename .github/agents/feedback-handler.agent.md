@@ -194,7 +194,7 @@ After completing all work, post a comprehensive PR comment following [code-revie
 ### Coverage Improvements
 - Added tests for new serial timeout logic (+15 lines covered)
 - Added edge case tests for error handling (+8 lines covered)
-- **Current patch coverage**: 87% (target: 70%)
+- **Current patch coverage**: 87% (target: from Codecov report/config)
 
 ### Test Results
 - All tests passing: [CI run](link)
