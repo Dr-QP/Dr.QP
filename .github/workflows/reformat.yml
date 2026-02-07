@@ -88,14 +88,14 @@ jobs:
           fi
       # Commit all changed files back to the repository
       - uses: stefanzweifel/git-auto-commit-action@v6
-        if: ${{ github.event_name == 'pull_request' && steps.verify.outputs.skip_commit != 'true' }}
+        if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' && steps.verify.outputs.skip_commit != 'true' }}
         id: commit
         with:
           commit_message: ${{ env.COMMIT_MESSAGE }}
 
       - name: Verify changes were committed
         shell: bash -le {0}
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' }}
         run: |
           set -x
           set -e

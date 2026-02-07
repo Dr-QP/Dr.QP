@@ -42,7 +42,7 @@ jobs:
     name: Development image
     timeout-minutes: 35
     needs: paths-filter
-    if: needs.paths-filter.outputs.pass == 'true'
+    if: needs.paths-filter.outputs.pass == 'true' && (github.event_name != 'pull_request' || github.base_ref == 'main')
     permissions:
       packages: write
     strategy:
@@ -88,6 +88,7 @@ jobs:
       packages: write
     needs:
       - build-dev-image
+    if: github.event_name != 'pull_request' || github.base_ref == 'main'
     timeout-minutes: 35
     outputs:
       image: ${{ steps.merge.outputs.image }}
@@ -290,6 +291,7 @@ jobs:
   build-deploy-image:
     name: Deployment image
     needs: [merge-dev-image, ros-ci]
+    if: github.event_name != 'pull_request' || github.base_ref == 'main'
     timeout-minutes: 35
     strategy:
       fail-fast: false
@@ -325,6 +327,7 @@ jobs:
       packages: write
     needs:
       - build-deploy-image
+    if: github.event_name != 'pull_request' || github.base_ref == 'main'
     timeout-minutes: 35
     outputs:
       image: ${{ steps.merge.outputs.image }}
