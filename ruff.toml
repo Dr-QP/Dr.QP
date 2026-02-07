@@ -4,6 +4,9 @@ indent-width = 4
 # Assume Python 3.12
 target-version = "py312"
 
+# Exclude vendor packages from linting and formatting (third-party code)
+extend-exclude = ["packages/vendor"]
+
 [format]
 # Use single quotes for strings
 quote-style = "single"

@@ -16,18 +16,29 @@ outputs:
 runs:
   using: composite
   steps:
+  - name: Build filters
+    id: build-filters
+    shell: bash
+    run: |
+      # Build the filters YAML with proper formatting for extra-filter
+      EXTRA=$(echo "${{ inputs.extra-filter }}" | sed 's/^/          - /')
+      echo "filters<<EOF" >> $GITHUB_OUTPUT
+      cat <<YAML >> $GITHUB_OUTPUT
+      ros:
+        - .clang-format
+        - .devcontainer/**
+        - .github/actions/**
+        - codecov.yml
+        - docker/**
+        - packages/**
+        - scripts/**
+      $EXTRA
+      YAML
+      echo "EOF" >> $GITHUB_OUTPUT
+
   - name: Filter
     id: filter
     uses: dorny/paths-filter@v3.0.2
     with:
       base: ${{ inputs.base-branch }}
-      filters: |
-        ros:
-          - .clang-format
-          - .devcontainer/**
-          - .github/actions/**
-          - codecov.yml
-          - docker/**
-          - packages/**
-          - scripts/**
-          - ${{ inputs.extra-filter }}
+      filters: ${{ steps.build-filters.outputs.filters }}

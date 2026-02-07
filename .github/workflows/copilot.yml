@@ -1,0 +1,92 @@
+name: Copilot Validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  merge_group:
+    types:
+      - checks_requested
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  paths-filter:
+    name: Need to run?
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    outputs:
+      pass: ${{ steps.filter.outputs.pass }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Filters
+        uses: ./.github/actions/paths-filter
+        id: filter
+        with:
+          extra-filter: |
+            .github/agents/**
+            .github/instructions/**
+            .github/skills/**
+            .github/workflows/copilot.yml
+            scripts/validate-skills.py
+            scripts/validate_skills/**
+
+  validate-skills:
+    name: Validate Agent Skills
+    runs-on: ubuntu-latest
+    needs: paths-filter
+    permissions:
+      contents: read
+    if: needs.paths-filter.outputs.pass == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python venv
+        uses: ./.github/actions/setup-python-venv
+
+      - name: Test validate skills
+        run: |
+          pytest scripts/validate_skills/tests --cov=scripts/validate_skills --cov-report=xml
+
+      - name: Validate Agent Skills
+        run: |
+          python3 scripts/validate-skills.py --recommend
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        if: ${{ !cancelled() }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: validate-skills
+          name: validate-skills-coverage
+          files: coverage.xml
+
+  finished:
+    name: Validation finished
+    needs: [paths-filter, validate-skills]
+    runs-on: ubuntu-latest
+    permissions: {}
+    timeout-minutes: 10
+    if: ${{ success() || cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}
+    steps:
+      - name: All jobs succeeded!
+        if: ${{ success() }}
+        run: |
+          exit 0
+      - name: Some jobs have failed!
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: |
+          exit 1
+      - name: Some jobs have been cancelled!
+        if: ${{ cancelled() || contains(needs.*.result, 'cancelled') }}
+        run: |
+          exit 1

@@ -39,16 +39,9 @@ jobs:
               - docs/**
               - .github/workflows/docs.yml
 
-      - uses: getsentry/action-setup-venv@v2.1.1
+      - name: Setup Python venv
         if: ${{ steps.filter.outputs.docs == 'true' }}
-        with:
-          python-version: 3.12
-          cache-dependency-path: |
-            requirements.txt
-            docs/requirements.txt
-            docs/constraints.txt
-            docs/source/notebooks/requirements.txt
-          install-cmd: pip install -r requirements.txt
+        uses: ./.github/actions/setup-python-venv
 
         # Multiple builds are not supported, so run them one after another. See https://github.com/sphinx-doc/sphinx/issues/10096
       - name: sphinx - check redirects diff

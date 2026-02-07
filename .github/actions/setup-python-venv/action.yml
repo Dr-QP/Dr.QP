@@ -1,0 +1,27 @@
+name: Setup Python venv
+description: Setup Python virtual environment with caching for project dependencies
+
+inputs:
+  python-version:
+    description: Python version to use
+    required: false
+    default: '3.12'
+
+outputs:
+  venv-path:
+    description: Path to the virtual environment
+    value: .venv
+
+runs:
+  using: composite
+  steps:
+    - uses: getsentry/action-setup-venv@v2.1.1
+      id: venv
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache-dependency-path: |
+          requirements.txt
+          docs/requirements.txt
+          docs/constraints.txt
+          docs/source/notebooks/requirements.txt
+        install-cmd: pip install -r requirements.txt

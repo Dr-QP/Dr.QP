@@ -9,5 +9,12 @@ ansible-lint>=25.2.1
 
 sphinx-autobuild
 
+# Skill validation
+pydantic>=2.0
+python-frontmatter>=1.1.0
+
+pytest>=7.0.0
+pytest-cov>=7.0.0
+
 -r docs/source/notebooks/requirements.txt
 -r docs/requirements.txt
