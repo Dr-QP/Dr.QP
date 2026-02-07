@@ -1,6 +1,7 @@
 ---
 description: 'Improve code quality, apply security best practices, and enhance design whilst maintaining green tests and GitHub issue compliance.'
 name: 'TDD Refactor Phase'
+model: Claude Sonnet 4.5
 tools:
   [
     'edit/editFiles',
