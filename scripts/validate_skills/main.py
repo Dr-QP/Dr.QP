@@ -21,6 +21,7 @@
 
 """Main orchestration function for the validate-skills tool."""
 
+import logging
 import sys
 from typing import List, Optional
 
@@ -71,9 +72,9 @@ def main(args: Optional[List[str]] = None) -> int:
                 'body': body,
                 'content': content,
             }
-        except Exception:
-            # Skip skills that can't be loaded for cross-validation
-            pass
+        except Exception as e:
+            # Log but skip skills that can't be loaded for cross-validation
+            logging.warning(f'Failed to load {skill_path}: {e}')
 
     # Validate each skill
     engine = ValidationEngine(show_warnings=parsed_args.recommend, show_info=parsed_args.recommend)

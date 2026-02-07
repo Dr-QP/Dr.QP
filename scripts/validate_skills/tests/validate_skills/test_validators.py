@@ -76,7 +76,7 @@ class TestSkillFrontmatterValidator:
         """Should reject description that is too short."""
         frontmatter = {
             'name': 'my-skill',
-            'description': 'Too short',  # Less than 100 characters
+            'description': 'Short',  # Less than 10 characters
         }
         validator = SkillFrontmatterValidator()
         issues = validator.validate(frontmatter)
