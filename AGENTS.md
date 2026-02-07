@@ -52,6 +52,7 @@ This workspace provides specialized agents for different development tasks. You 
 - **[Debugger](/.github/agents/debug.agent.md)** - Debug your application to find and fix bugs
 - **[Security Sentinel](/.github/agents/security-sentinel.agent.md)** - Review code for security issues and vulnerabilities
 - **[Tech Debt Remediator](/.github/agents/tech-debt-remediator.agent.md)** - Generate technical debt remediation plans
+- **[Feedback Handler](/.github/agents/feedback-handler.agent.md)** - Autonomously address PR feedback, CI failures, CodeQL findings, and coverage gaps
 
 ### Support Agents
 
@@ -64,6 +65,21 @@ This workspace provides specialized agents for different development tasks. You 
 ### When in Doubt
 
 Consult with the **Principal Engineer** agent for senior-level guidance on architecture, design decisions, and implementation strategies.
+
+## Remote Agent Guidelines
+
+### Addressing PR Feedback
+
+**For remote/cloud agents**: When tasked with addressing PR review comments, CI failures, security findings, or test coverage gaps, you MUST use the **[Feedback Handler](/.github/agents/feedback-handler.agent.md)** agent.
+
+The Feedback Handler provides:
+- Systematic resolution of all feedback types
+- Intent classification to avoid misinterpreting comments
+- TDD methodology orchestration via principal-engineer
+- Safety controls to prevent risky changes
+- Comprehensive tracking and documentation
+
+See [PR Feedback Instructions](/.github/instructions/pr-feedback.instructions.md) for detailed guidance on when and how to invoke the Feedback Handler agent.
 
 ## Available Skills
 
@@ -78,6 +94,7 @@ This workspace provides specialized Agent Skills that enhance your capabilities:
 - **[ros2-diagnostics](/.github/skills/ros2-diagnostics/SKILL.md)**: Debug and troubleshoot ROS 2 systems using introspection and diagnostic tools
 - **[ros2-lifecycle-management](/.github/skills/ros2-lifecycle-management/SKILL.md)**: Manage lifecycle node state transitions and coordinate system startup
 - **[code-review-standards](/.github/skills/code-review-standards/SKILL.md)**: Write PR descriptions and conduct code reviews
+- **[pr-feedback-resolution](/.github/skills/pr-feedback-resolution/SKILL.md)**: Systematically address PR feedback, CI failures, CodeQL findings, and coverage gaps
 - **[find-test-files](/.github/skills/find-test-files/SKILL.md)**: Identify and summarize relevant test files for a given change or component
 
 ## Available Prompts
