@@ -24,7 +24,7 @@ Skills are stored in specific locations:
 | Location | Scope | Recommendation |
 |----------|-------|----------------|
 | `.github/skills/<skill-name>/` | Project/repository | Recommended for project skills |
-| `.cursor/skills/<skill-name>/` | Project/repository | Cursor-compatible mirror location |
+| `.cursor/skills/<skill-name>/` | Project/repository | Cursor-compatible symlink or mirror |
 | `.claude/skills/<skill-name>/` | Project/repository | Legacy, for backward compatibility |
 | `~/.github/skills/<skill-name>/` | Personal (user-wide) | Recommended for personal skills |
 | `~/.claude/skills/<skill-name>/` | Personal (user-wide) | Legacy, for backward compatibility |

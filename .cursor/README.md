@@ -8,9 +8,9 @@ Source of truth:
 - .github/skills
 - .github/instructions
 
-Cursor shims:
-- .cursor/agents: lightweight agent stubs that reference the source agents
-- .cursor/skills: lightweight skill stubs that reference the source skills
+Cursor symlinks:
+- .cursor/agents -> .github/agents
+- .cursor/skills -> .github/skills
 - .cursor/rules: Cursor rule files that mirror the instruction content
 
 Keep these in sync when updating the .github sources.

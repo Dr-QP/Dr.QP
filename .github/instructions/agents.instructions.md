@@ -12,7 +12,7 @@ Instructions for creating effective and maintainable custom agent files that pro
 - Target audience: Developers creating custom agents for GitHub Copilot
 - File format: Markdown with YAML frontmatter
 - File naming convention: lowercase with hyphens (e.g., `test-specialist.agent.md`)
-- Location: `.github/agents/` (GitHub Copilot repo-level), `.cursor/agents/` (Cursor repo-level), or `agents/` (organization/enterprise-level)
+- Location: `.github/agents/` (GitHub Copilot repo-level), `.cursor/agents/` (Cursor repo-level symlink or mirror), or `agents/` (organization/enterprise-level)
 - Purpose: Define specialized agents with tailored expertise, tools, and instructions for specific tasks
 - Official documentation: https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/create-custom-agents
 
