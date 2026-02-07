@@ -62,8 +62,46 @@ This workspace provides specialized Agent Skills that enhance your capabilities:
 - **[ros2-workspace-testing](/.github/skills/ros2-workspace-testing/SKILL.md)**: Test packages and generate coverage reports
 - **[ros2-dependency-management](/.github/skills/ros2-dependency-management/SKILL.md)**: Manage workspace dependencies via rosdep and pip
 - **[ros2-environment-setup](/.github/skills/ros2-environment-setup/SKILL.md)**: Initialize and configure the development environment
+- **[ros2-launch-management](/.github/skills/ros2-launch-management/SKILL.md)**: Create, configure, and debug ROS 2 launch files with parameter passing and composition
+- **[ros2-parameter-tuning](/.github/skills/ros2-parameter-tuning/SKILL.md)**: Configure and tune node parameters using YAML files and runtime commands
+- **[ros2-diagnostics](/.github/skills/ros2-diagnostics/SKILL.md)**: Debug and troubleshoot ROS 2 systems using introspection and diagnostic tools
+- **[ros2-lifecycle-management](/.github/skills/ros2-lifecycle-management/SKILL.md)**: Manage lifecycle node state transitions and coordinate system startup
 - **[code-review-standards](/.github/skills/code-review-standards/SKILL.md)**: Write PR descriptions and conduct code reviews
 - **[find-test-files](/.github/skills/find-test-files/SKILL.md)**: Identify and summarize relevant test files for a given change or component
+
+## Available Prompts
+
+This workspace provides reusable prompt files for streamlining common development workflows. Prompts are pre-configured templates that guide GitHub Copilot through multi-step tasks.
+
+### Package and Project Setup
+
+- **[create-ros2-package](/.github/prompts/create-ros2-package.prompt.md)**: Create new ROS 2 package with proper structure, build files, and test scaffolding (C++, Python, or mixed)
+- **[add-ci-workflow](/.github/prompts/add-ci-workflow.prompt.md)**: Generate GitHub Actions workflows for build, test, coverage, or documentation automation
+
+### Development Patterns
+
+- **[implement-publisher-subscriber](/.github/prompts/implement-publisher-subscriber.prompt.md)**: Create ROS 2 publisher/subscriber nodes with proper QoS configuration and message handling
+- **[create-state-machine](/.github/prompts/create-state-machine.prompt.md)**: Generate state machine implementation with states, transitions, events, and lifecycle management
+
+### Testing and Quality
+
+- **[add-test-file](/.github/prompts/add-test-file.prompt.md)**: Add unit or integration test file with fixtures, test cases, and build integration
+- **[generate-pr-description](/.github/prompts/generate-pr-description.prompt.md)**: Create comprehensive pull request description following code-review-standards
+
+### How to Use Prompts
+
+In GitHub Copilot Chat:
+1. Type `/` to see available prompts
+2. Select a prompt or type the prompt name
+3. Provide required inputs when prompted
+4. Review and apply generated output
+
+Example:
+```
+/create-ros2-package drqp_sensors --type cpp --deps rclcpp,sensor_msgs
+```
+
+For detailed documentation, see [Prompts README](/.github/prompts/README.md).
 
 ## ROS 2 Development Environment
 
