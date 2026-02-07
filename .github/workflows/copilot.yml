@@ -66,3 +66,24 @@ jobs:
           flags: validate-skills
           name: validate-skills-coverage
           files: coverage.xml
+
+  finished:
+    name: Validation finished
+    needs: [paths-filter, validate-skills]
+    runs-on: ubuntu-latest
+    permissions: {}
+    timeout-minutes: 10
+    if: ${{ success() || cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}
+    steps:
+      - name: All jobs succeeded!
+        if: ${{ success() }}
+        run: |
+          exit 0
+      - name: Some jobs have failed!
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: |
+          exit 1
+      - name: Some jobs have been cancelled!
+        if: ${{ cancelled() || contains(needs.*.result, 'cancelled') }}
+        run: |
+          exit 1
