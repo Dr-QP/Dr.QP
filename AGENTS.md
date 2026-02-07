@@ -66,6 +66,21 @@ This workspace provides specialized agents for different development tasks. You 
 
 Consult with the **Principal Engineer** agent for senior-level guidance on architecture, design decisions, and implementation strategies.
 
+## Remote Agent Guidelines
+
+### Addressing PR Feedback
+
+**For remote/cloud agents**: When tasked with addressing PR review comments, CI failures, security findings, or test coverage gaps, you MUST use the **[Feedback Handler](/.github/agents/feedback-handler.agent.md)** agent.
+
+The Feedback Handler provides:
+- Systematic resolution of all feedback types
+- Intent classification to avoid misinterpreting comments
+- TDD methodology orchestration via principal-engineer
+- Safety controls to prevent risky changes
+- Comprehensive tracking and documentation
+
+See [PR Feedback Instructions](/.github/instructions/pr-feedback.instructions.md) for detailed guidance on when and how to invoke the Feedback Handler agent.
+
 ## Available Skills
 
 This workspace provides specialized Agent Skills that enhance your capabilities:
