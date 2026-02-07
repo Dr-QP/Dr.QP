@@ -88,7 +88,6 @@ jobs:
       packages: write
     needs:
       - build-dev-image
-    if: needs.paths-filter.outputs.pass == 'true'
     timeout-minutes: 35
     outputs:
       image: ${{ steps.merge.outputs.image }}
