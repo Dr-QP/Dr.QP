@@ -42,7 +42,7 @@ jobs:
     name: Development image
     timeout-minutes: 35
     needs: paths-filter
-    if: needs.paths-filter.outputs.pass == 'true'
+    if: needs.paths-filter.outputs.pass == 'true' && (github.event_name != 'pull_request' || github.base_ref == 'main')
     permissions:
       packages: write
     strategy:
@@ -88,13 +88,21 @@ jobs:
       packages: write
     needs:
       - build-dev-image
+    if: ${{ !cancelled() }}
     timeout-minutes: 35
     outputs:
-      image: ${{ steps.merge.outputs.image }}
+      image: ${{ steps.merge.outputs.image || steps.fallback.outputs.image }}
     steps:
       - uses: actions/checkout@v4
 
+      - name: Use prebuilt image for PRs to non-main branches
+        id: fallback
+        if: github.event_name == 'pull_request' && github.base_ref != 'main'
+        run: |
+          echo "image=${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop:edge" >> "$GITHUB_OUTPUT"
+
       - name: Merge and push ansible docker image
+        if: github.event_name != 'pull_request' || github.base_ref == 'main'
         uses: ./.github/actions/docker/multiarch-merge
         with:
           image: ${{ env.REGISTRY }}/dr-qp/ubuntu-ansible
@@ -104,6 +112,7 @@ jobs:
 
       - name: Merge and push development docker image
         id: merge
+        if: github.event_name != 'pull_request' || github.base_ref == 'main'
         uses: ./.github/actions/docker/multiarch-merge
         with:
           image: ${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop
