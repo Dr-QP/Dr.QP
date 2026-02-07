@@ -6,8 +6,6 @@ on:
     tags:
       - v*
   pull_request:
-    branches:
-      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}

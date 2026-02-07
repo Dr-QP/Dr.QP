@@ -1,6 +1,7 @@
 ---
 description: 'Autonomously address PR feedback by resolving review comments, CI failures, CodeQL findings, and coverage gaps following repository standards.'
 name: 'Feedback Handler'
+model: GPT-5.2-Codex
 tools:
   [
     # Core orchestration

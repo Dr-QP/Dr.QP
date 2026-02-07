@@ -1,6 +1,7 @@
 ---
 name: 'Principal Engineer'
 description: 'Provide principal-level software engineering guidance with focus on engineering excellence, technical leadership, and pragmatic implementation.'
+model: GPT-5.2-Codex
 infer: true
 tools:
   [
