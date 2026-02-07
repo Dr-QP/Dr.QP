@@ -6,8 +6,6 @@ on:
     branches:
       - a_stub_for_act
   pull_request:
-    branches:
-      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
@@ -83,21 +81,32 @@ jobs:
             echo "Reformatted in previous commit. Skipping commit."
             echo "skip_commit=true" >> "$GITHUB_OUTPUT"
           fi
-      # Commit all changed files back to the repository
+      # Commit all changed files back to the repository (only for PRs to main)
       - uses: stefanzweifel/git-auto-commit-action@v6
-        if: ${{ github.event_name == 'pull_request' && steps.verify.outputs.skip_commit != 'true' }}
+        if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' && steps.verify.outputs.skip_commit != 'true' }}
         id: commit
         with:
           commit_message: ${{ env.COMMIT_MESSAGE }}
 
-      - name: Verify changes were committed
+      - name: Verify changes were committed (PRs to main)
         shell: bash -le {0}
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' }}
         run: |
           set -x
           set -e
 
           git diff --exit-code
+          git diff --exit-code --cached
+
+      - name: Verify formatting is correct (PRs to non-main branches)
+        shell: bash -le {0}
+        if: ${{ github.event_name == 'pull_request' && github.base_ref != 'main' }}
+        run: |
+          set -x
+          set -e
+
+          # Fail if there are any changes needed
+          git diff --exit-code || (echo "Error: Code formatting is required. Please run './scripts/cpp-reformat.sh' and './scripts/python-reformat.sh' locally and commit the changes." && exit 1)
           git diff --exit-code --cached
 
 
