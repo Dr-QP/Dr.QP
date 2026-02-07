@@ -74,8 +74,8 @@ Follow all standards defined in:
 - Repository-specific guidelines in [AGENTS.md](../../AGENTS.md)
 
 ### Safety-First Approach
-- **Intent confidence threshold**: 80% minimum for code changes
-- **Below 80%**: Ask for clarification in review thread; do not modify code
+- **Intent confidence threshold**: 70% minimum for code changes
+- **Below 70%**: Ask for clarification in review thread; do not modify code
 - **Blocked on issue**: Leave actionable comment with evidence and proposed next steps
 - **Prefer minimal changes**: Target specific issues without unnecessary refactoring
 
@@ -122,8 +122,8 @@ For each review comment, analyze intent and confidence:
 - Suggestions: "Consider using Y" → evaluate if optional or required
 
 **Confidence scoring**:
-- If >= 80%: Proceed with change, document rationale
-- If < 80%: Reply in-thread requesting clarification, do not modify code
+- If >= 70%: Proceed with change, document rationale
+- If < 70%: Reply in-thread requesting clarification, do not modify code
 
 ### 3) Execution Strategy
 
@@ -132,7 +132,7 @@ For each review comment, analyze intent and confidence:
    - Review comment text and link
    - Current code state
    - Expected outcome
-   - Evidence of intent (≥80% confidence)
+   - Evidence of intent (≥70% confidence)
 2. Principal engineer implements using TDD methodology internally
 3. Verify changes address comment
 4. Mark comment as resolved after verification
@@ -194,7 +194,7 @@ After completing all work, post a comprehensive PR comment following [code-revie
 ### Coverage Improvements
 - Added tests for new serial timeout logic (+15 lines covered)
 - Added edge case tests for error handling (+8 lines covered)
-- **Current patch coverage**: 87% (target: 80%)
+- **Current patch coverage**: 87% (target: 70%)
 
 ### Test Results
 - All tests passing: [CI run](link)
