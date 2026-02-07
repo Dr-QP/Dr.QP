@@ -156,6 +156,7 @@ Content""")
         exit_code = main([str(tmp_path), '--format', 'json'])
         captured = capsys.readouterr()
         assert exit_code in [0, 1]
+        assert captured is not None
 
 
 class TestMainOutputBehavior:
@@ -177,6 +178,7 @@ Content""")
         exit_code = main([str(tmp_path)])
         captured = capsys.readouterr()
 
+        assert exit_code in [0, 1]
         assert len(captured.out) > 0 or len(captured.err) == 0
 
     def test_main_prints_summary(self, tmp_path, capsys):
@@ -196,6 +198,7 @@ Content""")
         exit_code = main([str(tmp_path)])
         captured = capsys.readouterr()
 
+        assert exit_code in [0, 1]
         # Should contain summary with passed/failed counts
         assert 'passed' in captured.out.lower() or 'Summary' in captured.out
 
@@ -212,6 +215,7 @@ Content""")
 
         # Should handle error gracefully
         assert exit_code == 1
+        assert captured is not None
 
 
 class TestMainIntegration:
