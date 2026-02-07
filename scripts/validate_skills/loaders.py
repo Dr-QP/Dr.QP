@@ -84,11 +84,8 @@ def safe_load_frontmatter(file_path: str) -> Tuple[Dict, str]:
         yaml.YAMLError: If frontmatter delimiters are incomplete
 
     """
-    file_stat = os.stat(file_path)
-    if file_stat.st_mode & 0o444 == 0:
-        raise PermissionError(f'Permission denied: {file_path}')
-
-    # This will raise OSError if file not found
+    # This will raise OSError (e.g., FileNotFoundError, PermissionError)
+    # if the file cannot be opened for reading.
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
