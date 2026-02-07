@@ -332,6 +332,6 @@ Safe remediation of CodeQL alerts:
 
 ## Related Resources
 
-- [Code Review Standards](./code-review-standards/SKILL.md) - PR description and review practices
-- [Shared Engineering Guidelines](../instructions/engineering.instructions.md) - Clean Code, SOLID, TDD
-- [Feedback Handler Agent](../agents/feedback-handler.agent.md) - Automated PR feedback resolution
+- [Code Review Standards](../code-review-standards/SKILL.md) - PR description and review practices
+- [Shared Engineering Guidelines](../../instructions/engineering.instructions.md) - Clean Code, SOLID, TDD
+- [Feedback Handler Agent](../../agents/feedback-handler.agent.md) - Automated PR feedback resolution
