@@ -161,7 +161,7 @@ For each review comment, analyze intent and confidence:
 2. Delegate to `principal-engineer` with:
    - Coverage report link
    - Uncovered line ranges
-   - Coverage target (≥80%)
+   - Coverage target provided by Codecov report
 3. Principal engineer adds tests following TDD methodology
 4. Verify coverage improvement in next CI run
 
