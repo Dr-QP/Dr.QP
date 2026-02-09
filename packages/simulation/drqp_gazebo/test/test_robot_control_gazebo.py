@@ -218,6 +218,7 @@ class TestGazeboRobotControl(unittest.TestCase):
                 f'Robot model failed to spawn: robot_state_publisher not running within '
                 f'{self.SPAWN_TIMEOUT}s. Error: {e}'
             )
+            raise
 
         # Spin to receive initial state (confirms robot state machine is active)
         start_time = time.time()
