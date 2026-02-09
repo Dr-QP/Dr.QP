@@ -443,20 +443,36 @@ class TestGazeboRobotControl(unittest.TestCase):
                 2.0 * (q.w * q.z + q.x * q.y), 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
             )
         else:
-            start_yaw = 0.0
+            self.fail('Failed to read initial odometry before rotation command')
 
         self._publish_movement_command(stride_x=0.0, stride_y=0.0, rotation=0.5)
         time.sleep(5.0)
         rclpy.spin_once(self.node, timeout_sec=0.5)
 
-        # Log rotation
+        # Log rotation and verify that a significant rotation occurred
         if self.robot_odometry is not None:
             q = self.robot_odometry.pose.pose.orientation
-            end_yaw = math.atan2(2.0 * (q.w * q.z + q.x * q.y), 1.0 - 2.0 * (q.y * q.y + q.z * q.z))
+            end_yaw = math.atan2(
+                2.0 * (q.w * q.z + q.x * q.y),
+                1.0 - 2.0 * (q.y * q.y + q.z * q.z),
+            )
             self.node.get_logger().info(
                 f'Rotation: start_yaw={start_yaw:.3f}, end_yaw={end_yaw:.3f}'
             )
 
+            # Compute smallest angular difference, handling wraparound at ±pi
+            delta_yaw = ((end_yaw - start_yaw + math.pi) % (2.0 * math.pi)) - math.pi
+            self.assertGreater(
+                abs(delta_yaw),
+                0.1,
+                msg=(
+                    f'Robot did not rotate significantly: '
+                    f'start_yaw={start_yaw:.3f}, end_yaw={end_yaw:.3f}, '
+                    f'|delta_yaw|={abs(delta_yaw):.3f}'
+                ),
+            )
+        else:
+            self.fail('Failed to read final odometry after rotation command')
     def test_disarm_robot(self):
         """Test disarming the robot and verify state transition."""
         # Ensure robot is armed first
