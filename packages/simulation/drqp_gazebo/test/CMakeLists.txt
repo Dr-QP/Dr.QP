@@ -7,3 +7,4 @@ function(add_ros_isolated_launch_test path)
 endfunction()
 
 add_ros_isolated_launch_test(test_simulation_smoke.py TIMEOUT 120)
+add_ros_isolated_launch_test(test_robot_control_gazebo.py TIMEOUT 180)
