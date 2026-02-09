@@ -390,9 +390,7 @@ class TestGazeboRobotControl(unittest.TestCase):
         # Log movement and verify that some motion occurred along Y
         if self.robot_odometry is not None:
             end_y = self.robot_odometry.pose.pose.position.y
-            self.node.get_logger().info(
-                f'Right movement: start_y={start_y:.3f}, end_y={end_y:.3f}'
-            )
+            self.node.get_logger().info(f'Right movement: start_y={start_y:.3f}, end_y={end_y:.3f}')
             # Require a minimal change in Y to consider the movement successful
             self.assertGreater(
                 abs(end_y - start_y),
@@ -401,6 +399,7 @@ class TestGazeboRobotControl(unittest.TestCase):
             )
         else:
             self.fail('Odometry became unavailable during right strafe movement test')
+
     def test_movement_rotation(self):
         """Test rotation movement command and verify rotation."""
         if self.current_robot_state != 'torque_on':
@@ -455,6 +454,7 @@ class TestGazeboRobotControl(unittest.TestCase):
             )
         else:
             self.fail('Failed to read final odometry after rotation command')
+
     def test_disarm_robot(self):
         """Test disarming the robot and verify state transition."""
         # Ensure robot is armed first
