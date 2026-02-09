@@ -80,6 +80,24 @@ class TestGazeboRobotControl(unittest.TestCase):
     MOVEMENT_TIMEOUT = 15.0
     CLOCK_TIMEOUT = 20.0
 
+    # Model and link names
+    ROBOT_MODEL_NAME = 'drqp'
+    BASE_LINK_NAME = 'drqp/base_link'
+    FOOT_LINKS = [
+        'drqp/left_front_foot_link',
+        'drqp/right_front_foot_link',
+        'drqp/left_middle_foot_link',
+        'drqp/right_middle_foot_link',
+        'drqp/left_back_foot_link',
+        'drqp/right_back_foot_link',
+    ]
+
+    # Ground clearance thresholds (meters)
+    BASE_ON_GROUND_THRESHOLD = 0.015  # Base should be below this when on ground
+    BASE_OFF_GROUND_THRESHOLD = 0.05  # Base should be above this when armed
+    FOOT_ON_GROUND_THRESHOLD = 0.01  # Feet should be below this when on ground
+    FOOT_OFF_GROUND_THRESHOLD = 0.02  # Feet should be above this when off ground
+
     @classmethod
     def setUpClass(cls):
         rclpy.init()
