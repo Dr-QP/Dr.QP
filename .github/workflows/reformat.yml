@@ -21,7 +21,7 @@ jobs:
     permissions: {}
     timeout-minutes: 10
     outputs:
-      pass: ${{ steps.filter.outputs.pass }}
+      pass: ${{ steps.override.outputs.pass }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -34,6 +34,23 @@ jobs:
             .github/workflows/reformat.yml
             docs/source/notebooks/**
             ansible/**
+
+      - name: Override pass for draft AI PRs
+        id: override
+        shell: bash
+        run: |
+          set -e
+
+          pass='${{ steps.filter.outputs.pass }}'
+          if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.pull_request.draft }}" == "true" ]]; then
+            case "${{ github.actor }}" in
+              *copilot*|*cursor*|*codex*|*claude*)
+                pass='false'
+                ;;
+            esac
+          fi
+
+          echo "pass=$pass" >> "$GITHUB_OUTPUT"
 
   reformat:
     name: Reformat
