@@ -99,7 +99,10 @@ class TestGazeboRobotControl(unittest.TestCase):
 
         # Subscribe to robot state
         self.state_sub = self.node.create_subscription(
-            std_msgs.msg.String, '/robot_state', self._robot_state_callback, qos_profile=qos_profile
+            std_msgs.msg.String,
+            '/robot_state',
+            self._robot_state_callback,
+            qos_profile=qos_profile,
         )
 
         # Subscribe to robot odometry from Gazebo
@@ -266,7 +269,8 @@ class TestGazeboRobotControl(unittest.TestCase):
             self.assertGreater(
                 base_z,
                 self.BASE_OFF_GROUND_THRESHOLD,
-                f'Base should be elevated when armed (z={base_z:.3f}m < {self.BASE_OFF_GROUND_THRESHOLD}m)',
+                f'Base should be elevated when armed '
+                f'(z={base_z:.3f}m < {self.BASE_OFF_GROUND_THRESHOLD}m)',
             )
 
         # Verify robot is in armed state
@@ -314,7 +318,8 @@ class TestGazeboRobotControl(unittest.TestCase):
             self.assertGreater(
                 delta_x,
                 0.01,
-                msg=f'Robot did not move forward significantly: delta_x={delta_x:.3f}m (expected > 0.01m)',
+                msg=f'Robot did not move forward significantly: '
+                f'delta_x={delta_x:.3f}m (expected > 0.01m)',
             )
         else:
             self.fail('Forward movement test failed: lost odometry after movement command')
@@ -350,7 +355,9 @@ class TestGazeboRobotControl(unittest.TestCase):
             self.assertLess(
                 end_x,
                 start_x - 0.01,
-                msg=f'Robot did not move backward significantly: start_x={start_x:.3f}, end_x={end_x:.3f} (expected end_x < start_x - 0.01m)',
+                msg=f'Robot did not move backward significantly: '
+                f'start_x={start_x:.3f}, end_x={end_x:.3f} '
+                f'(expected end_x < start_x - 0.01m)',
             )
         else:
             self.fail('Backward movement test failed: lost odometry after movement command')
@@ -386,7 +393,8 @@ class TestGazeboRobotControl(unittest.TestCase):
             self.assertGreater(
                 abs(delta_y),
                 0.01,
-                msg=f'Robot did not strafe left significantly: |delta_y|={abs(delta_y):.3f}m (expected > 0.01m)',
+                msg=f'Robot did not strafe left significantly: '
+                f'|delta_y|={abs(delta_y):.3f}m (expected > 0.01m)',
             )
         else:
             self.fail('Left strafe test failed: lost odometry after movement command')
@@ -414,7 +422,9 @@ class TestGazeboRobotControl(unittest.TestCase):
         # Log movement and verify that some motion occurred along Y
         if self.robot_odometry is not None:
             end_y = self.robot_odometry.pose.pose.position.y
-            self.node.get_logger().info(f'Right movement: start_y={start_y:.3f}, end_y={end_y:.3f}')
+            self.node.get_logger().info(
+                f'Right movement: start_y={start_y:.3f}, end_y={end_y:.3f}'
+            )
             # Require a minimal change in Y to consider the movement successful
             self.assertGreater(
                 abs(end_y - start_y),
@@ -553,7 +563,8 @@ class TestGazeboRobotControl(unittest.TestCase):
         self.assertEqual(
             self.current_robot_state,
             'finalized',
-            msg=f'Robot did not reach finalized state after disarm. Current state: {self.current_robot_state}',
+            msg=f'Robot did not reach finalized state after disarm. '
+            f'Current state: {self.current_robot_state}',
         )
 
 
