@@ -3,3 +3,17 @@
   ros_type_name: "rosgraph_msgs/msg/Clock"
   gz_type_name: "gz.msgs.Clock"
   direction: GZ_TO_ROS  # BIDIRECTIONAL or ROS_TO_GZ
+
+# Robot pose for tracking position and velocity
+- ros_topic_name: "/model/drqp/pose"
+  gz_topic_name: "/model/drqp/pose"
+  ros_type_name: "geometry_msgs/msg/PoseArray"
+  gz_type_name: "gz.msgs.Pose_V"
+  direction: GZ_TO_ROS
+
+# Robot odometry for velocity tracking
+- ros_topic_name: "/model/drqp/odometry"
+  gz_topic_name: "/model/drqp/odometry"
+  ros_type_name: "nav_msgs/msg/Odometry"
+  gz_type_name: "gz.msgs.Odometry"
+  direction: GZ_TO_ROS
