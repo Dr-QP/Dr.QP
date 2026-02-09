@@ -24,8 +24,9 @@ import subprocess
 
 
 def ensure_gz_sim_not_running():
-    """Remove any remaining Gazebo processes.
-    
+    """
+    Remove any remaining Gazebo processes.
+
     This is needed to ensure clean test isolation.
     See https://github.com/ros2/launch/issues/545 for details.
     """

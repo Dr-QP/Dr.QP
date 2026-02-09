@@ -36,7 +36,6 @@ from launch_testing_ros import WaitForTopics
 import pytest
 import rclpy
 from rosgraph_msgs.msg import Clock
-
 from test_utils import ensure_gz_sim_not_running
 
 

@@ -39,7 +39,6 @@ import rclpy
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 from rosgraph_msgs.msg import Clock
 import std_msgs.msg
-
 from test_utils import ensure_gz_sim_not_running
 
 
@@ -75,7 +74,7 @@ class TestGazeboRobotControl(unittest.TestCase):
     STATE_TRANSITION_TIMEOUT = 20.0
     MOVEMENT_TIMEOUT = 15.0
     CLOCK_TIMEOUT = 20.0
-    
+
     # Model and link names
     ROBOT_MODEL_NAME = 'drqp'
     BASE_LINK_NAME = 'drqp/base_link'
@@ -87,11 +86,11 @@ class TestGazeboRobotControl(unittest.TestCase):
         'drqp/left_back_foot_link',
         'drqp/right_back_foot_link',
     ]
-    
+
     # Ground clearance thresholds (meters)
     BASE_ON_GROUND_THRESHOLD = 0.015  # Base should be below this when on ground
     BASE_OFF_GROUND_THRESHOLD = 0.05  # Base should be above this when armed
-    FOOT_ON_GROUND_THRESHOLD = 0.01   # Feet should be below this when on ground
+    FOOT_ON_GROUND_THRESHOLD = 0.01  # Feet should be below this when on ground
     FOOT_OFF_GROUND_THRESHOLD = 0.02  # Feet should be above this when off ground
 
     @classmethod
@@ -105,44 +104,32 @@ class TestGazeboRobotControl(unittest.TestCase):
     def setUp(self):
         """Set up test node and publishers/subscribers."""
         self.node = rclpy.create_node('test_gazebo_robot_control')
-        
+
         # State tracking
         self.current_robot_state = None
         self.robot_odometry = None
         self.initial_pose = None
-        
+
         # QoS profile for state subscriptions
         qos_profile = QoSProfile(depth=1)
         qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
-        
+
         # Subscribe to robot state
         self.state_sub = self.node.create_subscription(
-            std_msgs.msg.String,
-            '/robot_state',
-            self._robot_state_callback,
-            qos_profile=qos_profile
+            std_msgs.msg.String, '/robot_state', self._robot_state_callback, qos_profile=qos_profile
         )
-        
+
         # Subscribe to robot odometry from Gazebo
         self.odom_sub = self.node.create_subscription(
-            Odometry,
-            '/model/drqp/odometry',
-            self._odometry_callback,
-            10
+            Odometry, '/model/drqp/odometry', self._odometry_callback, 10
         )
-        
+
         # Publisher for robot events (to trigger state transitions)
-        self.event_pub = self.node.create_publisher(
-            std_msgs.msg.String,
-            '/robot_event',
-            10
-        )
-        
+        self.event_pub = self.node.create_publisher(std_msgs.msg.String, '/robot_event', 10)
+
         # Publisher for movement commands
         self.movement_pub = self.node.create_publisher(
-            MovementCommand,
-            '/robot/movement_command',
-            10
+            MovementCommand, '/robot/movement_command', 10
         )
 
     def tearDown(self):
@@ -187,7 +174,7 @@ class TestGazeboRobotControl(unittest.TestCase):
             lambda: self.current_robot_state == expected_state,
             timeout_sec,
             f'Robot did not reach state "{expected_state}" within {timeout_sec}s. '
-            f'Current state: {self.current_robot_state}'
+            f'Current state: {self.current_robot_state}',
         )
 
     def _publish_movement_command(self, stride_x=0.0, stride_y=0.0, rotation=0.0):
@@ -208,7 +195,7 @@ class TestGazeboRobotControl(unittest.TestCase):
         # Check required nodes are running
         for node_name in ('robot_state_publisher', 'drqp_brain', 'drqp_robot_state'):
             check_node_running(self.node, node_name, timeout=self.CLOCK_TIMEOUT)
-        
+
         # Wait for clock to ensure Gazebo is running
         with WaitForTopics([('/clock', Clock)], timeout=self.CLOCK_TIMEOUT) as wait:
             self.assertTrue(wait.wait(), 'Did not receive /clock from Gazebo bridge')
@@ -223,16 +210,16 @@ class TestGazeboRobotControl(unittest.TestCase):
                 f'Robot model failed to spawn: robot_state_publisher not running within '
                 f'{self.SPAWN_TIMEOUT}s. Error: {e}'
             )
-        
+
         # Spin to receive initial state (confirms robot state machine is active)
         start_time = time.time()
         while self.current_robot_state is None and time.time() - start_time < self.SPAWN_TIMEOUT:
             rclpy.spin_once(self.node, timeout_sec=0.5)
-        
+
         self.assertIsNotNone(
             self.current_robot_state,
             f'Robot failed to spawn: did not receive robot state within {self.SPAWN_TIMEOUT}s. '
-            f'Check that Gazebo spawned the model "drqp" successfully.'
+            f'Check that Gazebo spawned the model "drqp" successfully.',
         )
 
     def test_arm_robot(self):
@@ -242,13 +229,13 @@ class TestGazeboRobotControl(unittest.TestCase):
             rclpy.spin_once(self.node, timeout_sec=1.0)
             if self.current_robot_state is None:
                 self.fail('Cannot arm robot: no initial state received')
-        
+
         initial_state = self.current_robot_state
         self.node.get_logger().info(f'Initial state before arming: {initial_state}')
-        
+
         # Send initialize event to arm the robot
         self._publish_event('initialize')
-        
+
         # Wait for initializing state (intermediate)
         try:
             self._wait_for_state('initializing', self.STATE_TRANSITION_TIMEOUT)
@@ -257,10 +244,10 @@ class TestGazeboRobotControl(unittest.TestCase):
                 f'Arm command failed: robot did not transition to "initializing" state. '
                 f'Current state: {self.current_robot_state}. Error: {e}'
             )
-        
+
         # Send initializing_done to complete arming
         self._publish_event('initializing_done')
-        
+
         # Wait for torque_on (armed) state
         try:
             self._wait_for_state('torque_on', self.STATE_TRANSITION_TIMEOUT)
@@ -278,17 +265,17 @@ class TestGazeboRobotControl(unittest.TestCase):
             self._wait_for_state('initializing', self.STATE_TRANSITION_TIMEOUT)
             self._publish_event('initializing_done')
             self._wait_for_state('torque_on', self.STATE_TRANSITION_TIMEOUT)
-        
+
         # Give robot time to reach standing posture
         time.sleep(3.0)
-        
+
         # Wait for odometry to verify robot is in stable position
         self._spin_until(
             lambda: self.robot_odometry is not None,
             self.MOVEMENT_TIMEOUT,
-            'Did not receive odometry from Gazebo'
+            'Did not receive odometry from Gazebo',
         )
-        
+
         # Verify base is elevated (z position should be > threshold)
         if self.robot_odometry is not None:
             base_z = self.robot_odometry.pose.pose.position.z
@@ -296,9 +283,9 @@ class TestGazeboRobotControl(unittest.TestCase):
             self.assertGreater(
                 base_z,
                 self.BASE_OFF_GROUND_THRESHOLD,
-                f'Base should be elevated when armed (z={base_z:.3f}m < {self.BASE_OFF_GROUND_THRESHOLD}m)'
+                f'Base should be elevated when armed (z={base_z:.3f}m < {self.BASE_OFF_GROUND_THRESHOLD}m)',
             )
-        
+
         # Verify robot is in armed state
         self.assertEqual(self.current_robot_state, 'torque_on')
 
@@ -310,29 +297,29 @@ class TestGazeboRobotControl(unittest.TestCase):
             self._wait_for_state('initializing', self.STATE_TRANSITION_TIMEOUT)
             self._publish_event('initializing_done')
             self._wait_for_state('torque_on', self.STATE_TRANSITION_TIMEOUT)
-        
+
         # Wait for odometry and store starting position
         try:
             self._spin_until(
                 lambda: self.robot_odometry is not None,
                 self.MOVEMENT_TIMEOUT,
-                'Did not receive odometry from Gazebo'
+                'Did not receive odometry from Gazebo',
             )
         except TimeoutError as e:
             self.fail(
                 f'Forward movement test failed: no odometry received from Gazebo. '
                 f'Check bridge configuration. Error: {e}'
             )
-        
+
         start_x = self.robot_odometry.pose.pose.position.x
-        
+
         # Publish forward movement command
         self._publish_movement_command(stride_x=1.0, stride_y=0.0, rotation=0.0)
-        
+
         # Allow time for movement
         time.sleep(5.0)
         rclpy.spin_once(self.node, timeout_sec=0.5)
-        
+
         # Verify forward motion occurred (x position should have changed)
         if self.robot_odometry is not None:
             end_x = self.robot_odometry.pose.pose.position.x
@@ -353,23 +340,25 @@ class TestGazeboRobotControl(unittest.TestCase):
             self._wait_for_state('initializing', self.STATE_TRANSITION_TIMEOUT)
             self._publish_event('initializing_done')
             self._wait_for_state('torque_on', self.STATE_TRANSITION_TIMEOUT)
-        
+
         # Wait for odometry and store starting position
         self._spin_until(
             lambda: self.robot_odometry is not None,
             self.MOVEMENT_TIMEOUT,
-            'Did not receive odometry from Gazebo'
+            'Did not receive odometry from Gazebo',
         )
         start_x = self.robot_odometry.pose.pose.position.x
-        
+
         self._publish_movement_command(stride_x=-1.0, stride_y=0.0, rotation=0.0)
         time.sleep(5.0)
         rclpy.spin_once(self.node, timeout_sec=0.5)
-        
+
         # Log movement
         if self.robot_odometry is not None:
             end_x = self.robot_odometry.pose.pose.position.x
-            self.node.get_logger().info(f'Backward movement: start_x={start_x:.3f}, end_x={end_x:.3f}')
+            self.node.get_logger().info(
+                f'Backward movement: start_x={start_x:.3f}, end_x={end_x:.3f}'
+            )
 
     def test_movement_left(self):
         """Test left strafe movement command and verify motion."""
@@ -378,19 +367,19 @@ class TestGazeboRobotControl(unittest.TestCase):
             self._wait_for_state('initializing', self.STATE_TRANSITION_TIMEOUT)
             self._publish_event('initializing_done')
             self._wait_for_state('torque_on', self.STATE_TRANSITION_TIMEOUT)
-        
+
         # Wait for odometry and store starting position
         self._spin_until(
             lambda: self.robot_odometry is not None,
             self.MOVEMENT_TIMEOUT,
-            'Did not receive odometry from Gazebo'
+            'Did not receive odometry from Gazebo',
         )
         start_y = self.robot_odometry.pose.pose.position.y
-        
+
         self._publish_movement_command(stride_x=0.0, stride_y=1.0, rotation=0.0)
         time.sleep(5.0)
         rclpy.spin_once(self.node, timeout_sec=0.5)
-        
+
         # Log movement
         if self.robot_odometry is not None:
             end_y = self.robot_odometry.pose.pose.position.y
@@ -403,19 +392,19 @@ class TestGazeboRobotControl(unittest.TestCase):
             self._wait_for_state('initializing', self.STATE_TRANSITION_TIMEOUT)
             self._publish_event('initializing_done')
             self._wait_for_state('torque_on', self.STATE_TRANSITION_TIMEOUT)
-        
+
         # Wait for odometry and store starting position
         self._spin_until(
             lambda: self.robot_odometry is not None,
             self.MOVEMENT_TIMEOUT,
-            'Did not receive odometry from Gazebo'
+            'Did not receive odometry from Gazebo',
         )
         start_y = self.robot_odometry.pose.pose.position.y
-        
+
         self._publish_movement_command(stride_x=0.0, stride_y=-1.0, rotation=0.0)
         time.sleep(5.0)
         rclpy.spin_once(self.node, timeout_sec=0.5)
-        
+
         # Log movement
         if self.robot_odometry is not None:
             end_y = self.robot_odometry.pose.pose.position.y
@@ -428,36 +417,33 @@ class TestGazeboRobotControl(unittest.TestCase):
             self._wait_for_state('initializing', self.STATE_TRANSITION_TIMEOUT)
             self._publish_event('initializing_done')
             self._wait_for_state('torque_on', self.STATE_TRANSITION_TIMEOUT)
-        
+
         # Wait for odometry and store starting orientation
         self._spin_until(
             lambda: self.robot_odometry is not None,
             self.MOVEMENT_TIMEOUT,
-            'Did not receive odometry from Gazebo'
+            'Did not receive odometry from Gazebo',
         )
-        
+
         # Get starting orientation (yaw from quaternion)
         import math
+
         if self.robot_odometry is not None:
             q = self.robot_odometry.pose.pose.orientation
             start_yaw = math.atan2(
-                2.0 * (q.w * q.z + q.x * q.y),
-                1.0 - 2.0 * (q.y * q.y + q.z * q.z)
+                2.0 * (q.w * q.z + q.x * q.y), 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
             )
         else:
             start_yaw = 0.0
-        
+
         self._publish_movement_command(stride_x=0.0, stride_y=0.0, rotation=0.5)
         time.sleep(5.0)
         rclpy.spin_once(self.node, timeout_sec=0.5)
-        
+
         # Log rotation
         if self.robot_odometry is not None:
             q = self.robot_odometry.pose.pose.orientation
-            end_yaw = math.atan2(
-                2.0 * (q.w * q.z + q.x * q.y),
-                1.0 - 2.0 * (q.y * q.y + q.z * q.z)
-            )
+            end_yaw = math.atan2(2.0 * (q.w * q.z + q.x * q.y), 1.0 - 2.0 * (q.y * q.y + q.z * q.z))
             self.node.get_logger().info(
                 f'Rotation: start_yaw={start_yaw:.3f}, end_yaw={end_yaw:.3f}'
             )
@@ -476,10 +462,10 @@ class TestGazeboRobotControl(unittest.TestCase):
                 self._wait_for_state('torque_on', self.STATE_TRANSITION_TIMEOUT)
             except TimeoutError:
                 self.fail('Failed to reach armed state before disarm test')
-        
+
         # Send finalize event to disarm
         self._publish_event('finalize')
-        
+
         # Wait for finalizing state
         try:
             self._wait_for_state('finalizing', self.STATE_TRANSITION_TIMEOUT)
@@ -488,10 +474,10 @@ class TestGazeboRobotControl(unittest.TestCase):
                 f'Disarm command failed: robot did not transition to "finalizing" state. '
                 f'Current state: {self.current_robot_state}. Error: {e}'
             )
-        
+
         # Send finalizing_done
         self._publish_event('finalizing_done')
-        
+
         # Wait for finalized (disarmed) state
         try:
             self._wait_for_state('finalized', self.STATE_TRANSITION_TIMEOUT)
@@ -510,23 +496,23 @@ class TestGazeboRobotControl(unittest.TestCase):
             self._wait_for_state('initializing', self.STATE_TRANSITION_TIMEOUT)
             self._publish_event('initializing_done')
             self._wait_for_state('torque_on', self.STATE_TRANSITION_TIMEOUT)
-            
+
             # Disarm
             self._publish_event('finalize')
             self._wait_for_state('finalizing', self.STATE_TRANSITION_TIMEOUT)
             self._publish_event('finalizing_done')
             self._wait_for_state('finalized', self.STATE_TRANSITION_TIMEOUT)
-        
+
         # Give robot time to settle to ground
         time.sleep(3.0)
-        
+
         # Wait for odometry
         self._spin_until(
             lambda: self.robot_odometry is not None,
             self.MOVEMENT_TIMEOUT,
-            'Did not receive odometry from Gazebo'
+            'Did not receive odometry from Gazebo',
         )
-        
+
         # Verify base is near ground (z position should be < threshold)
         if self.robot_odometry is not None:
             base_z = self.robot_odometry.pose.pose.position.z
@@ -534,7 +520,7 @@ class TestGazeboRobotControl(unittest.TestCase):
             # Note: When disarmed (torque off), legs go limp and base drops
             # We verify the robot completed the state transition
             # The actual height will depend on how the simulation handles torque-off state
-        
+
         # Verify robot completed disarm cycle
         self.assertEqual(self.current_robot_state, 'finalized')
 
@@ -553,6 +539,7 @@ class TestGazeboShutdown(unittest.TestCase):
         # Gazebo is SIGTERMed by the launch file, so we need to filter it out
         proc_info = self._filter_out_gazebo(proc_info)
         from launch_testing import asserts
+
         asserts.assertExitCodes(proc_info)
 
     def _filter_out_gazebo(self, proc_info):
