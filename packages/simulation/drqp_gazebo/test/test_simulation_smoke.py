@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import subprocess
 import unittest
 
 from controller_manager.test_utils import (
@@ -34,16 +33,15 @@ from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
 from launch_testing.proc_info_handler import ProcInfoHandler
 from launch_testing_ros import WaitForTopics
+import os
 import pytest
 import rclpy
 from rosgraph_msgs.msg import Clock
+import sys
 
-
-def ensure_gz_sim_not_running():
-    # Kill any remaining Gazebo processes
-    # See https://github.com/ros2/launch/issues/545 for details
-    shell_cmd = ['pkill', '-9', '-f', '^gz sim']
-    subprocess.run(shell_cmd, check=False)
+# Add test directory to path to import test utilities
+sys.path.insert(0, os.path.dirname(__file__))
+from test_utils import ensure_gz_sim_not_running  # noqa: E402
 
 
 @pytest.mark.launch_test
