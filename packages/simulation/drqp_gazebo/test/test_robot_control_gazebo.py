@@ -18,11 +18,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import math
 import time
 import unittest
 
 from controller_manager.test_utils import check_node_running
-from drqp_interfaces.msg import MovementCommand
+from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 from geometry_msgs.msg import Vector3
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
@@ -166,7 +167,7 @@ class TestGazeboRobotControl(unittest.TestCase):
         cmd.rotation_speed = rotation
         cmd.body_translation = Vector3(x=0.0, y=0.0, z=0.0)
         cmd.body_rotation = Vector3(x=0.0, y=0.0, z=0.0)
-        cmd.gait_type = 'tripod'
+        cmd.gait_type = MovementCommandConstants.GAIT_TRIPOD
         self.movement_pub.publish(cmd)
         self.node.get_logger().info(
             f'Published movement command: stride=({stride_x}, {stride_y}), rotation={rotation}'
@@ -309,9 +310,12 @@ class TestGazeboRobotControl(unittest.TestCase):
             self.node.get_logger().info(
                 f'Forward movement: start_x={start_x:.3f}, end_x={end_x:.3f}, delta={delta_x:.3f}'
             )
-            # Note: In a hexapod with working gait, we expect forward motion
-            # For now, we verify that odometry is updating (position may change)
-            # A strict assertion would check: self.assertGreater(end_x, start_x)
+            # Assert that forward motion occurred (x increased)
+            self.assertGreater(
+                delta_x,
+                0.01,
+                msg=f'Robot did not move forward significantly: delta_x={delta_x:.3f}m (expected > 0.01m)'
+            )
         else:
             self.fail('Forward movement test failed: lost odometry after movement command')
 
@@ -335,12 +339,21 @@ class TestGazeboRobotControl(unittest.TestCase):
         time.sleep(5.0)
         rclpy.spin_once(self.node, timeout_sec=0.5)
 
-        # Log movement
+        # Verify backward motion occurred (x decreased)
         if self.robot_odometry is not None:
             end_x = self.robot_odometry.pose.pose.position.x
+            delta_x = end_x - start_x
             self.node.get_logger().info(
-                f'Backward movement: start_x={start_x:.3f}, end_x={end_x:.3f}'
+                f'Backward movement: start_x={start_x:.3f}, end_x={end_x:.3f}, delta={delta_x:.3f}'
             )
+            # Assert that backward motion occurred (x decreased)
+            self.assertLess(
+                end_x,
+                start_x - 0.01,
+                msg=f'Robot did not move backward significantly: start_x={start_x:.3f}, end_x={end_x:.3f} (expected end_x < start_x - 0.01m)'
+            )
+        else:
+            self.fail('Backward movement test failed: lost odometry after movement command')
 
     def test_movement_left(self):
         """Test left strafe movement command and verify motion."""
@@ -362,10 +375,21 @@ class TestGazeboRobotControl(unittest.TestCase):
         time.sleep(5.0)
         rclpy.spin_once(self.node, timeout_sec=0.5)
 
-        # Log movement
+        # Verify left strafe motion occurred (Y position should have changed)
         if self.robot_odometry is not None:
             end_y = self.robot_odometry.pose.pose.position.y
-            self.node.get_logger().info(f'Left movement: start_y={start_y:.3f}, end_y={end_y:.3f}')
+            delta_y = end_y - start_y
+            self.node.get_logger().info(
+                f'Left movement: start_y={start_y:.3f}, end_y={end_y:.3f}, delta={delta_y:.3f}'
+            )
+            # Assert that left strafe motion occurred (Y changed)
+            self.assertGreater(
+                abs(delta_y),
+                0.01,
+                msg=f'Robot did not strafe left significantly: |delta_y|={abs(delta_y):.3f}m (expected > 0.01m)'
+            )
+        else:
+            self.fail('Left strafe test failed: lost odometry after movement command')
 
     def test_movement_right(self):
         """Test right strafe movement command and verify motion."""
@@ -416,8 +440,6 @@ class TestGazeboRobotControl(unittest.TestCase):
         )
 
         # Get starting orientation (yaw from quaternion)
-        import math
-
         if self.robot_odometry is not None:
             q = self.robot_odometry.pose.pose.orientation
             start_yaw = math.atan2(
@@ -495,7 +517,7 @@ class TestGazeboRobotControl(unittest.TestCase):
             )
 
     def test_verify_disarmed_posture(self):
-        """Verify robot posture after disarming (base on ground, feet off ground)."""
+        """Verify robot completed disarm state transition successfully."""
         # Ensure robot goes through full cycle
         if self.current_robot_state != 'finalized':
             # Arm
@@ -520,16 +542,19 @@ class TestGazeboRobotControl(unittest.TestCase):
             'Did not receive odometry from Gazebo',
         )
 
-        # Verify base is near ground (z position should be < threshold)
+        # Log base height after disarm
         if self.robot_odometry is not None:
             base_z = self.robot_odometry.pose.pose.position.z
             self.node.get_logger().info(f'Disarmed base height: z={base_z:.3f}m')
-            # Note: When disarmed (torque off), legs go limp and base drops
-            # We verify the robot completed the state transition
-            # The actual height will depend on how the simulation handles torque-off state
+        else:
+            self.fail('Failed to read odometry after disarm')
 
         # Verify robot completed disarm cycle
-        self.assertEqual(self.current_robot_state, 'finalized')
+        self.assertEqual(
+            self.current_robot_state,
+            'finalized',
+            msg=f'Robot did not reach finalized state after disarm. Current state: {self.current_robot_state}'
+        )
 
 
 @post_shutdown_test()
