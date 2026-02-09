@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import subprocess
 import unittest
 
 from controller_manager.test_utils import (
@@ -38,12 +37,7 @@ import pytest
 import rclpy
 from rosgraph_msgs.msg import Clock
 
-
-def ensure_gz_sim_not_running():
-    # Kill any remaining Gazebo processes
-    # See https://github.com/ros2/launch/issues/545 for details
-    shell_cmd = ['pkill', '-9', '-f', '^gz sim']
-    subprocess.run(shell_cmd, check=False)
+from test_utils import ensure_gz_sim_not_running
 
 
 @pytest.mark.launch_test

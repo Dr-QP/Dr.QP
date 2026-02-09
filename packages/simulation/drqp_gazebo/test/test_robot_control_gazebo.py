@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import subprocess
 import time
 import unittest
 
@@ -41,11 +40,7 @@ from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 from rosgraph_msgs.msg import Clock
 import std_msgs.msg
 
-
-def ensure_gz_sim_not_running():
-    """Kill any remaining Gazebo processes."""
-    shell_cmd = ['pkill', '-9', '-f', '^gz sim']
-    subprocess.run(shell_cmd, check=False)
+from test_utils import ensure_gz_sim_not_running
 
 
 @pytest.mark.launch_test
@@ -73,18 +68,7 @@ def generate_test_description():
 
 
 class TestGazeboRobotControl(unittest.TestCase):
-    """Test robot control behaviors in Gazebo simulation.
-    
-    This test suite validates:
-    1. Robot model spawns successfully in Gazebo
-    2. Arm command transitions robot to armed state (torque_on)
-    3. Armed robot has base elevated off ground (verified via odometry)
-    4. Movement commands for all directions (forward, backward, left, right, rotation)
-    5. Disarm command transitions robot to disarmed state (finalized)
-    6. State transitions complete within configurable timeouts
-    
-    All pose and velocity verification uses Gazebo odometry topic bridged to ROS.
-    """
+    """Test robot control behaviors in Gazebo simulation."""
 
     # Configurable timeouts
     SPAWN_TIMEOUT = 30.0
@@ -219,7 +203,7 @@ class TestGazeboRobotControl(unittest.TestCase):
             f'Published movement command: stride=({stride_x}, {stride_y}), rotation={rotation}'
         )
 
-    def test_01_nodes_and_clock(self):
+    def test_nodes_and_clock(self):
         """Verify simulation nodes are running and clock is available."""
         # Check required nodes are running
         for node_name in ('robot_state_publisher', 'drqp_brain', 'drqp_robot_state'):
@@ -229,7 +213,7 @@ class TestGazeboRobotControl(unittest.TestCase):
         with WaitForTopics([('/clock', Clock)], timeout=self.CLOCK_TIMEOUT) as wait:
             self.assertTrue(wait.wait(), 'Did not receive /clock from Gazebo bridge')
 
-    def test_02_robot_spawn(self):
+    def test_robot_spawn(self):
         """Verify robot model spawns in Gazebo within timeout."""
         # Verify robot_state_publisher is running (indicates robot description is loaded)
         try:
@@ -251,7 +235,7 @@ class TestGazeboRobotControl(unittest.TestCase):
             f'Check that Gazebo spawned the model "drqp" successfully.'
         )
 
-    def test_03_arm_robot(self):
+    def test_arm_robot(self):
         """Test arming the robot and verify state transition."""
         # Ensure we have initial state
         if self.current_robot_state is None:
@@ -286,7 +270,7 @@ class TestGazeboRobotControl(unittest.TestCase):
                 f'Current state: {self.current_robot_state}. Error: {e}'
             )
 
-    def test_04_verify_armed_posture(self):
+    def test_verify_armed_posture(self):
         """Verify robot posture after arming (base off ground, feet on ground)."""
         # Ensure robot is armed first
         if self.current_robot_state != 'torque_on':
@@ -318,7 +302,7 @@ class TestGazeboRobotControl(unittest.TestCase):
         # Verify robot is in armed state
         self.assertEqual(self.current_robot_state, 'torque_on')
 
-    def test_05_movement_forward(self):
+    def test_movement_forward(self):
         """Test forward movement command and verify motion."""
         # Ensure robot is armed
         if self.current_robot_state != 'torque_on':
@@ -362,7 +346,7 @@ class TestGazeboRobotControl(unittest.TestCase):
         else:
             self.fail('Forward movement test failed: lost odometry after movement command')
 
-    def test_06_movement_backward(self):
+    def test_movement_backward(self):
         """Test backward movement command and verify motion."""
         if self.current_robot_state != 'torque_on':
             self._publish_event('initialize')
@@ -387,7 +371,7 @@ class TestGazeboRobotControl(unittest.TestCase):
             end_x = self.robot_odometry.pose.pose.position.x
             self.node.get_logger().info(f'Backward movement: start_x={start_x:.3f}, end_x={end_x:.3f}')
 
-    def test_07_movement_left(self):
+    def test_movement_left(self):
         """Test left strafe movement command and verify motion."""
         if self.current_robot_state != 'torque_on':
             self._publish_event('initialize')
@@ -412,7 +396,7 @@ class TestGazeboRobotControl(unittest.TestCase):
             end_y = self.robot_odometry.pose.pose.position.y
             self.node.get_logger().info(f'Left movement: start_y={start_y:.3f}, end_y={end_y:.3f}')
 
-    def test_08_movement_right(self):
+    def test_movement_right(self):
         """Test right strafe movement command and verify motion."""
         if self.current_robot_state != 'torque_on':
             self._publish_event('initialize')
@@ -437,7 +421,7 @@ class TestGazeboRobotControl(unittest.TestCase):
             end_y = self.robot_odometry.pose.pose.position.y
             self.node.get_logger().info(f'Right movement: start_y={start_y:.3f}, end_y={end_y:.3f}')
 
-    def test_09_movement_rotation(self):
+    def test_movement_rotation(self):
         """Test rotation movement command and verify rotation."""
         if self.current_robot_state != 'torque_on':
             self._publish_event('initialize')
@@ -478,7 +462,7 @@ class TestGazeboRobotControl(unittest.TestCase):
                 f'Rotation: start_yaw={start_yaw:.3f}, end_yaw={end_yaw:.3f}'
             )
 
-    def test_10_disarm_robot(self):
+    def test_disarm_robot(self):
         """Test disarming the robot and verify state transition."""
         # Ensure robot is armed first
         if self.current_robot_state != 'torque_on':
@@ -517,7 +501,7 @@ class TestGazeboRobotControl(unittest.TestCase):
                 f'Current state: {self.current_robot_state}. Error: {e}'
             )
 
-    def test_11_verify_disarmed_posture(self):
+    def test_verify_disarmed_posture(self):
         """Verify robot posture after disarming (base on ground, feet off ground)."""
         # Ensure robot goes through full cycle
         if self.current_robot_state != 'finalized':
