@@ -23,7 +23,7 @@
 
 import pytest
 
-from validate_skills.cli import parse_arguments
+from drqp_validate_agents.validate_skills.cli import parse_arguments
 
 
 class TestParseArgumentsBasic:
