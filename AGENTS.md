@@ -203,7 +203,7 @@ For comprehensive dependency management guidance (C++, Python, rosdep, pip), see
 
 ## Best Practices for Agents
 
-1. **Always source setup.bash** before any build or test operation
+1. **Always source ./scripts/setup.bash** before any build or test operation
 2. **Use incremental builds** (`--packages-up-to <pkg>`) during development
 3. **Test specific packages** (`--packages-select <pkg>`) for rapid iteration
 4. **Use devcontainer** when running as a remote agent

@@ -1,12 +1,12 @@
 ---
 name: ros2-environment-setup
-description: Set up ROS 2 development environment for local and remote development. Use when asked to configure workspace environment, initialize ROS setup, configure Python virtual environment, or use devcontainer. Supports local development, remote development via devcontainer, environment variable configuration, and venv management.
+description: Set up ROS 2 development environment. Use before execution of ANY commands in terminal for local or remote agents.
 
 ---
 
 # ROS 2 Environment Setup
 
-Initialize and configure the ROS 2 development environment for both local and remote development workflows.
+Initialize and configure the ROS 2 development environment for both local and remote agent workflows.
 
 ## When to Use This Skill
 
