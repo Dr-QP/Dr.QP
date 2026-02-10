@@ -27,10 +27,10 @@ from typing import List, Optional
 
 import yaml
 
-from validate_skills.cli import parse_arguments
-from validate_skills.core import ValidationEngine
-from validate_skills.formatters import format_results
-from validate_skills.loaders import safe_load_frontmatter, SkillFileLoader
+from .cli import parse_arguments
+from .core import ValidationEngine
+from .formatters import format_results
+from .loaders import safe_load_frontmatter, SkillFileLoader
 
 
 def main(args: Optional[List[str]] = None) -> int:

@@ -26,7 +26,7 @@ import io
 import json
 from typing import List
 
-from validate_skills.types import ValidationLevel, ValidationResult
+from .types import ValidationLevel, ValidationResult
 
 
 class TextFormatter:

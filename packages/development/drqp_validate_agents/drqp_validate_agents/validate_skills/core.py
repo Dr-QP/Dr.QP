@@ -26,14 +26,14 @@ from typing import Dict
 
 import yaml
 
-from validate_skills.loaders import safe_load_frontmatter
-from validate_skills.types import ValidationIssue, ValidationLevel, ValidationResult
-from validate_skills.validators.cross_reference import CrossReferenceValidator
-from validate_skills.validators.skill import (
+from .loaders import safe_load_frontmatter
+from .types import ValidationIssue, ValidationLevel, ValidationResult
+from .validators.cross_reference import CrossReferenceValidator
+from .validators.skill import (
     SkillFrontmatterValidator,
     SkillStructureValidator,
 )
-from validate_skills.validators.uniqueness import UniquenessValidator
+from .validators.uniqueness import UniquenessValidator
 
 
 class ValidationEngine:
