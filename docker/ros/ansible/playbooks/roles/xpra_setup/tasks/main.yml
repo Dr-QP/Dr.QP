@@ -1,0 +1,84 @@
+---
+- name: Install Xpra and related packages
+  when: install_xpra | default(false)
+  block:
+    - name: Install prerequisites for Xpra repository
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - gnupg2
+          - wget
+        state: present
+        update_cache: true
+        install_recommends: false
+
+    - name: Add Xpra GPG key
+      ansible.builtin.shell: |
+        wget -O "/usr/share/keyrings/xpra.asc" https://xpra.org/xpra.asc
+      changed_when: true
+
+    - name: Add Xpra APT repository for Ubuntu Noble
+      ansible.builtin.shell: |
+        wget -O "/etc/apt/sources.list.d/xpra.sources" \
+          https://raw.githubusercontent.com/Xpra-org/xpra/master/packaging/repos/noble/xpra.sources
+      changed_when: true
+
+    - name: Update APT cache after adding Xpra repository
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install Xpra packages
+      ansible.builtin.apt:
+        name:
+          - xpra
+          - xpra-html5
+        state: present
+        install_recommends: false
+
+    - name: Install VirtualGL from GitHub releases
+      block:
+        - name: Detect system architecture
+          ansible.builtin.set_fact:
+            virtualgl_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
+
+        - name: Get latest VirtualGL release version
+          ansible.builtin.shell: |
+            curl -s https://api.github.com/repos/VirtualGL/virtualgl/releases/latest | \
+            grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/'
+          register: virtualgl_version
+          changed_when: false
+
+        - name: Download VirtualGL DEB package
+          ansible.builtin.get_url:
+            url: "https://github.com/VirtualGL/virtualgl/releases/download/v{{ virtualgl_version.stdout }}/virtualgl_{{ virtualgl_version.stdout }}_{{ virtualgl_arch }}.deb"
+            dest: "/tmp/virtualgl_{{ virtualgl_version.stdout }}_{{ virtualgl_arch }}.deb"
+            mode: '0644'
+
+        - name: Install VirtualGL DEB package
+          ansible.builtin.apt:
+            deb: "/tmp/virtualgl_{{ virtualgl_version.stdout }}_{{ virtualgl_arch }}.deb"
+            state: present
+
+        - name: Clean up VirtualGL DEB file
+          ansible.builtin.file:
+            path: "/tmp/virtualgl_{{ virtualgl_version.stdout }}_{{ virtualgl_arch }}.deb"
+            state: absent
+
+    - name: Install Mesa and OpenGL support packages
+      ansible.builtin.apt:
+        name:
+          - mesa-utils
+          - libgl1-mesa-glx
+          - libglvnd0
+          - xvfb
+        state: present
+        install_recommends: false
+
+    - name: Install llvmpipe for software rendering fallback
+      ansible.builtin.apt:
+        name:
+          - libllvmpipe0
+        state: present
+        install_recommends: false
+
