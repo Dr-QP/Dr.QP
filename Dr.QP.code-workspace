@@ -603,9 +603,8 @@
     "chat.mcp.gallery.enabled": true,
     "chat.mcp.autostart": "newAndOutdated",
     "chat.tools.terminal.autoApprove": {
-      "*": {
-        "approve": true,
-      }
+      "/.*/": true,
+      "rm": false
     },
     "chat.tools.urls.autoApprove": {
       "https://github.com": true,
