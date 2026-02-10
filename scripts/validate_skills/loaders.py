@@ -186,7 +186,7 @@ def load_all_skills(skill_files: List[str]) -> Dict[str, Dict]:
                 'frontmatter': frontmatter,
                 'body': body,
             }
-        except Exception as e:
+        except (OSError, UnicodeDecodeError, yaml.YAMLError) as e:
             logger.warning(f'Failed to load skill {file_path}: {e}')
 
     return skills

@@ -24,6 +24,7 @@
 import os
 
 import pytest
+import yaml
 
 
 class TestErrorHandlingEdgeCases:
@@ -40,7 +41,7 @@ class TestErrorHandlingEdgeCases:
         try:
             result = safe_load_frontmatter(str(skill_file))
             assert result is not None
-        except Exception as e:
+        except (OSError, UnicodeDecodeError, yaml.YAMLError) as e:
             assert 'yaml' in str(e).lower() or 'front' in str(e).lower()
 
     def test_skill_with_incomplete_frontmatter(self, tmp_path):
@@ -51,7 +52,7 @@ class TestErrorHandlingEdgeCases:
         skill_file.write_text('---\nname: test\nContent without closing delimiter')
 
         # Should raise error
-        with pytest.raises(Exception):
+        with pytest.raises(yaml.YAMLError):
             safe_load_frontmatter(str(skill_file))
 
     def test_extremely_large_file(self, tmp_path):
@@ -67,9 +68,9 @@ class TestErrorHandlingEdgeCases:
         try:
             result = safe_load_frontmatter(str(skill_file))
             assert result is not None
-        except Exception as e:
+        except (OSError, MemoryError, UnicodeDecodeError) as e:
             # Size-related error is acceptable
-            assert isinstance(e, (OSError, MemoryError, IOError))
+            assert isinstance(e, (OSError, MemoryError, UnicodeDecodeError))
 
     def test_circular_reference_protection(self, tmp_path):
         """Should protect against circular references."""
@@ -339,11 +340,11 @@ class TestRobustnessEdgeCases:
         from validate_skills.validators.skill import SkillStructureValidator
 
         body = """# Overview
-   
-## When to use this skill
-     
-## Features
-     """
+
+    ## When to use this skill
+
+    ## Features
+         """
         validator = SkillStructureValidator()
         issues = validator.validate(body)
         # May have warnings about empty sections

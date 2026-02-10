@@ -24,6 +24,8 @@
 from pathlib import Path
 from typing import Dict
 
+import yaml
+
 from validate_skills.loaders import safe_load_frontmatter
 from validate_skills.types import ValidationIssue, ValidationLevel, ValidationResult
 from validate_skills.validators.cross_reference import CrossReferenceValidator
@@ -67,7 +69,7 @@ class ValidationEngine:
         try:
             # Load the file
             frontmatter, body = safe_load_frontmatter(skill_path)
-        except Exception as e:
+        except (OSError, UnicodeDecodeError, yaml.YAMLError) as e:
             result.issues.append(
                 ValidationIssue(
                     level=ValidationLevel.ERROR,

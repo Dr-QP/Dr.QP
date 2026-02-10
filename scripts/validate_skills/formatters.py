@@ -209,28 +209,28 @@ class CSVFormatter:
         return output.getvalue().strip()
 
 
-def format_results(results: List[ValidationResult], format: str = 'text') -> str:
+def format_results(results: List[ValidationResult], output_format: str = 'text') -> str:
     """
     Format validation results in the requested format.
 
     Args:
         results: List of validation results
-        format: Format type ('text', 'json', 'csv')
+        output_format: Format type ('text', 'json', 'csv')
 
     Returns:
         Formatted string
 
     Raises:
-        ValueError: If format is not one of the supported types
+        ValueError: If output_format is not one of the supported types
 
     """
-    if format not in ('text', 'json', 'csv'):
-        raise ValueError(f"Invalid format '{format}'. Supported formats: text, json, csv")
+    if output_format not in ('text', 'json', 'csv'):
+        raise ValueError(f"Invalid format '{output_format}'. Supported formats: text, json, csv")
 
-    if format == 'json':
+    if output_format == 'json':
         formatter = JSONFormatter()
         return formatter.format_batch(results)
-    elif format == 'csv':
+    elif output_format == 'csv':
         formatter = CSVFormatter()
         lines = [formatter.get_header()]
         for result in results:

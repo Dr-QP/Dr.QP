@@ -25,6 +25,8 @@ import logging
 import sys
 from typing import List, Optional
 
+import yaml
+
 from validate_skills.cli import parse_arguments
 from validate_skills.core import ValidationEngine
 from validate_skills.formatters import format_results
@@ -33,7 +35,7 @@ from validate_skills.loaders import safe_load_frontmatter, SkillFileLoader
 
 def main(args: Optional[List[str]] = None) -> int:
     """
-    Main entry point for the validate-skills tool.
+    Run the validate-skills tool.
 
     Args:
         args: Command-line arguments (if None, sys.argv is used)
@@ -72,7 +74,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 'body': body,
                 'content': content,
             }
-        except Exception as e:
+        except (OSError, UnicodeDecodeError, yaml.YAMLError) as e:
             # Log but skip skills that can't be loaded for cross-validation
             logging.warning(f'Failed to load {skill_path}: {e}')
 
@@ -85,7 +87,7 @@ def main(args: Optional[List[str]] = None) -> int:
         results.append(result)
 
     # Format and output results
-    formatted = format_results(results, format=output_format)
+    formatted = format_results(results, output_format=output_format)
     if formatted:
         print(formatted)
 
