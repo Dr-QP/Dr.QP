@@ -688,9 +688,13 @@ def plot_with_legend(plot: callable):
 
 plot_with_legend(lambda ax: plot_spline(ax, 0, control_points, 3, derivatives=2))
 
-plot_with_legend(lambda ax: plot_spline(ax, 0, control_points, 3, derivatives=2, bc_type='natural'))
+plot_with_legend(
+    lambda ax: plot_spline(ax, 0, control_points, 3, derivatives=2, bc_type='natural')
+)
 
-plot_with_legend(lambda ax: plot_spline(ax, 0, control_points, 3, derivatives=2, bc_type='clamped'))
+plot_with_legend(
+    lambda ax: plot_spline(ax, 0, control_points, 3, derivatives=2, bc_type='clamped')
+)
 
 plot_with_legend(
     lambda ax: plot_spline(
@@ -699,7 +703,9 @@ plot_with_legend(
 )
 
 plot_with_legend(
-    lambda ax: plot_spline(ax, 0, control_points, 0.5, derivatives=2, spline_type=SplineType.splrep)
+    lambda ax: plot_spline(
+        ax, 0, control_points, 0.5, derivatives=2, spline_type=SplineType.splrep
+    )
 )
 
 plot_with_legend(
@@ -1079,11 +1085,15 @@ class SplineGaitGenerator:
         if leg_phase < self.lift_duration:
             # Swing phase - leg in air moving forward
             t = np.interp(leg_phase, [0, self.lift_duration], [0, 1])
-            x_control_point = np.interp(leg_phase, [0, self.lift_duration], [-half_step, half_step])
+            x_control_point = np.interp(
+                leg_phase, [0, self.lift_duration], [-half_step, half_step]
+            )
             z_control_point = np.sin(t * np.pi) * self.step_height
         else:
             # Stance phase - leg on ground moving backward
-            x_control_point = np.interp(leg_phase, [self.lift_duration, 1], [half_step, -half_step])
+            x_control_point = np.interp(
+                leg_phase, [self.lift_duration, 1], [half_step, -half_step]
+            )
             z_control_point = 0  # On ground
 
         return np.array(

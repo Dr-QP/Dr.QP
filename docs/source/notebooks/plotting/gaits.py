@@ -78,7 +78,9 @@ class GaitsVisualizer:
         fig, axs = plt.subplots(4, 1)
         fig.set_figheight(12, forward=True)
         # Adjust spacing between subplots to avoid title overlapping with ticks
-        plt.subplots_adjust(hspace=0.8)  # Increased from 0.5 to 0.8 for more space between subplots
+        plt.subplots_adjust(
+            hspace=0.8
+        )  # Increased from 0.5 to 0.8 for more space between subplots
 
         # print out **gen_args into a string
         if len(gen_args) == 0:
@@ -226,7 +228,9 @@ class GaitsVisualizer:
                 leg_tip = _leg_centers[leg]
                 if _rotation_gaits:
                     # TODO(anton-matosov): Why does visualization code need to know about rotations?
-                    rotation_transform = AffineTransform.from_rotvec([0, 0, offset.x], degrees=True)
+                    rotation_transform = AffineTransform.from_rotvec(
+                        [0, 0, offset.x], degrees=True
+                    )
                     leg_tip = rotation_transform.apply_point(leg_tip) + Point3D([0, 0, offset.z])
                 else:
                     leg_tip = leg_tip + offset
