@@ -74,9 +74,9 @@ class TestGazeboRobotControl(unittest.TestCase):
 
     # Configurable timeouts
     SPAWN_TIMEOUT = 30.0
-    STATE_TRANSITION_TIMEOUT = 20.0
-    MOVEMENT_TIMEOUT = 15.0
-    CLOCK_TIMEOUT = 20.0
+    STATE_TRANSITION_TIMEOUT = 5.0
+    MOVEMENT_TIMEOUT = 5.0
+    CLOCK_TIMEOUT = 10.0
 
     # Model and link names
     ROBOT_MODEL_NAME = 'drqp'

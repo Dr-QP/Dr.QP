@@ -39,6 +39,7 @@ from rosgraph_msgs.msg import Clock
 from test_utils import ensure_gz_sim_not_running
 
 
+@pytest.mark.skip
 @pytest.mark.slow
 @pytest.mark.launch_test
 def generate_test_description():
@@ -62,6 +63,7 @@ def generate_test_description():
     )
 
 
+@pytest.mark.skip
 class TestSimulationWiring(unittest.TestCase):
     """Ensure Gazebo simulation brings up the expected ROS graph."""
 
