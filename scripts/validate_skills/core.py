@@ -40,17 +40,7 @@ class ValidationEngine:
     """Orchestrates validation of skills."""
 
     def __init__(self, show_warnings: bool = False, show_info: bool = False):
-        """
-        Initialize the validation engine.
-
-        Args
-        ----
-            show_warnings : bool
-                Whether to include warnings in results.
-            show_info : bool
-                Whether to include info messages in results.
-
-        """
+        """Initialize the validation engine."""
         self.show_warnings = show_warnings
         self.show_info = show_info
 

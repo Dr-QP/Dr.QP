@@ -32,15 +32,7 @@ class CrossReferenceValidator:
     """Validates cross-references in skills."""
 
     def __init__(self, base_path: Optional[str] = None, show_warnings: bool = False):
-        """
-        Initialize the validator.
-
-        Args:
-        -----
-            base_path: Base path for resolving relative references.
-            show_warnings: Whether to include warnings.
-
-        """
+        """Initialize the validator."""
         self.base_path = base_path
         self.show_warnings = show_warnings
 

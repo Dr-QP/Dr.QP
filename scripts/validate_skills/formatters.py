@@ -33,15 +33,7 @@ class TextFormatter:
     """Formats results as readable text."""
 
     def __init__(self, use_colors: bool = False):
-        """
-        Initialize the formatter.
-
-        Args
-        ----
-            use_colors : bool
-                Whether to use ANSI color codes.
-
-        """
+        """Initialize the formatter."""
         self.use_colors = use_colors
 
     def format(self, result: ValidationResult) -> str:
