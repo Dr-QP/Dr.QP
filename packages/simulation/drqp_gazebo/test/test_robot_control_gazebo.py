@@ -19,8 +19,6 @@
 # THE SOFTWARE.
 
 import math
-import os
-import sys
 import time
 import unittest
 
@@ -42,9 +40,6 @@ import rclpy
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 from rosgraph_msgs.msg import Clock
 import std_msgs.msg
-
-sys.path.append(os.path.dirname(__file__))
-
 from test_utils import ensure_gz_sim_not_running
 
 
