@@ -19,8 +19,6 @@
 # THE SOFTWARE.
 
 import math
-import os
-import sys
 import time
 import unittest
 
@@ -42,8 +40,6 @@ import rclpy
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 from rosgraph_msgs.msg import Clock
 import std_msgs.msg
-
-sys.path.append(os.path.dirname(__file__))
 from test_utils import ensure_gz_sim_not_running
 
 
@@ -445,7 +441,9 @@ class TestGazeboRobotControl(unittest.TestCase):
         # Log movement and verify that some motion occurred along Y
         if self.robot_odometry is not None:
             end_y = self.robot_odometry.pose.pose.position.y
-            self.node.get_logger().info(f'Right movement: start_y={start_y:.3f}, end_y={end_y:.3f}')
+            self.node.get_logger().info(
+                f'Right movement: start_y={start_y:.3f}, end_y={end_y:.3f}'
+            )
             # Require a minimal change in Y to consider the movement successful
             self.assertGreater(
                 abs(end_y - start_y),
