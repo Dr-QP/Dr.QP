@@ -367,7 +367,7 @@ Troubleshoot launch file problems and node startup failures.
 
 | Issue | Cause | Solution |
 |-------|-------|----------|
-| "Package not found" | Package not installed or not sourced | Rebuild package and `source install/setup.bash` |
+| "Package not found" | Package not installed or not sourced | Rebuild package and `source scripts/setup.bash` |
 | "Executable not found" | Wrong executable name or not built | Check `install/<pkg>/lib/<pkg>/` for executables |
 | "Launch file not found" | Wrong path or not installed | Verify launch file in `install/<pkg>/share/<pkg>/launch/` |
 | Parameters not loaded | Wrong YAML syntax or file path | Validate YAML syntax, check file exists in install |

@@ -72,7 +72,7 @@ Get overview of running ROS 2 system.
    ```bash
    ros2 node info /<node_name>
    ```
-   
+
    This shows:
    - Subscribers (topics node reads from)
    - Publishers (topics node publishes to)
@@ -95,7 +95,7 @@ Investigate topics not receiving or sending messages correctly.
    ```bash
    ros2 topic info /<topic_name> --verbose
    ```
-   
+
    This shows:
    - Message type
    - Publisher count
@@ -197,7 +197,7 @@ Capture system data for offline analysis and debugging.
    ```bash
    ros2 bag info <bag_name>
    ```
-   
+
    Shows:
    - Duration
    - Start/end time
@@ -235,7 +235,7 @@ Use graphical tools to understand system structure.
    ```bash
    rqt_graph
    ```
-   
+
    Features:
    - Shows nodes as ovals
    - Shows topics as rectangles
@@ -247,7 +247,7 @@ Use graphical tools to understand system structure.
    ```bash
    rqt_console
    ```
-   
+
    Features:
    - View DEBUG, INFO, WARN, ERROR, FATAL messages
    - Filter by node name
@@ -259,7 +259,7 @@ Use graphical tools to understand system structure.
    ```bash
    rqt_plot
    ```
-   
+
    Usage:
    - Add topic fields to plot (e.g., `/topic/data`)
    - Multiple topics on same plot
@@ -280,7 +280,7 @@ Use graphical tools to understand system structure.
    ```bash
    rqt
    ```
-   
+
    Then: Plugins → Choose plugins to load
 
 **When to use**: Visual debugging, understanding system architecture, presentations
@@ -308,7 +308,7 @@ Diagnose performance issues and resource usage.
    ```bash
    # Record with timestamps
    ros2 bag record /<topic_name> -o debug_bag
-   
+
    # Analyze for gaps
    ros2 bag info debug_bag
    ```
@@ -347,7 +347,7 @@ Diagnose performance issues and resource usage.
 | Issue | Cause | Solution |
 |-------|-------|----------|
 | "No topics found" | No nodes publishing | Check if nodes are running with `ros2 node list` |
-| "Command not found: ros2" | Environment not sourced | Run `source /opt/ros/jazzy/setup.bash` or `source install/setup.bash` |
+| "Command not found: ros2" | Environment not sourced | Run `source scripts/setup.bash` |
 | Topic echo shows nothing | Wrong topic name or no messages | Verify topic name with `ros2 topic list`, check publisher with `ros2 topic info` |
 | rqt_graph empty | No active communication | Start nodes, ensure they're publishing/subscribing |
 | Service call hangs | Service not available or node busy | Check service exists with `ros2 service list`, verify node is responsive |
