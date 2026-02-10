@@ -2,37 +2,22 @@
 - name: Install Xpra and related packages
   when: install_xpra | default(true)
   block:
-    - name: Install prerequisites for Xpra repository
+    - name: Install curl for Xpra installation script
       ansible.builtin.apt:
         name:
-          - apt-transport-https
-          - ca-certificates
-          - gnupg2
-          - wget
+          - curl
         state: present
         update_cache: true
         install_recommends: false
 
-    - name: Add Xpra GPG key
-      ansible.builtin.get_url:
-        url: https://xpra.org/xpra.asc
-        dest: /usr/share/keyrings/xpra.asc
-        mode: '0644'
+    - name: Install Xpra using official installation script
+      ansible.builtin.shell: |
+        curl -fsSL https://xpra.org/get-xpra.sh | bash
+      changed_when: true
 
-    - name: Add Xpra APT repository for Ubuntu Noble
-      ansible.builtin.get_url:
-        url: https://raw.githubusercontent.com/Xpra-org/xpra/master/packaging/repos/noble/xpra.sources
-        dest: /etc/apt/sources.list.d/xpra.sources
-        mode: '0644'
-
-    - name: Update APT cache after adding Xpra repository
-      ansible.builtin.apt:
-        update_cache: true
-
-    - name: Install Xpra packages
+    - name: Install xpra-html5 web client
       ansible.builtin.apt:
         name:
-          - xpra
           - xpra-html5
         state: present
         install_recommends: false
