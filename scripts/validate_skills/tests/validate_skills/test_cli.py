@@ -229,7 +229,9 @@ class TestParseArgumentsEdgeCases:
 
     def test_parse_arguments_many_arguments(self):
         """Should handle multiple flags and arguments together."""
-        args = parse_arguments(['./skills', '--ci', '--recommend', '--format', 'json', '--verbose'])
+        args = parse_arguments(
+            ['./skills', '--ci', '--recommend', '--format', 'json', '--verbose']
+        )
         assert args.path == './skills'
         assert args.ci is True
         assert args.recommend is True

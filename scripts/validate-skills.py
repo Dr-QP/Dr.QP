@@ -38,6 +38,7 @@ Example:
 """
 
 import sys
+
 from validate_skills import main
 
 if __name__ == '__main__':
