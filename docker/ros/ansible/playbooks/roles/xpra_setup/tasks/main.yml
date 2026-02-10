@@ -2,18 +2,20 @@
 - name: Install Xpra and related packages
   when: install_xpra | default(true)
   block:
-    - name: Install curl for Xpra installation script
-      ansible.builtin.apt:
-        name:
-          - curl
-        state: present
-        update_cache: true
-        install_recommends: false
+    - name: Download Xpra official installation script
+      ansible.builtin.get_url:
+        url: https://xpra.org/get-xpra.sh
+        dest: /tmp/get-xpra.sh
+        mode: '0755'
 
     - name: Install Xpra using official installation script
-      ansible.builtin.shell: |
-        curl -fsSL https://xpra.org/get-xpra.sh | bash
+      ansible.builtin.shell: /tmp/get-xpra.sh
       changed_when: true
+
+    - name: Clean up Xpra installation script
+      ansible.builtin.file:
+        path: /tmp/get-xpra.sh
+        state: absent
 
     - name: Install xpra-html5 web client
       ansible.builtin.apt:
