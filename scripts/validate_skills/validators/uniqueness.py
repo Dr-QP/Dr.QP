@@ -34,9 +34,8 @@ class UniquenessValidator:
         Initialize the validator.
 
         Args:
-        ----
-            all_skills:
-                Dict of all skills for uniqueness comparison.
+        -----
+            all_skills: Dict of all skills for uniqueness comparison.
 
         """
         self.all_skills = all_skills or {}

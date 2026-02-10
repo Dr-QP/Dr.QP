@@ -36,9 +36,9 @@ class TextFormatter:
         """
         Initialize the formatter.
 
-        Args:
+        Args
         ----
-            use_colors:
+            use_colors : bool
                 Whether to use ANSI color codes.
 
         """

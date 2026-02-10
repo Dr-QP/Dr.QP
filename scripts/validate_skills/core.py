@@ -43,11 +43,11 @@ class ValidationEngine:
         """
         Initialize the validation engine.
 
-        Args:
+        Args
         ----
-            show_warnings:
+            show_warnings : bool
                 Whether to include warnings in results.
-            show_info:
+            show_info : bool
                 Whether to include info messages in results.
 
         """
