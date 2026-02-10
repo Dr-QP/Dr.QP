@@ -66,6 +66,8 @@ function ros2_ws
   else
     echo "Found ROS2 workspace: $ws"
   end
-  bass source $ws/scripts/setup.bash
+  bass source $ws/install/setup.bash
   register_argcomplete
+  bash $ws/scripts/setup.bash
+  source $ws/.venv-prod/bin/activate.fish
 end
