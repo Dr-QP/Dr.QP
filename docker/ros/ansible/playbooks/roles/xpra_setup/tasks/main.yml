@@ -26,31 +26,29 @@
 
     - name: Install VirtualGL from GitHub releases
       block:
-        - name: Detect system architecture
+        - name: Detect system architecture for VirtualGL
           ansible.builtin.set_fact:
             virtualgl_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
-
-        - name: Get latest VirtualGL release version
-          ansible.builtin.shell: |
-            curl -s https://api.github.com/repos/VirtualGL/virtualgl/releases/latest | \
-            grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/'
-          register: virtualgl_version
-          changed_when: false
+            virtualgl_version: "3.1.4"
+            virtualgl_checksums:
+              amd64: "sha256:02edc6b599571c385389af1a006f07a70c298e1d97c580a9bfd4b39d835c51e6"
+              arm64: "sha256:5583e08ee5694d14c6ea0f25d2cfd73fa6d5077869c6645c334a948265a777bb"
 
         - name: Download VirtualGL DEB package
           ansible.builtin.get_url:
-            url: "https://github.com/VirtualGL/virtualgl/releases/download/v{{ virtualgl_version.stdout }}/virtualgl_{{ virtualgl_version.stdout }}_{{ virtualgl_arch }}.deb"
-            dest: "/tmp/virtualgl_{{ virtualgl_version.stdout }}_{{ virtualgl_arch }}.deb"
+            url: "https://github.com/VirtualGL/virtualgl/releases/download/{{ virtualgl_version }}/virtualgl_{{ virtualgl_version }}_{{ virtualgl_arch }}.deb"
+            dest: "/tmp/virtualgl_{{ virtualgl_version }}_{{ virtualgl_arch }}.deb"
+            checksum: "{{ virtualgl_checksums[virtualgl_arch] }}"
             mode: '0644'
 
         - name: Install VirtualGL DEB package
           ansible.builtin.apt:
-            deb: "/tmp/virtualgl_{{ virtualgl_version.stdout }}_{{ virtualgl_arch }}.deb"
+            deb: "/tmp/virtualgl_{{ virtualgl_version }}_{{ virtualgl_arch }}.deb"
             state: present
 
         - name: Clean up VirtualGL DEB file
           ansible.builtin.file:
-            path: "/tmp/virtualgl_{{ virtualgl_version.stdout }}_{{ virtualgl_arch }}.deb"
+            path: "/tmp/virtualgl_{{ virtualgl_version }}_{{ virtualgl_arch }}.deb"
             state: absent
 
     - name: Install Mesa and OpenGL support packages
