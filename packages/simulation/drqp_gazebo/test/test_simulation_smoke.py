@@ -41,7 +41,7 @@ from rosgraph_msgs.msg import Clock
 
 sys.path.append(os.path.dirname(__file__))
 
-from test_utils import ensure_gz_sim_not_running
+from test_utils import ensure_gz_sim_not_running  # noqa: E402
 
 
 @pytest.mark.launch_test
