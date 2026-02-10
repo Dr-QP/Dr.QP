@@ -18,6 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import os
+import sys
 import unittest
 
 from controller_manager.test_utils import (
@@ -36,6 +38,9 @@ from launch_testing_ros import WaitForTopics
 import pytest
 import rclpy
 from rosgraph_msgs.msg import Clock
+
+sys.path.append(os.path.dirname(__file__))
+
 from test_utils import ensure_gz_sim_not_running
 
 
