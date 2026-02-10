@@ -35,10 +35,12 @@ class CrossReferenceValidator:
         """
         Initialize the validator.
 
-        Args
+        Args:
         ----
-            base_path: Base path for resolving relative references
-            show_warnings: Whether to include warnings
+            base_path:
+                Base path for resolving relative references.
+            show_warnings:
+                Whether to include warnings.
 
         """
         self.base_path = base_path

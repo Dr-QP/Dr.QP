@@ -36,9 +36,10 @@ class TextFormatter:
         """
         Initialize the formatter.
 
-        Args
+        Args:
         ----
-            use_colors: Whether to use ANSI color codes
+            use_colors:
+                Whether to use ANSI color codes.
 
         """
         self.use_colors = use_colors
