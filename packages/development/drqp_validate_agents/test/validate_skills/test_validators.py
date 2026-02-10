@@ -21,12 +21,12 @@
 
 """Unit tests for individual skill validators."""
 
-from validate_skills.validators.cross_reference import CrossReferenceValidator
-from validate_skills.validators.skill import (
+from drqp_validate_agents.validate_skills.validators.cross_reference import CrossReferenceValidator
+from drqp_validate_agents.validate_skills.validators.skill import (
     SkillFrontmatterValidator,
     SkillStructureValidator,
 )
-from validate_skills.validators.uniqueness import UniquenessValidator
+from drqp_validate_agents.validate_skills.validators.uniqueness import UniquenessValidator
 
 
 class TestSkillFrontmatterValidator:

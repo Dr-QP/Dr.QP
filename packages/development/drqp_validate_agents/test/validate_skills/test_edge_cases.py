@@ -32,7 +32,7 @@ class TestErrorHandlingEdgeCases:
 
     def test_skill_with_no_frontmatter(self, tmp_path):
         """Should handle skill file with no frontmatter delimiter."""
-        from validate_skills.loaders import safe_load_frontmatter
+        from drqp_validate_agents.validate_skills.loaders import safe_load_frontmatter
 
         skill_file = tmp_path / 'SKILL.md'
         skill_file.write_text('Just plain content without any YAML')
@@ -46,7 +46,7 @@ class TestErrorHandlingEdgeCases:
 
     def test_skill_with_incomplete_frontmatter(self, tmp_path):
         """Should handle incomplete frontmatter delimiters."""
-        from validate_skills.loaders import safe_load_frontmatter
+        from drqp_validate_agents.validate_skills.loaders import safe_load_frontmatter
 
         skill_file = tmp_path / 'SKILL.md'
         skill_file.write_text('---\nname: test\nContent without closing delimiter')
@@ -57,7 +57,7 @@ class TestErrorHandlingEdgeCases:
 
     def test_extremely_large_file(self, tmp_path):
         """Should handle extremely large skill files."""
-        from validate_skills.loaders import safe_load_frontmatter
+        from drqp_validate_agents.validate_skills.loaders import safe_load_frontmatter
 
         skill_file = tmp_path / 'SKILL.md'
         large_content = '---\nname: large-skill\ndescription: A comprehensive description.\n---\n'
@@ -74,7 +74,9 @@ class TestErrorHandlingEdgeCases:
 
     def test_circular_reference_protection(self, tmp_path):
         """Should protect against circular references."""
-        from validate_skills.validators.cross_reference import CrossReferenceValidator
+        from drqp_validate_agents.validate_skills.validators.cross_reference import (
+            CrossReferenceValidator,
+        )
 
         file_a = tmp_path / 'a.md'
         file_b = tmp_path / 'b.md'
@@ -92,7 +94,7 @@ class TestCharacterEncodingEdgeCases:
 
     def test_utf8_with_bom(self, tmp_path):
         """Should handle UTF-8 with BOM."""
-        from validate_skills.loaders import safe_load_frontmatter
+        from drqp_validate_agents.validate_skills.loaders import safe_load_frontmatter
 
         skill_file = tmp_path / 'SKILL.md'
         # Write UTF-8 BOM
@@ -106,7 +108,7 @@ class TestCharacterEncodingEdgeCases:
 
     def test_mixed_line_endings(self, tmp_path):
         """Should handle mixed line endings (CRLF and LF)."""
-        from validate_skills.loaders import safe_load_frontmatter
+        from drqp_validate_agents.validate_skills.loaders import safe_load_frontmatter
 
         skill_file = tmp_path / 'SKILL.md'
         content = '---\r\nname: test\ndescrip: Description\r\n---\r\nBody'
@@ -117,7 +119,7 @@ class TestCharacterEncodingEdgeCases:
 
     def test_unicode_in_frontmatter(self, tmp_path):
         """Should handle unicode characters in YAML values."""
-        from validate_skills.loaders import safe_load_frontmatter
+        from drqp_validate_agents.validate_skills.loaders import safe_load_frontmatter
 
         skill_file = tmp_path / 'SKILL.md'
         content = """---
@@ -137,7 +139,7 @@ class TestDataValidationEdgeCases:
 
     def test_extremely_long_name(self):
         """Should reject names exceeding maximum length."""
-        from validate_skills.validators.skill import SkillFrontmatterValidator
+        from drqp_validate_agents.validate_skills.validators.skill import SkillFrontmatterValidator
 
         validator = SkillFrontmatterValidator()
         frontmatter = {
@@ -149,7 +151,7 @@ class TestDataValidationEdgeCases:
 
     def test_extremely_long_description(self):
         """Should reject descriptions exceeding maximum length."""
-        from validate_skills.validators.skill import SkillFrontmatterValidator
+        from drqp_validate_agents.validate_skills.validators.skill import SkillFrontmatterValidator
 
         validator = SkillFrontmatterValidator()
         frontmatter = {
@@ -161,7 +163,7 @@ class TestDataValidationEdgeCases:
 
     def test_null_and_none_values(self):
         """Should handle None/null values properly."""
-        from validate_skills.validators.skill import SkillFrontmatterValidator
+        from drqp_validate_agents.validate_skills.validators.skill import SkillFrontmatterValidator
 
         validator = SkillFrontmatterValidator()
         frontmatter = {
@@ -173,7 +175,7 @@ class TestDataValidationEdgeCases:
 
     def test_boolean_instead_of_string(self):
         """Should reject wrong data types."""
-        from validate_skills.validators.skill import SkillFrontmatterValidator
+        from drqp_validate_agents.validate_skills.validators.skill import SkillFrontmatterValidator
 
         validator = SkillFrontmatterValidator()
         frontmatter = {
@@ -185,7 +187,7 @@ class TestDataValidationEdgeCases:
 
     def test_list_instead_of_string(self):
         """Should reject list values where strings expected."""
-        from validate_skills.validators.skill import SkillFrontmatterValidator
+        from drqp_validate_agents.validate_skills.validators.skill import SkillFrontmatterValidator
 
         validator = SkillFrontmatterValidator()
         frontmatter = {
@@ -201,7 +203,7 @@ class TestConcurrencyAndRaceConditions:
 
     def test_file_modified_during_validation(self, tmp_path):
         """Should handle file being modified during validation."""
-        from validate_skills.loaders import safe_load_frontmatter
+        from drqp_validate_agents.validate_skills.loaders import safe_load_frontmatter
 
         skill_file = tmp_path / 'SKILL.md'
         original = '---\nname: test\ndescription: Description\n---\nBody'
@@ -223,7 +225,7 @@ class TestConcurrencyAndRaceConditions:
 
     def test_file_deleted_during_validation(self, tmp_path):
         """Should handle file being deleted during validation."""
-        from validate_skills.loaders import safe_load_frontmatter
+        from drqp_validate_agents.validate_skills.loaders import safe_load_frontmatter
 
         skill_file = tmp_path / 'SKILL.md'
         skill_file.write_text('---\nname: test\n---\nBody')
@@ -241,7 +243,7 @@ class TestPathTraversalSecurity:
 
     def test_path_traversal_attempts(self, tmp_path):
         """Should prevent path traversal attacks."""
-        from validate_skills.loaders import find_skill_files
+        from drqp_validate_agents.validate_skills.loaders import find_skill_files
 
         # Try to traverse outside safe directory
         result = find_skill_files(str(tmp_path / '../../etc/passwd'))
@@ -253,7 +255,7 @@ class TestPathTraversalSecurity:
         if not hasattr(os, 'symlink'):
             pytest.skip('Symlinks not supported')
 
-        from validate_skills.loaders import find_skill_files
+        from drqp_validate_agents.validate_skills.loaders import find_skill_files
 
         dir_a = tmp_path / 'a'
         dir_b = tmp_path / 'b'
@@ -277,7 +279,11 @@ class TestResourceLimits:
 
     def test_many_small_issues(self):
         """Should handle results with many issues."""
-        from validate_skills.core import ValidationIssue, ValidationLevel, ValidationResult
+        from drqp_validate_agents.validate_skills.core import (
+            ValidationIssue,
+            ValidationLevel,
+            ValidationResult,
+        )
 
         issues = [
             ValidationIssue(level=ValidationLevel.ERROR, message=f'Issue {i}') for i in range(1000)
@@ -289,7 +295,7 @@ class TestResourceLimits:
 
     def test_many_skill_files(self, tmp_path):
         """Should handle validating many skill files."""
-        from validate_skills.loaders import load_all_skills
+        from drqp_validate_agents.validate_skills.loaders import load_all_skills
 
         # Create 100 skill files
         skill_paths = []
@@ -306,7 +312,7 @@ class TestResourceLimits:
 
     def test_deeply_nested_directories(self, tmp_path):
         """Should handle deeply nested directory structures."""
-        from validate_skills.loaders import find_skill_files
+        from drqp_validate_agents.validate_skills.loaders import find_skill_files
 
         # Create deeply nested structure
         current = tmp_path
@@ -326,7 +332,7 @@ class TestRobustnessEdgeCases:
 
     def test_empty_yaml_frontmatter(self, tmp_path):
         """Should handle completely empty frontmatter."""
-        from validate_skills.loaders import safe_load_frontmatter
+        from drqp_validate_agents.validate_skills.loaders import safe_load_frontmatter
 
         skill_file = tmp_path / 'SKILL.md'
         skill_file.write_text('---\n---\nBody only')
@@ -337,7 +343,7 @@ class TestRobustnessEdgeCases:
 
     def test_only_whitespace_in_sections(self, tmp_path):
         """Should handle sections with only whitespace."""
-        from validate_skills.validators.skill import SkillStructureValidator
+        from drqp_validate_agents.validate_skills.validators.skill import SkillStructureValidator
 
         body = """# Overview
 
@@ -352,7 +358,7 @@ class TestRobustnessEdgeCases:
 
     def test_malformed_markdown_syntax(self, tmp_path):
         """Should handle malformed markdown."""
-        from validate_skills.validators.skill import SkillStructureValidator
+        from drqp_validate_agents.validate_skills.validators.skill import SkillStructureValidator
 
         body = """# Overview
 This is overview.
@@ -372,7 +378,7 @@ More content"""
 
     def test_skill_with_special_yaml_types(self, tmp_path):
         """Should handle YAML special types."""
-        from validate_skills.loaders import safe_load_frontmatter
+        from drqp_validate_agents.validate_skills.loaders import safe_load_frontmatter
 
         skill_file = tmp_path / 'SKILL.md'
         content = """---

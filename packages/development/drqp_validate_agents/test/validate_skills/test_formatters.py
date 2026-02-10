@@ -23,7 +23,7 @@
 
 import pytest
 
-from validate_skills.formatters import (
+from drqp_validate_agents.validate_skills.formatters import (
     CSVFormatter,
     format_results,
     JSONFormatter,
@@ -36,7 +36,11 @@ class TestTextFormatter:
 
     def test_text_formatter_format_result(self):
         """Should format result as readable text."""
-        from validate_skills.core import ValidationIssue, ValidationLevel, ValidationResult
+        from drqp_validate_agents.validate_skills.core import (
+            ValidationIssue,
+            ValidationLevel,
+            ValidationResult,
+        )
 
         result = ValidationResult(
             skill_path='/path/to/SKILL.md',
@@ -55,7 +59,7 @@ class TestTextFormatter:
 
     def test_text_formatter_color_support(self):
         """Should optionally include color codes."""
-        from validate_skills.core import ValidationResult
+        from drqp_validate_agents.validate_skills.core import ValidationResult
 
         result = ValidationResult(skill_path='/path/to/SKILL.md', issues=[])
 
@@ -65,7 +69,11 @@ class TestTextFormatter:
 
     def test_text_formatter_summary_statistics(self):
         """Should include summary statistics."""
-        from validate_skills.core import ValidationIssue, ValidationLevel, ValidationResult
+        from drqp_validate_agents.validate_skills.core import (
+            ValidationIssue,
+            ValidationLevel,
+            ValidationResult,
+        )
 
         results = [
             ValidationResult(
@@ -89,7 +97,7 @@ class TestJSONFormatter:
         """Should produce valid JSON output."""
         import json
 
-        from validate_skills.core import ValidationResult
+        from drqp_validate_agents.validate_skills.core import ValidationResult
 
         result = ValidationResult(skill_path='/path/to/SKILL.md', issues=[])
 
@@ -104,7 +112,7 @@ class TestJSONFormatter:
         """Should include result metadata in JSON."""
         import json
 
-        from validate_skills.core import ValidationResult
+        from drqp_validate_agents.validate_skills.core import ValidationResult
 
         result = ValidationResult(skill_path='/path/to/SKILL.md', issues=[])
 
@@ -119,7 +127,7 @@ class TestJSONFormatter:
         """Should format multiple results."""
         import json
 
-        from validate_skills.core import ValidationResult
+        from drqp_validate_agents.validate_skills.core import ValidationResult
 
         results = [
             ValidationResult(skill_path='/path/skill1/SKILL.md', issues=[]),
@@ -146,7 +154,11 @@ class TestCSVFormatter:
 
     def test_csv_formatter_data_row(self):
         """Should format result as CSV row."""
-        from validate_skills.core import ValidationIssue, ValidationLevel, ValidationResult
+        from drqp_validate_agents.validate_skills.core import (
+            ValidationIssue,
+            ValidationLevel,
+            ValidationResult,
+        )
 
         result = ValidationResult(
             skill_path='/path/to/SKILL.md',
@@ -163,7 +175,11 @@ class TestCSVFormatter:
 
     def test_csv_formatter_escaping(self):
         """Should properly escape special characters in CSV."""
-        from validate_skills.core import ValidationIssue, ValidationLevel, ValidationResult
+        from drqp_validate_agents.validate_skills.core import (
+            ValidationIssue,
+            ValidationLevel,
+            ValidationResult,
+        )
 
         result = ValidationResult(
             skill_path='/path/to/SKILL.md',
@@ -186,7 +202,7 @@ class TestFormatResults:
 
     def test_format_results_text(self):
         """Should format results in text format by default."""
-        from validate_skills.core import ValidationResult
+        from drqp_validate_agents.validate_skills.core import ValidationResult
 
         results = [
             ValidationResult(skill_path='/path/skill1/SKILL.md', issues=[]),
@@ -199,7 +215,7 @@ class TestFormatResults:
         """Should format results in JSON format."""
         import json
 
-        from validate_skills.core import ValidationResult
+        from drqp_validate_agents.validate_skills.core import ValidationResult
 
         results = [
             ValidationResult(skill_path='/path/skill1/SKILL.md', issues=[]),
@@ -212,7 +228,7 @@ class TestFormatResults:
 
     def test_format_results_csv(self):
         """Should format results in CSV format."""
-        from validate_skills.core import ValidationResult
+        from drqp_validate_agents.validate_skills.core import ValidationResult
 
         results = [
             ValidationResult(skill_path='/path/skill1/SKILL.md', issues=[]),
@@ -227,7 +243,7 @@ class TestFormatResults:
 
     def test_format_results_invalid_format(self):
         """Should raise error for invalid format."""
-        from validate_skills.core import ValidationResult
+        from drqp_validate_agents.validate_skills.core import ValidationResult
 
         results = [ValidationResult(skill_path='/path/SKILL.md', issues=[])]
 
@@ -246,7 +262,7 @@ class TestFormatterEdgeCases:
 
     def test_formatter_no_issues(self):
         """Should format result with no issues."""
-        from validate_skills.core import ValidationResult
+        from drqp_validate_agents.validate_skills.core import ValidationResult
 
         result = ValidationResult(skill_path='/path/SKILL.md', issues=[])
         formatter = TextFormatter()
@@ -257,7 +273,11 @@ class TestFormatterEdgeCases:
 
     def test_formatter_many_issues(self):
         """Should handle many issues."""
-        from validate_skills.core import ValidationIssue, ValidationLevel, ValidationResult
+        from drqp_validate_agents.validate_skills.core import (
+            ValidationIssue,
+            ValidationLevel,
+            ValidationResult,
+        )
 
         issues = [
             ValidationIssue(level=ValidationLevel.ERROR, message=f'Error {i}') for i in range(100)
@@ -270,7 +290,7 @@ class TestFormatterEdgeCases:
 
     def test_formatter_special_characters_in_path(self):
         """Should handle special characters in file paths."""
-        from validate_skills.core import ValidationResult
+        from drqp_validate_agents.validate_skills.core import ValidationResult
 
         result = ValidationResult(skill_path='/path/skill with spaces & chars/SKILL.md', issues=[])
 
@@ -280,7 +300,11 @@ class TestFormatterEdgeCases:
 
     def test_formatter_unicode_in_messages(self):
         """Should handle unicode characters in messages."""
-        from validate_skills.core import ValidationIssue, ValidationLevel, ValidationResult
+        from drqp_validate_agents.validate_skills.core import (
+            ValidationIssue,
+            ValidationLevel,
+            ValidationResult,
+        )
 
         result = ValidationResult(
             skill_path='/path/SKILL.md',

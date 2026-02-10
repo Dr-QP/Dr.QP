@@ -23,7 +23,7 @@
 
 from typing import Dict, List, Optional
 
-from validate_skills.types import ValidationIssue, ValidationLevel
+from drqp_validate_agents.validate_skills.types import ValidationIssue, ValidationLevel
 
 
 class UniquenessValidator:

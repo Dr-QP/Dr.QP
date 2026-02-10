@@ -12,7 +12,7 @@ Comprehensive failing unit tests have been created to drive the refactoring of t
 
 1. **test_cli.py** - 242 lines, ~74 tests
 2. **test_loaders.py** - 351 lines, ~40+ tests
-3. **test_validators.py** - 324 lines, ~40+ tests  
+3. **test_validators.py** - 324 lines, ~40+ tests
 4. **test_core.py** - 331 lines, ~30+ tests
 5. **test_formatters.py** - 312 lines, ~30+ tests
 6. **test_main.py** - 325 lines, ~25+ tests
@@ -58,7 +58,7 @@ packages/validate_skills/
 
 ### Validators Module (test_validators.py - 40+ tests)
 - SkillFrontmatterValidator
-- SkillStructureValidator  
+- SkillStructureValidator
 - UniquenessValidator
 - CrossReferenceValidator
 - Edge case handling
@@ -170,14 +170,14 @@ pytest packages/validate_skills/tests/validate_skills/test_cli.py::TestParseArgu
 
 All tests import from the new package structure:
 ```python
-from validate_skills.cli import parse_arguments
-from validate_skills.loaders import find_skill_files, safe_load_frontmatter, load_all_skills
-from validate_skills.core import ValidationEngine, ValidationResult
-from validate_skills.formatters import TextFormatter, JSONFormatter, CSVFormatter
-from validate_skills.main import main
-from validate_skills.validators.skill import SkillFrontmatterValidator, SkillStructureValidator
-from validate_skills.validators.uniqueness import UniquenessValidator
-from validate_skills.validators.cross_reference import CrossReferenceValidator
+from drqp_validate_agents.validate_skills.cli import parse_arguments
+from drqp_validate_agents.validate_skills.loaders import find_skill_files, safe_load_frontmatter, load_all_skills
+from drqp_validate_agents.validate_skills.core import ValidationEngine, ValidationResult
+from drqp_validate_agents.validate_skills.formatters import TextFormatter, JSONFormatter, CSVFormatter
+from drqp_validate_agents.validate_skills.main import main
+from drqp_validate_agents.validate_skills.validators.skill import SkillFrontmatterValidator, SkillStructureValidator
+from drqp_validate_agents.validate_skills.validators.uniqueness import UniquenessValidator
+from drqp_validate_agents.validate_skills.validators.cross_reference import CrossReferenceValidator
 ```
 
 ## Next Steps
