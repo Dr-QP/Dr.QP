@@ -186,14 +186,7 @@ epub_show_urls = 'footnote'
 
 
 def setup(app: Sphinx) -> Dict[str, Any]:
-    """
-    Add custom configuration to sphinx app.
-
-    Args:
-    -----
-        app: the Sphinx application
-
-    """
+    """Add custom configuration to Sphinx app."""
     # Set default if not already defined in the shell
     os.environ.setdefault('SPHINX_BUILD', '1')
 
