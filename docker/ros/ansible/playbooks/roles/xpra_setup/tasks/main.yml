@@ -1,6 +1,6 @@
 ---
 - name: Install Xpra and related packages
-  when: install_xpra | default(false)
+  when: install_xpra | default(true)
   block:
     - name: Install prerequisites for Xpra repository
       ansible.builtin.apt:

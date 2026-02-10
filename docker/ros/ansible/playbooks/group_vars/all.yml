@@ -12,4 +12,4 @@ ros_user_setup_uid: 1001
 ros_user_setup_gid: 1001
 
 # Xpra configuration
-install_xpra: false # Set to true to install Xpra + VirtualGL for GUI rendering
+install_xpra: true # Install Xpra + VirtualGL for GUI rendering in desktop image
