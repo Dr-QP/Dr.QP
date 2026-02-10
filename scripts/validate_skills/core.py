@@ -43,7 +43,8 @@ class ValidationEngine:
         """
         Initialize the validation engine.
 
-        Args:
+        Args
+        ----
             show_warnings: Whether to include warnings in results
             show_info: Whether to include info messages in results
 
@@ -55,11 +56,13 @@ class ValidationEngine:
         """
         Validate a single skill file.
 
-        Args:
+        Args
+        ----
             skill_path: Path to the skill file
             all_skills: Dict of all skills for cross-validation
 
-        Returns:
+        Returns
+        -------
             ValidationResult with any issues found
 
         """

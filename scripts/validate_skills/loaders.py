@@ -35,10 +35,12 @@ def find_skill_files(path: str) -> List[str]:
     """
     Find all SKILL.md files in a directory or return file if it's a SKILL.md file.
 
-    Args:
+    Args
+    ----
         path: Path to directory or file
 
-    Returns:
+    Returns
+    -------
         List of paths to SKILL.md files
 
     """
@@ -72,13 +74,16 @@ def safe_load_frontmatter(file_path: str) -> Tuple[Dict, str]:
     """
     Safely load YAML frontmatter and body from a file.
 
-    Args:
+    Args
+    ----
         file_path: Path to the skill file
 
-    Returns:
+    Returns
+    -------
         Tuple of (frontmatter_dict, body_str)
 
-    Raises:
+    Raises
+    ------
         OSError: If file not found or cannot be read
         UnicodeDecodeError: If file encoding is invalid
         yaml.YAMLError: If frontmatter delimiters are incomplete
@@ -170,10 +175,12 @@ def load_all_skills(skill_files: List[str]) -> Dict[str, Dict]:
     """
     Load multiple skill files.
 
-    Args:
+    Args
+    ----
         skill_files: List of paths to skill files
 
-    Returns:
+    Returns
+    -------
         Dict of {file_path: {frontmatter, body}}
 
     """
@@ -203,10 +210,12 @@ class SkillFileLoader:
         """
         Find all SKILL.md files in a directory.
 
-        Args:
+        Args
+        ----
             path: Path to search
 
-        Returns:
+        Returns
+        -------
             List of skill file paths
 
         """
@@ -216,10 +225,12 @@ class SkillFileLoader:
         """
         Load a single skill file.
 
-        Args:
+        Args
+        ----
             path: Path to the skill file
 
-        Returns:
+        Returns
+        -------
             Tuple of (frontmatter, body)
 
         """

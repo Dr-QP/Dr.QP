@@ -37,10 +37,12 @@ def main(args: Optional[List[str]] = None) -> int:
     """
     Run the validate-skills tool.
 
-    Args:
+    Args
+    ----
         args: Command-line arguments (if None, sys.argv is used)
 
-    Returns:
+    Returns
+    -------
         Exit code (0 for success, 1 for validation failures)
 
     """

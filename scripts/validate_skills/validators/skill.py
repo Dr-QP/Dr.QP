@@ -34,11 +34,13 @@ class SkillFrontmatterValidator:
         """
         Validate frontmatter content.
 
-        Args:
+        Args
+        ----
             frontmatter: Dictionary of frontmatter values
             show_warnings: Whether to include warnings
 
-        Returns:
+        Returns
+        -------
             List of validation issues
 
         """
@@ -159,11 +161,13 @@ class SkillStructureValidator:
         """
         Validate body content structure.
 
-        Args:
+        Args
+        ----
             body: The markdown body content
             show_warnings: Whether to include warnings
 
-        Returns:
+        Returns
+        -------
             List of validation issues
 
         """

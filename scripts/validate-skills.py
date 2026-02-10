@@ -25,7 +25,8 @@ Validate Agent Skill files for compliance with best practices.
 This script provides a command-line interface to validate SKILL.md files
 in the workspace using comprehensive validation rules.
 
-Example:
+Example
+-------
     # Validate all skills in current directory
     ./scripts/validate-skills.py
 

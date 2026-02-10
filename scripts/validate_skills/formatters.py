@@ -36,7 +36,8 @@ class TextFormatter:
         """
         Initialize the formatter.
 
-        Args:
+        Args
+        ----
             use_colors: Whether to use ANSI color codes
 
         """
@@ -46,10 +47,12 @@ class TextFormatter:
         """
         Format a single result.
 
-        Args:
+        Args
+        ----
             result: ValidationResult to format
 
-        Returns:
+        Returns
+        -------
             Formatted string
 
         """
@@ -66,10 +69,12 @@ class TextFormatter:
         """
         Format summary statistics.
 
-        Args:
+        Args
+        ----
             results: List of validation results
 
-        Returns:
+        Returns
+        -------
             Formatted summary
 
         """
@@ -92,10 +97,12 @@ class TextFormatter:
         """
         Format multiple results.
 
-        Args:
+        Args
+        ----
             results: List of validation results
 
-        Returns:
+        Returns
+        -------
             Formatted batch output
 
         """
@@ -113,10 +120,12 @@ class JSONFormatter:
         """
         Format a single result.
 
-        Args:
+        Args
+        ----
             result: ValidationResult to format
 
-        Returns:
+        Returns
+        -------
             JSON string
 
         """
@@ -139,10 +148,12 @@ class JSONFormatter:
         """
         Format multiple results.
 
-        Args:
+        Args
+        ----
             results: List of validation results
 
-        Returns:
+        Returns
+        -------
             JSON array string
 
         """
@@ -172,7 +183,8 @@ class CSVFormatter:
         """
         Get CSV header row.
 
-        Returns:
+        Returns
+        -------
             Header row string
 
         """
@@ -182,10 +194,12 @@ class CSVFormatter:
         """
         Format a single result.
 
-        Args:
+        Args
+        ----
             result: ValidationResult to format
 
-        Returns:
+        Returns
+        -------
             CSV row string
 
         """
@@ -213,14 +227,17 @@ def format_results(results: List[ValidationResult], output_format: str = 'text')
     """
     Format validation results in the requested format.
 
-    Args:
+    Args
+    ----
         results: List of validation results
         output_format: Format type ('text', 'json', 'csv')
 
-    Returns:
+    Returns
+    -------
         Formatted string
 
-    Raises:
+    Raises
+    ------
         ValueError: If output_format is not one of the supported types
 
     """

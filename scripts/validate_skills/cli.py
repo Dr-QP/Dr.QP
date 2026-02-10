@@ -29,10 +29,12 @@ def parse_arguments(args: Optional[List[str]] = None) -> argparse.Namespace:
     """
     Parse command-line arguments.
 
-    Args:
+    Args
+    ----
         args: List of argument strings (if None, sys.argv is used)
 
-    Returns:
+    Returns
+    -------
         Parsed arguments as Namespace
 
     """
