@@ -39,6 +39,7 @@ from rosgraph_msgs.msg import Clock
 from test_utils import ensure_gz_sim_not_running
 
 
+@pytest.mark.slow
 @pytest.mark.launch_test
 def generate_test_description():
     ensure_gz_sim_not_running()

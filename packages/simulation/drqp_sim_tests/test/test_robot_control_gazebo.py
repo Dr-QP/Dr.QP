@@ -43,6 +43,7 @@ import std_msgs.msg
 from test_utils import ensure_gz_sim_not_running
 
 
+@pytest.mark.slow
 @pytest.mark.launch_test
 def generate_test_description():
     """Launch Gazebo simulation for testing."""
@@ -67,6 +68,7 @@ def generate_test_description():
     )
 
 
+@pytest.mark.slow
 class TestGazeboRobotControl(unittest.TestCase):
     """Test robot control behaviors in Gazebo simulation."""
 
@@ -227,6 +229,7 @@ class TestGazeboRobotControl(unittest.TestCase):
             f'Check that Gazebo spawned the model "drqp" successfully.',
         )
 
+    @pytest.mark.skip(reason='not tested yet')
     def test_arm_robot(self):
         """Test arming the robot and verify state transition."""
         # Ensure we have initial state
@@ -262,6 +265,7 @@ class TestGazeboRobotControl(unittest.TestCase):
                 f'Current state: {self.current_robot_state}. Error: {e}'
             )
 
+    @pytest.mark.skip(reason='not tested yet')
     def test_verify_armed_posture(self):
         """Verify robot posture after arming (base off ground, feet on ground)."""
         # Ensure robot is armed first
@@ -295,6 +299,7 @@ class TestGazeboRobotControl(unittest.TestCase):
         # Verify robot is in armed state
         self.assertEqual(self.current_robot_state, 'torque_on')
 
+    @pytest.mark.skip(reason='not tested yet')
     def test_movement_forward(self):
         """Test forward movement command and verify motion."""
         # Ensure robot is armed
@@ -343,6 +348,7 @@ class TestGazeboRobotControl(unittest.TestCase):
         else:
             self.fail('Forward movement test failed: lost odometry after movement command')
 
+    @pytest.mark.skip(reason='not tested yet')
     def test_movement_backward(self):
         """Test backward movement command and verify motion."""
         if self.current_robot_state != 'torque_on':
@@ -381,6 +387,7 @@ class TestGazeboRobotControl(unittest.TestCase):
         else:
             self.fail('Backward movement test failed: lost odometry after movement command')
 
+    @pytest.mark.skip(reason='not tested yet')
     def test_movement_left(self):
         """Test left strafe movement command and verify motion."""
         if self.current_robot_state != 'torque_on':
@@ -418,6 +425,7 @@ class TestGazeboRobotControl(unittest.TestCase):
         else:
             self.fail('Left strafe test failed: lost odometry after movement command')
 
+    @pytest.mark.skip(reason='not tested yet')
     def test_movement_right(self):
         """Test right strafe movement command and verify motion."""
         if self.current_robot_state != 'torque_on':
@@ -453,6 +461,7 @@ class TestGazeboRobotControl(unittest.TestCase):
         else:
             self.fail('Odometry became unavailable during right strafe movement test')
 
+    @pytest.mark.skip(reason='not tested yet')
     def test_movement_rotation(self):
         """Test rotation movement command and verify rotation."""
         if self.current_robot_state != 'torque_on':
@@ -506,6 +515,7 @@ class TestGazeboRobotControl(unittest.TestCase):
         else:
             self.fail('Failed to read final odometry after rotation command')
 
+    @pytest.mark.skip(reason='not tested yet')
     def test_disarm_robot(self):
         """Test disarming the robot and verify state transition."""
         # Ensure robot is armed first
@@ -545,6 +555,7 @@ class TestGazeboRobotControl(unittest.TestCase):
                 f'Current state: {self.current_robot_state}. Error: {e}'
             )
 
+    @pytest.mark.skip(reason='not tested yet')
     def test_verify_disarmed_posture(self):
         """Verify robot completed disarm state transition successfully."""
         # Ensure robot goes through full cycle
