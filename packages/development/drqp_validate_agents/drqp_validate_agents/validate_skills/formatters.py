@@ -36,7 +36,7 @@ class TextFormatter:
         """Initialize the formatter."""
         self.use_colors = use_colors
 
-    def format(self, result: ValidationResult) -> str:
+    def format_result(self, result: ValidationResult) -> str:
         """
         Format a single result.
 
@@ -101,7 +101,7 @@ class TextFormatter:
         """
         if not results:
             return ''
-        lines = [self.format(r) for r in results]
+        lines = [self.format_result(r) for r in results]
         lines.append(self.format_summary(results))
         return '\n'.join(lines)
 
@@ -109,7 +109,7 @@ class TextFormatter:
 class JSONFormatter:
     """Formats results as JSON."""
 
-    def format(self, result: ValidationResult) -> str:
+    def format_result(self, result: ValidationResult) -> str:
         """
         Format a single result.
 
@@ -183,7 +183,7 @@ class CSVFormatter:
         """
         return 'skill_path,is_valid,issue_level,issue_message,section'
 
-    def format(self, result: ValidationResult) -> str:
+    def format_result(self, result: ValidationResult) -> str:
         """
         Format a single result.
 
@@ -216,7 +216,11 @@ class CSVFormatter:
         return output.getvalue().strip()
 
 
-def format_results(results: List[ValidationResult], output_format: str = 'text') -> str:
+def format_results(
+    results: List[ValidationResult],
+    output_format: str = 'text',
+    **kwargs: str,
+) -> str:
     """
     Format validation results in the requested format.
 
@@ -224,6 +228,7 @@ def format_results(results: List[ValidationResult], output_format: str = 'text')
     ----
         results: List of validation results
         output_format: Format type ('text', 'json', 'csv')
+        format: Optional alias for output_format
 
     Returns
     -------
@@ -234,22 +239,26 @@ def format_results(results: List[ValidationResult], output_format: str = 'text')
         ValueError: If output_format is not one of the supported types
 
     """
+    format_override = kwargs.pop('format', None)
+    if kwargs:
+        unexpected = ', '.join(sorted(kwargs))
+        raise TypeError(f'Unexpected keyword arguments: {unexpected}')
+
+    if format_override is not None:
+        output_format = format_override
+
     if output_format not in ('text', 'json', 'csv'):
         raise ValueError(f"Invalid format '{output_format}'. Supported formats: text, json, csv")
 
     if output_format == 'json':
         formatter = JSONFormatter()
         return formatter.format_batch(results)
-    elif output_format == 'csv':
+    if output_format == 'csv':
         formatter = CSVFormatter()
         lines = [formatter.get_header()]
         for result in results:
-            lines.append(formatter.format(result))
+            lines.append(formatter.format_result(result))
         return '\n'.join(lines)
-    else:  # text
-        formatter = TextFormatter()
-        if not results:
-            return ''
-        lines = [formatter.format(r) for r in results]
-        lines.append(formatter.format_summary(results))
-        return '\n'.join(lines)
+
+    formatter = TextFormatter()
+    return formatter.format_batch(results)

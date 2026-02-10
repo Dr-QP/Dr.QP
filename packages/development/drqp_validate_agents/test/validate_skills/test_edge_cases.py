@@ -144,7 +144,9 @@ class TestDataValidationEdgeCases:
         validator = SkillFrontmatterValidator()
         frontmatter = {
             'name': 'x' * 1000,  # Far exceeds max length
-            'description': 'A comprehensive description of what this skill does and when to use it.',
+            'description': (
+                'A comprehensive description of what this skill does and when to use it.'
+            ),
         }
         issues = validator.validate(frontmatter)
         assert len(issues) > 0

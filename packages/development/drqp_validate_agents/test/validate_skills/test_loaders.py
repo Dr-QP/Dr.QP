@@ -23,13 +23,13 @@
 
 import os
 
-import pytest
-
 from drqp_validate_agents.validate_skills.loaders import (
     find_skill_files,
     load_all_skills,
     safe_load_frontmatter,
 )
+
+import pytest
 
 
 class TestFindSkillFilesDirectory:

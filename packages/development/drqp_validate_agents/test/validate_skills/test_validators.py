@@ -36,7 +36,9 @@ class TestSkillFrontmatterValidator:
         """Should accept valid frontmatter with required fields."""
         frontmatter = {
             'name': 'my-skill',
-            'description': 'A comprehensive description of what this skill does and when to use it.',
+            'description': (
+                'A comprehensive description of what this skill does and when to use it.'
+            ),
         }
         validator = SkillFrontmatterValidator()
         issues = validator.validate(frontmatter)

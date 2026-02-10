@@ -21,14 +21,14 @@
 
 """Unit tests for output formatting utilities."""
 
-import pytest
-
 from drqp_validate_agents.validate_skills.formatters import (
     CSVFormatter,
     format_results,
     JSONFormatter,
     TextFormatter,
 )
+
+import pytest
 
 
 class TestTextFormatter:
@@ -51,7 +51,7 @@ class TestTextFormatter:
         )
 
         formatter = TextFormatter()
-        output = formatter.format(result)
+        output = formatter.format_result(result)
 
         assert isinstance(output, str)
         assert 'SKILL.md' in output
@@ -64,7 +64,7 @@ class TestTextFormatter:
         result = ValidationResult(skill_path='/path/to/SKILL.md', issues=[])
 
         formatter = TextFormatter(use_colors=True)
-        output = formatter.format(result)
+        output = formatter.format_result(result)
         assert isinstance(output, str)
 
     def test_text_formatter_summary_statistics(self):
@@ -102,7 +102,7 @@ class TestJSONFormatter:
         result = ValidationResult(skill_path='/path/to/SKILL.md', issues=[])
 
         formatter = JSONFormatter()
-        output = formatter.format(result)
+        output = formatter.format_result(result)
 
         # Should be valid JSON
         parsed = json.loads(output)
@@ -117,7 +117,7 @@ class TestJSONFormatter:
         result = ValidationResult(skill_path='/path/to/SKILL.md', issues=[])
 
         formatter = JSONFormatter()
-        output = formatter.format(result)
+        output = formatter.format_result(result)
         parsed = json.loads(output)
 
         assert 'skill_path' in parsed or 'path' in parsed or 'file' in parsed
@@ -168,7 +168,7 @@ class TestCSVFormatter:
         )
 
         formatter = CSVFormatter()
-        output = formatter.format(result)
+        output = formatter.format_result(result)
 
         assert isinstance(output, str)
         assert 'SKILL.md' in output or 'path' in output.lower()
@@ -191,7 +191,7 @@ class TestCSVFormatter:
         )
 
         formatter = CSVFormatter()
-        output = formatter.format(result)
+        output = formatter.format_result(result)
 
         assert isinstance(output, str)
         # Should handle special characters
@@ -266,7 +266,7 @@ class TestFormatterEdgeCases:
 
         result = ValidationResult(skill_path='/path/SKILL.md', issues=[])
         formatter = TextFormatter()
-        output = formatter.format(result)
+        output = formatter.format_result(result)
 
         assert isinstance(output, str)
         assert 'SKILL.md' in output
@@ -285,7 +285,7 @@ class TestFormatterEdgeCases:
         result = ValidationResult(skill_path='/path/SKILL.md', issues=issues)
 
         formatter = TextFormatter()
-        output = formatter.format(result)
+        output = formatter.format_result(result)
         assert isinstance(output, str)
 
     def test_formatter_special_characters_in_path(self):
@@ -295,7 +295,7 @@ class TestFormatterEdgeCases:
         result = ValidationResult(skill_path='/path/skill with spaces & chars/SKILL.md', issues=[])
 
         formatter = TextFormatter()
-        output = formatter.format(result)
+        output = formatter.format_result(result)
         assert isinstance(output, str)
 
     def test_formatter_unicode_in_messages(self):
@@ -316,5 +316,5 @@ class TestFormatterEdgeCases:
         )
 
         formatter = TextFormatter()
-        output = formatter.format(result)
+        output = formatter.format_result(result)
         assert isinstance(output, str)
