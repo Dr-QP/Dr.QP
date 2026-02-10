@@ -23,7 +23,7 @@
     "git config": "git config --global gpg.ssh.program ssh-keygen",
     "python-venv": "python3 -m venv /opt/ros/overlay_ws/.venv && /opt/ros/overlay_ws/.venv/bin/python3 -m pip install -r /opt/ros/overlay_ws/requirements.txt --use-pep517", // Keep in sync with the task in Dr.QP.code-workspace
     "rosdep": "./scripts/ros-dep.sh",
-    "xpra": "echo 'Run /start-xpra.sh to start Xpra HTML5 GUI server on port 14500'"
+    "xpra": "nohup /start-xpra.sh > /tmp/xpra.log 2>&1 &"
   },
   "runArgs": [
     // Commented out to allow Codespaces use
