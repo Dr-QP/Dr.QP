@@ -63,10 +63,10 @@ ansible-playbook playbook.yml -e "install_xpra=true"
 
 ### From Ubuntu Repositories
 - `mesa-utils` - OpenGL utilities
-- `libgl1-mesa-glx` - OpenGL runtime
+- `libgl1` - OpenGL runtime
 - `libglvnd0` - OpenGL vendor library
 - `xvfb` - Virtual framebuffer
-- `libllvmpipe0` - Software rendering support
+- `libgl1-mesa-dri` - Software rendering support (Mesa DRI with llvmpipe)
 
 ## Idempotency
 

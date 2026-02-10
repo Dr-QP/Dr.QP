@@ -14,15 +14,16 @@
         install_recommends: false
 
     - name: Add Xpra GPG key
-      ansible.builtin.shell: |
-        wget -O "/usr/share/keyrings/xpra.asc" https://xpra.org/xpra.asc
-      changed_when: true
+      ansible.builtin.get_url:
+        url: https://xpra.org/xpra.asc
+        dest: /usr/share/keyrings/xpra.asc
+        mode: '0644'
 
     - name: Add Xpra APT repository for Ubuntu Noble
-      ansible.builtin.shell: |
-        wget -O "/etc/apt/sources.list.d/xpra.sources" \
-          https://raw.githubusercontent.com/Xpra-org/xpra/master/packaging/repos/noble/xpra.sources
-      changed_when: true
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/Xpra-org/xpra/master/packaging/repos/noble/xpra.sources
+        dest: /etc/apt/sources.list.d/xpra.sources
+        mode: '0644'
 
     - name: Update APT cache after adding Xpra repository
       ansible.builtin.apt:
@@ -69,16 +70,16 @@
       ansible.builtin.apt:
         name:
           - mesa-utils
-          - libgl1-mesa-glx
+          - libgl1
           - libglvnd0
           - xvfb
         state: present
         install_recommends: false
 
-    - name: Install llvmpipe for software rendering fallback
+    - name: Install software rendering support (Mesa DRI with llvmpipe)
       ansible.builtin.apt:
         name:
-          - libllvmpipe0
+          - libgl1-mesa-dri
         state: present
         install_recommends: false
 
