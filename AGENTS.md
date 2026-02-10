@@ -213,6 +213,7 @@ For comprehensive dependency management guidance (C++, Python, rosdep, pip), see
 8. **Use `--symlink-install`** for faster Python development iteration
 9. **Enable coverage** with `--mixin coverage-pytest` when testing
 10. **Re-run failed tests** with `--packages-select-test-failures` to save time
+11. **Always re-run failing tests** after applying a fix when the user asked to fix it
 
 ## Code Review Standards
 
