@@ -72,7 +72,7 @@ Create a simple launch file to start one node with parameters.
 
 3. Test the launch file:
    ```bash
-   source install/setup.bash
+   source scripts/setup.bash
    ros2 launch <package_name> basic.launch.py
    ```
 
@@ -181,7 +181,7 @@ Load parameters from external YAML configuration files.
 4. Rebuild and launch:
    ```bash
    colcon build --packages-select <package_name>
-   source install/setup.bash
+   source scripts/setup.bash
    ros2 launch <package_name> params.launch.py
    ```
 
@@ -280,7 +280,7 @@ Build complex launch configurations by including other launch files.
 
    def generate_launch_description():
        pkg_dir = get_package_share_directory('<package_name>')
-       
+
        # Include base launch file
        base_launch = IncludeLaunchDescription(
            PythonLaunchDescriptionSource(
