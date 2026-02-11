@@ -1,6 +1,6 @@
 ---
 - name: Install Xpra and related packages
-  when: install_xpra | default(true)
+  when: install_xpra | default(true) | bool
   block:
     - name: Download Xpra official installation script
       ansible.builtin.get_url:

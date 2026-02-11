@@ -26,4 +26,4 @@
     - { role: nodejs, tags: ["nodejs"] }
     - { role: cmake_kitware, tags: ["cmake"] }
     - { role: clang, tags: ["clang"] }
-    - { role: xpra_setup, tags: ["xpra_setup"], when: install_xpra | default(false) }
+    - { role: xpra_setup, tags: ["xpra_setup"], when: install_xpra | default(true) | bool }
