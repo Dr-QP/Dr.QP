@@ -1,0 +1,70 @@
+---
+- name: Install Xpra and related packages
+  when: install_xpra | default(false) | bool
+  block:
+    - name: Download Xpra official installation script
+      ansible.builtin.get_url:
+        url: https://xpra.org/get-xpra.sh
+        dest: /tmp/get-xpra.sh
+        mode: '0755'
+
+    - name: Install Xpra using official installation script
+      ansible.builtin.shell: /tmp/get-xpra.sh
+      changed_when: true
+
+    - name: Clean up Xpra installation script
+      ansible.builtin.file:
+        path: /tmp/get-xpra.sh
+        state: absent
+
+    - name: Install xpra-html5 web client
+      ansible.builtin.apt:
+        name:
+          - xpra-html5
+        state: present
+        install_recommends: false
+
+    - name: Install VirtualGL from GitHub releases
+      block:
+        - name: Detect system architecture for VirtualGL
+          ansible.builtin.set_fact:
+            virtualgl_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
+            virtualgl_version: "3.1.4"
+            virtualgl_checksums:
+              amd64: "sha256:02edc6b599571c385389af1a006f07a70c298e1d97c580a9bfd4b39d835c51e6"
+              arm64: "sha256:5583e08ee5694d14c6ea0f25d2cfd73fa6d5077869c6645c334a948265a777bb"
+
+        - name: Download VirtualGL DEB package
+          ansible.builtin.get_url:
+            url: "https://github.com/VirtualGL/virtualgl/releases/download/{{ virtualgl_version }}/virtualgl_{{ virtualgl_version }}_{{ virtualgl_arch }}.deb"
+            dest: "/tmp/virtualgl_{{ virtualgl_version }}_{{ virtualgl_arch }}.deb"
+            checksum: "{{ virtualgl_checksums[virtualgl_arch] }}"
+            mode: '0644'
+
+        - name: Install VirtualGL DEB package
+          ansible.builtin.apt:
+            deb: "/tmp/virtualgl_{{ virtualgl_version }}_{{ virtualgl_arch }}.deb"
+            state: present
+
+        - name: Clean up VirtualGL DEB file
+          ansible.builtin.file:
+            path: "/tmp/virtualgl_{{ virtualgl_version }}_{{ virtualgl_arch }}.deb"
+            state: absent
+
+    - name: Install Mesa and OpenGL support packages
+      ansible.builtin.apt:
+        name:
+          - mesa-utils
+          - libgl1
+          - libglvnd0
+          - xvfb
+        state: present
+        install_recommends: false
+
+    - name: Install software rendering support (Mesa DRI with llvmpipe)
+      ansible.builtin.apt:
+        name:
+          - libgl1-mesa-dri
+        state: present
+        install_recommends: false
+

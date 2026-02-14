@@ -10,7 +10,11 @@
   },
   "workspaceFolder": "/opt/ros/overlay_ws/",
   "workspaceMount": "source=${localWorkspaceFolder},target=/opt/ros/overlay_ws/,type=bind",
-  "containerEnv": {},
+  "containerEnv": {
+    "DISPLAY": ":100"
+  },
+  // Port 14500: Xpra HTML5 GUI server for remote desktop access
+  "forwardPorts": [14500],
   "mounts": [
   ],
   // Second venv command with --system-site-packages turns on access to system packages to allow ROS2 builds to work
@@ -18,7 +22,8 @@
   "postAttachCommand": {
     "git config": "git config --global gpg.ssh.program ssh-keygen",
     "python-venv": "python3 -m venv /opt/ros/overlay_ws/.venv && /opt/ros/overlay_ws/.venv/bin/python3 -m pip install -r /opt/ros/overlay_ws/requirements.txt --use-pep517", // Keep in sync with the task in Dr.QP.code-workspace
-    "rosdep": "./scripts/ros-dep.sh"
+    "rosdep": "./scripts/ros-dep.sh",
+    "xpra": "nohup /start-xpra.sh > /tmp/xpra.log 2>&1 &"
   },
   "runArgs": [
     // Commented out to allow Codespaces use
@@ -39,7 +44,7 @@
     "--mount", "type=volume,source=drqp-colcon-log,target=/opt/ros/overlay_ws/log",
     "--mount", "type=volume,source=drqp-docs-build,target=/opt/ros/overlay_ws/docs/_build",
     "--mount", "type=volume,source=drqp-python-micromamba,target=/opt/ros/overlay_ws/.micromamba",
-    "--mount", "type=volume,source=drqp-python-venv,target=/opt/ros/overlay_ws/.venv",
+    "--mount", "type=volume,source=drqp-python-venv,target=/opt/ros/overlay_ws/.venv"
   ],
   "features": {
   }
