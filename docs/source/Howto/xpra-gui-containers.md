@@ -44,11 +44,11 @@ Then open `http://localhost:14500` in your browser.
 The `/start-xpra.sh` script accepts the following options:
 
 - `--port PORT`: Change the web server port (default: 14500)
-- `--display DISPLAY`: Specify the X display number (default: 100)
+- `--display DISPLAY`: Specify the X display number (default: :100)
 
 Example:
 ```bash
-/start-xpra.sh --port 8080 --display 101
+/start-xpra.sh --port 8080 --display :101
 ```
 
 ## GPU Acceleration
@@ -75,7 +75,7 @@ If no GPU is available, the container automatically falls back to software rende
 ## Comparison with X11 forwarding
 
 | Feature | Xpra | X11 Forwarding |
-|---------|------|---|
+| --- | --- | --- |
 | Requires X11 server | No | Yes |
 | Works in browser | Yes | No |
 | Works on macOS/Windows | Yes | Requires XQuartz/Xming |
@@ -100,7 +100,7 @@ If port 14500 is already in use, specify a different port:
 If you get a display conflict error, try a different display number:
 
 ```bash
-/start-xpra.sh --display 101
+/start-xpra.sh --display :101
 ```
 
 ### Black screen or no window appears
@@ -114,4 +114,3 @@ If you get a display conflict error, try a different display number:
 - Use GPU acceleration with `vglrun` for 3D applications
 - Reduce window size or resolution if experiencing lag
 - Check system resources: `top` or `htop`
-
