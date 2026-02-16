@@ -7,10 +7,9 @@ tools:
     # Core orchestration
     'agent', # Delegate code changes to principal-engineer
 
-    # Evidence collection and verification
-    'execute/runTests', # Verify fixes by running targeted tests
-    'execute/getTerminalOutput', # Collect test output for analysis
-    'findTestFiles', # Locate relevant test files for coverage gaps
+    # Apply changes and verify fixes
+    'edit',
+    'execute',
 
     # GitHub interactions
     'github/*', # Post comments, mark resolved, fetch review feedback
