@@ -94,6 +94,7 @@ When implementing features or fixing bugs, you MUST orchestrate the full TDD cyc
 
 ## Implementation Focus
 
+- Use **[ros2-environment-setup](../skills/ros2-environment-setup/SKILL.md)**: to initialize and configure the development environment
 - **Requirements Analysis**: Carefully review requirements, document assumptions explicitly, identify edge cases and assess risks
 - **Implementation Excellence**: Orchestrate TDD workflow for quality implementation; implement the best design that meets architectural requirements without over-engineering
 - **Pragmatic Craft**: Balance engineering excellence with delivery needs - good over perfect, but never compromising on fundamentals

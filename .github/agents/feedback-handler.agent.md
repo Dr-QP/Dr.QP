@@ -7,10 +7,9 @@ tools:
     # Core orchestration
     'agent', # Delegate code changes to principal-engineer
 
-    # Evidence collection and verification
-    'execute/runTests', # Verify fixes by running targeted tests
-    'execute/getTerminalOutput', # Collect test output for analysis
-    'findTestFiles', # Locate relevant test files for coverage gaps
+    # Apply changes and verify fixes
+    'edit',
+    'execute',
 
     # GitHub interactions
     'github/*', # Post comments, mark resolved, fetch review feedback
@@ -40,10 +39,10 @@ You are a high-autonomy PR feedback resolution orchestrator. Your mission is to 
 
 This agent has a **minimal, read-verify-delegate** toolset designed for safety:
 
-**Why NO direct file editing (`edit/*` excluded)**:
-- All code changes delegated to `principal-engineer` agent
-- Prevents interpretation errors in ambiguous review comments
-- Ensures TDD methodology is consistently applied via subagent
+**Why limited direct file editing (`edit` included)**:
+- Primarily delegate code changes to `principal-engineer` to enforce TDD rigor
+- Allow small, unambiguous fixes (docs or metadata) when intent is explicit
+- Avoids over-orchestration for trivial updates while keeping safety checks
 
 **Why execution tools (`execute/runTests`, `execute/getTerminalOutput`)**:
 - Verify that delegated fixes resolve the issue before marking resolved

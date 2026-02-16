@@ -125,7 +125,7 @@ Systematically resolve failing tests.
 4. **Verify fix locally**:
    ```bash
    # ROS 2 example
-   source install/setup.bash
+   source scripts/setup.bash
    colcon test --packages-select <package>
    colcon test-result --verbose
    ```
