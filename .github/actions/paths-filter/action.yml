@@ -21,9 +21,12 @@ runs:
     shell: bash
     run: |
       # Build the filters YAML with proper formatting for extra-filter
-      EXTRA=$(echo "${{ inputs.extra-filter }}" | sed 's/^/          - /')
-      echo "filters<<EOF" >> $GITHUB_OUTPUT
-      cat <<YAML >> $GITHUB_OUTPUT
+      EXTRA=$(printf '%s\n' "${{ inputs.extra-filter }}" | \
+        sed 's/^[[:space:]]*//; s/^/        - /' | \
+        sed '/^        - $/d')
+      {
+        echo "filters<<EOF"
+        cat <<'YAML'
       ros:
         - .clang-format
         - .devcontainer/**
@@ -32,9 +35,12 @@ runs:
         - docker/**
         - packages/**
         - scripts/**
-      $EXTRA
       YAML
-      echo "EOF" >> $GITHUB_OUTPUT
+        if [ -n "$EXTRA" ]; then
+          printf '%s\n' "$EXTRA"
+        fi
+        echo "EOF"
+      } >> "$GITHUB_OUTPUT"
 
   - name: Filter
     id: filter
