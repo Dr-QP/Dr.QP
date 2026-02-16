@@ -83,26 +83,26 @@ public:
   {
     // Configure QoS
     auto qos = <qos_profile>;
-    
+
     // Create publisher
     publisher_ = this->create_publisher<<MessageType>>("<topic_name>", qos);
-    
+
     // Create timer
     timer_ = this->create_wall_timer(
       <publish_period>ms,
       std::bind(&<TopicName>Publisher::publish_message, this)
     );
-    
+
     RCLCPP_INFO(this->get_logger(), "Publisher initialized on topic: <topic_name>");
   }
 
 private:
   void publish_message() {
     auto message = <MessageType>();
-    
+
     // Populate message fields
     // TODO: Set message content
-    
+
     publisher_->publish(message);
     RCLCPP_DEBUG(this->get_logger(), "Published message");
   }
@@ -135,29 +135,29 @@ class <TopicName>Publisher(Node):
 
     def __init__(self):
         super().__init__('<node_name>_publisher')
-        
+
         # Configure QoS
         qos_profile = QoSProfile(<qos_settings>)
-        
+
         # Create publisher
         self.publisher_ = self.create_publisher(
             <MessageClass>,
             '<topic_name>',
             qos_profile
         )
-        
+
         # Create timer
         timer_period = <period>  # seconds
         self.timer = self.create_timer(timer_period, self.publish_message)
-        
+
         self.get_logger().info('Publisher initialized on topic: <topic_name>')
 
     def publish_message(self):
         """Publish message to topic."""
         msg = <MessageClass>()
-        
+
         # TODO: Populate message fields
-        
+
         self.publisher_.publish(msg)
         self.get_logger().debug('Published message')
 
@@ -196,14 +196,14 @@ public:
   {
     // Configure QoS
     auto qos = <qos_profile>;
-    
+
     // Create subscription
     subscription_ = this->create_subscription<<MessageType>>(
       "<topic_name>",
       qos,
       std::bind(&<TopicName>Subscriber::message_callback, this, std::placeholders::_1)
     );
-    
+
     RCLCPP_INFO(this->get_logger(), "Subscriber initialized on topic: <topic_name>");
   }
 
@@ -211,7 +211,7 @@ private:
   void message_callback(const <MessageType>::SharedPtr msg) {
     // Process received message
     RCLCPP_INFO(this->get_logger(), "Received message");
-    
+
     // TODO: Process message content
   }
 
@@ -242,10 +242,10 @@ class <TopicName>Subscriber(Node):
 
     def __init__(self):
         super().__init__('<node_name>_subscriber')
-        
+
         # Configure QoS
         qos_profile = QoSProfile(<qos_settings>)
-        
+
         # Create subscription
         self.subscription = self.create_subscription(
             <MessageClass>,
@@ -253,13 +253,13 @@ class <TopicName>Subscriber(Node):
             self.message_callback,
             qos_profile
         )
-        
+
         self.get_logger().info('Subscriber initialized on topic: <topic_name>')
 
     def message_callback(self, msg):
         """Handle received messages."""
         self.get_logger().info('Received message')
-        
+
         # TODO: Process message content
 
 
@@ -409,7 +409,7 @@ def generate_launch_description():
 
 🧪 Test the nodes:
    1. Build: colcon build --packages-select <package_name>
-   2. Source: source install/setup.bash
+   2. Source: source scripts/setup.bash
    3. Terminal 1: ros2 run <package_name> <node_name>_publisher
    4. Terminal 2: ros2 run <package_name> <node_name>_subscriber
    5. Or use launch: ros2 launch <package_name> <nodes>_launch.py
@@ -422,7 +422,7 @@ def generate_launch_description():
 ## Validation Steps
 
 1. **Build package**: `colcon build --packages-select <package_name>`
-2. **Source workspace**: `source install/setup.bash`
+2. **Source workspace**: `source scripts/setup.bash`
 3. **Run publisher**: `ros2 run <package_name> <node_name>_publisher`
 4. **Run subscriber**: `ros2 run <package_name> <node_name>_subscriber` (separate terminal)
 5. **Check topics**: `ros2 topic list`

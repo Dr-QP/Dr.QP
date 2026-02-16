@@ -611,5 +611,6 @@
       "https://github.com": true,
       "https://www.google.com/search": true
     },
+    "chat.tools.terminal.autoReplyToPrompts": true,
   }
 }
