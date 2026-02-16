@@ -65,7 +65,7 @@ The official Xpra installation script (`https://xpra.org/get-xpra.sh`) handles:
 - Installing the base `xpra` package
 
 ### From GitHub Releases
-- `virtualgl` - Latest version (auto-detected and downloaded)
+- `virtualgl` - Version 3.1.4 (pinned, sha256 verified for amd64/arm64)
 
 ### From Ubuntu Repositories
 - `mesa-utils` - OpenGL utilities
@@ -79,7 +79,7 @@ The official Xpra installation script (`https://xpra.org/get-xpra.sh`) handles:
 This role is idempotent. Running it multiple times will not cause issues:
 - Repository files are overwritten (safe)
 - Package installations are idempotent
-- VirtualGL version detection ensures correct package is installed
+- VirtualGL version and checksums are pinned for deterministic installs
 
 ## Architecture Support
 
@@ -90,7 +90,6 @@ The role automatically detects the system architecture and downloads the appropr
 ## Notes
 
 - The role requires internet access to download packages from official repositories
-- VirtualGL version is auto-detected from GitHub releases
+- VirtualGL version and checksums are pinned in `tasks/main.yml`
 - The role uses `install_recommends: false` to minimize image size
 - All tasks are conditional on `install_xpra` variable for flexibility
-

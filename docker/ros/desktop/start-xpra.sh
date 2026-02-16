@@ -43,6 +43,14 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+normalize_display() {
+  if [[ "$DISPLAY" != :* ]]; then
+    DISPLAY=":$DISPLAY"
+  fi
+}
+
+normalize_display
+
 # Detect GPU availability
 detect_gpu() {
   # Check for NVIDIA GPU
@@ -52,13 +60,13 @@ detect_gpu() {
       return 0
     fi
   fi
-  
+
   # Check for DRI devices (AMD/Intel)
   if [[ -d /dev/dri ]] && [[ -n "$(ls -A /dev/dri 2>/dev/null)" ]]; then
     echo "DRI GPU device detected"
     return 0
   fi
-  
+
   echo "No GPU detected, using software rendering"
   return 1
 }
@@ -98,6 +106,16 @@ echo "=========================================="
 echo "Port: $PORT"
 echo "Display: $DISPLAY"
 
+if ! command -v xpra &> /dev/null; then
+  echo "Warning: xpra not found. Skipping startup."
+  exit 0
+fi
+
+if xpra status "$DISPLAY" &> /dev/null; then
+  echo "Xpra already running on $DISPLAY. Skipping startup."
+  exit 0
+fi
+
 # Detect and setup rendering
 if detect_gpu; then
   setup_gpu_rendering || true
@@ -116,11 +134,13 @@ echo ""
 # --html=on: Enable HTML5 web client
 # --daemon=no: Run in foreground (important for Docker)
 # Xpra creates its own virtual X server (Xvfb or Xdummy) internally
-xpra start "$DISPLAY" \
+if ! xpra start "$DISPLAY" \
   --bind-tcp=0.0.0.0:"$PORT" \
   --html=on \
-  --daemon=no
+  --daemon=no; then
+  echo "Warning: Xpra failed to start. Check ~/.xpra/logs/ for details."
+  exit 0
+fi
 
 # Cleanup on exit
 cleanup
-
