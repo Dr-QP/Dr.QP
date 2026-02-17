@@ -54,16 +54,19 @@ ansible-playbook playbook.yml -e "install_xpra=true"
 
 ## What Gets Installed
 
-### From Official Xpra Installation Script
-- `xpra` - Main Xpra server and client (installed via official `get-xpra.sh` script)
-- `xpra-html5` - HTML5 web client (installed separately via APT)
+### Xpra Repository Setup and Packages
 
-The official Xpra installation script (`https://xpra.org/get-xpra.sh`) handles:
+This role uses the official Xpra `setup.py` helper from the Xpra GitHub
+repository with the `install-repo` command to set up the Xpra APT
+repository. That step handles:
 - Adding the Xpra GPG key
 - Adding the correct APT repository for the current distribution
 - Updating the APT cache
-- Installing the base `xpra` package
 
+After the repository is configured, the role installs the following
+packages via APT:
+- `xpra` - Main Xpra server and client (installed from the Xpra APT repository)
+- `xpra-html5` - HTML5 web client (installed from APT, typically the Xpra repository)
 ### From GitHub Releases
 - `virtualgl` - Version 3.1.4 (pinned, sha256 verified for amd64/arm64)
 
