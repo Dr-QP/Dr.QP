@@ -10,8 +10,8 @@ Xpra is a "screen for X11" that allows you to run GUI applications in a containe
 
 ### Using the devcontainer
 
-1. **Open the devcontainer** in VS Code
-2. **Start Xpra** in the integrated terminal:
+1. **Open the devcontainer** in VS Code. Xpra will be started automatically in the background by the devcontainer configuration.
+2. **(Optional) Manually start or restart Xpra** in the integrated terminal if needed (for example, to change the port or display, or for troubleshooting):
    ```bash
    /start-xpra.sh
    ```
