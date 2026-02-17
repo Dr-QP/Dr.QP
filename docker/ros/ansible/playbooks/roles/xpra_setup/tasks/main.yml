@@ -19,6 +19,12 @@
         path: /tmp/xpra-setup.py
         state: absent
 
+    - name: Install Xpra server package
+      ansible.builtin.apt:
+        name:
+          - xpra
+        state: present
+        install_recommends: false
     - name: Install xpra-html5 web client
       ansible.builtin.apt:
         name:
