@@ -2,17 +2,23 @@
 # shellcheck disable=SC1090,SC1091
 set -euo pipefail
 
-# Xpra startup script for Docker containers
-# Starts Xpra server with HTML5 web client support
-# Supports GPU acceleration via VirtualGL or software rendering via Xvfb
-
 # Default configuration
 PORT=14500
 DISPLAY=:100
+BACKGROUND=false
 
 # Parse command-line arguments
 print_usage() {
-  echo "Usage: $0 [--port PORT] [--display DISPLAY]"
+  cat <<'USAGE'
+Usage: start-xpra.sh [--port PORT] [--display DISPLAY] [--background]
+
+Start an Xpra server with the HTML5 web client enabled.
+
+Options:
+  --port PORT       HTTP port for the HTML5 client (default: 14500)
+  --display DISPLAY X display (accepts :100 or 100; default: :100)
+  --background      Start Xpra in the background and exit immediately
+USAGE
 }
 
 while [[ $# -gt 0 ]]; do
@@ -34,6 +40,10 @@ while [[ $# -gt 0 ]]; do
       fi
       DISPLAY="$2"
       shift 2
+      ;;
+    --background)
+      BACKGROUND=true
+      shift
       ;;
     *)
       echo "Unknown option: $1"
@@ -134,12 +144,20 @@ echo ""
 # --html=on: Enable HTML5 web client
 # --daemon=no: Run in foreground (important for Docker)
 # Xpra creates its own virtual X server (Xvfb or Xdummy) internally
+if [[ "$BACKGROUND" == "true" ]]; then
+  nohup xpra start "$DISPLAY" \
+    --bind-tcp=0.0.0.0:"$PORT" \
+    --html=on \
+    --daemon=no > /tmp/xpra.log 2>&1 &
+  exit 0
+fi
+
 if ! xpra start "$DISPLAY" \
   --bind-tcp=0.0.0.0:"$PORT" \
   --html=on \
   --daemon=no; then
   echo "Warning: Xpra failed to start. Check ~/.xpra/logs/ for details."
-  exit 0
+  exit 1
 fi
 
 # Cleanup on exit
