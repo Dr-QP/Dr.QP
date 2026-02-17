@@ -7,10 +7,10 @@
         url: https://raw.githubusercontent.com/Xpra-org/xpra/831ccc2/setup.py
         dest: /tmp/xpra-setup.py
         checksum: sha256:f1c7440eb0087bb5e083b0ddd26270566d7eef260afedd5033f8bcd5564a4d81
-        mode: '0755'
+        mode: "0755"
 
     - name: Install Xpra repository using setup.py
-      ansible.builtin.shell:
+      ansible.builtin.command:
         cmd: python3 /tmp/xpra-setup.py install-repo
         creates: /etc/apt/sources.list.d/xpra.list
 
@@ -47,7 +47,7 @@
             url: "https://github.com/VirtualGL/virtualgl/releases/download/{{ virtualgl_version }}/virtualgl_{{ virtualgl_version }}_{{ virtualgl_arch }}.deb"
             dest: "/tmp/virtualgl_{{ virtualgl_version }}_{{ virtualgl_arch }}.deb"
             checksum: "{{ virtualgl_checksums[virtualgl_arch] }}"
-            mode: '0644'
+            mode: "0644"
 
         - name: Install VirtualGL DEB package
           ansible.builtin.apt:
@@ -75,4 +75,3 @@
           - libgl1-mesa-dri
         state: present
         install_recommends: false
-
