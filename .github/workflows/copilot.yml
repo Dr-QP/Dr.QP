@@ -31,12 +31,12 @@ jobs:
         id: filter
         with:
           extra-filter: |
-            .github/agents/**
-            .github/instructions/**
-            .github/skills/**
-            .github/workflows/copilot.yml
-            scripts/validate-skills.py
-            scripts/validate_skills/**
+            - .github/agents/**
+            - .github/instructions/**
+            - .github/skills/**
+            - .github/workflows/copilot.yml
+            - scripts/validate-skills.py
+            - scripts/validate_skills/**
 
   validate-skills:
     name: Validate Agent Skills

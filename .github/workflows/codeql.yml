@@ -53,7 +53,7 @@ jobs:
         id: filter
         with:
           extra-filter: |
-            .github/workflows/codeql.yml
+            - .github/workflows/codeql.yml
 
   analyze:
     name: Analyze (${{ matrix.language }})
