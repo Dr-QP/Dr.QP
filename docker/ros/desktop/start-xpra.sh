@@ -150,20 +150,20 @@ if [[ "$BACKGROUND" == "true" ]]; then
     --html=on \
     --daemon=no > /tmp/xpra.log 2>&1 &
   XPRA_PID=$!
-
-  # Basic sanity check: ensure the background process is at least alive now.
-  if ! kill -0 "$XPRA_PID" 2>/dev/null; then
-    echo "Error: Failed to start Xpra in background mode. Check /tmp/xpra.log for details."
-    exit 1
-  fi
-
-  echo "Xpra started in background (PID: $XPRA_PID)."
-  echo "Logs are being written to /tmp/xpra.log."
+# --bind-tcp: Listen on localhost only on specified port
+# --html=on: Enable HTML5 web client
+# --daemon=no: Run in foreground (important for Docker)
+# Xpra creates its own virtual X server (Xvfb or Xdummy) internally
+if [[ "$BACKGROUND" == "true" ]]; then
+  nohup xpra start "$DISPLAY" \
+    --bind-tcp=127.0.0.1:"$PORT" \
+    --html=on \
+    --daemon=no > /tmp/xpra.log 2>&1 &
   exit 0
 fi
 
 if ! xpra start "$DISPLAY" \
-  --bind-tcp=0.0.0.0:"$PORT" \
+  --bind-tcp=127.0.0.1:"$PORT" \
   --html=on \
   --daemon=no; then
   echo "Warning: Xpra failed to start. Check ~/.xpra/logs/ for details."
