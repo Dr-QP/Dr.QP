@@ -89,7 +89,6 @@ jobs:
       packages: write
     needs:
       - build-dev-image
-    if: ${{ !cancelled() }}
     timeout-minutes: 35
     outputs:
       image: ${{ steps.merge.outputs.image || steps.fallback.outputs.image }}
