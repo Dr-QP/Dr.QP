@@ -6,7 +6,7 @@ inputs:
     required: false
     default: main
   extra-filter:
-    description: Extra filters
+    description: Extra filters (YAML list entries, one per line)
     required: false
     default: 'default-path-that-will-never-match'
 outputs:
@@ -22,7 +22,8 @@ runs:
     run: |
       # Build the filters YAML with proper formatting for extra-filter
       EXTRA=$(printf '%s\n' "${{ inputs.extra-filter }}" | \
-        sed 's/^[[:space:]]*//; s/^/        - /' | \
+        sed -En 's/^[[:space:]]*-[[:space:]]*//p' | \
+        sed -E 's/^/        - /' | \
         sed '/^        - $/d')
       {
         echo "filters<<EOF"

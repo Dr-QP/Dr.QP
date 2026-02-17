@@ -31,9 +31,9 @@ jobs:
         id: filter
         with:
           extra-filter: |
-            .github/workflows/reformat.yml
-            docs/source/notebooks/**
-            ansible/**
+            - .github/workflows/reformat.yml
+            - docs/source/notebooks/**
+            - ansible/**
 
       - name: Override pass for draft AI PRs
         id: override
