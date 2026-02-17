@@ -22,7 +22,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 WORKDIR $OVERLAY_WS
 
 # Copy Xpra startup script
-COPY ../desktop/start-xpra.sh /start-xpra.sh
+COPY --chmod=755 ../desktop/start-xpra.sh /start-xpra.sh
 
 # Expose Xpra port
 EXPOSE 14500
@@ -33,7 +33,7 @@ ENV CC=clang
 ENV CXX=clang++
 
 # Setup entrypoint
-COPY ../deploy/ros_entrypoint.sh /
+COPY --chmod=755 ../deploy/ros_entrypoint.sh /ros_entrypoint.sh
 
 ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["bash"]
