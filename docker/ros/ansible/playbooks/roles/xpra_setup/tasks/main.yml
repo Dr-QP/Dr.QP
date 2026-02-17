@@ -2,19 +2,20 @@
 - name: Install Xpra and related packages
   when: install_xpra | default(false) | bool
   block:
-    - name: Download Xpra official installation script
+    - name: Download Xpra setup.py (pinned to v6.4.3 commit)
       ansible.builtin.get_url:
-        url: https://xpra.org/get-xpra.sh
-        dest: /tmp/get-xpra.sh
+        url: https://raw.githubusercontent.com/Xpra-org/xpra/831ccc2/setup.py
+        dest: /tmp/xpra-setup.py
+        checksum: sha256:f1c7440eb0087bb5e083b0ddd26270566d7eef260afedd5033f8bcd5564a4d81
         mode: '0755'
 
-    - name: Install Xpra using official installation script
-      ansible.builtin.shell: /tmp/get-xpra.sh
+    - name: Install Xpra repository using setup.py
+      ansible.builtin.shell: python3 /tmp/xpra-setup.py install-repo
       changed_when: true
 
-    - name: Clean up Xpra installation script
+    - name: Clean up Xpra setup.py
       ansible.builtin.file:
-        path: /tmp/get-xpra.sh
+        path: /tmp/xpra-setup.py
         state: absent
 
     - name: Install xpra-html5 web client
