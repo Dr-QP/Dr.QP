@@ -23,8 +23,8 @@ runs:
       # Build the filters YAML with proper formatting for extra-filter
       EXTRA=$(printf '%s\n' "${{ inputs.extra-filter }}" | \
         sed -En 's/^[[:space:]]*-[[:space:]]*//p' | \
-        sed -E 's/^/        - /' | \
-        sed '/^        - $/d')
+        sed -E 's/^/  - /' | \
+        sed '/^  - $/d')
       {
         echo "filters<<EOF"
         cat <<'YAML'
