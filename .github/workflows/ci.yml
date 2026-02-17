@@ -37,7 +37,7 @@ jobs:
         id: filter
         with:
           extra-filter: |
-            .github/workflows/ci.yml
+            - .github/workflows/ci.yml
 
   build-dev-image:
     name: Development image
