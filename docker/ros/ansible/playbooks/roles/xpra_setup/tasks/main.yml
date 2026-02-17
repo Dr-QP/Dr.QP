@@ -10,8 +10,9 @@
         mode: '0755'
 
     - name: Install Xpra repository using setup.py
-      ansible.builtin.shell: python3 /tmp/xpra-setup.py install-repo
-      changed_when: true
+      ansible.builtin.shell:
+        cmd: python3 /tmp/xpra-setup.py install-repo
+        creates: /etc/apt/sources.list.d/xpra.list
 
     - name: Clean up Xpra setup.py
       ansible.builtin.file:
