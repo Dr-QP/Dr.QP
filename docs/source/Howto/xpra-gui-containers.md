@@ -45,6 +45,7 @@ The `/start-xpra.sh` script accepts the following options:
 
 - `--port PORT`: Change the web server port (default: 14500)
 - `--display DISPLAY`: Specify the X display number (default: :100)
+- `--background`: Start Xpra in the background and exit immediately (used by devcontainer auto-start)
 
 Example:
 ```bash
