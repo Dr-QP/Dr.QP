@@ -149,6 +149,16 @@ if [[ "$BACKGROUND" == "true" ]]; then
     --bind-tcp=0.0.0.0:"$PORT" \
     --html=on \
     --daemon=no > /tmp/xpra.log 2>&1 &
+  XPRA_PID=$!
+
+  # Basic sanity check: ensure the background process is at least alive now.
+  if ! kill -0 "$XPRA_PID" 2>/dev/null; then
+    echo "Error: Failed to start Xpra in background mode. Check /tmp/xpra.log for details."
+    exit 1
+  fi
+
+  echo "Xpra started in background (PID: $XPRA_PID)."
+  echo "Logs are being written to /tmp/xpra.log."
   exit 0
 fi
 
