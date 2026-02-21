@@ -2,21 +2,21 @@
 - name: Install Xpra and related packages
   when: install_xpra | default(false) | bool
   block:
-    - name: Download Xpra setup.py (pinned to v6.4.3 commit)
-      ansible.builtin.get_url:
-        url: https://raw.githubusercontent.com/Xpra-org/xpra/831ccc2/setup.py
-        dest: /tmp/xpra-setup.py
-        checksum: sha256:f1c7440eb0087bb5e083b0ddd26270566d7eef260afedd5033f8bcd5564a4d81
-        mode: "0755"
+    - name: Clone Xpra repository (pinned to v6.4.3 tag)
+      ansible.builtin.git:
+        repo: https://github.com/Xpra-org/xpra.git
+        dest: /tmp/xpra
+        version: 831ccc2b6828b17d31dcad40f2b318030028e837
+        depth: 1
 
     - name: Install Xpra repository using setup.py
       ansible.builtin.command:
-        cmd: python3 /tmp/xpra-setup.py install-repo
+        cmd: python3 /tmp/xpra/setup.py install-repo
         creates: /etc/apt/sources.list.d/xpra.list
 
-    - name: Clean up Xpra setup.py
+    - name: Clean up Xpra repository clone
       ansible.builtin.file:
-        path: /tmp/xpra-setup.py
+        path: /tmp/xpra
         state: absent
 
     - name: Install Xpra server package
