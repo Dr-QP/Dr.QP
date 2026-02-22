@@ -34,6 +34,12 @@ jobs:
             - .github/workflows/reformat.yml
             - docs/source/notebooks/**
             - ansible/**
+            - packages/**/*.cpp
+            - packages/**/*.h
+            - packages/**/*.py
+            - scripts/cpp-reformat.sh
+            - scripts/python-reformat.sh
+            - .clang-format
 
       - name: Override pass for draft AI PRs
         id: override
