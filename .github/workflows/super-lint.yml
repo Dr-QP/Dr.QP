@@ -107,13 +107,12 @@ jobs:
 
       - name: Determine whether to skip auto-commit
         id: verify
-        if: ${{ github.event_name == 'pull_request' }}
         shell: bash
         run: |
           set -e
 
           skip_commit='true'
-          if [[ "${{ github.base_ref }}" == 'main' ]]; then
+          if [[ "${{ github.event_name }}" == 'pull_request' && "${{ github.base_ref }}" == 'main' ]]; then
             skip_commit='false'
 
             if [[ $(git log -1 --pretty=%B) == "$COMMIT_MESSAGE" ]]; then
@@ -126,7 +125,7 @@ jobs:
 
       - name: Commit Super-Linter fixes (PRs to main)
         uses: stefanzweifel/git-auto-commit-action@v6
-        if: ${{ github.event_name == 'pull_request' && steps.verify.outputs.skip_commit != 'true' }}
+        if: ${{ steps.verify.outputs.skip_commit != 'true' }}
         with:
           commit_message: ${{ env.COMMIT_MESSAGE }}
 
