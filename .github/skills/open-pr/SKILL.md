@@ -1,6 +1,6 @@
 ---
 name: open-pr
-description: Create GitHub pull requests from conversation context with proper formatting and issue linking
+description: Create GitHub pull requests from conversation context with proper formatting and optional issue linking
 ---
 
 # Open PR
@@ -16,9 +16,9 @@ This skill **MUST** use GitHub MCP tools for GitHub operations and **MUST NOT** 
 
 Required MCP tools:
 - `github/create_pull_request` - create the pull request
-- `github/list_issues` - list recent issues when issue number is missing
 
 Optional MCP tools (for validation and follow-up):
+- `github/list_issues` - list recent issues when issue number is missing
 - `github/list_pull_requests` - check for existing PRs from the same branch
 - `github/pull_request_read` - fetch PR details after creation
 
@@ -28,7 +28,7 @@ The PR body content **MUST** be generated using the prompt in
 `.github/prompts/generate-pr-description.prompt.md`.
 
 The open-pr skill is responsible for:
-- issue-number enforcement (`[#N]`)
+- optional issue linking in title/body when issue context exists
 - user confirmation
 - remote branch verification
 - GitHub PR creation through MCP
@@ -48,7 +48,7 @@ Review the entire conversation history and git changes to extract PR details:
 - Review git diff and git status to see actual changes made
 - Extract key details: what was changed, why, which files were affected
 - Determine the type of changes (feature, bugfix, refactor, etc.)
-- Check if there's a related issue number mentioned in the conversation
+- Check if there's a related issue number mentioned in the conversation (optional)
 
 Context signals for PR type:
 - Feature signals: new functionality added, new files created, capabilities extended
@@ -74,11 +74,11 @@ git log origin/main..HEAD --oneline
 
 This ensures the PR description accurately reflects the actual code changes.
 
-### 3. Issue Number Extraction
+### 3. Optional Issue Linking
 
-**CRITICAL:** The PR title **MUST** include an issue number in the format `[#N]`.
+Issue linking is recommended but not required.
 
-**How to find the issue number:**
+**How to find an issue number when available:**
 1. Search conversation history for explicit issue references:
    - "for issue #42"
    - "closes #15"
@@ -90,24 +90,20 @@ This ensures the PR description accurately reflects the actual code changes.
      - Use `github/list_issues` with repository `owner` and `repo`
      - Start with `state: open`, `perPage: 10`
      - If needed, broaden query with `state: all`
-   - Ask the user: "Which issue does this PR address? (Provide issue number)"
+  - Ask the user if they want to link an issue: "Would you like to link an issue to this PR?"
 
-3. If user says there's no related issue:
-   - **STOP** and inform the user:
-     ```
-     Cannot create PR without a related issue.
-     Please create an issue first using the open-issue skill, or provide an existing issue number.
-     ```
-
-**Never create a PR without an issue number.**
+3. If no issue is provided:
+  - Continue PR creation without issue linking
+  - Use a concise title without issue prefix
 
 ### 4. PR Draft Construction
 
 Generate the PR description by following
 `.github/prompts/generate-pr-description.prompt.md`.
 
-Use the generated output as the PR body, and prepend the required title format:
-- `[#issue-number] Brief description`
+Use the generated output as the PR body, and use one of these title formats:
+- If issue is available: `[#issue-number] Brief description`
+- If issue is not available: `Brief description`
 - Keep the title description concise and outcome-focused
 
 ### 5. User Confirmation Phase
@@ -186,7 +182,7 @@ Use the tool with these fields:
 - `title` (required): full PR title
 - `head` (required): source branch name
 - `base` (required): target branch (usually `main`)
-- `body` (optional): PR body (include Summary, Changes, Testing, Related Issue)
+- `body` (optional): PR body (include Summary, Changes, Testing, optional Related section)
 - `draft` (optional): set to `true` for draft PR
 - `maintainer_can_modify` (optional): set per repository policy
 
@@ -206,13 +202,10 @@ Use the tool with these fields:
 
 Handle common error scenarios gracefully:
 
-**No issue number found:**
+**Issue number not found:**
 ```
-Cannot create PR: No related issue number found.
-
-Please either:
-1. Provide the issue number this PR addresses
-2. Create an issue first using the open-issue skill
+No related issue number found.
+Proceeding without issue linking.
 ```
 
 **No git changes:**
@@ -242,7 +235,6 @@ Or confirm you want to create a PR from the current branch.
 ```
 I don't have enough context to create a PR. Could you please provide:
 - What changes were made?
-- What issue does this PR address?
 - What was tested?
 ```
 
