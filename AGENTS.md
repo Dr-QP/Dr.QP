@@ -23,6 +23,18 @@ reads from `.cursor/`, so we link the agent, skill, and instruction catalogs the
 
 Update the `.github` sources; the symlinks pick up changes automatically.
 
+## Codex Compatibility
+
+This repository keeps GitHub Copilot customizations under `.github/`. Codex
+reads from `.codex/`, so we link the supported agentic catalogs there:
+
+- **Agents**: `.codex/agents/` (symlink to `.github/agents/`)
+- **Skills**: `.codex/skills/` (symlink to `.github/skills/`)
+- **Instructions**: `.codex/instructions/` (symlink to `.github/instructions/`)
+- **Prompts**: `.codex/prompts/` (symlink to `.github/prompts/`)
+
+Update the `.github` sources; the symlinks pick up changes automatically.
+
 ## Available Agents
 
 This workspace provides specialized agents for different development tasks. You can request a specific agent by name, or choose based on your task:
