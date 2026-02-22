@@ -1,0 +1,107 @@
+# Xpra Setup Role
+
+This Ansible role installs Xpra, xpra-html5, VirtualGL, and related dependencies for remote desktop and application streaming on Ubuntu 24.04 (Noble).
+
+## Overview
+
+Xpra is a persistent remote application server that allows you to run X11 applications on a remote host and display them locally. This role sets up:
+
+- **Xpra**: Remote desktop and application streaming server
+- **xpra-html5**: HTML5 client for web-based access
+- **VirtualGL**: GPU acceleration for remote rendering
+- **Mesa utilities**: Software rendering fallback (llvmpipe)
+- **Xvfb**: Virtual framebuffer for headless operation
+
+## Requirements
+
+- Ubuntu 24.04 (Noble) or compatible Debian-based distribution
+- Internet access to download packages from official repositories
+- Root or sudo access
+
+## Role Variables
+
+### `install_xpra`
+
+- **Type**: Boolean
+- **Default**: `false`
+- **Description**: Enable or disable the installation of Xpra and related packages
+
+## Example Usage
+
+```yaml
+- name: Install Xpra
+  hosts: all
+  become: true
+  vars:
+    install_xpra: true
+  roles:
+    - { role: xpra_setup, tags: ["xpra_setup"] }
+```
+
+Or with conditional installation:
+
+```yaml
+- name: Setup Docker image with optional Xpra
+  hosts: all
+  become: true
+  roles:
+    - { role: xpra_setup, tags: ["xpra_setup"] }
+```
+
+Then enable at runtime:
+
+```bash
+ansible-playbook playbook.yml -e "install_xpra=true"
+```
+
+## What Gets Installed
+
+### Xpra Repository Setup and Packages
+
+This role uses the official Xpra `setup.py` helper from the Xpra GitHub
+repository with the `install-lts-repo` command to set up the Xpra APT
+repository. That step handles:
+
+- Adding the Xpra GPG key
+- Adding the correct APT repository for the current distribution
+- Updating the APT cache
+
+After the repository is configured, the role installs the following
+packages via APT:
+
+- `xpra` - Main Xpra server and client (installed from the Xpra APT repository)
+- `xpra-html5` - HTML5 web client (installed by cloning the xpra-html5 repository and installing it via `setup.py`)
+
+### From GitHub Releases
+
+- `virtualgl` - Version 3.1.4 (pinned, sha256 verified for amd64/arm64)
+
+### From Ubuntu Repositories
+
+- `mesa-utils` - OpenGL utilities
+- `libgl1` - OpenGL runtime
+- `libglvnd0` - OpenGL vendor library
+- `xvfb` - Virtual framebuffer
+- `libgl1-mesa-dri` - Software rendering support (Mesa DRI with llvmpipe)
+
+## Idempotency
+
+This role is idempotent. Running it multiple times will not cause issues:
+
+- Repository files are overwritten (safe)
+- Package installations are idempotent
+- VirtualGL version and checksums are pinned for deterministic installs
+
+## Architecture Support
+
+The role automatically detects the system architecture and downloads the appropriate VirtualGL package:
+
+- **amd64** (x86_64)
+- **arm64** (aarch64)
+
+## Notes
+
+- The role requires internet access to download packages from official repositories
+- VirtualGL version and checksums are pinned in `tasks/main.yml`
+- The role uses `install_recommends: false` to minimize image size
+- All tasks are conditional on `install_xpra` variable for flexibility

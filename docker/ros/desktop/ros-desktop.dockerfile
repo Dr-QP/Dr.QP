@@ -17,9 +17,15 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && ansible-playbook playbooks/20_ros_setup.yml \
       -i inventories/localhost.yml \
       -vvv \
-      -e "ci_mode=true clang_version=$CLANG_VERSION ros_distro=$ROS_DISTRO"
+      -e "ci_mode=true clang_version=$CLANG_VERSION ros_distro=$ROS_DISTRO install_xpra=true"
 
 WORKDIR $OVERLAY_WS
+
+# Copy Xpra startup script
+COPY --chmod=755 ../desktop/start-xpra.sh /start-xpra.sh
+
+# Expose Xpra port
+EXPOSE 14500
 
 # Force clang installed by llvm.sh in /usr/lib/llvm-${CLANG_VERSION}/bin to be the default in docker
 ENV PATH="/usr/lib/llvm-${CLANG_VERSION}/bin:/root/.local/bin:$PATH"
@@ -27,7 +33,7 @@ ENV CC=clang
 ENV CXX=clang++
 
 # Setup entrypoint
-COPY ../deploy/ros_entrypoint.sh /
+COPY --chmod=755 ../deploy/ros_entrypoint.sh /ros_entrypoint.sh
 
 ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["bash"]
