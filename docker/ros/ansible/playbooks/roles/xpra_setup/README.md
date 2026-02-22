@@ -57,7 +57,7 @@ ansible-playbook playbook.yml -e "install_xpra=true"
 ### Xpra Repository Setup and Packages
 
 This role uses the official Xpra `setup.py` helper from the Xpra GitHub
-repository with the `install-repo` command to set up the Xpra APT
+repository with the `install-lts-repo` command to set up the Xpra APT
 repository. That step handles:
 - Adding the Xpra GPG key
 - Adding the correct APT repository for the current distribution
