@@ -100,14 +100,17 @@ jobs:
           fi
       # Commit all changed files back to the repository (only for PRs to main)
       - uses: stefanzweifel/git-auto-commit-action@v6
-        if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' && steps.verify.outputs.skip_commit != 'true' }}
+        if: >
+          github.event_name == 'pull_request' &&
+          github.ref_name != github.event.repository.default_branch &&
+          steps.verify.outputs.skip_commit != 'true'
         id: commit
         with:
           commit_message: ${{ env.COMMIT_MESSAGE }}
 
       - name: Verify changes were committed (PRs to main)
         shell: bash -le {0}
-        if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' }}
+        if: github.event_name == 'pull_request' && github.ref_name != github.event.repository.default_branch
         run: |
           set -x
           set -e
@@ -117,7 +120,7 @@ jobs:
 
       - name: Verify formatting is correct (PRs to non-main branches)
         shell: bash -le {0}
-        if: ${{ github.event_name == 'pull_request' && github.base_ref != 'main' }}
+        if: github.event_name == 'pull_request' && github.base_ref != github.event.repository.default_branch
         run: |
           set -x
           set -e

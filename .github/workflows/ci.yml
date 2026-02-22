@@ -43,7 +43,7 @@ jobs:
     name: Development image
     timeout-minutes: 35
     needs: paths-filter
-    if: needs.paths-filter.outputs.pass == 'true' && (github.event_name != 'pull_request' || github.base_ref == 'main')
+    if: needs.paths-filter.outputs.pass == 'true' && (github.event_name != 'pull_request' || github.ref_name != github.event.repository.default_branch)
     permissions:
       packages: write
     strategy:
@@ -97,12 +97,12 @@ jobs:
 
       - name: Use prebuilt image for PRs to non-main branches
         id: fallback
-        if: github.event_name == 'pull_request' && github.base_ref != 'main'
+        if: github.event_name == 'pull_request' && github.base_ref != github.event.repository.default_branch
         run: |
           echo "image=${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop:edge" >> "$GITHUB_OUTPUT"
 
       - name: Merge and push ansible docker image
-        if: github.event_name != 'pull_request' || github.base_ref == 'main'
+        if: github.event_name != 'pull_request' || github.ref_name != github.event.repository.default_branch
         uses: ./.github/actions/docker/multiarch-merge
         with:
           image: ${{ env.REGISTRY }}/dr-qp/ubuntu-ansible
@@ -112,7 +112,7 @@ jobs:
 
       - name: Merge and push development docker image
         id: merge
-        if: github.event_name != 'pull_request' || github.base_ref == 'main'
+        if: github.event_name != 'pull_request' || github.ref_name != github.event.repository.default_branch
         uses: ./.github/actions/docker/multiarch-merge
         with:
           image: ${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop
@@ -299,7 +299,7 @@ jobs:
   build-deploy-image:
     name: Deployment image
     needs: [merge-dev-image, ros-ci]
-    if: github.event_name != 'pull_request' || github.base_ref == 'main'
+    if: github.event_name != 'pull_request' || github.ref_name != github.event.repository.default_branch
     timeout-minutes: 35
     strategy:
       fail-fast: false
@@ -335,7 +335,7 @@ jobs:
       packages: write
     needs:
       - build-deploy-image
-    if: github.event_name != 'pull_request' || github.base_ref == 'main'
+    if: github.event_name != 'pull_request' || github.ref_name != github.event.repository.default_branch
     timeout-minutes: 35
     outputs:
       image: ${{ steps.merge.outputs.image }}
