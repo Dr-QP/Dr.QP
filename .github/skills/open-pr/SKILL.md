@@ -179,8 +179,10 @@ git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null
 - If push fails due to conflicts:
   ```
   Cannot push: your branch has diverged from remote.
-  Please resolve conflicts manually with:
-    git pull --rebase origin <branch-name>
+  Please resolve conflicts by merging the remote branch into your local branch:
+    git pull origin <branch-name>
+  Then resolve any merge conflicts, commit the merge, and run:
+    git push
   ```
 - For other push failures: Display the error and abort PR creation
 
