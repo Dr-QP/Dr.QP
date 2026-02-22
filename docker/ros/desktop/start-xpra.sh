@@ -3,6 +3,7 @@
 set -euo pipefail
 
 # Default configuration
+HOST=127.0.0.1
 PORT=14500
 DISPLAY=:100
 BACKGROUND=false
@@ -16,6 +17,7 @@ Start an Xpra server with the HTML5 web client enabled.
 
 Options:
   --port PORT       HTTP port for the HTML5 client (default: 14500)
+  --host HOST       Host/IP to bind the Xpra server (default: 127.0.0.1)
   --display DISPLAY X display (accepts :100 or 100; default: :100)
   --background      Start Xpra in the background and exit immediately
 USAGE
@@ -23,6 +25,15 @@ USAGE
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --host)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: --host requires a value."
+        print_usage
+        exit 1
+      fi
+      HOST="$2"
+      shift 2
+      ;;
     --port)
       if [[ $# -lt 2 ]]; then
         echo "Error: --port requires a value."
@@ -136,24 +147,24 @@ export DISPLAY
 
 echo ""
 echo "Starting Xpra server..."
-echo "HTML5 client will be available at: http://127.0.0.1:$PORT"
+echo "HTML5 client will be available at: http://$HOST:$PORT"
 echo ""
 
 # Start Xpra server
-# --bind-tcp: Listen on all interfaces on specified port
+# --bind-tcp: Listen on specified host and port
 # --html=on: Enable HTML5 web client
 # --daemon=no: Run in foreground (important for Docker)
 # Xpra creates its own virtual X server (Xvfb or Xdummy) internally
 if [[ "$BACKGROUND" == "true" ]]; then
   nohup xpra start "$DISPLAY" \
-    --bind-tcp=0.0.0.0:"$PORT" \
+    --bind-tcp="$HOST:$PORT" \
     --html=on \
     --daemon=no > /tmp/xpra.log 2>&1 &
   exit 0
 fi
 
 if ! xpra start "$DISPLAY" \
-  --bind-tcp=127.0.0.1:"$PORT" \
+  --bind-tcp="$HOST:$PORT" \
   --html=on \
   --daemon=no; then
   echo "Warning: Xpra failed to start. Check ~/.xpra/logs/ for details."
