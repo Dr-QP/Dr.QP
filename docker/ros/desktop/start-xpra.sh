@@ -149,16 +149,6 @@ if [[ "$BACKGROUND" == "true" ]]; then
     --bind-tcp=0.0.0.0:"$PORT" \
     --html=on \
     --daemon=no > /tmp/xpra.log 2>&1 &
-  XPRA_PID=$!
-# --bind-tcp: Listen on localhost only on specified port
-# --html=on: Enable HTML5 web client
-# --daemon=no: Run in foreground (important for Docker)
-# Xpra creates its own virtual X server (Xvfb or Xdummy) internally
-if [[ "$BACKGROUND" == "true" ]]; then
-  nohup xpra start "$DISPLAY" \
-    --bind-tcp=127.0.0.1:"$PORT" \
-    --html=on \
-    --daemon=no > /tmp/xpra.log 2>&1 &
   exit 0
 fi
 
