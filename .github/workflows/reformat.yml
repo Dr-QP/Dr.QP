@@ -109,9 +109,6 @@ jobs:
           elif [[ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]]; then
             echo "Pull request is from a fork. Skipping commit."
             skip_commit=true
-          elif [[ "${{ github.base_ref }}" != "${{ github.event.repository.default_branch }}" ]]; then
-            echo "Not a pull request to the default branch. Skipping commit."
-            skip_commit=true
           elif [[ $(git log -1 --pretty=%B) == "$COMMIT_MESSAGE" ]]; then
             echo "Reformatted in previous commit. Skipping commit."
             skip_commit=true
