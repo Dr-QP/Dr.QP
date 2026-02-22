@@ -126,7 +126,28 @@ Should I create this PR?
 - If the user requests modifications, update the draft and present again
 - If the user declines, abort PR creation gracefully
 
-### 6. Remote Branch Verification
+### 6. Branch Sync with `origin/main`
+
+**CRITICAL:** Before pushing or creating a PR, ensure the current branch includes the latest
+`origin/main`.
+
+1. Fetch latest remote refs:
+  ```bash
+  git fetch origin
+  ```
+2. Check whether `origin/main` is already contained in `HEAD`:
+  ```bash
+  git merge-base --is-ancestor origin/main HEAD
+  ```
+3. If this check fails (non-zero exit code), merge the latest `origin/main`:
+  ```bash
+  git merge origin/main
+  ```
+4. If merge conflicts occur:
+  - Stop and inform the user conflicts must be resolved before PR creation
+  - Do not proceed to remote push or PR creation until conflicts are resolved
+
+### 7. Remote Branch Verification
 
 **CRITICAL:** Before creating the PR, verify the current branch exists on the remote repository.
 
@@ -172,7 +193,7 @@ git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null
   ```
 - For other push failures: Display the error and abort PR creation
 
-### 7. GitHub PR Creation (MCP)
+### 8. GitHub PR Creation (MCP)
 
 Once confirmed and the branch is on remote, create the PR using `github/create_pull_request`.
 
@@ -198,7 +219,7 @@ Use the tool with these fields:
 - Set `draft: true` if the user wants to create a draft PR
 - Set `base: <branch>` if targeting a different base branch
 
-### 8. Error Handling
+### 9. Error Handling
 
 Handle common error scenarios gracefully:
 
@@ -242,6 +263,12 @@ I don't have enough context to create a PR. Could you please provide:
 ```
 Failed to create pull request: [error message]
 Please check GitHub MCP connectivity, authentication, and required tool permissions.
+```
+
+**Merge conflict while syncing with `origin/main`:**
+```
+Cannot continue PR creation: merge conflicts occurred while merging origin/main.
+Please resolve conflicts, commit the merge, and retry PR creation.
 ```
 
 ## Ownership
