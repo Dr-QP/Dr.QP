@@ -11,7 +11,7 @@
 
     - name: Install Xpra repository using setup.py
       ansible.builtin.command:
-        cmd: python3 /tmp/xpra/setup.py install-repo
+        cmd: python3 /tmp/xpra/setup.py install-lts-repo
         creates: /etc/apt/sources.list.d/xpra.list
 
     - name: Clean up Xpra repository clone
