@@ -136,7 +136,7 @@ export DISPLAY
 
 echo ""
 echo "Starting Xpra server..."
-echo "HTML5 client will be available at: http://localhost:$PORT"
+echo "HTML5 client will be available at: http://127.0.0.1:$PORT"
 echo ""
 
 # Start Xpra server
