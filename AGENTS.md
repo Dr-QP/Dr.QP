@@ -108,6 +108,8 @@ This workspace provides specialized Agent Skills that enhance your capabilities:
 - **[code-review-standards](/.github/skills/code-review-standards/SKILL.md)**: Write PR descriptions and conduct code reviews
 - **[pr-feedback-resolution](/.github/skills/pr-feedback-resolution/SKILL.md)**: Systematically address PR feedback, CI failures, CodeQL findings, and coverage gaps
 - **[find-test-files](/.github/skills/find-test-files/SKILL.md)**: Identify and summarize relevant test files for a given change or component
+- **[open-pr](/.github/skills/open-pr/SKILL.md)**: Create GitHub pull requests from conversation context with accurate title/body generation, user confirmation, branch sync, and remote verification
+- **[update-branch](/.github/skills/update-branch/SKILL.md)**: Update the current Git branch from origin/main by merging main into it
 
 ## Available Prompts
 
