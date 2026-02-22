@@ -21,6 +21,7 @@ Xpra is a persistent remote application server that allows you to run X11 applic
 ## Role Variables
 
 ### `install_xpra`
+
 - **Type**: Boolean
 - **Default**: `false`
 - **Description**: Enable or disable the installation of Xpra and related packages
@@ -48,6 +49,7 @@ Or with conditional installation:
 ```
 
 Then enable at runtime:
+
 ```bash
 ansible-playbook playbook.yml -e "install_xpra=true"
 ```
@@ -59,18 +61,23 @@ ansible-playbook playbook.yml -e "install_xpra=true"
 This role uses the official Xpra `setup.py` helper from the Xpra GitHub
 repository with the `install-repo` command to set up the Xpra APT
 repository. That step handles:
+
 - Adding the Xpra GPG key
 - Adding the correct APT repository for the current distribution
 - Updating the APT cache
 
 After the repository is configured, the role installs the following
 packages via APT:
+
 - `xpra` - Main Xpra server and client (installed from the Xpra APT repository)
 - `xpra-html5` - HTML5 web client (installed from APT, typically the Xpra repository)
+
 ### From GitHub Releases
+
 - `virtualgl` - Version 3.1.4 (pinned, sha256 verified for amd64/arm64)
 
 ### From Ubuntu Repositories
+
 - `mesa-utils` - OpenGL utilities
 - `libgl1` - OpenGL runtime
 - `libglvnd0` - OpenGL vendor library
@@ -80,6 +87,7 @@ packages via APT:
 ## Idempotency
 
 This role is idempotent. Running it multiple times will not cause issues:
+
 - Repository files are overwritten (safe)
 - Package installations are idempotent
 - VirtualGL version and checksums are pinned for deterministic installs
@@ -87,6 +95,7 @@ This role is idempotent. Running it multiple times will not cause issues:
 ## Architecture Support
 
 The role automatically detects the system architecture and downloads the appropriate VirtualGL package:
+
 - **amd64** (x86_64)
 - **arm64** (aarch64)
 
