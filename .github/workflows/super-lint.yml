@@ -90,7 +90,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEFAULT_BRANCH: main
           VALIDATE_ALL_CODEBASE: false
-          FILTER_REGEX_INCLUDE: '(^|/)(Dockerfile(\..*)?)$|\.(md|markdown|yml|yaml|json|sh|bash|zsh)$'
           FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
 
           # Markdown: lint via Prettier only
