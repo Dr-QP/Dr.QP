@@ -66,7 +66,7 @@ repository. That step handles:
 After the repository is configured, the role installs the following
 packages via APT:
 - `xpra` - Main Xpra server and client (installed from the Xpra APT repository)
-- `xpra-html5` - HTML5 web client (installed from APT, typically the Xpra repository)
+- `xpra-html5` - HTML5 web client (installed by cloning the xpra-html5 repository and installing it via `setup.py`)
 ### From GitHub Releases
 - `virtualgl` - Version 3.1.4 (pinned, sha256 verified for amd64/arm64)
 
