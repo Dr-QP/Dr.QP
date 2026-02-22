@@ -126,6 +126,7 @@ jobs:
         with:
           branch: ${{ github.head_ref || github.ref_name }}
           commit_message: ${{ env.COMMIT_MESSAGE }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify changes were committed (PRs to default branch)
         shell: bash -le {0}
