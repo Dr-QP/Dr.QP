@@ -10,6 +10,18 @@ with meaningful titles, proper formatting, and appropriate tag selection. The AI
 should analyze the conversation, extract PR details, and confirm with the user before
 creating the pull request.
 
+## GitHub MCP Tools Required
+
+This skill **MUST** use GitHub MCP tools for GitHub operations and **MUST NOT** use `gh` CLI commands.
+
+Required MCP tools:
+- `github/create_pull_request` - create the pull request
+- `github/list_issues` - list recent issues when issue number is missing
+
+Optional MCP tools (for validation and follow-up):
+- `github/list_pull_requests` - check for existing PRs from the same branch
+- `github/pull_request_read` - fetch PR details after creation
+
 ## PR Format
 
 GitHub pull requests created by this skill must follow this exact structure:
@@ -125,9 +137,9 @@ This ensures the PR description accurately reflects the actual code changes.
 
 2. If no issue number is found in conversation:
    - Check if there are recent issues that match this work:
-     ```bash
-     gh issue list --limit 10
-     ```
+     - Use `github/list_issues` with repository `owner` and `repo`
+     - Start with `state: open`, `perPage: 10`
+     - If needed, broaden query with `state: all`
    - Ask the user: "Which issue does this PR address? (Provide issue number)"
 
 3. If user says there's no related issue:
@@ -241,27 +253,29 @@ git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null
   ```
 - For other push failures: Display the error and abort PR creation
 
-### 7. GitHub PR Creation
+### 7. GitHub PR Creation (MCP)
 
-Once confirmed and the branch is on remote, create the PR using the GitHub CLI:
+Once confirmed and the branch is on remote, create the PR using `github/create_pull_request`.
 
-```bash
-gh pr create --title "TITLE_HERE" --body "$(cat <<'EOF'
-BODY_CONTENT_HERE
-EOF
-)"
-```
+Use the tool with these fields:
+- `owner` (required): repository owner
+- `repo` (required): repository name
+- `title` (required): full PR title
+- `head` (required): source branch name
+- `base` (required): target branch (usually `main`)
+- `body` (optional): PR body (include Summary, Changes, Testing, Related Issue)
+- `draft` (optional): set to `true` for draft PR
+- `maintainer_can_modify` (optional): set per repository policy
 
 **Important:**
-- Use heredoc (`<<'EOF' ... EOF`) to preserve markdown formatting
 - The body should include all sections from Summary onwards (not the title)
-- The PR will be created against the default branch (usually main/master)
-- After successful creation, display the PR URL to the user
+- If `base` is not explicitly provided by user/repo policy, default to `main`
+- After successful creation, display the PR URL/number returned by the MCP tool
 - Confirm: "Pull request created successfully: [URL]"
 
-**Optional flags:**
-- Add `--draft` if the user wants to create a draft PR
-- Add `--base BRANCH` if targeting a different base branch
+**Optional parameters:**
+- Set `draft: true` if the user wants to create a draft PR
+- Set `base: <branch>` if targeting a different base branch
 
 ### 8. Error Handling
 
@@ -288,10 +302,10 @@ Cannot create PR: No changes detected in the working directory.
 Please make and commit your changes first.
 ```
 
-**GitHub CLI not authenticated:**
+**GitHub MCP authentication/authorization failure:**
 ```
-GitHub CLI is not authenticated. Please run:
-  gh auth login
+GitHub MCP request failed due to authentication or missing permissions.
+Please verify MCP server authentication and token scopes (typically `repo`).
 ```
 
 **Not on a feature branch:**
@@ -316,7 +330,7 @@ I don't have enough context to create a PR. Could you please provide:
 **PR creation failed:**
 ```
 Failed to create pull request: [error message]
-Please check your GitHub CLI configuration and try again.
+Please check GitHub MCP connectivity, authentication, and required tool permissions.
 ```
 
 ## Ownership
