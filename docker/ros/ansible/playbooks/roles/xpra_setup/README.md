@@ -59,7 +59,7 @@ ansible-playbook playbook.yml -e "install_xpra=true"
 ### Xpra Repository Setup and Packages
 
 This role uses the official Xpra `setup.py` helper from the Xpra GitHub
-repository with the `install-repo` command to set up the Xpra APT
+repository with the `install-lts-repo` command to set up the Xpra APT
 repository. That step handles:
 
 - Adding the Xpra GPG key
@@ -70,7 +70,7 @@ After the repository is configured, the role installs the following
 packages via APT:
 
 - `xpra` - Main Xpra server and client (installed from the Xpra APT repository)
-- `xpra-html5` - HTML5 web client (installed from APT, typically the Xpra repository)
+- `xpra-html5` - HTML5 web client (installed by cloning the xpra-html5 repository and installing it via `setup.py`)
 
 ### From GitHub Releases
 
