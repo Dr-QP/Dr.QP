@@ -25,12 +25,23 @@
           - xpra
         state: present
         install_recommends: false
-    - name: Install xpra-html5 web client
-      ansible.builtin.apt:
-        name:
-          - xpra-html5
-        state: present
-        install_recommends: false
+
+    - name: Clone Xpra-html5 repository (pinned to v19 tag)
+      ansible.builtin.git:
+        repo: https://github.com/Xpra-org/xpra-html5.git
+        dest: /tmp/xpra-html5
+        version: 462cadec215acd1bb7d2d8fdc58d5040a0412540
+        depth: 1
+
+    - name: Install Xpra-html5 repository using setup.py
+      ansible.builtin.command:
+        cmd: python3 /tmp/xpra-html5/setup.py install
+        creates: /etc/apt/sources.list.d/xpra-html5.list
+
+    - name: Clean up Xpra-html5 repository clone
+      ansible.builtin.file:
+        path: /tmp/xpra-html5
+        state: absent
 
     - name: Install VirtualGL from GitHub releases
       block:
