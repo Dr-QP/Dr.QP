@@ -93,8 +93,10 @@ jobs:
           FILTER_REGEX_INCLUDE: '(^|/)(Dockerfile(\..*)?)$|\.(md|markdown|yml|yaml|json|sh|bash|zsh)$'
           FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
 
-          # Markdown: lint via Prettier
+          # Markdown: lint via Prettier only
           VALIDATE_MARKDOWN_PRETTIER: true
+          VALIDATE_MARKDOWN: false
+          VALIDATE_MARKDOWN_MARKDOWN_LINK_CHECK: false
 
           # Additional file types not currently covered by existing CI linters
           VALIDATE_YAML: true
@@ -103,23 +105,43 @@ jobs:
           VALIDATE_DOCKERFILE_HADOLINT: true
           VALIDATE_GITHUB_ACTIONS: true
 
-      - name: Verify if not recursive commit
+      - name: Determine whether to skip auto-commit
         id: verify
+        if: ${{ github.event_name == 'pull_request' }}
+        shell: bash
+        run: |
+          set -e
+
+          skip_commit='true'
+          if [[ "${{ github.base_ref }}" == 'main' ]]; then
+            skip_commit='false'
+
+            if [[ $(git log -1 --pretty=%B) == "$COMMIT_MESSAGE" ]]; then
+              echo "Super-Linter fixes were already applied in the previous commit. Skipping commit."
+              skip_commit='true'
+            fi
+          fi
+
+          echo "skip_commit=$skip_commit" >> "$GITHUB_OUTPUT"
+
+      - name: Commit Super-Linter fixes (PRs to main)
+        uses: stefanzweifel/git-auto-commit-action@v6
+        if: ${{ github.event_name == 'pull_request' && steps.verify.outputs.skip_commit != 'true' }}
+        with:
+          commit_message: ${{ env.COMMIT_MESSAGE }}
+
+      - name: Verify no autofix changes required (PRs to main)
         if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' }}
         shell: bash
         run: |
           set -e
 
-          if [[ $(git log -1 --pretty=%B) == "$COMMIT_MESSAGE" ]]; then
-            echo "Markdown was fixed in previous commit. Skipping commit."
-            echo "skip_commit=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Commit markdown fixes (PRs to main)
-        uses: stefanzweifel/git-auto-commit-action@v6
-        if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' && steps.verify.outputs.skip_commit != 'true' }}
-        with:
-          commit_message: ${{ env.COMMIT_MESSAGE }}
+          git diff --exit-code || (
+            echo "Error: Super-Linter fixes are required."
+            echo "Please format and lint the affected files locally (for example, using Prettier for Markdown and the appropriate linters for YAML/JSON/Bash/Dockerfile/GitHub Actions), then commit the changes."
+            exit 1
+          )
+          git diff --exit-code --cached
 
       - name: Verify no autofix changes required (PRs to non-main branches)
         if: ${{ github.event_name == 'pull_request' && github.base_ref != 'main' }}
@@ -128,8 +150,8 @@ jobs:
           set -e
 
           git diff --exit-code || (
-            echo "Error: markdown and file lint fixes are required."
-            echo "Please run local formatting/lint scripts and commit the changes."
+            echo "Error: Super-Linter fixes are required."
+            echo "Please format and lint the affected files locally (for example, using Prettier for Markdown and the appropriate linters for YAML/JSON/Bash/Dockerfile/GitHub Actions), then commit the changes."
             exit 1
           )
           git diff --exit-code --cached
