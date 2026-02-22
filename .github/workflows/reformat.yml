@@ -119,7 +119,7 @@ jobs:
 
           echo "skip_commit=$skip_commit" >> "$GITHUB_OUTPUT"
 
-      - name: Commit all changed files back to the repository (only for PRs to main)
+      - name: Commit all changed files back to the repository (PRs to default branch)
         uses: stefanzweifel/git-auto-commit-action@v7
         if: steps.verify.outputs.skip_commit != 'true'
         id: commit
