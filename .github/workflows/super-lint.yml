@@ -1,0 +1,135 @@
+name: Super Lint
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+  merge_group:
+    types:
+      - checks_requested
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  COMMIT_MESSAGE: Apply super-linter fixes
+
+jobs:
+  paths-filter:
+    name: Need to run?
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    permissions: {}
+    timeout-minutes: 10
+    outputs:
+      pass: ${{ steps.override.outputs.pass }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Filters
+        uses: ./.github/actions/paths-filter
+        id: filter
+        with:
+          extra-filter: |
+            - .github/workflows/super-lint.yml
+            - '**/*.md'
+            - '**/*.markdown'
+            - '**/*.yml'
+            - '**/*.yaml'
+            - '**/*.json'
+            - '**/*.sh'
+            - '**/*.bash'
+            - '**/*.zsh'
+            - '**/Dockerfile'
+            - '**/Dockerfile.*'
+
+      - name: Override pass for draft AI PRs
+        id: override
+        shell: bash
+        run: |
+          set -e
+
+          pass='${{ steps.filter.outputs.pass }}'
+          if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.pull_request.draft }}" == "true" ]]; then
+            case "${{ github.actor }}" in
+              *copilot*|*cursor*|*codex*|*claude*)
+                pass='false'
+                ;;
+            esac
+          fi
+
+          echo "pass=$pass" >> "$GITHUB_OUTPUT"
+
+  super-linter:
+    name: Super-Linter
+    needs: paths-filter
+    if: needs.paths-filter.outputs.pass == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      statuses: write
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref || github.ref }}
+          token: ${{ secrets.REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Add workspace to safe directories
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Run Super-Linter
+        uses: super-linter/super-linter/slim@v8
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BRANCH: main
+          VALIDATE_ALL_CODEBASE: false
+          FILTER_REGEX_INCLUDE: '(^|/)(Dockerfile(\..*)?)$|\.(md|markdown|yml|yaml|json|sh|bash|zsh)$'
+          FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
+
+          # Markdown: lint via Prettier
+          VALIDATE_MARKDOWN_PRETTIER: true
+
+          # Additional file types not currently covered by existing CI linters
+          VALIDATE_YAML: true
+          VALIDATE_JSON: true
+          VALIDATE_BASH: true
+          VALIDATE_DOCKERFILE_HADOLINT: true
+          VALIDATE_GITHUB_ACTIONS: true
+
+      - name: Verify if not recursive commit
+        id: verify
+        if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' }}
+        shell: bash
+        run: |
+          set -e
+
+          if [[ $(git log -1 --pretty=%B) == "$COMMIT_MESSAGE" ]]; then
+            echo "Markdown was fixed in previous commit. Skipping commit."
+            echo "skip_commit=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit markdown fixes (PRs to main)
+        uses: stefanzweifel/git-auto-commit-action@v6
+        if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' && steps.verify.outputs.skip_commit != 'true' }}
+        with:
+          commit_message: ${{ env.COMMIT_MESSAGE }}
+
+      - name: Verify no autofix changes required (PRs to non-main branches)
+        if: ${{ github.event_name == 'pull_request' && github.base_ref != 'main' }}
+        shell: bash
+        run: |
+          set -e
+
+          git diff --exit-code || (
+            echo "Error: markdown and file lint fixes are required."
+            echo "Please run local formatting/lint scripts and commit the changes."
+            exit 1
+          )
+          git diff --exit-code --cached
