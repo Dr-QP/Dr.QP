@@ -1,15 +1,15 @@
 ---
 name: update-branch
-description: Update the current Git branch from origin by merging the repository default branch into it. Use when asked to sync a feature branch, bring branch up to date, resolve merge conflicts, or unblock CI after base branch drift. Keywords: merge default branch, update branch, sync with origin default branch, resolve merge conflicts.
+description: Update the current Git branch from origin by merging `origin/main` into it. Use when asked to sync a feature branch, bring branch up to date, resolve merge conflicts, or unblock CI after base branch drift. Keywords: merge `origin/main`, update branch, sync with origin/main, resolve merge conflicts.
 ---
 
-# Update Branch from origin Default Branch
+# Update Branch from origin/main
 
-Safely update the current branch by merging `origin/<default-branch>` into it, resolving conflicts autonomously when confidence is high, and requesting user input when confidence is low.
+Safely update the current branch by merging `origin/main` into it, resolving conflicts autonomously when confidence is high, and requesting user input when confidence is low.
 
 ## When to Use This Skill
 
-- Sync a feature branch with latest changes from `origin/<default-branch>`
+- Sync a feature branch with latest changes from `origin/main`
 - Resolve branch drift causing CI failures or stale diffs
 - Refresh long-lived PR branches before final review
 - Resolve merge conflicts while preserving branch intent
@@ -18,7 +18,7 @@ Safely update the current branch by merging `origin/<default-branch>` into it, r
 
 - Git repository with `origin` remote configured
 - Clean working tree (or user-approved stash workflow)
-- Current branch is not the default branch
+- Current branch is not `main`
 - User intent is merge-based update (not rebase)
 
 ## Safety Rules
@@ -42,14 +42,9 @@ Safely update the current branch by merging `origin/<default-branch>` into it, r
 	- Commit changes, or
 	- Stash changes and continue.
 
-3. Detect the repository default branch:
+3. Verify current branch is not `main`:
 	```bash
-	default_branch="$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')"
-	```
-
-4. Verify current branch is not the default branch:
-	```bash
-	test "$(git rev-parse --abbrev-ref HEAD)" != "$default_branch"
+	test "$(git rev-parse --abbrev-ref HEAD)" != "main"
 	```
 
 ### Workflow 2: Fetch and Merge
@@ -59,10 +54,9 @@ Safely update the current branch by merging `origin/<default-branch>` into it, r
 	git fetch origin
 	```
 
-2. Merge `origin/$default_branch` into current branch:
+2. Merge `origin/main` into current branch:
 	```bash
-	default_branch="$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')"
-	git merge --no-ff "origin/$default_branch"
+	git merge --no-ff origin/main
 	```
 
 3. If merge succeeds with no conflicts:
@@ -83,7 +77,7 @@ When merge conflicts occur, resolve in this order with confidence scoring.
 #### Resolution Heuristics
 
 1. Prefer conflict blocks that preserve current branch feature behavior.
-2. Incorporate non-conflicting safety or compatibility updates from `origin/<default-branch>`.
+2. Incorporate non-conflicting safety or compatibility updates from `origin/main`.
 3. Keep public interfaces stable unless branch changes explicitly require updates.
 4. Ensure resulting code compiles and aligns with repository conventions.
 
@@ -131,14 +125,14 @@ Please choose A, B, or provide a custom resolution.
 |---------------|----------------|---------------------|
 | Whitespace / formatting only | Keep style consistent with file | 95% |
 | Import/include ordering | Keep compilable/import-valid ordering | 90% |
-| Dependency/version bumps | Prefer newer compatible version from `origin/<default-branch>` | 80% |
+| Dependency/version bumps | Prefer newer compatible version from `origin/main` | 80% |
 | Test expectation drift | Preserve branch behavior, then adjust tests if intent is clear | 75% |
 | Core logic divergence | Escalate unless intent is unambiguous | <70% by default |
 | API contract changes | Escalate unless covered by explicit branch requirement | <70% by default |
 
 ## Completion Criteria
 
-- `origin/<default-branch>` is merged into current branch
+- `origin/main` is merged into current branch
 - All conflicts are resolved
 - No unresolved markers remain:
   ```bash

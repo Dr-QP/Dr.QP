@@ -195,7 +195,7 @@ Use the tool with these fields:
 - `repo` (required): repository name
 - `title` (required): full PR title
 - `head` (required): source branch name
-- `base` (required): target branch (usually the repository default branch)
+- `base` (required): target branch (usually `main`)
 - `body` (optional): PR body (include Summary, Changes, Testing, optional Related section)
 - `draft` (optional): set to `true` for draft PR
 - `maintainer_can_modify` (optional): set per repository policy
@@ -204,13 +204,7 @@ Use the tool with these fields:
 - The body should be the generated markdown from
   `.github/prompts/generate-pr-description.prompt.md`
 - Do not duplicate or re-interpret the prompt's section requirements here
-- If `base` is not explicitly provided by user/repo policy, detect the repository default branch and use it:
-  1. Prefer git remote metadata:
-     ```bash
-     git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'
-     ```
-  2. If unavailable, use GitHub metadata tooling (for example, an MCP repo read call).
-  3. If both methods fail, stop and ask the user to provide the base branch explicitly.
+- If `base` is not explicitly provided by user/repo policy, set `base: main`.
 - After successful creation, display the PR URL/number returned by the MCP tool
 - Confirm: "Pull request created successfully: [URL]"
 
