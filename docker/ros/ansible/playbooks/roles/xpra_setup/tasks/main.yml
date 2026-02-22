@@ -47,7 +47,7 @@
       block:
         - name: Detect system architecture for VirtualGL
           ansible.builtin.set_fact:
-            virtualgl_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
+            virtualgl_arch: "{{ 'arm64' if ansible_facts['architecture'] == 'aarch64' else 'amd64' }}"
             virtualgl_version: "3.1.4"
             virtualgl_checksums:
               amd64: "sha256:02edc6b599571c385389af1a006f07a70c298e1d97c580a9bfd4b39d835c51e6"
