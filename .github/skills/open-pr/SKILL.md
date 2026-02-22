@@ -1,12 +1,12 @@
 ---
 name: open-pr
-description: Create GitHub pull requests from conversation context with proper formatting and tag selection
+description: Create GitHub pull requests from conversation context with proper formatting and issue linking
 ---
 
 # Open PR
 
 This skill instructs AI agents on how to create GitHub pull requests from conversation context
-with meaningful titles, proper formatting, and appropriate tag selection. The AI agent
+with meaningful titles and proper formatting. The AI agent
 should analyze the conversation, extract PR details, and confirm with the user before
 creating the pull request.
 
@@ -28,8 +28,7 @@ The PR body content **MUST** be generated using the prompt in
 `.github/prompts/generate-pr-description.prompt.md`.
 
 The open-pr skill is responsible for:
-- tag selection for the PR title
-- issue-number enforcement (`[tag][#N]`)
+- issue-number enforcement (`[#N]`)
 - user confirmation
 - remote branch verification
 - GitHub PR creation through MCP
@@ -37,26 +36,6 @@ The open-pr skill is responsible for:
 The detailed PR description structure, section requirements, and quality checks
 are defined in `.github/prompts/generate-pr-description.prompt.md` and **MUST NOT**
 be duplicated here.
-
-## Tag Selection
-
-A `git-msg-tags.md` file should appear in `{ROOT_PROJ}/docs/git-msg-tags.md` which
-defines the tags related to the corresponding modules or modifications. The AI agent
-**MUST** refer to this file to select the appropriate tag for the PR title.
-
-If the file does not exist, reject the PR creation and ask the user to provide a
-list of tags in `docs/git-msg-tags.md`.
-
-### Tag Logic
-
-The AI agent must determine which tag to use based on the PR type by reading
-`docs/git-msg-tags.md` which contains the project's tag definitions.
-
-**Selection guidelines:**
-- Read `docs/git-msg-tags.md` to understand available tags and their meanings
-- Choose the most specific tag that describes the primary change
-- If multiple tags could apply, choose the one that best represents the core purpose
-- If the tag is ambiguous, ask the user to select from 2-3 most relevant options
 
 ## Workflow for AI Agents
 
@@ -95,17 +74,9 @@ git log origin/main..HEAD --oneline
 
 This ensures the PR description accurately reflects the actual code changes.
 
-### 3. Tag Selection Phase
+### 3. Issue Number Extraction
 
-- Read `docs/git-msg-tags.md` to understand available tags
-- Analyze the changes and determine the primary purpose
-- Apply the tag logic described above
-- If multiple tags could apply, choose the most specific one
-- If the tag is ambiguous, ask the user to choose from 2-3 most relevant options
-
-### 4. Issue Number Extraction
-
-**CRITICAL:** The PR title **MUST** include an issue number in the format `[tag][#N]`.
+**CRITICAL:** The PR title **MUST** include an issue number in the format `[#N]`.
 
 **How to find the issue number:**
 1. Search conversation history for explicit issue references:
@@ -130,16 +101,16 @@ This ensures the PR description accurately reflects the actual code changes.
 
 **Never create a PR without an issue number.**
 
-### 5. PR Draft Construction
+### 4. PR Draft Construction
 
 Generate the PR description by following
 `.github/prompts/generate-pr-description.prompt.md`.
 
 Use the generated output as the PR body, and prepend the required title format:
-- `[tag][#issue-number] Brief description`
+- `[#issue-number] Brief description`
 - Keep the title description concise and outcome-focused
 
-### 6. User Confirmation Phase
+### 5. User Confirmation Phase
 
 **CRITICAL:** The AI agent **MUST** display the complete PR draft to the user
 and wait for explicit confirmation before creating the PR.
@@ -159,7 +130,7 @@ Should I create this PR?
 - If the user requests modifications, update the draft and present again
 - If the user declines, abort PR creation gracefully
 
-### 6.5. Remote Branch Verification
+### 6. Remote Branch Verification
 
 **CRITICAL:** Before creating the PR, verify the current branch exists on the remote repository.
 
@@ -234,12 +205,6 @@ Use the tool with these fields:
 ### 8. Error Handling
 
 Handle common error scenarios gracefully:
-
-**Missing git-msg-tags.md:**
-```
-Cannot create PR: docs/git-msg-tags.md not found.
-Please create this file with your project's tag definitions.
-```
 
 **No issue number found:**
 ```
