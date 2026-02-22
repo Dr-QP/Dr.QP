@@ -30,6 +30,7 @@ The PR body content **MUST** be generated using the prompt in
 The open-pr skill is responsible for:
 - optional issue linking in title/body when issue context exists
 - user confirmation
+- delegating branch sync with `origin/main` to the `update-branch` skill
 - remote branch verification
 - GitHub PR creation through MCP
 
@@ -128,24 +129,14 @@ Should I create this PR?
 
 ### 6. Branch Sync with `origin/main`
 
-**CRITICAL:** Before pushing or creating a PR, ensure the current branch includes the latest
-`origin/main`.
+**CRITICAL:** Before pushing or creating a PR, sync the current branch using the
+`.github/skills/update-branch/SKILL.md` workflow.
 
-1. Fetch latest remote refs:
-  ```bash
-  git fetch origin
-  ```
-2. Check whether `origin/main` is already contained in `HEAD`:
-  ```bash
-  git merge-base --is-ancestor origin/main HEAD
-  ```
-3. If this check fails (non-zero exit code), merge the latest `origin/main`:
-  ```bash
-  git merge origin/main
-  ```
-4. If merge conflicts occur:
-  - Stop and inform the user conflicts must be resolved before PR creation
-  - Do not proceed to remote push or PR creation until conflicts are resolved
+The AI agent **MUST** invoke and follow the `update-branch` skill instead of re-implementing
+merge logic inline.
+
+If `update-branch` reports unresolved conflicts or requires user input, stop PR creation and
+ask the user to resolve or confirm conflict decisions first.
 
 ### 7. Remote Branch Verification
 
