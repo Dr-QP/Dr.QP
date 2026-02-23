@@ -24,6 +24,8 @@ if pgrep -x dockerd >/dev/null 2>&1; then
     fi
     sleep 1
   done
+  echo "dockerd appears to be running but is not responding after 20 seconds; refusing to start a second dockerd instance." >&2
+  exit 1
 fi
 
 dockerd -H "$docker_host" >/tmp/dockerd.log 2>&1 &
