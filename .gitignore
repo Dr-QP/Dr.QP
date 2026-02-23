@@ -350,3 +350,6 @@ nodesource_setup.sh
 
 # Ansible
 .ansible/
+
+# Super-Linter
+super-linter-output/
