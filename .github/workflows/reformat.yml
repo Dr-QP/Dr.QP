@@ -78,15 +78,15 @@ jobs:
     container:
       image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
     permissions:
-      contents: write # To write linting fixes
       statuses: write # To update PR status
     timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
-          fetch-depth: 0
-          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0 # Required for git diff to work properly
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.REPO_PAT }} # Use PAT to allow CI reruns on pushed commits
 
       - name: Add workspace to safe directories
         run: |
@@ -161,7 +161,6 @@ jobs:
         if: steps.verify.outputs.skip_commit != 'true'
         id: commit
         with:
-          branch: ${{ github.head_ref || github.ref_name }}
           commit_message: ${{ env.COMMIT_MESSAGE }}
 
       - name: Verify changes were committed if any
