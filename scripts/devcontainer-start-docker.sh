@@ -17,15 +17,6 @@ if docker info >/dev/null 2>&1; then
   exit 0
 fi
 
-if pgrep -x dockerd >/dev/null 2>&1; then
-  for _ in $(seq 1 20); do
-    if docker info >/dev/null 2>&1; then
-      exit 0
-    fi
-    sleep 1
-  done
-fi
-
 dockerd -H "$docker_host" >/tmp/dockerd.log 2>&1 &
 
 for _ in $(seq 1 30); do
