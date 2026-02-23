@@ -112,11 +112,19 @@ jobs:
           VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'workflow_dispatch' }}
           FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
 
+          VALIDATE_GITLEAKS: true
+
           # Markdown: lint via Prettier only
+          VALIDATE_MARKDOWN_PRETTIER: true
           VALIDATE_MARKDOWN: false
           FIX_MARKDOWN_PRETTIER: true
 
           # Additional file types not currently covered by existing CI linters
+          VALIDATE_YAML: true
+          VALIDATE_JSON: true
+          VALIDATE_BASH: true
+          VALIDATE_DOCKERFILE_HADOLINT: true
+          VALIDATE_GITHUB_ACTIONS: true
           FIX_YAML: true
           FIX_JSON: true
           FIX_BASH: true
