@@ -110,14 +110,13 @@ jobs:
         uses: super-linter/super-linter/slim@v8
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEFAULT_BRANCH: main
           VALIDATE_ALL_CODEBASE: false
           FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
 
           # Markdown: lint via Prettier only
           VALIDATE_MARKDOWN_PRETTIER: true
           VALIDATE_MARKDOWN: false
-          VALIDATE_MARKDOWN_MARKDOWN_LINK_CHECK: false
+          FIX_MARKDOWN_PRETTIER: true
 
           # Additional file types not currently covered by existing CI linters
           VALIDATE_YAML: true
@@ -125,6 +124,22 @@ jobs:
           VALIDATE_BASH: true
           VALIDATE_DOCKERFILE_HADOLINT: true
           VALIDATE_GITHUB_ACTIONS: true
+          FIX_YAML: true
+          FIX_JSON: true
+          FIX_BASH: true
+          FIX_DOCKERFILE_HADOLINT: true
+          FIX_GITHUB_ACTIONS: true
+
+          # Disable linters that are already run in previous steps to avoid duplicate fixes and conflicts
+          VALIDATE_PYTHON_BLACK: false
+          VALIDATE_PYTHON_FLAKE8: false
+          VALIDATE_PYTHON_ISORT: false
+          VALIDATE_PYTHON_MYPY: false
+          VALIDATE_PYTHON_PYLINT: false
+          VALIDATE_PYTHON_RUFF: false
+          VALIDATE_PYTHON_RUFF_FORMAT: false
+          VALIDATE_CPP: false
+          VALIDATE_CPP_CLANG_FORMAT: false
 
       - name: Verify if not recursive commit
         id: verify
