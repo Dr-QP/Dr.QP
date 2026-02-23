@@ -112,35 +112,27 @@ jobs:
           VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'workflow_dispatch' }}
           FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
 
-          VALIDATE_GITLEAKS: true
 
           # Markdown: lint via Prettier only
           VALIDATE_MARKDOWN_PRETTIER: true
-          VALIDATE_MARKDOWN: false
           FIX_MARKDOWN_PRETTIER: true
 
           # Additional file types not currently covered by existing CI linters
-          VALIDATE_YAML: true
-          VALIDATE_JSON: true
+          VALIDATE_YAML_PRETTIER: true
+          VALIDATE_JSON_PRETTIER: true
+          VALIDATE_JSONC_PRETTIER: true
           VALIDATE_BASH: true
           VALIDATE_DOCKERFILE_HADOLINT: true
           VALIDATE_GITHUB_ACTIONS: true
-          FIX_YAML: true
-          FIX_JSON: true
-          FIX_BASH: true
-          FIX_DOCKERFILE_HADOLINT: true
-          FIX_GITHUB_ACTIONS: true
+          VALIDATE_GITHUB_ACTIONS_ZIZMOR: true
+          VALIDATE_GITLEAKS: true
 
-          # Disable linters that are already run in previous steps to avoid duplicate fixes and conflicts
-          VALIDATE_PYTHON_BLACK: false
-          VALIDATE_PYTHON_FLAKE8: false
-          VALIDATE_PYTHON_ISORT: false
-          VALIDATE_PYTHON_MYPY: false
-          VALIDATE_PYTHON_PYLINT: false
-          VALIDATE_PYTHON_RUFF: false
-          VALIDATE_PYTHON_RUFF_FORMAT: false
-          VALIDATE_CPP: false
-          VALIDATE_CPP_CLANG_FORMAT: false
+          FIX_YAML_PRETTIER: true
+          FIX_JSON_PRETTIER: true
+          FIX_JSONC_PRETTIER: true
+          FIX_DOCKERFILE_HADOLINT: true
+          FIX_GITHUB_ACTIONS_ZIZMOR: true
+
 
       - name: Verify if not recursive commit
         id: verify
