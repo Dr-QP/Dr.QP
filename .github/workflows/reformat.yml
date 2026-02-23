@@ -60,6 +60,7 @@ jobs:
         shell: bash
         run: |
           set -e
+          set -x
 
           pass='${STEPS_FILTER_OUTPUTS_PASS}'
           if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.pull_request.draft }}" == "true" ]]; then
