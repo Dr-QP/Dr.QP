@@ -116,7 +116,7 @@ jobs:
 
           echo "skip_commit=$skip_commit" >> "$GITHUB_OUTPUT"
 
-      - name: Commit all changed files back to the repository (PRs to default branch)
+      - name: Commit all changed files back to the repository
         uses: stefanzweifel/git-auto-commit-action@v7
         if: steps.verify.outputs.skip_commit != 'true'
         id: commit
@@ -125,7 +125,7 @@ jobs:
           commit_message: ${{ env.COMMIT_MESSAGE }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Verify changes were committed (PRs to default branch)
+      - name: Verify changes were committed
         shell: bash -le {0}
         if: steps.verify.outputs.skip_commit != 'true'
         run: |
