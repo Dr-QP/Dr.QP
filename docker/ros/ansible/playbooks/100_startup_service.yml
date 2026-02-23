@@ -41,6 +41,7 @@
   roles:
     - { role: extra_facts, tags: ["extra_facts"] }
     - { role: install_docker, tags: ["install_docker"] }
+    - { role: install_docker_service, tags: ["install_docker_service"] }
   tasks:
     - name: Pull Docker image from GitHub Container Registry
       community.docker.docker_image_pull:
