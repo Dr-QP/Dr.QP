@@ -84,6 +84,8 @@ jobs:
       image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
     permissions:
       statuses: write # To update PR status
+      issues: write # To post pull request summary comments
+      pull-requests: write # To interact with pull request metadata/comments
     timeout-minutes: 15
     steps:
       - name: Checkout repository
