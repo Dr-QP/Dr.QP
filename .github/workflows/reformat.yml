@@ -125,25 +125,11 @@ jobs:
           commit_message: ${{ env.COMMIT_MESSAGE }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Verify changes were committed
+      - name: Verify changes were committed if any
         shell: bash -le {0}
-        if: steps.verify.outputs.skip_commit != 'true'
         run: |
           set -x
           set -e
 
           git diff --exit-code
           git diff --exit-code --cached
-
-      - name: Verify formatting is correct (changes not committed)
-        shell: bash -le {0}
-        if: steps.verify.outputs.skip_commit == 'true'
-        run: |
-          set -x
-          set -e
-
-          # Fail if there are any changes needed
-          git diff --exit-code || (echo "Error: Code formatting is required. Please run './scripts/cpp-reformat.sh' and './scripts/python-reformat.sh' locally and commit the changes." && exit 1)
-          git diff --exit-code --cached
-
-
