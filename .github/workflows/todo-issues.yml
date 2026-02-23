@@ -1,0 +1,38 @@
+name: TODO/FIXME Issue Sync
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  sync-todo-issues:
+    name: Sync TODO/FIXME to issues
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write
+    env:
+      DRY_RUN: ${{ !((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
+      EXCLUDE_PATTERN: >-
+        ^(build/|install/|log/|\.venv/|venv/|node_modules/|dist/|coverage/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.cache/|\.git/|third_party/|vendor/|\.cursor/|\.codex/|\.github/(agents|skills|instructions|prompts)/|AGENTS\.md$)
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Scan TODO/FIXME comments
+        uses: ribtoks/tdg-github-action@f093b9309d79281ff459a7e19793d64b96b03e2e # v0.4.16-beta
+        with:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          REF: ${{ github.ref_name }}
+          DRY_RUN: ${{ env.DRY_RUN }}
+          EXCLUDE_PATTERN: ${{ env.EXCLUDE_PATTERN }}
