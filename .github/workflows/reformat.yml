@@ -132,7 +132,6 @@ jobs:
           FIX_YAML_PRETTIER: true
           FIX_JSON_PRETTIER: true
           FIX_JSONC_PRETTIER: true
-          FIX_DOCKERFILE_HADOLINT: true
           FIX_GITHUB_ACTIONS_ZIZMOR: true
 
 
