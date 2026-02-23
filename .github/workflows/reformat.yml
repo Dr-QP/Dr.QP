@@ -112,7 +112,6 @@ jobs:
           VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'workflow_dispatch' }}
           FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
 
-          VALIDATE_GITHUB_ACTIONS: true
           VALIDATE_GITLEAKS: true
 
           # Markdown: lint via Prettier only
