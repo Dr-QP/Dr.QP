@@ -1,6 +1,8 @@
 # Install Docker Role
 
-This Ansible role installs and configures Docker Engine on Ubuntu systems, including setting up the repository, installing Docker components, configuring the daemon, and adding the user to the docker group.
+This Ansible role installs and configures Docker Engine on Ubuntu systems,
+including setting up the repository, installing Docker components,
+configuring the daemon, and adding the user to the `docker` group.
 
 ## Example Usage
 
@@ -14,4 +16,5 @@ This Ansible role installs and configures Docker Engine on Ubuntu systems, inclu
 
 ## Notes
 
-This role is used by the `10_install_docker.yml` playbook and the `100_startup_service.yml` playbook for setting up Docker-based ROS 2 services.
+This role is intentionally focused on core installation only. Service startup
+is handled by the `install_docker_service` role where systemd is available.
