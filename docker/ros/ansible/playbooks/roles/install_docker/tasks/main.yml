@@ -1,4 +1,10 @@
 ---
+- name: Ensure Docker keyring directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
 - name: Install Docker dependencies
   ansible.builtin.apt:
     name:
@@ -56,12 +62,14 @@
     state: "{{ 'restarted' if install_docker_docker_daemon_config.changed else 'started' }}"
     enabled: true
     daemon_reload: true
+  when: install_docker_manage_service | bool
 
 - name: Ensure containerd service is running
   ansible.builtin.systemd_service:
     name: containerd.service
     state: started
     enabled: true
+  when: install_docker_manage_service | bool
 
 - name: Create docker group
   ansible.builtin.group:
@@ -70,6 +78,9 @@
 
 - name: Add user to docker group
   ansible.builtin.user:
-    name: "{{ ansible_user }}"
+    name: "{{ install_docker_user }}"
     groups: docker
     append: true
+  when:
+    - install_docker_add_user_to_group | bool
+    - install_docker_user != "root"

@@ -1,0 +1,5 @@
+---
+# Control how Docker is configured by this role.
+install_docker_manage_service: true
+install_docker_add_user_to_group: true
+install_docker_user: "{{ ansible_user | default(ros_user | default('root')) }}"

@@ -26,6 +26,7 @@
     "rosdep": "./scripts/ros-dep.sh",
     "xpra": "/start-xpra.sh --background"
   },
+  "postStartCommand": "/opt/ros/overlay_ws/scripts/devcontainer-start-docker.sh",
   "runArgs": [
     // Commented out to allow Codespaces use
     "--network", "host",
@@ -47,9 +48,5 @@
     "--mount", "type=volume,source=drqp-python-micromamba,target=/opt/ros/overlay_ws/.micromamba",
     "--mount", "type=volume,source=drqp-python-venv,target=/opt/ros/overlay_ws/.venv"
   ],
-  "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
-      "moby": true
-    }
-  }
+  "features": {}
 }
