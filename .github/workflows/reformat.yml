@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  COMMIT_MESSAGE: Reformatted code
+  COMMIT_MESSAGE: Apply linter fixes and reformatting
 
 jobs:
   paths-filter:
@@ -40,6 +40,16 @@ jobs:
             - scripts/cpp-reformat.sh
             - scripts/python-reformat.sh
             - .clang-format
+            - '**/*.md'
+            - '**/*.markdown'
+            - '**/*.yml'
+            - '**/*.yaml'
+            - '**/*.json'
+            - '**/*.sh'
+            - '**/*.bash'
+            - '**/*.zsh'
+            - '**/Dockerfile'
+            - '**/Dockerfile.*'
 
       - name: Override pass for draft AI PRs
         id: override
@@ -66,9 +76,9 @@ jobs:
     container:
       image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
     permissions:
-      # To write linting fixes
-      contents: write
-    timeout-minutes: 10
+      contents: write # To write linting fixes
+      statuses: write # To update PR status
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -94,6 +104,27 @@ jobs:
         run: |
           source /opt/ros/jazzy/setup.bash
           ./scripts/python-reformat.sh || true
+
+
+      - name: Run Super-Linter
+        uses: super-linter/super-linter/slim@v8
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BRANCH: main
+          VALIDATE_ALL_CODEBASE: false
+          FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
+
+          # Markdown: lint via Prettier only
+          VALIDATE_MARKDOWN_PRETTIER: true
+          VALIDATE_MARKDOWN: false
+          VALIDATE_MARKDOWN_MARKDOWN_LINK_CHECK: false
+
+          # Additional file types not currently covered by existing CI linters
+          VALIDATE_YAML: true
+          VALIDATE_JSON: true
+          VALIDATE_BASH: true
+          VALIDATE_DOCKERFILE_HADOLINT: true
+          VALIDATE_GITHUB_ACTIONS: true
 
       - name: Verify if not recursive commit
         id: verify
