@@ -17,7 +17,13 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && ansible-playbook playbooks/20_ros_setup.yml \
       -i inventories/localhost.yml \
       -vvv \
-      -e "ci_mode=true clang_version=$CLANG_VERSION ros_distro=$ROS_DISTRO install_xpra=true"
+      -e "ci_mode=true \
+           clang_version=$CLANG_VERSION \
+           ros_distro=$ROS_DISTRO \
+           install_xpra=true \
+           install_docker=true \
+           install_docker_manage_service=false \
+           install_docker_add_user_to_group=false"
 
 WORKDIR $OVERLAY_WS
 
@@ -37,4 +43,3 @@ COPY --chmod=755 ../deploy/ros_entrypoint.sh /ros_entrypoint.sh
 
 ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["bash"]
-
