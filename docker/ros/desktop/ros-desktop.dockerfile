@@ -21,9 +21,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            clang_version=$CLANG_VERSION \
            ros_distro=$ROS_DISTRO \
            install_xpra=true \
-           install_docker=true \
-           install_docker_manage_service=false \
-           install_docker_add_user_to_group=false"
+           install_docker=true
 
 WORKDIR $OVERLAY_WS
 

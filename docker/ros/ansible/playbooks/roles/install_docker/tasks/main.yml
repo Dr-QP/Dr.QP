@@ -56,31 +56,15 @@
       }
   register: install_docker_docker_daemon_config
 
-- name: Restart Docker service to apply config changes
-  ansible.builtin.systemd_service:
-    name: docker.service
-    state: "{{ 'restarted' if install_docker_docker_daemon_config.changed else 'started' }}"
-    enabled: true
-    daemon_reload: true
-  when: install_docker_manage_service | bool
-
-- name: Ensure containerd service is running
-  ansible.builtin.systemd_service:
-    name: containerd.service
-    state: started
-    enabled: true
-  when: install_docker_manage_service | bool
-
 - name: Create docker group
   ansible.builtin.group:
     name: docker
     state: present
 
-- name: Add user to docker group
+- name: Add current user to docker group
   ansible.builtin.user:
-    name: "{{ install_docker_user }}"
+    name: "{{ ansible_user | default(ros_user | default('root')) }}"
     groups: docker
     append: true
   when:
-    - install_docker_add_user_to_group | bool
-    - install_docker_user != "root"
+    - (ansible_user | default(ros_user | default('root'))) != "root"

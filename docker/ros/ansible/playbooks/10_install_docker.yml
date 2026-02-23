@@ -6,3 +6,4 @@
   roles:
     - { role: extra_facts, tags: ["extra_facts"] }
     - { role: install_docker, tags: ["install_docker"] }
+    - { role: install_docker_service, tags: ["install_docker_service"] }
