@@ -105,13 +105,15 @@ jobs:
           source /opt/ros/jazzy/setup.bash
           ./scripts/python-reformat.sh || true
 
-
       - name: Run Super-Linter
         uses: super-linter/super-linter/slim@v8
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'workflow_dispatch' }}
           FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
+
+          VALIDATE_GITHUB_ACTIONS: true
+          VALIDATE_GITLEAKS: true
 
           # Markdown: lint via Prettier only
           VALIDATE_MARKDOWN_PRETTIER: true
