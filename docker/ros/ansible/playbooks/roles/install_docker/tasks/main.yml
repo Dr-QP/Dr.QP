@@ -1,4 +1,10 @@
 ---
+- name: Ensure Docker keyring directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
 - name: Install Docker dependencies
   ansible.builtin.apt:
     name:
@@ -10,10 +16,11 @@
     update_cache: true
 
 - name: Add Docker GPG key
-  ansible.builtin.apt_key:
+  ansible.builtin.get_url:
     url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
-    keyring: /etc/apt/keyrings/docker.asc
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+    force: false
 
 - name: Add Docker repository
   ansible.builtin.apt_repository:
@@ -50,26 +57,15 @@
       }
   register: install_docker_docker_daemon_config
 
-- name: Restart Docker service to apply config changes
-  ansible.builtin.systemd_service:
-    name: docker.service
-    state: "{{ 'restarted' if install_docker_docker_daemon_config.changed else 'started' }}"
-    enabled: true
-    daemon_reload: true
-
-- name: Ensure containerd service is running
-  ansible.builtin.systemd_service:
-    name: containerd.service
-    state: started
-    enabled: true
-
 - name: Create docker group
   ansible.builtin.group:
     name: docker
     state: present
 
-- name: Add user to docker group
+- name: Add current user to docker group
   ansible.builtin.user:
-    name: "{{ ansible_user }}"
+    name: "{{ ansible_user | default(ros_user | default('root')) }}"
     groups: docker
     append: true
+  when:
+    - (ansible_user | default(ros_user | default('root'))) != "root"
