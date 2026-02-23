@@ -97,6 +97,7 @@ Available role tags:
 - `nodejs`: Node.js and NPM
 - `clang`: Clang installation
 - `ros_user_setup`: ROS user creation and setup
+- `xpra_setup`: Setup xpra and xpra-html5 with GPU support
 
 ### Run only the ROS installation part
 

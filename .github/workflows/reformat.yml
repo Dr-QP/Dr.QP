@@ -34,6 +34,12 @@ jobs:
             - .github/workflows/reformat.yml
             - docs/source/notebooks/**
             - ansible/**
+            - packages/**/*.cpp
+            - packages/**/*.h
+            - packages/**/*.py
+            - scripts/cpp-reformat.sh
+            - scripts/python-reformat.sh
+            - .clang-format
 
       - name: Override pass for draft AI PRs
         id: override
@@ -59,14 +65,16 @@ jobs:
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     container:
       image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
-    permissions: {}
+    permissions:
+      # To write linting fixes
+      contents: write
     timeout-minutes: 10
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
-          ref: ${{ github.head_ref }}
-          token: ${{ secrets.REPO_PAT }}
+          fetch-depth: 0
+          persist-credentials: false
 
       - name: Add workspace to safe directories
         run: |
@@ -94,20 +102,32 @@ jobs:
           set -x
           set -e
 
-          if [[ $(git log -1 --pretty=%B) == "$COMMIT_MESSAGE" ]]; then
+          skip_commit=false
+          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+            echo "Not a pull request. Skipping commit."
+            skip_commit=true
+          elif [[ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]]; then
+            echo "Pull request is from a fork. Skipping commit."
+            skip_commit=true
+          elif [[ $(git log -1 --pretty=%B) == "$COMMIT_MESSAGE" ]]; then
             echo "Reformatted in previous commit. Skipping commit."
-            echo "skip_commit=true" >> "$GITHUB_OUTPUT"
+            skip_commit=true
           fi
-      # Commit all changed files back to the repository (only for PRs to main)
-      - uses: stefanzweifel/git-auto-commit-action@v6
-        if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' && steps.verify.outputs.skip_commit != 'true' }}
+
+          echo "skip_commit=$skip_commit" >> "$GITHUB_OUTPUT"
+
+      - name: Commit all changed files back to the repository (PRs to default branch)
+        uses: stefanzweifel/git-auto-commit-action@v7
+        if: steps.verify.outputs.skip_commit != 'true'
         id: commit
         with:
+          branch: ${{ github.head_ref || github.ref_name }}
           commit_message: ${{ env.COMMIT_MESSAGE }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Verify changes were committed (PRs to main)
+      - name: Verify changes were committed (PRs to default branch)
         shell: bash -le {0}
-        if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' }}
+        if: steps.verify.outputs.skip_commit != 'true'
         run: |
           set -x
           set -e
@@ -115,9 +135,9 @@ jobs:
           git diff --exit-code
           git diff --exit-code --cached
 
-      - name: Verify formatting is correct (PRs to non-main branches)
+      - name: Verify formatting is correct (changes not committed)
         shell: bash -le {0}
-        if: ${{ github.event_name == 'pull_request' && github.base_ref != 'main' }}
+        if: steps.verify.outputs.skip_commit == 'true'
         run: |
           set -x
           set -e
