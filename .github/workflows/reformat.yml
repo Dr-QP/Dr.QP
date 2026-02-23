@@ -4,7 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - a_stub_for_act
+      - main
+    tags:
+      - v*
   pull_request:
 
 concurrency:
