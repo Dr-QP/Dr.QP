@@ -72,7 +72,7 @@ jobs:
     name: Reformat
     needs: paths-filter
     if: needs.paths-filter.outputs.pass == 'true'
-    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    runs-on: 'ubuntu-24.04' # superlinter only supports x86_64 for now
     container:
       image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
     permissions:
