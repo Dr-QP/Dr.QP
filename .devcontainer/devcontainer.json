@@ -11,7 +11,8 @@
   "workspaceFolder": "/opt/ros/overlay_ws/",
   "workspaceMount": "source=${localWorkspaceFolder},target=/opt/ros/overlay_ws/,type=bind",
   "containerEnv": {
-    "DISPLAY": ":100"
+    "DISPLAY": ":100",
+    "DOCKER_HOST": "unix:///var/run/docker.sock"
   },
   // Port 14500: Xpra HTML5 GUI server for remote desktop access
   "forwardPorts": [14500],
@@ -47,5 +48,8 @@
     "--mount", "type=volume,source=drqp-python-venv,target=/opt/ros/overlay_ws/.venv"
   ],
   "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": true
+    }
   }
 }
