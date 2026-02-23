@@ -55,8 +55,8 @@
 
         - name: Download VirtualGL DEB package
           ansible.builtin.get_url:
-            url: "https://github.com/VirtualGL/virtualgl/releases/download/{{ xpra_setup_virtualgl_version }}/virtualgl_{{ xpra_setup_virtualgl_version }}_{{ xpra_setup_virtualgl_arch
-              }}.deb"
+            url: "https://github.com/VirtualGL/virtualgl/releases/download/{{
+              xpra_setup_virtualgl_version }}/virtualgl_{{ xpra_setup_virtualgl_version }}_{{ xpra_setup_virtualgl_arch }}.deb"
             dest: "/tmp/virtualgl_{{ xpra_setup_virtualgl_version }}_{{ xpra_setup_virtualgl_arch }}.deb"
             checksum: "{{ xpra_setup_virtualgl_checksums[xpra_setup_virtualgl_arch] }}"
             mode: "0644"
