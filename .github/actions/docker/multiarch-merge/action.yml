@@ -68,8 +68,36 @@ runs:
       shell: bash
       working-directory: ${{ steps.digests.outputs.digests_dir }}
       run: |
-        docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-          $(printf '%s@sha256:%s ' "${INPUTS_IMAGE}" *)
+        set -euo pipefail
+
+        if [ -z "${INPUTS_IMAGE}" ]; then
+          echo "inputs.image is empty; cannot create image manifest"
+          exit 1
+        fi
+
+        shopt -s nullglob
+        digest_files=(*)
+        if [ ${#digest_files[@]} -eq 0 ]; then
+          echo "No digest files downloaded for ${INPUTS_IMAGE}"
+          exit 1
+        fi
+
+        sources=()
+        for digest in "${digest_files[@]}"; do
+          if [ -z "${digest}" ]; then
+            continue
+          fi
+          sources+=("${INPUTS_IMAGE}@sha256:${digest}")
+        done
+
+        if [ ${#sources[@]} -eq 0 ]; then
+          echo "No valid digest sources found for ${INPUTS_IMAGE}"
+          exit 1
+        fi
+
+        docker buildx imagetools create \
+          $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+          "${sources[@]}"
       env:
         INPUTS_IMAGE: ${{ inputs.image }}
 
