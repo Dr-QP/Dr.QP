@@ -21,12 +21,6 @@ outputs:
   image:
     description: Docker tag for the images
     value: ${{ steps.meta.outputs.tag }}
-  digest:
-    description: Docker digest for the merged multiarch image
-    value: ${{ steps.pinned.outputs.digest }}
-  image_pinned:
-    description: Digest-pinned image reference for the merged multiarch image
-    value: ${{ steps.pinned.outputs.image }}
 runs:
   using: composite
   steps:
@@ -44,14 +38,14 @@ runs:
         echo "digests_dir=${DIGESTS_DIR}" >> "$GITHUB_OUTPUT"
 
     - name: Download digests
-      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      uses: actions/download-artifact@v4
       with:
         path: ${{ steps.digests.outputs.digests_dir }}
         pattern: ${{ steps.digests.outputs.artifact_name_prefix }}*
         merge-multiple: true
 
-    - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-    - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+    - uses: docker/setup-buildx-action@v3
+    - uses: docker/login-action@v3
       with:
         registry: ${{ inputs.registry }}
         username: ${{ inputs.registry-username }}
@@ -69,29 +63,12 @@ runs:
       working-directory: ${{ steps.digests.outputs.digests_dir }}
       run: |
         docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-          $(printf '%s@sha256:%s ' "${INPUTS_IMAGE}" *)
-      env:
-        INPUTS_IMAGE: ${{ inputs.image }}
+          $(printf '${{ inputs.image }}@sha256:%s ' *)
 
     - name: Inspect image
       shell: bash
       run: |
-        docker buildx imagetools inspect "${INPUTS_IMAGE}:${STEPS_META_OUTPUTS_VERSION}"
-      env:
-        INPUTS_IMAGE: ${{ inputs.image }}
-        STEPS_META_OUTPUTS_VERSION: ${{ steps.meta.outputs.version }}
-
-    - name: Resolve merged image digest
-      shell: bash
-      id: pinned
-      env:
-        IMAGE_TAG: ${{ steps.meta.outputs.tag }}
-      run: |
-        set -e
-
-        digest=$(docker buildx imagetools inspect "${IMAGE_TAG}" --format '{{json .Manifest.Digest}}' | tr -d '"')
-        echo "digest=${digest}" >> "$GITHUB_OUTPUT"
-        echo "image=${IMAGE_TAG%@*}@${digest}" >> "$GITHUB_OUTPUT"
+        docker buildx imagetools inspect ${{ inputs.image }}:${{ steps.meta.outputs.version }}
 
     - name: Cleanup digests temp dir
       if: ${{ inputs.export-digest == 'true' }}
