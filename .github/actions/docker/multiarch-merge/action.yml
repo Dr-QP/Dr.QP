@@ -69,14 +69,14 @@ runs:
       working-directory: ${{ steps.digests.outputs.digests_dir }}
       run: |
         docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-          $(printf '${INPUTS_IMAGE}@sha256:%s ' *)
+          $(printf '%s@sha256:%s ' "${INPUTS_IMAGE}" *)
       env:
         INPUTS_IMAGE: ${{ inputs.image }}
 
     - name: Inspect image
       shell: bash
       run: |
-        docker buildx imagetools inspect ${INPUTS_IMAGE}:${STEPS_META_OUTPUTS_VERSION}
+        docker buildx imagetools inspect "${INPUTS_IMAGE}:${STEPS_META_OUTPUTS_VERSION}"
       env:
         INPUTS_IMAGE: ${{ inputs.image }}
         STEPS_META_OUTPUTS_VERSION: ${{ steps.meta.outputs.version }}
