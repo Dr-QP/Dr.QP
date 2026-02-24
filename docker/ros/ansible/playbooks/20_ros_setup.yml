@@ -8,6 +8,7 @@
   roles:
     - { role: extra_facts, tags: ["extra_facts", "always"] }
     - { role: basic_prereqs, tags: ["basic_prereqs"] }
+    - { role: install_docker, tags: ["install_docker"], when: install_docker | default(false) | bool }
     - { role: locale_setup, tags: ["locale_setup"] }
     - { role: utc_timezone, tags: ["utc_timezone"] }
     - { role: ros_user_setup, tags: ["setup_user"], when: setup_user }

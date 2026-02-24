@@ -11,7 +11,8 @@
   "workspaceFolder": "/opt/ros/overlay_ws/",
   "workspaceMount": "source=${localWorkspaceFolder},target=/opt/ros/overlay_ws/,type=bind",
   "containerEnv": {
-    "DISPLAY": ":100"
+    "DISPLAY": ":100",
+    "DOCKER_HOST": "unix:///var/run/docker.sock"
   },
   // Port 14500: Xpra HTML5 GUI server for remote desktop access
   "forwardPorts": [14500],
@@ -25,6 +26,7 @@
     "rosdep": "./scripts/ros-dep.sh",
     "xpra": "/start-xpra.sh --background"
   },
+  "postStartCommand": "/opt/ros/overlay_ws/scripts/devcontainer-start-docker.sh",
   "runArgs": [
     // Commented out to allow Codespaces use
     "--network", "host",
@@ -46,6 +48,5 @@
     "--mount", "type=volume,source=drqp-python-micromamba,target=/opt/ros/overlay_ws/.micromamba",
     "--mount", "type=volume,source=drqp-python-venv,target=/opt/ros/overlay_ws/.venv"
   ],
-  "features": {
-  }
+  "features": {}
 }

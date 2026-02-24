@@ -4,7 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - a_stub_for_act
+      - main
+    tags:
+      - v*
   pull_request:
 
 concurrency:
@@ -12,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  COMMIT_MESSAGE: Reformatted code
+  COMMIT_MESSAGE: Apply linter fixes and reformatting
 
 jobs:
   paths-filter:
@@ -24,7 +26,9 @@ jobs:
       pass: ${{ steps.override.outputs.pass }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Filters
         uses: ./.github/actions/paths-filter
@@ -40,16 +44,27 @@ jobs:
             - scripts/cpp-reformat.sh
             - scripts/python-reformat.sh
             - .clang-format
+            - '**/*.md'
+            - '**/*.markdown'
+            - '**/*.yml'
+            - '**/*.yaml'
+            - '**/*.json'
+            - '**/*.sh'
+            - '**/*.bash'
+            - '**/*.zsh'
+            - '**/Dockerfile'
+            - '**/Dockerfile.*'
 
       - name: Override pass for draft AI PRs
         id: override
         shell: bash
         run: |
           set -e
+          set -x
 
-          pass='${{ steps.filter.outputs.pass }}'
+          pass="${STEPS_FILTER_OUTPUTS_PASS}"
           if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.pull_request.draft }}" == "true" ]]; then
-            case "${{ github.actor }}" in
+            case "${GITHUB_ACTOR}" in
               *copilot*|*cursor*|*codex*|*claude*)
                 pass='false'
                 ;;
@@ -57,23 +72,27 @@ jobs:
           fi
 
           echo "pass=$pass" >> "$GITHUB_OUTPUT"
+        env:
+          STEPS_FILTER_OUTPUTS_PASS: ${{ steps.filter.outputs.pass }}
 
   reformat:
     name: Reformat
     needs: paths-filter
     if: needs.paths-filter.outputs.pass == 'true'
-    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    runs-on: 'ubuntu-24.04' # superlinter only supports x86_64 for now
     container:
       image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
     permissions:
-      # To write linting fixes
-      contents: write
-    timeout-minutes: 10
+      statuses: write # To update PR status
+      issues: write # To post pull request summary comments
+      pull-requests: write # To interact with pull request metadata/comments
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Required for git diff to work properly
+          token: ${{ secrets.REPO_PAT }} # Use PAT to allow CI reruns on pushed commits
           persist-credentials: false
 
       - name: Add workspace to safe directories
@@ -95,6 +114,32 @@ jobs:
           source /opt/ros/jazzy/setup.bash
           ./scripts/python-reformat.sh || true
 
+      - name: Run Super-Linter
+        uses: super-linter/super-linter@61abc07d755095a68f4987d1c2c3d1d64408f1f9 # v8
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'workflow_dispatch' }}
+          FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
+
+          # Markdown: lint via Prettier only
+          VALIDATE_MARKDOWN_PRETTIER: true
+          FIX_MARKDOWN_PRETTIER: true
+
+          # Additional file types not currently covered by existing CI linters
+          VALIDATE_YAML_PRETTIER: true
+          VALIDATE_JSON_PRETTIER: true
+          VALIDATE_JSONC_PRETTIER: true
+          VALIDATE_BASH: true
+          VALIDATE_DOCKERFILE_HADOLINT: true
+          VALIDATE_GITHUB_ACTIONS: true
+          VALIDATE_GITHUB_ACTIONS_ZIZMOR: true
+          VALIDATE_GITLEAKS: true
+
+          FIX_YAML_PRETTIER: true
+          FIX_JSON_PRETTIER: true
+          FIX_JSONC_PRETTIER: true
+          FIX_GITHUB_ACTIONS_ZIZMOR: true
+
       - name: Verify if not recursive commit
         id: verify
         shell: bash -le {0}
@@ -106,7 +151,7 @@ jobs:
           if [[ "${{ github.event_name }}" != "pull_request" ]]; then
             echo "Not a pull request. Skipping commit."
             skip_commit=true
-          elif [[ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]]; then
+          elif [[ "${GITHUB_EVENT_PULL_REQUEST_HEAD_REPO_FULL_NAME}" != "${{ github.repository }}" ]]; then
             echo "Pull request is from a fork. Skipping commit."
             skip_commit=true
           elif [[ $(git log -1 --pretty=%B) == "$COMMIT_MESSAGE" ]]; then
@@ -115,35 +160,24 @@ jobs:
           fi
 
           echo "skip_commit=$skip_commit" >> "$GITHUB_OUTPUT"
+        env:
+          GITHUB_EVENT_PULL_REQUEST_HEAD_REPO_FULL_NAME: ${{ github.event.pull_request.head.repo.full_name }}
 
-      - name: Commit all changed files back to the repository (PRs to default branch)
-        uses: stefanzweifel/git-auto-commit-action@v7
+      - name: Commit all changed files back to the repository
+        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7
         if: steps.verify.outputs.skip_commit != 'true'
         id: commit
         with:
-          branch: ${{ github.head_ref || github.ref_name }}
+          # Specify the branch to commit to instead of checkout, otherwise super-linter's GITHUB_SHA validation fails to find the commit.
+          # For pull requests, this will be the source branch; for pushes, this will be the current branch.
+          branch: ${{ github.event.pull_request.head.ref || github.head_ref || github.ref }}
           commit_message: ${{ env.COMMIT_MESSAGE }}
-          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Verify changes were committed (PRs to default branch)
+      - name: Verify changes were committed if any
         shell: bash -le {0}
-        if: steps.verify.outputs.skip_commit != 'true'
         run: |
           set -x
           set -e
 
           git diff --exit-code
           git diff --exit-code --cached
-
-      - name: Verify formatting is correct (changes not committed)
-        shell: bash -le {0}
-        if: steps.verify.outputs.skip_commit == 'true'
-        run: |
-          set -x
-          set -e
-
-          # Fail if there are any changes needed
-          git diff --exit-code || (echo "Error: Code formatting is required. Please run './scripts/cpp-reformat.sh' and './scripts/python-reformat.sh' locally and commit the changes." && exit 1)
-          git diff --exit-code --cached
-
-
