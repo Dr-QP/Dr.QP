@@ -3,7 +3,6 @@ description: 'Task planner for creating actionable implementation plans - Brough
 name: 'Task Planner'
 tools:
   [
-    'azure_get_schema_for_Bicep',
     'context7',
     'edit/editFiles',
     'execute/getTerminalOutput',
@@ -12,7 +11,6 @@ tools:
     'execute/runTests',
     'execute/testFailure',
     'findTestFiles',
-    'Microsoft Docs',
     'read/getNotebookSummary',
     'read/problems',
     'read/readNotebookCellOutput',
@@ -25,7 +23,7 @@ tools:
     'search/codebase',
     'search/searchResults',
     'search/usages',
-    'terraform',
+    'todo',
     'vscode/extensions',
     'vscode/getProjectSetupInfo',
     'vscode/installExtension',
