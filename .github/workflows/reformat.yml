@@ -16,6 +16,10 @@ concurrency:
 env:
   COMMIT_MESSAGE: Apply linter fixes and reformatting
 
+defaults:
+  run:
+    shell: bash -xle {0}
+
 jobs:
   paths-filter:
     name: Need to run?
@@ -57,11 +61,7 @@ jobs:
 
       - name: Override pass for draft AI PRs
         id: override
-        shell: bash
         run: |
-          set -e
-          set -x
-
           pass="${STEPS_FILTER_OUTPUTS_PASS}"
           if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.pull_request.draft }}" == "true" ]]; then
             case "${GITHUB_ACTOR}" in
@@ -103,13 +103,11 @@ jobs:
         uses: ./.github/actions/setup-python-venv
 
       - name: Reformat C++
-        shell: bash -le {0}
         run: |
           source /opt/ros/jazzy/setup.bash
           ./scripts/cpp-reformat.sh || true
 
       - name: Reformat Python
-        shell: bash -le {0}
         run: |
           source /opt/ros/jazzy/setup.bash
           ./scripts/python-reformat.sh || true
@@ -149,11 +147,7 @@ jobs:
       - name: Verify if not recursive commit
         if: always()
         id: verify
-        shell: bash -le {0}
         run: |
-          set -x
-          set -e
-
           skip_commit=false
           if [[ "${{ github.event_name }}" != "pull_request" ]]; then
             echo "Not a pull request. Skipping commit."
@@ -183,7 +177,6 @@ jobs:
 
       - name: Verify changes were committed if any
         if: always()
-        shell: bash -le {0}
         run: |
           set -x
           set -e
