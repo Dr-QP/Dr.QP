@@ -96,6 +96,7 @@ jobs:
     timeout-minutes: 35
     outputs:
       image: ${{ steps.merge.outputs.image }}
+      image_pinned: ${{ steps.merge.outputs.image_pinned }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -132,7 +133,7 @@ jobs:
     permissions:
       packages: read
     container:
-      image: ${{ needs.merge-dev-image.outputs.image }}
+      image: ${{ needs.merge-dev-image.outputs.image_pinned }}
     steps:
       - name: copy .colcon to GHA's $HOME
         shell: bash
@@ -276,8 +277,19 @@ jobs:
             password: ${{ secrets.GITHUB_TOKEN }}
 
         - name: Patch devcontainer.json to use image built in this workflow
+          env:
+            MERGED_IMAGE: ${{ needs.merge-dev-image.outputs.image_pinned }}
           run: |
-            sed -i "s|ghcr.io/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop:edge|${{ needs.merge-dev-image.outputs.image }}|g" .devcontainer/devcontainer.json
+            python3 - <<'PY'
+            import json
+            import os
+            from pathlib import Path
+
+            path = Path('.devcontainer/devcontainer.json')
+            content = json.loads(path.read_text(encoding='utf-8'))
+            content['image'] = os.environ['MERGED_IMAGE']
+            path.write_text(json.dumps(content, indent=2) + '\n', encoding='utf-8')
+            PY
 
         - name: Build and test dev container image
           uses: devcontainers/ci@v0.3

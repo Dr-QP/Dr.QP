@@ -21,6 +21,12 @@ outputs:
   image:
     description: Docker tag for the images
     value: ${{ steps.meta.outputs.tag }}
+  digest:
+    description: Docker digest for the merged multiarch image
+    value: ${{ steps.pinned.outputs.digest }}
+  image_pinned:
+    description: Digest-pinned image reference for the merged multiarch image
+    value: ${{ steps.pinned.outputs.image }}
 runs:
   using: composite
   steps:
@@ -69,6 +75,18 @@ runs:
       shell: bash
       run: |
         docker buildx imagetools inspect ${{ inputs.image }}:${{ steps.meta.outputs.version }}
+
+    - name: Resolve merged image digest
+      shell: bash
+      id: pinned
+      env:
+        IMAGE_TAG: ${{ steps.meta.outputs.tag }}
+      run: |
+        set -e
+
+        digest=$(docker buildx imagetools inspect "${IMAGE_TAG}" --format '{{json .Manifest.Digest}}' | tr -d '"')
+        echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+        echo "image=${IMAGE_TAG%@*}@${digest}" >> "$GITHUB_OUTPUT"
 
     - name: Cleanup digests temp dir
       if: ${{ inputs.export-digest == 'true' }}
