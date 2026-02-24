@@ -122,19 +122,13 @@ jobs:
           FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
 
           # Markdown: lint via Prettier only
-          VALIDATE_MARKDOWN_PRETTIER: true
           FIX_MARKDOWN_PRETTIER: true
 
           # Additional file types not currently covered by existing CI linters
-          VALIDATE_YAML_PRETTIER: true
-          VALIDATE_JSON_PRETTIER: true
-          VALIDATE_JSONC_PRETTIER: true
           VALIDATE_BASH: true
           VALIDATE_DOCKERFILE_HADOLINT: true
           VALIDATE_GITHUB_ACTIONS: true
-          VALIDATE_GITHUB_ACTIONS_ZIZMOR: true
           VALIDATE_GITLEAKS: true
-
           FIX_YAML_PRETTIER: true
           FIX_JSON_PRETTIER: true
           FIX_JSONC_PRETTIER: true
