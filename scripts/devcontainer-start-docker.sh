@@ -121,13 +121,16 @@ running_daemon_needs_vfs_restart() {
 
   existing_driver="$(docker_driver)"
   existing_root_dir="$(docker_root_dir)"
-  [[ "$existing_driver" == "overlayfs" ]] && is_overlay_backed "$existing_root_dir"
+  [[ "$existing_driver" == "overlay2" || "$existing_driver" == "overlay" ]] &&
+    is_overlay_backed "$existing_root_dir"
 }
 
 configure_storage_driver_args() {
+  local -n dockerd_args_ref="$1"
+
   if is_overlay_backed "$docker_data_root"; then
     echo "Detected overlayfs for $docker_data_root; starting dockerd with vfs storage driver."
-    dockerd_args+=(
+    dockerd_args_ref+=(
       --storage-driver=vfs
       --data-root /tmp/docker-vfs
       --exec-root /tmp/docker-vfs-exec
@@ -147,7 +150,7 @@ restart_local_daemon_if_needed() {
 
   existing_local_dockerd_pid="$(local_dockerd_pid || true)"
   if [[ -z "$existing_local_dockerd_pid" ]]; then
-    return 0
+    exit 0
   fi
 
   if ! running_daemon_needs_vfs_restart; then
@@ -155,12 +158,19 @@ restart_local_daemon_if_needed() {
   fi
 
   echo "Detected running dockerd using overlayfs on overlayfs; restarting with vfs."
-  kill "$existing_local_dockerd_pid"
-  wait_for_docker_down || true
+  kill -TERM "$existing_local_dockerd_pid" || true
+  if ! wait_for_docker_down; then
+    echo "dockerd did not stop after SIGTERM; sending SIGKILL." >&2
+    kill -KILL "$existing_local_dockerd_pid" || true
+    if ! wait_for_docker_down; then
+      die "Failed to stop existing dockerd process (pid=$existing_local_dockerd_pid); aborting restart."
+    fi
+  fi
 }
 
 start_dockerd() {
-  dockerd "${dockerd_args[@]}" >"$docker_log_file" 2>&1 &
+  local -n dockerd_args_ref="$1"
+  dockerd "${dockerd_args_ref[@]}" >"$docker_log_file" 2>&1 &
 }
 
 validate_prerequisites() {
@@ -168,15 +178,13 @@ validate_prerequisites() {
   has_command dockerd || die "dockerd not found; rebuild the devcontainer image."
 }
 
-dockerd_args=(
-  -H "$docker_host"
-)
-
 main() {
+  local -a dockerd_args=(-H "$docker_host")
+
   validate_prerequisites
   restart_local_daemon_if_needed
-  configure_storage_driver_args
-  start_dockerd
+  configure_storage_driver_args dockerd_args
+  start_dockerd dockerd_args
 
   if wait_for_docker_up; then
     exit 0
