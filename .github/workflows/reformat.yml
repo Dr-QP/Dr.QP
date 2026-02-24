@@ -135,6 +135,7 @@ jobs:
           FIX_GITHUB_ACTIONS_ZIZMOR: true
 
       - name: Verify if not recursive commit
+        if: always()
         id: verify
         shell: bash -le {0}
         run: |
@@ -159,7 +160,7 @@ jobs:
 
       - name: Commit all changed files back to the repository
         uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7
-        if: steps.verify.outputs.skip_commit != 'true'
+        if: always() && steps.verify.outputs.skip_commit != 'true'
         id: commit
         with:
           # Specify the branch to commit to instead of checkout, otherwise super-linter's GITHUB_SHA validation fails to find the commit.
@@ -168,6 +169,7 @@ jobs:
           commit_message: ${{ env.COMMIT_MESSAGE }}
 
       - name: Verify changes were committed if any
+        if: always()
         shell: bash -le {0}
         run: |
           set -x
