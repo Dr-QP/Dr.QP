@@ -604,9 +604,8 @@
     "chat.mcp.autostart": "newAndOutdated",
     "chat.tools.terminal.autoApprove": {
       "*": {
-        "approve": true
-      },
-      "gh": true
+        "approve": true,
+      }
     },
     "chat.tools.urls.autoApprove": {
       "https://github.com": true,
