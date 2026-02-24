@@ -278,7 +278,7 @@ jobs:
 
       - name: Patch devcontainer.json to use image built in this workflow
         env:
-          MERGED_IMAGE: ${{ needs.merge-dev-image.outputs.image_pinned }} # zizmor: ignore[unpinned-images]
+          MERGED_IMAGE: ${{ needs.merge-dev-image.outputs.image_pinned }}
         shell: python3
         run: |
           import json
