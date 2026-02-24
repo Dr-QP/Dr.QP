@@ -133,7 +133,7 @@ jobs:
     permissions:
       packages: read
     container:
-      image: ${{ needs.merge-dev-image.outputs.image_pinned }}
+      image: ${{ needs.merge-dev-image.outputs.image_pinned }} # zizmor: ignore[unpinned-images]
     steps:
       - name: copy .colcon to GHA's $HOME
         shell: bash
