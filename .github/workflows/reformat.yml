@@ -93,7 +93,7 @@ jobs:
         with:
           fetch-depth: 0 # Required for git diff to work properly
           token: ${{ secrets.REPO_PAT }} # Use PAT to allow CI reruns on pushed commits
-          persist-credentials: false
+          persist-credentials: true # Needed to commit changes back to the repository
 
       - name: Add workspace to safe directories
         run: |
