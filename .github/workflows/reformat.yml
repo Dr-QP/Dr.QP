@@ -121,6 +121,12 @@ jobs:
           VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'workflow_dispatch' }}
           FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
 
+          # Keep summary artifacts enabled when posting PR comments to avoid
+          # Super-Linter summary configuration warnings.
+          SAVE_SUPER_LINTER_SUMMARY: true
+          ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: true
+          ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: false
+
           # Markdown: lint via Prettier only
           VALIDATE_MARKDOWN_PRETTIER: true
           FIX_MARKDOWN_PRETTIER: true
