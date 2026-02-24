@@ -286,7 +286,18 @@ jobs:
           from pathlib import Path
 
           path = Path('.devcontainer/devcontainer.json')
-          content = json.loads(path.read_text(encoding='utf-8'))
+          raw_text = path.read_text(encoding='utf-8')
+
+          # Strip simple line comments (// ...) commonly used in devcontainer.json
+          cleaned_lines = []
+          for line in raw_text.splitlines():
+              stripped = line.lstrip()
+              if stripped.startswith('//'):
+                  continue
+              cleaned_lines.append(line)
+          cleaned_text = '\n'.join(cleaned_lines)
+
+          content = json.loads(cleaned_text)
           content['image'] = os.environ['MERGED_IMAGE']
           path.write_text(json.dumps(content, indent=2) + '\n', encoding='utf-8')
 
