@@ -81,7 +81,7 @@
 
     - name: Enable and start autorun service {{ control_service_name }}
       ansible.builtin.systemd_service:
-        daemon-reload: "{{ control_service_file.changed }}"
+        daemon_reload: "{{ control_service_file.changed }}"
         name: "{{ control_service_name }}"
         enabled: true
         state: "{{ 'restarted' if control_service_file.changed else 'started' }}"
@@ -127,7 +127,7 @@
 
     - name: Enable and start joystick service {{ joystick_service_name }}
       ansible.builtin.systemd_service:
-        daemon-reload: "{{ joystick_service_file.changed }}"
+        daemon_reload: "{{ joystick_service_file.changed }}"
         name: "{{ joystick_service_name }}"
         enabled: true
         state: "{{ 'restarted' if joystick_service_file.changed else 'started' }}"
