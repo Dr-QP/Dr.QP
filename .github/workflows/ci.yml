@@ -15,6 +15,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash -xle {0}
+
 env:
   ROS_DISTRO: jazzy
   REGISTRY: ghcr.io
@@ -136,7 +140,6 @@ jobs:
       image: ${{ needs.merge-dev-image.outputs.image_pinned }} # zizmor: ignore[unpinned-images]
     steps:
       - name: copy .colcon to GHA's $HOME
-        shell: bash
         run: |
           cp -r /root/.colcon "$HOME"
           colcon mixin list
@@ -146,7 +149,6 @@ jobs:
           persist-credentials: false
 
       - name: Build ROS workspace
-        shell: bash
         run: |
           set -x
           set -e
@@ -160,7 +162,6 @@ jobs:
           python3 -m colcon build --mixin coverage-pytest ninja rel-with-deb-info --event-handlers=console_cohesion+ --symlink-install --cmake-args -D DRQP_ENABLE_COVERAGE=ON
 
       - name: Test ROS workspace
-        shell: bash
         run: |
           set -x
           set -e
@@ -177,7 +178,6 @@ jobs:
           python3 -m colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure
 
       - name: Process llvm coverage
-        shell: bash
         run: ./packages/cmake/llvm-cov-export-all.py ./build
 
       - name: Upload coverage reports to Codecov
@@ -207,7 +207,6 @@ jobs:
 
           echo "result=$test_reports" >> "$GITHUB_OUTPUT"
           echo "$test_reports"
-        shell: bash
         id: test_reports
 
       - name: Upload test results to Codecov
@@ -279,27 +278,8 @@ jobs:
       - name: Patch devcontainer.json to use image built in this workflow
         env:
           MERGED_IMAGE: ${{ needs.merge-dev-image.outputs.image_pinned }}
-        shell: python
         run: |
-          import json
-          import os
-          from pathlib import Path
-
-          path = Path('.devcontainer/devcontainer.json')
-          raw_text = path.read_text(encoding='utf-8')
-
-          # Strip simple line comments (// ...) commonly used in devcontainer.json
-          cleaned_lines = []
-          for line in raw_text.splitlines():
-              stripped = line.lstrip()
-              if stripped.startswith('//'):
-                  continue
-              cleaned_lines.append(line)
-          cleaned_text = '\n'.join(cleaned_lines)
-
-          content = json.loads(cleaned_text)
-          content['image'] = os.environ['MERGED_IMAGE']
-          path.write_text(json.dumps(content, indent=2) + '\n', encoding='utf-8')
+          sed -i "s|ghcr.io/dr-qp/${ROS_DISTRO}-ros-desktop:edge|${MERGED_IMAGE}|g" .devcontainer/devcontainer.json
 
       - name: Build and test dev container image
         uses: devcontainers/ci@8bf61b26e9c3a98f69cb6ce2f88d24ff59b785c6 # v0.3
