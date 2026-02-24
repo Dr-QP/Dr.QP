@@ -278,6 +278,9 @@ jobs:
               set -x
               set -e
 
+              # Test that Docker is working in the dev container (Docker-in-Docker)
+              docker run hello-world
+
               sudo apt update
               rosdep update
               ./scripts/ros-dep.sh
