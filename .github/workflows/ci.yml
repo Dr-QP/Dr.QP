@@ -279,7 +279,7 @@ jobs:
               set -e
 
               # Test that Docker is working in the dev container (Docker-in-Docker)
-              docker run hello-world
+              docker run --rm hello-world | head -n 5
 
               sudo apt update
               rosdep update
