@@ -126,6 +126,8 @@ jobs:
           FIX_MARKDOWN_PRETTIER: true
 
           # Additional file types not currently covered by existing CI linters
+          # Note: Ansible YAML under docker/ros/ansible/** is excluded via .prettierignore
+          # so ansible-lint --fix remains the single formatter for those files.
           VALIDATE_YAML_PRETTIER: true
           VALIDATE_JSON_PRETTIER: true
           VALIDATE_JSONC_PRETTIER: true
