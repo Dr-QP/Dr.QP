@@ -6,6 +6,7 @@ docker_log_file="/tmp/dockerd.log"
 docker_data_root="/var/lib/docker"
 docker_startup_retries=30
 docker_shutdown_retries=15
+dockerd_args=(-H "$docker_host")
 
 docker_info() {
   docker info >/dev/null 2>&1
@@ -126,11 +127,9 @@ running_daemon_needs_vfs_restart() {
 }
 
 configure_storage_driver_args() {
-  local -n dockerd_args_ref="$1"
-
   if is_overlay_backed "$docker_data_root"; then
     echo "Detected overlayfs for $docker_data_root; starting dockerd with vfs storage driver."
-    dockerd_args_ref+=(
+    dockerd_args+=(
       --storage-driver=vfs
       --data-root /tmp/docker-vfs
       --exec-root /tmp/docker-vfs-exec
@@ -169,8 +168,7 @@ restart_local_daemon_if_needed() {
 }
 
 start_dockerd() {
-  local -n dockerd_args_ref="$1"
-  dockerd "${dockerd_args_ref[@]}" >"$docker_log_file" 2>&1 &
+  dockerd "${dockerd_args[@]}" >"$docker_log_file" 2>&1 &
 }
 
 validate_prerequisites() {
@@ -179,12 +177,10 @@ validate_prerequisites() {
 }
 
 main() {
-  local -a dockerd_args=(-H "$docker_host")
-
   validate_prerequisites
   restart_local_daemon_if_needed
-  configure_storage_driver_args dockerd_args
-  start_dockerd dockerd_args
+  configure_storage_driver_args
+  start_dockerd
 
   if wait_for_docker_up; then
     exit 0
