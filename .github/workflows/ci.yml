@@ -279,8 +279,8 @@ jobs:
         - name: Patch devcontainer.json to use image built in this workflow
           env:
             MERGED_IMAGE: ${{ needs.merge-dev-image.outputs.image_pinned }}
+          shell: python3
           run: |
-            python3 - <<'PY'
             import json
             import os
             from pathlib import Path
@@ -289,7 +289,6 @@ jobs:
             content = json.loads(path.read_text(encoding='utf-8'))
             content['image'] = os.environ['MERGED_IMAGE']
             path.write_text(json.dumps(content, indent=2) + '\n', encoding='utf-8')
-            PY
 
         - name: Build and test dev container image
           uses: devcontainers/ci@v0.3
