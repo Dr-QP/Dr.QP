@@ -16,8 +16,7 @@
   },
   // Port 14500: Xpra HTML5 GUI server for remote desktop access
   "forwardPorts": [14500],
-  "mounts": [
-  ],
+  "mounts": [],
   // Second venv command with --system-site-packages turns on access to system packages to allow ROS2 builds to work
   "postCreateCommand": "sudo chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /opt/ros/overlay_ws/.venv",
   "postAttachCommand": {
@@ -26,7 +25,6 @@
     "rosdep": "./scripts/ros-dep.sh",
     "xpra": "/start-xpra.sh --background"
   },
-  "postStartCommand": "/opt/ros/overlay_ws/scripts/devcontainer-start-docker.sh",
   "runArgs": [
     // Commented out to allow Codespaces use
     "--network", "host",
@@ -46,7 +44,10 @@
     "--mount", "type=volume,source=drqp-colcon-log,target=/opt/ros/overlay_ws/log",
     "--mount", "type=volume,source=drqp-docs-build,target=/opt/ros/overlay_ws/docs/_build",
     "--mount", "type=volume,source=drqp-python-micromamba,target=/opt/ros/overlay_ws/.micromamba",
-    "--mount", "type=volume,source=drqp-python-venv,target=/opt/ros/overlay_ws/.venv"
+    "--mount", "type=volume,source=drqp-python-venv,target=/opt/ros/overlay_ws/.venv",
+
+    // Mount the Docker socket to allow Docker-from-Docker (DooD) for building and running containers from within the dev container
+    "--mount", "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock"
   ],
   "features": {}
 }
