@@ -18,7 +18,7 @@ env:
 
 defaults:
   run:
-    shell: bash -xe {0}
+    shell: bash -xeuo pipefail {0}
 
 jobs:
   paths-filter:

@@ -17,7 +17,7 @@ concurrency:
 
 defaults:
   run:
-    shell: bash -xe {0}
+    shell: bash -xeuo pipefail {0}
 
 env:
   ROS_DISTRO: jazzy
@@ -347,6 +347,7 @@ jobs:
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
           registry-token: ${{ secrets.GITHUB_TOKEN }}
+
   merge-all:
     name: CI/CD finished
     needs:
