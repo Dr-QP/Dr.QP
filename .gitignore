@@ -351,5 +351,8 @@ nodesource_setup.sh
 # Ansible
 .ansible/
 
+# Copilot
+.copilot-tracking/
+
 # Super-Linter
 super-linter-output/
