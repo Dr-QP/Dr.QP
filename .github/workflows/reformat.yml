@@ -179,8 +179,5 @@ jobs:
       - name: Verify changes were committed if any
         if: always()
         run: |
-          set -x
-          set -e
-
           git diff --exit-code
           git diff --exit-code --cached

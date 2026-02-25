@@ -150,9 +150,6 @@ jobs:
 
       - name: Build ROS workspace
         run: |
-          set -x
-          set -e
-
           sudo apt update
           rosdep update
           ./scripts/ros-dep.sh
@@ -163,9 +160,6 @@ jobs:
 
       - name: Test ROS workspace
         run: |
-          set -x
-          set -e
-
           source "scripts/setup.bash" --update-venv
 
           echo ''
@@ -200,8 +194,6 @@ jobs:
       - name: Discover test reports
         if: ${{ !cancelled() }}
         run: |
-          set -x
-          set -e
           test_reports=$(find build -name "*.xunit.xml" | tr '\n' ',')
           test_reports=${test_reports%,}  # Remove trailing comma
 
@@ -287,9 +279,6 @@ jobs:
           configFile: .devcontainer/devcontainer.json
           noCache: true
           runCmd: |
-            set -x
-            set -e
-
             # Test that Docker is working in the dev container (Docker-in-Docker)
             docker run --rm hello-world | head -n 5
 
