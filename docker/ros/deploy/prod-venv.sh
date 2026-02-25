@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 install_dir=${1}
-script_dir=$(dirname $0)
+script_dir=$(dirname "${BASH_SOURCE[0]}")
 
-python3 -m venv .venv-prod --system-site-packages
+$script_dir/prod-venv-create.sh
 source .venv-prod/bin/activate
 
 if [[ -n $install_dir ]]; then
