@@ -30,7 +30,6 @@
     repo: "{{ docker_mcp_repo_url }}"
     dest: "{{ docker_mcp_temp_dir.path }}"
     version: "{{ docker_mcp_version }}"
-    depth: 1
   become: true
   become_user: "{{ docker_mcp_user }}"
 
