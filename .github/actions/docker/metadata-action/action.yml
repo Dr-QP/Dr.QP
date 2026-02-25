@@ -36,16 +36,18 @@ runs:
       id: extra-args
       run: |
         EXTRA_ARGS=''
-        if [ -n "${{ inputs.prefix }}" ]; then
-          EXTRA_ARGS="${EXTRA_ARGS},prefix=${{ inputs.prefix }}"
+        if [ -n "${INPUTS_PREFIX}" ]; then
+          EXTRA_ARGS="${EXTRA_ARGS},prefix=${INPUTS_PREFIX}"
         fi
-        if [ -n "${{ inputs.arch }}" ]; then
-          EXTRA_ARGS="${EXTRA_ARGS},suffix=-${{ inputs.arch }}"
+        if [ -n "${INPUTS_ARCH}" ]; then
+          EXTRA_ARGS="${EXTRA_ARGS},suffix=-${INPUTS_ARCH}"
         fi
         echo "result=${EXTRA_ARGS}" >> "$GITHUB_OUTPUT"
+      env:
+        INPUTS_PREFIX: ${{ inputs.prefix }}
+        INPUTS_ARCH: ${{ inputs.arch }}
 
-
-    - uses: docker/metadata-action@v5
+    - uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
       id: meta
       with:
         images: ${{ inputs.images }}
@@ -60,6 +62,7 @@ runs:
       shell: bash -xeuo pipefail {0}
       id: single-tag
       run: |
-        first_tag=$(echo "${{ steps.meta.outputs.tags }}" | head -n1 | tr -d '\r')
+        first_tag=$(echo "${STEPS_META_OUTPUTS_TAGS}" | head -n1 | tr -d '\r')
         echo "result=$first_tag" >> "$GITHUB_OUTPUT"
-
+      env:
+        STEPS_META_OUTPUTS_TAGS: ${{ steps.meta.outputs.tags }}
