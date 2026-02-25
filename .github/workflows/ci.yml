@@ -90,25 +90,19 @@ jobs:
         run: |
           if [[ $CLEAN_BUILD = true ]] || [[ $IS_MAIN = true ]]; then
             echo "ansible_base=ubuntu:24.04" >> $GITHUB_OUTPUT
-            echo "use_main_dev=false" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          ANSIBLE_IMAGE="${{ env.REGISTRY }}/dr-qp/ubuntu-ansible:edge"
           DEV_IMAGE="${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop:edge"
 
           sudo apt-get update -qq && sudo apt-get install -y -qq skopeo
 
           if skopeo inspect --creds "${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}" \
-             "docker://${ANSIBLE_IMAGE}" >/dev/null 2>&1 && \
-             skopeo inspect --creds "${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}" \
              "docker://${DEV_IMAGE}" >/dev/null 2>&1; then
-            echo "ansible_base=$ANSIBLE_IMAGE" >> $GITHUB_OUTPUT
-            echo "use_main_dev=true" >> $GITHUB_OUTPUT
+            echo "ansible_base=$DEV_IMAGE" >> $GITHUB_OUTPUT
           else
             echo "Edge images not found; building from scratch" >&2
             echo "ansible_base=ubuntu:24.04" >> $GITHUB_OUTPUT
-            echo "use_main_dev=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Build ubuntu ansible
@@ -138,7 +132,7 @@ jobs:
           registry-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
             ROS_DISTRO=${{ env.ROS_DISTRO }}
-            FROM_IMAGE=${{ steps.base_refs.outputs.use_main_dev == 'true' && format('{0}/dr-qp/{1}-ros-desktop:edge', env.REGISTRY, env.ROS_DISTRO) || format('{0}/dr-qp/ubuntu-ansible@{1}', env.REGISTRY, steps.build_ubuntu_ansible.outputs.digest) }}
+            FROM_IMAGE=ghcr.io/dr-qp/ubuntu-ansible@${{ steps.build_ubuntu_ansible.outputs.digest }}
 
   merge-dev-image:
     name: Merge development image
