@@ -21,12 +21,17 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-export AMENT_TRACE_SETUP_FILES="${AMENT_TRACE_SETUP_FILES:-}"
-export AMENT_PYTHON_EXECUTABLE="${AMENT_PYTHON_EXECUTABLE:-$root_dir/.venv-prod/bin/python3}"
+# ROS2 setup scripts may unset variables, so disable 'set -u' temporarily to avoid errors.
+[[ -o nounset ]]; no_unset=$?
+[[ $no_unset ]] && set +u
+
 source "/opt/ros/$ROS_DISTRO/setup.bash"
 
 if [[ -f "$root_dir/install/local_setup.bash" ]]; then
   source "$root_dir/install/local_setup.bash"
 fi
+
+# Restore 'set -u' if it was previously enabled.
+[[ $no_unset ]] && set -u
 
 source $root_dir/docker/ros/deploy/prod-venv.sh
