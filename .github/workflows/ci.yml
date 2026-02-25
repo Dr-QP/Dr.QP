@@ -74,12 +74,17 @@ jobs:
       - name: Set base image refs
         id: base_refs
         env:
-          CLEAN_BUILD: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.clean_build) || steps.clean_build_msg.outcome == 'success' }}
+          CLEAN_BUILD_DISPATCH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.clean_build }}
+          CLEAN_BUILD_COMMIT: ${{ steps.clean_build_msg.outcome == 'success' }}
+          CLEAN_BUILD_MERGE_GROUP: ${{ github.event_name == 'merge_group' }}
           IS_MAIN: ${{ github.ref == 'refs/heads/main' || contains(github.ref, 'tags/v') }}
         run: |
           echo "ansible_base=ubuntu:24.04" >> $GITHUB_OUTPUT
 
-          if [[ $CLEAN_BUILD = true ]] || [[ $IS_MAIN = true ]]; then
+          if [[ $CLEAN_BUILD_DISPATCH = true ]] \
+            || [[ $CLEAN_BUILD_COMMIT = true ]] \
+            || [[ $CLEAN_BUILD_MERGE_GROUP = true ]] \
+            || [[ $IS_MAIN = true ]]; then
             echo "Cleaning build required"
             exit 0
           fi
