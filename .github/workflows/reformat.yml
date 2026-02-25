@@ -16,6 +16,10 @@ concurrency:
 env:
   COMMIT_MESSAGE: Apply linter fixes and reformatting
 
+defaults:
+  run:
+    shell: bash -xeuo pipefail {0}
+
 jobs:
   paths-filter:
     name: Need to run?
@@ -57,11 +61,7 @@ jobs:
 
       - name: Override pass for draft AI PRs
         id: override
-        shell: bash
         run: |
-          set -e
-          set -x
-
           pass="${STEPS_FILTER_OUTPUTS_PASS}"
           if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.pull_request.draft }}" == "true" ]]; then
             case "${GITHUB_ACTOR}" in
@@ -93,7 +93,7 @@ jobs:
         with:
           fetch-depth: 0 # Required for git diff to work properly
           token: ${{ secrets.REPO_PAT }} # Use PAT to allow CI reruns on pushed commits
-          persist-credentials: false
+          persist-credentials: true # Needed to commit changes back to the repository
 
       - name: Add workspace to safe directories
         run: |
@@ -103,16 +103,14 @@ jobs:
         uses: ./.github/actions/setup-python-venv
 
       - name: Reformat C++
-        shell: bash -le {0}
         run: |
-          source /opt/ros/jazzy/setup.bash
-          ./scripts/cpp-reformat.sh || true
+          source scripts/setup.bash
+          ./scripts/cpp-reformat.sh
 
       - name: Reformat Python
-        shell: bash -le {0}
         run: |
-          source /opt/ros/jazzy/setup.bash
-          ./scripts/python-reformat.sh || true
+          source scripts/setup.bash
+          ./scripts/python-reformat.sh
 
       - name: Run Super-Linter
         uses: super-linter/super-linter@61abc07d755095a68f4987d1c2c3d1d64408f1f9 # v8
@@ -121,11 +119,18 @@ jobs:
           VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'workflow_dispatch' }}
           FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
 
+          # Comment on the workflow only summary instead of the pull request conversation to avoid spamming notifications for every push to a PR.
+          SAVE_SUPER_LINTER_SUMMARY: true
+          ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false
+          ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: true
+
           # Markdown: lint via Prettier only
           VALIDATE_MARKDOWN_PRETTIER: true
           FIX_MARKDOWN_PRETTIER: true
 
           # Additional file types not currently covered by existing CI linters
+          # Note: Ansible YAML under docker/ros/ansible/** is excluded via .prettierignore
+          # so ansible-lint --fix remains the single formatter for those files.
           VALIDATE_YAML_PRETTIER: true
           VALIDATE_JSON_PRETTIER: true
           VALIDATE_JSONC_PRETTIER: true
@@ -141,12 +146,9 @@ jobs:
           FIX_GITHUB_ACTIONS_ZIZMOR: true
 
       - name: Verify if not recursive commit
+        if: always()
         id: verify
-        shell: bash -le {0}
         run: |
-          set -x
-          set -e
-
           skip_commit=false
           if [[ "${{ github.event_name }}" != "pull_request" ]]; then
             echo "Not a pull request. Skipping commit."
@@ -154,7 +156,7 @@ jobs:
           elif [[ "${GITHUB_EVENT_PULL_REQUEST_HEAD_REPO_FULL_NAME}" != "${{ github.repository }}" ]]; then
             echo "Pull request is from a fork. Skipping commit."
             skip_commit=true
-          elif [[ $(git log -1 --pretty=%B) == "$COMMIT_MESSAGE" ]]; then
+          elif [[ "$(git show -s --format=%B "${GITHUB_EVENT_PULL_REQUEST_HEAD_SHA}")" == "$COMMIT_MESSAGE" ]]; then
             echo "Reformatted in previous commit. Skipping commit."
             skip_commit=true
           fi
@@ -162,10 +164,11 @@ jobs:
           echo "skip_commit=$skip_commit" >> "$GITHUB_OUTPUT"
         env:
           GITHUB_EVENT_PULL_REQUEST_HEAD_REPO_FULL_NAME: ${{ github.event.pull_request.head.repo.full_name }}
+          GITHUB_EVENT_PULL_REQUEST_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
 
       - name: Commit all changed files back to the repository
         uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7
-        if: steps.verify.outputs.skip_commit != 'true'
+        if: always() && steps.verify.outputs.skip_commit != 'true'
         id: commit
         with:
           # Specify the branch to commit to instead of checkout, otherwise super-linter's GITHUB_SHA validation fails to find the commit.
@@ -174,10 +177,7 @@ jobs:
           commit_message: ${{ env.COMMIT_MESSAGE }}
 
       - name: Verify changes were committed if any
-        shell: bash -le {0}
+        if: always()
         run: |
-          set -x
-          set -e
-
           git diff --exit-code
           git diff --exit-code --cached
