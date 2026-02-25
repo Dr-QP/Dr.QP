@@ -18,7 +18,7 @@ runs:
   steps:
   - name: Build filters
     id: build-filters
-    shell: bash
+    shell: bash -xeuo pipefail {0}
     run: |
       # Build the filters YAML with proper formatting for extra-filter
       EXTRA=$(printf '%s\n' "${{ inputs.extra-filter }}" | \

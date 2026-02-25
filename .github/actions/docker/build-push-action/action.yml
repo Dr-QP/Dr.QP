@@ -71,7 +71,7 @@ runs:
 
     - name: Export digest
       if: ${{ inputs.export-digest == 'true' }}
-      shell: bash
+      shell: bash -xeuo pipefail {0}
       id: digests
       env:
         DIGESTS_DIR: ${{ runner.temp }}/digests/${{ inputs.image }}-${{ inputs.future-tag }}
@@ -98,7 +98,7 @@ runs:
 
     - name: Cleanup digests
       if: ${{ inputs.export-digest == 'true' }}
-      shell: bash
+      shell: bash -xeuo pipefail {0}
       env:
         DIGESTS_DIR: ${{ steps.digests.outputs.digests_dir }}
       run: |

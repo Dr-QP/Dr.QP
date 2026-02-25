@@ -57,7 +57,7 @@ runs:
           type=edge,branch=main${{ steps.extra-args.outputs.result }}
 
     - name: Extract single tag
-      shell: bash
+      shell: bash -xeuo pipefail {0}
       id: single-tag
       run: |
         first_tag=$(echo "${{ steps.meta.outputs.tags }}" | head -n1 | tr -d '\r')

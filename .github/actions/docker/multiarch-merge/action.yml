@@ -31,7 +31,7 @@ runs:
   using: composite
   steps:
     - name: Prepare digest artifact name
-      shell: bash -xeuo pipefail
+      shell: bash -xeuo pipefail {0}
       id: digests
       env:
         ARTIFACT_NAME: digests-${{ inputs.image }}${{ inputs.future-tag }}-
@@ -65,7 +65,7 @@ runs:
         prefix: ${{ inputs.future-tag }}
 
     - name: Create manifest list and push
-      shell: bash -xeuo pipefail
+      shell: bash -xeuo pipefail {0}
       working-directory: ${{ steps.digests.outputs.digests_dir }}
       run: |
         if [ -z "${INPUTS_IMAGE}" ]; then
@@ -100,7 +100,7 @@ runs:
         INPUTS_IMAGE: ${{ inputs.image }}
 
     - name: Inspect image
-      shell: bash -xeuo pipefail
+      shell: bash -xeuo pipefail {0}
       run: |
         docker buildx imagetools inspect "${INPUTS_IMAGE}:${STEPS_META_OUTPUTS_VERSION}"
       env:
@@ -108,7 +108,7 @@ runs:
         STEPS_META_OUTPUTS_VERSION: ${{ steps.meta.outputs.version }}
 
     - name: Resolve merged image digest
-      shell: bash -xeuo pipefail
+      shell: bash -xeuo pipefail {0}
       id: pinned
       env:
         IMAGE_TAG: ${{ steps.meta.outputs.tag }}
@@ -121,7 +121,7 @@ runs:
 
     - name: Cleanup digests temp dir
       if: ${{ inputs.export-digest == 'true' }}
-      shell: bash -xeuo pipefail
+      shell: bash -xeuo pipefail {0}
       env:
         DIGESTS_DIR: ${{ steps.digests.outputs.digests_dir }}
       run: |
