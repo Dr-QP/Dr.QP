@@ -1,0 +1,14 @@
+---
+# Default variables for docker_mcp role
+
+# Git repository URL for mcp-gateway
+docker_mcp_repo_url: "https://github.com/docker/mcp-gateway.git"
+
+# Version/branch/tag to checkout (use 'main' for latest)
+docker_mcp_version: "main"
+
+# User to install the plugin for (defaults to ros_user from playbook context)
+docker_mcp_user: "{{ ros_user | default(ansible_user_id) }}"
+
+# User home directory
+docker_mcp_user_home: "{{ user_home | default('/home/' + docker_mcp_user) }}"
