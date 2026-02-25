@@ -31,7 +31,6 @@
     dest: "{{ docker_mcp_temp_dir.path }}"
     version: "{{ docker_mcp_version }}"
     depth: 1
-  register: docker_mcp_git_clone
   become: true
   become_user: "{{ docker_mcp_user }}"
 
