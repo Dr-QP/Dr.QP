@@ -104,12 +104,12 @@ jobs:
 
       - name: Reformat C++
         run: |
-          source /opt/ros/jazzy/setup.bash
+          source scripts/setup.bash
           ./scripts/cpp-reformat.sh
 
       - name: Reformat Python
         run: |
-          source /opt/ros/jazzy/setup.bash
+          source scripts/setup.bash
           ./scripts/python-reformat.sh
 
       - name: Run Super-Linter

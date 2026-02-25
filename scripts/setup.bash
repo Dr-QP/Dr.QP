@@ -20,6 +20,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 
+export AMENT_TRACE_SETUP_FILES="${AMENT_TRACE_SETUP_FILES:-}"
 source "/opt/ros/$ROS_DISTRO/setup.bash"
 
 if [[ -f "$root_dir/install/local_setup.bash" ]]; then
