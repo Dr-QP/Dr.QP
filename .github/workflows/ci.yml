@@ -95,10 +95,10 @@ jobs:
 
           if skopeo inspect --creds "${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}" \
              "docker://${DEV_IMAGE}" >/dev/null 2>&1; then
-             echo "Using edge image as base to speed up build. Commit or comment with [ci:clean_build] to force a clean build. Alternatively, use workflow_dispatch to force a clean build."
+             echo "Using edge image as base to speed up build. Include [ci:clean_build] in your commit message to force a clean build. Alternatively, use workflow_dispatch to force a clean build."
              echo "ansible_base=$DEV_IMAGE" >> $GITHUB_OUTPUT
           else
-            echo "Edge images not found; building from scratch" >&2
+            echo "Edge image not found; building from scratch"
           fi
 
       - name: Build ubuntu ansible
