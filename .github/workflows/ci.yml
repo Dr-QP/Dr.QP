@@ -17,7 +17,7 @@ concurrency:
 
 defaults:
   run:
-    shell: bash -le {0}
+    shell: bash -xe {0}
 
 env:
   ROS_DISTRO: jazzy
