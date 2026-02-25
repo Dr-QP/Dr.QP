@@ -75,7 +75,7 @@ jobs:
         id: clean_build_msg
         if: github.event_name == 'push' || github.event_name == 'pull_request'
         continue-on-error: true
-        uses: gsactions/commit-message-checker@v2
+        uses: gsactions/commit-message-checker@16fa2d5de096ae0d35626443bcd24f1e756cafee # v2
         with:
           pattern: '\[ci:clean_build\]'
 
