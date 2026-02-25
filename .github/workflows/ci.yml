@@ -66,11 +66,10 @@ jobs:
       - name: Check commit message for clean-build
         id: clean_build_msg
         run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
+          if [ "${EVENT_NAME}" = "push" ]; then
             MSG="${GITHUB_EVENT_HEAD_COMMIT_MESSAGE}"
-          elif [ "${{ github.event_name }}" = "pull_request" ]; then
-            MSG=$(curl -sSf -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/commits/${{ github.event.pull_request.head.sha }}" | jq -r .commit.message)
+          elif [ "${EVENT_NAME}" = "pull_request" ]; then
+            MSG="$(git show -s --format=%B "${GITHUB_EVENT_PULL_REQUEST_HEAD_SHA}")"
           else
             MSG=""
           fi
@@ -81,6 +80,8 @@ jobs:
           fi
         env:
           GITHUB_EVENT_HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          GITHUB_EVENT_PULL_REQUEST_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_NAME: ${{ github.event_name }}
 
       - name: Set base image refs
         id: base_refs
