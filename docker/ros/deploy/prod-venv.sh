@@ -3,7 +3,7 @@
 install_dir=${1:-}
 script_dir=$(dirname "${BASH_SOURCE[0]}")
 
-$script_dir/prod-venv-create.sh
+"$script_dir/prod-venv-create.sh"
 source .venv-prod/bin/activate
 
 if [[ -n $install_dir ]]; then
