@@ -63,8 +63,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check commit message for full-build
-        id: full_build_msg
+      - name: Check commit message for clean-build
+        id: clean_build_msg
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
             MSG="${GITHUB_EVENT_HEAD_COMMIT_MESSAGE}"
@@ -74,7 +74,7 @@ jobs:
           else
             MSG=""
           fi
-          if echo "$MSG" | grep -Fq '[ci:full-build]'; then
+          if echo "$MSG" | grep -Fq '[ci:clean_build]'; then
             echo "from_commit=true" >> $GITHUB_OUTPUT
           else
             echo "from_commit=false" >> $GITHUB_OUTPUT
@@ -85,7 +85,7 @@ jobs:
       - name: Set base image refs
         id: base_refs
         run: |
-          FORCE_CLEAN="${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.clean_build) || steps.full_build_msg.outputs.from_commit == 'true' }}"
+          FORCE_CLEAN="${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.clean_build) || steps.clean_build_msg.outputs.from_commit == 'true' }}"
           if [ "${GITHUB_REF}" = "refs/heads/main" ] || [[ "${GITHUB_REF}" == refs/tags/* ]] || [ "$FORCE_CLEAN" = "true" ]; then
             echo "ansible_base=ubuntu:24.04" >> $GITHUB_OUTPUT
             echo "use_main_dev=false" >> $GITHUB_OUTPUT
