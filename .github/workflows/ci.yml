@@ -69,7 +69,7 @@ jobs:
         id: full_build_msg
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
-            MSG="${{ github.event.head_commit.message }}"
+            MSG="${GITHUB_EVENT_HEAD_COMMIT_MESSAGE}"
           elif [ "${{ github.event_name }}" = "pull_request" ]; then
             MSG=$(curl -sSf -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               "https://api.github.com/repos/${{ github.repository }}/commits/${{ github.event.pull_request.head.sha }}" | jq -r .commit.message)
@@ -81,12 +81,14 @@ jobs:
           else
             echo "from_commit=false" >> $GITHUB_OUTPUT
           fi
+        env:
+          GITHUB_EVENT_HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
 
       - name: Set base image refs
         id: base_refs
         run: |
           FORCE_CLEAN="${{ github.event_name == 'workflow_dispatch' && inputs.clean_build == 'true' || steps.full_build_msg.outputs.from_commit == 'true' }}"
-          if [ "${{ github.ref }}" = "refs/heads/main" ] || [[ "${{ github.ref }}" == refs/tags/* ]] || [ "$FORCE_CLEAN" = "true" ]; then
+          if [ "${GITHUB_REF}" = "refs/heads/main" ] || [[ "${GITHUB_REF}" == refs/tags/* ]] || [ "$FORCE_CLEAN" = "true" ]; then
             echo "ansible_base=ubuntu:24.04" >> $GITHUB_OUTPUT
             echo "use_main_dev=false" >> $GITHUB_OUTPUT
             exit 0
@@ -97,9 +99,9 @@ jobs:
 
           sudo apt-get update -qq && sudo apt-get install -y -qq skopeo
 
-          if skopeo inspect --creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
+          if skopeo inspect --creds "${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}" \
              "docker://${ANSIBLE_IMAGE}" >/dev/null 2>&1 && \
-             skopeo inspect --creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
+             skopeo inspect --creds "${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}" \
              "docker://${DEV_IMAGE}" >/dev/null 2>&1; then
             echo "ansible_base=$ANSIBLE_IMAGE" >> $GITHUB_OUTPUT
             echo "use_main_dev=true" >> $GITHUB_OUTPUT
