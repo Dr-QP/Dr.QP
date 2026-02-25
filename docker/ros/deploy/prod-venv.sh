@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-install_dir=${1}
+install_dir=${1:-}
 script_dir=$(dirname "${BASH_SOURCE[0]}")
 
 $script_dir/prod-venv-create.sh
