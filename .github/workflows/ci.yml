@@ -87,7 +87,7 @@ jobs:
           CLEAN_BUILD_MERGE_GROUP: ${{ github.event_name == 'merge_group' }}
           IS_MAIN: ${{ github.ref == 'refs/heads/main' || contains(github.ref, 'tags/v') }}
         run: |
-          echo "ansible_base=ubuntu:24.04" >> $GITHUB_OUTPUT
+          echo "ansible_base=ubuntu:24.04" >> "$GITHUB_OUTPUT"
 
           if [[ $CLEAN_BUILD_DISPATCH = true ]] \
             || [[ $CLEAN_BUILD_COMMIT = true ]] \
@@ -104,7 +104,7 @@ jobs:
           if skopeo inspect --creds "${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}" \
              "docker://${DEV_IMAGE}" >/dev/null 2>&1; then
              echo "Using edge image as base to speed up build. Include [ci:clean_build] in your commit message to force a clean build. Alternatively, use workflow_dispatch to force a clean build."
-             echo "ansible_base=$DEV_IMAGE" >> $GITHUB_OUTPUT
+             echo "ansible_base=$DEV_IMAGE" >> "$GITHUB_OUTPUT"
           else
             echo "Edge image not found; building from scratch"
           fi

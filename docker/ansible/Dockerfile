@@ -5,7 +5,10 @@ FROM $BASE_IMAGE
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     --mount=type=bind,readonly,source=..,target=/scripts \
-    apt-get update && apt-get install -y python3 sudo locales \
+    apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    sudo \
+    locales \
     && /scripts/setup-ansible.sh
 
 # Set the locale en_US.UTF-8
