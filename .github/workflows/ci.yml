@@ -85,7 +85,7 @@ jobs:
       - name: Set base image refs
         id: base_refs
         run: |
-          FORCE_CLEAN="${{ github.event_name == 'workflow_dispatch' && inputs.clean_build == 'true' || steps.full_build_msg.outputs.from_commit == 'true' }}"
+          FORCE_CLEAN="${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.clean_build == 'true') || steps.full_build_msg.outputs.from_commit == 'true' }}"
           if [ "${GITHUB_REF}" = "refs/heads/main" ] || [[ "${GITHUB_REF}" == refs/tags/* ]] || [ "$FORCE_CLEAN" = "true" ]; then
             echo "ansible_base=ubuntu:24.04" >> $GITHUB_OUTPUT
             echo "use_main_dev=false" >> $GITHUB_OUTPUT
@@ -136,7 +136,7 @@ jobs:
           registry-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
             ROS_DISTRO=${{ env.ROS_DISTRO }}
-            FROM_IMAGE=${{ steps.base_refs.outputs.use_main_dev == 'true' && format('ghcr.io/dr-qp/{0}-ros-desktop:edge', env.ROS_DISTRO) || format('ghcr.io/dr-qp/ubuntu-ansible@{0}', steps.build_ubuntu_ansible.outputs.digest) }}
+            FROM_IMAGE=${{ steps.base_refs.outputs.use_main_dev == 'true' && format('{0}/dr-qp/{1}-ros-desktop:edge', env.REGISTRY, env.ROS_DISTRO) || format('{0}/dr-qp/ubuntu-ansible@{1}', env.REGISTRY, steps.build_ubuntu_ansible.outputs.digest) }}
 
   merge-dev-image:
     name: Merge development image
