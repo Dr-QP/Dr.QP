@@ -98,8 +98,8 @@ See [PR Feedback Instructions](/.github/instructions/pr-feedback.instructions.md
 
 This workspace uses skill metadata in each `SKILL.md` file as the single source of truth for skill discovery and routing intent.
 
-- Browse skill folders under [`.github/skills/`](./.github/skills/)
-- See [`.github/skills/README.md`](./.github/skills/README.md) for validation commands and conventions
+- Browse skill folders under [`.github/skills/`](/.github/skills/)
+- See [`.github/skills/README.md`](/.github/skills/README.md) for validation commands and conventions
 
 ## Available Prompts
 
