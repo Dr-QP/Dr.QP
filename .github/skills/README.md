@@ -100,21 +100,6 @@ python3 scripts/validate-skills.py --recommend
 python3 scripts/validate-skills.py --ci
 ```
 
-### VS Code Tasks
-
-Run validation from VS Code:
-
-1. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
-2. Type "Tasks: Run Task"
-3. Select "Validate Skills" or "Validate Skills (CI Mode)"
-
-### Pre-commit Hook
-
-Skills are automatically validated before commit. To run manually:
-
-```bash
-pre-commit run validate-skills
-```
 
 ### CI/CD Integration
 
