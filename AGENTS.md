@@ -268,7 +268,7 @@ devcontainer exec --workspace-folder /workspace bash -c "
 "
 ```
 
-For test runs that need the production venv (with `python-statemachine`), use `source scripts/setup.bash --update-venv`. Build, test, and lint commands are documented in the CI/CD Pipeline section above.
+For test runs that need the production venv (with `python-statemachine`), use `source scripts/setup.bash --update-venv` **after a successful `colcon build`**. The `--update-venv` flag scans `build/` and `install/` for `requires.txt` files; on a fresh workspace before the first build those directories do not exist and `find` will produce noisy errors. Build, test, and lint commands are documented in the CI/CD Pipeline section above.
 
 ### Gotchas
 
