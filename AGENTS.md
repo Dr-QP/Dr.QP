@@ -248,7 +248,7 @@ devcontainer up --workspace-folder /workspace \
   --mount "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock"
 ```
 
-The host Docker socket mount is needed so the `postStartCommand` (Docker-in-Docker check) succeeds. The `devcontainer up` command automatically runs the lifecycle hooks defined in `devcontainer.json` (rosdep install, Python venv creation, xpra startup).
+The host Docker socket mount lets `scripts/devcontainer-start-docker.sh` (`postStartCommand`) detect that Docker is already accessible and exit cleanly, avoiding a redundant `dockerd` startup inside the container. The `devcontainer up` command runs all lifecycle hooks defined in `devcontainer.json`: `postCreateCommand` (directory ownership), `postStartCommand` (Docker check), and `postAttachCommand` (rosdep install, Python venv creation, xpra startup).
 
 ### Running Commands
 
@@ -268,7 +268,7 @@ devcontainer exec --workspace-folder /workspace bash -c "
 "
 ```
 
-For test runs that need the production venv (with `python-statemachine`), use `source scripts/setup.bash --update-venv` **after a successful `colcon build`**. The `--update-venv` flag scans `build/` and `install/` for `requires.txt` files; on a fresh workspace before the first build those directories do not exist and `find` will produce noisy errors. Build, test, and lint commands are documented in the CI/CD Pipeline section above.
+For test runs that need the production venv (with `python-statemachine`), use `source scripts/setup.bash --update-venv` **after a successful `colcon build`**. The `--update-venv` flag scans `build/` and `install/` for `requires.txt` files. Inside the devcontainer these directories exist as Docker volume mount points, but they will be empty until the first build — so `find` may return nothing (harmless). Outside the devcontainer the directories may not exist at all, producing noisy errors. Build, test, and lint commands are documented in the CI/CD Pipeline section above.
 
 ### Gotchas
 
@@ -277,4 +277,4 @@ For test runs that need the production venv (with `python-statemachine`), use `s
 - Some packages emit CMake warnings about unused `DRQP_ENABLE_COVERAGE` — these are benign.
 - The `drqp_gazebo` simulation tests run headless and take ~20 seconds.
 - The production venv (`.venv-prod`) is separate from the dev venv (`.venv`). The `setup.bash --update-venv` flag populates `.venv-prod` from `requires.txt` files in `build/` and `install/` directories.
-- Docker must be started before `devcontainer up`: `sudo dockerd &>/tmp/dockerd.log &` (with fuse-overlayfs storage driver configured in `/etc/docker/daemon.json`).
+- The cloud VM's host Docker daemon must be running before `devcontainer up`. The update script starts it with `sudo dockerd &>/tmp/dockerd.log &`. The host daemon uses `fuse-overlayfs` as configured in `/etc/docker/daemon.json` because the cloud VM runs inside a Firecracker VM where the default `overlay2` driver is not supported. This is unrelated to Docker inside the devcontainer (which is handled by `scripts/devcontainer-start-docker.sh`).
