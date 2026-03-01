@@ -239,50 +239,42 @@ For comprehensive code review guidance and PR description standards, see the [co
 
 ### Development Container
 
-All build, test, and lint commands must run inside the devcontainer Docker image (`ghcr.io/dr-qp/jazzy-ros-desktop:edge`). The cloud VM does not have ROS 2 installed natively.
+All build, test, and lint commands run inside the devcontainer defined in `.devcontainer/devcontainer.json`. The cloud VM does not have ROS 2 installed natively.
 
-The container is started as:
-
-```bash
-sudo docker run -d --name drqp-dev --network host --ipc host --privileged \
-  -v /workspace:/opt/ros/overlay_ws -w /opt/ros/overlay_ws \
-  ghcr.io/dr-qp/jazzy-ros-desktop:edge sleep infinity
-```
-
-Run all commands via `sudo docker exec drqp-dev bash -c "..."`.
-
-### Environment Setup Inside Container
-
-Before any build or ROS 2 command, source the setup script:
+The update script starts Docker and brings up the devcontainer using:
 
 ```bash
-export ROS_DISTRO=jazzy CC=clang CXX=clang++ CMAKE_EXPORT_COMPILE_COMMANDS=1
-source scripts/setup.bash
+devcontainer up --workspace-folder /workspace \
+  --mount "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock"
 ```
 
-For test runs that need the production venv (with `python-statemachine`), use:
+The host Docker socket mount is needed so the `postStartCommand` (Docker-in-Docker check) succeeds. The `devcontainer up` command automatically runs the lifecycle hooks defined in `devcontainer.json` (rosdep install, Python venv creation, xpra startup).
+
+### Running Commands
+
+Use `devcontainer exec` to run commands inside the container:
 
 ```bash
-source scripts/setup.bash --update-venv
+devcontainer exec --workspace-folder /workspace bash -c "<command>"
 ```
 
-### Key Commands (inside container)
+Before build or ROS 2 commands, source the setup script inside the exec:
 
-| Task                 | Command                                                                                                                                                                |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Install rosdep deps  | `apt-get update && rosdep update && ./scripts/ros-dep.sh`                                                                                                              |
-| Create dev venv      | `python3 -m venv .venv && .venv/bin/python3 -m pip install -r requirements.txt --use-pep517`                                                                           |
-| Build all packages   | `python3 -m colcon build --mixin coverage-pytest ninja rel-with-deb-info --event-handlers=console_cohesion+ --symlink-install --cmake-args -D DRQP_ENABLE_COVERAGE=ON` |
-| Test all packages    | `python3 -m colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure`                                                      |
-| Lint (Python)        | `source .venv/bin/activate && ruff check packages/ && ruff format --check packages/`                                                                                   |
-| Build single package | `python3 -m colcon build --packages-up-to <pkg_name> --symlink-install`                                                                                                |
-| Test single package  | `python3 -m colcon test --packages-select <pkg_name> --return-code-on-test-failure`                                                                                    |
+```bash
+devcontainer exec --workspace-folder /workspace bash -c "
+  export ROS_DISTRO=jazzy CC=clang CXX=clang++ CMAKE_EXPORT_COMPILE_COMMANDS=1
+  source scripts/setup.bash
+  <ros2 commands here>
+"
+```
+
+For test runs that need the production venv (with `python-statemachine`), use `source scripts/setup.bash --update-venv`. Build, test, and lint commands are documented in the CI/CD Pipeline section above.
 
 ### Gotchas
 
-- The colcon mixin config lives at `/root/.colcon/` inside the image. It is already set up.
+- The colcon mixin config lives at `/root/.colcon/` inside the image and is pre-configured.
 - `--symlink-install` is required for Python coverage collection and hot-reloading.
-- Some packages emit CMake warnings about unused `DRQP_ENABLE_COVERAGE` — these are benign (not all packages support coverage).
-- The `drqp_gazebo` simulation tests run headless (`--headless-rendering -s`) and take ~25 seconds.
+- Some packages emit CMake warnings about unused `DRQP_ENABLE_COVERAGE` — these are benign.
+- The `drqp_gazebo` simulation tests run headless and take ~20 seconds.
 - The production venv (`.venv-prod`) is separate from the dev venv (`.venv`). The `setup.bash --update-venv` flag populates `.venv-prod` from `requires.txt` files in `build/` and `install/` directories.
-- Docker must be started before the container: `sudo dockerd &>/tmp/dockerd.log &` (with fuse-overlayfs storage driver configured).
+- Docker must be started before `devcontainer up`: `sudo dockerd &>/tmp/dockerd.log &` (with fuse-overlayfs storage driver configured in `/etc/docker/daemon.json`).
