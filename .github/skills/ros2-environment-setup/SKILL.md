@@ -1,7 +1,6 @@
 ---
 name: ros2-environment-setup
 description: Set up ROS 2 development environment and workspace shell state. Use when asked to initialize a ROS shell, prepare local or remote agent sessions before running terminal commands, bootstrap virtual environments, or troubleshoot missing ROS environment variables.
-
 ---
 
 # ROS 2 Environment Setup
@@ -50,11 +49,13 @@ ROS 2 Environment Hierarchy:
 Set up a fresh workspace for local development.
 
 1. Clone or navigate to workspace:
+
    ```bash
    cd <workspace_root>
    ```
 
 2. Source the ROS environment setup script:
+
    ```bash
    source scripts/setup.bash
    ```
@@ -66,6 +67,7 @@ Set up a fresh workspace for local development.
    - Sets ROS_DISTRO, ROS_PACKAGE_PATH, and other ROS variables
 
 3. Verify ROS environment is configured:
+
    ```bash
    echo $ROS_DISTRO          # Should print: jazzy
    echo $ROS_PACKAGE_PATH    # Should show workspace packages
@@ -79,11 +81,13 @@ Set up a fresh workspace for local development.
 Create isolated Python environment for development tools.
 
 1. Create virtual environment (one-time setup):
+
    ```bash
    python3 -m venv .venv
    ```
 
 2. Activate the virtual environment:
+
    ```bash
    source .venv/bin/activate
    ```
@@ -91,6 +95,7 @@ Create isolated Python environment for development tools.
    Your shell prompt changes to show `(.venv)` prefix
 
 3. Install development dependencies:
+
    ```bash
    python3 -m pip install --upgrade pip
    python3 -m pip install -r requirements.txt --use-pep517
@@ -103,6 +108,7 @@ Create isolated Python environment for development tools.
    - Jupyter notebooks for prototyping
 
 4. Verify installation:
+
    ```bash
    python3 -m pytest --version
    python3 -c "import ruff; print('ruff ready')"
@@ -120,11 +126,13 @@ Create isolated Python environment for development tools.
 Refresh venv dependencies after requirements.txt changes.
 
 1. Activate the virtual environment:
+
    ```bash
    source .venv/bin/activate
    ```
 
 2. Use convenience flag with setup script:
+
    ```bash
    deactivate  # Exit any active venv
    source scripts/setup.bash --update-venv
@@ -136,6 +144,7 @@ Refresh venv dependencies after requirements.txt changes.
    - Leaves venv activated for immediate use
 
 3. Verify updates completed:
+
    ```bash
    pip list | grep pytest
    ```
@@ -150,6 +159,7 @@ Refresh venv dependencies after requirements.txt changes.
 Set up VS Code devcontainer for remote/GitHub Codespaces development.
 
 1. Open workspace in VS Code:
+
    ```bash
    code <workspace_root>
    ```
@@ -178,6 +188,7 @@ Set up VS Code devcontainer for remote/GitHub Codespaces development.
    ```
 
 **Devcontainer Features**:
+
 - Persistent volumes: Build artifacts, install, logs, caches persist across sessions
 - Network: Proper ROS communication (DDS, IPC)
 - Development tools: Clangd, debuggers, test viewers pre-configured
@@ -188,11 +199,13 @@ Set up VS Code devcontainer for remote/GitHub Codespaces development.
 Set compiler and build system options for optimal performance.
 
 1. Source the base ROS environment:
+
    ```bash
    source scripts/setup.bash
    ```
 
 2. Configure for development builds with clang:
+
    ```bash
    export CMAKE_EXPORT_COMPILE_COMMANDS=1
    export CC=clang
@@ -205,6 +218,7 @@ Set compiler and build system options for optimal performance.
    - `CXX=clang++`: Use Clang C++ compiler
 
 3. Verify environment:
+
    ```bash
    echo $CC          # Should print: clang
    echo $CXX         # Should print: clang++
@@ -221,6 +235,7 @@ Set compiler and build system options for optimal performance.
 Check that all components are properly configured.
 
 1. Verify ROS 2 core:
+
    ```bash
    source scripts/setup.bash
    ros2 topic list        # Should work (may be empty if no nodes running)
@@ -229,16 +244,19 @@ Check that all components are properly configured.
    ```
 
 2. Verify workspace packages:
+
    ```bash
    ros2 pkg list | grep drqp     # Should show workspace packages
    ```
 
 3. Verify Python setup:
+
    ```bash
    python3 -c "import rclpy; print('ROS 2 Python client ready')"
    ```
 
 4. Verify development tools:
+
    ```bash
    source .venv/bin/activate
    python3 -m pytest --version
@@ -253,11 +271,13 @@ Check that all components are properly configured.
 Clean up environment and start fresh.
 
 1. Deactivate any active Python venv:
+
    ```bash
    deactivate
    ```
 
 2. Clear environment variables:
+
    ```bash
    unset ROS_DISTRO ROS_PACKAGE_PATH CC CXX CMAKE_EXPORT_COMPILE_COMMANDS
    ```
@@ -265,6 +285,7 @@ Clean up environment and start fresh.
 3. Open a new terminal or shell
 
 4. Re-run setup:
+
    ```bash
    source scripts/setup.bash
    ```
@@ -279,16 +300,16 @@ Clean up environment and start fresh.
 
 ## Environment Variables Reference
 
-| Variable | Purpose | Set By | Value |
-|----------|---------|--------|-------|
-| `ROS_DISTRO` | ROS 2 distribution | setup.bash | `jazzy` |
-| `ROS_PACKAGE_PATH` | Package search paths | setup.bash | `$(pwd)/install/` |
-| `AMENT_PREFIX_PATH` | Installed package prefix | setup.bash | `$(pwd)/install/` |
-| `CMAKE_EXPORT_COMPILE_COMMANDS` | IDE integration | Manual | `1` |
-| `CC` | C compiler | Manual | `clang` |
-| `CXX` | C++ compiler | Manual | `clang++` |
-| `PYTHONPATH` | Python module search path | setup.bash | Includes workspace packages |
-| `VIRTUAL_ENV` | Active venv path | venv activation | `$(pwd)/.venv` |
+| Variable                        | Purpose                   | Set By          | Value                       |
+| ------------------------------- | ------------------------- | --------------- | --------------------------- |
+| `ROS_DISTRO`                    | ROS 2 distribution        | setup.bash      | `jazzy`                     |
+| `ROS_PACKAGE_PATH`              | Package search paths      | setup.bash      | `$(pwd)/install/`           |
+| `AMENT_PREFIX_PATH`             | Installed package prefix  | setup.bash      | `$(pwd)/install/`           |
+| `CMAKE_EXPORT_COMPILE_COMMANDS` | IDE integration           | Manual          | `1`                         |
+| `CC`                            | C compiler                | Manual          | `clang`                     |
+| `CXX`                           | C++ compiler              | Manual          | `clang++`                   |
+| `PYTHONPATH`                    | Python module search path | setup.bash      | Includes workspace packages |
+| `VIRTUAL_ENV`                   | Active venv path          | venv activation | `$(pwd)/.venv`              |
 
 ## Directory Structure
 
@@ -310,18 +331,17 @@ Clean up environment and start fresh.
 
 ## Troubleshooting
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| "Command 'ros2' not found" | ROS 2 not sourced | Run `source scripts/setup.bash` |
-| "Package not found" error | Workspace overlay not loaded | Ensure `install/local_setup.bash` exists, rebuild if needed |
-| Python import "rclpy" fails | ROS 2 Python client not available | Install: `rosdep install --from-paths packages --ignore-src -y` |
-| Venv not activating | Venv not created or corrupted | Delete `.venv` and recreate: `python3 -m venv .venv` |
-| Devcontainer won't start | Docker not running or insufficient space | Start Docker daemon and check disk space |
-| Conflicting Python versions | Multiple Python environments active | Deactivate venv: `deactivate`, then verify `python3 --version` |
-| Build uses wrong compiler | Environment variables not set | Export: `export CC=clang && export CXX=clang++` |
-| IDE can't find includes | Compile commands missing | Build with `CMAKE_EXPORT_COMPILE_COMMANDS=1` enabled |
+| Issue                       | Cause                                    | Solution                                                        |
+| --------------------------- | ---------------------------------------- | --------------------------------------------------------------- |
+| "Command 'ros2' not found"  | ROS 2 not sourced                        | Run `source scripts/setup.bash`                                 |
+| "Package not found" error   | Workspace overlay not loaded             | Ensure `install/local_setup.bash` exists, rebuild if needed     |
+| Python import "rclpy" fails | ROS 2 Python client not available        | Install: `rosdep install --from-paths packages --ignore-src -y` |
+| Venv not activating         | Venv not created or corrupted            | Delete `.venv` and recreate: `python3 -m venv .venv`            |
+| Devcontainer won't start    | Docker not running or insufficient space | Start Docker daemon and check disk space                        |
+| Conflicting Python versions | Multiple Python environments active      | Deactivate venv: `deactivate`, then verify `python3 --version`  |
+| Build uses wrong compiler   | Environment variables not set            | Export: `export CC=clang && export CXX=clang++`                 |
+| IDE can't find includes     | Compile commands missing                 | Build with `CMAKE_EXPORT_COMPILE_COMMANDS=1` enabled            |
 
 ## References
 
 - Devcontainer configuration: `.devcontainer/devcontainer.json`
-
