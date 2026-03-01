@@ -120,9 +120,9 @@ pre-commit run validate-skills
 
 Skills are validated automatically in GitHub Actions when:
 
-- Pushing to main or develop branches
-- Opening/updating pull requests
-- Manually triggered via workflow_dispatch
+- Opening or updating pull requests (`pull_request`)
+- Pushing to the `main` branch (`push`)
+- A merge queue requests checks (`merge_group` with `checks_requested`)
 
 See [`.github/workflows/copilot.yml`](../workflows/copilot.yml) for details.
 
