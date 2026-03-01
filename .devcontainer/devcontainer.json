@@ -27,27 +27,41 @@
   },
   "runArgs": [
     // Commented out to allow Codespaces use
-    "--network", "host",
-    "--ipc", "host",
-    "--pid", "host",
+    "--network",
+    "host",
+    "--ipc",
+    "host",
+    "--pid",
+    "host",
     "--privileged",
 
     // Uncomment to allow shared memory based DDS communication
     // "--user", "1001:1001", // Change to match primary user on the host
 
-    "--mount", "type=volume,source=drqp-ansible,target=/opt/ros/overlay_ws/.ansible",
-    "--mount", "type=volume,source=drqp-vscode,target=/opt/ros/overlay_ws/.vscode",
-    "--mount", "type=volume,source=drqp-clangd-cache,target=/opt/ros/overlay_ws/.cache",
-    "--mount", "type=volume,source=drqp-colcon-build,target=/opt/ros/overlay_ws/build",
-    "--mount", "type=volume,source=drqp-colcon-install,target=/opt/ros/overlay_ws/install",
-    "--mount", "type=volume,source=drqp-colcon-lcov,target=/opt/ros/overlay_ws/lcov",
-    "--mount", "type=volume,source=drqp-colcon-log,target=/opt/ros/overlay_ws/log",
-    "--mount", "type=volume,source=drqp-docs-build,target=/opt/ros/overlay_ws/docs/_build",
-    "--mount", "type=volume,source=drqp-python-micromamba,target=/opt/ros/overlay_ws/.micromamba",
-    "--mount", "type=volume,source=drqp-python-venv,target=/opt/ros/overlay_ws/.venv",
+    "--mount",
+    "type=volume,source=drqp-ansible,target=/opt/ros/overlay_ws/.ansible",
+    "--mount",
+    "type=volume,source=drqp-vscode,target=/opt/ros/overlay_ws/.vscode",
+    "--mount",
+    "type=volume,source=drqp-clangd-cache,target=/opt/ros/overlay_ws/.cache",
+    "--mount",
+    "type=volume,source=drqp-colcon-build,target=/opt/ros/overlay_ws/build",
+    "--mount",
+    "type=volume,source=drqp-colcon-install,target=/opt/ros/overlay_ws/install",
+    "--mount",
+    "type=volume,source=drqp-colcon-lcov,target=/opt/ros/overlay_ws/lcov",
+    "--mount",
+    "type=volume,source=drqp-colcon-log,target=/opt/ros/overlay_ws/log",
+    "--mount",
+    "type=volume,source=drqp-docs-build,target=/opt/ros/overlay_ws/docs/_build",
+    "--mount",
+    "type=volume,source=drqp-python-micromamba,target=/opt/ros/overlay_ws/.micromamba",
+    "--mount",
+    "type=volume,source=drqp-python-venv,target=/opt/ros/overlay_ws/.venv",
 
     // Mount the Docker socket to allow Docker-from-Docker (DooD) for building and running containers from within the dev container
-    "--mount", "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock"
+    "--mount",
+    "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock"
   ],
   "features": {}
 }
