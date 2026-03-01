@@ -36,6 +36,7 @@ jobs:
             - .github/skills/**
             - .github/workflows/copilot.yml
             - scripts/validate-skills.py
+            - scripts/validate-skills-ref.py
             - scripts/validate_skills/**
 
   validate-skills:
@@ -60,6 +61,10 @@ jobs:
       - name: Validate Agent Skills
         run: |
           python3 scripts/validate-skills.py --recommend
+
+      - name: Validate Agent Skills (skills-ref baseline)
+        run: |
+          python3 scripts/validate-skills-ref.py .github/skills
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5

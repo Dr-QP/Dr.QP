@@ -14,7 +14,7 @@ See [Agent Skills Guidelines](../instructions/agent-skills.instructions.md) for 
 
 ## Skill Validation
 
-All skills in this directory are automatically validated to ensure they follow best practices and can be effectively discovered by Copilot.
+All skills in this directory are automatically validated to ensure they follow best practices and can be effectively discovered by Copilot. Validation combines repository-specific checks with the upstream `skills-ref` validator baseline.
 
 ### Validation Rules
 
@@ -91,6 +91,11 @@ python3 scripts/validate-skills.py --recommend
 python3 scripts/validate-skills.py --ci
 ```
 
+**Run skills-ref baseline validation (Python 3.11+):**
+```bash
+python3 scripts/validate-skills-ref.py .github/skills
+```
+
 ### VS Code Tasks
 
 Run validation from VS Code:
@@ -112,7 +117,7 @@ Skills are validated automatically in GitHub Actions when:
 - Opening/updating pull requests
 - Manually triggered via workflow_dispatch
 
-See [`.github/workflows/validate-skills.yml`](../workflows/validate-skills.yml) for details.
+See [`.github/workflows/copilot.yml`](../workflows/copilot.yml) for details.
 
 ## Example Skills
 
@@ -153,3 +158,4 @@ Example entry format:
 - [VS Code Agent Skills Documentation](https://code.visualstudio.com/docs/copilot/customization/agent-skills)
 - [Agent Skills Guidelines](../instructions/agent-skills.instructions.md)
 - [Validation Script Source](../../scripts/validate-skills.py)
+- [`skills-ref` on PyPI (pinned to `0.1.1`, Python >= 3.11)](https://pypi.org/project/skills-ref/0.1.1/)

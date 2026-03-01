@@ -1,6 +1,6 @@
 ---
 name: ros2-environment-setup
-description: Set up ROS 2 development environment. Use before execution of ANY commands in terminal for local or remote agents.
+description: Set up ROS 2 development environment and workspace shell state. Use when asked to initialize a ROS shell, prepare local or remote agent sessions before running terminal commands, bootstrap virtual environments, or troubleshoot missing ROS environment variables.
 
 ---
 
