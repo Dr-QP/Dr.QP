@@ -100,7 +100,6 @@ python3 scripts/validate-skills.py --recommend
 python3 scripts/validate-skills.py --ci
 ```
 
-
 ### CI/CD Integration
 
 Skills are validated automatically in GitHub Actions when:
