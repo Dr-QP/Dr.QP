@@ -96,21 +96,10 @@ See [PR Feedback Instructions](/.github/instructions/pr-feedback.instructions.md
 
 ## Available Skills
 
-This workspace provides specialized Agent Skills that enhance your capabilities:
+This workspace uses skill metadata in each `SKILL.md` file as the single source of truth for skill discovery and routing intent.
 
-- **[ros2-workspace-build](/.github/skills/ros2-workspace-build/SKILL.md)**: Build ROS 2 packages with colcon (incremental builds, debug symbols, coverage)
-- **[ros2-workspace-testing](/.github/skills/ros2-workspace-testing/SKILL.md)**: Test packages and generate coverage reports
-- **[ros2-dependency-management](/.github/skills/ros2-dependency-management/SKILL.md)**: Manage workspace dependencies via rosdep and pip
-- **[ros2-environment-setup](/.github/skills/ros2-environment-setup/SKILL.md)**: Initialize and configure the development environment
-- **[ros2-launch-management](/.github/skills/ros2-launch-management/SKILL.md)**: Create, configure, and debug ROS 2 launch files with parameter passing and composition
-- **[ros2-parameter-tuning](/.github/skills/ros2-parameter-tuning/SKILL.md)**: Configure and tune node parameters using YAML files and runtime commands
-- **[ros2-diagnostics](/.github/skills/ros2-diagnostics/SKILL.md)**: Debug and troubleshoot ROS 2 systems using introspection and diagnostic tools
-- **[ros2-lifecycle-management](/.github/skills/ros2-lifecycle-management/SKILL.md)**: Manage lifecycle node state transitions and coordinate system startup
-- **[code-review-standards](/.github/skills/code-review-standards/SKILL.md)**: Write PR descriptions and conduct code reviews
-- **[pr-feedback-resolution](/.github/skills/pr-feedback-resolution/SKILL.md)**: Systematically address PR feedback, CI failures, CodeQL findings, and coverage gaps
-- **[find-test-files](/.github/skills/find-test-files/SKILL.md)**: Identify and summarize relevant test files for a given change or component
-- **[open-pr](/.github/skills/open-pr/SKILL.md)**: Create GitHub pull requests from conversation context with accurate title/body generation, user confirmation, branch sync, and remote verification
-- **[update-branch](/.github/skills/update-branch/SKILL.md)**: Update the current Git branch from origin/main by merging main into it
+- Browse skill folders under [`.github/skills/`](/.github/skills/)
+- See [`.github/skills/README.md`](/.github/skills/README.md) for validation commands and conventions
 
 ## Available Prompts
 

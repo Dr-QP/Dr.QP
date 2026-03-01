@@ -35,16 +35,19 @@ The description is the PRIMARY mechanism for skill discovery. It must include:
 - **KEYWORDS**: Minimum 5 unique technical terms, actions, or domain concepts
 
 **Errors:**
+
 - ❌ Vague terms: helpers, utilities, tools, stuff, things, misc, various, general
 - ❌ Missing WHEN guidance (no trigger phrases)
 - ❌ Too few keywords (< 5 unique terms)
 
 **Good Example:**
+
 ```yaml
 description: Toolkit for testing local web applications using Playwright browser automation. Use when asked to verify frontend functionality, debug UI behavior, capture browser screenshots, check for visual regressions, or view browser console logs. Supports Chrome, Firefox, and WebKit browsers.
 ```
 
 **Bad Example:**
+
 ```yaml
 description: Web testing helpers
 ```
@@ -52,10 +55,12 @@ description: Web testing helpers
 #### 3. Content Structure Requirements
 
 Required sections in the body:
+
 - **When to Use This Skill**: List of specific scenarios
 - **Prerequisites**: Required tools, dependencies, environment setup
 
 Recommended sections:
+
 - **Troubleshooting**: Common issues and solutions (preferably as a table)
 - **Step-by-Step Workflows**: At least 2 workflow sections with numbered steps
 
@@ -72,47 +77,38 @@ Recommended sections:
 ### Running Validation
 
 **Validate all skills:**
+
 ```bash
 python3 scripts/validate-skills.py
 ```
 
 **Validate specific skill:**
+
 ```bash
 python3 scripts/validate-skills.py .github/skills/my-skill/SKILL.md
 ```
 
 **Show warnings and recommendations:**
+
 ```bash
 python3 scripts/validate-skills.py --recommend
 ```
 
 **CI mode (exit with error on failures):**
+
 ```bash
 python3 scripts/validate-skills.py --ci
-```
-
-### VS Code Tasks
-
-Run validation from VS Code:
-1. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
-2. Type "Tasks: Run Task"
-3. Select "Validate Skills" or "Validate Skills (CI Mode)"
-
-### Pre-commit Hook
-
-Skills are automatically validated before commit. To run manually:
-```bash
-pre-commit run validate-skills
 ```
 
 ### CI/CD Integration
 
 Skills are validated automatically in GitHub Actions when:
-- Pushing to main or develop branches
-- Opening/updating pull requests
-- Manually triggered via workflow_dispatch
 
-See [`.github/workflows/validate-skills.yml`](../workflows/validate-skills.yml) for details.
+- Opening or updating pull requests (`pull_request`)
+- Pushing to the `main` branch (`push`)
+- A merge queue requests checks (`merge_group` with `checks_requested`)
+
+See [`.github/workflows/copilot.yml`](../workflows/copilot.yml) for details.
 
 ## Example Skills
 
