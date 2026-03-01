@@ -12,6 +12,7 @@
     - { role: locale_setup, tags: ["locale_setup"] }
     - { role: utc_timezone, tags: ["utc_timezone"] }
     - { role: ros_user_setup, tags: ["setup_user"], when: setup_user }
+    - { role: docker_mcp, tags: ["docker_mcp"], when: install_docker_mcp | default(false) | bool }
     - { role: fish_setup, tags: ["fish_setup"] }
     - { role: bash_setup, tags: ["bash_setup"] }
     - { role: cmake_kitware, tags: ["cmake"], when: not source_install } # Install Kitware CMake beforehand for prebuilt install

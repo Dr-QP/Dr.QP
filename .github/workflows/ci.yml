@@ -10,10 +10,21 @@ on:
   merge_group:
     types:
       - checks_requested
+  workflow_dispatch:
+    inputs:
+      clean_build:
+        description: 'Build images from scratch (no base from main)'
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash -xeuo pipefail {0}
 
 env:
   ROS_DISTRO: jazzy
@@ -30,7 +41,9 @@ jobs:
       pass: ${{ steps.filter.outputs.pass }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Filters
         uses: ./.github/actions/paths-filter
@@ -43,7 +56,7 @@ jobs:
     name: Development image
     timeout-minutes: 35
     needs: paths-filter
-    if: needs.paths-filter.outputs.pass == 'true'
+    if: needs.paths-filter.outputs.pass == 'true' || github.event_name == 'workflow_dispatch'
     permissions:
       packages: write
     strategy:
@@ -54,7 +67,48 @@ jobs:
           - arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Check commit message for clean-build
+        id: clean_build_msg
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: gsactions/commit-message-checker@16fa2d5de096ae0d35626443bcd24f1e756cafee # v2
+        with:
+          pattern: '\[ci:clean_build\]'
+
+      - name: Set base image refs
+        id: base_refs
+        env:
+          CLEAN_BUILD_DISPATCH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.clean_build }}
+          CLEAN_BUILD_COMMIT: ${{ steps.clean_build_msg.outcome == 'success' }}
+          CLEAN_BUILD_MERGE_GROUP: ${{ github.event_name == 'merge_group' }}
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' || contains(github.ref, 'tags/v') }}
+        run: |
+          echo "ansible_base=ubuntu:24.04" >> "$GITHUB_OUTPUT"
+
+          if [[ $CLEAN_BUILD_DISPATCH = true ]] \
+            || [[ $CLEAN_BUILD_COMMIT = true ]] \
+            || [[ $CLEAN_BUILD_MERGE_GROUP = true ]] \
+            || [[ $IS_MAIN = true ]]; then
+            echo "Cleaning build required"
+            exit 0
+          fi
+
+          DEV_IMAGE="${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop:edge"
+
+          sudo apt-get update -qq && sudo apt-get install -y -qq skopeo
+
+          if skopeo inspect --creds "${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}" \
+             "docker://${DEV_IMAGE}" >/dev/null 2>&1; then
+             echo "Using edge image as base to speed up build. Include [ci:clean_build] in your commit message to force a clean build. Alternatively, use workflow_dispatch to force a clean build."
+             echo "ansible_base=$DEV_IMAGE" >> "$GITHUB_OUTPUT"
+          else
+            echo "Edge image not found; building from scratch"
+          fi
+
       - name: Build ubuntu ansible
         id: build_ubuntu_ansible
         uses: ./.github/actions/docker/build-push-action
@@ -66,6 +120,8 @@ jobs:
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
           registry-token: ${{ secrets.GITHUB_TOKEN }}
+          build-args: |
+            BASE_IMAGE=${{ steps.base_refs.outputs.ansible_base }}
 
       - name: Build development docker image
         id: build
@@ -92,8 +148,11 @@ jobs:
     timeout-minutes: 35
     outputs:
       image: ${{ steps.merge.outputs.image }}
+      image_pinned: ${{ steps.merge.outputs.image_pinned }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Merge and push ansible docker image
         uses: ./.github/actions/docker/multiarch-merge
@@ -126,22 +185,19 @@ jobs:
     permissions:
       packages: read
     container:
-      image: ${{ needs.merge-dev-image.outputs.image }}
+      image: ${{ needs.merge-dev-image.outputs.image_pinned }} # zizmor: ignore[unpinned-images]
     steps:
       - name: copy .colcon to GHA's $HOME
-        shell: bash
         run: |
           cp -r /root/.colcon "$HOME"
           colcon mixin list
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Build ROS workspace
-        shell: bash
         run: |
-          set -x
-          set -e
-
           sudo apt update
           rosdep update
           ./scripts/ros-dep.sh
@@ -151,11 +207,7 @@ jobs:
           python3 -m colcon build --mixin coverage-pytest ninja rel-with-deb-info --event-handlers=console_cohesion+ --symlink-install --cmake-args -D DRQP_ENABLE_COVERAGE=ON
 
       - name: Test ROS workspace
-        shell: bash
         run: |
-          set -x
-          set -e
-
           source "scripts/setup.bash" --update-venv
 
           echo ''
@@ -168,11 +220,10 @@ jobs:
           python3 -m colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure
 
       - name: Process llvm coverage
-        shell: bash
         run: ./packages/cmake/llvm-cov-export-all.py ./build
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
         if: ${{ env.ACT == '' && !cancelled() }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -183,33 +234,30 @@ jobs:
             packages/vendor/**
 
       - name: Test Summary
-        uses: test-summary/action@v2
+        uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2
         if: ${{ env.ACT == '' && !cancelled() }}
         with:
-          paths: "build/*/test_results/*/*.xunit.xml"
+          paths: 'build/*/test_results/*/*.xunit.xml'
 
       - name: Discover test reports
         if: ${{ !cancelled() }}
         run: |
-          set -x
-          set -e
           test_reports=$(find build -name "*.xunit.xml" | tr '\n' ',')
           test_reports=${test_reports%,}  # Remove trailing comma
 
           echo "result=$test_reports" >> "$GITHUB_OUTPUT"
           echo "$test_reports"
-        shell: bash
         id: test_reports
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
         with:
           report_type: test_results
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ steps.test_reports.outputs.result }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         # upload the logs even when the build fails
         if: always()
         with:
@@ -218,78 +266,79 @@ jobs:
           retention-days: 90
 
   dev-container-ci:
-      name: Devcontainer image
-      needs: [merge-dev-image]
-      timeout-minutes: 35
-      strategy:
-        fail-fast: false
-        matrix:
-          include:
-            - arch: ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
-            - arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
-      runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-      permissions:
-        packages: read
-      steps:
-          # Running container will fail with act due to no Docker in Docker, only Docker outside of Docker
-          # https://github.com/Dr-QP/Dr.QP/wiki/Issue-using-%60act%60-and-%60devcontainers-ci%60
-          # DinD requires an image that has dockerd installed, so run with -P ubuntu-latest=ghcr.io/corvina-r-d/ubuntu:act-22.04
-          # DinD requires --priviliged option as well
-          #
-          #
-          # DinD fails under QEMU emulation of arm64 on the amd64 CPUs:
-          # iptables: Failed to initialize nft: Protocol not supported
-          # https://github.com/multiarch/qemu-user-static/issues/191
-        - name: optionally start DinD for act (local testing)
-          if: env.ACT
-          run: |
-            dockerd -H unix:///var/run/dind.sock & sleep 5;
-            echo "DOCKER_HOST=unix:///var/run/dind.sock" >> "${GITHUB_ENV}"
+    name: Devcontainer image
+    needs: [merge-dev-image]
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
+          - arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    permissions:
+      packages: read
+    steps:
+      # Running container will fail with act due to no Docker in Docker, only Docker outside of Docker
+      # https://github.com/Dr-QP/Dr.QP/wiki/Issue-using-%60act%60-and-%60devcontainers-ci%60
+      # DinD requires an image that has dockerd installed, so run with -P ubuntu-latest=ghcr.io/corvina-r-d/ubuntu:act-22.04
+      # DinD requires --priviliged option as well
+      #
+      #
+      # DinD fails under QEMU emulation of arm64 on the amd64 CPUs:
+      # iptables: Failed to initialize nft: Protocol not supported
+      # https://github.com/multiarch/qemu-user-static/issues/191
+      - name: optionally start DinD for act (local testing)
+        if: env.ACT
+        run: |
+          dockerd -H unix:///var/run/dind.sock & sleep 5;
+          echo "DOCKER_HOST=unix:///var/run/dind.sock" >> "${GITHUB_ENV}"
 
-        - name: optionally test DinD for act (local testing)
-          if: env.ACT
-          run: |
-            docker run --rm ghcr.io/dr-qp/hello-world:linux
-            id
+      - name: optionally test DinD for act (local testing)
+        if: env.ACT
+        run: |
+          docker run --rm ghcr.io/dr-qp/hello-world:linux
+          id
 
-        - name: Install updated Skopeo needed for docker/buildx
-          run: |
-            sudo apt-get update
-            sudo apt-get install skopeo -y
+      - name: Install updated Skopeo needed for docker/buildx
+        run: |
+          sudo apt-get update
+          sudo apt-get install skopeo -y
 
-        - uses: actions/checkout@v4
-        - uses: docker/setup-buildx-action@v3
-        - uses: docker/login-action@v3
-          with:
-            registry: ${{ env.REGISTRY }}
-            username: ${{ env.REGISTRY_USERNAME }}
-            password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ env.REGISTRY_USERNAME }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-        - name: Patch devcontainer.json to use image built in this workflow
-          run: |
-            sed -i "s|ghcr.io/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop:edge|${{ needs.merge-dev-image.outputs.image }}|g" .devcontainer/devcontainer.json
+      - name: Patch devcontainer.json to use image built in this workflow
+        env:
+          MERGED_IMAGE: ${{ needs.merge-dev-image.outputs.image_pinned }}
+        run: |
+          sed -i "s|ghcr.io/dr-qp/${ROS_DISTRO}-ros-desktop:edge|${MERGED_IMAGE}|g" .devcontainer/devcontainer.json
 
-        - name: Build and test dev container image
-          uses: devcontainers/ci@v0.3
-          with:
-            configFile: .devcontainer/devcontainer.json
-            noCache: true
-            runCmd: |
-              set -x
-              set -e
+      - name: Build and test dev container image
+        uses: devcontainers/ci@8bf61b26e9c3a98f69cb6ce2f88d24ff59b785c6 # v0.3
+        with:
+          configFile: .devcontainer/devcontainer.json
+          noCache: true
+          runCmd: |
+            # Test that Docker is working in the dev container (Docker-from-Docker)
+            docker run --rm hello-world | head -n 5
 
-              # Test that Docker is working in the dev container (Docker-from-Docker)
-              docker run --rm hello-world | head -n 5
+            sudo apt update
+            rosdep update
+            ./scripts/ros-dep.sh
+            source "scripts/setup.bash"
+            python3 -m colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+
 
-              sudo apt update
-              rosdep update
-              ./scripts/ros-dep.sh
-              source "scripts/setup.bash"
-              python3 -m colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+
+            source "scripts/setup.bash" --update-venv
 
-              source "scripts/setup.bash" --update-venv
-
-              python3 -m colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure
+            python3 -m colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure
 
   build-deploy-image:
     name: Deployment image
@@ -305,7 +354,9 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Build deployment docker image
         uses: ./.github/actions/docker/build-push-action
@@ -333,7 +384,9 @@ jobs:
     outputs:
       image: ${{ steps.merge.outputs.image }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
       - name: Merge and push deployment docker image
         id: merge
         uses: ./.github/actions/docker/multiarch-merge
@@ -342,9 +395,18 @@ jobs:
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
           registry-token: ${{ secrets.GITHUB_TOKEN }}
+
   merge-all:
     name: CI/CD finished
-    needs: [build-dev-image, merge-dev-image, ros-ci, build-deploy-image, merge-deploy-image, dev-container-ci]
+    needs:
+      [
+        build-dev-image,
+        merge-dev-image,
+        ros-ci,
+        build-deploy-image,
+        merge-deploy-image,
+        dev-container-ci,
+      ]
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions: {}
     timeout-minutes: 10

@@ -1,0 +1,71 @@
+---
+# Docker MCP CLI plugin installation tasks
+# Builds and installs docker-mcp from https://github.com/docker/mcp-gateway
+
+- name: Install Go programming language
+  ansible.builtin.apt:
+    name: golang-go
+    state: present
+    update_cache: true
+    install_recommends: false
+
+- name: Install build dependencies
+  ansible.builtin.apt:
+    name:
+      - git
+      - make
+    state: present
+    install_recommends: false
+
+- name: Create temporary directory for mcp-gateway
+  ansible.builtin.tempfile:
+    state: directory
+    prefix: mcp_gateway_
+  register: docker_mcp_temp_dir
+  become: true
+  become_user: "{{ docker_mcp_user }}"
+
+- name: Clone mcp-gateway repository
+  ansible.builtin.git:
+    repo: "{{ docker_mcp_repo_url }}"
+    dest: "{{ docker_mcp_temp_dir.path }}"
+    version: "{{ docker_mcp_version }}"
+  become: true
+  become_user: "{{ docker_mcp_user }}"
+
+- name: Create Docker CLI plugins directory
+  ansible.builtin.file:
+    path: "{{ docker_mcp_user_home }}/.docker/cli-plugins"
+    state: directory
+    owner: "{{ docker_mcp_user }}"
+    group: "{{ docker_mcp_user }}"
+    mode: "0755"
+
+- name: Build and install docker-mcp plugin
+  community.general.make:
+    chdir: "{{ docker_mcp_temp_dir.path }}"
+    target: docker-mcp
+  environment:
+    HOME: "{{ docker_mcp_user_home }}"
+    PATH: "{{ ansible_env.PATH }}:/usr/local/go/bin:{{ docker_mcp_user_home }}/go/bin"
+    GOPATH: "{{ docker_mcp_user_home }}/go"
+  become: true
+  become_user: "{{ docker_mcp_user }}"
+
+- name: Verify docker-mcp plugin was installed
+  ansible.builtin.stat:
+    path: "{{ docker_mcp_user_home }}/.docker/cli-plugins/docker-mcp"
+  register: docker_mcp_plugin_stat
+
+- name: Fail if plugin was not installed
+  ansible.builtin.fail:
+    msg: "docker-mcp plugin was not installed correctly"
+  when: not docker_mcp_plugin_stat.stat.exists
+
+- name: Clean up temporary directory
+  ansible.builtin.file:
+    path: "{{ docker_mcp_temp_dir.path }}"
+    state: absent
+  become: true
+  become_user: "{{ docker_mcp_user }}"
+  when: docker_mcp_temp_dir.path is defined
