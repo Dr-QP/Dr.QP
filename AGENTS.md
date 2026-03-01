@@ -85,6 +85,7 @@ Consult with the **Principal Engineer** agent for senior-level guidance on archi
 **For remote/cloud agents**: When tasked with addressing PR review comments, CI failures, security findings, or test coverage gaps, you MUST use the **[Feedback Handler](/.github/agents/feedback-handler.agent.md)** agent.
 
 The Feedback Handler provides:
+
 - Systematic resolution of all feedback types
 - Intent classification to avoid misinterpreting comments
 - TDD methodology orchestration via principal-engineer
@@ -133,12 +134,14 @@ This workspace provides reusable prompt files for streamlining common developmen
 ### How to Use Prompts
 
 In GitHub Copilot Chat:
+
 1. Type `/` to see available prompts
 2. Select a prompt or type the prompt name
 3. Provide required inputs when prompted
 4. Review and apply generated output
 
 Example:
+
 ```
 /create-ros2-package drqp_sensors --type cpp --deps rclcpp,sensor_msgs
 ```
@@ -265,15 +268,15 @@ source scripts/setup.bash --update-venv
 
 ### Key Commands (inside container)
 
-| Task | Command |
-|------|---------|
-| Install rosdep deps | `apt-get update && rosdep update && ./scripts/ros-dep.sh` |
-| Create dev venv | `python3 -m venv .venv && .venv/bin/python3 -m pip install -r requirements.txt --use-pep517` |
-| Build all packages | `python3 -m colcon build --mixin coverage-pytest ninja rel-with-deb-info --event-handlers=console_cohesion+ --symlink-install --cmake-args -D DRQP_ENABLE_COVERAGE=ON` |
-| Test all packages | `python3 -m colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure` |
-| Lint (Python) | `source .venv/bin/activate && ruff check packages/ && ruff format --check packages/` |
-| Build single package | `python3 -m colcon build --packages-up-to <pkg_name> --symlink-install` |
-| Test single package | `python3 -m colcon test --packages-select <pkg_name> --return-code-on-test-failure` |
+| Task                 | Command                                                                                                                                                                |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Install rosdep deps  | `apt-get update && rosdep update && ./scripts/ros-dep.sh`                                                                                                              |
+| Create dev venv      | `python3 -m venv .venv && .venv/bin/python3 -m pip install -r requirements.txt --use-pep517`                                                                           |
+| Build all packages   | `python3 -m colcon build --mixin coverage-pytest ninja rel-with-deb-info --event-handlers=console_cohesion+ --symlink-install --cmake-args -D DRQP_ENABLE_COVERAGE=ON` |
+| Test all packages    | `python3 -m colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure`                                                      |
+| Lint (Python)        | `source .venv/bin/activate && ruff check packages/ && ruff format --check packages/`                                                                                   |
+| Build single package | `python3 -m colcon build --packages-up-to <pkg_name> --symlink-install`                                                                                                |
+| Test single package  | `python3 -m colcon test --packages-select <pkg_name> --return-code-on-test-failure`                                                                                    |
 
 ### Gotchas
 
