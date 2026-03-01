@@ -231,3 +231,55 @@ For comprehensive dependency management guidance (C++, Python, rosdep, pip), see
 ## Code Review Standards
 
 For comprehensive code review guidance and PR description standards, see the [code-review-standards](/.github/skills/code-review-standards/SKILL.md) skill.
+
+## Cursor Cloud specific instructions
+
+### Development Container
+
+All build, test, and lint commands must run inside the devcontainer Docker image (`ghcr.io/dr-qp/jazzy-ros-desktop:edge`). The cloud VM does not have ROS 2 installed natively.
+
+The container is started as:
+
+```bash
+sudo docker run -d --name drqp-dev --network host --ipc host --privileged \
+  -v /workspace:/opt/ros/overlay_ws -w /opt/ros/overlay_ws \
+  ghcr.io/dr-qp/jazzy-ros-desktop:edge sleep infinity
+```
+
+Run all commands via `sudo docker exec drqp-dev bash -c "..."`.
+
+### Environment Setup Inside Container
+
+Before any build or ROS 2 command, source the setup script:
+
+```bash
+export ROS_DISTRO=jazzy CC=clang CXX=clang++ CMAKE_EXPORT_COMPILE_COMMANDS=1
+source scripts/setup.bash
+```
+
+For test runs that need the production venv (with `python-statemachine`), use:
+
+```bash
+source scripts/setup.bash --update-venv
+```
+
+### Key Commands (inside container)
+
+| Task | Command |
+|------|---------|
+| Install rosdep deps | `apt-get update && rosdep update && ./scripts/ros-dep.sh` |
+| Create dev venv | `python3 -m venv .venv && .venv/bin/python3 -m pip install -r requirements.txt --use-pep517` |
+| Build all packages | `python3 -m colcon build --mixin coverage-pytest ninja rel-with-deb-info --event-handlers=console_cohesion+ --symlink-install --cmake-args -D DRQP_ENABLE_COVERAGE=ON` |
+| Test all packages | `python3 -m colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure` |
+| Lint (Python) | `source .venv/bin/activate && ruff check packages/ && ruff format --check packages/` |
+| Build single package | `python3 -m colcon build --packages-up-to <pkg_name> --symlink-install` |
+| Test single package | `python3 -m colcon test --packages-select <pkg_name> --return-code-on-test-failure` |
+
+### Gotchas
+
+- The colcon mixin config lives at `/root/.colcon/` inside the image. It is already set up.
+- `--symlink-install` is required for Python coverage collection and hot-reloading.
+- Some packages emit CMake warnings about unused `DRQP_ENABLE_COVERAGE` — these are benign (not all packages support coverage).
+- The `drqp_gazebo` simulation tests run headless (`--headless-rendering -s`) and take ~25 seconds.
+- The production venv (`.venv-prod`) is separate from the dev venv (`.venv`). The `setup.bash --update-venv` flag populates `.venv-prod` from `requires.txt` files in `build/` and `install/` directories.
+- Docker must be started before the container: `sudo dockerd &>/tmp/dockerd.log &` (with fuse-overlayfs storage driver configured).
