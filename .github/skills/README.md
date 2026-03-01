@@ -91,6 +91,7 @@ python3 scripts/validate-skills.py --recommend
 python3 scripts/validate-skills.py --ci
 ```
 
+
 ### VS Code Tasks
 
 Run validation from VS Code:
@@ -112,7 +113,7 @@ Skills are validated automatically in GitHub Actions when:
 - Opening/updating pull requests
 - Manually triggered via workflow_dispatch
 
-See [`.github/workflows/validate-skills.yml`](../workflows/validate-skills.yml) for details.
+See [`.github/workflows/copilot.yml`](../workflows/copilot.yml) for details.
 
 ## Example Skills
 
