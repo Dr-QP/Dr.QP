@@ -19,7 +19,7 @@ setup(
     zip_safe=True,
     maintainer='Anton Matosov',
     maintainer_email='anton.matosov@gmail.com',
-    description='TODO: Package description',
+    description='Simulation test suite for drqp ROS 2 packages.',
     license='MIT',
     entry_points={
         'console_scripts': [],
