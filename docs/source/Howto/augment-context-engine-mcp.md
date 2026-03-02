@@ -18,7 +18,7 @@ This opens a browser window for authentication.
 
 ## Configure MCP server
 
-Create [/.vscode/mcp.json](.vscode/mcp.json) at the repository root with the following content:
+Create `/.vscode/mcp.json` at the repository root with the following content:
 
 ```json
 {

@@ -609,8 +609,8 @@
       "gh": true,
       "rm": false
     },
-    "chat.tools.terminal.ignoreDefaultAutoApproveRules": true,
-    "chat.tools.terminal.blockDetectedFileWrites": "never",
+    "chat.tools.terminal.ignoreDefaultAutoApproveRules": false,
+    "chat.tools.terminal.blockDetectedFileWrites": "outsideWorkspace",
 
     "chat.tools.urls.autoApprove": {
       "https://github.com": true,
