@@ -75,7 +75,6 @@ jobs:
         env:
           STEPS_FILTER_OUTPUTS_PASS: ${{ steps.filter.outputs.pass }}
 
-
   reformat:
     name: Reformat
     needs: paths-filter
