@@ -28,7 +28,6 @@ from drqp_validate_agents.validate_skills.loaders import (
     load_all_skills,
     safe_load_frontmatter,
 )
-
 import pytest
 
 

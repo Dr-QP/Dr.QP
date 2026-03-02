@@ -27,7 +27,6 @@ from drqp_validate_agents.validate_skills.formatters import (
     JSONFormatter,
     TextFormatter,
 )
-
 import pytest
 
 
