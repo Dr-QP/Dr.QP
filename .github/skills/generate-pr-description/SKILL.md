@@ -64,7 +64,7 @@ API changes, config changes, dependency version changes, schema changes.
 
 ### Step 7: Generate PR Description
 
-Use [code-review-standards](../code-review-standards/SKILL.md) template. Include:
+Use [code-review-standards](../code-review-standards/) template. Include:
 
 - **Summary**: 2-3 sentences
 - **Changes**: By category (Features, Bug Fixes, Refactoring, Tests, Documentation, Configuration)
@@ -88,5 +88,5 @@ Ensure completeness, technical accuracy, valid links, testing matches actual wor
 
 ## Related Resources
 
-- [code-review-standards](../code-review-standards/SKILL.md)
+- [code-review-standards](../code-review-standards/)
 - [Engineering guidelines](../../instructions/engineering.instructions.md)

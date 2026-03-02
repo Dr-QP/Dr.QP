@@ -123,6 +123,6 @@ C++: `test/test_<package_name>.cpp` with GTest, `ament_add_gmock`. Python: `test
 ## Related Resources
 
 - [ROS 2 Package Creation Tutorial](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Creating-Your-First-ROS2-Package.html)
-- [ros2-workspace-build](../ros2-workspace-build/SKILL.md)
+- [ros2-workspace-build](../ros2-workspace-build/)
 - [Engineering guidelines](../../instructions/engineering.instructions.md)
 - Examples: `packages/runtime/drqp_control/`, `packages/runtime/drqp_brain/`

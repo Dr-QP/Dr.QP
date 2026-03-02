@@ -84,4 +84,4 @@ Create `launch/<nodes>_launch.py` with Node actions for publisher and subscriber
 
 - [ROS 2 Writing Publisher/Subscriber](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Cpp-Publisher-And-Subscriber.html)
 - [ROS 2 QoS](https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Quality-of-Service-Settings.html)
-- [create-ros2-package](../create-ros2-package/SKILL.md)
+- [create-ros2-package](../create-ros2-package/)

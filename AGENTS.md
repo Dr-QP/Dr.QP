@@ -62,7 +62,7 @@ Update `.github` sources; symlinks pick up changes automatically.
 
 ## Remote Agent Guidelines
 
-When addressing PR review comments, CI failures, CodeQL findings, or coverage gaps, use the [pr-feedback-resolution](/.github/skills/pr-feedback-resolution/SKILL.md) skill.
+When addressing PR review comments, CI failures, CodeQL findings, or coverage gaps, use the [pr-feedback-resolution](/.github/skills/pr-feedback-resolution/) skill.
 
 ## Available Skills
 
@@ -72,7 +72,7 @@ Key skills: ros2-environment-setup, ros2-workspace-build, ros2-workspace-testing
 
 ## Code Review Standards
 
-[code-review-standards](/.github/skills/code-review-standards/SKILL.md)
+[code-review-standards](/.github/skills/code-review-standards/)
 
 ## Cursor Cloud specific instructions
 

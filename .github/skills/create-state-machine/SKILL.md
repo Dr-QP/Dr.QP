@@ -79,4 +79,4 @@ Include new files in CMakeLists.txt or setup.py.
 
 - [python-statemachine](https://python-statemachine.readthedocs.io/)
 - Example: `packages/runtime/drqp_brain/`
-- [create-ros2-package](../create-ros2-package/SKILL.md), [add-test-file](../add-test-file/SKILL.md)
+- [create-ros2-package](../create-ros2-package/), [add-test-file](../add-test-file/)

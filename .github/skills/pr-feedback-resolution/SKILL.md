@@ -389,6 +389,6 @@ Maintain an internal execution log documenting:
 
 ## Related Resources
 
-- [Code Review Standards](../code-review-standards/SKILL.md) - PR description and review practices
+- [Code Review Standards](../code-review-standards/) - PR description and review practices
 - [Shared Engineering Guidelines](../../instructions/engineering.instructions.md) - Clean Code, SOLID, TDD
 - [Principal Engineer](../../agents/principal-engineer.agent.md) - Primary implementation agent with TDD orchestration

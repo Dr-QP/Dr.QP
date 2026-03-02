@@ -85,7 +85,7 @@ python3 scripts/validate-skills.py
 **Validate specific skill:**
 
 ```bash
-python3 scripts/validate-skills.py .github/skills/my-skill/SKILL.md
+python3 scripts/validate-skills.py .github/skills/my-skill/
 ```
 
 **Show warnings and recommendations:**

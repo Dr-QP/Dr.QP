@@ -83,6 +83,6 @@ C++: `ament_lint_auto`, `drqp_lint_common`, `ament_cmake_gmock`, `ament_cmake_py
 
 ## Related Resources
 
-- [find-test-files](../find-test-files/SKILL.md)
-- [ros2-workspace-testing](../ros2-workspace-testing/SKILL.md)
+- [find-test-files](../find-test-files/)
+- [ros2-workspace-testing](../ros2-workspace-testing/)
 - [Engineering guidelines](../../instructions/engineering.instructions.md)
