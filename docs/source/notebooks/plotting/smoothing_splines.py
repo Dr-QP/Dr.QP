@@ -31,10 +31,30 @@ def plot_spline(
 
     Parameters
     ----------
-    ax: Axis to plot on
-    current_t: current time point
-    control_points: Array of control points [x, y, t]
-    k: degree of BSpline to plot
+    ax : matplotlib.axes.Axes
+        Axis to plot on.
+    current_t : float
+        Current time point.
+    control_points : numpy.ndarray
+        Array of control points [x, y, t].
+    k : int
+        Degree of BSpline to plot.
+    num_fine_t_points : int
+        Number of samples for plotting the spline.
+    label : str | None
+        Optional label for the plot.
+    color : str | None
+        Optional color for the spline line.
+    derivatives : int
+        Number of derivatives to plot.
+    bc_type : object | None
+        Boundary condition type for interpolation.
+    spline_type : SplineType
+        Spline type to compute.
+    derivatives_ax : matplotlib.axes.Axes | None
+        Axis to plot derivatives on.
+    mix : float
+        Mixing ratio with a linear spline (0-1).
 
     """
     if derivatives_ax is None:
