@@ -743,7 +743,7 @@ Our new approach should satisfy the following requirements:
 1.  Allow defining a gait trajectory.
 2.  Allow defining a gait sequence.
 3.  Allow defining a gait generator function that will combine the two above given a set of parameters.
-4.  Allow steering, turing and transitioning between gaits and positions.
+4.  Allow steering, turning and transitioning between gaits and positions.
 
 1 and 2 are fairly straightforward and we have seen some solution using trigonometrical functions and polynomials already, however they do not allow proper mixing of the trajectories needed to achieve smooth transitions. 3 and 4 require a function that allows mixing. That is a task for a [smoothing spline function](https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html), e.g. a [B-spline](https://en.wikipedia.org/wiki/B-spline). It allows a smooth transition between control points while remaining stable if some of the control points are changed.
 
