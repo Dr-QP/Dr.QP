@@ -24,7 +24,7 @@ import unittest
 
 from controller_manager.test_utils import check_node_running
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
-from geometry_msgs.msg import Pose, PoseArray, Vector3
+from geometry_msgs.msg import Pose, Vector3
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -34,6 +34,7 @@ from launch_testing import post_shutdown_test
 from launch_testing.actions import ReadyToTest
 from launch_testing.proc_info_handler import ProcInfoHandler
 from launch_testing_ros import WaitForTopics
+from nav_msgs.msg import Odometry
 import pytest
 import rclpy
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
@@ -78,18 +79,6 @@ class TestGazeboRobotControl(unittest.TestCase):
     CLOCK_TIMEOUT = 10.0
     MOVEMENT_DURATION = 5.0
 
-    # Model and link names
-    ROBOT_MODEL_NAME = 'drqp'
-    BASE_LINK_NAME = 'drqp/base_link'
-    FOOT_LINKS = [
-        'drqp/left_front_foot_link',
-        'drqp/right_front_foot_link',
-        'drqp/left_middle_foot_link',
-        'drqp/right_middle_foot_link',
-        'drqp/left_back_foot_link',
-        'drqp/right_back_foot_link',
-    ]
-
     # Ground clearance thresholds (meters)
     BASE_ON_GROUND_THRESHOLD = 0.015  # Base should be below this when on ground
     BASE_OFF_GROUND_THRESHOLD = 0.03  # Model z should be above this when armed
@@ -122,11 +111,11 @@ class TestGazeboRobotControl(unittest.TestCase):
             qos_profile=qos_profile,
         )
 
-        # Subscribe to robot pose from Gazebo bridge
-        self.pose_sub = self.node.create_subscription(
-            PoseArray,
-            '/model/drqp/pose',
-            self._pose_callback,
+        # Subscribe to robot odometry from Gazebo bridge
+        self.odom_sub = self.node.create_subscription(
+            Odometry,
+            '/model/drqp/odometry',
+            self._odometry_callback,
             10,
         )
 
@@ -153,24 +142,9 @@ class TestGazeboRobotControl(unittest.TestCase):
         self.current_robot_state = msg.data
         self.node.get_logger().info(f'Robot state updated: {self.current_robot_state}')
 
-    def _pose_callback(self, msg: PoseArray):
-        """
-        Track robot pose from Gazebo.
-
-        This callback only uses the pose when the PoseArray contains exactly
-        one pose. When multiple poses are present (e.g. from a world-level
-        dynamic_pose/info topic that includes many entities), it avoids
-        arbitrarily assuming index 0 is the robot.
-        """
-        pose_count = len(msg.poses)
-        if pose_count == 1:
-            self.robot_pose = msg.poses[0]
-        else:
-            # Avoid mis-associating poses from multi-entity PoseArray messages.
-            # Tests that rely on self.robot_pose should instead use a
-            # robot-specific pose topic or a bridge that publishes a single
-            # pose for the robot model.
-            self.fail(f'Received PoseArray with {pose_count} poses; robot pose is ambiguous.')
+    def _odometry_callback(self, msg: Odometry):
+        """Track robot pose from robot-scoped odometry."""
+        self.robot_pose = msg.pose.pose
 
     def _spin_until(self, condition_fn, timeout_sec, error_message):
         """Spin the node until a condition is met or timeout occurs."""
@@ -212,11 +186,11 @@ class TestGazeboRobotControl(unittest.TestCase):
         )
 
     def _wait_for_pose(self):
-        """Wait until pose is available from Gazebo."""
+        """Wait until robot pose is available from Gazebo odometry."""
         self._spin_until(
             lambda: self.robot_pose is not None,
             self.MOVEMENT_TIMEOUT,
-            'Did not receive /model/drqp/pose from Gazebo bridge',
+            'Did not receive /model/drqp/odometry from Gazebo bridge',
         )
 
     def _skip_if_pose_unavailable(self):
@@ -366,7 +340,7 @@ class TestGazeboRobotControl(unittest.TestCase):
         # Verify robot_state_publisher is running (indicates robot description is loaded)
         try:
             check_node_running(self.node, 'robot_state_publisher', timeout=self.SPAWN_TIMEOUT)
-        except Exception as e:
+        except (AssertionError, RuntimeError, TimeoutError) as e:
             self.fail(
                 f'Robot model failed to spawn: robot_state_publisher not running within '
                 f'{self.SPAWN_TIMEOUT}s. Error: {e}'
