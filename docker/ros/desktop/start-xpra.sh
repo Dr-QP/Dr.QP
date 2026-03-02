@@ -154,23 +154,32 @@ echo "Starting Xpra server..."
 echo "HTML5 client will be available at: http://$HOST:$PORT"
 echo ""
 
+# Shared Xpra options (defined once for both foreground/background modes)
+XPRA_ARGS=(
+  "$DISPLAY"
+  "--bind-tcp=$HOST:$PORT"
+  "--html=on"
+  "--daemon=no"
+  "--mdns=no"
+  "--notifications=no"
+  "--dbus-proxy=no"
+  "--dbus-control=no"
+  "--dbus-launch="
+  "--webcam=no"
+  "--opengl=yes"
+)
+
 # Start Xpra server
 # --bind-tcp: Listen on specified host and port
 # --html=on: Enable HTML5 web client
 # --daemon=no: Run in foreground (important for Docker)
 # Xpra creates its own virtual X server (Xvfb or Xdummy) internally
 if [[ "$BACKGROUND" == "true" ]]; then
-  nohup xpra start "$DISPLAY" \
-    --bind-tcp="$HOST:$PORT" \
-    --html=on \
-    --daemon=no > /tmp/xpra.log 2>&1 &
+  nohup xpra start "${XPRA_ARGS[@]}" > /tmp/xpra.log 2>&1 &
   exit 0
 fi
 
-if ! xpra start "$DISPLAY" \
-  --bind-tcp="$HOST:$PORT" \
-  --html=on \
-  --daemon=no; then
+if ! xpra start "${XPRA_ARGS[@]}"; then
   echo "Warning: Xpra failed to start. Check ~/.xpra/logs/ for details."
   exit 1
 fi
