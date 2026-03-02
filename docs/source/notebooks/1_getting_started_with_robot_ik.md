@@ -704,9 +704,9 @@ _ = animate_plot(
 )
 ```
 
- Woohoo! The entire IK chain works as expected and we can put the foot on a target!
+Woohoo! The entire IK chain works as expected and we can put the foot on a target!
 
- There is still one oopsy to cover, a case when the target is unreachable.
+There is still one oopsy to cover, a case when the target is unreachable.
 
 ```{code-cell} ipython3
 try:
