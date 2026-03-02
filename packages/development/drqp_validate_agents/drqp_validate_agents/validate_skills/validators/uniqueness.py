@@ -23,20 +23,14 @@
 
 from typing import Dict, List, Optional
 
-from validate_skills.types import ValidationIssue, ValidationLevel
+from drqp_validate_agents.validate_skills.types import ValidationIssue, ValidationLevel
 
 
 class UniquenessValidator:
     """Validates skill name uniqueness."""
 
     def __init__(self, all_skills: Optional[Dict] = None):
-        """
-        Initialize the validator.
-
-        Args:
-            all_skills: Dict of all skills for uniqueness comparison
-
-        """
+        """Initialize the validator."""
         self.all_skills = all_skills or {}
 
     def validate(
@@ -45,13 +39,15 @@ class UniquenessValidator:
         """
         Validate skill uniqueness.
 
-        Args:
+        Args
+        ----
             skill_path: Path to the skill file
             metadata: Metadata dictionary (frontmatter)
             content: Content string (for compatibility)
             all_skills: Override dict of all skills for comparison
 
-        Returns:
+        Returns
+        -------
             List of validation issues
 
         """

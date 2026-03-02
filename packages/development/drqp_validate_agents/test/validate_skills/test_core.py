@@ -21,7 +21,7 @@
 
 """Unit tests for validation engine core."""
 
-from validate_skills.core import ValidationEngine, ValidationResult
+from drqp_validate_agents.validate_skills.core import ValidationEngine, ValidationResult
 
 
 class TestValidationEngineBasic:
@@ -252,7 +252,7 @@ class TestValidationResult:
 
     def test_validation_result_is_valid_with_warnings(self):
         """Should indicate valid when only warnings present."""
-        from validate_skills.core import ValidationIssue, ValidationLevel
+        from drqp_validate_agents.validate_skills.core import ValidationIssue, ValidationLevel
 
         result = ValidationResult(
             skill_path='/path/SKILL.md',
@@ -262,7 +262,7 @@ class TestValidationResult:
 
     def test_validation_result_is_valid_with_errors(self):
         """Should indicate invalid when errors present."""
-        from validate_skills.core import ValidationIssue, ValidationLevel
+        from drqp_validate_agents.validate_skills.core import ValidationIssue, ValidationLevel
 
         result = ValidationResult(
             skill_path='/path/SKILL.md',
@@ -272,7 +272,7 @@ class TestValidationResult:
 
     def test_validation_result_has_warnings(self):
         """Should detect presence of warnings."""
-        from validate_skills.core import ValidationIssue, ValidationLevel
+        from drqp_validate_agents.validate_skills.core import ValidationIssue, ValidationLevel
 
         result = ValidationResult(
             skill_path='/path/SKILL.md',
@@ -282,7 +282,7 @@ class TestValidationResult:
 
     def test_validation_result_has_warnings_false(self):
         """Should indicate no warnings when none present."""
-        from validate_skills.core import ValidationIssue, ValidationLevel
+        from drqp_validate_agents.validate_skills.core import ValidationIssue, ValidationLevel
 
         result = ValidationResult(
             skill_path='/path/SKILL.md',
@@ -292,7 +292,7 @@ class TestValidationResult:
 
     def test_validation_result_issue_count(self):
         """Should count issues accurately."""
-        from validate_skills.core import ValidationIssue, ValidationLevel
+        from drqp_validate_agents.validate_skills.core import ValidationIssue, ValidationLevel
 
         result = ValidationResult(
             skill_path='/path/SKILL.md',
@@ -306,7 +306,7 @@ class TestValidationResult:
 
     def test_validation_result_error_count(self):
         """Should count errors separately."""
-        from validate_skills.core import ValidationIssue, ValidationLevel
+        from drqp_validate_agents.validate_skills.core import ValidationIssue, ValidationLevel
 
         result = ValidationResult(
             skill_path='/path/SKILL.md',

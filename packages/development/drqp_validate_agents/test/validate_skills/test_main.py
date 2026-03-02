@@ -21,7 +21,7 @@
 
 """Unit tests for main orchestration function."""
 
-from validate_skills.main import main
+from drqp_validate_agents.validate_skills.main import main
 
 
 class TestMainBasic:

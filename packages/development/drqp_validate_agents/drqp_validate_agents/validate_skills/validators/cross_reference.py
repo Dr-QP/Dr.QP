@@ -25,21 +25,14 @@ from pathlib import Path
 import re
 from typing import List, Optional
 
-from validate_skills.types import ValidationIssue, ValidationLevel
+from drqp_validate_agents.validate_skills.types import ValidationIssue, ValidationLevel
 
 
 class CrossReferenceValidator:
     """Validates cross-references in skills."""
 
     def __init__(self, base_path: Optional[str] = None, show_warnings: bool = False):
-        """
-        Initialize the validator.
-
-        Args:
-            base_path: Base path for resolving relative references
-            show_warnings: Whether to include warnings
-
-        """
+        """Initialize the validator."""
         self.base_path = base_path
         self.show_warnings = show_warnings
 
@@ -47,12 +40,14 @@ class CrossReferenceValidator:
         """
         Validate cross-references.
 
-        Args:
+        Args
+        ----
             skill_path: Path to the skill file
             metadata: Metadata dictionary (frontmatter)
             content: Content (body)
 
-        Returns:
+        Returns
+        -------
             List of validation issues
 
         """

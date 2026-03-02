@@ -150,14 +150,14 @@ pytest -m "not slow" tests/validate_skills/
 
 All tests import from the new package structure:
 ```python
-from validate_skills.cli import parse_arguments
-from validate_skills.loaders import find_skill_files, safe_load_frontmatter, load_all_skills
-from validate_skills.core import ValidationEngine, ValidationResult
-from validate_skills.formatters import TextFormatter, JSONFormatter, CSVFormatter
-from validate_skills.main import main
-from validate_skills.validators.skill import SkillFrontmatterValidator, SkillStructureValidator
-from validate_skills.validators.uniqueness import UniquenessValidator
-from validate_skills.validators.cross_reference import CrossReferenceValidator
+from drqp_validate_agents.validate_skills.cli import parse_arguments
+from drqp_validate_agents.validate_skills.loaders import find_skill_files, safe_load_frontmatter, load_all_skills
+from drqp_validate_agents.validate_skills.core import ValidationEngine, ValidationResult
+from drqp_validate_agents.validate_skills.formatters import TextFormatter, JSONFormatter, CSVFormatter
+from drqp_validate_agents.validate_skills.main import main
+from drqp_validate_agents.validate_skills.validators.skill import SkillFrontmatterValidator, SkillStructureValidator
+from drqp_validate_agents.validate_skills.validators.uniqueness import UniquenessValidator
+from drqp_validate_agents.validate_skills.validators.cross_reference import CrossReferenceValidator
 ```
 
 ## Test Coverage Summary

@@ -35,10 +35,12 @@ def find_skill_files(path: str) -> List[str]:
     """
     Find all SKILL.md files in a directory or return file if it's a SKILL.md file.
 
-    Args:
+    Args
+    ----
         path: Path to directory or file
 
-    Returns:
+    Returns
+    -------
         List of paths to SKILL.md files
 
     """
@@ -72,18 +74,25 @@ def safe_load_frontmatter(file_path: str) -> Tuple[Dict, str]:
     """
     Safely load YAML frontmatter and body from a file.
 
-    Args:
+    Args
+    ----
         file_path: Path to the skill file
 
-    Returns:
+    Returns
+    -------
         Tuple of (frontmatter_dict, body_str)
 
-    Raises:
+    Raises
+    ------
         OSError: If file not found or cannot be read
         UnicodeDecodeError: If file encoding is invalid
         yaml.YAMLError: If frontmatter delimiters are incomplete
 
     """
+    file_mode = os.stat(file_path).st_mode
+    if file_mode & 0o444 == 0:
+        raise PermissionError(f"Permission denied: '{file_path}'")
+
     # This will raise OSError (e.g., FileNotFoundError, PermissionError)
     # if the file cannot be opened for reading.
     with open(file_path, 'r', encoding='utf-8') as f:
@@ -170,10 +179,12 @@ def load_all_skills(skill_files: List[str]) -> Dict[str, Dict]:
     """
     Load multiple skill files.
 
-    Args:
+    Args
+    ----
         skill_files: List of paths to skill files
 
-    Returns:
+    Returns
+    -------
         Dict of {file_path: {frontmatter, body}}
 
     """
@@ -186,7 +197,7 @@ def load_all_skills(skill_files: List[str]) -> Dict[str, Dict]:
                 'frontmatter': frontmatter,
                 'body': body,
             }
-        except Exception as e:
+        except (OSError, UnicodeDecodeError, yaml.YAMLError) as e:
             logger.warning(f'Failed to load skill {file_path}: {e}')
 
     return skills
@@ -203,10 +214,12 @@ class SkillFileLoader:
         """
         Find all SKILL.md files in a directory.
 
-        Args:
+        Args
+        ----
             path: Path to search
 
-        Returns:
+        Returns
+        -------
             List of skill file paths
 
         """
@@ -216,10 +229,12 @@ class SkillFileLoader:
         """
         Load a single skill file.
 
-        Args:
+        Args
+        ----
             path: Path to the skill file
 
-        Returns:
+        Returns
+        -------
             Tuple of (frontmatter, body)
 
         """

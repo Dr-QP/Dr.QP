@@ -19,18 +19,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Public API for the validate-skills package."""
+"""Entry point for running validate_skills as a module."""
 
-from validate_skills.cli import parse_arguments
-from validate_skills.core import ValidationEngine
-from validate_skills.loaders import SkillFileLoader
-from validate_skills.main import main
-from validate_skills.types import ValidationResult
+import sys
 
-__all__ = [
-    'main',
-    'parse_arguments',
-    'ValidationEngine',
-    'ValidationResult',
-    'SkillFileLoader',
-]
+from .main import main
+
+if __name__ == '__main__':
+    sys.exit(main())
