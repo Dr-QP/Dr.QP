@@ -375,7 +375,6 @@ class TestGazeboRobotControl(unittest.TestCase):
                 f'{self.SPAWN_TIMEOUT}s. Error: {e}'
             )
 
-
         # Spin to receive initial state (confirms robot state machine is active)
         start_time = time.time()
         while self.current_robot_state is None and time.time() - start_time < self.SPAWN_TIMEOUT:
