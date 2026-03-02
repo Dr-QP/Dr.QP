@@ -15,16 +15,12 @@ setup(
         ('share/' + package_name + '/config', glob('config/*')),
     ],
     install_requires=['setuptools'],
+    tests_require=['pytest'],  # must be here, otherwise colcon will skip tests
     zip_safe=True,
     maintainer='Anton Matosov',
     maintainer_email='anton.matosov@gmail.com',
     description='TODO: Package description',
     license='MIT',
-    extras_require={
-        'test': [
-            'pytest',
-        ],
-    },
     entry_points={
         'console_scripts': [],
     },
