@@ -5,7 +5,7 @@
 1. **Always source scripts/setup.bash** before build or test
 2. **Use incremental builds** (`--packages-up-to <pkg>`) during development
 3. **Test specific packages** (`--packages-select <pkg>`) for rapid iteration
-4. **Use devcontainer** when running as remote agent
+4. **Use devcontainer** when running as remote agent (see [Cursor Cloud Sessions](#cursor-cloud-sessions) below)
 5. **Only run full builds/tests** when explicitly requested
 6. **Collect test output** from `build/<package_name>/test_results/`
 7. **Check build logs** in `log/latest_build/` if builds fail
@@ -74,6 +74,6 @@ Key skills: ros2-environment-setup, ros2-workspace-build, ros2-workspace-testing
 
 [code-review-standards](/.github/skills/code-review-standards/)
 
-## Cursor Cloud specific instructions
+## Cursor Cloud Sessions
 
-Use [microVM-sandbox](/.github/instructions/microVM-sandbox.instructions.md) instructions when working in Cursor Cloud environment.
+**Load the microVM-sandbox instructions** — Read and follow [microVM-sandbox](/.github/instructions/microVM-sandbox.instructions.md) before running any build, test, or lint command.
