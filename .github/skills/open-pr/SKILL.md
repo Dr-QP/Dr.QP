@@ -24,8 +24,8 @@ Optional MCP tools (for validation and follow-up):
 
 ## PR Description Source of Truth
 
-The PR body content **MUST** be generated using the prompt in
-`.github/prompts/generate-pr-description.prompt.md`.
+The PR body content **MUST** be generated using the
+[generate-pr-description](../generate-pr-description/SKILL.md) skill.
 
 The open-pr skill is responsible for:
 - optional issue linking in title/body when issue context exists
@@ -35,8 +35,8 @@ The open-pr skill is responsible for:
 - GitHub PR creation through MCP
 
 The detailed PR description structure, section requirements, and quality checks
-are defined in `.github/prompts/generate-pr-description.prompt.md` and **MUST NOT**
-be duplicated here.
+are defined in the [generate-pr-description](../generate-pr-description/SKILL.md) skill
+and **MUST NOT** be duplicated here.
 
 ## Workflow for AI Agents
 
@@ -99,8 +99,8 @@ Issue linking is recommended but not required.
 
 ### 4. PR Draft Construction
 
-Generate the PR description by following
-`.github/prompts/generate-pr-description.prompt.md`.
+Generate the PR description by following the
+[generate-pr-description](../generate-pr-description/SKILL.md) skill.
 
 Use the generated output as the PR body, and use one of these title formats:
 - If issue is available: `[#issue-number] Brief description`
@@ -201,8 +201,8 @@ Use the tool with these fields:
 - `maintainer_can_modify` (optional): set per repository policy
 
 **Important:**
-- The body should be the generated markdown from
-  `.github/prompts/generate-pr-description.prompt.md`
+- The body should be the generated markdown from the
+  [generate-pr-description](../generate-pr-description/SKILL.md) skill
 - Do not duplicate or re-interpret the prompt's section requirements here
 - If `base` is not explicitly provided by user/repo policy, set `base: main`.
 - After successful creation, display the PR URL/number returned by the MCP tool
@@ -274,5 +274,5 @@ explicitly requested by the user.
 
 ## PR Body Guidance
 
-For complete PR-description instructions and examples, always use:
-`.github/prompts/generate-pr-description.prompt.md`.
+For complete PR-description instructions and examples, use the
+[generate-pr-description](../generate-pr-description/SKILL.md) skill.

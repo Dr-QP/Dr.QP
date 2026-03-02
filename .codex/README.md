@@ -7,7 +7,7 @@ Source of truth:
 - .github/agents
 - .github/skills
 - .github/instructions
-- .github/prompts
+- .github/prompts (README redirects to skills; prompt workflows migrated to skills)
 
 Codex symlinks:
 - .codex/agents -> .github/agents
