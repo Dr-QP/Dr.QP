@@ -62,7 +62,6 @@ def generate_test_description():
     )
 
 
-@pytest.mark.skip
 class TestSimulationWiring(unittest.TestCase):
     """Ensure Gazebo simulation brings up the expected ROS graph."""
 
