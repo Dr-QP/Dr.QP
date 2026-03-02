@@ -146,7 +146,7 @@ def generate_launch_description():
             '-name',
             'drqp',
             '-allow_renaming',
-            'true',
+            'false',
         ],
     )
 
