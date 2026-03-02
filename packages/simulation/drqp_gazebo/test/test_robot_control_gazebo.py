@@ -170,10 +170,7 @@ class TestGazeboRobotControl(unittest.TestCase):
             # Tests that rely on self.robot_pose should instead use a
             # robot-specific pose topic or a bridge that publishes a single
             # pose for the robot model.
-            self.node.get_logger().warning(
-                f'Received PoseArray with {pose_count} poses; '
-                'robot pose not updated because the source is ambiguous.'
-            )
+            self.fail(f'Received PoseArray with {pose_count} poses; robot pose is ambiguous.')
 
     def _spin_until(self, condition_fn, timeout_sec, error_message):
         """Spin the node until a condition is met or timeout occurs."""
@@ -374,7 +371,6 @@ class TestGazeboRobotControl(unittest.TestCase):
                 f'Robot model failed to spawn: robot_state_publisher not running within '
                 f'{self.SPAWN_TIMEOUT}s. Error: {e}'
             )
-
 
         # Spin to receive initial state (confirms robot state machine is active)
         start_time = time.time()
