@@ -111,7 +111,11 @@ cleanup() {
 
   # Stop Xpra server
   if command -v xpra &> /dev/null; then
-    xpra stop "$DISPLAY" 2>/dev/null || true
+    if xpra status "$DISPLAY" &>/dev/null; then
+      xpra stop "$DISPLAY" 2>/dev/null || true
+    else
+      echo "Xpra server on $DISPLAY is not running; nothing to stop."
+    fi
   fi
 
   exit 0
@@ -170,6 +174,3 @@ if ! xpra start "$DISPLAY" \
   echo "Warning: Xpra failed to start. Check ~/.xpra/logs/ for details."
   exit 1
 fi
-
-# Cleanup on exit
-cleanup
