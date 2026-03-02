@@ -1,7 +1,7 @@
 # Agents Guidelines
 
 NEVER use "$TMPDIR" env variable.
-ALWAYS use "${workspaceFolder}/.tmp" for temporary files.
+ALWAYS use "./.tmp" (relative to the repo root) for temporary files; create it if it does not exist.
 
 ## General Engineering Principles
 
