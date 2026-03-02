@@ -92,7 +92,7 @@ class TestGazeboRobotControl(unittest.TestCase):
 
     # Ground clearance thresholds (meters)
     BASE_ON_GROUND_THRESHOLD = 0.015  # Base should be below this when on ground
-    BASE_OFF_GROUND_THRESHOLD = -0.03  # Model z should be above this when armed
+    BASE_OFF_GROUND_THRESHOLD = 0.03  # Model z should be above this when armed
 
     @classmethod
     def setUpClass(cls):
@@ -154,9 +154,26 @@ class TestGazeboRobotControl(unittest.TestCase):
         self.node.get_logger().info(f'Robot state updated: {self.current_robot_state}')
 
     def _pose_callback(self, msg: PoseArray):
-        """Track robot pose from Gazebo."""
-        if msg.poses:
+        """
+        Track robot pose from Gazebo.
+
+        This callback only uses the pose when the PoseArray contains exactly
+        one pose. When multiple poses are present (e.g. from a world-level
+        dynamic_pose/info topic that includes many entities), it avoids
+        arbitrarily assuming index 0 is the robot.
+        """
+        pose_count = len(msg.poses)
+        if pose_count == 1:
             self.robot_pose = msg.poses[0]
+        else:
+            # Avoid mis-associating poses from multi-entity PoseArray messages.
+            # Tests that rely on self.robot_pose should instead use a
+            # robot-specific pose topic or a bridge that publishes a single
+            # pose for the robot model.
+            self.node.get_logger().warning(
+                f'Received PoseArray with {pose_count} poses; '
+                'robot pose not updated because the source is ambiguous.'
+            )
 
     def _spin_until(self, condition_fn, timeout_sec, error_message):
         """Spin the node until a condition is met or timeout occurs."""
