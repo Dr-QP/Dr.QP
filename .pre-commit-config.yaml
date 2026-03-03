@@ -55,7 +55,7 @@ repos:
 
   - id: validate-skills
     name: validate-skills
-    entry: python3 scripts/validate-skills.py --ci
+    entry: validate_skills --ci
     language: system
     files: '(\.github/skills/.*SKILL\.md|\.claude/skills/.*SKILL\.md)$'
     pass_filenames: false

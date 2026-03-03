@@ -35,8 +35,7 @@ jobs:
             - .github/instructions/**
             - .github/skills/**
             - .github/workflows/copilot.yml
-            - scripts/validate-skills.py
-            - scripts/validate_skills/**
+            - packages/development/drqp_validate_agents/**
 
   validate-skills:
     name: Validate Agent Skills
@@ -53,13 +52,16 @@ jobs:
       - name: Setup Python venv
         uses: ./.github/actions/setup-python-venv
 
+      - name: Install validate_skills package
+        run: pip install -e packages/development/drqp_validate_agents
+
       - name: Test validate skills
         run: |
-          pytest scripts/validate_skills/tests --cov=scripts/validate_skills --cov-report=xml
+          pytest packages/development/drqp_validate_agents/test/validate_skills \
+            --cov=drqp_validate_agents.validate_skills --cov-report=xml
 
       - name: Validate Agent Skills
-        run: |
-          python3 scripts/validate-skills.py --recommend
+        run: validate_skills --recommend
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
