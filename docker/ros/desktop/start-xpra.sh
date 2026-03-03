@@ -218,20 +218,20 @@ echo ""
 
 # Shared Xpra options (defined once for both foreground/background modes)
 XPRA_ARGS=(
-  "$DISPLAY"
-  "--bind-tcp=$HOST:$PORT"
-  "--html=on"
-  "--daemon=no"
-  "--mdns=no"
-  "--notifications=no"
-  "--global-menus=no"
-  "--start-new-commands=no"
-  "--dbus-proxy=no"
-  "--dbus-control=no"
-  "--dbus-launch="
-  "--webcam=no"
-  "--opengl=yes"
-  "--video-encoders=$VIDEO_ENCODERS"
+  "$DISPLAY"                             # Virtual display identifier (for example, :100)
+  "--bind-tcp=$HOST:$PORT"               # Bind HTML5/websocket server to host:port
+  "--html=on"                            # Enable built-in HTML5 web client
+  "--daemon=no"                          # Keep xpra in foreground unless wrapped by nohup
+  "--mdns=no"                            # Disable mDNS service advertisement
+  "--notifications=no"                   # Disable desktop notification forwarding
+  "--global-menus=no"                    # Disable global menu integration
+  "--start-new-commands=no"              # Prevent clients from launching new server-side commands
+  "--dbus-proxy=no"                      # Disable D-Bus proxying into sessions
+  "--dbus-control=no"                    # Disable remote control over D-Bus
+  "--dbus-launch="                       # Do not auto-launch a D-Bus session bus
+  "--webcam=no"                          # Disable webcam forwarding
+  "--opengl=yes"                         # Allow OpenGL acceleration when available
+  "--video-encoders=$VIDEO_ENCODERS"     # Preferred video encoder list (env-overridable)
 )
 
 # Start Xpra server
