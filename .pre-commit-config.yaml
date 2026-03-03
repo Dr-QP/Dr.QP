@@ -7,55 +7,55 @@ repos:
   #   - id: end-of-file-fixer
   #   - id: trailing-whitespace
 
-- repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.11.2
-  hooks:
-    - id: ruff-format
-    - id: ruff # lint
-      args: [ --fix ]
-    - id: ruff # isort
-      args: [ --fix, --select, I ]
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.2
+    hooks:
+      - id: ruff-format
+      - id: ruff # lint
+        args: [--fix]
+      - id: ruff # isort
+        args: [--fix, --select, I]
 
-# [jupytext] Error: the git index is outdated.
-# Please add the paired notebook with:
-#     git add notebooks/1_getting_started_with_robot_ik.ipynb
-# - repo: https://github.com/mwouts/jupytext
-#   rev: v1.17.0
-#   hooks:
-#   - id: jupytext
-#     args: [--sync, notebooks/*.md, notebooks/*.ipynb, --pipe-fmt, py:percent, --pipe, 'ruff format {}', --pipe, 'ruff check --fix --ignore E402,F811 {}', --pipe, 'ruff check --fix --select I {}']
-#     additional_dependencies:
-#     - ruff==v0.11.2
-#     pass_filenames: false
+  # [jupytext] Error: the git index is outdated.
+  # Please add the paired notebook with:
+  #     git add notebooks/1_getting_started_with_robot_ik.ipynb
+  # - repo: https://github.com/mwouts/jupytext
+  #   rev: v1.17.0
+  #   hooks:
+  #   - id: jupytext
+  #     args: [--sync, notebooks/*.md, notebooks/*.ipynb, --pipe-fmt, py:percent, --pipe, 'ruff format {}', --pipe, 'ruff check --fix --ignore E402,F811 {}', --pipe, 'ruff check --fix --select I {}']
+  #     additional_dependencies:
+  #     - ruff==v0.11.2
+  #     pass_filenames: false
 
-- repo: https://github.com/gitleaks/gitleaks
-  rev: v8.24.3
-  hooks:
-    - id: gitleaks
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.3
+    hooks:
+      - id: gitleaks
 
-- repo: https://github.com/rhysd/actionlint
-  rev: v1.7.7
-  hooks:
-    - id: actionlint
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.7
+    hooks:
+      - id: actionlint
 
-- repo: local
-  hooks:
-  - id: python-reformat
-    name: python-reformat
-    entry: ./scripts/python-reformat.sh
-    language: script
-    pass_filenames: false
+  - repo: local
+    hooks:
+      - id: python-reformat
+        name: python-reformat
+        entry: ./scripts/python-reformat.sh
+        language: script
+        pass_filenames: false
 
-  - id: format-cpp
-    name: format-cpp
-    entry: ./scripts/cpp-reformat.sh
-    language: script
-    types: [c++]
-    pass_filenames: false
+      - id: format-cpp
+        name: format-cpp
+        entry: ./scripts/cpp-reformat.sh
+        language: script
+        types: [c++]
+        pass_filenames: false
 
-  - id: validate-skills
-    name: validate-skills
-    entry: validate_skills --ci
-    language: system
-    files: '(\.github/skills/.*SKILL\.md|\.claude/skills/.*SKILL\.md)$'
-    pass_filenames: false
+      - id: validate-skills
+        name: validate-skills
+        entry: validate_skills --ci
+        language: system
+        files: '(\.github/skills/.*SKILL\.md|\.claude/skills/.*SKILL\.md)$'
+        pass_filenames: false
