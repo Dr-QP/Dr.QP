@@ -55,7 +55,7 @@ def generate_test_description():
         [
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(simulation_launch),
-                launch_arguments={'gui': 'false'}.items(),
+                launch_arguments={'sim_gui': 'false'}.items(),
             ),
             TimerAction(period=5.0, actions=[ReadyToTest()]),
         ]
