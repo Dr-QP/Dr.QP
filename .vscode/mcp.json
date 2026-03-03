@@ -3,6 +3,11 @@
     "github": {
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/"
+    },
+    "augmentcode": {
+      "type": "stdio",
+      "command": "auggie",
+      "args": ["--mcp", "--mcp-auto-workspace"]
     }
   }
 }

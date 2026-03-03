@@ -688,9 +688,13 @@ def plot_with_legend(plot: callable):
 
 plot_with_legend(lambda ax: plot_spline(ax, 0, control_points, 3, derivatives=2))
 
-plot_with_legend(lambda ax: plot_spline(ax, 0, control_points, 3, derivatives=2, bc_type='natural'))
+plot_with_legend(
+    lambda ax: plot_spline(ax, 0, control_points, 3, derivatives=2, bc_type='natural')
+)
 
-plot_with_legend(lambda ax: plot_spline(ax, 0, control_points, 3, derivatives=2, bc_type='clamped'))
+plot_with_legend(
+    lambda ax: plot_spline(ax, 0, control_points, 3, derivatives=2, bc_type='clamped')
+)
 
 plot_with_legend(
     lambda ax: plot_spline(
@@ -699,7 +703,9 @@ plot_with_legend(
 )
 
 plot_with_legend(
-    lambda ax: plot_spline(ax, 0, control_points, 0.5, derivatives=2, spline_type=SplineType.splrep)
+    lambda ax: plot_spline(
+        ax, 0, control_points, 0.5, derivatives=2, spline_type=SplineType.splrep
+    )
 )
 
 plot_with_legend(
@@ -725,19 +731,19 @@ plot_with_legend(
 
 With the current approach we have achieved decent results and it helped us to get a basic understanding of gaits generation, however it has a serious limitations:
 
- 1. It is not possible to transition between gaits as they are implemented as separate classes
- 2. There is no transition in and out of the gait from standing position.
- 3. Different gaits have different trajectories, however the only thing that has to change is the order in which legs are lifted.
- 4. Phase logic is mixed with trajectory logic.
+1.  It is not possible to transition between gaits as they are implemented as separate classes
+2.  There is no transition in and out of the gait from standing position.
+3.  Different gaits have different trajectories, however the only thing that has to change is the order in which legs are lifted.
+4.  Phase logic is mixed with trajectory logic.
 
 Lets rework the code to address all these issues and have production ready solution we will use in the next notebook that will be taking all we have learned so far to real ROS implementation controlling a simulated robot in Gazebo.
 
 Our new approach should satisfy the following requirements:
 
- 1. Allow defining a gait trajectory.
- 2. Allow defining a gait sequence.
- 3. Allow defining a gait generator function that will combine the two above given a set of parameters.
- 4. Allow steering, turing and transitioning between gaits and positions.
+1.  Allow defining a gait trajectory.
+2.  Allow defining a gait sequence.
+3.  Allow defining a gait generator function that will combine the two above given a set of parameters.
+4.  Allow steering, turning and transitioning between gaits and positions.
 
 1 and 2 are fairly straightforward and we have seen some solution using trigonometrical functions and polynomials already, however they do not allow proper mixing of the trajectories needed to achieve smooth transitions. 3 and 4 require a function that allows mixing. That is a task for a [smoothing spline function](https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html), e.g. a [B-spline](https://en.wikipedia.org/wiki/B-spline). It allows a smooth transition between control points while remaining stable if some of the control points are changed.
 
@@ -933,11 +939,11 @@ As we already know every gait has two phases: swing and stance. The first parame
 
 Each phase has its own additional parameters:
 
- 1. swing phase:
+1.  swing phase:
     - lift height
     - step length
     - swing speed
- 2. stance phase:
+2.  stance phase:
     - step length
     - stance speed
 
@@ -1079,11 +1085,15 @@ class SplineGaitGenerator:
         if leg_phase < self.lift_duration:
             # Swing phase - leg in air moving forward
             t = np.interp(leg_phase, [0, self.lift_duration], [0, 1])
-            x_control_point = np.interp(leg_phase, [0, self.lift_duration], [-half_step, half_step])
+            x_control_point = np.interp(
+                leg_phase, [0, self.lift_duration], [-half_step, half_step]
+            )
             z_control_point = np.sin(t * np.pi) * self.step_height
         else:
             # Stance phase - leg on ground moving backward
-            x_control_point = np.interp(leg_phase, [self.lift_duration, 1], [half_step, -half_step])
+            x_control_point = np.interp(
+                leg_phase, [self.lift_duration, 1], [half_step, -half_step]
+            )
             z_control_point = 0  # On ground
 
         return np.array(

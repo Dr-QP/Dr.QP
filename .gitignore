@@ -353,6 +353,7 @@ nodesource_setup.sh
 
 # Copilot
 .copilot-tracking/
+.tmp/
 
 # Super-Linter
 super-linter-output/
