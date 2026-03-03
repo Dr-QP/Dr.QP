@@ -228,7 +228,9 @@ class GaitsVisualizer:
                 leg_tip = _leg_centers[leg]
                 if _rotation_gaits:
                     # TODO(anton-matosov): Why does visualization code need to know about rotations?
-                    rotation_transform = AffineTransform.from_rotvec([0, 0, offset.x], degrees=True)
+                    rotation_transform = AffineTransform.from_rotvec(
+                        [0, 0, offset.x], degrees=True
+                    )
                     leg_tip = rotation_transform.apply_point(leg_tip) + Point3D([0, 0, offset.z])
                 else:
                     leg_tip = leg_tip + offset
