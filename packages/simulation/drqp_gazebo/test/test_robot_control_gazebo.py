@@ -61,7 +61,7 @@ def generate_test_description():
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(simulation_launch),
                 launch_arguments={
-                    'sim_gui': 'false',
+                    'sim_gui': 'true',
                 }.items(),
             ),
             # Wait for simulation to fully initialize before starting tests
@@ -195,12 +195,13 @@ class TestGazeboRobotControl(unittest.TestCase):
             'Did not receive /model/drqp/odometry from Gazebo bridge',
         )
 
-    def _skip_if_pose_unavailable(self):
-        """Skip current test if Gazebo pose bridge data is unavailable."""
-        try:
-            self._wait_for_pose()
-        except TimeoutError as error:
-            self.skipTest(f'Gazebo pose data unavailable: {error}')
+    def _require_pose(self):
+        """Require Gazebo pose bridge data for pose-dependent tests."""
+        self._wait_for_pose()
+        self.assertIsNotNone(
+            self.robot_pose,
+            'Gazebo pose data is required but /model/drqp/odometry did not provide a pose',
+        )
 
     def _arm_robot(self):
         """Arm the robot and wait for torque_on state."""
@@ -276,7 +277,7 @@ class TestGazeboRobotControl(unittest.TestCase):
         self, stride_x: float = 0.0, stride_y: float = 0.0, rotation: float = 0.0
     ) -> tuple[float, float, float]:
         """Publish movement command and return body-frame deltas."""
-        self._skip_if_pose_unavailable()
+        self._require_pose()
         start_pose = self.robot_pose
         if start_pose is None:
             raise RuntimeError('No starting pose available before movement command')
@@ -373,7 +374,7 @@ class TestGazeboRobotControl(unittest.TestCase):
 
     def test_verify_armed_posture(self):
         """Verify robot posture after arming (base off ground)."""
-        self._skip_if_pose_unavailable()
+        self._require_pose()
 
         # Ensure robot is armed first
         self._arm_robot()
@@ -382,25 +383,25 @@ class TestGazeboRobotControl(unittest.TestCase):
         time.sleep(3.0)
 
         # Wait for pose to verify robot is in stable position
-        self._skip_if_pose_unavailable()
+        self._require_pose()
 
         # Verify base is elevated (z position should be > threshold)
-        if self.robot_pose is not None:
-            base_z = self.robot_pose.position.z
-            self.node.get_logger().info(f'Armed base height: z={base_z:.3f}m')
-            self.assertGreater(
-                base_z,
-                self.BASE_OFF_GROUND_THRESHOLD,
-                f'Base should be elevated when armed '
-                f'(z={base_z:.3f}m < {self.BASE_OFF_GROUND_THRESHOLD}m)',
-            )
+        self.assertIsNotNone(self.robot_pose, 'Failed to read pose after arming')
+        base_z = self.robot_pose.position.z
+        self.node.get_logger().info(f'Armed base height: z={base_z:.3f}m')
+        self.assertGreater(
+            base_z,
+            self.BASE_OFF_GROUND_THRESHOLD,
+            f'Base should be elevated when armed '
+            f'(z={base_z:.3f}m < {self.BASE_OFF_GROUND_THRESHOLD}m)',
+        )
 
         # Verify robot is in armed state
         self.assertEqual(self.current_robot_state, 'torque_on')
 
     def test_movement_forward(self):
         """Test forward movement command and verify motion."""
-        self._skip_if_pose_unavailable()
+        self._require_pose()
         self._arm_robot()
         try:
             forward_delta, _, _ = self._run_movement_and_measure(stride_x=1.0)
@@ -415,7 +416,7 @@ class TestGazeboRobotControl(unittest.TestCase):
 
     def test_movement_backward(self):
         """Test backward movement command and verify motion."""
-        self._skip_if_pose_unavailable()
+        self._require_pose()
         self._arm_robot()
         try:
             forward_delta, _, _ = self._run_movement_and_measure(stride_x=-1.0)
@@ -430,7 +431,7 @@ class TestGazeboRobotControl(unittest.TestCase):
 
     def test_movement_left(self):
         """Test left strafe movement command and verify motion."""
-        self._skip_if_pose_unavailable()
+        self._require_pose()
         self._arm_robot()
         try:
             _, left_delta, _ = self._run_movement_and_measure(stride_y=1.0)
@@ -445,7 +446,7 @@ class TestGazeboRobotControl(unittest.TestCase):
 
     def test_movement_right(self):
         """Test right strafe movement command and verify motion."""
-        self._skip_if_pose_unavailable()
+        self._require_pose()
         self._arm_robot()
         try:
             _, left_delta, _ = self._run_movement_and_measure(stride_y=-1.0)
@@ -462,7 +463,7 @@ class TestGazeboRobotControl(unittest.TestCase):
 
     def test_movement_rotation(self):
         """Test rotation movement command and verify yaw rotation."""
-        self._skip_if_pose_unavailable()
+        self._require_pose()
         self._arm_robot()
         try:
             _, _, delta_yaw = self._run_movement_and_measure(rotation=0.5)
@@ -486,14 +487,14 @@ class TestGazeboRobotControl(unittest.TestCase):
 
     def test_verify_disarmed_posture(self):
         """Verify robot posture after disarming (base on ground)."""
-        self._skip_if_pose_unavailable()
+        self._require_pose()
         self._disarm_robot()
 
         # Give robot time to settle to ground
         time.sleep(3.0)
 
         # Wait for pose
-        self._skip_if_pose_unavailable()
+        self._require_pose()
 
         # Verify base is down after disarm
         if self.robot_pose is not None:
