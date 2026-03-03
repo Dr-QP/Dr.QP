@@ -20,49 +20,10 @@ Options:
   --host HOST       Host/IP to bind the Xpra server (default: 127.0.0.1)
   --display DISPLAY X display (accepts :100 or 100; default: :100)
   --background      Start Xpra in the background and exit immediately
+  --stop            Stop the Xpra server and clean up resources
 USAGE
 }
 
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --host)
-      if [[ $# -lt 2 ]]; then
-        echo "Error: --host requires a value."
-        print_usage
-        exit 1
-      fi
-      HOST="$2"
-      shift 2
-      ;;
-    --port)
-      if [[ $# -lt 2 ]]; then
-        echo "Error: --port requires a value."
-        print_usage
-        exit 1
-      fi
-      PORT="$2"
-      shift 2
-      ;;
-    --display)
-      if [[ $# -lt 2 ]]; then
-        echo "Error: --display requires a value."
-        print_usage
-        exit 1
-      fi
-      DISPLAY="$2"
-      shift 2
-      ;;
-    --background)
-      BACKGROUND=true
-      shift
-      ;;
-    *)
-      echo "Unknown option: $1"
-      print_usage
-      exit 1
-      ;;
-  esac
-done
 
 normalize_display() {
   if [[ "$DISPLAY" != :* ]]; then
@@ -70,7 +31,21 @@ normalize_display() {
   fi
 }
 
-normalize_display
+xpra_session_running() {
+  xpra list 2>/dev/null | grep -Fq "LIVE session at $DISPLAY"
+}
+
+port_in_use() {
+  if command -v lsof &>/dev/null; then
+    lsof -iTCP:"$PORT" -sTCP:LISTEN -n -P &>/dev/null
+    return $?
+  fi
+  if command -v fuser &>/dev/null; then
+    fuser "$PORT"/tcp &>/dev/null
+    return $?
+  fi
+  return 1
+}
 
 # Detect GPU availability
 detect_gpu() {
@@ -111,15 +86,71 @@ cleanup() {
 
   # Stop Xpra server
   if command -v xpra &> /dev/null; then
-    if xpra status "$DISPLAY" &>/dev/null; then
+    if xpra_session_running; then
       xpra stop "$DISPLAY" 2>/dev/null || true
+      sleep 1
+      if xpra_session_running; then
+        xpra exit "$DISPLAY" 2>/dev/null || true
+      fi
     else
       echo "Xpra server on $DISPLAY is not running; nothing to stop."
     fi
   fi
 
+  if port_in_use; then
+    echo "Warning: TCP port $PORT is still in use after cleanup."
+  fi
+
   exit 0
 }
+
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --host)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: --host requires a value."
+        print_usage
+        exit 1
+      fi
+      HOST="$2"
+      shift 2
+      ;;
+    --port)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: --port requires a value."
+        print_usage
+        exit 1
+      fi
+      PORT="$2"
+      shift 2
+      ;;
+    --display)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: --display requires a value."
+        print_usage
+        exit 1
+      fi
+      DISPLAY="$2"
+      shift 2
+      ;;
+    --background)
+      BACKGROUND=true
+      shift
+      ;;
+    --stop)
+      cleanup
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      print_usage
+      exit 1
+      ;;
+  esac
+done
+
+normalize_display
 
 # Setup signal handlers for graceful shutdown
 trap cleanup SIGTERM SIGINT
@@ -136,7 +167,7 @@ if ! command -v xpra &> /dev/null; then
   exit 0
 fi
 
-if xpra status "$DISPLAY" &> /dev/null; then
+if xpra_session_running; then
   echo "Xpra already running on $DISPLAY. Skipping startup."
   exit 0
 fi
