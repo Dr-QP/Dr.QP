@@ -24,17 +24,61 @@
     }
   },
   "mounts": [
-    { "source": "drqp-ansible-${devcontainerId}", "target": "/opt/ros/overlay_ws/.ansible", "type": "volume" },
-    { "source": "drqp-vscode-${devcontainerId}", "target": "/opt/ros/overlay_ws/.vscode", "type": "volume" },
-    { "source": "drqp-clangd-cache-${devcontainerId}", "target": "/opt/ros/overlay_ws/.cache", "type": "volume" },
-    { "source": "drqp-colcon-build-${devcontainerId}", "target": "/opt/ros/overlay_ws/build", "type": "volume" },
-    { "source": "drqp-colcon-install-${devcontainerId}", "target": "/opt/ros/overlay_ws/install", "type": "volume" },
-    { "source": "drqp-colcon-lcov-${devcontainerId}", "target": "/opt/ros/overlay_ws/lcov", "type": "volume" },
-    { "source": "drqp-colcon-log-${devcontainerId}", "target": "/opt/ros/overlay_ws/log", "type": "volume" },
-    { "source": "drqp-docs-build-${devcontainerId}", "target": "/opt/ros/overlay_ws/docs/_build", "type": "volume" },
-    { "source": "drqp-python-micromamba-${devcontainerId}", "target": "/opt/ros/overlay_ws/.micromamba", "type": "volume" },
-    { "source": "drqp-python-venv-${devcontainerId}", "target": "/opt/ros/overlay_ws/.venv", "type": "volume" },
-    { "source": "drqp-python-venv-prod-${devcontainerId}", "target": "/opt/ros/overlay_ws/.venv-prod", "type": "volume" }
+    {
+      "source": "drqp-ansible-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/.ansible",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-vscode-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/.vscode",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-clangd-cache-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/.cache",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-colcon-build-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/build",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-colcon-install-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/install",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-colcon-lcov-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/lcov",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-colcon-log-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/log",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-docs-build-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/docs/_build",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-python-micromamba-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/.micromamba",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-python-venv-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/.venv",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-python-venv-prod-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/.venv-prod",
+      "type": "volume"
+    }
   ],
   // Second venv command with --system-site-packages turns on access to system packages to allow ROS2 builds to work
   "postCreateCommand": "sudo chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /opt/ros/overlay_ws/.venv",
@@ -48,9 +92,12 @@
   "privileged": true,
   "runArgs": [
     // Commented out to allow Codespaces use
-    "--network", "host",
-    "--ipc", "host",
-    "--pid", "host"
+    "--network",
+    "host",
+    "--ipc",
+    "host",
+    "--pid",
+    "host"
 
     // Uncomment to allow shared memory based DDS communication
     // "--user", "1001:1001", // Change to match primary user on the host
