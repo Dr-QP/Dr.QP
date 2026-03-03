@@ -35,7 +35,7 @@ jobs:
             - .github/instructions/**
             - .github/skills/**
             - .github/workflows/copilot.yml
-            - packages/development/drqp_validate_agents/**
+            - py_packages/**
 
   validate-skills:
     name: Validate Agent Skills
@@ -53,12 +53,15 @@ jobs:
         uses: ./.github/actions/setup-python-venv
 
       - name: Install validate_skills package
-        run: pip install -e packages/development/drqp_validate_agents
+        run: pip install -e py_packages/validate_agents
+
+      - name: Ruff check
+        run: ruff check py_packages/validate_agents/
 
       - name: Test validate skills
         run: |
-          pytest packages/development/drqp_validate_agents/test/validate_skills \
-            --cov=drqp_validate_agents.validate_skills --cov-report=xml
+          pytest py_packages/validate_agents/tests/validate_skills \
+            --cov=validate_agents --cov-report=xml
 
       - name: Validate Agent Skills
         run: validate_skills --recommend

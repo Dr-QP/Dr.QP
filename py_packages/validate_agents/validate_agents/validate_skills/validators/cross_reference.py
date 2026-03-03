@@ -21,11 +21,11 @@
 
 """Validator for cross-references."""
 
-from pathlib import Path
 import re
+from pathlib import Path
 from typing import List, Optional
 
-from drqp_validate_agents.validate_skills.types import ValidationIssue, ValidationLevel
+from ..types import ValidationIssue, ValidationLevel
 
 
 class CrossReferenceValidator:

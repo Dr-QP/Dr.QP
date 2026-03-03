@@ -466,7 +466,8 @@
       "/opt/ros/jazzy/local/lib/python3.12/dist-packages"
     ],
     "python.testing.pytestArgs": [
-        "packages"
+        "packages",
+        "py_packages"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,

@@ -21,7 +21,7 @@
 
 """Unit tests for CLI argument parsing and setup."""
 
-from drqp_validate_agents.validate_skills.cli import parse_arguments
+from validate_agents.validate_skills.cli import parse_arguments
 import pytest
 
 

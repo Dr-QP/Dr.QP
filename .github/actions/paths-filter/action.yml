@@ -35,6 +35,7 @@ runs:
           - codecov.yml
           - docker/**
           - packages/**
+          - py_packages/**
           - scripts/**
         YAML
           if [ -n "$EXTRA" ]; then
