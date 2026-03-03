@@ -32,6 +32,34 @@ normalize_display() {
   fi
 }
 
+display_number() {
+  echo "${DISPLAY#:}"
+}
+
+ensure_display_lock_is_clear() {
+  local number lock_file socket_file lock_pid
+  number="$(display_number)"
+  lock_file="/tmp/.X${number}-lock"
+  socket_file="/tmp/.X11-unix/X${number}"
+
+  if [[ ! -f "$lock_file" ]]; then
+    return 0
+  fi
+
+  lock_pid="$(tr -cd '0-9' < "$lock_file" 2>/dev/null || true)"
+  if [[ -n "$lock_pid" ]] && kill -0 "$lock_pid" 2>/dev/null; then
+    echo "Error: display $DISPLAY is in use by PID $lock_pid."
+    echo "Use --display with a different number, or stop the existing X server."
+    exit 1
+  fi
+
+  echo "Removing stale X lock for display $DISPLAY: $lock_file"
+  rm -f "$lock_file"
+  if [[ -S "$socket_file" ]]; then
+    rm -f "$socket_file"
+  fi
+}
+
 xpra_session_running() {
   xpra list 2>/dev/null | grep -Fq "LIVE session at $DISPLAY"
 }
@@ -172,6 +200,8 @@ if xpra_session_running; then
   echo "Xpra already running on $DISPLAY. Skipping startup."
   exit 0
 fi
+
+ensure_display_lock_is_clear
 
 # Detect and setup rendering
 if detect_gpu; then
