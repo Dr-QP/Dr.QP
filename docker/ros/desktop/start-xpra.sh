@@ -7,6 +7,7 @@ HOST=127.0.0.1
 PORT=14500
 DISPLAY=:100
 BACKGROUND=false
+VIDEO_ENCODERS=${XPRA_VIDEO_ENCODERS:-x264,vpx}
 
 # Parse command-line arguments
 print_usage() {
@@ -200,6 +201,7 @@ XPRA_ARGS=(
   "--dbus-launch="
   "--webcam=no"
   "--opengl=yes"
+  "--video-encoders=$VIDEO_ENCODERS"
 )
 
 # Start Xpra server
