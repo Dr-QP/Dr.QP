@@ -28,7 +28,8 @@
     { "source": "drqp-colcon-log-${devcontainerId}", "target": "/opt/ros/overlay_ws/log", "type": "volume" },
     { "source": "drqp-docs-build-${devcontainerId}", "target": "/opt/ros/overlay_ws/docs/_build", "type": "volume" },
     { "source": "drqp-python-micromamba-${devcontainerId}", "target": "/opt/ros/overlay_ws/.micromamba", "type": "volume" },
-    { "source": "drqp-python-venv-${devcontainerId}", "target": "/opt/ros/overlay_ws/.venv", "type": "volume" }
+    { "source": "drqp-python-venv-${devcontainerId}", "target": "/opt/ros/overlay_ws/.venv", "type": "volume" },
+    { "source": "drqp-python-venv-prod-${devcontainerId}", "target": "/opt/ros/overlay_ws/.venv-prod", "type": "volume" }
   ],
   // Second venv command with --system-site-packages turns on access to system packages to allow ROS2 builds to work
   "postCreateCommand": "sudo chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /opt/ros/overlay_ws/.venv",
