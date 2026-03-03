@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import multiprocessing
+import os
 
 from ament_flake8.main import main_with_errors
 import pytest
@@ -23,5 +24,6 @@ import pytest
 def test_flake8():
     # Use spawn method to avoid fork-related warnings
     multiprocessing.set_start_method('spawn', force=True)
-    rc, errors = main_with_errors(argv=[])
+    package_root = os.path.dirname(os.path.dirname(__file__))
+    rc, errors = main_with_errors(argv=[package_root])
     assert rc == 0, 'Found %d code style errors / warnings:\n' % len(errors) + '\n'.join(errors)

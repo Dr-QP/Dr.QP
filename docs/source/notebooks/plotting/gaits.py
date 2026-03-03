@@ -78,7 +78,9 @@ class GaitsVisualizer:
         fig, axs = plt.subplots(4, 1)
         fig.set_figheight(12, forward=True)
         # Adjust spacing between subplots to avoid title overlapping with ticks
-        plt.subplots_adjust(hspace=0.8)  # Increased from 0.5 to 0.8 for more space between subplots
+        plt.subplots_adjust(
+            hspace=0.8
+        )  # Increased from 0.5 to 0.8 for more space between subplots
 
         # print out **gen_args into a string
         if len(gen_args) == 0:
