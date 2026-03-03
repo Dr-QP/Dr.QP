@@ -229,6 +229,7 @@ def format_results(
         results: List of validation results
         output_format: Format type ('text', 'json', 'csv')
         format: Optional alias for output_format
+        **kwargs: Additional format options
 
     Returns
     -------

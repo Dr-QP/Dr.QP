@@ -590,7 +590,7 @@
     "python.analysis.typeCheckingMode": "standard",
     "python.defaultInterpreterPath": "/usr/bin/python3",
 
-    "ros2-topic-viewer.rosSetupScript": "/media/anton/dev/ros_workspaces/drqp_ws/src/Dr.QP/install/setup.bash",
+    "ros2-topic-viewer.rosSetupScript": "scripts/setup.bash",
     "ansibleVault.encryptVaultId": "",
 
     "github.copilot.chat.codeGeneration.useInstructionFiles": true,
@@ -601,14 +601,17 @@
     },
     "chat.agent.enabled": true,
     "chat.agent.maxRequests": 250,
+    "chat.useAgentSkills": true,
+    "chat.useAgentsMdFile": true,
     "chat.mcp.gallery.enabled": true,
     "chat.mcp.autostart": "newAndOutdated",
     "chat.tools.terminal.autoApprove": {
-      "*": {
-        "approve": true
-      },
-      "gh": true
+      "/.*/": true, // Allow all commands, denied commands will still need approval.
+      "gh": true,
+      "rm": false
     },
+    "chat.tools.terminal.ignoreDefaultAutoApproveRules": false,
+    "chat.tools.terminal.blockDetectedFileWrites": "outsideWorkspace",
     "chat.tools.urls.autoApprove": {
       "https://github.com": true,
       "https://www.google.com/search": true

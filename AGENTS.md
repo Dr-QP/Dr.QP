@@ -1,5 +1,8 @@
 # Agents Guidelines
 
+NEVER use "$TMPDIR" env variable.
+ALWAYS use "./.tmp" (relative to the repo root) for temporary files; create it if it does not exist.
+
 ## General Engineering Principles
 
 For comprehensive engineering standards and best practices, refer to [shared engineering guidelines](/.github/instructions/engineering.instructions.md).
