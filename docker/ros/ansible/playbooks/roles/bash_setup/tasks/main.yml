@@ -13,7 +13,7 @@
 - name: Add ros2_ws to .bashrc
   ansible.builtin.lineinfile:
     path: "{{ user_home }}/.bashrc"
-    line: 'alias ros2_ws="source ./install/setup.bash"'
+    line: 'alias ros2_ws="source ./scripts/setup.bash"'
     state: present
     create: true
     owner: "{{ ros_user_setup_uid }}"
