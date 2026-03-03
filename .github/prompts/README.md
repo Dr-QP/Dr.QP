@@ -174,9 +174,41 @@ Prompt files (`.prompt.md`) are pre-configured, executable templates that guide 
 
 ---
 
+### Pull Requests
+
+#### 6. [open-pr](./open-pr.prompt.md)
+
+**Purpose**: Open or update a pull request with a title and body synced to the actual branch changes.
+
+**When to use**:
+- Opening a PR from the current branch
+- Keeping an existing PR title/body up to date after new commits
+- Replacing boilerplate with accurate, change-driven documentation
+- Ensuring PR content reflects what is actually in the branch
+
+**Example**:
+```
+/open-pr
+/open-pr --base develop --issue 42
+/open-pr --draft true
+```
+
+**Inputs**:
+- Base branch (optional, default: `main`)
+- Draft flag (optional, default: `false`)
+- Related issue number to close (optional)
+
+**Outputs**:
+- PR opened (or updated) via `gh pr create` / `gh pr edit`
+- Title: concise, imperative, type-prefixed (e.g. `feat: add vision package`)
+- Body: change-driven sections — What Changed, Why, How to Test, Breaking Changes, Related Issues
+- Confirmation with PR URL and section summary
+
+---
+
 ### Documentation
 
-#### 6. [generate-pr-description](./generate-pr-description.prompt.md)
+#### 7. [generate-pr-description](./generate-pr-description.prompt.md)
 
 **Purpose**: Generate comprehensive pull request description following code-review-standards.
 
