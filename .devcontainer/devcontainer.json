@@ -17,6 +17,16 @@
   // Port 14500: Xpra HTML5 GUI server for remote desktop access
   "forwardPorts": [14500],
   "mounts": [
+    { "source": "drqp-ansible", "target": "/opt/ros/overlay_ws/.ansible", "type": "volume" },
+    { "source": "drqp-vscode", "target": "/opt/ros/overlay_ws/.vscode", "type": "volume" },
+    { "source": "drqp-clangd-cache", "target": "/opt/ros/overlay_ws/.cache", "type": "volume" },
+    { "source": "drqp-colcon-build", "target": "/opt/ros/overlay_ws/build", "type": "volume" },
+    { "source": "drqp-colcon-install", "target": "/opt/ros/overlay_ws/install", "type": "volume" },
+    { "source": "drqp-colcon-lcov", "target": "/opt/ros/overlay_ws/lcov", "type": "volume" },
+    { "source": "drqp-colcon-log", "target": "/opt/ros/overlay_ws/log", "type": "volume" },
+    { "source": "drqp-docs-build", "target": "/opt/ros/overlay_ws/docs/_build", "type": "volume" },
+    { "source": "drqp-python-micromamba", "target": "/opt/ros/overlay_ws/.micromamba", "type": "volume" },
+    { "source": "drqp-python-venv", "target": "/opt/ros/overlay_ws/.venv", "type": "volume" }
   ],
   // Second venv command with --system-site-packages turns on access to system packages to allow ROS2 builds to work
   "postCreateCommand": "sudo chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /opt/ros/overlay_ws/.venv",
@@ -27,26 +37,15 @@
     "xpra": "/start-xpra.sh --background"
   },
   "postStartCommand": "/opt/ros/overlay_ws/scripts/devcontainer-start-docker.sh",
+  "privileged": true,
   "runArgs": [
     // Commented out to allow Codespaces use
     "--network", "host",
     "--ipc", "host",
-    "--pid", "host",
-    "--privileged",
+    "--pid", "host"
 
     // Uncomment to allow shared memory based DDS communication
     // "--user", "1001:1001", // Change to match primary user on the host
-
-    "--mount", "type=volume,source=drqp-ansible,target=/opt/ros/overlay_ws/.ansible",
-    "--mount", "type=volume,source=drqp-vscode,target=/opt/ros/overlay_ws/.vscode",
-    "--mount", "type=volume,source=drqp-clangd-cache,target=/opt/ros/overlay_ws/.cache",
-    "--mount", "type=volume,source=drqp-colcon-build,target=/opt/ros/overlay_ws/build",
-    "--mount", "type=volume,source=drqp-colcon-install,target=/opt/ros/overlay_ws/install",
-    "--mount", "type=volume,source=drqp-colcon-lcov,target=/opt/ros/overlay_ws/lcov",
-    "--mount", "type=volume,source=drqp-colcon-log,target=/opt/ros/overlay_ws/log",
-    "--mount", "type=volume,source=drqp-docs-build,target=/opt/ros/overlay_ws/docs/_build",
-    "--mount", "type=volume,source=drqp-python-micromamba,target=/opt/ros/overlay_ws/.micromamba",
-    "--mount", "type=volume,source=drqp-python-venv,target=/opt/ros/overlay_ws/.venv"
   ],
   "features": {}
 }
