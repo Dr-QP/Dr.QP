@@ -24,7 +24,7 @@
         name:
           - xpra
         state: present
-        install_recommends: false
+        install_recommends: true
 
     - name: Clone Xpra-html5 repository (pinned to v19 tag)
       ansible.builtin.git:
