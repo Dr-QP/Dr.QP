@@ -142,10 +142,7 @@ class SkillFrontmatterValidator:
                         'general',
                     }
                     desc_lower = description.lower()
-                    found_vague = [
-                        term for term in vague_terms
-                        if f' {term} ' in f' {desc_lower} '
-                    ]
+                    found_vague = [term for term in vague_terms if f' {term} ' in f' {desc_lower} ']
                     if found_vague:
                         vague_list = ', '.join(found_vague)
                         message = (
