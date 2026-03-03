@@ -12,7 +12,7 @@ VIDEO_ENCODERS=${XPRA_VIDEO_ENCODERS:-x264,vpx}
 # Parse command-line arguments
 print_usage() {
   cat <<'USAGE'
-Usage: start-xpra.sh [--port PORT] [--display DISPLAY] [--background]
+Usage: start-xpra.sh [--host HOST] [--port PORT] [--display DISPLAY] [--background] [--stop]
 
 Start an Xpra server with the HTML5 web client enabled.
 
