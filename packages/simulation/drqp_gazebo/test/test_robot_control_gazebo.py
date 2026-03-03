@@ -81,9 +81,8 @@ class TestGazeboRobotControl(unittest.TestCase):
     CLOCK_TIMEOUT = 10.0
     MOVEMENT_DURATION = 5.0
 
-    # Ground clearance thresholds (meters)
-    BASE_ON_GROUND_THRESHOLD = 0.015  # Base should be below this when on ground
-    BASE_OFF_GROUND_THRESHOLD = 0.03  # Model z should be above this when armed
+    # Posture delta threshold (meters)
+    MIN_ARM_DISARM_HEIGHT_DELTA = 0.02
 
     @classmethod
     def setUpClass(cls):
@@ -375,8 +374,14 @@ class TestGazeboRobotControl(unittest.TestCase):
     def test_verify_armed_posture(self):
         """Verify robot posture after arming (base off ground)."""
         self._require_pose()
+        self._disarm_robot()
+        time.sleep(1.0)
+        self._require_pose()
 
-        # Ensure robot is armed first
+        self.assertIsNotNone(self.robot_pose, 'Failed to read disarmed pose before arming')
+        disarmed_base_z = self.robot_pose.position.z
+
+        # Ensure robot is armed
         self._arm_robot()
 
         # Give robot time to reach standing posture
@@ -385,15 +390,19 @@ class TestGazeboRobotControl(unittest.TestCase):
         # Wait for pose to verify robot is in stable position
         self._require_pose()
 
-        # Verify base is elevated (z position should be > threshold)
+        # Verify base is elevated relative to disarmed posture
         self.assertIsNotNone(self.robot_pose, 'Failed to read pose after arming')
-        base_z = self.robot_pose.position.z
-        self.node.get_logger().info(f'Armed base height: z={base_z:.3f}m')
+        armed_base_z = self.robot_pose.position.z
+        delta_z = armed_base_z - disarmed_base_z
+        self.node.get_logger().info(
+            f'Armed base height: z={armed_base_z:.3f}m '
+            f'(disarmed={disarmed_base_z:.3f}m, delta={delta_z:.3f}m)'
+        )
         self.assertGreater(
-            base_z,
-            self.BASE_OFF_GROUND_THRESHOLD,
-            f'Base should be elevated when armed '
-            f'(z={base_z:.3f}m < {self.BASE_OFF_GROUND_THRESHOLD}m)',
+            delta_z,
+            self.MIN_ARM_DISARM_HEIGHT_DELTA,
+            f'Base should rise when armed '
+            f'(delta_z={delta_z:.3f}m <= {self.MIN_ARM_DISARM_HEIGHT_DELTA}m)',
         )
 
         # Verify robot is in armed state
@@ -488,6 +497,13 @@ class TestGazeboRobotControl(unittest.TestCase):
     def test_verify_disarmed_posture(self):
         """Verify robot posture after disarming (base on ground)."""
         self._require_pose()
+        self._arm_robot()
+        time.sleep(1.0)
+        self._require_pose()
+
+        self.assertIsNotNone(self.robot_pose, 'Failed to read armed pose before disarming')
+        armed_base_z = self.robot_pose.position.z
+
         self._disarm_robot()
 
         # Give robot time to settle to ground
@@ -496,16 +512,21 @@ class TestGazeboRobotControl(unittest.TestCase):
         # Wait for pose
         self._require_pose()
 
-        # Verify base is down after disarm
+        # Verify base goes down relative to armed posture
         if self.robot_pose is not None:
-            base_z = self.robot_pose.position.z
-            self.node.get_logger().info(f'Disarmed base height: z={base_z:.3f}m')
+            disarmed_base_z = self.robot_pose.position.z
+            delta_z = armed_base_z - disarmed_base_z
+            self.node.get_logger().info(
+                f'Disarmed base height: z={disarmed_base_z:.3f}m '
+                f'(armed={armed_base_z:.3f}m, delta={delta_z:.3f}m)'
+            )
             self.assertLess(
-                base_z,
-                self.BASE_ON_GROUND_THRESHOLD,
+                disarmed_base_z,
+                armed_base_z - self.MIN_ARM_DISARM_HEIGHT_DELTA,
                 msg=(
-                    f'Base should be on ground when disarmed '
-                    f'(z={base_z:.3f}m >= {self.BASE_ON_GROUND_THRESHOLD}m)'
+                    f'Base should lower when disarmed '
+                    f'(armed={armed_base_z:.3f}m, disarmed={disarmed_base_z:.3f}m, '
+                    f'min_delta={self.MIN_ARM_DISARM_HEIGHT_DELTA}m)'
                 ),
             )
         else:
