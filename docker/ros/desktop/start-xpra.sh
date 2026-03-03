@@ -170,6 +170,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --stop)
+      normalize_display
       cleanup
       exit 0
       ;;
