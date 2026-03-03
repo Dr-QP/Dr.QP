@@ -68,8 +68,8 @@ done
 
 # Derive unique port per devcontainer instance when DEVCONTAINER_ID is set
 if [[ "${PORT_EXPLICIT}" != "true" ]] && [[ -n "${DEVCONTAINER_ID:-}" ]]; then
-  hash=$(echo -n "${DEVCONTAINER_ID}" | cksum | awk '{print $1}')
-  PORT=$((14500 + (hash % 100)))
+  port_hash=$(echo -n "${DEVCONTAINER_ID}" | cksum | awk '{print $1}')
+  PORT=$((14500 + (port_hash % 100)))
 fi
 
 normalize_display() {
