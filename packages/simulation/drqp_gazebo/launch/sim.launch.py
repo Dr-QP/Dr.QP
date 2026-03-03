@@ -43,7 +43,7 @@ def generate_launch_description():
     declared_arguments = []
     declared_arguments.append(
         DeclareLaunchArgument(
-            'gui',
+            'sim_gui',
             default_value='true',
             description='Start Gazebo GUI Client automatically with this launch file.',
         )
@@ -64,7 +64,7 @@ def generate_launch_description():
     )
 
     # Initialize Arguments
-    gui = LaunchConfiguration('gui')
+    sim_gui = LaunchConfiguration('sim_gui')
 
     gazebo_sigterm_timeout = LaunchConfiguration('gazebo_sigterm_timeout')
     gazebo_sigkill_timeout = LaunchConfiguration('gazebo_sigkill_timeout')
@@ -76,7 +76,7 @@ def generate_launch_description():
             '-v',
             '3',
             'empty.sdf',
-            IfElseSubstitution(gui, '', ' --headless-rendering -s'),
+            IfElseSubstitution(sim_gui, '', ' --headless-rendering -s'),
         ],
         shell=True,
         output='screen',
@@ -104,7 +104,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             'gz_args': IfElseSubstitution(
-                gui,
+                sim_gui,
                 gz_args,
                 gz_args + ' --headless-rendering -s',
             ),
@@ -161,7 +161,6 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
-            'show_rviz': gui,
             'use_gazebo': 'true',
         }.items(),
     )

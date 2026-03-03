@@ -60,7 +60,9 @@ def generate_test_description():
         [
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(simulation_launch),
-                launch_arguments={'gui': 'false'}.items(),
+                launch_arguments={
+                    'sim_gui': 'false',
+                }.items(),
             ),
             # Wait for simulation to fully initialize before starting tests
             TimerAction(period=10.0, actions=[ReadyToTest()]),
