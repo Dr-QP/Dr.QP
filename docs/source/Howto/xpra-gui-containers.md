@@ -34,16 +34,18 @@ If you're not using the devcontainer, you can run Xpra directly from Docker:
 ```bash
 docker run -it -p 14500:14500 \
   ghcr.io/dr-qp/jazzy-ros-desktop:edge \
-  bash -c "/start-xpra.sh & sleep 2 && bash"
+   bash -c "/start-xpra.sh --host 0.0.0.0 & sleep 2 && bash"
 ```
 
 Then open `http://localhost:14500` in your browser.
+
+When using Docker port publishing (`-p`), pass `--host 0.0.0.0` so Xpra listens on the container interface. For devcontainer or host-network workflows, `127.0.0.1` remains the safer default.
 
 ## Configuration
 
 The `/start-xpra.sh` script accepts the following options:
 
-- `--host HOST`: Host/IP for Xpra TCP bind (default: `127.0.0.1`)
+- `--host HOST`: Host/IP for Xpra TCP bind (default: `127.0.0.1`; use `0.0.0.0` with Docker `-p` port publishing)
 - `--port PORT`: HTTP/TCP port for the HTML5 client (default: `14500`)
 - `--display DISPLAY`: X display number (accepts `:100` or `100`; default: `:100`)
 - `--background`: Start Xpra in the background and exit immediately (used by devcontainer auto-start)
