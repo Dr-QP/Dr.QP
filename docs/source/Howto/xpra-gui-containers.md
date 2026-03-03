@@ -43,11 +43,9 @@ Then open `http://localhost:14500` in your browser.
 
 The `/start-xpra.sh` script accepts the following options:
 
-- `--host HOST`: Host/IP for Xpra TCP bind (default: `127.0.0.1`)
-- `--port PORT`: HTTP/TCP port for the HTML5 client (default: `14500`)
-- `--display DISPLAY`: X display number (accepts `:100` or `100`; default: `:100`)
+- `--port PORT`: Change the web server port (default: 14500)
+- `--display DISPLAY`: Specify the X display number (default: :100)
 - `--background`: Start Xpra in the background and exit immediately (used by devcontainer auto-start)
-- `--stop`: Stop the Xpra session for the selected display and clean up
 
 Example:
 ```bash

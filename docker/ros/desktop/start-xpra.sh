@@ -7,14 +7,11 @@ HOST=127.0.0.1
 PORT=14500
 DISPLAY=:100
 BACKGROUND=false
-VIDEO_ENCODERS=${XPRA_VIDEO_ENCODERS:-x264,vpx}
-XPRA_DAEMON_MODE=no
-XPRA_LOG_FILE=/tmp/xpra.log
 
 # Parse command-line arguments
 print_usage() {
   cat <<'USAGE'
-Usage: start-xpra.sh [--host HOST] [--port PORT] [--display DISPLAY] [--background] [--stop]
+Usage: start-xpra.sh [--port PORT] [--display DISPLAY] [--background]
 
 Start an Xpra server with the HTML5 web client enabled.
 
@@ -23,10 +20,49 @@ Options:
   --host HOST       Host/IP to bind the Xpra server (default: 127.0.0.1)
   --display DISPLAY X display (accepts :100 or 100; default: :100)
   --background      Start Xpra in the background and exit immediately
-  --stop            Stop the Xpra server and clean up resources
 USAGE
 }
 
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --host)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: --host requires a value."
+        print_usage
+        exit 1
+      fi
+      HOST="$2"
+      shift 2
+      ;;
+    --port)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: --port requires a value."
+        print_usage
+        exit 1
+      fi
+      PORT="$2"
+      shift 2
+      ;;
+    --display)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: --display requires a value."
+        print_usage
+        exit 1
+      fi
+      DISPLAY="$2"
+      shift 2
+      ;;
+    --background)
+      BACKGROUND=true
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      print_usage
+      exit 1
+      ;;
+  esac
+done
 
 normalize_display() {
   if [[ "$DISPLAY" != :* ]]; then
@@ -34,49 +70,7 @@ normalize_display() {
   fi
 }
 
-display_number() {
-  echo "${DISPLAY#:}"
-}
-
-ensure_display_lock_is_clear() {
-  local number lock_file socket_file lock_pid
-  number="$(display_number)"
-  lock_file="/tmp/.X${number}-lock"
-  socket_file="/tmp/.X11-unix/X${number}"
-
-  if [[ ! -f "$lock_file" ]]; then
-    return 0
-  fi
-
-  lock_pid="$(tr -cd '0-9' < "$lock_file" 2>/dev/null || true)"
-  if [[ -n "$lock_pid" ]] && kill -0 "$lock_pid" 2>/dev/null; then
-    echo "Error: display $DISPLAY is in use by PID $lock_pid."
-    echo "Use --display with a different number, or stop the existing X server."
-    exit 1
-  fi
-
-  echo "Removing stale X lock for display $DISPLAY: $lock_file"
-  rm -f "$lock_file"
-  if [[ -S "$socket_file" ]]; then
-    rm -f "$socket_file"
-  fi
-}
-
-xpra_session_running() {
-  xpra list 2>/dev/null | grep -Fq "LIVE session at $DISPLAY"
-}
-
-port_in_use() {
-  if command -v lsof &>/dev/null; then
-    lsof -iTCP:"$PORT" -sTCP:LISTEN -n -P &>/dev/null
-    return $?
-  fi
-  if command -v fuser &>/dev/null; then
-    fuser "$PORT"/tcp &>/dev/null
-    return $?
-  fi
-  return 1
-}
+normalize_display
 
 # Detect GPU availability
 detect_gpu() {
@@ -117,75 +111,11 @@ cleanup() {
 
   # Stop Xpra server
   if command -v xpra &> /dev/null; then
-    if xpra_session_running; then
-      xpra stop "$DISPLAY" 2>/dev/null || true
-      sleep 1
-      if xpra_session_running; then
-        xpra exit "$DISPLAY" 2>/dev/null || true
-      fi
-    else
-      echo "Xpra server on $DISPLAY is not running; nothing to stop."
-    fi
-  fi
-
-  if port_in_use; then
-    echo "Warning: TCP port $PORT is still in use after cleanup."
+    xpra stop "$DISPLAY" 2>/dev/null || true
   fi
 
   exit 0
 }
-
-
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --host)
-      if [[ $# -lt 2 ]]; then
-        echo "Error: --host requires a value."
-        print_usage
-        exit 1
-      fi
-      HOST="$2"
-      shift 2
-      ;;
-    --port)
-      if [[ $# -lt 2 ]]; then
-        echo "Error: --port requires a value."
-        print_usage
-        exit 1
-      fi
-      PORT="$2"
-      shift 2
-      ;;
-    --display)
-      if [[ $# -lt 2 ]]; then
-        echo "Error: --display requires a value."
-        print_usage
-        exit 1
-      fi
-      DISPLAY="$2"
-      shift 2
-      ;;
-    --background)
-      BACKGROUND=true
-      shift
-      ;;
-    --stop)
-      cleanup
-      exit 0
-      ;;
-    *)
-      echo "Unknown option: $1"
-      print_usage
-      exit 1
-      ;;
-  esac
-done
-
-normalize_display
-
-if [[ "$BACKGROUND" == "true" ]]; then
-  XPRA_DAEMON_MODE=yes
-fi
 
 # Setup signal handlers for graceful shutdown
 trap cleanup SIGTERM SIGINT
@@ -202,12 +132,10 @@ if ! command -v xpra &> /dev/null; then
   exit 0
 fi
 
-if xpra_session_running; then
+if xpra status "$DISPLAY" &> /dev/null; then
   echo "Xpra already running on $DISPLAY. Skipping startup."
   exit 0
 fi
-
-ensure_display_lock_is_clear
 
 # Detect and setup rendering
 if detect_gpu; then
@@ -222,53 +150,26 @@ echo "Starting Xpra server..."
 echo "HTML5 client will be available at: http://$HOST:$PORT"
 echo ""
 
-# Shared Xpra options (defined once for both foreground/background modes)
-XPRA_ARGS=(
-  "$DISPLAY"                             # Virtual display identifier (for example, :100)
-  "--bind-tcp=$HOST:$PORT"               # Bind HTML5/websocket server to host:port
-  "--html=on"                            # Enable built-in HTML5 web client
-  "--daemon=$XPRA_DAEMON_MODE"           # Xpra daemon mode (yes for background lifecycle hooks)
-  "--mdns=no"                            # Disable mDNS service advertisement
-  "--notifications=no"                   # Disable desktop notification forwarding
-  "--global-menus=no"                    # Disable global menu integration
-  "--start-new-commands=no"              # Prevent clients from launching new server-side commands
-  "--dbus-proxy=no"                      # Disable D-Bus proxying into sessions
-  "--dbus-control=no"                    # Disable remote control over D-Bus
-  "--dbus-launch="                       # Do not auto-launch a D-Bus session bus
-  "--webcam=no"                          # Disable webcam forwarding
-  "--opengl=yes"                         # Allow OpenGL acceleration when available
-  "--video-encoders=$VIDEO_ENCODERS"     # Preferred video encoder list (env-overridable)
-)
-
 # Start Xpra server
 # --bind-tcp: Listen on specified host and port
 # --html=on: Enable HTML5 web client
 # --daemon=no: Run in foreground (important for Docker)
 # Xpra creates its own virtual X server (Xvfb or Xdummy) internally
 if [[ "$BACKGROUND" == "true" ]]; then
-  echo "Starting Xpra in background mode..."
-  if ! xpra start "${XPRA_ARGS[@]}" "--log-file=$XPRA_LOG_FILE"; then
-    echo "Warning: Xpra failed to start in background mode. Check $XPRA_LOG_FILE."
-    exit 1
-  fi
-
-  for _ in {1..10}; do
-    if xpra_session_running; then
-      exit 0
-    fi
-    sleep 1
-  done
-
-  if ! xpra_session_running; then
-    echo "Warning: Xpra background startup did not produce a live session on $DISPLAY."
-    echo "Check $XPRA_LOG_FILE for diagnostics."
-    exit 1
-  fi
-
+  nohup xpra start "$DISPLAY" \
+    --bind-tcp="$HOST:$PORT" \
+    --html=on \
+    --daemon=no > /tmp/xpra.log 2>&1 &
   exit 0
 fi
 
-if ! xpra start "${XPRA_ARGS[@]}"; then
+if ! xpra start "$DISPLAY" \
+  --bind-tcp="$HOST:$PORT" \
+  --html=on \
+  --daemon=no; then
   echo "Warning: Xpra failed to start. Check ~/.xpra/logs/ for details."
   exit 1
 fi
+
+# Cleanup on exit
+cleanup
