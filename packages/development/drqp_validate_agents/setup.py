@@ -14,7 +14,7 @@ setup(
     zip_safe=True,
     maintainer='Anton Matosov',
     maintainer_email='anton.matosov@gmail.com',
-    description='TODO: Package description',
+    description='CLI tools for validating DRQP agents and their skills.',
     license='MIT',
     extras_require={
         'test': [
