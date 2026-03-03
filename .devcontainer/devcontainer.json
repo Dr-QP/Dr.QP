@@ -12,12 +12,17 @@
   "workspaceMount": "source=${localWorkspaceFolder},target=/opt/ros/overlay_ws/,type=bind",
   "containerEnv": {
     "DISPLAY": ":100",
-    "DOCKER_HOST": "unix:///var/run/docker.sock"
+    "DOCKER_HOST": "unix:///var/run/docker.sock",
+    "DEVCONTAINER_ID": "${devcontainerId}"
   },
 
-  "forwardPorts": [
-    { "port": 14500, "protocol": "tcp" } // Xpra HTML5 GUI server for remote desktop access
-  ],
+  "forwardPorts": ["14500-14599"],
+  "portsAttributes": {
+    "14500-14599": {
+      "label": "Xpra HTML5",
+      "onAutoForward": "silent"
+    }
+  },
   "mounts": [
     { "source": "drqp-ansible-${devcontainerId}", "target": "/opt/ros/overlay_ws/.ansible", "type": "volume" },
     { "source": "drqp-vscode-${devcontainerId}", "target": "/opt/ros/overlay_ws/.vscode", "type": "volume" },

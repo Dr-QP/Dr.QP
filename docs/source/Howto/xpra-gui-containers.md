@@ -15,7 +15,7 @@ Xpra is a "screen for X11" that allows you to run GUI applications in a containe
    ```bash
    /start-xpra.sh
    ```
-3. **Open your browser** and navigate to `http://localhost:14500`
+3. **Open your browser** and navigate to `http://localhost:<port>`, where `<port>` is shown in the Xpra startup output (default: 14500). See [Multiple devcontainer instances](#multiple-devcontainer-instances) for multi-instance port allocation.
 4. **Launch a GUI application**:
    ```bash
    rviz2
@@ -38,6 +38,14 @@ docker run -it -p 14500:14500 \
 ```
 
 Then open `http://localhost:14500` in your browser.
+
+## Multiple devcontainer instances
+
+When multiple devcontainer instances run (e.g., different worktrees or workspaces), each instance uses a unique port in the range **14500-14599** to avoid conflicts. The port is derived from the devcontainer ID, so it stays stable for a given instance across rebuilds.
+
+- The chosen port is printed when Xpra starts (e.g., in the integrated terminal or `/tmp/xpra.log` when started in background).
+- Access the HTML5 client at `http://localhost:<port>`.
+- Ports 14500-14599 are forwarded automatically by the devcontainer configuration.
 
 ## Configuration
 
@@ -88,9 +96,13 @@ For more details on X11 forwarding, see [Running ROS GUI tools remotely using X1
 
 ## Troubleshooting
 
+### Which port is my instance using?
+
+When Xpra starts in the background (devcontainer auto-start), the port is written to `/tmp/xpra.log`. Check the log or run `/start-xpra.sh` in the foreground to see the chosen port.
+
 ### Port already in use
 
-If port 14500 is already in use, specify a different port:
+If your chosen port is already in use, specify a different port explicitly:
 
 ```bash
 /start-xpra.sh --port 14501

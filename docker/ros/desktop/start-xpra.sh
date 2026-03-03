@@ -7,6 +7,7 @@ HOST=127.0.0.1
 PORT=14500
 DISPLAY=:100
 BACKGROUND=false
+PORT_EXPLICIT=false
 
 # Parse command-line arguments
 print_usage() {
@@ -41,6 +42,7 @@ while [[ $# -gt 0 ]]; do
         exit 1
       fi
       PORT="$2"
+      PORT_EXPLICIT=true
       shift 2
       ;;
     --display)
@@ -63,6 +65,12 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+# Derive unique port per devcontainer instance when DEVCONTAINER_ID is set
+if [[ "${PORT_EXPLICIT}" != "true" ]] && [[ -n "${DEVCONTAINER_ID:-}" ]]; then
+  hash=$(echo -n "${DEVCONTAINER_ID}" | cksum | awk '{print $1}')
+  PORT=$((14500 + (hash % 100)))
+fi
 
 normalize_display() {
   if [[ "$DISPLAY" != :* ]]; then
