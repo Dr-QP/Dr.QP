@@ -14,8 +14,10 @@
     "DISPLAY": ":100",
     "DOCKER_HOST": "unix:///var/run/docker.sock"
   },
-  // Port 14500: Xpra HTML5 GUI server for remote desktop access
-  "forwardPorts": [14500],
+
+  "forwardPorts": [
+    { "port": 14500, "protocol": "tcp" } // Xpra HTML5 GUI server for remote desktop access
+  ],
   "mounts": [
     { "source": "drqp-ansible", "target": "/opt/ros/overlay_ws/.ansible", "type": "volume" },
     { "source": "drqp-vscode", "target": "/opt/ros/overlay_ws/.vscode", "type": "volume" },
