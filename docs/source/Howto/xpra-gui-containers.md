@@ -50,6 +50,7 @@ The `/start-xpra.sh` script accepts the following options:
 - `--stop`: Stop the Xpra session for the selected display and clean up
 
 Example:
+
 ```bash
 /start-xpra.sh --port 8080 --display :101
 ```
@@ -77,14 +78,14 @@ If no GPU is available, the container automatically falls back to software rende
 
 ## Comparison with X11 forwarding
 
-| Feature | Xpra | X11 Forwarding |
-| --- | --- | --- |
-| Requires X11 server | No | Yes |
-| Works in browser | Yes | No |
-| Works on macOS/Windows | Yes | Requires XQuartz/Xming |
-| Works in Codespaces | Yes | No |
-| Latency | Higher | Lower (on LAN) |
-| Setup complexity | Simple | Moderate |
+| Feature                | Xpra   | X11 Forwarding         |
+| ---------------------- | ------ | ---------------------- |
+| Requires X11 server    | No     | Yes                    |
+| Works in browser       | Yes    | No                     |
+| Works on macOS/Windows | Yes    | Requires XQuartz/Xming |
+| Works in Codespaces    | Yes    | No                     |
+| Latency                | Higher | Lower (on LAN)         |
+| Setup complexity       | Simple | Moderate               |
 
 For more details on X11 forwarding, see [Running ROS GUI tools remotely using X11 forwarding](remote-x11-tools.md).
 
