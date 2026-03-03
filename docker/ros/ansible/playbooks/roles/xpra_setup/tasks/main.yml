@@ -76,7 +76,10 @@
       ansible.builtin.apt:
         name:
           - mesa-utils
+          - menu-xdg
           - python3-opengl
+          - python3-pyinotify
+          - python3-xdg
           - libgl1
           - libglvnd0
           - xvfb
