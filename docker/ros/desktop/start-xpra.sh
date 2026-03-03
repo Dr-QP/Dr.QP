@@ -8,6 +8,8 @@ PORT=14500
 DISPLAY=:100
 BACKGROUND=false
 VIDEO_ENCODERS=${XPRA_VIDEO_ENCODERS:-x264,vpx}
+XPRA_DAEMON_MODE=no
+XPRA_LOG_FILE=/tmp/xpra.log
 
 # Parse command-line arguments
 print_usage() {
@@ -181,6 +183,10 @@ done
 
 normalize_display
 
+if [[ "$BACKGROUND" == "true" ]]; then
+  XPRA_DAEMON_MODE=yes
+fi
+
 # Setup signal handlers for graceful shutdown
 trap cleanup SIGTERM SIGINT
 
@@ -221,7 +227,7 @@ XPRA_ARGS=(
   "$DISPLAY"                             # Virtual display identifier (for example, :100)
   "--bind-tcp=$HOST:$PORT"               # Bind HTML5/websocket server to host:port
   "--html=on"                            # Enable built-in HTML5 web client
-  "--daemon=no"                          # Keep xpra in foreground unless wrapped by nohup
+  "--daemon=$XPRA_DAEMON_MODE"           # Xpra daemon mode (yes for background lifecycle hooks)
   "--mdns=no"                            # Disable mDNS service advertisement
   "--notifications=no"                   # Disable desktop notification forwarding
   "--global-menus=no"                    # Disable global menu integration
@@ -240,7 +246,25 @@ XPRA_ARGS=(
 # --daemon=no: Run in foreground (important for Docker)
 # Xpra creates its own virtual X server (Xvfb or Xdummy) internally
 if [[ "$BACKGROUND" == "true" ]]; then
-  nohup xpra start "${XPRA_ARGS[@]}" > /tmp/xpra.log 2>&1 &
+  echo "Starting Xpra in background mode..."
+  if ! xpra start "${XPRA_ARGS[@]}" "--log-file=$XPRA_LOG_FILE"; then
+    echo "Warning: Xpra failed to start in background mode. Check $XPRA_LOG_FILE."
+    exit 1
+  fi
+
+  for _ in {1..10}; do
+    if xpra_session_running; then
+      exit 0
+    fi
+    sleep 1
+  done
+
+  if ! xpra_session_running; then
+    echo "Warning: Xpra background startup did not produce a live session on $DISPLAY."
+    echo "Check $XPRA_LOG_FILE for diagnostics."
+    exit 1
+  fi
+
   exit 0
 fi
 
