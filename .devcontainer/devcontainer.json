@@ -24,14 +24,23 @@
     }
   },
   "mounts": [
+    // Bare git clone to allow relative worktrees to work within the containers
+    {
+      "source": "${localWorkspaceFolder}/../Dr.QP.git",
+      "target": "/opt/ros/Dr.QP.git",
+      "type": "bind"
+    },
+
+    // Shared .vscode folder
+    {
+      "source": "drqp-vscode",
+      "target": "/opt/ros/overlay_ws/.vscode",
+      "type": "volume"
+    },
+
     {
       "source": "drqp-ansible-${devcontainerId}",
       "target": "/opt/ros/overlay_ws/.ansible",
-      "type": "volume"
-    },
-    {
-      "source": "drqp-vscode-${devcontainerId}",
-      "target": "/opt/ros/overlay_ws/.vscode",
       "type": "volume"
     },
     {
