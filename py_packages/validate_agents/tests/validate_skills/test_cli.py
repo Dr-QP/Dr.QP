@@ -23,7 +23,7 @@
 
 import pytest
 
-from validate_skills.cli import parse_arguments
+from validate_agents.validate_skills.cli import parse_arguments
 
 
 class TestParseArgumentsBasic:
@@ -230,7 +230,14 @@ class TestParseArgumentsEdgeCases:
     def test_parse_arguments_many_arguments(self):
         """Should handle multiple flags and arguments together."""
         args = parse_arguments(
-            ['./skills', '--ci', '--recommend', '--format', 'json', '--verbose']
+            [
+                './skills',
+                '--ci',
+                '--recommend',
+                '--format',
+                'json',
+                '--verbose',
+            ]
         )
         assert args.path == './skills'
         assert args.ci is True

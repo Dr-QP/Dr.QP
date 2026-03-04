@@ -24,7 +24,7 @@
 import re
 from typing import List
 
-from validate_skills.types import ValidationIssue, ValidationLevel
+from ..types import ValidationIssue, ValidationLevel
 
 
 class SkillFrontmatterValidator:
@@ -67,10 +67,13 @@ class SkillFrontmatterValidator:
             else:
                 # Validate name format
                 if not re.match(r'^[a-z0-9]+(-[a-z0-9]+)*$', name):
+                    message = (
+                        f"Name must be lowercase with hyphens (e.g., 'my-skill'), got: '{name}'"
+                    )
                     issues.append(
                         ValidationIssue(
                             level=ValidationLevel.ERROR,
-                            message=f"Name must be lowercase with hyphens (e.g., 'my-skill'), got: '{name}'",
+                            message=message,
                             section='frontmatter',
                         )
                     )
@@ -141,10 +144,15 @@ class SkillFrontmatterValidator:
                         term for term in vague_terms if f' {term} ' in f' {desc_lower} '
                     ]
                     if found_vague:
+                        vague_list = ', '.join(found_vague)
+                        message = (
+                            'Description contains vague terms: '
+                            f'{vague_list}. Be specific about capabilities.'
+                        )
                         issues.append(
                             ValidationIssue(
                                 level=ValidationLevel.WARNING,
-                                message=f'Description contains vague terms: {", ".join(found_vague)}. Be specific about capabilities.',
+                                message=message,
                                 section='frontmatter',
                             )
                         )
@@ -200,10 +208,12 @@ class SkillStructureValidator:
             end_index = start_index + next_header.start() if next_header else len(body)
             content = body[start_index:end_index].strip()
             if not content or len(content) < 10:
+                header_name = header_line.strip()
+                message = f"Top-level section '{header_name}' appears to be empty or very short"
                 issues.append(
                     ValidationIssue(
                         level=ValidationLevel.WARNING,
-                        message=f"Top-level section '{header_line.strip()}' appears to be empty or very short",
+                        message=message,
                         section='structure',
                     )
                 )

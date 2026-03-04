@@ -24,7 +24,9 @@ jobs:
       pass: ${{ steps.filter.outputs.pass }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Filters
         uses: ./.github/actions/paths-filter
@@ -35,8 +37,7 @@ jobs:
             - .github/instructions/**
             - .github/skills/**
             - .github/workflows/copilot.yml
-            - scripts/validate-skills.py
-            - scripts/validate_skills/**
+            - py_packages/**/*.py
 
   validate-skills:
     name: Validate Agent Skills
@@ -48,21 +49,26 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Setup Python venv
         uses: ./.github/actions/setup-python-venv
 
+      - name: Install validate_skills package
+        run: pip install -e py_packages/validate_agents
+
       - name: Test validate skills
         run: |
-          pytest scripts/validate_skills/tests --cov=scripts/validate_skills --cov-report=xml
+          pytest py_packages/validate_agents/tests/validate_skills \
+            --cov=validate_agents --cov-report=xml
 
       - name: Validate Agent Skills
-        run: |
-          python3 scripts/validate-skills.py --recommend
+        run: validate_skills --recommend
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
         if: ${{ !cancelled() }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

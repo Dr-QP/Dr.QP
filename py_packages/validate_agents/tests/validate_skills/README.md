@@ -5,7 +5,9 @@ This directory contains comprehensive failing unit tests that drive the refactor
 ## Test Files
 
 ### 1. **test_cli.py** (74 tests across 7 test classes)
+
 Tests for CLI argument parsing and setup.
+
 - Basic argument parsing (default path, custom paths, file paths, absolute paths)
 - `--recommend` flag for showing warnings
 - `--ci` flag for continuous integration mode
@@ -17,10 +19,12 @@ Tests for CLI argument parsing and setup.
 - Edge cases (empty paths, whitespace, relative paths with dots, many arguments)
 
 ### 2. **test_loaders.py** (40+ tests across 6 test classes)
+
 Tests for file loading and parsing utilities.
+
 - **TestFindSkillFilesDirectory**: Finding SKILL.md files in directories
   - Empty directories, single skills, nested directories, multiple files
-  - Exclusion of test, tests, pytest_cache, __pycache__ directories
+  - Exclusion of test, tests, pytest_cache, `__pycache__` directories
 - **TestFindSkillFilesSingleFile**: Finding when given specific file path
   - Specific SKILL.md files, non-SKILL files, nonexistent files
 - **TestSafeLoadFrontmatter**: Safe YAML frontmatter loading
@@ -34,7 +38,9 @@ Tests for file loading and parsing utilities.
 - **TestLoadersEdgeCases**: Symlinks, permission denied, hidden directories
 
 ### 3. **test_validators.py** (40+ tests across 5 test classes)
+
 Tests for individual skill validators.
+
 - **TestSkillFrontmatterValidator**: Frontmatter validation
   - Valid frontmatter, missing name/description
   - Name format validation, description length constraints
@@ -50,7 +56,9 @@ Tests for individual skill validators.
 - **TestValidatorsEdgeCases**: Empty metadata, None values, whitespace-only values, wrong types
 
 ### 4. **test_core.py** (30+ tests across 4 test classes)
+
 Tests for the validation engine core.
+
 - **TestValidationEngineBasic**: Basic validation operations
   - Engine initialization, valid/invalid skill validation
 - **TestValidationEngineWarnings**: Warning handling
@@ -65,7 +73,9 @@ Tests for the validation engine core.
   - is_valid property, has_warnings property, issue counting
 
 ### 5. **test_formatters.py** (30+ tests across 5 test classes)
+
 Tests for output formatting utilities.
+
 - **TestTextFormatter**: Text output formatting
   - Format results, color support, summary statistics
 - **TestJSONFormatter**: JSON output formatting
@@ -77,7 +87,9 @@ Tests for output formatting utilities.
 - **TestFormatterEdgeCases**: Empty results, no issues, many issues, unicode handling
 
 ### 6. **test_main.py** (25+ tests across 6 test classes)
+
 Tests for main orchestration function.
+
 - **TestMainBasic**: Basic main function behavior
   - No arguments, directory validation, file validation
 - **TestMainExitCodes**: Exit code behavior
@@ -91,7 +103,9 @@ Tests for main orchestration function.
 - **TestMainEdgeCases**: Nonexistent paths, empty directories, permission denied
 
 ### 7. **test_edge_cases.py** (50+ tests across 7 test classes)
+
 Tests for edge cases and error handling.
+
 - **TestErrorHandlingEdgeCases**: File handling edge cases
   - No frontmatter, incomplete frontmatter, large files
   - Circular reference protection
@@ -111,14 +125,17 @@ Tests for edge cases and error handling.
 ## Test Configuration
 
 ### conftest.py
+
 Provides pytest configuration and shared fixtures:
+
 - `skill_template`: Template for creating test skills
 - `valid_skill_content`: Complete valid skill content
 - `invalid_skill_content`: Invalid skill for error testing
 - `temp_skill_dir`: Temporary directory with sample skills
 - `mock_logger`: Mock logger fixture
 
-### __init__.py
+### `__init__`.py
+
 Package marker files for test discovery.
 
 ## Running the Tests
@@ -149,15 +166,16 @@ pytest -m "not slow" tests/validate_skills/
 ## Import Structure
 
 All tests import from the new package structure:
+
 ```python
-from validate_skills.cli import parse_arguments
-from validate_skills.loaders import find_skill_files, safe_load_frontmatter, load_all_skills
-from validate_skills.core import ValidationEngine, ValidationResult
-from validate_skills.formatters import TextFormatter, JSONFormatter, CSVFormatter
-from validate_skills.main import main
-from validate_skills.validators.skill import SkillFrontmatterValidator, SkillStructureValidator
-from validate_skills.validators.uniqueness import UniquenessValidator
-from validate_skills.validators.cross_reference import CrossReferenceValidator
+from validate_agents.validate_skills.cli import parse_arguments
+from validate_agents.validate_skills.loaders import find_skill_files, safe_load_frontmatter, load_all_skills
+from validate_agents.validate_skills.core import ValidationEngine, ValidationResult
+from validate_agents.validate_skills.formatters import TextFormatter, JSONFormatter, CSVFormatter
+from validate_agents.validate_skills.main import main
+from validate_agents.validate_skills.validators.skill import SkillFrontmatterValidator, SkillStructureValidator
+from validate_agents.validate_skills.validators.uniqueness import UniquenessValidator
+from validate_agents.validate_skills.validators.cross_reference import CrossReferenceValidator
 ```
 
 ## Test Coverage Summary
@@ -175,6 +193,7 @@ from validate_skills.validators.cross_reference import CrossReferenceValidator
 ## Test Characteristics
 
 ### Comprehensive Coverage
+
 - ✅ Normal/happy path scenarios
 - ✅ Edge cases and error conditions
 - ✅ Integration between components
@@ -185,16 +204,19 @@ from validate_skills.validators.cross_reference import CrossReferenceValidator
 - ✅ Resource limits and performance
 
 ### Clear Test Names
+
 - All tests use descriptive names that explain the scenario
 - Docstrings provide context and expected behavior
 - Test organization by functionality (classes, methods)
 
 ### Good Assertions
+
 - Specific assertions that check for expected behavior
 - Validation of error types and messages
 - State changes and side effects verified
 
 ### Guide for Refactoring
+
 These tests comprehensively specify the expected behavior of the new package structure, allowing developers to implement the modules with confidence that they meet all requirements.
 
 ## Next Steps
@@ -205,4 +227,3 @@ Once the new package structure is implemented:
 2. Implement modules incrementally
 3. Tests will guide design decisions
 4. All tests should pass when refactoring is complete
-

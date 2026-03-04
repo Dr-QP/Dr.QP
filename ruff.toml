@@ -53,6 +53,7 @@ ignore = ["E501", "D212"]
 force-single-line = false
 force-sort-within-sections = true # sort all imports within section no matter the style
 combine-as-imports = true
+known-first-party = ["validate_agents"]
 known-third-party = ["rclpy", "sensor_msgs", "tf2_ros", "pytest", "drqp_brain"]
 case-sensitive = false
 order-by-type = false # ignore type, use alphabetical order
