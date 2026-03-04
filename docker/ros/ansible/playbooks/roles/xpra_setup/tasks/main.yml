@@ -24,7 +24,7 @@
         name:
           - xpra
         state: present
-        install_recommends: false
+        install_recommends: true
 
     - name: Clone Xpra-html5 repository (pinned to v19 tag)
       ansible.builtin.git:
@@ -76,6 +76,10 @@
       ansible.builtin.apt:
         name:
           - mesa-utils
+          - menu-xdg
+          - python3-opengl
+          - python3-pyinotify
+          - python3-xdg
           - libgl1
           - libglvnd0
           - xvfb
