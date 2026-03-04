@@ -15,7 +15,7 @@ Xpra is a "screen for X11" that allows you to run GUI applications in a containe
    ```bash
    /start-xpra.sh
    ```
-3. **Open your browser** and navigate to `http://localhost:<port>`, where `<port>` is shown in the Xpra startup output (default: 14500). See [Multiple devcontainer instances](#multiple-devcontainer-instances) for multi-instance port allocation.
+3. **Open your browser** and navigate to `http://localhost:<port>`, where `<port>` is shown in the Xpra startup output (default: 14500). See **Multiple devcontainer instances** below for multi-instance port allocation.
 4. **Launch a GUI application**:
    ```bash
    rviz2
@@ -26,6 +26,14 @@ Xpra is a "screen for X11" that allows you to run GUI applications in a containe
    ```
 
 The application window will appear in your browser.
+
+#### Multiple devcontainer instances
+
+When multiple devcontainer instances run (e.g., different worktrees or workspaces), each instance uses a unique port in the range **14500-14599** to avoid conflicts. The port is derived from the devcontainer ID, so it stays stable for a given instance across rebuilds.
+
+- The chosen port is printed when Xpra starts (e.g., in the integrated terminal or `/tmp/xpra.log` when started in background).
+- Access the HTML5 client at `http://localhost:<port>`.
+- Ports 14500-14599 are forwarded automatically by the devcontainer configuration.
 
 ### Running from Docker directly
 
@@ -40,14 +48,6 @@ docker run -it -p 14500:14500 \
 Then open `http://localhost:14500` in your browser.
 
 When using Docker port publishing (`-p`), pass `--host 0.0.0.0` so Xpra listens on the container interface. For devcontainer or host-network workflows, `127.0.0.1` remains the safer default.
-
-## Multiple devcontainer instances
-
-When multiple devcontainer instances run (e.g., different worktrees or workspaces), each instance uses a unique port in the range **14500-14599** to avoid conflicts. The port is derived from the devcontainer ID, so it stays stable for a given instance across rebuilds.
-
-- The chosen port is printed when Xpra starts (e.g., in the integrated terminal or `/tmp/xpra.log` when started in background).
-- Access the HTML5 client at `http://localhost:<port>`.
-- Ports 14500-14599 are forwarded automatically by the devcontainer configuration.
 
 ## Configuration
 
