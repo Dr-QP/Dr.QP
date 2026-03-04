@@ -12,8 +12,7 @@
       ]
     }
   },
-  // "workspaceFolder": "/opt/ros/overlay_ws/",
-  "workspaceFolder": "${localWorkspaceFolder}",
+  "workspaceFolder": "/opt/ros/overlay_ws/",
   "containerEnv": {
     "DISPLAY": ":100",
     "DOCKER_HOST": "unix:///var/run/docker.sock",
@@ -87,13 +86,13 @@
     }
   ],
   // Second venv command with --system-site-packages turns on access to system packages to allow ROS2 builds to work
-  "postCreateCommand": "sudo chown -R root:root ${workspaceFolder}/.ansible ${workspaceFolder}/.vscode ${workspaceFolder}/.cache ${workspaceFolder}/build ${workspaceFolder}/install ${workspaceFolder}/lcov ${workspaceFolder}/log ${workspaceFolder}/docs/_build ${workspaceFolder}/.micromamba ${workspaceFolder}/.venv ${workspaceFolder}/.venv-prod",
+  "postCreateCommand": "sudo chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /opt/ros/overlay_ws/.venv /opt/ros/overlay_ws/.venv-prod",
   "postAttachCommand": {
     "git config": "git config --global gpg.ssh.program ssh-keygen",
-    "python-venv": "python3 -m venv ${workspaceFolder}/.venv && ${workspaceFolder}/.venv/bin/python3 -m pip install -r ${workspaceFolder}/requirements.txt --use-pep517", // Keep in sync with the task in Dr.QP.code-workspace
+    "python-venv": "python3 -m venv /opt/ros/overlay_ws/.venv && /opt/ros/overlay_ws/.venv/bin/python3 -m pip install -r /opt/ros/overlay_ws/requirements.txt --use-pep517", // Keep in sync with the task in Dr.QP.code-workspace
     "rosdep": "./scripts/ros-dep.sh",
     "xpra": "/start-xpra.sh --background"
   },
-  "postStartCommand": "${workspaceFolder}/scripts/devcontainer-start-docker.sh",
+  "postStartCommand": "/opt/ros/overlay_ws/scripts/devcontainer-start-docker.sh",
   "features": {}
 }
