@@ -1,0 +1,11 @@
+services:
+  devcontainer:
+    image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
+    privileged: true
+    network_mode: host
+    ipc: host
+    pid: host
+    volumes:
+      - ${GIT_REPO}:${GIT_REPO}:rw
+      - ${LOCAL_WORKSPACE_FOLDER}:${LOCAL_WORKSPACE_FOLDER}:rw
+    command: /bin/sh -c "while sleep 1000; do :; done"
