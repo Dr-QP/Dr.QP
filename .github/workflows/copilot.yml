@@ -37,7 +37,7 @@ jobs:
             - .github/instructions/**
             - .github/skills/**
             - .github/workflows/copilot.yml
-            - py_packages/**
+            - py_packages/**/*.py
 
   validate-skills:
     name: Validate Agent Skills
