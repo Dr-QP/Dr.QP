@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 gitdir="$(git rev-parse --git-common-dir)"
 case $gitdir in
