@@ -1,6 +1,8 @@
 {
   "name": "Dr.QP ROS 2 jazzy",
-  "image": "ghcr.io/dr-qp/jazzy-ros-desktop:edge",
+  "initializeCommand": ".devcontainer/devcontainer-init.sh",
+  "dockerComposeFile": ["docker-compose.yml"],
+  "service": "devcontainer",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -9,55 +11,84 @@
     }
   },
   "workspaceFolder": "/opt/ros/overlay_ws/",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/opt/ros/overlay_ws/,type=bind",
   "containerEnv": {
     "DISPLAY": ":100",
-    "DOCKER_HOST": "unix:///var/run/docker.sock"
+    "DOCKER_HOST": "unix:///var/run/docker.sock",
+    "DEVCONTAINER_ID": "${devcontainerId}"
   },
-  // Port 14500: Xpra HTML5 GUI server for remote desktop access
-  "forwardPorts": [14500],
-  "mounts": [],
+
+  "forwardPorts": ["14500-14599"],
+  "portsAttributes": {
+    "14500-14599": {
+      "label": "Xpra HTML5",
+      "onAutoForward": "silent"
+    }
+  },
+  "mounts": [
+    // Shared .vscode folder
+    {
+      "source": "drqp-vscode",
+      "target": "/opt/ros/overlay_ws/.vscode",
+      "type": "volume"
+    },
+
+    {
+      "source": "drqp-ansible-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/.ansible",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-clangd-cache-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/.cache",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-colcon-build-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/build",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-colcon-install-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/install",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-colcon-lcov-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/lcov",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-colcon-log-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/log",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-docs-build-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/docs/_build",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-python-micromamba-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/.micromamba",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-python-venv-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/.venv",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-python-venv-prod-${devcontainerId}",
+      "target": "/opt/ros/overlay_ws/.venv-prod",
+      "type": "volume"
+    }
+  ],
   // Second venv command with --system-site-packages turns on access to system packages to allow ROS2 builds to work
-  "postCreateCommand": "sudo chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /opt/ros/overlay_ws/.venv",
+  "postCreateCommand": "sudo chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /opt/ros/overlay_ws/.venv /opt/ros/overlay_ws/.venv-prod",
   "postAttachCommand": {
     "git config": "git config --global gpg.ssh.program ssh-keygen",
     "python-venv": "python3 -m venv /opt/ros/overlay_ws/.venv && /opt/ros/overlay_ws/.venv/bin/python3 -m pip install -r /opt/ros/overlay_ws/requirements.txt --use-pep517", // Keep in sync with the task in Dr.QP.code-workspace
     "rosdep": "./scripts/ros-dep.sh"
   },
-  "postStartCommand": "./scripts/devcontainer-postStartCommand.sh",
-  "runArgs": [
-    // Commented out to allow Codespaces use
-    "--network",
-    "host",
-    "--ipc",
-    "host",
-    "--pid",
-    "host",
-    "--privileged",
-
-    // Uncomment to allow shared memory based DDS communication
-    // "--user", "1001:1001", // Change to match primary user on the host
-
-    "--mount",
-    "type=volume,source=drqp-ansible,target=/opt/ros/overlay_ws/.ansible",
-    "--mount",
-    "type=volume,source=drqp-vscode,target=/opt/ros/overlay_ws/.vscode",
-    "--mount",
-    "type=volume,source=drqp-clangd-cache,target=/opt/ros/overlay_ws/.cache",
-    "--mount",
-    "type=volume,source=drqp-colcon-build,target=/opt/ros/overlay_ws/build",
-    "--mount",
-    "type=volume,source=drqp-colcon-install,target=/opt/ros/overlay_ws/install",
-    "--mount",
-    "type=volume,source=drqp-colcon-lcov,target=/opt/ros/overlay_ws/lcov",
-    "--mount",
-    "type=volume,source=drqp-colcon-log,target=/opt/ros/overlay_ws/log",
-    "--mount",
-    "type=volume,source=drqp-docs-build,target=/opt/ros/overlay_ws/docs/_build",
-    "--mount",
-    "type=volume,source=drqp-python-micromamba,target=/opt/ros/overlay_ws/.micromamba",
-    "--mount",
-    "type=volume,source=drqp-python-venv,target=/opt/ros/overlay_ws/.venv"
-  ],
-  "features": {}
+  "postStartCommand": "./scripts/devcontainer-postStartCommand.sh"
 }
