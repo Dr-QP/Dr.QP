@@ -21,13 +21,14 @@
 
 """Unit tests for output formatting utilities."""
 
+import pytest
+
 from validate_agents.validate_skills.formatters import (
     CSVFormatter,
     format_results,
     JSONFormatter,
     TextFormatter,
 )
-import pytest
 
 
 class TestTextFormatter:

@@ -21,8 +21,8 @@
 
 """Validator for cross-references."""
 
-import re
 from pathlib import Path
+import re
 from typing import List, Optional
 
 from ..types import ValidationIssue, ValidationLevel
