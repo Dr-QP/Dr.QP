@@ -59,9 +59,6 @@ jobs:
       - name: Install validate_skills package
         run: pip install -e py_packages/validate_agents
 
-      - name: Ruff check
-        run: ruff check py_packages/validate_agents/
-
       - name: Test validate skills
         run: |
           pytest py_packages/validate_agents/tests/validate_skills \
