@@ -12,4 +12,4 @@ services:
 
       # Local ROS overlay workspace
       - ${LOCAL_WORKSPACE_FOLDER}:/opt/ros/overlay_ws/:rw
-    command: /bin/sh -c "while sleep 1000; do :; done"
+    command: ["sleep", "infinity"]
