@@ -28,58 +28,58 @@
     // Shared .vscode folder
     {
       "source": "drqp-vscode",
-      "target": "${workspaceFolder}/.vscode",
+      "target": "/opt/ros/overlay_ws/.vscode",
       "type": "volume"
     },
 
     {
       "source": "drqp-ansible-${devcontainerId}",
-      "target": "${workspaceFolder}/.ansible",
+      "target": "/opt/ros/overlay_ws/.ansible",
       "type": "volume"
     },
     {
       "source": "drqp-clangd-cache-${devcontainerId}",
-      "target": "${workspaceFolder}/.cache",
+      "target": "/opt/ros/overlay_ws/.cache",
       "type": "volume"
     },
     {
       "source": "drqp-colcon-build-${devcontainerId}",
-      "target": "${workspaceFolder}/build",
+      "target": "/opt/ros/overlay_ws/build",
       "type": "volume"
     },
     {
       "source": "drqp-colcon-install-${devcontainerId}",
-      "target": "${workspaceFolder}/install",
+      "target": "/opt/ros/overlay_ws/install",
       "type": "volume"
     },
     {
       "source": "drqp-colcon-lcov-${devcontainerId}",
-      "target": "${workspaceFolder}/lcov",
+      "target": "/opt/ros/overlay_ws/lcov",
       "type": "volume"
     },
     {
       "source": "drqp-colcon-log-${devcontainerId}",
-      "target": "${workspaceFolder}/log",
+      "target": "/opt/ros/overlay_ws/log",
       "type": "volume"
     },
     {
       "source": "drqp-docs-build-${devcontainerId}",
-      "target": "${workspaceFolder}/docs/_build",
+      "target": "/opt/ros/overlay_ws/docs/_build",
       "type": "volume"
     },
     {
       "source": "drqp-python-micromamba-${devcontainerId}",
-      "target": "${workspaceFolder}/.micromamba",
+      "target": "/opt/ros/overlay_ws/.micromamba",
       "type": "volume"
     },
     {
       "source": "drqp-python-venv-${devcontainerId}",
-      "target": "${workspaceFolder}/.venv",
+      "target": "/opt/ros/overlay_ws/.venv",
       "type": "volume"
     },
     {
       "source": "drqp-python-venv-prod-${devcontainerId}",
-      "target": "${workspaceFolder}/.venv-prod",
+      "target": "/opt/ros/overlay_ws/.venv-prod",
       "type": "volume"
     }
   ],
