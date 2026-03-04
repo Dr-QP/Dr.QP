@@ -32,3 +32,35 @@ def ensure_gz_sim_not_running():
     """
     shell_cmd = ['pkill', '-9', '-f', '^gz sim']
     subprocess.run(shell_cmd, check=False)
+
+
+def reset_gz_world(world_name: str = 'empty') -> bool:
+    """
+    Reset the Gazebo world simulation state.
+
+    Calls the gz service to reset all models and physics in the world,
+    restoring the robot to its spawn pose and clearing velocities.
+
+    Args:
+        world_name: The name of the Gazebo world to reset.
+
+    Returns:
+        True if the reset service call succeeded, False otherwise.
+
+    """
+    shell_cmd = [
+        'gz',
+        'service',
+        '-s',
+        f'/world/{world_name}/control',
+        '--reqtype',
+        'gz.msgs.WorldControl',
+        '--reptype',
+        'gz.msgs.Boolean',
+        '--timeout',
+        '2000',
+        '--req',
+        'reset: {all: true}',
+    ]
+    result = subprocess.run(shell_cmd, check=False, capture_output=True)
+    return result.returncode == 0

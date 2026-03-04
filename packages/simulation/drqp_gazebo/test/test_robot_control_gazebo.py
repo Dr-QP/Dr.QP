@@ -40,7 +40,7 @@ import rclpy
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 from rosgraph_msgs.msg import Clock
 import std_msgs.msg
-from test_utils import ensure_gz_sim_not_running
+from test_utils import ensure_gz_sim_not_running, reset_gz_world
 
 
 @pytest.mark.slow
@@ -138,9 +138,44 @@ class TestGazeboRobotControl(unittest.TestCase):
             'No subscribers for /robot_event publisher',
         )
 
+        # Reset simulation state before each test for clean isolation
+        self._reset_simulation()
+
     def tearDown(self):
         """Clean up test node."""
         self.node.destroy_node()
+
+    def _reset_simulation(self):
+        """Reset Gazebo world and robot state machine for clean test isolation."""
+        # Ensure we have the current robot state before resetting
+        if self.current_robot_state is None:
+            self._spin_until(
+                lambda: self.current_robot_state is not None,
+                self.STATE_TRANSITION_TIMEOUT,
+                'Did not receive initial robot state before simulation reset',
+            )
+
+        # Reset the Gazebo world: restores robot to spawn pose and clears physics
+        if not reset_gz_world():
+            raise RuntimeError(
+                'Gazebo world reset failed. '
+                'Tests may run with stale simulation state.'
+            )
+
+        # Clear stale pose data so tests wait for fresh post-reset odometry
+        self.robot_pose = None
+
+        # Reset the robot state machine to initial torque_off state
+        self._publish_event('reset')
+        self._spin_until(
+            lambda: self.current_robot_state == 'torque_off',
+            self.STATE_TRANSITION_TIMEOUT,
+            f'Robot did not reset to torque_off after simulation reset. '
+            f'Current state: {self.current_robot_state}',
+        )
+
+        # Allow physics to settle after the world reset
+        time.sleep(1.0)
 
     def _robot_state_callback(self, msg: std_msgs.msg.String):
         """Track current robot state."""

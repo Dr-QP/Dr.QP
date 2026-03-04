@@ -53,4 +53,13 @@ class RobotStateMachine(StateMachine):
     )
     servos_rebooting_done = servos_rebooting.to(torque_off)
 
+    reset = (
+        torque_off.to(torque_off)
+        | initializing.to(torque_off)
+        | torque_on.to(torque_off)
+        | finalizing.to(torque_off)
+        | finalized.to(torque_off)
+        | servos_rebooting.to(torque_off)
+    )
+
     kill_switch_pressed = turn_off | initialize
