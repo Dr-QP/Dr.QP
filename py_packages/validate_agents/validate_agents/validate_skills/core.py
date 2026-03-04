@@ -48,13 +48,11 @@ class ValidationEngine:
         """
         Validate a single skill file.
 
-        Args
-        ----
+        Args:
             skill_path: Path to the skill file
             all_skills: Dict of all skills for cross-validation
 
-        Returns
-        -------
+        Returns:
             ValidationResult with any issues found
 
         """

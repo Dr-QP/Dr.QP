@@ -39,15 +39,13 @@ class UniquenessValidator:
         """
         Validate skill uniqueness.
 
-        Args
-        ----
+        Args:
             skill_path: Path to the skill file
             metadata: Metadata dictionary (frontmatter)
             content: Content string (for compatibility)
             all_skills: Override dict of all skills for comparison
 
-        Returns
-        -------
+        Returns:
             List of validation issues
 
         """

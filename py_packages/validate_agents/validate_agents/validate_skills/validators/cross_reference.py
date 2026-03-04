@@ -40,14 +40,12 @@ class CrossReferenceValidator:
         """
         Validate cross-references.
 
-        Args
-        ----
+        Args:
             skill_path: Path to the skill file
             metadata: Metadata dictionary (frontmatter)
             content: Content (body)
 
-        Returns
-        -------
+        Returns:
             List of validation issues
 
         """

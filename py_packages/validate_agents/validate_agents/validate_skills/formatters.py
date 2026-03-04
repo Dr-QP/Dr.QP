@@ -40,12 +40,10 @@ class TextFormatter:
         """
         Format a single result.
 
-        Args
-        ----
+        Args:
             result: ValidationResult to format
 
-        Returns
-        -------
+        Returns:
             Formatted string
 
         """
@@ -62,12 +60,10 @@ class TextFormatter:
         """
         Format summary statistics.
 
-        Args
-        ----
+        Args:
             results: List of validation results
 
-        Returns
-        -------
+        Returns:
             Formatted summary
 
         """
@@ -90,12 +86,10 @@ class TextFormatter:
         """
         Format multiple results.
 
-        Args
-        ----
+        Args:
             results: List of validation results
 
-        Returns
-        -------
+        Returns:
             Formatted batch output
 
         """
@@ -113,12 +107,10 @@ class JSONFormatter:
         """
         Format a single result.
 
-        Args
-        ----
+        Args:
             result: ValidationResult to format
 
-        Returns
-        -------
+        Returns:
             JSON string
 
         """
@@ -141,12 +133,10 @@ class JSONFormatter:
         """
         Format multiple results.
 
-        Args
-        ----
+        Args:
             results: List of validation results
 
-        Returns
-        -------
+        Returns:
             JSON array string
 
         """
@@ -176,8 +166,7 @@ class CSVFormatter:
         """
         Get CSV header row.
 
-        Returns
-        -------
+        Returns:
             Header row string
 
         """
@@ -187,12 +176,10 @@ class CSVFormatter:
         """
         Format a single result.
 
-        Args
-        ----
+        Args:
             result: ValidationResult to format
 
-        Returns
-        -------
+        Returns:
             CSV row string
 
         """
@@ -224,19 +211,16 @@ def format_results(
     """
     Format validation results in the requested format.
 
-    Args
-    ----
+    Args:
         results: List of validation results
         output_format: Format type ('text', 'json', 'csv')
         format: Optional alias for output_format
         **kwargs: Additional format options
 
-    Returns
-    -------
+    Returns:
         Formatted string
 
-    Raises
-    ------
+    Raises:
         ValueError: If output_format is not one of the supported types
 
     """
