@@ -20,7 +20,7 @@ Usage: start-xpra.sh [--host HOST] [--port PORT] [--display DISPLAY] [--backgrou
 Start an Xpra server with the HTML5 web client enabled.
 
 Options:
-  --port PORT       HTTP port for the HTML5 client (default: 14500)
+  --port PORT       HTTP port for the HTML5 client (default: derived from DEVCONTAINER_ID in range 14500-14599, or 14500 if DEVCONTAINER_ID is unset)
   --host HOST       Host/IP to bind the Xpra server (default: 127.0.0.1)
   --display DISPLAY X display (accepts :100 or 100; default: :100)
   --background      Start Xpra in the background and exit immediately
