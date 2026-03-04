@@ -14,3 +14,6 @@ ros_user_setup_gid: 1001
 
 # Xpra configuration
 install_xpra: false # Enable in ros-desktop.dockerfile via -e install_xpra=true
+
+# Agentic tools configuration
+install_agentic_tools: false # Enable to install MCP inspector and augmentcode/auggie
