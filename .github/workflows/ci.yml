@@ -321,6 +321,11 @@ jobs:
         run: |
           sed -i "s|ghcr.io/dr-qp/${ROS_DISTRO}-ros-desktop:edge|${MERGED_IMAGE}|g" .devcontainer/devcontainer.json
 
+      - name: Run initializeCommand from devcontainer.json, because devcontainer build doesn't run it for some reason
+        run: |
+          INITIALIZE_COMMAND=$(jq -r '.initializeCommand' .devcontainer/devcontainer.json)
+          eval "$INITIALIZE_COMMAND"
+
       - name: Build and test dev container image
         uses: devcontainers/ci@8bf61b26e9c3a98f69cb6ce2f88d24ff59b785c6 # v0.3
         with:
