@@ -103,7 +103,7 @@ For more details on X11 forwarding, see [Running ROS GUI tools remotely using X1
 
 ### Which port is my instance using?
 
-When Xpra starts in the background (devcontainer auto-start), the port is written to `/tmp/xpra.log`. Check the log or run `/start-xpra.sh` in the foreground to see the chosen port.
+When Xpra starts in the background (devcontainer auto-start), the chosen port is printed to the devcontainer startup output (VS Code Dev Containers logs / terminal). Check that output, or run `/start-xpra.sh` in the foreground to see the chosen port.
 
 ### Port already in use
 
