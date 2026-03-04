@@ -1,9 +1,7 @@
 {
   "name": "Dr.QP ROS 2 jazzy",
   "initializeCommand": ".devcontainer/devcontainer-init.sh",
-  "dockerComposeFile": [
-    "docker-compose.yml"
-  ],
+  "dockerComposeFile": ["docker-compose.yml"],
   "service": "devcontainer",
   "customizations": {
     "vscode": {

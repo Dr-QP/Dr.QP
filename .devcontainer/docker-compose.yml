@@ -14,4 +14,4 @@ services:
 
       # Local ROS overlay workspace
       - ${LOCAL_WORKSPACE_FOLDER}:/opt/ros/overlay_ws/:rw
-    command: ["sleep", "infinity"]
+    command: ['sleep', 'infinity']
