@@ -24,7 +24,7 @@ Tests for file loading and parsing utilities.
 
 - **TestFindSkillFilesDirectory**: Finding SKILL.md files in directories
   - Empty directories, single skills, nested directories, multiple files
-  - Exclusion of test, tests, pytest_cache, **pycache** directories
+  - Exclusion of test, tests, pytest_cache, `__pycache__` directories
 - **TestFindSkillFilesSingleFile**: Finding when given specific file path
   - Specific SKILL.md files, non-SKILL files, nonexistent files
 - **TestSafeLoadFrontmatter**: Safe YAML frontmatter loading
@@ -134,7 +134,7 @@ Provides pytest configuration and shared fixtures:
 - `temp_skill_dir`: Temporary directory with sample skills
 - `mock_logger`: Mock logger fixture
 
-### **init**.py
+### `__init__`.py
 
 Package marker files for test discovery.
 
