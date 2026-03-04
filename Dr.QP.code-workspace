@@ -466,7 +466,8 @@
       "/opt/ros/jazzy/local/lib/python3.12/dist-packages"
     ],
     "python.testing.pytestArgs": [
-        "packages"
+        "packages",
+        "py_packages"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
@@ -611,7 +612,6 @@
     },
     "chat.tools.terminal.ignoreDefaultAutoApproveRules": false,
     "chat.tools.terminal.blockDetectedFileWrites": "outsideWorkspace",
-
     "chat.tools.urls.autoApprove": {
       "https://github.com": true,
       "https://www.google.com/search": true
