@@ -22,6 +22,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            ros_distro=$ROS_DISTRO \
            install_xpra=true \
            install_docker=true \
+           install_agentic_tools=true \
          "
 
 WORKDIR $OVERLAY_WS

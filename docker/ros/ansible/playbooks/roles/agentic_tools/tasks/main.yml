@@ -1,4 +1,10 @@
 ---
+- name: Install husky (required by auggie prepare script)
+  community.general.npm:
+    name: "husky"
+    global: true
+    state: present
+
 - name: Install modelcontextprotocol/inspector
   community.general.npm:
     name: "modelcontextprotocol/inspector"
