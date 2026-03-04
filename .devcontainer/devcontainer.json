@@ -92,10 +92,5 @@
     "python-venv": "python3 -m venv /opt/ros/overlay_ws/.venv && /opt/ros/overlay_ws/.venv/bin/python3 -m pip install -r /opt/ros/overlay_ws/requirements.txt --use-pep517", // Keep in sync with the task in Dr.QP.code-workspace
     "rosdep": "./scripts/ros-dep.sh"
   },
-  "postStartCommand": "./scripts/devcontainer-postStartCommand.sh",
-  "runArgs": [
-    // Uncomment to allow shared memory based DDS communication
-    // "--user", "1001:1001", // Change to match primary user on the host
-  ],
-  "features": {}
+  "postStartCommand": "./scripts/devcontainer-postStartCommand.sh"
 }
