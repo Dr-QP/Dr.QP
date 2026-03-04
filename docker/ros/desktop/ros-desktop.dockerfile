@@ -9,13 +9,12 @@ ARG CLANG_VERSION=20
 ARG OVERLAY_WS=/opt/ros/overlay_ws
 
 # Install ROS
-WORKDIR /ros-scripts/ansible
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     --mount=type=bind,readonly,source=..,target=/ros-scripts \
     apt-get update \
-    && ansible-playbook playbooks/20_ros_setup.yml \
-      -i inventories/localhost.yml \
+    && ansible-playbook /ros-scripts/ansible/playbooks/20_ros_setup.yml \
+      -i /ros-scripts/ansible/inventories/localhost.yml \
       -vvv \
       -e "ci_mode=true \
            clang_version=$CLANG_VERSION \
