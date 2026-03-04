@@ -23,7 +23,7 @@
 
 import pytest
 
-from validate_skills.formatters import (
+from validate_agents.validate_skills.formatters import (
     CSVFormatter,
     format_results,
     JSONFormatter,
@@ -36,7 +36,11 @@ class TestTextFormatter:
 
     def test_text_formatter_format_result(self):
         """Should format result as readable text."""
-        from validate_skills.core import ValidationIssue, ValidationLevel, ValidationResult
+        from validate_agents.validate_skills.core import (
+            ValidationIssue,
+            ValidationLevel,
+            ValidationResult,
+        )
 
         result = ValidationResult(
             skill_path='/path/to/SKILL.md',
@@ -47,7 +51,7 @@ class TestTextFormatter:
         )
 
         formatter = TextFormatter()
-        output = formatter.format(result)
+        output = formatter.format_result(result)
 
         assert isinstance(output, str)
         assert 'SKILL.md' in output
@@ -55,17 +59,21 @@ class TestTextFormatter:
 
     def test_text_formatter_color_support(self):
         """Should optionally include color codes."""
-        from validate_skills.core import ValidationResult
+        from validate_agents.validate_skills.core import ValidationResult
 
         result = ValidationResult(skill_path='/path/to/SKILL.md', issues=[])
 
         formatter = TextFormatter(use_colors=True)
-        output = formatter.format(result)
+        output = formatter.format_result(result)
         assert isinstance(output, str)
 
     def test_text_formatter_summary_statistics(self):
         """Should include summary statistics."""
-        from validate_skills.core import ValidationIssue, ValidationLevel, ValidationResult
+        from validate_agents.validate_skills.core import (
+            ValidationIssue,
+            ValidationLevel,
+            ValidationResult,
+        )
 
         results = [
             ValidationResult(
@@ -89,12 +97,12 @@ class TestJSONFormatter:
         """Should produce valid JSON output."""
         import json
 
-        from validate_skills.core import ValidationResult
+        from validate_agents.validate_skills.core import ValidationResult
 
         result = ValidationResult(skill_path='/path/to/SKILL.md', issues=[])
 
         formatter = JSONFormatter()
-        output = formatter.format(result)
+        output = formatter.format_result(result)
 
         # Should be valid JSON
         parsed = json.loads(output)
@@ -104,12 +112,12 @@ class TestJSONFormatter:
         """Should include result metadata in JSON."""
         import json
 
-        from validate_skills.core import ValidationResult
+        from validate_agents.validate_skills.core import ValidationResult
 
         result = ValidationResult(skill_path='/path/to/SKILL.md', issues=[])
 
         formatter = JSONFormatter()
-        output = formatter.format(result)
+        output = formatter.format_result(result)
         parsed = json.loads(output)
 
         assert 'skill_path' in parsed or 'path' in parsed or 'file' in parsed
@@ -119,7 +127,7 @@ class TestJSONFormatter:
         """Should format multiple results."""
         import json
 
-        from validate_skills.core import ValidationResult
+        from validate_agents.validate_skills.core import ValidationResult
 
         results = [
             ValidationResult(skill_path='/path/skill1/SKILL.md', issues=[]),
@@ -146,7 +154,11 @@ class TestCSVFormatter:
 
     def test_csv_formatter_data_row(self):
         """Should format result as CSV row."""
-        from validate_skills.core import ValidationIssue, ValidationLevel, ValidationResult
+        from validate_agents.validate_skills.core import (
+            ValidationIssue,
+            ValidationLevel,
+            ValidationResult,
+        )
 
         result = ValidationResult(
             skill_path='/path/to/SKILL.md',
@@ -156,14 +168,18 @@ class TestCSVFormatter:
         )
 
         formatter = CSVFormatter()
-        output = formatter.format(result)
+        output = formatter.format_result(result)
 
         assert isinstance(output, str)
         assert 'SKILL.md' in output or 'path' in output.lower()
 
     def test_csv_formatter_escaping(self):
         """Should properly escape special characters in CSV."""
-        from validate_skills.core import ValidationIssue, ValidationLevel, ValidationResult
+        from validate_agents.validate_skills.core import (
+            ValidationIssue,
+            ValidationLevel,
+            ValidationResult,
+        )
 
         result = ValidationResult(
             skill_path='/path/to/SKILL.md',
@@ -175,7 +191,7 @@ class TestCSVFormatter:
         )
 
         formatter = CSVFormatter()
-        output = formatter.format(result)
+        output = formatter.format_result(result)
 
         assert isinstance(output, str)
         # Should handle special characters
@@ -186,7 +202,7 @@ class TestFormatResults:
 
     def test_format_results_text(self):
         """Should format results in text format by default."""
-        from validate_skills.core import ValidationResult
+        from validate_agents.validate_skills.core import ValidationResult
 
         results = [
             ValidationResult(skill_path='/path/skill1/SKILL.md', issues=[]),
@@ -199,7 +215,7 @@ class TestFormatResults:
         """Should format results in JSON format."""
         import json
 
-        from validate_skills.core import ValidationResult
+        from validate_agents.validate_skills.core import ValidationResult
 
         results = [
             ValidationResult(skill_path='/path/skill1/SKILL.md', issues=[]),
@@ -212,7 +228,7 @@ class TestFormatResults:
 
     def test_format_results_csv(self):
         """Should format results in CSV format."""
-        from validate_skills.core import ValidationResult
+        from validate_agents.validate_skills.core import ValidationResult
 
         results = [
             ValidationResult(skill_path='/path/skill1/SKILL.md', issues=[]),
@@ -227,7 +243,7 @@ class TestFormatResults:
 
     def test_format_results_invalid_format(self):
         """Should raise error for invalid format."""
-        from validate_skills.core import ValidationResult
+        from validate_agents.validate_skills.core import ValidationResult
 
         results = [ValidationResult(skill_path='/path/SKILL.md', issues=[])]
 
@@ -246,18 +262,22 @@ class TestFormatterEdgeCases:
 
     def test_formatter_no_issues(self):
         """Should format result with no issues."""
-        from validate_skills.core import ValidationResult
+        from validate_agents.validate_skills.core import ValidationResult
 
         result = ValidationResult(skill_path='/path/SKILL.md', issues=[])
         formatter = TextFormatter()
-        output = formatter.format(result)
+        output = formatter.format_result(result)
 
         assert isinstance(output, str)
         assert 'SKILL.md' in output
 
     def test_formatter_many_issues(self):
         """Should handle many issues."""
-        from validate_skills.core import ValidationIssue, ValidationLevel, ValidationResult
+        from validate_agents.validate_skills.core import (
+            ValidationIssue,
+            ValidationLevel,
+            ValidationResult,
+        )
 
         issues = [
             ValidationIssue(level=ValidationLevel.ERROR, message=f'Error {i}') for i in range(100)
@@ -265,22 +285,26 @@ class TestFormatterEdgeCases:
         result = ValidationResult(skill_path='/path/SKILL.md', issues=issues)
 
         formatter = TextFormatter()
-        output = formatter.format(result)
+        output = formatter.format_result(result)
         assert isinstance(output, str)
 
     def test_formatter_special_characters_in_path(self):
         """Should handle special characters in file paths."""
-        from validate_skills.core import ValidationResult
+        from validate_agents.validate_skills.core import ValidationResult
 
         result = ValidationResult(skill_path='/path/skill with spaces & chars/SKILL.md', issues=[])
 
         formatter = TextFormatter()
-        output = formatter.format(result)
+        output = formatter.format_result(result)
         assert isinstance(output, str)
 
     def test_formatter_unicode_in_messages(self):
         """Should handle unicode characters in messages."""
-        from validate_skills.core import ValidationIssue, ValidationLevel, ValidationResult
+        from validate_agents.validate_skills.core import (
+            ValidationIssue,
+            ValidationLevel,
+            ValidationResult,
+        )
 
         result = ValidationResult(
             skill_path='/path/SKILL.md',
@@ -292,5 +316,5 @@ class TestFormatterEdgeCases:
         )
 
         formatter = TextFormatter()
-        output = formatter.format(result)
+        output = formatter.format_result(result)
         assert isinstance(output, str)

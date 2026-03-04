@@ -79,25 +79,25 @@ Recommended sections:
 **Validate all skills:**
 
 ```bash
-python3 scripts/validate-skills.py
+validate_skills
 ```
 
 **Validate specific skill:**
 
 ```bash
-python3 scripts/validate-skills.py .github/skills/my-skill/SKILL.md
+validate_skills .github/skills/my-skill/SKILL.md
 ```
 
 **Show warnings and recommendations:**
 
 ```bash
-python3 scripts/validate-skills.py --recommend
+validate_skills --recommend
 ```
 
 **CI mode (exit with error on failures):**
 
 ```bash
-python3 scripts/validate-skills.py --ci
+validate_skills --ci
 ```
 
 ### CI/CD Integration
@@ -114,7 +114,7 @@ See [`.github/workflows/copilot.yml`](../workflows/copilot.yml) for details.
 
 Example "good" and "bad" skills are defined inline in the unit tests using
 temporary directories (via `tmp_path` fixtures), rather than checked-in
-fixture files. Refer to the tests under `scripts/validate_skills/tests/` for concrete examples
+fixture files. Refer to the tests under `py_packages/validate_agents/tests/validate_skills/` for concrete examples
 of valid and invalid `SKILL.md` definitions.
 
 ## Skill Catalog
@@ -138,7 +138,7 @@ Example entry format:
 1. Create a new directory: `.github/skills/my-new-skill/`
 2. Create `SKILL.md` with proper frontmatter and structure
 3. Add any resources (scripts, templates, references) in subdirectories
-4. Run validation: `python3 scripts/validate-skills.py .github/skills/my-new-skill/`
+4. Run validation: `validate_skills .github/skills/my-new-skill/`
 5. Fix any errors or warnings
 6. Add skill to this README's catalog section
 7. Commit and push (pre-commit hook will validate automatically)
@@ -148,4 +148,4 @@ Example entry format:
 - [Agent Skills Specification](https://agentskills.io/)
 - [VS Code Agent Skills Documentation](https://code.visualstudio.com/docs/copilot/customization/agent-skills)
 - [Agent Skills Guidelines](../instructions/agent-skills.instructions.md)
-- [Validation Script Source](../../scripts/validate-skills.py)
+- [Validation package](../../py_packages/validate_agents/)

@@ -21,12 +21,12 @@
 
 """Unit tests for individual skill validators."""
 
-from validate_skills.validators.cross_reference import CrossReferenceValidator
-from validate_skills.validators.skill import (
+from validate_agents.validate_skills.validators.cross_reference import CrossReferenceValidator
+from validate_agents.validate_skills.validators.skill import (
     SkillFrontmatterValidator,
     SkillStructureValidator,
 )
-from validate_skills.validators.uniqueness import UniquenessValidator
+from validate_agents.validate_skills.validators.uniqueness import UniquenessValidator
 
 
 class TestSkillFrontmatterValidator:
@@ -36,7 +36,9 @@ class TestSkillFrontmatterValidator:
         """Should accept valid frontmatter with required fields."""
         frontmatter = {
             'name': 'my-skill',
-            'description': 'A comprehensive description of what this skill does and when to use it.',
+            'description': (
+                'A comprehensive description of what this skill does and when to use it.'
+            ),
         }
         validator = SkillFrontmatterValidator()
         issues = validator.validate(frontmatter)
