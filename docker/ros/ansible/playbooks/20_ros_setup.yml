@@ -26,6 +26,7 @@
     - { role: ros_install_source, tags: ["ros_install", "ros_install_source"], when: source_install }
     - { role: ros_dependencies, tags: ["ros_dependencies"] }
     - { role: nodejs, tags: ["nodejs"] }
+    - { role: agentic_tools, tags: ["agentic_tools"] }
     - { role: cmake_kitware, tags: ["cmake"] }
     - { role: clang, tags: ["clang"] }
     - { role: xpra_setup, tags: ["xpra_setup"], when: install_xpra | default(false) | bool }

@@ -1,0 +1,8 @@
+---
+- name: Install agentic npm tools globally
+  community.general.npm:
+    name: "{{ item }}"
+    global: true
+  loop:
+    - "@augmentcode/auggie@latest"
+    - "@modelcontextprotocol/inspector@latest"
