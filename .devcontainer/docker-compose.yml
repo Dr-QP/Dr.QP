@@ -6,6 +6,10 @@ services:
     ipc: host
     pid: host
     volumes:
+      # Volumes for git worktree
       - ${GIT_REPO}:${GIT_REPO}:rw
       - ${LOCAL_WORKSPACE_FOLDER}:${LOCAL_WORKSPACE_FOLDER}:rw
+
+      # Local ROS overlay workspace
+      - ${LOCAL_WORKSPACE_FOLDER}:/opt/ros/overlay_ws/:rw
     command: /bin/sh -c "while sleep 1000; do :; done"
