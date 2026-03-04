@@ -172,7 +172,6 @@ while [[ $# -gt 0 ]]; do
     --stop)
       normalize_display
       cleanup
-      exit 0
       ;;
     *)
       echo "Unknown option: $1"
