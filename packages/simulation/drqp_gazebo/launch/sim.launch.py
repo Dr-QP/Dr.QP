@@ -32,6 +32,7 @@ from launch.substitutions import (
 )
 from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
+from ros_gz_bridge.actions import RosGzBridge
 
 
 def generate_launch_description():
@@ -82,29 +83,18 @@ def generate_launch_description():
             'on_exit_shutdown': 'true',
         }.items(),
     )
-    gazebo_bridge = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [
-                    FindPackageShare('ros_gz_sim'),
-                    'launch',
-                    'ros_gz_sim.launch.py',
-                ]
-            )
+    gazebo_bridge = RosGzBridge(
+        bridge_name='drqp_gazebo_bridge',
+        config_file=PathJoinSubstitution(
+            [
+                FindPackageShare('drqp_gazebo'),
+                'config',
+                'drqp_gazebo_bridge.yml',
+            ]
         ),
-        launch_arguments={
-            'bridge_name': 'drqp_gazebo_bridge',
-            'config_file': PathJoinSubstitution(
-                [
-                    FindPackageShare('drqp_gazebo'),
-                    'config',
-                    'drqp_gazebo_bridge.yml',
-                ]
-            ),
-            'use_composition': 'false',  # Composition throws an exception
-            'create_own_container': 'true',
-            'container_name': container_name,
-        }.items(),
+        use_composition='false',  # Composition throws an exception
+        create_own_container='true',
+        container_name=container_name,
     )
 
     gz_spawn_entity = Node(
