@@ -45,6 +45,7 @@ class TestGazeboRobotControlNodesAndClock(GazeboRobotControlBase):
     def test_controllers_are_active(self):
         self.assert_controllers_are_active()
 
+
 @post_shutdown_test()
 class TestSimulationShutdown(SimulationShutdownTestCase):
     """Verify processes exit cleanly after the launch test finishes."""
