@@ -5,6 +5,7 @@ model: GPT-5.3-Codex
 infer: true
 tools:
   [
+    'augmentcode/codebase-retrieval',
     'agent',
     'edit',
     'execute',
