@@ -25,7 +25,7 @@ import math
 import time
 import unittest
 
-from controller_manager.test_utils import check_node_running
+from controller_manager.test_utils import check_controllers_running, check_node_running
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 from geometry_msgs.msg import Pose, Vector3
 from launch import LaunchDescription
@@ -387,6 +387,17 @@ class GazeboRobotControlBase(unittest.TestCase):
 
         with WaitForTopics([('/clock', Clock)], timeout=self.CLOCK_TIMEOUT) as wait:
             self.assertTrue(wait.wait(), 'Did not receive /clock from Gazebo bridge')
+
+    def assert_controllers_are_active(self) -> None:
+        """Verify ros2_control controllers are alive inside Gazebo."""
+        check_controllers_running(
+            self.node,
+            [
+                'joint_state_broadcaster',
+                'joint_trajectory_controller',
+            ],
+            timeout=20.0,
+        )
 
     def assert_robot_spawned(self) -> None:
         """Verify robot model is spawned and state machine publishes state."""

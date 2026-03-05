@@ -42,6 +42,8 @@ class TestGazeboRobotControlNodesAndClock(GazeboRobotControlBase):
     def test_nodes_and_clock(self):
         self.assert_nodes_and_clock()
 
+    def test_controllers_are_active(self):
+        self.assert_controllers_are_active()
 
 @post_shutdown_test()
 class TestSimulationShutdown(SimulationShutdownTestCase):
