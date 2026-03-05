@@ -29,13 +29,15 @@ from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
-from launch_testing import asserts, post_shutdown_test
+from launch_testing import post_shutdown_test
 from launch_testing.actions import ReadyToTest
-from launch_testing.proc_info_handler import ProcInfoHandler
 from launch_testing_ros import WaitForTopics
 import pytest
 import rclpy
 from rosgraph_msgs.msg import Clock
+from simulation_shutdown_test_case import (
+    SimulationShutdownTestCase,
+)
 from test_utils import ensure_gz_sim_not_running
 
 
@@ -102,25 +104,5 @@ class TestSimulationWiring(unittest.TestCase):
 
 
 @post_shutdown_test()
-class TestSimulationShutdown(unittest.TestCase):
+class TestSimulationShutdown(SimulationShutdownTestCase):
     """Verify processes exit cleanly after the launch test finishes."""
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        super().tearDownClass()
-        ensure_gz_sim_not_running()
-
-    def test_exit_codes(self, proc_info):
-        """Check if the processes exited normally (except Gazebo)."""
-        # Gazebo is SIGTERMed by the launch file, so we need to filter it out
-        proc_info = self._filter_out_gazebo(proc_info)
-        asserts.assertExitCodes(proc_info)
-
-    def _filter_out_gazebo(self, proc_info):
-        """Filter out Gazebo processes from the list."""
-        filtered_proc_info = ProcInfoHandler()
-        skipped_procs = ('gazebo', 'gz', 'bridge_node')
-        for proc_name in proc_info.process_names():
-            if not any(skip in proc_name for skip in skipped_procs):
-                filtered_proc_info.append(proc_info[proc_name])
-        return filtered_proc_info

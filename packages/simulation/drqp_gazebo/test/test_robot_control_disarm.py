@@ -18,11 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from launch_testing import post_shutdown_test
 import pytest
-
 from robot_control_test_support import (
-    GazeboRobotControlBase,
     create_simulation_launch_description,
+    GazeboRobotControlBase,
+)
+from simulation_shutdown_test_case import (
+    SimulationShutdownTestCase,
 )
 
 
@@ -38,3 +41,8 @@ class TestGazeboRobotControlDisarm(GazeboRobotControlBase):
 
     def test_disarm_robot(self):
         self.assert_robot_can_disarm()
+
+
+@post_shutdown_test()
+class TestSimulationShutdown(SimulationShutdownTestCase):
+    """Verify processes exit cleanly after the launch test finishes."""

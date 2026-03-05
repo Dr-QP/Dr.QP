@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2026 Anton Matosov
+# # Copyright (c) 2017-2026 Anton Matosov
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,23 +20,12 @@
 
 import unittest
 
-from launch_testing import post_shutdown_test
-import pytest
-from robot_control_test_support import (
-    assert_clean_exit_codes,
-    create_simulation_launch_description,
-)
+from launch_testing import asserts
+from launch_testing.proc_info_handler import ProcInfoHandler
 from test_utils import ensure_gz_sim_not_running
 
 
-@pytest.mark.slow
-@pytest.mark.launch_test
-def generate_test_description():
-    return create_simulation_launch_description()
-
-
-@post_shutdown_test()
-class TestGazeboRobotControlShutdown(unittest.TestCase):
+class SimulationShutdownTestCase(unittest.TestCase):
     """Verify processes exit cleanly after the launch test finishes."""
 
     @classmethod
@@ -46,4 +35,15 @@ class TestGazeboRobotControlShutdown(unittest.TestCase):
 
     def test_exit_codes(self, proc_info):
         """Check if the processes exited normally (except Gazebo)."""
-        assert_clean_exit_codes(proc_info)
+        # Gazebo is SIGTERMed by the launch file, so we need to filter it out
+        proc_info = self._filter_out_gazebo(proc_info)
+        asserts.assertExitCodes(proc_info)
+
+    def _filter_out_gazebo(self, proc_info):
+        """Filter out Gazebo processes from the list."""
+        filtered_proc_info = ProcInfoHandler()
+        skipped_procs = ('gazebo', 'gz', 'bridge_node')
+        for proc_name in proc_info.process_names():
+            if not any(skip in proc_name for skip in skipped_procs):
+                filtered_proc_info.append(proc_info[proc_name])
+        return filtered_proc_info
