@@ -25,13 +25,6 @@
     }
   },
   "mounts": [
-    // Shared .vscode folder
-    {
-      "source": "drqp-vscode",
-      "target": "/opt/ros/overlay_ws/.vscode",
-      "type": "volume"
-    },
-
     {
       "source": "drqp-ansible-${devcontainerId}",
       "target": "/opt/ros/overlay_ws/.ansible",
