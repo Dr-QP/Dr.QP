@@ -174,10 +174,7 @@ class GazeboRobotControlBase(unittest.TestCase):
     def _publish_event(self, event_name: str) -> None:
         msg = std_msgs.msg.String()
         msg.data = event_name
-        for _ in range(3):
-            self.event_pub.publish(msg)
-            rclpy.spin_once(self.node, timeout_sec=0.05)
-            time.sleep(0.05)
+        self.event_pub.publish(msg)
         self.node.get_logger().info(f'Published event: {event_name}')
         rclpy.spin_once(self.node, timeout_sec=0.1)
 
@@ -224,29 +221,22 @@ class GazeboRobotControlBase(unittest.TestCase):
                 self.STATE_TRANSITION_TIMEOUT,
             )
 
-        initialize_error = None
-        for _ in range(2):
+        if self.current_robot_state in ('torque_off', 'finalized'):
             self._publish_event('initialize')
-            try:
-                self._wait_for_any_state(
-                    ('initializing', 'torque_on'),
-                    self.STATE_TRANSITION_TIMEOUT,
-                )
-                initialize_error = None
-                break
-            except TimeoutError as error:
-                initialize_error = error
+            self._wait_for_any_state(
+                ('initializing', 'torque_on'),
+                self.STATE_TRANSITION_TIMEOUT,
+            )
 
-        if initialize_error is not None:
-            raise initialize_error
+        if self.current_robot_state == 'initializing':
+            self._publish_event('initializing_done')
+            self._wait_for_state('torque_on', self.STATE_TRANSITION_TIMEOUT)
 
         if self.current_robot_state != 'torque_on':
-            self._publish_event('initializing_done')
-            try:
-                self._wait_for_state('torque_on', self.STATE_TRANSITION_TIMEOUT)
-            except TimeoutError:
-                self._publish_event('initializing_done')
-                self._wait_for_state('torque_on', self.STATE_TRANSITION_TIMEOUT)
+            self.fail(
+                'Failed to arm robot with clean transitions. '
+                f'Current state: {self.current_robot_state}'
+            )
 
     def _disarm_robot(self) -> None:
         if self.current_robot_state == 'finalized':
@@ -254,29 +244,22 @@ class GazeboRobotControlBase(unittest.TestCase):
         if self.current_robot_state != 'torque_on':
             self._arm_robot()
 
-        finalize_error = None
-        for _ in range(2):
+        if self.current_robot_state == 'torque_on':
             self._publish_event('finalize')
-            try:
-                self._wait_for_any_state(
-                    ('finalizing', 'finalized'),
-                    self.STATE_TRANSITION_TIMEOUT,
-                )
-                finalize_error = None
-                break
-            except TimeoutError as error:
-                finalize_error = error
+            self._wait_for_any_state(
+                ('finalizing', 'finalized'),
+                self.STATE_TRANSITION_TIMEOUT,
+            )
 
-        if finalize_error is not None:
-            raise finalize_error
+        if self.current_robot_state == 'finalizing':
+            self._publish_event('finalizing_done')
+            self._wait_for_state('finalized', self.STATE_TRANSITION_TIMEOUT)
 
         if self.current_robot_state != 'finalized':
-            self._publish_event('finalizing_done')
-            try:
-                self._wait_for_state('finalized', self.STATE_TRANSITION_TIMEOUT)
-            except TimeoutError:
-                self._publish_event('finalizing_done')
-                self._wait_for_state('finalized', self.STATE_TRANSITION_TIMEOUT)
+            self.fail(
+                'Failed to disarm robot with clean transitions. '
+                f'Current state: {self.current_robot_state}'
+            )
 
     def _yaw_from_pose(self, pose: Pose) -> float:
         q = pose.orientation
