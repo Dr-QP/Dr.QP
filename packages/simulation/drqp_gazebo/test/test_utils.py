@@ -44,8 +44,7 @@ def ensure_gz_sim_not_running():
     """
     trace = _caller_trace()
     print(
-        f'Ensuring no gz sim processes are running... '
-        f'[pkill -9 -f "^gz sim"] caller={trace}',
+        f'Ensuring no gz sim processes are running... [pkill -9 -f "^gz sim"] caller={trace}',
         flush=True,
     )
     shell_cmd = ['pkill', '-9', '-f', '^gz sim']
