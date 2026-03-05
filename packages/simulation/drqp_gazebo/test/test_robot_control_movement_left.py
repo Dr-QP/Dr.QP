@@ -25,7 +25,7 @@ from robot_control_test_support import (
     GazeboRobotControlBase,
 )
 from simulation_shutdown_test_case import (
-    SimulationShutdownTestCase,
+    SimulationShutdownBase,
 )
 
 
@@ -44,5 +44,8 @@ class TestGazeboRobotControlLeftMovement(GazeboRobotControlBase):
 
 
 @post_shutdown_test()
-class TestSimulationShutdown(SimulationShutdownTestCase):
+class TestSimulationShutdown(SimulationShutdownBase):
     """Verify processes exit cleanly after the launch test finishes."""
+
+    def test_exit_codes(self, proc_info):
+        self.assert_exit_codes(proc_info)

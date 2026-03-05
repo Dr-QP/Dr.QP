@@ -20,7 +20,19 @@
 
 """Shared test utilities for Gazebo simulation tests."""
 
+import inspect
 import subprocess
+
+
+def _caller_trace(max_depth: int = 3) -> str:
+    """Return a compact caller chain for debugging test teardown/setup flows."""
+    stack = inspect.stack()
+    # Stack[0] is _caller_trace and stack[1] is the direct wrapper/caller in this module.
+    callers = stack[2 : 2 + max_depth]
+    if not callers:
+        return '<unknown caller>'
+
+    return ' <- '.join(f'{frame.function}@{frame.filename}:{frame.lineno}' for frame in callers)
 
 
 def ensure_gz_sim_not_running():
@@ -30,5 +42,11 @@ def ensure_gz_sim_not_running():
     This is needed to ensure clean test isolation.
     See https://github.com/ros2/launch/issues/545 for details.
     """
+    trace = _caller_trace()
+    print(
+        f'Ensuring no gz sim processes are running... '
+        f'[pkill -9 -f "^gz sim"] caller={trace}',
+        flush=True,
+    )
     shell_cmd = ['pkill', '-9', '-f', '^gz sim']
     subprocess.run(shell_cmd, check=False)

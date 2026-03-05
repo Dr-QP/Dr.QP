@@ -25,7 +25,7 @@ from launch_testing.proc_info_handler import ProcInfoHandler
 from test_utils import ensure_gz_sim_not_running
 
 
-class SimulationShutdownTestCase(unittest.TestCase):
+class SimulationShutdownBase(unittest.TestCase):
     """Verify processes exit cleanly after the launch test finishes."""
 
     @classmethod
@@ -33,7 +33,7 @@ class SimulationShutdownTestCase(unittest.TestCase):
         super().tearDownClass()
         ensure_gz_sim_not_running()
 
-    def test_exit_codes(self, proc_info):
+    def assert_exit_codes(self, proc_info):
         """Check if the processes exited normally (except Gazebo)."""
         # Gazebo is SIGTERMed by the launch file, so we need to filter it out
         proc_info = self._filter_out_gazebo(proc_info)
