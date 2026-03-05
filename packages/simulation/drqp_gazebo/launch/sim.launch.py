@@ -65,31 +65,6 @@ def generate_launch_description():
 
     # Initialize Arguments
     sim_gui = LaunchConfiguration('sim_gui')
-
-    gazebo_sigterm_timeout = LaunchConfiguration('gazebo_sigterm_timeout')
-    gazebo_sigkill_timeout = LaunchConfiguration('gazebo_sigkill_timeout')
-    gazebo = ExecuteProcess(
-        cmd=[
-            'gz',
-            'sim',
-            '-r',
-            '-v',
-            '3',
-            'empty.sdf',
-            IfElseSubstitution(sim_gui, '', ' --headless-rendering -s'),
-        ],
-        shell=True,
-        output='screen',
-        sigterm_timeout=gazebo_sigterm_timeout,
-        sigkill_timeout=gazebo_sigkill_timeout,
-    )
-    on_gazebo_shutdown = RegisterEventHandler(
-        OnProcessExit(
-            target_action=gazebo,
-            on_exit=[Shutdown(reason='Gazebo exited')],
-        )
-    )
-
     container_name = 'drqp_gazebo_container'
     gz_args = '-r -v 3 empty.sdf'
     gazebo = IncludeLaunchDescription(
@@ -173,7 +148,6 @@ def generate_launch_description():
                     SetParameter('use_sim_time', value=True),
                     drqp_system,
                     gazebo,
-                    on_gazebo_shutdown,
                     gazebo_bridge,
                     gz_spawn_entity,
                 ]
