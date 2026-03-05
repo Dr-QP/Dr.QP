@@ -61,7 +61,7 @@ def create_simulation_launch_description() -> LaunchDescription:
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(simulation_launch),
                 launch_arguments={
-                    'sim_gui': 'true',
+                    'sim_gui': 'false',
                 }.items(),
             ),
             # Wait for simulation to fully initialize before starting tests.
