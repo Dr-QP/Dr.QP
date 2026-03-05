@@ -28,7 +28,7 @@ def _caller_trace(max_depth: int = 3) -> str:
     """Return a compact caller chain for debugging test teardown/setup flows."""
     stack = inspect.stack()
     # Stack[0] is _caller_trace and stack[1] is the direct wrapper/caller in this module.
-    callers = stack[2 : 2 + max_depth]
+    callers = stack[2:][:max_depth]
     if not callers:
         return '<unknown caller>'
 
