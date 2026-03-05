@@ -10,7 +10,7 @@ BACKGROUND=false
 PORT_EXPLICIT=false
 VIDEO_ENCODERS=${XPRA_VIDEO_ENCODERS:-x264,vpx}
 XPRA_DAEMON_MODE=no
-XPRA_LOG_FILE=/tmp/xpra.log
+XPRA_LOG_FILE="$PWD/log/xpra.log"
 
 # Parse command-line arguments
 print_usage() {
