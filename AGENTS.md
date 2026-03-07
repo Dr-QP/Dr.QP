@@ -15,6 +15,7 @@ ALWAYS use "./.tmp" (relative to the repo root) for temporary files; create it i
 8. **Use `--symlink-install`** for Python coverage and hot-reload
 9. **Enable coverage** with `--mixin coverage-pytest` when testing
 10. **Re-run failed tests** with `--packages-select-test-failures`
+11. **When available in VS Code, use `vscode/askQuestions`** for all yes/no and multiple-choice user questions
 
 ### When in Doubt
 
