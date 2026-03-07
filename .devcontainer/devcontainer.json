@@ -25,60 +25,53 @@
     }
   },
   "mounts": [
-    // Shared .vscode folder
     {
-      "source": "drqp-vscode",
-      "target": "/opt/ros/overlay_ws/.vscode",
-      "type": "volume"
-    },
-
-    {
-      "source": "drqp-ansible-${devcontainerId}",
+      "source": "drqp-ansible",
       "target": "/opt/ros/overlay_ws/.ansible",
       "type": "volume"
     },
     {
-      "source": "drqp-clangd-cache-${devcontainerId}",
+      "source": "drqp-clangd-cache",
       "target": "/opt/ros/overlay_ws/.cache",
       "type": "volume"
     },
     {
-      "source": "drqp-colcon-build-${devcontainerId}",
+      "source": "drqp-colcon-build",
       "target": "/opt/ros/overlay_ws/build",
       "type": "volume"
     },
     {
-      "source": "drqp-colcon-install-${devcontainerId}",
+      "source": "drqp-colcon-install",
       "target": "/opt/ros/overlay_ws/install",
       "type": "volume"
     },
     {
-      "source": "drqp-colcon-lcov-${devcontainerId}",
+      "source": "drqp-colcon-lcov",
       "target": "/opt/ros/overlay_ws/lcov",
       "type": "volume"
     },
     {
-      "source": "drqp-colcon-log-${devcontainerId}",
+      "source": "drqp-colcon-log",
       "target": "/opt/ros/overlay_ws/log",
       "type": "volume"
     },
     {
-      "source": "drqp-docs-build-${devcontainerId}",
+      "source": "drqp-docs-build",
       "target": "/opt/ros/overlay_ws/docs/_build",
       "type": "volume"
     },
     {
-      "source": "drqp-python-micromamba-${devcontainerId}",
+      "source": "drqp-python-micromamba",
       "target": "/opt/ros/overlay_ws/.micromamba",
       "type": "volume"
     },
     {
-      "source": "drqp-python-venv-${devcontainerId}",
+      "source": "drqp-python-venv",
       "target": "/opt/ros/overlay_ws/.venv",
       "type": "volume"
     },
     {
-      "source": "drqp-python-venv-prod-${devcontainerId}",
+      "source": "drqp-python-venv-prod",
       "target": "/opt/ros/overlay_ws/.venv-prod",
       "type": "volume"
     }

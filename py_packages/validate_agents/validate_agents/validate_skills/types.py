@@ -41,6 +41,7 @@ class ValidationIssue:
     level: ValidationLevel
     message: str
     line_number: Optional[int] = None
+    column_number: Optional[int] = None
     section: Optional[str] = None
 
     def __str__(self) -> str:
@@ -52,7 +53,12 @@ class ValidationIssue:
             if self.level == ValidationLevel.WARNING
             else 'ℹ'
         )
-        location = f' (line {self.line_number})' if self.line_number else ''
+        if self.line_number and self.column_number:
+            location = f' (line {self.line_number}:{self.column_number})'
+        elif self.line_number:
+            location = f' (line {self.line_number})'
+        else:
+            location = ''
         section_info = f' [{self.section}]' if self.section else ''
         return f'  {prefix} {self.message}{section_info}{location}'
 

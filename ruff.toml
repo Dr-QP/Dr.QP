@@ -44,9 +44,10 @@ select = ["E", "W", "F", "BLE",
   "E501", # Line too long
 ]
 
-# Never enforce `E501` (line length violations) - handled by formatter
-# Ignore D212 in favor of D213
-ignore = ["E501", "D212"]
+ignore = [
+  "E501", # Never enforce `E501` (line length violations) - handled by formatter
+  "D212", # Ignore D212 in favor of D213
+]
 
 [lint.isort]
 # Import sorting configuration

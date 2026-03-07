@@ -89,6 +89,57 @@ class TestTextFormatter:
         assert isinstance(summary, str)
         assert '1' in summary or '2' in summary  # Should mention counts
 
+    def test_text_formatter_includes_line_and_column(self):
+        """Should render issues in file:line:column format when available."""
+        from validate_agents.validate_skills.core import (
+            ValidationIssue,
+            ValidationLevel,
+            ValidationResult,
+        )
+
+        result = ValidationResult(
+            skill_path='/path/to/SKILL.md',
+            issues=[
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    message='Broken reference: missing.md',
+                    line_number=42,
+                    column_number=7,
+                    section='cross_reference',
+                )
+            ],
+        )
+
+        formatter = TextFormatter()
+        output = formatter.format_result(result)
+
+        assert '/path/to/SKILL.md:42:7: Broken reference: missing.md [cross_reference]' in output
+
+    def test_text_formatter_includes_file_prefix_without_column(self):
+        """Should still prefix file path when only a line number is available."""
+        from validate_agents.validate_skills.core import (
+            ValidationIssue,
+            ValidationLevel,
+            ValidationResult,
+        )
+
+        result = ValidationResult(
+            skill_path='/path/to/SKILL.md',
+            issues=[
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    message='Missing header',
+                    line_number=12,
+                    section='structure',
+                )
+            ],
+        )
+
+        formatter = TextFormatter()
+        output = formatter.format_result(result)
+
+        assert '/path/to/SKILL.md:12: Missing header [structure]' in output
+
 
 class TestJSONFormatter:
     """Tests for JSON output formatting."""
