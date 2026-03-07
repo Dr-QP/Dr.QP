@@ -2,7 +2,7 @@
 
 root_dir=${PWD}
 
-if [[ -d "$root_dir/.venv-prod" ]]; then
+if [[ -f "$root_dir/.venv-prod/bin/activate" ]]; then
   exit 0
 fi
 

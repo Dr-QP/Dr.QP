@@ -1,0 +1,12 @@
+---
+- name: Install @modelcontextprotocol/inspector
+  community.general.npm:
+    name: "@modelcontextprotocol/inspector"
+    global: true
+    state: present
+
+- name: Install @augmentcode/auggie
+  community.general.npm:
+    name: "@augmentcode/auggie"
+    global: true
+    state: present

@@ -38,6 +38,10 @@ function find_up
   end
 end
 
+function xpra_display
+  set -xg DISPLAY ":100"
+end
+
 function ros2_activate
   if test -f /opt/ros/{{ ros_distro }}/setup.bash
     echo "Found ros-{{ ros_distro }} in /opt/ros"
@@ -68,4 +72,8 @@ function ros2_ws
   end
   bass source $ws/install/setup.bash
   register_argcomplete
+
+  # Create and load prod-venv
+  (cd $ws && bash $ws/docker/ros/deploy/prod-venv-create.sh)
+  source $ws/.venv-prod/bin/activate.fish
 end

@@ -45,6 +45,7 @@ jobs:
             - packages/**/*.cpp
             - packages/**/*.h
             - packages/**/*.py
+            - py_packages/**/*.py
             - scripts/cpp-reformat.sh
             - scripts/python-reformat.sh
             - .clang-format

@@ -704,9 +704,9 @@ _ = animate_plot(
 )
 ```
 
- Woohoo! The entire IK chain works as expected and we can put the foot on a target!
+Woohoo! The entire IK chain works as expected and we can put the foot on a target!
 
- There is still one oopsy to cover, a case when the target is unreachable.
+There is still one oopsy to cover, a case when the target is unreachable.
 
 ```{code-cell} ipython3
 try:
@@ -762,7 +762,9 @@ def safe_inverse_kinematics(coxa, femur, tibia, foot_target: Point3D, verbose=Fa
 
 
 try:
-    solvable, alpha, beta, gamma = safe_inverse_kinematics(1, 1, 1, Point3D(10, 1, 1), verbose=True)
+    solvable, alpha, beta, gamma = safe_inverse_kinematics(
+        1, 1, 1, Point3D(10, 1, 1), verbose=True
+    )
 except ValueError as e:
     print(e)
 ```

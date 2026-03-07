@@ -15,7 +15,7 @@
 
 - name: Download Node.js setup script
   ansible.builtin.get_url:
-    url: https://deb.nodesource.com/setup_20.x
+    url: https://deb.nodesource.com/setup_24.x
     dest: "{{ nodejs_temp_dir.path }}/nodesource_setup.sh"
     mode: "0755"
   become: false

@@ -24,28 +24,23 @@
 from pathlib import Path
 from typing import Dict
 
-from validate_skills.loaders import safe_load_frontmatter
-from validate_skills.types import ValidationIssue, ValidationLevel, ValidationResult
-from validate_skills.validators.cross_reference import CrossReferenceValidator
-from validate_skills.validators.skill import (
+import yaml
+
+from .loaders import safe_load_frontmatter
+from .types import ValidationIssue, ValidationLevel, ValidationResult
+from .validators.cross_reference import CrossReferenceValidator
+from .validators.skill import (
     SkillFrontmatterValidator,
     SkillStructureValidator,
 )
-from validate_skills.validators.uniqueness import UniquenessValidator
+from .validators.uniqueness import UniquenessValidator
 
 
 class ValidationEngine:
     """Orchestrates validation of skills."""
 
     def __init__(self, show_warnings: bool = False, show_info: bool = False):
-        """
-        Initialize the validation engine.
-
-        Args:
-            show_warnings: Whether to include warnings in results
-            show_info: Whether to include info messages in results
-
-        """
+        """Initialize the validation engine."""
         self.show_warnings = show_warnings
         self.show_info = show_info
 
@@ -67,7 +62,7 @@ class ValidationEngine:
         try:
             # Load the file
             frontmatter, body = safe_load_frontmatter(skill_path)
-        except Exception as e:
+        except (OSError, UnicodeDecodeError, yaml.YAMLError) as e:
             result.issues.append(
                 ValidationIssue(
                     level=ValidationLevel.ERROR,
@@ -105,3 +100,11 @@ class ValidationEngine:
         )
 
         return result
+
+
+__all__ = [
+    'ValidationEngine',
+    'ValidationIssue',
+    'ValidationLevel',
+    'ValidationResult',
+]

@@ -21,15 +21,7 @@
 
 """Pytest configuration and shared fixtures."""
 
-from pathlib import Path
-import sys
-
 import pytest
-
-# Add parent directory to path for imports
-test_dir = Path(__file__).parent
-package_dir = test_dir.parent.parent
-sys.path.insert(0, str(package_dir))
 
 
 @pytest.fixture

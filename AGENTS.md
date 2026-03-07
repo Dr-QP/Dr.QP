@@ -1,5 +1,8 @@
 # Agents Guidelines
 
+NEVER use "$TMPDIR" env variable.
+ALWAYS use "./.tmp" (relative to the repo root) for temporary files; create it if it does not exist.
+
 ## Best Practices for Agents
 
 1. **Always source scripts/setup.bash** before build or test
