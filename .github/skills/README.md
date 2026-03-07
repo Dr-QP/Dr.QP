@@ -136,7 +136,6 @@ of valid and invalid `SKILL.md` definitions.
 - **add-test-file** - Unit or integration test scaffolding. `.github/skills/add-test-file/`
 - **implement-publisher-subscriber** - Pub/sub nodes, QoS. `.github/skills/implement-publisher-subscriber/`
 - **create-state-machine** - FSM implementation. `.github/skills/create-state-machine/`
-- **add-ci-workflow** - GitHub Actions for ROS 2. `.github/skills/add-ci-workflow/`
 
 ### Review and PR Skills
 

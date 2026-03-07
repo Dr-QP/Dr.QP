@@ -35,7 +35,7 @@ devcontainer exec --workspace-folder /workspace bash -c "
 "
 ```
 
-For test runs that need the production venv (with `python-statemachine`), use `source scripts/setup.bash --update-venv` **after a successful `colcon build`**. The `--update-venv` flag scans `build/` and `install/` for `requires.txt` files. Inside the devcontainer these directories exist as Docker volume mount points, but they will be empty until the first build — so `find` may return nothing (harmless). Outside the devcontainer the directories may not exist at all, producing noisy errors. Build, test, and lint commands are documented in the CI/CD Pipeline section above.
+For test runs that need the production venv (with `python-statemachine`), use `source scripts/setup.bash --update-venv` **after a successful `colcon build`**. The `--update-venv` flag scans `build/` and `install/` for `requires.txt` files. Inside the devcontainer these directories exist as Docker volume mount points, but they will be empty until the first build — so `find` may return nothing (harmless). Outside the devcontainer the directories may not exist at all, producing noisy errors. Build, test, and lint commands should mirror those used in the repository CI workflows (see `.github/workflows/ci.yml`).
 
 ### Gotchas
 
@@ -44,4 +44,4 @@ For test runs that need the production venv (with `python-statemachine`), use `s
 - Some packages emit CMake warnings about unused `DRQP_ENABLE_COVERAGE` — these are benign.
 - The `drqp_gazebo` simulation tests run headless and take ~20 seconds.
 - The production venv (`.venv-prod`) is separate from the dev venv (`.venv`). The `setup.bash --update-venv` flag populates `.venv-prod` from `requires.txt` files in `build/` and `install/` directories.
-- The cloud VM's host Docker daemon must be running before `devcontainer up`. The update script starts it with `sudo dockerd &>/tmp/dockerd.log &`. The host daemon uses `fuse-overlayfs` as configured in `/etc/docker/daemon.json` because the cloud VM runs inside a Firecracker VM where the default `overlay2` driver is not supported. This is unrelated to Docker inside the devcontainer (which is handled by `scripts/devcontainer-start-docker.sh`).
+- The cloud VM's host Docker daemon must be running before `devcontainer up`.

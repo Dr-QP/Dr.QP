@@ -91,7 +91,7 @@ Package format 3, name, version 0.0.0, description, maintainer, license. Build t
 
 ### Step 6: Generate setup.py (Python or Mixed)
 
-`find_packages(exclude=['test'])`, data files, entry points. Reference: `packages/runtime/drqp_brain/setup.py`.
+`find_packages(exclude=['test'])`, data files, entry points, and for `ament_python` packages set `tests_require=['pytest']` so `colcon test` runs Python tests. Reference: `packages/runtime/drqp_brain/setup.py`.
 
 ### Step 7: setup.cfg and .coveragerc (Python)
 
