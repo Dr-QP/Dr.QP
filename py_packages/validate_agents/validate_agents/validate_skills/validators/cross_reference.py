@@ -87,8 +87,11 @@ class CrossReferenceValidator:
             else:
                 base = Path(skill_path).parent
 
+            if reference.startswith('path/to/'):
+                continue
+
             # Try to find the referenced file
-            ref_path = base / reference
+            ref_path = self._resolve_reference(base, reference)
 
             # Normalize path
             try:
@@ -119,6 +122,14 @@ class CrossReferenceValidator:
                 )
 
         return issues
+
+    @staticmethod
+    def _resolve_reference(base: Path, reference: str) -> Path:
+        """Resolve a markdown reference against either the file or repo root."""
+        if reference.startswith('/'):
+            return (Path.cwd() / reference.lstrip('/')).resolve()
+
+        return (base / reference).resolve()
 
     @staticmethod
     def _get_position(content: str, offset: int) -> tuple[int, int]:

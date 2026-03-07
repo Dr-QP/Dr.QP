@@ -26,14 +26,40 @@ from typing import Dict
 
 import yaml
 
-from .loaders import safe_load_frontmatter_with_body_line
+from .loaders import safe_load_frontmatter, safe_load_frontmatter_with_body_line
 from .types import ValidationIssue, ValidationLevel, ValidationResult
 from .validators.cross_reference import CrossReferenceValidator
-from .validators.skill import (
-    SkillFrontmatterValidator,
-    SkillStructureValidator,
-)
 from .validators.uniqueness import UniquenessValidator
+
+
+def skills_ref_validate(skill_dir: Path | str) -> list[str]:
+    """Validate a skill directory using the upstream skills-ref package."""
+    skill_dir = Path(skill_dir)
+    try:
+        from skills_ref import validate as validate_skill
+        from skills_ref.validator import validate_metadata
+    except ImportError as exc:
+        return [f'Unable to import skills-ref: {exc}']
+
+    errors = list(validate_skill(skill_dir))
+
+    if not errors:
+        return errors
+
+    skill_file = skill_dir / 'SKILL.md'
+    if not skill_file.exists():
+        return errors
+
+    try:
+        frontmatter, _ = safe_load_frontmatter(str(skill_file))
+    except (OSError, UnicodeDecodeError, yaml.YAMLError):
+        return errors
+
+    normalized_errors = list(validate_metadata(frontmatter, skill_dir))
+    if not normalized_errors:
+        return []
+
+    return normalized_errors
 
 
 class ValidationEngine:
@@ -60,7 +86,6 @@ class ValidationEngine:
         result = ValidationResult(skill_path=skill_path, issues=[])
 
         try:
-            # Load the file
             frontmatter, body, body_start_line = safe_load_frontmatter_with_body_line(skill_path)
         except (OSError, UnicodeDecodeError, yaml.YAMLError) as e:
             result.issues.append(
@@ -72,15 +97,16 @@ class ValidationEngine:
             )
             return result
 
-        # Validate frontmatter
-        fm_validator = SkillFrontmatterValidator()
-        result.issues.extend(fm_validator.validate(frontmatter, show_warnings=self.show_warnings))
+        skill_dir = Path(skill_path).parent
+        for message in skills_ref_validate(skill_dir):
+            result.issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    message=message,
+                    section='skills_ref',
+                )
+            )
 
-        # Validate structure
-        struct_validator = SkillStructureValidator()
-        result.issues.extend(struct_validator.validate(body, show_warnings=self.show_warnings))
-
-        # Validate uniqueness
         unique_validator = UniquenessValidator(all_skills=all_skills)
         result.issues.extend(
             unique_validator.validate(
@@ -90,10 +116,8 @@ class ValidationEngine:
             )
         )
 
-        # Validate cross-references
-        skill_dir = str(Path(skill_path).parent) if skill_path else None
         xref_validator = CrossReferenceValidator(
-            base_path=skill_dir, show_warnings=self.show_warnings
+            base_path=str(skill_dir), show_warnings=self.show_warnings
         )
         result.issues.extend(
             xref_validator.validate(
@@ -112,4 +136,5 @@ __all__ = [
     'ValidationIssue',
     'ValidationLevel',
     'ValidationResult',
+    'skills_ref_validate',
 ]
