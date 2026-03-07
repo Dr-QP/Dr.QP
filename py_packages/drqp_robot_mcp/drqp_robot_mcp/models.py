@@ -15,14 +15,14 @@ class Vector3:
     z: float
 
     @classmethod
-    def from_mapping(cls, data: dict[str, Any] | None) -> "Vector3 | None":
+    def from_mapping(cls, data: dict[str, Any] | None) -> 'Vector3 | None':
         """Create a vector from a JSON mapping."""
         if data is None:
             return None
         return cls(
-            x=float(data.get("x", 0.0)),
-            y=float(data.get("y", 0.0)),
-            z=float(data.get("z", 0.0)),
+            x=float(data.get('x', 0.0)),
+            y=float(data.get('y', 0.0)),
+            z=float(data.get('z', 0.0)),
         )
 
 
@@ -36,15 +36,15 @@ class Quaternion:
     w: float
 
     @classmethod
-    def from_mapping(cls, data: dict[str, Any] | None) -> "Quaternion | None":
+    def from_mapping(cls, data: dict[str, Any] | None) -> 'Quaternion | None':
         """Create an orientation from a JSON mapping."""
         if data is None:
             return None
         return cls(
-            x=float(data.get("x", 0.0)),
-            y=float(data.get("y", 0.0)),
-            z=float(data.get("z", 0.0)),
-            w=float(data.get("w", 1.0)),
+            x=float(data.get('x', 0.0)),
+            y=float(data.get('y', 0.0)),
+            z=float(data.get('z', 0.0)),
+            w=float(data.get('w', 1.0)),
         )
 
 
@@ -56,12 +56,12 @@ class Pose:
     orientation: Quaternion
 
     @classmethod
-    def from_mapping(cls, data: dict[str, Any] | None) -> "Pose | None":
+    def from_mapping(cls, data: dict[str, Any] | None) -> 'Pose | None':
         """Create a pose from a JSON mapping."""
         if data is None:
             return None
-        position = Vector3.from_mapping(data.get("position"))
-        orientation = Quaternion.from_mapping(data.get("orientation"))
+        position = Vector3.from_mapping(data.get('position'))
+        orientation = Quaternion.from_mapping(data.get('orientation'))
         if position is None or orientation is None:
             return None
         return cls(position=position, orientation=orientation)
@@ -76,12 +76,12 @@ class JointStateValue:
     effort: float | None
 
     @classmethod
-    def from_mapping(cls, data: dict[str, Any]) -> "JointStateValue":
+    def from_mapping(cls, data: dict[str, Any]) -> 'JointStateValue':
         """Create a joint state from a JSON mapping."""
         return cls(
-            position=_optional_float(data.get("position")),
-            velocity=_optional_float(data.get("velocity")),
-            effort=_optional_float(data.get("effort")),
+            position=_optional_float(data.get('position')),
+            velocity=_optional_float(data.get('velocity')),
+            effort=_optional_float(data.get('effort')),
         )
 
 
@@ -94,12 +94,12 @@ class WorldEntityState:
     pose: Pose | None
 
     @classmethod
-    def from_mapping(cls, data: dict[str, Any]) -> "WorldEntityState":
+    def from_mapping(cls, data: dict[str, Any]) -> 'WorldEntityState':
         """Create an entity state from a JSON mapping."""
         return cls(
-            name=str(data.get("name", "")),
-            entity_id=_optional_int(data.get("entity_id")),
-            pose=Pose.from_mapping(data.get("pose")),
+            name=str(data.get('name', '')),
+            entity_id=_optional_int(data.get('entity_id')),
+            pose=Pose.from_mapping(data.get('pose')),
         )
 
 
@@ -112,23 +112,21 @@ class WorldStateSnapshot:
     simulation_time_sec: float | None
     entity_count: int
     entities: list[WorldEntityState] = field(default_factory=list)
-    source: str = "gazebo"
+    source: str = 'gazebo'
     note: str | None = None
 
     @classmethod
-    def from_mapping(cls, data: dict[str, Any]) -> "WorldStateSnapshot":
+    def from_mapping(cls, data: dict[str, Any]) -> 'WorldStateSnapshot':
         """Create a world snapshot from a JSON mapping."""
-        entities = [
-            WorldEntityState.from_mapping(item) for item in data.get("entities", [])
-        ]
+        entities = [WorldEntityState.from_mapping(item) for item in data.get('entities', [])]
         return cls(
-            available=bool(data.get("available", False)),
-            world_name=str(data.get("world_name", "")),
-            simulation_time_sec=_optional_float(data.get("simulation_time_sec")),
-            entity_count=int(data.get("entity_count", len(entities))),
+            available=bool(data.get('available', False)),
+            world_name=str(data.get('world_name', '')),
+            simulation_time_sec=_optional_float(data.get('simulation_time_sec')),
+            entity_count=int(data.get('entity_count', len(entities))),
             entities=entities,
-            source=str(data.get("source", "gazebo")),
-            note=data.get("note"),
+            source=str(data.get('source', 'gazebo')),
+            note=data.get('note'),
         )
 
 
@@ -147,22 +145,22 @@ class RobotStateSnapshot:
     note: str | None = None
 
     @classmethod
-    def from_mapping(cls, data: dict[str, Any]) -> "RobotStateSnapshot":
+    def from_mapping(cls, data: dict[str, Any]) -> 'RobotStateSnapshot':
         """Create a robot state snapshot from a JSON mapping."""
         joint_states = {
             name: JointStateValue.from_mapping(value)
-            for name, value in data.get("joint_states", {}).items()
+            for name, value in data.get('joint_states', {}).items()
         }
         return cls(
-            timestamp=str(data.get("timestamp", "")),
-            available=bool(data.get("available", False)),
-            simulation_running=bool(data.get("simulation_running", False)),
-            lifecycle_state=data.get("lifecycle_state"),
-            world_name=data.get("world_name"),
-            simulation_time_sec=_optional_float(data.get("simulation_time_sec")),
-            robot_pose=Pose.from_mapping(data.get("robot_pose")),
+            timestamp=str(data.get('timestamp', '')),
+            available=bool(data.get('available', False)),
+            simulation_running=bool(data.get('simulation_running', False)),
+            lifecycle_state=data.get('lifecycle_state'),
+            world_name=data.get('world_name'),
+            simulation_time_sec=_optional_float(data.get('simulation_time_sec')),
+            robot_pose=Pose.from_mapping(data.get('robot_pose')),
             joint_states=joint_states,
-            note=data.get("note"),
+            note=data.get('note'),
         )
 
 

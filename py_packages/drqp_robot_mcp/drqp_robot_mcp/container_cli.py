@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, UTC
 import json
 import os
+from pathlib import Path
 import shlex
 import subprocess
 import sys
 import time
-from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any, Callable
 
 
@@ -20,39 +20,39 @@ def main() -> None:
     args = parser.parse_args()
     result = args.handler(args)
     json.dump(result, sys.stdout)
-    sys.stdout.write("\n")
+    sys.stdout.write('\n')
 
 
 def build_parser() -> argparse.ArgumentParser:
     """Build the CLI parser."""
-    parser = argparse.ArgumentParser("drqp_robot_mcp_container")
-    subparsers = parser.add_subparsers(dest="command", required=True)
+    parser = argparse.ArgumentParser('drqp_robot_mcp_container')
+    subparsers = parser.add_subparsers(dest='command', required=True)
 
-    start_sim = subparsers.add_parser("start-simulation")
-    start_sim.add_argument("--workspace-root", default="/workspace")
-    start_sim.add_argument("--pid-path", required=True)
-    start_sim.add_argument("--log-path", required=True)
-    start_sim.add_argument("--gui", action="store_true")
+    start_sim = subparsers.add_parser('start-simulation')
+    start_sim.add_argument('--workspace-root', default='/workspace')
+    start_sim.add_argument('--pid-path', required=True)
+    start_sim.add_argument('--log-path', required=True)
+    start_sim.add_argument('--gui', action='store_true')
     start_sim.set_defaults(handler=cmd_start_simulation)
 
-    publish_event = subparsers.add_parser("publish-event")
-    publish_event.add_argument("--event", required=True)
+    publish_event = subparsers.add_parser('publish-event')
+    publish_event.add_argument('--event', required=True)
     publish_event.set_defaults(handler=cmd_publish_event)
 
-    wait_state = subparsers.add_parser("wait-state")
-    wait_state.add_argument("--target-state", required=True)
-    wait_state.add_argument("--timeout-sec", type=float, default=90.0)
+    wait_state = subparsers.add_parser('wait-state')
+    wait_state.add_argument('--target-state', required=True)
+    wait_state.add_argument('--timeout-sec', type=float, default=90.0)
     wait_state.set_defaults(handler=cmd_wait_state)
 
-    get_world_state = subparsers.add_parser("get-world-state")
-    get_world_state.add_argument("--world-name", default="empty")
-    get_world_state.add_argument("--timeout-sec", type=float, default=10.0)
+    get_world_state = subparsers.add_parser('get-world-state')
+    get_world_state.add_argument('--world-name', default='empty')
+    get_world_state.add_argument('--timeout-sec', type=float, default=10.0)
     get_world_state.set_defaults(handler=cmd_get_world_state)
 
-    get_robot_state = subparsers.add_parser("get-robot-state")
-    get_robot_state.add_argument("--world-name", default="empty")
-    get_robot_state.add_argument("--robot-name", default="drqp")
-    get_robot_state.add_argument("--timeout-sec", type=float, default=10.0)
+    get_robot_state = subparsers.add_parser('get-robot-state')
+    get_robot_state.add_argument('--world-name', default='empty')
+    get_robot_state.add_argument('--robot-name', default='drqp')
+    get_robot_state.add_argument('--timeout-sec', type=float, default=10.0)
     get_robot_state.set_defaults(handler=cmd_get_robot_state)
 
     return parser
@@ -69,51 +69,49 @@ def cmd_start_simulation(args: argparse.Namespace) -> dict[str, Any]:
     current_pid = _read_pid(pid_path)
     if current_pid is not None and _pid_is_running(current_pid):
         return {
-            "started": False,
-            "pid": current_pid,
-            "message": "Simulation launch is already running.",
-            "log_path": str(log_path),
+            'started': False,
+            'pid': current_pid,
+            'message': 'Simulation launch is already running.',
+            'log_path': str(log_path),
         }
 
-    env_exports = (
-        "export ROS_DISTRO=jazzy CC=clang CXX=clang++ "
-        "CMAKE_EXPORT_COMPILE_COMMANDS=1"
-    )
-    gui_value = "true" if args.gui else "false"
+    env_exports = 'export ROS_DISTRO=jazzy CC=clang CXX=clang++ CMAKE_EXPORT_COMPILE_COMMANDS=1'
+    gui_value = 'true' if args.gui else 'false'
     launch_command = (
-        f"cd {shlex.quote(str(workspace_root))} && "
-        f"{env_exports} && "
-        "source scripts/setup.bash && "
-        f"ros2 launch drqp_gazebo sim.launch.py gui:={gui_value}"
+        f'cd {shlex.quote(str(workspace_root))} && '
+        f'{env_exports} && '
+        'source scripts/setup.bash && '
+        f'ros2 launch drqp_gazebo sim.launch.py gui:={gui_value}'
     )
 
-    with log_path.open("a", encoding="utf-8") as log_file:
+    with log_path.open('a', encoding='utf-8') as log_file:
         process = subprocess.Popen(  # noqa: S603
-            ["bash", "-lc", launch_command],
+            ['bash', '-lc', launch_command],
             cwd=workspace_root,
             stdout=log_file,
             stderr=subprocess.STDOUT,
             start_new_session=True,
         )
 
-    pid_path.write_text(f"{process.pid}\n", encoding="utf-8")
+    pid_path.write_text(f'{process.pid}\n', encoding='utf-8')
     return {
-        "started": True,
-        "pid": process.pid,
-        "message": "Started Gazebo simulation launch.",
-        "log_path": str(log_path),
+        'started': True,
+        'pid': process.pid,
+        'message': 'Started Gazebo simulation launch.',
+        'log_path': str(log_path),
     }
 
 
 def cmd_publish_event(args: argparse.Namespace) -> dict[str, Any]:
     """Publish a robot event onto /robot_event."""
+
     def _operation() -> dict[str, Any]:
         import rclpy
         from rclpy.node import Node
         import std_msgs.msg
 
-        node = Node("drqp_robot_mcp_event_publisher")
-        publisher = node.create_publisher(std_msgs.msg.String, "/robot_event", 10)
+        node = Node('drqp_robot_mcp_event_publisher')
+        publisher = node.create_publisher(std_msgs.msg.String, '/robot_event', 10)
         deadline = time.monotonic() + 2.0
         while time.monotonic() < deadline and publisher.get_subscription_count() == 0:
             rclpy.spin_once(node, timeout_sec=0.1)
@@ -125,9 +123,9 @@ def cmd_publish_event(args: argparse.Namespace) -> dict[str, Any]:
         subscriptions = publisher.get_subscription_count()
         node.destroy_node()
         return {
-            "published": True,
-            "event": args.event,
-            "subscription_count": subscriptions,
+            'published': True,
+            'event': args.event,
+            'subscription_count': subscriptions,
         }
 
     return _with_rclpy(_operation)
@@ -137,9 +135,9 @@ def cmd_wait_state(args: argparse.Namespace) -> dict[str, Any]:
     """Wait until /robot_state reaches the requested state."""
     state = _read_robot_lifecycle_state(timeout_sec=args.timeout_sec, expected=args.target_state)
     return {
-        "reached": state == args.target_state,
-        "state": state,
-        "target_state": args.target_state,
+        'reached': state == args.target_state,
+        'state': state,
+        'target_state': args.target_state,
     }
 
 
@@ -162,25 +160,25 @@ def cmd_get_robot_state(args: argparse.Namespace) -> dict[str, Any]:
         world_name=args.world_name,
         timeout_sec=_time_left(deadline),
     )
-    robot_pose = _find_robot_pose(world_state.get("entities", []), args.robot_name)
+    robot_pose = _find_robot_pose(world_state.get('entities', []), args.robot_name)
 
     available = (
         lifecycle_state is not None
         or bool(joint_states)
         or robot_pose is not None
-        or bool(world_state.get("available"))
+        or bool(world_state.get('available'))
     )
 
     return {
-        "timestamp": datetime.now(UTC).isoformat(),
-        "available": available,
-        "simulation_running": available,
-        "lifecycle_state": lifecycle_state,
-        "world_name": world_state.get("world_name") if world_state.get("available") else None,
-        "simulation_time_sec": world_state.get("simulation_time_sec"),
-        "robot_pose": robot_pose,
-        "joint_states": joint_states,
-        "note": None if available else "Robot topics are not yet available.",
+        'timestamp': datetime.now(UTC).isoformat(),
+        'available': available,
+        'simulation_running': available,
+        'lifecycle_state': lifecycle_state,
+        'world_name': world_state.get('world_name') if world_state.get('available') else None,
+        'simulation_time_sec': world_state.get('simulation_time_sec'),
+        'robot_pose': robot_pose,
+        'joint_states': joint_states,
+        'note': None if available else 'Robot topics are not yet available.',
     }
 
 
@@ -191,7 +189,7 @@ def _get_world_state_snapshot(world_name: str, timeout_sec: float) -> dict[str, 
 
     try:
         raw_output = subprocess.run(  # noqa: S603
-            ["gz", "topic", "-e", "-n", "1", "-t", f"/world/{world_name}/pose/info"],
+            ['gz', 'topic', '-e', '-n', '1', '-t', f'/world/{world_name}/pose/info'],
             check=True,
             capture_output=True,
             text=True,
@@ -199,23 +197,23 @@ def _get_world_state_snapshot(world_name: str, timeout_sec: float) -> dict[str, 
         )
         entities = parse_gazebo_pose_info(raw_output.stdout)
     except FileNotFoundError:
-        note = "Gazebo CLI is not installed in the devcontainer."
+        note = 'Gazebo CLI is not installed in the devcontainer.'
     except subprocess.CalledProcessError as exc:
-        note = exc.stderr.strip() or exc.stdout.strip() or "Gazebo pose topic is unavailable."
+        note = exc.stderr.strip() or exc.stdout.strip() or 'Gazebo pose topic is unavailable.'
     except subprocess.TimeoutExpired:
-        note = "Timed out waiting for Gazebo world pose information."
+        note = 'Timed out waiting for Gazebo world pose information.'
 
     simulation_time_sec = _read_simulation_time(timeout_sec=min(timeout_sec, 0.5))
     available = bool(entities) or simulation_time_sec is not None
 
     return {
-        "available": available,
-        "world_name": world_name,
-        "simulation_time_sec": simulation_time_sec,
-        "entity_count": len(entities),
-        "entities": entities,
-        "source": "gazebo",
-        "note": note,
+        'available': available,
+        'world_name': world_name,
+        'simulation_time_sec': simulation_time_sec,
+        'entity_count': len(entities),
+        'entities': entities,
+        'source': 'gazebo',
+        'note': note,
     }
 
 
@@ -225,9 +223,9 @@ def _find_robot_pose(
 ) -> dict[str, Any] | None:
     """Return the best matching robot pose from world entities."""
     for entity in entities:
-        name = entity.get("name", "")
-        if name == robot_name or name.startswith(f"{robot_name}_"):
-            return entity.get("pose")
+        name = entity.get('name', '')
+        if name == robot_name or name.startswith(f'{robot_name}_'):
+            return entity.get('pose')
     return None
 
 
@@ -236,30 +234,31 @@ def _read_robot_lifecycle_state(
     expected: str | None = None,
 ) -> str | None:
     """Read the latest lifecycle state from /robot_state."""
+
     def _operation() -> str | None:
         import rclpy
         from rclpy.node import Node
         from rclpy.qos import QoSDurabilityPolicy, QoSProfile
         import std_msgs.msg
 
-        node = Node("drqp_robot_mcp_state_reader")
+        node = Node('drqp_robot_mcp_state_reader')
         qos = QoSProfile(depth=1)
         qos.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
-        state: dict[str, str | None] = {"value": None}
+        state: dict[str, str | None] = {'value': None}
 
         def callback(message: std_msgs.msg.String) -> None:
-            state["value"] = message.data
+            state['value'] = message.data
 
-        node.create_subscription(std_msgs.msg.String, "/robot_state", callback, qos)
+        node.create_subscription(std_msgs.msg.String, '/robot_state', callback, qos)
         deadline = time.monotonic() + timeout_sec
         while time.monotonic() < deadline:
             rclpy.spin_once(node, timeout_sec=0.1)
-            if state["value"] is None:
+            if state['value'] is None:
                 continue
-            if expected is None or state["value"] == expected:
+            if expected is None or state['value'] == expected:
                 break
 
-        value = state["value"]
+        value = state['value']
         node.destroy_node()
         return value
 
@@ -268,23 +267,24 @@ def _read_robot_lifecycle_state(
 
 def _read_joint_states(timeout_sec: float) -> dict[str, dict[str, float | None]]:
     """Read the latest joint state message from /joint_states."""
+
     def _operation() -> dict[str, dict[str, float | None]]:
         import rclpy
         from rclpy.node import Node
         from sensor_msgs.msg import JointState
 
-        node = Node("drqp_robot_mcp_joint_state_reader")
+        node = Node('drqp_robot_mcp_joint_state_reader')
         joint_states: dict[str, dict[str, float | None]] = {}
 
         def callback(message: JointState) -> None:
             for index, name in enumerate(message.name):
                 joint_states[name] = {
-                    "position": _value_at(message.position, index),
-                    "velocity": _value_at(message.velocity, index),
-                    "effort": _value_at(message.effort, index),
+                    'position': _value_at(message.position, index),
+                    'velocity': _value_at(message.velocity, index),
+                    'effort': _value_at(message.effort, index),
                 }
 
-        node.create_subscription(JointState, "/joint_states", callback, 10)
+        node.create_subscription(JointState, '/joint_states', callback, 10)
         deadline = time.monotonic() + timeout_sec
         while time.monotonic() < deadline and not joint_states:
             rclpy.spin_once(node, timeout_sec=0.1)
@@ -297,23 +297,24 @@ def _read_joint_states(timeout_sec: float) -> dict[str, dict[str, float | None]]
 
 def _read_simulation_time(timeout_sec: float) -> float | None:
     """Read the latest simulation time from /clock."""
+
     def _operation() -> float | None:
         import rclpy
         from rclpy.node import Node
         from rosgraph_msgs.msg import Clock
 
-        node = Node("drqp_robot_mcp_clock_reader")
-        result: dict[str, float | None] = {"value": None}
+        node = Node('drqp_robot_mcp_clock_reader')
+        result: dict[str, float | None] = {'value': None}
 
         def callback(message: Clock) -> None:
-            result["value"] = float(message.clock.sec) + (message.clock.nanosec / 1_000_000_000)
+            result['value'] = float(message.clock.sec) + (message.clock.nanosec / 1_000_000_000)
 
-        node.create_subscription(Clock, "/clock", callback, 10)
+        node.create_subscription(Clock, '/clock', callback, 10)
         deadline = time.monotonic() + timeout_sec
-        while time.monotonic() < deadline and result["value"] is None:
+        while time.monotonic() < deadline and result['value'] is None:
             rclpy.spin_once(node, timeout_sec=0.1)
 
-        value = result["value"]
+        value = result['value']
         node.destroy_node()
         return value
 
@@ -339,9 +340,9 @@ def _with_rclpy(operation: Callable[[], Any]) -> Any:
 def parse_gazebo_pose_info(raw_output: str) -> list[dict[str, Any]]:
     """Parse `gz topic -e /world/<world>/pose/info` output into entity poses."""
     entities: list[dict[str, Any]] = []
-    for block in _extract_blocks(raw_output, "pose"):
+    for block in _extract_blocks(raw_output, 'pose'):
         entity = _parse_pose_block(block)
-        if entity["name"]:
+        if entity['name']:
             entities.append(entity)
     return entities
 
@@ -351,7 +352,7 @@ def _extract_blocks(raw_output: str, block_name: str) -> list[list[str]]:
     blocks: list[list[str]] = []
     lines = raw_output.splitlines()
     index = 0
-    opening = f"{block_name} {{"
+    opening = f'{block_name} {{'
 
     while index < len(lines):
         if lines[index].strip() != opening:
@@ -363,9 +364,9 @@ def _extract_blocks(raw_output: str, block_name: str) -> list[list[str]]:
         index += 1
         while index < len(lines) and depth > 0:
             stripped = lines[index].strip()
-            if stripped.endswith("{"):
+            if stripped.endswith('{'):
                 depth += 1
-            if stripped == "}":
+            if stripped == '}':
                 depth -= 1
                 if depth == 0:
                     break
@@ -381,46 +382,46 @@ def _extract_blocks(raw_output: str, block_name: str) -> list[list[str]]:
 
 def _parse_pose_block(lines: list[str]) -> dict[str, Any]:
     """Parse a single Gazebo entity pose block."""
-    name = ""
+    name = ''
     entity_id: int | None = None
-    position: dict[str, float] = {"x": 0.0, "y": 0.0, "z": 0.0}
-    orientation: dict[str, float] = {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}
+    position: dict[str, float] = {'x': 0.0, 'y': 0.0, 'z': 0.0}
+    orientation: dict[str, float] = {'x': 0.0, 'y': 0.0, 'z': 0.0, 'w': 1.0}
     current_section: str | None = None
 
     for raw_line in lines:
         stripped = raw_line.strip()
         if not stripped:
             continue
-        if stripped in {"position {", "orientation {"}:
+        if stripped in {'position {', 'orientation {'}:
             current_section = stripped.split()[0]
             continue
-        if stripped == "}":
+        if stripped == '}':
             current_section = None
             continue
-        if ":" not in stripped:
+        if ':' not in stripped:
             continue
 
-        key, value = stripped.split(":", maxsplit=1)
+        key, value = stripped.split(':', maxsplit=1)
         text = value.strip().strip('"')
         if current_section is None:
-            if key == "name":
+            if key == 'name':
                 name = text
-            elif key == "id":
+            elif key == 'id':
                 entity_id = int(text)
             continue
 
         numeric = float(text)
-        if current_section == "position":
+        if current_section == 'position':
             position[key] = numeric
-        elif current_section == "orientation":
+        elif current_section == 'orientation':
             orientation[key] = numeric
 
     return {
-        "name": name,
-        "entity_id": entity_id,
-        "pose": {
-            "position": position,
-            "orientation": orientation,
+        'name': name,
+        'entity_id': entity_id,
+        'pose': {
+            'position': position,
+            'orientation': orientation,
         },
     }
 
@@ -430,7 +431,7 @@ def _read_pid(pid_path: Path) -> int | None:
     if not pid_path.exists():
         return None
     try:
-        return int(pid_path.read_text(encoding="utf-8").strip())
+        return int(pid_path.read_text(encoding='utf-8').strip())
     except ValueError:
         return None
 
@@ -456,5 +457,5 @@ def _time_left(deadline: float) -> float:
     return max(0.1, deadline - time.monotonic())
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

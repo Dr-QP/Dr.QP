@@ -13,12 +13,11 @@ from .models import (
     WorldStateSnapshot,
 )
 
-
 mcp = FastMCP(
-    "Dr.QP Robot MCP",
+    'Dr.QP Robot MCP',
     instructions=(
-        "Use these tools to boot the Dr.QP Gazebo robot, query its lifecycle "
-        "and pose state, record robot state snapshots, and inspect Gazebo world poses."
+        'Use these tools to boot the Dr.QP Gazebo robot, query its lifecycle '
+        'and pose state, record robot state snapshots, and inspect Gazebo world poses.'
     ),
 )
 controller = RobotMcpController()
@@ -73,5 +72,5 @@ def main() -> None:
     mcp.run()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

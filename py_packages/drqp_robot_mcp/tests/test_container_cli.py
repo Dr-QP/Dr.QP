@@ -49,7 +49,7 @@ pose {
     parsed = parse_gazebo_pose_info(raw_output)
 
     assert len(parsed) == 2
-    assert parsed[1]["name"] == "drqp"
-    assert parsed[1]["entity_id"] == 2
-    assert parsed[1]["pose"]["position"]["x"] == 1.5
-    assert parsed[1]["pose"]["orientation"]["w"] == 0.707
+    assert parsed[1]['name'] == 'drqp'
+    assert parsed[1]['entity_id'] == 2
+    assert parsed[1]['pose']['position']['x'] == 1.5
+    assert parsed[1]['pose']['orientation']['w'] == 0.707
