@@ -24,4 +24,4 @@ runs:
           uv.lock
           py_packages/validate_agents/pyproject.toml
           packages/runtime/drqp_brain/setup.py
-        install-cmd: python -m pip install --disable-pip-version-check uv && python -m uv sync
+        install-cmd: python -m pip install --disable-pip-version-check uv && python -m uv sync --frozen

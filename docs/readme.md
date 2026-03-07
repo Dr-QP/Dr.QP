@@ -12,7 +12,7 @@ This directory contains the Sphinx documentation for the project.
 
 ### Details
 
-The following commands will create a clean venv specific for building documentation and build the documentation using Sphinx.
+The following commands will set up the workspace virtual environment and build the documentation using Sphinx.
 
 ```bash
 python3 -m pip install --user --break-system-packages --disable-pip-version-check uv
