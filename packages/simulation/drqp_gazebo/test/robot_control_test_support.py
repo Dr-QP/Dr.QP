@@ -21,6 +21,7 @@
 """Shared support code for isolated Gazebo robot control launch tests."""
 
 from collections.abc import Callable
+from copy import deepcopy
 import math
 import time
 import unittest
@@ -64,8 +65,9 @@ def create_simulation_launch_description() -> LaunchDescription:
                     'sim_gui': 'false',
                 }.items(),
             ),
-            # Wait for simulation to fully initialize before starting tests.
-            TimerAction(period=10.0, actions=[ReadyToTest()]),
+            # Handshake with the launched processes, then let the test harness
+            # block on real graph/clock/controller readiness.
+            TimerAction(period=1.0, actions=[ReadyToTest()]),
         ]
     )
 
@@ -89,11 +91,15 @@ class GazeboRobotControlBase(unittest.TestCase):
     """Shared harness and helpers for robot control behavior tests."""
 
     # Configurable timeouts.
-    SPAWN_TIMEOUT = 30.0
-    STATE_TRANSITION_TIMEOUT = 10.0
-    MOVEMENT_TIMEOUT = 5.0
-    CLOCK_TIMEOUT = 10.0
+    READY_TIMEOUT = 90.0
+    SPAWN_TIMEOUT = 90.0
+    STATE_TRANSITION_TIMEOUT = 90.0
+    MOVEMENT_TIMEOUT = 30.0
+    CLOCK_TIMEOUT = 30.0
+    CONTROLLER_TIMEOUT = 60.0
+    SIM_TIME_TIMEOUT = 60.0
     MOVEMENT_DURATION = 5.0
+    POSE_SETTLE_DURATION = 1.0
 
     # Posture delta threshold (meters).
     MIN_ARM_DISARM_HEIGHT_DELTA = 0.02
@@ -112,7 +118,9 @@ class GazeboRobotControlBase(unittest.TestCase):
         self.node = rclpy.create_node('test_gazebo_robot_control')
 
         self.current_robot_state = None
+        self.current_clock = None
         self.robot_pose = None
+        self.robot_pose_stamp_ns = None
 
         qos_profile = QoSProfile(depth=1)
         qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
@@ -130,20 +138,14 @@ class GazeboRobotControlBase(unittest.TestCase):
             self._odometry_callback,
             10,
         )
+        self.clock_sub = self.node.create_subscription(Clock, '/clock', self._clock_callback, 10)
 
         self.event_pub = self.node.create_publisher(std_msgs.msg.String, '/robot_event', 10)
         self.movement_pub = self.node.create_publisher(
             MovementCommand, '/robot/movement_command', 10
         )
 
-        self._spin_until(
-            lambda: (
-                self.event_pub.get_subscription_count() > 0
-                and self.movement_pub.get_subscription_count() > 0
-            ),
-            self.CLOCK_TIMEOUT,
-            'No subscribers for /robot_event publisher',
-        )
+        self._wait_for_simulation_ready()
 
     def tearDown(self) -> None:
         """Clean up test node."""
@@ -153,8 +155,16 @@ class GazeboRobotControlBase(unittest.TestCase):
         self.current_robot_state = msg.data
         self.node.get_logger().info(f'Robot state updated: {self.current_robot_state}')
 
+    def _clock_callback(self, msg: Clock) -> None:
+        self.current_clock = msg.clock
+
     def _odometry_callback(self, msg: Odometry) -> None:
         self.robot_pose = msg.pose.pose
+        self.robot_pose_stamp_ns = self._time_msg_to_nanoseconds(msg.header.stamp)
+
+    @staticmethod
+    def _time_msg_to_nanoseconds(msg) -> int:
+        return (msg.sec * 1_000_000_000) + msg.nanosec
 
     def _spin_until(
         self,
@@ -163,8 +173,8 @@ class GazeboRobotControlBase(unittest.TestCase):
         error_message: str,
     ) -> bool:
         """Spin the node until a condition is met or timeout occurs."""
-        start_time = time.time()
-        while time.time() - start_time < timeout_sec:
+        start_time = time.monotonic()
+        while time.monotonic() - start_time < timeout_sec:
             rclpy.spin_once(self.node, timeout_sec=0.1)
             if condition_fn():
                 return True
@@ -177,6 +187,24 @@ class GazeboRobotControlBase(unittest.TestCase):
         self.event_pub.publish(msg)
         self.node.get_logger().info(f'Published event: {event_name}')
         rclpy.spin_once(self.node, timeout_sec=0.1)
+
+    def _wait_for_simulation_ready(self) -> None:
+        self.assert_nodes_and_clock()
+        self.assert_controllers_are_active()
+        self._spin_until(
+            lambda: (
+                self.event_pub.get_subscription_count() > 0
+                and self.movement_pub.get_subscription_count() > 0
+            ),
+            self.READY_TIMEOUT,
+            'Timed out waiting for /robot_event and /robot/movement_command subscribers',
+        )
+        self._wait_for_any_state(
+            ('torque_off', 'finalized', 'initializing', 'finalizing', 'torque_on'),
+            self.SPAWN_TIMEOUT,
+        )
+        self._wait_for_sim_time(self.POSE_SETTLE_DURATION, wall_timeout_sec=self.CLOCK_TIMEOUT)
+        self._wait_for_pose()
 
     def _wait_for_state(self, expected_state: str, timeout_sec: float) -> None:
         self._spin_until(
@@ -198,12 +226,86 @@ class GazeboRobotControlBase(unittest.TestCase):
             f'within {timeout_sec}s. Current state: {self.current_robot_state}',
         )
 
+    def _current_sim_time_ns(self) -> int | None:
+        if self.current_clock is None:
+            return None
+        return self._time_msg_to_nanoseconds(self.current_clock)
+
+    def _wait_for_sim_time_since(
+        self,
+        start_time_ns: int,
+        duration_sec: float,
+        *,
+        wall_timeout_sec: float | None = None,
+    ) -> None:
+        target_time_ns = start_time_ns + int(duration_sec * 1_000_000_000)
+
+        def reached_target_time() -> bool:
+            current_time_ns = self._current_sim_time_ns()
+            return current_time_ns is not None and current_time_ns >= target_time_ns
+
+        timeout_sec = wall_timeout_sec or max(self.SIM_TIME_TIMEOUT, duration_sec * 12.0)
+        self._spin_until(
+            reached_target_time,
+            timeout_sec,
+            (
+                f'Simulation time did not advance by {duration_sec:.1f}s '
+                f'within {timeout_sec:.1f}s of wall time'
+            ),
+        )
+
+    def _wait_for_sim_time(
+        self,
+        duration_sec: float,
+        *,
+        wall_timeout_sec: float | None = None,
+    ) -> None:
+        self._spin_until(
+            lambda: self.current_clock is not None,
+            self.CLOCK_TIMEOUT,
+            'Did not receive /clock from Gazebo bridge',
+        )
+        start_time_ns = self._current_sim_time_ns()
+        if start_time_ns is None:
+            raise RuntimeError(
+                'Simulation clock became unavailable while waiting for time to advance'
+            )
+        self._wait_for_sim_time_since(
+            start_time_ns,
+            duration_sec,
+            wall_timeout_sec=wall_timeout_sec,
+        )
+
     def _wait_for_pose(self) -> None:
         self._spin_until(
             lambda: self.robot_pose is not None,
             self.MOVEMENT_TIMEOUT,
             'Did not receive /model/drqp/odometry from Gazebo bridge',
         )
+
+    def _wait_for_new_pose(self, previous_pose_stamp_ns: int | None) -> None:
+        self._spin_until(
+            lambda: (
+                self.robot_pose is not None
+                and self.robot_pose_stamp_ns is not None
+                and (
+                    previous_pose_stamp_ns is None
+                    or self.robot_pose_stamp_ns > previous_pose_stamp_ns
+                )
+            ),
+            self.MOVEMENT_TIMEOUT,
+            'Did not receive a fresh /model/drqp/odometry pose sample from Gazebo bridge',
+        )
+
+    def _wait_for_pose_sample(self, settle_sim_time_sec: float = 0.0) -> Pose:
+        self._require_pose()
+        previous_pose_stamp_ns = self.robot_pose_stamp_ns
+        if settle_sim_time_sec > 0.0:
+            self._wait_for_sim_time(settle_sim_time_sec)
+        self._wait_for_new_pose(previous_pose_stamp_ns)
+        if self.robot_pose is None:
+            raise RuntimeError('Gazebo pose became unavailable while sampling odometry')
+        return deepcopy(self.robot_pose)
 
     def _require_pose(self) -> None:
         self._wait_for_pose()
@@ -213,24 +315,20 @@ class GazeboRobotControlBase(unittest.TestCase):
         )
 
     def _arm_robot(self) -> None:
+        self._wait_for_any_state(
+            ('torque_off', 'finalized', 'initializing', 'finalizing', 'torque_on'),
+            self.STATE_TRANSITION_TIMEOUT,
+        )
         if self.current_robot_state == 'torque_on':
             return
-        if self.current_robot_state is None:
-            self._wait_for_any_state(
-                ('torque_off', 'finalized', 'initializing', 'finalizing', 'torque_on'),
-                self.STATE_TRANSITION_TIMEOUT,
-            )
+
+        if self.current_robot_state == 'finalizing':
+            self._wait_for_state('finalized', self.STATE_TRANSITION_TIMEOUT)
 
         if self.current_robot_state in ('torque_off', 'finalized'):
             self._publish_event('initialize')
-            self._wait_for_any_state(
-                ('initializing', 'torque_on'),
-                self.STATE_TRANSITION_TIMEOUT,
-            )
 
-        if self.current_robot_state == 'initializing':
-            self._publish_event('initializing_done')
-            self._wait_for_state('torque_on', self.STATE_TRANSITION_TIMEOUT)
+        self._wait_for_state('torque_on', self.STATE_TRANSITION_TIMEOUT)
 
         if self.current_robot_state != 'torque_on':
             self.fail(
@@ -239,21 +337,23 @@ class GazeboRobotControlBase(unittest.TestCase):
             )
 
     def _disarm_robot(self) -> None:
+        self._wait_for_any_state(
+            ('torque_off', 'finalized', 'initializing', 'finalizing', 'torque_on'),
+            self.STATE_TRANSITION_TIMEOUT,
+        )
         if self.current_robot_state == 'finalized':
             return
-        if self.current_robot_state != 'torque_on':
+
+        if self.current_robot_state == 'initializing':
+            self._wait_for_state('torque_on', self.STATE_TRANSITION_TIMEOUT)
+
+        if self.current_robot_state == 'torque_off':
             self._arm_robot()
 
         if self.current_robot_state == 'torque_on':
             self._publish_event('finalize')
-            self._wait_for_any_state(
-                ('finalizing', 'finalized'),
-                self.STATE_TRANSITION_TIMEOUT,
-            )
 
-        if self.current_robot_state == 'finalizing':
-            self._publish_event('finalizing_done')
-            self._wait_for_state('finalized', self.STATE_TRANSITION_TIMEOUT)
+        self._wait_for_state('finalized', self.STATE_TRANSITION_TIMEOUT)
 
         if self.current_robot_state != 'finalized':
             self.fail(
@@ -271,23 +371,23 @@ class GazeboRobotControlBase(unittest.TestCase):
         stride_y: float = 0.0,
         rotation: float = 0.0,
     ) -> tuple[float, float, float]:
-        self._require_pose()
-        start_pose = self.robot_pose
-        if start_pose is None:
-            raise RuntimeError('No starting pose available before movement command')
+        start_pose = self._wait_for_pose_sample(settle_sim_time_sec=self.POSE_SETTLE_DURATION)
 
         start_pos = start_pose.position
         start_yaw = self._yaw_from_pose(start_pose)
+        start_sim_time_ns = self._current_sim_time_ns()
+        if start_sim_time_ns is None:
+            raise RuntimeError('Simulation clock is unavailable before movement command')
+        start_pose_stamp_ns = self.robot_pose_stamp_ns
 
         self._publish_movement_command(stride_x=stride_x, stride_y=stride_y, rotation=rotation)
 
-        end_time = time.time() + self.MOVEMENT_DURATION
-        while time.time() < end_time:
-            rclpy.spin_once(self.node, timeout_sec=0.1)
+        self._wait_for_sim_time_since(start_sim_time_ns, self.MOVEMENT_DURATION)
+        self._wait_for_new_pose(start_pose_stamp_ns)
 
-        end_pose = self.robot_pose
-        if end_pose is None:
+        if self.robot_pose is None:
             raise RuntimeError('Pose became unavailable after movement command')
+        end_pose = deepcopy(self.robot_pose)
 
         end_pos = end_pose.position
         end_yaw = self._yaw_from_pose(end_pose)
@@ -379,7 +479,7 @@ class GazeboRobotControlBase(unittest.TestCase):
                 'joint_state_broadcaster',
                 'joint_trajectory_controller',
             ],
-            timeout=20.0,
+            timeout=self.CONTROLLER_TIMEOUT,
         )
 
     def assert_robot_spawned(self) -> None:
@@ -392,9 +492,10 @@ class GazeboRobotControlBase(unittest.TestCase):
                 f'{self.SPAWN_TIMEOUT}s. Error: {error}'
             )
 
-        start_time = time.time()
-        while self.current_robot_state is None and time.time() - start_time < self.SPAWN_TIMEOUT:
-            rclpy.spin_once(self.node, timeout_sec=0.5)
+        self._wait_for_any_state(
+            ('torque_off', 'finalized', 'initializing', 'finalizing', 'torque_on'),
+            self.SPAWN_TIMEOUT,
+        )
 
         self.assertIsNotNone(
             self.current_robot_state,
@@ -416,20 +517,15 @@ class GazeboRobotControlBase(unittest.TestCase):
 
     def assert_armed_posture(self) -> None:
         """Verify arming elevates base, or static posture mode is consistent."""
-        self._require_pose()
         self._disarm_robot()
-        time.sleep(1.0)
-        self._require_pose()
-
-        self.assertIsNotNone(self.robot_pose, 'Failed to read disarmed pose before arming')
-        disarmed_base_z = self.robot_pose.position.z
+        disarmed_base_z = self._wait_for_pose_sample(
+            settle_sim_time_sec=self.POSE_SETTLE_DURATION
+        ).position.z
 
         self._arm_robot()
-        time.sleep(3.0)
-        self._require_pose()
-
-        self.assertIsNotNone(self.robot_pose, 'Failed to read pose after arming')
-        armed_base_z = self.robot_pose.position.z
+        armed_base_z = self._wait_for_pose_sample(
+            settle_sim_time_sec=self.POSE_SETTLE_DURATION
+        ).position.z
         delta_z = armed_base_z - disarmed_base_z
         self.node.get_logger().info(
             f'Armed base height: z={armed_base_z:.3f}m '
@@ -534,23 +630,15 @@ class GazeboRobotControlBase(unittest.TestCase):
 
     def assert_disarmed_posture(self) -> None:
         """Verify disarming lowers base, or static posture mode is consistent."""
-        self._require_pose()
         self._arm_robot()
-        time.sleep(1.0)
-        self._require_pose()
-
-        self.assertIsNotNone(self.robot_pose, 'Failed to read armed pose before disarming')
-        armed_base_z = self.robot_pose.position.z
+        armed_base_z = self._wait_for_pose_sample(
+            settle_sim_time_sec=self.POSE_SETTLE_DURATION
+        ).position.z
 
         self._disarm_robot()
-        time.sleep(3.0)
-        self._require_pose()
-
-        if self.robot_pose is None:
-            self.fail('Failed to read pose after disarm')
-            return
-
-        disarmed_base_z = self.robot_pose.position.z
+        disarmed_base_z = self._wait_for_pose_sample(
+            settle_sim_time_sec=self.POSE_SETTLE_DURATION
+        ).position.z
         delta_z = disarmed_base_z - armed_base_z
         self.node.get_logger().info(
             f'Disarmed base height: z={disarmed_base_z:.3f}m '
