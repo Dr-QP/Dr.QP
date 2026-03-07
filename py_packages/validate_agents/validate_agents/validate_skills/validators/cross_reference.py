@@ -34,9 +34,7 @@ class CrossReferenceValidator:
     IGNORE_START_PATTERN = re.compile(
         r'<!--\s*validate_skills:\s*ignore-cross-reference-start\s*-->'
     )
-    IGNORE_END_PATTERN = re.compile(
-        r'<!--\s*validate_skills:\s*ignore-cross-reference-end\s*-->'
-    )
+    IGNORE_END_PATTERN = re.compile(r'<!--\s*validate_skills:\s*ignore-cross-reference-end\s*-->')
 
     def __init__(self, base_path: Optional[str] = None, show_warnings: bool = False):
         """Initialize the validator."""
