@@ -15,19 +15,22 @@ creating the pull request.
 This skill **MUST** use GitHub MCP tools for GitHub operations and **MUST NOT** use `gh` CLI commands.
 
 Required MCP tools:
+
 - `github/create_pull_request` - create the pull request
 
 Optional MCP tools (for validation and follow-up):
+
 - `github/list_issues` - list recent issues when issue number is missing
 - `github/list_pull_requests` - check for existing PRs from the same branch
 - `github/pull_request_read` - fetch PR details after creation
 
 ## PR Description Source of Truth
 
-The PR body content **MUST** be generated using the prompt in
-`.github/prompts/generate-pr-description.prompt.md`.
+The PR body content **MUST** be generated using the
+[generate-pr-description](../generate-pr-description/) skill.
 
 The open-pr skill is responsible for:
+
 - optional issue linking in title/body when issue context exists
 - user confirmation
 - delegating branch sync with `origin/main` to the `update-branch` skill
@@ -35,8 +38,8 @@ The open-pr skill is responsible for:
 - GitHub PR creation through MCP
 
 The detailed PR description structure, section requirements, and quality checks
-are defined in `.github/prompts/generate-pr-description.prompt.md` and **MUST NOT**
-be duplicated here.
+are defined in the [generate-pr-description](../generate-pr-description/) skill
+and **MUST NOT** be duplicated here.
 
 ## Workflow for AI Agents
 
@@ -45,6 +48,7 @@ When this skill is invoked, the AI agent **MUST** follow these steps:
 ### 1. Context Analysis Phase
 
 Review the entire conversation history and git changes to extract PR details:
+
 - Identify what work was completed during the conversation
 - Review git diff and git status to see actual changes made
 - Extract key details: what was changed, why, which files were affected
@@ -52,6 +56,7 @@ Review the entire conversation history and git changes to extract PR details:
 - Check if there's a related issue number mentioned in the conversation (optional)
 
 Context signals for PR type:
+
 - Feature signals: new functionality added, new files created, capabilities extended
 - Bugfix signals: fixed error, resolved issue, corrected behavior
 - Refactor signals: improved code structure, reorganized code, better patterns
@@ -80,6 +85,7 @@ This ensures the PR description accurately reflects the actual code changes.
 Issue linking is recommended but not required.
 
 **How to find an issue number when available:**
+
 1. Search conversation history for explicit issue references:
    - "for issue #42"
    - "closes #15"
@@ -91,18 +97,21 @@ Issue linking is recommended but not required.
      - Use `github/list_issues` with repository `owner` and `repo`
      - Start with `state: open`, `perPage: 10`
      - If needed, broaden query with `state: all`
-  - Ask the user if they want to link an issue: "Would you like to link an issue to this PR?"
+
+- Ask the user if they want to link an issue: "Would you like to link an issue to this PR?"
 
 3. If no issue is provided:
-  - Continue PR creation without issue linking
-  - Use a concise title without issue prefix
+
+- Continue PR creation without issue linking
+- Use a concise title without issue prefix
 
 ### 4. PR Draft Construction
 
-Generate the PR description by following
-`.github/prompts/generate-pr-description.prompt.md`.
+Generate the PR description by following the
+[generate-pr-description](../generate-pr-description/) skill.
 
 Use the generated output as the PR body, and use one of these title formats:
+
 - If issue is available: `[#issue-number] Brief description`
 - If issue is not available: `Brief description`
 - Keep the title description concise and outcome-focused
@@ -113,6 +122,7 @@ Use the generated output as the PR body, and use one of these title formats:
 and wait for explicit confirmation before creating the PR.
 
 Present the draft in a clear format:
+
 ```
 I've prepared this pull request:
 
@@ -130,7 +140,7 @@ Should I create this PR?
 ### 6. Branch Sync with `origin/main`
 
 **CRITICAL:** Before pushing or creating a PR, sync the current branch using the
-`.github/skills/update-branch/SKILL.md` workflow.
+`.github/skills/update-branch/` workflow.
 
 The AI agent **MUST** invoke and follow the `update-branch` skill instead of re-implementing
 merge logic inline.
@@ -150,6 +160,7 @@ git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null
 ```
 
 **If the command fails (no upstream branch):**
+
 1. Get the current branch name:
    ```bash
    git branch --show-current
@@ -161,6 +172,7 @@ git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null
 3. Confirm to user: "Pushed branch to remote: origin/<branch-name>"
 
 **If the command succeeds (upstream branch exists):**
+
 1. Check if local is ahead of remote:
    ```bash
    git status --porcelain --branch
@@ -172,6 +184,7 @@ git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null
 3. If up-to-date, continue to PR creation
 
 **Error handling:**
+
 - If push fails due to authentication:
   ```
   Git push failed. Please check your Git credentials.
@@ -191,6 +204,7 @@ git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null
 Once confirmed and the branch is on remote, create the PR using `github/create_pull_request`.
 
 Use the tool with these fields:
+
 - `owner` (required): repository owner
 - `repo` (required): repository name
 - `title` (required): full PR title
@@ -201,14 +215,16 @@ Use the tool with these fields:
 - `maintainer_can_modify` (optional): set per repository policy
 
 **Important:**
-- The body should be the generated markdown from
-  `.github/prompts/generate-pr-description.prompt.md`
+
+- The body should be the generated markdown from the
+  [generate-pr-description](../generate-pr-description/) skill
 - Do not duplicate or re-interpret the prompt's section requirements here
 - If `base` is not explicitly provided by user/repo policy, set `base: main`.
 - After successful creation, display the PR URL/number returned by the MCP tool
 - Confirm: "Pull request created successfully: [URL]"
 
 **Optional parameters:**
+
 - Set `draft: true` if the user wants to create a draft PR
 - Set `base: <branch>` if targeting a different base branch
 
@@ -217,24 +233,28 @@ Use the tool with these fields:
 Handle common error scenarios gracefully:
 
 **Issue number not found:**
+
 ```
 No related issue number found.
 Proceeding without issue linking.
 ```
 
 **No git changes:**
+
 ```
 Cannot create PR: No changes detected in the working directory.
 Please make and commit your changes first.
 ```
 
 **GitHub MCP authentication/authorization failure:**
+
 ```
 GitHub MCP request failed due to authentication or missing permissions.
 Please verify MCP server authentication and token scopes (typically `repo`).
 ```
 
 **Not on a feature branch:**
+
 ```
 Warning: You're on the main/master branch.
 PRs should typically be created from feature branches.
@@ -246,6 +266,7 @@ Or confirm you want to create a PR from the current branch.
 ```
 
 **No conversation context:**
+
 ```
 I don't have enough context to create a PR. Could you please provide:
 - What changes were made?
@@ -253,12 +274,14 @@ I don't have enough context to create a PR. Could you please provide:
 ```
 
 **PR creation failed:**
+
 ```
 Failed to create pull request: [error message]
 Please check GitHub MCP connectivity, authentication, and required tool permissions.
 ```
 
 **Merge conflict while syncing with `origin/main`:**
+
 ```
 Cannot continue PR creation: merge conflicts occurred while merging origin/main.
 Please resolve conflicts, commit the merge, and retry PR creation.
@@ -274,5 +297,5 @@ explicitly requested by the user.
 
 ## PR Body Guidance
 
-For complete PR-description instructions and examples, always use:
-`.github/prompts/generate-pr-description.prompt.md`.
+For complete PR-description instructions and examples, use the
+[generate-pr-description](../generate-pr-description/) skill.

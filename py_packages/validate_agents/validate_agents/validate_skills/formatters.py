@@ -52,9 +52,24 @@ class TextFormatter:
         lines.append(f'{status} {result.skill_path}')
 
         for issue in result.issues:
-            lines.append(str(issue))
+            lines.append(self._format_issue(result.skill_path, issue))
 
         return '\n'.join(lines)
+
+    def _format_issue(self, skill_path: str, issue: object) -> str:
+        """Format an issue line for IDE-friendly path parsing."""
+        section_info = f' [{issue.section}]' if issue.section else ''
+
+        if issue.line_number and issue.column_number:
+            return (
+                f'{skill_path}:{issue.line_number}:{issue.column_number}: '
+                f'{issue.message}{section_info}'
+            )
+
+        if issue.line_number:
+            return f'{skill_path}:{issue.line_number}: {issue.message}{section_info}'
+
+        return f'{skill_path}: {issue.message}{section_info}'
 
     def format_summary(self, results: List[ValidationResult]) -> str:
         """
@@ -123,6 +138,7 @@ class JSONFormatter:
                     'message': issue.message,
                     'section': issue.section,
                     'line_number': issue.line_number,
+                    'column_number': issue.column_number,
                 }
                 for issue in result.issues
             ],
@@ -150,6 +166,7 @@ class JSONFormatter:
                         'message': issue.message,
                         'section': issue.section,
                         'line_number': issue.line_number,
+                        'column_number': issue.column_number,
                     }
                     for issue in r.issues
                 ],
@@ -170,7 +187,7 @@ class CSVFormatter:
             Header row string
 
         """
-        return 'skill_path,is_valid,issue_level,issue_message,section'
+        return 'skill_path,is_valid,issue_level,issue_message,section,line_number,column_number'
 
     def format_result(self, result: ValidationResult) -> str:
         """
@@ -187,7 +204,7 @@ class CSVFormatter:
         writer = csv.writer(output)
 
         if not result.issues:
-            writer.writerow([result.skill_path, str(result.is_valid), '', '', ''])
+            writer.writerow([result.skill_path, str(result.is_valid), '', '', '', '', ''])
         else:
             for issue in result.issues:
                 writer.writerow(
@@ -197,6 +214,8 @@ class CSVFormatter:
                         issue.level.value,
                         issue.message,
                         issue.section or '',
+                        issue.line_number or '',
+                        issue.column_number or '',
                     ]
                 )
 

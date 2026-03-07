@@ -40,9 +40,9 @@ class TestParseArgumentsBasic:
         assert args.path == './skills'
 
     def test_parse_arguments_file_path(self):
-        """Should accept path to specific SKILL.md file."""
-        args = parse_arguments(['.github/skills/my-skill/SKILL.md'])
-        assert args.path == '.github/skills/my-skill/SKILL.md'
+        """Should accept path to specific skill directory."""
+        args = parse_arguments(['.github/skills/my-skill/'])
+        assert args.path == '.github/skills/my-skill/'
 
     def test_parse_arguments_absolute_path(self):
         """Should accept absolute paths."""
