@@ -8,7 +8,7 @@ tools:
     'execute',
     'read',
     'search',
-    'todo'
+    'todo',
     'vscode',
     'web',
   ]
