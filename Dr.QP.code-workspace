@@ -432,6 +432,7 @@
       {
         "label": "Dr.QP xunit-viewer",
         "type": "shell",
+        // Fallback for environments where the ros2-xunit-viewer workspace extension is not installed.
         // xunit-viewer supports only a single folder for -r argument, so ignores is the only way to reduce noise
         "command": "npx -y xunit-viewer -r build --server -o build/xunit-index.html -i Test.xml -i coverage.xml -i package.xml --watch",
         "options": {
