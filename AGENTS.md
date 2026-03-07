@@ -23,7 +23,7 @@ Consult the **[Principal Engineer](/.github/agents/principal-engineer.agent.md)*
 ## Catalog Locations
 
 - **Cursor**: `.cursor/agents/`, `.cursor/skills/`, `.cursor/rules/` (symlinks to `.github/`)
-- **Codex**: `.codex/agents/`, `.codex/skills/`, `.codex/instructions/`, `.codex/prompts/` (symlinks to `.github/`)
+- **Codex**: `.codex/agents/`, `.codex/skills/`, `.codex/instructions/`, (symlinks to `.github/`)
 
 Update `.github` sources; symlinks pick up changes automatically.
 
