@@ -49,6 +49,7 @@ If exists: offer to append or create `test_<name>_integration.cpp` etc.
 ### Step 4: Generate Test File
 
 **C++ Unit:**
+
 ```cpp
 #include "<package_name>/<header>.h"
 #include <gmock/gmock.h>

@@ -51,12 +51,12 @@ C++: `create_subscription` with callback. Python: `create_subscription` with cal
 
 ### Step 5: Map QoS Profile
 
-| Profile        | Reliability | Durability | History    |
-|----------------|-------------|------------|------------|
-| default        | Reliable    | Volatile   | Keep last 10 |
-| reliable       | Reliable    | Volatile   | Keep last 10 |
-| best_effort    | Best effort| Volatile   | Keep last 1  |
-| sensor_data    | Best effort| Volatile   | Keep last 5   |
+| Profile     | Reliability | Durability | History      |
+| ----------- | ----------- | ---------- | ------------ |
+| default     | Reliable    | Volatile   | Keep last 10 |
+| reliable    | Reliable    | Volatile   | Keep last 10 |
+| best_effort | Best effort | Volatile   | Keep last 1  |
+| sensor_data | Best effort | Volatile   | Keep last 5  |
 
 ### Step 6: Update Build Configuration
 
