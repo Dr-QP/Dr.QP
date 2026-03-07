@@ -23,13 +23,20 @@
 
 from pathlib import Path
 import re
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from ..types import ValidationIssue, ValidationLevel
 
 
 class CrossReferenceValidator:
     """Validates cross-references in skills."""
+
+    IGNORE_START_PATTERN = re.compile(
+        r'<!--\s*validate_skills:\s*ignore-cross-reference-start\s*-->'
+    )
+    IGNORE_END_PATTERN = re.compile(
+        r'<!--\s*validate_skills:\s*ignore-cross-reference-end\s*-->'
+    )
 
     def __init__(self, base_path: Optional[str] = None, show_warnings: bool = False):
         """Initialize the validator."""
@@ -57,6 +64,7 @@ class CrossReferenceValidator:
 
         """
         issues = []
+        ignored_ranges = self._build_ignored_ranges(content)
 
         # Extract all markdown links: [text](reference)
         link_pattern = r'\[([^\]]+)\]\(([^\)]+)\)'
@@ -64,6 +72,10 @@ class CrossReferenceValidator:
 
         for match in matches:
             text, reference = match.groups()
+
+            if self._is_ignored_position(match.start(), ignored_ranges):
+                continue
+
             # Skip external references
             if reference.startswith(('http://', 'https://', '#')):
                 continue
@@ -117,3 +129,37 @@ class CrossReferenceValidator:
         line_start = content.rfind('\n', 0, offset)
         column_number = offset + 1 if line_start == -1 else offset - line_start
         return line_number, column_number
+
+    @classmethod
+    def _build_ignored_ranges(cls, content: str) -> List[Tuple[int, int]]:
+        """Build character ranges where cross-reference validation is suppressed."""
+        boundaries = []
+
+        for match in cls.IGNORE_START_PATTERN.finditer(content):
+            boundaries.append((match.start(), 'start'))
+        for match in cls.IGNORE_END_PATTERN.finditer(content):
+            boundaries.append((match.start(), 'end'))
+
+        boundaries.sort(key=lambda item: item[0])
+
+        ranges: List[Tuple[int, int]] = []
+        active_start: Optional[int] = None
+
+        for position, boundary_type in boundaries:
+            if boundary_type == 'start' and active_start is None:
+                active_start = position
+                continue
+
+            if boundary_type == 'end' and active_start is not None:
+                ranges.append((active_start, position))
+                active_start = None
+
+        if active_start is not None:
+            ranges.append((active_start, len(content)))
+
+        return ranges
+
+    @staticmethod
+    def _is_ignored_position(position: int, ranges: List[Tuple[int, int]]) -> bool:
+        """Check whether a character position falls inside an ignored range."""
+        return any(start <= position < end for start, end in ranges)

@@ -293,6 +293,23 @@ class TestCrossReferenceValidator:
         assert issues[0].line_number == 6
         assert issues[0].column_number == 5
 
+    def test_validate_ignores_marked_template_block(self, tmp_path):
+        """Should ignore references in explicitly marked template blocks."""
+        skill_file = tmp_path / 'SKILL.md'
+        content = (
+            '<!-- validate_skills: ignore-cross-reference-start -->\n'
+            '[template](nonexistent-template.md)\n'
+            '<!-- validate_skills: ignore-cross-reference-end -->\n'
+            '[real](nonexistent-real.md)\n'
+        )
+        skill_file.write_text(content)
+
+        validator = CrossReferenceValidator(str(tmp_path))
+        issues = validator.validate(skill_path=str(skill_file), metadata={}, content=content)
+
+        assert len(issues) == 1
+        assert 'nonexistent-real.md' in issues[0].message
+
     def test_validate_absolute_path_references(self, tmp_path):
         """Should handle absolute path references."""
         skill_file = tmp_path / 'SKILL.md'

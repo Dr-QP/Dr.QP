@@ -241,6 +241,8 @@ Ensure all feedback is addressed before requesting re-review.
 
 Post this template as a PR comment after completing all work:
 
+<!-- validate_skills: ignore-cross-reference-start -->
+
 ```markdown
 ## Feedback Resolution Summary
 
@@ -278,6 +280,8 @@ Post this template as a PR comment after completing all work:
 - [drqp_serial/test/test_driver.cpp](link): Added timeout tests
 - [drqp_interfaces/msg/Status.msg](link): Added timeout status field
 ```
+
+<!-- validate_skills: ignore-cross-reference-end -->
 
 Mark all resolved comments as resolved using GitHub API.
 
