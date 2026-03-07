@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-root_dir=${PWD}
+root_dir=${1:-$PWD}
 
 if [[ -f "$root_dir/.venv-prod/bin/activate" ]]; then
   exit 0
