@@ -42,10 +42,10 @@ Gather complete context before making changes.
 
 1. **Fetch PR review comments**:
 
-   ```bash
+```bash
    # Use GitHub MCP or API
    gh pr view <pr-number> --comments
-   ```
+```
 
 2. **Get CI check results**:
    - Check GitHub Actions workflow runs
@@ -117,10 +117,10 @@ Systematically resolve failing tests.
 
 1. **Collect test output**:
 
-   ```bash
+```bash
    # For ROS 2 workspace
    cat build/<package_name>/test_results/<package_name>/*.xml
-   ```
+```
 
 2. **Diagnose root cause**:
    - Read test failure messages
@@ -136,12 +136,12 @@ Systematically resolve failing tests.
 
 4. **Verify fix locally**:
 
-   ```bash
+```bash
    # ROS 2 example
    source scripts/setup.bash
    colcon test --packages-select <package>
    colcon test-result --verbose
-   ```
+```
 
 5. **Push and verify CI passes**:
    - Commit fix with descriptive message
@@ -187,10 +187,10 @@ Add tests for uncovered code.
 
 1. **Identify coverage gaps**:
 
-   ```bash
+```bash
    # From Codecov report or local coverage
    # Note uncovered line ranges in modified files
-   ```
+```
 
 2. **Prioritize coverage**:
    - **Critical paths**: Business logic, error handling
@@ -204,12 +204,12 @@ Add tests for uncovered code.
 
 4. **Verify coverage improvement**:
 
-   ```bash
+```bash
    # ROS 2 example with coverage
    colcon build --cmake-args -DDRQP_ENABLE_COVERAGE=ON
    colcon test
    # Check coverage report
-   ```
+```
 
 5. **Target coverage goal**:
    - Aim for 80%+ patch coverage minimum
