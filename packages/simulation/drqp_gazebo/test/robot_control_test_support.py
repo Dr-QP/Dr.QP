@@ -26,6 +26,8 @@ import math
 import time
 import unittest
 
+import builtin_interfaces
+import builtin_interfaces.msg
 from controller_manager.test_utils import check_controllers_running, check_node_running
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 from geometry_msgs.msg import Pose, Vector3
@@ -163,7 +165,7 @@ class GazeboRobotControlBase(unittest.TestCase):
         self.robot_pose_stamp_ns = self._time_msg_to_nanoseconds(msg.header.stamp)
 
     @staticmethod
-    def _time_msg_to_nanoseconds(msg) -> int:
+    def _time_msg_to_nanoseconds(msg: builtin_interfaces.msg.Time) -> int:
         return (msg.sec * 1_000_000_000) + msg.nanosec
 
     def _spin_until(
