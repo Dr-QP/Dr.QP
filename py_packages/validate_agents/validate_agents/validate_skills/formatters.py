@@ -187,10 +187,7 @@ class CSVFormatter:
             Header row string
 
         """
-        return (
-            'skill_path,is_valid,issue_level,issue_message,section,'
-            'line_number,column_number'
-        )
+        return 'skill_path,is_valid,issue_level,issue_message,section,line_number,column_number'
 
     def format_result(self, result: ValidationResult) -> str:
         """
