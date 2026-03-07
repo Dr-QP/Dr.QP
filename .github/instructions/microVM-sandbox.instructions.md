@@ -1,6 +1,5 @@
 ---
 description: 'Guidelines for working in sandbox microVM'
-
 ---
 
 # microVM sandbox workflows

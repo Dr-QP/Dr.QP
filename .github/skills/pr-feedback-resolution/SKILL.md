@@ -41,6 +41,7 @@ When performing code changes as part of PR feedback resolution:
 Gather complete context before making changes.
 
 1. **Fetch PR review comments**:
+
    ```bash
    # Use GitHub MCP or API
    gh pr view <pr-number> --comments
@@ -115,6 +116,7 @@ Resolve code review feedback systematically.
 Systematically resolve failing tests.
 
 1. **Collect test output**:
+
    ```bash
    # For ROS 2 workspace
    cat build/<package_name>/test_results/<package_name>/*.xml
@@ -133,6 +135,7 @@ Systematically resolve failing tests.
    - Add regression test if bug revealed
 
 4. **Verify fix locally**:
+
    ```bash
    # ROS 2 example
    source scripts/setup.bash
@@ -183,6 +186,7 @@ Address security vulnerabilities safely.
 Add tests for uncovered code.
 
 1. **Identify coverage gaps**:
+
    ```bash
    # From Codecov report or local coverage
    # Note uncovered line ranges in modified files
@@ -199,6 +203,7 @@ Add tests for uncovered code.
    - Use TDD Refactor: Improve test clarity
 
 4. **Verify coverage improvement**:
+
    ```bash
    # ROS 2 example with coverage
    colcon build --cmake-args -DDRQP_ENABLE_COVERAGE=ON
@@ -240,29 +245,35 @@ Post this template as a PR comment after completing all work:
 ## Feedback Resolution Summary
 
 ### Review Comments Addressed
+
 - [Comment #1](link): Changed X to Y per reviewer request
 - [Comment #2](link): Added error handling for edge case A
 - [Comment #3](link): **Clarification requested** - awaiting response on approach
 
 ### CI Failures Fixed
+
 - **Tests**: Fixed 3 failing tests in drqp_serial ([logs](link))
 - **Lint**: Resolved formatting issues in 5 files
 - **Build**: Updated dependency declarations
 
 ### Security Findings Resolved
+
 - **CodeQL-001**: Fixed SQL injection in query builder ([finding](link))
 - **CodeQL-002**: Addressed path traversal vulnerability ([finding](link))
 
 ### Coverage Improvements
+
 - Added tests for new serial timeout logic (+15 lines covered)
 - Added edge case tests for error handling (+8 lines covered)
 - **Current patch coverage**: 87% (target: from Codecov report/config)
 
 ### Test Results
+
 - All tests passing: [CI run](link)
 - Coverage report: [Codecov](link)
 
 ### Files Modified
+
 - [drqp_serial/src/driver.cpp](link): Timeout implementation
 - [drqp_serial/test/test_driver.cpp](link): Added timeout tests
 - [drqp_interfaces/msg/Status.msg](link): Added timeout status field
@@ -335,6 +346,7 @@ Maintain an internal execution log documenting:
 ## Quality Standards
 
 ### Code Changes
+
 - Follow repository engineering standards
 - Use TDD cycle for all changes
 - Maintain or improve test coverage
@@ -346,6 +358,7 @@ Maintain an internal execution log documenting:
 - Prefer targeted, minimal diffs
 
 ### Communication
+
 - Clear, professional, constructive tone
 - Link to evidence (commits, logs, reports)
 - Explain rationale for decisions
@@ -353,6 +366,7 @@ Maintain an internal execution log documenting:
 - Thank reviewers for feedback
 
 ### Verification
+
 - All tests pass locally before pushing
 - CI checks green before requesting re-review
 - Coverage targets met
@@ -362,18 +376,23 @@ Maintain an internal execution log documenting:
 ## Troubleshooting
 
 ### Problem: Cannot determine comment intent
+
 **Solution**: Reply asking for clarification with your interpretation and proposed action. Do not guess or assume.
 
 ### Problem: CI fails intermittently (flaky test)
+
 **Solution**: Identify source of non-determinism (timing, randomness, external dependency). Fix test to be deterministic or mark as integration test.
 
 ### Problem: CodeQL false positive
+
 **Solution**: Review carefully; often not false positive. If genuinely incorrect, document why and request CodeQL suppression approval.
 
 ### Problem: Coverage target cannot be met
+
 **Solution**: Document why certain code is untestable (external API, hardware dependency, etc.). Consider refactoring for testability.
 
 ### Problem: Review comment asks for significant refactor
+
 **Solution**: Assess scope vs PR goals. If out of scope, propose follow-up issue. If in scope, create plan and confirm with reviewer before proceeding.
 
 ## Success Criteria

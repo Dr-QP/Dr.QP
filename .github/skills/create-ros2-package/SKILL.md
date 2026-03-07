@@ -51,6 +51,7 @@ Generate a complete ROS 2 package with proper structure, build configuration, an
 ### Step 3: Create Package Structure
 
 **C++ packages:**
+
 ```
 <package_name>/
 ├── CMakeLists.txt
@@ -64,6 +65,7 @@ Generate a complete ROS 2 package with proper structure, build configuration, an
 ```
 
 **Python packages:**
+
 ```
 <package_name>/
 ├── package.xml
