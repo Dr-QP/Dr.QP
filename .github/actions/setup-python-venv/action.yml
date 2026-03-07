@@ -1,5 +1,5 @@
 name: Setup Python venv
-description: Setup Python virtual environment with caching for project dependencies
+description: Setup Python virtual environment with caching for uv-managed dependencies
 
 inputs:
   python-version:
@@ -15,13 +15,13 @@ outputs:
 runs:
   using: composite
   steps:
-    - uses: getsentry/action-setup-venv@v2.1.1
+    - uses: getsentry/action-setup-venv@3a832a9604b3e1a4202ae559248f26867b467cc7 # v2.1.1
       id: venv
       with:
         python-version: ${{ inputs.python-version }}
         cache-dependency-path: |
-          requirements.txt
-          docs/requirements.txt
-          docs/constraints.txt
-          docs/source/notebooks/requirements.txt
-        install-cmd: pip install -r requirements.txt
+          pyproject.toml
+          uv.lock
+          py_packages/validate_agents/pyproject.toml
+          packages/runtime/drqp_brain/setup.py
+        install-cmd: python -m pip install --disable-pip-version-check uv && python -m uv sync
