@@ -6,9 +6,9 @@ This directory contains the Sphinx documentation for the project.
 
 ### TL;DR
 
- 1. Clone repo and open workspace as usual.
- 2. Run `Dr.QP venv` task from VSCode (`uv sync`)
- 3. Run `Dr.QP build docs` task from VSCode
+1.  Clone repo and open workspace as usual.
+2.  Run `Dr.QP venv` task from VSCode (`uv sync`)
+3.  Run `Dr.QP build docs` task from VSCode
 
 ### Details
 

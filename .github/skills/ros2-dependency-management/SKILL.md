@@ -1,7 +1,6 @@
 ---
 name: ros2-dependency-management
 description: Manage ROS 2 workspace dependencies using rosdep, pip, and package.xml. Use when asked to install dependencies, setup Python virtual environment, configure package dependencies, or resolve missing dependencies. Supports C++ dependencies, Python packages, tool dependencies, and dependency installation workflows.
-
 ---
 
 # ROS 2 Dependency Management
@@ -30,12 +29,12 @@ Manage workspace dependencies across C++, Python, and system tools using rosdep 
 
 ## Dependency Types
 
-| Type | Managed By | Configuration | Purpose |
-|------|-----------|---------------|---------|
-| **Tool Dependencies** | rosdep | `package.xml` build tools | Build system, linters, CI tools |
-| **C++ Runtime/Build Deps** | rosdep | `package.xml` `<depend>` | C++ libraries and headers |
-| **Python Runtime Deps** | rosdep or setup.py | `package.xml` or `setup.cfg` | Production Python packages |
-| **Python Dev Deps** | uv | `pyproject.toml` | Development tools, docs, notebooks, and local editable packages |
+| Type                       | Managed By         | Configuration                | Purpose                                                         |
+| -------------------------- | ------------------ | ---------------------------- | --------------------------------------------------------------- |
+| **Tool Dependencies**      | rosdep             | `package.xml` build tools    | Build system, linters, CI tools                                 |
+| **C++ Runtime/Build Deps** | rosdep             | `package.xml` `<depend>`     | C++ libraries and headers                                       |
+| **Python Runtime Deps**    | rosdep or setup.py | `package.xml` or `setup.cfg` | Production Python packages                                      |
+| **Python Dev Deps**        | uv                 | `pyproject.toml`             | Development tools, docs, notebooks, and local editable packages |
 
 ## Step-by-Step Workflows
 
@@ -44,11 +43,13 @@ Manage workspace dependencies across C++, Python, and system tools using rosdep 
 Complete dependency installation for the workspace.
 
 1. Navigate to workspace root:
+
    ```bash
    cd <workspace_root>
    ```
 
 2. Run automated dependency installation:
+
    ```bash
    ./scripts/ros-dep.sh
    ```
@@ -68,21 +69,25 @@ Complete dependency installation for the workspace.
 Isolate Python development dependencies from system Python.
 
 1. Install `uv`:
+
    ```bash
    python3 -m pip install --user --break-system-packages --disable-pip-version-check uv
    ```
 
 2. Sync the workspace environment:
+
    ```bash
    $HOME/.local/bin/uv sync
    ```
 
 3. Activate virtual environment:
+
    ```bash
    source .venv/bin/activate
    ```
 
 4. Verify installation:
+
    ```bash
    python3 -m pytest --version
    ```
@@ -97,6 +102,7 @@ Isolate Python development dependencies from system Python.
 Refresh rosdep package registry (required after ROS updates).
 
 1. Update rosdep cache:
+
    ```bash
    rosdep update
    ```
@@ -111,11 +117,13 @@ Refresh rosdep package registry (required after ROS updates).
 Add a new C++ library to a package's build/runtime dependencies.
 
 1. Edit package's `package.xml`:
+
    ```bash
    nano packages/runtime/<package_name>/package.xml
    ```
 
 2. Add dependency in appropriate section:
+
    ```xml
    <!-- For build-time dependencies -->
    <build_depend>new_library</build_depend>
@@ -128,6 +136,7 @@ Add a new C++ library to a package's build/runtime dependencies.
    ```
 
 3. Install the new dependency:
+
    ```bash
    rosdep install --from-paths packages/runtime/<package_name> --ignore-src -y
    ```
@@ -154,12 +163,14 @@ Add Python package to development or production use.
 **For Production Dependencies** (used by package code):
 
 1. Edit package's `setup.py` or `package.xml`:
+
    ```bash
    # For setup.py-based packages:
    nano packages/runtime/<package_name>/setup.py
    ```
 
 2. Add to `install_requires` list in `setup.py`:
+
    ```python
    install_requires=[
        'existing-package>=1.0',
@@ -168,6 +179,7 @@ Add Python package to development or production use.
    ```
 
    OR edit `package.xml` for rosdep-managed dependencies:
+
    ```xml
    <build_depend>python3-new-package</build_depend>
    <run_depend>python3-new-package</run_depend>
@@ -186,6 +198,7 @@ Resolve "package not found" or "library not found" errors.
 1. Identify the missing package from error message
 
 2. Search rosdep registry:
+
    ```bash
    rosdep search <package_name>
    ```
@@ -206,13 +219,13 @@ Resolve "package not found" or "library not found" errors.
 
 ## Dependency File Locations
 
-| File | Purpose | Scope |
-|------|---------|-------|
-| `packages/runtime/*/package.xml` | C++ and ROS dependencies per package | Package-level |
-| `packages/runtime/*/setup.py` | Python package dependencies | Package-level (Python packages only) |
-| `pyproject.toml` | Workspace development dependencies for `uv` | Workspace-level |
-| `.venv/` | Virtual environment | Local development only |
-| `scripts/ros-dep.sh` | Automated dependency installation | Workspace setup |
+| File                             | Purpose                                     | Scope                                |
+| -------------------------------- | ------------------------------------------- | ------------------------------------ |
+| `packages/runtime/*/package.xml` | C++ and ROS dependencies per package        | Package-level                        |
+| `packages/runtime/*/setup.py`    | Python package dependencies                 | Package-level (Python packages only) |
+| `pyproject.toml`                 | Workspace development dependencies for `uv` | Workspace-level                      |
+| `.venv/`                         | Virtual environment                         | Local development only               |
+| `scripts/ros-dep.sh`             | Automated dependency installation           | Workspace setup                      |
 
 ## Common Dependency Management Commands
 
@@ -247,15 +260,15 @@ python3 -m pip list
 
 ## Troubleshooting
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| "rosdep: command not found" | ROS 2 not installed | Install ROS 2 Jazzy first |
-| "package not found in registry" | Package not in rosdep registry | Use pip or install from source |
-| Python package import fails | venv not activated or package not installed | Run `$HOME/.local/bin/uv sync` and then `source .venv/bin/activate` |
-| "Permission denied" on install | User lacks write permission | Use `sudo` or fix directory permissions |
-| Circular dependency errors | Package depends on itself transitively | Review `package.xml` dependencies |
-| Stale dependency cache | Old dependency versions cached | Run `rosdep update` and `pip cache purge` |
-| Version conflicts | Different packages require incompatible versions | Review version constraints and update `setup.py` |
+| Issue                           | Cause                                            | Solution                                                            |
+| ------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------- |
+| "rosdep: command not found"     | ROS 2 not installed                              | Install ROS 2 Jazzy first                                           |
+| "package not found in registry" | Package not in rosdep registry                   | Use pip or install from source                                      |
+| Python package import fails     | venv not activated or package not installed      | Run `$HOME/.local/bin/uv sync` and then `source .venv/bin/activate` |
+| "Permission denied" on install  | User lacks write permission                      | Use `sudo` or fix directory permissions                             |
+| Circular dependency errors      | Package depends on itself transitively           | Review `package.xml` dependencies                                   |
+| Stale dependency cache          | Old dependency versions cached                   | Run `rosdep update` and `pip cache purge`                           |
+| Version conflicts               | Different packages require incompatible versions | Review version constraints and update `setup.py`                    |
 
 ## References
 
@@ -263,4 +276,3 @@ python3 -m pip list
 - See the official rosdep reference documentation for rosdep commands and options
 - Optionally use an `./scripts/ros-dep.sh` helper script in your repository for automated installation
 - Refer to `package.xml` templates in ROS 2 documentation or your project for dependency configuration examples
-

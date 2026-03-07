@@ -145,7 +145,7 @@ Refresh the development environment after `pyproject.toml` or `uv.lock` changes.
    .venv/bin/pip list | grep pytest
    ```
 
-4. Deactivate when done:
+5. Deactivate when done:
    ```bash
    deactivate
    ```
