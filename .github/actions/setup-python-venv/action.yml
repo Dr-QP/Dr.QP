@@ -24,4 +24,4 @@ runs:
           uv.lock
           py_packages/validate_agents/pyproject.toml
           packages/runtime/drqp_brain/setup.py
-        install-cmd: python -m pip install --disable-pip-version-check uv && python -m uv sync --frozen
+        install-cmd: curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin sh && uv sync --frozen
