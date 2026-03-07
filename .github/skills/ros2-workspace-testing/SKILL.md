@@ -169,8 +169,13 @@ Process LLVM coverage data and prepare for analysis.
 
 Explore test results with interactive visualization.
 
-1. Preferred: run the workspace task `Dr.QP workspace extensions`, then use the VS Code command palette action `ROS2: Open XUnit Test Results`
+1. Preferred: run the workspace task `Dr.QP workspace extensions`, then use the VS Code command palette action `ROS2: Open XUnit Test Results`.
 
+   - In editors that support **workspace extensions** (for example, Cursor), this task clones the `ros2-xunit-viewer` extension into `.vscode/extensions` and the editor automatically loads it, which provides the `ROS2: Open XUnit Test Results` command.
+   - In standard VS Code, cloning into `.vscode/extensions` is **not** sufficient by itself. You must install/activate the corresponding extension so the command appears, for example by:
+     - Installing the published `ros2-xunit-viewer` extension from the VS Code Marketplace, or
+     - Packaging the cloned source as a `.vsix` and installing it via `code --install-extension <file>.vsix`.
+   - If you cannot or do not want to install the extension, use the fallback workflow below.
 2. Fallback: launch xunit-viewer server directly:
 
    ```bash
@@ -201,7 +206,7 @@ Explore test results with interactive visualization.
 | Tests fail with "module not found" | Python dependencies missing                | Run `source scripts/setup.bash --update-venv`       |
 | "Command 'pytest' not found"       | venv not updated                           | Run `source scripts/setup.bash --update-venv`       |
 | Coverage data not generated        | Coverage not enabled in build              | Rebuild with `--mixin coverage-pytest` during build |
-| Xunit-viewer won't start           | Node.js or npx not available               | Install Node.js or use alternative viewer           |
+| xunit-viewer won't start           | Node.js or npx not available               | Install Node.js or use alternative viewer           |
 | Test results missing or incomplete | Build artifacts cleaned                    | Rebuild packages before testing                     |
 | Tests timeout or hang              | Test blocking on I/O or infinite loop      | Check test logs in `log/latest_test/`               |
 

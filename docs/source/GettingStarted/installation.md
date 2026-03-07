@@ -13,7 +13,7 @@ cd Dr.QP
 2. Install recommended VSCode extensions
 3. Run the task `Dr.QP workspace extensions` to clone local workspace extensions, including `ros2-xunit-viewer`
 4. Install docker (either [Docker Desktop](https://www.docker.com/products/docker-desktop/) for macOS and Windows) or native docker installation for linux `scripts/install_docker.sh`
-5. Run `Dev Containers: Reopen in Container` via command pallet `F1` and select `Dr.QP.code-workspace` workspace
+5. Run `Dev Containers: Reopen in Container` via command palette `F1` and select `Dr.QP.code-workspace` workspace
 6. Choose devcontainer to open:
 
 After running tests, use the command palette action `ROS2: Open XUnit Test Results` to browse `colcon` results inside VS Code.
