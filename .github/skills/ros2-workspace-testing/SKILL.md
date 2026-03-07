@@ -33,17 +33,31 @@ Run ROS 2 tests efficiently and analyze results with comprehensive coverage repo
 Use for rapid iteration when developing and testing a single package.
 
 1. Source the ROS environment with venv updates:
+
    ```bash
    source scripts/setup.bash --update-venv
    ```
 
 2. Run tests for the package only:
+
    ```bash
    python3 -m colcon test \
      --event-handlers console_cohesion+ summary+ status+ \
      --return-code-on-test-failure \
      --packages-select <package_name>
    ```
+
+   For the full `drqp_gazebo` launch suite, opt out of the default smoke-only mode:
+
+   ```bash
+   DRQP_GAZEBO_TEST_MODE=all python3 -m colcon test \
+      --event-handlers console_cohesion+ summary+ status+ \
+      --return-code-on-test-failure \
+      --packages-select drqp_gazebo \
+      --mixin coverage-pytest
+   ```
+
+   Without `DRQP_GAZEBO_TEST_MODE=all`, `drqp_gazebo` runs only the smoke subset and skips non-smoke slow launch tests.
 
 3. Check test results in console output (summary appears at end)
 
@@ -56,11 +70,13 @@ Use for rapid iteration when developing and testing a single package.
 Use when you need code coverage metrics alongside test execution.
 
 1. Source the ROS environment with venv updates:
+
    ```bash
    source scripts/setup.bash --update-venv
    ```
 
 2. Run tests with coverage enabled:
+
    ```bash
    python3 -m colcon test \
      --event-handlers console_cohesion+ summary+ status+ \
@@ -78,11 +94,13 @@ Use when you need code coverage metrics alongside test execution.
 **WARNING**: Full test suite takes 10-20+ minutes. Only run when explicitly requested or before final integration.
 
 1. Source the ROS environment with venv updates:
+
    ```bash
    source scripts/setup.bash --update-venv
    ```
 
 2. Run all tests with coverage:
+
    ```bash
    python3 -m colcon test \
      --event-handlers console_cohesion+ summary+ status+ \
@@ -97,11 +115,13 @@ Use when you need code coverage metrics alongside test execution.
 Use to save time when retesting after fixing failures.
 
 1. Source the ROS environment:
+
    ```bash
    source scripts/setup.bash --update-venv
    ```
 
 2. Re-run only previously failed tests:
+
    ```bash
    python3 -m colcon test \
      --event-handlers console_cohesion+ summary+ status+ \
@@ -116,11 +136,13 @@ Use to save time when retesting after fixing failures.
 Examine test output and failure details.
 
 1. View test summary across workspace:
+
    ```bash
    python3 -m colcon test-result --all
    ```
 
 2. View verbose test results with error details:
+
    ```bash
    python3 -m colcon test-result --verbose
    ```
@@ -135,11 +157,13 @@ Examine test output and failure details.
 Process LLVM coverage data and prepare for analysis.
 
 1. Source the ROS environment:
+
    ```bash
    source scripts/setup.bash
    ```
 
 2. Process LLVM coverage for C++ packages:
+
    ```bash
    ./packages/cmake/llvm-cov-export-all.py ./build
    ```
@@ -158,6 +182,7 @@ Process LLVM coverage data and prepare for analysis.
 Explore test results with interactive visualization.
 
 1. Launch xunit-viewer server:
+
    ```bash
    npx -y xunit-viewer -r build --server -o build/xunit-index.html \
      -i Test.xml -i coverage.xml -i package.xml --watch
@@ -171,24 +196,25 @@ Explore test results with interactive visualization.
 
 ## Test Output Structure
 
-| Location | Contains | Format |
-|----------|----------|--------|
-| `build/<package_name>/test_results/<package_name>/` | Test execution results | xunit.xml |
-| `log/latest_test/<package_name>/` | Test execution logs | Text/JSON |
-| `build/<package_name>/coverage.info` | C++ coverage data | LCOV |
-| `build/<package_name>/.coverage` | Python coverage data | Coverage.py |
+| Location                                            | Contains               | Format      |
+| --------------------------------------------------- | ---------------------- | ----------- |
+| `build/<package_name>/test_results/<package_name>/` | Test execution results | xunit.xml   |
+| `log/latest_test/<package_name>/`                   | Test execution logs    | Text/JSON   |
+| `build/<package_name>/coverage.info`                | C++ coverage data      | LCOV        |
+| `build/<package_name>/.coverage`                    | Python coverage data   | Coverage.py |
 
 ## Troubleshooting
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| "No tests found" | Package has no tests or wrong package name | Verify `test/` directory exists in package |
-| Tests fail with "module not found" | Python dependencies missing | Run `source scripts/setup.bash --update-venv` |
-| "Command 'pytest' not found" | venv not updated | Run `source scripts/setup.bash --update-venv` |
-| Coverage data not generated | Coverage not enabled in build | Rebuild with `--mixin coverage-pytest` during build |
-| Xunit-viewer won't start | Node.js or npx not available | Install Node.js or use alternative viewer |
-| Test results missing or incomplete | Build artifacts cleaned | Rebuild packages before testing |
-| Tests timeout or hang | Test blocking on I/O or infinite loop | Check test logs in `log/latest_test/` |
+| Issue                                  | Cause                                      | Solution                                                                 |
+| -------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------ |
+| "No tests found"                       | Package has no tests or wrong package name | Verify `test/` directory exists in package                               |
+| Tests fail with "module not found"     | Python dependencies missing                | Run `source scripts/setup.bash --update-venv`                            |
+| "Command 'pytest' not found"           | venv not updated                           | Run `source scripts/setup.bash --update-venv`                            |
+| Coverage data not generated            | Coverage not enabled in build              | Rebuild with `--mixin coverage-pytest` during build                      |
+| Xunit-viewer won't start               | Node.js or npx not available               | Install Node.js or use alternative viewer                                |
+| Test results missing or incomplete     | Build artifacts cleaned                    | Rebuild packages before testing                                          |
+| Tests timeout or hang                  | Test blocking on I/O or infinite loop      | Check test logs in `log/latest_test/`                                    |
+| `drqp_gazebo` launch tests are skipped | Default smoke-only mode is active          | Re-run with `DRQP_GAZEBO_TEST_MODE=all` to include the full Gazebo suite |
 
 ## References
 
@@ -196,4 +222,3 @@ Explore test results with interactive visualization.
 - Refer to ROS 2 and colcon coverage guides for coverage instrumentation best practices
 - If your workspace includes helper scripts for automated test execution, document how to use them here
 - If you use custom coverage processing tools, document their usage and configuration here
-
