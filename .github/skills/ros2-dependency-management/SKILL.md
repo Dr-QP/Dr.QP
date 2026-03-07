@@ -35,7 +35,7 @@ Manage workspace dependencies across C++, Python, and system tools using rosdep 
 | **Tool Dependencies** | rosdep | `package.xml` build tools | Build system, linters, CI tools |
 | **C++ Runtime/Build Deps** | rosdep | `package.xml` `<depend>` | C++ libraries and headers |
 | **Python Runtime Deps** | rosdep or setup.py | `package.xml` or `setup.cfg` | Production Python packages |
-| **Python Dev Deps** | pip + requirements.txt | `requirements.txt` | Development tools (pytest, ruff, docs) |
+| **Python Dev Deps** | uv | `pyproject.toml` | Development tools, docs, notebooks, and local editable packages |
 
 ## Step-by-Step Workflows
 
@@ -67,26 +67,20 @@ Complete dependency installation for the workspace.
 
 Isolate Python development dependencies from system Python.
 
-1. Create virtual environment:
+1. Install `uv`:
    ```bash
-   python3 -m venv .venv
+   python3 -m pip install --user --break-system-packages --disable-pip-version-check uv
    ```
 
-2. Activate virtual environment:
+2. Sync the workspace environment:
+   ```bash
+   $HOME/.local/bin/uv sync
+   ```
+
+3. Activate virtual environment:
    ```bash
    source .venv/bin/activate
    ```
-
-3. Install development dependencies:
-   ```bash
-   .venv/bin/python3 -m pip install -r requirements.txt --use-pep517
-   ```
-
-   This installs:
-   - Test frameworks (pytest, coverage)
-   - Code quality tools (ruff, type checkers)
-   - Documentation tools (sphinx, autodoc)
-   - Development utilities
 
 4. Verify installation:
    ```bash
@@ -150,16 +144,11 @@ Add Python package to development or production use.
 
 **For Development Dependencies** (pytest, docs, linting):
 
-1. Add package name to `requirements.txt`:
-   ```bash
-   echo "new-package>=1.0.0" >> requirements.txt
-   ```
+1. Add the package to the appropriate dependency group in `pyproject.toml`
 
-2. Install updated requirements:
+2. Re-sync the environment:
    ```bash
-   source .venv/bin/activate
-   python3 -m pip install -r requirements.txt --use-pep517
-   deactivate
+   $HOME/.local/bin/uv sync
    ```
 
 **For Production Dependencies** (used by package code):
@@ -221,7 +210,7 @@ Resolve "package not found" or "library not found" errors.
 |------|---------|-------|
 | `packages/runtime/*/package.xml` | C++ and ROS dependencies per package | Package-level |
 | `packages/runtime/*/setup.py` | Python package dependencies | Package-level (Python packages only) |
-| `requirements.txt` | Development tools and docs | Workspace-level |
+| `pyproject.toml` | Workspace development dependencies for `uv` | Workspace-level |
 | `.venv/` | Virtual environment | Local development only |
 | `scripts/ros-dep.sh` | Automated dependency installation | Workspace setup |
 
@@ -243,17 +232,17 @@ rosdep install --from-paths packages/runtime/<package_name> --ignore-src -y
 # List all installed system dependencies
 rosdep list | grep "^python3"
 
+# Install uv
+python3 -m pip install --user --break-system-packages --disable-pip-version-check uv
+
+# Sync workspace dependencies
+$HOME/.local/bin/uv sync
+
 # Activate Python venv
 source .venv/bin/activate
 
-# Install/upgrade pip
-python3 -m pip install --upgrade pip
-
-# Show installed pip packages
-pip list
-
-# Install with specific version
-pip install "package_name==1.2.3"
+# Show installed packages
+python3 -m pip list
 ```
 
 ## Troubleshooting
@@ -262,7 +251,7 @@ pip install "package_name==1.2.3"
 |-------|-------|----------|
 | "rosdep: command not found" | ROS 2 not installed | Install ROS 2 Jazzy first |
 | "package not found in registry" | Package not in rosdep registry | Use pip or install from source |
-| Python package import fails | venv not activated or package not installed | Run `source .venv/bin/activate` and `pip install -r requirements.txt` |
+| Python package import fails | venv not activated or package not installed | Run `$HOME/.local/bin/uv sync` and then `source .venv/bin/activate` |
 | "Permission denied" on install | User lacks write permission | Use `sudo` or fix directory permissions |
 | Circular dependency errors | Package depends on itself transitively | Review `package.xml` dependencies |
 | Stale dependency cache | Old dependency versions cached | Run `rosdep update` and `pip cache purge` |

@@ -10,7 +10,7 @@ These guidelines supplement the [general Python coding conventions](./python.ins
 ## Execution Environment
 
 - Use virtual environment `.venv` for executing scripts locally
-- Ensure all dependencies are listed in a `requirements.txt` file for easy setup
+- Define workspace dependencies in `pyproject.toml` and sync `.venv` with `uv`
 - Avoid using global installations of packages to prevent version conflicts
 
 ## Documentation Examples

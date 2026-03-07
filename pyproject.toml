@@ -1,0 +1,58 @@
+[project]
+name = "drqp-workspace"
+version = "0.0.0"
+requires-python = ">=3.12"
+description = "Workspace-level development dependencies for the Dr.QP monorepo."
+
+[dependency-groups]
+dev = [
+  "pre-commit>=4.2.0",
+  "pygame>=2.5",
+  "esbonio>=0.16",
+  "ansible>=11.4",
+  "ansible-lint>=25.2.1",
+  "sphinx-autobuild",
+  "pydantic>=2.0",
+  "python-frontmatter>=1.1.0",
+  "pytest>=7.0.0",
+  "pytest-cov>=7.0.0",
+  "pytest-xdist>=3.8.0",
+  "validate_agents",
+]
+docs = [
+  { include-group = "notebooks" },
+  "sphinx~=8.2.0",
+  "sphinx-notfound-page~=1.0.0",
+  "pydata-sphinx-theme==0.16.0",
+  "sphinx-sitemap>=2.6.0",
+  "myst-nb>=1.2.0",
+  "myst-parser>=4.0.0",
+  "PyGithub>=2.6",
+  "sphinx-copybutton",
+  "sphinx-design",
+  "sphinx-togglebutton",
+  "sphinxext-rediraffe",
+  "sphinxcontrib-lightbox2",
+]
+notebooks = [
+  "ruff>=0.11.5",
+  "jupyterlab>=4.4",
+  "numpy>=1.26.0,<2.0.0",
+  "scipy>=1.15.2",
+  "numpy-quaternion>=2024.0.7",
+  "matplotlib>=3.8.0",
+  "ipympl>=0.9.7",
+  "matplotlib-inline-labels>=0.1",
+  "typeguard>=4.1.5",
+  "Pygments>=2.17.2",
+  "jupytext==1.17.2",
+  "drqp_brain",
+]
+
+[tool.uv]
+package = false
+default-groups = ["dev", "docs"]
+
+[tool.uv.sources]
+validate_agents = { path = "py_packages/validate_agents", editable = true }
+drqp_brain = { path = "packages/runtime/drqp_brain", editable = true }
