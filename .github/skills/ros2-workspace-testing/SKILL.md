@@ -24,7 +24,7 @@ Run ROS 2 tests efficiently and analyze results with comprehensive coverage repo
 - `scripts/setup.bash` available in workspace root
 - Packages already built with `colcon build`
 - Python 3.8+ for coverage tools
-- Optional: Node.js for interactive result viewer (xunit-viewer)
+- Optional: Node.js for interactive result viewer (`xunit-viewer` or the `ros2-xunit-viewer` workspace extension)
 
 ## Step-by-Step Workflows
 
@@ -157,17 +157,19 @@ Process LLVM coverage data and prepare for analysis.
 
 Explore test results with interactive visualization.
 
-1. Launch xunit-viewer server:
+1. Preferred: run the workspace task `Dr.QP workspace extensions`, then use the VS Code command palette action `ROS2: Open XUnit Test Results`
+
+2. Fallback: launch xunit-viewer server directly:
    ```bash
    npx -y xunit-viewer -r build --server -o build/xunit-index.html \
      -i Test.xml -i coverage.xml -i package.xml --watch
    ```
 
-2. Open browser to `http://localhost:3000`
+3. Open browser to `http://localhost:3000`
 
-3. Browse test results, failures, and coverage interactively
+4. Browse test results, failures, and coverage interactively
 
-4. Stop server with `Ctrl+C`
+5. Stop server with `Ctrl+C`
 
 ## Test Output Structure
 
