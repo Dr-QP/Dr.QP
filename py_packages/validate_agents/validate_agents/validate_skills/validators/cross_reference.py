@@ -36,7 +36,13 @@ class CrossReferenceValidator:
         self.base_path = base_path
         self.show_warnings = show_warnings
 
-    def validate(self, skill_path: str, metadata: dict, content: str) -> List[ValidationIssue]:
+    def validate(
+        self,
+        skill_path: str,
+        metadata: dict,
+        content: str,
+        line_offset: int = 0,
+    ) -> List[ValidationIssue]:
         """
         Validate cross-references.
 
@@ -44,6 +50,7 @@ class CrossReferenceValidator:
             skill_path: Path to the skill file
             metadata: Metadata dictionary (frontmatter)
             content: Content (body)
+            line_offset: Number of file lines preceding the body content
 
         Returns:
             List of validation issues
@@ -53,12 +60,16 @@ class CrossReferenceValidator:
 
         # Extract all markdown links: [text](reference)
         link_pattern = r'\[([^\]]+)\]\(([^\)]+)\)'
-        matches = re.findall(link_pattern, content)
+        matches = re.finditer(link_pattern, content)
 
-        for text, reference in matches:
+        for match in matches:
+            text, reference = match.groups()
             # Skip external references
             if reference.startswith(('http://', 'https://', '#')):
                 continue
+
+            line_number, column_number = self._get_position(content, match.start())
+            line_number += line_offset
 
             # Resolve path relative to base_path or skill directory
             if self.base_path:
@@ -78,6 +89,8 @@ class CrossReferenceValidator:
                     ValidationIssue(
                         level=ValidationLevel.WARNING,
                         message=f'Broken reference: {reference}',
+                        line_number=line_number,
+                        column_number=column_number,
                         section='cross_reference',
                     )
                 )
@@ -89,8 +102,18 @@ class CrossReferenceValidator:
                     ValidationIssue(
                         level=ValidationLevel.ERROR,
                         message=f'Broken reference: {reference}',
+                        line_number=line_number,
+                        column_number=column_number,
                         section='cross_reference',
                     )
                 )
 
         return issues
+
+    @staticmethod
+    def _get_position(content: str, offset: int) -> tuple[int, int]:
+        """Return 1-based line and column for a character offset."""
+        line_number = content.count('\n', 0, offset) + 1
+        line_start = content.rfind('\n', 0, offset)
+        column_number = offset + 1 if line_start == -1 else offset - line_start
+        return line_number, column_number

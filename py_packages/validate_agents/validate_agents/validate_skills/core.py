@@ -26,7 +26,7 @@ from typing import Dict
 
 import yaml
 
-from .loaders import safe_load_frontmatter
+from .loaders import safe_load_frontmatter_with_body_line
 from .types import ValidationIssue, ValidationLevel, ValidationResult
 from .validators.cross_reference import CrossReferenceValidator
 from .validators.skill import (
@@ -61,7 +61,7 @@ class ValidationEngine:
 
         try:
             # Load the file
-            frontmatter, body = safe_load_frontmatter(skill_path)
+            frontmatter, body, body_start_line = safe_load_frontmatter_with_body_line(skill_path)
         except (OSError, UnicodeDecodeError, yaml.YAMLError) as e:
             result.issues.append(
                 ValidationIssue(
@@ -96,7 +96,12 @@ class ValidationEngine:
             base_path=skill_dir, show_warnings=self.show_warnings
         )
         result.issues.extend(
-            xref_validator.validate(skill_path=skill_path, metadata=frontmatter, content=body)
+            xref_validator.validate(
+                skill_path=skill_path,
+                metadata=frontmatter,
+                content=body,
+                line_offset=body_start_line - 1,
+            )
         )
 
         return result
