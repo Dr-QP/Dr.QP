@@ -195,6 +195,11 @@ python3 -m colcon build --mixin coverage-pytest ninja rel-with-deb-info \
 python3 -m colcon test --mixin coverage-pytest \
   --event-handlers=console_cohesion+ --return-code-on-test-failure
 
+# Run all drqp_gazebo tests, including non-smoke launch tests
+DRQP_GAZEBO_TEST_MODE=all python3 -m colcon test --mixin coverage-pytest \
+  --event-handlers=console_cohesion+ --return-code-on-test-failure \
+  --packages-select drqp_gazebo
+
 # Process coverage
 ./packages/cmake/llvm-cov-export-all.py ./build
 ```
@@ -223,6 +228,7 @@ For comprehensive dependency management guidance (C++, Python, rosdep, pip), see
 9. **Enable coverage** with `--mixin coverage-pytest` when testing
 10. **Re-run failed tests** with `--packages-select-test-failures` to save time
 11. **Always re-run failing tests** after applying a fix when the user asked to fix it
+12. **Set `DRQP_GAZEBO_TEST_MODE=all`** when running the full `drqp_gazebo` suite; otherwise only the smoke subset runs by default
 
 ## Code Review Standards
 

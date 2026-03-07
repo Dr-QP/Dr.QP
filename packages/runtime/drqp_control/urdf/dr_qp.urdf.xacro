@@ -35,7 +35,7 @@
 
   <xacro:if value="$(arg use_gazebo)">
     <xacro:include filename="$(find drqp_control)/urdf/gazebo.xacro"/>
-    <xacro:gazebo />
+    <xacro:gazebo robot_name="$(arg robot_name)" />
   </xacro:if>
 
   <gazebo>

@@ -45,6 +45,17 @@ Use for rapid iteration when developing and testing a single package.
      --packages-select <package_name>
    ```
 
+    For the full `drqp_gazebo` launch suite, opt out of the default smoke-only mode:
+    ```bash
+    DRQP_GAZEBO_TEST_MODE=all python3 -m colcon test \
+       --event-handlers console_cohesion+ summary+ status+ \
+       --return-code-on-test-failure \
+       --packages-select drqp_gazebo \
+       --mixin coverage-pytest
+    ```
+
+    Without `DRQP_GAZEBO_TEST_MODE=all`, `drqp_gazebo` runs only the smoke subset and skips non-smoke slow launch tests.
+
 3. Check test results in console output (summary appears at end)
 
 4. View detailed test logs in `log/latest_test/<package_name>/`
@@ -189,6 +200,7 @@ Explore test results with interactive visualization.
 | Xunit-viewer won't start | Node.js or npx not available | Install Node.js or use alternative viewer |
 | Test results missing or incomplete | Build artifacts cleaned | Rebuild packages before testing |
 | Tests timeout or hang | Test blocking on I/O or infinite loop | Check test logs in `log/latest_test/` |
+| `drqp_gazebo` launch tests are skipped | Default smoke-only mode is active | Re-run with `DRQP_GAZEBO_TEST_MODE=all` to include the full Gazebo suite |
 
 ## References
 
