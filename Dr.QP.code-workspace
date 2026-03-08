@@ -330,7 +330,7 @@
       {
         "label": "Dr.QP venv",
         "type": "shell",
-        "command": "uv sync", // Keep in sync with the command in .devcontainer/devcontainer.json
+        "command": "./scripts/uv-sync.sh",
         "options": {
           "cwd": "${workspaceFolder}"
         },
