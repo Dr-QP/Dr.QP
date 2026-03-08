@@ -5,7 +5,7 @@ description: Generate comprehensive pull request description following code-revi
 
 # Generate Pull Request Description
 
-Generate a comprehensive, high-quality PR description that follows code-review-standards and engineering best practices.
+Generate a comprehensive PR description by analyzing the change set and filling the structure defined by [code-review-standards](../code-review-standards/). Use [engineering guidelines](../../instructions/engineering.instructions.md) only for shared quality expectations rather than repeating them here.
 
 ## When to Use This Skill
 
@@ -62,22 +62,20 @@ Unit tests, integration tests, manual testing, coverage impact.
 
 API changes, config changes, dependency version changes, schema changes.
 
-### Step 7: Generate PR Description
+### Step 7: Generate The Description
 
-Use [code-review-standards](../code-review-standards/) template. Include:
+Use the template and wording rules from [code-review-standards](../code-review-standards/). Include only sections that are relevant to the change:
 
 - **Summary**: 2-3 sentences
-- **Changes**: By category (Features, Bug Fixes, Refactoring, Tests, Documentation, Configuration)
-- **Technical Details**: Approach, key files, dependencies, assumptions
-- **Testing Strategy**: Unit, integration, manual, coverage
-- **Breaking Changes**: YES/NO, migration steps, deployment notes
-- **Risk Assessment**: Risks and mitigation
-- **Related**: Closes #, related to #, design doc link
-- **Checklist**: Code follows conventions, tests pass, docs updated, etc.
+- **What Changed**: Group related changes instead of listing files
+- **Why**: User or system impact
+- **How to Test**: Actual verification performed
+- **Breaking Changes**: Only when applicable
+- **Related**: Issues, design docs, or follow-up work
 
 ### Step 8: Review and Validate
 
-Ensure completeness, technical accuracy, valid links, testing matches actual work.
+Ensure completeness, technical accuracy, valid links, and that testing matches actual work. Do not repeat generic review or clean-code checklists from the referenced documents.
 
 ## Edge Cases
 

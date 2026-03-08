@@ -7,6 +7,12 @@ applyTo: '**'
 
 Unified engineering standards and best practices that apply across all code, agents, skills, and instructions in this workspace.
 
+## Reuse Policy
+
+- Treat this file as the canonical source for general engineering guidance
+- Keep skills and agent files task-specific; link here instead of copying broad quality, testing, or review checklists
+- Repeat shared guidance only when a task needs a tighter rule, different default, or concrete workflow-specific example
+
 ## Core Engineering Principles
 
 ### Code Quality & Clarity
