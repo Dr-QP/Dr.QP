@@ -22,6 +22,6 @@ validate_agent_files --ci                # CI mode (nonzero exit on errors)
 
 ## Notes
 
-- Skill frontmatter validation is delegated to `skills-ref`.
+- `skills-ref` is a required dependency and the primary validator for skill files.
 - Local validation still checks repository-specific rules such as duplicate skill names,
   cross-references, agent handoffs, and prompt `#file:` references.

@@ -63,6 +63,29 @@ def test_issue310_skill_validation_keeps_duplicate_name_check(
     assert 'duplicate-skill' in captured.out
 
 
+def test_issue310_skills_ref_is_primary_for_skill_validation(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """A failing skills-ref result should stop local skill-specific checks for that file."""
+    _write_skill(
+        tmp_path / 'broken-skill',
+        'broken-skill',
+        '# Broken Skill\n\nSee [missing](missing.md).\n',
+    )
+
+    monkeypatch.setattr(
+        'validate_agent_files.core.skills_ref_validate',
+        lambda skill_dir: ['sentinel skills-ref failure'],
+    )
+
+    exit_code = main([str(tmp_path)])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert 'sentinel skills-ref failure' in captured.out
+    assert 'missing.md' not in captured.out
+
+
 def test_issue310_skill_validation_keeps_broken_link_check(
     tmp_path: Path, monkeypatch, capsys
 ) -> None:

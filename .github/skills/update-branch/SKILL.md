@@ -1,6 +1,6 @@
 ---
 name: update-branch
-description: Update the current Git branch from origin by merging `origin/main` into it. Use when asked to sync a feature branch, bring branch up to date, resolve merge conflicts, or unblock CI after base branch drift. Keywords: merge `origin/main`, update branch, sync with origin/main, resolve merge conflicts.
+description: "Update the current Git branch from origin by merging `origin/main` into it. Use when asked to sync a feature branch, bring branch up to date, resolve merge conflicts, or unblock CI after base branch drift. Keywords: merge `origin/main`, update branch, sync with origin/main, resolve merge conflicts."
 ---
 
 # Update Branch from origin/main

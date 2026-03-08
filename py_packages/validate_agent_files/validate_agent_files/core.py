@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import yaml
 
@@ -15,6 +15,7 @@ from .loaders import (
     find_prompt_files,
     load_all_skills,
     load_custom_file,
+    safe_load_frontmatter_with_body_line,
 )
 from .types import ValidationIssue, ValidationLevel, ValidationResult
 from .validators.agents import build_known_agent_targets, validate_agent_frontmatter
@@ -25,37 +26,14 @@ from .validators.prompts import (
     validate_prompt_references,
 )
 from .validators.uniqueness import UniquenessValidator
-from .loaders import safe_load_frontmatter, safe_load_frontmatter_with_body_line
 
 
 def skills_ref_validate(skill_dir: Path | str) -> list[str]:
     """Validate a skill directory using the upstream skills-ref package."""
+    from skills_ref import validate as validate_skill  # type: ignore[import-not-found]
+
     skill_dir = Path(skill_dir)
-    try:
-        from skills_ref import validate as validate_skill
-        from skills_ref.validator import validate_metadata
-    except ImportError as exc:
-        return [f'Unable to import skills-ref: {exc}']
-
-    errors = list(validate_skill(skill_dir))
-
-    if not errors:
-        return errors
-
-    skill_file = skill_dir / 'SKILL.md'
-    if not skill_file.exists():
-        return errors
-
-    try:
-        frontmatter, _ = safe_load_frontmatter(str(skill_file))
-    except (OSError, UnicodeDecodeError, yaml.YAMLError):
-        return errors
-
-    normalized_errors = list(validate_metadata(frontmatter, skill_dir))
-    if not normalized_errors:
-        return []
-
-    return normalized_errors
+    return list(validate_skill(skill_dir))
 
 
 class ValidationEngine:
@@ -65,7 +43,7 @@ class ValidationEngine:
         self.show_warnings = show_warnings
         self.show_info = show_info
 
-    def validate(self, skill_path: str, all_skills: Dict = None) -> ValidationResult:
+    def validate(self, skill_path: str, all_skills: Optional[Dict] = None) -> ValidationResult:
         all_skills = all_skills or {}
         result = ValidationResult(skill_path=skill_path, issues=[])
 
@@ -90,6 +68,9 @@ class ValidationEngine:
                     section='skills_ref',
                 )
             )
+
+        if result.issues:
+            return result
 
         unique_validator = UniquenessValidator(all_skills=all_skills)
         result.issues.extend(
