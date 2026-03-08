@@ -80,16 +80,10 @@ Set up a fresh workspace for local development.
 
 Create isolated Python environment for development tools.
 
-1. Install `uv` if it is not already available:
+1. Sync the workspace environment from `pyproject.toml`:
 
    ```bash
-   python3 -m pip install --user --break-system-packages --disable-pip-version-check uv
-   ```
-
-2. Sync the workspace environment from `pyproject.toml`:
-
-   ```bash
-   $HOME/.local/bin/uv sync
+   uv sync
    ```
 
    This command:
@@ -97,7 +91,7 @@ Create isolated Python environment for development tools.
    - Installs the workspace development, docs, and notebook dependencies
    - Uses the repository lockfile when present for reproducible environments
 
-3. Activate the virtual environment when you need an interactive shell:
+2. Activate the virtual environment when you need an interactive shell:
 
    ```bash
    source .venv/bin/activate
@@ -105,14 +99,14 @@ Create isolated Python environment for development tools.
 
    Your shell prompt changes to show `(.venv)` prefix
 
-4. Verify installation:
+3. Verify installation:
 
    ```bash
    python3 -m pytest --version
    python3 -c "import ruff; print('ruff ready')"
    ```
 
-5. Exit venv when done:
+4. Exit venv when done:
    ```bash
    deactivate
    ```
@@ -123,29 +117,23 @@ Create isolated Python environment for development tools.
 
 Refresh the development environment after `pyproject.toml` or `uv.lock` changes.
 
-1. Install or update `uv` if needed:
+1. Re-sync the workspace environment:
 
    ```bash
-   python3 -m pip install --user --break-system-packages --disable-pip-version-check uv
-   ```
-
-2. Re-sync the workspace environment:
-
-   ```bash
-   $HOME/.local/bin/uv sync
+   uv sync
    ```
 
    This automatically updates `.venv` from the workspace dependency groups.
 
-3. Use `source scripts/setup.bash --update-venv` only after a build when you need to refresh `.venv-prod` from generated ROS package `requires.txt` metadata.
+2. Use `source scripts/setup.bash --update-venv` only after a build when you need to refresh `.venv-prod` from generated ROS package `requires.txt` metadata.
 
-4. Verify updates completed:
+3. Verify updates completed:
 
    ```bash
    .venv/bin/pip list | grep pytest
    ```
 
-5. Deactivate when done:
+4. Deactivate when done:
    ```bash
    deactivate
    ```
@@ -289,8 +277,7 @@ Clean up environment and start fresh.
 5. For clean venv, remove and recreate:
    ```bash
    rm -rf .venv
-   python3 -m pip install --user --break-system-packages --disable-pip-version-check uv
-   $HOME/.local/bin/uv sync
+   uv sync
    ```
 
 ## Environment Variables Reference
@@ -331,7 +318,7 @@ Clean up environment and start fresh.
 | "Command 'ros2' not found"  | ROS 2 not sourced                        | Run `source scripts/setup.bash`                                 |
 | "Package not found" error   | Workspace overlay not loaded             | Ensure `install/local_setup.bash` exists, rebuild if needed     |
 | Python import "rclpy" fails | ROS 2 Python client not available        | Install: `rosdep install --from-paths packages --ignore-src -y` |
-| Venv not activating         | Venv not created or corrupted            | Delete `.venv` and recreate it with `$HOME/.local/bin/uv sync`  |
+| Venv not activating         | Venv not created or corrupted            | Delete `.venv` and recreate it with `uv sync`                   |
 | Devcontainer won't start    | Docker not running or insufficient space | Start Docker daemon and check disk space                        |
 | Conflicting Python versions | Multiple Python environments active      | Deactivate venv: `deactivate`, then verify `python3 --version`  |
 | Build uses wrong compiler   | Environment variables not set            | Export: `export CC=clang && export CXX=clang++`                 |

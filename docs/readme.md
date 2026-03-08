@@ -15,8 +15,7 @@ This directory contains the Sphinx documentation for the project.
 The following commands will set up the workspace virtual environment and build the documentation using Sphinx.
 
 ```bash
-python3 -m pip install --user --break-system-packages --disable-pip-version-check uv
-$HOME/.local/bin/uv sync
+uv sync
 
 .venv/bin/sphinx-build -nW --keep-going -b html docs/source/ docs/_build/html
 ```

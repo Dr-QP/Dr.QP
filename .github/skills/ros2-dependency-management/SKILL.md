@@ -68,31 +68,25 @@ Complete dependency installation for the workspace.
 
 Isolate Python development dependencies from system Python.
 
-1. Install `uv`:
+1. Sync the workspace environment:
 
    ```bash
-   python3 -m pip install --user --break-system-packages --disable-pip-version-check uv
+   uv sync
    ```
 
-2. Sync the workspace environment:
-
-   ```bash
-   $HOME/.local/bin/uv sync
-   ```
-
-3. Activate virtual environment:
+2. Activate virtual environment:
 
    ```bash
    source .venv/bin/activate
    ```
 
-4. Verify installation:
+3. Verify installation:
 
    ```bash
    python3 -m pytest --version
    ```
 
-5. Deactivate when done:
+4. Deactivate when done:
    ```bash
    deactivate
    ```
@@ -157,7 +151,7 @@ Add Python package to development or production use.
 
 2. Re-sync the environment:
    ```bash
-   $HOME/.local/bin/uv sync
+   uv sync
    ```
 
 **For Production Dependencies** (used by package code):
@@ -245,11 +239,8 @@ rosdep install --from-paths packages/runtime/<package_name> --ignore-src -y
 # List all installed system dependencies
 rosdep list | grep "^python3"
 
-# Install uv
-python3 -m pip install --user --break-system-packages --disable-pip-version-check uv
-
 # Sync workspace dependencies
-$HOME/.local/bin/uv sync
+uv sync
 
 # Activate Python venv
 source .venv/bin/activate
@@ -264,7 +255,7 @@ python3 -m pip list
 | ------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------- |
 | "rosdep: command not found"     | ROS 2 not installed                              | Install ROS 2 Jazzy first                                           |
 | "package not found in registry" | Package not in rosdep registry                   | Use pip or install from source                                      |
-| Python package import fails     | venv not activated or package not installed      | Run `$HOME/.local/bin/uv sync` and then `source .venv/bin/activate` |
+| Python package import fails     | venv not activated or package not installed      | Run `uv sync` and then `source .venv/bin/activate`                  |
 | "Permission denied" on install  | User lacks write permission                      | Use `sudo` or fix directory permissions                             |
 | Circular dependency errors      | Package depends on itself transitively           | Review `package.xml` dependencies                                   |
 | Stale dependency cache          | Old dependency versions cached                   | Run `rosdep update` and `pip cache purge`                           |
