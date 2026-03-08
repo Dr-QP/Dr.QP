@@ -66,7 +66,7 @@ Use this skill when you need to validate Agent Skills and ensure they follow bes
 
 @pytest.fixture
 def invalid_skill_content():
-    """Provide invalid skill content for testing error handling."""
+    """Provide invalid skill content for error handling."""
     return """---
 description: Missing name field
 ---
@@ -119,7 +119,6 @@ def mock_logger(monkeypatch):
     return log
 
 
-# Hook to customize test output
 def pytest_configure(config):
     """Configure pytest with custom settings."""
     config.addinivalue_line('markers', 'slow: mark test as slow to run')

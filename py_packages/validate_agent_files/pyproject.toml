@@ -3,21 +3,21 @@ requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "validate_agents"
+name = "validate_agent_files"
 version = "0.0.0"
 description = "CLI tools for validating DRQP agents and their skills."
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
-dependencies = ["PyYAML>=6.0"]
+dependencies = ["PyYAML>=6.0", "skills-ref>=0.1.1,<0.2"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0", "pytest-cov>=4.0"]
 
 [project.scripts]
-validate_skills = "validate_agents.validate_skills.__main__:main"
+validate_agent_files = "validate_agent_files.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["validate_agents*"]
+include = ["validate_agent_files*"]
 exclude = ["tests*"]

@@ -1,6 +1,6 @@
 ---
 name: update-branch
-description: Update the current Git branch from origin by merging `origin/main` into it. Use when asked to sync a feature branch, bring branch up to date, resolve merge conflicts, or unblock CI after base branch drift. Keywords: merge `origin/main`, update branch, sync with origin/main, resolve merge conflicts.
+description: 'Update the current Git branch from origin by merging `origin/main` into it. Use when asked to sync a feature branch, bring branch up to date, resolve merge conflicts, or unblock CI after base branch drift. Keywords: merge `origin/main`, update branch, sync with origin/main, resolve merge conflicts.'
 ---
 
 # Update Branch from origin/main
@@ -33,35 +33,38 @@ Safely update the current branch by merging `origin/main` into it, resolving con
 ### Workflow 1: Preflight Checks
 
 1. Confirm branch and status:
-	```bash
-	git rev-parse --abbrev-ref HEAD
-	git status --porcelain
-	```
+
+   ```bash
+   git rev-parse --abbrev-ref HEAD
+   git status --porcelain
+   ```
 
 2. If working tree is dirty, pause and ask to:
-	- Commit changes, or
-	- Stash changes and continue.
+   - Commit changes, or
+   - Stash changes and continue.
 
 3. Verify current branch is not `main`:
-	```bash
-	test "$(git rev-parse --abbrev-ref HEAD)" != "main"
-	```
+   ```bash
+   test "$(git rev-parse --abbrev-ref HEAD)" != "main"
+   ```
 
 ### Workflow 2: Fetch and Merge
 
 1. Fetch remote updates:
-	```bash
-	git fetch origin
-	```
+
+   ```bash
+   git fetch origin
+   ```
 
 2. Merge `origin/main` into current branch:
-	```bash
-	git merge --no-ff origin/main
-	```
+
+   ```bash
+   git merge --no-ff origin/main
+   ```
 
 3. If merge succeeds with no conflicts:
-	- Run targeted validation (tests/lint relevant to changed files).
-	- Continue to completion.
+   - Run targeted validation (tests/lint relevant to changed files).
+   - Continue to completion.
 
 ### Workflow 3: Autonomous Conflict Resolution
 
@@ -100,35 +103,37 @@ Please choose A, B, or provide a custom resolution.
 ### Workflow 4: Complete Merge and Validate
 
 1. After resolving conflicts:
-	```bash
-	git add <resolved-files>
-	git commit
-	```
+
+   ```bash
+   git add <resolved-files>
+   git commit
+   ```
 
 2. Run targeted verification before push:
-	- Build/test packages or modules impacted by conflict files
-	- Run lint or static checks where available
+   - Build/test packages or modules impacted by conflict files
+   - Run lint or static checks where available
 
 3. Confirm merge result:
-	```bash
-	git log --oneline --decorate -n 5
-	```
+
+   ```bash
+   git log --oneline --decorate -n 5
+   ```
 
 4. Push updated branch:
-	```bash
-	git push origin HEAD
-	```
+   ```bash
+   git push origin HEAD
+   ```
 
 ## Conflict Types and Default Actions
 
-| Conflict Type | Default Action | Confidence Baseline |
-|---------------|----------------|---------------------|
-| Whitespace / formatting only | Keep style consistent with file | 95% |
-| Import/include ordering | Keep compilable/import-valid ordering | 90% |
-| Dependency/version bumps | Prefer newer compatible version from `origin/main` | 80% |
-| Test expectation drift | Preserve branch behavior, then adjust tests if intent is clear | 75% |
-| Core logic divergence | Escalate unless intent is unambiguous | <70% by default |
-| API contract changes | Escalate unless covered by explicit branch requirement | <70% by default |
+| Conflict Type                | Default Action                                                 | Confidence Baseline |
+| ---------------------------- | -------------------------------------------------------------- | ------------------- |
+| Whitespace / formatting only | Keep style consistent with file                                | 95%                 |
+| Import/include ordering      | Keep compilable/import-valid ordering                          | 90%                 |
+| Dependency/version bumps     | Prefer newer compatible version from `origin/main`             | 80%                 |
+| Test expectation drift       | Preserve branch behavior, then adjust tests if intent is clear | 75%                 |
+| Core logic divergence        | Escalate unless intent is unambiguous                          | <70% by default     |
+| API contract changes         | Escalate unless covered by explicit branch requirement         | <70% by default     |
 
 ## Completion Criteria
 
@@ -143,10 +148,9 @@ Please choose A, B, or provide a custom resolution.
 
 ## Troubleshooting
 
-| Issue | Likely Cause | Action |
-|-------|--------------|--------|
-| Merge aborted unexpectedly | Interrupted conflict workflow | Re-run `git merge --abort`, then restart |
-| Too many ambiguous conflicts | Widespread refactor overlap | Escalate early; request user decision on strategy |
-| Tests fail post-merge | Semantic drift from mainline | Fix behavior or tests based on confirmed intent |
-| Wrong branch updated | Incorrect checkout before merge | Switch to target branch and repeat workflow |
-
+| Issue                        | Likely Cause                    | Action                                            |
+| ---------------------------- | ------------------------------- | ------------------------------------------------- |
+| Merge aborted unexpectedly   | Interrupted conflict workflow   | Re-run `git merge --abort`, then restart          |
+| Too many ambiguous conflicts | Widespread refactor overlap     | Escalate early; request user decision on strategy |
+| Tests fail post-merge        | Semantic drift from mainline    | Fix behavior or tests based on confirmed intent   |
+| Wrong branch updated         | Incorrect checkout before merge | Switch to target branch and repeat workflow       |
