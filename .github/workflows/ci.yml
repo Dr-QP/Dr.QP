@@ -217,6 +217,7 @@ jobs:
           echo ''
           python3 -c 'import statemachine'
           echo ''
+
           python3 -m colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure
 
       - name: Process llvm coverage
@@ -274,7 +275,9 @@ jobs:
       matrix:
         include:
           - arch: ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
+            SIMULATION_TEST_MODE: 'smoke'
           - arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
+            SIMULATION_TEST_MODE: 'all'
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:
       packages: read
@@ -339,6 +342,9 @@ jobs:
             source "scripts/setup.bash" --update-venv
 
             python3 -m colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure
+          env:
+            # Pass the build args to devcontainer build
+            DRQP_GAZEBO_TEST_MODE=${{ matrix.SIMULATION_TEST_MODE }}
 
   build-deploy-image:
     name: Deployment image

@@ -93,33 +93,64 @@ def safe_load_frontmatter(file_path: str) -> Tuple[Dict, str]:
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
+    frontmatter, body, _ = _parse_frontmatter_content(content)
+    return frontmatter, body
+
+
+def safe_load_frontmatter_with_body_line(file_path: str) -> Tuple[Dict, str, int]:
+    """
+    Safely load YAML frontmatter, body, and the body's starting line.
+
+    Args:
+        file_path: Path to the skill file
+
+    Returns:
+        Tuple of (frontmatter_dict, body_str, body_start_line)
+
+    Raises:
+        OSError: If file not found or cannot be read
+        UnicodeDecodeError: If file encoding is invalid
+        yaml.YAMLError: If frontmatter delimiters are incomplete
+
+    """
+    file_mode = os.stat(file_path).st_mode
+    if file_mode & 0o444 == 0:
+        raise PermissionError(f"Permission denied: '{file_path}'")
+
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    return _parse_frontmatter_content(content)
+
+
+def _parse_frontmatter_content(content: str) -> Tuple[Dict, str, int]:
+    """Parse frontmatter content and return the body's starting line."""
     # Remove BOM if present
     if content.startswith('\ufeff'):
         content = content[1:]
 
-    # Split on frontmatter delimiter
     if not content.startswith('---'):
-        # File doesn't have frontmatter, return empty dict and full content as body
-        return {}, content
+        return {}, content, 1
 
     parts = content.split('---', 2)
     if len(parts) < 3:
-        # Incomplete frontmatter - opening delimiter found but no closing
         raise yaml.YAMLError('Incomplete frontmatter delimiters in file')
 
     frontmatter_str = parts[1]
-    body = parts[2].lstrip('\n')
+    body_with_leading_newlines = parts[2]
+    body = body_with_leading_newlines.lstrip('\n')
+    stripped_newlines = len(body_with_leading_newlines) - len(body)
+    body_start_prefix = f'---{frontmatter_str}---{body_with_leading_newlines[:stripped_newlines]}'
+    body_start_line = body_start_prefix.count('\n') + 1
 
     frontmatter_str = _normalize_frontmatter(frontmatter_str)
 
-    # Parse YAML frontmatter
     try:
         frontmatter = yaml.safe_load(frontmatter_str) or {}
     except yaml.YAMLError as e:
-        # If YAML parsing fails, raise the error
         raise yaml.YAMLError(f'Failed to parse frontmatter YAML: {e}')
 
-    return frontmatter, body
+    return frontmatter, body, body_start_line
 
 
 def _normalize_frontmatter(frontmatter_str: str) -> str:

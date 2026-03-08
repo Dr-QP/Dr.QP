@@ -246,6 +246,70 @@ class TestCrossReferenceValidator:
             'reference' in str(issue).lower() or 'broken' in str(issue).lower() for issue in issues
         )
 
+    def test_validate_broken_reference_reports_line_and_column(self, tmp_path):
+        """Should report the broken link's 1-based line and column."""
+        skill_file = tmp_path / 'SKILL.md'
+        content = '# Title\n\nSee [missing](nonexistent.md)\n'
+        skill_file.write_text(content)
+
+        validator = CrossReferenceValidator(str(tmp_path))
+        issues = validator.validate(skill_path=str(skill_file), metadata={}, content=content)
+
+        assert len(issues) == 1
+        assert issues[0].line_number == 3
+        assert issues[0].column_number == 5
+        assert 'nonexistent.md' in issues[0].message
+
+    def test_validate_multiple_broken_references_on_same_line(self, tmp_path):
+        """Should distinguish columns for multiple broken links on one line."""
+        skill_file = tmp_path / 'SKILL.md'
+        content = 'See [one](missing1.md) and [two](missing2.md)\n'
+        skill_file.write_text(content)
+
+        validator = CrossReferenceValidator(str(tmp_path))
+        issues = validator.validate(skill_path=str(skill_file), metadata={}, content=content)
+
+        assert len(issues) == 2
+        assert issues[0].line_number == 1
+        assert issues[0].column_number == 5
+        assert issues[1].line_number == 1
+        assert issues[1].column_number == 28
+
+    def test_validate_applies_line_offset(self, tmp_path):
+        """Should offset reported lines when content starts later in the file."""
+        skill_file = tmp_path / 'SKILL.md'
+        content = 'See [missing](nonexistent.md)\n'
+        skill_file.write_text(content)
+
+        validator = CrossReferenceValidator(str(tmp_path))
+        issues = validator.validate(
+            skill_path=str(skill_file),
+            metadata={},
+            content=content,
+            line_offset=5,
+        )
+
+        assert len(issues) == 1
+        assert issues[0].line_number == 6
+        assert issues[0].column_number == 5
+
+    def test_validate_ignores_marked_template_block(self, tmp_path):
+        """Should ignore references in explicitly marked template blocks."""
+        skill_file = tmp_path / 'SKILL.md'
+        content = (
+            '<!-- validate_skills: ignore-cross-reference-start -->\n'
+            '[template](nonexistent-template.md)\n'
+            '<!-- validate_skills: ignore-cross-reference-end -->\n'
+            '[real](nonexistent-real.md)\n'
+        )
+        skill_file.write_text(content)
+
+        validator = CrossReferenceValidator(str(tmp_path))
+        issues = validator.validate(skill_path=str(skill_file), metadata={}, content=content)
+
+        assert len(issues) == 1
+        assert 'nonexistent-real.md' in issues[0].message
+
     def test_validate_absolute_path_references(self, tmp_path):
         """Should handle absolute path references."""
         skill_file = tmp_path / 'SKILL.md'

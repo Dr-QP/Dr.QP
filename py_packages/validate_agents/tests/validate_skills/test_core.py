@@ -161,6 +161,29 @@ Content""")
         issues_found = len(result.issues)
         assert issues_found > 0
 
+    def test_validation_engine_reports_file_relative_xref_lines(self, tmp_path):
+        """Should include frontmatter lines when reporting broken references."""
+        skill_file = tmp_path / 'SKILL.md'
+        skill_file.write_text("""---
+name: test-skill
+description: A comprehensive description of what this skill does and when to use it.
+---
+
+# Overview
+See [missing](nonexistent.md)
+
+## When to use this skill
+Use this when you need it.
+""")
+
+        engine = ValidationEngine()
+        result = engine.validate(str(skill_file), all_skills={})
+
+        xref_issues = [issue for issue in result.issues if issue.section == 'cross_reference']
+        assert len(xref_issues) == 1
+        assert xref_issues[0].line_number == 7
+        assert xref_issues[0].column_number == 5
+
 
 class TestValidationEngineLoadedSkills:
     """Tests for cross-validation with loaded skills."""
