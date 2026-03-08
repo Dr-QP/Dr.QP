@@ -66,7 +66,7 @@ Unified engineering standards and best practices that apply across all code, age
   - Keep dependencies up-to-date
 
 - **Include documentation and comments**:
-  - Explain *why* decisions were made, not *what* the code does
+  - Explain _why_ decisions were made, not _what_ the code does
   - Document algorithm approaches for complex code
   - Use comments sparingly for non-obvious logic
   - Keep comments synchronized with code
@@ -128,6 +128,7 @@ Unified engineering standards and best practices that apply across all code, age
   - Use triple-quoted strings
 
 - Example:
+
   ```python
   def calculate_area(radius: float) -> float:
       """
@@ -188,7 +189,8 @@ When reviewing code:
 - **Verify standards**: Does it follow project conventions?
 
 **Provide constructive feedback**:
-- Explain *why* a change is needed
+
+- Explain _why_ a change is needed
 - Suggest alternatives if rejecting an approach
 - Acknowledge good work and learning
 - Be respectful and collaborative
@@ -215,4 +217,3 @@ Before completing work:
 - Participate in code reviews to share knowledge
 - Refactor legacy code to apply new patterns
 - Share knowledge through documentation and mentoring
-
