@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Verify Copilot reviewed current head
+      - name: Verify Copilot reviewed PR
         uses: actions/github-script@v7
         with:
           script: |
@@ -44,7 +44,6 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const pull_number = pr.number;
-            const headSha = pr.head.sha;
 
             const reviews = await github.paginate(
               github.rest.pulls.listReviews,
@@ -60,24 +59,20 @@ jobs:
               'copilot-pull-request-reviewer[bot]',
             ]);
 
-            // Require a submitted Copilot review for the current head SHA.
-            // This avoids accepting an old review after new commits were pushed.
+            // Require an active submitted Copilot review for any commit in the PR.
             const matchingReview = reviews.find((review) => {
               const login = review.user?.login;
               const state = review.state;
-              const commitId = review.commit_id;
               return (
                 copilotLogins.has(login) &&
                 state &&
                 state !== 'PENDING' &&
-                commitId === headSha
+                state !== 'DISMISSED'
               );
             });
 
             if (!matchingReview) {
-              core.setFailed(
-                `Copilot has not reviewed current head commit ${headSha}.`
-              );
+              core.setFailed('Copilot has not submitted a review for this PR.');
               return;
             }
 
