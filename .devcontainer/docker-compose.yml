@@ -1,12 +1,13 @@
 services:
   devcontainer:
-    image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
+    image: ghcr.io/dr-qp/jazzy-ros-desktop:pr-324
+
+    # Required for Docker in Docker (dind) to allow nested containers for ROS 2 development
+    # as well as for allowing privileged access to the host's GPU for hardware-accelerated rendering in Gazebo and RViz.
+    # As well as access to host's devices for hardware access (e.g. TTY servos).
+    # Note: Using privileged mode grants the container elevated permissions, which can pose security risks. Use with caution and only in trusted environments.
     privileged: true
-    network_mode: host
-    ipc: host
-    pid: host
-    # Uncomment to allow shared memory based DDS communication
-    # user: "1001:1001", # Change to match primary user on the host
+
     volumes:
       # Volumes for git worktree
       - ${GIT_REPO:-$PWD}:${GIT_REPO:-$PWD}:rw
@@ -15,3 +16,17 @@ services:
       # Local ROS overlay workspace
       - ${LOCAL_WORKSPACE_FOLDER:-$PWD}:/opt/ros/overlay_ws/:rw
     command: ['sleep', 'infinity']
+
+    ######################################################################
+    # Enabling host PID affects isolation and doesn't allow XPRA to run in multiple VScode windows without conflicts.
+    #
+    # Note:
+    # This can have security implications as it allows processes inside the container to access shared memory segments on the host
+    # Use with caution and only in trusted environments.
+    #
+    # Uncomment to allow shared memory based DDS communication
+    # network_mode: host
+    # ipc: host
+    # pid: host
+    # user: "1001:1001", # Change to match primary user on the host
+    ######################################################################
