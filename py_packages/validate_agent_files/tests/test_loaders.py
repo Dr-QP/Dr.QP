@@ -31,7 +31,9 @@ def test_issue310_loader_discovery_and_identifier_helpers_cover_file_cases(
     """Discovery helpers should handle valid files, wrong suffixes, and missing paths."""
     skill_file = tmp_path / 'skill' / 'SKILL.md'
     skill_file.parent.mkdir()
-    skill_file.write_text('---\nname: demo-skill\ndescription: A valid description.\n---\n# Demo\n')
+    skill_file.write_text(
+        '---\nname: demo-skill\ndescription: A valid description.\n---\n# Demo\n'
+    )
 
     agent_file = tmp_path / 'demo.agent.md'
     agent_file.write_text('---\nname: Demo\ndescription: Valid description.\n---\n# Demo\n')
@@ -165,9 +167,7 @@ def test_issue310_load_all_skills_skips_unparseable_files(
 def test_issue310_load_custom_file_tracks_frontmatter_presence(tmp_path: Path) -> None:
     """Custom file loading should preserve frontmatter state and body offsets."""
     prompt_with_frontmatter = tmp_path / 'with-frontmatter.prompt.md'
-    prompt_with_frontmatter.write_text(
-        '---\nagent: demo\nmodel: GPT-5.4\n---\n\n# Prompt\n'
-    )
+    prompt_with_frontmatter.write_text('---\nagent: demo\nmodel: GPT-5.4\n---\n\n# Prompt\n')
     prompt_without_frontmatter = tmp_path / 'without-frontmatter.prompt.md'
     prompt_without_frontmatter.write_text('# Prompt\n')
 

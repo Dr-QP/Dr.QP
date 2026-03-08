@@ -199,7 +199,10 @@ def test_issue310_validate_agent_frontmatter_and_handoffs_reject_invalid_shapes(
         ('invalid', 'Handoff #1 must be a mapping'),
         ({'agent': 'principal-engineer'}, "Handoff #1 is missing required field 'label'"),
         ({'label': 'Delegate'}, "Handoff #1 is missing required field 'agent'"),
-        ({'label': 'Delegate', 'agent': 'missing'}, "Handoff #1 references unknown agent 'missing'"),
+        (
+            {'label': 'Delegate', 'agent': 'missing'},
+            "Handoff #1 references unknown agent 'missing'",
+        ),
         (
             {'label': 'Delegate', 'agent': 'principal-engineer', 'prompt': 3},
             "Handoff #1 field 'prompt' must be a string",
@@ -293,7 +296,9 @@ def test_issue310_cross_reference_validator_warns_on_resolution_failure_and_help
     resolved = original_resolve_reference(Path(tmp_path), '/docs/readme.md')
     assert resolved == (Path.cwd() / 'docs' / 'readme.md').resolve()
 
-    ignored_content = '<!-- validate_skills: ignore-cross-reference-start -->\n[ignored](missing.md)'
+    ignored_content = (
+        '<!-- validate_skills: ignore-cross-reference-start -->\n[ignored](missing.md)'
+    )
     ignored_ranges = CrossReferenceValidator._build_ignored_ranges(ignored_content)
     assert ignored_ranges == [(0, len(ignored_content))]
     assert CrossReferenceValidator._is_ignored_position(10, ignored_ranges) is True

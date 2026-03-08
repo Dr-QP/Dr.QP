@@ -118,7 +118,10 @@ def test_issue310_skill_validation_keeps_broken_link_check(
     ('frontmatter', 'message'),
     [
         ({'description': 'Valid enough description'}, "Missing required field: 'name'"),
-        ({'name': 12, 'description': 'Valid enough description'}, 'Name must be a string, got: int'),
+        (
+            {'name': 12, 'description': 'Valid enough description'},
+            'Name must be a string, got: int',
+        ),
         (
             {'name': 'Not Valid', 'description': 'Valid enough description'},
             "Name must be lowercase with hyphens (e.g., 'my-skill'), got: 'Not Valid'",
@@ -129,7 +132,10 @@ def test_issue310_skill_validation_keeps_broken_link_check(
         ),
         ({'name': 'valid-skill'}, "Missing required field: 'description'"),
         ({'name': 'valid-skill', 'description': 12}, 'Description must be a string, got: int'),
-        ({'name': 'valid-skill', 'description': 'too short'}, 'Description must be at least 10 characters'),
+        (
+            {'name': 'valid-skill', 'description': 'too short'},
+            'Description must be at least 10 characters',
+        ),
         (
             {'name': 'valid-skill', 'description': 'a' * 1025},
             'Description exceeds maximum length of 1024 characters',
@@ -166,8 +172,18 @@ def test_issue310_skill_frontmatter_validator_warns_on_vague_description_terms()
     ('body', 'show_warnings', 'expected_level', 'expected_message'),
     [
         ('', False, 'error', 'Body content is empty'),
-        ('Paragraph only\n', False, 'error', "Missing required top-level header (e.g., '# Title')"),
-        ('# Title\n\nshort\n', True, 'warning', "Top-level section '# Title' appears to be empty or very short"),
+        (
+            'Paragraph only\n',
+            False,
+            'error',
+            "Missing required top-level header (e.g., '# Title')",
+        ),
+        (
+            '# Title\n\nshort\n',
+            True,
+            'warning',
+            "Top-level section '# Title' appears to be empty or very short",
+        ),
     ],
 )
 def test_issue310_skill_structure_validator_reports_problem_cases(

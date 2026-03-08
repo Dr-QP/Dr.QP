@@ -12,7 +12,8 @@ from types import ModuleType
 import pytest
 import yaml
 
-from validate_agent_files.core import ValidationEngine, skills_ref_validate
+from validate_agent_files.core import skills_ref_validate, ValidationEngine
+
 try:
     import tomllib
 except ModuleNotFoundError:  # pragma: no cover - Python < 3.11
