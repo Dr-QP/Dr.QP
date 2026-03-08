@@ -132,10 +132,10 @@ Unified engineering standards and best practices that apply across all code, age
   def calculate_area(radius: float) -> float:
       """
       Calculate the area of a circle given the radius.
-      
+
       Args:
           radius: The radius of the circle in units
-          
+
       Returns:
           The area in square units (π * r²)
       """
