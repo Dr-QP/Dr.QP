@@ -1,15 +1,22 @@
 ---
 # Install uv Python package manager from the official installer
+- name: Check if uv is already installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/uv
+  register: uv_binary
+
 - name: Create temporary directory for uv installer
   ansible.builtin.tempfile:
     state: directory
   register: uv_temp_dir
+  when: not uv_binary.stat.exists
 
 - name: Download uv install script
   ansible.builtin.get_url:
     url: https://astral.sh/uv/install.sh
     dest: "{{ uv_temp_dir.path }}/uv-install.sh"
     mode: "0755"
+  when: not uv_binary.stat.exists
 
 - name: Install uv to /usr/local/bin
   ansible.builtin.shell:
@@ -19,9 +26,10 @@
   environment:
     UV_INSTALL_DIR: /usr/local/bin
     UV_NO_MODIFY_PATH: "1"
+  when: not uv_binary.stat.exists
 
 - name: Clean up temporary directory
   ansible.builtin.file:
     path: "{{ uv_temp_dir.path }}"
     state: absent
-  when: uv_temp_dir.path is defined
+  when: not uv_binary.stat.exists and uv_temp_dir.path is defined
