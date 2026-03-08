@@ -1,4 +1,4 @@
-# Test Suite for validate_agents Validation Modules
+# Test Suite for validate_agent_files Validation Modules
 
 This directory contains comprehensive failing unit tests that drive the refactoring of the validate-skills package into a clean, modular structure.
 
@@ -151,7 +151,7 @@ pytest tests/test_cli.py
 pytest -v tests/
 
 # Run with coverage
-pytest --cov=validate_agents tests/
+pytest --cov=validate_agent_files tests/
 
 # Run only fast tests (exclude slow)
 pytest -m "not slow" tests/
@@ -162,14 +162,14 @@ pytest -m "not slow" tests/
 All tests import from the new package structure:
 
 ```python
-from validate_agents.cli import parse_arguments
-from validate_agents.loaders import find_skill_files, safe_load_frontmatter, load_all_skills
-from validate_agents.core import ValidationEngine, ValidationResult
-from validate_agents.formatters import TextFormatter, JSONFormatter, CSVFormatter
-from validate_agents.main import main
-from validate_agents.validators.skill import SkillFrontmatterValidator, SkillStructureValidator
-from validate_agents.validators.uniqueness import UniquenessValidator
-from validate_agents.validators.cross_reference import CrossReferenceValidator
+from validate_agent_files.cli import parse_arguments
+from validate_agent_files.loaders import find_skill_files, safe_load_frontmatter, load_all_skills
+from validate_agent_files.core import ValidationEngine, ValidationResult
+from validate_agent_files.formatters import TextFormatter, JSONFormatter, CSVFormatter
+from validate_agent_files.main import main
+from validate_agent_files.validators.skill import SkillFrontmatterValidator, SkillStructureValidator
+from validate_agent_files.validators.uniqueness import UniquenessValidator
+from validate_agent_files.validators.cross_reference import CrossReferenceValidator
 ```
 
 ## Test Coverage Summary

@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 
-from validate_agents.cli import parse_arguments
+from validate_agent_files.cli import parse_arguments
 
 
 def test_parse_arguments_defaults_to_all_kinds() -> None:

@@ -56,13 +56,13 @@ jobs:
       - name: Setup Python venv
         uses: ./.github/actions/setup-python-venv
 
-      - name: Install validate_agents package
-        run: pip install -e py_packages/validate_agents
+      - name: Install validate_agent_files package
+        run: pip install -e py_packages/validate_agent_files
 
       - name: Test customization validators
         run: |
-          pytest py_packages/validate_agents/tests \
-            --cov=validate_agents --cov-report=xml
+          pytest py_packages/validate_agent_files/tests \
+            --cov=validate_agent_files --cov-report=xml
 
       - name: Validate Copilot Customizations
         run: validate_agent_files --recommend .github

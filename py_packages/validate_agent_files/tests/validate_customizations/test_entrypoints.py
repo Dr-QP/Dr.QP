@@ -8,7 +8,7 @@ from pathlib import Path
 
 import tomllib
 
-from validate_agents.main import main as validate_agent_files_main
+from validate_agent_files.main import main as validate_agent_files_main
 
 
 def _write_valid_skill(skill_dir: Path, name: str) -> None:
@@ -34,7 +34,7 @@ def test_issue310_registers_validate_agent_files_cli() -> None:
 
     scripts = pyproject['project']['scripts']
 
-    assert scripts == {'validate_agent_files': 'validate_agents.__main__:main'}
+    assert scripts == {'validate_agent_files': 'validate_agent_files.__main__:main'}
 
 
 def test_issue310_validate_agent_files_can_limit_to_skills(

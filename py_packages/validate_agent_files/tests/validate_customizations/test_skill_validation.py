@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from validate_agents.main import main
+from validate_agent_files.main import main
 
 
 def _write_skill(skill_dir: Path, name: str, body: str) -> None:
@@ -33,7 +33,7 @@ def test_issue310_skill_spec_validation_delegates_to_skills_ref(
         calls.append(skill_dir)
         return ['sentinel skills-ref failure']
 
-    monkeypatch.setattr('validate_agents.core.skills_ref_validate', fake_validate)
+    monkeypatch.setattr('validate_agent_files.core.skills_ref_validate', fake_validate)
 
     exit_code = main([str(tmp_path)])
     captured = capsys.readouterr()
@@ -51,7 +51,7 @@ def test_issue310_skill_validation_keeps_duplicate_name_check(
     _write_skill(tmp_path / 'skill-two', 'duplicate-skill', '# Skill Two\n')
 
     monkeypatch.setattr(
-        'validate_agents.core.skills_ref_validate',
+        'validate_agent_files.core.skills_ref_validate',
         lambda skill_dir: [],
     )
 
@@ -74,7 +74,7 @@ def test_issue310_skill_validation_keeps_broken_link_check(
     )
 
     monkeypatch.setattr(
-        'validate_agents.core.skills_ref_validate',
+        'validate_agent_files.core.skills_ref_validate',
         lambda skill_dir: [],
     )
 

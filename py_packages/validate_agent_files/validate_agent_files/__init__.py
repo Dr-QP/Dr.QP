@@ -1,4 +1,4 @@
-"""Public API for validate_agents."""
+"""Public API for validate_agent_files."""
 
 from .core import (
 	CustomizationsValidationEngine,

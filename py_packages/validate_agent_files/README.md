@@ -1,4 +1,4 @@
-# validate_agents
+# validate_agent_files
 
 CLI tools for validating DRQP skills, agent files, and prompt files.
 
