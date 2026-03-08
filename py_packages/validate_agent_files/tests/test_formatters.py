@@ -23,12 +23,13 @@
 
 import pytest
 
-from validate_agents.validate_skills.formatters import (
+from validate_agent_files.formatters import (
     CSVFormatter,
     format_results,
     JSONFormatter,
     TextFormatter,
 )
+from validate_agent_files.types import ValidationIssue, ValidationLevel, ValidationResult
 
 
 class TestTextFormatter:
@@ -36,7 +37,7 @@ class TestTextFormatter:
 
     def test_text_formatter_format_result(self):
         """Should format result as readable text."""
-        from validate_agents.validate_skills.core import (
+        from validate_agent_files.core import (
             ValidationIssue,
             ValidationLevel,
             ValidationResult,
@@ -59,7 +60,7 @@ class TestTextFormatter:
 
     def test_text_formatter_color_support(self):
         """Should optionally include color codes."""
-        from validate_agents.validate_skills.core import ValidationResult
+        from validate_agent_files.core import ValidationResult
 
         result = ValidationResult(skill_path='/path/to/SKILL.md', issues=[])
 
@@ -69,7 +70,7 @@ class TestTextFormatter:
 
     def test_text_formatter_summary_statistics(self):
         """Should include summary statistics."""
-        from validate_agents.validate_skills.core import (
+        from validate_agent_files.core import (
             ValidationIssue,
             ValidationLevel,
             ValidationResult,
@@ -87,11 +88,11 @@ class TestTextFormatter:
         summary = formatter.format_summary(results)
 
         assert isinstance(summary, str)
-        assert '1' in summary or '2' in summary  # Should mention counts
+        assert '1' in summary or '2' in summary
 
     def test_text_formatter_includes_line_and_column(self):
         """Should render issues in file:line:column format when available."""
-        from validate_agents.validate_skills.core import (
+        from validate_agent_files.core import (
             ValidationIssue,
             ValidationLevel,
             ValidationResult,
@@ -117,7 +118,7 @@ class TestTextFormatter:
 
     def test_text_formatter_includes_file_prefix_without_column(self):
         """Should still prefix file path when only a line number is available."""
-        from validate_agents.validate_skills.core import (
+        from validate_agent_files.core import (
             ValidationIssue,
             ValidationLevel,
             ValidationResult,
@@ -148,14 +149,13 @@ class TestJSONFormatter:
         """Should produce valid JSON output."""
         import json
 
-        from validate_agents.validate_skills.core import ValidationResult
+        from validate_agent_files.core import ValidationResult
 
         result = ValidationResult(skill_path='/path/to/SKILL.md', issues=[])
 
         formatter = JSONFormatter()
         output = formatter.format_result(result)
 
-        # Should be valid JSON
         parsed = json.loads(output)
         assert isinstance(parsed, dict)
 
@@ -163,7 +163,7 @@ class TestJSONFormatter:
         """Should include result metadata in JSON."""
         import json
 
-        from validate_agents.validate_skills.core import ValidationResult
+        from validate_agent_files.core import ValidationResult
 
         result = ValidationResult(skill_path='/path/to/SKILL.md', issues=[])
 
@@ -178,7 +178,7 @@ class TestJSONFormatter:
         """Should format multiple results."""
         import json
 
-        from validate_agents.validate_skills.core import ValidationResult
+        from validate_agent_files.core import ValidationResult
 
         results = [
             ValidationResult(skill_path='/path/skill1/SKILL.md', issues=[]),
@@ -201,11 +201,11 @@ class TestCSVFormatter:
         output = formatter.get_header()
 
         assert isinstance(output, str)
-        assert ',' in output or ';' in output  # Should be delimited
+        assert ',' in output or ';' in output
 
     def test_csv_formatter_data_row(self):
         """Should format result as CSV row."""
-        from validate_agents.validate_skills.core import (
+        from validate_agent_files.core import (
             ValidationIssue,
             ValidationLevel,
             ValidationResult,
@@ -226,7 +226,7 @@ class TestCSVFormatter:
 
     def test_csv_formatter_escaping(self):
         """Should properly escape special characters in CSV."""
-        from validate_agents.validate_skills.core import (
+        from validate_agent_files.core import (
             ValidationIssue,
             ValidationLevel,
             ValidationResult,
@@ -245,7 +245,6 @@ class TestCSVFormatter:
         output = formatter.format_result(result)
 
         assert isinstance(output, str)
-        # Should handle special characters
 
 
 class TestFormatResults:
@@ -253,7 +252,7 @@ class TestFormatResults:
 
     def test_format_results_text(self):
         """Should format results in text format by default."""
-        from validate_agents.validate_skills.core import ValidationResult
+        from validate_agent_files.core import ValidationResult
 
         results = [
             ValidationResult(skill_path='/path/skill1/SKILL.md', issues=[]),
@@ -266,20 +265,19 @@ class TestFormatResults:
         """Should format results in JSON format."""
         import json
 
-        from validate_agents.validate_skills.core import ValidationResult
+        from validate_agent_files.core import ValidationResult
 
         results = [
             ValidationResult(skill_path='/path/skill1/SKILL.md', issues=[]),
         ]
 
         output = format_results(results, format='json')
-        # Should be valid JSON
         parsed = json.loads(output)
         assert parsed is not None
 
     def test_format_results_csv(self):
         """Should format results in CSV format."""
-        from validate_agents.validate_skills.core import ValidationResult
+        from validate_agent_files.core import ValidationResult
 
         results = [
             ValidationResult(skill_path='/path/skill1/SKILL.md', issues=[]),
@@ -289,12 +287,11 @@ class TestFormatResults:
         output = format_results(results, format='csv')
         assert isinstance(output, str)
         lines = output.split('\n')
-        # Should have header + data rows
         assert len(lines) >= 1
 
     def test_format_results_invalid_format(self):
         """Should raise error for invalid format."""
-        from validate_agents.validate_skills.core import ValidationResult
+        from validate_agent_files.core import ValidationResult
 
         results = [ValidationResult(skill_path='/path/SKILL.md', issues=[])]
 
@@ -313,7 +310,7 @@ class TestFormatterEdgeCases:
 
     def test_formatter_no_issues(self):
         """Should format result with no issues."""
-        from validate_agents.validate_skills.core import ValidationResult
+        from validate_agent_files.core import ValidationResult
 
         result = ValidationResult(skill_path='/path/SKILL.md', issues=[])
         formatter = TextFormatter()
@@ -324,14 +321,15 @@ class TestFormatterEdgeCases:
 
     def test_formatter_many_issues(self):
         """Should handle many issues."""
-        from validate_agents.validate_skills.core import (
+        from validate_agent_files.core import (
             ValidationIssue,
             ValidationLevel,
             ValidationResult,
         )
 
         issues = [
-            ValidationIssue(level=ValidationLevel.ERROR, message=f'Error {i}') for i in range(100)
+            ValidationIssue(level=ValidationLevel.ERROR, message=f'Error {index}')
+            for index in range(100)
         ]
         result = ValidationResult(skill_path='/path/SKILL.md', issues=issues)
 
@@ -341,7 +339,7 @@ class TestFormatterEdgeCases:
 
     def test_formatter_special_characters_in_path(self):
         """Should handle special characters in file paths."""
-        from validate_agents.validate_skills.core import ValidationResult
+        from validate_agent_files.core import ValidationResult
 
         result = ValidationResult(skill_path='/path/skill with spaces & chars/SKILL.md', issues=[])
 
@@ -351,7 +349,7 @@ class TestFormatterEdgeCases:
 
     def test_formatter_unicode_in_messages(self):
         """Should handle unicode characters in messages."""
-        from validate_agents.validate_skills.core import (
+        from validate_agent_files.core import (
             ValidationIssue,
             ValidationLevel,
             ValidationResult,
@@ -369,3 +367,62 @@ class TestFormatterEdgeCases:
         formatter = TextFormatter()
         output = formatter.format_result(result)
         assert isinstance(output, str)
+
+
+@pytest.mark.parametrize(
+    ('issue', 'expected'),
+    [
+        (
+            ValidationIssue(
+                level=ValidationLevel.ERROR,
+                message='Broken reference',
+                line_number=3,
+                column_number=9,
+                section='cross_reference',
+            ),
+            '  ✗ Broken reference [cross_reference] (line 3:9)',
+        ),
+        (
+            ValidationIssue(
+                level=ValidationLevel.WARNING,
+                message='Needs detail',
+                line_number=8,
+                section='frontmatter',
+            ),
+            '  ⚠ Needs detail [frontmatter] (line 8)',
+        ),
+        (
+            ValidationIssue(
+                level=ValidationLevel.INFO,
+                message='FYI',
+            ),
+            '  ℹ FYI',
+        ),
+    ],
+)
+def test_issue310_validation_issue_str_formats_prefix_section_and_location(
+    issue: ValidationIssue,
+    expected: str,
+) -> None:
+    """ValidationIssue.__str__ should include severity, section, and location."""
+    assert str(issue) == expected
+
+
+def test_issue310_validation_result_properties_and_str_track_errors_and_warnings() -> None:
+    """ValidationResult should derive validity and warning state from issues."""
+    warning_result = ValidationResult(
+        skill_path='warning.md',
+        issues=[ValidationIssue(level=ValidationLevel.WARNING, message='warning')],
+    )
+    error_result = ValidationResult(
+        skill_path='error.md',
+        issues=[ValidationIssue(level=ValidationLevel.ERROR, message='error')],
+    )
+
+    assert warning_result.is_valid is True
+    assert warning_result.has_warnings is True
+    assert str(warning_result) == '✓ warning.md'
+
+    assert error_result.is_valid is False
+    assert error_result.has_warnings is False
+    assert str(error_result) == '✗ error.md'
