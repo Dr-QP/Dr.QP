@@ -5,7 +5,7 @@ description: Generate comprehensive pull request description following code-revi
 
 # Generate Pull Request Description
 
-Generate a comprehensive PR description by analyzing the change set and filling the structure defined by [code-review-standards](../code-review-standards/). Use [engineering guidelines](../../instructions/engineering.instructions.md) only for shared quality expectations rather than repeating them here.
+Generate a comprehensive PR description by analyzing the change set and filling the repository template at [../../pull_request_template.md](../../pull_request_template.md). Use [code-review-standards](../code-review-standards/) for wording and review conventions, and use [engineering guidelines](../../instructions/engineering.instructions.md) only for shared quality expectations rather than repeating them here.
 
 ## When to Use This Skill
 
@@ -62,20 +62,23 @@ Unit tests, integration tests, manual testing, coverage impact.
 
 API changes, config changes, dependency version changes, schema changes.
 
+Identify any required migration work such as config changes, rollout order, data backfills, operator actions, or compatibility notes.
+
 ### Step 7: Generate The Description
 
-Use the template and wording rules from [code-review-standards](../code-review-standards/). Include only sections that are relevant to the change:
+Start from [../../pull_request_template.md](../../pull_request_template.md) and follow the wording rules from [code-review-standards](../code-review-standards/). Remove sections that do not apply, and ensure the final PR description covers the same information required by the template:
 
 - **Summary**: 2-3 sentences
 - **What Changed**: Group related changes instead of listing files
 - **Why**: User or system impact
 - **How to Test**: Actual verification performed
 - **Breaking Changes**: Only when applicable
+- **Migration**: Required rollout, upgrade, backfill, or operator steps
 - **Related**: Issues, design docs, or follow-up work
 
 ### Step 8: Review and Validate
 
-Ensure completeness, technical accuracy, valid links, and that testing matches actual work. Do not repeat generic review or clean-code checklists from the referenced documents.
+Ensure completeness, technical accuracy, valid links, and that testing matches actual work. Confirm that the final description stays in sync with [../../pull_request_template.md](../../pull_request_template.md) and does not repeat generic review or clean-code checklists from the referenced documents.
 
 ## Edge Cases
 
@@ -86,5 +89,6 @@ Ensure completeness, technical accuracy, valid links, and that testing matches a
 
 ## Related Resources
 
+- [Pull request template](../../pull_request_template.md)
 - [code-review-standards](../code-review-standards/)
 - [Engineering guidelines](../../instructions/engineering.instructions.md)
