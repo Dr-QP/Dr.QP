@@ -114,7 +114,7 @@ See [`.github/workflows/copilot.yml`](../workflows/copilot.yml) for details.
 
 Example "good" and "bad" skills are defined inline in the unit tests using
 temporary directories (via `tmp_path` fixtures), rather than checked-in
-fixture files. Refer to the tests under `py_packages/validate_agent_files/tests/validate_skills/` for concrete examples
+fixture files. Refer to the tests under `py_packages/validate_agent_files/tests/` for concrete examples
 of valid and invalid `SKILL.md` definitions.
 
 ## Skill Catalog
