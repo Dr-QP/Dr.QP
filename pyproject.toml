@@ -17,7 +17,7 @@ dev = [
   "pytest>=7.0.0",
   "pytest-cov>=7.0.0",
   "pytest-xdist>=3.8.0",
-  "validate_agents",
+  "validate_agent_files",
 ]
 docs = [
   { include-group = "notebooks" },
@@ -54,5 +54,5 @@ package = false
 default-groups = ["dev", "docs"]
 
 [tool.uv.sources]
-validate_agents = { path = "py_packages/validate_agents", editable = true }
+validate_agent_files = { path = "py_packages/validate_agent_files", editable = true }
 drqp_brain = { path = "packages/runtime/drqp_brain", editable = true }
