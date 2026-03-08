@@ -181,11 +181,11 @@ def _find_matching_files(path: str, suffix: str) -> List[str]:
         return []
 
     matches: List[str] = []
-    for root, dirs, files in candidate.walk():
+    for root, dirs, files in os.walk(candidate):
         dirs[:] = [dirname for dirname in dirs if dirname not in EXCLUDED_DIRS]
         for filename in files:
             if filename.endswith(suffix):
-                matches.append(str(root / filename))
+                matches.append(str(Path(root) / filename))
 
     return sorted(matches)
 

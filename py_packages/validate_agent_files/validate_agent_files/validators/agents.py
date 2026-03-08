@@ -118,6 +118,9 @@ def build_known_agent_targets(agent_documents: Dict[str, dict]) -> Set[str]:
     targets: Set[str] = set()
     for file_path, frontmatter in agent_documents.items():
         targets.add(file_path)
+        identifier = frontmatter.get('_identifier')
+        if isinstance(identifier, str) and identifier.strip():
+            targets.add(identifier.strip())
         name = frontmatter.get('name')
         if isinstance(name, str) and name.strip():
             targets.add(name.strip())

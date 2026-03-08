@@ -5,7 +5,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-import tomllib
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - Python < 3.11
+    import tomli as tomllib
 
 from validate_agent_files.main import main as validate_agent_files_main
 
@@ -36,8 +40,11 @@ def test_issue310_registers_validate_agent_files_cli() -> None:
     assert scripts == {'validate_agent_files': 'validate_agent_files.__main__:main'}
 
 
-def test_issue310_validate_agent_files_can_limit_to_skills(tmp_path: Path, capsys) -> None:
+def test_issue310_validate_agent_files_can_limit_to_skills(
+    tmp_path: Path, capsys, monkeypatch
+) -> None:
     """The canonical CLI should ignore agents and prompts when kind=skills."""
+    monkeypatch.setattr('validate_agent_files.core.skills_ref_validate', lambda _: [])
     _write_valid_skill(tmp_path / 'valid-skill', 'valid-skill')
 
     (tmp_path / 'broken.agent.md').write_text(
@@ -65,9 +72,10 @@ model: GPT-5.4
 
 
 def test_issue310_validate_agent_files_scans_skills_agents_and_prompts(
-    tmp_path: Path, capsys
+    tmp_path: Path, capsys, monkeypatch
 ) -> None:
     """The canonical CLI should validate all supported customization kinds."""
+    monkeypatch.setattr('validate_agent_files.core.skills_ref_validate', lambda _: [])
     _write_valid_skill(tmp_path / 'valid-skill', 'valid-skill')
 
     (tmp_path / 'broken.agent.md').write_text(

@@ -99,3 +99,40 @@ handoffs:
 
     assert exit_code == 1
     assert 'does-not-exist' in captured.out
+
+
+def test_issue310_agent_validation_accepts_stem_handoff_targets(
+    tmp_path: Path, capsys
+) -> None:
+    """Handoffs should accept the target agent file stem as an identifier."""
+    (tmp_path / 'principal-engineer.agent.md').write_text(
+        """---
+name: Principal Engineer
+description: Valid description.
+model: GPT-5.4
+tools: [read]
+---
+
+# Principal Engineer
+"""
+    )
+    (tmp_path / 'delegator.agent.md').write_text(
+        """---
+name: Delegator
+description: Valid description.
+model: GPT-5.4
+tools: [read]
+handoffs:
+  - label: Delegate
+    agent: principal-engineer
+---
+
+# Delegator
+"""
+    )
+
+    exit_code = main([str(tmp_path), '--kind', 'agents'])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert 'references unknown agent' not in captured.out
