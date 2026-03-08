@@ -6,7 +6,7 @@ services:
     # as well as for allowing privileged access to the host's GPU for hardware-accelerated rendering in Gazebo and RViz.
     # As well as access to host's devices for hardware access (e.g. TTY servos).
     # Note: Using privileged mode grants the container elevated permissions, which can pose security risks. Use with caution and only in trusted environments.
-    privileged: true 
+    privileged: true
 
     volumes:
       # Volumes for git worktree
@@ -18,7 +18,7 @@ services:
     command: ['sleep', 'infinity']
 
     ######################################################################
-    # Enabling host PID affects isolation and doesn't allow XPRA to run in multiple VScode windows without conflicts. 
+    # Enabling host PID affects isolation and doesn't allow XPRA to run in multiple VScode windows without conflicts.
     #
     # Note:
     # This can have security implications as it allows processes inside the container to access shared memory segments on the host

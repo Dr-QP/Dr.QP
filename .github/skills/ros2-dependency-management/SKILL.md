@@ -251,15 +251,15 @@ python3 -m pip list
 
 ## Troubleshooting
 
-| Issue                           | Cause                                            | Solution                                                            |
-| ------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------- |
-| "rosdep: command not found"     | ROS 2 not installed                              | Install ROS 2 Jazzy first                                           |
-| "package not found in registry" | Package not in rosdep registry                   | Use pip or install from source                                      |
-| Python package import fails     | venv not activated or package not installed      | Run `uv sync` and then `source .venv/bin/activate`                  |
-| "Permission denied" on install  | User lacks write permission                      | Use `sudo` or fix directory permissions                             |
-| Circular dependency errors      | Package depends on itself transitively           | Review `package.xml` dependencies                                   |
-| Stale dependency cache          | Old dependency versions cached                   | Run `rosdep update` and `pip cache purge`                           |
-| Version conflicts               | Different packages require incompatible versions | Review version constraints and update `setup.py`                    |
+| Issue                           | Cause                                            | Solution                                           |
+| ------------------------------- | ------------------------------------------------ | -------------------------------------------------- |
+| "rosdep: command not found"     | ROS 2 not installed                              | Install ROS 2 Jazzy first                          |
+| "package not found in registry" | Package not in rosdep registry                   | Use pip or install from source                     |
+| Python package import fails     | venv not activated or package not installed      | Run `uv sync` and then `source .venv/bin/activate` |
+| "Permission denied" on install  | User lacks write permission                      | Use `sudo` or fix directory permissions            |
+| Circular dependency errors      | Package depends on itself transitively           | Review `package.xml` dependencies                  |
+| Stale dependency cache          | Old dependency versions cached                   | Run `rosdep update` and `pip cache purge`          |
+| Version conflicts               | Different packages require incompatible versions | Review version constraints and update `setup.py`   |
 
 ## References
 
