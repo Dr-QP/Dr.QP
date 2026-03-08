@@ -19,117 +19,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Core validation engine for skills."""
+"""Compatibility wrapper for validate_agents.core."""
 
-from pathlib import Path
-from typing import Dict
-
-import yaml
-
-from .loaders import safe_load_frontmatter, safe_load_frontmatter_with_body_line
-from .types import ValidationIssue, ValidationLevel, ValidationResult
-from .validators.cross_reference import CrossReferenceValidator
-from .validators.uniqueness import UniquenessValidator
-
-
-def skills_ref_validate(skill_dir: Path | str) -> list[str]:
-    """Validate a skill directory using the upstream skills-ref package."""
-    skill_dir = Path(skill_dir)
-    try:
-        from skills_ref import validate as validate_skill
-        from skills_ref.validator import validate_metadata
-    except ImportError as exc:
-        return [f'Unable to import skills-ref: {exc}']
-
-    errors = list(validate_skill(skill_dir))
-
-    if not errors:
-        return errors
-
-    skill_file = skill_dir / 'SKILL.md'
-    if not skill_file.exists():
-        return errors
-
-    try:
-        frontmatter, _ = safe_load_frontmatter(str(skill_file))
-    except (OSError, UnicodeDecodeError, yaml.YAMLError):
-        return errors
-
-    normalized_errors = list(validate_metadata(frontmatter, skill_dir))
-    if not normalized_errors:
-        return []
-
-    return normalized_errors
-
-
-class ValidationEngine:
-    """Orchestrates validation of skills."""
-
-    def __init__(self, show_warnings: bool = False, show_info: bool = False):
-        """Initialize the validation engine."""
-        self.show_warnings = show_warnings
-        self.show_info = show_info
-
-    def validate(self, skill_path: str, all_skills: Dict = None) -> ValidationResult:
-        """
-        Validate a single skill file.
-
-        Args:
-            skill_path: Path to the skill file
-            all_skills: Dict of all skills for cross-validation
-
-        Returns:
-            ValidationResult with any issues found
-
-        """
-        all_skills = all_skills or {}
-        result = ValidationResult(skill_path=skill_path, issues=[])
-
-        try:
-            frontmatter, body, body_start_line = safe_load_frontmatter_with_body_line(skill_path)
-        except (OSError, UnicodeDecodeError, yaml.YAMLError) as e:
-            result.issues.append(
-                ValidationIssue(
-                    level=ValidationLevel.ERROR,
-                    message=f'Failed to parse file: {e}',
-                    section='parsing',
-                )
-            )
-            return result
-
-        skill_dir = Path(skill_path).parent
-        for message in skills_ref_validate(skill_dir):
-            result.issues.append(
-                ValidationIssue(
-                    level=ValidationLevel.ERROR,
-                    message=message,
-                    section='skills_ref',
-                )
-            )
-
-        unique_validator = UniquenessValidator(all_skills=all_skills)
-        result.issues.extend(
-            unique_validator.validate(
-                skill_path=skill_path,
-                metadata=frontmatter,
-                content=body,
-            )
-        )
-
-        xref_validator = CrossReferenceValidator(
-            base_path=str(skill_dir), show_warnings=self.show_warnings
-        )
-        result.issues.extend(
-            xref_validator.validate(
-                skill_path=skill_path,
-                metadata=frontmatter,
-                content=body,
-                line_offset=body_start_line - 1,
-            )
-        )
-
-        return result
-
+from ..core import (
+    ValidationEngine,
+    ValidationIssue,
+    ValidationLevel,
+    ValidationResult,
+    skills_ref_validate,
+)
 
 __all__ = [
     'ValidationEngine',

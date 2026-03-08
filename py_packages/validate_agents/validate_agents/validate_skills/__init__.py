@@ -19,14 +19,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Public API for the validate-skills package."""
+"""Compatibility exports for the historical validate_skills package."""
 
-from .core import ValidationEngine
-from .loaders import SkillFileLoader
-from .types import ValidationResult
+from ..core import ValidationEngine, ValidationResult
+from ..loaders import SkillFileLoader
 
-__all__ = [
-    'ValidationEngine',
-    'ValidationResult',
-    'SkillFileLoader',
-]
+__all__ = ['ValidationEngine', 'ValidationResult', 'SkillFileLoader']

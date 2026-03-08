@@ -8,8 +8,8 @@ import sys
 from typing import List, Optional
 
 from .cli import parse_arguments
-from .validate_customizations.core import CustomizationsValidationEngine
-from .validate_skills.formatters import format_results
+from .core import CustomizationsValidationEngine
+from .formatters import format_results
 
 
 def main(args: Optional[List[str]] = None) -> int:
