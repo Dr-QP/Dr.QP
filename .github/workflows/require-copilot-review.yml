@@ -1,0 +1,86 @@
+name: require-copilot-review
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - review_requested
+      - review_request_removed
+  pull_request_review:
+    types:
+      - submitted
+      - dismissed
+      - edited
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  copilot-review-present:
+    name: copilot-review-present
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verify Copilot reviewed current head
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              core.setFailed('No pull_request in event payload');
+              return;
+            }
+
+            // Optional: skip drafts if you do not want to block drafts
+            // if (pr.draft) {
+            //   core.info('Draft PR, skipping');
+            //   return;
+            // }
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number = pr.number;
+            const headSha = pr.head.sha;
+
+            const reviews = await github.paginate(
+              github.rest.pulls.listReviews,
+              {
+                owner,
+                repo,
+                pull_number,
+                per_page: 100,
+              }
+            );
+
+            const copilotLogins = new Set([
+              'copilot-pull-request-reviewer[bot]',
+            ]);
+
+            // Require a submitted Copilot review for the current head SHA.
+            // This avoids accepting an old review after new commits were pushed.
+            const matchingReview = reviews.find((review) => {
+              const login = review.user?.login;
+              const state = review.state;
+              const commitId = review.commit_id;
+              return (
+                copilotLogins.has(login) &&
+                state &&
+                state !== 'PENDING' &&
+                commitId === headSha
+              );
+            });
+
+            if (!matchingReview) {
+              core.setFailed(
+                `Copilot has not reviewed current head commit ${headSha}.`
+              );
+              return;
+            }
+
+            core.info(
+              `Found Copilot review by ${matchingReview.user.login} for ${matchingReview.commit_id} with state ${matchingReview.state}.`
+            );
