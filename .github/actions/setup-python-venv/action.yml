@@ -27,7 +27,7 @@ runs:
 
     - name: Install dependencies with uv
       shell: bash
-      run: uv sync --dev --frozen
+      run: uv sync --all-groups --all-extras --frozen
 
     - name: Minimize uv cache
       shell: bash
