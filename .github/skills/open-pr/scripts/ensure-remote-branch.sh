@@ -8,6 +8,7 @@ source "${script_dir}/__common.sh"
 
 remote_name="origin"
 branch_name=""
+remote_was_explicit=0
 
 usage() {
   show_help_header "Ensure the current branch exists on the remote and push if needed."
@@ -38,6 +39,7 @@ while [[ $# -gt 0 ]]; do
     --remote)
       [[ $# -ge 2 ]] || { print_error "Missing value for --remote"; exit 2; }
       remote_name="$2"
+      remote_was_explicit=1
       shift 2
       ;;
     --branch)
@@ -80,6 +82,15 @@ fi
 
 upstream_ref=""
 if upstream_ref="$(git rev-parse --abbrev-ref --symbolic-full-name "${branch_name}@{u}" 2>/dev/null)"; then
+  upstream_remote="${upstream_ref%%/*}"
+  upstream_branch="${upstream_ref#*/}"
+
+  if [[ "${remote_was_explicit}" -eq 1 && "${upstream_remote}" != "${remote_name}" ]]; then
+    print_error "Configured upstream remote '${upstream_remote}' does not match --remote '${remote_name}'."
+    printf 'Please either rerun the command with --remote %s or update the branch upstream before continuing.\n' "${upstream_remote}" >&2
+    exit 2
+  fi
+
   ahead_count="$(git rev-list --count "${upstream_ref}..${branch_name}")"
   behind_count="$(git rev-list --count "${branch_name}..${upstream_ref}")"
 
@@ -88,11 +99,18 @@ if upstream_ref="$(git rev-parse --abbrev-ref --symbolic-full-name "${branch_nam
   printf 'AHEAD=%s\n' "${ahead_count}"
   printf 'BEHIND=%s\n' "${behind_count}"
 
-  if [[ "${behind_count}" -gt 0 ]]; then
+  if [[ "${behind_count}" -gt 0 && "${ahead_count}" -gt 0 ]]; then
     print_error "Cannot push: your branch has diverged from remote."
     printf 'Please resolve conflicts by merging the remote branch into your local branch:\n' >&2
-    printf '  git pull %s %s\n' "${remote_name}" "${branch_name}" >&2
+    printf '  git pull %s %s\n' "${upstream_remote}" "${upstream_branch}" >&2
     printf 'Then resolve any merge conflicts, commit the merge, and run:\n' >&2
+    printf '  git push\n' >&2
+    exit 3
+  elif [[ "${behind_count}" -gt 0 ]]; then
+    print_error "Cannot push: your branch is behind its upstream remote."
+    printf 'Please update your local branch from the configured upstream (a fast-forward pull is usually sufficient):\n' >&2
+    printf '  git pull --ff-only %s %s\n' "${upstream_remote}" "${upstream_branch}" >&2
+    printf 'Then run:\n' >&2
     printf '  git push\n' >&2
     exit 3
   fi

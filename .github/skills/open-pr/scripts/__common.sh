@@ -28,9 +28,6 @@ is_default_branch() {
 show_help_header() {
   local description="$1"
 
-  cat <<EOF
-${description}
-
-Skill root: ${skill_root_dir}
-EOF
+  printf '%s\n\n' "${description}"
+  printf 'Skill root: %s\n' "${skill_root_dir}"
 }

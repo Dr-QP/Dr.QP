@@ -159,12 +159,14 @@ Run the bundled helper:
 .github/skills/open-pr/scripts/ensure-remote-branch.sh
 ```
 
-The script handles these cases exactly:
+The script handles these cases:
 
-- no upstream branch: pushes with `-u origin <branch>`
-- local branch ahead of upstream: pushes changes
+- no upstream branch: pushes with `-u <remote> <branch>` using the configured `--remote` value or the default remote
+- local branch ahead of upstream: pushes changes to the configured upstream
 - branch up to date: exits successfully without pushing
-- branch behind or diverged: exits non-zero with the exact recovery instructions to show the user
+- branch behind its upstream: exits non-zero with fast-forward recovery instructions
+- branch diverged from upstream: exits non-zero with merge-based recovery instructions
+- `--remote` conflicts with the configured upstream remote: exits non-zero so the user can reconcile the remote selection
 - current branch is `main` or `master`: exits with a warning so the agent can ask for confirmation before continuing
 
 Use `--remote <name>` or `--branch <name>` when the default remote or branch should be overridden.
