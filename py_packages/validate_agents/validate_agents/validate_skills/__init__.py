@@ -21,13 +21,11 @@
 
 """Public API for the validate-skills package."""
 
-from .cli import parse_arguments
 from .core import ValidationEngine
 from .loaders import SkillFileLoader
 from .types import ValidationResult
 
 __all__ = [
-    'parse_arguments',
     'ValidationEngine',
     'ValidationResult',
     'SkillFileLoader',
