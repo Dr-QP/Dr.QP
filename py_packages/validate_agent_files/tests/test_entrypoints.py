@@ -31,7 +31,7 @@ See [guide](guide.md).
 
 def test_issue310_registers_validate_agent_files_cli() -> None:
     """The package should expose only the canonical validation entry point."""
-    pyproject_path = Path(__file__).resolve().parents[2] / 'pyproject.toml'
+    pyproject_path = Path(__file__).resolve().parents[1] / 'pyproject.toml'
     with pyproject_path.open('rb') as stream:
         pyproject = tomllib.load(stream)
 

@@ -87,7 +87,7 @@ class TestTextFormatter:
         summary = formatter.format_summary(results)
 
         assert isinstance(summary, str)
-        assert '1' in summary or '2' in summary  # Should mention counts
+        assert '1' in summary or '2' in summary
 
     def test_text_formatter_includes_line_and_column(self):
         """Should render issues in file:line:column format when available."""
@@ -155,7 +155,6 @@ class TestJSONFormatter:
         formatter = JSONFormatter()
         output = formatter.format_result(result)
 
-        # Should be valid JSON
         parsed = json.loads(output)
         assert isinstance(parsed, dict)
 
@@ -201,7 +200,7 @@ class TestCSVFormatter:
         output = formatter.get_header()
 
         assert isinstance(output, str)
-        assert ',' in output or ';' in output  # Should be delimited
+        assert ',' in output or ';' in output
 
     def test_csv_formatter_data_row(self):
         """Should format result as CSV row."""
@@ -245,7 +244,6 @@ class TestCSVFormatter:
         output = formatter.format_result(result)
 
         assert isinstance(output, str)
-        # Should handle special characters
 
 
 class TestFormatResults:
@@ -273,7 +271,6 @@ class TestFormatResults:
         ]
 
         output = format_results(results, format='json')
-        # Should be valid JSON
         parsed = json.loads(output)
         assert parsed is not None
 
@@ -289,7 +286,6 @@ class TestFormatResults:
         output = format_results(results, format='csv')
         assert isinstance(output, str)
         lines = output.split('\n')
-        # Should have header + data rows
         assert len(lines) >= 1
 
     def test_format_results_invalid_format(self):
@@ -331,7 +327,8 @@ class TestFormatterEdgeCases:
         )
 
         issues = [
-            ValidationIssue(level=ValidationLevel.ERROR, message=f'Error {i}') for i in range(100)
+            ValidationIssue(level=ValidationLevel.ERROR, message=f'Error {index}')
+            for index in range(100)
         ]
         result = ValidationResult(skill_path='/path/SKILL.md', issues=issues)
 
