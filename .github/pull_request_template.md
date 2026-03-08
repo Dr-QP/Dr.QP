@@ -23,6 +23,10 @@ Explain the user, system, or maintenance impact.
 
 - None.
 
+## Migration
+
+- None.
+
 ## Related
 
 - Closes #
