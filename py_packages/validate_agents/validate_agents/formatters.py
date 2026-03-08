@@ -7,7 +7,7 @@ import io
 import json
 from typing import List
 
-from .types import ValidationLevel, ValidationResult
+from .types import ValidationIssue, ValidationLevel, ValidationResult
 
 
 class TextFormatter:
@@ -26,7 +26,7 @@ class TextFormatter:
 
         return '\n'.join(lines)
 
-    def _format_issue(self, skill_path: str, issue: object) -> str:
+    def _format_issue(self, skill_path: str, issue: ValidationIssue) -> str:
         section_info = f' [{issue.section}]' if issue.section else ''
 
         if issue.line_number and issue.column_number:
