@@ -111,7 +111,7 @@ class SkillFrontmatterValidator:
                                 level=ValidationLevel.WARNING,
                                 message=(
                                     'Description contains vague terms: '
-                                    f"{', '.join(found_vague)}. Be specific about capabilities."
+                                    f'{", ".join(found_vague)}. Be specific about capabilities.'
                                 ),
                                 section='frontmatter',
                             )

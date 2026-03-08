@@ -44,10 +44,16 @@ class TextFormatter:
         total = len(results)
         valid = sum(1 for result in results if result.is_valid)
         warnings = sum(
-            1 for result in results for issue in result.issues if issue.level == ValidationLevel.WARNING
+            1
+            for result in results
+            for issue in result.issues
+            if issue.level == ValidationLevel.WARNING
         )
         errors = sum(
-            1 for result in results for issue in result.issues if issue.level == ValidationLevel.ERROR
+            1
+            for result in results
+            for issue in result.issues
+            if issue.level == ValidationLevel.ERROR
         )
 
         lines = [

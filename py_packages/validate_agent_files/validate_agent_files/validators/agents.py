@@ -9,7 +9,9 @@ from typing import Dict, Iterable, List, Set
 from ..types import ValidationIssue, ValidationLevel
 
 
-def validate_agent_frontmatter(frontmatter: dict, known_targets: Set[str]) -> List[ValidationIssue]:
+def validate_agent_frontmatter(
+    frontmatter: dict, known_targets: Set[str]
+) -> List[ValidationIssue]:
     issues: List[ValidationIssue] = []
 
     description = frontmatter.get('description')
@@ -62,7 +64,9 @@ def validate_agent_frontmatter(frontmatter: dict, known_targets: Set[str]) -> Li
     return issues
 
 
-def validate_handoff(handoff: object, known_targets: Set[str], index: int) -> Iterable[ValidationIssue]:
+def validate_handoff(
+    handoff: object, known_targets: Set[str], index: int
+) -> Iterable[ValidationIssue]:
     if not isinstance(handoff, dict):
         yield ValidationIssue(
             level=ValidationLevel.ERROR,

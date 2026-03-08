@@ -10,9 +10,7 @@ from typing import List, Optional
 
 def parse_arguments(args: Optional[List[str]] = None) -> argparse.Namespace:
     """Parse command-line arguments for repository customization validation."""
-    parser = argparse.ArgumentParser(
-        description='Validate repository skills, agents, and prompts'
-    )
+    parser = argparse.ArgumentParser(description='Validate repository skills, agents, and prompts')
 
     parser.add_argument(
         'path',

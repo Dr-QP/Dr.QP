@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-
 import tomllib
 
 from validate_agent_files.main import main as validate_agent_files_main
@@ -37,9 +36,7 @@ def test_issue310_registers_validate_agent_files_cli() -> None:
     assert scripts == {'validate_agent_files': 'validate_agent_files.__main__:main'}
 
 
-def test_issue310_validate_agent_files_can_limit_to_skills(
-    tmp_path: Path, capsys
-) -> None:
+def test_issue310_validate_agent_files_can_limit_to_skills(tmp_path: Path, capsys) -> None:
     """The canonical CLI should ignore agents and prompts when kind=skills."""
     _write_valid_skill(tmp_path / 'valid-skill', 'valid-skill')
 

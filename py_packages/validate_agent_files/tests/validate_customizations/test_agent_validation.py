@@ -66,9 +66,7 @@ handoffs:
     assert 'handoffs' in captured.out
 
 
-def test_issue310_agent_validation_checks_handoff_target_exists(
-    tmp_path: Path, capsys
-) -> None:
+def test_issue310_agent_validation_checks_handoff_target_exists(tmp_path: Path, capsys) -> None:
     """Handoffs should resolve to an existing agent by file stem or name."""
     (tmp_path / 'existing.agent.md').write_text(
         """---

@@ -51,7 +51,9 @@ def validate_prompt_body(body: str) -> List[ValidationIssue]:
     ]
 
 
-def validate_prompt_references(file_path: str, body: str, line_offset: int) -> List[ValidationIssue]:
+def validate_prompt_references(
+    file_path: str, body: str, line_offset: int
+) -> List[ValidationIssue]:
     issues: List[ValidationIssue] = []
     base_dir = Path(file_path).parent
     for match in FILE_REFERENCE_PATTERN.finditer(body):

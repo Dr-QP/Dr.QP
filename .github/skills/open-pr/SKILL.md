@@ -1,6 +1,6 @@
 ---
 name: open-pr
-description: "Create GitHub pull requests from conversation context with accurate title/body generation, user confirmation, branch sync, and remote verification. Use when asked to open/create/submit a PR, draft a pull request, or finalize changes after implementation. Keywords: open pr, create pr, submit pr, pull request, github pr, draft pr, ready for review."
+description: 'Create GitHub pull requests from conversation context with accurate title/body generation, user confirmation, branch sync, and remote verification. Use when asked to open/create/submit a PR, draft a pull request, or finalize changes after implementation. Keywords: open pr, create pr, submit pr, pull request, github pr, draft pr, ready for review.'
 ---
 
 # Open PR
