@@ -101,9 +101,7 @@ handoffs:
     assert 'does-not-exist' in captured.out
 
 
-def test_issue310_agent_validation_accepts_stem_handoff_targets(
-    tmp_path: Path, capsys
-) -> None:
+def test_issue310_agent_validation_accepts_stem_handoff_targets(tmp_path: Path, capsys) -> None:
     """Handoffs should accept the target agent file stem as an identifier."""
     (tmp_path / 'principal-engineer.agent.md').write_text(
         """---
