@@ -1,4 +1,4 @@
-name: require-copilot-review
+name: Require Copilot Review
 
 on:
   pull_request:
