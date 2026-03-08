@@ -37,6 +37,13 @@ The open-pr skill is responsible for:
 - remote branch verification
 - GitHub PR creation through MCP
 
+## Bundled Scripts
+
+Use these exact helper scripts instead of retyping inline shell commands:
+
+- [review-git-changes.sh](scripts/review-git-changes.sh) reviews the working tree, diff stats, patch, and commit log for the PR context.
+- [ensure-remote-branch.sh](scripts/ensure-remote-branch.sh) verifies upstream tracking, pushes the branch when needed, and blocks on divergence.
+
 The detailed PR description structure, section requirements, and quality checks
 are defined in the [generate-pr-description](../generate-pr-description/) skill
 and **MUST NOT** be duplicated here.
@@ -68,17 +75,11 @@ Context signals for PR type:
 **CRITICAL:** Before drafting the PR, the AI agent **MUST** review actual git changes:
 
 ```bash
-# Check what files have changed
-git status
-
-# Review the actual changes
-git diff
-
-# Check commit history on current branch
-git log origin/main..HEAD --oneline
+.github/skills/open-pr/scripts/review-git-changes.sh
 ```
 
-This ensures the PR description accurately reflects the actual code changes.
+Use `--base-ref <ref>` or `--range <range>` when the comparison base is not `origin/main`.
+This script ensures the PR description accurately reflects the actual code changes.
 
 ### 3. Optional Issue Linking
 
@@ -152,52 +153,23 @@ ask the user to resolve or confirm conflict decisions first.
 
 **CRITICAL:** Before creating the PR, verify the current branch exists on the remote repository.
 
-Check if the current branch is tracking a remote branch:
+Run the bundled helper:
 
 ```bash
-# Check if current branch has an upstream branch
-git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null
+.github/skills/open-pr/scripts/ensure-remote-branch.sh
 ```
 
-**If the command fails (no upstream branch):**
+The script handles these cases exactly:
 
-1. Get the current branch name:
-   ```bash
-   git branch --show-current
-   ```
-2. Push the branch with tracking:
-   ```bash
-   git push -u origin <branch-name>
-   ```
-3. Confirm to user: "Pushed branch to remote: origin/<branch-name>"
+- no upstream branch: pushes with `-u origin <branch>`
+- local branch ahead of upstream: pushes changes
+- branch up to date: exits successfully without pushing
+- branch behind or diverged: exits non-zero with the exact recovery instructions to show the user
+- current branch is `main` or `master`: exits with a warning so the agent can ask for confirmation before continuing
 
-**If the command succeeds (upstream branch exists):**
+Use `--remote <name>` or `--branch <name>` when the default remote or branch should be overridden.
 
-1. Check if local is ahead of remote:
-   ```bash
-   git status --porcelain --branch
-   ```
-2. If output contains `[ahead N]`, push changes:
-   ```bash
-   git push
-   ```
-3. If up-to-date, continue to PR creation
-
-**Error handling:**
-
-- If push fails due to authentication:
-  ```
-  Git push failed. Please check your Git credentials.
-  ```
-- If push fails due to conflicts:
-  ```
-  Cannot push: your branch has diverged from remote.
-  Please resolve conflicts by merging the remote branch into your local branch:
-    git pull origin <branch-name>
-  Then resolve any merge conflicts, commit the merge, and run:
-    git push
-  ```
-- For other push failures: Display the error and abort PR creation
+If the script exits non-zero, display its actionable error output and abort PR creation.
 
 ### 8. GitHub PR Creation (MCP)
 
