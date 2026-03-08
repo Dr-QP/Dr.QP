@@ -1,7 +1,6 @@
 ---
 name: code-review-standards
 description: Apply code review standards and write high-quality pull request descriptions. Use when asked to review code, write PR descriptions, create commit messages, or submit pull requests. Enforces imperative language, comprehensive descriptions, PR best practices, and clean code principles.
-
 ---
 
 # Code Review Standards
@@ -48,11 +47,13 @@ This skill covers review-specific workflow and PR-writing structure. Do not rest
 Create a comprehensive pull request description.
 
 1. Start with concise summary (1-2 lines):
+
    ```
    Add timeout handling to serial communication driver
    ```
 
 2. Add "What changed" section describing modifications:
+
    ```markdown
    ## What Changed
 
@@ -63,6 +64,7 @@ Create a comprehensive pull request description.
    ```
 
 3. Add "Why" section explaining motivation:
+
    ```markdown
    ## Why
 
@@ -72,6 +74,7 @@ Create a comprehensive pull request description.
    ```
 
 4. Add "How to test" section with verification steps:
+
    ```markdown
    ## How to Test
 
@@ -82,6 +85,7 @@ Create a comprehensive pull request description.
    ```
 
 5. Add "Related issues" if applicable:
+
    ```markdown
    ## Related Issues
 
@@ -90,6 +94,7 @@ Create a comprehensive pull request description.
    ```
 
 6. Add "Breaking changes" if any:
+
    ```markdown
    ## Breaking Changes
 
@@ -114,6 +119,7 @@ Evaluate code changes against the shared engineering standards, then focus your 
 Write helpful, actionable review comments.
 
 **Good feedback example:**
+
 ```
 The mutex lock here could be a deadlock risk if `process_data()`
 throws an exception. Consider using RAII pattern or try/finally
@@ -121,6 +127,7 @@ to ensure lock is always released.
 ```
 
 **Poor feedback example:**
+
 ```
 This is bad. Fix it.
 ```
@@ -164,6 +171,7 @@ Update PR based on code review feedback.
 
 1. Make requested code changes
 2. Commit with clear message:
+
    ```bash
    git commit -m "Address review feedback: simplify error handling logic"
    ```
@@ -213,17 +221,16 @@ Relates to #45
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| PR description too technical | Add "Why" section explaining user impact |
-| Feedback seems nitpicky | Consider if it genuinely improves maintainability |
-| Author defensive about feedback | Keep tone neutral; focus on code, not person |
-| Conflicting feedback from reviewers | Discuss in thread; find consensus or escalate |
-| Changes seem unnecessary | Ask for clarification of impact/rationale |
-| Too many comments per review | Prioritize critical issues; discuss style separately |
+| Issue                               | Solution                                             |
+| ----------------------------------- | ---------------------------------------------------- |
+| PR description too technical        | Add "Why" section explaining user impact             |
+| Feedback seems nitpicky             | Consider if it genuinely improves maintainability    |
+| Author defensive about feedback     | Keep tone neutral; focus on code, not person         |
+| Conflicting feedback from reviewers | Discuss in thread; find consensus or escalate        |
+| Changes seem unnecessary            | Ask for clarification of impact/rationale            |
+| Too many comments per review        | Prioritize critical issues; discuss style separately |
 
 ## References
 
 - [Shared engineering guidelines](../../instructions/engineering.instructions.md)
 - [Generate pull request description](../generate-pr-description/)
-
