@@ -5,7 +5,14 @@
 from __future__ import annotations
 
 from pathlib import Path
+import runpy
+import sys
+from types import ModuleType
 
+import pytest
+import yaml
+
+from validate_agent_files.core import ValidationEngine, skills_ref_validate
 try:
     import tomllib
 except ModuleNotFoundError:  # pragma: no cover - Python < 3.11
@@ -100,3 +107,52 @@ model: GPT-5.4
     assert exit_code == 1
     assert 'broken.agent.md' in captured.out
     assert 'broken.prompt.md' in captured.out
+
+
+def test_issue310_validate_agent_files_module_exits_with_main_return_code(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Running the module should exit with the return code from main."""
+    monkeypatch.setattr('validate_agent_files.main.main', lambda: 7)
+    sys.modules.pop('validate_agent_files.__main__', None)
+
+    with pytest.raises(SystemExit) as excinfo:
+        runpy.run_module('validate_agent_files.__main__', run_name='__main__')
+
+    assert excinfo.value.code == 7
+
+
+def test_issue310_skills_ref_validate_wraps_upstream_validate(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The wrapper should coerce the input to Path and materialize iterable output."""
+    seen_paths: list[Path] = []
+    fake_module = ModuleType('skills_ref')
+
+    def fake_validate(skill_dir: Path):
+        seen_paths.append(skill_dir)
+        yield 'first'
+        yield 'second'
+
+    fake_module.validate = fake_validate
+    monkeypatch.setitem(sys.modules, 'skills_ref', fake_module)
+
+    assert skills_ref_validate('demo-skill') == ['first', 'second']
+    assert seen_paths == [Path('demo-skill')]
+
+
+def test_issue310_validation_engine_returns_parsing_issue_for_invalid_skill(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Skill validation should convert parser failures into a validation result."""
+    monkeypatch.setattr(
+        'validate_agent_files.core.safe_load_frontmatter_with_body_line',
+        lambda _: (_ for _ in ()).throw(yaml.YAMLError('broken yaml')),
+    )
+
+    result = ValidationEngine().validate('broken/SKILL.md')
+
+    assert result.is_valid is False
+    assert len(result.issues) == 1
+    assert result.issues[0].section == 'parsing'
+    assert 'Failed to parse file: broken yaml' == result.issues[0].message

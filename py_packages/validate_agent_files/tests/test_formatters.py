@@ -29,6 +29,7 @@ from validate_agent_files.formatters import (
     JSONFormatter,
     TextFormatter,
 )
+from validate_agent_files.types import ValidationIssue, ValidationLevel, ValidationResult
 
 
 class TestTextFormatter:
@@ -366,3 +367,62 @@ class TestFormatterEdgeCases:
         formatter = TextFormatter()
         output = formatter.format_result(result)
         assert isinstance(output, str)
+
+
+@pytest.mark.parametrize(
+    ('issue', 'expected'),
+    [
+        (
+            ValidationIssue(
+                level=ValidationLevel.ERROR,
+                message='Broken reference',
+                line_number=3,
+                column_number=9,
+                section='cross_reference',
+            ),
+            '  ✗ Broken reference [cross_reference] (line 3:9)',
+        ),
+        (
+            ValidationIssue(
+                level=ValidationLevel.WARNING,
+                message='Needs detail',
+                line_number=8,
+                section='frontmatter',
+            ),
+            '  ⚠ Needs detail [frontmatter] (line 8)',
+        ),
+        (
+            ValidationIssue(
+                level=ValidationLevel.INFO,
+                message='FYI',
+            ),
+            '  ℹ FYI',
+        ),
+    ],
+)
+def test_issue310_validation_issue_str_formats_prefix_section_and_location(
+    issue: ValidationIssue,
+    expected: str,
+) -> None:
+    """ValidationIssue.__str__ should include severity, section, and location."""
+    assert str(issue) == expected
+
+
+def test_issue310_validation_result_properties_and_str_track_errors_and_warnings() -> None:
+    """ValidationResult should derive validity and warning state from issues."""
+    warning_result = ValidationResult(
+        skill_path='warning.md',
+        issues=[ValidationIssue(level=ValidationLevel.WARNING, message='warning')],
+    )
+    error_result = ValidationResult(
+        skill_path='error.md',
+        issues=[ValidationIssue(level=ValidationLevel.ERROR, message='error')],
+    )
+
+    assert warning_result.is_valid is True
+    assert warning_result.has_warnings is True
+    assert str(warning_result) == '✓ warning.md'
+
+    assert error_result.is_valid is False
+    assert error_result.has_warnings is False
+    assert str(error_result) == '✗ error.md'

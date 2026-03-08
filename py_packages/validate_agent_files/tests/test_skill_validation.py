@@ -6,7 +6,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from validate_agent_files.main import main
+from validate_agent_files.validators.skill import (
+    SkillFrontmatterValidator,
+    SkillStructureValidator,
+)
 
 
 def _write_skill(skill_dir: Path, name: str, body: str) -> None:
@@ -106,3 +112,83 @@ def test_issue310_skill_validation_keeps_broken_link_check(
 
     assert exit_code == 1
     assert 'missing.md' in captured.out
+
+
+@pytest.mark.parametrize(
+    ('frontmatter', 'message'),
+    [
+        ({'description': 'Valid enough description'}, "Missing required field: 'name'"),
+        ({'name': 12, 'description': 'Valid enough description'}, 'Name must be a string, got: int'),
+        (
+            {'name': 'Not Valid', 'description': 'Valid enough description'},
+            "Name must be lowercase with hyphens (e.g., 'my-skill'), got: 'Not Valid'",
+        ),
+        (
+            {'name': 'a' * 65, 'description': 'Valid enough description'},
+            'Name exceeds maximum length of 64 characters',
+        ),
+        ({'name': 'valid-skill'}, "Missing required field: 'description'"),
+        ({'name': 'valid-skill', 'description': 12}, 'Description must be a string, got: int'),
+        ({'name': 'valid-skill', 'description': 'too short'}, 'Description must be at least 10 characters'),
+        (
+            {'name': 'valid-skill', 'description': 'a' * 1025},
+            'Description exceeds maximum length of 1024 characters',
+        ),
+    ],
+)
+def test_issue310_skill_frontmatter_validator_rejects_invalid_name_and_description_cases(
+    frontmatter: dict,
+    message: str,
+) -> None:
+    """Skill frontmatter validation should cover all error branches."""
+    issues = SkillFrontmatterValidator().validate(frontmatter)
+
+    assert [issue.section for issue in issues] == ['frontmatter']
+    assert issues[0].message == message
+
+
+def test_issue310_skill_frontmatter_validator_warns_on_vague_description_terms() -> None:
+    """Warning mode should flag vague terminology in descriptions."""
+    issues = SkillFrontmatterValidator().validate(
+        {
+            'name': 'valid-skill',
+            'description': 'This skill bundles helpers, tools, and various adapters.',
+        },
+        show_warnings=True,
+    )
+
+    assert len(issues) == 1
+    assert issues[0].level.value == 'warning'
+    assert 'various' in issues[0].message
+
+
+@pytest.mark.parametrize(
+    ('body', 'show_warnings', 'expected_level', 'expected_message'),
+    [
+        ('', False, 'error', 'Body content is empty'),
+        ('Paragraph only\n', False, 'error', "Missing required top-level header (e.g., '# Title')"),
+        ('# Title\n\nshort\n', True, 'warning', "Top-level section '# Title' appears to be empty or very short"),
+    ],
+)
+def test_issue310_skill_structure_validator_reports_problem_cases(
+    body: str,
+    show_warnings: bool,
+    expected_level: str,
+    expected_message: str,
+) -> None:
+    """Structure validation should cover empty, headerless, and short sections."""
+    issues = SkillStructureValidator().validate(body, show_warnings=show_warnings)
+
+    assert len(issues) == 1
+    assert issues[0].level.value == expected_level
+    assert issues[0].message == expected_message
+
+
+def test_issue310_skill_structure_validator_accepts_sufficient_top_section() -> None:
+    """A well-formed top section should not produce structure issues."""
+    issues = SkillStructureValidator().validate(
+        '# Title\n\nThis section contains more than enough detail to pass.\n',
+        show_warnings=True,
+    )
+
+    assert issues == []

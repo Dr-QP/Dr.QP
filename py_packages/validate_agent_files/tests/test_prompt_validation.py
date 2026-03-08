@@ -6,6 +6,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+import yaml
+
+from validate_agent_files.core import CustomizationsValidationEngine
+from validate_agent_files.loaders import CustomFileContent
 from validate_agent_files.main import main
 
 
@@ -61,3 +66,30 @@ Use #file:./missing.instructions.md before implementing.
 
     assert exit_code == 1
     assert 'missing.instructions.md' in captured.out
+
+
+def test_issue310_customizations_engine_reports_prompt_parse_and_no_frontmatter_paths(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Prompt validation should preserve parse failures and plain markdown failures."""
+    prompt_files = ['broken.prompt.md', 'plain.prompt.md']
+
+    def fake_load_custom_file(file_path: str) -> CustomFileContent:
+        if file_path == 'broken.prompt.md':
+            raise yaml.YAMLError('bad yaml')
+        return CustomFileContent(
+            frontmatter={},
+            body='# Plain Prompt\n',
+            body_start_line=1,
+            has_frontmatter=False,
+        )
+
+    monkeypatch.setattr('validate_agent_files.core.find_prompt_files', lambda _: prompt_files)
+    monkeypatch.setattr('validate_agent_files.core.load_custom_file', fake_load_custom_file)
+
+    results = CustomizationsValidationEngine()._validate_prompts('unused')
+
+    assert len(results) == 2
+    assert results[0].issues[0].section == 'parsing'
+    assert results[0].issues[0].message == 'Failed to parse file: bad yaml'
+    assert results[1].issues[0].message == 'File must start with YAML frontmatter'
