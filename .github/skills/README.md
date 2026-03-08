@@ -79,25 +79,25 @@ Recommended sections:
 **Validate all skills:**
 
 ```bash
-validate_skills
+validate_agent_files --kind skills
 ```
 
 **Validate specific skill:**
 
 ```bash
-validate_skills .github/skills/my-skill/
+validate_agent_files --kind skills .github/skills/my-skill/
 ```
 
 **Show warnings and recommendations:**
 
 ```bash
-validate_skills --recommend
+validate_agent_files --kind skills --recommend
 ```
 
 **CI mode (exit with error on failures):**
 
 ```bash
-validate_skills --ci
+validate_agent_files --kind skills --ci
 ```
 
 ### CI/CD Integration
@@ -151,7 +151,7 @@ of valid and invalid `SKILL.md` definitions.
 1. Create a new directory: `.github/skills/my-new-skill/`
 2. Create `SKILL.md` with proper frontmatter and structure
 3. Add any resources (scripts, templates, references) in subdirectories
-4. Run validation: `validate_skills .github/skills/my-new-skill/`
+4. Run validation: `validate_agent_files --kind skills .github/skills/my-new-skill/`
 5. Fix any errors or warnings
 6. Add skill to this README's catalog section
 7. Commit and push (pre-commit hook will validate automatically)

@@ -11,15 +11,13 @@ pip install -e .
 ## Usage
 
 ```bash
-validate_customizations                  # Validate skills, agents, and prompts under .
-validate_customizations .github          # Validate canonical repo customizations
-validate_customizations --kind agents    # Validate only agent files
-validate_customizations --kind prompts   # Validate only prompt files
-
-validate_skills                          # Backward-compatible skills-only validation
-validate_skills path/to/skills/          # Validate specific skill directory
-validate_skills --recommend              # Show recommendations
-validate_skills --ci                     # CI mode (nonzero exit on errors)
+validate_agent_files                     # Validate skills, agents, and prompts under .
+validate_agent_files .github             # Validate canonical repo customizations
+validate_agent_files --kind skills       # Validate only skill files
+validate_agent_files --kind agents       # Validate only agent files
+validate_agent_files --kind prompts      # Validate only prompt files
+validate_agent_files --recommend         # Show recommendations
+validate_agent_files --ci                # CI mode (nonzero exit on errors)
 ```
 
 ## Notes

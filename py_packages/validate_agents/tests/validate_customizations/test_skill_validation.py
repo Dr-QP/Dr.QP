@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from validate_agents.validate_skills.main import main
+from validate_agents.main import main
 
 
 def _write_skill(skill_dir: Path, name: str, body: str) -> None:

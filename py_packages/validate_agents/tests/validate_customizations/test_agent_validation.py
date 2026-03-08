@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from validate_agents.validate_customizations.main import main
+from validate_agents.main import main
 
 
 def test_issue310_agent_validation_requires_repo_frontmatter_and_handoff_shape(

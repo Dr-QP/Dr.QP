@@ -19,81 +19,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Main orchestration function for the validate-skills tool."""
+"""Compatibility wrapper for the package-level CLI entry."""
 
-import logging
-import sys
 from typing import List, Optional
 
-import yaml
-
-from .cli import parse_arguments
-from .core import ValidationEngine
-from .formatters import format_results
-from .loaders import safe_load_frontmatter, SkillFileLoader
+from ..main import main as _main
 
 
 def main(args: Optional[List[str]] = None) -> int:
-    """
-    Run the validate-skills tool.
-
-    Args:
-        args: Command-line arguments (if None, sys.argv is used)
-
-    Returns:
-        Exit code (0 for success, 1 for validation failures)
-
-    """
-    # Parse arguments
-    parsed_args = parse_arguments(args)
-
-    # Determine which format to use
-    output_format = parsed_args.format
-
-    # Find skill files
-    loader = SkillFileLoader()
-    skill_files = loader.find_skill_files(parsed_args.path)
-
-    if not skill_files:
-        if output_format == 'text':
-            print(f'No SKILL.md files found in {parsed_args.path}')
-        return 0
-
-    if output_format == 'text':
-        print(f'Validating {len(skill_files)} skill(s)...\n')
-
-    # Load all skills for cross-validation
-    all_skills = {}
-    for skill_path in skill_files:
-        try:
-            frontmatter, body = safe_load_frontmatter(skill_path)
-            with open(skill_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-            all_skills[skill_path] = {
-                'frontmatter': frontmatter,
-                'body': body,
-                'content': content,
-            }
-        except (OSError, UnicodeDecodeError, yaml.YAMLError) as e:
-            # Log but skip skills that can't be loaded for cross-validation
-            logging.warning(f'Failed to load {skill_path}: {e}')
-
-    # Validate each skill
-    engine = ValidationEngine(show_warnings=parsed_args.recommend, show_info=parsed_args.recommend)
-
-    results = []
-    for skill_path in skill_files:
-        result = engine.validate(skill_path, all_skills=all_skills)
-        results.append(result)
-
-    # Format and output results
-    formatted = format_results(results, output_format=output_format)
-    if formatted:
-        print(formatted)
-
-    # Return exit code based on results
-    failed_count = sum(1 for r in results if not r.is_valid)
-    return 1 if failed_count > 0 else 0
+    """Run the package-level validator with skills-only defaults."""
+    forwarded_args = ['--kind', 'skills']
+    if args:
+        forwarded_args.extend(args)
+    return _main(forwarded_args)
 
 
 if __name__ == '__main__':

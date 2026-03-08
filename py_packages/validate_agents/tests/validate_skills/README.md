@@ -1,18 +1,18 @@
-# Test Suite for validate_skills Package
+# Test Suite for validate_agents Validation Modules
 
 This directory contains comprehensive failing unit tests that drive the refactoring of the validate-skills package into a clean, modular structure.
 
 ## Test Files
 
-### 1. **test_cli.py** (74 tests across 7 test classes)
+### 1. **test_cli.py**
 
-Tests for CLI argument parsing and setup.
+Tests for canonical CLI argument parsing and setup.
 
 - Basic argument parsing (default path, custom paths, file paths, absolute paths)
 - `--recommend` flag for showing warnings
 - `--ci` flag for continuous integration mode
 - Validation level control (`--no-warnings`, `--errors-only`)
-- Output format options (`--format json|csv|xml`)
+- Output format options (`--format json|csv`)
 - Verbosity flags (`-q`/`--quiet`, `-v`/`--verbose`)
 - Help text and documentation
 - Invalid argument combinations
@@ -142,25 +142,19 @@ Package marker files for test discovery.
 
 ```bash
 # Run all tests
-pytest tests/validate_skills/
+pytest tests/
 
 # Run specific test file
-pytest tests/validate_skills/test_cli.py
-
-# Run specific test class
-pytest tests/validate_skills/test_cli.py::TestParseArgumentsBasic
-
-# Run specific test
-pytest tests/validate_skills/test_cli.py::TestParseArgumentsBasic::test_parse_arguments_default_path
+pytest tests/test_cli.py
 
 # Run with verbose output
-pytest -v tests/validate_skills/
+pytest -v tests/
 
 # Run with coverage
-pytest --cov=validate_skills tests/validate_skills/
+pytest --cov=validate_agents tests/
 
 # Run only fast tests (exclude slow)
-pytest -m "not slow" tests/validate_skills/
+pytest -m "not slow" tests/
 ```
 
 ## Import Structure
@@ -168,11 +162,11 @@ pytest -m "not slow" tests/validate_skills/
 All tests import from the new package structure:
 
 ```python
-from validate_agents.validate_skills.cli import parse_arguments
+from validate_agents.cli import parse_arguments
 from validate_agents.validate_skills.loaders import find_skill_files, safe_load_frontmatter, load_all_skills
 from validate_agents.validate_skills.core import ValidationEngine, ValidationResult
 from validate_agents.validate_skills.formatters import TextFormatter, JSONFormatter, CSVFormatter
-from validate_agents.validate_skills.main import main
+from validate_agents.main import main
 from validate_agents.validate_skills.validators.skill import SkillFrontmatterValidator, SkillStructureValidator
 from validate_agents.validate_skills.validators.uniqueness import UniquenessValidator
 from validate_agents.validate_skills.validators.cross_reference import CrossReferenceValidator
@@ -180,7 +174,9 @@ from validate_agents.validate_skills.validators.cross_reference import CrossRefe
 
 ## Test Coverage Summary
 
-**Total Tests: 300+**
+## Total Tests
+
+300+
 
 - CLI Parsing: 74 tests
 - File Loading: 40+ tests

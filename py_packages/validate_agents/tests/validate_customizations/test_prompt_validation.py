@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from validate_agents.validate_customizations.main import main
+from validate_agents.main import main
 
 
 def test_issue310_prompt_validation_requires_agent_frontmatter_and_non_empty_body(

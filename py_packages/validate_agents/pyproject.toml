@@ -15,8 +15,7 @@ dependencies = ["PyYAML>=6.0", "skills-ref>=0.1.1,<0.2"]
 dev = ["pytest>=7.0", "pytest-cov>=4.0"]
 
 [project.scripts]
-validate_customizations = "validate_agents.validate_customizations.__main__:main"
-validate_skills = "validate_agents.validate_skills.__main__:main"
+validate_agent_files = "validate_agents.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Compatibility entry point for the package-level validator."""
+"""Entry point for running validate_agent_files as a module."""
 
 import sys
 

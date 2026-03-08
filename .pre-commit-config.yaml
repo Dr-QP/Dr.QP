@@ -53,9 +53,9 @@ repos:
         types: [c++]
         pass_filenames: false
 
-      - id: validate-customizations
-        name: validate-customizations
-        entry: validate_customizations --ci .github
+      - id: validate-agent-files
+        name: validate-agent-files
+        entry: validate_agent_files --ci .github
         language: system
         files: '(\.github/skills/.*/SKILL\.md|\.github/agents/.*\.agent\.md|\.github/prompts/.*\.prompt\.md)$'
         pass_filenames: false

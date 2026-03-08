@@ -24,11 +24,9 @@
 from .cli import parse_arguments
 from .core import ValidationEngine
 from .loaders import SkillFileLoader
-from .main import main
 from .types import ValidationResult
 
 __all__ = [
-    'main',
     'parse_arguments',
     'ValidationEngine',
     'ValidationResult',

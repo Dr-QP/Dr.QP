@@ -19,7 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Entry point for running validate_skills as a module."""
+"""Compatibility entry point for the package-level validator."""
 
 import sys
 
