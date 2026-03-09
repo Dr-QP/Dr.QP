@@ -45,7 +45,7 @@
     src: /usr/local/bin/bun
     dest: /usr/local/bin/bunx
     state: link
-  when: bun_setup_bun_binary.stat.exists or not bun_setup_bunx_binary.stat.exists
+  when: not bun_setup_bunx_binary.stat.exists
 
 - name: Clean up temporary directory
   ansible.builtin.file:
