@@ -1,7 +1,7 @@
 ---
 description: 'Implement minimal code to satisfy GitHub issue requirements and make failing tests pass without over-engineering.'
 name: 'TDD Green Phase'
-model: Claude Sonnet 4.5
+model: GPT-5.4
 tools:
   [
     'edit/editFiles',

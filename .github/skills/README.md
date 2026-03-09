@@ -79,25 +79,25 @@ Recommended sections:
 **Validate all skills:**
 
 ```bash
-validate_skills
+validate_agent_files --kind skills
 ```
 
 **Validate specific skill:**
 
 ```bash
-validate_skills .github/skills/my-skill/SKILL.md
+validate_agent_files --kind skills .github/skills/my-skill/
 ```
 
 **Show warnings and recommendations:**
 
 ```bash
-validate_skills --recommend
+validate_agent_files --kind skills --recommend
 ```
 
 **CI mode (exit with error on failures):**
 
 ```bash
-validate_skills --ci
+validate_agent_files --kind skills --ci
 ```
 
 ### CI/CD Integration
@@ -114,31 +114,44 @@ See [`.github/workflows/copilot.yml`](../workflows/copilot.yml) for details.
 
 Example "good" and "bad" skills are defined inline in the unit tests using
 temporary directories (via `tmp_path` fixtures), rather than checked-in
-fixture files. Refer to the tests under `py_packages/validate_agents/tests/validate_skills/` for concrete examples
+fixture files. Refer to the tests under `py_packages/validate_agent_files/tests/` for concrete examples
 of valid and invalid `SKILL.md` definitions.
 
 ## Skill Catalog
 
-Currently, this repository has no production skills. Skills will be listed here as they are added.
+### ROS 2 Workflow Skills
 
-<!--
-Example entry format:
+- **ros2-environment-setup** - Environment initialization, devcontainer, venv. `.github/skills/ros2-environment-setup/`
+- **ros2-workspace-build** - Build ROS 2 packages with colcon. `.github/skills/ros2-workspace-build/`
+- **ros2-workspace-testing** - Run tests, coverage. `.github/skills/ros2-workspace-testing/`
+- **ros2-dependency-management** - rosdep, pip, package.xml. `.github/skills/ros2-dependency-management/`
+- **ros2-launch-management** - Launch files, parameters. `.github/skills/ros2-launch-management/`
+- **ros2-lifecycle-management** - Lifecycle node states. `.github/skills/ros2-lifecycle-management/`
+- **ros2-parameter-tuning** - Parameter configuration. `.github/skills/ros2-parameter-tuning/`
+- **ros2-diagnostics** - Debug topics, services, nodes. `.github/skills/ros2-diagnostics/`
 
-### skill-name
+### Package and Code Creation Skills
 
-**Description**: Brief description of what the skill does.
+- **create-ros2-package** - New ROS 2 package (C++, Python, mixed). `.github/skills/create-ros2-package/`
+- **add-test-file** - Unit or integration test scaffolding. `.github/skills/add-test-file/`
+- **implement-publisher-subscriber** - Pub/sub nodes, QoS. `.github/skills/implement-publisher-subscriber/`
+- **create-state-machine** - FSM implementation. `.github/skills/create-state-machine/`
 
-**Use when**: Specific trigger scenarios.
+### Review and PR Skills
 
-**Location**: `.github/skills/skill-name/`
--->
+- **code-review-standards** - PR descriptions, review practices. `.github/skills/code-review-standards/`
+- **generate-pr-description** - Generate PR body. `.github/skills/generate-pr-description/`
+- **pr-feedback-resolution** - Address PR feedback, CI, CodeQL, coverage. `.github/skills/pr-feedback-resolution/`
+- **open-pr** - Create GitHub PR. `.github/skills/open-pr/`
+- **update-branch** - Sync branch with main. `.github/skills/update-branch/`
+- **find-test-files** - Locate test files. `.github/skills/find-test-files/`
 
 ## Creating New Skills
 
 1. Create a new directory: `.github/skills/my-new-skill/`
 2. Create `SKILL.md` with proper frontmatter and structure
 3. Add any resources (scripts, templates, references) in subdirectories
-4. Run validation: `validate_skills .github/skills/my-new-skill/`
+4. Run validation: `validate_agent_files --kind skills .github/skills/my-new-skill/`
 5. Fix any errors or warnings
 6. Add skill to this README's catalog section
 7. Commit and push (pre-commit hook will validate automatically)
@@ -148,4 +161,4 @@ Example entry format:
 - [Agent Skills Specification](https://agentskills.io/)
 - [VS Code Agent Skills Documentation](https://code.visualstudio.com/docs/copilot/customization/agent-skills)
 - [Agent Skills Guidelines](../instructions/agent-skills.instructions.md)
-- [Validation package](../../py_packages/validate_agents/)
+- [Validation package](../../py_packages/validate_agent_files/)

@@ -1,12 +1,11 @@
 ---
 name: code-review-standards
 description: Apply code review standards and write high-quality pull request descriptions. Use when asked to review code, write PR descriptions, create commit messages, or submit pull requests. Enforces imperative language, comprehensive descriptions, PR best practices, and clean code principles.
-
 ---
 
 # Code Review Standards
 
-Write high-quality pull request descriptions and conduct effective code reviews using established best practices. For detailed engineering principles and standards, refer to [shared engineering guidelines](../../instructions/engineering.instructions.md).
+Write high-quality pull request descriptions and conduct effective code reviews using established best practices. Use [shared engineering guidelines](../../instructions/engineering.instructions.md) as the source of truth for generic code quality, testing, error handling, and clean-code expectations.
 
 ## When to Use This Skill
 
@@ -27,7 +26,11 @@ Write high-quality pull request descriptions and conduct effective code reviews 
 - Understanding of why specific design decisions were made
 - Familiarity with the codebase being reviewed
 
-## PR Description Best Practices
+## Scope
+
+This skill covers review-specific workflow and PR-writing structure. Do not restate broad engineering rules from the shared instructions unless the review needs a tighter, task-specific requirement.
+
+## PR Description Workflow
 
 ### Golden Rules
 
@@ -39,18 +42,18 @@ Write high-quality pull request descriptions and conduct effective code reviews 
 6. **No invisible content**: Never use HTML comments or hidden Unicode
 7. **Treat as git commit**: Apply highest standards; this is permanent project history
 
-## Step-by-Step Workflows
-
-### Workflow 1: Write PR Description (Recommended Template)
+### Recommended Template
 
 Create a comprehensive pull request description.
 
 1. Start with concise summary (1-2 lines):
+
    ```
    Add timeout handling to serial communication driver
    ```
 
 2. Add "What changed" section describing modifications:
+
    ```markdown
    ## What Changed
 
@@ -61,6 +64,7 @@ Create a comprehensive pull request description.
    ```
 
 3. Add "Why" section explaining motivation:
+
    ```markdown
    ## Why
 
@@ -70,6 +74,7 @@ Create a comprehensive pull request description.
    ```
 
 4. Add "How to test" section with verification steps:
+
    ```markdown
    ## How to Test
 
@@ -80,6 +85,7 @@ Create a comprehensive pull request description.
    ```
 
 5. Add "Related issues" if applicable:
+
    ```markdown
    ## Related Issues
 
@@ -88,6 +94,7 @@ Create a comprehensive pull request description.
    ```
 
 6. Add "Breaking changes" if any:
+
    ```markdown
    ## Breaking Changes
 
@@ -95,47 +102,24 @@ Create a comprehensive pull request description.
    - Removed `sync_read()` function (use async variant instead)
    ```
 
-### Workflow 2: Review Code for Quality Standards
+## Review Workflow
 
-Evaluate code changes against project standards.
+Evaluate code changes against the shared engineering standards, then focus your review on findings, evidence, and impact.
 
-**Check these aspects:**
+### What To Check
 
-1. **Readability and Clarity**
-   - Variable/function names are clear and descriptive
-   - Code is understandable without excessive comments
-   - Complex logic is broken into smaller functions
-   - Nesting is not excessive (max 3-4 levels)
+1. Correctness and behavioral regressions
+2. Missing or weak tests for changed behavior
+3. Maintainability risks that materially raise future cost
+4. Security or performance issues with concrete impact
+5. Standards violations that conflict with the shared engineering guidelines
 
-2. **Maintainability**
-   - Functions have single, clear responsibility
-   - Code avoids duplication (DRY principle)
-   - Dependencies on external libraries are documented
-   - Design decisions are explained in comments
-
-3. **Error Handling**
-   - All error cases are handled appropriately
-   - Exception messages are clear and actionable
-   - Edge cases are considered and tested
-   - No silent failures
-
-4. **Testing**
-   - Code changes include corresponding tests
-   - Tests cover happy path and error cases
-   - Coverage is maintained or improved
-   - Test names clearly describe what they verify
-
-5. **Standards Compliance**
-   - Follows language-specific conventions (PEP 8 for Python, clang-format for C++)
-   - Consistent with codebase patterns
-   - No deprecated patterns or libraries
-   - Aligns with project architecture
-
-### Workflow 3: Provide Constructive Code Review Feedback
+### How To Write Findings
 
 Write helpful, actionable review comments.
 
 **Good feedback example:**
+
 ```
 The mutex lock here could be a deadlock risk if `process_data()`
 throws an exception. Consider using RAII pattern or try/finally
@@ -143,6 +127,7 @@ to ensure lock is always released.
 ```
 
 **Poor feedback example:**
+
 ```
 This is bad. Fix it.
 ```
@@ -156,7 +141,7 @@ This is bad. Fix it.
 5. **Praise good code**: Acknowledge well-written sections
 6. **Focus on impact**: Explain how the issue affects functionality/maintenance
 
-**Common feedback categories:**
+### Common Finding Categories
 
 ```
 ## Clarity Issues
@@ -180,27 +165,13 @@ This is bad. Fix it.
 - "Consider using pattern X instead for better separation"
 ```
 
-### Workflow 4: Validate Against Clean Code Principles
-
-Check code against established quality standards.
-
-| Principle | Check | Example |
-|-----------|-------|---------|
-| **Single Responsibility** | Does function do one thing? | Function calculates AND formats AND logs → split into 3 |
-| **Descriptive Names** | Are names self-documenting? | `x`, `temp` → `milliseconds_elapsed`, `retry_count` |
-| **Small Functions** | Can function be understood in 2 minutes? | 200-line function → split into 5 functions |
-| **Error Handling** | Are all error paths explicit? | Silent failures → throw with context |
-| **Tests** | Are tests clear and comprehensive? | Single assertion per test, clear test names |
-| **Comments** | Are comments explaining "why" not "what"? | `// increment counter` → `// retry count to handle transient failures` |
-| **DRY** | Is code duplicated? | Same logic in 3 places → extract to function |
-| **Dependencies** | Are dependencies minimal and explicit? | Using everything from library → import only what's used |
-
-### Workflow 5: Handle Review Feedback in PR Updates
+## Responding To Review Feedback
 
 Update PR based on code review feedback.
 
 1. Make requested code changes
 2. Commit with clear message:
+
    ```bash
    git commit -m "Address review feedback: simplify error handling logic"
    ```
@@ -250,34 +221,16 @@ Relates to #45
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| PR description too technical | Add "Why" section explaining user impact |
-| Feedback seems nitpicky | Consider if it genuinely improves maintainability |
-| Author defensive about feedback | Keep tone neutral; focus on code, not person |
-| Conflicting feedback from reviewers | Discuss in thread; find consensus or escalate |
-| Changes seem unnecessary | Ask for clarification of impact/rationale |
-| Too many comments per review | Prioritize critical issues; discuss style separately |
-
-## Review Checklist
-
-Before approving a PR, verify:
-
-- [ ] PR description is comprehensive and uses imperative mood
-- [ ] Code follows project coding standards
-- [ ] All error cases are handled
-- [ ] Tests are included and comprehensive
-- [ ] Test coverage maintained or improved
-- [ ] No duplication or code smell issues
-- [ ] Design aligns with project architecture
-- [ ] Comments explain "why" not "what"
-- [ ] No breaking changes without documentation
-- [ ] Related issues properly referenced
+| Issue                               | Solution                                             |
+| ----------------------------------- | ---------------------------------------------------- |
+| PR description too technical        | Add "Why" section explaining user impact             |
+| Feedback seems nitpicky             | Consider if it genuinely improves maintainability    |
+| Author defensive about feedback     | Keep tone neutral; focus on code, not person         |
+| Conflicting feedback from reviewers | Discuss in thread; find consensus or escalate        |
+| Changes seem unnecessary            | Ask for clarification of impact/rationale            |
+| Too many comments per review        | Prioritize critical issues; discuss style separately |
 
 ## References
 
-- See PR template guide for detailed examples
-- Use a Pull Request Template for GitHub auto-fill of standard sections
-- Use a code review checklist for systematic reviews
-- Review clean code principles and standards regularly
-
+- [Shared engineering guidelines](../../instructions/engineering.instructions.md)
+- [Generate pull request description](../generate-pr-description/)

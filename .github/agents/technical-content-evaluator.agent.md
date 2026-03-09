@@ -14,7 +14,7 @@ tools:
     'web/fetch',
     'web/githubRepo',
   ]
-model: Claude Sonnet 4.5 (copilot)
+model: GPT-5.4
 ---
 
 Evaluate and enhance technical training content, documentation, and educational materials through comprehensive editorial review. Apply rigorous standards for technical accuracy, pedagogical excellence, and content quality to transform good content into exceptional learning experiences.

@@ -74,6 +74,6 @@ function ros2_ws
   register_argcomplete
 
   # Create and load prod-venv
-  (cd $ws && bash $ws/docker/ros/deploy/prod-venv-create.sh)
+  bash $ws/docker/ros/deploy/prod-venv-create.sh "$ws"
   source $ws/.venv-prod/bin/activate.fish
 end

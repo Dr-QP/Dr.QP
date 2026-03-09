@@ -10,8 +10,8 @@ ansible-lint>=25.2.1
 sphinx-autobuild
 
 # Skill validation
--e py_packages/validate_agents
 -e py_packages/drqp_robot_mcp
+-e py_packages/validate_agent_files
 pydantic>=2.0
 python-frontmatter>=1.1.0
 

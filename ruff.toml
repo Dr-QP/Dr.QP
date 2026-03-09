@@ -44,16 +44,17 @@ select = ["E", "W", "F", "BLE",
   "E501", # Line too long
 ]
 
-# Never enforce `E501` (line length violations) - handled by formatter
-# Ignore D212 in favor of D213
-ignore = ["E501", "D212"]
+ignore = [
+  "E501", # Never enforce `E501` (line length violations) - handled by formatter
+  "D212", # Ignore D212 in favor of D213
+]
 
 [lint.isort]
 # Import sorting configuration
 force-single-line = false
 force-sort-within-sections = true # sort all imports within section no matter the style
 combine-as-imports = true
-known-first-party = ["validate_agents"]
+known-first-party = ["validate_agent_files"]
 known-third-party = ["rclpy", "sensor_msgs", "tf2_ros", "pytest", "drqp_brain"]
 case-sensitive = false
 order-by-type = false # ignore type, use alphabetical order

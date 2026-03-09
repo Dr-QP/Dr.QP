@@ -21,13 +21,9 @@
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
-    ExecuteProcess,
     GroupAction,
     IncludeLaunchDescription,
-    RegisterEventHandler,
-    Shutdown,
 )
-from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
     IfElseSubstitution,
@@ -36,6 +32,7 @@ from launch.substitutions import (
 )
 from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
+from ros_gz_bridge.actions import RosGzBridge
 
 
 def generate_launch_description():
@@ -43,7 +40,7 @@ def generate_launch_description():
     declared_arguments = []
     declared_arguments.append(
         DeclareLaunchArgument(
-            'gui',
+            'sim_gui',
             default_value='true',
             description='Start Gazebo GUI Client automatically with this launch file.',
         )
@@ -64,32 +61,7 @@ def generate_launch_description():
     )
 
     # Initialize Arguments
-    gui = LaunchConfiguration('gui')
-
-    gazebo_sigterm_timeout = LaunchConfiguration('gazebo_sigterm_timeout')
-    gazebo_sigkill_timeout = LaunchConfiguration('gazebo_sigkill_timeout')
-    gazebo = ExecuteProcess(
-        cmd=[
-            'gz',
-            'sim',
-            '-r',
-            '-v',
-            '3',
-            'empty.sdf',
-            IfElseSubstitution(gui, '', ' --headless-rendering -s'),
-        ],
-        shell=True,
-        output='screen',
-        sigterm_timeout=gazebo_sigterm_timeout,
-        sigkill_timeout=gazebo_sigkill_timeout,
-    )
-    on_gazebo_shutdown = RegisterEventHandler(
-        OnProcessExit(
-            target_action=gazebo,
-            on_exit=[Shutdown(reason='Gazebo exited')],
-        )
-    )
-
+    sim_gui = LaunchConfiguration('sim_gui')
     container_name = 'drqp_gazebo_container'
     gz_args = '-r -v 3 empty.sdf'
     gazebo = IncludeLaunchDescription(
@@ -104,36 +76,25 @@ def generate_launch_description():
         ),
         launch_arguments={
             'gz_args': IfElseSubstitution(
-                gui,
+                sim_gui,
                 gz_args,
                 gz_args + ' --headless-rendering -s',
             ),
             'on_exit_shutdown': 'true',
         }.items(),
     )
-    gazebo_bridge = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [
-                    FindPackageShare('ros_gz_sim'),
-                    'launch',
-                    'ros_gz_sim.launch.py',
-                ]
-            )
+    gazebo_bridge = RosGzBridge(
+        bridge_name='drqp_gazebo_bridge',
+        config_file=PathJoinSubstitution(
+            [
+                FindPackageShare('drqp_gazebo'),
+                'config',
+                'drqp_gazebo_bridge.yml',
+            ]
         ),
-        launch_arguments={
-            'bridge_name': 'drqp_gazebo_bridge',
-            'config_file': PathJoinSubstitution(
-                [
-                    FindPackageShare('drqp_gazebo'),
-                    'config',
-                    'drqp_gazebo_bridge.yml',
-                ]
-            ),
-            'use_composition': 'false',  # Composition throws an exception
-            'create_own_container': 'true',
-            'container_name': container_name,
-        }.items(),
+        use_composition='false',  # Composition throws an exception
+        create_own_container='true',
+        container_name=container_name,
     )
 
     gz_spawn_entity = Node(
@@ -146,7 +107,7 @@ def generate_launch_description():
             '-name',
             'drqp',
             '-allow_renaming',
-            'true',
+            'false',
         ],
     )
 
@@ -161,7 +122,6 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
-            'show_rviz': gui,
             'use_gazebo': 'true',
         }.items(),
     )
@@ -174,7 +134,6 @@ def generate_launch_description():
                     SetParameter('use_sim_time', value=True),
                     drqp_system,
                     gazebo,
-                    on_gazebo_shutdown,
                     gazebo_bridge,
                     gz_spawn_entity,
                 ]

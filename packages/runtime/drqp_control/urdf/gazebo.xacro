@@ -1,10 +1,16 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:macro name="gazebo">
+  <xacro:macro name="gazebo" params="robot_name">
     <!-- ros_control plugin -->
     <gazebo>
       <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
         <parameters>$(find drqp_control)/config/drqp_controllers.yml</parameters>
+      </plugin>
+      <plugin filename="gz-sim-odometry-publisher-system" name="gz::sim::systems::OdometryPublisher">
+        <odom_frame>odom</odom_frame>
+        <robot_base_frame>${robot_name}/base_link</robot_base_frame>
+        <odom_topic>/model/drqp/odometry</odom_topic>
+        <dimensions>3</dimensions>
       </plugin>
     </gazebo>
   </xacro:macro>

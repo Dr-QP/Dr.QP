@@ -2,7 +2,7 @@
 description: 'Expert at designing and creating VS Code custom agents with optimal configurations'
 name: Custom Agent Foundry
 argument-hint: Describe the agent role, purpose, and required capabilities
-model: Claude Sonnet 4.5
+model: GPT-5.4
 tools:
   [
     'agent',
@@ -71,7 +71,7 @@ description: Brief, clear description shown in chat input (required)
 name: Display name for the agent (optional, defaults to filename)
 argument-hint: Guidance text for users on how to interact (optional)
 tools: ['tool1', 'tool2', 'toolset/*'] # Available tools
-model: Claude Sonnet 4 # Optional: specific model selection
+model: GPT-5.4 # Optional: specific model selection
 handoffs: # Optional: workflow transitions
   - label: Next Step
     agent: target-agent-name
