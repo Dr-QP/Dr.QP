@@ -24,6 +24,6 @@ Linux is the only platform that has been tested for this project.
 1. Use Ubuntu 24.04 Noble as the base OS
 2. Open `Dr.QP.code-workspace` in VSCode
 3. Install recommended VSCode extensions
-4. Create venv using the task `Dr.QP venv`
+4. Create or update the workspace venv using the task `Dr.QP venv` (`uv sync`)
 5. Setup environment using the task `Dr.QP setup ROS`
 6. Install ROS dependencies using the task `Dr.QP rosdep`

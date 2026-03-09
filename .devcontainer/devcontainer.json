@@ -14,7 +14,11 @@
   "containerEnv": {
     "DISPLAY": ":100",
     "DOCKER_HOST": "unix:///var/run/docker.sock",
-    "DEVCONTAINER_ID": "${devcontainerId}"
+    "DEVCONTAINER_ID": "${devcontainerId}",
+
+    "UV_CACHE_DIR": "/uv/cache",
+    "UV_PYTHON_INSTALL_DIR": "/uv/python",
+    "UV_PROJECT_ENVIRONMENT": "/uv/venvs/${localWorkspaceFolderBasename}/"
   },
 
   "forwardPorts": ["14500-14599"],
@@ -66,8 +70,8 @@
       "type": "volume"
     },
     {
-      "source": "drqp-python-venv",
-      "target": "/opt/ros/overlay_ws/.venv",
+      "source": "drqp-uv",
+      "target": "/uv",
       "type": "volume"
     },
     {
@@ -76,11 +80,11 @@
       "type": "volume"
     }
   ],
-  // Second venv command with --system-site-packages turns on access to system packages to allow ROS2 builds to work
-  "postCreateCommand": "sudo chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /opt/ros/overlay_ws/.venv /opt/ros/overlay_ws/.venv-prod",
+  // Keep the developer `.venv` bootstrap separate from the ROS runtime `.venv-prod` flow.
+  "postCreateCommand": "sudo chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /uv /opt/ros/overlay_ws/.venv-prod",
   "postAttachCommand": {
     "git config": "git config --global gpg.ssh.program ssh-keygen",
-    "python-venv": "python3 -m venv /opt/ros/overlay_ws/.venv && /opt/ros/overlay_ws/.venv/bin/python3 -m pip install -r /opt/ros/overlay_ws/requirements.txt --use-pep517", // Keep in sync with the task in Dr.QP.code-workspace
+    "python-venv": "./scripts/uv-sync.sh",
     "rosdep": "./scripts/ros-dep.sh"
   },
   "postStartCommand": "./scripts/devcontainer-postStartCommand.sh"
