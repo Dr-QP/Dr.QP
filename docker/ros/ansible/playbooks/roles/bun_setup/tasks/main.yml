@@ -5,6 +5,11 @@
     path: /usr/local/bin/bun
   register: bun_setup_bun_binary
 
+- name: Check if bunx is already installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/bunx
+  register: bun_setup_bunx_binary
+
 - name: Install Bun installer prerequisites
   ansible.builtin.apt:
     name:
@@ -34,6 +39,13 @@
   environment:
     BUN_INSTALL: /usr/local
   when: not bun_setup_bun_binary.stat.exists
+
+- name: Ensure bunx is available alongside Bun
+  ansible.builtin.file:
+    src: /usr/local/bin/bun
+    dest: /usr/local/bin/bunx
+    state: link
+  when: bun_setup_bun_binary.stat.exists or not bun_setup_bunx_binary.stat.exists
 
 - name: Clean up temporary directory
   ansible.builtin.file:
