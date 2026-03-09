@@ -1,0 +1,89 @@
+name: Require Copilot Review
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - review_requested
+      - review_request_removed
+  pull_request_review:
+    types:
+      - submitted
+      - dismissed
+      - edited
+  merge_group:
+    types:
+      - checks_requested
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  copilot-review-present:
+    name: copilot-review-present
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verify Copilot reviewed PR
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            if (context.eventName === 'merge_group') {
+              core.info('Merge group event, skipping Copilot review check');
+              return;
+            }
+
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              core.setFailed('No pull_request in event payload');
+              return;
+            }
+
+            // Optional: skip drafts if you do not want to block drafts
+            // if (pr.draft) {
+            //   core.info('Draft PR, skipping');
+            //   return;
+            // }
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number = pr.number;
+
+            const reviews = await github.paginate(
+              github.rest.pulls.listReviews,
+              {
+                owner,
+                repo,
+                pull_number,
+                per_page: 100,
+              }
+            );
+
+            const copilotLogins = new Set([
+              'copilot-pull-request-reviewer[bot]',
+            ]);
+
+            // Require an active submitted Copilot review for any commit in the PR.
+            const matchingReview = reviews.find((review) => {
+              const login = review.user?.login;
+              const state = review.state;
+              return (
+                copilotLogins.has(login) &&
+                state &&
+                state !== 'PENDING' &&
+                state !== 'DISMISSED'
+              );
+            });
+
+            if (!matchingReview) {
+              core.setFailed('Copilot has not submitted a review for this PR.');
+              return;
+            }
+
+            core.info(
+              `Found Copilot review by ${matchingReview.user.login} for ${matchingReview.commit_id} with state ${matchingReview.state}.`
+            );

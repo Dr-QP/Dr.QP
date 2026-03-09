@@ -5,7 +5,7 @@ description: Generate comprehensive pull request description following code-revi
 
 # Generate Pull Request Description
 
-Generate a comprehensive, high-quality PR description that follows code-review-standards and engineering best practices.
+Generate a comprehensive PR description by analyzing the change set and filling the repository template at [../../pull_request_template.md](../../pull_request_template.md). Use [code-review-standards](../code-review-standards/) for wording and review conventions, and use [engineering guidelines](../../instructions/engineering.instructions.md) only for shared quality expectations rather than repeating them here.
 
 ## When to Use This Skill
 
@@ -62,22 +62,23 @@ Unit tests, integration tests, manual testing, coverage impact.
 
 API changes, config changes, dependency version changes, schema changes.
 
-### Step 7: Generate PR Description
+Identify any required migration work such as config changes, rollout order, data backfills, operator actions, or compatibility notes.
 
-Use [code-review-standards](../code-review-standards/) template. Include:
+### Step 7: Generate The Description
+
+Start from [../../pull_request_template.md](../../pull_request_template.md) and follow the wording rules from [code-review-standards](../code-review-standards/). Remove sections that do not apply, and ensure the final PR description covers the same information required by the template:
 
 - **Summary**: 2-3 sentences
-- **Changes**: By category (Features, Bug Fixes, Refactoring, Tests, Documentation, Configuration)
-- **Technical Details**: Approach, key files, dependencies, assumptions
-- **Testing Strategy**: Unit, integration, manual, coverage
-- **Breaking Changes**: YES/NO, migration steps, deployment notes
-- **Risk Assessment**: Risks and mitigation
-- **Related**: Closes #, related to #, design doc link
-- **Checklist**: Code follows conventions, tests pass, docs updated, etc.
+- **What Changed**: Group related changes instead of listing files
+- **Why**: User or system impact
+- **How to Test**: Actual verification performed
+- **Breaking Changes**: Only when applicable
+- **Migration**: Required rollout, upgrade, backfill, or operator steps
+- **Related**: Issues, design docs, or follow-up work
 
 ### Step 8: Review and Validate
 
-Ensure completeness, technical accuracy, valid links, testing matches actual work.
+Ensure completeness, technical accuracy, valid links, and that testing matches actual work. Confirm that the final description stays in sync with [../../pull_request_template.md](../../pull_request_template.md) and does not repeat generic review or clean-code checklists from the referenced documents.
 
 ## Edge Cases
 
@@ -88,5 +89,6 @@ Ensure completeness, technical accuracy, valid links, testing matches actual wor
 
 ## Related Resources
 
+- [Pull request template](../../pull_request_template.md)
 - [code-review-standards](../code-review-standards/)
 - [Engineering guidelines](../../instructions/engineering.instructions.md)
