@@ -1,0 +1,42 @@
+---
+# Install Bun JavaScript runtime from the official installer
+- name: Check if Bun is already installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/bun
+  register: bun_setup_bun_binary
+
+- name: Install Bun installer prerequisites
+  ansible.builtin.apt:
+    name:
+      - unzip
+    state: present
+    install_recommends: false
+  when: not bun_setup_bun_binary.stat.exists
+
+- name: Create temporary directory for Bun installer
+  ansible.builtin.tempfile:
+    state: directory
+  register: bun_setup_temp_dir
+  when: not bun_setup_bun_binary.stat.exists
+
+- name: Download Bun install script
+  ansible.builtin.get_url:
+    url: https://bun.com/install
+    dest: "{{ bun_setup_temp_dir.path }}/bun-install.sh"
+    mode: "0755"
+  when: not bun_setup_bun_binary.stat.exists
+
+- name: Install Bun to /usr/local/bin
+  ansible.builtin.shell:
+    cmd: "{{ bun_setup_temp_dir.path }}/bun-install.sh"
+    executable: /bin/bash
+    creates: /usr/local/bin/bun
+  environment:
+    BUN_INSTALL: /usr/local
+  when: not bun_setup_bun_binary.stat.exists
+
+- name: Clean up temporary directory
+  ansible.builtin.file:
+    path: "{{ bun_setup_temp_dir.path }}"
+    state: absent
+  when: not bun_setup_bun_binary.stat.exists and bun_setup_temp_dir.path is defined
