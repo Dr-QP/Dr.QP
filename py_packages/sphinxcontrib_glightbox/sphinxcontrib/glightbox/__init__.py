@@ -1,4 +1,5 @@
-"""Sphinx extension for GLightbox - a pure JavaScript lightbox library.
+"""
+Sphinx extension for GLightbox - a pure JavaScript lightbox library.
 
 This extension wraps images in the documentation with GLightbox links,
 providing a better lightbox experience than the older lightbox2 library.
@@ -7,10 +8,10 @@ It properly handles SVG images without rendering them oversized.
 
 from __future__ import annotations
 
-import posixpath
-import urllib.parse
 from pathlib import Path
+import posixpath
 from typing import Any
+import urllib.parse
 
 from docutils import nodes
 from sphinx.application import Sphinx
@@ -34,7 +35,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 class glightbox_reference(nodes.reference):
-    """Custom reference node for GLightbox-wrapped images.
+    """
+    Custom reference node for GLightbox-wrapped images.
 
     Using a custom node allows us to defer URI resolution to write time,
     so that the href correctly points to the output path in _images/ rather
