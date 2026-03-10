@@ -6,15 +6,6 @@
 
 Update `.github` sources; symlinks pick up changes automatically.
 
-## Key Instructions
-
-<!-- Import shared instruction files -->
-
-@.claude/instructions/engineering.instructions.md
-@.claude/instructions/microVM-sandbox.instructions.md
-@.claude/instructions/python.instructions.md
-@.claude/instructions/agent-skills.instructions.md
-
 ## Temporary Files
 
 NEVER use `$TMPDIR`. ALWAYS use `./.tmp` (relative to repo root) for temporary files; create it if it does not exist.
