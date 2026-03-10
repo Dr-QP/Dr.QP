@@ -7,22 +7,7 @@ if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
 fi
 
 # Start Docker daemon if not running
-if ! docker info >/dev/null 2>&1; then
-  echo "Starting Docker daemon..."
-  dockerd -H unix:///var/run/docker.sock >/tmp/dockerd.log 2>&1 &
-  for i in $(seq 1 30); do
-    if docker info >/dev/null 2>&1; then
-      echo "Docker daemon is ready."
-      break
-    fi
-    sleep 1
-  done
-  if ! docker info >/dev/null 2>&1; then
-    echo "Failed to start Docker daemon" >&2
-    tail -n 20 /tmp/dockerd.log >&2
-    exit 1
-  fi
-fi
+"$CLAUDE_PROJECT_DIR/scripts/devcontainer-start-docker.sh"
 
 # Install devcontainer CLI if not available
 if ! command -v devcontainer >/dev/null 2>&1; then
