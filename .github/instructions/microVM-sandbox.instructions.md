@@ -1,6 +1,6 @@
 ---
 description: 'Guidelines for working in sandbox microVM'
-applyTo: '**'
+applyTo: '**/*'
 ---
 
 # microVM sandbox workflows
