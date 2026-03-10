@@ -1,4 +1,4 @@
 # Claude Code Customizations
 
-This directory mirrors the repository's GitHub Copilot customizations so they
-are discoverable in Claude Code.
+This directory mirrors the shared configuration from the repository's `.github/`
+directory (agents, skills, and instructions) so it is available to Claude Code.
