@@ -23,6 +23,7 @@ Consult the **[Principal Engineer](/.github/agents/principal-engineer.agent.md)*
 
 ## Catalog Locations
 
+- **Claude**: `.claude/agents/`, `.claude/commands/`, `.claude/instructions/` (symlinks to `.github/`)
 - **Cursor**: `.cursor/agents/`, `.cursor/skills/`, `.cursor/rules/` (symlinks to `.github/`)
 - **Codex**: `.codex/agents/`, `.codex/skills/`, `.codex/instructions/` (symlinks to `.github/`)
 
