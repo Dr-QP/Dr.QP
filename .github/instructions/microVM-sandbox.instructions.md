@@ -9,6 +9,20 @@ applyTo: '**/*'
 
 All build, test, and lint commands run inside the devcontainer defined in `.devcontainer/devcontainer.json`. The cloud VM does not have ROS 2 installed natively.
 
+### Authentication
+
+To pull images from `ghcr.io`, the session-start hook authenticates using the
+`GITHUB_TOKEN` environment variable (set by the platform) and `GITHUB_ACTOR`
+(the GitHub username):
+
+```bash
+echo "$GITHUB_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR:-token}" --password-stdin
+```
+
+Both variables must be available in the microVM environment before the hook
+runs. Without them, pulls of private images or images subject to rate limits
+will fail.
+
 The update script starts Docker and brings up the devcontainer using:
 
 ```bash

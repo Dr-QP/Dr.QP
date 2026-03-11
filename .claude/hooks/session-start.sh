@@ -9,6 +9,11 @@ fi
 # Start Docker daemon if not running
 "$CLAUDE_PROJECT_DIR/scripts/devcontainer-start-docker.sh"
 
+# Authenticate to ghcr.io if a GitHub token is available
+if [ -n "${GITHUB_TOKEN:-}" ]; then
+  echo "$GITHUB_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR:-token}" --password-stdin
+fi
+
 # Install devcontainer CLI if not available
 if ! command -v devcontainer >/dev/null 2>&1; then
   echo "Installing @devcontainers/cli..."
