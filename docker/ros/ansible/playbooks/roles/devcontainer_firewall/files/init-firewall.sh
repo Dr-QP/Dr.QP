@@ -42,11 +42,24 @@ else
     echo "No Docker DNS rules to restore"
 fi
 
-# Allow DNS and localhost before any restrictions
-iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
-iptables -A INPUT  -p udp --sport 53 -j ACCEPT
-iptables -A OUTPUT -p tcp --dport 22 -j ACCEPT
-iptables -A INPUT  -p tcp --sport 22 -m state --state ESTABLISHED -j ACCEPT
+# Allow DNS only to the Docker embedded resolver (127.0.0.11).
+# Both UDP and TCP are permitted; TCP covers large responses (>512 bytes).
+# All other DNS destinations remain blocked after DROP policy is applied.
+iptables -A OUTPUT -p udp --dport 53 -d 127.0.0.11 -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 53 -d 127.0.0.11 -j ACCEPT
+iptables -A INPUT  -p udp --sport 53 -s 127.0.0.11 -m state --state ESTABLISHED -j ACCEPT
+iptables -A INPUT  -p tcp --sport 53 -s 127.0.0.11 -m state --state ESTABLISHED -j ACCEPT
+
+# Allow SSH only to the Docker host (default gateway), not arbitrary external hosts.
+DOCKER_HOST_IP=$(ip route | awk '/default/ {print $3}' | head -n 1 || true)
+if [ -n "$DOCKER_HOST_IP" ]; then
+    iptables -A OUTPUT -p tcp -d "$DOCKER_HOST_IP" --dport 22 -j ACCEPT
+    iptables -A INPUT  -p tcp -s "$DOCKER_HOST_IP" --sport 22 -m state --state ESTABLISHED -j ACCEPT
+else
+    echo "WARNING: Could not determine Docker host IP; SSH egress will be restricted by allowlist rules"
+fi
+
+# Allow loopback
 iptables -A INPUT  -i lo -j ACCEPT
 iptables -A OUTPUT -o lo -j ACCEPT
 
@@ -97,18 +110,17 @@ while IFS= read -r line; do
     fi
 done < "$ALLOWLIST"
 
-# Allow the host network (default route)
+# Allow traffic to the Docker host only (not the whole /24 subnet).
 HOST_IP=$(ip route | grep default | cut -d" " -f3)
 if [ -z "$HOST_IP" ]; then
     echo "ERROR: Failed to detect host IP"
     exit 1
 fi
-HOST_NETWORK=$(echo "$HOST_IP" | sed "s/\.[0-9]*$/.0\/24/")
-echo "Host network: $HOST_NETWORK"
-iptables -A INPUT  -s "$HOST_NETWORK" -j ACCEPT
-iptables -A OUTPUT -d "$HOST_NETWORK" -j ACCEPT
+echo "Host IP: ${HOST_IP}/32"
+iptables -A INPUT  -s "${HOST_IP}/32" -j ACCEPT
+iptables -A OUTPUT -d "${HOST_IP}/32" -j ACCEPT
 
-# Default DROP policy
+# Default DROP policy (IPv4)
 iptables -P INPUT   DROP
 iptables -P FORWARD DROP
 iptables -P OUTPUT  DROP
@@ -122,6 +134,19 @@ iptables -A OUTPUT -m set --match-set allowed-domains dst -j ACCEPT
 
 # Reject everything else immediately
 iptables -A OUTPUT -j REJECT --reject-with icmp-admin-prohibited
+
+# Block all IPv6 traffic — the allowlist is IPv4-only; without this, IPv6
+# would bypass the allowlist entirely.
+if command -v ip6tables &>/dev/null; then
+    ip6tables -A INPUT  -i lo -j ACCEPT
+    ip6tables -A OUTPUT -o lo -j ACCEPT
+    ip6tables -P INPUT   DROP
+    ip6tables -P FORWARD DROP
+    ip6tables -P OUTPUT  DROP
+    echo "IPv6 blocked"
+else
+    echo "WARNING: ip6tables not available; IPv6 traffic is not restricted"
+fi
 
 echo "Firewall configuration complete"
 echo "Verifying firewall rules..."
