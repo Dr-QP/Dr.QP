@@ -81,12 +81,11 @@
     }
   ],
   // Keep the developer `.venv` bootstrap separate from the ROS runtime `.venv-prod` flow.
-  // Install firewall tools via Ansible after fixing volume ownership.
-  "postCreateCommand": "sudo chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /uv /opt/ros/overlay_ws/.venv-prod && ./scripts/devcontainer-install-firewall.sh",
+  "postCreateCommand": "sudo chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /uv /opt/ros/overlay_ws/.venv-prod",
   "postAttachCommand": {
     "git config": "git config --global gpg.ssh.program ssh-keygen",
     "python-venv": "./scripts/uv-sync.sh",
     "rosdep": "./scripts/ros-dep.sh"
   },
-  "postStartCommand": "./scripts/devcontainer-postStartCommand.sh && sudo /usr/local/bin/init-firewall.sh"
+  "postStartCommand": "./scripts/devcontainer-postStartCommand.sh"
 }
