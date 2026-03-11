@@ -33,10 +33,14 @@ astral.sh
 marketplace.visualstudio.com
 vscode.blob.core.windows.net
 update.code.visualstudio.com
+*.gallery.vsassets.io
+*.gallerycdn.vsassets.io
 
 # The rest of dev image: Ubuntu, ROS and tools
 security.ubuntu.com
 archive.ubuntu.com
+ppa.launchpadcontent.net
+ports.ubuntu.com
 download.docker.com
 packages.ros.org
 deb.nodesource.com
