@@ -1,8 +1,5 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(docker info:*)",
-      "Read(//opt/ros/overlay_ws/**)"
-    ]
+    "allow": ["Bash(docker info:*)", "Read(//opt/ros/overlay_ws/**)"]
   }
 }
