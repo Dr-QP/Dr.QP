@@ -63,7 +63,7 @@ def visit_glightbox_reference(self: HTML5Translator, node: glightbox_reference) 
     atts: dict[str, Any] = {'class': 'glightbox', 'href': href}
 
     # Pass through data-* attributes for GLightbox options (e.g., data-title)
-    for key, val in node.attval.items() if hasattr(node, 'attval') else []:
+    for key, val in node.attributes.items():
         if key.startswith('data-'):
             atts[key] = val
 
