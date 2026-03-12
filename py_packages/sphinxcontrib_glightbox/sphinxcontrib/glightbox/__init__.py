@@ -67,12 +67,22 @@ def visit_glightbox_reference(self: HTML5Translator, node: glightbox_reference) 
         if key.startswith('data-'):
             atts[key] = val
 
-    # Add alt text as glightbox description if available
+    # Add alt text as glightbox description if available, without
+    # overwriting any existing data-glightbox options.
     for child in node.children:
         if isinstance(child, nodes.image):
             alt = child.get('alt', '')
             if alt:
-                atts['data-glightbox'] = f'description: {alt}'
+                existing_glightbox = atts.get('data-glightbox')
+                if existing_glightbox:
+                    # If the existing value does not already specify a
+                    # description, append one derived from the alt text.
+                    if 'description:' not in existing_glightbox:
+                        atts['data-glightbox'] = (
+                            f'{existing_glightbox}; description: {alt}'
+                        )
+                else:
+                    atts['data-glightbox'] = f'description: {alt}'
             break
 
     self.body.append(self.starttag(node, 'a', '', **atts))
