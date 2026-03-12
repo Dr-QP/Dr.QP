@@ -1,7 +1,6 @@
 services:
   devcontainer:
     image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
-
     # Required for Docker in Docker (dind) to allow nested containers for ROS 2 development
     # as well as for allowing privileged access to the host's GPU for hardware-accelerated rendering in Gazebo and RViz.
     # As well as access to host's devices for hardware access (e.g. TTY servos).
