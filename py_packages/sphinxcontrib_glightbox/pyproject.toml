@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Sphinx extension for GLightbox - a better image lightbox with SVG support."
 readme = "README.md"
 license = {text = "MIT"}
+license-files = ["THIRD_PARTY_LICENSES.md"]
 requires-python = ">=3.10"
 dependencies = [
     "sphinx>=5.0",

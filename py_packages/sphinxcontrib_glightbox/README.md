@@ -29,3 +29,7 @@ To exclude a specific image from the lightbox, add the `no-glightbox` class:
 .. image:: image.png
    :class: no-glightbox
 ```
+
+## Third-Party Licenses
+
+This package bundles GLightbox CSS and JavaScript assets. See [THIRD_PARTY_LICENSES.md](./THIRD_PARTY_LICENSES.md) for the full license text.
