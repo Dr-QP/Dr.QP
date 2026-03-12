@@ -62,11 +62,6 @@ def visit_glightbox_reference(self: HTML5Translator, node: glightbox_reference) 
 
     atts: dict[str, Any] = {'class': 'glightbox', 'href': href}
 
-    # Pass through data-* attributes for GLightbox options (e.g., data-title)
-    for key, val in node.attval.items() if hasattr(node, 'attval') else []:
-        if key.startswith('data-'):
-            atts[key] = val
-
     # Add alt text as glightbox description if available
     for child in node.children:
         if isinstance(child, nodes.image):
@@ -117,7 +112,15 @@ class GlightboxTransform(SphinxPostTransform):
 
 def add_static_path(app: Sphinx) -> None:
     """Add the extension's _static directory to the Sphinx static path."""
-    app.config.html_static_path.append(str(_STATIC_DIR))
+    static_dir = str(_STATIC_DIR)
+    static_paths = getattr(app.config, 'html_static_path', None)
+
+    if static_paths is None:
+        app.config.html_static_path = [static_dir]
+        return
+
+    if static_dir not in static_paths:
+        static_paths.append(static_dir)
 
 
 def setup(app: Sphinx) -> dict[str, Any]:
