@@ -62,6 +62,11 @@ def visit_glightbox_reference(self: HTML5Translator, node: glightbox_reference) 
 
     atts: dict[str, Any] = {'class': 'glightbox', 'href': href}
 
+    # Pass through data-* attributes for GLightbox options (e.g., data-title)
+    for key, val in node.attributes.items():
+        if key.startswith('data-'):
+            atts[key] = val
+
     # Add alt text as glightbox description if available
     for child in node.children:
         if isinstance(child, nodes.image):
