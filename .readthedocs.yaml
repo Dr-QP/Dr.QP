@@ -14,5 +14,5 @@ build:
     - ffmpeg
   commands:
     - pip install uv
-    - uv sync --group docs
+    - uv sync --frozen --group docs
     - uv run sphinx-build -b html docs/source $READTHEDOCS_OUTPUT/html
