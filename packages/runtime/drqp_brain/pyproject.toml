@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "drqp_brain"
+version = "0.1.0"
+description = "IK solvers and other high level control algorithms"
+license = {text = "MIT"}
+maintainers = [{name = "Anton Matosov", email = "anton.matosov@gmail.com"}]
+dependencies = [
+    "python-statemachine>=2.5.0",
+    "numpy",
+    "scipy",
+]
+
+[project.scripts]
+drqp_brain = "drqp_brain.brain_node:main"
+drqp_robot_state = "drqp_brain.robot_state.robot_state_node:main"
+drqp_joystick_translator = "drqp_brain.joystick_translator_node:main"
+
+[tool.setuptools.packages.find]
+exclude = ["test*"]
+
+[tool.setuptools.data-files]
+"share/ament_index/resource_index/packages" = ["resource/drqp_brain"]
+"share/drqp_brain" = ["package.xml"]
+"share/drqp_brain/launch" = ["launch/bringup.launch.py"]

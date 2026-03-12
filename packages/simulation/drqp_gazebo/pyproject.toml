@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "drqp_gazebo"
+version = "0.1.0"
+description = "Simulation test suite for drqp ROS 2 packages."
+license = {text = "MIT"}
+maintainers = [{name = "Anton Matosov", email = "anton.matosov@gmail.com"}]
+dependencies = []
+
+[tool.setuptools.packages.find]
+exclude = ["test*"]
+
+[tool.setuptools.data-files]
+"share/ament_index/resource_index/packages" = ["resource/drqp_gazebo"]
+"share/drqp_gazebo" = ["package.xml"]
+"share/drqp_gazebo/launch" = ["launch/sim.launch.py"]
+"share/drqp_gazebo/config" = ["config/drqp_gazebo_bridge.yml"]
+
+[tool.pytest.ini_options]
+timeout = 600
+timeout_method = "thread"
+markers = [
+    "smoke: marks tests as part of the regular CI simulation smoke suite",
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
