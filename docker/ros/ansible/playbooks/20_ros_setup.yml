@@ -26,8 +26,10 @@
     - { role: ros_install_source, tags: ["ros_install", "ros_install_source"], when: source_install }
     - { role: ros_dependencies, tags: ["ros_dependencies"] }
     - { role: nodejs, tags: ["nodejs"] }
+    - { role: bun_setup, tags: ["bun_setup"] }
     - { role: uv_setup, tags: ["uv_setup"] }
     - { role: agentic_tools, tags: ["agentic_tools"], when: install_agentic_tools | default(false) | bool }
     - { role: cmake_kitware, tags: ["cmake"] }
     - { role: clang, tags: ["clang"] }
     - { role: xpra_setup, tags: ["xpra_setup"], when: install_xpra | default(false) | bool }
+    - { role: devcontainer_firewall, tags: ["devcontainer_firewall"], when: install_devcontainer_firewall | default(false) | bool }

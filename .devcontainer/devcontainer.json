@@ -12,6 +12,8 @@
   },
   "workspaceFolder": "/opt/ros/overlay_ws/",
   "containerEnv": {
+    "ENABLE_FIREWALL": "false",
+
     "DISPLAY": ":100",
     "DOCKER_HOST": "unix:///var/run/docker.sock",
     "DEVCONTAINER_ID": "${devcontainerId}",

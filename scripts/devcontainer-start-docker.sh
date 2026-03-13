@@ -122,7 +122,7 @@ running_daemon_needs_vfs_restart() {
 
   existing_driver="$(docker_driver)"
   existing_root_dir="$(docker_root_dir)"
-  [[ "$existing_driver" == "overlay2" || "$existing_driver" == "overlay" ]] &&
+  [[ "$existing_driver" == "overlay2" || "$existing_driver" == "overlay" || "$existing_driver" == "overlayfs" ]] &&
     is_overlay_backed "$existing_root_dir"
 }
 
