@@ -18,6 +18,7 @@ dev = [
   "pytest-cov>=7.0.0",
   "pytest-xdist>=3.8.0",
   "validate_agent_files",
+  "drqp_robot_mcp",
 ]
 docs = [
   { include-group = "notebooks" },
@@ -55,4 +56,5 @@ default-groups = ["dev", "docs"]
 
 [tool.uv.sources]
 validate_agent_files = { path = "py_packages/validate_agent_files", editable = true }
+drqp_robot_mcp = { path = "py_packages/drqp_robot_mcp", editable = true }
 drqp_brain = { path = "packages/runtime/drqp_brain", editable = true }
