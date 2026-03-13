@@ -1,5 +1,13 @@
 {
   "permissions": {
-    "allow": ["Bash(docker info:*)", "Read(//opt/ros/overlay_ws/**)"]
+    "allow": [
+      "Read(//opt//ros//**)",
+      "Read(//root//**)",
+      "WebSearch",
+      "WebFetch(domain:docs.docker.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)"
+    ]
   }
 }
