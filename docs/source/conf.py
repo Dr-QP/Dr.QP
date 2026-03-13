@@ -64,7 +64,7 @@ extensions = [
     'sphinx.ext.duration',
     'sphinx.ext.intersphinx',
     'sphinxext.rediraffe',
-    'sphinxcontrib.glightbox',
+    'sphinxcontrib.spotlight',
     'myst_nb',  # for embedding jupyter notebooks
     # Disabled for now due to conflict with myst_nb
     # see https://github.com/executablebooks/MyST-NB/issues/421

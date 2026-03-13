@@ -1,9 +1,9 @@
 """
-Sphinx extension for GLightbox - a pure JavaScript lightbox library.
+Sphinx extension for Spotlight.js - a pure JavaScript lightbox library.
 
-This extension wraps images in the documentation with GLightbox links,
-providing a better lightbox experience than the older lightbox2 library.
-It properly handles SVG images without rendering them oversized.
+This extension wraps images in the documentation with Spotlight links,
+providing a lightweight lightbox experience. It properly handles SVG images
+without rendering them oversized.
 """
 
 from __future__ import annotations
@@ -20,23 +20,10 @@ from sphinx.writers.html5 import HTML5Translator
 
 _STATIC_DIR = Path(__file__).parent / '_static'
 
-_INIT_SCRIPT = """
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof GLightbox !== 'undefined') {
-        const lightbox = GLightbox({
-            selector: '.glightbox',
-            touchNavigation: true,
-            loop: false,
-            zoomable: true,
-        });
-    }
-});
-"""
 
-
-class glightbox_reference(nodes.reference):
+class spotlight_reference(nodes.reference):
     """
-    Custom reference node for GLightbox-wrapped images.
+    Custom reference node for Spotlight-wrapped images.
 
     Using a custom node allows us to defer URI resolution to write time,
     so that the href correctly points to the output path in _images/ rather
@@ -44,8 +31,8 @@ class glightbox_reference(nodes.reference):
     """
 
 
-def visit_glightbox_reference(self: HTML5Translator, node: glightbox_reference) -> None:
-    """Render a glightbox reference as an <a> tag with the correct image URI."""
+def visit_spotlight_reference(self: HTML5Translator, node: spotlight_reference) -> None:
+    """Render a spotlight reference as an <a> tag with the correct image URI."""
     # Find the image child and resolve its output URI
     href = node.get('refuri', '')
     for child in node.children:
@@ -60,41 +47,31 @@ def visit_glightbox_reference(self: HTML5Translator, node: glightbox_reference) 
                 href = old_uri
             break
 
-    atts: dict[str, Any] = {'class': 'glightbox', 'href': href}
+    atts: dict[str, Any] = {'class': 'spotlight', 'href': href}
 
-    # Pass through data-* attributes for GLightbox options (e.g., data-title)
+    # Pass through data-* attributes for Spotlight options
     for key, val in node.attributes.items():
         if key.startswith('data-'):
             atts[key] = val
 
-    # Add alt text as glightbox description if available, without
-    # overwriting any existing data-glightbox options.
+    # Add alt text as spotlight description if available
     for child in node.children:
         if isinstance(child, nodes.image):
             alt = child.get('alt', '')
-            if alt:
-                existing_glightbox = atts.get('data-glightbox')
-                if existing_glightbox:
-                    # If the existing value does not already specify a
-                    # description, append one derived from the alt text.
-                    if 'description:' not in existing_glightbox:
-                        atts['data-glightbox'] = (
-                            f'{existing_glightbox}; description: {alt}'
-                        )
-                else:
-                    atts['data-glightbox'] = f'description: {alt}'
+            if alt and 'data-description' not in atts:
+                atts['data-description'] = alt
             break
 
     self.body.append(self.starttag(node, 'a', '', **atts))
 
 
-def depart_glightbox_reference(self: HTML5Translator, node: glightbox_reference) -> None:
-    """Close the <a> tag for the glightbox reference."""
+def depart_spotlight_reference(self: HTML5Translator, node: spotlight_reference) -> None:
+    """Close the <a> tag for the spotlight reference."""
     self.body.append('</a>')
 
 
-class GlightboxTransform(SphinxPostTransform):
-    """Post-transform that wraps image nodes with GLightbox anchor tags."""
+class SpotlightTransform(SphinxPostTransform):
+    """Post-transform that wraps image nodes with Spotlight anchor tags."""
 
     default_priority = 200
     formats = ('html',)
@@ -109,16 +86,16 @@ class GlightboxTransform(SphinxPostTransform):
             return
 
         # Skip images that have been explicitly excluded
-        if 'no-glightbox' in node.get('classes', []):
+        if 'no-spotlight' in node.get('classes', []):
             return
 
         # Skip images with no URI
         if not node.get('uri', ''):
             return
 
-        # Create a glightbox_reference node wrapping the image.
-        # The actual href will be resolved at write time in visit_glightbox_reference.
-        ref = glightbox_reference('', '', internal=False)
+        # Create a spotlight_reference node wrapping the image.
+        # The actual href will be resolved at write time in visit_spotlight_reference.
+        ref = spotlight_reference('', '', internal=False)
 
         # Replace image node with reference wrapping the image
         node.replace_self([ref])
@@ -137,18 +114,18 @@ def add_static_path(app: Sphinx) -> None:
 
     if static_dir not in static_paths:
         static_paths.append(static_dir)
+
+
 def setup(app: Sphinx) -> dict[str, Any]:
-    """Set up the sphinxcontrib.glightbox extension."""
+    """Set up the sphinxcontrib.spotlight extension."""
     app.add_node(
-        glightbox_reference,
-        html=(visit_glightbox_reference, depart_glightbox_reference),
+        spotlight_reference,
+        html=(visit_spotlight_reference, depart_spotlight_reference),
     )
-    app.add_post_transform(GlightboxTransform)
+    app.add_post_transform(SpotlightTransform)
 
     app.connect('builder-inited', add_static_path)
-    app.add_css_file('sphinxcontrib_glightbox/css/glightbox.min.css')
-    app.add_js_file('sphinxcontrib_glightbox/js/glightbox.min.js')
-    app.add_js_file(None, body=_INIT_SCRIPT, type='text/javascript')
+    app.add_js_file('sphinxcontrib_spotlight/js/spotlight.bundle.min.js')
 
     return {
         'version': '0.1.0',

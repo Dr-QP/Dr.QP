@@ -32,7 +32,7 @@ docs = [
   "sphinx-design",
   "sphinx-togglebutton",
   "sphinxext-rediraffe",
-  "sphinxcontrib-glightbox",
+  "sphinxcontrib-spotlight",
 ]
 notebooks = [
   "ruff>=0.11.5",
@@ -55,5 +55,5 @@ default-groups = ["dev", "docs"]
 
 [tool.uv.sources]
 validate_agent_files = { path = "py_packages/validate_agent_files", editable = true }
-sphinxcontrib-glightbox = { path = "py_packages/sphinxcontrib_glightbox", editable = true }
+sphinxcontrib-spotlight = { path = "py_packages/sphinxcontrib_spotlight", editable = true }
 drqp_brain = { path = "packages/runtime/drqp_brain", editable = true }
