@@ -10,5 +10,22 @@
         ]
       }
     ]
+  },
+  "permissions": {
+    "allow": [
+      "Write(//opt//ros//overlay_ws//**)",
+      "Read(//opt//ros//**)",
+
+      "Read(//root//**)",
+
+      "Write(//tmp//**)",
+      "Read(//tmp//**)",
+
+      "WebSearch",
+      "WebFetch(domain:docs.docker.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)"
+    ]
   }
 }
