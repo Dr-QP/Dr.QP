@@ -816,7 +816,7 @@ docs = [
     { name = "sphinx-notfound-page" },
     { name = "sphinx-sitemap" },
     { name = "sphinx-togglebutton" },
-    { name = "sphinxcontrib-lightbox2" },
+    { name = "sphinxcontrib-spotlight" },
     { name = "sphinxext-rediraffe" },
     { name = "typeguard" },
 ]
@@ -874,7 +874,7 @@ docs = [
     { name = "sphinx-notfound-page", specifier = "~=1.0.0" },
     { name = "sphinx-sitemap", specifier = ">=2.6.0" },
     { name = "sphinx-togglebutton" },
-    { name = "sphinxcontrib-lightbox2" },
+    { name = "sphinxcontrib-spotlight", editable = "py_packages/sphinxcontrib_spotlight" },
     { name = "sphinxext-rediraffe" },
     { name = "typeguard", specifier = ">=4.1.5" },
 ]
@@ -3239,18 +3239,6 @@ wheels = [
 ]
 
 [[package]]
-name = "sphinxcontrib-lightbox2"
-version = "0.5.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "sphinx" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/2c/df/53cd11b018796417fd5b7288fa089b67d825996e13ad351e1763b71cf849/sphinxcontrib_lightbox2-0.5.0.tar.gz", hash = "sha256:68a7fc911731465552b0fe304448d3ba197bf981505ff4e6c6a19da782a8b920", size = 112177, upload-time = "2025-10-15T10:53:17.209Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/38/94/be4975a34a613fae20017907965792f9886b9fd8c80f479ca63647a1de51/sphinxcontrib_lightbox2-0.5.0-py3-none-any.whl", hash = "sha256:4bb23b700796c2b7b02b8d2992a02c70056cb30907e1cd1c59589e5a50d63903", size = 112998, upload-time = "2025-10-15T10:53:15.813Z" },
-]
-
-[[package]]
 name = "sphinxcontrib-qthelp"
 version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3266,6 +3254,21 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/3b/44/6716b257b0aa6bfd51a1b31665d1c205fb12cb5ad56de752dfa15657de2f/sphinxcontrib_serializinghtml-2.0.0.tar.gz", hash = "sha256:e9d912827f872c029017a53f0ef2180b327c3f7fd23c87229f7a8e8b70031d4d", size = 16080, upload-time = "2024-07-29T01:10:09.332Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/52/a7/d2782e4e3f77c8450f727ba74a8f12756d5ba823d81b941f1b04da9d033a/sphinxcontrib_serializinghtml-2.0.0-py3-none-any.whl", hash = "sha256:6e2cb0eef194e10c27ec0023bfeb25badbbb5868244cf5bc5bdc04e4464bf331", size = 92072, upload-time = "2024-07-29T01:10:08.203Z" },
+]
+
+[[package]]
+name = "sphinxcontrib-spotlight"
+version = "0.1.0"
+source = { editable = "py_packages/sphinxcontrib_spotlight" }
+dependencies = [
+    { name = "docutils" },
+    { name = "sphinx" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "docutils" },
+    { name = "sphinx", specifier = ">=5.0" },
 ]
 
 [[package]]
