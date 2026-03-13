@@ -7,7 +7,19 @@
     "augmentcode": {
       "type": "stdio",
       "command": "auggie",
-      "args": ["--mcp", "--mcp-auto-workspace"]
+      "args": [
+        "--mcp",
+        "--mcp-auto-workspace"
+      ]
+    },
+    "MCP_DOCKER": {
+      "command": "docker",
+      "args": [
+        "mcp",
+        "gateway",
+        "run"
+      ],
+      "type": "stdio"
     }
   }
 }
