@@ -14,12 +14,12 @@ The Docker MCP Gateway enables integration with AI tools and agents by providing
 
 ## Role Variables
 
-|Variable|Default|Description|
-|--------|-------|-----------|
-|`docker_mcp_repo_url`|`https://github.com/docker/mcp-gateway.git`|Git repository URL|
-|`docker_mcp_version`|`main`|Git branch, tag, or commit to checkout|
-|`docker_mcp_user`|`{{ ros_user }}`|User to install the plugin for|
-|`docker_mcp_user_home`|`{{ user_home }}`|User's home directory|
+| Variable               | Default                                     | Description                            |
+| ---------------------- | ------------------------------------------- | -------------------------------------- |
+| `docker_mcp_repo_url`  | `https://github.com/docker/mcp-gateway.git` | Git repository URL                     |
+| `docker_mcp_version`   | `main`                                      | Git branch, tag, or commit to checkout |
+| `docker_mcp_user`      | `{{ ros_user }}`                            | User to install the plugin for         |
+| `docker_mcp_user_home` | `{{ user_home }}`                           | User's home directory                  |
 
 ## Example Usage
 
@@ -28,7 +28,7 @@ The Docker MCP Gateway enables integration with AI tools and agents by providing
   hosts: all
   become: true
   roles:
-    - { role: docker_mcp, tags: ["docker_mcp"] }
+    - { role: docker_mcp, tags: ['docker_mcp'] }
 ```
 
 ### Install specific version
@@ -39,9 +39,9 @@ The Docker MCP Gateway enables integration with AI tools and agents by providing
   become: true
   roles:
     - role: docker_mcp
-      tags: ["docker_mcp"]
+      tags: ['docker_mcp']
       vars:
-        docker_mcp_version: "v0.40.0"
+        docker_mcp_version: 'v0.40.0'
 ```
 
 ### Install for a specific user
@@ -52,10 +52,10 @@ The Docker MCP Gateway enables integration with AI tools and agents by providing
   become: true
   roles:
     - role: docker_mcp
-      tags: ["docker_mcp"]
+      tags: ['docker_mcp']
       vars:
-        docker_mcp_user: "developer"
-        docker_mcp_user_home: "/home/developer"
+        docker_mcp_user: 'developer'
+        docker_mcp_user_home: '/home/developer'
 ```
 
 ## What This Role Does

@@ -15,12 +15,12 @@ This role installs `docker-pass` automatically. However, **secrets must be initi
 
 ## Role Variables
 
-|Variable|Default|Description|
-|--------|-------|-----------|
-|`docker_pass_repo_url`|`https://github.com/docker/secrets-engine.git`|Git repository URL|
-|`docker_pass_version`|`main`|Git branch, tag, or commit to checkout|
-|`docker_pass_user`|`{{ ros_user }}`|User to install the plugin for|
-|`docker_pass_user_home`|`{{ user_home }}`|User's home directory|
+| Variable                | Default                                        | Description                            |
+| ----------------------- | ---------------------------------------------- | -------------------------------------- |
+| `docker_pass_repo_url`  | `https://github.com/docker/secrets-engine.git` | Git repository URL                     |
+| `docker_pass_version`   | `main`                                         | Git branch, tag, or commit to checkout |
+| `docker_pass_user`      | `{{ ros_user }}`                               | User to install the plugin for         |
+| `docker_pass_user_home` | `{{ user_home }}`                              | User's home directory                  |
 
 ## Example Usage
 
@@ -29,7 +29,7 @@ This role installs `docker-pass` automatically. However, **secrets must be initi
   hosts: all
   become: true
   roles:
-    - { role: docker_pass, tags: ["docker_pass"] }
+    - { role: docker_pass, tags: ['docker_pass'] }
 ```
 
 ## What This Role Does
