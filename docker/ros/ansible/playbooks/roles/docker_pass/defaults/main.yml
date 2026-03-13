@@ -1,0 +1,14 @@
+---
+# Default variables for docker_pass role
+
+# Git repository URL for secrets-engine (docker-pass plugin)
+docker_pass_repo_url: "https://github.com/docker/secrets-engine.git"
+
+# Version/branch/tag to checkout (use 'main' for latest)
+docker_pass_version: "main"
+
+# User to install the plugin for (defaults to ros_user from playbook context)
+docker_pass_user: "{{ ros_user | default(ansible_user_id) }}"
+
+# User home directory
+docker_pass_user_home: "{{ user_home | default('/home/' + docker_pass_user) }}"
