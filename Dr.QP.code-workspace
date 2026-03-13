@@ -168,7 +168,7 @@
       {
         "label": "Dr.QP colcon build",
         "type": "ROS2",
-        "command": "python3",
+        "command": "${workspaceFolder}/.venv-prod/bin/python3",
         "args": [
           "-m",
           "colcon",
@@ -210,7 +210,7 @@
       {
         "label": "Dr.QP colcon test",
         "type": "ROS2",
-        "command": "python3",
+        "command": "${workspaceFolder}/.venv-prod/bin/python3",
         "args": [
           "-m",
           "colcon",
@@ -239,7 +239,7 @@
       {
         "label": "Dr.QP colcon test failed only",
         "type": "ROS2",
-        "command": "python3",
+        "command": "${workspaceFolder}/.venv-prod/bin/python3",
         "args": [
           "-m",
           "colcon",
