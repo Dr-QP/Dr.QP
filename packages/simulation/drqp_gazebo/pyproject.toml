@@ -11,7 +11,7 @@ maintainers = [{name = "Anton Matosov", email = "anton.matosov@gmail.com"}]
 dependencies = []
 
 [tool.setuptools.packages.find]
-exclude = ["test*"]
+include = ["drqp_gazebo*"]
 
 [tool.setuptools.data-files]
 "share/ament_index/resource_index/packages" = ["resource/drqp_gazebo"]

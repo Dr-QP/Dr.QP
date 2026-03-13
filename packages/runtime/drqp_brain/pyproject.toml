@@ -20,7 +20,7 @@ drqp_robot_state = "drqp_brain.robot_state.robot_state_node:main"
 drqp_joystick_translator = "drqp_brain.joystick_translator_node:main"
 
 [tool.setuptools.packages.find]
-exclude = ["test*"]
+include = ["drqp_brain*"]
 
 [tool.setuptools.data-files]
 "share/ament_index/resource_index/packages" = ["resource/drqp_brain"]
