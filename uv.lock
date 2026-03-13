@@ -763,7 +763,6 @@ dependencies = [
     { name = "numpy" },
     { name = "python-statemachine" },
     { name = "scipy" },
-    { name = "setuptools" },
 ]
 
 [package.metadata]
@@ -771,7 +770,6 @@ requires-dist = [
     { name = "numpy" },
     { name = "python-statemachine", specifier = ">=2.5.0" },
     { name = "scipy" },
-    { name = "setuptools" },
 ]
 
 [[package]]
