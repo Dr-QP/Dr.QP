@@ -22,6 +22,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            install_xpra=true \
            install_docker=true \
            install_agentic_tools=true \
+           install_devcontainer_firewall=true \
          "
 
 WORKDIR $OVERLAY_WS
