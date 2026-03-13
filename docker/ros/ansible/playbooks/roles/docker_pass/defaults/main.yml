@@ -5,7 +5,8 @@
 docker_pass_repo_url: "https://github.com/docker/secrets-engine.git"
 
 # Version/branch/tag to checkout (use 'main' for latest)
-docker_pass_version: "main"
+# https://github.com/docker/secrets-engine/releases
+docker_pass_version: "v0.4.0"
 
 # User to install the plugin for (defaults to ros_user from playbook context)
 docker_pass_user: "{{ ros_user | default(ansible_user_id) }}"
