@@ -31,23 +31,6 @@
     }
   },
   "mounts": [
-    // Docker Desktop MCP integration: share MCP server config, secrets engine, and tools socket
-    // from the Mac host so agents can use Docker Desktop's configured MCP servers and secrets.
-    {
-      "source": "${localEnv:HOME}/.docker/mcp",
-      "target": "/root/.docker/mcp",
-      "type": "bind"
-    },
-    {
-      "source": "${localEnv:HOME}/.docker/desktop",
-      "target": "/root/.docker/desktop",
-      "type": "bind"
-    },
-    {
-      "source": "${localEnv:HOME}/.cache/docker-secrets-engine",
-      "target": "/root/.cache/docker-secrets-engine",
-      "type": "bind"
-    },
     {
       "source": "drqp-ansible",
       "target": "/opt/ros/overlay_ws/.ansible",
