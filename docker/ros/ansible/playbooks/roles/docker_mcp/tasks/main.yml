@@ -1,6 +1,7 @@
 ---
 # Docker MCP CLI plugin installation tasks
 # Builds and installs docker-mcp from https://github.com/docker/mcp-gateway
+# Builds and installs docker-pass from https://github.com/docker/secrets-engine
 
 - name: Install Go programming language
   ansible.builtin.apt:
@@ -14,6 +15,8 @@
     name:
       - git
       - make
+      - gpg
+      - pass
     state: present
     install_recommends: false
 
@@ -69,3 +72,59 @@
   become: true
   become_user: "{{ docker_mcp_user }}"
   when: docker_mcp_temp_dir.path is defined
+
+# docker-pass: secrets engine plugin for `docker mcp gateway run --secrets docker-desktop`
+- name: Create temporary directory for secrets-engine
+  ansible.builtin.tempfile:
+    state: directory
+    prefix: secrets_engine_
+  register: docker_pass_temp_dir
+  become: true
+  become_user: "{{ docker_mcp_user }}"
+
+- name: Clone secrets-engine repository
+  ansible.builtin.git:
+    repo: "{{ docker_pass_repo_url }}"
+    dest: "{{ docker_pass_temp_dir.path }}"
+    version: "{{ docker_pass_version }}"
+    depth: 1
+  become: true
+  become_user: "{{ docker_mcp_user }}"
+
+- name: Build docker-pass plugin
+  ansible.builtin.command:
+    cmd: >-
+      go build -o "{{ docker_mcp_user_home }}/.docker/cli-plugins/docker-pass" .
+    chdir: "{{ docker_pass_temp_dir.path }}/plugins/pass"
+  environment:
+    HOME: "{{ docker_mcp_user_home }}"
+    PATH: "{{ ansible_env.PATH }}:/usr/local/go/bin:{{ docker_mcp_user_home }}/go/bin"
+    GOPATH: "{{ docker_mcp_user_home }}/go"
+  become: true
+  become_user: "{{ docker_mcp_user }}"
+  changed_when: true
+
+- name: Set docker-pass executable permissions
+  ansible.builtin.file:
+    path: "{{ docker_mcp_user_home }}/.docker/cli-plugins/docker-pass"
+    owner: "{{ docker_mcp_user }}"
+    group: "{{ docker_mcp_user }}"
+    mode: "0755"
+
+- name: Verify docker-pass plugin was installed
+  ansible.builtin.stat:
+    path: "{{ docker_mcp_user_home }}/.docker/cli-plugins/docker-pass"
+  register: docker_pass_stat
+
+- name: Fail if docker-pass plugin was not installed
+  ansible.builtin.fail:
+    msg: "docker-pass plugin was not installed correctly"
+  when: not docker_pass_stat.stat.exists
+
+- name: Clean up secrets-engine temporary directory
+  ansible.builtin.file:
+    path: "{{ docker_pass_temp_dir.path }}"
+    state: absent
+  become: true
+  become_user: "{{ docker_mcp_user }}"
+  when: docker_pass_temp_dir.path is defined
