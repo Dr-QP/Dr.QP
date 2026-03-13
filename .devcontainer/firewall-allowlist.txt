@@ -1,0 +1,50 @@
+# Firewall domain allowlist for the Dr.QP devcontainer.
+# Read at container start by /usr/local/bin/init-firewall.sh.
+# Edit this file to add or remove allowed destinations; changes take effect
+# on the next container start (no image rebuild needed).
+#
+# Format:
+#   github-meta          – fetch all GitHub IP ranges via api.github.com/meta
+#                          (covers github.com, raw.githubusercontent.com, etc.)
+#   <domain>             – resolve the domain via DNS and allow the resulting IPs
+#   # <comment>          – ignored
+#   <blank line>         – ignored
+
+# GitHub (web, API, git, raw content, releases)
+github-meta
+
+# Anthropic / Claude Code
+api.anthropic.com
+statsig.anthropic.com
+statsig.com
+sentry.io
+
+# npm registry
+registry.npmjs.org
+
+# Python packaging (uv / pip)
+pypi.org
+files.pythonhosted.org
+bootstrap.pypa.io
+# uv install script
+astral.sh
+
+# VS Code marketplace & updates
+marketplace.visualstudio.com
+vscode.blob.core.windows.net
+update.code.visualstudio.com
+*.gallery.vsassets.io
+*.gallerycdn.vsassets.io
+
+# The rest of dev image: Ubuntu, ROS and tools
+security.ubuntu.com
+archive.ubuntu.com
+ppa.launchpadcontent.net
+ports.ubuntu.com
+download.docker.com
+packages.ros.org
+deb.nodesource.com
+apt.kitware.com
+apt.llvm.org
+cli.github.com
+bun.com
