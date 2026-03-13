@@ -11,6 +11,7 @@ This package bundles the following third-party assets.
 **License:** Apache 2.0
 
 Files:
+
 - `sphinxcontrib/spotlight/_static/sphinxcontrib_spotlight/js/spotlight.bundle.min.js`
 
 ```

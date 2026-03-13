@@ -105,7 +105,7 @@ class SpotlightTransform(SphinxPostTransform):
 def add_static_path(app: Sphinx) -> None:
     """Add the extension's _static directory to the Sphinx static path."""
     static_dir = str(_STATIC_DIR)
-    static_paths = getattr(app.config, "html_static_path", None)
+    static_paths = getattr(app.config, 'html_static_path', None)
 
     if static_paths is None:
         # Initialize html_static_path if it hasn't been set yet.
