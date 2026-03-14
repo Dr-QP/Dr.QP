@@ -28,7 +28,7 @@ See `defaults/main.yml` for default values
   hosts: all
   become: true
   roles:
-    - { role: docker_mcp, tags: ["docker_mcp"] }
+    - { role: docker_mcp, tags: ['docker_mcp'] }
 ```
 
 ### Install specific version
@@ -39,9 +39,9 @@ See `defaults/main.yml` for default values
   become: true
   roles:
     - role: docker_mcp
-      tags: ["docker_mcp"]
+      tags: ['docker_mcp']
       vars:
-        docker_mcp_version: "v0.40.0"
+        docker_mcp_version: 'v0.40.0'
 ```
 
 ### Install for a specific user
@@ -52,10 +52,10 @@ See `defaults/main.yml` for default values
   become: true
   roles:
     - role: docker_mcp
-      tags: ["docker_mcp"]
+      tags: ['docker_mcp']
       vars:
-        docker_mcp_user: "developer"
-        docker_mcp_user_home: "/home/developer"
+        docker_mcp_user: 'developer'
+        docker_mcp_user_home: '/home/developer'
 ```
 
 ## What This Role Does

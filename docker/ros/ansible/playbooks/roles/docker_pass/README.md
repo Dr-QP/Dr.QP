@@ -29,7 +29,7 @@ See `defaults/main.yml` for default values
   hosts: all
   become: true
   roles:
-    - { role: docker_pass, tags: ["docker_pass"] }
+    - { role: docker_pass, tags: ['docker_pass'] }
 ```
 
 ## What This Role Does
