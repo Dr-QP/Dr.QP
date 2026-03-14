@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -xeuo pipefail
+set -euo pipefail
 
 script_dir=$(dirname "${BASH_SOURCE[0]}")
 
