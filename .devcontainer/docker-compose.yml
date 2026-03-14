@@ -7,6 +7,9 @@ services:
     # Note: Using privileged mode grants the container elevated permissions, which can pose security risks. Use with caution and only in trusted environments.
     privileged: true
 
+    environment:
+      DOCKER_PASS_EXPORT_KEY: ${DOCKER_PASS_EXPORT_KEY:-}
+
     volumes:
       # Volumes for git worktree
       - ${GIT_REPO:-$PWD}:${GIT_REPO:-$PWD}:rw

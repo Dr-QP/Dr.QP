@@ -35,16 +35,25 @@ _export_docker_pass_secrets() {
         return 0
     fi
 
-    # Build a sh one-liner that prints "name\tvalue" for each secret.
+    # Build a sh one-liner that prints "name\tvalue" only when the secret was
+    # successfully resolved (non-empty); unresolved se:// refs stay empty.
     local print_cmd="" j
     for j in $(seq 0 $((i - 1))); do
-        print_cmd+="printf '%s\t%s\n' \"\$_N${j}\" \"\$_S${j}\"; "
+        print_cmd+="[ -n \"\$_S${j}\" ] && printf '%s\t%s\n' \"\$_N${j}\" \"\$_S${j}\"; "
     done
 
+    # Encrypt the export file with a per-session random key so it is not stored
+    # in plaintext on disk. The key is written to .devcontainer/.env and picked
+    # up by docker-compose, then used by devcontainer-setup-pass.sh to decrypt.
+    local key
+    key=$(openssl rand -hex 32)
+
     mkdir -p "$export_dir"
-    : > "$export_file"
+
+    docker run --rm "${args[@]}" busybox sh -c "$print_cmd" 2>/dev/null \
+        | openssl enc -aes-256-cbc -pbkdf2 -pass "pass:${key}" -out "$export_file"
     chmod 600 "$export_file"
 
-    docker run --rm "${args[@]}" busybox sh -c "$print_cmd" 2>/dev/null >> "$export_file"
+    echo "DOCKER_PASS_EXPORT_KEY=${key}" >> "$script_dir/.env"
 }
 _export_docker_pass_secrets
