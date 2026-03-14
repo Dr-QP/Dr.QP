@@ -49,10 +49,12 @@ See `defaults/main.yml` for default values
 ### 1 — Generate or import a GPG key
 
 ```bash
-# Generate a new key (accept defaults; use a blank passphrase for unattended use)
+# Generate a new key (explicit RSA parameters avoid GPG default-curve issues in some devcontainers)
 gpg --batch --gen-key <<EOF
-Key-Type: default
-Subkey-Type: default
+Key-Type: RSA
+Key-Length: 3072
+Subkey-Type: RSA
+Subkey-Length: 3072
 Name-Real: Docker Secrets
 Name-Email: docker-secrets@local
 Expire-Date: 0
