@@ -14,12 +14,12 @@ The Docker MCP Gateway enables integration with AI tools and agents by providing
 
 ## Role Variables
 
-|Variable|Default|Description|
-|--------|-------|-----------|
-|`docker_mcp_repo_url`|`https://github.com/docker/mcp-gateway.git`|Git repository URL|
-|`docker_mcp_version`|`main`|Git branch, tag, or commit to checkout|
-|`docker_mcp_user`|`{{ ros_user }}`|User to install the plugin for|
-|`docker_mcp_user_home`|`{{ user_home }}`|User's home directory|
+- `docker_mcp_repo_url` - Git repository URL
+- `docker_mcp_version` - Git branch, tag, or commit to checkout
+- `docker_mcp_user` - User to install the plugin for
+- `docker_mcp_user_home` - User's home directory
+
+See `defaults/main.yml` for default values
 
 ## Example Usage
 
