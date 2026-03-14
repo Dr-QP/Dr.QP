@@ -20,18 +20,31 @@ _export_docker_pass_secrets() {
         return 0
     fi
 
-    # `docker pass ls` prints one full secret path per line, e.g.:
-    #   docker/mcp/github.personal_access_token
+    # Collect all docker/mcp/ secret names.
+    # Pass each as _Ni (name) + _Si (se:// value) so the container can print
+    # self-describing "name\tvalue" lines — no index alignment needed on the
+    # host side, and `docker pass get` is bypassed (it always masks the value).
+    local args=() name i
+    i=0
+    while IFS= read -r name; do
+        args+=(-e "_N${i}=${name}" -e "_S${i}=se://${name}")
+        i=$((i + 1))
+    done < <(docker pass ls 2>/dev/null | grep '^docker/mcp/')
+
+    if [[ $i -eq 0 ]]; then
+        return 0
+    fi
+
+    # Build a sh one-liner that prints "name\tvalue" for each secret.
+    local print_cmd="" j
+    for j in $(seq 0 $((i - 1))); do
+        print_cmd+="printf '%s\t%s\n' \"\$_N${j}\" \"\$_S${j}\"; "
+    done
+
     mkdir -p "$export_dir"
     : > "$export_file"
     chmod 600 "$export_file"
 
-    # `docker pass get` always masks the value (hardcoded "**********").
-    # The only way to extract plaintext is to let Docker inject it via the se:// URI scheme.
-    local name value
-    while IFS= read -r name; do
-        value=$(docker run --rm -e "_V=se://$name" busybox sh -c 'printf "%s" "$_V"' 2>/dev/null) || continue
-        printf '%s\t%s\n' "$name" "$value" >> "$export_file"
-    done < <(docker pass ls 2>/dev/null | grep '^docker/mcp/')
+    docker run --rm "${args[@]}" busybox sh -c "$print_cmd" 2>/dev/null >> "$export_file"
 }
 _export_docker_pass_secrets
