@@ -9,6 +9,12 @@ echo "GIT_REPO=$gitdir" > "$script_dir/.env"
 LOCAL_WORKSPACE_FOLDER=$(realpath "$script_dir/..")
 echo "LOCAL_WORKSPACE_FOLDER=$LOCAL_WORKSPACE_FOLDER" >> "$script_dir/.env"
 
+HOST_MCP_DIR="$HOME/.docker/mcp"
+if [[ ! -d "$HOST_MCP_DIR" ]]; then
+    mkdir -p "$HOST_MCP_DIR"
+fi
+echo "HOST_MCP_DIR=$HOST_MCP_DIR" >> "$script_dir/.env"
+
 # Export docker/mcp/ secrets from the host via `docker pass` so the container can import them.
 # The export file is written to .tmp/ (gitignored) and is read+deleted by devcontainer-setup-pass.sh.
 _export_docker_pass_secrets() {

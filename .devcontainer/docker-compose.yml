@@ -17,6 +17,9 @@ services:
 
       # Local ROS overlay workspace
       - ${LOCAL_WORKSPACE_FOLDER:-$PWD}:/opt/ros/overlay_ws/:rw
+
+      # Docker mcp setup from host
+      - ${HOST_MCP_DIR:-/tmp}:/root/.docker/mcp:ro
     command: ['sleep', 'infinity']
 
     ######################################################################
