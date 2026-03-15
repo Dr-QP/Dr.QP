@@ -1,10 +1,7 @@
 ---
 # docker-pass CLI plugin installation tasks
-# Builds and installs docker-pass from https://github.com/docker/secrets-engine
-#
-# docker-pass is a Docker CLI plugin that bridges `docker mcp gateway run --secrets docker-desktop`
-# to the local `pass` password store on Linux. After installation, secrets must be
-# initialised manually — see the README for details.
+# Builds and installs a Linux Docker CLI launcher around the upstream
+# docker/secrets-engine plugins/pass module.
 
 - name: Install Go programming language
   ansible.builtin.apt:
@@ -13,12 +10,14 @@
     update_cache: true
     install_recommends: false
 
-- name: Install docker-pass dependencies
+- name: Install docker-pass runtime dependencies
   ansible.builtin.apt:
     name:
       - git
-      - gpg
-      - pass
+      - dbus
+      - dbus-x11
+      - gnome-keyring
+      - libglib2.0-bin
     state: present
     install_recommends: false
 
@@ -47,10 +46,30 @@
   become: true
   become_user: "{{ docker_pass_user }}"
 
+- name: Create docker-pass launcher directory
+  ansible.builtin.file:
+    path: "{{ docker_pass_temp_dir.path }}/plugins/pass/cmd/docker-pass"
+    state: directory
+    owner: "{{ docker_pass_user }}"
+    group: "{{ docker_pass_user }}"
+    mode: "0755"
+  become: true
+  become_user: "{{ docker_pass_user }}"
+
+- name: Install docker-pass launcher source
+  ansible.builtin.template:
+    src: docker-pass-main.go.j2
+    dest: "{{ docker_pass_temp_dir.path }}/plugins/pass/cmd/docker-pass/main.go"
+    owner: "{{ docker_pass_user }}"
+    group: "{{ docker_pass_user }}"
+    mode: "0644"
+  become: true
+  become_user: "{{ docker_pass_user }}"
+
 - name: Build docker-pass plugin
   ansible.builtin.command:
     cmd: >-
-      go build -o "{{ docker_pass_user_home }}/.docker/cli-plugins/docker-pass" .
+      go build -trimpath -o "{{ docker_pass_user_home }}/.docker/cli-plugins/docker-pass" ./cmd/docker-pass
     chdir: "{{ docker_pass_temp_dir.path }}/plugins/pass"
   environment:
     HOME: "{{ docker_pass_user_home }}"
@@ -67,15 +86,18 @@
     group: "{{ docker_pass_user }}"
     mode: "0755"
 
-- name: Verify docker-pass plugin was installed
-  ansible.builtin.stat:
-    path: "{{ docker_pass_user_home }}/.docker/cli-plugins/docker-pass"
-  register: docker_pass_stat
+- name: Verify docker-pass plugin metadata
+  ansible.builtin.command:
+    cmd: "{{ docker_pass_user_home }}/.docker/cli-plugins/docker-pass docker-cli-plugin-metadata"
+  register: docker_pass_metadata
+  changed_when: false
+  become: true
+  become_user: "{{ docker_pass_user }}"
 
-- name: Fail if docker-pass plugin was not installed
+- name: Fail if docker-pass plugin metadata is unavailable
   ansible.builtin.fail:
     msg: "docker-pass plugin was not installed correctly"
-  when: not docker_pass_stat.stat.exists
+  when: docker_pass_metadata.rc != 0
 
 - name: Clean up temporary directory
   ansible.builtin.file:

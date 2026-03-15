@@ -1,17 +1,17 @@
 # Docker Pass CLI Plugin Role
 
-This Ansible role builds and installs the `docker-pass` secrets provider plugin from [docker/secrets-engine](https://github.com/docker/secrets-engine). It enables `docker mcp gateway run --secrets docker-desktop` to resolve secrets inside a Linux devcontainer.
+This Ansible role installs a working Linux `docker-pass` Docker CLI plugin using the upstream [docker/secrets-engine](https://github.com/docker/secrets-engine) pass module plus a local launcher. It fixes the fact that `plugins/pass/` in `v0.4.0` is a library package, so running `go build` in that directory produces a Go archive rather than a Docker CLI executable.
 
 ## Overview
 
-On macOS, Docker Desktop stores MCP secrets in the host OS Keychain. Inside a Linux devcontainer, that Keychain is not accessible. The `docker-pass` plugin bridges this gap by providing a `docker pass` CLI subcommand backed by the Linux [`pass`](https://www.passwordstore.org/) password manager.
+The upstream Docker Pass implementation on Linux uses the freedesktop Secret Service API over D-Bus. It is not backed by the `pass` GPG password store. This role only installs the Docker CLI plugin binary; a usable Linux runtime still requires a session bus plus a Secret Service provider such as `gnome-keyring` or `kdewallet`.
 
-This role installs `docker-pass` automatically. However, **secrets must be initialised manually after the devcontainer is built** — they are not automatically synchronised from Docker Desktop.
+This role installs `docker-pass` automatically. The devcontainer startup scripts are responsible for launching a D-Bus session plus `gnome-keyring-daemon` so the official Linux backend is available.
 
 ## Requirements
 
 - Go (installed automatically by this role)
-- `gpg` and `pass` (installed automatically by this role)
+- A Linux Secret Service backend such as `gnome-keyring` or `kdewallet` if you want the official upstream `docker pass` runtime to work
 
 ## Role Variables
 
@@ -35,63 +35,19 @@ See `defaults/main.yml` for default values
 ## What This Role Does
 
 1. **Installs Go** - Required for building the plugin
-2. **Installs `gpg` and `pass`** - Runtime dependencies for the secrets store
+2. **Installs Secret Service runtime packages** - `dbus`, `dbus-x11`, `gnome-keyring`, and `libglib2.0-bin`
 3. **Creates plugins directory** - `~/.docker/cli-plugins/`
 4. **Clones the repository** - Shallow clone of secrets-engine
-5. **Builds the plugin** - `go build` from `plugins/pass/`
-6. **Verifies installation** - Confirms plugin exists
-7. **Cleans up** - Removes temporary build directory
+5. **Renders a Linux launcher** - Adds a local `main.go` that exposes Docker CLI metadata and executes the upstream pass commands
+6. **Builds the plugin** - `go build ./cmd/docker-pass`
+7. **Verifies installation** - Runs `docker-cli-plugin-metadata` against the built binary
+8. **Cleans up** - Removes temporary build directory
 
-## Post-Install: Initialising Secrets
+## Runtime Notes
 
-`docker-pass` uses the local `pass` store (GPG-encrypted). The store must be initialised once per devcontainer, and each secret must be added manually.
+`docker pass` on Linux talks to Secret Service, not the `pass` utility. If `docker pass ls` fails with D-Bus or collection errors, the plugin installation is correct but the container is missing a running Secret Service session.
 
-### 1 — Generate or import a GPG key
-
-```bash
-# Generate a new key (explicit RSA parameters avoid GPG default-curve issues in some devcontainers)
-gpg --batch --gen-key <<EOF
-Key-Type: RSA
-Key-Length: 3072
-Subkey-Type: RSA
-Subkey-Length: 3072
-Name-Real: Docker Secrets
-Name-Email: docker-secrets@local
-Expire-Date: 0
-%no-protection
-EOF
-```
-
-### 2 — Initialise the pass store
-
-```bash
-GPG_ID=$(gpg --list-keys --with-colons docker-secrets@local | awk -F: '/^fpr/ { print $10; exit }')
-pass init "$GPG_ID"
-```
-
-### 3 — Add your secrets
-
-Secrets are stored under the `docker/mcp/` prefix to match Docker Desktop's naming:
-
-```bash
-echo "ghp_your_token_here" | pass insert -e docker/mcp/github.personal_access_token
-```
-
-Verify with:
-
-```bash
-docker pass ls
-# or
-docker mcp secret ls
-```
-
-### 4 — Use with docker mcp gateway
-
-No extra flags needed — `--secrets docker-desktop` is the default:
-
-```bash
-docker mcp gateway run
-```
+The repository bootstrap now imports exported secrets with `docker pass set`, so the devcontainer runtime and the Docker CLI plugin use the same backend.
 
 ## References
 

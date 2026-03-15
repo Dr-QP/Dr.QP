@@ -2,6 +2,12 @@ script_file="${BASH_SOURCE[0]}"
 script_dir=$(dirname "$script_file")
 source "$script_dir/__utils.sh"
 
+docker_pass_env_file="$root_dir/.tmp/docker-pass-session.env"
+if [[ -f "$docker_pass_env_file" ]]; then
+  # shellcheck disable=SC1090
+  source "$docker_pass_env_file"
+fi
+
 (cd "$root_dir" && "$root_dir/docker/ros/deploy/prod-venv-create.sh")
 
 while [[ $# -gt 0 ]]; do

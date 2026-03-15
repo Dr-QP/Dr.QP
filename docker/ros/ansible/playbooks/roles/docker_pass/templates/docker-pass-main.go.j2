@@ -1,0 +1,59 @@
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"os"
+
+	passcli "github.com/docker/secrets-engine/plugins/pass"
+	"github.com/docker/secrets-engine/plugins/pass/commands"
+	passstore "github.com/docker/secrets-engine/plugins/pass/store"
+)
+
+const serviceGroup = "docker"
+
+type pluginMetadata struct {
+	SchemaVersion   string `json:"SchemaVersion"`
+	Vendor          string `json:"Vendor"`
+	Version         string `json:"Version"`
+	ShortDescription string `json:"ShortDescription"`
+}
+
+func printMetadata() error {
+	return json.NewEncoder(os.Stdout).Encode(pluginMetadata{
+		SchemaVersion:   "0.1.0",
+		Vendor:          "Docker Inc.",
+		Version:         "{{ docker_pass_version }}",
+		ShortDescription: "Docker Pass Plugin",
+	})
+}
+
+func main() {
+	args := os.Args[1:]
+	if len(args) > 0 && args[0] == "docker-cli-plugin-metadata" {
+		if err := printMetadata(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
+	if len(args) > 0 && args[0] == "pass" {
+		args = args[1:]
+	}
+
+	store, err := passstore.PassStore(serviceGroup)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	root := passcli.Root(context.Background(), store, commands.VersionInfo{
+		Version: "{{ docker_pass_version }}",
+		Commit:  "local-build",
+	})
+	root.SetArgs(args)
+	if err := root.Execute(); err != nil {
+		os.Exit(1)
+	}
+}
