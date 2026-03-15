@@ -3,15 +3,36 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net"
+	"net/http"
 	"os"
+	"os/signal"
+	"path/filepath"
+	"syscall"
+	"time"
 
-	passcli "github.com/docker/secrets-engine/plugins/pass"
+	"connectrpc.com/connect"
+	"google.golang.org/protobuf/proto"
+
+	passplugin "github.com/docker/secrets-engine/plugins/pass"
 	"github.com/docker/secrets-engine/plugins/pass/commands"
 	passstore "github.com/docker/secrets-engine/plugins/pass/store"
+	resolver "github.com/docker/secrets-engine/x/api/resolver"
+	resolverv1 "github.com/docker/secrets-engine/x/api/resolver/v1"
+	"github.com/docker/secrets-engine/x/api/resolver/v1/resolverv1connect"
+	"github.com/docker/secrets-engine/x/logging"
 )
 
-const serviceGroup = "docker"
+const (
+	serviceGroup             = "docker"
+	localEngineServeCommand  = "internal-engine-serve"
+	localEnginePluginName    = "pass"
+	localEnginePluginPattern = "docker/**"
+	localEngineHealthPath    = "/health"
+	localEngineShutdownGrace = 5 * time.Second
+)
 
 type pluginMetadata struct {
 	SchemaVersion   string `json:"SchemaVersion"`
@@ -29,10 +50,119 @@ func printMetadata() error {
 	})
 }
 
+type listService struct{}
+
+func (listService) ListPlugins(context.Context, *connect.Request[resolverv1.ListPluginsRequest]) (*connect.Response[resolverv1.ListPluginsResponse], error) {
+	return connect.NewResponse(resolverv1.ListPluginsResponse_builder{
+		Plugins: []*resolverv1.Plugin{
+			resolverv1.Plugin_builder{
+				Name:     proto.String(localEnginePluginName),
+				Version:  proto.String("{{ docker_pass_version }}"),
+				Pattern:  proto.String(localEnginePluginPattern),
+				External: proto.Bool(true),
+			}.Build(),
+		},
+	}.Build()), nil
+}
+
+func engineSocketPath() (string, error) {
+	cacheDir, err := os.UserCacheDir()
+	if err != nil {
+		return "", fmt.Errorf("resolve user cache directory: %w", err)
+	}
+
+	socketDir := filepath.Join(cacheDir, "docker-secrets-engine")
+	if err := os.MkdirAll(socketDir, 0o700); err != nil {
+		return "", fmt.Errorf("create engine socket directory: %w", err)
+	}
+
+	return filepath.Join(socketDir, "engine.sock"), nil
+}
+
+func runLocalEngine() error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	store, err := passstore.PassStore(serviceGroup)
+	if err != nil {
+		return err
+	}
+
+	plugin, err := passplugin.NewPassPlugin(logging.NewDefaultLogger("docker-pass-engine"), store)
+	if err != nil {
+		return fmt.Errorf("create pass resolver: %w", err)
+	}
+
+	socketPath, err := engineSocketPath()
+	if err != nil {
+		return err
+	}
+
+	if err := os.Remove(socketPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("remove stale engine socket: %w", err)
+	}
+
+	listener, err := net.Listen("unix", socketPath)
+	if err != nil {
+		return fmt.Errorf("listen on engine socket %q: %w", socketPath, err)
+	}
+	defer func() {
+		_ = listener.Close()
+		_ = os.Remove(socketPath)
+	}()
+
+	if err := os.Chmod(socketPath, 0o600); err != nil {
+		return fmt.Errorf("set engine socket permissions: %w", err)
+	}
+
+	httpMux := http.NewServeMux()
+	httpMux.HandleFunc(localEngineHealthPath, func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
+	})
+	httpMux.Handle(resolverv1connect.NewListServiceHandler(listService{}))
+	httpMux.Handle(resolverv1connect.NewResolverServiceHandler(resolver.NewResolverHandler(plugin)))
+
+	server := &http.Server{Handler: httpMux}
+	errCh := make(chan error, 1)
+	go func() {
+		defer close(errCh)
+		if serveErr := server.Serve(listener); serveErr != nil && !errors.Is(serveErr, http.ErrServerClosed) {
+			errCh <- serveErr
+		}
+	}()
+
+	select {
+	case serveErr, ok := <-errCh:
+		if ok && serveErr != nil {
+			return serveErr
+		}
+		return nil
+	case <-ctx.Done():
+	}
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), localEngineShutdownGrace)
+	defer cancel()
+	shutdownErr := server.Shutdown(shutdownCtx)
+	serveErr, ok := <-errCh
+	if !ok {
+		serveErr = nil
+	}
+
+	return errors.Join(shutdownErr, serveErr)
+}
+
 func main() {
 	args := os.Args[1:]
 	if len(args) > 0 && args[0] == "docker-cli-plugin-metadata" {
 		if err := printMetadata(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
+	if len(args) > 0 && args[0] == localEngineServeCommand {
+		if err := runLocalEngine(); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
@@ -48,7 +178,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	root := passcli.Root(context.Background(), store, commands.VersionInfo{
+	root := passplugin.Root(context.Background(), store, commands.VersionInfo{
 		Version: "{{ docker_pass_version }}",
 		Commit:  "local-build",
 	})

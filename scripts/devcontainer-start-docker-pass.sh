@@ -4,6 +4,11 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 workspace_dir="$(cd "$script_dir/.." && pwd)"
 env_file="$workspace_dir/.tmp/docker-pass-session.env"
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/docker-secrets-engine"
+engine_socket="$cache_dir/engine.sock"
+engine_pid_file="$workspace_dir/.tmp/docker-pass-engine.pid"
+engine_log_file="$workspace_dir/.tmp/docker-pass-engine.log"
+engine_binary="$HOME/.docker/cli-plugins/docker-pass"
 
 session_ready() {
     [[ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]] || return 1
@@ -12,6 +17,73 @@ session_ready() {
         --object-path /org/freedesktop/DBus \
         --method org.freedesktop.DBus.GetNameOwner \
         org.freedesktop.secrets >/dev/null 2>&1
+}
+
+engine_ready() {
+    [[ -S "$engine_socket" ]] || return 1
+    curl --silent --show-error --fail --unix-socket "$engine_socket" \
+        http://localhost/health >/dev/null 2>&1
+}
+
+ensure_local_engine() {
+    local engine_pid=""
+    local timeout_ms=5000
+    local interval_ms=100
+    local elapsed_ms=0
+
+    if [[ ! -x "$engine_binary" ]]; then
+        return 0
+    fi
+
+    if engine_ready; then
+        return 0
+    fi
+
+    mkdir -p "$workspace_dir/.tmp"
+
+    if [[ -f "$engine_pid_file" ]]; then
+        engine_pid="$(<"$engine_pid_file")"
+        if [[ -n "$engine_pid" ]] && kill -0 "$engine_pid" >/dev/null 2>&1; then
+            while ! engine_ready; do
+                sleep 0.1
+                elapsed_ms=$((elapsed_ms + interval_ms))
+                if (( elapsed_ms >= timeout_ms )); then
+                    break
+                fi
+            done
+            if engine_ready; then
+                return 0
+            fi
+        fi
+        rm -f "$engine_pid_file"
+    fi
+
+    mkdir -p "$cache_dir"
+    rm -f "$engine_socket"
+
+    "$engine_binary" internal-engine-serve >"$engine_log_file" 2>&1 &
+    engine_pid=$!
+    echo "$engine_pid" > "$engine_pid_file"
+
+    elapsed_ms=0
+    while ! engine_ready; do
+        if ! kill -0 "$engine_pid" >/dev/null 2>&1; then
+            echo "docker-pass local engine exited unexpectedly" >&2
+            if [[ -f "$engine_log_file" ]]; then
+                cat "$engine_log_file" >&2
+            fi
+            return 1
+        fi
+        sleep 0.1
+        elapsed_ms=$((elapsed_ms + interval_ms))
+        if (( elapsed_ms >= timeout_ms )); then
+            echo "Timeout waiting for docker-pass local engine to become available" >&2
+            if [[ -f "$engine_log_file" ]]; then
+                cat "$engine_log_file" >&2
+            fi
+            return 1
+        fi
+    done
 }
 
 load_saved_session() {
@@ -36,10 +108,12 @@ EOF
 
 if session_ready; then
     write_env_file
+    ensure_local_engine
     exit 0
 fi
 
 if load_saved_session; then
+    ensure_local_engine
     exit 0
 fi
 
@@ -97,3 +171,4 @@ while ! session_ready; do
 done
 
 write_env_file
+ensure_local_engine
