@@ -10,6 +10,28 @@ workspace_dir="$(cd "$script_dir/.." && pwd)"
 EXPORT_FILE="$workspace_dir/.tmp/docker-pass-export"
 DOCKER_PASS_ENV_FILE="$workspace_dir/.tmp/docker-pass-session.env"
 
+import_secret() {
+    local name="$1"
+    local value="$2"
+    local attempt=1
+    local max_attempts=10
+    local error_output=""
+
+    while (( attempt <= max_attempts )); do
+        if error_output=$(printf '%s\n' "$value" | docker pass set "$name" 2>&1 >/dev/null); then
+            return 0
+        fi
+
+        if (( attempt == max_attempts )); then
+            echo "$error_output" >&2
+            return 1
+        fi
+
+        sleep 0.5
+        attempt=$((attempt + 1))
+    done
+}
+
 "$script_dir/devcontainer-start-docker-pass.sh"
 
 if [[ -f "$DOCKER_PASS_ENV_FILE" ]]; then
@@ -27,7 +49,7 @@ if [[ -f "$EXPORT_FILE" ]] && [[ -n "${DOCKER_PASS_EXPORT_KEY:-}" ]]; then
     fi
     while IFS=$'\t' read -r name value; do
         [[ -z "$name" ]] && continue
-        printf '%s\n' "$value" | docker pass set "$name"
+        import_secret "$name" "$value"
     done < <(openssl enc -aes-256-cbc -d -pbkdf2 \
         -pass "pass:${DOCKER_PASS_EXPORT_KEY}" -in "$EXPORT_FILE" 2>/dev/null)
     rm -f "$EXPORT_FILE"
