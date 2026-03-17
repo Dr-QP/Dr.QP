@@ -10,10 +10,14 @@ LOCAL_WORKSPACE_FOLDER=$(realpath "$script_dir/..")
 echo "LOCAL_WORKSPACE_FOLDER=$LOCAL_WORKSPACE_FOLDER" >> "$script_dir/.env"
 
 HOST_MCP_DIR="$HOME/.docker/mcp"
-if [[ ! -d "$HOST_MCP_DIR" ]]; then
-    mkdir -p "$HOST_MCP_DIR"
+CONTAINER_MCP_DIR="/root/.docker/mcp"
+if [[ -d "$HOST_MCP_DIR" ]]; then
+    echo "HOST_MCP_DIR=$HOST_MCP_DIR" >> "$script_dir/.env"
+    echo "CONTAINER_MCP_DIR=$CONTAINER_MCP_DIR" >> "$script_dir/.env"
+else
+    # Ensure the container MCP dir exists to avoid bind mount errors, even if empty.
+    mkdir -p "/tmp/stub-mcp"
 fi
-echo "HOST_MCP_DIR=$HOST_MCP_DIR" >> "$script_dir/.env"
 
 # Export docker/mcp/ secrets from the host via `docker pass` so the container can import them.
 # The export file is written to .tmp/ (gitignored) and is read+deleted by devcontainer-setup-pass.sh.
@@ -62,4 +66,13 @@ _export_docker_pass_secrets() {
 
     echo "DOCKER_PASS_EXPORT_KEY=${key}" >> "$script_dir/.env"
 }
-_export_docker_pass_secrets
+
+HOST_SECRETS_SOCKET="$HOME/Library/Caches/docker-secrets-engine/engine.sock"
+DOCKER_SECRETS_ENGINE_SOCKET="/root/.cache/docker-secrets-engine/engine.sock"
+if [[ -S "$HOST_SECRETS_SOCKET" ]]; then
+    echo "HOST_SECRETS_SOCKET=$HOST_SECRETS_SOCKET" >> "$script_dir/.env"
+    echo "DOCKER_SECRETS_ENGINE_SOCKET=$DOCKER_SECRETS_ENGINE_SOCKET" >> "$script_dir/.env"
+else
+    touch "/tmp/stub-secrets-engine.sock"
+    _export_docker_pass_secrets
+fi

@@ -19,7 +19,8 @@ services:
       - ${LOCAL_WORKSPACE_FOLDER:-$PWD}:/opt/ros/overlay_ws/:rw
 
       # Docker mcp setup from host
-      - ${HOST_MCP_DIR:-/tmp}:/root/.docker/mcp:ro
+      - ${HOST_MCP_DIR:-/tmp/stub-mcp}:${CONTAINER_MCP_DIR:-/tmp/stub-mcp}:ro
+      - ${HOST_SECRETS_SOCKET:-/tmp/stub-secrets-engine.sock}:${DOCKER_SECRETS_ENGINE_SOCKET:-/tmp/stub-secrets-engine.sock}:ro
     command: ['sleep', 'infinity']
 
     ######################################################################
