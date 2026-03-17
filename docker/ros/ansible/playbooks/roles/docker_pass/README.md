@@ -47,9 +47,9 @@ See `defaults/main.yml` for default values
 
 `docker pass` on Linux talks to Secret Service, not the `pass` utility. If `docker pass ls` fails with D-Bus or collection errors, the plugin installation is correct but the container is missing a running Secret Service session.
 
-The repository bootstrap now imports exported secrets with `docker pass set`, so the devcontainer runtime and the Docker CLI plugin use the same backend.
+The repository bootstrap imports exported secrets with `docker pass set` only when it is operating without a mounted external secrets engine socket, so the devcontainer still has a local backend when it cannot talk to the host engine directly.
 
-The devcontainer startup script also launches the hidden `internal-engine-serve` mode so `docker mcp secret ls` and other local resolver clients can talk to `~/.cache/docker-secrets-engine/engine.sock` without Docker Desktop running inside the container.
+The devcontainer startup script also launches the hidden `internal-engine-serve` mode so `docker mcp secret ls` and other local resolver clients can talk to `~/.cache/docker-secrets-engine/engine.sock` without Docker Desktop running inside the container. When a host engine socket is already mounted and healthy, startup uses that socket directly and skips local secret mirroring.
 
 ## References
 

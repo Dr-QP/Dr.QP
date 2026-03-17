@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Starts the Docker Pass Secret Service runtime inside the devcontainer and imports
 # any docker/mcp/ secrets that were exported to .tmp/docker-pass-export by
-# devcontainer-init.sh on the host.
+# devcontainer-init.sh on the host. When a live Docker secrets engine socket is
+# mounted into the container, that engine remains the runtime source of truth and
+# no local secret mirroring is required during startup.
 set -xeuo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -137,7 +139,7 @@ fi
 if [[ -f "$EXPORT_FILE" ]] && [[ -n "${DOCKER_PASS_EXPORT_KEY:-}" ]]; then
     import_exported_secrets
 elif [[ "$DOCKER_PASS_EXTERNAL_ENGINE" == "1" ]]; then
-    import_live_engine_secrets
+    echo "Using mounted Docker secrets engine at ${DOCKER_SECRETS_ENGINE_SOCKET:-$HOME/.cache/docker-secrets-engine/engine.sock}; skipping local secret import."
 else
     echo "No docker-pass export file or decryption key; skipping secret import."
 fi
