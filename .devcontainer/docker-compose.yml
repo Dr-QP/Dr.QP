@@ -9,6 +9,8 @@ services:
 
     environment:
       DOCKER_PASS_EXPORT_KEY: ${DOCKER_PASS_EXPORT_KEY:-}
+      DOCKER_PASS_EXTERNAL_ENGINE: ${DOCKER_PASS_EXTERNAL_ENGINE:-0}
+      DOCKER_SECRETS_ENGINE_SOCKET: ${DOCKER_SECRETS_ENGINE_SOCKET:-/root/.cache/docker-secrets-engine/engine.sock}
 
     volumes:
       # Volumes for git worktree

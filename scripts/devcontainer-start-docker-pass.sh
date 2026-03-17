@@ -5,10 +5,11 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 workspace_dir="$(cd "$script_dir/.." && pwd)"
 env_file="$workspace_dir/.tmp/docker-pass-session.env"
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/docker-secrets-engine"
-engine_socket="$cache_dir/engine.sock"
+engine_socket="${DOCKER_SECRETS_ENGINE_SOCKET:-$cache_dir/engine.sock}"
 engine_pid_file="$workspace_dir/.tmp/docker-pass-engine.pid"
 engine_log_file="$workspace_dir/.tmp/docker-pass-engine.log"
 engine_binary="$HOME/.docker/cli-plugins/docker-pass"
+external_engine="${DOCKER_PASS_EXTERNAL_ENGINE:-0}"
 
 session_ready() {
     [[ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]] || return 1
@@ -25,11 +26,25 @@ engine_ready() {
         http://localhost/health >/dev/null 2>&1
 }
 
+wait_for_engine_ready() {
+    local timeout_ms="${1:-5000}"
+    local interval_ms=100
+    local elapsed_ms=0
+
+    while ! engine_ready; do
+        sleep 0.1
+        elapsed_ms=$((elapsed_ms + interval_ms))
+        if (( elapsed_ms >= timeout_ms )); then
+            return 1
+        fi
+    done
+
+    return 0
+}
+
 ensure_local_engine() {
     local engine_pid=""
     local timeout_ms=5000
-    local interval_ms=100
-    local elapsed_ms=0
 
     if [[ ! -x "$engine_binary" ]]; then
         return 0
@@ -39,19 +54,21 @@ ensure_local_engine() {
         return 0
     fi
 
+    if [[ "$external_engine" == "1" ]]; then
+        if wait_for_engine_ready "$timeout_ms"; then
+            return 0
+        fi
+
+        echo "Mounted docker-pass engine socket at $engine_socket is unavailable" >&2
+        return 1
+    fi
+
     mkdir -p "$workspace_dir/.tmp"
 
     if [[ -f "$engine_pid_file" ]]; then
         engine_pid="$(<"$engine_pid_file")"
         if [[ -n "$engine_pid" ]] && kill -0 "$engine_pid" >/dev/null 2>&1; then
-            while ! engine_ready; do
-                sleep 0.1
-                elapsed_ms=$((elapsed_ms + interval_ms))
-                if (( elapsed_ms >= timeout_ms )); then
-                    break
-                fi
-            done
-            if engine_ready; then
+            if wait_for_engine_ready "$timeout_ms"; then
                 return 0
             fi
         fi
@@ -65,7 +82,6 @@ ensure_local_engine() {
     engine_pid=$!
     echo "$engine_pid" > "$engine_pid_file"
 
-    elapsed_ms=0
     while ! engine_ready; do
         if ! kill -0 "$engine_pid" >/dev/null 2>&1; then
             echo "docker-pass local engine exited unexpectedly" >&2
@@ -74,9 +90,8 @@ ensure_local_engine() {
             fi
             return 1
         fi
-        sleep 0.1
-        elapsed_ms=$((elapsed_ms + interval_ms))
-        if (( elapsed_ms >= timeout_ms )); then
+
+        if ! wait_for_engine_ready "$timeout_ms"; then
             echo "Timeout waiting for docker-pass local engine to become available" >&2
             if [[ -f "$engine_log_file" ]]; then
                 cat "$engine_log_file" >&2
