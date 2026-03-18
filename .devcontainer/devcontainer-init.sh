@@ -70,9 +70,11 @@ _export_docker_pass_secrets() {
 HOST_SECRETS_SOCKET="$HOME/Library/Caches/docker-secrets-engine/engine.sock"
 DOCKER_SECRETS_ENGINE_SOCKET="/root/.cache/docker-secrets-engine/engine.sock"
 if [[ -S "$HOST_SECRETS_SOCKET" ]]; then
-    echo "HOST_SECRETS_SOCKET=$HOST_SECRETS_SOCKET" >> "$script_dir/.env"
-    echo "DOCKER_SECRETS_ENGINE_SOCKET=$DOCKER_SECRETS_ENGINE_SOCKET" >> "$script_dir/.env"
-    echo "DOCKER_PASS_EXTERNAL_ENGINE=1" >> "$script_dir/.env"
+    {
+        echo "HOST_SECRETS_SOCKET=$HOST_SECRETS_SOCKET"
+        echo "DOCKER_SECRETS_ENGINE_SOCKET=$DOCKER_SECRETS_ENGINE_SOCKET"
+        echo "DOCKER_PASS_EXTERNAL_ENGINE=1"
+    } >> "$script_dir/.env"
 else
     touch "/tmp/stub-secrets-engine.sock"
     echo "DOCKER_PASS_EXTERNAL_ENGINE=0" >> "$script_dir/.env"
