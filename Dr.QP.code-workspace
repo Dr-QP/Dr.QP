@@ -614,7 +614,8 @@
     "chat.tools.terminal.blockDetectedFileWrites": "outsideWorkspace",
     "chat.tools.urls.autoApprove": {
       "https://github.com": true,
-      "https://www.google.com/search": true
+      "https://www.google.com/search": true,
+      "https://docs.docker.com": true,
     },
     "chat.tools.terminal.autoReplyToPrompts": true,
   }

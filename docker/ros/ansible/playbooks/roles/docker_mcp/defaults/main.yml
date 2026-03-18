@@ -5,7 +5,8 @@
 docker_mcp_repo_url: "https://github.com/docker/mcp-gateway.git"
 
 # Version/branch/tag to checkout (use 'main' for latest)
-docker_mcp_version: "main"
+# https://github.com/docker/mcp-gateway/releases
+docker_mcp_version: "v0.40.2"
 
 # User to install the plugin for (defaults to ros_user from playbook context)
 docker_mcp_user: "{{ ros_user | default(ansible_user_id) }}"
