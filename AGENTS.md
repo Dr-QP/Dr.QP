@@ -23,11 +23,11 @@ Consult the **[Principal Engineer](/.github/agents/principal-engineer.agent.md)*
 
 ## Catalog Locations
 
-- **Claude**: `.claude/agents/`, `.claude/commands/`, `.claude/instructions/` (symlinks to `.github/`)
-- **Cursor**: `.cursor/agents/`, `.cursor/skills/`, `.cursor/rules/` (symlinks to `.github/`)
-- **Codex**: `.codex/agents/`, `.codex/skills/`, `.codex/instructions/` (symlinks to `.github/`)
+- **Claude**: `.claude/agents/`, `.claude/skills/`, `.claude/instructions/` - source of trueth
+- **Cursor**: `.cursor/agents/`, `.cursor/skills/`, `.cursor/rules/` (symlinks to `.claude/`)
+- **Codex**: `.codex/agents/`, `.codex/skills/`, `.codex/instructions/` (symlinks to `.claude/`)
 
-Update `.github` sources; symlinks pick up changes automatically.
+Use or edit `.claude` sources; symlinks pick up changes automatically.
 
 ## Available Agents
 

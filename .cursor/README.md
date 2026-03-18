@@ -1,4 +1,4 @@
 # Cursor Customizations
 
-This directory mirrors the repository's GitHub Copilot customizations so they
+This directory mirrors the repository's Claude customizations so they
 are discoverable in Cursor.
