@@ -3,6 +3,10 @@ description: 'Expert React 19.2 frontend engineer specializing in modern hooks, 
 name: React Expert
 tools:
   [
+    'context7/*',
+    'sequentialthinking/*',
+    'mcp-server-git/*',
+    'github/*',
     'edit/editFiles',
     'execute/createAndRunTask',
     'execute/getTerminalOutput',

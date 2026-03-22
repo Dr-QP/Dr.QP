@@ -3,6 +3,8 @@ name: 'Issue Refiner'
 description: 'Refine the requirement or issue with Acceptance Criteria, Technical Considerations, Edge Cases, and NFRs'
 tools:
   [
+    'context7/*',
+    'sequentialthinking/*',
     'github/issue_read',
     'github/issue_write',
     'github/list_issues',

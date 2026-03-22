@@ -4,12 +4,15 @@ description: 'Provide principal-level software engineering guidance with focus o
 model: GPT-5.4
 tools:
   [
-    'augmentcode/codebase-retrieval',
+    'context7/*',
+    'sequentialthinking/*',
+    'mcp-server-git/*',
+    'github/*',
+    'augmentcode/*',
     'agent',
     'edit',
     'execute',
     'findTestFiles',
-    'github/*',
     'read',
     'todo',
     'search',

@@ -3,6 +3,10 @@ name: Technical Content Evaluator
 description: 'Elite technical content editor and curriculum architect for evaluating technical training materials, documentation, and educational content. Reviews for technical accuracy, pedagogical excellence, content flow, code validation, and ensures A-grade quality standards.'
 tools:
   [
+    'context7/*',
+    'sequentialthinking/*',
+    'mcp-server-git/*',
+    'github/*',
     'agent',
     'edit',
     'execute',
