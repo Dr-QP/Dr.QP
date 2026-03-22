@@ -31,18 +31,8 @@ Update `.github` sources; symlinks pick up changes automatically.
 
 ## Available Agents
 
-### Planning & Analysis
-
-- **[Task Planner](/.github/agents/task-planner.agent.md)** - Create actionable implementation plans
-- **[Task Researcher](/.github/agents/task-researcher.agent.md)** - Comprehensive project analysis and research
-- **[Technical Spike Researcher](/.github/agents/technical-spike-researcher.agent.md)** - Research and validate technical spike documents
-- **[Issue Refiner](/.github/agents/issue-refiner.agent.md)** - Refine requirements with acceptance criteria and edge cases
-
 ### Development
 
-- **[Code Alchemist](/.github/agents/code-alchemist.agent.md)** - Transform code with Clean Code and SOLID
-- **[C++ Expert](/.github/agents/cpp-expert.agent.md)** - Expert C++ guidance, modern practices
-- **[React Expert](/.github/agents/react-expert.agent.md)** - React frontend with hooks and performance
 - **[Principal Engineer](/.github/agents/principal-engineer.agent.md)** - Senior guidance, architecture, pragmatic implementation
 
 ### Testing & Quality
@@ -50,20 +40,6 @@ Update `.github` sources; symlinks pick up changes automatically.
 - **[TDD Red](/.github/agents/tdd-red.agent.md)** - Write failing tests before implementation
 - **[TDD Green](/.github/agents/tdd-green.agent.md)** - Implement minimal code to satisfy requirements
 - **[TDD Refactor](/.github/agents/tdd-refactor.agent.md)** - Improve code quality while maintaining tests
-
-### Debugging & Review
-
-- **[Debugger](/.github/agents/debug.agent.md)** - Debug and fix bugs
-- **[Security Sentinel](/.github/agents/security-sentinel.agent.md)** - Review for security issues
-- **[Tech Debt Remediator](/.github/agents/tech-debt-remediator.agent.md)** - Technical debt remediation plans
-
-### Support
-
-- **[Prompt Builder](/.github/agents/prompt-builder.agent.md)** - Prompt engineering and validation
-- **[Mentor](/.github/agents/mentor.agent.md)** - Socratic questioning and critical thinking
-- **[Technical Content Evaluator](/.github/agents/technical-content-evaluator.agent.md)** - Review technical materials
-- **[Custom Agent Foundry](/.github/agents/custom-agent-foundry.agent.md)** - Design VS Code custom agents
-- **[Deep Thinker](/.github/agents/deep-thinker.agent.md)** - Advanced reasoning for complex problems
 
 ## Remote Agent Guidelines
 
