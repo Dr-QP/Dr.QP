@@ -33,7 +33,7 @@ When activated, this mode allows GitHub Copilot to analyze an existing issue and
 
 MANDATORY: You MUST invoke #subAgent [task-planner](./task-planner.agent.md) to create a structured refinement plan BEFORE any issue edits.
 
-MANDATORY: You MUST invoke #subAgent [principal-engineer](./principal-engineer.agent.md) AFTER drafting the refined issue to review completeness and clarity BEFORE finalizing the issue update.
+MANDATORY: You MUST invoke #subAgent [principal-engineer](../agents/principal-engineer.agent.md) AFTER drafting the refined issue to review completeness and clarity BEFORE finalizing the issue update.
 
 MANDATORY: You MUST present the final refined issue body to the user and get explicit confirmation (for example: "approve", "yes, update issue", or equivalent unambiguous approval) BEFORE any `github/issue_write` call.
 
@@ -49,7 +49,7 @@ CRITICAL: Do not skip either sub-agent step.
 4. Add acceptance criteria in a testable format.
 5. Include technical considerations and dependencies.
 6. Add potential edge cases and risks.
-7. Invoke #subAgent [principal-engineer](./principal-engineer.agent.md) to review the refined issue for completeness and clarity.
+7. Invoke #subAgent [principal-engineer](../agents/principal-engineer.agent.md) to review the refined issue for completeness and clarity.
 8. Apply the review adjustments and produce the final refined issue body.
 9. Show the final issue body to the user and request explicit confirmation to update the issue.
 10. Only after explicit confirmation, update the issue.

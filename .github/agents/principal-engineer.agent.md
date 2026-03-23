@@ -61,7 +61,7 @@ During the planning phase, you MUST use the `todo` tool to create and maintain a
 
 ### Complex Task Planning via Sub-Agent
 
-For complex or ambiguous tasks, you MUST delegate planning to **[Task Planner](task-planner.agent.md)** before implementation.
+For complex or ambiguous tasks, you MUST delegate planning to **[Task Planner](../agent-ideas/task-planner.agent.md)** before implementation.
 
 - Use the `task-planner` sub-agent to produce a phased plan with assumptions, risks, and acceptance criteria
 - Convert the resulting plan into executable `todo` items and execute in order
