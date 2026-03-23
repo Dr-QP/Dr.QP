@@ -14,12 +14,12 @@ The Docker MCP Gateway enables integration with AI tools and agents by providing
 
 ## Role Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `docker_mcp_repo_url` | `https://github.com/docker/mcp-gateway.git` | Git repository URL |
-| `docker_mcp_version` | `main` | Git branch, tag, or commit to checkout |
-| `docker_mcp_user` | `{{ ros_user }}` | User to install the plugin for |
-| `docker_mcp_user_home` | `{{ user_home }}` | User's home directory |
+- `docker_mcp_repo_url` - Git repository URL
+- `docker_mcp_version` - Git branch, tag, or commit to checkout
+- `docker_mcp_user` - User to install the plugin for
+- `docker_mcp_user_home` - User's home directory
+
+See `defaults/main.yml` for default values
 
 ## Example Usage
 
@@ -28,7 +28,7 @@ The Docker MCP Gateway enables integration with AI tools and agents by providing
   hosts: all
   become: true
   roles:
-    - { role: docker_mcp, tags: ["docker_mcp"] }
+    - { role: docker_mcp, tags: ['docker_mcp'] }
 ```
 
 ### Install specific version
@@ -39,9 +39,9 @@ The Docker MCP Gateway enables integration with AI tools and agents by providing
   become: true
   roles:
     - role: docker_mcp
-      tags: ["docker_mcp"]
+      tags: ['docker_mcp']
       vars:
-        docker_mcp_version: "v0.40.0"
+        docker_mcp_version: 'v0.40.0'
 ```
 
 ### Install for a specific user
@@ -52,10 +52,10 @@ The Docker MCP Gateway enables integration with AI tools and agents by providing
   become: true
   roles:
     - role: docker_mcp
-      tags: ["docker_mcp"]
+      tags: ['docker_mcp']
       vars:
-        docker_mcp_user: "developer"
-        docker_mcp_user_home: "/home/developer"
+        docker_mcp_user: 'developer'
+        docker_mcp_user_home: '/home/developer'
 ```
 
 ## What This Role Does
@@ -67,6 +67,10 @@ The Docker MCP Gateway enables integration with AI tools and agents by providing
 5. **Builds the plugin** - Runs `make docker-mcp`
 6. **Verifies installation** - Confirms plugin exists
 7. **Cleans up** - Removes temporary build directory
+
+## Secrets in Devcontainers
+
+To use `docker mcp gateway run` with Docker Desktop secrets inside a devcontainer (Linux), also install the [`docker_pass`](../docker_pass/README.md) role. Without it, the gateway cannot resolve secrets from Docker Desktop's store because the macOS Keychain is not accessible from Linux.
 
 ## Verification
 

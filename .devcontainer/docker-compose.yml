@@ -7,6 +7,11 @@ services:
     # Note: Using privileged mode grants the container elevated permissions, which can pose security risks. Use with caution and only in trusted environments.
     privileged: true
 
+    environment:
+      DOCKER_PASS_EXPORT_KEY: ${DOCKER_PASS_EXPORT_KEY:-}
+      DOCKER_PASS_EXTERNAL_ENGINE: ${DOCKER_PASS_EXTERNAL_ENGINE:-0}
+      DOCKER_SECRETS_ENGINE_SOCKET: ${DOCKER_SECRETS_ENGINE_SOCKET:-/root/.cache/docker-secrets-engine/engine.sock}
+
     volumes:
       # Volumes for git worktree
       - ${GIT_REPO:-$PWD}:${GIT_REPO:-$PWD}:rw
@@ -14,6 +19,10 @@ services:
 
       # Local ROS overlay workspace
       - ${LOCAL_WORKSPACE_FOLDER:-$PWD}:/opt/ros/overlay_ws/:rw
+
+      # Docker mcp setup from host
+      - ${HOST_MCP_DIR:-/tmp/stub-mcp}:${CONTAINER_MCP_DIR:-/tmp/stub-mcp}:ro
+      - ${HOST_SECRETS_SOCKET:-/tmp/stub-secrets-engine.sock}:${DOCKER_SECRETS_ENGINE_SOCKET:-/tmp/stub-secrets-engine.sock}:ro
     command: ['sleep', 'infinity']
 
     ######################################################################
