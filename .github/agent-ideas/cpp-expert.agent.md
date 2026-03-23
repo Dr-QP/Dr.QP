@@ -3,6 +3,10 @@ name: C++ Expert
 description: 'Provide expert C++ software engineering guidance using modern C++ and industry best practices.'
 tools:
   [
+    'context7/*',
+    'sequentialthinking/*',
+    'mcp-server-git/*',
+    'github/*',
     'edit/editFiles',
     'execute/createAndRunTask',
     'execute/getTerminalOutput',

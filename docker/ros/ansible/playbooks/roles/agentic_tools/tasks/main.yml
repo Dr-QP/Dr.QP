@@ -10,3 +10,9 @@
     name: "@augmentcode/auggie"
     global: true
     state: present
+
+- name: Install @anthropic-ai/claude-code
+  community.general.npm:
+    name: "@anthropic-ai/claude-code"
+    global: true
+    state: present

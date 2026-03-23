@@ -356,5 +356,8 @@ nodesource_setup.sh
 .copilot-tracking/
 .tmp/
 
+# Superpowers plans
+docs/superpowers/
+
 # Super-Linter
 super-linter-output/

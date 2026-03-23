@@ -1,6 +1,10 @@
 {
   "permissions": {
-    "allow": ["Bash(**)", "Read(//tmp/**)", "Write(//tmp/**)"]
+    "allow": [
+      "Bash(**)",
+      "Read(//tmp/**)",
+      "Write(//tmp/**)"
+    ]
   },
   "hooks": {
     "SessionStart": [
@@ -13,5 +17,10 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "ralph-loop@claude-plugins-official": true
   }
 }
