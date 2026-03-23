@@ -109,12 +109,29 @@ with_secret_tracing_disabled() {
 
 import_exported_secrets() {
     echo "Importing docker/mcp/ secrets from $EXPORT_FILE..."
+
+    # Ensure xtrace is disabled while setting up and running the openssl
+    # process substitution so that sensitive arguments are not logged.
+    local xtrace_was_enabled=0
+    if [[ $- == *x* ]]; then
+        xtrace_was_enabled=1
+        set +x
+    fi
+
     with_secret_tracing_disabled import_secret_stream < <(
         openssl enc -aes-256-cbc -d -pbkdf2 \
             -pass "pass:${DOCKER_PASS_EXPORT_KEY}" -in "$EXPORT_FILE" 2>/dev/null
     )
+    local status=$?
+
+    if [[ $xtrace_was_enabled -eq 1 ]]; then
+        set -x
+    fi
+
     rm -f "$EXPORT_FILE"
     echo "Secrets imported and export file removed."
+
+    return "$status"
 }
 
 import_live_engine_secrets() {
