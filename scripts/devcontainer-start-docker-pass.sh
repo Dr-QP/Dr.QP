@@ -135,6 +135,11 @@ fi
 rm -f "$env_file"
 unset DBUS_SESSION_BUS_ADDRESS DBUS_SESSION_BUS_PID GNOME_KEYRING_CONTROL
 
+if [[ ! -x "$engine_binary" ]]; then
+    echo "docker-pass plugin not installed; skipping Secret Service setup."
+    exit 0
+fi
+
 if ! command -v dbus-daemon >/dev/null 2>&1; then
     echo "dbus-daemon is not installed"
     exit 1

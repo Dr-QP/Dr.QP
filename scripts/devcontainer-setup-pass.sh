@@ -57,7 +57,7 @@ import_secret() {
     local error_output=""
 
     while (( attempt <= max_attempts )); do
-        if error_output=$(printf '%s\n' "$value" | docker pass set "$name" 2>&1 >/dev/null); then
+        if error_output=$({ printf '%s\n' "$value" | docker pass set "$name" >/dev/null; } 2>&1); then
             return 0
         fi
 
