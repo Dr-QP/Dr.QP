@@ -7,7 +7,10 @@ name = "validate_agent_files"
 version = "0.0.0"
 description = "CLI tools for validating DRQP agents and their skills."
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
+license-files = [
+  "../../LICENSE",
+]
 requires-python = ">=3.10"
 dependencies = ["PyYAML>=6.0", "skills-ref>=0.1.1,<0.2"]
 
