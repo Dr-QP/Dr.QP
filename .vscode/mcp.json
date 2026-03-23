@@ -8,6 +8,17 @@
       "type": "stdio",
       "command": "auggie",
       "args": ["--mcp", "--mcp-auto-workspace"]
+    },
+    "drqp_robot": {
+      "type": "stdio",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "cd \"${workspaceFolder}\" && exec ./.venv/bin/drqp_robot_mcp"
+      ],
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      }
     }
   }
 }
