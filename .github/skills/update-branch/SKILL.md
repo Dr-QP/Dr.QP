@@ -47,6 +47,7 @@ Exit codes: `0` merged, `1` conflicts, `3` already up to date, `5` on default br
 ```
 
 The script handles:
+
 - Preflight checks (dirty tree → error, on default branch → error)
 - `git fetch origin`
 - Already-up-to-date detection (exit 3)

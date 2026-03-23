@@ -1,7 +1,8 @@
 ---
 description: 'Systematically research and validate technical spike documents through exhaustive investigation and controlled experimentation.'
 name: 'Technical Spike Researcher'
-tools: [
+tools:
+  [
     'context7/*',
     'sequentialthinking/*',
     'mcp-server-git/*',
@@ -13,8 +14,8 @@ tools: [
     'search',
     'todo',
     'vscode',
-    'web'
-]
+    'web',
+  ]
 ---
 
 # Technical spike research mode
