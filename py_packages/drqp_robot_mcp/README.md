@@ -15,8 +15,7 @@ Local MCP server for interacting with the Dr.QP Gazebo robot.
 From the repository root:
 
 ```bash
-python3 -m venv .venv
-./.venv/bin/python3 -m pip install -r requirements.txt --use-pep517
+uv sync
 ```
 
 ## Running the server

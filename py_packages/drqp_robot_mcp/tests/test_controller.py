@@ -105,7 +105,9 @@ def test_recording_collects_multiple_samples() -> None:
     controller = FakeController([make_snapshot('torque_on')])
 
     status = controller.start_recording(sample_interval_sec=0.01)
-    time.sleep(0.035)
+    deadline = time.time() + 1.0
+    while getattr(status, "sample_count", 0) < 2 and time.time() < deadline:
+        time.sleep(0.005)
     recorded = controller.stop_recording()
 
     assert status.active is True
