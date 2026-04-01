@@ -47,11 +47,11 @@ Gather complete context before making changes.
    gh pr view <pr-number> --comments
 ```
 
-   After fetching, **filter out resolved threads** using these rules (apply in order):
+After fetching, **filter out resolved threads** using these rules (apply in order):
 
-   - **Skip if GitHub-resolved**: If a review thread is marked as resolved on GitHub, exclude the entire thread — do not process any comments in it.
-   - **Skip if last comment signals completion**: If the last comment in a thread contains a completion word (e.g., "done", "complete", "fixed", "addressed", "ignore", "wontfix", "won't fix", "LGTM", "no action needed"), treat the thread as resolved and skip it entirely.
-   - **Override with last-comment instructions**: If the last comment in an unresolved thread contains explicit instructions (e.g., "instead do X", "use Y here", "change this to Z"), treat those instructions as the authoritative user intent for that thread and ignore earlier comments in the thread.
+- **Skip if GitHub-resolved**: If a review thread is marked as resolved on GitHub, exclude the entire thread — do not process any comments in it.
+- **Skip if last comment signals completion**: If the last comment in a thread contains a completion word (e.g., "done", "complete", "fixed", "addressed", "ignore", "wontfix", "won't fix", "LGTM", "no action needed"), treat the thread as resolved and skip it entirely.
+- **Override with last-comment instructions**: If the last comment in an unresolved thread contains explicit instructions (e.g., "instead do X", "use Y here", "change this to Z"), treat those instructions as the authoritative user intent for that thread and ignore earlier comments in the thread.
 
 2. **Get CI check results**:
    - Check GitHub Actions workflow runs
@@ -247,12 +247,12 @@ Ensure all feedback is addressed before requesting re-review.
 
 When iterating over PR review threads, apply these filters in order before any classification or action:
 
-| Check | Condition | Action |
-|-------|-----------|--------|
-| GitHub-resolved | Thread is marked resolved in GitHub UI | **Skip entire thread** |
-| Completion signal | Last comment contains: "done", "complete", "fixed", "addressed", "ignore", "wontfix", "won't fix", "LGTM", "no action needed" (case-insensitive) | **Skip entire thread** |
-| Last-comment instruction | Last comment contains explicit instructions (e.g., "instead do X", "use Y", "change to Z") | **Follow last comment only**; ignore earlier comments in thread |
-| Default | None of the above | Process thread normally using all comments |
+| Check                    | Condition                                                                                                                                        | Action                                                          |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| GitHub-resolved          | Thread is marked resolved in GitHub UI                                                                                                           | **Skip entire thread**                                          |
+| Completion signal        | Last comment contains: "done", "complete", "fixed", "addressed", "ignore", "wontfix", "won't fix", "LGTM", "no action needed" (case-insensitive) | **Skip entire thread**                                          |
+| Last-comment instruction | Last comment contains explicit instructions (e.g., "instead do X", "use Y", "change to Z")                                                       | **Follow last comment only**; ignore earlier comments in thread |
+| Default                  | None of the above                                                                                                                                | Process thread normally using all comments                      |
 
 This filtering must be applied **before** computing confidence scores or taking any action.
 
