@@ -785,7 +785,7 @@ requires-dist = [
 
 [[package]]
 name = "drqp-robot-mcp"
-version = "0.0.0"
+version = "1.0.0"
 source = { editable = "py_packages/drqp_robot_mcp" }
 dependencies = [
     { name = "mcp", extra = ["cli"] },
