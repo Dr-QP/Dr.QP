@@ -5,6 +5,9 @@ argument-hint: Describe the agent role, purpose, and required capabilities
 model: GPT-5.4
 tools:
   [
+    'context7/*',
+    'sequentialthinking/*',
+    'mcp-server-git/*',
     'agent',
     'edit',
     'execute',

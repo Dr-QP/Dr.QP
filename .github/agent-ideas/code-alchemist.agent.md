@@ -3,6 +3,10 @@ name: 'Code Alchemist'
 description: 'Ask WG Code Alchemist to transform your code with Clean Code principles and SOLID design'
 tools:
   [
+    'context7/*',
+    'sequentialthinking/*',
+    'mcp-server-git/*',
+    'github/*',
     'edit/editFiles',
     'execute/createAndRunTask',
     'execute/getTerminalOutput',

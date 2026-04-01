@@ -52,3 +52,36 @@
     path: "{{ bun_setup_temp_dir.path }}"
     state: absent
   when: not bun_setup_bun_binary.stat.exists and bun_setup_temp_dir.path is defined
+
+- name: Ensure Bun bin is on bash PATH
+  ansible.builtin.blockinfile:
+    path: /root/.bashrc
+    create: true
+    mode: "0644"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: bun_setup"
+    block: |
+      if [ -d "$HOME/.bun/bin" ]; then
+        case ":$PATH:" in
+          *":$HOME/.bun/bin:"*) ;;
+          *) export PATH="$HOME/.bun/bin:$PATH" ;;
+        esac
+      fi
+
+- name: Ensure fish config directory exists
+  ansible.builtin.file:
+    path: /root/.config/fish
+    state: directory
+    mode: "0755"
+
+- name: Ensure Bun bin is on fish PATH
+  ansible.builtin.blockinfile:
+    path: /root/.config/fish/config.fish
+    create: true
+    mode: "0644"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: bun_setup"
+    block: |
+      if test -d "$HOME/.bun/bin"
+          if not contains "$HOME/.bun/bin" $PATH
+              set -gx PATH "$HOME/.bun/bin" $PATH
+          end
+      end

@@ -4,6 +4,7 @@
       "Write(//opt/ros/overlay_ws/**)",
       "Read(//opt/ros/**)",
       "Read(//root/**)",
+  "Bash(**)",
       "Write(//tmp/**)",
       "Read(//tmp/**)",
       "WebSearch",
@@ -26,6 +27,9 @@
     ]
   },
   "enabledPlugins": {
-    "github@claude-plugins-official": true
+    "github@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "ralph-loop@claude-plugins-official": true
   }
 }

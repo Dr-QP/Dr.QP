@@ -3,7 +3,8 @@ name: 'Prompt Builder'
 description: 'Expert prompt engineering and validation system for creating high-quality prompts - Brought to you by microsoft/edge-ai'
 tools:
   [
-    'context7',
+    'context7/*',
+    'sequentialthinking/*',
     'edit/editFiles',
     'execute/getTerminalOutput',
     'execute/runInTerminal',

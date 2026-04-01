@@ -3,7 +3,8 @@ description: 'Task planner for creating actionable implementation plans - Brough
 name: 'Task Planner'
 tools:
   [
-    'context7',
+    'context7/*',
+    'sequentialthinking/*',
     'edit/editFiles',
     'execute/getTerminalOutput',
     'execute/runInTerminal',

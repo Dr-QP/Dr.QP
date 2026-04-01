@@ -1,5 +1,12 @@
 ---
-
 singleQuote: true
-proseWrap: "preserve"
-endOfLine: "lf"
+proseWrap: 'preserve'
+endOfLine: 'lf'
+
+overrides:
+  # Match the one-item-per-line array style used by VS Code and Claude Code
+  - files:
+      - '.vscode/*.json'
+      - '.claude/*.json'
+    options:
+      printWidth: 0
