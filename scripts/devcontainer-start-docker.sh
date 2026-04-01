@@ -2,10 +2,16 @@
 set -euo pipefail
 
 docker_host="${DOCKER_HOST:-unix:///var/run/docker.sock}"
-docker_log_file="/tmp/dockerd.log"
 docker_data_root="/var/lib/docker"
 docker_startup_retries=30
 docker_shutdown_retries=15
+
+docker_host_id="$(printf '%s' "$docker_host" | sed 's#[^A-Za-z0-9_.-]#_#g')"
+docker_log_file="/tmp/dockerd-${docker_host_id}.log"
+docker_vfs_data_root="/tmp/docker-vfs-${docker_host_id}"
+docker_vfs_exec_root="/tmp/docker-vfs-exec-${docker_host_id}"
+docker_vfs_pid_file="/tmp/dockerd-${docker_host_id}.pid"
+
 dockerd_args=(-H "$docker_host")
 
 docker_info() {
@@ -80,7 +86,7 @@ local_dockerd_pid() {
     fi
   fi
 
-  for pidfile in /tmp/dockerd-vfs.pid /var/run/docker.pid; do
+  for pidfile in "$docker_vfs_pid_file" /tmp/dockerd-vfs.pid /var/run/docker.pid; do
     if [[ -r "$pidfile" ]]; then
       pid="$(cat "$pidfile" 2>/dev/null || true)"
       if is_dockerd_pid "$pid"; then
@@ -131,12 +137,11 @@ configure_storage_driver_args() {
     echo "Detected overlayfs for $docker_data_root; starting dockerd with vfs storage driver."
     dockerd_args+=(
       --storage-driver=vfs
-      --data-root /tmp/docker-vfs
-      --exec-root /tmp/docker-vfs-exec
-      --pidfile /tmp/dockerd-vfs.pid
+      --data-root "$docker_vfs_data_root"
+      --exec-root "$docker_vfs_exec_root"
+      --pidfile "$docker_vfs_pid_file"
       --iptables=false
     )
-    docker_log_file="/tmp/dockerd-vfs.log"
   fi
 }
 
@@ -168,6 +173,15 @@ restart_local_daemon_if_needed() {
 }
 
 start_dockerd() {
+  local existing_pid=""
+
+  if [[ -r "$docker_vfs_pid_file" ]]; then
+    existing_pid="$(cat "$docker_vfs_pid_file" 2>/dev/null || true)"
+    if ! is_dockerd_pid "$existing_pid"; then
+      rm -f "$docker_vfs_pid_file"
+    fi
+  fi
+
   dockerd "${dockerd_args[@]}" >"$docker_log_file" 2>&1 &
 }
 

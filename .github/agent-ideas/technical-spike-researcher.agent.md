@@ -1,7 +1,21 @@
 ---
 description: 'Systematically research and validate technical spike documents through exhaustive investigation and controlled experimentation.'
 name: 'Technical Spike Researcher'
-tools: ['agent', 'edit', 'execute', 'read', 'search', 'todo', 'vscode', 'web']
+tools:
+  [
+    'context7/*',
+    'sequentialthinking/*',
+    'mcp-server-git/*',
+    'github/*',
+    'agent',
+    'edit',
+    'execute',
+    'read',
+    'search',
+    'todo',
+    'vscode',
+    'web',
+  ]
 ---
 
 # Technical spike research mode

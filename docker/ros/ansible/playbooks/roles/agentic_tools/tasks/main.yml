@@ -5,8 +5,20 @@
     global: true
     state: present
 
+- name: Install @github/copilot
+  community.general.npm:
+    name: "@github/copilot"
+    global: true
+    state: present
+
 - name: Install @augmentcode/auggie
   community.general.npm:
     name: "@augmentcode/auggie"
+    global: true
+    state: present
+
+- name: Install @anthropic-ai/claude-code
+  community.general.npm:
+    name: "@anthropic-ai/claude-code"
     global: true
     state: present

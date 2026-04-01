@@ -4,6 +4,10 @@ name: 'TDD Red Phase'
 model: GPT-5.4
 tools:
   [
+    'context7/*',
+    'sequentialthinking/*',
+    'mcp-server-git/*',
+    'github/*',
     'edit/editFiles',
     'execute/getTerminalOutput',
     'execute/runInTerminal',

@@ -4,7 +4,10 @@ name: 'Task Researcher'
 tools:
   [
     'azure_get_schema_for_Bicep',
-    'context7',
+    'context7/*',
+    'sequentialthinking/*',
+    'mcp-server-git/*',
+    'github/*',
     'edit/editFiles',
     'execute/getTerminalOutput',
     'execute/runInTerminal',

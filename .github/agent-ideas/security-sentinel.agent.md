@@ -3,6 +3,10 @@ name: 'Security Sentinel'
 description: 'Ask WG Code Sentinel to review your code for security issues.'
 tools:
   [
+    'context7/*',
+    'sequentialthinking/*',
+    'mcp-server-git/*',
+    'github/*',
     'edit/editFiles',
     'execute/createAndRunTask',
     'execute/getTerminalOutput',

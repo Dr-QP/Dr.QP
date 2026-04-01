@@ -27,7 +27,6 @@ name: 'Agent Display Name'
 tools: ['read', 'edit', 'search']
 model: GPT-5.4
 target: 'vscode'
-infer: true
 ---
 ```
 

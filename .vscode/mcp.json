@@ -1,5 +1,25 @@
 {
   "servers": {
+    "sequentialthinking": {
+      "command": "bunx",
+      "args": [
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "mcp-docs": {
+      "type": "http",
+      "url": "https://modelcontextprotocol.io/mcp"
+    },
+    "mcp-server-git": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-git"
+      ]
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp/oauth"
+    },
     "github": {
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/"
@@ -7,15 +27,28 @@
     "augmentcode": {
       "type": "stdio",
       "command": "auggie",
-      "args": ["--mcp", "--mcp-auto-workspace"]
+      "args": [
+        "--mcp",
+        "--mcp-auto-workspace"
+      ]
+    },
+    "MCP_DOCKER": {
+      "command": "docker",
+      "args": [
+        "mcp",
+        "gateway",
+        "run",
+        "--cpus",
+        "0",
+        "--memory",
+        "0"
+      ],
+      "type": "stdio"
     },
     "drqp_robot": {
       "type": "stdio",
-      "command": "bash",
-      "args": [
-        "-lc",
-        "cd \"${workspaceFolder}\" && exec ./.venv/bin/drqp_robot_mcp"
-      ],
+      "command": "${workspaceFolder}/.venv/bin/drqp_robot_mcp",
+      "cwd": "${workspaceFolder}",
       "env": {
         "PYTHONUNBUFFERED": "1"
       }
