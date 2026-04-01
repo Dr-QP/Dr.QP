@@ -613,8 +613,17 @@
     "chat.tools.terminal.ignoreDefaultAutoApproveRules": false,
     "chat.tools.terminal.blockDetectedFileWrites": "outsideWorkspace",
     "chat.tools.urls.autoApprove": {
+      "https://code.visualstudio.com": true,
+      "https://raw.githubusercontent.com/github/github-mcp-server/": true,
       "https://github.com": true,
-      "https://www.google.com/search": true
+      "https://code.visualstudio.com/docs": true,
+      "https://docs.github.com": true,
+      "https://*.github.com": {
+        "approveRequest": true
+      },
+      "https://www.google.com/search": true,
+      "https://docs.docker.com": true,
+      "https://code.claude.com/docs/en/": true,
     },
     "chat.tools.terminal.autoReplyToPrompts": true,
   }
