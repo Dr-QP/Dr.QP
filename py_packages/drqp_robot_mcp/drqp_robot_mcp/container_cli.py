@@ -168,11 +168,15 @@ def cmd_get_robot_state(args: argparse.Namespace) -> dict[str, Any]:
         or robot_pose is not None
         or bool(world_state.get('available'))
     )
+    # Treat world_state availability as the indicator that the Gazebo simulation
+    # is currently reachable, instead of using the broader `available` flag
+    # that can be satisfied by stale latched /robot_state messages.
+    simulation_running = bool(world_state.get('available'))
 
     return {
         'timestamp': datetime.now(UTC).isoformat(),
         'available': available,
-        'simulation_running': available,
+        'simulation_running': simulation_running,
         'lifecycle_state': lifecycle_state,
         'world_name': world_state.get('world_name') if world_state.get('available') else None,
         'simulation_time_sec': world_state.get('simulation_time_sec'),

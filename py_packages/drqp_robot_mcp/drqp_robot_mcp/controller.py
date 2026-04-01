@@ -376,8 +376,13 @@ class RobotMcpController:
     def _ensure_devcontainer_running(self) -> None:
         """Create the compose env file and ensure the devcontainer is up."""
         self.launch_pid_path.parent.mkdir(parents=True, exist_ok=True)
+        init_script = self.workspace_root / '.devcontainer' / 'devcontainer-init.sh'
+        shell_command = (
+            f'cd {shlex.quote(str(self.workspace_root))} && '
+            f'bash {shlex.quote(str(init_script))}'
+        )
         self._run_command(
-            ['bash', str(self.workspace_root / '.devcontainer' / 'devcontainer-init.sh')],
+            ['bash', '-lc', shell_command],
             timeout=10.0,
         )
         self._run_command(
