@@ -4,13 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, UTC
-import json
 from pathlib import Path
-import shlex
-import subprocess
 import threading
 import time
-from typing import Any, Callable, Sequence
+from typing import Any, Callable
 
 from .models import (
     LifecycleActionResult,
@@ -19,22 +16,24 @@ from .models import (
     RobotStateSnapshot,
     WorldStateSnapshot,
 )
+from .runtime import (
+    get_robot_state as runtime_get_robot_state,
+    get_world_state as runtime_get_world_state,
+    publish_event as runtime_publish_event,
+    start_simulation as runtime_start_simulation,
+    wait_for_state as runtime_wait_for_state,
+)
 
 
 class ControllerError(RuntimeError):
     """Raised when the robot MCP controller cannot complete an action."""
 
 
-@dataclass(slots=True)
-class CommandResult:
-    """Captured subprocess result."""
-
-    stdout: str
-    stderr: str
-    returncode: int
-
-
-RunCommand = Callable[[Sequence[str], float | None], CommandResult]
+RobotStateReader = Callable[[str, str, float], dict[str, Any]]
+WorldStateReader = Callable[[str, float], dict[str, Any]]
+LifecycleEventPublisher = Callable[[str], dict[str, Any]]
+LifecycleStateWaiter = Callable[[str, float], dict[str, Any]]
+SimulationStarter = Callable[[Path, Path, Path, bool], dict[str, Any]]
 
 
 @dataclass(slots=True)
@@ -49,24 +48,29 @@ class _RecordingSession:
 
 
 class RobotMcpController:
-    """Coordinate Gazebo, ROS 2, and robot lifecycle operations."""
+    """Coordinate local ROS 2, optional Gazebo, and robot lifecycle operations."""
 
     def __init__(
         self,
         workspace_root: str | Path | None = None,
-        run_command: RunCommand | None = None,
         world_name: str = 'empty',
         robot_name: str = 'drqp',
+        start_simulation: SimulationStarter | None = None,
+        publish_event: LifecycleEventPublisher | None = None,
+        wait_for_state: LifecycleStateWaiter | None = None,
+        get_robot_state: RobotStateReader | None = None,
+        get_world_state: WorldStateReader | None = None,
     ) -> None:
         self.workspace_root = Path(workspace_root or Path.cwd()).resolve()
         self.world_name = world_name
         self.robot_name = robot_name
-        self.compose_file = self.workspace_root / '.devcontainer' / 'docker-compose.yml'
-        self.compose_env_file = self.workspace_root / '.devcontainer' / '.env'
-        self.pythonpath_root = self.workspace_root / 'py_packages' / 'drqp_robot_mcp'
         self.launch_pid_path = self.workspace_root / '.tmp' / 'drqp_robot_mcp' / 'sim.launch.pid'
         self.launch_log_path = self.workspace_root / '.tmp' / 'drqp_robot_mcp' / 'sim.launch.log'
-        self._run_command_impl = run_command or self._default_run_command
+        self._start_simulation_impl = start_simulation or runtime_start_simulation
+        self._publish_event_impl = publish_event or runtime_publish_event
+        self._wait_for_state_impl = wait_for_state or runtime_wait_for_state
+        self._get_robot_state_impl = get_robot_state or runtime_get_robot_state
+        self._get_world_state_impl = get_world_state or runtime_get_world_state
         self._recording_lock = threading.Lock()
         self._recording: _RecordingSession | None = None
 
@@ -75,14 +79,19 @@ class RobotMcpController:
         simulation_was_started = False
         state_before_snapshot = self.get_robot_state()
 
-        if not state_before_snapshot.simulation_running:
-            simulation = self._container_start_simulation()
+        if state_before_snapshot.lifecycle_state is None:
+            simulation = self._start_simulation()
             simulation_was_started = bool(simulation.get('started', False))
-            state_before_snapshot = self._poll_state(
-                predicate=lambda snapshot: snapshot.lifecycle_state is not None,
-                timeout_sec=min(timeout_sec, 60.0),
-                error_message='Timed out waiting for the robot state topic after starting simulation.',
-            )
+            try:
+                state_before_snapshot = self._poll_state(
+                    predicate=lambda snapshot: snapshot.lifecycle_state is not None,
+                    timeout_sec=min(timeout_sec, 60.0),
+                    error_message='Timed out waiting for the robot state topic after starting simulation.',
+                )
+            except ControllerError as exc:
+                if not bool(simulation.get('available', True)):
+                    raise ControllerError(str(simulation.get('message'))) from exc
+                raise
 
         state_before = state_before_snapshot.lifecycle_state
         if state_before == 'torque_on':
@@ -97,17 +106,17 @@ class RobotMcpController:
             )
 
         if state_before in {'torque_off', 'finalized'}:
-            self._container_publish_event('initialize')
+            self._publish_event('initialize')
             state_after_snapshot = self._wait_for_state('torque_on', timeout_sec)
         elif state_before == 'initializing':
             state_after_snapshot = self._wait_for_state('torque_on', timeout_sec)
         elif state_before == 'finalizing':
             self._wait_for_state('finalized', timeout_sec)
-            self._container_publish_event('initialize')
+            self._publish_event('initialize')
             state_after_snapshot = self._wait_for_state('torque_on', timeout_sec)
         elif state_before == 'servos_rebooting':
             self._wait_for_state('torque_off', timeout_sec)
-            self._container_publish_event('initialize')
+            self._publish_event('initialize')
             state_after_snapshot = self._wait_for_state('torque_on', timeout_sec)
         else:
             raise ControllerError('Robot lifecycle state is unavailable; cannot complete boot up.')
@@ -127,22 +136,22 @@ class RobotMcpController:
         state_before_snapshot = self.get_robot_state()
         state_before = state_before_snapshot.lifecycle_state
 
-        if not state_before_snapshot.simulation_running or state_before is None:
+        if state_before is None:
             return LifecycleActionResult(
                 action='shut_down',
                 state_before=state_before,
                 state_after=state_before,
                 simulation_was_started=False,
-                simulation_running=False,
-                message='Simulation is not running.',
+                simulation_running=state_before_snapshot.simulation_running,
+                message='Robot lifecycle state is unavailable.',
                 log_path=str(self.launch_log_path),
             )
 
         if state_before == 'torque_on':
-            self._container_publish_event('finalize')
+            self._publish_event('finalize')
             state_after_snapshot = self._wait_for_state('finalized', timeout_sec)
         elif state_before == 'initializing':
-            self._container_publish_event('turn_off')
+            self._publish_event('turn_off')
             state_after_snapshot = self._wait_for_state('torque_off', timeout_sec)
         elif state_before == 'finalizing':
             state_after_snapshot = self._wait_for_state('finalized', timeout_sec)
@@ -165,11 +174,15 @@ class RobotMcpController:
 
     def get_robot_state(self, timeout_sec: float = 10.0) -> RobotStateSnapshot:
         """Return the latest robot snapshot."""
-        return RobotStateSnapshot.from_mapping(self._container_get_robot_state(timeout_sec))
+        return RobotStateSnapshot.from_mapping(
+            self._get_robot_state_impl(self.world_name, self.robot_name, timeout_sec)
+        )
 
     def get_world_state(self, timeout_sec: float = 10.0) -> WorldStateSnapshot:
         """Return the latest Gazebo world snapshot."""
-        return WorldStateSnapshot.from_mapping(self._container_get_world_state(timeout_sec))
+        return WorldStateSnapshot.from_mapping(
+            self._get_world_state_impl(self.world_name, timeout_sec)
+        )
 
     def start_recording(self, sample_interval_sec: float = 0.5) -> RecordingStatus:
         """Start recording robot snapshots."""
@@ -256,7 +269,7 @@ class RobotMcpController:
         timeout_sec: float,
     ) -> RobotStateSnapshot:
         """Wait for the robot to reach the requested lifecycle state."""
-        result = self._container_wait_state(target_state, timeout_sec)
+        result = self._wait_for_state_impl(target_state, timeout_sec)
         if not bool(result.get('reached', False)):
             raise ControllerError(
                 f"Timed out waiting for robot state '{target_state}'. "
@@ -280,155 +293,18 @@ class RobotMcpController:
             latest = self.get_robot_state()
         raise ControllerError(error_message)
 
-    def _container_start_simulation(self) -> dict[str, Any]:
-        """Start the background Gazebo launch process."""
-        return self._run_container_json(
-            'start-simulation',
-            '--workspace-root',
-            str(self.workspace_root),
-            '--pid-path',
-            str(self.launch_pid_path),
-            '--log-path',
-            str(self.launch_log_path),
-            timeout=60.0,
+    def _start_simulation(self) -> dict[str, Any]:
+        """Start the background Gazebo launch process when available."""
+        return self._start_simulation_impl(
+            self.workspace_root,
+            self.launch_pid_path,
+            self.launch_log_path,
+            False,
         )
 
-    def _container_publish_event(self, event: str) -> dict[str, Any]:
-        """Publish a robot lifecycle event."""
-        return self._run_container_json(
-            'publish-event',
-            '--event',
-            event,
-            timeout=20.0,
-        )
-
-    def _container_wait_state(
-        self,
-        target_state: str,
-        timeout_sec: float,
-    ) -> dict[str, Any]:
-        """Wait for a target lifecycle state inside the devcontainer."""
-        return self._run_container_json(
-            'wait-state',
-            '--target-state',
-            target_state,
-            '--timeout-sec',
-            str(timeout_sec),
-            timeout=timeout_sec + 10.0,
-        )
-
-    def _container_get_robot_state(self, timeout_sec: float) -> dict[str, Any]:
-        """Fetch the latest robot state from the devcontainer."""
-        return self._run_container_json(
-            'get-robot-state',
-            '--world-name',
-            self.world_name,
-            '--robot-name',
-            self.robot_name,
-            '--timeout-sec',
-            str(timeout_sec),
-            timeout=timeout_sec + 10.0,
-        )
-
-    def _container_get_world_state(self, timeout_sec: float) -> dict[str, Any]:
-        """Fetch the latest world state from the devcontainer."""
-        return self._run_container_json(
-            'get-world-state',
-            '--world-name',
-            self.world_name,
-            '--timeout-sec',
-            str(timeout_sec),
-            timeout=timeout_sec + 10.0,
-        )
-
-    def _run_container_json(self, *args: str, timeout: float) -> dict[str, Any]:
-        """Run the devcontainer bridge and decode its JSON output."""
-        self._ensure_devcontainer_running()
-
-        python_command = shlex.join(['python3', '-m', 'drqp_robot_mcp.container_cli', *args])
-        shell_command = (
-            f'cd {shlex.quote(str(self.workspace_root))} && '
-            f'export PYTHONPATH={shlex.quote(str(self.pythonpath_root))}'
-            '${PYTHONPATH:+:$PYTHONPATH} && '
-            'export ROS_DISTRO=jazzy CC=clang CXX=clang++ '
-            'CMAKE_EXPORT_COMPILE_COMMANDS=1 && '
-            'source scripts/setup.bash && '
-            f'{python_command}'
-        )
-        command = [
-            *self._docker_compose_base_command(),
-            'exec',
-            '-T',
-            'devcontainer',
-            'bash',
-            '-lc',
-            shell_command,
-        ]
-        result = self._run_command(command, timeout=timeout)
-        try:
-            return json.loads(result.stdout)
-        except json.JSONDecodeError as exc:
-            raise ControllerError(
-                'Container bridge returned invalid JSON output.\n'
-                f'stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}'
-            ) from exc
-
-    def _ensure_devcontainer_running(self) -> None:
-        """Create the compose env file and ensure the devcontainer is up."""
-        self.launch_pid_path.parent.mkdir(parents=True, exist_ok=True)
-        init_script = self.workspace_root / '.devcontainer' / 'devcontainer-init.sh'
-        shell_command = (
-            f'cd {shlex.quote(str(self.workspace_root))} && '
-            f'bash {shlex.quote(str(init_script))}'
-        )
-        self._run_command(
-            ['bash', '-lc', shell_command],
-            timeout=10.0,
-        )
-        self._run_command(
-            [*self._docker_compose_base_command(), 'up', '-d', 'devcontainer'],
-            timeout=120.0,
-        )
-
-    def _docker_compose_base_command(self) -> list[str]:
-        """Build the base docker compose command for the devcontainer."""
-        return [
-            'docker',
-            'compose',
-            '-f',
-            str(self.compose_file),
-            '--env-file',
-            str(self.compose_env_file),
-        ]
-
-    def _run_command(self, command: Sequence[str], timeout: float | None) -> CommandResult:
-        """Run a command and raise a helpful error on failure."""
-        result = self._run_command_impl(command, timeout)
-        if result.returncode != 0:
-            joined = shlex.join(command)
-            raise ControllerError(
-                f'Command failed: {joined}\nstdout:\n{result.stdout}\n\nstderr:\n{result.stderr}'
-            )
-        return result
-
-    @staticmethod
-    def _default_run_command(
-        command: Sequence[str],
-        timeout: float | None,
-    ) -> CommandResult:
-        """Run a subprocess and capture text output."""
-        completed = subprocess.run(  # noqa: S603
-            list(command),
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            check=False,
-        )
-        return CommandResult(
-            stdout=completed.stdout,
-            stderr=completed.stderr,
-            returncode=completed.returncode,
-        )
+    def _publish_event(self, event: str) -> dict[str, Any]:
+        """Publish a lifecycle event onto the local ROS graph."""
+        return self._publish_event_impl(event)
 
 
 def _utc_now() -> str:

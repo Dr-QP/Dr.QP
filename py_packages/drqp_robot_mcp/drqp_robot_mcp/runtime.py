@@ -1,13 +1,13 @@
-"""Devcontainer-side bridge for Dr.QP robot MCP operations."""
+"""Local ROS 2 and Gazebo runtime helpers for the Dr.QP robot MCP server."""
 
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 import json
 import os
 from pathlib import Path
-import shlex
+import shutil
 import subprocess
 import sys
 import time
@@ -15,7 +15,7 @@ from typing import Any, Callable
 
 
 def main() -> None:
-    """Run the requested bridge command and print JSON."""
+    """Run the requested helper command and print JSON."""
     parser = build_parser()
     args = parser.parse_args()
     result = args.handler(args)
@@ -24,12 +24,12 @@ def main() -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """Build the CLI parser."""
-    parser = argparse.ArgumentParser('drqp_robot_mcp_container')
+    """Build a parser for manual local runtime operations."""
+    parser = argparse.ArgumentParser('drqp_robot_mcp_runtime')
     subparsers = parser.add_subparsers(dest='command', required=True)
 
     start_sim = subparsers.add_parser('start-simulation')
-    start_sim.add_argument('--workspace-root', default='/workspace')
+    start_sim.add_argument('--workspace-root', default='.')
     start_sim.add_argument('--pid-path', required=True)
     start_sim.add_argument('--log-path', required=True)
     start_sim.add_argument('--gui', action='store_true')
@@ -59,10 +59,22 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def cmd_start_simulation(args: argparse.Namespace) -> dict[str, Any]:
-    """Start the Gazebo simulation launch file in the background."""
-    workspace_root = Path(args.workspace_root)
-    pid_path = Path(args.pid_path)
-    log_path = Path(args.log_path)
+    """Adapter for launching Gazebo from parsed CLI arguments."""
+    return start_simulation(
+        workspace_root=Path(args.workspace_root),
+        pid_path=Path(args.pid_path),
+        log_path=Path(args.log_path),
+        gui=bool(args.gui),
+    )
+
+
+def start_simulation(
+    workspace_root: Path,
+    pid_path: Path,
+    log_path: Path,
+    gui: bool = False,
+) -> dict[str, Any]:
+    """Start the Gazebo simulation locally when the launch file is available."""
     pid_path.parent.mkdir(parents=True, exist_ok=True)
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -70,23 +82,30 @@ def cmd_start_simulation(args: argparse.Namespace) -> dict[str, Any]:
     if current_pid is not None and _pid_is_running(current_pid):
         return {
             'started': False,
+            'available': True,
             'pid': current_pid,
             'message': 'Simulation launch is already running.',
             'log_path': str(log_path),
         }
 
-    env_exports = 'export ROS_DISTRO=jazzy CC=clang CXX=clang++ CMAKE_EXPORT_COMPILE_COMMANDS=1'
-    gui_value = 'true' if args.gui else 'false'
-    launch_command = (
-        f'cd {shlex.quote(str(workspace_root))} && '
-        f'{env_exports} && '
-        'source scripts/setup.bash && '
-        f'ros2 launch drqp_gazebo sim.launch.py gui:={gui_value}'
-    )
+    if not _gazebo_launch_is_available():
+        return {
+            'started': False,
+            'available': False,
+            'pid': None,
+            'message': 'Gazebo launch is not available in the current ROS 2 environment.',
+            'log_path': str(log_path),
+        }
 
     with log_path.open('a', encoding='utf-8') as log_file:
         process = subprocess.Popen(  # noqa: S603
-            ['bash', '-lc', launch_command],
+            [
+                'ros2',
+                'launch',
+                'drqp_gazebo',
+                'sim.launch.py',
+                f'gui:={str(gui).lower()}',
+            ],
             cwd=workspace_root,
             stdout=log_file,
             stderr=subprocess.STDOUT,
@@ -96,6 +115,7 @@ def cmd_start_simulation(args: argparse.Namespace) -> dict[str, Any]:
     pid_path.write_text(f'{process.pid}\n', encoding='utf-8')
     return {
         'started': True,
+        'available': True,
         'pid': process.pid,
         'message': 'Started Gazebo simulation launch.',
         'log_path': str(log_path),
@@ -103,6 +123,11 @@ def cmd_start_simulation(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def cmd_publish_event(args: argparse.Namespace) -> dict[str, Any]:
+    """Adapter for publishing a robot lifecycle event."""
+    return publish_event(args.event)
+
+
+def publish_event(event: str) -> dict[str, Any]:
     """Publish a robot event onto /robot_event."""
 
     def _operation() -> dict[str, Any]:
@@ -116,7 +141,7 @@ def cmd_publish_event(args: argparse.Namespace) -> dict[str, Any]:
         while time.monotonic() < deadline and publisher.get_subscription_count() == 0:
             rclpy.spin_once(node, timeout_sec=0.1)
 
-        publisher.publish(std_msgs.msg.String(data=args.event))
+        publisher.publish(std_msgs.msg.String(data=event))
         for _ in range(5):
             rclpy.spin_once(node, timeout_sec=0.05)
 
@@ -124,7 +149,7 @@ def cmd_publish_event(args: argparse.Namespace) -> dict[str, Any]:
         node.destroy_node()
         return {
             'published': True,
-            'event': args.event,
+            'event': event,
             'subscription_count': subscriptions,
         }
 
@@ -132,35 +157,54 @@ def cmd_publish_event(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def cmd_wait_state(args: argparse.Namespace) -> dict[str, Any]:
+    """Adapter for waiting on a target lifecycle state."""
+    return wait_for_state(args.target_state, args.timeout_sec)
+
+
+def wait_for_state(target_state: str, timeout_sec: float) -> dict[str, Any]:
     """Wait until /robot_state reaches the requested state."""
-    state = _read_robot_lifecycle_state(timeout_sec=args.timeout_sec, expected=args.target_state)
+    state = _read_robot_lifecycle_state(timeout_sec=timeout_sec, expected=target_state)
     return {
-        'reached': state == args.target_state,
+        'reached': state == target_state,
         'state': state,
-        'target_state': args.target_state,
+        'target_state': target_state,
     }
 
 
 def cmd_get_world_state(args: argparse.Namespace) -> dict[str, Any]:
+    """Adapter for reading the latest Gazebo world entity poses."""
+    return get_world_state(args.world_name, args.timeout_sec)
+
+
+def get_world_state(world_name: str, timeout_sec: float) -> dict[str, Any]:
     """Read the latest Gazebo world entity poses."""
-    world_state = _get_world_state_snapshot(
-        world_name=args.world_name,
-        timeout_sec=args.timeout_sec,
-    )
-    return world_state
+    return _get_world_state_snapshot(world_name=world_name, timeout_sec=timeout_sec)
 
 
 def cmd_get_robot_state(args: argparse.Namespace) -> dict[str, Any]:
+    """Adapter for reading the latest robot lifecycle, joints, and pose."""
+    return get_robot_state(
+        world_name=args.world_name,
+        robot_name=args.robot_name,
+        timeout_sec=args.timeout_sec,
+    )
+
+
+def get_robot_state(
+    world_name: str,
+    robot_name: str,
+    timeout_sec: float,
+) -> dict[str, Any]:
     """Read the latest robot lifecycle state, joints, and pose."""
-    deadline = time.monotonic() + args.timeout_sec
+    deadline = time.monotonic() + timeout_sec
 
     lifecycle_state = _read_robot_lifecycle_state(timeout_sec=_time_left(deadline))
     joint_states = _read_joint_states(timeout_sec=_time_left(deadline))
     world_state = _get_world_state_snapshot(
-        world_name=args.world_name,
+        world_name=world_name,
         timeout_sec=_time_left(deadline),
     )
-    robot_pose = _find_robot_pose(world_state.get('entities', []), args.robot_name)
+    robot_pose = _find_robot_pose(world_state.get('entities', []), robot_name)
 
     available = (
         lifecycle_state is not None
@@ -168,9 +212,6 @@ def cmd_get_robot_state(args: argparse.Namespace) -> dict[str, Any]:
         or robot_pose is not None
         or bool(world_state.get('available'))
     )
-    # Treat world_state availability as the indicator that the Gazebo simulation
-    # is currently reachable, instead of using the broader `available` flag
-    # that can be satisfied by stale latched /robot_state messages.
     simulation_running = bool(world_state.get('available'))
 
     return {
@@ -201,7 +242,7 @@ def _get_world_state_snapshot(world_name: str, timeout_sec: float) -> dict[str, 
         )
         entities = parse_gazebo_pose_info(raw_output.stdout)
     except FileNotFoundError:
-        note = 'Gazebo CLI is not installed in the devcontainer.'
+        note = 'Gazebo CLI is not installed in the current environment.'
     except subprocess.CalledProcessError as exc:
         note = exc.stderr.strip() or exc.stdout.strip() or 'Gazebo pose topic is unavailable.'
     except subprocess.TimeoutExpired:
@@ -428,6 +469,23 @@ def _parse_pose_block(lines: list[str]) -> dict[str, Any]:
             'orientation': orientation,
         },
     }
+
+
+def _gazebo_launch_is_available() -> bool:
+    """Return whether Gazebo launch support is present in this environment."""
+    if shutil.which('ros2') is None:
+        return False
+    try:
+        subprocess.run(  # noqa: S603
+            ['ros2', 'pkg', 'prefix', 'drqp_gazebo'],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=5.0,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        return False
+    return True
 
 
 def _read_pid(pid_path: Path) -> int | None:

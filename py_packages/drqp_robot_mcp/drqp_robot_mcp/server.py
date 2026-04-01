@@ -16,8 +16,9 @@ from .models import (
 mcp = FastMCP(
     'Dr.QP Robot MCP',
     instructions=(
-        'Use these tools to boot the Dr.QP Gazebo robot, query its lifecycle '
-        'and pose state, record robot state snapshots, and inspect Gazebo world poses.'
+        'Use these tools to manage the Dr.QP robot from the current ROS 2 '
+        'environment, record robot state snapshots, and inspect Gazebo world '
+        'poses when Gazebo is available.'
     ),
 )
 controller = RobotMcpController()
@@ -25,7 +26,7 @@ controller = RobotMcpController()
 
 @mcp.tool()
 def drqp_robot_boot_up(timeout_sec: float = 120.0) -> LifecycleActionResult:
-    """Boot the Dr.QP Gazebo robot to the `torque_on` lifecycle state."""
+    """Boot the Dr.QP robot to the `torque_on` lifecycle state."""
     return controller.boot_up(timeout_sec=timeout_sec)
 
 
@@ -63,7 +64,7 @@ def drqp_robot_get_recording_status() -> RecordingStatus:
 
 @mcp.tool()
 def drqp_robot_get_world_state(timeout_sec: float = 10.0) -> WorldStateSnapshot:
-    """Return the latest Gazebo world entity poses and simulation time."""
+    """Return Gazebo world poses and simulation time when Gazebo is available."""
     return controller.get_world_state(timeout_sec=timeout_sec)
 
 

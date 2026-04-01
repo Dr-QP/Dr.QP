@@ -34,7 +34,7 @@ def make_snapshot(
 
 
 class FakeController(RobotMcpController):
-    """Controller test double that avoids Docker and ROS 2."""
+    """Controller test double that avoids ROS middleware dependencies."""
 
     def __init__(self, states: list[RobotStateSnapshot]):
         super().__init__(workspace_root='/workspace')
@@ -52,26 +52,26 @@ class FakeController(RobotMcpController):
             return snapshot
         return self.current_state
 
-    def _container_start_simulation(self) -> dict[str, object]:
+    def _start_simulation(self) -> dict[str, object]:
         self.start_calls += 1
         self.current_state = make_snapshot('torque_off')
         self.states = [self.current_state]
-        return {'started': True}
+        return {'started': True, 'available': True}
 
-    def _container_publish_event(self, event: str) -> dict[str, object]:
+    def _publish_event(self, event: str) -> dict[str, object]:
         self.published_events.append(event)
         return {'published': True, 'event': event}
 
-    def _container_wait_state(
+    def _wait_for_state(
         self,
         target_state: str,
         timeout_sec: float,
-    ) -> dict[str, object]:
+    ) -> RobotStateSnapshot:
         del timeout_sec
         self.waited_states.append(target_state)
         self.current_state = make_snapshot(target_state)
         self.states = [self.current_state]
-        return {'reached': True, 'state': target_state}
+        return self.current_state
 
 
 def test_boot_up_starts_simulation_and_initializes_robot() -> None:
@@ -88,9 +88,35 @@ def test_boot_up_starts_simulation_and_initializes_robot() -> None:
     assert result.simulation_was_started is True
 
 
+def test_boot_up_initializes_without_starting_simulation_when_state_exists() -> None:
+    """Boot-up uses the existing ROS lifecycle state even without Gazebo."""
+    controller = FakeController([make_snapshot('torque_off', simulation_running=False)])
+
+    result = controller.boot_up(timeout_sec=5.0)
+
+    assert controller.start_calls == 0
+    assert controller.published_events == ['initialize']
+    assert controller.waited_states == ['torque_on']
+    assert result.state_before == 'torque_off'
+    assert result.state_after == 'torque_on'
+    assert result.simulation_was_started is False
+
+
 def test_shut_down_finalizes_robot_from_torque_on() -> None:
     """Shutdown sends finalize when the robot is currently on."""
     controller = FakeController([make_snapshot('torque_on')])
+
+    result = controller.shut_down(timeout_sec=5.0)
+
+    assert controller.published_events == ['finalize']
+    assert controller.waited_states == ['finalized']
+    assert result.state_before == 'torque_on'
+    assert result.state_after == 'finalized'
+
+
+def test_shut_down_uses_lifecycle_state_without_simulation_running() -> None:
+    """Shutdown uses lifecycle state when ROS is available without Gazebo."""
+    controller = FakeController([make_snapshot('torque_on', simulation_running=False)])
 
     result = controller.shut_down(timeout_sec=5.0)
 
