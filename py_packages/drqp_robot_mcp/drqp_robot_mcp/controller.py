@@ -9,6 +9,7 @@ import threading
 import time
 from typing import Any, Callable
 
+from . import runtime
 from .models import (
     LifecycleActionResult,
     RecordedRobotStates,
@@ -16,24 +17,10 @@ from .models import (
     RobotStateSnapshot,
     WorldStateSnapshot,
 )
-from .runtime import (
-    get_robot_state as runtime_get_robot_state,
-    get_world_state as runtime_get_world_state,
-    publish_event as runtime_publish_event,
-    start_simulation as runtime_start_simulation,
-    wait_for_state as runtime_wait_for_state,
-)
 
 
 class ControllerError(RuntimeError):
     """Raised when the robot MCP controller cannot complete an action."""
-
-
-RobotStateReader = Callable[[str, str, float], dict[str, Any]]
-WorldStateReader = Callable[[str, float], dict[str, Any]]
-LifecycleEventPublisher = Callable[[str], dict[str, Any]]
-LifecycleStateWaiter = Callable[[str, float], dict[str, Any]]
-SimulationStarter = Callable[[Path, Path, Path, bool], dict[str, Any]]
 
 
 @dataclass(slots=True)
@@ -55,22 +42,12 @@ class RobotMcpController:
         workspace_root: str | Path | None = None,
         world_name: str = 'empty',
         robot_name: str = 'drqp',
-        start_simulation: SimulationStarter | None = None,
-        publish_event: LifecycleEventPublisher | None = None,
-        wait_for_state: LifecycleStateWaiter | None = None,
-        get_robot_state: RobotStateReader | None = None,
-        get_world_state: WorldStateReader | None = None,
     ) -> None:
         self.workspace_root = Path(workspace_root or Path.cwd()).resolve()
         self.world_name = world_name
         self.robot_name = robot_name
         self.launch_pid_path = self.workspace_root / '.tmp' / 'drqp_robot_mcp' / 'sim.launch.pid'
         self.launch_log_path = self.workspace_root / '.tmp' / 'drqp_robot_mcp' / 'sim.launch.log'
-        self._start_simulation_impl = start_simulation or runtime_start_simulation
-        self._publish_event_impl = publish_event or runtime_publish_event
-        self._wait_for_state_impl = wait_for_state or runtime_wait_for_state
-        self._get_robot_state_impl = get_robot_state or runtime_get_robot_state
-        self._get_world_state_impl = get_world_state or runtime_get_world_state
         self._recording_lock = threading.Lock()
         self._recording: _RecordingSession | None = None
 
@@ -175,13 +152,13 @@ class RobotMcpController:
     def get_robot_state(self, timeout_sec: float = 10.0) -> RobotStateSnapshot:
         """Return the latest robot snapshot."""
         return RobotStateSnapshot.from_mapping(
-            self._get_robot_state_impl(self.world_name, self.robot_name, timeout_sec)
+            runtime.get_robot_state(self.world_name, self.robot_name, timeout_sec)
         )
 
     def get_world_state(self, timeout_sec: float = 10.0) -> WorldStateSnapshot:
         """Return the latest Gazebo world snapshot."""
         return WorldStateSnapshot.from_mapping(
-            self._get_world_state_impl(self.world_name, timeout_sec)
+            runtime.get_world_state(self.world_name, timeout_sec)
         )
 
     def start_recording(self, sample_interval_sec: float = 0.5) -> RecordingStatus:
@@ -269,7 +246,7 @@ class RobotMcpController:
         timeout_sec: float,
     ) -> RobotStateSnapshot:
         """Wait for the robot to reach the requested lifecycle state."""
-        result = self._wait_for_state_impl(target_state, timeout_sec)
+        result = runtime.wait_for_state(target_state, timeout_sec)
         if not bool(result.get('reached', False)):
             raise ControllerError(
                 f"Timed out waiting for robot state '{target_state}'. "
@@ -295,7 +272,7 @@ class RobotMcpController:
 
     def _start_simulation(self) -> dict[str, Any]:
         """Start the background Gazebo launch process when available."""
-        return self._start_simulation_impl(
+        return runtime.start_simulation(
             self.workspace_root,
             self.launch_pid_path,
             self.launch_log_path,
@@ -304,7 +281,7 @@ class RobotMcpController:
 
     def _publish_event(self, event: str) -> dict[str, Any]:
         """Publish a lifecycle event onto the local ROS graph."""
-        return self._publish_event_impl(event)
+        return runtime.publish_event(event)
 
 
 def _utc_now() -> str:
