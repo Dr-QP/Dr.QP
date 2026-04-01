@@ -31,6 +31,19 @@
         "--mcp",
         "--mcp-auto-workspace"
       ]
+    },
+    "MCP_DOCKER": {
+      "command": "docker",
+      "args": [
+        "mcp",
+        "gateway",
+        "run",
+        "--cpus",
+        "0",
+        "--memory",
+        "0"
+      ],
+      "type": "stdio"
     }
   }
 }
