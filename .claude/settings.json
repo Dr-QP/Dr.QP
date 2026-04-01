@@ -4,7 +4,7 @@
       "Write(//opt/ros/overlay_ws/**)",
       "Read(//opt/ros/**)",
       "Read(//root/**)",
-  "Bash(**)",
+      "Bash(**)",
       "Write(//tmp/**)",
       "Read(//tmp/**)",
       "WebSearch",
