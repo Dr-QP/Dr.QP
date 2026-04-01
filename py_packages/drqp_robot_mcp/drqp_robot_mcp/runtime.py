@@ -2,70 +2,13 @@
 
 from __future__ import annotations
 
-import argparse
 from datetime import UTC, datetime
-import json
 import os
 from pathlib import Path
 import shutil
 import subprocess
-import sys
 import time
 from typing import Any, Callable
-
-
-def main() -> None:
-    """Run the requested helper command and print JSON."""
-    parser = build_parser()
-    args = parser.parse_args()
-    result = args.handler(args)
-    json.dump(result, sys.stdout)
-    sys.stdout.write('\n')
-
-
-def build_parser() -> argparse.ArgumentParser:
-    """Build a parser for manual local runtime operations."""
-    parser = argparse.ArgumentParser('drqp_robot_mcp_runtime')
-    subparsers = parser.add_subparsers(dest='command', required=True)
-
-    start_sim = subparsers.add_parser('start-simulation')
-    start_sim.add_argument('--workspace-root', default='.')
-    start_sim.add_argument('--pid-path', required=True)
-    start_sim.add_argument('--log-path', required=True)
-    start_sim.add_argument('--gui', action='store_true')
-    start_sim.set_defaults(handler=cmd_start_simulation)
-
-    publish_event = subparsers.add_parser('publish-event')
-    publish_event.add_argument('--event', required=True)
-    publish_event.set_defaults(handler=cmd_publish_event)
-
-    wait_state = subparsers.add_parser('wait-state')
-    wait_state.add_argument('--target-state', required=True)
-    wait_state.add_argument('--timeout-sec', type=float, default=90.0)
-    wait_state.set_defaults(handler=cmd_wait_state)
-
-    get_world_state = subparsers.add_parser('get-world-state')
-    get_world_state.add_argument('--world-name', default='empty')
-    get_world_state.add_argument('--timeout-sec', type=float, default=10.0)
-    get_world_state.set_defaults(handler=cmd_get_world_state)
-
-    get_robot_state = subparsers.add_parser('get-robot-state')
-    get_robot_state.add_argument('--world-name', default='empty')
-    get_robot_state.add_argument('--robot-name', default='drqp')
-    get_robot_state.add_argument('--timeout-sec', type=float, default=10.0)
-    get_robot_state.set_defaults(handler=cmd_get_robot_state)
-
-    return parser
-
-
-def cmd_start_simulation(args: argparse.Namespace) -> dict[str, Any]:
-    """Adapter for launching Gazebo from parsed CLI arguments."""
-    return start_simulation(
-        workspace_root=Path(args.workspace_root),
-        pid_path=Path(args.pid_path),
-        log_path=Path(args.log_path),
-        gui=bool(args.gui),
-    )
 
 
 def start_simulation(
@@ -122,11 +65,6 @@ def start_simulation(
     }
 
 
-def cmd_publish_event(args: argparse.Namespace) -> dict[str, Any]:
-    """Adapter for publishing a robot lifecycle event."""
-    return publish_event(args.event)
-
-
 def publish_event(event: str) -> dict[str, Any]:
     """Publish a robot event onto /robot_event."""
 
@@ -156,11 +94,6 @@ def publish_event(event: str) -> dict[str, Any]:
     return _with_rclpy(_operation)
 
 
-def cmd_wait_state(args: argparse.Namespace) -> dict[str, Any]:
-    """Adapter for waiting on a target lifecycle state."""
-    return wait_for_state(args.target_state, args.timeout_sec)
-
-
 def wait_for_state(target_state: str, timeout_sec: float) -> dict[str, Any]:
     """Wait until /robot_state reaches the requested state."""
     state = _read_robot_lifecycle_state(timeout_sec=timeout_sec, expected=target_state)
@@ -171,23 +104,9 @@ def wait_for_state(target_state: str, timeout_sec: float) -> dict[str, Any]:
     }
 
 
-def cmd_get_world_state(args: argparse.Namespace) -> dict[str, Any]:
-    """Adapter for reading the latest Gazebo world entity poses."""
-    return get_world_state(args.world_name, args.timeout_sec)
-
-
 def get_world_state(world_name: str, timeout_sec: float) -> dict[str, Any]:
     """Read the latest Gazebo world entity poses."""
     return _get_world_state_snapshot(world_name=world_name, timeout_sec=timeout_sec)
-
-
-def cmd_get_robot_state(args: argparse.Namespace) -> dict[str, Any]:
-    """Adapter for reading the latest robot lifecycle, joints, and pose."""
-    return get_robot_state(
-        world_name=args.world_name,
-        robot_name=args.robot_name,
-        timeout_sec=args.timeout_sec,
-    )
 
 
 def get_robot_state(
@@ -517,7 +436,3 @@ def _value_at(values: Any, index: int) -> float | None:
 def _time_left(deadline: float) -> float:
     """Return the remaining time budget for a composite operation."""
     return max(0.1, deadline - time.monotonic())
-
-
-if __name__ == '__main__':
-    main()

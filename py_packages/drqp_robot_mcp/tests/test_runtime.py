@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from argparse import Namespace
 from pathlib import Path
 
 from drqp_robot_mcp import runtime
@@ -79,7 +78,7 @@ def test_start_simulation_returns_unavailable_when_gazebo_launch_is_missing(
     assert 'Gazebo launch is not available' in result['message']
 
 
-def test_cmd_start_simulation_uses_direct_ros2_launch_without_shell(
+def test_start_simulation_uses_direct_ros2_launch_without_shell(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
@@ -116,32 +115,3 @@ def test_cmd_start_simulation_uses_direct_ros2_launch_without_shell(
     assert captured['kwargs']['cwd'] == tmp_path
     assert captured['kwargs']['start_new_session'] is True
     assert 'shell' not in captured['kwargs']
-
-
-def test_cmd_start_simulation_namespace_adapter(tmp_path: Path, monkeypatch) -> None:
-    """The CLI-style adapter delegates to the local runtime helper."""
-    pid_path = tmp_path / 'sim.pid'
-    log_path = tmp_path / 'sim.log'
-
-    monkeypatch.setattr(
-        runtime,
-        'start_simulation',
-        lambda workspace_root, pid_path, log_path, gui=False: {
-            'started': True,
-            'available': True,
-            'pid': 99,
-            'message': f'{workspace_root}:{pid_path}:{log_path}:{gui}',
-        },
-    )
-
-    result = runtime.cmd_start_simulation(
-        Namespace(
-            workspace_root=str(tmp_path),
-            pid_path=str(pid_path),
-            log_path=str(log_path),
-            gui=False,
-        )
-    )
-
-    assert result['started'] is True
-    assert result['available'] is True
