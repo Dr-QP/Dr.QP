@@ -132,7 +132,7 @@ def test_recording_collects_multiple_samples() -> None:
 
     status = controller.start_recording(sample_interval_sec=0.01)
     deadline = time.time() + 1.0
-    while getattr(status, "sample_count", 0) < 2 and time.time() < deadline:
+    while getattr(status, 'sample_count', 0) < 2 and time.time() < deadline:
         time.sleep(0.005)
     recorded = controller.stop_recording()
 
