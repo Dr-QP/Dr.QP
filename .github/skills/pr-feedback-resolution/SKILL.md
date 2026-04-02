@@ -67,11 +67,11 @@ Gather complete context before making changes.
 
     The fetch mechanism must expose each review thread's resolved state such as `isResolved`; `gh pr view <pr-number> --comments` alone is insufficient because it flattens comments and omits thread resolution metadata.
 
-   After fetching, **filter out resolved threads** using these rules (apply in order):
+After fetching, **filter out resolved threads** using these rules (apply in order):
 
-   - **Skip if GitHub-resolved**: If a review thread is marked as resolved on GitHub, exclude the entire thread — do not process any comments in it.
-   - **Skip if last comment signals completion**: Treat the thread as resolved and skip it entirely only if the last comment clearly and positively signals completion using a case-insensitive whole-word or whole-phrase match on terms like "done", "complete", "fixed", "addressed", "ignore", "wontfix", "won't fix", "LGTM", or "no action needed". Do not treat the thread as resolved if the term appears inside another word such as "prefixed" or in an obviously negative or uncertain context near the term such as "not fixed yet", "still not addressed", "is this fixed?", or "doesn't look done".
-   - **Override with last-comment instructions**: If the last comment in an unresolved thread contains explicit instructions (e.g., "instead do X", "use Y here", "change this to Z"), treat those instructions as the authoritative user intent for that thread and ignore earlier comments in the thread.
+- **Skip if GitHub-resolved**: If a review thread is marked as resolved on GitHub, exclude the entire thread — do not process any comments in it.
+- **Skip if last comment signals completion**: Treat the thread as resolved and skip it entirely only if the last comment clearly and positively signals completion using a case-insensitive whole-word or whole-phrase match on terms like "done", "complete", "fixed", "addressed", "ignore", "wontfix", "won't fix", "LGTM", or "no action needed". Do not treat the thread as resolved if the term appears inside another word such as "prefixed" or in an obviously negative or uncertain context near the term such as "not fixed yet", "still not addressed", "is this fixed?", or "doesn't look done".
+- **Override with last-comment instructions**: If the last comment in an unresolved thread contains explicit instructions (e.g., "instead do X", "use Y here", "change this to Z"), treat those instructions as the authoritative user intent for that thread and ignore earlier comments in the thread.
 
 2. **Get CI check results**:
    - Check GitHub Actions workflow runs
