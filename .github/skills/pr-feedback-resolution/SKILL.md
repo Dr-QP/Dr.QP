@@ -43,14 +43,34 @@ Gather complete context before making changes.
 1. **Fetch PR review comments**:
 
 ```bash
-   # Use GitHub MCP or API
-   gh pr view <pr-number> --comments
+    # Use GitHub MCP or an API that returns per-thread resolution state
+    gh api graphql -f owner='<owner>' -f repo='<repo>' -F number=<pr-number> -f query='\
+       query($owner: String!, $repo: String!, $number: Int!) {\
+          repository(owner: $owner, name: $repo) {\
+             pullRequest(number: $number) {\
+                reviewThreads(first: 100) {\
+                   nodes {\
+                      isResolved\
+                      comments(first: 100) {\
+                         nodes {\
+                            body\
+                            author { login }\
+                            url\
+                         }\
+                      }\
+                   }\
+                }\
+             }\
+          }\
+       }'
 ```
+
+    The fetch mechanism must expose each review thread's resolved state such as `isResolved`; `gh pr view <pr-number> --comments` alone is insufficient because it flattens comments and omits thread resolution metadata.
 
    After fetching, **filter out resolved threads** using these rules (apply in order):
 
    - **Skip if GitHub-resolved**: If a review thread is marked as resolved on GitHub, exclude the entire thread — do not process any comments in it.
-   - **Skip if last comment signals completion**: If the last comment in a thread contains a completion word (e.g., "done", "complete", "fixed", "addressed", "ignore", "wontfix", "won't fix", "LGTM", "no action needed"), treat the thread as resolved and skip it entirely.
+   - **Skip if last comment signals completion**: Treat the thread as resolved and skip it entirely only if the last comment clearly and positively signals completion using a case-insensitive whole-word or whole-phrase match on terms like "done", "complete", "fixed", "addressed", "ignore", "wontfix", "won't fix", "LGTM", or "no action needed". Do not treat the thread as resolved if the term appears inside another word such as "prefixed" or in an obviously negative or uncertain context near the term such as "not fixed yet", "still not addressed", "is this fixed?", or "doesn't look done".
    - **Override with last-comment instructions**: If the last comment in an unresolved thread contains explicit instructions (e.g., "instead do X", "use Y here", "change this to Z"), treat those instructions as the authoritative user intent for that thread and ignore earlier comments in the thread.
 
 2. **Get CI check results**:
@@ -250,7 +270,7 @@ When iterating over PR review threads, apply these filters in order before any c
 | Check | Condition | Action |
 |-------|-----------|--------|
 | GitHub-resolved | Thread is marked resolved in GitHub UI | **Skip entire thread** |
-| Completion signal | Last comment contains: "done", "complete", "fixed", "addressed", "ignore", "wontfix", "won't fix", "LGTM", "no action needed" (case-insensitive) | **Skip entire thread** |
+| Completion signal | Last comment clearly and positively matches a completion term using case-insensitive whole-word or whole-phrase matching; ignore partial-word matches and obvious negations or questions near the term | **Skip entire thread** |
 | Last-comment instruction | Last comment contains explicit instructions (e.g., "instead do X", "use Y", "change to Z") | **Follow last comment only**; ignore earlier comments in thread |
 | Default | None of the above | Process thread normally using all comments |
 
