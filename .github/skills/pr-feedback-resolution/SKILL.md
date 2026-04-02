@@ -1,6 +1,6 @@
 ---
 name: pr-feedback-resolution
-description: Systematic workflow for addressing PR feedback, CI failures, security findings, and coverage gaps. Use when resolving code review comments, fixing CI issues, addressing CodeQL alerts, or improving test coverage.
+description: "Systematic workflow for resolving pull request feedback, review threads, CI failures, CodeQL findings, and Codecov patch coverage gaps. Use when addressing PR review comments, skipping resolved threads, classifying reviewer intent, fixing failing checks, or preparing a PR for re-review. Keywords: PR feedback, review comments, resolved threads, CI failures, CodeQL, Codecov, re-review."
 ---
 
 # PR Feedback Resolution Skill
@@ -43,9 +43,35 @@ Gather complete context before making changes.
 1. **Fetch PR review comments**:
 
 ```bash
-   # Use GitHub MCP or API
-   gh pr view <pr-number> --comments
+    # Use GitHub MCP or an API that returns per-thread resolution state
+    gh api graphql -f owner='<owner>' -f repo='<repo>' -F number=<pr-number> -f query='\
+       query($owner: String!, $repo: String!, $number: Int!) {\
+          repository(owner: $owner, name: $repo) {\
+             pullRequest(number: $number) {\
+                reviewThreads(first: 100) {\
+                   nodes {\
+                      isResolved\
+                      comments(first: 100) {\
+                         nodes {\
+                            body\
+                            author { login }\
+                            url\
+                         }\
+                      }\
+                   }\
+                }\
+             }\
+          }\
+       }'
 ```
+
+    The fetch mechanism must expose each review thread's resolved state such as `isResolved`; `gh pr view <pr-number> --comments` alone is insufficient because it flattens comments and omits thread resolution metadata.
+
+After fetching, **filter out resolved threads** using these rules (apply in order):
+
+- **Skip if GitHub-resolved**: If a review thread is marked as resolved on GitHub, exclude the entire thread — do not process any comments in it.
+- **Skip if last comment signals completion**: Treat the thread as resolved and skip it entirely only if the last comment clearly and positively signals completion using a case-insensitive whole-word or whole-phrase match on terms like "done", "complete", "fixed", "addressed", "ignore", "wontfix", "won't fix", "LGTM", or "no action needed". Do not treat the thread as resolved if the term appears inside another word such as "prefixed" or in an obviously negative or uncertain context near the term such as "not fixed yet", "still not addressed", "is this fixed?", or "doesn't look done".
+- **Override with last-comment instructions**: If the last comment in an unresolved thread contains explicit instructions (e.g., "instead do X", "use Y here", "change this to Z"), treat those instructions as the authoritative user intent for that thread and ignore earlier comments in the thread.
 
 2. **Get CI check results**:
    - Check GitHub Actions workflow runs
@@ -71,7 +97,7 @@ Gather complete context before making changes.
 
 ### Workflow 2: Classify Review Comment Intent
 
-Determine confidence level before making changes.
+Determine confidence level before making changes. **Only process threads that passed the Workflow 1 filters** — resolved or completion-signaled threads are never classified.
 
 1. **Analyze comment language**:
    - **Explicit requests**: "Change X to Y", "Add Z", "Remove A"
@@ -236,6 +262,19 @@ Ensure all feedback is addressed before requesting re-review.
    - Note any items needing discussion
 
 ## Common Patterns
+
+### Pattern: Thread Resolution Filtering
+
+When iterating over PR review threads, apply these filters in order before any classification or action:
+
+| Check                    | Condition                                                                                                                                                                                                                                                                                                 | Action                                                          |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| GitHub-resolved          | Thread is marked resolved in GitHub UI                                                                                                                                                                                                                                                                    | **Skip entire thread**                                          |
+| Completion signal        | Last comment is a short, positive-only acknowledgement such as exactly "done", "complete", "fixed", "addressed", "resolved", "ignore", "wontfix", "won't fix", "LGTM", "looks good to me", "no action needed" (case-insensitive), with no trailing "but", "however", questions, or additional suggestions | **Skip entire thread**                                          |
+| Last-comment instruction | Last comment contains explicit instructions (e.g., "instead do X", "use Y", "change to Z")                                                                                                                                                                                                                | **Follow last comment only**; ignore earlier comments in thread |
+| Default                  | None of the above                                                                                                                                                                                                                                                                                         | Process thread normally using all comments                      |
+
+This filtering must be applied **before** computing confidence scores or taking any action.
 
 ### Pattern: Feedback Resolution Summary Template
 
