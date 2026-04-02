@@ -1,6 +1,6 @@
 ---
 name: pr-feedback-resolution
-description: Systematic workflow for addressing PR feedback, CI failures, security findings, and coverage gaps. Use when resolving code review comments, fixing CI issues, addressing CodeQL alerts, or improving test coverage.
+description: Systematic workflow for resolving pull request feedback, review threads, CI failures, CodeQL findings, and Codecov patch coverage gaps. Use when addressing PR review comments, skipping resolved threads, classifying reviewer intent, fixing failing checks, or preparing a PR for re-review. Keywords: PR feedback, review comments, resolved threads, CI failures, CodeQL, Codecov, re-review.
 ---
 
 # PR Feedback Resolution Skill
