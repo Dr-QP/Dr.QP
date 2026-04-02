@@ -35,4 +35,4 @@ Gazebo support is optional:
 - Robot lifecycle and state tools operate against the current ROS graph.
 - Gazebo world queries work when Gazebo topics and the `gz` CLI are available.
 - Simulation launch is only attempted when the `drqp_gazebo` ROS 2 package is
-	installed in the current environment.
+  installed in the current environment.
