@@ -12,6 +12,29 @@
         <odom_topic>/model/drqp/odometry</odom_topic>
         <dimensions>3</dimensions>
       </plugin>
+      <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+    </gazebo>
+
+    <!-- 9-DOF IMU sensor on imu_link (accelerometer + gyroscope + orientation) -->
+    <gazebo reference="${robot_name}/imu_link">
+      <sensor name="imu_sensor" type="imu">
+        <always_on>true</always_on>
+        <update_rate>30</update_rate>
+        <gz_frame_id>${robot_name}/imu_link</gz_frame_id>
+        <topic>/imu/data</topic>
+        <imu>
+          <angular_velocity>
+            <x><noise type="gaussian"><mean>0</mean><stddev>2e-4</stddev></noise></x>
+            <y><noise type="gaussian"><mean>0</mean><stddev>2e-4</stddev></noise></y>
+            <z><noise type="gaussian"><mean>0</mean><stddev>2e-4</stddev></noise></z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x><noise type="gaussian"><mean>0</mean><stddev>1.7e-2</stddev></noise></x>
+            <y><noise type="gaussian"><mean>0</mean><stddev>1.7e-2</stddev></noise></y>
+            <z><noise type="gaussian"><mean>0</mean><stddev>1.7e-2</stddev></noise></z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
     </gazebo>
   </xacro:macro>
 </robot>
