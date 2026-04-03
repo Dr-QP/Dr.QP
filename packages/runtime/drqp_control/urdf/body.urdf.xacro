@@ -41,4 +41,13 @@
   <link name="$(arg robot_name)/camera">
   </link>
 
+  <joint name="base_center_to_imu" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="$(arg robot_name)/base_center_link"/>
+    <child link="$(arg robot_name)/imu_link"/>
+  </joint>
+
+  <link name="$(arg robot_name)/imu_link">
+  </link>
+
 </robot>
