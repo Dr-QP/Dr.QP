@@ -44,6 +44,7 @@ from nav_msgs.msg import Odometry
 import rclpy
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 from rosgraph_msgs.msg import Clock
+from sensor_msgs.msg import Imu
 import std_msgs.msg
 from test_utils import ensure_gz_sim_not_running
 
@@ -471,6 +472,11 @@ class GazeboRobotControlBase(unittest.TestCase):
             ],
             timeout=self.CONTROLLER_TIMEOUT,
         )
+
+    def assert_imu_data(self) -> None:
+        """Verify the simulated IMU publishes on /imu/data via the Gazebo bridge."""
+        with WaitForTopics([('/imu/data', Imu)], timeout=self.CLOCK_TIMEOUT) as wait:
+            self.assertTrue(wait.wait(), 'Did not receive /imu/data from Gazebo IMU sensor')
 
     def assert_robot_spawned(self) -> None:
         """Verify robot model is spawned and state machine publishes state."""
