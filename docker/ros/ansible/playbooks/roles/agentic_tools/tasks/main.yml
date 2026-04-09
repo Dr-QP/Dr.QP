@@ -6,9 +6,9 @@
       - add
       - --global
       - "{{ item.package }}"
-    creates: "/root/.bun/bin/{{ item.bin }}"
+    creates: "/usr/local/bin/{{ item.bin }}"
   environment:
-    HOME: /root
+    BUN_INSTALL: /usr/local
   loop:
     - package: "@modelcontextprotocol/inspector"
       bin: mcp-inspector

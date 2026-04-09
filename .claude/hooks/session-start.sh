@@ -9,13 +9,18 @@ fi
 # Start Docker daemon if not running
 "$CLAUDE_PROJECT_DIR/scripts/devcontainer-start-docker.sh"
 
+export PATH="$HOME/.bun/bin:$PATH"
+
 # Install Bun if not available
 if ! command -v bun >/dev/null 2>&1; then
   echo "Installing Bun..."
-  curl -fsSL https://bun.com/install | bash
+  install_dir="$CLAUDE_PROJECT_DIR/.tmp"
+  install_script="$install_dir/bun-install.sh"
+  mkdir -p "$install_dir"
+  curl -fsSL https://bun.com/install -o "$install_script"
+  bash "$install_script"
+  rm -f "$install_script"
 fi
-
-export PATH="$HOME/.bun/bin:$PATH"
 
 # Install devcontainer CLI if not available
 if ! command -v devcontainer >/dev/null 2>&1; then

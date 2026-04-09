@@ -40,9 +40,9 @@
       - add
       - --global
       - yarn
-    creates: /root/.bun/bin/yarn
+    creates: /usr/local/bin/yarn
   environment:
-    HOME: /root
+    BUN_INSTALL: /usr/local
 
 - name: Clean up temporary directory
   ansible.builtin.file:

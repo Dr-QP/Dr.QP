@@ -26,7 +26,7 @@
     - { role: ros_install_prebuilt, tags: ["ros_install", "ros_install_prebuilt"], when: not source_install }
     - { role: ros_install_source, tags: ["ros_install", "ros_install_source"], when: source_install }
     - { role: ros_dependencies, tags: ["ros_dependencies"] }
-    - { role: bun_setup, tags: ["bun_setup"] }
+    - { role: bun_setup, tags: ["bun_setup", "nodejs", "agentic_tools"] }
     - { role: nodejs, tags: ["nodejs"] }
     - { role: uv_setup, tags: ["uv_setup"] }
     - { role: agentic_tools, tags: ["agentic_tools"], when: install_agentic_tools | default(false) | bool }
