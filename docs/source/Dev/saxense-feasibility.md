@@ -7,7 +7,7 @@ does not provide a Raspberry Pi or a paired DualSense controller.
 
 ## Executive summary
 
-- **Decision:** Go with constraints
+- **Decision:** Conditional go — validated on target hardware before shipping
 - **Why:** SAxense is the only known open-source tool that enables DualSense
   **haptics over Bluetooth** on Linux. Every alternative (including `pydualsense`)
   is limited to USB for haptic output. Because Dr.QP connects to the controller
@@ -92,7 +92,7 @@ pw-cli -m load-module libpipewire-module-pipe-tunnel \
   audio.format=u8 audio.rate=3000 audio.channels=2 \
   node.name=SAxense \
   stream.props='{media.role=Haptics device.icon-name=input-gaming}'
-./SAxense < /dev/shm/SAxense > "$dev"
+./SAxense < /dev/shm/SAxense.sock > "$dev"
 ```
 
 This keeps SAxense running continuously and lets any PipeWire-aware source
@@ -194,8 +194,10 @@ drqp_brain (ROS 2 node)
 
 1. **Decision point stays in `drqp_brain`** — the existing
    `joystick_translator_node.py` already holds the mode-change logic.
-2. **Non-blocking invocation** — use `subprocess.Popen` with `stdin=PIPE` and
-   do not wait for completion. The haptic clip plays asynchronously.
+2. **Non-blocking invocation** — launch a two-process pipeline with
+   `subprocess.Popen`: start `ffmpeg` with `stdout=PIPE`, start `SAxense`
+   with `stdin` connected to that pipe, and do not wait for completion. The
+   haptic clip plays asynchronously.
 3. **Optional at runtime** — if `SAxense` binary or hidraw device is absent,
    log a one-time warning and continue without haptics.
 4. **Graceful degradation** — if the subprocess fails (exit code non-zero,
@@ -224,7 +226,7 @@ drqp_brain (ROS 2 node)
 | --- | --- |
 | hidraw device absent at startup | Log warning; skip haptics silently |
 | SAxense binary absent | Log warning on first invocation only; degrade to no haptics |
-| subprocess crash mid-clip | Catch `CalledProcessError`; log once; continue |
+| subprocess crash mid-clip | Launch asynchronously, capture stderr, detect failure via child return code or polling; log once; continue |
 | Multiple rapid events | Allow concurrent clips or cancel previous; do not block control loop |
 | hidraw path changes after reconnect | Re-discover device path on each invocation |
 | PipeWire latency spike (Option B) | Use Option A (ffmpeg) instead |
