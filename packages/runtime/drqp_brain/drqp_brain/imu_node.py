@@ -167,6 +167,7 @@ class ImuNode(Node):
         imu_msg.angular_velocity.x = angular_velocity_x
         imu_msg.angular_velocity.y = angular_velocity_y
         imu_msg.angular_velocity.z = angular_velocity_z
+        imu_msg.angular_velocity_covariance[0] = -1.0  # covariance unknown
 
         linear_acceleration_x, linear_acceleration_y, linear_acceleration_z = (
             sample.linear_acceleration
@@ -174,6 +175,7 @@ class ImuNode(Node):
         imu_msg.linear_acceleration.x = linear_acceleration_x
         imu_msg.linear_acceleration.y = linear_acceleration_y
         imu_msg.linear_acceleration.z = linear_acceleration_z
+        imu_msg.linear_acceleration_covariance[0] = -1.0  # covariance unknown
 
         self.imu_pub.publish(imu_msg)
 

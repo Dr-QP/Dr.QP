@@ -165,6 +165,37 @@ class TestImuNode(unittest.TestCase):
         self.assertEqual(self.magnetic_field_messages, [])
         self.assertEqual(self.temperature_messages, [])
 
+    def test_publish_measurements_marks_orientation_unavailable_when_none(self):
+        """Publish gyro/accel even when orientation is absent; mark it unavailable."""
+        self.fake_sensor.sample = ImuSample(
+            orientation_wxyz=None,
+            angular_velocity=(0.7, 0.8, 0.9),
+            linear_acceleration=(2.1, 2.2, 2.3),
+            magnetic_field_microtesla=(5.0, 6.0, 7.0),
+            temperature_celsius=25.0,
+        )
+        self._wait_for_subscribers()
+
+        self.node.publish_measurements()
+        delivered = self._spin_until(lambda: len(self.imu_messages) > 0, iterations=20)
+
+        self.assertTrue(delivered, 'Expected IMU message to be delivered without orientation')
+
+        imu_msg = self.imu_messages[-1]
+        self.assertEqual(
+            imu_msg.orientation_covariance[0],
+            -1.0,
+            'orientation_covariance[0] must be -1 when orientation is unavailable',
+        )
+        self.assertEqual(imu_msg.angular_velocity.x, 0.7)
+        self.assertEqual(imu_msg.angular_velocity.y, 0.8)
+        self.assertEqual(imu_msg.angular_velocity.z, 0.9)
+        self.assertEqual(imu_msg.angular_velocity_covariance[0], -1.0)
+        self.assertEqual(imu_msg.linear_acceleration.x, 2.1)
+        self.assertEqual(imu_msg.linear_acceleration.y, 2.2)
+        self.assertEqual(imu_msg.linear_acceleration.z, 2.3)
+        self.assertEqual(imu_msg.linear_acceleration_covariance[0], -1.0)
+
 
 if __name__ == '__main__':
     unittest.main()
