@@ -190,9 +190,7 @@ class JoystickTranslatorNode(rclpy.node.Node):
         )
 
     def _set_gait_index(self, new_index: int):
-        """
-        Update gait state and queue haptic feedback for confirmed changes.
-        """
+        """Update gait state and queue haptic feedback for confirmed changes."""
         if new_index == self.gait_index:
             return
 
