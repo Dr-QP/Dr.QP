@@ -240,7 +240,7 @@ class JoystickTranslatorNode(rclpy.node.Node):
                     'continuing without controller feedback'
                 )
                 self._haptics_warning_logged = True
-            self._pending_feedback_commands.clear()
+            self._reset_pending_feedback()
             return
 
         self._haptics_warning_logged = False
@@ -252,6 +252,20 @@ class JoystickTranslatorNode(rclpy.node.Node):
         ):
             command = self._pending_feedback_commands.pop(0)
             self._publish_haptic_command(command)
+
+    def _reset_pending_feedback(self):
+        """
+        Discard pending commands and reset scheduler state for those channels.
+
+        Resetting allows re-selection of the same gait/mode to trigger fresh
+        feedback once the haptics backend becomes available again.
+        """
+        dropped_channels = {
+            command.channel_id for command in self._pending_feedback_commands
+        }
+        self._pending_feedback_commands.clear()
+        for channel_id in dropped_channels:
+            self.haptic_feedback_scheduler.reset_channel(channel_id)
 
     def _publish_haptic_command(self, command: ScheduledFeedbackCommand):
         """Publish a single JoyFeedbackArray command."""
@@ -272,7 +286,7 @@ class JoystickTranslatorNode(rclpy.node.Node):
                     f'{exc}. Continuing without controller feedback'
                 )
                 self._haptics_warning_logged = True
-            self._pending_feedback_commands.clear()
+            self._reset_pending_feedback()
 
 
 def main():

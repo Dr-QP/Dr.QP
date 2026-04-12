@@ -87,10 +87,10 @@ class TestHaptics(unittest.TestCase):
             [command.channel_id for command in commands],
             [0, 0, 0, 0],
         )
-        self.assertEqual(commands[0].due_at, 10.0)
-        self.assertEqual(commands[1].due_at, 10.06)
-        self.assertEqual(commands[2].due_at, 10.1)
-        self.assertEqual(commands[3].due_at, 10.16)
+        self.assertAlmostEqual(commands[0].due_at, 10.0, places=7)
+        self.assertAlmostEqual(commands[1].due_at, 10.06, places=7)
+        self.assertAlmostEqual(commands[2].due_at, 10.1, places=7)
+        self.assertAlmostEqual(commands[3].due_at, 10.16, places=7)
 
     def test_scheduler_is_idempotent_for_same_finalized_state(self):
         """
@@ -115,8 +115,28 @@ class TestHaptics(unittest.TestCase):
         current_time[0] = 30.02
         commands = scheduler.schedule(gait_feedback_pattern('ripple'))
 
-        self.assertEqual(commands[0].due_at, 30.16)
-        self.assertEqual(commands[1].due_at, 30.22)
+        self.assertAlmostEqual(commands[0].due_at, 30.16, places=7)
+        self.assertAlmostEqual(commands[1].due_at, 30.22, places=7)
+
+
+    def test_scheduler_reset_channel_allows_resending_same_state(self):
+        """
+        After reset_channel, re-selecting the same state should produce
+        fresh feedback commands (models backend reconnect scenario).
+        """
+        current_time = [40.0]
+        scheduler = HapticFeedbackScheduler(clock=lambda: current_time[0])
+        tripod_pattern = gait_feedback_pattern('tripod')
+
+        first = scheduler.schedule(tripod_pattern)
+        self.assertEqual(len(first), 2)
+
+        # Simulate discarding due to missing backend and resetting channel
+        scheduler.reset_channel(tripod_pattern.channel_id)
+
+        # Same state should now produce commands again
+        second = scheduler.schedule(tripod_pattern)
+        self.assertEqual(len(second), 2)
 
 
 if __name__ == '__main__':

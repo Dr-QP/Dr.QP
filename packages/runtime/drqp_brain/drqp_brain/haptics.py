@@ -133,6 +133,18 @@ class HapticFeedbackScheduler:
 
         return commands
 
+    def reset_channel(self, channel_id: int) -> None:
+        """
+        Clear the remembered state for a channel.
+
+        Call this when pending commands for a channel are discarded (e.g. due
+        to a missing or failed haptics backend) so that a later re-selection
+        of the same state can still emit feedback once the backend is available
+        again.
+        """
+        self._last_state_by_channel.pop(channel_id, None)
+        self._next_feedback_at.pop(channel_id, None)
+
 
 def gait_feedback_pattern(gait_name: str) -> HapticPulsePattern:
     """Return the haptic pulse pattern for a gait selection."""
