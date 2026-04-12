@@ -22,7 +22,6 @@ import unittest
 
 from drqp_brain.haptics import (
     LEFT_RUMBLE_CHANNEL_ID,
-    RIGHT_RUMBLE_CHANNEL_ID,
     HapticFeedbackScheduler,
     control_mode_feedback_pattern,
     gait_feedback_pattern,
@@ -52,10 +51,10 @@ class TestHaptics(unittest.TestCase):
         self.assertEqual(ripple.pulse_count, 2)
         self.assertEqual(wave.pulse_count, 3)
 
-    def test_control_mode_feedback_pattern_uses_right_channel_pulse_counts(
+    def test_control_mode_feedback_pattern_uses_working_rumble_channel(
         self,
     ):
-        """Control mode selections should map to right-channel pulse counts."""
+        """Control mode selections should map to the working rumble channel."""
         walk = control_mode_feedback_pattern(_FakeControlMode('Walk'))
         body_position = control_mode_feedback_pattern(
             _FakeControlMode('BodyPosition')
@@ -64,9 +63,9 @@ class TestHaptics(unittest.TestCase):
             _FakeControlMode('BodyRotation')
         )
 
-        self.assertEqual(walk.channel_id, RIGHT_RUMBLE_CHANNEL_ID)
-        self.assertEqual(body_position.channel_id, RIGHT_RUMBLE_CHANNEL_ID)
-        self.assertEqual(body_rotation.channel_id, RIGHT_RUMBLE_CHANNEL_ID)
+        self.assertEqual(walk.channel_id, LEFT_RUMBLE_CHANNEL_ID)
+        self.assertEqual(body_position.channel_id, LEFT_RUMBLE_CHANNEL_ID)
+        self.assertEqual(body_rotation.channel_id, LEFT_RUMBLE_CHANNEL_ID)
         self.assertEqual(walk.pulse_count, 1)
         self.assertEqual(body_position.pulse_count, 2)
         self.assertEqual(body_rotation.pulse_count, 3)
@@ -94,7 +93,8 @@ class TestHaptics(unittest.TestCase):
 
     def test_scheduler_is_idempotent_for_same_finalized_state(self):
         """
-        Repeated selection of the active state should not schedule
+        Repeated selection of the active state should not schedule.
+
         more feedback.
         """
         current_time = [20.0]
@@ -105,9 +105,7 @@ class TestHaptics(unittest.TestCase):
         self.assertEqual(scheduler.schedule(tripod_pattern), [])
 
     def test_scheduler_applies_channel_cooldown_before_next_pattern(self):
-        """
-        Rapid updates on one channel should be delayed by the cooldown window.
-        """
+        """Rapid updates on one channel should be delayed by the cooldown window."""
         current_time = [30.0]
         scheduler = HapticFeedbackScheduler(clock=lambda: current_time[0])
 
@@ -121,7 +119,8 @@ class TestHaptics(unittest.TestCase):
 
     def test_scheduler_reset_channel_allows_resending_same_state(self):
         """
-        After reset_channel, re-selecting the same state should produce
+        After reset_channel, re-selecting the same state should produce.
+
         fresh feedback commands (models backend reconnect scenario).
         """
         current_time = [40.0]

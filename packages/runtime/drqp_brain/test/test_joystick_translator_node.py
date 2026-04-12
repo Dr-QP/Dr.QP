@@ -170,6 +170,29 @@ class TestJoystickTranslatorNode(unittest.TestCase):
         self.assertEqual(feedback.id, 0)
         self.assertGreater(feedback.intensity, 0.0)
 
+    def test_control_mode_haptic_feedback_uses_working_rumble_channel(self):
+        """Control-mode changes should publish on the same rumble channel."""
+        self.node._publish_control_mode_change()
+
+        for _ in range(10):
+            rclpy.spin_once(self.node, timeout_sec=0.02)
+            rclpy.spin_once(self.test_node, timeout_sec=0.02)
+            if self.joy_feedback_messages:
+                break
+
+        self.assertGreater(
+            len(self.joy_feedback_messages),
+            0,
+            'Control-mode joy feedback should be published',
+        )
+        feedback = self.joy_feedback_messages[0]
+        self.assertEqual(
+            feedback.type,
+            sensor_msgs.msg.JoyFeedback.TYPE_RUMBLE,
+        )
+        self.assertEqual(feedback.id, 0)
+        self.assertGreater(feedback.intensity, 0.0)
+
 
 if __name__ == '__main__':
     unittest.main()
