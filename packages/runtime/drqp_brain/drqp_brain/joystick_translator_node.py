@@ -97,7 +97,7 @@ class JoystickTranslatorNode(rclpy.node.Node):
             std_msgs.msg.String, '/robot_event', qos_profile=10
         )
         self.joy_feedback_pub = self.create_publisher(
-            sensor_msgs.msg.JoyFeedbackArray,
+            sensor_msgs.msg.JoyFeedback,
             '/joy/set_feedback',
             qos_profile=10,
         )
@@ -229,21 +229,10 @@ class JoystickTranslatorNode(rclpy.node.Node):
         )
 
     def _dispatch_pending_feedback(self):
-        """Publish due haptic commands when a feedback backend is available."""
+        """Publish any haptic commands whose scheduled time has arrived."""
         if not self._pending_feedback_commands:
             return
 
-        if self.joy_feedback_pub.get_subscription_count() == 0:
-            if not self._haptics_warning_logged:
-                self.get_logger().warning(
-                    'DualSense haptics unavailable on /joy/set_feedback; '
-                    'continuing without controller feedback'
-                )
-                self._haptics_warning_logged = True
-            self._reset_pending_feedback()
-            return
-
-        self._haptics_warning_logged = False
         now = self.haptic_feedback_scheduler.now()
 
         while (
@@ -268,17 +257,14 @@ class JoystickTranslatorNode(rclpy.node.Node):
             self.haptic_feedback_scheduler.reset_channel(channel_id)
 
     def _publish_haptic_command(self, command: ScheduledFeedbackCommand):
-        """Publish a single JoyFeedbackArray command."""
+        """Publish a single JoyFeedback command."""
         feedback = sensor_msgs.msg.JoyFeedback()
         feedback.type = sensor_msgs.msg.JoyFeedback.TYPE_RUMBLE
         feedback.id = command.channel_id
         feedback.intensity = float(command.intensity)
 
-        feedback_array = sensor_msgs.msg.JoyFeedbackArray()
-        feedback_array.array = [feedback]
-
         try:
-            self.joy_feedback_pub.publish(feedback_array)
+            self.joy_feedback_pub.publish(feedback)
         except Exception as exc:
             if not self._haptics_warning_logged:
                 self.get_logger().warning(
