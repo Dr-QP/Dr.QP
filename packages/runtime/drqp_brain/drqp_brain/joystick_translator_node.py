@@ -265,7 +265,7 @@ class JoystickTranslatorNode(rclpy.node.Node):
 
         try:
             self.joy_feedback_pub.publish(feedback)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             if not self._haptics_warning_logged:
                 self.get_logger().warning(
                     'Failed to publish DualSense haptic feedback: '
