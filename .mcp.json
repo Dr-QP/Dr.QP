@@ -1,22 +1,3 @@
 {
-  "mcpServers": {
-    "sequentialthinking": {
-      "type": "stdio",
-      "command": "bunx",
-      "args": [
-        "@modelcontextprotocol/server-sequential-thinking"
-      ]
-    },
-    "mcp-docs": {
-      "type": "http",
-      "url": "https://modelcontextprotocol.io/mcp"
-    },
-    "mcp-server-git": {
-      "type": "stdio",
-      "command": "uvx",
-      "args": [
-        "mcp-server-git"
-      ]
-    }
-  }
+  "mcpServers": {}
 }
