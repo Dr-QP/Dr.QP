@@ -74,8 +74,8 @@ class HapticFeedbackScheduler:
     def __init__(
         self,
         clock: Callable[[], float] = time.monotonic,
-        pulse_on_duration: float = 0.06,
-        pulse_gap_duration: float = 0.04,
+        pulse_on_duration: float = 0.15,
+        pulse_gap_duration: float = 0.05,
         cooldown_window: float = 0.1,
     ):
         self._clock = clock
@@ -164,6 +164,8 @@ def gait_feedback_pattern(gait_name: str) -> HapticPulsePattern:
         channel_id=LEFT_RUMBLE_CHANNEL_ID,
         pulse_count=GAIT_FEEDBACK_PULSES[gait_name],
         state_key=f'gait:{gait_name}',
+        repeat_count=2,
+        repeat_gap_duration=0.25,
     )
 
 
@@ -176,5 +178,5 @@ def control_mode_feedback_pattern(control_mode: object) -> HapticPulsePattern:
         pulse_count=CONTROL_MODE_FEEDBACK_PULSES[control_mode_name],
         state_key=f'control_mode:{control_mode_name}',
         repeat_count=3,
-        repeat_gap_duration=0.18,
+        repeat_gap_duration=0.25,
     )
