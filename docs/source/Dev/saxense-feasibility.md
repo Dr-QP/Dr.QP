@@ -141,6 +141,7 @@ path avoids the loopback and is expected to be closer to the lower bound.
 They have not been measured on the Dr.QP target hardware.** The acceptance
 criterion of 20 captured measurements must be met before any integration ships.
 
+(known-issues-with-pipewire-on-ubuntu-2404--raspberry-pi-5)=
 ## Known issues with PipeWire on Ubuntu 24.04 / Raspberry Pi 5
 
 Community documentation (tested July 2024 on RPi 5 + Ubuntu 24.04) confirms:
