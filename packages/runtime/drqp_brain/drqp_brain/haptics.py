@@ -50,6 +50,8 @@ class HapticPulsePattern:
     pulse_count: int
     state_key: str
     intensity: float = 0.8
+    repeat_count: int = 1
+    repeat_gap_duration: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -99,6 +101,9 @@ class HapticFeedbackScheduler:
         if pattern.pulse_count <= 0:
             return []
 
+        if pattern.repeat_count <= 0:
+            return []
+
         if (
             self._last_state_by_channel.get(pattern.channel_id)
             == pattern.state_key
@@ -108,23 +113,30 @@ class HapticFeedbackScheduler:
         start_at = max(self.now(), self._next_feedback_at[pattern.channel_id])
         commands = []
         pulse_span = self._pulse_on_duration + self._pulse_gap_duration
+        group_gap = max(pattern.repeat_gap_duration, self._pulse_gap_duration)
 
-        for pulse_index in range(pattern.pulse_count):
-            pulse_start = start_at + (pulse_index * pulse_span)
-            commands.append(
-                ScheduledFeedbackCommand(
-                    due_at=pulse_start,
-                    channel_id=pattern.channel_id,
-                    intensity=pattern.intensity,
-                )
+        for repeat_index in range(pattern.repeat_count):
+            group_start = start_at + repeat_index * (
+                (pattern.pulse_count * pulse_span) - self._pulse_gap_duration
+                + group_gap
             )
-            commands.append(
-                ScheduledFeedbackCommand(
-                    due_at=pulse_start + self._pulse_on_duration,
-                    channel_id=pattern.channel_id,
-                    intensity=0.0,
+
+            for pulse_index in range(pattern.pulse_count):
+                pulse_start = group_start + (pulse_index * pulse_span)
+                commands.append(
+                    ScheduledFeedbackCommand(
+                        due_at=pulse_start,
+                        channel_id=pattern.channel_id,
+                        intensity=pattern.intensity,
+                    )
                 )
-            )
+                commands.append(
+                    ScheduledFeedbackCommand(
+                        due_at=pulse_start + self._pulse_on_duration,
+                        channel_id=pattern.channel_id,
+                        intensity=0.0,
+                    )
+                )
 
         self._last_state_by_channel[pattern.channel_id] = pattern.state_key
         self._next_feedback_at[pattern.channel_id] = (
@@ -163,4 +175,6 @@ def control_mode_feedback_pattern(control_mode: object) -> HapticPulsePattern:
         channel_id=LEFT_RUMBLE_CHANNEL_ID,
         pulse_count=CONTROL_MODE_FEEDBACK_PULSES[control_mode_name],
         state_key=f'control_mode:{control_mode_name}',
+        repeat_count=3,
+        repeat_gap_duration=0.18,
     )

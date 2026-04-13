@@ -54,7 +54,7 @@ class TestHaptics(unittest.TestCase):
     def test_control_mode_feedback_pattern_uses_working_rumble_channel(
         self,
     ):
-        """Control mode selections should map to the working rumble channel."""
+        """Control modes should preserve pulse mapping and repeat groups."""
         walk = control_mode_feedback_pattern(_FakeControlMode('Walk'))
         body_position = control_mode_feedback_pattern(
             _FakeControlMode('BodyPosition')
@@ -69,6 +69,30 @@ class TestHaptics(unittest.TestCase):
         self.assertEqual(walk.pulse_count, 1)
         self.assertEqual(body_position.pulse_count, 2)
         self.assertEqual(body_rotation.pulse_count, 3)
+        self.assertEqual(walk.repeat_count, 3)
+        self.assertEqual(body_position.repeat_count, 3)
+        self.assertEqual(body_rotation.repeat_count, 3)
+        self.assertGreater(walk.repeat_gap_duration, 0.04)
+
+    def test_scheduler_repeats_control_mode_groups_with_longer_group_gap(self):
+        """Control-mode groups should repeat three times with a longer inter-group gap."""
+        current_time = [50.0]
+        scheduler = HapticFeedbackScheduler(clock=lambda: current_time[0])
+
+        commands = scheduler.schedule(
+            control_mode_feedback_pattern(_FakeControlMode('BodyPosition'))
+        )
+
+        active_commands = [
+            command for command in commands if command.intensity > 0.0
+        ]
+        self.assertEqual(len(active_commands), 6)
+        self.assertAlmostEqual(active_commands[0].due_at, 50.0, places=7)
+        self.assertAlmostEqual(active_commands[1].due_at, 50.1, places=7)
+        self.assertAlmostEqual(active_commands[2].due_at, 50.34, places=7)
+        self.assertAlmostEqual(active_commands[3].due_at, 50.44, places=7)
+        self.assertAlmostEqual(active_commands[4].due_at, 50.68, places=7)
+        self.assertAlmostEqual(active_commands[5].due_at, 50.78, places=7)
 
     def test_scheduler_returns_on_off_commands_for_each_pulse(self):
         """A pulse pattern should expand into alternating on/off commands."""
