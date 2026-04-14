@@ -1,0 +1,29 @@
+# move_group node parameters for Dr.QP.
+#
+# These are loaded alongside the SRDF, kinematics, and planning pipeline
+# configs when the move_group executable starts.
+
+move_group:
+  # Capabilities to load.  The defaults cover planning, execution, and
+  # query/state services.  Uncomment to add extras.
+  capabilities: ""
+  disable_capabilities: ""
+
+  # Trajectory execution
+  trajectory_execution:
+    allowed_execution_duration_scaling: 1.2
+    allowed_goal_duration_margin: 0.5
+    allowed_start_tolerance: 0.01
+
+  # Planning scene monitor
+  planning_scene_monitor_options:
+    name: "planning_scene_monitor"
+    robot_description: "robot_description"
+    joint_state_topic: "/joint_states"
+    attached_collision_object_topic: "/move_group/planning_scene_monitor"
+    publish_planning_scene_topic: "/move_group/publish_planning_scene"
+    monitored_planning_scene_topic: "/move_group/monitored_planning_scene"
+    wait_for_initial_state_timeout: 10.0
+
+  # Sensor integration – add 3D sensor sources here when available.
+  sensors: []

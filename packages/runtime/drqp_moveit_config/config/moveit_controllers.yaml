@@ -1,0 +1,35 @@
+# MoveIt 2 controller configuration for Dr.QP.
+#
+# Connects MoveIt's trajectory execution to the existing
+# joint_trajectory_controller managed by ros2_control.
+#
+# The single JointTrajectoryController covers all 18 joints, so MoveIt
+# routes every group's trajectory through the same action server.
+
+moveit_simple_controller_manager:
+  controller_names:
+    - joint_trajectory_controller
+
+joint_trajectory_controller:
+  type: FollowJointTrajectory
+  action_ns: follow_joint_trajectory
+  default: true
+  joints:
+    - dr_qp/left_front_coxa
+    - dr_qp/left_front_femur
+    - dr_qp/left_front_tibia
+    - dr_qp/right_front_coxa
+    - dr_qp/right_front_femur
+    - dr_qp/right_front_tibia
+    - dr_qp/left_middle_coxa
+    - dr_qp/left_middle_femur
+    - dr_qp/left_middle_tibia
+    - dr_qp/right_middle_coxa
+    - dr_qp/right_middle_femur
+    - dr_qp/right_middle_tibia
+    - dr_qp/left_back_coxa
+    - dr_qp/left_back_femur
+    - dr_qp/left_back_tibia
+    - dr_qp/right_back_coxa
+    - dr_qp/right_back_femur
+    - dr_qp/right_back_tibia

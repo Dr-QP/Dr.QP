@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SRDF for the Dr.QP hexapod robot.
+
+  Planning groups: one per leg (3-DOF chain, coxa → femur → tibia → foot)
+  plus a whole-body group that spans all 18 revolute joints.
+
+  Joint axes:
+    coxa  – revolute around Z  (yaw),   limits: -90 … +90  deg
+    femur – revolute around Y  (pitch),  limits: -98 … +90  deg
+    tibia – revolute around Y  (pitch),  limits: -80 … +110 deg
+
+  End-effectors:  each leg's foot_link is treated as the EEF.
+
+  Self-collision notes
+  Adjacent-link pairs (connected directly in the kinematic chain) are
+  listed with reason="Adjacent" so MoveIt skips those checks.
+  Pairs that can never physically reach each other across the body are
+  marked reason="Never".  All other pairs are checked at runtime.
+-->
+<robot name="dr_qp">
+
+  <!-- ================================================================
+       Planning groups – one per leg
+       ================================================================ -->
+
+  <group name="left_front_leg">
+    <chain base_link="dr_qp/base_center_link"
+           tip_link="dr_qp/left_front_foot_link"/>
+  </group>
+
+  <group name="right_front_leg">
+    <chain base_link="dr_qp/base_center_link"
+           tip_link="dr_qp/right_front_foot_link"/>
+  </group>
+
+  <group name="left_middle_leg">
+    <chain base_link="dr_qp/base_center_link"
+           tip_link="dr_qp/left_middle_foot_link"/>
+  </group>
+
+  <group name="right_middle_leg">
+    <chain base_link="dr_qp/base_center_link"
+           tip_link="dr_qp/right_middle_foot_link"/>
+  </group>
+
+  <group name="left_back_leg">
+    <chain base_link="dr_qp/base_center_link"
+           tip_link="dr_qp/left_back_foot_link"/>
+  </group>
+
+  <group name="right_back_leg">
+    <chain base_link="dr_qp/base_center_link"
+           tip_link="dr_qp/right_back_foot_link"/>
+  </group>
+
+  <!-- Whole-body group: all 18 revolute joints. -->
+  <group name="whole_body">
+    <group name="left_front_leg"/>
+    <group name="right_front_leg"/>
+    <group name="left_middle_leg"/>
+    <group name="right_middle_leg"/>
+    <group name="left_back_leg"/>
+    <group name="right_back_leg"/>
+  </group>
+
+  <!-- ================================================================
+       End effectors
+       ================================================================ -->
+
+  <end_effector name="left_front_foot"
+                parent_link="dr_qp/left_front_tibia_leg"
+                group="left_front_leg"/>
+
+  <end_effector name="right_front_foot"
+                parent_link="dr_qp/right_front_tibia_leg"
+                group="right_front_leg"/>
+
+  <end_effector name="left_middle_foot"
+                parent_link="dr_qp/left_middle_tibia_leg"
+                group="left_middle_leg"/>
+
+  <end_effector name="right_middle_foot"
+                parent_link="dr_qp/right_middle_tibia_leg"
+                group="right_middle_leg"/>
+
+  <end_effector name="left_back_foot"
+                parent_link="dr_qp/left_back_tibia_leg"
+                group="left_back_leg"/>
+
+  <end_effector name="right_back_foot"
+                parent_link="dr_qp/right_back_tibia_leg"
+                group="right_back_leg"/>
+
+  <!-- ================================================================
+       Default home states (all joints at 0 rad)
+       ================================================================ -->
+
+  <group_state name="home" group="left_front_leg">
+    <joint name="dr_qp/left_front_coxa"  value="0"/>
+    <joint name="dr_qp/left_front_femur" value="0"/>
+    <joint name="dr_qp/left_front_tibia" value="0"/>
+  </group_state>
+
+  <group_state name="home" group="right_front_leg">
+    <joint name="dr_qp/right_front_coxa"  value="0"/>
+    <joint name="dr_qp/right_front_femur" value="0"/>
+    <joint name="dr_qp/right_front_tibia" value="0"/>
+  </group_state>
+
+  <group_state name="home" group="left_middle_leg">
+    <joint name="dr_qp/left_middle_coxa"  value="0"/>
+    <joint name="dr_qp/left_middle_femur" value="0"/>
+    <joint name="dr_qp/left_middle_tibia" value="0"/>
+  </group_state>
+
+  <group_state name="home" group="right_middle_leg">
+    <joint name="dr_qp/right_middle_coxa"  value="0"/>
+    <joint name="dr_qp/right_middle_femur" value="0"/>
+    <joint name="dr_qp/right_middle_tibia" value="0"/>
+  </group_state>
+
+  <group_state name="home" group="left_back_leg">
+    <joint name="dr_qp/left_back_coxa"  value="0"/>
+    <joint name="dr_qp/left_back_femur" value="0"/>
+    <joint name="dr_qp/left_back_tibia" value="0"/>
+  </group_state>
+
+  <group_state name="home" group="right_back_leg">
+    <joint name="dr_qp/right_back_coxa"  value="0"/>
+    <joint name="dr_qp/right_back_femur" value="0"/>
+    <joint name="dr_qp/right_back_tibia" value="0"/>
+  </group_state>
+
+  <group_state name="home" group="whole_body">
+    <joint name="dr_qp/left_front_coxa"   value="0"/>
+    <joint name="dr_qp/left_front_femur"  value="0"/>
+    <joint name="dr_qp/left_front_tibia"  value="0"/>
+    <joint name="dr_qp/right_front_coxa"  value="0"/>
+    <joint name="dr_qp/right_front_femur" value="0"/>
+    <joint name="dr_qp/right_front_tibia" value="0"/>
+    <joint name="dr_qp/left_middle_coxa"  value="0"/>
+    <joint name="dr_qp/left_middle_femur" value="0"/>
+    <joint name="dr_qp/left_middle_tibia" value="0"/>
+    <joint name="dr_qp/right_middle_coxa"  value="0"/>
+    <joint name="dr_qp/right_middle_femur" value="0"/>
+    <joint name="dr_qp/right_middle_tibia" value="0"/>
+    <joint name="dr_qp/left_back_coxa"   value="0"/>
+    <joint name="dr_qp/left_back_femur"  value="0"/>
+    <joint name="dr_qp/left_back_tibia"  value="0"/>
+    <joint name="dr_qp/right_back_coxa"  value="0"/>
+    <joint name="dr_qp/right_back_femur" value="0"/>
+    <joint name="dr_qp/right_back_tibia" value="0"/>
+  </group_state>
+
+  <!-- ================================================================
+       Self-collision matrix
+       Adjacent links in each leg chain are disabled automatically by
+       MoveIt; we list them explicitly here for clarity.
+       ================================================================ -->
+
+  <!-- body links -->
+  <disable_collisions link1="dr_qp/base_link"        link2="dr_qp/base_center_link" reason="Adjacent"/>
+
+  <!-- left_front -->
+  <disable_collisions link1="dr_qp/base_center_link"          link2="dr_qp/left_front_coxa_servo"       reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_front_coxa_servo"     link2="dr_qp/left_front_coxa_f2_link_1"   reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_front_coxa_f2_link_1" link2="dr_qp/left_front_coxa_f2_link_2"   reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_front_coxa_f2_link_2" link2="dr_qp/left_front_femur_servo"       reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_front_femur_servo"    link2="dr_qp/left_front_femur_link_f3"    reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_front_femur_link_f3"  link2="dr_qp/left_front_femur_link_f1"    reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_front_femur_link_f1"  link2="dr_qp/left_front_tibia_servo"      reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_front_tibia_servo"    link2="dr_qp/left_front_tibia_leg"        reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_front_tibia_leg"      link2="dr_qp/left_front_foot_link"        reason="Adjacent"/>
+
+  <!-- right_front -->
+  <disable_collisions link1="dr_qp/base_center_link"           link2="dr_qp/right_front_coxa_servo"       reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_front_coxa_servo"     link2="dr_qp/right_front_coxa_f2_link_1"   reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_front_coxa_f2_link_1" link2="dr_qp/right_front_coxa_f2_link_2"   reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_front_coxa_f2_link_2" link2="dr_qp/right_front_femur_servo"       reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_front_femur_servo"    link2="dr_qp/right_front_femur_link_f3"    reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_front_femur_link_f3"  link2="dr_qp/right_front_femur_link_f1"    reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_front_femur_link_f1"  link2="dr_qp/right_front_tibia_servo"      reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_front_tibia_servo"    link2="dr_qp/right_front_tibia_leg"        reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_front_tibia_leg"      link2="dr_qp/right_front_foot_link"        reason="Adjacent"/>
+
+  <!-- left_middle -->
+  <disable_collisions link1="dr_qp/base_center_link"            link2="dr_qp/left_middle_coxa_servo"       reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_servo"      link2="dr_qp/left_middle_coxa_f2_link_1"   reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_1"  link2="dr_qp/left_middle_coxa_f2_link_2"   reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_2"  link2="dr_qp/left_middle_femur_servo"       reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_servo"     link2="dr_qp/left_middle_femur_link_f3"    reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f3"   link2="dr_qp/left_middle_femur_link_f1"    reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f1"   link2="dr_qp/left_middle_tibia_servo"      reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_servo"     link2="dr_qp/left_middle_tibia_leg"        reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_leg"       link2="dr_qp/left_middle_foot_link"        reason="Adjacent"/>
+
+  <!-- right_middle -->
+  <disable_collisions link1="dr_qp/base_center_link"             link2="dr_qp/right_middle_coxa_servo"       reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_middle_coxa_servo"      link2="dr_qp/right_middle_coxa_f2_link_1"   reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_middle_coxa_f2_link_1"  link2="dr_qp/right_middle_coxa_f2_link_2"   reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_middle_coxa_f2_link_2"  link2="dr_qp/right_middle_femur_servo"       reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_middle_femur_servo"     link2="dr_qp/right_middle_femur_link_f3"    reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_middle_femur_link_f3"   link2="dr_qp/right_middle_femur_link_f1"    reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_middle_femur_link_f1"   link2="dr_qp/right_middle_tibia_servo"      reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_middle_tibia_servo"     link2="dr_qp/right_middle_tibia_leg"        reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_middle_tibia_leg"       link2="dr_qp/right_middle_foot_link"        reason="Adjacent"/>
+
+  <!-- left_back -->
+  <disable_collisions link1="dr_qp/base_center_link"           link2="dr_qp/left_back_coxa_servo"       reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_back_coxa_servo"       link2="dr_qp/left_back_coxa_f2_link_1"   reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_back_coxa_f2_link_1"   link2="dr_qp/left_back_coxa_f2_link_2"   reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_back_coxa_f2_link_2"   link2="dr_qp/left_back_femur_servo"       reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_back_femur_servo"      link2="dr_qp/left_back_femur_link_f3"    reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_back_femur_link_f3"    link2="dr_qp/left_back_femur_link_f1"    reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_back_femur_link_f1"    link2="dr_qp/left_back_tibia_servo"      reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_back_tibia_servo"      link2="dr_qp/left_back_tibia_leg"        reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/left_back_tibia_leg"        link2="dr_qp/left_back_foot_link"        reason="Adjacent"/>
+
+  <!-- right_back -->
+  <disable_collisions link1="dr_qp/base_center_link"            link2="dr_qp/right_back_coxa_servo"       reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_back_coxa_servo"       link2="dr_qp/right_back_coxa_f2_link_1"   reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_back_coxa_f2_link_1"   link2="dr_qp/right_back_coxa_f2_link_2"   reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_back_coxa_f2_link_2"   link2="dr_qp/right_back_femur_servo"       reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_back_femur_servo"      link2="dr_qp/right_back_femur_link_f3"    reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_back_femur_link_f3"    link2="dr_qp/right_back_femur_link_f1"    reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_back_femur_link_f1"    link2="dr_qp/right_back_tibia_servo"      reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_back_tibia_servo"      link2="dr_qp/right_back_tibia_leg"        reason="Adjacent"/>
+  <disable_collisions link1="dr_qp/right_back_tibia_leg"        link2="dr_qp/right_back_foot_link"        reason="Adjacent"/>
+
+  <!-- Cross-leg pairs: front-left vs front-right coxa servos are at opposite
+       sides of the body and cannot physically collide. -->
+  <disable_collisions link1="dr_qp/left_front_coxa_servo"  link2="dr_qp/right_front_coxa_servo"  reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_servo" link2="dr_qp/right_middle_coxa_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_back_coxa_servo"   link2="dr_qp/right_back_coxa_servo"   reason="Never"/>
+
+  <!-- Front and back legs are too far apart to collide at the coxa level. -->
+  <disable_collisions link1="dr_qp/left_front_coxa_servo"  link2="dr_qp/left_back_coxa_servo"   reason="Never"/>
+  <disable_collisions link1="dr_qp/right_front_coxa_servo" link2="dr_qp/right_back_coxa_servo"  reason="Never"/>
+  <disable_collisions link1="dr_qp/left_front_coxa_servo"  link2="dr_qp/right_back_coxa_servo"  reason="Never"/>
+  <disable_collisions link1="dr_qp/right_front_coxa_servo" link2="dr_qp/left_back_coxa_servo"   reason="Never"/>
+
+</robot>

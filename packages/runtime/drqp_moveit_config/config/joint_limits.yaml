@@ -1,0 +1,107 @@
+# Joint limits for MoveIt 2.
+# Values are read from the URDF by default; this file allows overrides.
+# has_velocity_limits / has_acceleration_limits are enforced by MoveIt
+# even when the URDF velocity field is set to a non-zero value.
+
+joint_limits:
+  # ---- left_front ----
+  dr_qp/left_front_coxa:
+    has_velocity_limits: true
+    max_velocity: 3.14159   # rad/s (~180 deg/s)
+    has_acceleration_limits: false
+    max_acceleration: 0
+  dr_qp/left_front_femur:
+    has_velocity_limits: true
+    max_velocity: 3.14159
+    has_acceleration_limits: false
+    max_acceleration: 0
+  dr_qp/left_front_tibia:
+    has_velocity_limits: true
+    max_velocity: 3.14159
+    has_acceleration_limits: false
+    max_acceleration: 0
+
+  # ---- right_front ----
+  dr_qp/right_front_coxa:
+    has_velocity_limits: true
+    max_velocity: 3.14159
+    has_acceleration_limits: false
+    max_acceleration: 0
+  dr_qp/right_front_femur:
+    has_velocity_limits: true
+    max_velocity: 3.14159
+    has_acceleration_limits: false
+    max_acceleration: 0
+  dr_qp/right_front_tibia:
+    has_velocity_limits: true
+    max_velocity: 3.14159
+    has_acceleration_limits: false
+    max_acceleration: 0
+
+  # ---- left_middle ----
+  dr_qp/left_middle_coxa:
+    has_velocity_limits: true
+    max_velocity: 3.14159
+    has_acceleration_limits: false
+    max_acceleration: 0
+  dr_qp/left_middle_femur:
+    has_velocity_limits: true
+    max_velocity: 3.14159
+    has_acceleration_limits: false
+    max_acceleration: 0
+  dr_qp/left_middle_tibia:
+    has_velocity_limits: true
+    max_velocity: 3.14159
+    has_acceleration_limits: false
+    max_acceleration: 0
+
+  # ---- right_middle ----
+  dr_qp/right_middle_coxa:
+    has_velocity_limits: true
+    max_velocity: 3.14159
+    has_acceleration_limits: false
+    max_acceleration: 0
+  dr_qp/right_middle_femur:
+    has_velocity_limits: true
+    max_velocity: 3.14159
+    has_acceleration_limits: false
+    max_acceleration: 0
+  dr_qp/right_middle_tibia:
+    has_velocity_limits: true
+    max_velocity: 3.14159
+    has_acceleration_limits: false
+    max_acceleration: 0
+
+  # ---- left_back ----
+  dr_qp/left_back_coxa:
+    has_velocity_limits: true
+    max_velocity: 3.14159
+    has_acceleration_limits: false
+    max_acceleration: 0
+  dr_qp/left_back_femur:
+    has_velocity_limits: true
+    max_velocity: 3.14159
+    has_acceleration_limits: false
+    max_acceleration: 0
+  dr_qp/left_back_tibia:
+    has_velocity_limits: true
+    max_velocity: 3.14159
+    has_acceleration_limits: false
+    max_acceleration: 0
+
+  # ---- right_back ----
+  dr_qp/right_back_coxa:
+    has_velocity_limits: true
+    max_velocity: 3.14159
+    has_acceleration_limits: false
+    max_acceleration: 0
+  dr_qp/right_back_femur:
+    has_velocity_limits: true
+    max_velocity: 3.14159
+    has_acceleration_limits: false
+    max_acceleration: 0
+  dr_qp/right_back_tibia:
+    has_velocity_limits: true
+    max_velocity: 3.14159
+    has_acceleration_limits: false
+    max_acceleration: 0
