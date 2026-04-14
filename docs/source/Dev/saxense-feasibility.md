@@ -52,8 +52,19 @@ Output reports on Linux's Bluetooth hidraw interface are not routed through the
 same path as USB, and no Python library as of 2025 overcomes this limit. The
 community consensus is that USB is required for haptics with `pydualsense`.
 
-SAxense specifically addresses this gap. It writes to the hidraw device
-directly, bypassing the Linux input subsystem entirely. This works over
+**SDL2 and SDL3** provide cross-platform haptic APIs
+([SDL2 docs](https://wiki.libsdl.org/SDL2/CategoryHaptic),
+[SDL3 docs](https://wiki.libsdl.org/SDL3/CategoryHaptic)) and are worth
+considering for richer rumble effects. However, both go through the Linux
+kernel's force-feedback (evdev FF) interface. On Linux Bluetooth, the
+`hid-playstation` driver exposes only basic `FF_RUMBLE` through evdev, not the
+raw HID output path needed for 3000 Hz stereo PCM haptics. SDL2 and SDL3 are
+therefore suitable for the rumble MVP path (see
+[#241](https://github.com/Dr-QP/Dr.QP/issues/241)) but do not replace SAxense
+for audio-quality vibration waveforms over Bluetooth.
+
+SAxense specifically addresses the PCM-haptics gap. It writes to the hidraw
+device directly, bypassing the Linux input subsystem entirely. This works over
 Bluetooth because it targets the Bluetooth HID output path (`uhid`).
 
 The confirmed device glob used by SAxense is:
@@ -267,5 +278,7 @@ above, and then open a follow-up implementation issue linked to
 | `pydualsense` for haptics | Cannot send haptic output over Bluetooth (USB-only output) |
 | `dualsensectl` | Configuration tool; no haptic audio streaming capability |
 | `dualsense-controller` PyPI package | Same USB-only haptics limitation |
+| SDL2 haptic API ([docs](https://wiki.libsdl.org/SDL2/CategoryHaptic)) | Cross-platform rumble and force-feedback via Linux kernel evdev FF interface; Python binding via `pysdl2`; supports `FF_RUMBLE` and waveform effects where the kernel exposes them; on Linux Bluetooth, `hid-playstation` driver exposes only basic `FF_RUMBLE` — no raw-HID PCM path; rumble use case already covered by #241 |
+| SDL3 haptic API ([docs](https://wiki.libsdl.org/SDL3/CategoryHaptic)) | Updated API with improved DualSense support including `SDL_HAPTIC_CUSTOM` for custom waveforms on supporting hardware; still kernel-FF-based on Linux Bluetooth; does not expose the 3000 Hz stereo u8 PCM path needed for audio-quality haptics; Python bindings (`pysdl3` / ctypes) less mature; viable for richer rumble or adaptive trigger effects but does not replace SAxense for PCM haptics |
 | PipeWire loopback (SAxense Option B) | Higher latency risk, requires working BT audio stack; deferred |
 | Kernel rumble driver (`FF_RUMBLE`) | Basic rumble only; no frequency-shaped vibration; already covered by #241 |
