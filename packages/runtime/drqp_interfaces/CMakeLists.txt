@@ -16,6 +16,7 @@ foreach(dep ${${PROJECT_NAME}_BUILD_DEPENDS} ${${PROJECT_NAME}_BUILDTOOL_DEPENDS
 endforeach()
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  msg/HapticEffect.msg
   msg/MovementCommand.msg
   msg/MovementCommandConstants.msg
   msg/RobotCommand.msg

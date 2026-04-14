@@ -116,7 +116,7 @@
                 $DEVICE_ARGS \
                 --rm \
                 --name {{ joystick_service_name }} \
-                {{ container_image }} ros2 run joy game_controller_node & \
+                {{ container_image }} ros2 run drqp_joy game_controller_node & \
             fi; \
             sleep 2; \
           done'
