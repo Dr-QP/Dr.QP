@@ -77,6 +77,7 @@ ompl:
       temp_change_factor: 2.0
       min_temperature: 10e-10
       init_temperature: 10e-6
+      # Note: "frountier" is the parameter name used by OMPL (known typo preserved for compatibility)
       frountier_threshold: 0.0
       frountierNodeRatio: 0.1
       k_constant: 0.0
@@ -121,6 +122,7 @@ ompl:
       range: 0.0
       temp_change_factor: 0.1
       init_temperature: 100
+      # Note: "frountier" is the parameter name used by OMPL (known typo preserved for compatibility)
       frountier_threshold: 0.0
       frountier_node_ratio: 0.1
       cost_threshold: 1e300
