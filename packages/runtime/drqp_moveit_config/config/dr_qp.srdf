@@ -231,8 +231,92 @@
   <!-- Cross-leg pairs: front-left vs front-right coxa servos are at opposite
        sides of the body and cannot physically collide. -->
   <disable_collisions link1="dr_qp/left_front_coxa_servo"  link2="dr_qp/right_front_coxa_servo"  reason="Never"/>
-  <disable_collisions link1="dr_qp/left_middle_coxa_servo" link2="dr_qp/right_middle_coxa_servo" reason="Never"/>
   <disable_collisions link1="dr_qp/left_back_coxa_servo"   link2="dr_qp/right_back_coxa_servo"   reason="Never"/>
+
+  <!-- left_middle vs right_middle: the two middle legs face directly across
+       the body from each other; no link on either leg can ever reach any
+       link on the other leg. -->
+  <disable_collisions link1="dr_qp/left_middle_coxa_servo" link2="dr_qp/right_middle_coxa_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_servo" link2="dr_qp/right_middle_coxa_f2_link_1" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_servo" link2="dr_qp/right_middle_coxa_f2_link_2" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_servo" link2="dr_qp/right_middle_femur_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_servo" link2="dr_qp/right_middle_femur_link_f3" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_servo" link2="dr_qp/right_middle_femur_link_f1" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_servo" link2="dr_qp/right_middle_tibia_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_servo" link2="dr_qp/right_middle_tibia_leg" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_servo" link2="dr_qp/right_middle_foot_link" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_1" link2="dr_qp/right_middle_coxa_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_1" link2="dr_qp/right_middle_coxa_f2_link_1" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_1" link2="dr_qp/right_middle_coxa_f2_link_2" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_1" link2="dr_qp/right_middle_femur_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_1" link2="dr_qp/right_middle_femur_link_f3" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_1" link2="dr_qp/right_middle_femur_link_f1" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_1" link2="dr_qp/right_middle_tibia_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_1" link2="dr_qp/right_middle_tibia_leg" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_1" link2="dr_qp/right_middle_foot_link" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_2" link2="dr_qp/right_middle_coxa_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_2" link2="dr_qp/right_middle_coxa_f2_link_1" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_2" link2="dr_qp/right_middle_coxa_f2_link_2" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_2" link2="dr_qp/right_middle_femur_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_2" link2="dr_qp/right_middle_femur_link_f3" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_2" link2="dr_qp/right_middle_femur_link_f1" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_2" link2="dr_qp/right_middle_tibia_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_2" link2="dr_qp/right_middle_tibia_leg" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_coxa_f2_link_2" link2="dr_qp/right_middle_foot_link" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_servo" link2="dr_qp/right_middle_coxa_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_servo" link2="dr_qp/right_middle_coxa_f2_link_1" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_servo" link2="dr_qp/right_middle_coxa_f2_link_2" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_servo" link2="dr_qp/right_middle_femur_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_servo" link2="dr_qp/right_middle_femur_link_f3" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_servo" link2="dr_qp/right_middle_femur_link_f1" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_servo" link2="dr_qp/right_middle_tibia_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_servo" link2="dr_qp/right_middle_tibia_leg" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_servo" link2="dr_qp/right_middle_foot_link" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f3" link2="dr_qp/right_middle_coxa_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f3" link2="dr_qp/right_middle_coxa_f2_link_1" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f3" link2="dr_qp/right_middle_coxa_f2_link_2" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f3" link2="dr_qp/right_middle_femur_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f3" link2="dr_qp/right_middle_femur_link_f3" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f3" link2="dr_qp/right_middle_femur_link_f1" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f3" link2="dr_qp/right_middle_tibia_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f3" link2="dr_qp/right_middle_tibia_leg" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f3" link2="dr_qp/right_middle_foot_link" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f1" link2="dr_qp/right_middle_coxa_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f1" link2="dr_qp/right_middle_coxa_f2_link_1" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f1" link2="dr_qp/right_middle_coxa_f2_link_2" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f1" link2="dr_qp/right_middle_femur_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f1" link2="dr_qp/right_middle_femur_link_f3" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f1" link2="dr_qp/right_middle_femur_link_f1" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f1" link2="dr_qp/right_middle_tibia_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f1" link2="dr_qp/right_middle_tibia_leg" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_femur_link_f1" link2="dr_qp/right_middle_foot_link" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_servo" link2="dr_qp/right_middle_coxa_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_servo" link2="dr_qp/right_middle_coxa_f2_link_1" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_servo" link2="dr_qp/right_middle_coxa_f2_link_2" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_servo" link2="dr_qp/right_middle_femur_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_servo" link2="dr_qp/right_middle_femur_link_f3" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_servo" link2="dr_qp/right_middle_femur_link_f1" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_servo" link2="dr_qp/right_middle_tibia_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_servo" link2="dr_qp/right_middle_tibia_leg" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_servo" link2="dr_qp/right_middle_foot_link" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_leg" link2="dr_qp/right_middle_coxa_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_leg" link2="dr_qp/right_middle_coxa_f2_link_1" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_leg" link2="dr_qp/right_middle_coxa_f2_link_2" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_leg" link2="dr_qp/right_middle_femur_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_leg" link2="dr_qp/right_middle_femur_link_f3" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_leg" link2="dr_qp/right_middle_femur_link_f1" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_leg" link2="dr_qp/right_middle_tibia_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_leg" link2="dr_qp/right_middle_tibia_leg" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_tibia_leg" link2="dr_qp/right_middle_foot_link" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_foot_link" link2="dr_qp/right_middle_coxa_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_foot_link" link2="dr_qp/right_middle_coxa_f2_link_1" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_foot_link" link2="dr_qp/right_middle_coxa_f2_link_2" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_foot_link" link2="dr_qp/right_middle_femur_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_foot_link" link2="dr_qp/right_middle_femur_link_f3" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_foot_link" link2="dr_qp/right_middle_femur_link_f1" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_foot_link" link2="dr_qp/right_middle_tibia_servo" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_foot_link" link2="dr_qp/right_middle_tibia_leg" reason="Never"/>
+  <disable_collisions link1="dr_qp/left_middle_foot_link" link2="dr_qp/right_middle_foot_link" reason="Never"/>
 
   <!-- Front and back legs are too far apart to collide at the coxa level. -->
   <disable_collisions link1="dr_qp/left_front_coxa_servo"  link2="dr_qp/left_back_coxa_servo"   reason="Never"/>
