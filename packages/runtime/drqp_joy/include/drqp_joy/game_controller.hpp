@@ -97,6 +97,7 @@ private:
   int autorepeat_interval_ms_{0};
   bool sticky_buttons_{false};
   int coalesce_interval_ms_{0};
+  uint32_t feedback_rumble_duration_ms_{1000};
 
   // ── State ───────────────────────────────────────────────────────────────────
   SDL_Gamepad * game_controller_{nullptr};

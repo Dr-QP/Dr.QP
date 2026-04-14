@@ -37,7 +37,7 @@ float32 small_magnitude   # Right/light motor strength [0.0 to 1.0]
 float32 level    # Constant force level [-1.0 to 1.0]
 
 # ---- TYPE_SINE / TYPE_TRIANGLE / TYPE_SAWTOOTHUP / TYPE_SAWTOOTHDOWN fields ----
-float32 period_ms       # Wave period in ms
+uint32 period_ms        # Wave period in ms
 float32 magnitude       # Peak amplitude [0.0 to 1.0]
 float32 offset          # Mean / centre value [-1.0 to 1.0]
 float32 phase_degrees   # Phase offset [0.0 to 360.0]

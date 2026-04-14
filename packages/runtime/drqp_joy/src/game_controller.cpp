@@ -57,6 +57,23 @@ namespace drqp_joy
 
 using HapticEffect = drqp_interfaces::msg::HapticEffect;
 
+namespace
+{
+
+/// Clamp a float in [-1, 1] and convert to Sint16 for SDL haptic level fields.
+Sint16 toSint16(float v)
+{
+  return static_cast<Sint16>(std::clamp(v, -1.0f, 1.0f) * 32767.0f);
+}
+
+/// Clamp a float in [0, 1] and convert to Uint16 for SDL haptic magnitude fields.
+Uint16 toUint16(float v)
+{
+  return static_cast<Uint16>(std::clamp(v, 0.0f, 1.0f) * 0xFFFF);
+}
+
+}  // namespace
+
 GameController::GameController(const rclcpp::NodeOptions & options)
 : rclcpp::Node("game_controller_node", options)
 {
@@ -100,6 +117,9 @@ GameController::GameController(const rclcpp::NodeOptions & options)
   if (coalesce_interval_ms_ < 0) {
     throw std::runtime_error("coalesce_interval_ms must be positive");
   }
+
+  feedback_rumble_duration_ms_ =
+    static_cast<uint32_t>(this->declare_parameter("feedback_rumble_duration_ms", 1000));
   // Make sure to initialize publish_soon_time regardless of whether we are going
   // to use it; this ensures that we are always using the correct time source.
   publish_soon_time_ = this->now();
@@ -217,7 +237,7 @@ void GameController::feedbackCb(const std::shared_ptr<sensor_msgs::msg::JoyFeedb
   }
 
   // We purposely ignore the return value; if it fails, what can we do?
-  SDL_RumbleGamepad(game_controller_, low_freq, high_freq, 1000);
+  SDL_RumbleGamepad(game_controller_, low_freq, high_freq, feedback_rumble_duration_ms_);
 }
 
 void GameController::hapticCb(const std::shared_ptr<HapticEffect> msg)
@@ -246,19 +266,13 @@ void GameController::hapticCb(const std::shared_ptr<HapticEffect> msg)
   SDL_memset(&effect, 0, sizeof(effect));
 
   const uint32_t duration = (msg->duration_ms == 0) ? SDL_HAPTIC_INFINITY : msg->duration_ms;
-  const auto to_s16 = [](float v) {
-    return static_cast<Sint16>(std::clamp(v, -1.0f, 1.0f) * 32767.0f);
-  };
-  const auto to_u16 = [](float v) {
-    return static_cast<Uint16>(std::clamp(v, 0.0f, 1.0f) * 0xFFFF);
-  };
 
   switch (msg->effect_type) {
     case HapticEffect::TYPE_LEFTRIGHT: {
       effect.type = SDL_HAPTIC_LEFTRIGHT;
       effect.leftright.length = duration;
-      effect.leftright.large_magnitude = to_u16(msg->large_magnitude);
-      effect.leftright.small_magnitude = to_u16(msg->small_magnitude);
+      effect.leftright.large_magnitude = toUint16(msg->large_magnitude);
+      effect.leftright.small_magnitude = toUint16(msg->small_magnitude);
       break;
     }
 
@@ -266,7 +280,7 @@ void GameController::hapticCb(const std::shared_ptr<HapticEffect> msg)
       effect.type = SDL_HAPTIC_CONSTANT;
       effect.constant.length = duration;
       effect.constant.delay = static_cast<Uint16>(msg->delay_ms);
-      effect.constant.level = to_s16(msg->level);
+      effect.constant.level = toSint16(msg->level);
       effect.constant.attack_length = static_cast<Uint16>(msg->attack_ms);
       effect.constant.fade_length = static_cast<Uint16>(msg->fade_ms);
       break;
@@ -293,8 +307,8 @@ void GameController::hapticCb(const std::shared_ptr<HapticEffect> msg)
       effect.periodic.length = duration;
       effect.periodic.delay = static_cast<Uint16>(msg->delay_ms);
       effect.periodic.period = static_cast<Uint16>(msg->period_ms);
-      effect.periodic.magnitude = to_s16(msg->magnitude);
-      effect.periodic.offset = to_s16(msg->offset);
+      effect.periodic.magnitude = toSint16(msg->magnitude);
+      effect.periodic.offset = toSint16(msg->offset);
       // phase is 0–65535 representing 0°–360°
       effect.periodic.phase =
         static_cast<Uint16>(std::clamp(msg->phase_degrees, 0.0f, 360.0f) / 360.0f * 65535.0f);
@@ -307,8 +321,8 @@ void GameController::hapticCb(const std::shared_ptr<HapticEffect> msg)
       effect.type = SDL_HAPTIC_RAMP;
       effect.ramp.length = duration;
       effect.ramp.delay = static_cast<Uint16>(msg->delay_ms);
-      effect.ramp.start = to_s16(msg->ramp_start);
-      effect.ramp.end = to_s16(msg->ramp_end);
+      effect.ramp.start = toSint16(msg->ramp_start);
+      effect.ramp.end = toSint16(msg->ramp_end);
       effect.ramp.attack_length = static_cast<Uint16>(msg->attack_ms);
       effect.ramp.fade_length = static_cast<Uint16>(msg->fade_ms);
       break;
