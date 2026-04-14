@@ -72,6 +72,12 @@ Uint16 toUint16(float v)
   return static_cast<Uint16>(std::clamp(v, 0.0f, 1.0f) * 0xFFFF);
 }
 
+/// Convert a phase angle in degrees [0, 360] to the SDL haptic Uint16 phase range [0, 65535].
+Uint16 toHapticPhase(float phase_degrees)
+{
+  return static_cast<Uint16>(std::clamp(phase_degrees, 0.0f, 360.0f) / 360.0f * 65535.0f);
+}
+
 }  // namespace
 
 GameController::GameController(const rclcpp::NodeOptions & options)
@@ -151,7 +157,9 @@ GameController::GameController(const rclcpp::NodeOptions & options)
 
   // SDL_INIT_GAMEPAD implies SDL_INIT_JOYSTICK.
   if (!SDL_Init(SDL_INIT_GAMEPAD | SDL_INIT_HAPTIC)) {
-    throw std::runtime_error("SDL could not be initialized: " + std::string(SDL_GetError()));
+    throw std::runtime_error(
+      "Failed to initialize SDL3 (gamepad and haptic subsystems): " +
+      std::string(SDL_GetError()));
   }
 }
 
@@ -309,9 +317,7 @@ void GameController::hapticCb(const std::shared_ptr<HapticEffect> msg)
       effect.periodic.period = static_cast<Uint16>(msg->period_ms);
       effect.periodic.magnitude = toSint16(msg->magnitude);
       effect.periodic.offset = toSint16(msg->offset);
-      // phase is 0–65535 representing 0°–360°
-      effect.periodic.phase =
-        static_cast<Uint16>(std::clamp(msg->phase_degrees, 0.0f, 360.0f) / 360.0f * 65535.0f);
+      effect.periodic.phase = toHapticPhase(msg->phase_degrees);
       effect.periodic.attack_length = static_cast<Uint16>(msg->attack_ms);
       effect.periodic.fade_length = static_cast<Uint16>(msg->fade_ms);
       break;
@@ -470,7 +476,7 @@ void GameController::handleGamepadDeviceAdded(const SDL_GamepadDeviceEvent & e)
 
   if (!dev_name_.empty()) {
     // Match by device name
-    if (new_name == nullptr || std::string(new_name) != dev_name_) {
+    if (new_name == nullptr || dev_name_ != new_name) {
       RCLCPP_INFO(
         get_logger(), "Gamepad added: id=%u, name=%s — not the requested device_name '%s'",
         new_id, new_name ? new_name : "unknown", dev_name_.c_str());
