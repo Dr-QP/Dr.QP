@@ -5,7 +5,7 @@ This page documents how to configure the Augment Context Engine MCP server for G
 ## Install Auggie CLI
 
 ```
-npm install -g @augmentcode/auggie@latest
+bun add -g @augmentcode/auggie@latest
 ```
 
 ## Sign in
