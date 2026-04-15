@@ -14,10 +14,6 @@
   <depend>sensor_msgs</depend>
   <depend>drqp_interfaces</depend>
 
-  <!-- SDL3: apt install libsdl3-dev (Ubuntu 24.04+) -->
-  <build_depend>libsdl3-dev</build_depend>
-  <exec_depend>libsdl3-0</exec_depend>
-
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>drqp_lint_common</test_depend>
 

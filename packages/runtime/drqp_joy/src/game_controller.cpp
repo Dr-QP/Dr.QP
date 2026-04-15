@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020, Open Source Robotics Foundation.
  * Copyright (c) 2023, CSIRO Data61.
- * Copyright (c) 2024-2025, Anton Matosov (SDL3 migration, dual-motor rumble, haptics)
+ * Copyright (c) 2024-2026, Anton Matosov (SDL3 migration, dual-motor rumble, haptics)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -528,7 +528,10 @@ void GameController::handleGamepadDeviceAdded(const SDL_GamepadDeviceEvent & e)
     get_logger(), "Opened gamepad: %s  deadzone: %f  rumble: %s  haptic: %s",
     SDL_GetGamepadName(game_controller_),
     scaled_deadzone_,
-    SDL_GamepadHasRumble(game_controller_) ? "Yes" : "No",
+    SDL_GetBooleanProperty(
+      SDL_GetGamepadProperties(game_controller_),
+      SDL_PROP_GAMEPAD_CAP_RUMBLE_BOOLEAN,
+      false) ? "Yes" : "No",
     haptic_ ? "Yes" : "No");
 }
 

@@ -6,22 +6,13 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 include(../../cmake/ClangCoverage.cmake)
+include(../../cmake/FetchSDL3.cmake)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(drqp_interfaces REQUIRED)
-
-# SDL3 — prefer cmake config, fall back to pkg-config
-find_package(SDL3 QUIET CONFIG)
-if(NOT SDL3_FOUND)
-  find_package(PkgConfig REQUIRED)
-  pkg_check_modules(SDL3 REQUIRED IMPORTED_TARGET sdl3)
-  if(NOT TARGET SDL3::SDL3)
-    add_library(SDL3::SDL3 ALIAS PkgConfig::SDL3)
-  endif()
-endif()
 
 # ── Shared component library ──────────────────────────────────────────────────
 add_library(${PROJECT_NAME}_component SHARED
@@ -54,17 +45,10 @@ install(DIRECTORY include/
 
 install(TARGETS
   ${PROJECT_NAME}_component
-  EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
-
-install(DIRECTORY launch
-  DESTINATION share/${PROJECT_NAME})
-
-ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(rclcpp rclcpp_components sensor_msgs drqp_interfaces)
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
 if(BUILD_TESTING)
