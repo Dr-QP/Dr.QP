@@ -1,6 +1,6 @@
 ---
 description: 'Improve code quality, apply security best practices, and enhance design whilst maintaining green tests and GitHub issue compliance.'
-name: 'TDD Refactor Phase'
+name: 'TDD Refactor'
 model: GPT-5.4
 tools:
   [
