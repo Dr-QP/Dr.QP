@@ -6,6 +6,7 @@ A collection of experiments and failed attempts.
 :caption: 'Contents:'
 :maxdepth: 2
 
+saxense-feasibility
 ../notebooks/3_1_experiment_smoothing_splines
 ../notebooks/3_2_experiment_transitions
 ```
