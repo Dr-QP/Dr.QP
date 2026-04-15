@@ -33,6 +33,10 @@
 // extended with dual-motor rumble and SDL haptic effect support.
 // Original: https://github.com/ros-drivers/joystick_drivers/blob/ros2/joy/src/game_controller.cpp
 
+#include "drqp_joy/game_controller.hpp"
+
+#include <SDL3/SDL.h>
+
 #include <algorithm>
 #include <chrono>
 #include <functional>
@@ -42,15 +46,12 @@
 #include <string>
 #include <thread>
 
-#include <SDL3/SDL.h>
+#include "drqp_interfaces/msg/haptic_effect.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 #include <sensor_msgs/msg/joy.hpp>
 #include <sensor_msgs/msg/joy_feedback.hpp>
-
-#include "drqp_interfaces/msg/haptic_effect.hpp"
-#include "drqp_joy/game_controller.hpp"
 
 namespace drqp_joy
 {
@@ -340,7 +341,8 @@ void GameController::hapticCb(const std::shared_ptr<HapticEffect> msg)
   }
 
   if (!SDL_HapticEffectSupported(haptic_, &effect)) {
-    RCLCPP_WARN(get_logger(), "Haptic effect type %d not supported by this device", msg->effect_type);
+    RCLCPP_WARN(
+      get_logger(), "Haptic effect type %d not supported by this device", msg->effect_type);
     return;
   }
 

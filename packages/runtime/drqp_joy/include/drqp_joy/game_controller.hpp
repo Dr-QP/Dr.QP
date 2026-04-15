@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020, Open Source Robotics Foundation.
  * Copyright (c) 2023, CSIRO Data61.
- * Copyright (c) 2024-2025, Anton Matosov (SDL3 migration, dual-motor rumble, haptics)
+ * Copyright (c) 2024-2026, Anton Matosov (SDL3 migration, dual-motor rumble, haptics)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
