@@ -24,10 +24,10 @@ import argparse
 from typing import Optional
 
 from drqp_brain.haptics import (
-    HapticFeedbackScheduler,
-    ScheduledFeedbackCommand,
     control_mode_feedback_pattern,
     gait_feedback_pattern,
+    HapticFeedbackScheduler,
+    ScheduledFeedbackCommand,
 )
 from drqp_brain.joystick_button import ButtonIndex
 from drqp_brain.joystick_input_handler import JoystickInputHandler
@@ -69,20 +69,12 @@ class JoystickTranslatorNode(rclpy.node.Node):
             ButtonIndex.DpadLeft: lambda b, e: self._prev_gait(),
             ButtonIndex.DpadRight: lambda b, e: self._next_gait(),
             ButtonIndex.L1: lambda b, e: self._publish_control_mode_change(),
-            ButtonIndex.PS: lambda b, e: self._publish_event(
-                'kill_switch_pressed'
-            ),
-            ButtonIndex.TouchpadButton: lambda b, e: self._publish_event(
-                'kill_switch_pressed'
-            ),
-            ButtonIndex.Start: lambda b, e: self._publish_event(
-                'reboot_servos'
-            ),
+            ButtonIndex.PS: lambda b, e: self._publish_event('kill_switch_pressed'),
+            ButtonIndex.TouchpadButton: lambda b, e: self._publish_event('kill_switch_pressed'),
+            ButtonIndex.Start: lambda b, e: self._publish_event('reboot_servos'),
             ButtonIndex.Select: lambda b, e: self._publish_event('finalize'),
         }
-        self.joystick_input_handler = JoystickInputHandler(
-            button_callbacks=button_callbacks
-        )
+        self.joystick_input_handler = JoystickInputHandler(button_callbacks=button_callbacks)
 
         # Subscribe to joystick input
         self.joystick_sub = self.create_subscription(
@@ -101,13 +93,9 @@ class JoystickTranslatorNode(rclpy.node.Node):
             '/joy/set_feedback',
             qos_profile=10,
         )
-        self.haptic_feedback_scheduler = (
-            haptic_feedback_scheduler or HapticFeedbackScheduler()
-        )
+        self.haptic_feedback_scheduler = haptic_feedback_scheduler or HapticFeedbackScheduler()
         self._pending_feedback_commands: list[ScheduledFeedbackCommand] = []
-        self._feedback_timer = self.create_timer(
-            0.02, self._dispatch_pending_feedback
-        )
+        self._feedback_timer = self.create_timer(0.02, self._dispatch_pending_feedback)
         self._haptics_warning_logged = False
 
         self.get_logger().info('Joystick translator node initialized')
@@ -133,16 +121,10 @@ class JoystickTranslatorNode(rclpy.node.Node):
         msg = MovementCommand()
 
         # Convert Point3D to Vector3
-        msg.stride_direction = (
-            self.joystick_input_handler.direction.to_vector3()
-        )
+        msg.stride_direction = self.joystick_input_handler.direction.to_vector3()
         msg.rotation_speed = float(self.joystick_input_handler.rotation_speed)
-        msg.body_translation = (
-            self.joystick_input_handler.body_translation.to_vector3()
-        )
-        msg.body_rotation = (
-            self.joystick_input_handler.body_rotation.to_vector3()
-        )
+        msg.body_translation = self.joystick_input_handler.body_translation.to_vector3()
+        msg.body_rotation = self.joystick_input_handler.body_rotation.to_vector3()
         msg.gait_type = self.gaits[self.gait_index]
 
         self.movement_command_pub.publish(msg)
@@ -180,13 +162,10 @@ class JoystickTranslatorNode(rclpy.node.Node):
             return
 
         self.get_logger().info(
-            'Switching control mode: '
-            f'{self.joystick_input_handler.control_mode}'
+            f'Switching control mode: {self.joystick_input_handler.control_mode}'
         )
         self._schedule_haptic_feedback(
-            control_mode_feedback_pattern(
-                self.joystick_input_handler.control_mode
-            )
+            control_mode_feedback_pattern(self.joystick_input_handler.control_mode)
         )
 
     def _set_gait_index(self, new_index: int):
@@ -233,10 +212,7 @@ class JoystickTranslatorNode(rclpy.node.Node):
 
         now = self.haptic_feedback_scheduler.now()
 
-        while (
-            self._pending_feedback_commands
-            and self._pending_feedback_commands[0].due_at <= now
-        ):
+        while self._pending_feedback_commands and self._pending_feedback_commands[0].due_at <= now:
             command = self._pending_feedback_commands.pop(0)
             self._publish_haptic_command(command)
 
@@ -247,9 +223,7 @@ class JoystickTranslatorNode(rclpy.node.Node):
         Resetting allows re-selection of the same gait/mode to trigger fresh
         feedback once the haptics backend becomes available again.
         """
-        dropped_channels = {
-            command.channel_id for command in self._pending_feedback_commands
-        }
+        dropped_channels = {command.channel_id for command in self._pending_feedback_commands}
         self._pending_feedback_commands.clear()
         for channel_id in dropped_channels:
             self.haptic_feedback_scheduler.reset_channel(channel_id)
@@ -277,9 +251,7 @@ def main():
     """Entry point for joystick translator node."""
     node = None
     try:
-        parser = argparse.ArgumentParser(
-            'Joystick to semantic command translator ROS node'
-        )
+        parser = argparse.ArgumentParser('Joystick to semantic command translator ROS node')
         filtered_args = rclpy.utilities.remove_ros_args()
         args = parser.parse_args(args=filtered_args[1:])
         rclpy.init()

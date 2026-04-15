@@ -25,7 +25,6 @@ from dataclasses import dataclass
 import time
 from typing import Callable
 
-
 LEFT_RUMBLE_CHANNEL_ID = 0
 RIGHT_RUMBLE_CHANNEL_ID = 1
 
@@ -89,9 +88,7 @@ class HapticFeedbackScheduler:
         """Return the scheduler clock time."""
         return self._clock()
 
-    def schedule(
-        self, pattern: HapticPulsePattern
-    ) -> list[ScheduledFeedbackCommand]:
+    def schedule(self, pattern: HapticPulsePattern) -> list[ScheduledFeedbackCommand]:
         """
         Create the scheduled rumble commands for a feedback pattern.
 
@@ -104,10 +101,7 @@ class HapticFeedbackScheduler:
         if pattern.repeat_count <= 0:
             return []
 
-        if (
-            self._last_state_by_channel.get(pattern.channel_id)
-            == pattern.state_key
-        ):
+        if self._last_state_by_channel.get(pattern.channel_id) == pattern.state_key:
             return []
 
         start_at = max(self.now(), self._next_feedback_at[pattern.channel_id])
@@ -117,8 +111,7 @@ class HapticFeedbackScheduler:
 
         for repeat_index in range(pattern.repeat_count):
             group_start = start_at + repeat_index * (
-                (pattern.pulse_count * pulse_span) - self._pulse_gap_duration
-                + group_gap
+                (pattern.pulse_count * pulse_span) - self._pulse_gap_duration + group_gap
             )
 
             for pulse_index in range(pattern.pulse_count):
@@ -139,9 +132,7 @@ class HapticFeedbackScheduler:
                 )
 
         self._last_state_by_channel[pattern.channel_id] = pattern.state_key
-        self._next_feedback_at[pattern.channel_id] = (
-            commands[-1].due_at + self._cooldown_window
-        )
+        self._next_feedback_at[pattern.channel_id] = commands[-1].due_at + self._cooldown_window
 
         return commands
 

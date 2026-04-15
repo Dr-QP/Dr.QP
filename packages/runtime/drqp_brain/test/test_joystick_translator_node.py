@@ -132,9 +132,7 @@ class TestJoystickTranslatorNode(unittest.TestCase):
     def test_dispatch_pending_feedback_publishes_without_subscriber_check(self):
         """Due haptic commands should be published without gating on discovery."""
         self.node.joy_feedback_pub.publish = Mock()
-        self.node._pending_feedback_commands = [
-            Mock(due_at=0.0, channel_id=0, intensity=0.8)
-        ]
+        self.node._pending_feedback_commands = [Mock(due_at=0.0, channel_id=0, intensity=0.8)]
         self.node.haptic_feedback_scheduler.now = Mock(return_value=0.0)
 
         self.node._dispatch_pending_feedback()
@@ -178,9 +176,7 @@ class TestJoystickTranslatorNode(unittest.TestCase):
             rclpy.spin_once(self.node, timeout_sec=0.02)
             rclpy.spin_once(self.test_node, timeout_sec=0.02)
             active_pulses = [
-                feedback
-                for feedback in self.joy_feedback_messages
-                if feedback.intensity > 0.0
+                feedback for feedback in self.joy_feedback_messages if feedback.intensity > 0.0
             ]
             if len(active_pulses) >= 6:
                 break
@@ -191,9 +187,7 @@ class TestJoystickTranslatorNode(unittest.TestCase):
             'Control-mode joy feedback should be published',
         )
         active_pulses = [
-            feedback
-            for feedback in self.joy_feedback_messages
-            if feedback.intensity > 0.0
+            feedback for feedback in self.joy_feedback_messages if feedback.intensity > 0.0
         ]
         self.assertEqual(len(active_pulses), 6)
         for feedback in active_pulses:

@@ -21,10 +21,10 @@
 import unittest
 
 from drqp_brain.haptics import (
-    LEFT_RUMBLE_CHANNEL_ID,
-    HapticFeedbackScheduler,
     control_mode_feedback_pattern,
     gait_feedback_pattern,
+    HapticFeedbackScheduler,
+    LEFT_RUMBLE_CHANNEL_ID,
 )
 
 
@@ -56,12 +56,8 @@ class TestHaptics(unittest.TestCase):
     ):
         """Control modes should preserve pulse mapping and repeat groups."""
         walk = control_mode_feedback_pattern(_FakeControlMode('Walk'))
-        body_position = control_mode_feedback_pattern(
-            _FakeControlMode('BodyPosition')
-        )
-        body_rotation = control_mode_feedback_pattern(
-            _FakeControlMode('BodyRotation')
-        )
+        body_position = control_mode_feedback_pattern(_FakeControlMode('BodyPosition'))
+        body_rotation = control_mode_feedback_pattern(_FakeControlMode('BodyRotation'))
 
         self.assertEqual(walk.channel_id, LEFT_RUMBLE_CHANNEL_ID)
         self.assertEqual(body_position.channel_id, LEFT_RUMBLE_CHANNEL_ID)
@@ -83,9 +79,7 @@ class TestHaptics(unittest.TestCase):
             control_mode_feedback_pattern(_FakeControlMode('BodyPosition'))
         )
 
-        active_commands = [
-            command for command in commands if command.intensity > 0.0
-        ]
+        active_commands = [command for command in commands if command.intensity > 0.0]
         self.assertEqual(len(active_commands), 6)
         self.assertAlmostEqual(active_commands[0].due_at, 50.0, places=7)
         self.assertAlmostEqual(active_commands[1].due_at, 50.1, places=7)
@@ -139,7 +133,6 @@ class TestHaptics(unittest.TestCase):
 
         self.assertAlmostEqual(commands[0].due_at, 30.16, places=7)
         self.assertAlmostEqual(commands[1].due_at, 30.22, places=7)
-
 
     def test_scheduler_reset_channel_allows_resending_same_state(self):
         """
