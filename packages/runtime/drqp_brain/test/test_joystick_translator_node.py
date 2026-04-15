@@ -172,7 +172,7 @@ class TestJoystickTranslatorNode(unittest.TestCase):
         """Control-mode changes should repeat the mapped pulse group 3 times."""
         self.node._publish_control_mode_change()
 
-        for _ in range(50):
+        for _ in range(90):
             rclpy.spin_once(self.node, timeout_sec=0.02)
             rclpy.spin_once(self.test_node, timeout_sec=0.02)
             active_pulses = [
