@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2020, Open Source Robotics Foundation.
- * Copyright (c) 2023, CSIRO Data61.
- * Copyright (c) 2024-2026, Anton Matosov (SDL3 migration, dual-motor rumble, haptics)
+ * Copyright (c) 2023, CSIRO Data61
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -9,9 +8,11 @@
  *
  *     * Redistributions of source code must retain the above copyright
  *       notice, this list of conditions and the following disclaimer.
+ *
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
+ *
  *     * Neither the name of the copyright holder nor the names of its
  *       contributors may be used to endorse or promote products derived from
  *       this software without specific prior written permission.
@@ -34,16 +35,20 @@
 // Original: https://github.com/ros-drivers/joystick_drivers/blob/ros2/joy/src/game_controller.cpp
 
 #include "drqp_joy/game_controller.hpp"
+#include "drqp_joy/game_controller_utils.hpp"
 
 #include <SDL3/SDL.h>
 
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
 #include <functional>
 #include <future>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <thread>
 
 #include "drqp_interfaces/msg/haptic_effect.hpp"
@@ -60,6 +65,46 @@ using HapticEffect = drqp_interfaces::msg::HapticEffect;
 
 namespace
 {
+
+constexpr SDL_InitFlags kRequiredSdlSubsystems = SDL_INIT_GAMEPAD | SDL_INIT_HAPTIC;
+
+std::mutex& sdl_init_mutex()
+{
+  static std::mutex mutex;
+  return mutex;
+}
+
+size_t& sdl_init_ref_count()
+{
+  static size_t count = 0;
+  return count;
+}
+
+void acquireSdlSubsystems()
+{
+  std::scoped_lock lock(sdl_init_mutex());
+
+  if (sdl_init_ref_count() == 0 && !SDL_Init(kRequiredSdlSubsystems)) {
+    throw std::runtime_error(
+      "Failed to initialize SDL3 (gamepad and haptic subsystems): " + std::string(SDL_GetError()));
+  }
+
+  ++sdl_init_ref_count();
+}
+
+void releaseSdlSubsystems()
+{
+  std::scoped_lock lock(sdl_init_mutex());
+
+  if (sdl_init_ref_count() == 0) {
+    return;
+  }
+
+  --sdl_init_ref_count();
+  if (sdl_init_ref_count() == 0) {
+    SDL_QuitSubSystem(kRequiredSdlSubsystems);
+  }
+}
 
 /// Clamp a float in [-1, 1] and convert to Sint16 for SDL haptic level fields.
 Sint16 toSint16(float v)
@@ -79,6 +124,19 @@ Uint16 toHapticPhase(float phase_degrees)
   return static_cast<Uint16>(std::clamp(phase_degrees, 0.0f, 360.0f) / 360.0f * 65535.0f);
 }
 
+Uint16 clampTimingField(uint32_t value, std::string_view field_name, const rclcpp::Logger& logger)
+{
+  constexpr uint32_t max_value = std::numeric_limits<Uint16>::max();
+  if (value > max_value) {
+    RCLCPP_WARN(
+      logger, "%s=%u exceeds Uint16 max; clamping to %u", std::string(field_name).c_str(), value,
+      max_value);
+    return static_cast<Uint16>(max_value);
+  }
+
+  return static_cast<Uint16>(value);
+}
+
 }  // namespace
 
 GameController::GameController(const rclcpp::NodeOptions& options)
@@ -91,9 +149,7 @@ GameController::GameController(const rclcpp::NodeOptions& options)
   // we'll convert that to the range of 0 to 32767.  Note also that negatives
   // are not allowed, as this is a +/- value.
   scaled_deadzone_ = this->declare_parameter("deadzone", 0.05);
-  if (scaled_deadzone_ < 0.0 || scaled_deadzone_ > 1.0) {
-    throw std::runtime_error("Deadzone must be between 0.0 and 1.0");
-  }
+  detail::validateDeadzone(scaled_deadzone_);
   unscaled_deadzone_ = 32767.0 * scaled_deadzone_;
   // According to the SDL documentation, this always returns a value between
   // -32768 and 32767.  However, we want to report a value between -1.0 and 1.0,
@@ -121,9 +177,7 @@ GameController::GameController(const rclcpp::NodeOptions& options)
   sticky_buttons_ = this->declare_parameter("sticky_buttons", false);
 
   coalesce_interval_ms_ = static_cast<int>(this->declare_parameter("coalesce_interval_ms", 1));
-  if (coalesce_interval_ms_ < 0) {
-    throw std::runtime_error("coalesce_interval_ms must be positive");
-  }
+  detail::validateCoalesceInterval(coalesce_interval_ms_);
 
   feedback_rumble_duration_ms_ =
     static_cast<uint32_t>(this->declare_parameter("feedback_rumble_duration_ms", 1000));
@@ -146,35 +200,56 @@ GameController::GameController(const rclcpp::NodeOptions& options)
     "joy/set_haptic", rclcpp::QoS(10),
     std::bind(&GameController::hapticCb, this, std::placeholders::_1));
 
-  future_ = exit_signal_.get_future();
-
-  // In theory we could do this with just a timer, which would simplify the code
-  // a bit.  But then we couldn't react to "immediate" events, so we stick with
-  // the thread.
-  event_thread_ = std::thread(&GameController::eventThread, this);
-
   joy_msg_.buttons.resize(SDL_GAMEPAD_BUTTON_COUNT);
   joy_msg_.axes.resize(SDL_GAMEPAD_AXIS_COUNT);
 
-  // SDL_INIT_GAMEPAD implies SDL_INIT_JOYSTICK.
-  if (!SDL_Init(SDL_INIT_GAMEPAD | SDL_INIT_HAPTIC)) {
-    throw std::runtime_error(
-      "Failed to initialize SDL3 (gamepad and haptic subsystems): " + std::string(SDL_GetError()));
+  future_ = exit_signal_.get_future();
+  acquireSdlSubsystems();
+
+  try {
+    // In theory we could do this with just a timer, which would simplify the code
+    // a bit.  But then we couldn't react to "immediate" events, so we stick with
+    // the thread.
+    event_thread_ = std::thread(&GameController::eventThread, this);
+  } catch (...) {
+    releaseSdlSubsystems();
+    throw;
   }
 }
 
 GameController::~GameController()
 {
   exit_signal_.set_value();
-  event_thread_.join();
-  closeHaptic();
-  if (game_controller_ != nullptr) {
-    SDL_CloseGamepad(game_controller_);
+  if (event_thread_.joinable()) {
+    event_thread_.join();
   }
-  SDL_Quit();
+
+  {
+    std::scoped_lock lock(sdl_state_mutex_);
+    closeHaptic();
+    if (game_controller_ != nullptr) {
+      SDL_CloseGamepad(game_controller_);
+      game_controller_ = nullptr;
+    }
+    joystick_instance_id_ = 0;
+  }
+
+  releaseSdlSubsystems();
 }
 
 // ── Private helpers ─────────────────────────────────────────────────────────
+
+void GameController::destroyHapticEffectLocked()
+{
+  if (haptic_ == nullptr || haptic_effect_id_ == -1) {
+    haptic_effect_id_ = -1;
+    return;
+  }
+
+  SDL_StopHapticEffect(haptic_, haptic_effect_id_);
+  SDL_DestroyHapticEffect(haptic_, haptic_effect_id_);
+  haptic_effect_id_ = -1;
+}
 
 void GameController::openHaptic()
 {
@@ -196,11 +271,7 @@ void GameController::closeHaptic()
   if (haptic_ == nullptr) {
     return;
   }
-  if (haptic_effect_id_ != -1) {
-    SDL_StopHapticEffect(haptic_, haptic_effect_id_);
-    SDL_DestroyHapticEffect(haptic_, haptic_effect_id_);
-    haptic_effect_id_ = -1;
-  }
+  destroyHapticEffectLocked();
   SDL_CloseHaptic(haptic_);
   haptic_ = nullptr;
 }
@@ -223,6 +294,7 @@ void GameController::feedbackCb(const std::shared_ptr<sensor_msgs::msg::JoyFeedb
     return;
   }
 
+  std::scoped_lock lock(sdl_state_mutex_);
   if (game_controller_ == nullptr) {
     return;
   }
@@ -250,6 +322,8 @@ void GameController::feedbackCb(const std::shared_ptr<sensor_msgs::msg::JoyFeedb
 
 void GameController::hapticCb(const std::shared_ptr<HapticEffect> msg)
 {
+  std::scoped_lock lock(sdl_state_mutex_);
+
   if (haptic_ == nullptr) {
     RCLCPP_WARN_ONCE(get_logger(), "Haptic not available on this gamepad — ignoring set_haptic");
     return;
@@ -258,7 +332,7 @@ void GameController::hapticCb(const std::shared_ptr<HapticEffect> msg)
   // ── Handle stop actions ─────────────────────────────────────────────────
   if (msg->action == HapticEffect::ACTION_STOP_ALL) {
     SDL_StopHapticEffects(haptic_);
-    haptic_effect_id_ = -1;
+    destroyHapticEffectLocked();
     return;
   }
 
@@ -266,6 +340,11 @@ void GameController::hapticCb(const std::shared_ptr<HapticEffect> msg)
     if (haptic_effect_id_ != -1) {
       SDL_StopHapticEffect(haptic_, haptic_effect_id_);
     }
+    return;
+  }
+
+  if (msg->action != HapticEffect::ACTION_PLAY) {
+    RCLCPP_WARN(get_logger(), "Unknown haptic action: %u", msg->action);
     return;
   }
 
@@ -287,10 +366,10 @@ void GameController::hapticCb(const std::shared_ptr<HapticEffect> msg)
   case HapticEffect::TYPE_CONSTANT: {
     effect.type = SDL_HAPTIC_CONSTANT;
     effect.constant.length = duration;
-    effect.constant.delay = static_cast<Uint16>(msg->delay_ms);
+    effect.constant.delay = clampTimingField(msg->delay_ms, "delay_ms", get_logger());
     effect.constant.level = toSint16(msg->level);
-    effect.constant.attack_length = static_cast<Uint16>(msg->attack_ms);
-    effect.constant.fade_length = static_cast<Uint16>(msg->fade_ms);
+    effect.constant.attack_length = clampTimingField(msg->attack_ms, "attack_ms", get_logger());
+    effect.constant.fade_length = clampTimingField(msg->fade_ms, "fade_ms", get_logger());
     break;
   }
 
@@ -313,24 +392,24 @@ void GameController::hapticCb(const std::shared_ptr<HapticEffect> msg)
       break;
     }
     effect.periodic.length = duration;
-    effect.periodic.delay = static_cast<Uint16>(msg->delay_ms);
-    effect.periodic.period = static_cast<Uint16>(msg->period_ms);
+    effect.periodic.delay = clampTimingField(msg->delay_ms, "delay_ms", get_logger());
+    effect.periodic.period = clampTimingField(msg->period_ms, "period_ms", get_logger());
     effect.periodic.magnitude = toSint16(msg->magnitude);
     effect.periodic.offset = toSint16(msg->offset);
     effect.periodic.phase = toHapticPhase(msg->phase_degrees);
-    effect.periodic.attack_length = static_cast<Uint16>(msg->attack_ms);
-    effect.periodic.fade_length = static_cast<Uint16>(msg->fade_ms);
+    effect.periodic.attack_length = clampTimingField(msg->attack_ms, "attack_ms", get_logger());
+    effect.periodic.fade_length = clampTimingField(msg->fade_ms, "fade_ms", get_logger());
     break;
   }
 
   case HapticEffect::TYPE_RAMP: {
     effect.type = SDL_HAPTIC_RAMP;
     effect.ramp.length = duration;
-    effect.ramp.delay = static_cast<Uint16>(msg->delay_ms);
+    effect.ramp.delay = clampTimingField(msg->delay_ms, "delay_ms", get_logger());
     effect.ramp.start = toSint16(msg->ramp_start);
     effect.ramp.end = toSint16(msg->ramp_end);
-    effect.ramp.attack_length = static_cast<Uint16>(msg->attack_ms);
-    effect.ramp.fade_length = static_cast<Uint16>(msg->fade_ms);
+    effect.ramp.attack_length = clampTimingField(msg->attack_ms, "attack_ms", get_logger());
+    effect.ramp.fade_length = clampTimingField(msg->fade_ms, "fade_ms", get_logger());
     break;
   }
 
@@ -346,11 +425,7 @@ void GameController::hapticCb(const std::shared_ptr<HapticEffect> msg)
   }
 
   // Stop and destroy the previous effect slot before creating a new one
-  if (haptic_effect_id_ != -1) {
-    SDL_StopHapticEffect(haptic_, haptic_effect_id_);
-    SDL_DestroyHapticEffect(haptic_, haptic_effect_id_);
-    haptic_effect_id_ = -1;
-  }
+  destroyHapticEffectLocked();
 
   haptic_effect_id_ = SDL_CreateHapticEffect(haptic_, &effect);
   if (haptic_effect_id_ < 0) {
@@ -407,8 +482,9 @@ bool GameController::handleGamepadAxis(const SDL_GamepadAxisEvent& e)
   }
 
   const float last_axis_value = joy_msg_.axes.at(e.axis);
-  joy_msg_.axes.at(e.axis) = convertRawAxisValueToROS(e.value);
-  if (last_axis_value != joy_msg_.axes.at(e.axis)) {
+  const float next_axis_value = convertRawAxisValueToROS(e.value);
+  joy_msg_.axes.at(e.axis) = next_axis_value;
+  if (detail::axisValueChanged(last_axis_value, next_axis_value)) {
     if (coalesce_interval_ms_ > 0 && !publish_soon_) {
       publish_soon_ = true;
       publish_soon_time_ = this->now();
@@ -503,6 +579,7 @@ void GameController::handleGamepadDeviceAdded(const SDL_GamepadDeviceEvent& e)
   RCLCPP_INFO(
     get_logger(), "Gamepad added: id=%u, name=%s", new_id, new_name ? new_name : "unknown");
 
+  std::scoped_lock lock(sdl_state_mutex_);
   if (game_controller_ != nullptr) {
     // Already managing a controller; ignore this one.
     return;
@@ -540,6 +617,7 @@ void GameController::handleGamepadDeviceRemoved(const SDL_GamepadDeviceEvent& e)
     return;
   }
 
+  std::scoped_lock lock(sdl_state_mutex_);
   closeHaptic();
 
   if (game_controller_ != nullptr) {

@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2020, Open Source Robotics Foundation.
- * Copyright (c) 2023, CSIRO Data61.
- * Copyright (c) 2024-2026, Anton Matosov (SDL3 migration, dual-motor rumble, haptics)
+ * Copyright (c) 2023, CSIRO Data61
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -9,9 +8,11 @@
  *
  *     * Redistributions of source code must retain the above copyright
  *       notice, this list of conditions and the following disclaimer.
+ *
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
+ *
  *     * Neither the name of the copyright holder nor the names of its
  *       contributors may be used to endorse or promote products derived from
  *       this software without specific prior written permission.
@@ -36,6 +37,7 @@
 
 #include <future>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <thread>
 
@@ -84,6 +86,7 @@ private:
   void feedbackCb(const std::shared_ptr<sensor_msgs::msg::JoyFeedback> msg);
   void hapticCb(const std::shared_ptr<drqp_interfaces::msg::HapticEffect> msg);
 
+  void destroyHapticEffectLocked();
   void openHaptic();
   void closeHaptic();
 
@@ -107,6 +110,7 @@ private:
 
   bool publish_soon_{false};
   rclcpp::Time publish_soon_time_;
+  std::mutex sdl_state_mutex_;
 
   // ── Threading ───────────────────────────────────────────────────────────────
   std::thread event_thread_;
