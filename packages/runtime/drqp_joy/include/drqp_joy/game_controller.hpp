@@ -62,22 +62,22 @@ namespace drqp_joy
 class GameController final : public rclcpp::Node
 {
 public:
-  explicit GameController(const rclcpp::NodeOptions & options);
-  GameController(GameController && c) = delete;
-  GameController & operator=(GameController && c) = delete;
-  GameController(const GameController & c) = delete;
-  GameController & operator=(const GameController & c) = delete;
+  explicit GameController(const rclcpp::NodeOptions& options);
+  GameController(GameController&& c) = delete;
+  GameController& operator=(GameController&& c) = delete;
+  GameController(const GameController& c) = delete;
+  GameController& operator=(const GameController& c) = delete;
 
   ~GameController() override;
 
 private:
   void eventThread();
 
-  bool handleGamepadAxis(const SDL_GamepadAxisEvent & e);
-  bool handleGamepadButtonDown(const SDL_GamepadButtonEvent & e);
-  bool handleGamepadButtonUp(const SDL_GamepadButtonEvent & e);
-  void handleGamepadDeviceAdded(const SDL_GamepadDeviceEvent & e);
-  void handleGamepadDeviceRemoved(const SDL_GamepadDeviceEvent & e);
+  bool handleGamepadAxis(const SDL_GamepadAxisEvent& e);
+  bool handleGamepadButtonDown(const SDL_GamepadButtonEvent& e);
+  bool handleGamepadButtonUp(const SDL_GamepadButtonEvent& e);
+  void handleGamepadDeviceAdded(const SDL_GamepadDeviceEvent& e);
+  void handleGamepadDeviceRemoved(const SDL_GamepadDeviceEvent& e);
 
   float convertRawAxisValueToROS(int16_t val);
 
@@ -100,9 +100,9 @@ private:
   uint32_t feedback_rumble_duration_ms_{1000};
 
   // ── State ───────────────────────────────────────────────────────────────────
-  SDL_Gamepad * game_controller_{nullptr};
+  SDL_Gamepad* game_controller_{nullptr};
   SDL_JoystickID joystick_instance_id_{0};
-  SDL_Haptic * haptic_{nullptr};
+  SDL_Haptic* haptic_{nullptr};
   int haptic_effect_id_{-1};
 
   bool publish_soon_{false};

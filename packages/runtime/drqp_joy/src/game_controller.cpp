@@ -81,7 +81,7 @@ Uint16 toHapticPhase(float phase_degrees)
 
 }  // namespace
 
-GameController::GameController(const rclcpp::NodeOptions & options)
+GameController::GameController(const rclcpp::NodeOptions& options)
 : rclcpp::Node("game_controller_node", options)
 {
   dev_id_ = static_cast<int>(this->declare_parameter("device_id", 0));
@@ -159,8 +159,7 @@ GameController::GameController(const rclcpp::NodeOptions & options)
   // SDL_INIT_GAMEPAD implies SDL_INIT_JOYSTICK.
   if (!SDL_Init(SDL_INIT_GAMEPAD | SDL_INIT_HAPTIC)) {
     throw std::runtime_error(
-      "Failed to initialize SDL3 (gamepad and haptic subsystems): " +
-      std::string(SDL_GetError()));
+      "Failed to initialize SDL3 (gamepad and haptic subsystems): " + std::string(SDL_GetError()));
   }
 }
 
@@ -179,7 +178,7 @@ GameController::~GameController()
 
 void GameController::openHaptic()
 {
-  SDL_Joystick * joystick = SDL_GetGamepadJoystick(game_controller_);
+  SDL_Joystick* joystick = SDL_GetGamepadJoystick(game_controller_);
   if (joystick == nullptr) {
     RCLCPP_INFO(get_logger(), "Could not get joystick handle for haptic init: %s", SDL_GetError());
     return;
@@ -233,16 +232,16 @@ void GameController::feedbackCb(const std::shared_ptr<sensor_msgs::msg::JoyFeedb
   uint16_t high_freq = 0;
 
   switch (msg->id) {
-    case 0:  // Both motors
-      low_freq = intensity;
-      high_freq = intensity;
-      break;
-    case 1:  // Low-frequency (heavy/left) motor
-      low_freq = intensity;
-      break;
-    case 2:  // High-frequency (light/right) motor
-      high_freq = intensity;
-      break;
+  case 0:  // Both motors
+    low_freq = intensity;
+    high_freq = intensity;
+    break;
+  case 1:  // Low-frequency (heavy/left) motor
+    low_freq = intensity;
+    break;
+  case 2:  // High-frequency (light/right) motor
+    high_freq = intensity;
+    break;
   }
 
   // We purposely ignore the return value; if it fails, what can we do?
@@ -277,67 +276,67 @@ void GameController::hapticCb(const std::shared_ptr<HapticEffect> msg)
   const uint32_t duration = (msg->duration_ms == 0) ? SDL_HAPTIC_INFINITY : msg->duration_ms;
 
   switch (msg->effect_type) {
-    case HapticEffect::TYPE_LEFTRIGHT: {
-      effect.type = SDL_HAPTIC_LEFTRIGHT;
-      effect.leftright.length = duration;
-      effect.leftright.large_magnitude = toUint16(msg->large_magnitude);
-      effect.leftright.small_magnitude = toUint16(msg->small_magnitude);
-      break;
-    }
+  case HapticEffect::TYPE_LEFTRIGHT: {
+    effect.type = SDL_HAPTIC_LEFTRIGHT;
+    effect.leftright.length = duration;
+    effect.leftright.large_magnitude = toUint16(msg->large_magnitude);
+    effect.leftright.small_magnitude = toUint16(msg->small_magnitude);
+    break;
+  }
 
-    case HapticEffect::TYPE_CONSTANT: {
-      effect.type = SDL_HAPTIC_CONSTANT;
-      effect.constant.length = duration;
-      effect.constant.delay = static_cast<Uint16>(msg->delay_ms);
-      effect.constant.level = toSint16(msg->level);
-      effect.constant.attack_length = static_cast<Uint16>(msg->attack_ms);
-      effect.constant.fade_length = static_cast<Uint16>(msg->fade_ms);
-      break;
-    }
+  case HapticEffect::TYPE_CONSTANT: {
+    effect.type = SDL_HAPTIC_CONSTANT;
+    effect.constant.length = duration;
+    effect.constant.delay = static_cast<Uint16>(msg->delay_ms);
+    effect.constant.level = toSint16(msg->level);
+    effect.constant.attack_length = static_cast<Uint16>(msg->attack_ms);
+    effect.constant.fade_length = static_cast<Uint16>(msg->fade_ms);
+    break;
+  }
 
+  case HapticEffect::TYPE_SINE:
+  case HapticEffect::TYPE_TRIANGLE:
+  case HapticEffect::TYPE_SAWTOOTHUP:
+  case HapticEffect::TYPE_SAWTOOTHDOWN: {
+    switch (msg->effect_type) {
     case HapticEffect::TYPE_SINE:
+      effect.type = SDL_HAPTIC_SINE;
+      break;
     case HapticEffect::TYPE_TRIANGLE:
+      effect.type = SDL_HAPTIC_TRIANGLE;
+      break;
     case HapticEffect::TYPE_SAWTOOTHUP:
-    case HapticEffect::TYPE_SAWTOOTHDOWN: {
-      switch (msg->effect_type) {
-        case HapticEffect::TYPE_SINE:
-          effect.type = SDL_HAPTIC_SINE;
-          break;
-        case HapticEffect::TYPE_TRIANGLE:
-          effect.type = SDL_HAPTIC_TRIANGLE;
-          break;
-        case HapticEffect::TYPE_SAWTOOTHUP:
-          effect.type = SDL_HAPTIC_SAWTOOTHUP;
-          break;
-        case HapticEffect::TYPE_SAWTOOTHDOWN:
-          effect.type = SDL_HAPTIC_SAWTOOTHDOWN;
-          break;
-      }
-      effect.periodic.length = duration;
-      effect.periodic.delay = static_cast<Uint16>(msg->delay_ms);
-      effect.periodic.period = static_cast<Uint16>(msg->period_ms);
-      effect.periodic.magnitude = toSint16(msg->magnitude);
-      effect.periodic.offset = toSint16(msg->offset);
-      effect.periodic.phase = toHapticPhase(msg->phase_degrees);
-      effect.periodic.attack_length = static_cast<Uint16>(msg->attack_ms);
-      effect.periodic.fade_length = static_cast<Uint16>(msg->fade_ms);
+      effect.type = SDL_HAPTIC_SAWTOOTHUP;
+      break;
+    case HapticEffect::TYPE_SAWTOOTHDOWN:
+      effect.type = SDL_HAPTIC_SAWTOOTHDOWN;
       break;
     }
+    effect.periodic.length = duration;
+    effect.periodic.delay = static_cast<Uint16>(msg->delay_ms);
+    effect.periodic.period = static_cast<Uint16>(msg->period_ms);
+    effect.periodic.magnitude = toSint16(msg->magnitude);
+    effect.periodic.offset = toSint16(msg->offset);
+    effect.periodic.phase = toHapticPhase(msg->phase_degrees);
+    effect.periodic.attack_length = static_cast<Uint16>(msg->attack_ms);
+    effect.periodic.fade_length = static_cast<Uint16>(msg->fade_ms);
+    break;
+  }
 
-    case HapticEffect::TYPE_RAMP: {
-      effect.type = SDL_HAPTIC_RAMP;
-      effect.ramp.length = duration;
-      effect.ramp.delay = static_cast<Uint16>(msg->delay_ms);
-      effect.ramp.start = toSint16(msg->ramp_start);
-      effect.ramp.end = toSint16(msg->ramp_end);
-      effect.ramp.attack_length = static_cast<Uint16>(msg->attack_ms);
-      effect.ramp.fade_length = static_cast<Uint16>(msg->fade_ms);
-      break;
-    }
+  case HapticEffect::TYPE_RAMP: {
+    effect.type = SDL_HAPTIC_RAMP;
+    effect.ramp.length = duration;
+    effect.ramp.delay = static_cast<Uint16>(msg->delay_ms);
+    effect.ramp.start = toSint16(msg->ramp_start);
+    effect.ramp.end = toSint16(msg->ramp_end);
+    effect.ramp.attack_length = static_cast<Uint16>(msg->attack_ms);
+    effect.ramp.fade_length = static_cast<Uint16>(msg->fade_ms);
+    break;
+  }
 
-    default:
-      RCLCPP_WARN(get_logger(), "Unknown haptic effect type: %d", msg->effect_type);
-      return;
+  default:
+    RCLCPP_WARN(get_logger(), "Unknown haptic effect type: %d", msg->effect_type);
+    return;
   }
 
   if (!SDL_HapticEffectSupported(haptic_, &effect)) {
@@ -394,7 +393,7 @@ float GameController::convertRawAxisValueToROS(int16_t val)
   return static_cast<float>(double_val * scale_);
 }
 
-bool GameController::handleGamepadAxis(const SDL_GamepadAxisEvent & e)
+bool GameController::handleGamepadAxis(const SDL_GamepadAxisEvent& e)
 {
   bool publish = false;
 
@@ -425,7 +424,7 @@ bool GameController::handleGamepadAxis(const SDL_GamepadAxisEvent & e)
   return publish;
 }
 
-bool GameController::handleGamepadButtonDown(const SDL_GamepadButtonEvent & e)
+bool GameController::handleGamepadButtonDown(const SDL_GamepadButtonEvent& e)
 {
   bool publish = false;
 
@@ -448,7 +447,7 @@ bool GameController::handleGamepadButtonDown(const SDL_GamepadButtonEvent & e)
   return publish;
 }
 
-bool GameController::handleGamepadButtonUp(const SDL_GamepadButtonEvent & e)
+bool GameController::handleGamepadButtonUp(const SDL_GamepadButtonEvent& e)
 {
   bool publish = false;
 
@@ -471,23 +470,23 @@ bool GameController::handleGamepadButtonUp(const SDL_GamepadButtonEvent & e)
 
 // ── Device connect / disconnect ───────────────────────────────────────────────
 
-void GameController::handleGamepadDeviceAdded(const SDL_GamepadDeviceEvent & e)
+void GameController::handleGamepadDeviceAdded(const SDL_GamepadDeviceEvent& e)
 {
   const SDL_JoystickID new_id = e.which;
-  const char * new_name = SDL_GetGamepadNameForID(new_id);
+  const char* new_name = SDL_GetGamepadNameForID(new_id);
 
   if (!dev_name_.empty()) {
     // Match by device name
     if (new_name == nullptr || dev_name_ != new_name) {
       RCLCPP_INFO(
-        get_logger(), "Gamepad added: id=%u, name=%s — not the requested device_name '%s'",
-        new_id, new_name ? new_name : "unknown", dev_name_.c_str());
+        get_logger(), "Gamepad added: id=%u, name=%s — not the requested device_name '%s'", new_id,
+        new_name ? new_name : "unknown", dev_name_.c_str());
       return;
     }
   } else {
     // Match by index (dev_id_): check whether new_id is at position dev_id_ in the current list
     int count = 0;
-    SDL_JoystickID * ids = SDL_GetGamepads(&count);
+    SDL_JoystickID* ids = SDL_GetGamepads(&count);
     bool matched = false;
     if (ids != nullptr) {
       matched = (count > dev_id_) && (ids[dev_id_] == new_id);
@@ -495,8 +494,8 @@ void GameController::handleGamepadDeviceAdded(const SDL_GamepadDeviceEvent & e)
     }
     if (!matched) {
       RCLCPP_INFO(
-        get_logger(), "Gamepad added: id=%u, name=%s — not at device_id=%d, ignoring",
-        new_id, new_name ? new_name : "unknown", dev_id_);
+        get_logger(), "Gamepad added: id=%u, name=%s — not at device_id=%d, ignoring", new_id,
+        new_name ? new_name : "unknown", dev_id_);
       return;
     }
   }
@@ -519,8 +518,7 @@ void GameController::handleGamepadDeviceAdded(const SDL_GamepadDeviceEvent & e)
 
   // Seed the initial axis state
   for (int i = 0; i < SDL_GAMEPAD_AXIS_COUNT; ++i) {
-    const int16_t state =
-      SDL_GetGamepadAxis(game_controller_, static_cast<SDL_GamepadAxis>(i));
+    const int16_t state = SDL_GetGamepadAxis(game_controller_, static_cast<SDL_GamepadAxis>(i));
     joy_msg_.axes.at(i) = convertRawAxisValueToROS(state);
   }
 
@@ -528,16 +526,15 @@ void GameController::handleGamepadDeviceAdded(const SDL_GamepadDeviceEvent & e)
 
   RCLCPP_INFO(
     get_logger(), "Opened gamepad: %s  deadzone: %f  rumble: %s  haptic: %s",
-    SDL_GetGamepadName(game_controller_),
-    scaled_deadzone_,
+    SDL_GetGamepadName(game_controller_), scaled_deadzone_,
     SDL_GetBooleanProperty(
-      SDL_GetGamepadProperties(game_controller_),
-      SDL_PROP_GAMEPAD_CAP_RUMBLE_BOOLEAN,
-      false) ? "Yes" : "No",
+      SDL_GetGamepadProperties(game_controller_), SDL_PROP_GAMEPAD_CAP_RUMBLE_BOOLEAN, false)
+      ? "Yes"
+      : "No",
     haptic_ ? "Yes" : "No");
 }
 
-void GameController::handleGamepadDeviceRemoved(const SDL_GamepadDeviceEvent & e)
+void GameController::handleGamepadDeviceRemoved(const SDL_GamepadDeviceEvent& e)
 {
   if (e.which != joystick_instance_id_) {
     return;
@@ -546,8 +543,7 @@ void GameController::handleGamepadDeviceRemoved(const SDL_GamepadDeviceEvent & e
   closeHaptic();
 
   if (game_controller_ != nullptr) {
-    RCLCPP_INFO(
-      get_logger(), "Gamepad removed: %s.", SDL_GetGamepadName(game_controller_));
+    RCLCPP_INFO(get_logger(), "Gamepad removed: %s.", SDL_GetGamepadName(game_controller_));
     SDL_CloseGamepad(game_controller_);
     game_controller_ = nullptr;
   }
@@ -571,42 +567,42 @@ void GameController::eventThread()
     const bool got_event = SDL_WaitEventTimeout(&e, wait_time_ms);
     if (got_event) {
       switch (e.type) {
-        case SDL_EVENT_GAMEPAD_AXIS_MOTION:
-          should_publish = handleGamepadAxis(e.gaxis);
-          break;
-        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
-          should_publish = handleGamepadButtonDown(e.gbutton);
-          break;
-        case SDL_EVENT_GAMEPAD_BUTTON_UP:
-          should_publish = handleGamepadButtonUp(e.gbutton);
-          break;
-        case SDL_EVENT_GAMEPAD_ADDED:
-          handleGamepadDeviceAdded(e.gdevice);
-          break;
-        case SDL_EVENT_GAMEPAD_REMOVED:
-          handleGamepadDeviceRemoved(e.gdevice);
-          break;
-        // Joystick events are duplicates of GAMEPAD events; suppress them.
-        case SDL_EVENT_JOYSTICK_AXIS_MOTION:
-        case SDL_EVENT_JOYSTICK_BALL_MOTION:
-        case SDL_EVENT_JOYSTICK_HAT_MOTION:
-        case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
-        case SDL_EVENT_JOYSTICK_BUTTON_UP:
-        case SDL_EVENT_JOYSTICK_ADDED:
-        case SDL_EVENT_JOYSTICK_REMOVED:
-          break;
-        default:
-          RCLCPP_DEBUG(get_logger(), "Unhandled SDL event type 0x%x", e.type);
-          break;
+      case SDL_EVENT_GAMEPAD_AXIS_MOTION:
+        should_publish = handleGamepadAxis(e.gaxis);
+        break;
+      case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+        should_publish = handleGamepadButtonDown(e.gbutton);
+        break;
+      case SDL_EVENT_GAMEPAD_BUTTON_UP:
+        should_publish = handleGamepadButtonUp(e.gbutton);
+        break;
+      case SDL_EVENT_GAMEPAD_ADDED:
+        handleGamepadDeviceAdded(e.gdevice);
+        break;
+      case SDL_EVENT_GAMEPAD_REMOVED:
+        handleGamepadDeviceRemoved(e.gdevice);
+        break;
+      // Joystick events are duplicates of GAMEPAD events; suppress them.
+      case SDL_EVENT_JOYSTICK_AXIS_MOTION:
+      case SDL_EVENT_JOYSTICK_BALL_MOTION:
+      case SDL_EVENT_JOYSTICK_HAT_MOTION:
+      case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
+      case SDL_EVENT_JOYSTICK_BUTTON_UP:
+      case SDL_EVENT_JOYSTICK_ADDED:
+      case SDL_EVENT_JOYSTICK_REMOVED:
+        break;
+      default:
+        RCLCPP_DEBUG(get_logger(), "Unhandled SDL event type 0x%x", e.type);
+        break;
       }
     } else {
       // Timeout or error — check autorepeat
       const rclcpp::Time now = this->now();
       const rclcpp::Duration diff_since_last_publish = now - last_publish;
-      if ((autorepeat_rate_ > 0.0 &&
-        RCL_NS_TO_MS(diff_since_last_publish.nanoseconds()) >= autorepeat_interval_ms_) ||
-        publish_soon_)
-      {
+      if (
+        (autorepeat_rate_ > 0.0 &&
+         RCL_NS_TO_MS(diff_since_last_publish.nanoseconds()) >= autorepeat_interval_ms_) ||
+        publish_soon_) {
         last_publish = now;
         should_publish = true;
         publish_soon_ = false;
