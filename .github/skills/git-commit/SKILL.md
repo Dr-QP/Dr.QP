@@ -30,18 +30,18 @@ Generate [conventional commit messages](./References/conventional-commits.md) fr
 
 **Types:**
 
-| Type | Use when | Typical examples | Reference |
-| --- | --- | --- | --- |
-| `feat` | Adding new functionality or a new workflow | auth flow, pagination endpoint, new UI capability | [feat.md](./References/feat.md) |
-| `fix` | Correcting broken or incorrect behavior | memory leak, validation issue, connection problem | [fix.md](./References/fix.md) |
-| `docs` | Changing documentation only | README update, API usage examples, guides | [docs.md](./References/docs.md) |
-| `style` | Adjusting formatting without logic changes | CSS polish, formatting cleanup | [style.md](./References/style.md) |
-| `refactor` | Restructuring code without changing behavior | logic extraction, internal reorganization | [refactor.md](./References/refactor.md) |
-| `perf` | Improving runtime performance | query batching, indexing, caching | [perf.md](./References/perf.md) |
-| `test` | Adding or fixing tests | unit coverage, test updates, assertions | [test.md](./References/test.md) |
-| `build` | Changing build or packaging behavior | dependency update, build config change | [build.md](./References/build.md) |
-| `ci` | Changing CI or CD automation | deployment pipeline, workflow update | [ci.md](./References/ci.md) |
-| `chore` | Handling maintenance work outside product behavior | repo cleanup, housekeeping, support tasks | [chore.md](./References/chore.md) |
+| Type       | Use when                                           | Typical examples                                  | Reference                               |
+| ---------- | -------------------------------------------------- | ------------------------------------------------- | --------------------------------------- |
+| `feat`     | Adding new functionality or a new workflow         | auth flow, pagination endpoint, new UI capability | [feat.md](./References/feat.md)         |
+| `fix`      | Correcting broken or incorrect behavior            | memory leak, validation issue, connection problem | [fix.md](./References/fix.md)           |
+| `docs`     | Changing documentation only                        | README update, API usage examples, guides         | [docs.md](./References/docs.md)         |
+| `style`    | Adjusting formatting without logic changes         | CSS polish, formatting cleanup                    | [style.md](./References/style.md)       |
+| `refactor` | Restructuring code without changing behavior       | logic extraction, internal reorganization         | [refactor.md](./References/refactor.md) |
+| `perf`     | Improving runtime performance                      | query batching, indexing, caching                 | [perf.md](./References/perf.md)         |
+| `test`     | Adding or fixing tests                             | unit coverage, test updates, assertions           | [test.md](./References/test.md)         |
+| `build`    | Changing build or packaging behavior               | dependency update, build config change            | [build.md](./References/build.md)       |
+| `ci`       | Changing CI or CD automation                       | deployment pipeline, workflow update              | [ci.md](./References/ci.md)             |
+| `chore`    | Handling maintenance work outside product behavior | repo cleanup, housekeeping, support tasks         | [chore.md](./References/chore.md)       |
 
 ## Tips for Best Messages
 

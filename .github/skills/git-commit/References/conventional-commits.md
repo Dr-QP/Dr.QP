@@ -5,6 +5,7 @@ A specification for adding human and machine-readable meaning to commit messages
 ## 🎯 Overview
 
 Conventional Commits provide:
+
 - **Structured History**: Clear, searchable commit history
 - **Automated Tools**: Enables automated versioning and changelog generation
 - **Clear Communication**: Describes the nature and impact of changes
@@ -14,6 +15,7 @@ Conventional Commits provide:
 ## 📏 Commit Message Format
 
 ### Basic Structure
+
 ```
 <type>[optional scope]: <description>
 
@@ -23,6 +25,7 @@ Conventional Commits provide:
 ```
 
 ### Examples
+
 ```bash
 # Simple commit
 feat: add user authentication
@@ -45,6 +48,7 @@ Closes #123
 ### Primary Types
 
 #### `feat` - New Features
+
 ```bash
 # Adding new functionality
 feat: add dark mode toggle
@@ -53,6 +57,7 @@ feat(api): add user profile endpoint
 ```
 
 #### `fix` - Bug Fixes
+
 ```bash
 # Fixing existing functionality
 fix: resolve memory leak in data processing
@@ -61,6 +66,7 @@ fix(ui): fix button alignment on mobile devices
 ```
 
 #### `docs` - Documentation
+
 ```bash
 # Documentation changes only
 docs: update API documentation
@@ -69,6 +75,7 @@ docs: fix typos in contributing guide
 ```
 
 #### `style` - Code Style
+
 ```bash
 # Code style changes (formatting, missing semicolons, etc.)
 style: fix eslint warnings
@@ -77,6 +84,7 @@ style: add missing semicolons
 ```
 
 #### `refactor` - Code Refactoring
+
 ```bash
 # Code changes that neither fix bugs nor add features
 refactor: extract user validation logic
@@ -85,6 +93,7 @@ refactor: improve error handling structure
 ```
 
 #### `test` - Tests
+
 ```bash
 # Adding or modifying tests
 test: add unit tests for authentication service
@@ -93,6 +102,7 @@ test: improve test coverage for utility functions
 ```
 
 #### `chore` - Maintenance
+
 ```bash
 # Other changes that don't modify src or test files
 chore: update dependencies
@@ -103,6 +113,7 @@ chore: add pre-commit hooks
 ### Secondary Types
 
 #### `perf` - Performance Improvements
+
 ```bash
 perf: improve database query performance
 perf(image): optimize image loading and caching
@@ -110,6 +121,7 @@ perf: reduce bundle size by 20%
 ```
 
 #### `ci` - Continuous Integration
+
 ```bash
 ci: add automated testing workflow
 ci(github): update build pipeline configuration
@@ -117,6 +129,7 @@ ci: fix deployment script issues
 ```
 
 #### `build` - Build System
+
 ```bash
 build: upgrade webpack to version 5
 build(docker): optimize container image size
@@ -124,6 +137,7 @@ build: configure babel for modern browsers
 ```
 
 #### `revert` - Reverting Changes
+
 ```bash
 revert: revert "feat: add user authentication"
 
@@ -133,11 +147,13 @@ This reverts commit 1234567890abcdef due to security concerns.
 ## 🎯 Scopes
 
 ### Purpose
+
 Scopes provide additional context about which part of the codebase is affected.
 
 ### Common Scopes
 
 #### Frontend Scopes
+
 ```bash
 feat(ui): add loading spinner component
 fix(components): resolve prop validation warnings
@@ -145,6 +161,7 @@ style(layout): improve responsive grid system
 ```
 
 #### Backend Scopes
+
 ```bash
 feat(api): add user management endpoints
 fix(database): resolve connection pool issues
@@ -152,6 +169,7 @@ perf(queries): optimize user search functionality
 ```
 
 #### Feature-Based Scopes
+
 ```bash
 feat(auth): implement OAuth2 integration
 fix(payment): resolve checkout calculation errors
@@ -159,6 +177,7 @@ test(notifications): add email delivery tests
 ```
 
 #### Infrastructure Scopes
+
 ```bash
 chore(docker): update base image to node:18
 ci(deploy): add staging environment workflow
@@ -166,6 +185,7 @@ build(webpack): configure code splitting
 ```
 
 ### Scope Guidelines
+
 - **Be Consistent**: Use the same scopes across your team
 - **Be Specific**: Choose the most relevant scope
 - **Keep It Short**: Use abbreviations when appropriate
@@ -174,6 +194,7 @@ build(webpack): configure code splitting
 ## ✍️ Writing Effective Descriptions
 
 ### Description Guidelines
+
 - **Use imperative mood**: "add" not "added" or "adds"
 - **Keep it concise**: 50 characters or less when possible
 - **Start lowercase**: Unless it's a proper noun
@@ -181,6 +202,7 @@ build(webpack): configure code splitting
 - **Be descriptive**: Explain what the change does, not how
 
 ### Good Examples
+
 ```bash
 # ✅ Clear and concise
 feat: add user profile photo upload
@@ -195,6 +217,7 @@ perf(api): cache frequently accessed user data
 ```
 
 ### Poor Examples
+
 ```bash
 # ❌ Vague descriptions
 feat: add stuff
@@ -213,6 +236,7 @@ feat: add comprehensive user authentication system with JWT tokens and password 
 ## 📝 Body and Footer Guidelines
 
 ### Body Guidelines
+
 - **Use when needed**: Add body for complex changes
 - **Explain why**: Focus on motivation and impact
 - **Wrap at 72 characters**: For better readability
@@ -233,6 +257,7 @@ payments and edge cases.
 ```
 
 ### Footer Guidelines
+
 - **Reference issues**: Link to GitHub issues or tickets
 - **Breaking changes**: Clearly mark breaking changes
 - **Co-authors**: Credit contributors
@@ -258,6 +283,7 @@ Co-authored-by: Jane Smith <jane@example.com>
 ## 🚨 Breaking Changes
 
 ### Marking Breaking Changes
+
 ```bash
 # In the type/scope
 feat!: remove deprecated user API endpoints
@@ -274,6 +300,7 @@ Migration guide: https://docs.example.com/auth-migration
 ```
 
 ### Breaking Change Guidelines
+
 - **Always mark breaking changes** with `!` or `BREAKING CHANGE:`
 - **Explain the impact** in the footer
 - **Provide migration guidance** when possible
@@ -282,6 +309,7 @@ Migration guide: https://docs.example.com/auth-migration
 ## 🔧 Tool Integration
 
 ### Commitizen Setup
+
 ```bash
 # Install commitizen
 npm install -g commitizen
@@ -301,6 +329,7 @@ npx cz
 ```
 
 ### Commitlint Configuration
+
 ```javascript
 // commitlint.config.js
 module.exports = {
@@ -320,17 +349,18 @@ module.exports = {
         'perf',
         'ci',
         'build',
-        'revert'
-      ]
+        'revert',
+      ],
     ],
     'subject-case': [2, 'never', ['start-case', 'pascal-case']],
     'subject-max-length': [2, 'always', 72],
-    'body-max-line-length': [2, 'always', 100]
-  }
+    'body-max-line-length': [2, 'always', 100],
+  },
 };
 ```
 
 ### Husky Pre-commit Hook
+
 ```bash
 # Install husky
 npm install --save-dev husky
@@ -345,6 +375,7 @@ npx husky add .husky/commit-msg 'npx --no-install commitlint --edit $1'
 ## 📊 Automated Versioning
 
 ### Semantic Release Configuration
+
 ```json
 {
   "plugins": [
@@ -362,6 +393,7 @@ npx husky add .husky/commit-msg 'npx --no-install commitlint --edit $1'
 ```
 
 ### Version Bump Rules
+
 - **Major**: Breaking changes (`!` or `BREAKING CHANGE:`)
 - **Minor**: New features (`feat:`)
 - **Patch**: Bug fixes (`fix:`)
@@ -370,24 +402,29 @@ npx husky add .husky/commit-msg 'npx --no-install commitlint --edit $1'
 ## 📈 Changelog Generation
 
 ### Automated Changelog Example
+
 ```markdown
 # Changelog
 
 ## [2.1.0] - 2025-09-16
 
 ### Features
+
 - **auth**: add OAuth2 integration (#123)
 - **ui**: implement dark mode toggle (#456)
 - add user profile photo upload (#789)
 
 ### Bug Fixes
+
 - **mobile**: correct touch event handling on iOS (#321)
 - resolve memory leak in data processing (#654)
 
 ### Performance Improvements
+
 - **api**: cache frequently accessed user data (#987)
 
 ### BREAKING CHANGES
+
 - **auth**: remove session-based authentication
 
   All existing authentication endpoints have been removed.
@@ -397,6 +434,7 @@ npx husky add .husky/commit-msg 'npx --no-install commitlint --edit $1'
 ## 🎯 Best Practices
 
 ### Commit Frequency
+
 ```bash
 # ✅ Good: Logical, atomic commits
 feat: add user registration form
@@ -408,11 +446,13 @@ feat: add user system with registration, login, profile, and admin panel
 ```
 
 ### Commit Size
+
 - **Make atomic commits**: One logical change per commit
 - **Keep commits focused**: Single responsibility principle
 - **Test between commits**: Each commit should leave the code in a working state
 
 ### Message Quality
+
 ```bash
 # ✅ Excellent: Clear, specific, helpful
 feat(auth): add password strength validation with configurable rules
@@ -431,6 +471,7 @@ chore: update stuff
 ## 🚀 Advanced Patterns
 
 ### Multi-part Features
+
 ```bash
 # When implementing a large feature across multiple commits
 feat(auth): add authentication database schema
@@ -441,6 +482,7 @@ docs(auth): document new authentication system
 ```
 
 ### Dependency Updates
+
 ```bash
 # Regular dependency updates
 chore(deps): update lodash to version 4.17.21
@@ -452,6 +494,7 @@ chore(deps): bump axios from 0.21.1 to 0.24.0 for security fix
 ```
 
 ### Hotfixes
+
 ```bash
 # Production hotfixes
 fix: resolve critical payment processing error
@@ -465,6 +508,7 @@ Fixes #URGENT-123
 ## 📚 Team Guidelines
 
 ### Onboarding New Team Members
+
 1. **Training**: Explain conventional commit benefits and structure
 2. **Tools**: Set up commitizen and commitlint
 3. **Practice**: Review commit history together
@@ -472,8 +516,10 @@ Fixes #URGENT-123
 5. **Review**: Include commit message quality in code reviews
 
 ### Code Review Integration
+
 ```markdown
 # PR Review Checklist
+
 - [ ] Commit messages follow conventional format
 - [ ] Each commit represents a logical change
 - [ ] Breaking changes are properly marked
@@ -482,6 +528,7 @@ Fixes #URGENT-123
 ```
 
 ### Enforcement Levels
+
 - **Soft**: Guidelines and recommendations
 - **Medium**: Automated checks with warnings
 - **Strict**: Build fails on non-compliant commits
@@ -491,6 +538,7 @@ Fixes #URGENT-123
 ### Common Issues
 
 #### Commit Message Too Long
+
 ```bash
 # ❌ Problem: Description too long
 feat: add comprehensive user authentication system with JWT tokens, password hashing, email verification, and social login
@@ -506,6 +554,7 @@ Implement full authentication system including:
 ```
 
 #### Wrong Commit Type
+
 ```bash
 # ❌ Problem: Wrong type
 docs: fix user registration validation bug
@@ -515,6 +564,7 @@ fix: resolve user registration validation bug
 ```
 
 #### Missing Breaking Change Marker
+
 ```bash
 # ❌ Problem: Breaking change not marked
 feat(api): change user endpoint response format
@@ -528,11 +578,13 @@ BREAKING CHANGE: user endpoint now returns different response structure
 ## 📞 Resources and Support
 
 ### Documentation
+
 - [Conventional Commits Specification](https://conventionalcommits.org/)
 - [Semantic Versioning](https://semver.org/)
 - [Angular Commit Guidelines](https://github.com/angular/angular/blob/main/CONTRIBUTING.md#commit)
 
 ### Tools
+
 - [Commitizen](https://commitizen.github.io/cz-cli/)
 - [Commitlint](https://commitlint.js.org/)
 - [Semantic Release](https://semantic-release.gitbook.io/)
