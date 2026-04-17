@@ -2,7 +2,7 @@
 
 Use `feat` for a new feature or new functionality.
 
-Examples extracted from the skill:
+# Examples
 
 ```bash
 feat(auth): add JWT-based user authentication

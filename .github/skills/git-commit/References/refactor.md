@@ -2,7 +2,7 @@
 
 Use `refactor` for code refactoring with no functional change.
 
-Examples extracted from the skill:
+# Examples
 
 ```bash
 refactor(api): extract database logic into repository pattern

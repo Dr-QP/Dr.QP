@@ -2,7 +2,7 @@
 
 Use `build` for build system changes.
 
-Examples extracted from the skill:
+# Examples
 
 ```text
 build: update dependencies to latest versions

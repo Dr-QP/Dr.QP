@@ -2,7 +2,7 @@
 
 Use `test` for test additions or test fixes.
 
-Examples extracted from the skill:
+# Examples
 
 ```text
 test: Testing

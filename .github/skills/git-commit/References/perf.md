@@ -2,7 +2,7 @@
 
 Use `perf` for performance improvements.
 
-Examples extracted from the skill:
+# Examples
 
 ```bash
 perf(queries): optimize user data fetching

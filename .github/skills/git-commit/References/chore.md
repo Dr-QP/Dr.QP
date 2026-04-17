@@ -2,7 +2,7 @@
 
 Use `chore` for maintenance tasks.
 
-Examples extracted from the skill:
+# Examples
 
 ```text
 chore(docker): optimize container image size
