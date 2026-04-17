@@ -29,16 +29,19 @@ Generate [conventional commit messages](./References/conventional-commits.md) fr
 ```
 
 **Types:**
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Code style (formatting, no logic change)
-- `refactor`: Code refactoring
-- `perf`: Performance improvements
-- `test`: Test additions or fixes
-- `build`: Build system changes
-- `ci`: CI/CD changes
-- `chore`: Maintenance tasks
+
+| Type | Use when | Typical examples |
+| --- | --- | --- |
+| `feat` | Adding new functionality or a new workflow | auth flow, pagination endpoint, new UI capability |
+| `fix` | Correcting broken or incorrect behavior | memory leak, validation issue, connection problem |
+| `docs` | Changing documentation only | README update, API usage examples, guides |
+| `style` | Adjusting formatting without logic changes | CSS polish, formatting cleanup |
+| `refactor` | Restructuring code without changing behavior | logic extraction, internal reorganization |
+| `perf` | Improving runtime performance | query batching, indexing, caching |
+| `test` | Adding or fixing tests | unit coverage, test updates, assertions |
+| `build` | Changing build or packaging behavior | dependency update, build config change |
+| `ci` | Changing CI or CD automation | deployment pipeline, workflow update |
+| `chore` | Handling maintenance work outside product behavior | repo cleanup, housekeeping, support tasks |
 
 Detailed references by commit type:
 
