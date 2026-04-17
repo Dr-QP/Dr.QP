@@ -33,3 +33,5 @@ Run the following command on your dev host to install docker and setup autorun s
 cd docker/ros/ansible
 ansible-playbook playbooks/100_startup_service.yml
 ```
+
+This also installs a post-start cleanup unit that prunes unused Docker images after the robot services are up.
