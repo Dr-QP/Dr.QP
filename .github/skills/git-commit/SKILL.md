@@ -6,14 +6,14 @@ allowed-tools: Bash, Read
 
 # Git Commit Skill
 
-Generate conventional commit messages from your git diff.
+Generate [conventional commit messages](./References/conventional-commits.md) from your git diff.
 
 ## When I Activate
 
 - ✅ `git commit` without message
 - ✅ User asks "what should my commit message be?"
 - ✅ Staged changes exist
-- ✅ User mentions commit or conventional commits
+- ✅ User mentions commit or [conventional commit](./References/conventional-commits.md)
 - ✅ Before creating commits
 
 ## What I Generate
