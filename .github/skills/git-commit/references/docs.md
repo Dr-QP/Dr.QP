@@ -2,7 +2,7 @@
 
 Use `docs` for documentation changes.
 
-# Examples
+## Examples
 
 ```bash
 docs: update API documentation with authentication examples

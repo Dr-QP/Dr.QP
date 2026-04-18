@@ -2,7 +2,7 @@
 
 Use `ci` for CI or CD pipeline changes.
 
-# Examples
+## Examples
 
 ```text
 ci: add automated deployment pipeline

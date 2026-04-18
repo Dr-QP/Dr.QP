@@ -2,10 +2,10 @@
 
 Use `test` for test additions or test fixes.
 
-# Examples
+## Examples
 
 ```text
-test: Testing
+test: Add unit tests for auth service
   - Adding or fixing tests
 ```
 

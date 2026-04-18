@@ -2,7 +2,7 @@
 
 Use `fix` for a bug fix or correction to existing behavior.
 
-# Examples
+## Examples
 
 ```bash
 fix(components): resolve memory leak in UserList

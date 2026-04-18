@@ -16,7 +16,7 @@ Conventional Commits provide:
 
 ### Basic Structure
 
-```
+```text
 <type>[optional scope]: <description>
 
 [optional body]
