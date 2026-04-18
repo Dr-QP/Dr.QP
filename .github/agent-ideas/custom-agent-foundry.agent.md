@@ -7,7 +7,6 @@ tools:
   [
     'context7/*',
     'sequentialthinking/*',
-    'mcp-server-git/*',
     'agent',
     'edit',
     'execute',
