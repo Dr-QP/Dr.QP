@@ -12,6 +12,7 @@ Instructions for creating effective and portable Agent Skills that enhance GitHu
 Agent skills are folders of instructions, scripts, and resources that Copilot can load when relevant to improve performance on specialized tasks. Unlike custom instructions, which are best for simple repository-wide guidance, skills are meant for task-specific workflows that should only be loaded when needed.
 
 Key characteristics:
+
 - **Portable**: Works across VS Code, Copilot CLI, and Copilot coding agent
 - **On-demand**: Copilot decides to use a skill based on the prompt and the skill's `description`
 - **Resource-bundled**: A skill directory can include scripts, examples, and supplementary Markdown resources
@@ -21,14 +22,14 @@ Key characteristics:
 
 GitHub's documented skill locations are:
 
-| Location | Scope | Recommendation |
-|----------|-------|----------------|
-| `.github/skills/<skill-name>/` | Project/repository | Recommended for project skills |
-| `.claude/skills/<skill-name>/` | Project/repository | Legacy, for backward compatibility |
-| `.agents/skills/<skill-name>/` | Project/repository | Supported alternative project location |
-| `~/.copilot/skills/<skill-name>/` | Personal (user-wide) | Recommended for personal skills |
-| `~/.claude/skills/<skill-name>/` | Personal (user-wide) | Legacy, for backward compatibility |
-| `~/.agents/skills/<skill-name>/` | Personal (user-wide) | Supported alternative personal location |
+| Location                          | Scope                | Recommendation                          |
+| --------------------------------- | -------------------- | --------------------------------------- |
+| `.github/skills/<skill-name>/`    | Project/repository   | Recommended for project skills          |
+| `.claude/skills/<skill-name>/`    | Project/repository   | Legacy, for backward compatibility      |
+| `.agents/skills/<skill-name>/`    | Project/repository   | Supported alternative project location  |
+| `~/.copilot/skills/<skill-name>/` | Personal (user-wide) | Recommended for personal skills         |
+| `~/.claude/skills/<skill-name>/`  | Personal (user-wide) | Legacy, for backward compatibility      |
+| `~/.agents/skills/<skill-name>/`  | Personal (user-wide) | Supported alternative personal location |
 
 Each skill **must** have its own subdirectory containing at minimum a `SKILL.md` file.
 
@@ -47,14 +48,15 @@ license: Complete terms in LICENSE.txt
 ---
 ```
 
-| Field | Required | Constraints |
-|-------|----------|-------------|
-| `name` | Yes | Unique identifier, lowercase, hyphens for spaces, usually matches the skill directory name |
-| `description` | Yes | Describe what the skill does and when Copilot should use it |
-| `license` | No | Describe the license that applies to the skill |
-| `allowed-tools` | No | Optional tool pre-approval list for skills that need to run tools such as `shell` |
+| Field           | Required | Constraints                                                                                |
+| --------------- | -------- | ------------------------------------------------------------------------------------------ |
+| `name`          | Yes      | Unique identifier, lowercase, hyphens for spaces, usually matches the skill directory name |
+| `description`   | Yes      | Describe what the skill does and when Copilot should use it                                |
+| `license`       | No       | Describe the license that applies to the skill                                             |
+| `allowed-tools` | No       | Optional tool pre-approval list for skills that need to run tools such as `shell`          |
 
 Important points:
+
 - The file name must be exactly `SKILL.md`
 - The skill directory name should be lowercase and use hyphens for spaces
 - The Markdown body should contain instructions, examples, and guidelines Copilot can follow
@@ -64,42 +66,46 @@ Important points:
 **CRITICAL**: Copilot decides when to use a skill based on the user's prompt and the skill's `description`. If the description is vague, the skill is unlikely to be selected at the right time.
 
 **What to include in description** — Follow the **WHAT/WHEN/KEYWORDS pattern**:
+
 1. **WHAT** the skill does (capabilities)
 2. **WHEN** to use it (specific triggers, scenarios, file types, or user requests)
 3. **Keywords** that users might mention in their prompts
 
 **Example of excellent description:**
+
 ```yaml
 description: Guide for debugging failing GitHub Actions workflows. Use this when asked to debug failing GitHub Actions workflows.
 ```
 
 **Example of poor description:**
+
 ```yaml
 description: Web testing helpers
 ```
+
 This fails because it does not clearly say what the skill does or when Copilot should use it.
 
 ### Common Skill Discovery Issues
 
-| Problem | Cause | Solution |
-|---------|-------|----------|
-| Skill never activates | Vague or generic description | Rewrite the description so it states the task and trigger clearly |
-| Activates on wrong requests | Description is too broad | Narrow the trigger phrases and task scope |
-| Conflicting skill activations | Multiple skills describe the same use case | Differentiate the descriptions and intended scenarios |
-| Skill runs without enough context | Body lacks actionable instructions | Add explicit steps, examples, and usage notes |
+| Problem                           | Cause                                      | Solution                                                          |
+| --------------------------------- | ------------------------------------------ | ----------------------------------------------------------------- |
+| Skill never activates             | Vague or generic description               | Rewrite the description so it states the task and trigger clearly |
+| Activates on wrong requests       | Description is too broad                   | Narrow the trigger phrases and task scope                         |
+| Conflicting skill activations     | Multiple skills describe the same use case | Differentiate the descriptions and intended scenarios             |
+| Skill runs without enough context | Body lacks actionable instructions         | Add explicit steps, examples, and usage notes                     |
 
 ### Body Content
 
 The body contains the instructions Copilot receives after the skill is selected. GitHub Docs do not require a fixed section layout, but the body should be concrete and operational.
 
-| Section | Purpose |
-|---------|---------|
-| `# Title` | Brief overview of what this skill enables |
+| Section                     | Purpose                                             |
+| --------------------------- | --------------------------------------------------- |
+| `# Title`                   | Brief overview of what this skill enables           |
 | `## When to Use This Skill` | List of scenarios (reinforces description triggers) |
-| `## Prerequisites` | Required tools, dependencies, environment setup |
-| `## Step-by-Step Workflows` | Numbered steps for common tasks |
-| `## Troubleshooting` | Common issues and solutions table |
-| `## References` | Links to bundled docs or external resources |
+| `## Prerequisites`          | Required tools, dependencies, environment setup     |
+| `## Step-by-Step Workflows` | Numbered steps for common tasks                     |
+| `## Troubleshooting`        | Common issues and solutions table                   |
+| `## References`             | Links to bundled docs or external resources         |
 
 ## Bundling Resources
 
@@ -107,12 +113,12 @@ When a skill is invoked, Copilot automatically discovers the files in that skill
 
 GitHub Docs do not require a fixed folder taxonomy. These subfolders are still useful conventions when they improve organization:
 
-| Folder | Purpose | Loaded into Context? | Example Files |
-|--------|---------|---------------------|---------------|
-| `scripts/` | Executable automation that performs specific operations | When executed | `helper.py`, `validate.sh`, `build.ts` |
-| `references/` | Documentation the AI agent reads to inform decisions | Yes, when referenced | `api_reference.md`, `schema.md`, `workflow_guide.md` |
-| `templates/` | Starter code or scaffolds that the AI agent modifies | Yes, when referenced | `viewer.html`, `hello-world/`, `config.template` |
-| `assets/` | Static supporting files used as-is | Usually no | `logo.png`, `baseline.png`, `report-template.html` |
+| Folder        | Purpose                                                 | Loaded into Context? | Example Files                                        |
+| ------------- | ------------------------------------------------------- | -------------------- | ---------------------------------------------------- |
+| `scripts/`    | Executable automation that performs specific operations | When executed        | `helper.py`, `validate.sh`, `build.ts`               |
+| `references/` | Documentation the AI agent reads to inform decisions    | Yes, when referenced | `api_reference.md`, `schema.md`, `workflow_guide.md` |
+| `templates/`  | Starter code or scaffolds that the AI agent modifies    | Yes, when referenced | `viewer.html`, `hello-world/`, `config.template`     |
+| `assets/`     | Static supporting files used as-is                      | Usually no           | `logo.png`, `baseline.png`, `report-template.html`   |
 
 ### Directory Structure Example
 
@@ -167,6 +173,7 @@ allowed-tools: shell
 ```
 
 Security guidance:
+
 - Only pre-approve `shell` or `bash` if you fully trust the skill and every referenced script
 - Pre-approving terminal tools removes the normal confirmation step for command execution
 - When in doubt, omit `shell` and `bash` from `allowed-tools` so Copilot must ask first
@@ -183,13 +190,14 @@ first argument.
 
 Copilot uses skills as follows:
 
-| Level | What Loads | When |
-|-------|------------|------|
-| 1. Discovery | Skill metadata, especially `description` | Used to decide whether the skill is relevant |
-| 2. Instructions | `SKILL.md` body | Loaded when Copilot chooses the skill |
-| 3. Resources | Scripts and supporting files in the skill directory | Available alongside the instructions when needed |
+| Level           | What Loads                                          | When                                             |
+| --------------- | --------------------------------------------------- | ------------------------------------------------ |
+| 1. Discovery    | Skill metadata, especially `description`            | Used to decide whether the skill is relevant     |
+| 2. Instructions | `SKILL.md` body                                     | Loaded when Copilot chooses the skill            |
+| 3. Resources    | Scripts and supporting files in the skill directory | Available alongside the instructions when needed |
 
 Practical implication:
+
 - Put concise routing logic in the `description`
 - Put operational guidance in the body
 - Keep supporting files close to the skill and reference them explicitly
@@ -208,14 +216,15 @@ Practical implication:
 
 When including scripts, prefer cross-platform languages:
 
-| Language | Use Case |
-|----------|----------|
-| Python | Complex automation, data processing |
-| pwsh | PowerShell Core scripting |
-| Node.js | JavaScript-based tooling |
-| Bash/Shell | Simple automation tasks |
+| Language   | Use Case                            |
+| ---------- | ----------------------------------- |
+| Python     | Complex automation, data processing |
+| pwsh       | PowerShell Core scripting           |
+| Node.js    | JavaScript-based tooling            |
+| Bash/Shell | Simple automation tasks             |
 
 Best practices:
+
 - Include help/usage documentation (`--help` flag)
 - Handle errors gracefully with clear messages
 - Avoid storing credentials or secrets
@@ -225,6 +234,7 @@ Best practices:
 ### When to Bundle Scripts
 
 Include scripts in your skill when:
+
 - The same code would be rewritten repeatedly by the agent
 - Deterministic reliability is critical (e.g., file manipulation, API calls)
 - Complex logic benefits from being pre-tested rather than generated each time
@@ -253,6 +263,7 @@ Use skills for detailed, reusable task playbooks that should only enter context 
 You can add a skill created by someone else by downloading a directory that contains `SKILL.md` and any related files, then moving that directory into one of the supported skill locations.
 
 Useful source:
+
 - https://awesome-copilot.github.com/skills/
 
 ## Common Patterns
@@ -262,11 +273,11 @@ Useful source:
 Document parameters clearly:
 
 ```markdown
-| Parameter | Required | Default | Description |
-|-----------|----------|---------|-------------|
-| `--input` | Yes | - | Input file or URL to process |
-| `--action` | Yes | - | Action to perform |
-| `--verbose` | No | `false` | Enable verbose output |
+| Parameter   | Required | Default | Description                  |
+| ----------- | -------- | ------- | ---------------------------- |
+| `--input`   | Yes      | -       | Input file or URL to process |
+| `--action`  | Yes      | -       | Action to perform            |
+| `--verbose` | No       | `false` | Enable verbose output        |
 ```
 
 ## Validation Checklist
@@ -290,6 +301,7 @@ When executing multi-step workflows, create a TODO list where each step referenc
 
 ```markdown
 ## TODO
+
 - [ ] Step 1: Configure environment - see [workflow-setup.md](./references/workflow-setup.md#environment)
 - [ ] Step 2: Build project - see [workflow-setup.md](./references/workflow-setup.md#build)
 - [ ] Step 3: Deploy to staging - see [workflow-deployment.md](./references/workflow-deployment.md#staging)
