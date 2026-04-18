@@ -17,7 +17,7 @@ if(NOT SDL3_FOUND)
   externalproject_add(SDL3-3.4.4
     PREFIX SDL3-3.4.4
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG release-3.4.4
+    GIT_TAG 5848e584a1b606de26e3dbd1c7e4ecbc34f807a6 # release-3.4.4
     UPDATE_DISCONNECTED TRUE
     CMAKE_ARGS
       -DBUILD_SHARED_LIBS=ON
