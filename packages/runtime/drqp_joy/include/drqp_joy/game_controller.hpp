@@ -48,27 +48,27 @@ namespace joy
 class GameController final : public rclcpp::Node
 {
 public:
-  explicit GameController(const rclcpp::NodeOptions & options);
-  GameController(GameController && c) = delete;
-  GameController & operator=(GameController && c) = delete;
-  GameController(const GameController & c) = delete;
-  GameController & operator=(const GameController & c) = delete;
+  explicit GameController(const rclcpp::NodeOptions& options);
+  GameController(GameController&& c) = delete;
+  GameController& operator=(GameController&& c) = delete;
+  GameController(const GameController& c) = delete;
+  GameController& operator=(const GameController& c) = delete;
 
   ~GameController() override;
 
 private:
   void eventThread();
-  bool handleControllerAxis(const SDL_ControllerAxisEvent & e);
-  bool handleControllerButtonDown(const SDL_ControllerButtonEvent & e);
-  bool handleControllerButtonUp(const SDL_ControllerButtonEvent & e);
-  void handleControllerDeviceAdded(const SDL_ControllerDeviceEvent & e);
-  void handleControllerDeviceRemoved(const SDL_ControllerDeviceEvent & e);
+  bool handleControllerAxis(const SDL_ControllerAxisEvent& e);
+  bool handleControllerButtonDown(const SDL_ControllerButtonEvent& e);
+  bool handleControllerButtonUp(const SDL_ControllerButtonEvent& e);
+  void handleControllerDeviceAdded(const SDL_ControllerDeviceEvent& e);
+  void handleControllerDeviceRemoved(const SDL_ControllerDeviceEvent& e);
   float convertRawAxisValueToROS(int16_t val);
   void feedbackCb(const std::shared_ptr<sensor_msgs::msg::JoyFeedback> msg);
 
   int dev_id_{0};
 
-  SDL_GameController * game_controller_{nullptr};
+  SDL_GameController* game_controller_{nullptr};
   SDL_JoystickID joystick_instance_id_{0};
   double scaled_deadzone_{0.0};
   double unscaled_deadzone_{0.0};

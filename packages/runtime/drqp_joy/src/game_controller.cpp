@@ -49,7 +49,7 @@
 namespace joy
 {
 
-GameController::GameController(const rclcpp::NodeOptions & options)
+GameController::GameController(const rclcpp::NodeOptions& options)
 : rclcpp::Node("game_controller_node", options)
 {
   dev_id_ = static_cast<int>(this->declare_parameter("device_id", 0));
@@ -180,7 +180,7 @@ float GameController::convertRawAxisValueToROS(int16_t val)
   return static_cast<float>(double_val * scale_);
 }
 
-bool GameController::handleControllerAxis(const SDL_ControllerAxisEvent & e)
+bool GameController::handleControllerAxis(const SDL_ControllerAxisEvent& e)
 {
   bool publish = false;
 
@@ -212,7 +212,7 @@ bool GameController::handleControllerAxis(const SDL_ControllerAxisEvent & e)
   return publish;
 }
 
-bool GameController::handleControllerButtonDown(const SDL_ControllerButtonEvent & e)
+bool GameController::handleControllerButtonDown(const SDL_ControllerButtonEvent& e)
 {
   bool publish = false;
 
@@ -236,7 +236,7 @@ bool GameController::handleControllerButtonDown(const SDL_ControllerButtonEvent 
   return publish;
 }
 
-bool GameController::handleControllerButtonUp(const SDL_ControllerButtonEvent & e)
+bool GameController::handleControllerButtonUp(const SDL_ControllerButtonEvent& e)
 {
   bool publish = false;
 
@@ -256,7 +256,7 @@ bool GameController::handleControllerButtonUp(const SDL_ControllerButtonEvent & 
   return publish;
 }
 
-void GameController::handleControllerDeviceAdded(const SDL_ControllerDeviceEvent & e)
+void GameController::handleControllerDeviceAdded(const SDL_ControllerDeviceEvent& e)
 {
   int num_joysticks = SDL_NumJoysticks();
   if (num_joysticks < 0) {
@@ -265,7 +265,7 @@ void GameController::handleControllerDeviceAdded(const SDL_ControllerDeviceEvent
   }
   bool matching_device_found = false;
   for (int i = 0; i < num_joysticks; ++i) {
-    const char * name = SDL_JoystickNameForIndex(i);
+    const char* name = SDL_JoystickNameForIndex(i);
     if (name == nullptr) {
       RCLCPP_WARN(get_logger(), "Could not get game controller name: %s", SDL_GetError());
       continue;
@@ -282,8 +282,8 @@ void GameController::handleControllerDeviceAdded(const SDL_ControllerDeviceEvent
   }
   if (!dev_name_.empty() && !matching_device_found) {
     RCLCPP_WARN(
-      get_logger(), "Could not get game controller with name %s: %s",
-      dev_name_.c_str(), SDL_GetError());
+      get_logger(), "Could not get game controller with name %s: %s", dev_name_.c_str(),
+      SDL_GetError());
     return;
   }
 
@@ -316,12 +316,12 @@ void GameController::handleControllerDeviceAdded(const SDL_ControllerDeviceEvent
   }
 
 #if SDL_VERSION_ATLEAST(2, 0, 18)
-  const char * has_rumble_string = "No";
+  const char* has_rumble_string = "No";
   if (SDL_GameControllerHasRumble(game_controller_)) {
     has_rumble_string = "Yes";
   }
 #else
-  const char * has_rumble_string = "Unknown";
+  const char* has_rumble_string = "Unknown";
 #endif
 
   RCLCPP_INFO(
@@ -329,15 +329,14 @@ void GameController::handleControllerDeviceAdded(const SDL_ControllerDeviceEvent
     SDL_GameControllerName(game_controller_), scaled_deadzone_, has_rumble_string);
 }
 
-void GameController::handleControllerDeviceRemoved(const SDL_ControllerDeviceEvent & e)
+void GameController::handleControllerDeviceRemoved(const SDL_ControllerDeviceEvent& e)
 {
   if (e.which != joystick_instance_id_) {
     return;
   }
   if (game_controller_ != nullptr) {
     RCLCPP_INFO(
-      get_logger(), "Game controller Removed: %s.",
-      SDL_GameControllerName(game_controller_));
+      get_logger(), "Game controller Removed: %s.", SDL_GameControllerName(game_controller_));
     SDL_GameControllerClose(game_controller_);
     game_controller_ = nullptr;
   }
@@ -348,7 +347,7 @@ void GameController::eventThread()
   std::future_status status;
   rclcpp::Time last_publish = this->now();
 
-  do{
+  do {
     bool should_publish = false;
     SDL_Event e;
     int wait_time_ms = autorepeat_interval_ms_;
@@ -359,49 +358,49 @@ void GameController::eventThread()
     if (success == 1) {
       // Succeeded getting an event
       switch (e.type) {
-        case SDL_CONTROLLERAXISMOTION: {
-            should_publish = handleControllerAxis(e.caxis);
-            break;
-          }
-        case SDL_CONTROLLERBUTTONDOWN: {
-            should_publish = handleControllerButtonDown(e.cbutton);
-            break;
-          }
-        case SDL_CONTROLLERBUTTONUP: {
-            should_publish = handleControllerButtonUp(e.cbutton);
-            break;
-          }
-        case SDL_CONTROLLERDEVICEADDED: {
-            handleControllerDeviceAdded(e.cdevice);
-            break;
-          }
-        case SDL_CONTROLLERDEVICEREMOVED: {
-            handleControllerDeviceRemoved(e.cdevice);
-            break;
-          }
-        case SDL_JOYAXISMOTION:  // Ignore joystick events, they are duplicates of CONTROLLERDEVICE.
-        case SDL_JOYBALLMOTION:
-        case SDL_JOYHATMOTION:
-        case SDL_JOYBUTTONDOWN:
-        case SDL_JOYBUTTONUP:
-        case SDL_JOYDEVICEADDED:
-        case SDL_JOYDEVICEREMOVED: {
-            break;
-          }
-        default: {
-            RCLCPP_INFO(get_logger(), "Unknown event type %d", e.type);
-            break;
-          }
+      case SDL_CONTROLLERAXISMOTION: {
+        should_publish = handleControllerAxis(e.caxis);
+        break;
+      }
+      case SDL_CONTROLLERBUTTONDOWN: {
+        should_publish = handleControllerButtonDown(e.cbutton);
+        break;
+      }
+      case SDL_CONTROLLERBUTTONUP: {
+        should_publish = handleControllerButtonUp(e.cbutton);
+        break;
+      }
+      case SDL_CONTROLLERDEVICEADDED: {
+        handleControllerDeviceAdded(e.cdevice);
+        break;
+      }
+      case SDL_CONTROLLERDEVICEREMOVED: {
+        handleControllerDeviceRemoved(e.cdevice);
+        break;
+      }
+      case SDL_JOYAXISMOTION:  // Ignore joystick events, they are duplicates of CONTROLLERDEVICE.
+      case SDL_JOYBALLMOTION:
+      case SDL_JOYHATMOTION:
+      case SDL_JOYBUTTONDOWN:
+      case SDL_JOYBUTTONUP:
+      case SDL_JOYDEVICEADDED:
+      case SDL_JOYDEVICEREMOVED: {
+        break;
+      }
+      default: {
+        RCLCPP_INFO(get_logger(), "Unknown event type %d", e.type);
+        break;
+      }
       }
     } else {
       // We didn't succeed, either because of a failure or because of a timeout.
       // If we are autorepeating and enough time has passed, set should_publish.
       rclcpp::Time now = this->now();
       rclcpp::Duration diff_since_last_publish = now - last_publish;
-      if ((autorepeat_rate_ > 0.0 &&
-        RCL_NS_TO_MS(diff_since_last_publish.nanoseconds()) >= autorepeat_interval_ms_) ||
-        publish_soon_)
-      {
+      if (
+        (autorepeat_rate_ > 0.0 &&
+         RCL_NS_TO_MS(diff_since_last_publish.nanoseconds()) >= autorepeat_interval_ms_) ||
+        publish_soon_) {
         last_publish = now;
         should_publish = true;
         publish_soon_ = false;
