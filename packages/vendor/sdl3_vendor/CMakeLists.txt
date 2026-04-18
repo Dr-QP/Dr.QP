@@ -8,7 +8,8 @@ option(FORCE_BUILD_VENDOR_PKG
 find_package(ament_cmake REQUIRED)
 
 if(NOT FORCE_BUILD_VENDOR_PKG)
-  find_package(SDL3 QUIET CONFIG)
+  list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
+  find_package(SDL3_CUSTOM QUIET)
 endif()
 
 if(NOT SDL3_FOUND)
@@ -43,9 +44,14 @@ if(NOT SDL3_FOUND)
     DESTINATION ${CMAKE_INSTALL_PREFIX})
 endif()
 
+install(DIRECTORY cmake
+  DESTINATION share/${PROJECT_NAME})
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-ament_package()
+ament_package(
+  CONFIG_EXTRAS "sdl3_vendor-extras.cmake"
+)

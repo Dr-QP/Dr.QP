@@ -13,7 +13,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(drqp_interfaces REQUIRED)
 find_package(sdl3_vendor REQUIRED)
-find_package(SDL3 REQUIRED CONFIG)
+find_package(SDL3_CUSTOM REQUIRED)
 
 # ── Shared component library ──────────────────────────────────────────────────
 add_library(${PROJECT_NAME}_component SHARED
