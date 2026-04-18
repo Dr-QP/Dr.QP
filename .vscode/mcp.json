@@ -6,10 +6,6 @@
         "@modelcontextprotocol/server-sequential-thinking"
       ]
     },
-    "mcp-docs": {
-      "type": "http",
-      "url": "https://modelcontextprotocol.io/mcp"
-    },
     "context7": {
       "type": "http",
       "url": "https://mcp.context7.com/mcp/oauth"
