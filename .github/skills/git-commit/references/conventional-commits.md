@@ -26,7 +26,7 @@ Conventional Commits provide:
 
 ### Examples
 
-```bash
+```text
 # Simple commit
 feat: add user authentication
 
@@ -49,7 +49,7 @@ Closes #123
 
 #### `feat` - New Features
 
-```bash
+```text
 # Adding new functionality
 feat: add dark mode toggle
 feat(ui): implement responsive navigation menu
@@ -58,7 +58,7 @@ feat(api): add user profile endpoint
 
 #### `fix` - Bug Fixes
 
-```bash
+```text
 # Fixing existing functionality
 fix: resolve memory leak in data processing
 fix(auth): correct token expiration validation
@@ -67,7 +67,7 @@ fix(ui): fix button alignment on mobile devices
 
 #### `docs` - Documentation
 
-```bash
+```text
 # Documentation changes only
 docs: update API documentation
 docs(readme): add installation instructions
@@ -76,7 +76,7 @@ docs: fix typos in contributing guide
 
 #### `style` - Code Style
 
-```bash
+```text
 # Code style changes (formatting, missing semicolons, etc.)
 style: fix eslint warnings
 style(components): improve code formatting
@@ -85,7 +85,7 @@ style: add missing semicolons
 
 #### `refactor` - Code Refactoring
 
-```bash
+```text
 # Code changes that neither fix bugs nor add features
 refactor: extract user validation logic
 refactor(utils): simplify date formatting functions
@@ -94,7 +94,7 @@ refactor: improve error handling structure
 
 #### `test` - Tests
 
-```bash
+```text
 # Adding or modifying tests
 test: add unit tests for authentication service
 test(api): add integration tests for user endpoints
@@ -103,7 +103,7 @@ test: improve test coverage for utility functions
 
 #### `chore` - Maintenance
 
-```bash
+```text
 # Other changes that don't modify src or test files
 chore: update dependencies
 chore(build): configure webpack for production
@@ -114,7 +114,7 @@ chore: add pre-commit hooks
 
 #### `perf` - Performance Improvements
 
-```bash
+```text
 perf: improve database query performance
 perf(image): optimize image loading and caching
 perf: reduce bundle size by 20%
@@ -122,7 +122,7 @@ perf: reduce bundle size by 20%
 
 #### `ci` - Continuous Integration
 
-```bash
+```text
 ci: add automated testing workflow
 ci(github): update build pipeline configuration
 ci: fix deployment script issues
@@ -130,7 +130,7 @@ ci: fix deployment script issues
 
 #### `build` - Build System
 
-```bash
+```text
 build: upgrade webpack to version 5
 build(docker): optimize container image size
 build: configure babel for modern browsers
@@ -138,7 +138,7 @@ build: configure babel for modern browsers
 
 #### `revert` - Reverting Changes
 
-```bash
+```text
 revert: revert "feat: add user authentication"
 
 This reverts commit 1234567890abcdef due to security concerns.
@@ -154,7 +154,7 @@ Scopes provide additional context about which part of the codebase is affected.
 
 #### Frontend Scopes
 
-```bash
+```text
 feat(ui): add loading spinner component
 fix(components): resolve prop validation warnings
 style(layout): improve responsive grid system
@@ -162,7 +162,7 @@ style(layout): improve responsive grid system
 
 #### Backend Scopes
 
-```bash
+```text
 feat(api): add user management endpoints
 fix(database): resolve connection pool issues
 perf(queries): optimize user search functionality
@@ -170,7 +170,7 @@ perf(queries): optimize user search functionality
 
 #### Feature-Based Scopes
 
-```bash
+```text
 feat(auth): implement OAuth2 integration
 fix(payment): resolve checkout calculation errors
 test(notifications): add email delivery tests
@@ -178,7 +178,7 @@ test(notifications): add email delivery tests
 
 #### Infrastructure Scopes
 
-```bash
+```text
 chore(docker): update base image to node:18
 ci(deploy): add staging environment workflow
 build(webpack): configure code splitting
@@ -203,7 +203,7 @@ build(webpack): configure code splitting
 
 ### Good Examples
 
-```bash
+```text
 # ✅ Clear and concise
 feat: add user profile photo upload
 fix: resolve race condition in async data loading
@@ -218,7 +218,7 @@ perf(api): cache frequently accessed user data
 
 ### Poor Examples
 
-```bash
+```text
 # ❌ Vague descriptions
 feat: add stuff
 fix: bug fix
@@ -242,7 +242,7 @@ feat: add comprehensive user authentication system with JWT tokens and password 
 - **Wrap at 72 characters**: For better readability
 - **Separate from description**: Use blank line
 
-```bash
+```text
 feat(api): add user subscription management
 
 Implement comprehensive subscription system including:
@@ -262,7 +262,7 @@ payments and edge cases.
 - **Breaking changes**: Clearly mark breaking changes
 - **Co-authors**: Credit contributors
 
-```bash
+```text
 # Issue references
 Closes #123
 Fixes #456
@@ -284,7 +284,7 @@ Co-authored-by: Jane Smith <jane@example.com>
 
 ### Marking Breaking Changes
 
-```bash
+```text
 # In the type/scope
 feat!: remove deprecated user API endpoints
 fix(api)!: change response format for user data
@@ -435,7 +435,7 @@ npx husky add .husky/commit-msg 'npx --no-install commitlint --edit $1'
 
 ### Commit Frequency
 
-```bash
+```text
 # ✅ Good: Logical, atomic commits
 feat: add user registration form
 test: add validation tests for user registration
@@ -453,7 +453,7 @@ feat: add user system with registration, login, profile, and admin panel
 
 ### Message Quality
 
-```bash
+```text
 # ✅ Excellent: Clear, specific, helpful
 feat(auth): add password strength validation with configurable rules
 
@@ -472,7 +472,7 @@ chore: update stuff
 
 ### Multi-part Features
 
-```bash
+```text
 # When implementing a large feature across multiple commits
 feat(auth): add authentication database schema
 feat(auth): implement user registration API
@@ -483,7 +483,7 @@ docs(auth): document new authentication system
 
 ### Dependency Updates
 
-```bash
+```text
 # Regular dependency updates
 chore(deps): update lodash to version 4.17.21
 chore(deps-dev): update jest to version 29.0.0
@@ -495,7 +495,7 @@ chore(deps): bump axios from 0.21.1 to 0.24.0 for security fix
 
 ### Hotfixes
 
-```bash
+```text
 # Production hotfixes
 fix: resolve critical payment processing error
 
@@ -539,7 +539,7 @@ Fixes #URGENT-123
 
 #### Commit Message Too Long
 
-```bash
+```text
 # ❌ Problem: Description too long
 feat: add comprehensive user authentication system with JWT tokens, password hashing, email verification, and social login
 
@@ -555,7 +555,7 @@ Implement full authentication system including:
 
 #### Wrong Commit Type
 
-```bash
+```text
 # ❌ Problem: Wrong type
 docs: fix user registration validation bug
 
@@ -565,7 +565,7 @@ fix: resolve user registration validation bug
 
 #### Missing Breaking Change Marker
 
-```bash
+```text
 # ❌ Problem: Breaking change not marked
 feat(api): change user endpoint response format
 
