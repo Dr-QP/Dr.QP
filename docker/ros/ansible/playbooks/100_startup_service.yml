@@ -140,7 +140,7 @@
         dest: "/etc/systemd/system/{{ docker_prune_service_name }}.service"
         content: |
           [Unit]
-          Description=Prune unused Docker images after Dr.QP services start
+          Description=Prune unused Docker resources after Dr.QP services start
           After=docker.service {{ control_service_name }}.service {{ joystick_service_name }}.service
           Requires=docker.service {{ control_service_name }}.service {{ joystick_service_name }}.service
 
@@ -163,4 +163,4 @@
         daemon_reload: "{{ control_service_file.changed or joystick_service_file.changed or docker_prune_service_file.changed }}"
         name: "{{ docker_prune_service_name }}"
         enabled: true
-        state: "{{ 'restarted' if control_service_file.changed or joystick_service_file.changed or docker_prune_service_file.changed else 'started' }}"
+        state: "{{ 'restarted' if control_service_file.changed or joystick_service_file.changed or docker_prune_service_file.changed else omit }}"

@@ -34,4 +34,4 @@ cd docker/ros/ansible
 ansible-playbook playbooks/100_startup_service.yml
 ```
 
-This also installs a post-start cleanup unit that prunes unused Docker images after the robot services are up.
+This also installs a post-start cleanup unit that prunes unused Docker resources, including images, stopped containers, unused networks, and build cache, after the robot services are up.

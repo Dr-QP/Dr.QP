@@ -248,7 +248,7 @@ This playbook:
   - `drqp-control-service`: Runs the main control nodes
   - `drqp-joystick-service`: Runs the joystick node with hot-plugging support
 - Creates a post-start cleanup service:
-  - `drqp-docker-prune-service`: Waits until the startup services are active and then runs `docker system prune -a -f` once to reclaim unused images
+  - `drqp-docker-prune-service`: Waits until the startup services are active and then runs `docker system prune -a -f` once to reclaim disk space by pruning unused Docker images, stopped containers, unused networks, and build cache
 
 ### SSH Agent Authentication
 
