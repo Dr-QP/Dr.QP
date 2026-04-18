@@ -5,7 +5,6 @@ tools:
   [
     'context7/*',
     'sequentialthinking/*',
-    'mcp-server-git/*',
     'edit/editFiles',
     'execute/getTerminalOutput',
     'execute/runInTerminal',
