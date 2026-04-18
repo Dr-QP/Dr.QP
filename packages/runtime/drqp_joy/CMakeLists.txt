@@ -6,13 +6,14 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 include(../../cmake/ClangCoverage.cmake)
-include(../../cmake/FetchSDL3.cmake)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(drqp_interfaces REQUIRED)
+find_package(sdl3_vendor REQUIRED)
+find_package(SDL3 REQUIRED CONFIG)
 
 # ── Shared component library ──────────────────────────────────────────────────
 add_library(${PROJECT_NAME}_component SHARED
