@@ -18,7 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""MoveIt 2 move_group launch file for the Dr.QP hexapod robot.
+"""
+MoveIt 2 move_group launch file for the Dr.QP hexapod robot.
 
 Starts the move_group node with SRDF, kinematics, OMPL planning pipeline
 and controller configuration loaded from this package's config/ directory.
@@ -28,13 +29,12 @@ parameter server (published by robot_state_publisher) before this file
 is launched.
 """
 
-import yaml
-
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+import yaml
 
 
 def _load_yaml(path):

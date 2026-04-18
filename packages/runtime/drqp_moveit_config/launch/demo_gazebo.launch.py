@@ -18,7 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Demo launch: Dr.QP + MoveIt 2 with Gazebo simulation.
+"""
+Demo launch: Dr.QP + MoveIt 2 with Gazebo simulation.
 
 Starts:
   1. drqp_gazebo sim.launch.py     – Gazebo + ros2_control + brain
@@ -34,8 +35,6 @@ For CI / headless runs::
     ros2 launch drqp_moveit_config demo_gazebo.launch.py show_rviz:=false sim_gui:=false
 """
 
-import yaml
-
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
@@ -44,6 +43,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
+import yaml
 
 
 def _load_yaml(path):

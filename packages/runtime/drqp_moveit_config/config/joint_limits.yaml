@@ -7,7 +7,7 @@ joint_limits:
   # ---- left_front ----
   dr_qp/left_front_coxa:
     has_velocity_limits: true
-    max_velocity: 3.14159   # rad/s (~180 deg/s)
+    max_velocity: 3.14159 # rad/s (~180 deg/s)
     has_acceleration_limits: false
     max_acceleration: 0
   dr_qp/left_front_femur:

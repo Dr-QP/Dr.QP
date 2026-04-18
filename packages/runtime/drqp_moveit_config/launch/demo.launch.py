@@ -18,7 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Demo launch: Dr.QP + MoveIt 2 in RViz2 (no hardware, no simulation).
+"""
+Demo launch: Dr.QP + MoveIt 2 in RViz2 (no hardware, no simulation).
 
 Starts:
   1. robot_state_publisher  – publishes robot_description from URDF/xacro
@@ -31,8 +32,6 @@ Run with::
     ros2 launch drqp_moveit_config demo.launch.py
 """
 
-import yaml
-
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
@@ -40,6 +39,7 @@ from launch.conditions import IfCondition
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
+import yaml
 
 
 def _load_yaml(path):
@@ -85,9 +85,7 @@ def generate_launch_description():
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='screen',
-        parameters=[
-            {'robot_description': robot_description_content, 'use_sim_time': False}
-        ],
+        parameters=[{'robot_description': robot_description_content, 'use_sim_time': False}],
     )
 
     # Fake joint states so the robot visualises in RViz without hardware.

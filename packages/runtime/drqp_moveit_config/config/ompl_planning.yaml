@@ -13,7 +13,6 @@ ompl:
     default_planner_request_adapters/FixStartStateCollision
     default_planner_request_adapters/FixStartStatePathConstraints
   start_state_max_bounds_error: 0.1
-
   # Per-group planner configurations; fall back to the default when a
   # group has no explicit entry.
   left_front_leg:

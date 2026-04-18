@@ -6,8 +6,8 @@
 move_group:
   # Capabilities to load.  The defaults cover planning, execution, and
   # query/state services.  Uncomment to add extras.
-  capabilities: ""
-  disable_capabilities: ""
+  capabilities: ''
+  disable_capabilities: ''
 
   # Trajectory execution
   trajectory_execution:
@@ -17,12 +17,12 @@ move_group:
 
   # Planning scene monitor
   planning_scene_monitor_options:
-    name: "planning_scene_monitor"
-    robot_description: "robot_description"
-    joint_state_topic: "/joint_states"
-    attached_collision_object_topic: "/move_group/planning_scene_monitor"
-    publish_planning_scene_topic: "/move_group/publish_planning_scene"
-    monitored_planning_scene_topic: "/move_group/monitored_planning_scene"
+    name: 'planning_scene_monitor'
+    robot_description: 'robot_description'
+    joint_state_topic: '/joint_states'
+    attached_collision_object_topic: '/move_group/planning_scene_monitor'
+    publish_planning_scene_topic: '/move_group/publish_planning_scene'
+    monitored_planning_scene_topic: '/move_group/monitored_planning_scene'
     wait_for_initial_state_timeout: 10.0
 
   # Sensor integration – add 3D sensor sources here when available.

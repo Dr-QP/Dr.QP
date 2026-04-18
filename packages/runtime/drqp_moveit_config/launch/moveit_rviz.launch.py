@@ -18,7 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""RViz2 launch file with MoveIt Motion Planning plugin for Dr.QP.
+"""
+RViz2 launch file with MoveIt Motion Planning plugin for Dr.QP.
 
 Can be included from a higher-level launch file or run standalone when
 move_group is already running on the same ROS graph.
