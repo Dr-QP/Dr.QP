@@ -6,16 +6,6 @@
         "@modelcontextprotocol/server-sequential-thinking"
       ]
     },
-    "mcp-docs": {
-      "type": "http",
-      "url": "https://modelcontextprotocol.io/mcp"
-    },
-    "mcp-server-git": {
-      "command": "uvx",
-      "args": [
-        "mcp-server-git"
-      ]
-    },
     "context7": {
       "type": "http",
       "url": "https://mcp.context7.com/mcp/oauth"
@@ -32,19 +22,20 @@
         "--mcp-auto-workspace"
       ]
     },
-    "MCP_DOCKER": {
-      "command": "docker",
-      "args": [
-        "mcp",
-        "gateway",
-        "run",
-        "--cpus",
-        "0",
-        "--memory",
-        "0"
-      ],
-      "type": "stdio"
-    },
+    // Docker MCP freqently having DNS issues
+    // "MCP_DOCKER": {
+    //   "command": "docker",
+    //   "args": [
+    //     "mcp",
+    //     "gateway",
+    //     "run",
+    //     "--cpus",
+    //     "0",
+    //     "--memory",
+    //     "0"
+    //   ],
+    //   "type": "stdio"
+    // },
     "drqp_robot": {
       "type": "stdio",
       "command": "${workspaceFolder}/.venv/bin/drqp_robot_mcp",

@@ -13,7 +13,6 @@ tools:
     'findTestFiles',
     'context7/*',
     'sequentialthinking/*',
-    'mcp-server-git/*',
     'github/*',
     'read/getTaskOutput',
     'read/problems',

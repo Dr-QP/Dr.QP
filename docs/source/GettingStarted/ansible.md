@@ -157,7 +157,6 @@ env ANSIBLE_CONFIG=ansible-virtual.cfg ansible-playbook \
     playbooks/20_ros_setup.yml -vvv
 ```
 
-
 ## Generating ROS Dependencies
 
 The project includes a script to generate ROS dependencies based on your project:
@@ -248,6 +247,8 @@ This playbook:
 - Creates two systemd services:
   - `drqp-control-service`: Runs the main control nodes
   - `drqp-joystick-service`: Runs the joystick node with hot-plugging support
+- Creates a post-start cleanup service:
+  - `drqp-docker-prune-service`: Waits until the startup services are active and then runs `docker system prune -a -f` once to reclaim disk space by pruning unused Docker images, stopped containers, unused networks, and build cache
 
 ### SSH Agent Authentication
 
