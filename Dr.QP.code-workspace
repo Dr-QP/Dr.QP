@@ -630,5 +630,8 @@
       "https://code.claude.com/docs/en/": true,
     },
     "chat.tools.terminal.autoReplyToPrompts": true,
+
+    "python.terminal.activateEnvironment": false,
+    "python.terminal.activateEnvInCurrentTerminal": false
   }
 }
