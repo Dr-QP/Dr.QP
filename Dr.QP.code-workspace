@@ -320,8 +320,8 @@
       },
       {
         "label": "Dr.QP rosdep",
-        "type": "ROS2",
-        "command": "./scripts/ros-dep.sh",
+        "type": "shell",
+        "command": "${workspaceFolder}/scripts/ros-dep.sh",
         "problemMatcher": []
       },
       {
