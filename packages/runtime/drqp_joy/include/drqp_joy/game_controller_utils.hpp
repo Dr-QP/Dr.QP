@@ -21,6 +21,7 @@
 #ifndef DRQP_JOY__GAME_CONTROLLER_UTILS_HPP_
 #define DRQP_JOY__GAME_CONTROLLER_UTILS_HPP_
 
+#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 
@@ -28,6 +29,7 @@ namespace drqp_joy::detail
 {
 
 inline constexpr float kAxisChangeTolerance = 1.0e-6F;
+inline constexpr int kResponsiveEventPollIntervalMs = 5;
 
 inline void validateDeadzone(double deadzone)
 {
@@ -46,6 +48,21 @@ inline void validateCoalesceInterval(int interval_ms)
 inline bool axisValueChanged(float previous_value, float next_value)
 {
   return std::fabs(previous_value - next_value) > kAxisChangeTolerance;
+}
+
+inline int computeEventPollIntervalMs(int autorepeat_interval_ms, int coalesce_interval_ms)
+{
+  validateCoalesceInterval(coalesce_interval_ms);
+
+  int interval_ms = kResponsiveEventPollIntervalMs;
+  if (autorepeat_interval_ms > 0) {
+    interval_ms = std::min(interval_ms, autorepeat_interval_ms);
+  }
+  if (coalesce_interval_ms > 0) {
+    interval_ms = std::min(interval_ms, coalesce_interval_ms);
+  }
+
+  return std::max(1, interval_ms);
 }
 
 }  // namespace drqp_joy::detail

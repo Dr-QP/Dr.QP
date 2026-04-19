@@ -32,11 +32,10 @@
 
 #include <SDL3/SDL.h>
 
-#include <future>
+#include <chrono>
 #include <memory>
 #include <mutex>
 #include <string>
-#include <thread>
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joy.hpp>
@@ -70,7 +69,7 @@ public:
   ~GameController() override;
 
 private:
-  void eventThread();
+  void pollEvents();
 
   bool handleGamepadAxis(const SDL_GamepadAxisEvent& e);
   bool handleGamepadButtonDown(const SDL_GamepadButtonEvent& e);
@@ -107,12 +106,12 @@ private:
 
   bool publish_soon_{false};
   rclcpp::Time publish_soon_time_;
+  rclcpp::Time last_publish_time_;
   std::mutex sdl_state_mutex_;
 
   // ── Threading ───────────────────────────────────────────────────────────────
-  std::thread event_thread_;
-  std::shared_future<void> future_;
-  std::promise<void> exit_signal_;
+  rclcpp::CallbackGroup::SharedPtr sdl_callback_group_;
+  rclcpp::TimerBase::SharedPtr event_timer_;
 
   // ── ROS interfaces ──────────────────────────────────────────────────────────
   rclcpp::Publisher<sensor_msgs::msg::Joy>::SharedPtr pub_;

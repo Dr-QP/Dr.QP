@@ -40,13 +40,11 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
-#include <future>
 #include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <thread>
 
 #include "drqp_interfaces/msg/haptic_effect.hpp"
 
@@ -181,8 +179,14 @@ GameController::GameController(const rclcpp::NodeOptions& options)
   // Make sure to initialize publish_soon_time regardless of whether we are going
   // to use it; this ensures that we are always using the correct time source.
   publish_soon_time_ = this->now();
+  last_publish_time_ = publish_soon_time_;
+
+  sdl_callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
   pub_ = create_publisher<sensor_msgs::msg::Joy>("joy", 10);
+
+  rclcpp::SubscriptionOptions sdl_subscription_options;
+  sdl_subscription_options.callback_group = sdl_callback_group_;
 
   // joy/set_feedback — rumble via sensor_msgs/JoyFeedback.
   //   id=0  → set both low-freq and high-freq motors to intensity
@@ -190,35 +194,28 @@ GameController::GameController(const rclcpp::NodeOptions& options)
   //   id=2  → high-freq (light/right) motor only
   feedback_sub_ = this->create_subscription<sensor_msgs::msg::JoyFeedback>(
     "joy/set_feedback", rclcpp::QoS(10),
-    std::bind(&GameController::feedbackCb, this, std::placeholders::_1));
+    std::bind(&GameController::feedbackCb, this, std::placeholders::_1), sdl_subscription_options);
 
   // joy/set_haptic — full SDL haptic effects via drqp_interfaces/HapticEffect.
   haptic_sub_ = this->create_subscription<HapticEffect>(
     "joy/set_haptic", rclcpp::QoS(10),
-    std::bind(&GameController::hapticCb, this, std::placeholders::_1));
+    std::bind(&GameController::hapticCb, this, std::placeholders::_1), sdl_subscription_options);
 
   joy_msg_.buttons.resize(SDL_GAMEPAD_BUTTON_COUNT);
   joy_msg_.axes.resize(SDL_GAMEPAD_AXIS_COUNT);
 
-  future_ = exit_signal_.get_future();
   acquireSdlSubsystems();
 
-  try {
-    // In theory we could do this with just a timer, which would simplify the code
-    // a bit.  But then we couldn't react to "immediate" events, so we stick with
-    // the thread.
-    event_thread_ = std::thread(&GameController::eventThread, this);
-  } catch (...) {
-    releaseSdlSubsystems();
-    throw;
-  }
+  const auto event_poll_period = std::chrono::milliseconds(
+    detail::computeEventPollIntervalMs(autorepeat_interval_ms_, coalesce_interval_ms_));
+  event_timer_ = this->create_wall_timer(
+    event_poll_period, std::bind(&GameController::pollEvents, this), sdl_callback_group_);
 }
 
 GameController::~GameController()
 {
-  exit_signal_.set_value();
-  if (event_thread_.joinable()) {
-    event_thread_.join();
+  if (event_timer_ != nullptr) {
+    event_timer_->cancel();
   }
 
   {
@@ -626,72 +623,58 @@ void GameController::handleGamepadDeviceRemoved(const SDL_GamepadDeviceEvent& e)
 
 // ── Event loop ────────────────────────────────────────────────────────────────
 
-void GameController::eventThread()
+void GameController::pollEvents()
 {
-  std::future_status status;
-  rclcpp::Time last_publish = this->now();
-
-  do {
-    bool should_publish = false;
-    SDL_Event e;
-    int wait_time_ms = autorepeat_interval_ms_;
-    if (publish_soon_) {
-      wait_time_ms = std::min(wait_time_ms, coalesce_interval_ms_);
+  bool should_publish = false;
+  SDL_Event e;
+  while (SDL_PollEvent(&e)) {
+    switch (e.type) {
+    case SDL_EVENT_GAMEPAD_AXIS_MOTION:
+      should_publish = handleGamepadAxis(e.gaxis) || should_publish;
+      break;
+    case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+      should_publish = handleGamepadButtonDown(e.gbutton) || should_publish;
+      break;
+    case SDL_EVENT_GAMEPAD_BUTTON_UP:
+      should_publish = handleGamepadButtonUp(e.gbutton) || should_publish;
+      break;
+    case SDL_EVENT_GAMEPAD_ADDED:
+      handleGamepadDeviceAdded(e.gdevice);
+      break;
+    case SDL_EVENT_GAMEPAD_REMOVED:
+      handleGamepadDeviceRemoved(e.gdevice);
+      break;
+    // Joystick events are duplicates of GAMEPAD events; suppress them.
+    case SDL_EVENT_JOYSTICK_AXIS_MOTION:
+    case SDL_EVENT_JOYSTICK_BALL_MOTION:
+    case SDL_EVENT_JOYSTICK_HAT_MOTION:
+    case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
+    case SDL_EVENT_JOYSTICK_BUTTON_UP:
+    case SDL_EVENT_JOYSTICK_ADDED:
+    case SDL_EVENT_JOYSTICK_REMOVED:
+      break;
+    default:
+      RCLCPP_DEBUG(get_logger(), "Unhandled SDL event type 0x%x", e.type);
+      break;
     }
-    // SDL3: SDL_WaitEventTimeout returns bool (true = event received)
-    const bool got_event = SDL_WaitEventTimeout(&e, wait_time_ms);
-    if (got_event) {
-      switch (e.type) {
-      case SDL_EVENT_GAMEPAD_AXIS_MOTION:
-        should_publish = handleGamepadAxis(e.gaxis);
-        break;
-      case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
-        should_publish = handleGamepadButtonDown(e.gbutton);
-        break;
-      case SDL_EVENT_GAMEPAD_BUTTON_UP:
-        should_publish = handleGamepadButtonUp(e.gbutton);
-        break;
-      case SDL_EVENT_GAMEPAD_ADDED:
-        handleGamepadDeviceAdded(e.gdevice);
-        break;
-      case SDL_EVENT_GAMEPAD_REMOVED:
-        handleGamepadDeviceRemoved(e.gdevice);
-        break;
-      // Joystick events are duplicates of GAMEPAD events; suppress them.
-      case SDL_EVENT_JOYSTICK_AXIS_MOTION:
-      case SDL_EVENT_JOYSTICK_BALL_MOTION:
-      case SDL_EVENT_JOYSTICK_HAT_MOTION:
-      case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
-      case SDL_EVENT_JOYSTICK_BUTTON_UP:
-      case SDL_EVENT_JOYSTICK_ADDED:
-      case SDL_EVENT_JOYSTICK_REMOVED:
-        break;
-      default:
-        RCLCPP_DEBUG(get_logger(), "Unhandled SDL event type 0x%x", e.type);
-        break;
-      }
-    } else {
-      // Timeout or error — check autorepeat
-      const rclcpp::Time now = this->now();
-      const rclcpp::Duration diff_since_last_publish = now - last_publish;
-      if (
-        (autorepeat_rate_ > 0.0 &&
-         RCL_NS_TO_MS(diff_since_last_publish.nanoseconds()) >= autorepeat_interval_ms_) ||
-        publish_soon_) {
-        last_publish = now;
-        should_publish = true;
-        publish_soon_ = false;
-      }
-    }
+  }
 
-    if (game_controller_ != nullptr && should_publish) {
-      joy_msg_.header.frame_id = "joy";
-      joy_msg_.header.stamp = this->now();
-      pub_->publish(joy_msg_);
-    }
+  const rclcpp::Time now = this->now();
+  const rclcpp::Duration diff_since_last_publish = now - last_publish_time_;
+  if (
+    (autorepeat_rate_ > 0.0 &&
+     RCL_NS_TO_MS(diff_since_last_publish.nanoseconds()) >= autorepeat_interval_ms_) ||
+    publish_soon_) {
+    should_publish = true;
+    publish_soon_ = false;
+  }
 
-    status = future_.wait_for(std::chrono::seconds(0));
-  } while (status == std::future_status::timeout);
+  if (game_controller_ != nullptr && should_publish) {
+    last_publish_time_ = now;
+    joy_msg_.header.frame_id = "joy";
+    joy_msg_.header.stamp = now;
+    pub_->publish(joy_msg_);
+  }
 }
 
 }  // namespace drqp_joy

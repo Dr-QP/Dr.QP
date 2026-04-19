@@ -10,3 +10,8 @@ The vendored SDL build is configured with `SDL_UNIX_CONSOLE_BUILD=ON` and with
 desktop windowing subsystems disabled. `drqp_joy` only needs SDL's gamepad and
 haptic support, so this avoids hard dependencies on X11 and Wayland development
 packages that are not required for the node's runtime behavior.
+
+`drqp_joy` pumps SDL events from the ROS executor thread instead of a private
+worker thread. SDL3 requires `SDL_PumpEvents` and the `SDL_WaitEvent*` family to
+run on the main thread, so the node uses a short wall timer to keep controller
+latency low without tripping SDL's main-thread assertions.
