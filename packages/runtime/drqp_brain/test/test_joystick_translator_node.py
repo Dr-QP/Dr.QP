@@ -21,6 +21,7 @@
 import unittest
 from unittest.mock import Mock
 
+from drqp_brain.haptics import HapticFeedbackScheduler
 from drqp_brain.joystick_translator_node import JoystickTranslatorNode
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 import rclpy
@@ -167,6 +168,58 @@ class TestJoystickTranslatorNode(unittest.TestCase):
         )
         self.assertEqual(feedback.id, 0)
         self.assertGreater(feedback.intensity, 0.0)
+
+    def test_replacing_pending_control_mode_feedback_starts_new_pattern_immediately(self):
+        """A newer mode change should interrupt stale queued feedback immediately."""
+        current_time = [100.0]
+        self.node.haptic_feedback_scheduler = HapticFeedbackScheduler(
+            clock=lambda: current_time[0]
+        )
+
+        self.node._publish_control_mode_change()
+        current_time[0] = 100.02
+        self.node._publish_control_mode_change()
+
+        pending = self.node._pending_feedback_commands
+        active_due_ats = [command.due_at for command in pending if command.intensity > 0.0]
+
+        self.assertEqual(len(pending), 19)
+        self.assertAlmostEqual(pending[0].due_at, 100.02, places=7)
+        self.assertEqual(pending[0].intensity, 0.0)
+        self.assertEqual(len(active_due_ats), 9)
+        self.assertAlmostEqual(active_due_ats[0], 100.02, places=7)
+        self.assertAlmostEqual(active_due_ats[1], 100.22, places=7)
+        self.assertAlmostEqual(active_due_ats[2], 100.42, places=7)
+        self.assertAlmostEqual(active_due_ats[-1], 102.02, places=7)
+
+    def test_dispatch_pending_feedback_publishes_interrupt_and_new_pulse_in_same_tick(self):
+        """Interrupting stale feedback should emit stop and replacement pulse together."""
+        current_time = [200.0]
+        self.node.haptic_feedback_scheduler = HapticFeedbackScheduler(
+            clock=lambda: current_time[0]
+        )
+        self.node.joy_feedback_pub.publish = Mock()
+
+        self.node._publish_control_mode_change()
+        current_time[0] = 200.02
+        self.node._publish_control_mode_change()
+
+        self.node._dispatch_pending_feedback()
+
+        self.assertEqual(self.node.joy_feedback_pub.publish.call_count, 2)
+
+        stop_feedback = self.node.joy_feedback_pub.publish.call_args_list[0].args[0]
+        start_feedback = self.node.joy_feedback_pub.publish.call_args_list[1].args[0]
+
+        self.assertEqual(stop_feedback.id, 0)
+        self.assertEqual(stop_feedback.intensity, 0.0)
+        self.assertEqual(start_feedback.id, 0)
+        self.assertGreater(start_feedback.intensity, 0.0)
+        self.assertAlmostEqual(
+            self.node._pending_feedback_commands[0].due_at,
+            200.17,
+            places=7,
+        )
 
     def test_control_mode_haptic_feedback_uses_working_rumble_channel(self):
         """Control-mode changes should repeat the mapped pulse group 3 times."""
