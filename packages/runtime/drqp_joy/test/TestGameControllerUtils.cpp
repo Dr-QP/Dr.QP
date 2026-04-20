@@ -18,6 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <array>
+#include <optional>
+
 #include <catch_amalgamated.hpp>
 #include <catch_ros2/catch.hpp>
 
@@ -25,6 +28,16 @@
 
 namespace
 {
+
+bool matchesExpectedDeviceId(const std::optional<int>& device_id, int expected_device_id)
+{
+  return device_id.has_value() && device_id.value() == expected_device_id;
+}
+
+bool matchesExpectedInterval(int actual_interval_ms, int expected_interval_ms)
+{
+  return actual_interval_ms == expected_interval_ms;
+}
 
 TEST_CASE("validateDeadzone accepts values in [0.0, 1.0)")
 {
@@ -61,8 +74,30 @@ TEST_CASE("validateDeviceId accepts non-negative values")
 
 TEST_CASE("validateDeviceId rejects negative values")
 {
+  CHECK_THROWS_WITH(drqp_joy::detail::validateDeviceId(-1), "device_id must be non-negative");
+}
+
+TEST_CASE("getRequestedDeviceByIndex returns the requested device id when present")
+{
+  constexpr std::array<int, 3> device_ids{41, 42, 43};
+
+  CHECK(matchesExpectedDeviceId(drqp_joy::detail::getRequestedDeviceByIndex(device_ids, 0), 41));
+  CHECK(matchesExpectedDeviceId(drqp_joy::detail::getRequestedDeviceByIndex(device_ids, 2), 43));
+}
+
+TEST_CASE("getRequestedDeviceByIndex returns nullopt when the index is out of range")
+{
+  constexpr std::array<int, 2> device_ids{41, 42};
+
+  CHECK_FALSE(drqp_joy::detail::getRequestedDeviceByIndex(device_ids, 2).has_value());
+}
+
+TEST_CASE("getRequestedDeviceByIndex rejects negative indices")
+{
+  constexpr std::array<int, 1> device_ids{41};
+
   CHECK_THROWS_WITH(
-    drqp_joy::detail::validateDeviceId(-1), "device_id must be non-negative");
+    drqp_joy::detail::getRequestedDeviceByIndex(device_ids, -1), "device_id must be non-negative");
 }
 
 TEST_CASE("axisValueChanged uses a tolerance instead of direct equality")
@@ -78,17 +113,17 @@ TEST_CASE("axisValueChanged uses a tolerance instead of direct equality")
 
 TEST_CASE("computeEventPollIntervalMs prefers responsive polling")
 {
-  CHECK(drqp_joy::detail::computeEventPollIntervalMs(50, 0) == 5);
-  CHECK(drqp_joy::detail::computeEventPollIntervalMs(50, 1) == 1);
-  CHECK(drqp_joy::detail::computeEventPollIntervalMs(2, 10) == 2);
+  CHECK(matchesExpectedInterval(drqp_joy::detail::computeEventPollIntervalMs(50, 0), 5));
+  CHECK(matchesExpectedInterval(drqp_joy::detail::computeEventPollIntervalMs(50, 1), 1));
+  CHECK(matchesExpectedInterval(drqp_joy::detail::computeEventPollIntervalMs(2, 10), 2));
 }
 
 TEST_CASE("computeEventPollIntervalMs never returns less than one millisecond")
 {
-  CHECK(
-    drqp_joy::detail::computeEventPollIntervalMs(0, 0) ==
-    drqp_joy::detail::kResponsiveEventPollIntervalMs);
-  CHECK(drqp_joy::detail::computeEventPollIntervalMs(1, 0) == 1);
+  CHECK(matchesExpectedInterval(
+    drqp_joy::detail::computeEventPollIntervalMs(0, 0),
+    drqp_joy::detail::kResponsiveEventPollIntervalMs));
+  CHECK(matchesExpectedInterval(drqp_joy::detail::computeEventPollIntervalMs(1, 0), 1));
 }
 
 }  // namespace

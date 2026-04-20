@@ -45,6 +45,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "drqp_interfaces/msg/haptic_effect.hpp"
 
@@ -205,7 +206,12 @@ GameController::GameController(const rclcpp::NodeOptions& options)
   joy_msg_.buttons.resize(SDL_GAMEPAD_BUTTON_COUNT);
   joy_msg_.axes.resize(SDL_GAMEPAD_AXIS_COUNT);
 
+  RCLCPP_INFO(
+    get_logger(), "Starting game controller node with device_id=%d device_name='%s'", dev_id_,
+    dev_name_.c_str());
+
   acquireSdlSubsystems();
+  discoverAvailableGamepads();
 
   const auto event_poll_period = std::chrono::milliseconds(
     detail::computeEventPollIntervalMs(autorepeat_interval_ms_, coalesce_interval_ms_));
@@ -437,6 +443,121 @@ void GameController::hapticCb(const std::shared_ptr<HapticEffect> msg)
 
 // ── Axis / button event handlers ──────────────────────────────────────────────
 
+void GameController::discoverAvailableGamepads()
+{
+  int count = 0;
+  SDL_JoystickID* ids = SDL_GetGamepads(&count);
+  if (ids == nullptr || count <= 0) {
+    RCLCPP_INFO(get_logger(), "No gamepads detected at startup; waiting for SDL hotplug events");
+    return;
+  }
+
+  std::vector<SDL_JoystickID> joystick_ids(ids, ids + count);
+  SDL_free(ids);
+
+  for (const SDL_JoystickID joystick_id : joystick_ids) {
+    const char* joystick_name = SDL_GetGamepadNameForID(joystick_id);
+    if (matchesRequestedGamepad(joystick_id, joystick_name, true)) {
+      openRequestedGamepad(joystick_id, joystick_name);
+      return;
+    }
+  }
+
+  if (dev_name_.empty()) {
+    RCLCPP_INFO(
+      get_logger(),
+      "Detected %d gamepad(s) at startup, but none matched requested device_id=%d; waiting for "
+      "hotplug events",
+      count, dev_id_);
+    return;
+  }
+
+  RCLCPP_INFO(
+    get_logger(),
+    "Detected %d gamepad(s) at startup, but none matched requested device_name='%s'; waiting for "
+    "hotplug events",
+    count, dev_name_.c_str());
+}
+
+bool GameController::matchesRequestedGamepad(
+  SDL_JoystickID joystick_id, const char* joystick_name, bool log_mismatch)
+{
+  if (!dev_name_.empty()) {
+    if (joystick_name == nullptr || dev_name_ != joystick_name) {
+      if (log_mismatch) {
+        RCLCPP_INFO(
+          get_logger(), "Gamepad added: id=%u, name=%s — not the requested device_name '%s'",
+          joystick_id, joystick_name ? joystick_name : "unknown", dev_name_.c_str());
+      }
+      return false;
+    }
+
+    return true;
+  }
+
+  int count = 0;
+  SDL_JoystickID* ids = SDL_GetGamepads(&count);
+  if (ids == nullptr) {
+    if (log_mismatch) {
+      RCLCPP_WARN(
+        get_logger(), "Unable to enumerate gamepads while matching device_id=%d: %s", dev_id_,
+        SDL_GetError());
+    }
+    return false;
+  }
+
+  const std::vector<SDL_JoystickID> joystick_ids(ids, ids + count);
+  SDL_free(ids);
+
+  const auto requested_id = detail::getRequestedDeviceByIndex(joystick_ids, dev_id_);
+  if (!requested_id.has_value() || requested_id.value() != joystick_id) {
+    if (log_mismatch) {
+      RCLCPP_INFO(
+        get_logger(), "Gamepad added: id=%u, name=%s — not at device_id=%d, ignoring", joystick_id,
+        joystick_name ? joystick_name : "unknown", dev_id_);
+    }
+    return false;
+  }
+
+  return true;
+}
+
+void GameController::openRequestedGamepad(SDL_JoystickID joystick_id, const char* joystick_name)
+{
+  RCLCPP_INFO(
+    get_logger(), "Gamepad added: id=%u, name=%s", joystick_id,
+    joystick_name ? joystick_name : "unknown");
+
+  std::scoped_lock lock(sdl_state_mutex_);
+  if (game_controller_ != nullptr) {
+    return;
+  }
+
+  game_controller_ = SDL_OpenGamepad(joystick_id);
+  if (game_controller_ == nullptr) {
+    RCLCPP_WARN(get_logger(), "Unable to open gamepad id=%u: %s", joystick_id, SDL_GetError());
+    return;
+  }
+
+  joystick_instance_id_ = joystick_id;
+
+  for (int i = 0; i < SDL_GAMEPAD_AXIS_COUNT; ++i) {
+    const int16_t state = SDL_GetGamepadAxis(game_controller_, static_cast<SDL_GamepadAxis>(i));
+    joy_msg_.axes.at(i) = convertRawAxisValueToROS(state);
+  }
+
+  openHaptic();
+
+  RCLCPP_INFO(
+    get_logger(), "Opened gamepad: %s  deadzone: %f  rumble: %s  haptic: %s",
+    SDL_GetGamepadName(game_controller_), scaled_deadzone_,
+    SDL_GetBooleanProperty(
+      SDL_GetGamepadProperties(game_controller_), SDL_PROP_GAMEPAD_CAP_RUMBLE_BOOLEAN, false)
+      ? "Yes"
+      : "No",
+    haptic_ ? "Yes" : "No");
+}
+
 float GameController::convertRawAxisValueToROS(int16_t val)
 {
   // SDL reports axis values between -32768 and 32767.  To make sure
@@ -546,64 +667,11 @@ void GameController::handleGamepadDeviceAdded(const SDL_GamepadDeviceEvent& e)
   const SDL_JoystickID new_id = e.which;
   const char* new_name = SDL_GetGamepadNameForID(new_id);
 
-  if (!dev_name_.empty()) {
-    // Match by device name
-    if (new_name == nullptr || dev_name_ != new_name) {
-      RCLCPP_INFO(
-        get_logger(), "Gamepad added: id=%u, name=%s — not the requested device_name '%s'", new_id,
-        new_name ? new_name : "unknown", dev_name_.c_str());
-      return;
-    }
-  } else {
-    // Match by index (dev_id_): check whether new_id is at position dev_id_ in the current list
-    int count = 0;
-    SDL_JoystickID* ids = SDL_GetGamepads(&count);
-    bool matched = false;
-    if (ids != nullptr) {
-      matched = (count > dev_id_) && (ids[dev_id_] == new_id);
-      SDL_free(ids);
-    }
-    if (!matched) {
-      RCLCPP_INFO(
-        get_logger(), "Gamepad added: id=%u, name=%s — not at device_id=%d, ignoring", new_id,
-        new_name ? new_name : "unknown", dev_id_);
-      return;
-    }
-  }
-
-  RCLCPP_INFO(
-    get_logger(), "Gamepad added: id=%u, name=%s", new_id, new_name ? new_name : "unknown");
-
-  std::scoped_lock lock(sdl_state_mutex_);
-  if (game_controller_ != nullptr) {
-    // Already managing a controller; ignore this one.
+  if (!matchesRequestedGamepad(new_id, new_name, true)) {
     return;
   }
 
-  game_controller_ = SDL_OpenGamepad(new_id);
-  if (game_controller_ == nullptr) {
-    RCLCPP_WARN(get_logger(), "Unable to open gamepad id=%u: %s", new_id, SDL_GetError());
-    return;
-  }
-
-  joystick_instance_id_ = new_id;
-
-  // Seed the initial axis state
-  for (int i = 0; i < SDL_GAMEPAD_AXIS_COUNT; ++i) {
-    const int16_t state = SDL_GetGamepadAxis(game_controller_, static_cast<SDL_GamepadAxis>(i));
-    joy_msg_.axes.at(i) = convertRawAxisValueToROS(state);
-  }
-
-  openHaptic();
-
-  RCLCPP_INFO(
-    get_logger(), "Opened gamepad: %s  deadzone: %f  rumble: %s  haptic: %s",
-    SDL_GetGamepadName(game_controller_), scaled_deadzone_,
-    SDL_GetBooleanProperty(
-      SDL_GetGamepadProperties(game_controller_), SDL_PROP_GAMEPAD_CAP_RUMBLE_BOOLEAN, false)
-      ? "Yes"
-      : "No",
-    haptic_ ? "Yes" : "No");
+  openRequestedGamepad(new_id, new_name);
 }
 
 void GameController::handleGamepadDeviceRemoved(const SDL_GamepadDeviceEvent& e)

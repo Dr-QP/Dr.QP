@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
 #include <stdexcept>
 
 namespace drqp_joy::detail
@@ -50,6 +51,20 @@ inline void validateDeviceId(int device_id)
   if (device_id < 0) {
     throw std::runtime_error("device_id must be non-negative");
   }
+}
+
+template <typename Container>
+inline auto getRequestedDeviceByIndex(const Container& device_ids, int device_id)
+  -> std::optional<typename Container::value_type>
+{
+  validateDeviceId(device_id);
+
+  const auto index = static_cast<size_t>(device_id);
+  if (index >= device_ids.size()) {
+    return std::nullopt;
+  }
+
+  return device_ids[index];
 }
 
 inline bool axisValueChanged(float previous_value, float next_value)

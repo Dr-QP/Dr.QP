@@ -68,6 +68,11 @@ public:
   ~GameController() override;
 
 private:
+  void discoverAvailableGamepads();
+  bool matchesRequestedGamepad(
+    SDL_JoystickID joystick_id, const char* joystick_name, bool log_mismatch);
+  void openRequestedGamepad(SDL_JoystickID joystick_id, const char* joystick_name);
+
   void pollEvents();
 
   bool handleGamepadAxis(const SDL_GamepadAxisEvent& e);
