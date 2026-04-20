@@ -33,7 +33,7 @@ services:
     # Use with caution and only in trusted environments.
     #
     # Uncomment to allow shared memory based DDS communication
-    network_mode: host
+    # network_mode: host
     # ipc: host
     # pid: host
     # user: "1001:1001", # Change to match primary user on the host
