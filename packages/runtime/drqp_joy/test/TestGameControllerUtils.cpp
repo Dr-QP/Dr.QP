@@ -53,6 +53,18 @@ TEST_CASE("validateCoalesceInterval rejects negative values")
     drqp_joy::detail::validateCoalesceInterval(-1), "coalesce_interval_ms must be non-negative");
 }
 
+TEST_CASE("validateDeviceId accepts non-negative values")
+{
+  CHECK_NOTHROW(drqp_joy::detail::validateDeviceId(0));
+  CHECK_NOTHROW(drqp_joy::detail::validateDeviceId(1));
+}
+
+TEST_CASE("validateDeviceId rejects negative values")
+{
+  CHECK_THROWS_WITH(
+    drqp_joy::detail::validateDeviceId(-1), "device_id must be non-negative");
+}
+
 TEST_CASE("axisValueChanged uses a tolerance instead of direct equality")
 {
   CHECK_FALSE(drqp_joy::detail::axisValueChanged(0.5F, 0.5F));
@@ -66,17 +78,17 @@ TEST_CASE("axisValueChanged uses a tolerance instead of direct equality")
 
 TEST_CASE("computeEventPollIntervalMs prefers responsive polling")
 {
-  CHECK_EQ(drqp_joy::detail::computeEventPollIntervalMs(50, 0), 5);
-  CHECK_EQ(drqp_joy::detail::computeEventPollIntervalMs(50, 1), 1);
-  CHECK_EQ(drqp_joy::detail::computeEventPollIntervalMs(2, 10), 2);
+  CHECK(drqp_joy::detail::computeEventPollIntervalMs(50, 0) == 5);
+  CHECK(drqp_joy::detail::computeEventPollIntervalMs(50, 1) == 1);
+  CHECK(drqp_joy::detail::computeEventPollIntervalMs(2, 10) == 2);
 }
 
 TEST_CASE("computeEventPollIntervalMs never returns less than one millisecond")
 {
-  CHECK_EQ(
-    drqp_joy::detail::computeEventPollIntervalMs(0, 0),
+  CHECK(
+    drqp_joy::detail::computeEventPollIntervalMs(0, 0) ==
     drqp_joy::detail::kResponsiveEventPollIntervalMs);
-  CHECK_EQ(drqp_joy::detail::computeEventPollIntervalMs(1, 0), 1);
+  CHECK(drqp_joy::detail::computeEventPollIntervalMs(1, 0) == 1);
 }
 
 }  // namespace

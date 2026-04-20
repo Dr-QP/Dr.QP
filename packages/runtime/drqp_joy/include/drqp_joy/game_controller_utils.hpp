@@ -45,6 +45,13 @@ inline void validateCoalesceInterval(int interval_ms)
   }
 }
 
+inline void validateDeviceId(int device_id)
+{
+  if (device_id < 0) {
+    throw std::runtime_error("device_id must be non-negative");
+  }
+}
+
 inline bool axisValueChanged(float previous_value, float next_value)
 {
   return std::fabs(previous_value - next_value) > kAxisChangeTolerance;

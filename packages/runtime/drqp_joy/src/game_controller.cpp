@@ -138,6 +138,7 @@ GameController::GameController(const rclcpp::NodeOptions& options)
 : rclcpp::Node("game_controller_node", options)
 {
   dev_id_ = static_cast<int>(this->declare_parameter("device_id", 0));
+  detail::validateDeviceId(dev_id_);
   dev_name_ = this->declare_parameter("device_name", std::string(""));
 
   // The user specifies the deadzone to us in the range of 0.0 to 1.0.  Later on
