@@ -61,8 +61,7 @@ TEST_CASE("validateDeviceId accepts non-negative values")
 
 TEST_CASE("validateDeviceId rejects negative values")
 {
-  CHECK_THROWS_WITH(
-    drqp_joy::detail::validateDeviceId(-1), "device_id must be non-negative");
+  CHECK_THROWS_WITH(drqp_joy::detail::validateDeviceId(-1), "device_id must be non-negative");
 }
 
 TEST_CASE("axisValueChanged uses a tolerance instead of direct equality")
