@@ -32,7 +32,6 @@
 
 #include <SDL3/SDL.h>
 
-#include <chrono>
 #include <memory>
 #include <mutex>
 #include <string>

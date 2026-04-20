@@ -66,17 +66,17 @@ TEST_CASE("axisValueChanged uses a tolerance instead of direct equality")
 
 TEST_CASE("computeEventPollIntervalMs prefers responsive polling")
 {
-  CHECK(drqp_joy::detail::computeEventPollIntervalMs(50, 0) == 5);
-  CHECK(drqp_joy::detail::computeEventPollIntervalMs(50, 1) == 1);
-  CHECK(drqp_joy::detail::computeEventPollIntervalMs(2, 10) == 2);
+  CHECK_EQ(drqp_joy::detail::computeEventPollIntervalMs(50, 0), 5);
+  CHECK_EQ(drqp_joy::detail::computeEventPollIntervalMs(50, 1), 1);
+  CHECK_EQ(drqp_joy::detail::computeEventPollIntervalMs(2, 10), 2);
 }
 
 TEST_CASE("computeEventPollIntervalMs never returns less than one millisecond")
 {
-  CHECK(
-    drqp_joy::detail::computeEventPollIntervalMs(0, 0) ==
+  CHECK_EQ(
+    drqp_joy::detail::computeEventPollIntervalMs(0, 0),
     drqp_joy::detail::kResponsiveEventPollIntervalMs);
-  CHECK(drqp_joy::detail::computeEventPollIntervalMs(1, 0) == 1);
+  CHECK_EQ(drqp_joy::detail::computeEventPollIntervalMs(1, 0), 1);
 }
 
 }  // namespace
