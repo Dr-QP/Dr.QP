@@ -3,14 +3,16 @@
 # Maps the SDL3 haptic API (SDL3/SDL_haptic.h) to ROS 2 messages.
 # Publish to joy/set_haptic to trigger haptic effects on the gamepad.
 
-# Effect type constants — map to SDL_HAPTIC_* types
-uint8 TYPE_LEFTRIGHT = 0      # SDL_HAPTIC_LEFTRIGHT  - Dual motor rumble
-uint8 TYPE_CONSTANT = 1       # SDL_HAPTIC_CONSTANT   - Constant force
-uint8 TYPE_SINE = 2           # SDL_HAPTIC_SINE       - Sine wave
-uint8 TYPE_TRIANGLE = 3       # SDL_HAPTIC_TRIANGLE   - Triangle wave
-uint8 TYPE_SAWTOOTHUP = 4     # SDL_HAPTIC_SAWTOOTHUP
-uint8 TYPE_SAWTOOTHDOWN = 5   # SDL_HAPTIC_SAWTOOTHDOWN
-uint8 TYPE_RAMP = 6           # SDL_HAPTIC_RAMP       - Ramp force
+# Effect type constants — drqp_interfaces enum values that drqp_joy maps
+# to the corresponding SDL_HAPTIC_* effect types. These numeric values are
+# message-local identifiers and do not match the SDL_HAPTIC_* numeric values.
+uint8 TYPE_LEFTRIGHT = 0      # Maps to SDL_HAPTIC_LEFTRIGHT  - Dual motor rumble
+uint8 TYPE_CONSTANT = 1       # Maps to SDL_HAPTIC_CONSTANT   - Constant force
+uint8 TYPE_SINE = 2           # Maps to SDL_HAPTIC_SINE       - Sine wave
+uint8 TYPE_TRIANGLE = 3       # Maps to SDL_HAPTIC_TRIANGLE   - Triangle wave
+uint8 TYPE_SAWTOOTHUP = 4     # Maps to SDL_HAPTIC_SAWTOOTHUP
+uint8 TYPE_SAWTOOTHDOWN = 5   # Maps to SDL_HAPTIC_SAWTOOTHDOWN
+uint8 TYPE_RAMP = 6           # Maps to SDL_HAPTIC_RAMP       - Ramp force
 
 # Action constants
 uint8 ACTION_PLAY = 0     # Create and run the effect
