@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-script_dir=$(dirname $0)
+script_dir=$(dirname "$0")
 source "$script_dir/__utils.sh"
 
 sudo apt-get update
