@@ -36,7 +36,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     sudo apt-get update \
     && rosdep update \
     && rosdep install --ignore-src -y \
-      --from-paths "$OVERLAY_WS/drqp/packages/runtime"
+      --from-paths "$OVERLAY_WS/drqp/packages/runtime" \
+                   "$OVERLAY_WS/drqp/packages/vendor"
 
 ARG OVERLAY_MIXINS="ninja rel-with-deb-info"
 RUN . /opt/ros/$ROS_DISTRO/setup.sh \
