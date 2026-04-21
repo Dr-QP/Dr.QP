@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>sdl3_vendor</name>
+  <version>1.0.0</version>
+  <description>Vendor library package for SDL3.</description>
+  <maintainer email="anton.matosov@gmail.com">Anton Matosov</maintainer>
+  <license>BSD-3-Clause AND MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>drqp_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

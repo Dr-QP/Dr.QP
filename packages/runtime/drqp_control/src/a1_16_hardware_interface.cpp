@@ -181,23 +181,27 @@ hardware_interface::return_type a1_16_hardware_interface::readServoStatus(uint8_
 
     XYZrobotServoStatus status = servo->readStatus();
     if (servo->isFailed()) {
-      RCLCPP_ERROR(
-        get_logger(), "Failed to read status for servo %i: %s", servoId,
+      RCLCPP_ERROR_THROTTLE(
+        get_logger(), logThrottleClock_, 5000, "Failed to read status for servo %i: %s", servoId,
         to_string(servo->getLastError()).c_str());
       return hardware_interface::return_type::OK;
     }
 
     auto jointValues = robotConfig_.servoToJoint({servoId, status.position});
     if (!jointValues) {
-      RCLCPP_ERROR(get_logger(), "Failed to convert servo %i position to joint", servoId);
+      RCLCPP_ERROR_THROTTLE(
+        get_logger(), logThrottleClock_, 5000, "Failed to convert servo %i position to joint",
+        servoId);
       return hardware_interface::return_type::OK;
     }
     set_state(jointValues->name + "/position", jointValues->position_as_radians);
     set_state(jointValues->name + "/pwm", status.pwm / 1023.0);
   } catch (const std::exception& e) {
-    RCLCPP_ERROR(get_logger(), "Failed to read servo %i: %s", servoId, e.what());
+    RCLCPP_ERROR_THROTTLE(
+      get_logger(), logThrottleClock_, 5000, "Failed to read servo %i: %s", servoId, e.what());
   } catch (...) {
-    RCLCPP_ERROR(get_logger(), "Failed to read servo %i: unknown exception", servoId);
+    RCLCPP_ERROR_THROTTLE(
+      get_logger(), logThrottleClock_, 5000, "Failed to read servo %i: unknown exception", servoId);
   }
   return hardware_interface::return_type::OK;
 }
@@ -210,18 +214,20 @@ hardware_interface::return_type a1_16_hardware_interface::readBatteryVoltage()
     uint8_t voltage = 0;
     servo->ramRead(offsetof(XYZrobotServoRAM, Voltage), &voltage, sizeof(voltage));
     if (servo->isFailed()) {
-      RCLCPP_ERROR(
-        get_logger(), "Failed to read RAM for servo %i: %s", batteryParams_.sourceServoId,
-        to_string(servo->getLastError()).c_str());
+      RCLCPP_ERROR_THROTTLE(
+        get_logger(), logThrottleClock_, 5000, "Failed to read RAM for servo %i: %s",
+        batteryParams_.sourceServoId, to_string(servo->getLastError()).c_str());
       return hardware_interface::return_type::OK;
     }
     const double voltageValue = voltage / 16.0;
     set_state("battery_state/voltage", voltageValue);
     return hardware_interface::return_type::OK;
   } catch (const std::exception& e) {
-    RCLCPP_ERROR(get_logger(), "Failed to read battery voltage: %s", e.what());
+    RCLCPP_ERROR_THROTTLE(
+      get_logger(), logThrottleClock_, 5000, "Failed to read battery voltage: %s", e.what());
   } catch (...) {
-    RCLCPP_ERROR(get_logger(), "Failed to read battery voltage: unknown exception");
+    RCLCPP_ERROR_THROTTLE(
+      get_logger(), logThrottleClock_, 5000, "Failed to read battery voltage: unknown exception");
   }
   return hardware_interface::return_type::OK;
 }
@@ -241,9 +247,10 @@ hardware_interface::return_type a1_16_hardware_interface::read(
 
     return readServoStatus(servoId);
   } catch (const std::exception& e) {
-    RCLCPP_ERROR(get_logger(), "Failed to read: %s", e.what());
+    RCLCPP_ERROR_THROTTLE(get_logger(), logThrottleClock_, 5000, "Failed to read: %s", e.what());
   } catch (...) {
-    RCLCPP_ERROR(get_logger(), "Failed to read: unknown exception");
+    RCLCPP_ERROR_THROTTLE(
+      get_logger(), logThrottleClock_, 5000, "Failed to read: unknown exception");
   }
   return hardware_interface::return_type::OK;
 }

@@ -180,17 +180,21 @@ class JoystickTranslatorNode(rclpy.node.Node):
 
     def _schedule_haptic_feedback(self, pattern):
         """Queue haptic feedback commands without blocking the control path."""
-        commands = self.haptic_feedback_scheduler.schedule(pattern)
-        if not commands:
-            return
-
         pending_commands = [
             command
             for command in self._pending_feedback_commands
             if command.channel_id != pattern.channel_id
         ]
 
-        if len(pending_commands) != len(self._pending_feedback_commands):
+        replaced_channel = len(pending_commands) != len(self._pending_feedback_commands)
+        if replaced_channel:
+            self.haptic_feedback_scheduler.reset_channel(pattern.channel_id)
+
+        commands = self.haptic_feedback_scheduler.schedule(pattern)
+        if not commands:
+            return
+
+        if replaced_channel:
             pending_commands.append(
                 ScheduledFeedbackCommand(
                     due_at=self.haptic_feedback_scheduler.now(),
