@@ -25,6 +25,7 @@ from drqp_brain.haptics import (
     gait_feedback_pattern,
     HapticFeedbackScheduler,
     LEFT_RUMBLE_CHANNEL_ID,
+    RIGHT_RUMBLE_CHANNEL_ID,
 )
 
 
@@ -59,9 +60,9 @@ class TestHaptics(unittest.TestCase):
         body_position = control_mode_feedback_pattern(_FakeControlMode('BodyPosition'))
         body_rotation = control_mode_feedback_pattern(_FakeControlMode('BodyRotation'))
 
-        self.assertEqual(walk.channel_id, LEFT_RUMBLE_CHANNEL_ID)
-        self.assertEqual(body_position.channel_id, LEFT_RUMBLE_CHANNEL_ID)
-        self.assertEqual(body_rotation.channel_id, LEFT_RUMBLE_CHANNEL_ID)
+        self.assertEqual(walk.channel_id, RIGHT_RUMBLE_CHANNEL_ID)
+        self.assertEqual(body_position.channel_id, RIGHT_RUMBLE_CHANNEL_ID)
+        self.assertEqual(body_rotation.channel_id, RIGHT_RUMBLE_CHANNEL_ID)
         self.assertEqual(walk.pulse_count, 1)
         self.assertEqual(body_position.pulse_count, 2)
         self.assertEqual(body_rotation.pulse_count, 3)
@@ -102,7 +103,7 @@ class TestHaptics(unittest.TestCase):
         )
         self.assertEqual(
             [command.channel_id for command in commands],
-            [0, 0, 0, 0, 0, 0, 0, 0],
+            [LEFT_RUMBLE_CHANNEL_ID] * 8,
         )
         self.assertAlmostEqual(commands[0].due_at, 10.0, places=7)
         self.assertAlmostEqual(commands[1].due_at, 10.15, places=7)

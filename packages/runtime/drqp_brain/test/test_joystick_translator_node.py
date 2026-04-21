@@ -21,7 +21,11 @@
 import unittest
 from unittest.mock import Mock
 
-from drqp_brain.haptics import HapticFeedbackScheduler
+from drqp_brain.haptics import (
+    HapticFeedbackScheduler,
+    LEFT_RUMBLE_CHANNEL_ID,
+    RIGHT_RUMBLE_CHANNEL_ID,
+)
 from drqp_brain.joystick_translator_node import JoystickTranslatorNode
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 import rclpy
@@ -166,7 +170,7 @@ class TestJoystickTranslatorNode(unittest.TestCase):
             feedback.type,
             sensor_msgs.msg.JoyFeedback.TYPE_RUMBLE,
         )
-        self.assertEqual(feedback.id, 0)
+        self.assertEqual(feedback.id, LEFT_RUMBLE_CHANNEL_ID)
         self.assertGreater(feedback.intensity, 0.0)
 
     def test_replacing_pending_control_mode_feedback_starts_new_pattern_immediately(self):
@@ -211,9 +215,9 @@ class TestJoystickTranslatorNode(unittest.TestCase):
         stop_feedback = self.node.joy_feedback_pub.publish.call_args_list[0].args[0]
         start_feedback = self.node.joy_feedback_pub.publish.call_args_list[1].args[0]
 
-        self.assertEqual(stop_feedback.id, 0)
+        self.assertEqual(stop_feedback.id, RIGHT_RUMBLE_CHANNEL_ID)
         self.assertEqual(stop_feedback.intensity, 0.0)
-        self.assertEqual(start_feedback.id, 0)
+        self.assertEqual(start_feedback.id, RIGHT_RUMBLE_CHANNEL_ID)
         self.assertGreater(start_feedback.intensity, 0.0)
         self.assertAlmostEqual(
             self.node._pending_feedback_commands[0].due_at,
@@ -248,7 +252,7 @@ class TestJoystickTranslatorNode(unittest.TestCase):
                 feedback.type,
                 sensor_msgs.msg.JoyFeedback.TYPE_RUMBLE,
             )
-            self.assertEqual(feedback.id, 0)
+            self.assertEqual(feedback.id, RIGHT_RUMBLE_CHANNEL_ID)
             self.assertGreater(feedback.intensity, 0.0)
 
 
