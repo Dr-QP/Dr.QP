@@ -47,6 +47,9 @@ class TestGazeboRobotControlNodesAndClock(GazeboRobotControlBase):
     def test_controllers_are_active(self):
         self.assert_controllers_are_active()
 
+    def test_imu_data_is_published(self):
+        self.assert_imu_data()
+
 
 @post_shutdown_test()
 class TestSimulationShutdown(SimulationShutdownBase):

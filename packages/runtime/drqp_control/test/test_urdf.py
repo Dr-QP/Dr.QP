@@ -21,6 +21,7 @@
 import os
 import subprocess
 import tempfile
+import xml.etree.ElementTree as ET
 
 from ament_index_python.packages import get_package_share_directory
 import pytest
@@ -57,6 +58,17 @@ def test_urdf_file_is_valid(urdf_file):
                 stderr=subprocess.STDOUT,
             )
             assert proc.returncode == 0, 'check_urdf failed:\n' + proc.stdout.decode()
+
+            root = ET.parse(temp_file.name).getroot()
+            links = {link.attrib['name'] for link in root.findall('link')}
+            joints = {joint.attrib['name']: joint for joint in root.findall('joint')}
+
+            assert 'dr_qp/imu_link' in links
+            assert 'base_center_to_imu' in joints
+            imu_joint = joints['base_center_to_imu']
+            assert imu_joint.attrib['type'] == 'fixed'
+            assert imu_joint.find('parent').attrib['link'] == 'dr_qp/base_center_link'
+            assert imu_joint.find('child').attrib['link'] == 'dr_qp/imu_link'
         finally:
             if os.path.exists(temp_file.name):
                 os.remove(temp_file.name)
