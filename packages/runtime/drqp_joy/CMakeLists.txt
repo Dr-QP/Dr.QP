@@ -11,7 +11,6 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(drqp_interfaces REQUIRED)
 find_package(sdl3_vendor REQUIRED)
 find_package(SDL3_CUSTOM REQUIRED)
 
@@ -20,19 +19,28 @@ add_library(${PROJECT_NAME}_component SHARED
   src/game_controller.cpp
 )
 
+add_executable(${PROJECT_NAME}_diagnostic
+  src/dualsense_diagnostic.cpp
+)
+
 target_compile_features(${PROJECT_NAME}_component PUBLIC cxx_std_20)
+target_compile_features(${PROJECT_NAME}_diagnostic PUBLIC cxx_std_20)
 
 target_include_directories(${PROJECT_NAME}_component PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
+target_include_directories(${PROJECT_NAME}_diagnostic PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+
 target_link_libraries(${PROJECT_NAME}_component SDL3::SDL3)
+target_link_libraries(${PROJECT_NAME}_diagnostic SDL3::SDL3)
 
 ament_target_dependencies(${PROJECT_NAME}_component
   rclcpp
   rclcpp_components
   sensor_msgs
-  drqp_interfaces
 )
 
 rclcpp_components_register_node(${PROJECT_NAME}_component
@@ -46,6 +54,7 @@ install(DIRECTORY include/
 
 install(TARGETS
   ${PROJECT_NAME}_component
+  ${PROJECT_NAME}_diagnostic
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}

@@ -3,7 +3,7 @@
 <package format="3">
   <name>drqp_joy</name>
   <version>1.0.0</version>
-  <description>Dr.QP game controller node — SDL3 port with full dual-motor rumble and haptic support</description>
+  <description>Dr.QP game controller node — SDL3 port with dual-motor rumble support</description>
   <maintainer email="anton.matosov@gmail.com">Anton Matosov</maintainer>
   <license>BSD-3-Clause AND MIT</license>
 
@@ -12,7 +12,6 @@
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>sensor_msgs</depend>
-  <depend>drqp_interfaces</depend>
   <depend>sdl3_vendor</depend>
 
   <test_depend>ament_lint_auto</test_depend>

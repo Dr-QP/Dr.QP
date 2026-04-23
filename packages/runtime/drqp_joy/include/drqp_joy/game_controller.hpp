@@ -40,12 +40,10 @@
 #include <sensor_msgs/msg/joy.hpp>
 #include <sensor_msgs/msg/joy_feedback.hpp>
 
-#include "drqp_interfaces/msg/haptic_effect.hpp"
-
 namespace drqp_joy
 {
 
-/// ROS 2 game-controller node — SDL3 port with dual-motor rumble and haptic support.
+/// ROS 2 game-controller node — SDL3 port with dual-motor rumble support.
 ///
 /// **Topics published**
 ///   - `joy`  (sensor_msgs/Joy)
@@ -55,7 +53,6 @@ namespace drqp_joy
 ///       id=0  → set both low-freq and high-freq motors to `intensity`
 ///       id=1  → low-freq (heavy/left) motor only
 ///       id=2  → high-freq (light/right) motor only
-///   - `joy/set_haptic`    (drqp_interfaces/HapticEffect) — SDL haptic effects
 class GameController final : public rclcpp::Node
 {
 public:
@@ -84,11 +81,6 @@ private:
   float convertRawAxisValueToROS(int16_t val);
 
   void feedbackCb(const std::shared_ptr<sensor_msgs::msg::JoyFeedback> msg);
-  void hapticCb(const std::shared_ptr<drqp_interfaces::msg::HapticEffect> msg);
-
-  void destroyHapticEffectLocked();
-  void openHaptic();
-  void closeHaptic();
 
   // ── Parameters ─────────────────────────────────────────────────────────────
   int dev_id_{0};
@@ -105,8 +97,6 @@ private:
   // ── State ───────────────────────────────────────────────────────────────────
   SDL_Gamepad* game_controller_{nullptr};
   SDL_JoystickID joystick_instance_id_{0};
-  SDL_Haptic* haptic_{nullptr};
-  int haptic_effect_id_{-1};
 
   bool publish_soon_{false};
   rclcpp::Time publish_soon_time_;
@@ -120,7 +110,6 @@ private:
   // ── ROS interfaces ──────────────────────────────────────────────────────────
   rclcpp::Publisher<sensor_msgs::msg::Joy>::SharedPtr pub_;
   rclcpp::Subscription<sensor_msgs::msg::JoyFeedback>::SharedPtr feedback_sub_;
-  rclcpp::Subscription<drqp_interfaces::msg::HapticEffect>::SharedPtr haptic_sub_;
 
   sensor_msgs::msg::Joy joy_msg_;
 };

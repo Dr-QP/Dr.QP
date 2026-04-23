@@ -2,6 +2,7 @@ find_package(catch_ros2 REQUIRED)
 
 add_executable(drqp_joy_tests
   TestGameControllerUtils.cpp
+  TestDualSenseDiagnosticUtils.cpp
 )
 drqp_test_enable_coverage(drqp_joy_tests)
 

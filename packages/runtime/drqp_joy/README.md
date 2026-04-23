@@ -15,3 +15,29 @@ packages that are not required for the node's runtime behavior.
 worker thread. SDL3 requires `SDL_PumpEvents` and the `SDL_WaitEvent*` family to
 run on the main thread, so the node uses a short wall timer to keep controller
 latency low without tripping SDL's main-thread assertions.
+
+## DualSense Linux diagnostic
+
+`drqp_joy` also installs a standalone SDL3 diagnostic executable for Linux:
+
+```bash
+ros2 run drqp_joy drqp_joy_diagnostic
+```
+
+The tool enumerates playback devices and gamepads, looks for a likely DualSense
+speaker sink, plays a short synthesized tone when one is available, then checks
+gamepad rumble and SDL haptic support on the selected controller.
+
+Useful options:
+
+```bash
+ros2 run drqp_joy drqp_joy_diagnostic -- --list-only
+ros2 run drqp_joy drqp_joy_diagnostic -- --gamepad-name DualSense
+ros2 run drqp_joy drqp_joy_diagnostic -- --audio-device-name DualSense
+ros2 run drqp_joy drqp_joy_diagnostic -- --skip-audio
+ros2 run drqp_joy drqp_joy_diagnostic -- --skip-haptics
+ros2 run drqp_joy drqp_joy_diagnostic -- --duration-ms 1500
+```
+
+The speaker test only passes when Linux exposes the controller as a playback
+device, which normally requires a USB connection.
