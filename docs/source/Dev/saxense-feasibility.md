@@ -7,7 +7,9 @@ does not provide a Raspberry Pi or a paired DualSense controller.
 
 ## Executive summary
 
-- **Decision:** Conditional go — validated on target hardware before shipping
+- **Decision:** NO GO. While it handles haptics, it doesn't handle audio. Even for
+  Haptics it is a very rough POC which is brittle. The proper HIDAPI layer needs
+  to be built instead.
 - **Why:** SAxense is the only known open-source tool that enables DualSense
   **haptics over Bluetooth** on Linux. Every alternative (including `pydualsense`)
   is limited to USB for haptic output. Because Dr.QP connects to the controller
@@ -35,7 +37,7 @@ uses `CLOCK_MONOTONIC` POSIX timers and `mlockall` to keep itself in RAM.
 Key facts verified from the source code:
 
 - Report ID `0x32`, size 141 bytes, includes a CRC-32 using seed `0xA2`
-- 64 PCM samples (stereo u8) are packed into a `0x12` sub-packet per report
+- 64 PCM samples (stereo S8) are packed into a `0x12` sub-packet per report
 - The timer interval is `1e9 * 64 / (3000 * 2) ≈ 10 667 000 ns ≈ 10.67 ms`
 - No library dependencies beyond libc and POSIX timers
 - Makefile consists of a single rule: `SAxense: SAxense.c` (implicit `cc`)
@@ -100,7 +102,7 @@ PipeWire involvement is required.
 ```sh
 pw-cli -m load-module libpipewire-module-pipe-tunnel \
   tunnel.mode=sink pipe.filename=/dev/shm/SAxense.sock \
-  audio.format=u8 audio.rate=3000 audio.channels=2 \
+  audio.format=S8 audio.rate=3000 audio.channels=2 \
   node.name=SAxense \
   stream.props='{media.role=Haptics device.icon-name=input-gaming}'
 ./SAxense < /dev/shm/SAxense.sock > "$dev"
@@ -279,6 +281,6 @@ above, and then open a follow-up implementation issue linked to
 | `dualsensectl` | Configuration tool; no haptic audio streaming capability |
 | `dualsense-controller` PyPI package | Same USB-only haptics limitation |
 | SDL2 haptic API ([docs](https://wiki.libsdl.org/SDL2/CategoryHaptic)) | Cross-platform rumble and force-feedback via Linux kernel evdev FF interface; Python binding via `pysdl2`; supports `FF_RUMBLE` and waveform effects where the kernel exposes them; on Linux Bluetooth, `hid-playstation` driver exposes only basic `FF_RUMBLE` — no raw-HID PCM path; rumble use case already covered by #241 |
-| SDL3 haptic API ([docs](https://wiki.libsdl.org/SDL3/CategoryHaptic)) | Updated API with improved DualSense support including `SDL_HAPTIC_CUSTOM` for custom waveforms on supporting hardware; still kernel-FF-based on Linux Bluetooth; does not expose the 3000 Hz stereo u8 PCM path needed for audio-quality haptics; Python bindings (`pysdl3` / ctypes) less mature; viable for richer rumble or adaptive trigger effects but does not replace SAxense for PCM haptics |
+| SDL3 haptic API ([docs](https://wiki.libsdl.org/SDL3/CategoryHaptic)) | Updated API with improved DualSense support including `SDL_HAPTIC_CUSTOM` for custom waveforms on supporting hardware; still kernel-FF-based on Linux Bluetooth; does not expose the 3000 Hz stereo S8 PCM path needed for audio-quality haptics; Python bindings (`pysdl3` / ctypes) less mature; viable for richer rumble or adaptive trigger effects but does not replace SAxense for PCM haptics |
 | PipeWire loopback (SAxense Option B) | Higher latency risk, requires working BT audio stack; deferred |
 | Kernel rumble driver (`FF_RUMBLE`) | Basic rumble only; no frequency-shaped vibration; already covered by #241 |
