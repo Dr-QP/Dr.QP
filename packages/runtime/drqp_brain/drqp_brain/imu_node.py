@@ -88,9 +88,7 @@ class Bno055Sensor:
             linear_acceleration=_as_vector3(self._sensor.acceleration),
             magnetic_field_microtesla=_as_vector3(self._sensor.magnetic),
             temperature_celsius=(
-                None
-                if self._sensor.temperature is None
-                else float(self._sensor.temperature)
+                None if self._sensor.temperature is None else float(self._sensor.temperature)
             ),
         )
 
@@ -109,9 +107,7 @@ class ImuNode(Node):
         self.declare_parameter('i2c_address', 0x28)
         self.declare_parameter('publish_temperature', True)
 
-        publish_rate_hz = (
-            self.get_parameter('publish_rate_hz').get_parameter_value().double_value
-        )
+        publish_rate_hz = self.get_parameter('publish_rate_hz').get_parameter_value().double_value
         if publish_rate_hz <= 0.0:
             raise ValueError('publish_rate_hz must be greater than zero')
 
@@ -153,17 +149,13 @@ class ImuNode(Node):
         if sample.orientation_wxyz is None:
             imu_msg.orientation_covariance[0] = -1.0
         else:
-            orientation_w, orientation_x, orientation_y, orientation_z = (
-                sample.orientation_wxyz
-            )
+            orientation_w, orientation_x, orientation_y, orientation_z = sample.orientation_wxyz
             imu_msg.orientation.w = orientation_w
             imu_msg.orientation.x = orientation_x
             imu_msg.orientation.y = orientation_y
             imu_msg.orientation.z = orientation_z
 
-        angular_velocity_x, angular_velocity_y, angular_velocity_z = (
-            sample.angular_velocity
-        )
+        angular_velocity_x, angular_velocity_y, angular_velocity_z = sample.angular_velocity
         imu_msg.angular_velocity.x = angular_velocity_x
         imu_msg.angular_velocity.y = angular_velocity_y
         imu_msg.angular_velocity.z = angular_velocity_z
