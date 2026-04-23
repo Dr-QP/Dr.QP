@@ -79,10 +79,10 @@ def generate_launch_description():
                         name='load_joystick',
                         default_value='false',
                         choices=['true', 'false'],
-                        description='Load joy game_controller_node',
+                        description='Load drqp_joy game_controller_node',
                     ),
                     Node(
-                        package='joy',
+                        package='drqp_joy',
                         executable='game_controller_node',
                         output='screen',
                         condition=IfCondition(load_joystick),

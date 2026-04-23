@@ -1,12 +1,11 @@
 ---
 description: 'Guide test-first development by writing failing tests that describe desired behaviour from GitHub issue context before implementation exists.'
-name: 'TDD Red Phase'
+name: 'TDD Red'
 model: GPT-5.4
 tools:
   [
     'context7/*',
     'sequentialthinking/*',
-    'mcp-server-git/*',
     'github/*',
     'edit/editFiles',
     'execute/getTerminalOutput',

@@ -14,14 +14,14 @@ ARG GIT_SHA
 ARG GIT_REPO
 
 WORKDIR $OVERLAY_WS/src
-RUN echo "\
-repositories: \n\
-  drqp: \n\
-    type: git \n\
-    url: $GIT_REPO \n\
-    version: $GIT_SHA \n\
-" > ../overlay.repos
-RUN vcs import ./ < ../overlay.repos
+RUN printf '%s\n' \
+      "repositories:" \
+      "  drqp:" \
+      "    type: git" \
+      "    url: ${GIT_REPO}" \
+      "    version: ${GIT_SHA}" \
+      > ../overlay.repos \
+    && vcs import ./ < ../overlay.repos
 
 FROM $BUILD_IMAGE AS builder
 
@@ -33,16 +33,18 @@ COPY --from=cacher $OVERLAY_WS/src/ $OVERLAY_WS
 ARG DEPLOY_PACKAGE="drqp_brain"
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    sudo apt-get update \
+    apt-get update \
     && rosdep update \
     && rosdep install --ignore-src -y \
-      --from-paths "$OVERLAY_WS/drqp/packages/runtime"
+      --from-paths "$OVERLAY_WS/drqp/packages/runtime" \
+                   "$OVERLAY_WS/drqp/packages/vendor"
 
 ARG OVERLAY_MIXINS="ninja rel-with-deb-info"
-RUN . /opt/ros/$ROS_DISTRO/setup.sh \
+# hadolint ignore=SC2086
+RUN . "/opt/ros/$ROS_DISTRO/setup.sh" \
     && colcon build \
       --packages-up-to \
-        $DEPLOY_PACKAGE \
+        "$DEPLOY_PACKAGE" \
       --mixin $OVERLAY_MIXINS
 
 # deployment
@@ -58,12 +60,12 @@ COPY --from=builder $OVERLAY_WS/install $OVERLAY_WS/install
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    sudo apt-get update \
-    && sudo apt-get install -y --no-install-recommends \
+    apt-get update \
+    && apt-get install -y --no-install-recommends \
       python3-venv \
       python3-pip \
     && rosdep update \
-    && rm -f $OVERLAY_WS/install/COLCON_IGNORE \
+    && rm -f "$OVERLAY_WS/install/COLCON_IGNORE" \
     && rosdep install --ignore-src -y \
       --from-paths "$OVERLAY_WS/install" \
       -t exec
@@ -71,9 +73,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 ENV OVERLAY_WS=$OVERLAY_WS
 ENV ROS_DISTRO=$ROS_DISTRO
 
-RUN groupadd -g $DEPLOY_GID $DEPLOY_USER \
-    && useradd -m -u $DEPLOY_UID -g $DEPLOY_GID $DEPLOY_USER \
-    && sudo chown -R $DEPLOY_USER:$DEPLOY_USER $OVERLAY_WS
+RUN groupadd -g "$DEPLOY_GID" "$DEPLOY_USER" \
+    && useradd -l -m -u "$DEPLOY_UID" -g "$DEPLOY_GID" "$DEPLOY_USER" \
+    && chown -R "$DEPLOY_USER:$DEPLOY_USER" "$OVERLAY_WS"
 USER $DEPLOY_USER
 
 RUN --mount=type=bind,readonly,source=.,target=/deploy-scripts \

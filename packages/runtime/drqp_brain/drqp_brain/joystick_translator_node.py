@@ -21,7 +21,14 @@
 # THE SOFTWARE.
 
 import argparse
+from typing import Optional
 
+from drqp_brain.haptics import (
+    control_mode_feedback_pattern,
+    gait_feedback_pattern,
+    HapticFeedbackScheduler,
+    ScheduledFeedbackCommand,
+)
 from drqp_brain.joystick_button import ButtonIndex
 from drqp_brain.joystick_input_handler import JoystickInputHandler
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
@@ -37,12 +44,16 @@ class JoystickTranslatorNode(rclpy.node.Node):
     """
     ROS node that translates joystick input to semantic robot commands.
 
-    Subscribes to /joy topic and publishes MovementCommand messages and robot events,
-    abstracting away hardware-specific joystick details into application-level semantics.
-    State machine events are published directly to /robot_event.
+    Subscribes to /joy topic and publishes MovementCommand messages
+    and robot events, abstracting away hardware-specific joystick
+    details into application-level semantics. State machine events
+    are published directly to /robot_event.
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        haptic_feedback_scheduler: Optional[HapticFeedbackScheduler] = None,
+    ):
         super().__init__('joystick_translator')
 
         # Track gait state for movement commands
@@ -77,6 +88,15 @@ class JoystickTranslatorNode(rclpy.node.Node):
         self.robot_event_pub = self.create_publisher(
             std_msgs.msg.String, '/robot_event', qos_profile=10
         )
+        self.joy_feedback_pub = self.create_publisher(
+            sensor_msgs.msg.JoyFeedback,
+            '/joy/set_feedback',
+            qos_profile=10,
+        )
+        self.haptic_feedback_scheduler = haptic_feedback_scheduler or HapticFeedbackScheduler()
+        self._pending_feedback_commands: list[ScheduledFeedbackCommand] = []
+        self._feedback_timer = self.create_timer(0.02, self._dispatch_pending_feedback)
+        self._haptics_warning_logged = False
 
         self.get_logger().info('Joystick translator node initialized')
 
@@ -127,20 +147,108 @@ class JoystickTranslatorNode(rclpy.node.Node):
 
     def _prev_gait(self):
         """Switch to previous gait type."""
-        self.gait_index = (self.gait_index - 1) % len(self.gaits)
-        self.get_logger().info(f'Switching gait: {self.gaits[self.gait_index]}')
+        self._set_gait_index((self.gait_index - 1) % len(self.gaits))
 
     def _next_gait(self):
         """Switch to next gait type."""
-        self.gait_index = (self.gait_index + 1) % len(self.gaits)
-        self.get_logger().info(f'Switching gait: {self.gaits[self.gait_index]}')
+        self._set_gait_index((self.gait_index + 1) % len(self.gaits))
 
     def _publish_control_mode_change(self):
         """Handle control mode change."""
+        previous_mode = self.joystick_input_handler.control_mode
         self.joystick_input_handler.next_control_mode()
+
+        if self.joystick_input_handler.control_mode == previous_mode:
+            return
+
         self.get_logger().info(
             f'Switching control mode: {self.joystick_input_handler.control_mode}'
         )
+        self._schedule_haptic_feedback(
+            control_mode_feedback_pattern(self.joystick_input_handler.control_mode)
+        )
+
+    def _set_gait_index(self, new_index: int):
+        """Update gait state and queue haptic feedback for confirmed changes."""
+        if new_index == self.gait_index:
+            return
+
+        self.gait_index = new_index
+        gait_name = self.gaits[self.gait_index]
+        self.get_logger().info(f'Switching gait: {gait_name}')
+        self._schedule_haptic_feedback(gait_feedback_pattern(gait_name))
+
+    def _schedule_haptic_feedback(self, pattern):
+        """Queue haptic feedback commands without blocking the control path."""
+        pending_commands = [
+            command
+            for command in self._pending_feedback_commands
+            if command.channel_id != pattern.channel_id
+        ]
+
+        replaced_channel = len(pending_commands) != len(self._pending_feedback_commands)
+        if replaced_channel:
+            self.haptic_feedback_scheduler.reset_channel(pattern.channel_id)
+
+        commands = self.haptic_feedback_scheduler.schedule(pattern)
+        if not commands:
+            return
+
+        if replaced_channel:
+            pending_commands.append(
+                ScheduledFeedbackCommand(
+                    due_at=self.haptic_feedback_scheduler.now(),
+                    channel_id=pattern.channel_id,
+                    intensity=0.0,
+                )
+            )
+
+        pending_commands.extend(commands)
+        self._pending_feedback_commands = sorted(
+            pending_commands,
+            key=lambda command: command.due_at,
+        )
+
+    def _dispatch_pending_feedback(self):
+        """Publish any haptic commands whose scheduled time has arrived."""
+        if not self._pending_feedback_commands:
+            return
+
+        now = self.haptic_feedback_scheduler.now()
+
+        while self._pending_feedback_commands and self._pending_feedback_commands[0].due_at <= now:
+            command = self._pending_feedback_commands.pop(0)
+            self._publish_haptic_command(command)
+
+    def _reset_pending_feedback(self):
+        """
+        Discard pending commands and reset scheduler state for those channels.
+
+        Resetting allows re-selection of the same gait/mode to trigger fresh
+        feedback once the haptics backend becomes available again.
+        """
+        dropped_channels = {command.channel_id for command in self._pending_feedback_commands}
+        self._pending_feedback_commands.clear()
+        for channel_id in dropped_channels:
+            self.haptic_feedback_scheduler.reset_channel(channel_id)
+
+    def _publish_haptic_command(self, command: ScheduledFeedbackCommand):
+        """Publish a single JoyFeedback command."""
+        feedback = sensor_msgs.msg.JoyFeedback()
+        feedback.type = sensor_msgs.msg.JoyFeedback.TYPE_RUMBLE
+        feedback.id = command.channel_id
+        feedback.intensity = float(command.intensity)
+
+        try:
+            self.joy_feedback_pub.publish(feedback)
+        except Exception as exc:  # noqa: BLE001
+            if not self._haptics_warning_logged:
+                self.get_logger().warning(
+                    'Failed to publish DualSense haptic feedback: '
+                    f'{exc}. Continuing without controller feedback'
+                )
+                self._haptics_warning_logged = True
+            self._reset_pending_feedback()
 
 
 def main():

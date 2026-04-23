@@ -3,8 +3,15 @@ set -euo pipefail
 
 script_dir=$(dirname "${BASH_SOURCE[0]}")
 
+if [[ -f "$script_dir/local.env" ]]; then
+    cp -f "$script_dir/local.env" "$script_dir/.env"
+else
+    rm -f "$script_dir/.env"
+    touch "$script_dir/.env"
+fi
+
 gitdir=$(realpath "$(git rev-parse --git-common-dir)")
-echo "GIT_REPO=$gitdir" > "$script_dir/.env"
+echo "GIT_REPO=$gitdir" >> "$script_dir/.env"
 
 LOCAL_WORKSPACE_FOLDER=$(realpath "$script_dir/..")
 echo "LOCAL_WORKSPACE_FOLDER=$LOCAL_WORKSPACE_FOLDER" >> "$script_dir/.env"

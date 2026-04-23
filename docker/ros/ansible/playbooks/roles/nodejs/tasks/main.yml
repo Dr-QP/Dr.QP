@@ -1,5 +1,5 @@
 ---
-# Node.js and NPM installation
+# Node.js installation
 - name: Remove old Node.js and NPM
   ansible.builtin.apt:
     name:
@@ -33,10 +33,16 @@
     state: present
     install_recommends: false
 
-- name: Install Yarn globally
-  community.general.npm:
-    name: yarn
-    global: true
+- name: Install Yarn globally with Bun
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/bun
+      - add
+      - --global
+      - yarn
+    creates: /usr/local/bin/yarn
+  environment:
+    BUN_INSTALL: /usr/local
 
 - name: Clean up temporary directory
   ansible.builtin.file:

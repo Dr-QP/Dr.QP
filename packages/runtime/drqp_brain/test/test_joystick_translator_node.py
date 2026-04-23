@@ -19,7 +19,13 @@
 # THE SOFTWARE.
 
 import unittest
+from unittest.mock import Mock
 
+from drqp_brain.haptics import (
+    HapticFeedbackScheduler,
+    LEFT_RUMBLE_CHANNEL_ID,
+    RIGHT_RUMBLE_CHANNEL_ID,
+)
 from drqp_brain.joystick_translator_node import JoystickTranslatorNode
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 import rclpy
@@ -45,6 +51,7 @@ class TestJoystickTranslatorNode(unittest.TestCase):
         # Store received messages
         self.movement_commands = []
         self.robot_events = []
+        self.joy_feedback_messages = []
 
         # Subscribe to translator output
         self.movement_sub = self.test_node.create_subscription(
@@ -58,6 +65,13 @@ class TestJoystickTranslatorNode(unittest.TestCase):
             std_msgs.msg.String,
             '/robot_event',
             lambda msg: self.robot_events.append(msg),
+            10,
+        )
+
+        self.joy_feedback_sub = self.test_node.create_subscription(
+            sensor_msgs.msg.JoyFeedback,
+            '/joy/set_feedback',
+            lambda msg: self.joy_feedback_messages.append(msg),
             10,
         )
 
@@ -119,6 +133,127 @@ class TestJoystickTranslatorNode(unittest.TestCase):
 
         event = self.robot_events[-1]
         self.assertEqual(event.data, 'finalize')
+
+    def test_dispatch_pending_feedback_publishes_without_subscriber_check(self):
+        """Due haptic commands should be published without gating on discovery."""
+        self.node.joy_feedback_pub.publish = Mock()
+        self.node._pending_feedback_commands = [Mock(due_at=0.0, channel_id=0, intensity=0.8)]
+        self.node.haptic_feedback_scheduler.now = Mock(return_value=0.0)
+
+        self.node._dispatch_pending_feedback()
+
+        self.node.joy_feedback_pub.publish.assert_called_once()
+        self.assertEqual(self.node._pending_feedback_commands, [])
+
+    def test_haptic_feedback_is_published_on_joy_set_feedback(self):
+        """Gait changes should publish JoyFeedback messages on /joy/set_feedback."""
+        joy_msg = sensor_msgs.msg.Joy()
+        joy_msg.axes = [0.0] * 6
+        joy_msg.buttons = [0] * 21
+        joy_msg.buttons[14] = 1
+
+        self.node._joy_callback(joy_msg)
+
+        for _ in range(10):
+            rclpy.spin_once(self.node, timeout_sec=0.02)
+            rclpy.spin_once(self.test_node, timeout_sec=0.02)
+            if self.joy_feedback_messages:
+                break
+
+        self.assertGreater(
+            len(self.joy_feedback_messages),
+            0,
+            'Joy feedback should be published',
+        )
+        feedback = self.joy_feedback_messages[0]
+        self.assertEqual(
+            feedback.type,
+            sensor_msgs.msg.JoyFeedback.TYPE_RUMBLE,
+        )
+        self.assertEqual(feedback.id, LEFT_RUMBLE_CHANNEL_ID)
+        self.assertGreater(feedback.intensity, 0.0)
+
+    def test_replacing_pending_control_mode_feedback_starts_new_pattern_immediately(self):
+        """A newer mode change should interrupt stale queued feedback immediately."""
+        current_time = [100.0]
+        self.node.haptic_feedback_scheduler = HapticFeedbackScheduler(
+            clock=lambda: current_time[0]
+        )
+
+        self.node._publish_control_mode_change()
+        current_time[0] = 100.02
+        self.node._publish_control_mode_change()
+
+        pending = self.node._pending_feedback_commands
+        active_due_ats = [command.due_at for command in pending if command.intensity > 0.0]
+
+        self.assertEqual(len(pending), 19)
+        self.assertAlmostEqual(pending[0].due_at, 100.02, places=7)
+        self.assertEqual(pending[0].intensity, 0.0)
+        self.assertEqual(len(active_due_ats), 9)
+        self.assertAlmostEqual(active_due_ats[0], 100.02, places=7)
+        self.assertAlmostEqual(active_due_ats[1], 100.22, places=7)
+        self.assertAlmostEqual(active_due_ats[2], 100.42, places=7)
+        self.assertAlmostEqual(active_due_ats[-1], 102.02, places=7)
+
+    def test_dispatch_pending_feedback_publishes_interrupt_and_new_pulse_in_same_tick(self):
+        """Interrupting stale feedback should emit stop and replacement pulse together."""
+        current_time = [200.0]
+        self.node.haptic_feedback_scheduler = HapticFeedbackScheduler(
+            clock=lambda: current_time[0]
+        )
+        self.node.joy_feedback_pub.publish = Mock()
+
+        self.node._publish_control_mode_change()
+        current_time[0] = 200.02
+        self.node._publish_control_mode_change()
+
+        self.node._dispatch_pending_feedback()
+
+        self.assertEqual(self.node.joy_feedback_pub.publish.call_count, 2)
+
+        stop_feedback = self.node.joy_feedback_pub.publish.call_args_list[0].args[0]
+        start_feedback = self.node.joy_feedback_pub.publish.call_args_list[1].args[0]
+
+        self.assertEqual(stop_feedback.id, RIGHT_RUMBLE_CHANNEL_ID)
+        self.assertEqual(stop_feedback.intensity, 0.0)
+        self.assertEqual(start_feedback.id, RIGHT_RUMBLE_CHANNEL_ID)
+        self.assertGreater(start_feedback.intensity, 0.0)
+        self.assertAlmostEqual(
+            self.node._pending_feedback_commands[0].due_at,
+            200.17,
+            places=7,
+        )
+
+    def test_control_mode_haptic_feedback_uses_working_rumble_channel(self):
+        """Control-mode changes should repeat the mapped pulse group 3 times."""
+        self.node._publish_control_mode_change()
+
+        for _ in range(90):
+            rclpy.spin_once(self.node, timeout_sec=0.02)
+            rclpy.spin_once(self.test_node, timeout_sec=0.02)
+            active_pulses = [
+                feedback for feedback in self.joy_feedback_messages if feedback.intensity > 0.0
+            ]
+            if len(active_pulses) >= 6:
+                break
+
+        self.assertGreater(
+            len(self.joy_feedback_messages),
+            0,
+            'Control-mode joy feedback should be published',
+        )
+        active_pulses = [
+            feedback for feedback in self.joy_feedback_messages if feedback.intensity > 0.0
+        ]
+        self.assertEqual(len(active_pulses), 6)
+        for feedback in active_pulses:
+            self.assertEqual(
+                feedback.type,
+                sensor_msgs.msg.JoyFeedback.TYPE_RUMBLE,
+            )
+            self.assertEqual(feedback.id, RIGHT_RUMBLE_CHANNEL_ID)
+            self.assertGreater(feedback.intensity, 0.0)
 
 
 if __name__ == '__main__':
