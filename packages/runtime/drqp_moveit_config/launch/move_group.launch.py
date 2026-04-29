@@ -21,19 +21,17 @@
 """
 MoveIt 2 move_group launch file for the Dr.QP hexapod robot.
 
-Starts the move_group node with SRDF, kinematics, OMPL planning pipeline
-and controller configuration loaded from this package's config/ directory.
-
-The robot_description parameter must already be available on the
-parameter server (published by robot_state_publisher) before this file
-is launched.
+Starts the move_group node with robot_description, SRDF, kinematics,
+OMPL planning pipeline and controller configuration loaded from this
+package's config/ directory.
 """
 
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 import yaml
 
 
@@ -44,6 +42,16 @@ def _load_yaml(path):
 
 def _get_moveit_params(pkg_path):
     """Return a list of parameter dicts for the move_group node."""
+    drqp_control_pkg = get_package_share_path('drqp_control')
+    robot_description_content = ParameterValue(
+        Command(
+            [
+                'xacro ',
+                str(drqp_control_pkg / 'urdf' / 'dr_qp.urdf.xacro'),
+            ]
+        ),
+        value_type=str,
+    )
     srdf_content = (pkg_path / 'config' / 'dr_qp.srdf').read_text()
     kinematics = _load_yaml(pkg_path / 'config' / 'kinematics.yaml')
     joint_limits = _load_yaml(pkg_path / 'config' / 'joint_limits.yaml')
@@ -52,6 +60,7 @@ def _get_moveit_params(pkg_path):
     move_group = _load_yaml(pkg_path / 'config' / 'move_group.yaml')
 
     return [
+        {'robot_description': robot_description_content},
         {'robot_description_semantic': srdf_content},
         {'robot_description_kinematics': kinematics},
         {'robot_description_planning': joint_limits},

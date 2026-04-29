@@ -40,8 +40,9 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node, SetParameter
+from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 import yaml
 
@@ -52,10 +53,22 @@ def _load_yaml(path):
 
 
 def generate_launch_description():
+    drqp_control_pkg = get_package_share_path('drqp_control')
     moveit_pkg = get_package_share_path('drqp_moveit_config')
 
     show_rviz = LaunchConfiguration('show_rviz')
     sim_gui = LaunchConfiguration('sim_gui')
+
+    robot_description_content = ParameterValue(
+        Command(
+            [
+                'xacro ',
+                str(drqp_control_pkg / 'urdf' / 'dr_qp.urdf.xacro'),
+                ' use_gazebo:=true',
+            ]
+        ),
+        value_type=str,
+    )
 
     srdf_content = (moveit_pkg / 'config' / 'dr_qp.srdf').read_text()
     kinematics = _load_yaml(moveit_pkg / 'config' / 'kinematics.yaml')
@@ -65,6 +78,7 @@ def generate_launch_description():
     move_group_params = _load_yaml(moveit_pkg / 'config' / 'move_group.yaml')
 
     moveit_params = [
+        {'robot_description': robot_description_content},
         {'robot_description_semantic': srdf_content},
         {'robot_description_kinematics': kinematics},
         {'robot_description_planning': joint_limits},

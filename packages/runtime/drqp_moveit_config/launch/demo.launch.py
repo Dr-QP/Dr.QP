@@ -35,7 +35,7 @@ Run with::
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -52,6 +52,7 @@ def generate_launch_description():
     moveit_pkg = get_package_share_path('drqp_moveit_config')
 
     show_rviz = LaunchConfiguration('show_rviz')
+    gui = LaunchConfiguration('gui')
 
     robot_description_content = ParameterValue(
         Command(
@@ -93,7 +94,14 @@ def generate_launch_description():
         package='joint_state_publisher',
         executable='joint_state_publisher',
         name='joint_state_publisher',
-        parameters=[{'use_gui': False}],
+        condition=UnlessCondition(gui),
+    )
+
+    joint_state_publisher_gui = Node(
+        package='joint_state_publisher_gui',
+        executable='joint_state_publisher_gui',
+        name='joint_state_publisher_gui',
+        condition=IfCondition(gui),
     )
 
     move_group_node = Node(
@@ -121,8 +129,15 @@ def generate_launch_description():
                 choices=['true', 'false'],
                 description='Start RViz2 with MoveIt Motion Planning plugin',
             ),
+            DeclareLaunchArgument(
+                name='gui',
+                default_value='false',
+                choices=['true', 'false'],
+                description='Start joint_state_publisher_gui instead of joint_state_publisher',
+            ),
             robot_state_publisher,
             joint_state_publisher,
+            joint_state_publisher_gui,
             move_group_node,
             rviz_node,
         ]
