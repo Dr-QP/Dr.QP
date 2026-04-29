@@ -23,7 +23,6 @@
 import argparse
 from dataclasses import dataclass
 import sys
-from typing import Callable, Protocol
 
 import rclpy
 import rclpy.logging
@@ -42,13 +41,6 @@ class ImuSample:
     linear_acceleration: tuple[float, float, float] | None
     magnetic_field_microtesla: tuple[float, float, float] | None = None
     temperature_celsius: float | None = None
-
-
-class ImuSensor(Protocol):
-    """Protocol implemented by concrete IMU backends."""
-
-    def read_sample(self) -> ImuSample:
-        """Read and normalize the next IMU sample."""
 
 
 class SensorInitializationError(RuntimeError):
@@ -111,10 +103,7 @@ class Bno055Sensor:
 class ImuNode(Node):
     """Publish BNO055 IMU readings using standard ROS sensor messages."""
 
-    def __init__(
-        self,
-        sensor_factory: Callable[[int], ImuSensor] | None = None,
-    ):
+    def __init__(self):
         super().__init__('drqp_imu')
 
         self.declare_parameter('frame_id', 'dr_qp/imu_link')
@@ -136,10 +125,8 @@ class ImuNode(Node):
         self.magnetic_field_pub = self.create_publisher(MagneticField, '/imu/mag', 10)
         self.temperature_pub = self.create_publisher(Temperature, '/imu/temperature', 10)
 
-        if sensor_factory is None:
-            sensor_factory = Bno055Sensor
         try:
-            self.sensor = sensor_factory(int(address))
+            self.sensor = Bno055Sensor(int(address))
         except Exception as exc:
             self.destroy_node()
             raise SensorInitializationError(

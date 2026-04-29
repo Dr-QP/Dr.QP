@@ -66,7 +66,12 @@ class TestImuNode(unittest.TestCase):
             temperature_celsius=24.5,
         )
         self.fake_sensor = FakeImuSensor(sample=sample)
-        self.node = ImuNode(sensor_factory=lambda address: self.fake_sensor)
+        self.sensor_patch = mock.patch(
+            'drqp_brain.imu_node.Bno055Sensor',
+            return_value=self.fake_sensor,
+        )
+        self.sensor_patch.start()
+        self.node = ImuNode()
         self.node.timer.cancel()
         self.test_node = rclpy.create_node('test_imu_consumer')
 
@@ -93,6 +98,7 @@ class TestImuNode(unittest.TestCase):
     def tearDown(self):
         self.node.destroy_node()
         self.test_node.destroy_node()
+        self.sensor_patch.stop()
 
     def _spin_until(self, predicate, iterations: int = 10) -> bool:
         """Spin both nodes until the predicate is satisfied or the budget is exhausted."""
@@ -114,6 +120,9 @@ class TestImuNode(unittest.TestCase):
             iterations=20,
         )
         self.assertTrue(connected, 'Expected IMU subscriptions to connect')
+        self.imu_messages.clear()
+        self.magnetic_field_messages.clear()
+        self.temperature_messages.clear()
 
     def test_publish_measurements_publishes_imu_and_9dof_topics(self):
         """Publish IMU, magnetic field, and temperature messages from one sample."""
@@ -209,18 +218,20 @@ class TestImuNodeInitialization(unittest.TestCase):
     def tearDownClass(cls):
         rclpy.shutdown()
 
-    def test_constructor_wraps_sensor_factory_failures(self):
+    def test_constructor_wraps_sensor_construction_failures(self):
         """Report backend construction failures with an actionable startup error."""
 
-        def failing_sensor_factory(address: int):
-            del address
-            raise AttributeError('platform detection failed')
-
-        with self.assertRaisesRegex(
-            SensorInitializationError,
-            'Failed to initialize the BNO055 IMU backend at I2C address 0x28',
-        ) as context:
-            ImuNode(sensor_factory=failing_sensor_factory)
+        with (
+            mock.patch(
+                'drqp_brain.imu_node.Bno055Sensor',
+                side_effect=AttributeError('platform detection failed'),
+            ),
+            self.assertRaisesRegex(
+                SensorInitializationError,
+                'Failed to initialize the BNO055 IMU backend at I2C address 0x28',
+            ) as context,
+        ):
+            ImuNode()
 
         self.assertIsInstance(context.exception.__cause__, AttributeError)
 
