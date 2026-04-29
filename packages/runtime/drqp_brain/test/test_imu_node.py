@@ -21,7 +21,7 @@
 import unittest
 from unittest import mock
 
-from drqp_brain.imu_node import ImuNode, ImuSample, SensorInitializationError, main
+from drqp_brain.imu_node import ImuNode, ImuSample, main, SensorInitializationError
 import rclpy
 from sensor_msgs.msg import Imu, MagneticField, Temperature
 
@@ -220,7 +220,6 @@ class TestImuNodeInitialization(unittest.TestCase):
 
     def test_constructor_wraps_sensor_construction_failures(self):
         """Report backend construction failures with an actionable startup error."""
-
         with (
             mock.patch(
                 'drqp_brain.imu_node.Bno055Sensor',
@@ -244,7 +243,9 @@ class TestImuMain(unittest.TestCase):
         logger = mock.Mock()
 
         with (
-            mock.patch('drqp_brain.imu_node.rclpy.utilities.remove_ros_args', return_value=['drqp_imu']),
+            mock.patch(
+                'drqp_brain.imu_node.rclpy.utilities.remove_ros_args', return_value=['drqp_imu']
+            ),
             mock.patch('drqp_brain.imu_node.rclpy.init'),
             mock.patch(
                 'drqp_brain.imu_node.ImuNode',

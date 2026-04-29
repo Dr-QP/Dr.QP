@@ -25,8 +25,8 @@ from dataclasses import dataclass
 import sys
 
 import rclpy
-import rclpy.logging
 from rclpy.executors import ExternalShutdownException
+import rclpy.logging
 from rclpy.node import Node
 import rclpy.utilities
 from sensor_msgs.msg import Imu, MagneticField, Temperature
