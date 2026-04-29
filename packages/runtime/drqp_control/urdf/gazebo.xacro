@@ -7,9 +7,9 @@
         <parameters>$(find drqp_control)/config/drqp_controllers.yml</parameters>
       </plugin>
       <plugin filename="gz-sim-odometry-publisher-system" name="gz::sim::systems::OdometryPublisher">
-        <odom_frame>odom</odom_frame>
+        <odom_frame>${robot_name}/odom</odom_frame>
         <robot_base_frame>${robot_name}/base_link</robot_base_frame>
-        <odom_topic>/model/drqp/odometry</odom_topic>
+        <odom_topic>/model/${robot_name}/odometry</odom_topic>
         <dimensions>3</dimensions>
       </plugin>
       <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
@@ -21,7 +21,7 @@
         <always_on>true</always_on>
         <update_rate>30</update_rate>
         <gz_frame_id>${robot_name}/imu_link</gz_frame_id>
-        <topic>/imu/data</topic>
+        <topic>/model/${robot_name}/imu/data</topic>
         <imu>
           <angular_velocity>
             <x><noise type="gaussian"><mean>0</mean><stddev>2e-4</stddev></noise></x>
@@ -33,6 +33,12 @@
             <y><noise type="gaussian"><mean>0</mean><stddev>1.7e-2</stddev></noise></y>
             <z><noise type="gaussian"><mean>0</mean><stddev>1.7e-2</stddev></noise></z>
           </linear_acceleration>
+          <orientation>
+            <x><noise type="gaussian"><mean>0</mean><stddev>1e-3</stddev></noise></x>
+            <y><noise type="gaussian"><mean>0</mean><stddev>1e-3</stddev></noise></y>
+            <z><noise type="gaussian"><mean>0</mean><stddev>1e-3</stddev></noise></z>
+            <w><noise type="gaussian"><mean>0</mean><stddev>1e-3</stddev></noise></w>
+          </orientation>
         </imu>
       </sensor>
     </gazebo>
