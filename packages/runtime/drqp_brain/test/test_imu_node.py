@@ -70,6 +70,7 @@ class TestImuNode(unittest.TestCase):
             'drqp_brain.imu_node.Bno055Sensor',
             return_value=self.fake_sensor,
         )
+        self.addCleanup(self.sensor_patch.stop)
         self.sensor_patch.start()
         self.node = ImuNode()
         self.node.timer.cancel()
