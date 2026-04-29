@@ -22,9 +22,11 @@
 
 import argparse
 from dataclasses import dataclass
+import sys
 from typing import Callable, Protocol
 
 import rclpy
+import rclpy.logging
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 import rclpy.utilities
@@ -47,6 +49,18 @@ class ImuSensor(Protocol):
 
     def read_sample(self) -> ImuSample:
         """Read and normalize the next IMU sample."""
+
+
+class SensorInitializationError(RuntimeError):
+    """Raised when the IMU backend cannot be constructed."""
+
+
+def _format_exception_summary(exc: Exception) -> str:
+    """Render a short exception summary suitable for startup logs."""
+    detail = str(exc).strip()
+    if not detail:
+        return type(exc).__name__
+    return f'{type(exc).__name__}: {detail}'
 
 
 def _as_vector3(value: object) -> tuple[float, float, float] | None:
@@ -124,14 +138,23 @@ class ImuNode(Node):
 
         if sensor_factory is None:
             sensor_factory = Bno055Sensor
-        self.sensor = sensor_factory(int(address))
+        try:
+            self.sensor = sensor_factory(int(address))
+        except Exception as exc:
+            self.destroy_node()
+            raise SensorInitializationError(
+                'Failed to initialize the BNO055 IMU backend at I2C address '
+                f'0x{int(address):02X}. Run this node on supported hardware with '
+                'I2C enabled and the Blinka dependencies available. '
+                f'Original error: {_format_exception_summary(exc)}'
+            ) from exc
         self.timer = self.create_timer(1.0 / publish_rate_hz, self.publish_measurements)
 
     def publish_measurements(self):
         """Read the sensor once and publish ROS messages for the sample."""
         try:
             sample = self.sensor.read_sample()
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             self.get_logger().warning(f'Failed to read IMU sample: {exc}')
             return
 
@@ -200,6 +223,12 @@ def main():
         rclpy.init()
         node = ImuNode(**vars(args))
         rclpy.spin(node)
+    except SensorInitializationError as exc:
+        if rclpy.ok():
+            rclpy.logging.get_logger('drqp_imu').error(str(exc))
+        else:
+            print(str(exc), file=sys.stderr)
+        raise SystemExit(1)
     except (KeyboardInterrupt, ExternalShutdownException):
         pass  # codeql[py/empty-except]
     finally:

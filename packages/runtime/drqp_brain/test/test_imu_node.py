@@ -19,8 +19,9 @@
 # THE SOFTWARE.
 
 import unittest
+from unittest import mock
 
-from drqp_brain.imu_node import ImuNode, ImuSample
+from drqp_brain.imu_node import ImuNode, ImuSample, SensorInitializationError, main
 import rclpy
 from sensor_msgs.msg import Imu, MagneticField, Temperature
 
@@ -195,6 +196,59 @@ class TestImuNode(unittest.TestCase):
         self.assertEqual(imu_msg.linear_acceleration.y, 2.2)
         self.assertEqual(imu_msg.linear_acceleration.z, 2.3)
         self.assertEqual(imu_msg.linear_acceleration_covariance[0], -1.0)
+
+
+class TestImuNodeInitialization(unittest.TestCase):
+    """Test IMU node startup failures caused by backend construction."""
+
+    @classmethod
+    def setUpClass(cls):
+        rclpy.init()
+
+    @classmethod
+    def tearDownClass(cls):
+        rclpy.shutdown()
+
+    def test_constructor_wraps_sensor_factory_failures(self):
+        """Report backend construction failures with an actionable startup error."""
+
+        def failing_sensor_factory(address: int):
+            del address
+            raise AttributeError('platform detection failed')
+
+        with self.assertRaisesRegex(
+            SensorInitializationError,
+            'Failed to initialize the BNO055 IMU backend at I2C address 0x28',
+        ) as context:
+            ImuNode(sensor_factory=failing_sensor_factory)
+
+        self.assertIsInstance(context.exception.__cause__, AttributeError)
+
+
+class TestImuMain(unittest.TestCase):
+    """Test CLI behavior for IMU node startup failures."""
+
+    def test_main_exits_cleanly_when_sensor_backend_cannot_start(self):
+        """Exit with code 1 and log the startup error without a traceback."""
+        logger = mock.Mock()
+
+        with (
+            mock.patch('drqp_brain.imu_node.rclpy.utilities.remove_ros_args', return_value=['drqp_imu']),
+            mock.patch('drqp_brain.imu_node.rclpy.init'),
+            mock.patch(
+                'drqp_brain.imu_node.ImuNode',
+                side_effect=SensorInitializationError('backend unavailable'),
+            ),
+            mock.patch('drqp_brain.imu_node.rclpy.logging.get_logger', return_value=logger),
+            mock.patch('drqp_brain.imu_node.rclpy.ok', return_value=True),
+            mock.patch('drqp_brain.imu_node.rclpy.shutdown') as shutdown,
+        ):
+            with self.assertRaises(SystemExit) as context:
+                main()
+
+        self.assertEqual(context.exception.code, 1)
+        logger.error.assert_called_once_with('backend unavailable')
+        shutdown.assert_called_once_with()
 
 
 if __name__ == '__main__':
