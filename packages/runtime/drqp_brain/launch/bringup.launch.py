@@ -101,7 +101,6 @@ def generate_launch_description():
                                 executable='drqp_imu',
                                 output='screen',
                                 condition=IfCondition(load_imu),
-                                parameters=[{'frame_id': 'dr_qp/imu_link'}],
                             )
                         ],
                     ),
