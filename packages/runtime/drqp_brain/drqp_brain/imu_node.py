@@ -20,8 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 import sys
+from typing import SupportsFloat, SupportsIndex
 
 import rclpy
 from rclpy.executors import ExternalShutdownException
@@ -46,6 +48,9 @@ class SensorInitializationError(RuntimeError):
     """Raised when the IMU backend cannot be constructed."""
 
 
+FloatLike = SupportsFloat | SupportsIndex
+
+
 def _format_exception_summary(exc: Exception) -> str:
     """Render a short exception summary suitable for startup logs."""
     detail = str(exc).strip()
@@ -54,24 +59,46 @@ def _format_exception_summary(exc: Exception) -> str:
     return f'{type(exc).__name__}: {detail}'
 
 
-def _as_vector3(value: object) -> tuple[float, float, float] | None:
+def _as_vector3(value: Iterable[FloatLike | None] | None) -> tuple[float, float, float] | None:
     """Convert a 3-axis reading to a tuple of floats when available."""
     if value is None:
         return None
-    vector = tuple(float(component) for component in value)
-    if len(vector) != 3:
-        raise ValueError(f'Expected 3 components, got {len(vector)}')
-    return vector
+    components = tuple(value)
+    if len(components) != 3:
+        raise ValueError(f'Expected 3 components, got {len(components)}')
+    x_component, y_component, z_component = components
+    if x_component is None or y_component is None or z_component is None:
+        return None
+    return (
+        float(x_component),
+        float(y_component),
+        float(z_component),
+    )
 
 
-def _as_quaternion(value: object) -> tuple[float, float, float, float] | None:
+def _as_quaternion(
+    value: Iterable[FloatLike | None] | None,
+) -> tuple[float, float, float, float] | None:
     """Convert a quaternion reading to a tuple of floats when available."""
     if value is None:
         return None
-    quaternion = tuple(float(component) for component in value)
-    if len(quaternion) != 4:
-        raise ValueError(f'Expected 4 components, got {len(quaternion)}')
-    return quaternion
+    components = tuple(value)
+    if len(components) != 4:
+        raise ValueError(f'Expected 4 components, got {len(components)}')
+    w_component, x_component, y_component, z_component = components
+    if (
+        w_component is None
+        or x_component is None
+        or y_component is None
+        or z_component is None
+    ):
+        return None
+    return (
+        float(w_component),
+        float(x_component),
+        float(y_component),
+        float(z_component),
+    )
 
 
 class Bno055Sensor:

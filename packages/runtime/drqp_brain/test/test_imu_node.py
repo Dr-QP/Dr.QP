@@ -21,9 +21,28 @@
 import unittest
 from unittest import mock
 
-from drqp_brain.imu_node import ImuNode, ImuSample, main, SensorInitializationError
+from drqp_brain.imu_node import (
+    ImuNode,
+    ImuSample,
+    SensorInitializationError,
+    _as_quaternion,
+    _as_vector3,
+    main,
+)
 import rclpy
 from sensor_msgs.msg import Imu, MagneticField, Temperature
+
+
+class TestImuReadingConversion(unittest.TestCase):
+    """Test normalization helpers for raw IMU sensor readings."""
+
+    def test_as_vector3_returns_none_when_any_axis_is_missing(self):
+        """Treat partially missing 3-axis readings as unavailable."""
+        self.assertIsNone(_as_vector3((1.0, None, 3.0)))
+
+    def test_as_quaternion_returns_none_when_any_axis_is_missing(self):
+        """Treat partially missing quaternion readings as unavailable."""
+        self.assertIsNone(_as_quaternion((1.0, 0.0, None, 0.0)))
 
 
 class FakeImuSensor:
