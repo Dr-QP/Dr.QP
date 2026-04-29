@@ -42,12 +42,19 @@
   </link>
 
   <joint name="base_center_to_imu" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <origin rpy="0 0 0" xyz="0.054633 0 0.103"/>
     <parent link="$(arg robot_name)/base_center_link"/>
     <child link="$(arg robot_name)/imu_link"/>
   </joint>
 
   <link name="$(arg robot_name)/imu_link">
+    <!-- Footprint 3.8 mm x 5.2 mm, height 1.13 mm, X axis along short side -->
+     <visual>
+      <origin rpy="${pi} 0 ${pi/2}" xyz="0 0 0"/>
+      <geometry>
+          <box size="0.0038 0.0052 0.00113" />
+      </geometry>
+     </visual>
   </link>
 
 </robot>
