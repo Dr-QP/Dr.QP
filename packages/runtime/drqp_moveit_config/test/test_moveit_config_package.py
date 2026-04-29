@@ -12,7 +12,6 @@ from launch_ros.parameter_descriptions import ParameterValue
 import pytest
 import yaml
 
-
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_DIR = PACKAGE_ROOT / 'config'
 LAUNCH_DIR = PACKAGE_ROOT / 'launch'
@@ -136,19 +135,9 @@ def _command_text(parameter: ParameterValue) -> str:
 def test_package_manifest_declares_required_dependencies():
     package_xml = ET.parse(PACKAGE_ROOT / 'package.xml').getroot()
 
-    depends = {
-        element.text for element in package_xml.findall('depend') if element.text
-    }
-    exec_depends = {
-        element.text
-        for element in package_xml.findall('exec_depend')
-        if element.text
-    }
-    test_depends = {
-        element.text
-        for element in package_xml.findall('test_depend')
-        if element.text
-    }
+    depends = {element.text for element in package_xml.findall('depend') if element.text}
+    exec_depends = {element.text for element in package_xml.findall('exec_depend') if element.text}
+    test_depends = {element.text for element in package_xml.findall('test_depend') if element.text}
 
     assert {
         'drqp_control',
@@ -212,9 +201,7 @@ def test_srdf_is_well_formed_and_describes_robot_groups():
     assert set(groups) == set(EXPECTED_GROUPS)
     assert len(end_effectors) == 6
 
-    whole_body_children = [
-        child.attrib['name'] for child in groups['whole_body'].findall('group')
-    ]
+    whole_body_children = [child.attrib['name'] for child in groups['whole_body'].findall('group')]
     assert whole_body_children == LEG_GROUPS
 
     whole_body_home = next(
@@ -249,9 +236,7 @@ def test_demo_launch_description_contains_expected_nodes(
     nodes = _node_map(launch_description)
     robot_state_publisher = nodes[('robot_state_publisher', 'robot_state_publisher')]
     joint_state_publisher = nodes[('joint_state_publisher', 'joint_state_publisher')]
-    joint_state_publisher_gui = nodes[
-        ('joint_state_publisher_gui', 'joint_state_publisher_gui')
-    ]
+    joint_state_publisher_gui = nodes[('joint_state_publisher_gui', 'joint_state_publisher_gui')]
     move_group = nodes[('moveit_ros_move_group', 'move_group')]
     rviz = nodes[('rviz2', 'rviz2')]
 
@@ -303,9 +288,7 @@ def test_move_group_launch_description_exposes_move_group_node(
 
     assert isinstance(parameters['robot_description'], ParameterValue)
     assert 'dr_qp.urdf.xacro' in _command_text(parameters['robot_description'])
-    assert '<robot name="dr_qp">' in _normalized_xml_text(
-        parameters['robot_description_semantic']
-    )
+    assert '<robot name="dr_qp">' in _normalized_xml_text(parameters['robot_description_semantic'])
     assert _has_parameter_prefix(parameters, 'robot_description_kinematics.whole_body')
     assert _has_parameter_prefix(
         parameters,
@@ -333,9 +316,7 @@ def test_moveit_rviz_launch_description_exposes_rviz_node(
     assert isinstance(rviz.condition, IfCondition)
     assert _node_arguments(rviz) == ['-d', str(CONFIG_DIR / 'moveit.rviz')]
     assert isinstance(parameters['robot_description'], ParameterValue)
-    assert '<robot name="dr_qp">' in _normalized_xml_text(
-        parameters['robot_description_semantic']
-    )
+    assert '<robot name="dr_qp">' in _normalized_xml_text(parameters['robot_description_semantic'])
     assert _has_parameter_prefix(parameters, 'robot_description_kinematics.whole_body')
     assert _has_parameter_prefix(
         parameters,
@@ -360,17 +341,14 @@ def test_demo_gazebo_launch_description_groups_simulation_actions(
     )
     group_entities = list(_iter_entities([group_action]))[1:]
 
-    set_parameter = next(
-        entity for entity in group_entities if isinstance(entity, SetParameter)
-    )
+    set_parameter = next(entity for entity in group_entities if isinstance(entity, SetParameter))
     include_launch = next(
         entity for entity in group_entities if isinstance(entity, IncludeLaunchDescription)
     )
     move_group = next(
         entity
         for entity in group_entities
-        if isinstance(entity, Node)
-        and entity.node_package == 'moveit_ros_move_group'
+        if isinstance(entity, Node) and entity.node_package == 'moveit_ros_move_group'
     )
     rviz = next(
         entity
@@ -382,9 +360,7 @@ def test_demo_gazebo_launch_description_groups_simulation_actions(
     include_launch_arguments = dict(include_launch.launch_arguments)
     assert set(include_launch_arguments) == {'sim_gui'}
     assert isinstance(include_launch_arguments['sim_gui'], LaunchConfiguration)
-    assert _normalize_substitution(
-        include_launch_arguments['sim_gui'].variable_name
-    ) == 'sim_gui'
+    assert _normalize_substitution(include_launch_arguments['sim_gui'].variable_name) == 'sim_gui'
 
     move_group_parameters = _node_parameters(move_group)
     assert move_group_parameters['use_sim_time'] is True

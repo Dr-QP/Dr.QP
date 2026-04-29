@@ -304,6 +304,7 @@ The next few cells show that the MoveIt package really does mirror the structure
 
 ```{code-cell} ipython3
 from pathlib import Path
+
 import yaml
 
 config_dir = Path('../../../packages/runtime/drqp_moveit_config/config')
@@ -338,15 +339,15 @@ len(controllers['joint_trajectory_controller']['joints'])
 
 The table below is the shortest way to remember the migration.
 
-| Old analytical concept | MoveIt 2 representation |
-| --- | --- |
-| `HexapodModel` leg placement | leg macro instances in `dr_qp.urdf.xacro` |
-| `LegModel` 3-DOF chain | revolute joints in `leg.urdf.xacro` |
-| handwritten `inverse_kinematics()` | KDL plugin in `kinematics.yaml` |
-| foot target for a leg | SRDF chain group with foot tip link |
-| neutral/default pose | SRDF `group_state` named `home` |
-| direct angle output | planned trajectory sent through `joint_trajectory_controller` |
-| ad hoc runtime assembly | launch files that populate `move_group` parameters |
+| Old analytical concept             | MoveIt 2 representation                                       |
+| ---------------------------------- | ------------------------------------------------------------- |
+| `HexapodModel` leg placement       | leg macro instances in `dr_qp.urdf.xacro`                     |
+| `LegModel` 3-DOF chain             | revolute joints in `leg.urdf.xacro`                           |
+| handwritten `inverse_kinematics()` | KDL plugin in `kinematics.yaml`                               |
+| foot target for a leg              | SRDF chain group with foot tip link                           |
+| neutral/default pose               | SRDF `group_state` named `home`                               |
+| direct angle output                | planned trajectory sent through `joint_trajectory_controller` |
+| ad hoc runtime assembly            | launch files that populate `move_group` parameters            |
 
 ## What did not change
 
