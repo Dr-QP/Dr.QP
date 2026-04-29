@@ -241,16 +241,11 @@ class TestImuMain(unittest.TestCase):
     def test_main_exits_cleanly_when_sensor_backend_cannot_start(self):
         """Exit with code 1 and log the startup error without a traceback."""
         logger = mock.Mock()
+        imu_node_constructor = mock.Mock(side_effect=SensorInitializationError('backend unavailable'))
 
         with (
-            mock.patch(
-                'drqp_brain.imu_node.rclpy.utilities.remove_ros_args', return_value=['drqp_imu']
-            ),
             mock.patch('drqp_brain.imu_node.rclpy.init'),
-            mock.patch(
-                'drqp_brain.imu_node.ImuNode',
-                side_effect=SensorInitializationError('backend unavailable'),
-            ),
+            mock.patch('drqp_brain.imu_node.ImuNode', imu_node_constructor),
             mock.patch('drqp_brain.imu_node.rclpy.logging.get_logger', return_value=logger),
             mock.patch('drqp_brain.imu_node.rclpy.ok', return_value=True),
             mock.patch('drqp_brain.imu_node.rclpy.shutdown') as shutdown,
@@ -259,6 +254,7 @@ class TestImuMain(unittest.TestCase):
                 main()
 
         self.assertEqual(context.exception.code, 1)
+        imu_node_constructor.assert_called_once_with()
         logger.error.assert_called_once_with('backend unavailable')
         shutdown.assert_called_once_with()
 

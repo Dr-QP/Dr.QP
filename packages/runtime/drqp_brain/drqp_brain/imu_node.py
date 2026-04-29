@@ -20,7 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import argparse
 from dataclasses import dataclass
 import sys
 
@@ -204,11 +203,8 @@ def main():
     """Entry point for the Dr.QP IMU node."""
     node = None
     try:
-        parser = argparse.ArgumentParser('Dr.QP BNO055 IMU ROS node')
-        filtered_args = rclpy.utilities.remove_ros_args()
-        args = parser.parse_args(args=filtered_args[1:])
         rclpy.init()
-        node = ImuNode(**vars(args))
+        node = ImuNode()
         rclpy.spin(node)
     except SensorInitializationError as exc:
         if rclpy.ok():
