@@ -82,6 +82,7 @@ class Bno055Sensor:
 
     def read_sample(self) -> ImuSample:
         """Read the latest BNO055 sample."""
+        # API reference: https://docs.circuitpython.org/projects/bno055/en/stable/api.html
         return ImuSample(
             orientation_wxyz=_as_quaternion(self._sensor.quaternion),
             angular_velocity=_as_vector3(self._sensor.gyro),
@@ -103,7 +104,7 @@ class ImuNode(Node):
         super().__init__('drqp_imu')
 
         self.declare_parameter('frame_id', 'dr_qp/imu_link')
-        self.declare_parameter('publish_rate_hz', 30.0)
+        self.declare_parameter('publish_rate_hz', 100.0)
         self.declare_parameter('i2c_address', 0x28)
         self.declare_parameter('publish_temperature', True)
 
