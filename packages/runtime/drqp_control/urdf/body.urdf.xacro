@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<robot name="dr_qp" xmlns:xacro="http://ros.org/wiki/xacro">
+<robot name="drqp" xmlns:xacro="http://ros.org/wiki/xacro">
 
   <xacro:property name="body_height" value="0.037" />
 
