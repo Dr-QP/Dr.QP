@@ -22,12 +22,12 @@ import unittest
 from unittest import mock
 
 from drqp_brain.imu_node import (
-    ImuNode,
-    ImuSample,
-    SensorInitializationError,
     _as_quaternion,
     _as_vector3,
+    ImuNode,
+    ImuSample,
     main,
+    SensorInitializationError,
 )
 import rclpy
 from sensor_msgs.msg import Imu, MagneticField, Temperature
@@ -260,7 +260,9 @@ class TestImuMain(unittest.TestCase):
     def test_main_exits_cleanly_when_sensor_backend_cannot_start(self):
         """Exit with code 1 and log the startup error without a traceback."""
         logger = mock.Mock()
-        imu_node_constructor = mock.Mock(side_effect=SensorInitializationError('backend unavailable'))
+        imu_node_constructor = mock.Mock(
+            side_effect=SensorInitializationError('backend unavailable')
+        )
 
         with (
             mock.patch('drqp_brain.imu_node.rclpy.init'),

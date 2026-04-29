@@ -86,12 +86,7 @@ def _as_quaternion(
     if len(components) != 4:
         raise ValueError(f'Expected 4 components, got {len(components)}')
     w_component, x_component, y_component, z_component = components
-    if (
-        w_component is None
-        or x_component is None
-        or y_component is None
-        or z_component is None
-    ):
+    if w_component is None or x_component is None or y_component is None or z_component is None:
         return None
     return (
         float(w_component),
