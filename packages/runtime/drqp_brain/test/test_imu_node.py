@@ -160,7 +160,7 @@ class TestImuNode(unittest.TestCase):
         self.assertTrue(delivered, 'Expected IMU messages to be delivered')
 
         imu_msg = self.imu_messages[-1]
-        self.assertEqual(imu_msg.header.frame_id, 'dr_qp/imu_link')
+        self.assertEqual(imu_msg.header.frame_id, 'drqp/imu_link')
         self.assertEqual(imu_msg.orientation.w, 1.0)
         self.assertEqual(imu_msg.orientation.x, 0.1)
         self.assertEqual(imu_msg.orientation.y, 0.2)
@@ -173,13 +173,13 @@ class TestImuNode(unittest.TestCase):
         self.assertEqual(imu_msg.linear_acceleration.z, 1.3)
 
         magnetic_field_msg = self.magnetic_field_messages[-1]
-        self.assertEqual(magnetic_field_msg.header.frame_id, 'dr_qp/imu_link')
+        self.assertEqual(magnetic_field_msg.header.frame_id, 'drqp/imu_link')
         self.assertAlmostEqual(magnetic_field_msg.magnetic_field.x, 11.0e-6)
         self.assertAlmostEqual(magnetic_field_msg.magnetic_field.y, 12.0e-6)
         self.assertAlmostEqual(magnetic_field_msg.magnetic_field.z, 13.0e-6)
 
         temperature_msg = self.temperature_messages[-1]
-        self.assertEqual(temperature_msg.header.frame_id, 'dr_qp/imu_link')
+        self.assertEqual(temperature_msg.header.frame_id, 'drqp/imu_link')
         self.assertEqual(temperature_msg.temperature, 24.5)
 
     def test_publish_measurements_skips_publish_on_sensor_failure(self):

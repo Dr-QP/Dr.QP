@@ -127,7 +127,7 @@ class ImuNode(Node):
     def __init__(self):
         super().__init__('drqp_imu')
 
-        self.declare_parameter('frame_id', 'dr_qp/imu_link')
+        self.declare_parameter('frame_id', 'drqp/imu_link')
         self.declare_parameter('publish_rate_hz', 100.0)
         self.declare_parameter('i2c_address', 0x28)
         self.declare_parameter('publish_temperature', True)
