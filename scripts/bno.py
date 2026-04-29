@@ -3,6 +3,7 @@ import time
 import adafruit_bno055
 import board
 
+
 def fmt(v, w=8, p=2):
     if v is None:
         return ' ' * w
@@ -38,22 +39,13 @@ def main():
             c = sensor.calibration_status or (None, None, None, None)
 
             # Euler
-            print(
-                'Euler (deg):   '
-                f"{fmt(e[0])} {fmt(e[1])} {fmt(e[2])}      "
-            )
+            print(f'Euler (deg):   {fmt(e[0])} {fmt(e[1])} {fmt(e[2])}      ')
 
             # Quaternion
-            print(
-                'Quaternion:    '
-                f"{fmt(q[0])} {fmt(q[1])} {fmt(q[2])} {fmt(q[3])}"
-            )
+            print(f'Quaternion:    {fmt(q[0])} {fmt(q[1])} {fmt(q[2])} {fmt(q[3])}')
 
             # Calibration (0–3 values)
-            print(
-                'Calibration:   '
-                f"{fmt_int(c[0])}{fmt_int(c[1])}{fmt_int(c[2])}{fmt_int(c[3])}"
-            )
+            print(f'Calibration:   {fmt_int(c[0])}{fmt_int(c[1])}{fmt_int(c[2])}{fmt_int(c[3])}')
 
             time.sleep(0.1)
     finally:
