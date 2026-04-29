@@ -99,7 +99,6 @@ class TestImuNode(unittest.TestCase):
     def tearDown(self):
         self.node.destroy_node()
         self.test_node.destroy_node()
-        self.sensor_patch.stop()
 
     def _spin_until(self, predicate, iterations: int = 10) -> bool:
         """Spin both nodes until the predicate is satisfied or the budget is exhausted."""
