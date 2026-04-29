@@ -6,6 +6,9 @@ Other tools have not attempted building this support still.
 
 DualShock 4 userland driver has a 10 years old open PR claiming to have added audio support <https://github.com/chrippa/ds4drv/pull/80/changes#diff-a9c1342d4d6304e9c286f9ffd9d795494ba1aa7dd01b3266db8e5aa23dbed17b>
 
+Another DualShock 4 audio playback repo, just someone's hack to stream sbc audio https://github.com/sensepost/dual-pod-shock/blob/master/dual_pod_shock_POC.c (SBC (Low-Complexity Subband Codec) is the mandatory, default Bluetooth audio codec for Advanced Audio Distribution Profile (A2DP), ensuring universal compatibility across all Bluetooth devices. It offers decent, reliable sound quality for everyday use—like podcasts or calls—but features lower fidelity, higher latency (~200-300ms), and less detail compared to premium codecs like aptX or LDAC).
+`gst-launch-1.0 -q filesrc location=audiofilename.mp3 ! decodebin ! audioconvert ! audiosample ! sbcenc ! "audio/x-sbc,rate=32000,channels=2,channel-mode=dual,blocks=16,subbands=8,allocation-method=snr,bitpool=25" ! queque ! filesink location=audiofilename.sbc sync=false` command that was used to convert audio to SBC
+
 [SAxense](https://github.com/egormanga/SAxense) is POC for audio-haptics, but it raw and heavily relies on external tools for processing. See [SAxense feasibility](./saxense-feasibility.md) for more details.
 
 ## Resources
