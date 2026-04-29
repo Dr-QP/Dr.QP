@@ -1,18 +1,18 @@
 controller_manager:
   ros__parameters:
-    update_rate: 1000  # Hz
+    update_rate: 1000 # Hz
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
-      update_rate: 100  # Hz
+      update_rate: 100 # Hz
 
     battery_state_broadcaster:
       type: battery_state_broadcaster/BatteryStateBroadcaster
-      update_rate: 10  # Hz
+      update_rate: 10 # Hz
 
     joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
-      update_rate: 100  # Hz
+      update_rate: 100 # Hz
 
 joint_trajectory_controller:
   ros__parameters:
@@ -25,7 +25,6 @@ joint_trajectory_controller:
       - drqp/right_front_femur
       - drqp/right_front_tibia
 
-
       - drqp/left_middle_coxa
       - drqp/left_middle_femur
       - drqp/left_middle_tibia
@@ -33,7 +32,6 @@ joint_trajectory_controller:
       - drqp/right_middle_coxa
       - drqp/right_middle_femur
       - drqp/right_middle_tibia
-
 
       - drqp/left_back_coxa
       - drqp/left_back_femur
@@ -60,11 +58,9 @@ joint_trajectory_controller:
       stopped_velocity_tolerance: 0.01 # Defaults to 0.01
       goal_time: 0.0 # Defaults to 0.0 (start immediately)
 
-
-
 # https://docs.ros.org/en/iron/p/battery_state_broadcaster/
 battery_state_broadcaster:
   ros__parameters:
-    sensor_name: "battery_state"
+    sensor_name: 'battery_state'
     # https://github.com/ros2/common_interfaces/blob/jazzy/sensor_msgs/msg/BatteryState.msg
     power_supply_technology: 3 # POWER_SUPPLY_TECHNOLOGY_LIPO
