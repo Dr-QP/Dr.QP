@@ -48,7 +48,6 @@ from sensor_msgs.msg import Imu
 import std_msgs.msg
 from test_utils import ensure_gz_sim_not_running
 
-
 ODOM_TOPIC = '/odom'
 
 
