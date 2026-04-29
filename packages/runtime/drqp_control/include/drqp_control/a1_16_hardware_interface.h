@@ -24,6 +24,8 @@
 #include <cstdint>
 #include <memory>
 
+#include <rclcpp/clock.hpp>
+
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
@@ -116,6 +118,7 @@ private:
     float max;
     uint8_t sourceServoId;
   } batteryParams_;
+  rclcpp::Clock logThrottleClock_{RCL_STEADY_TIME};
   hardware_interface::return_type readBatteryVoltage();
 
   hardware_interface::return_type readServoStatus(uint8_t servoId);

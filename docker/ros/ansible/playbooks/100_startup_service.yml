@@ -71,6 +71,8 @@
             --pid host \
             --user {{ container_user }} \
             --group-add {{ dialout_group }} \
+            --log-opt max-size=10m \
+            --log-opt max-file=3 \
             $(find /dev/ -name "ttySC*" | xargs -I{} echo --device {}) \
             --rm \
             --name {{ control_service_name }} \
@@ -114,10 +116,12 @@
                 --pid host \
                 --user {{ container_user }} \
                 --group-add {{ input_group }} \
+                --log-opt max-size=10m \
+                --log-opt max-file=3 \
                 $DEVICE_ARGS \
                 --rm \
                 --name {{ joystick_service_name }} \
-                {{ container_image }} ros2 run joy game_controller_node & \
+                {{ container_image }} ros2 run drqp_joy game_controller_node & \
             fi; \
             sleep 2; \
           done'

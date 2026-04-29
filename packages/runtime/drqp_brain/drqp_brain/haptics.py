@@ -25,8 +25,9 @@ from dataclasses import dataclass
 import time
 from typing import Callable
 
-LEFT_RUMBLE_CHANNEL_ID = 0
-RIGHT_RUMBLE_CHANNEL_ID = 1
+BOTH_RUMBLE_CHANNEL_ID = 0
+LEFT_RUMBLE_CHANNEL_ID = 1
+RIGHT_RUMBLE_CHANNEL_ID = 2
 
 GAIT_FEEDBACK_PULSES = {
     'tripod': 1,
@@ -165,7 +166,7 @@ def control_mode_feedback_pattern(control_mode: object) -> HapticPulsePattern:
     control_mode_name = getattr(control_mode, 'name', str(control_mode))
 
     return HapticPulsePattern(
-        channel_id=LEFT_RUMBLE_CHANNEL_ID,
+        channel_id=RIGHT_RUMBLE_CHANNEL_ID,
         pulse_count=CONTROL_MODE_FEEDBACK_PULSES[control_mode_name],
         state_key=f'control_mode:{control_mode_name}',
         repeat_count=3,
