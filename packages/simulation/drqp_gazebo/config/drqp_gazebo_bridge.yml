@@ -5,7 +5,7 @@
   direction: GZ_TO_ROS # BIDIRECTIONAL or ROS_TO_GZ
 
 # Robot odometry for velocity tracking
-- ros_topic_name: '/model/drqp/odometry'
+- ros_topic_name: '/odom'
   gz_topic_name: '/model/drqp/odometry'
   ros_type_name: 'nav_msgs/msg/Odometry'
   gz_type_name: 'gz.msgs.Odometry'
