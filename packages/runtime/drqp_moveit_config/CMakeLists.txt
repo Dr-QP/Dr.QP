@@ -11,8 +11,8 @@ install(
 if(BUILD_TESTING)
   find_package(ament_cmake_pytest REQUIRED)
   ament_add_pytest_test(
-    test_launch_review_comments_pr349
-    test/test_launch_review_comments_pr349.py
+    test_moveit_config_package
+    test/test_moveit_config_package.py
   )
 
   find_package(ament_lint_auto REQUIRED)
