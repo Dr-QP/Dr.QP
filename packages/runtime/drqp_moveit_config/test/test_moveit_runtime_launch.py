@@ -4,6 +4,8 @@ import unittest
 
 from control_msgs.action import FollowJointTrajectory
 from controller_manager.test_utils import check_controllers_running, check_node_running
+from drqp_brain.joint_trajectory_builder import kFemurOffsetAngle, kTibiaOffsetAngle
+from drqp_brain.models import HexapodModel
 from geometry_msgs.msg import Pose, PoseStamped, Quaternion
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
@@ -13,7 +15,14 @@ from launch_ros.substitutions import FindPackageShare
 from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
 from moveit_msgs.action import ExecuteTrajectory
-from moveit_msgs.msg import CollisionObject, Constraints, JointConstraint, MoveItErrorCodes, PlanningScene, RobotState
+from moveit_msgs.msg import (
+    CollisionObject,
+    Constraints,
+    JointConstraint,
+    MoveItErrorCodes,
+    PlanningScene,
+    RobotState,
+)
 from moveit_msgs.srv import ApplyPlanningScene, GetMotionPlan, GetPositionIK, GetStateValidity
 import pytest
 import rclpy
@@ -22,10 +31,6 @@ from rosgraph_msgs.msg import Clock
 from scipy.spatial.transform import Rotation as Rotation
 from sensor_msgs.msg import JointState
 from shape_msgs.msg import SolidPrimitive
-
-from drqp_brain.joint_trajectory_builder import kFemurOffsetAngle, kTibiaOffsetAngle
-from drqp_brain.models import HexapodModel
-
 
 BASE_FRAME = 'drqp/base_center_link'
 GROUP_NAME = 'left_front_leg'
@@ -46,9 +51,7 @@ def _ensure_gz_sim_not_running() -> None:
 @pytest.mark.launch_test
 def generate_test_description():
     _ensure_gz_sim_not_running()
-    sim_launch = PathJoinSubstitution(
-        [FindPackageShare('drqp_gazebo'), 'launch', 'sim.launch.py']
-    )
+    sim_launch = PathJoinSubstitution([FindPackageShare('drqp_gazebo'), 'launch', 'sim.launch.py'])
     move_group_launch = PathJoinSubstitution(
         [FindPackageShare('drqp_moveit_config'), 'launch', 'move_group.launch.py']
     )
@@ -285,9 +288,7 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         motion_plan_request = request.motion_plan_request
         motion_plan_request.group_name = GROUP_NAME
         motion_plan_request.start_state = self._current_robot_state()
-        motion_plan_request.goal_constraints = [
-            self._goal_constraints_for(target_positions)
-        ]
+        motion_plan_request.goal_constraints = [self._goal_constraints_for(target_positions)]
         motion_plan_request.num_planning_attempts = 2
         motion_plan_request.allowed_planning_time = 5.0
         motion_plan_request.max_velocity_scaling_factor = 0.2
@@ -299,9 +300,7 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         robot_state: RobotState,
         joint_names: list[str],
     ) -> dict[str, float]:
-        joint_map = dict(
-            zip(robot_state.joint_state.name, robot_state.joint_state.position)
-        )
+        joint_map = dict(zip(robot_state.joint_state.name, robot_state.joint_state.position))
         return {joint_name: joint_map[joint_name] for joint_name in joint_names}
 
     def _assert_joint_map_close(
@@ -409,7 +408,9 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         request.group_name = GROUP_NAME
         return self._call_service(self.state_validity_client, request)
 
-    def test_issue43_left_front_leg_get_position_ik_matches_leg_model_and_get_motion_plan_succeeds(self):
+    def test_issue43_left_front_leg_get_position_ik_matches_leg_model_and_get_motion_plan_succeeds(
+        self,
+    ):
         target_pose, expected_joint_positions = self._reachable_target()
 
         ik_response = self._solve_ik(target_pose)
@@ -477,7 +478,9 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         self._apply_target_obstacle(target_pose)
 
         validity_response = self._state_validity(ik_response.solution)
-        self.assertFalse(validity_response.valid, 'Expected the blocked target state to be invalid')
+        self.assertFalse(
+            validity_response.valid, 'Expected the blocked target state to be invalid'
+        )
 
         plan_response = self._plan_to_joint_target(target_joint_positions)
         self.assertNotEqual(
