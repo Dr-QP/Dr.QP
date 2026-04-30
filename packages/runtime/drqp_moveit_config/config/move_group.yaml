@@ -4,6 +4,12 @@
 # configs when the move_group executable starts.
 
 move_group:
+  # Explicit pipeline selection is required by recent MoveIt releases.
+  default_planning_pipeline: ompl
+  planning_pipelines:
+    pipeline_names:
+      - ompl
+
   # Capabilities to load.  The defaults cover planning, execution, and
   # query/state services.  Uncomment to add extras.
   capabilities: ''
