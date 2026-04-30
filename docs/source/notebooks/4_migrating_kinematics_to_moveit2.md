@@ -341,7 +341,7 @@ The table below is the shortest way to remember the migration.
 
 | Old analytical concept             | MoveIt 2 representation                                       |
 | ---------------------------------- | ------------------------------------------------------------- |
-| `HexapodModel` leg placement       | leg macro instances in `drqp.urdf.xacro`                     |
+| `HexapodModel` leg placement       | leg macro instances in `drqp.urdf.xacro`                      |
 | `LegModel` 3-DOF chain             | revolute joints in `leg.urdf.xacro`                           |
 | handwritten `inverse_kinematics()` | KDL plugin in `kinematics.yaml`                               |
 | foot target for a leg              | SRDF chain group with foot tip link                           |
