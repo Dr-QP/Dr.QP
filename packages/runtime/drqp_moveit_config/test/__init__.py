@@ -17,27 +17,3 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-
-from test.moveit_launch_smoke_test_support import (
-    build_smoke_test_description,
-    MoveItLaunchSmokeShutdownTestCase,
-    MoveItLaunchSmokeTestCase,
-)
-
-import pytest
-
-
-@pytest.mark.launch_test
-def generate_test_description():
-    return build_smoke_test_description(
-        'demo.launch.py',
-        launch_arguments={'show_rviz': 'false'},
-    )
-
-
-class TestDemoLaunchSmoke(MoveItLaunchSmokeTestCase):
-    pass
-
-
-class TestDemoLaunchShutdown(MoveItLaunchSmokeShutdownTestCase):
-    pass
