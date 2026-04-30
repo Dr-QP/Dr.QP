@@ -28,8 +28,9 @@ package's config/ directory.
 
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -73,19 +74,9 @@ def _get_moveit_params(pkg_path):
 
 def generate_launch_description():
     pkg = get_package_share_path('drqp_moveit_config')
+    control_launch_path = get_package_share_path('drqp_control') / 'launch'
     use_sim_time = LaunchConfiguration('use_sim_time')
     publish_fake_joint_states = LaunchConfiguration('publish_fake_joint_states')
-    drqp_control_pkg = get_package_share_path('drqp_control')
-
-    robot_description_content = ParameterValue(
-        Command(
-            [
-                'xacro ',
-                str(drqp_control_pkg / 'urdf' / 'drqp.urdf.xacro'),
-            ]
-        ),
-        value_type=str,
-    )
 
     move_group_node = Node(
         package='moveit_ros_move_group',
@@ -94,30 +85,21 @@ def generate_launch_description():
         parameters=_get_moveit_params(pkg) + [{'use_sim_time': use_sim_time}],
     )
 
-    robot_state_publisher = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        output='screen',
+    robot_state_publisher = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(str(control_launch_path / 'rsp.launch.py')),
         condition=IfCondition(publish_fake_joint_states),
-        parameters=[
-            {
-                'robot_description': robot_description_content,
-                'use_sim_time': use_sim_time,
-            }
-        ],
+        launch_arguments={
+            'use_sim_time': use_sim_time,
+        }.items(),
     )
 
-    joint_state_publisher = Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher',
-        name='joint_state_publisher',
+    joint_state_publisher = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(str(control_launch_path / 'jsp.launch.py')),
         condition=IfCondition(publish_fake_joint_states),
-        parameters=[
-            {
-                'robot_description': robot_description_content,
-                'use_sim_time': use_sim_time,
-            }
-        ],
+        launch_arguments={
+            'use_sim_time': use_sim_time,
+            'gui': 'false',
+        }.items(),
     )
 
     return LaunchDescription(
