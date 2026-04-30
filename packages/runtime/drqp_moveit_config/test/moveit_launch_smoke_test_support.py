@@ -50,11 +50,13 @@ def build_smoke_test_description(
 
 
 class MoveItLaunchSmokeTestCase(unittest.TestCase):
+
     def test_launch_reaches_ready_state(self, proc_info):
         del proc_info
 
 
 @post_shutdown_test()
 class MoveItLaunchSmokeShutdownTestCase(unittest.TestCase):
+
     def test_exit_codes(self, proc_info):
         asserts.assertExitCodes(proc_info)

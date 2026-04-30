@@ -15,7 +15,12 @@ if(BUILD_TESTING)
 
   function(add_ros_isolated_launch_test path)
     set(RUNNER "${ament_cmake_ros_DIR}/run_test_isolated.py")
-    add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
+    add_launch_test(
+      "${path}"
+      RUNNER "${RUNNER}"
+      APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/test
+      ${ARGN}
+    )
   endfunction()
 
   add_ros_isolated_launch_test(test/test_move_group_launch_smoke.py)

@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from test.moveit_launch_smoke_test_support import (
+from moveit_launch_smoke_test_support import (
     build_smoke_test_description,
     MoveItLaunchSmokeShutdownTestCase,
     MoveItLaunchSmokeTestCase,
