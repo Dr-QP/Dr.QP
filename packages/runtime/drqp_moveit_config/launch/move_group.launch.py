@@ -26,55 +26,25 @@ OMPL planning pipeline and controller configuration loaded from this
 package's config/ directory.
 """
 
+from pathlib import Path
+import sys
+
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, LaunchConfiguration
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-from launch_ros.parameter_descriptions import ParameterValue
-import yaml
-
-
-def _load_yaml(path):
-    with open(path) as f:
-        return yaml.safe_load(f)
-
-
-def _get_moveit_params(pkg_path, use_gazebo):
-    """Return a list of parameter dicts for the move_group node."""
-    drqp_control_pkg = get_package_share_path('drqp_control')
-    robot_description_content = ParameterValue(
-        Command(
-            [
-                'xacro ',
-                str(drqp_control_pkg / 'urdf' / 'drqp.urdf.xacro'),
-                ' use_gazebo:=',
-                use_gazebo,
-            ]
-        ),
-        value_type=str,
-    )
-    srdf_content = (pkg_path / 'config' / 'drqp.srdf').read_text()
-    kinematics = _load_yaml(pkg_path / 'config' / 'kinematics.yaml')
-    joint_limits = _load_yaml(pkg_path / 'config' / 'joint_limits.yaml')
-    ompl = _load_yaml(pkg_path / 'config' / 'ompl_planning.yaml')
-    controllers = _load_yaml(pkg_path / 'config' / 'moveit_controllers.yaml')
-    move_group = _load_yaml(pkg_path / 'config' / 'move_group.yaml')
-
-    return [
-        {'robot_description': robot_description_content},
-        {'robot_description_semantic': srdf_content},
-        {'robot_description_kinematics': kinematics},
-        {'robot_description_planning': joint_limits},
-        ompl,
-        controllers,
-        move_group,
-    ]
 
 
 def generate_launch_description():
+    launch_dir = str(Path(__file__).resolve().parent)
+    if launch_dir not in sys.path:
+        sys.path.insert(0, launch_dir)
+
+    from moveit_launch_utils import get_moveit_params
+
     pkg = get_package_share_path('drqp_moveit_config')
     control_launch_path = get_package_share_path('drqp_control') / 'launch'
     use_sim_time = LaunchConfiguration('use_sim_time')
@@ -86,7 +56,7 @@ def generate_launch_description():
         package='moveit_ros_move_group',
         executable='move_group',
         output='screen',
-        parameters=_get_moveit_params(pkg, use_gazebo) + [{'use_sim_time': use_sim_time}],
+        parameters=get_moveit_params(pkg, use_gazebo) + [{'use_sim_time': use_sim_time}],
     )
 
     robot_state_publisher = IncludeLaunchDescription(
