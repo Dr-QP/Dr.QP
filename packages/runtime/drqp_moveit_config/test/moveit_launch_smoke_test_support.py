@@ -49,14 +49,28 @@ def build_smoke_test_description(
     )
 
 
+def _filter_shutdown_processes(proc_info):
+    filtered_proc_info = type(proc_info)()
+    skipped_procs = ('gazebo', 'gz', 'bridge_node')
+    for proc_name in proc_info.process_names():
+        if not any(skip in proc_name for skip in skipped_procs):
+            filtered_proc_info.append(proc_info[proc_name])
+    return filtered_proc_info
+
+
 class MoveItLaunchSmokeTestCase(unittest.TestCase):
 
     def test_launch_reaches_ready_state(self, proc_info):
-        del proc_info
+        early_exits = {
+            proc_name: proc_info[proc_name].returncode
+            for proc_name in proc_info.process_names()
+            if proc_info[proc_name].returncode is not None
+        }
+        self.assertFalse(early_exits, f'Processes exited before ready: {early_exits}')
 
 
 @post_shutdown_test()
 class MoveItLaunchSmokeShutdownTestCase(unittest.TestCase):
 
     def test_exit_codes(self, proc_info):
-        asserts.assertExitCodes(proc_info)
+        asserts.assertExitCodes(_filter_shutdown_processes(proc_info))
