@@ -145,7 +145,7 @@ Visualization Manager:
     Background Color: 48; 48; 48
     Default Light:
       On: true
-    Fixed Frame: dr_qp/base_link
+    Fixed Frame: drqp/base_link
     Frame Rate: 30
   Name: root
   Tools:

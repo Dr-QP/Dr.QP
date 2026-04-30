@@ -191,13 +191,13 @@ def test_moveit_config_yaml_files_parse_with_expected_shape():
 
 
 def test_srdf_is_well_formed_and_describes_robot_groups():
-    root = ET.parse(CONFIG_DIR / 'dr_qp.srdf').getroot()
+    root = ET.parse(CONFIG_DIR / 'drqp.srdf').getroot()
 
     groups = {group.attrib['name']: group for group in root.findall('group')}
     end_effectors = root.findall('end_effector')
     disable_collisions = root.findall('disable_collisions')
 
-    assert root.attrib['name'] == 'dr_qp'
+    assert root.attrib['name'] == 'drqp'
     assert set(groups) == set(EXPECTED_GROUPS)
     assert len(end_effectors) == 6
 
@@ -247,12 +247,12 @@ def test_demo_launch_description_contains_expected_nodes(
     robot_parameters = _node_parameters(robot_state_publisher)
     assert robot_parameters['use_sim_time'] is False
     assert isinstance(robot_parameters['robot_description'], ParameterValue)
-    assert 'dr_qp.urdf.xacro' in _command_text(robot_parameters['robot_description'])
+    assert 'drqp.urdf.xacro' in _command_text(robot_parameters['robot_description'])
 
     move_group_parameters = _node_parameters(move_group)
     assert move_group_parameters['use_sim_time'] is False
     assert isinstance(move_group_parameters['robot_description'], ParameterValue)
-    assert '<robot name="dr_qp">' in _normalized_xml_text(
+    assert '<robot name="drqp">' in _normalized_xml_text(
         move_group_parameters['robot_description_semantic']
     )
     assert _has_parameter_prefix(
@@ -261,7 +261,7 @@ def test_demo_launch_description_contains_expected_nodes(
     )
     assert _has_parameter_prefix(
         move_group_parameters,
-        'robot_description_planning.joint_limits.dr_qp/left_front_coxa',
+        'robot_description_planning.joint_limits.drqp/left_front_coxa',
     )
 
     assert _node_arguments(rviz)[-1].endswith('config/moveit.rviz')
@@ -287,12 +287,12 @@ def test_move_group_launch_description_exposes_move_group_node(
     parameters = _node_parameters(move_group)
 
     assert isinstance(parameters['robot_description'], ParameterValue)
-    assert 'dr_qp.urdf.xacro' in _command_text(parameters['robot_description'])
-    assert '<robot name="dr_qp">' in _normalized_xml_text(parameters['robot_description_semantic'])
+    assert 'drqp.urdf.xacro' in _command_text(parameters['robot_description'])
+    assert '<robot name="drqp">' in _normalized_xml_text(parameters['robot_description_semantic'])
     assert _has_parameter_prefix(parameters, 'robot_description_kinematics.whole_body')
     assert _has_parameter_prefix(
         parameters,
-        'robot_description_planning.joint_limits.dr_qp/left_front_coxa',
+        'robot_description_planning.joint_limits.drqp/left_front_coxa',
     )
     assert 'use_sim_time' in parameters
 
@@ -316,11 +316,11 @@ def test_moveit_rviz_launch_description_exposes_rviz_node(
     assert isinstance(rviz.condition, IfCondition)
     assert _node_arguments(rviz) == ['-d', str(CONFIG_DIR / 'moveit.rviz')]
     assert isinstance(parameters['robot_description'], ParameterValue)
-    assert '<robot name="dr_qp">' in _normalized_xml_text(parameters['robot_description_semantic'])
+    assert '<robot name="drqp">' in _normalized_xml_text(parameters['robot_description_semantic'])
     assert _has_parameter_prefix(parameters, 'robot_description_kinematics.whole_body')
     assert _has_parameter_prefix(
         parameters,
-        'robot_description_planning.joint_limits.dr_qp/left_front_coxa',
+        'robot_description_planning.joint_limits.drqp/left_front_coxa',
     )
 
 

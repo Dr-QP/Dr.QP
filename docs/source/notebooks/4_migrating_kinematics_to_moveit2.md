@@ -63,7 +63,7 @@ That means the first migration step is to turn the same physical assumptions int
 
 ### 1.1 The body file instantiates six legs
 
-The top-level robot description lives in `dr_qp.urdf.xacro`. It mounts the same leg macro six times with different positions and yaw values.
+The top-level robot description lives in `drqp.urdf.xacro`. It mounts the same leg macro six times with different positions and yaw values.
 
 ```xml
 <xacro:leg robot_name="$(arg robot_name)" prefix="left_front" x="0.11692" y="0.06387" yaw="${pi/4}"/>
@@ -131,7 +131,7 @@ URDF tells MoveIt what the robot is.
 
 SRDF tells MoveIt how to reason about the robot.
 
-The SRDF for Dr.QP lives in `packages/runtime/drqp_moveit_config/config/dr_qp.srdf` and adds four important layers of meaning.
+The SRDF for Dr.QP lives in `packages/runtime/drqp_moveit_config/config/drqp.srdf` and adds four important layers of meaning.
 
 ### 2.1 Planning groups
 
@@ -146,8 +146,8 @@ Example:
 
 ```xml
 <group name="left_front_leg">
-  <chain base_link="dr_qp/base_center_link"
-         tip_link="dr_qp/left_front_foot_link"/>
+  <chain base_link="drqp/base_center_link"
+         tip_link="drqp/left_front_foot_link"/>
 </group>
 
 <group name="whole_body">
@@ -318,7 +318,7 @@ The group names should look familiar: six leg groups plus `whole_body`.
 ```{code-cell} ipython3
 import xml.etree.ElementTree as ET
 
-srdf_root = ET.fromstring((config_dir / 'dr_qp.srdf').read_text())
+srdf_root = ET.fromstring((config_dir / 'drqp.srdf').read_text())
 [group.attrib['name'] for group in srdf_root.findall('group')]
 ```
 
@@ -341,7 +341,7 @@ The table below is the shortest way to remember the migration.
 
 | Old analytical concept             | MoveIt 2 representation                                       |
 | ---------------------------------- | ------------------------------------------------------------- |
-| `HexapodModel` leg placement       | leg macro instances in `dr_qp.urdf.xacro`                     |
+| `HexapodModel` leg placement       | leg macro instances in `drqp.urdf.xacro`                     |
 | `LegModel` 3-DOF chain             | revolute joints in `leg.urdf.xacro`                           |
 | handwritten `inverse_kinematics()` | KDL plugin in `kinematics.yaml`                               |
 | foot target for a leg              | SRDF chain group with foot tip link                           |

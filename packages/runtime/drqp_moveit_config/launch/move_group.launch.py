@@ -47,12 +47,12 @@ def _get_moveit_params(pkg_path):
         Command(
             [
                 'xacro ',
-                str(drqp_control_pkg / 'urdf' / 'dr_qp.urdf.xacro'),
+                str(drqp_control_pkg / 'urdf' / 'drqp.urdf.xacro'),
             ]
         ),
         value_type=str,
     )
-    srdf_content = (pkg_path / 'config' / 'dr_qp.srdf').read_text()
+    srdf_content = (pkg_path / 'config' / 'drqp.srdf').read_text()
     kinematics = _load_yaml(pkg_path / 'config' / 'kinematics.yaml')
     joint_limits = _load_yaml(pkg_path / 'config' / 'joint_limits.yaml')
     ompl = _load_yaml(pkg_path / 'config' / 'ompl_planning.yaml')

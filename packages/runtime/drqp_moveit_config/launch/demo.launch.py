@@ -58,13 +58,13 @@ def generate_launch_description():
         Command(
             [
                 'xacro ',
-                str(drqp_control_pkg / 'urdf' / 'dr_qp.urdf.xacro'),
+                str(drqp_control_pkg / 'urdf' / 'drqp.urdf.xacro'),
             ]
         ),
         value_type=str,
     )
 
-    srdf_content = (moveit_pkg / 'config' / 'dr_qp.srdf').read_text()
+    srdf_content = (moveit_pkg / 'config' / 'drqp.srdf').read_text()
     kinematics = _load_yaml(moveit_pkg / 'config' / 'kinematics.yaml')
     joint_limits = _load_yaml(moveit_pkg / 'config' / 'joint_limits.yaml')
     ompl = _load_yaml(moveit_pkg / 'config' / 'ompl_planning.yaml')
