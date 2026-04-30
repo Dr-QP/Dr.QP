@@ -86,15 +86,21 @@ class HexapodBrain(rclpy.node.Node):
             '/joint_trajectory_controller/joint_trajectory',
             qos_profile=10,
         )
-        self.trajectory_client = ActionClient(
-            self,
-            FollowJointTrajectory,
-            '/joint_trajectory_controller/follow_joint_trajectory',
-        )
+        self.trajectory_client = None
 
         self.setup_hexapod()
 
         self.loop_timer = self.create_timer(1 / self.fps, self.loop, autostart=False)
+
+    def _get_trajectory_client(self):
+        """Create the action client only when a trajectory action is needed."""
+        if self.trajectory_client is None:
+            self.trajectory_client = ActionClient(
+                self,
+                FollowJointTrajectory,
+                '/joint_trajectory_controller/follow_joint_trajectory',
+            )
+        return self.trajectory_client
 
     def setup_hexapod(self):
         drqp_coxa = 0.053  # in meters
@@ -233,7 +239,7 @@ class HexapodBrain(rclpy.node.Node):
         trajectory.add_point_from_hexapod(reach_in_seconds_from_start=3.2)
 
         trajectory.publish_action(
-            self.trajectory_client,
+            self._get_trajectory_client(),
             self,
             lambda: self.robot_event_pub.publish(std_msgs.msg.String(data='initializing_done')),
         )
@@ -248,7 +254,7 @@ class HexapodBrain(rclpy.node.Node):
         trajectory.add_point_from_hexapod(reach_in_seconds_from_start=1.5)
 
         trajectory.publish_action(
-            self.trajectory_client,
+            self._get_trajectory_client(),
             self,
             lambda: self.robot_event_pub.publish(std_msgs.msg.String(data='finalizing_done')),
         )
@@ -263,7 +269,9 @@ class HexapodBrain(rclpy.node.Node):
         trajectory = JointTrajectoryBuilder(self.hexapod)
         trajectory.add_point_from_hexapod(reach_in_seconds_from_start=0.0, effort=-1.0)
         trajectory.add_point_from_hexapod(reach_in_seconds_from_start=1.0, effort=0.0)
-        trajectory.publish_action(self.trajectory_client, self, self.publish_servos_rebooting_done)
+        trajectory.publish_action(
+            self._get_trajectory_client(), self, self.publish_servos_rebooting_done
+        )
 
     def publish_servos_rebooting_done(self):
         self.robot_event_pub.publish(std_msgs.msg.String(data='servos_rebooting_done'))
@@ -298,6 +306,12 @@ class HexapodBrain(rclpy.node.Node):
         self.get_logger().info('Stopping')
         self.loop_timer.cancel()
         self.walker.reset()
+
+    def destroy_node(self):
+        if self.trajectory_client is not None:
+            self.trajectory_client.destroy()
+            self.trajectory_client = None
+        return super().destroy_node()
 
 
 def main():
