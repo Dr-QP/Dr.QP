@@ -6,8 +6,7 @@
 # Explicit pipeline selection is required by recent MoveIt releases.
 default_planning_pipeline: ompl
 planning_pipelines:
-  pipeline_names:
-    - ompl
+  - ompl
 
 # Capabilities to load.  The defaults cover planning, execution, and
 # query/state services.  Uncomment to add extras.
