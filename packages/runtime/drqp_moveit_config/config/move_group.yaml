@@ -7,7 +7,7 @@
 default_planning_pipeline: ompl
 planning_pipelines:
   - ompl
-allow_trajectory_execution: false
+allow_trajectory_execution: true
 
 # Capabilities to load.  The defaults cover planning, execution, and
 # query/state services.  Uncomment to add extras.
