@@ -22,14 +22,6 @@ Panels:
     Expanded:
       - /Current View1
     Name: Views
-  - Class: moveit_ros_visualization/MotionPlanningPanel
-    Name: MotionPlanning
-    Robot Description: robot_description
-    Planning Group: left_front_leg
-    Planning Time: 5.0
-    Planning Attempts: 10
-    Velocity Scaling Factor: 0.1
-    Acceleration Scaling Factor: 0.1
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -85,7 +77,7 @@ Visualization Manager:
         {}
       Update Interval: 0
       Value: true
-    - Class: moveit_ros_visualization/MotionPlanning
+    - Class: moveit_rviz_plugin/MotionPlanning
       Enabled: true
       Move Group Namespace: ""
       Name: MotionPlanning
