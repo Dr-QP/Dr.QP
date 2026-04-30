@@ -15,6 +15,7 @@
   <depend>moveit_kinematics</depend>
   <depend>moveit_planners_ompl</depend>
   <depend>moveit_ros_robot_interaction</depend>
+  <exec_depend>moveit_simple_controller_manager</exec_depend>
 
   <exec_depend>drqp_brain</exec_depend>
   <exec_depend>drqp_gazebo</exec_depend>
