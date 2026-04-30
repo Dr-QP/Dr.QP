@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<robot name="dr_qp" xmlns:xacro="http://ros.org/wiki/xacro">
+<robot name="drqp" xmlns:xacro="http://ros.org/wiki/xacro">
 
   <xacro:property name="body_height" value="0.037" />
 
@@ -42,12 +42,21 @@
   </link>
 
   <joint name="base_center_to_imu" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <origin rpy="${pi} 0 ${pi/2}" xyz="0.054633 0 0.103"/>
     <parent link="$(arg robot_name)/base_center_link"/>
     <child link="$(arg robot_name)/imu_link"/>
   </joint>
 
   <link name="$(arg robot_name)/imu_link">
+     <visual>
+      <geometry>
+          <!-- Chip footprint 3.8 mm x 5.2 mm, height 1.13 mm, X axis along short side -->
+          <box size="0.0038 0.0052 0.00113" />
+      </geometry>
+      <material name="imu_material">
+        <color rgba="0 1 1 1"/>
+      </material>
+     </visual>
   </link>
 
 </robot>

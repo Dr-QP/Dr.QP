@@ -20,12 +20,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import argparse
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Callable, Protocol
+import sys
+from typing import SupportsFloat, SupportsIndex
 
 import rclpy
 from rclpy.executors import ExternalShutdownException
+import rclpy.logging
 from rclpy.node import Node
 import rclpy.utilities
 from sensor_msgs.msg import Imu, MagneticField, Temperature
@@ -42,31 +44,56 @@ class ImuSample:
     temperature_celsius: float | None = None
 
 
-class ImuSensor(Protocol):
-    """Protocol implemented by concrete IMU backends."""
-
-    def read_sample(self) -> ImuSample:
-        """Read and normalize the next IMU sample."""
+class SensorInitializationError(RuntimeError):
+    """Raised when the IMU backend cannot be constructed."""
 
 
-def _as_vector3(value: object) -> tuple[float, float, float] | None:
+FloatLike = SupportsFloat | SupportsIndex
+
+
+def _format_exception_summary(exc: Exception) -> str:
+    """Render a short exception summary suitable for startup logs."""
+    detail = str(exc).strip()
+    if not detail:
+        return type(exc).__name__
+    return f'{type(exc).__name__}: {detail}'
+
+
+def _as_vector3(value: Iterable[FloatLike | None] | None) -> tuple[float, float, float] | None:
     """Convert a 3-axis reading to a tuple of floats when available."""
     if value is None:
         return None
-    vector = tuple(float(component) for component in value)
-    if len(vector) != 3:
-        raise ValueError(f'Expected 3 components, got {len(vector)}')
-    return vector
+    components = tuple(value)
+    if len(components) != 3:
+        raise ValueError(f'Expected 3 components, got {len(components)}')
+    x_component, y_component, z_component = components
+    if x_component is None or y_component is None or z_component is None:
+        return None
+    return (
+        float(x_component),
+        float(y_component),
+        float(z_component),
+    )
 
 
-def _as_quaternion(value: object) -> tuple[float, float, float, float] | None:
+def _as_quaternion(
+    value: Iterable[FloatLike | None] | None,
+) -> tuple[float, float, float, float] | None:
     """Convert a quaternion reading to a tuple of floats when available."""
     if value is None:
         return None
-    quaternion = tuple(float(component) for component in value)
-    if len(quaternion) != 4:
-        raise ValueError(f'Expected 4 components, got {len(quaternion)}')
-    return quaternion
+    components = tuple(value)
+    if len(components) != 4:
+        raise ValueError(f'Expected 4 components, got {len(components)}')
+    w_component, x_component, y_component, z_component = components
+    if w_component is None or x_component is None or y_component is None or z_component is None:
+        return None
+    return (
+        float(w_component),
+        float(x_component),
+        float(y_component),
+        float(z_component),
+    )
 
 
 class Bno055Sensor:
@@ -82,6 +109,7 @@ class Bno055Sensor:
 
     def read_sample(self) -> ImuSample:
         """Read the latest BNO055 sample."""
+        # API reference: https://docs.circuitpython.org/projects/bno055/en/stable/api.html
         return ImuSample(
             orientation_wxyz=_as_quaternion(self._sensor.quaternion),
             angular_velocity=_as_vector3(self._sensor.gyro),
@@ -96,14 +124,11 @@ class Bno055Sensor:
 class ImuNode(Node):
     """Publish BNO055 IMU readings using standard ROS sensor messages."""
 
-    def __init__(
-        self,
-        sensor_factory: Callable[[int], ImuSensor] | None = None,
-    ):
+    def __init__(self):
         super().__init__('drqp_imu')
 
-        self.declare_parameter('frame_id', 'dr_qp/imu_link')
-        self.declare_parameter('publish_rate_hz', 30.0)
+        self.declare_parameter('frame_id', 'drqp/imu_link')
+        self.declare_parameter('publish_rate_hz', 100.0)
         self.declare_parameter('i2c_address', 0x28)
         self.declare_parameter('publish_temperature', True)
 
@@ -121,16 +146,23 @@ class ImuNode(Node):
         self.magnetic_field_pub = self.create_publisher(MagneticField, '/imu/mag', 10)
         self.temperature_pub = self.create_publisher(Temperature, '/imu/temperature', 10)
 
-        if sensor_factory is None:
-            sensor_factory = Bno055Sensor
-        self.sensor = sensor_factory(int(address))
+        try:
+            self.sensor = Bno055Sensor(int(address))
+        except Exception as exc:
+            self.destroy_node()
+            raise SensorInitializationError(
+                'Failed to initialize the BNO055 IMU backend at I2C address '
+                f'0x{int(address):02X}. Run this node on supported hardware with '
+                'I2C enabled and the Blinka dependencies available. '
+                f'Original error: {_format_exception_summary(exc)}'
+            ) from exc
         self.timer = self.create_timer(1.0 / publish_rate_hz, self.publish_measurements)
 
     def publish_measurements(self):
         """Read the sensor once and publish ROS messages for the sample."""
         try:
             sample = self.sensor.read_sample()
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             self.get_logger().warning(f'Failed to read IMU sample: {exc}')
             return
 
@@ -193,12 +225,15 @@ def main():
     """Entry point for the Dr.QP IMU node."""
     node = None
     try:
-        parser = argparse.ArgumentParser('Dr.QP BNO055 IMU ROS node')
-        filtered_args = rclpy.utilities.remove_ros_args()
-        args = parser.parse_args(args=filtered_args[1:])
         rclpy.init()
-        node = ImuNode(**vars(args))
+        node = ImuNode()
         rclpy.spin(node)
+    except SensorInitializationError as exc:
+        if rclpy.ok():
+            rclpy.logging.get_logger('drqp_imu').error(str(exc))
+        else:
+            print(str(exc), file=sys.stderr)
+        raise SystemExit(1)
     except (KeyboardInterrupt, ExternalShutdownException):
         pass  # codeql[py/empty-except]
     finally:

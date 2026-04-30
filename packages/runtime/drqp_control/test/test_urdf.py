@@ -31,7 +31,7 @@ import pytest
 def urdf_file():
     """Make URDF file path."""
     package_path = get_package_share_directory('drqp_control')
-    urdf_file_path = os.path.join(package_path, 'urdf', 'dr_qp.urdf.xacro')
+    urdf_file_path = os.path.join(package_path, 'urdf', 'drqp.urdf.xacro')
     return urdf_file_path
 
 
@@ -63,12 +63,12 @@ def test_urdf_file_is_valid(urdf_file):
             links = {link.attrib['name'] for link in root.findall('link')}
             joints = {joint.attrib['name']: joint for joint in root.findall('joint')}
 
-            assert 'dr_qp/imu_link' in links
+            assert 'drqp/imu_link' in links
             assert 'base_center_to_imu' in joints
             imu_joint = joints['base_center_to_imu']
             assert imu_joint.attrib['type'] == 'fixed'
-            assert imu_joint.find('parent').attrib['link'] == 'dr_qp/base_center_link'
-            assert imu_joint.find('child').attrib['link'] == 'dr_qp/imu_link'
+            assert imu_joint.find('parent').attrib['link'] == 'drqp/base_center_link'
+            assert imu_joint.find('child').attrib['link'] == 'drqp/imu_link'
         finally:
             if os.path.exists(temp_file.name):
                 os.remove(temp_file.name)

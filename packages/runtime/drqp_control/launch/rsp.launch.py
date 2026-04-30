@@ -39,7 +39,7 @@ def generate_launch_description():
         Command(
             [
                 'xacro ',
-                str(pkg_share_path / 'urdf' / 'dr_qp.urdf.xacro'),
+                str(pkg_share_path / 'urdf' / 'drqp.urdf.xacro'),
                 ' hardware_device_address:=',
                 hardware_device_address,
                 ' use_gazebo:=',

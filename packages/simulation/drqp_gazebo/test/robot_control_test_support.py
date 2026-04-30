@@ -48,6 +48,8 @@ from sensor_msgs.msg import Imu
 import std_msgs.msg
 from test_utils import ensure_gz_sim_not_running
 
+ODOM_TOPIC = '/odom'
+
 
 def create_simulation_launch_description() -> LaunchDescription:
     """Launch Gazebo simulation and wait for initialization before tests."""
@@ -137,7 +139,7 @@ class GazeboRobotControlBase(unittest.TestCase):
 
         self.odom_sub = self.node.create_subscription(
             Odometry,
-            '/model/drqp/odometry',
+            ODOM_TOPIC,
             self._odometry_callback,
             10,
         )
@@ -283,7 +285,7 @@ class GazeboRobotControlBase(unittest.TestCase):
         self._spin_until(
             lambda: self.robot_pose is not None,
             self.MOVEMENT_TIMEOUT,
-            'Did not receive /model/drqp/odometry from Gazebo bridge',
+            f'Did not receive {ODOM_TOPIC} from Gazebo bridge',
         )
 
     def _wait_for_new_pose(self, previous_pose_stamp_ns: int | None) -> None:
@@ -297,7 +299,7 @@ class GazeboRobotControlBase(unittest.TestCase):
                 )
             ),
             self.MOVEMENT_TIMEOUT,
-            'Did not receive a fresh /model/drqp/odometry pose sample from Gazebo bridge',
+            f'Did not receive a fresh {ODOM_TOPIC} pose sample from Gazebo bridge',
         )
 
     def _wait_for_pose_sample(self, settle_sim_time_sec: float = 0.0) -> Pose:
@@ -314,7 +316,7 @@ class GazeboRobotControlBase(unittest.TestCase):
         self._wait_for_pose()
         self.assertIsNotNone(
             self.robot_pose,
-            'Gazebo pose data is required but /model/drqp/odometry did not provide a pose',
+            f'Gazebo pose data is required but {ODOM_TOPIC} did not provide a pose',
         )
 
     def _sample_base_height(self) -> float:
