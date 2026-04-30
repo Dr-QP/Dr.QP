@@ -29,7 +29,10 @@ import pytest
 
 @pytest.mark.launch_test
 def generate_test_description():
-    return build_smoke_test_description('move_group.launch.py')
+    return build_smoke_test_description(
+        'move_group.launch.py',
+        launch_arguments={'publish_fake_joint_states': 'true'},
+    )
 
 
 class TestMoveGroupLaunchSmoke(MoveItLaunchSmokeTestCase):

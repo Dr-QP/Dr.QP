@@ -29,6 +29,7 @@ package's config/ directory.
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
+from launch.conditions import IfCondition
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -73,12 +74,50 @@ def _get_moveit_params(pkg_path):
 def generate_launch_description():
     pkg = get_package_share_path('drqp_moveit_config')
     use_sim_time = LaunchConfiguration('use_sim_time')
+    publish_fake_joint_states = LaunchConfiguration('publish_fake_joint_states')
+    drqp_control_pkg = get_package_share_path('drqp_control')
+
+    robot_description_content = ParameterValue(
+        Command(
+            [
+                'xacro ',
+                str(drqp_control_pkg / 'urdf' / 'drqp.urdf.xacro'),
+            ]
+        ),
+        value_type=str,
+    )
 
     move_group_node = Node(
         package='moveit_ros_move_group',
         executable='move_group',
         output='screen',
         parameters=_get_moveit_params(pkg) + [{'use_sim_time': use_sim_time}],
+    )
+
+    robot_state_publisher = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        output='screen',
+        condition=IfCondition(publish_fake_joint_states),
+        parameters=[
+            {
+                'robot_description': robot_description_content,
+                'use_sim_time': use_sim_time,
+            }
+        ],
+    )
+
+    joint_state_publisher = Node(
+        package='joint_state_publisher',
+        executable='joint_state_publisher',
+        name='joint_state_publisher',
+        condition=IfCondition(publish_fake_joint_states),
+        parameters=[
+            {
+                'robot_description': robot_description_content,
+                'use_sim_time': use_sim_time,
+            }
+        ],
     )
 
     return LaunchDescription(
@@ -89,6 +128,14 @@ def generate_launch_description():
                 choices=['true', 'false'],
                 description='Use simulation time',
             ),
+            DeclareLaunchArgument(
+                name='publish_fake_joint_states',
+                default_value='false',
+                choices=['true', 'false'],
+                description='Start robot_state_publisher and joint_state_publisher',
+            ),
+            robot_state_publisher,
+            joint_state_publisher,
             move_group_node,
         ]
     )

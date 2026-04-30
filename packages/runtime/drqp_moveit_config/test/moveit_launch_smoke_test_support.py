@@ -27,6 +27,8 @@ from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
+from moveit_msgs.srv import GetMotionPlan
+import rclpy
 
 
 def build_smoke_test_description(
@@ -60,13 +62,28 @@ def _filter_shutdown_processes(proc_info):
 
 class MoveItLaunchSmokeTestCase(unittest.TestCase):
 
+    READY_TIMEOUT = 60.0
+
     def test_launch_reaches_ready_state(self, proc_info):
-        early_exits = {
-            proc_name: proc_info[proc_name].returncode
-            for proc_name in proc_info.process_names()
-            if proc_info[proc_name].returncode is not None
-        }
-        self.assertFalse(early_exits, f'Processes exited before ready: {early_exits}')
+        del proc_info
+        if not rclpy.ok():
+            rclpy.init()
+            should_shutdown = True
+        else:
+            should_shutdown = False
+
+        node = rclpy.create_node('moveit_launch_smoke_test')
+        motion_plan_client = node.create_client(GetMotionPlan, '/plan_kinematic_path')
+        try:
+            self.assertTrue(
+                motion_plan_client.wait_for_service(timeout_sec=self.READY_TIMEOUT),
+                '/plan_kinematic_path service is not available',
+            )
+        finally:
+            motion_plan_client.destroy()
+            node.destroy_node()
+            if should_shutdown:
+                rclpy.shutdown()
 
 
 @post_shutdown_test()
