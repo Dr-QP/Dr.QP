@@ -35,54 +35,17 @@ Run with::
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, LaunchConfiguration
-from launch_ros.actions import Node
-from launch_ros.parameter_descriptions import ParameterValue
-import yaml
-
-
-def _load_yaml(path):
-    with open(path) as f:
-        return yaml.safe_load(f)
+from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
-    drqp_control_pkg = get_package_share_path('drqp_control')
     moveit_pkg = get_package_share_path('drqp_moveit_config')
     move_group_launch_path = moveit_pkg / 'launch' / 'move_group.launch.py'
+    moveit_rviz_launch_path = moveit_pkg / 'launch' / 'moveit_rviz.launch.py'
 
     show_rviz = LaunchConfiguration('show_rviz')
     gui = LaunchConfiguration('gui')
-
-    robot_description_content = ParameterValue(
-        Command(
-            [
-                'xacro ',
-                str(drqp_control_pkg / 'urdf' / 'drqp.urdf.xacro'),
-            ]
-        ),
-        value_type=str,
-    )
-
-    srdf_content = (moveit_pkg / 'config' / 'drqp.srdf').read_text()
-    kinematics = _load_yaml(moveit_pkg / 'config' / 'kinematics.yaml')
-    joint_limits = _load_yaml(moveit_pkg / 'config' / 'joint_limits.yaml')
-    ompl = _load_yaml(moveit_pkg / 'config' / 'ompl_planning.yaml')
-    controllers = _load_yaml(moveit_pkg / 'config' / 'moveit_controllers.yaml')
-    move_group_params = _load_yaml(moveit_pkg / 'config' / 'move_group.yaml')
-
-    moveit_params = [
-        {'robot_description': robot_description_content},
-        {'robot_description_semantic': srdf_content},
-        {'robot_description_kinematics': kinematics},
-        {'robot_description_planning': joint_limits},
-        ompl,
-        controllers,
-        move_group_params,
-        {'use_sim_time': False},
-    ]
 
     move_group_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(str(move_group_launch_path)),
@@ -93,14 +56,11 @@ def generate_launch_description():
         }.items(),
     )
 
-    rviz_node = Node(
-        package='rviz2',
-        executable='rviz2',
-        name='rviz2',
-        output='log',
-        arguments=['-d', str(moveit_pkg / 'config' / 'moveit.rviz')],
-        parameters=moveit_params,
-        condition=IfCondition(show_rviz),
+    moveit_rviz_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(str(moveit_rviz_launch_path)),
+        launch_arguments={
+            'use_rviz': show_rviz,
+        }.items(),
     )
 
     return LaunchDescription(
@@ -118,6 +78,6 @@ def generate_launch_description():
                 description='Start joint_state_publisher_gui instead of joint_state_publisher',
             ),
             move_group_launch,
-            rviz_node,
+            moveit_rviz_launch,
         ]
     )
