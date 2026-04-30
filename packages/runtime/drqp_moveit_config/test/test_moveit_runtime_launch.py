@@ -536,6 +536,7 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
 
 
 @post_shutdown_test()
+
 class TestMoveItRuntimeIssue43Shutdown(unittest.TestCase):
     def test_exit_codes(self, proc_info):
         filtered_proc_info = type(proc_info)()
