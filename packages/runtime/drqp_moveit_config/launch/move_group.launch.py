@@ -77,6 +77,7 @@ def generate_launch_description():
     control_launch_path = get_package_share_path('drqp_control') / 'launch'
     use_sim_time = LaunchConfiguration('use_sim_time')
     publish_fake_joint_states = LaunchConfiguration('publish_fake_joint_states')
+    gui = LaunchConfiguration('gui')
 
     move_group_node = Node(
         package='moveit_ros_move_group',
@@ -98,7 +99,7 @@ def generate_launch_description():
         condition=IfCondition(publish_fake_joint_states),
         launch_arguments={
             'use_sim_time': use_sim_time,
-            'gui': 'false',
+            'gui': gui,
         }.items(),
     )
 
@@ -115,6 +116,12 @@ def generate_launch_description():
                 default_value='false',
                 choices=['true', 'false'],
                 description='Start robot_state_publisher and joint_state_publisher',
+            ),
+            DeclareLaunchArgument(
+                name='gui',
+                default_value='false',
+                choices=['true', 'false'],
+                description='Start joint_state_publisher_gui instead of joint_state_publisher',
             ),
             robot_state_publisher,
             joint_state_publisher,

@@ -34,8 +34,9 @@ Run with::
 
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.conditions import IfCondition, UnlessCondition
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.conditions import IfCondition
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -50,6 +51,7 @@ def _load_yaml(path):
 def generate_launch_description():
     drqp_control_pkg = get_package_share_path('drqp_control')
     moveit_pkg = get_package_share_path('drqp_moveit_config')
+    move_group_launch_path = moveit_pkg / 'launch' / 'move_group.launch.py'
 
     show_rviz = LaunchConfiguration('show_rviz')
     gui = LaunchConfiguration('gui')
@@ -82,33 +84,13 @@ def generate_launch_description():
         {'use_sim_time': False},
     ]
 
-    robot_state_publisher = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        output='screen',
-        parameters=[{'robot_description': robot_description_content, 'use_sim_time': False}],
-    )
-
-    # Fake joint states so the robot visualises in RViz without hardware.
-    joint_state_publisher = Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher',
-        name='joint_state_publisher',
-        condition=UnlessCondition(gui),
-    )
-
-    joint_state_publisher_gui = Node(
-        package='joint_state_publisher_gui',
-        executable='joint_state_publisher_gui',
-        name='joint_state_publisher_gui',
-        condition=IfCondition(gui),
-    )
-
-    move_group_node = Node(
-        package='moveit_ros_move_group',
-        executable='move_group',
-        output='screen',
-        parameters=moveit_params,
+    move_group_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(str(move_group_launch_path)),
+        launch_arguments={
+            'use_sim_time': 'false',
+            'publish_fake_joint_states': 'true',
+            'gui': gui,
+        }.items(),
     )
 
     rviz_node = Node(
@@ -135,10 +117,7 @@ def generate_launch_description():
                 choices=['true', 'false'],
                 description='Start joint_state_publisher_gui instead of joint_state_publisher',
             ),
-            robot_state_publisher,
-            joint_state_publisher,
-            joint_state_publisher_gui,
-            move_group_node,
+            move_group_launch,
             rviz_node,
         ]
     )
