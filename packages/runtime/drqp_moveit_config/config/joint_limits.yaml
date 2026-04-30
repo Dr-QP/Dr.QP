@@ -8,100 +8,100 @@ joint_limits:
   drqp/left_front_coxa:
     has_velocity_limits: true
     max_velocity: 3.14159 # rad/s (~180 deg/s)
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 6.28318 # rad/s^2 (~360 deg/s^2)
   drqp/left_front_femur:
     has_velocity_limits: true
     max_velocity: 3.14159
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 6.28318
   drqp/left_front_tibia:
     has_velocity_limits: true
     max_velocity: 3.14159
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 6.28318
 
   # ---- right_front ----
   drqp/right_front_coxa:
     has_velocity_limits: true
     max_velocity: 3.14159
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 6.28318
   drqp/right_front_femur:
     has_velocity_limits: true
     max_velocity: 3.14159
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 6.28318
   drqp/right_front_tibia:
     has_velocity_limits: true
     max_velocity: 3.14159
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 6.28318
 
   # ---- left_middle ----
   drqp/left_middle_coxa:
     has_velocity_limits: true
     max_velocity: 3.14159
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 6.28318
   drqp/left_middle_femur:
     has_velocity_limits: true
     max_velocity: 3.14159
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 6.28318
   drqp/left_middle_tibia:
     has_velocity_limits: true
     max_velocity: 3.14159
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 6.28318
 
   # ---- right_middle ----
   drqp/right_middle_coxa:
     has_velocity_limits: true
     max_velocity: 3.14159
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 6.28318
   drqp/right_middle_femur:
     has_velocity_limits: true
     max_velocity: 3.14159
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 6.28318
   drqp/right_middle_tibia:
     has_velocity_limits: true
     max_velocity: 3.14159
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 6.28318
 
   # ---- left_back ----
   drqp/left_back_coxa:
     has_velocity_limits: true
     max_velocity: 3.14159
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 6.28318
   drqp/left_back_femur:
     has_velocity_limits: true
     max_velocity: 3.14159
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 6.28318
   drqp/left_back_tibia:
     has_velocity_limits: true
     max_velocity: 3.14159
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 6.28318
 
   # ---- right_back ----
   drqp/right_back_coxa:
     has_velocity_limits: true
     max_velocity: 3.14159
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 6.28318
   drqp/right_back_femur:
     has_velocity_limits: true
     max_velocity: 3.14159
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 6.28318
   drqp/right_back_tibia:
     has_velocity_limits: true
     max_velocity: 3.14159
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 6.28318
