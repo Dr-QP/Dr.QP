@@ -68,7 +68,7 @@ Rules for the body:
 - Use imperative, precise language targeted at an implementing agent.
 - Each acceptance criterion must be independently verifiable.
 - Do not repeat the issue title or restate what the code already enforces by convention.
-- Do not add comments, code blocks, or HTML markup.
+- Do not add HTML comments, hidden markup, or extraneous prose — plain Markdown only.
 - Keep the total body under 400 words unless the issue is genuinely complex.
 
 ### Step 4: Update the Issue
