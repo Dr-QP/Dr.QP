@@ -25,5 +25,5 @@ move_group:
     monitored_planning_scene_topic: '/move_group/monitored_planning_scene'
     wait_for_initial_state_timeout: 10.0
 
-  # Sensor integration – add 3D sensor sources here when available.
-  sensors: []
+  # Sensor integration is intentionally omitted until a concrete source is
+  # configured; launch_ros cannot infer a type for an empty sequence parameter.

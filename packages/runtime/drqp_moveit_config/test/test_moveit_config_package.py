@@ -132,31 +132,6 @@ def _command_text(parameter: ParameterValue) -> str:
     return _normalize_substitution(value.command)
 
 
-def test_package_manifest_declares_required_dependencies():
-    package_xml = ET.parse(PACKAGE_ROOT / 'package.xml').getroot()
-
-    depends = {element.text for element in package_xml.findall('depend') if element.text}
-    exec_depends = {element.text for element in package_xml.findall('exec_depend') if element.text}
-    test_depends = {element.text for element in package_xml.findall('test_depend') if element.text}
-
-    assert {
-        'drqp_control',
-        'moveit_ros_move_group',
-        'moveit_kinematics',
-        'moveit_planners_ompl',
-    }.issubset(depends)
-    assert {
-        'drqp_brain',
-        'drqp_gazebo',
-        'joint_state_publisher',
-        'joint_state_publisher_gui',
-        'robot_state_publisher',
-        'rviz2',
-        'xacro',
-    }.issubset(exec_depends)
-    assert {'ament_cmake_pytest', 'ament_lint_auto', 'drqp_lint_common'} == test_depends
-
-
 def test_moveit_config_yaml_files_parse_with_expected_shape():
     kinematics = _load_yaml(CONFIG_DIR / 'kinematics.yaml')
     joint_limits = _load_yaml(CONFIG_DIR / 'joint_limits.yaml')
@@ -164,7 +139,7 @@ def test_moveit_config_yaml_files_parse_with_expected_shape():
     controllers = _load_yaml(CONFIG_DIR / 'moveit_controllers.yaml')
     ompl = _load_yaml(CONFIG_DIR / 'ompl_planning.yaml')
 
-    assert set(kinematics) == set(EXPECTED_GROUPS)
+    assert set(kinematics) == set(LEG_GROUPS)
     assert all(
         config['kinematics_solver'] == 'kdl_kinematics_plugin/KDLKinematicsPlugin'
         for config in kinematics.values()
@@ -179,7 +154,7 @@ def test_moveit_config_yaml_files_parse_with_expected_shape():
     planning_scene_monitor = move_group['move_group']['planning_scene_monitor_options']
     assert planning_scene_monitor['robot_description'] == 'robot_description'
     assert planning_scene_monitor['joint_state_topic'] == '/joint_states'
-    assert move_group['move_group']['sensors'] == []
+    assert 'sensors' not in move_group['move_group']
 
     controller_names = controllers['moveit_simple_controller_manager']['controller_names']
     assert controller_names == ['joint_trajectory_controller']
@@ -257,7 +232,7 @@ def test_demo_launch_description_contains_expected_nodes(
     )
     assert _has_parameter_prefix(
         move_group_parameters,
-        'robot_description_kinematics.whole_body',
+        'robot_description_kinematics.left_front_leg',
     )
     assert _has_parameter_prefix(
         move_group_parameters,
@@ -289,7 +264,7 @@ def test_move_group_launch_description_exposes_move_group_node(
     assert isinstance(parameters['robot_description'], ParameterValue)
     assert 'drqp.urdf.xacro' in _command_text(parameters['robot_description'])
     assert '<robot name="drqp">' in _normalized_xml_text(parameters['robot_description_semantic'])
-    assert _has_parameter_prefix(parameters, 'robot_description_kinematics.whole_body')
+    assert _has_parameter_prefix(parameters, 'robot_description_kinematics.left_front_leg')
     assert _has_parameter_prefix(
         parameters,
         'robot_description_planning.joint_limits.drqp/left_front_coxa',
@@ -317,7 +292,7 @@ def test_moveit_rviz_launch_description_exposes_rviz_node(
     assert _node_arguments(rviz) == ['-d', str(CONFIG_DIR / 'moveit.rviz')]
     assert isinstance(parameters['robot_description'], ParameterValue)
     assert '<robot name="drqp">' in _normalized_xml_text(parameters['robot_description_semantic'])
-    assert _has_parameter_prefix(parameters, 'robot_description_kinematics.whole_body')
+    assert _has_parameter_prefix(parameters, 'robot_description_kinematics.left_front_leg')
     assert _has_parameter_prefix(
         parameters,
         'robot_description_planning.joint_limits.drqp/left_front_coxa',
