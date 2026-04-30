@@ -34,7 +34,6 @@ from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
-from moveit_msgs.action import ExecuteTrajectory
 from moveit_msgs.msg import (
     CollisionObject,
     Constraints,
@@ -138,11 +137,6 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
             ApplyPlanningScene,
             '/apply_planning_scene',
         )
-        self.execute_trajectory_client = ActionClient(
-            self.node,
-            ExecuteTrajectory,
-            '/execute_trajectory',
-        )
         self.follow_joint_trajectory_client = ActionClient(
             self.node,
             FollowJointTrajectory,
@@ -154,7 +148,6 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
     def tearDown(self):
         self._clear_obstacles()
         self.follow_joint_trajectory_client.destroy()
-        self.execute_trajectory_client.destroy()
         self.apply_planning_scene_client.destroy()
         self.state_validity_client.destroy()
         self.motion_plan_client.destroy()
@@ -203,10 +196,6 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
                 f'{name} service is not available',
             )
 
-        self.assertTrue(
-            self.execute_trajectory_client.wait_for_server(timeout_sec=self.READY_TIMEOUT),
-            'ExecuteTrajectory action is not available',
-        )
         self.assertTrue(
             self.follow_joint_trajectory_client.wait_for_server(timeout_sec=self.READY_TIMEOUT),
             'FollowJointTrajectory action is not available',
@@ -342,15 +331,14 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
             )
 
     def _execute_trajectory(self, robot_trajectory):
-        goal = ExecuteTrajectory.Goal()
-        goal.trajectory = robot_trajectory
-        goal.controller_names = ['joint_trajectory_controller']
+        goal = FollowJointTrajectory.Goal()
+        goal.trajectory = robot_trajectory.joint_trajectory
 
-        goal_future = self.execute_trajectory_client.send_goal_async(goal)
+        goal_future = self.follow_joint_trajectory_client.send_goal_async(goal)
         rclpy.spin_until_future_complete(self.node, goal_future, timeout_sec=self.READY_TIMEOUT)
         goal_handle = goal_future.result()
         self.assertIsNotNone(goal_handle)
-        self.assertTrue(goal_handle.accepted, 'ExecuteTrajectory goal was rejected')
+        self.assertTrue(goal_handle.accepted, 'FollowJointTrajectory goal was rejected')
 
         result_future = goal_handle.get_result_async()
         rclpy.spin_until_future_complete(
@@ -360,7 +348,10 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         )
         result = result_future.result()
         self.assertIsNotNone(result)
-        self.assertEqual(result.result.error_code.val, MoveItErrorCodes.SUCCESS)
+        self.assertEqual(
+            result.result.error_code,
+            FollowJointTrajectory.Result.SUCCESSFUL,
+        )
         return result.result
 
     def _wait_for_joint_positions(
