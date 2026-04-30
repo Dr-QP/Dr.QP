@@ -56,7 +56,7 @@ class JointTrajectoryBuilder:
                 else:
                     efforts.append(effort)
                 positions.append(float(np.radians(angle)))
-                self.joint_names.append(f'dr_qp/{leg.label.name}_{joint}')
+                self.joint_names.append(f'drqp/{leg.label.name}_{joint}')
 
         self.add_point(positions, efforts, reach_in_seconds_from_start)
 

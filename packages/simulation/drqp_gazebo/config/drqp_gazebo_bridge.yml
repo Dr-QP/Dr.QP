@@ -5,7 +5,7 @@
   direction: GZ_TO_ROS # BIDIRECTIONAL or ROS_TO_GZ
 
 # Robot odometry for velocity tracking
-- ros_topic_name: '/model/drqp/odometry'
+- ros_topic_name: '/odom'
   gz_topic_name: '/model/drqp/odometry'
   ros_type_name: 'nav_msgs/msg/Odometry'
   gz_type_name: 'gz.msgs.Odometry'
@@ -13,7 +13,7 @@
 
 # 9-DOF IMU data from simulated BNO055 sensor
 - ros_topic_name: '/imu/data'
-  gz_topic_name: '/imu/data'
+  gz_topic_name: '/model/drqp/imu/data'
   ros_type_name: 'sensor_msgs/msg/Imu'
   gz_type_name: 'gz.msgs.IMU'
   direction: GZ_TO_ROS
