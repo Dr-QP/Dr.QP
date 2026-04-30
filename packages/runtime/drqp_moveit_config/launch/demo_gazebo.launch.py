@@ -38,55 +38,19 @@ For CI / headless runs::
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
-from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution
-from launch_ros.actions import Node, SetParameter
-from launch_ros.parameter_descriptions import ParameterValue
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.actions import SetParameter
 from launch_ros.substitutions import FindPackageShare
-import yaml
-
-
-def _load_yaml(path):
-    with open(path) as f:
-        return yaml.safe_load(f)
 
 
 def generate_launch_description():
-    drqp_control_pkg = get_package_share_path('drqp_control')
     moveit_pkg = get_package_share_path('drqp_moveit_config')
+    move_group_launch_path = moveit_pkg / 'launch' / 'move_group.launch.py'
+    moveit_rviz_launch_path = moveit_pkg / 'launch' / 'moveit_rviz.launch.py'
 
     show_rviz = LaunchConfiguration('show_rviz')
     sim_gui = LaunchConfiguration('sim_gui')
-
-    robot_description_content = ParameterValue(
-        Command(
-            [
-                'xacro ',
-                str(drqp_control_pkg / 'urdf' / 'drqp.urdf.xacro'),
-                ' use_gazebo:=true',
-            ]
-        ),
-        value_type=str,
-    )
-
-    srdf_content = (moveit_pkg / 'config' / 'drqp.srdf').read_text()
-    kinematics = _load_yaml(moveit_pkg / 'config' / 'kinematics.yaml')
-    joint_limits = _load_yaml(moveit_pkg / 'config' / 'joint_limits.yaml')
-    ompl = _load_yaml(moveit_pkg / 'config' / 'ompl_planning.yaml')
-    controllers = _load_yaml(moveit_pkg / 'config' / 'moveit_controllers.yaml')
-    move_group_params = _load_yaml(moveit_pkg / 'config' / 'move_group.yaml')
-
-    moveit_params = [
-        {'robot_description': robot_description_content},
-        {'robot_description_semantic': srdf_content},
-        {'robot_description_kinematics': kinematics},
-        {'robot_description_planning': joint_limits},
-        ompl,
-        controllers,
-        move_group_params,
-        {'use_sim_time': True},
-    ]
 
     # Bring up the full Gazebo simulation stack (Gazebo + ros2_control + brain).
     gazebo_sim = IncludeLaunchDescription(
@@ -104,21 +68,22 @@ def generate_launch_description():
         }.items(),
     )
 
-    move_group_node = Node(
-        package='moveit_ros_move_group',
-        executable='move_group',
-        output='screen',
-        parameters=moveit_params,
+    move_group_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(str(move_group_launch_path)),
+        launch_arguments={
+            'use_sim_time': 'true',
+            'use_gazebo': 'true',
+            'publish_fake_joint_states': 'false',
+        }.items(),
     )
 
-    rviz_node = Node(
-        package='rviz2',
-        executable='rviz2',
-        name='rviz2',
-        output='log',
-        arguments=['-d', str(moveit_pkg / 'config' / 'moveit.rviz')],
-        parameters=moveit_params,
-        condition=IfCondition(show_rviz),
+    moveit_rviz_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(str(moveit_rviz_launch_path)),
+        launch_arguments={
+            'use_rviz': show_rviz,
+            'use_sim_time': 'true',
+            'use_gazebo': 'true',
+        }.items(),
     )
 
     return LaunchDescription(
@@ -139,8 +104,8 @@ def generate_launch_description():
                 [
                     SetParameter('use_sim_time', value=True),
                     gazebo_sim,
-                    move_group_node,
-                    rviz_node,
+                    move_group_launch,
+                    moveit_rviz_launch,
                 ]
             ),
         ]

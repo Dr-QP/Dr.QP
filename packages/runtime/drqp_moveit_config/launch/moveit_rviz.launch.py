@@ -40,13 +40,15 @@ def _load_yaml(path):
         return yaml.safe_load(f)
 
 
-def _get_moveit_params(moveit_pkg):
+def _get_moveit_params(moveit_pkg, use_gazebo):
     drqp_control_pkg = get_package_share_path('drqp_control')
     robot_description_content = ParameterValue(
         Command(
             [
                 'xacro ',
                 str(drqp_control_pkg / 'urdf' / 'drqp.urdf.xacro'),
+                ' use_gazebo:=',
+                use_gazebo,
             ]
         ),
         value_type=str,
@@ -74,6 +76,8 @@ def generate_launch_description():
     rviz_config = str(pkg / 'config' / 'moveit.rviz')
 
     use_rviz = LaunchConfiguration('use_rviz')
+    use_sim_time = LaunchConfiguration('use_sim_time')
+    use_gazebo = LaunchConfiguration('use_gazebo')
 
     rviz_node = Node(
         package='rviz2',
@@ -81,7 +85,7 @@ def generate_launch_description():
         name='rviz2',
         output='log',
         arguments=['-d', rviz_config],
-        parameters=_get_moveit_params(pkg),
+        parameters=_get_moveit_params(pkg, use_gazebo) + [{'use_sim_time': use_sim_time}],
         condition=IfCondition(use_rviz),
     )
 
@@ -92,6 +96,18 @@ def generate_launch_description():
                 default_value='true',
                 choices=['true', 'false'],
                 description='Start RViz2 with MoveIt Motion Planning plugin',
+            ),
+            DeclareLaunchArgument(
+                name='use_sim_time',
+                default_value='false',
+                choices=['true', 'false'],
+                description='Use simulation time for RViz',
+            ),
+            DeclareLaunchArgument(
+                name='use_gazebo',
+                default_value='false',
+                choices=['true', 'false'],
+                description='Build robot_description with Gazebo ros2_control settings',
             ),
             rviz_node,
         ]

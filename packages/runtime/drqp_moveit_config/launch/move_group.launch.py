@@ -42,7 +42,7 @@ def _load_yaml(path):
         return yaml.safe_load(f)
 
 
-def _get_moveit_params(pkg_path):
+def _get_moveit_params(pkg_path, use_gazebo):
     """Return a list of parameter dicts for the move_group node."""
     drqp_control_pkg = get_package_share_path('drqp_control')
     robot_description_content = ParameterValue(
@@ -50,6 +50,8 @@ def _get_moveit_params(pkg_path):
             [
                 'xacro ',
                 str(drqp_control_pkg / 'urdf' / 'drqp.urdf.xacro'),
+                ' use_gazebo:=',
+                use_gazebo,
             ]
         ),
         value_type=str,
@@ -76,6 +78,7 @@ def generate_launch_description():
     pkg = get_package_share_path('drqp_moveit_config')
     control_launch_path = get_package_share_path('drqp_control') / 'launch'
     use_sim_time = LaunchConfiguration('use_sim_time')
+    use_gazebo = LaunchConfiguration('use_gazebo')
     publish_fake_joint_states = LaunchConfiguration('publish_fake_joint_states')
     gui = LaunchConfiguration('gui')
 
@@ -83,7 +86,7 @@ def generate_launch_description():
         package='moveit_ros_move_group',
         executable='move_group',
         output='screen',
-        parameters=_get_moveit_params(pkg) + [{'use_sim_time': use_sim_time}],
+        parameters=_get_moveit_params(pkg, use_gazebo) + [{'use_sim_time': use_sim_time}],
     )
 
     robot_state_publisher = IncludeLaunchDescription(
@@ -110,6 +113,12 @@ def generate_launch_description():
                 default_value='false',
                 choices=['true', 'false'],
                 description='Use simulation time',
+            ),
+            DeclareLaunchArgument(
+                name='use_gazebo',
+                default_value='false',
+                choices=['true', 'false'],
+                description='Build robot_description with Gazebo ros2_control settings',
             ),
             DeclareLaunchArgument(
                 name='publish_fake_joint_states',
