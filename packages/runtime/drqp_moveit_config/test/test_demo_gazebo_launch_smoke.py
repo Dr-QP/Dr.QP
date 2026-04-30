@@ -25,7 +25,6 @@ from moveit_launch_smoke_test_support import (
     MoveItLaunchSmokeShutdownTestCase,
     MoveItLaunchSmokeTestCase,
 )
-
 import pytest
 
 
