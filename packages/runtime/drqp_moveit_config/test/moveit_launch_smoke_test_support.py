@@ -86,7 +86,8 @@ class MoveItLaunchSmokeTestCase(unittest.TestCase):
 
 
 @post_shutdown_test()
-
 class MoveItLaunchSmokeShutdownTestCase(unittest.TestCase):
+    """Verify the launch exits cleanly after smoke tests complete."""
+
     def test_exit_codes(self, proc_info):
         asserts.assertExitCodes(_filter_shutdown_processes(proc_info))

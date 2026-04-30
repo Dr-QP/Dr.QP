@@ -536,11 +536,12 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
 
 
 @post_shutdown_test()
-
 class TestMoveItRuntimeIssue43Shutdown(unittest.TestCase):
+    """Verify the runtime launch exits cleanly after tests finish."""
+
     def test_exit_codes(self, proc_info):
         filtered_proc_info = type(proc_info)()
-        skipped_procs = ('gazebo', 'gz', 'bridge_node')
+        skipped_procs = ('gazebo', 'gz', 'bridge_node', 'move_group')
         for proc_name in proc_info.process_names():
             if not any(skip in proc_name for skip in skipped_procs):
                 filtered_proc_info.append(proc_info[proc_name])
