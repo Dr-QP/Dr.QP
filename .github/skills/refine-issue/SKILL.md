@@ -71,10 +71,21 @@ Rules for the body:
 - Do not add HTML comments, hidden markup, or extraneous prose — plain Markdown only.
 - Keep the total body under 400 words unless the issue is genuinely complex.
 
-### Step 4: Update the Issue
+### Step 4: Check Confidence and Ask Clarifying Questions
 
-Call `github/issue_write` with the refined body. Do not ask for user confirmation — apply the update directly.
+Before writing to GitHub, assess how confident you are about each part of the refined specification:
+
+- **High confidence (≥80%)**: the issue text, codebase context, or prior conversation makes the intent clear.
+- **Low confidence (<80%)**: the scope is ambiguous, a key technical decision is unclear, or reasonable interpretations diverge.
+
+If **any** acceptance criterion or technical consideration has low confidence, **stop and ask the user a targeted clarifying question** before proceeding. Combine all low-confidence questions into a single message to avoid back-and-forth. Wait for the answer, then revise the draft accordingly.
+
+Do not ask about items that are unambiguous. Do not ask multiple separate questions when one well-formed question covers the same ground.
+
+### Step 5: Update the Issue
+
+Call `github/issue_write` with the refined body only after all low-confidence items are resolved.
 
 ## Output
 
-Updated issue body on GitHub. No user-facing summary is needed unless the caller explicitly requests one.
+Updated issue body on GitHub. If clarifying questions were asked, include a brief note of what was clarified.
