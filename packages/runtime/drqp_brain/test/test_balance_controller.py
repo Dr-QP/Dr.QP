@@ -56,7 +56,7 @@ def test_body_tilt_from_imu_is_zero_for_level_body():
 def test_body_tilt_from_imu_can_use_raw_orientation_without_mount_compensation():
     tilt = body_tilt_from_imu(
         make_quaternion_msg(R.from_euler('xyz', [0.07, -0.09, 0.2], degrees=False)),
-        base_center_to_imu_rotation=None,
+        base_center_to_imu_rotation=R.identity(),
     )
 
     assert tilt.x == pytest.approx(0.07)

@@ -32,10 +32,12 @@ BASE_CENTER_TO_IMU_ROTATION = R.from_euler('xyz', [np.pi, 0.0, np.pi / 2.0])
 def body_tilt_from_imu(
     orientation,
     *,
-    base_center_to_imu_rotation: R | None = BASE_CENTER_TO_IMU_ROTATION,
+    base_center_to_imu_rotation: R | None = None,
 ) -> Point3D:
     """Return base_center_link roll and pitch in radians from an IMU quaternion."""
     imu_in_world = R.from_quat([orientation.x, orientation.y, orientation.z, orientation.w])
+    if base_center_to_imu_rotation is None:
+        base_center_to_imu_rotation = BASE_CENTER_TO_IMU_ROTATION
     base_in_world = imu_in_world
     if base_center_to_imu_rotation is not None:
         base_in_world = imu_in_world * base_center_to_imu_rotation.inv()

@@ -371,7 +371,7 @@ class HexapodBrain(rclpy.node.Node):
         self.walker.reset()
 
     def destroy_node(self):
-        """Dispose of the lazy trajectory client before shutting down the node."""
+        """Clean up node resources before shutting down."""
         if self.__trajectory_client is not None:
             self.__trajectory_client.destroy()
             self.__trajectory_client = None
