@@ -88,4 +88,4 @@ Call `github/issue_write` with the refined body only after all low-confidence it
 
 ## Output
 
-Updated issue body on GitHub. If clarifying questions were asked, include a brief note of what was clarified.
+Updated issue body on GitHub. The body must be coherent and unambiguous — no meta-notes about the refinement process.
