@@ -298,43 +298,6 @@ This matters because MoveIt migrations often fail in configuration, not in code.
 
 For example, a typo in a group name can silently break planning even though the URDF is valid XML. Tests catch that kind of failure early.
 
-## A quick inspection from inside the notebook
-
-The next few cells show that the MoveIt package really does mirror the structure of the analytical model.
-
-```{code-cell} ipython3
-from pathlib import Path
-
-import yaml
-
-config_dir = Path('../../../packages/runtime/drqp_moveit_config/config')
-kinematics = yaml.safe_load((config_dir / 'kinematics.yaml').read_text())
-
-sorted(kinematics.keys())
-```
-
-The group names should look familiar: six leg groups plus `whole_body`.
-
-```{code-cell} ipython3
-import xml.etree.ElementTree as ET
-
-srdf_root = ET.fromstring((config_dir / 'drqp.srdf').read_text())
-[group.attrib['name'] for group in srdf_root.findall('group')]
-```
-
-We can also inspect the controller bridge that MoveIt will use for execution.
-
-```{code-cell} ipython3
-controllers = yaml.safe_load((config_dir / 'moveit_controllers.yaml').read_text())
-controllers['moveit_simple_controller_manager']['controller_names']
-```
-
-And finally, we can confirm that the trajectory controller covers all 18 actuated joints.
-
-```{code-cell} ipython3
-len(controllers['joint_trajectory_controller']['joints'])
-```
-
 ## Old world vs new world
 
 The table below is the shortest way to remember the migration.
