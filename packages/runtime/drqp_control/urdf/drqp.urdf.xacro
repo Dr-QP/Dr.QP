@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<robot name="dr_qp" xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:arg name="robot_name" default = "dr_qp"/>
+<robot name="drqp" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:arg name="robot_name" default = "drqp"/>
   <xacro:arg name="hardware_device_address" default="/dev/ttySC0"/>
   <xacro:arg name="use_gazebo" default="false" />
 

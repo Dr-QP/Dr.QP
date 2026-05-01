@@ -110,7 +110,7 @@ class TestJointTrajectoryBuilder:
         expected_names = []
         for leg_name in leg_names:
             for joint_type in ['coxa', 'femur', 'tibia']:
-                expected_names.append(f'dr_qp/{leg_name}_{joint_type}')
+                expected_names.append(f'drqp/{leg_name}_{joint_type}')
 
         assert trajectory_builder.joint_names == expected_names
 

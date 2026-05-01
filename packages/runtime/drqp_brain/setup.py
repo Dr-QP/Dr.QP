@@ -17,6 +17,7 @@ setup(
         'numpy',
         'scipy',
         'adafruit-circuitpython-bno055',
+        'lgpio',
     ],
     tests_require=['pytest'],  # must be here, otherwise colcon will skip tests
     zip_safe=True,
