@@ -219,11 +219,12 @@ class HexapodBrain(rclpy.node.Node):
 
     def get_body_tilt(self):
         """Return the latest IMU-derived tilt when balancing data is fresh enough."""
-        if not self.enable_imu_balance:
-            return None
-        if self.current_body_tilt is None or self.last_imu_update is None:
-            return None
-        if self.get_clock().now() - self.last_imu_update > self.imu_balance_timeout:
+        if (
+            not self.enable_imu_balance
+            or self.current_body_tilt is None
+            or self.last_imu_update is None
+            or self.get_clock().now() - self.last_imu_update > self.imu_balance_timeout
+        ):
             return None
         return self.current_body_tilt
 

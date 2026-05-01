@@ -54,11 +54,8 @@ def apply_imu_balance(
     if measured_body_tilt is None:
         return body_rotation
 
-    clipped_tilt = np.clip(
-        measured_body_tilt.numpy(),
-        [-max_tilt_rad, -max_tilt_rad, 0.0],
-        [max_tilt_rad, max_tilt_rad, 0.0],
-    )
+    tilt_bounds = np.array([max_tilt_rad, max_tilt_rad, 0.0])
+    clipped_tilt = np.clip(measured_body_tilt.numpy(), -tilt_bounds, tilt_bounds)
     requested_rotation = R.from_rotvec(body_rotation.numpy())
     balance_correction = R.from_euler(
         'xyz',
