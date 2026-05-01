@@ -200,6 +200,7 @@ class HexapodBrain(rclpy.node.Node):
                 msg.orientation.w,
             ]
         )
+        # Per sensor_msgs/Imu, a negative covariance means orientation is unavailable.
         if msg.orientation_covariance[0] < 0 or np.allclose(quaternion, 0.0):
             self.current_body_tilt = None
             self.last_imu_update = None
@@ -217,7 +218,7 @@ class HexapodBrain(rclpy.node.Node):
         """Log control mode changes (control mode is now handled by translator)."""
         self.get_logger().info('Control mode changed in translator node')
 
-    def get_body_tilt(self):
+    def get_imu_body_tilt(self):
         """Return the latest IMU-derived tilt when balancing data is fresh enough."""
         if (
             not self.enable_imu_balance
@@ -260,7 +261,7 @@ class HexapodBrain(rclpy.node.Node):
         )
         body_rotation = apply_imu_balance(
             body_rotation,
-            self.get_body_tilt(),
+            self.get_imu_body_tilt(),
             gain=self.imu_balance_gain,
             max_tilt_rad=self.imu_balance_max_tilt_rad,
         )
