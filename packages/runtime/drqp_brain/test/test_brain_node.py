@@ -25,8 +25,7 @@ from control_msgs.action import FollowJointTrajectory
 from drqp_brain.balance_controller import BASE_CENTER_TO_IMU_ROTATION
 from drqp_brain.brain_node import HexapodBrain
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
-from geometry_msgs.msg import Quaternion
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Quaternion, Vector3
 from launch import LaunchDescription
 from launch.actions import TimerAction
 from launch.substitutions import FindExecutable
