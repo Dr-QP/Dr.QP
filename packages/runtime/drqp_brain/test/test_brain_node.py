@@ -22,9 +22,10 @@ import unittest
 from unittest import mock
 
 from control_msgs.action import FollowJointTrajectory
+from drqp_brain.balance_controller import BASE_CENTER_TO_IMU_ROTATION
 from drqp_brain.brain_node import HexapodBrain
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Quaternion, Vector3
 from launch import LaunchDescription
 from launch.actions import TimerAction
 from launch.substitutions import FindExecutable
@@ -34,6 +35,8 @@ from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
 import pytest
 import rclpy
+from scipy.spatial.transform import Rotation as R
+from sensor_msgs.msg import Imu
 import std_msgs.msg
 
 
@@ -136,6 +139,41 @@ class TestBrainNode(unittest.TestCase):
             brain.destroy_node()
 
             action_client.destroy.assert_called_once_with()
+
+    def test_loop_uses_imu_balance_correction(self, proc_output):
+        """Apply IMU roll and pitch compensation before stepping the walker."""
+        base_in_world = R.from_euler('xyz', [0.12, -0.08, 0.35], degrees=False)
+        imu_in_world = base_in_world * BASE_CENTER_TO_IMU_ROTATION
+        qx, qy, qz, qw = imu_in_world.as_quat()
+
+        with mock.patch('drqp_brain.brain_node.JointTrajectoryBuilder') as trajectory_builder_cls:
+            brain = HexapodBrain()
+            try:
+                brain.walker.next_step = mock.Mock()
+                brain.current_movement.stride_direction = Vector3(x=0.0, y=0.0, z=0.0)
+                brain.current_movement.rotation_speed = 0.0
+                brain.current_movement.body_translation = Vector3(x=0.0, y=0.0, z=0.0)
+                brain.current_movement.body_rotation = Vector3(x=0.0, y=0.0, z=0.4)
+                brain.current_movement.gait_type = MovementCommandConstants.GAIT_TRIPOD
+                brain.process_imu(
+                    Imu(
+                        orientation=Quaternion(x=qx, y=qy, z=qz, w=qw),
+                        orientation_covariance=[0.0] * 9,
+                    )
+                )
+
+                brain.loop()
+
+                body_rotation = brain.walker.next_step.call_args.kwargs['body_rotation']
+                expected_rotation = R.from_euler(
+                    'xyz', [-0.12, 0.08, 0.0], degrees=False
+                ) * R.from_rotvec([0.0, 0.0, 0.4])
+                assert R.from_rotvec(body_rotation.numpy()).as_matrix() == pytest.approx(
+                    expected_rotation.as_matrix()
+                )
+                trajectory_builder_cls.assert_called_once()
+            finally:
+                brain.destroy_node()
 
 
 # Post-shutdown tests
