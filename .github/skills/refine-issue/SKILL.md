@@ -40,6 +40,8 @@ Keep each criterion specific and verifiable. Prune anything that is obvious or a
 
 Rewrite the issue body using the structure below. Omit any section that has nothing meaningful to say.
 
+Carry forward any existing content that is still relevant — links, reproduction steps, prior decisions, and constraints. Remove only content that is clearly redundant or is meta-process commentary about prior editing.
+
 ```markdown
 ## Goal
 
@@ -69,7 +71,7 @@ Rules for the body:
 - Each acceptance criterion must be independently verifiable.
 - Do not repeat the issue title or restate what the code already enforces by convention.
 - Do not add HTML comments, hidden markup, or extraneous prose — plain Markdown only.
-- Keep the total body under 400 words unless the issue is genuinely complex.
+- Keep the total body under 400 words. If the draft exceeds this limit, tighten criterion wording and remove non-essential details until it fits. Do not exceed 400 words without explicit user instruction.
 
 ### Step 4: Check Confidence and Ask Clarifying Questions
 
