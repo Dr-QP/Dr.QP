@@ -78,7 +78,7 @@ Before writing to GitHub, assess how confident you are about each part of the re
 - **High confidence (≥80%)**: the issue text, codebase context, or prior conversation makes the intent clear.
 - **Low confidence (<80%)**: the scope is ambiguous, a key technical decision is unclear, or reasonable interpretations diverge.
 
-If **any** acceptance criterion or technical consideration has low confidence, **stop and ask the user a targeted clarifying question** before proceeding. Combine all low-confidence questions into a single message to avoid back-and-forth. Wait for the answer, then revise the draft accordingly.
+If **any** acceptance criterion or technical consideration has low confidence, **stop and ask the user a targeted clarifying question** before proceeding. For yes/no or multiple-choice clarifications, prefer `vscode/askQuestions` when it is available. If `vscode/askQuestions` is not available, or if the clarification requires a free-form response, ask in plain text instead. Combine all low-confidence questions into a single interaction to avoid back-and-forth. Wait for the answer, then revise the draft accordingly.
 
 Do not ask about items that are unambiguous. Do not ask multiple separate questions when one well-formed question covers the same ground.
 
