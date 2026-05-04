@@ -1,6 +1,6 @@
 ---
 name: refine-issue
-description: Refine a GitHub issue by enriching it with acceptance criteria, technical considerations, edge cases, and NFRs. Keep the result compact and agent-readable. Use when asked to refine, enrich, or improve an issue description. Keywords: refine issue, improve issue, enrich issue, acceptance criteria, issue refinement.
+description: 'Refine a GitHub issue by enriching it with acceptance criteria, technical considerations, edge cases, and NFRs. Keep the result compact and agent-readable. Use when asked to refine, enrich, or improve an issue description. Keywords: refine issue, improve issue, enrich issue, acceptance criteria, issue refinement.'
 ---
 
 # Refine Issue
