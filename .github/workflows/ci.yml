@@ -175,6 +175,8 @@ jobs:
     name: Build and test ROS2 workspace
     needs: [merge-dev-image]
     timeout-minutes: 35
+    env:
+      DRQP_GAZEBO_TEST_MODE: all
     strategy:
       fail-fast: false
       matrix:
