@@ -19,10 +19,9 @@
 # THE SOFTWARE.
 
 import os
+from pathlib import Path
 import subprocess
 import tempfile
-import xml.etree.ElementTree as ET
-from pathlib import Path
 
 from ament_index_python.packages import get_package_share_directory
 import pytest
