@@ -100,9 +100,13 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
     FEMUR_LENGTH = math.hypot(0.036 + 0.0055 + 0.023, 0.015)
     TIBIA_LENGTH = math.hypot(0.0325 + 0.052797, 0.088395)
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
         rclpy.init()
-        self.addCleanup(rclpy.shutdown)
+        cls.addClassCleanup(rclpy.try_shutdown)
+
+    def setUp(self):
         self.node = rclpy.create_node('test_moveit_runtime_issue43')
         self.addCleanup(self.node.destroy_node)
         self.latest_joint_state = None

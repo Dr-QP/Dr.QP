@@ -36,9 +36,13 @@ import std_msgs.msg
 class TestJoystickTranslatorNode(unittest.TestCase):
     """Test the joystick translator node."""
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
         rclpy.init()
-        self.addCleanup(rclpy.shutdown)
+        cls.addClassCleanup(rclpy.try_shutdown)
+
+    def setUp(self):
         self.node = JoystickTranslatorNode()
         self.addCleanup(self.node.destroy_node)
         self.test_node = rclpy.create_node('test_translator_consumer')

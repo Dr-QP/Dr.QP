@@ -65,12 +65,20 @@ class FakeImuSensor:
         return self.sample
 
 
-class TestImuNode(unittest.TestCase):
+class RclpyTestCase(unittest.TestCase):
+    """Provide a class-scoped ROS context for unittest-based ROS tests."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        rclpy.init()
+        cls.addClassCleanup(rclpy.try_shutdown)
+
+
+class TestImuNode(RclpyTestCase):
     """Test the IMU publisher node with a fake sensor backend."""
 
     def setUp(self):
-        rclpy.init()
-        self.addCleanup(rclpy.shutdown)
         sample = ImuSample(
             orientation_wxyz=(1.0, 0.1, 0.2, 0.3),
             angular_velocity=(0.4, 0.5, 0.6),
@@ -218,12 +226,8 @@ class TestImuNode(unittest.TestCase):
         self.assertEqual(imu_msg.linear_acceleration_covariance[0], -1.0)
 
 
-class TestImuNodeInitialization(unittest.TestCase):
+class TestImuNodeInitialization(RclpyTestCase):
     """Test IMU node startup failures caused by backend construction."""
-
-    def setUp(self):
-        rclpy.init()
-        self.addCleanup(rclpy.shutdown)
 
     def test_constructor_wraps_sensor_construction_failures(self):
         """Report backend construction failures with an actionable startup error."""

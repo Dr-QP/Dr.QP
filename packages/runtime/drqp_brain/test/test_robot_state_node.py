@@ -57,9 +57,13 @@ def generate_test_description():
 class TestRobotStateMachineNode(unittest.TestCase):
     """Test the drqp_robot_state node."""
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
         rclpy.init()
-        self.addCleanup(rclpy.shutdown)
+        cls.addClassCleanup(rclpy.try_shutdown)
+
+    def setUp(self):
         self.node = rclpy.create_node('test_state_consumer')
         self.addCleanup(self.node.destroy_node)
 

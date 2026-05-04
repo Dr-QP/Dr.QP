@@ -75,9 +75,12 @@ class MoveItLaunchSmokeTestCase(unittest.TestCase):
 
     READY_TIMEOUT = 60.0
 
-    def setUp(self) -> None:
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
         rclpy.init()
-        self.addCleanup(rclpy.shutdown)
+        cls.addClassCleanup(rclpy.try_shutdown)
+
 
     def test_launch_reaches_ready_state(self, proc_info):
         del proc_info

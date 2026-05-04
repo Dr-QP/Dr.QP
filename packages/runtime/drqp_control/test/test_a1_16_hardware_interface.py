@@ -71,9 +71,13 @@ neutral_position = 0.1
 class TestA116HardwareInterface(unittest.TestCase):
     """Test the pose_setter node."""
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
         rclpy.init()
-        self.addCleanup(rclpy.shutdown)
+        cls.addClassCleanup(rclpy.try_shutdown)
+
+    def setUp(self):
         self.node = rclpy.create_node('test_servo_driver_' + self.id().replace('.', '_'))
         self.addCleanup(self.node.destroy_node)
         self._wait_for_controller(self.node)

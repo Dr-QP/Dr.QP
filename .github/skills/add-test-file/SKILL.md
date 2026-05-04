@@ -65,7 +65,7 @@ TEST_F(<ClassName>Test, MethodNameHandlesInvalidInput) { ... }
 
 **Python Unit:** pytest fixtures, `Test<ClassName>` class, assert patterns.
 
-**Python Integration:** `Test<NodeClass>Integration` class. Initialize ROS in `setUp()` and register `self.addCleanup(rclpy.shutdown)` immediately so shutdown still runs if setup fails. Prefer `self.addCleanup(...)` for node, client, subscription, and action cleanup as well.
+**Python Integration:** `Test<NodeClass>Integration` class. Initialize ROS once in `setUpClass()` and register `cls.addClassCleanup(rclpy.try_shutdown)` so the ROS context is shared across the class. Keep node, client, subscription, and action cleanup in `setUp()` with `self.addCleanup(...)`, or use the pytest equivalent class-scoped setup/teardown plus fixture finalizers.
 
 ### Step 5: Update Build Configuration
 

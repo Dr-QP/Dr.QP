@@ -57,9 +57,13 @@ def generate_test_description():
 class TestBrainNode(unittest.TestCase):
     """Test the drqp_brain node."""
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
         rclpy.init()
-        self.addCleanup(rclpy.shutdown)
+        cls.addClassCleanup(rclpy.try_shutdown)
+
+    def setUp(self):
         self.node = rclpy.create_node('test_brain_consumer')
         self.addCleanup(self.node.destroy_node)
 

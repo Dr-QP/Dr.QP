@@ -113,6 +113,12 @@ class GazeboRobotControlBase(unittest.TestCase):
 
     __test__ = False  # Prevent unittest from collecting this base class as a test case.
 
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        rclpy.init()
+        cls.addClassCleanup(rclpy.try_shutdown)
+
     # Configurable timeouts.
     READY_TIMEOUT = 90.0
     SPAWN_TIMEOUT = 90.0
@@ -130,8 +136,6 @@ class GazeboRobotControlBase(unittest.TestCase):
 
     def setUp(self) -> None:
         """Set up test node and publishers/subscribers."""
-        self.addCleanup(rclpy.try_shutdown)
-        rclpy.init()
         self.node = rclpy.create_node('test_gazebo_robot_control')
         self.addCleanup(self.node.destroy_node)
 
