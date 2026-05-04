@@ -65,26 +65,21 @@ class MoveItLaunchSmokeTestCase(unittest.TestCase):
 
     READY_TIMEOUT = 60.0
 
+    def setUp(self) -> None:
+        rclpy.init()
+        self.addCleanup(rclpy.shutdown)
+
     def test_launch_reaches_ready_state(self, proc_info):
         del proc_info
-        if not rclpy.ok():
-            rclpy.init()
-            should_shutdown = True
-        else:
-            should_shutdown = False
 
         node = rclpy.create_node('moveit_launch_smoke_test')
+        self.addCleanup(node.destroy_node)
         motion_plan_client = node.create_client(GetMotionPlan, '/plan_kinematic_path')
-        try:
-            self.assertTrue(
-                motion_plan_client.wait_for_service(timeout_sec=self.READY_TIMEOUT),
-                '/plan_kinematic_path service is not available',
-            )
-        finally:
-            motion_plan_client.destroy()
-            node.destroy_node()
-            if should_shutdown:
-                rclpy.shutdown()
+        self.addCleanup(motion_plan_client.destroy)
+        self.assertTrue(
+            motion_plan_client.wait_for_service(timeout_sec=self.READY_TIMEOUT),
+            '/plan_kinematic_path service is not available',
+        )
 
 
 @post_shutdown_test()

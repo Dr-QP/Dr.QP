@@ -27,11 +27,12 @@ class TestTimedQueue:
     """Test the TimedQueue class."""
 
     @pytest.fixture
-    def timed_queue(self):
+    def timed_queue(self, request):
         rclpy.init()
+        request.addfinalizer(rclpy.shutdown)
         node = rclpy.create_node('test_timed_queue')
-        yield TimedQueue(node)
-        rclpy.shutdown()
+        request.addfinalizer(node.destroy_node)
+        return TimedQueue(node)
 
     def test_added_action_is_executed_immediately(self, timed_queue):
         """Check whether actions are executed immediately."""

@@ -113,9 +113,11 @@ class GazeboRobotControlBase(unittest.TestCase):
     POSTURE_HEIGHT_EPSILON = 0.01
 
     def setUp(self) -> None:
-        rclpy.init()
         """Set up test node and publishers/subscribers."""
+        rclpy.init()
+        self.addCleanup(rclpy.shutdown)
         self.node = rclpy.create_node('test_gazebo_robot_control')
+        self.addCleanup(self.node.destroy_node)
 
         self.current_robot_state = None
         self.current_clock = None
@@ -164,11 +166,6 @@ class GazeboRobotControlBase(unittest.TestCase):
         )
         self._wait_for_sim_time(self.POSE_SETTLE_DURATION, wall_timeout_sec=self.CLOCK_TIMEOUT)
         self._wait_for_pose()
-
-    def tearDown(self) -> None:
-        """Clean up test node."""
-        self.node.destroy_node()
-        rclpy.shutdown()
 
     def _robot_state_callback(self, msg: std_msgs.msg.String) -> None:
         self.current_robot_state = msg.data
