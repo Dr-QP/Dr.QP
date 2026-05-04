@@ -23,6 +23,7 @@
 import inspect
 import subprocess
 
+__skip_gz_sim_cleanup = True
 
 def _caller_trace(max_depth: int = 3) -> str:
     """Return a compact caller chain for debugging test teardown/setup flows."""
@@ -42,6 +43,9 @@ def ensure_gz_sim_not_running():
     This is needed to ensure clean test isolation.
     See https://github.com/ros2/launch/issues/545 for details.
     """
+    if __skip_gz_sim_cleanup:
+        return
+
     trace = _caller_trace()
     print(
         f'Ensuring no gz sim processes are running... [pkill -9 -f "^gz sim"] caller={trace}',
