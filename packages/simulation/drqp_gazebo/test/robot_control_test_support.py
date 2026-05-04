@@ -95,6 +95,8 @@ def assert_clean_exit_codes(proc_info: ProcInfoHandler) -> None:
 class GazeboRobotControlBase(unittest.TestCase):
     """Shared harness and helpers for robot control behavior tests."""
 
+    __test__ = False  # Prevent unittest from collecting this base class as a test case.
+
     # Configurable timeouts.
     READY_TIMEOUT = 90.0
     SPAWN_TIMEOUT = 90.0
