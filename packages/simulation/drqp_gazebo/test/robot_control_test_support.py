@@ -112,15 +112,8 @@ class GazeboRobotControlBase(unittest.TestCase):
     MIN_ARM_DISARM_HEIGHT_DELTA = 0.02
     POSTURE_HEIGHT_EPSILON = 0.01
 
-    @classmethod
-    def setUpClass(cls) -> None:
-        rclpy.init()
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        rclpy.shutdown()
-
     def setUp(self) -> None:
+        rclpy.init()
         """Set up test node and publishers/subscribers."""
         self.node = rclpy.create_node('test_gazebo_robot_control')
 
@@ -175,6 +168,7 @@ class GazeboRobotControlBase(unittest.TestCase):
     def tearDown(self) -> None:
         """Clean up test node."""
         self.node.destroy_node()
+        rclpy.shutdown()
 
     def _robot_state_callback(self, msg: std_msgs.msg.String) -> None:
         self.current_robot_state = msg.data
