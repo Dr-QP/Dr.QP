@@ -131,7 +131,7 @@ URDF tells MoveIt what the robot is.
 
 SRDF tells MoveIt how to reason about the robot.
 
-The SRDF for Dr.QP lives in `packages/runtime/drqp_moveit_config/config/drqp.srdf` and adds four important layers of meaning.
+The SRDF for Dr.QP lives in `packages/runtime/drqp_moveit/config/drqp.srdf` and adds four important layers of meaning.
 
 ### 2.1 Planning groups
 
@@ -188,7 +188,7 @@ In MoveIt 2, IK is selected per planning group in `kinematics.yaml`.
 
 For Dr.QP, each leg is a standard serial chain, so the migration uses MoveIt's KDL plugin instead of writing a custom solver plugin.
 
-```{literalinclude} ../../../packages/runtime/drqp_moveit_config/config/kinematics.yaml
+```{literalinclude} ../../../packages/runtime/drqp_moveit/config/kinematics.yaml
 :language: yaml
 ```
 
@@ -217,7 +217,7 @@ MoveIt plans in terms of joint trajectories, but it still needs to know which RO
 
 That bridge is defined in `moveit_controllers.yaml`.
 
-```{literalinclude} ../../../packages/runtime/drqp_moveit_config/config/moveit_controllers.yaml
+```{literalinclude} ../../../packages/runtime/drqp_moveit/config/moveit_controllers.yaml
 :language: yaml
 ```
 
@@ -232,7 +232,7 @@ So the migration is not just "make IK work in RViz". It is also "connect the pla
 
 Once the URDF, SRDF, solver config, limits, and controller mapping exist, the system still has to be launched with the correct parameters.
 
-That is the job of the launch files in `drqp_moveit_config/launch/`.
+That is the job of the launch files in `drqp_moveit/launch/`.
 
 The key file for understanding the integration is `demo.launch.py`.
 
@@ -263,7 +263,7 @@ Dr.QP keeps two beginner-friendly entry points.
 Use this when you want to inspect the robot, move joints manually, and experiment with planning without hardware or Gazebo.
 
 ```bash
-ros2 launch drqp_moveit_config demo.launch.py
+ros2 launch drqp_moveit demo.launch.py
 ```
 
 ### 6.2 Gazebo demo
@@ -271,7 +271,7 @@ ros2 launch drqp_moveit_config demo.launch.py
 Use this when you want MoveIt connected to the simulated robot stack.
 
 ```bash
-ros2 launch drqp_moveit_config demo_gazebo.launch.py
+ros2 launch drqp_moveit demo_gazebo.launch.py
 ```
 
 The Gazebo launch reuses the same MoveIt parameters, but runs with simulated time and includes the simulation stack.
