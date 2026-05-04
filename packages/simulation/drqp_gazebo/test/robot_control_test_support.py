@@ -131,7 +131,6 @@ class GazeboRobotControlBase(unittest.TestCase):
     def setUp(self) -> None:
         """Set up test node and publishers/subscribers."""
         self.addCleanup(rclpy.try_shutdown)
-        rclpy.try_shutdown()
         rclpy.init()
         self.node = rclpy.create_node('test_gazebo_robot_control')
         self.addCleanup(self.node.destroy_node)
