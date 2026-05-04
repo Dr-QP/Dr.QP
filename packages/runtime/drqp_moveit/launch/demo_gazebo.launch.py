@@ -39,7 +39,11 @@ from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import (
+    EnvironmentVariable,
+    LaunchConfiguration,
+    PathJoinSubstitution,
+)
 from launch_ros.actions import SetParameter
 from launch_ros.substitutions import FindPackageShare
 
@@ -51,6 +55,7 @@ def generate_launch_description():
 
     show_rviz = LaunchConfiguration('show_rviz')
     sim_gui = LaunchConfiguration('sim_gui')
+    gz_partition = LaunchConfiguration('gz_partition')
 
     # Bring up the full Gazebo simulation stack (Gazebo + ros2_control + brain).
     gazebo_sim = IncludeLaunchDescription(
@@ -65,6 +70,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             'sim_gui': sim_gui,
+            'gz_partition': gz_partition,
         }.items(),
     )
 
@@ -99,6 +105,17 @@ def generate_launch_description():
                 default_value='false',
                 choices=['true', 'false'],
                 description='Start Gazebo GUI (false for headless CI runs)',
+            ),
+            DeclareLaunchArgument(
+                name='gz_partition',
+                default_value=[
+                    EnvironmentVariable('HOSTNAME', default_value='unknown-host'),
+                    ':',
+                    EnvironmentVariable('USER', default_value='unknown-user'),
+                    '-domain-',
+                    EnvironmentVariable('ROS_DOMAIN_ID', default_value='0'),
+                ],
+                description='Gazebo transport partition forwarded to sim.launch.py',
             ),
             GroupAction(
                 [

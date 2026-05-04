@@ -23,9 +23,11 @@ from launch.actions import (
     DeclareLaunchArgument,
     GroupAction,
     IncludeLaunchDescription,
+    SetEnvironmentVariable,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
+    EnvironmentVariable,
     IfElseSubstitution,
     LaunchConfiguration,
     PathJoinSubstitution,
@@ -59,9 +61,26 @@ def generate_launch_description():
             description='Seconds to wait after SIGTERM before sending SIGKILL to Gazebo.',
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'gz_partition',
+            default_value=[
+                EnvironmentVariable('HOSTNAME', default_value='unknown-host'),
+                ':',
+                EnvironmentVariable('USER', default_value='unknown-user'),
+                '-domain-',
+                EnvironmentVariable('ROS_DOMAIN_ID', default_value='0'),
+            ],
+            description=(
+                'Gazebo transport partition. Defaults to '
+                '<HOSTNAME>:<USERNAME>-domain-<ROS_DOMAIN_ID>.'
+            ),
+        )
+    )
 
     # Initialize Arguments
     sim_gui = LaunchConfiguration('sim_gui')
+    gz_partition = LaunchConfiguration('gz_partition')
     container_name = 'drqp_gazebo_container'
     gz_args = '-r -v 3 empty.sdf'
     gazebo = IncludeLaunchDescription(
@@ -129,6 +148,7 @@ def generate_launch_description():
     return LaunchDescription(
         declared_arguments
         + [
+            SetEnvironmentVariable('GZ_PARTITION', gz_partition),
             GroupAction(
                 [
                     SetParameter('use_sim_time', value=True),

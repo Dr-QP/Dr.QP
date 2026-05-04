@@ -18,6 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import os
+import re
 import unittest
 
 from launch import LaunchDescription
@@ -29,6 +31,14 @@ from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
 from moveit_msgs.srv import GetMotionPlan
 import rclpy
+
+
+def build_test_gz_partition(test_name: str) -> str:
+    domain_id = os.environ.get('ROS_DOMAIN_ID', '0')
+    sanitized_name = re.sub(r'[^a-z0-9]+', '-', test_name.lower()).strip('-')
+    if not sanitized_name:
+        sanitized_name = 'test'
+    return f'drqp-domain-{domain_id}-{sanitized_name}'
 
 
 def build_smoke_test_description(

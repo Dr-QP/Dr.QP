@@ -21,16 +21,22 @@
 
 from moveit_launch_smoke_test_support import (
     build_smoke_test_description,
+    build_test_gz_partition,
     MoveItLaunchSmokeShutdownTestCase,
     MoveItLaunchSmokeTestCase,
 )
 import pytest
 
+
 @pytest.mark.launch_test
 def generate_test_description():
     return build_smoke_test_description(
         'demo_gazebo.launch.py',
-        launch_arguments={'show_rviz': 'false', 'sim_gui': 'false'},
+        launch_arguments={
+            'show_rviz': 'false',
+            'sim_gui': 'false',
+            'gz_partition': build_test_gz_partition('demo_gazebo_launch_smoke'),
+        },
         ready_delay=5.0,
     )
 

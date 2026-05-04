@@ -19,7 +19,6 @@
 # THE SOFTWARE.
 
 import math
-import subprocess
 import unittest
 
 from control_msgs.action import FollowJointTrajectory
@@ -34,6 +33,7 @@ from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch_testing import asserts, post_shutdown_test
 from launch_testing.actions import ReadyToTest
+from moveit_launch_smoke_test_support import build_test_gz_partition
 from moveit_msgs.msg import (
     CollisionObject,
     Constraints,
@@ -61,6 +61,7 @@ LEFT_FRONT_JOINTS = [
 ]
 TARGET_OBSTACLE_ID = 'issue43_left_front_target_blocker'
 
+
 @pytest.mark.slow
 @pytest.mark.launch_test
 def generate_test_description():
@@ -72,7 +73,10 @@ def generate_test_description():
         [
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(sim_launch),
-                launch_arguments={'sim_gui': 'false'}.items(),
+                launch_arguments={
+                    'sim_gui': 'false',
+                    'gz_partition': build_test_gz_partition('moveit_runtime_launch'),
+                }.items(),
             ),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(move_group_launch),

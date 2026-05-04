@@ -22,7 +22,11 @@
 
 from collections.abc import Callable
 from copy import deepcopy
+import inspect
 import math
+import os
+from pathlib import Path
+import re
 import time
 import unittest
 
@@ -51,9 +55,20 @@ from test_utils import ensure_gz_sim_not_running
 ODOM_TOPIC = '/odom'
 
 
-def create_simulation_launch_description() -> LaunchDescription:
+def build_test_gz_partition(test_name: str) -> str:
+    domain_id = os.environ.get('ROS_DOMAIN_ID', '0')
+    sanitized_name = re.sub(r'[^a-z0-9]+', '-', test_name.lower()).strip('-')
+    if not sanitized_name:
+        sanitized_name = 'test'
+    return f'drqp-domain-{domain_id}-{sanitized_name}'
+
+
+def create_simulation_launch_description(test_name: str | None = None) -> LaunchDescription:
     """Launch Gazebo simulation and wait for initialization before tests."""
     ensure_gz_sim_not_running()
+
+    if test_name is None:
+        test_name = Path(inspect.stack()[1].filename).stem
 
     simulation_launch = PathJoinSubstitution(
         [
@@ -68,6 +83,7 @@ def create_simulation_launch_description() -> LaunchDescription:
                 PythonLaunchDescriptionSource(simulation_launch),
                 launch_arguments={
                     'sim_gui': 'false',
+                    'gz_partition': build_test_gz_partition(test_name),
                 }.items(),
             ),
             # Handshake with the launched processes, then let the test harness
