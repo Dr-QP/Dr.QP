@@ -38,8 +38,11 @@ class TestJoystickTranslatorNode(unittest.TestCase):
 
     def setUp(self):
         rclpy.init()
+        self.addCleanup(rclpy.shutdown)
         self.node = JoystickTranslatorNode()
+        self.addCleanup(self.node.destroy_node)
         self.test_node = rclpy.create_node('test_translator_consumer')
+        self.addCleanup(self.test_node.destroy_node)
 
         # Store received messages
         self.movement_commands = []
@@ -67,11 +70,6 @@ class TestJoystickTranslatorNode(unittest.TestCase):
             lambda msg: self.joy_feedback_messages.append(msg),
             10,
         )
-
-    def tearDown(self):
-        self.node.destroy_node()
-        self.test_node.destroy_node()
-        rclpy.shutdown()
 
     def test_joystick_to_movement_command(self):
         """Test that joystick messages are translated to movement commands."""

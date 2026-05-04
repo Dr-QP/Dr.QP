@@ -73,13 +73,16 @@ class TestA116HardwareInterface(unittest.TestCase):
 
     def setUp(self):
         rclpy.init()
+        self.addCleanup(rclpy.shutdown)
         self.node = rclpy.create_node('test_servo_driver_' + self.id().replace('.', '_'))
+        self.addCleanup(self.node.destroy_node)
         self._wait_for_controller(self.node)
         self.trajectory_client = ActionClient(
             self.node,
             FollowJointTrajectory,
             '/joint_trajectory_controller/follow_joint_trajectory',
         )
+        self.addCleanup(self.trajectory_client.destroy)
         self.assertTrue(self.trajectory_client.wait_for_server(timeout_sec=10.0))
 
         self.dynamic_joint_states_sub = self.node.create_subscription(
@@ -88,6 +91,7 @@ class TestA116HardwareInterface(unittest.TestCase):
             self.dynamic_joint_states_callback,
             10,
         )
+        self.addCleanup(self.dynamic_joint_states_sub.destroy)
         self.joint_names = [
             'drqp/left_front_coxa',
             'drqp/left_front_femur',
@@ -117,6 +121,7 @@ class TestA116HardwareInterface(unittest.TestCase):
             effort=1,
             expected_position=neutral_position,
         )
+        self.addCleanup(self._reset_feedback)
 
     def _wait_for_controller(self, node):
         needed_controllers = ['joint_trajectory_controller', 'joint_state_broadcaster']
@@ -147,13 +152,6 @@ class TestA116HardwareInterface(unittest.TestCase):
         self.joint_efforts = joint_efforts
         self.last_feedback = rclpy.time.Time.from_msg(msg.header.stamp)
         # self.node.get_logger().info(f'Feedback received: {self.joint_positions}')
-
-    def tearDown(self):
-        self.trajectory_client.destroy()
-        self.dynamic_joint_states_sub.destroy()
-        self.node.destroy_node()
-        self._reset_feedback()
-        rclpy.shutdown()
 
     def test_node_start(self):
         check_node_running(self.node, 'robot_state_publisher')

@@ -70,6 +70,7 @@ class TestImuNode(unittest.TestCase):
 
     def setUp(self):
         rclpy.init()
+        self.addCleanup(rclpy.shutdown)
         sample = ImuSample(
             orientation_wxyz=(1.0, 0.1, 0.2, 0.3),
             angular_velocity=(0.4, 0.5, 0.6),
@@ -85,8 +86,10 @@ class TestImuNode(unittest.TestCase):
         self.addCleanup(self.sensor_patch.stop)
         self.sensor_patch.start()
         self.node = ImuNode()
+        self.addCleanup(self.node.destroy_node)
         self.node.timer.cancel()
         self.test_node = rclpy.create_node('test_imu_consumer')
+        self.addCleanup(self.test_node.destroy_node)
 
         self.imu_messages = []
         self.magnetic_field_messages = []
@@ -107,11 +110,6 @@ class TestImuNode(unittest.TestCase):
             lambda msg: self.temperature_messages.append(msg),
             10,
         )
-
-    def tearDown(self):
-        self.node.destroy_node()
-        self.test_node.destroy_node()
-        rclpy.shutdown()
 
     def _spin_until(self, predicate, iterations: int = 10) -> bool:
         """Spin both nodes until the predicate is satisfied or the budget is exhausted."""
@@ -225,9 +223,7 @@ class TestImuNodeInitialization(unittest.TestCase):
 
     def setUp(self):
         rclpy.init()
-
-    def tearDown(self):
-        rclpy.shutdown()
+        self.addCleanup(rclpy.shutdown)
 
     def test_constructor_wraps_sensor_construction_failures(self):
         """Report backend construction failures with an actionable startup error."""
