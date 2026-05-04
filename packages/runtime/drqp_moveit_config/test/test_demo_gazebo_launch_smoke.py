@@ -43,8 +43,12 @@ def generate_test_description():
 
 
 class TestDemoGazeboLaunchSmoke(MoveItLaunchSmokeTestCase):
+    __test__ = True
+
     pass
 
 
 class TestDemoGazeboLaunchShutdown(MoveItLaunchSmokeShutdownTestCase):
+    __test__ = True
+
     pass

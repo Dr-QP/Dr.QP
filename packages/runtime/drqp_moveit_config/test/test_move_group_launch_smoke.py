@@ -35,8 +35,12 @@ def generate_test_description():
 
 
 class TestMoveGroupLaunchSmoke(MoveItLaunchSmokeTestCase):
+    __test__ = True
+
     pass
 
 
 class TestMoveGroupLaunchShutdown(MoveItLaunchSmokeShutdownTestCase):
+    __test__ = True
+
     pass

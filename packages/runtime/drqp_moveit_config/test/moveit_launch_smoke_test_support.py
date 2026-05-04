@@ -61,6 +61,8 @@ def _filter_shutdown_processes(proc_info):
 
 
 class MoveItLaunchSmokeTestCase(unittest.TestCase):
+    __test__ = False
+
     READY_TIMEOUT = 60.0
 
     def test_launch_reaches_ready_state(self, proc_info):
@@ -88,6 +90,8 @@ class MoveItLaunchSmokeTestCase(unittest.TestCase):
 @post_shutdown_test()
 class MoveItLaunchSmokeShutdownTestCase(unittest.TestCase):
     """Verify the launch exits cleanly after smoke tests complete."""
+
+    __test__ = False
 
     def test_exit_codes(self, proc_info):
         asserts.assertExitCodes(_filter_shutdown_processes(proc_info))
