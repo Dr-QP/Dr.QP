@@ -50,7 +50,7 @@ When addressing PR review comments, CI failures, CodeQL findings, or coverage ga
 
 Browse [`.github/skills/`](/.github/skills/). See [README](/.github/skills/README.md) for validation.
 
-Key skills: ros2-environment-setup, ros2-workspace-build, ros2-workspace-testing, ros2-dependency-management, code-review-standards, pr-feedback-resolution, create-ros2-package, add-test-file, implement-publisher-subscriber, create-state-machine, generate-pr-description.
+Key skills: ros2-environment-setup, ros2-workspace-build, ros2-workspace-testing, ros2-dependency-management, code-review-standards, pr-feedback-resolution, create-ros2-package, add-test-file, implement-publisher-subscriber, create-state-machine, generate-pr-description, refine-issue.
 
 ## Code Review Standards
 
