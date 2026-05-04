@@ -17,6 +17,7 @@ NEVER use GitHub API or GitHub MCP tools to update branch refs or push branch co
 9. **Enable coverage** with `--mixin coverage-pytest` when testing
 10. **Re-run failed tests** with `--packages-select-test-failures`
 11. **When available in VS Code, use `vscode/askQuestions`** for all yes/no and multiple-choice user questions
+12. **For `unittest` ROS tests, never call `rclpy.init()` in `setUpClass`**. Initialize ROS in `setUp()` and register `self.addCleanup(rclpy.shutdown)` immediately so shutdown still runs if setup fails. Prefer `self.addCleanup(...)` for node, client, subscription, and action cleanup as well.
 
 ### When in Doubt
 
