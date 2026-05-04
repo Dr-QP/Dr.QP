@@ -10,7 +10,7 @@
   <exec_depend>drqp_interfaces</exec_depend>
   <exec_depend>drqp_control</exec_depend>
   <exec_depend>drqp_joy</exec_depend>
-  <exec_depend>drqp_moveit</exec_depend>
+  <!-- <exec_depend>drqp_moveit</exec_depend> -->
   <exec_depend>rclpy</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>launch</exec_depend>
