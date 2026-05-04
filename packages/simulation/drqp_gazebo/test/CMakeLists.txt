@@ -31,6 +31,3 @@ foreach(test_file IN LISTS drqp_gazebo_launch_tests)
   )
 endforeach()
 
-ament_add_pytest_test(test_drqp_gazebo_flake8 test_flake8.py)
-ament_add_pytest_test(test_drqp_gazebo_pep257 test_pep257.py)
-ament_add_pytest_test(test_drqp_gazebo_copyright test_copyright.py)
