@@ -61,15 +61,9 @@ LEFT_FRONT_JOINTS = [
 ]
 TARGET_OBSTACLE_ID = 'issue43_left_front_target_blocker'
 
-
-def _ensure_gz_sim_not_running() -> None:
-    subprocess.run(['pkill', '-9', '-f', '^gz sim'], check=False)
-
-
 @pytest.mark.slow
 @pytest.mark.launch_test
 def generate_test_description():
-    _ensure_gz_sim_not_running()
     sim_launch = PathJoinSubstitution([FindPackageShare('drqp_gazebo'), 'launch', 'sim.launch.py'])
     move_group_launch = PathJoinSubstitution(
         [FindPackageShare('drqp_moveit'), 'launch', 'move_group.launch.py']
