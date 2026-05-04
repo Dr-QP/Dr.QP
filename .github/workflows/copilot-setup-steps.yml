@@ -17,4 +17,6 @@ jobs:
     environment: copilot
     steps:
       - uses: oven-sh/setup-bun@v2
+      - name: Install devcontainer CLI
+        run: bun add -g @devcontainers/cli
       - uses: astral-sh/setup-uv@v7
