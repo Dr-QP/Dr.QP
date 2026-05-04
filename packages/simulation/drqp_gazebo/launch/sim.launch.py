@@ -157,6 +157,6 @@ def generate_launch_description():
                     gazebo_bridge,
                     gz_spawn_entity,
                 ]
-            )
+            ),
         ]
     )
