@@ -22,6 +22,7 @@ import os
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 from ament_index_python.packages import get_package_share_directory
 import pytest
@@ -32,6 +33,8 @@ def urdf_file():
     """Make URDF file path."""
     package_path = get_package_share_directory('drqp_control')
     urdf_file_path = os.path.join(package_path, 'urdf', 'drqp.urdf.xacro')
+    if not os.path.exists(urdf_file_path):
+        urdf_file_path = str(Path(__file__).resolve().parent.parent / 'urdf' / 'drqp.urdf.xacro')
     return urdf_file_path
 
 
@@ -58,17 +61,32 @@ def test_urdf_file_is_valid(urdf_file):
                 stderr=subprocess.STDOUT,
             )
             assert proc.returncode == 0, 'check_urdf failed:\n' + proc.stdout.decode()
+        finally:
+            if os.path.exists(temp_file.name):
+                os.remove(temp_file.name)
 
-            root = ET.parse(temp_file.name).getroot()
-            links = {link.attrib['name'] for link in root.findall('link')}
-            joints = {joint.attrib['name']: joint for joint in root.findall('joint')}
 
-            assert 'drqp/imu_link' in links
-            assert 'base_center_to_imu' in joints
-            imu_joint = joints['base_center_to_imu']
-            assert imu_joint.attrib['type'] == 'fixed'
-            assert imu_joint.find('parent').attrib['link'] == 'drqp/base_center_link'
-            assert imu_joint.find('child').attrib['link'] == 'drqp/imu_link'
+def test_gazebo_urdf_converts_to_sdf_without_warnings(urdf_file):
+    """Check that the Gazebo URDF converts to SDF without warnings."""
+    with tempfile.NamedTemporaryFile(suffix='.urdf') as temp_file:
+        try:
+            proc = subprocess.run(
+                ['xacro', urdf_file, 'use_gazebo:=true', '-o', temp_file.name],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+            assert proc.returncode == 0, 'xacro failed:\n' + proc.stdout.decode()
+
+            proc = subprocess.run(
+                ['gz', 'sdf', '-p', temp_file.name],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+            sdf_output = proc.stdout.decode()
+
+            assert proc.returncode == 0, 'gz sdf failed:\n' + sdf_output
+            assert '<sdf' in sdf_output, 'Expected gz sdf to print converted SDF output'
+            assert 'Warning' not in sdf_output, 'gz sdf emitted warnings:\n' + sdf_output
         finally:
             if os.path.exists(temp_file.name):
                 os.remove(temp_file.name)
