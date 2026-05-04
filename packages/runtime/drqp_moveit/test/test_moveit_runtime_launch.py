@@ -19,7 +19,6 @@
 # THE SOFTWARE.
 
 import math
-import subprocess
 import unittest
 
 from control_msgs.action import FollowJointTrajectory
@@ -60,6 +59,7 @@ LEFT_FRONT_JOINTS = [
     'drqp/left_front_tibia',
 ]
 TARGET_OBSTACLE_ID = 'issue43_left_front_target_blocker'
+
 
 @pytest.mark.slow
 @pytest.mark.launch_test

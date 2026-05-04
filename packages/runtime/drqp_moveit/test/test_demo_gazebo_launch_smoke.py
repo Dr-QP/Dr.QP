@@ -26,6 +26,7 @@ from moveit_launch_smoke_test_support import (
 )
 import pytest
 
+
 @pytest.mark.launch_test
 def generate_test_description():
     return build_smoke_test_description(
