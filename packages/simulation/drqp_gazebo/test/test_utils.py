@@ -25,6 +25,7 @@ import subprocess
 
 __skip_gz_sim_cleanup = True
 
+
 def _caller_trace(max_depth: int = 3) -> str:
     """Return a compact caller chain for debugging test teardown/setup flows."""
     stack = inspect.stack()
