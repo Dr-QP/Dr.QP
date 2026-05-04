@@ -102,15 +102,8 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
     FEMUR_LENGTH = math.hypot(0.036 + 0.0055 + 0.023, 0.015)
     TIBIA_LENGTH = math.hypot(0.0325 + 0.052797, 0.088395)
 
-    @classmethod
-    def setUpClass(cls):
-        rclpy.init()
-
-    @classmethod
-    def tearDownClass(cls):
-        rclpy.shutdown()
-
     def setUp(self):
+        rclpy.init()
         self.node = rclpy.create_node('test_moveit_runtime_issue43')
         self.latest_joint_state = None
         self.latest_clock = None
@@ -155,6 +148,7 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         self.clock_sub.destroy()
         self.joint_state_sub.destroy()
         self.node.destroy_node()
+        rclpy.shutdown()
 
     def _joint_state_callback(self, msg: JointState) -> None:
         self.latest_joint_state = msg

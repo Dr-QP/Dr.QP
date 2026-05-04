@@ -68,15 +68,8 @@ class FakeImuSensor:
 class TestImuNode(unittest.TestCase):
     """Test the IMU publisher node with a fake sensor backend."""
 
-    @classmethod
-    def setUpClass(cls):
-        rclpy.init()
-
-    @classmethod
-    def tearDownClass(cls):
-        rclpy.shutdown()
-
     def setUp(self):
+        rclpy.init()
         sample = ImuSample(
             orientation_wxyz=(1.0, 0.1, 0.2, 0.3),
             angular_velocity=(0.4, 0.5, 0.6),
@@ -118,6 +111,7 @@ class TestImuNode(unittest.TestCase):
     def tearDown(self):
         self.node.destroy_node()
         self.test_node.destroy_node()
+        rclpy.shutdown()
 
     def _spin_until(self, predicate, iterations: int = 10) -> bool:
         """Spin both nodes until the predicate is satisfied or the budget is exhausted."""
@@ -229,12 +223,10 @@ class TestImuNode(unittest.TestCase):
 class TestImuNodeInitialization(unittest.TestCase):
     """Test IMU node startup failures caused by backend construction."""
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         rclpy.init()
 
-    @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
         rclpy.shutdown()
 
     def test_constructor_wraps_sensor_construction_failures(self):

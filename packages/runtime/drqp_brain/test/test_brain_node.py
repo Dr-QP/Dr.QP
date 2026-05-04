@@ -57,15 +57,8 @@ def generate_test_description():
 class TestBrainNode(unittest.TestCase):
     """Test the drqp_brain node."""
 
-    @classmethod
-    def setUpClass(cls):
-        rclpy.init()
-
-    @classmethod
-    def tearDownClass(cls):
-        rclpy.shutdown()
-
     def setUp(self):
+        rclpy.init()
         self.node = rclpy.create_node('test_brain_consumer')
 
         # Publishers for sending commands to brain node
@@ -78,6 +71,7 @@ class TestBrainNode(unittest.TestCase):
 
     def tearDown(self):
         self.node.destroy_node()
+        rclpy.shutdown()
 
     def test_nothing(self, proc_output):
         """Smoke check."""

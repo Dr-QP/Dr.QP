@@ -71,15 +71,8 @@ neutral_position = 0.1
 class TestA116HardwareInterface(unittest.TestCase):
     """Test the pose_setter node."""
 
-    @classmethod
-    def setUpClass(cls):
-        rclpy.init()
-
-    @classmethod
-    def tearDownClass(cls):
-        rclpy.shutdown()
-
     def setUp(self):
+        rclpy.init()
         self.node = rclpy.create_node('test_servo_driver_' + self.id().replace('.', '_'))
         self._wait_for_controller(self.node)
         self.trajectory_client = ActionClient(
@@ -160,6 +153,7 @@ class TestA116HardwareInterface(unittest.TestCase):
         self.dynamic_joint_states_sub.destroy()
         self.node.destroy_node()
         self._reset_feedback()
+        rclpy.shutdown()
 
     def test_node_start(self):
         check_node_running(self.node, 'robot_state_publisher')

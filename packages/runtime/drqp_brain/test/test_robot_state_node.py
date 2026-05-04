@@ -57,19 +57,13 @@ def generate_test_description():
 class TestRobotStateMachineNode(unittest.TestCase):
     """Test the drqp_robot_state node."""
 
-    @classmethod
-    def setUpClass(cls):
-        rclpy.init()
-
-    @classmethod
-    def tearDownClass(cls):
-        rclpy.shutdown()
-
     def setUp(self):
+        rclpy.init()
         self.node = rclpy.create_node('test_state_consumer')
 
     def tearDown(self):
         self.node.destroy_node()
+        rclpy.shutdown()
 
     def test_processes_events_and_publishes_state(self, proc_output):
         """Check whether events are processed."""

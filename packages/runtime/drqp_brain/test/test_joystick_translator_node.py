@@ -36,15 +36,8 @@ import std_msgs.msg
 class TestJoystickTranslatorNode(unittest.TestCase):
     """Test the joystick translator node."""
 
-    @classmethod
-    def setUpClass(cls):
-        rclpy.init()
-
-    @classmethod
-    def tearDownClass(cls):
-        rclpy.shutdown()
-
     def setUp(self):
+        rclpy.init()
         self.node = JoystickTranslatorNode()
         self.test_node = rclpy.create_node('test_translator_consumer')
 
@@ -78,6 +71,7 @@ class TestJoystickTranslatorNode(unittest.TestCase):
     def tearDown(self):
         self.node.destroy_node()
         self.test_node.destroy_node()
+        rclpy.shutdown()
 
     def test_joystick_to_movement_command(self):
         """Test that joystick messages are translated to movement commands."""
