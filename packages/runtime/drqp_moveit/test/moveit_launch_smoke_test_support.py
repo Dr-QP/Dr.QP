@@ -81,7 +81,6 @@ class MoveItLaunchSmokeTestCase(unittest.TestCase):
         rclpy.init()
         cls.addClassCleanup(rclpy.try_shutdown)
 
-
     def test_launch_reaches_ready_state(self, proc_info):
         del proc_info
 
