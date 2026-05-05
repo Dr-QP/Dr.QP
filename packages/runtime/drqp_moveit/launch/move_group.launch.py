@@ -51,12 +51,16 @@ def generate_launch_description():
     use_gazebo = LaunchConfiguration('use_gazebo')
     publish_fake_joint_states = LaunchConfiguration('publish_fake_joint_states')
     gui = LaunchConfiguration('gui')
+    hardware_device_address = LaunchConfiguration('hardware_device_address')
 
     move_group_node = Node(
         package='moveit_ros_move_group',
         executable='move_group',
         output='screen',
-        parameters=get_moveit_params(pkg, use_gazebo) + [{'use_sim_time': use_sim_time}],
+        parameters=get_moveit_params(
+            pkg, use_gazebo=use_gazebo, hardware_device_address=hardware_device_address
+        )
+        + [{'use_sim_time': use_sim_time}],
     )
 
     robot_state_publisher = IncludeLaunchDescription(
@@ -89,6 +93,14 @@ def generate_launch_description():
                 default_value='false',
                 choices=['true', 'false'],
                 description='Build robot_description with Gazebo ros2_control settings',
+            ),
+            DeclareLaunchArgument(
+                'hardware_device_address',
+                default_value='/dev/ttySC0',
+                description=(
+                    'Hardware device address for ros2_control in URDF. '
+                    'Use "mock_servo" for fake hardware.'
+                ),
             ),
             DeclareLaunchArgument(
                 name='publish_fake_joint_states',

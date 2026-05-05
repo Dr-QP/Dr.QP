@@ -49,6 +49,7 @@ def generate_launch_description():
     use_rviz = LaunchConfiguration('use_rviz')
     use_sim_time = LaunchConfiguration('use_sim_time')
     use_gazebo = LaunchConfiguration('use_gazebo')
+    hardware_device_address = LaunchConfiguration('hardware_device_address')
 
     rviz_node = Node(
         package='rviz2',
@@ -56,7 +57,8 @@ def generate_launch_description():
         name='rviz2',
         output='log',
         arguments=['-d', rviz_config],
-        parameters=get_moveit_params(pkg, use_gazebo) + [{'use_sim_time': use_sim_time}],
+        parameters=get_moveit_params(pkg, use_gazebo, hardware_device_address)
+        + [{'use_sim_time': use_sim_time}],
         condition=IfCondition(use_rviz),
     )
 
@@ -79,6 +81,14 @@ def generate_launch_description():
                 default_value='false',
                 choices=['true', 'false'],
                 description='Build robot_description with Gazebo ros2_control settings',
+            ),
+            DeclareLaunchArgument(
+                'hardware_device_address',
+                default_value='/dev/ttySC0',
+                description=(
+                    'Hardware device address for ros2_control in URDF. '
+                    'Use "mock_servo" for fake hardware.'
+                ),
             ),
             rviz_node,
         ]

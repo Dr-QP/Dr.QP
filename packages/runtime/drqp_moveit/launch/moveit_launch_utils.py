@@ -29,7 +29,7 @@ def load_yaml(path):
         return yaml.safe_load(file)
 
 
-def get_moveit_params(pkg_path, use_gazebo):
+def get_moveit_params(pkg_path, use_gazebo, hardware_device_address):
     drqp_control_pkg = get_package_share_path('drqp_control')
     robot_description_content = ParameterValue(
         Command(
@@ -38,6 +38,8 @@ def get_moveit_params(pkg_path, use_gazebo):
                 str(drqp_control_pkg / 'urdf' / 'drqp.urdf.xacro'),
                 ' use_gazebo:=',
                 use_gazebo,
+                ' hardware_device_address:=',
+                hardware_device_address,
             ]
         ),
         value_type=str,
