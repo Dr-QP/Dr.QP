@@ -19,7 +19,10 @@
 # THE SOFTWARE.
 
 import unittest
+from unittest import mock
 
+from control_msgs.action import FollowJointTrajectory
+from drqp_brain.brain_node import HexapodBrain
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 from geometry_msgs.msg import Vector3
 from launch import LaunchDescription
@@ -97,6 +100,38 @@ class TestBrainNode(unittest.TestCase):
 
         # If we get here without errors, the test passes
         # (brain node should process the command without crashing)
+
+    def test_trajectory_action_client_is_created_lazily(self, proc_output):
+        """Only create the action client when an action sequence is requested."""
+        with mock.patch('drqp_brain.brain_node.ActionClient') as action_client_cls:
+            action_client = action_client_cls.return_value
+            action_client.send_goal_async.return_value.add_done_callback = mock.Mock()
+
+            brain = HexapodBrain()
+            try:
+                action_client_cls.assert_not_called()
+
+                brain.reboot_servos()
+
+                action_client_cls.assert_called_once_with(
+                    brain,
+                    FollowJointTrajectory,
+                    '/joint_trajectory_controller/follow_joint_trajectory',
+                )
+            finally:
+                brain.destroy_node()
+
+    def test_destroy_node_destroys_action_client(self, proc_output):
+        """Destroy the action client explicitly during node shutdown."""
+        with mock.patch('drqp_brain.brain_node.ActionClient') as action_client_cls:
+            action_client = action_client_cls.return_value
+            action_client.send_goal_async.return_value.add_done_callback = mock.Mock()
+
+            brain = HexapodBrain()
+            brain.reboot_servos()
+            brain.destroy_node()
+
+            action_client.destroy.assert_called_once_with()
 
 
 # Post-shutdown tests

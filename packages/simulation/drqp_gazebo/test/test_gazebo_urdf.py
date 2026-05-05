@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2025 Anton Matosov
+# Copyright (c) 2017-2026 Anton Matosov
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -23,39 +23,32 @@ import subprocess
 import tempfile
 
 from ament_index_python.packages import get_package_share_directory
-import pytest
 
 
-@pytest.fixture
-def urdf_file():
-    """Make URDF file path."""
+def test_gazebo_urdf_converts_to_sdf_without_warnings():
+    """Check that the Gazebo-enabled Dr.QP URDF converts to SDF cleanly."""
     package_path = get_package_share_directory('drqp_control')
-    return os.path.join(package_path, 'urdf', 'drqp.urdf.xacro')
+    urdf_file = os.path.join(package_path, 'urdf', 'drqp.urdf.xacro')
 
-
-def test_urdf_file_exists(urdf_file):
-    """Check if URDF file exists."""
-    assert os.path.exists(urdf_file)
-
-
-def test_urdf_file_is_valid(urdf_file):
-    """Check if URDF file is valid."""
     with tempfile.NamedTemporaryFile(suffix='.urdf') as temp_file:
         try:
             proc = subprocess.run(
-                ['xacro', urdf_file, '-o', temp_file.name],
+                ['xacro', urdf_file, 'use_gazebo:=true', '-o', temp_file.name],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
             )
             assert proc.returncode == 0, 'xacro failed:\n' + proc.stdout.decode()
-            assert os.path.exists(temp_file.name)
 
             proc = subprocess.run(
-                ['check_urdf', temp_file.name],
+                ['gz', 'sdf', '-p', temp_file.name],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
             )
-            assert proc.returncode == 0, 'check_urdf failed:\n' + proc.stdout.decode()
+            sdf_output = proc.stdout.decode()
+
+            assert proc.returncode == 0, 'gz sdf failed:\n' + sdf_output
+            assert '<sdf' in sdf_output, 'Expected gz sdf to print converted SDF output'
+            assert 'Warning' not in sdf_output, 'gz sdf emitted warnings:\n' + sdf_output
         finally:
             if os.path.exists(temp_file.name):
                 os.remove(temp_file.name)

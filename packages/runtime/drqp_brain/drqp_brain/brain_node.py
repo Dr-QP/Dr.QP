@@ -86,15 +86,22 @@ class HexapodBrain(rclpy.node.Node):
             '/joint_trajectory_controller/joint_trajectory',
             qos_profile=10,
         )
-        self.trajectory_client = ActionClient(
-            self,
-            FollowJointTrajectory,
-            '/joint_trajectory_controller/follow_joint_trajectory',
-        )
+        self.__trajectory_client = None
 
         self.setup_hexapod()
 
         self.loop_timer = self.create_timer(1 / self.fps, self.loop, autostart=False)
+
+    @property
+    def trajectory_client(self):
+        """Create the action client only when a trajectory action is needed."""
+        if self.__trajectory_client is None:
+            self.__trajectory_client = ActionClient(
+                self,
+                FollowJointTrajectory,
+                '/joint_trajectory_controller/follow_joint_trajectory',
+            )
+        return self.__trajectory_client
 
     def setup_hexapod(self):
         drqp_coxa = 0.053  # in meters
@@ -298,6 +305,12 @@ class HexapodBrain(rclpy.node.Node):
         self.get_logger().info('Stopping')
         self.loop_timer.cancel()
         self.walker.reset()
+
+    def destroy_node(self):
+        if self.__trajectory_client is not None:
+            self.__trajectory_client.destroy()
+            self.__trajectory_client = None
+        return super().destroy_node()
 
 
 def main():
