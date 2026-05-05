@@ -58,13 +58,13 @@ During the planning phase, you MUST use the `todo` tool to create and maintain a
 - Keep the plan current when scope, dependencies, or risks change
 - Include validation steps (tests, checks, review gates) in the plan
 
-### Complex Task Planning via Sub-Agent
+### Complex Task Planning
 
-For complex or ambiguous tasks, you MUST delegate planning to **[Task Planner](../agent-ideas/task-planner.agent.md)** before implementation.
+For complex or ambiguous tasks, you MUST use the built-in `sequentialthinking` tool to produce a phased plan before implementation.
 
-- Use the `task-planner` sub-agent to produce a phased plan with assumptions, risks, and acceptance criteria
+- Use `sequentialthinking` to reason through assumptions, risks, and acceptance criteria before writing code
 - Convert the resulting plan into executable `todo` items and execute in order
-- Re-invoke `task-planner` when requirements shift or blockers invalidate the current plan
+- Re-invoke `sequentialthinking` when requirements shift or blockers invalidate the current plan
 
 ## Test-Driven Development (TDD) Workflow
 
