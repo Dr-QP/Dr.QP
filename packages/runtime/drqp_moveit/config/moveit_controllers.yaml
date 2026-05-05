@@ -9,27 +9,26 @@
 moveit_simple_controller_manager:
   controller_names:
     - joint_trajectory_controller
-
-joint_trajectory_controller:
-  type: FollowJointTrajectory
-  action_ns: follow_joint_trajectory
-  default: true
-  joints:
-    - drqp/left_front_coxa
-    - drqp/left_front_femur
-    - drqp/left_front_tibia
-    - drqp/right_front_coxa
-    - drqp/right_front_femur
-    - drqp/right_front_tibia
-    - drqp/left_middle_coxa
-    - drqp/left_middle_femur
-    - drqp/left_middle_tibia
-    - drqp/right_middle_coxa
-    - drqp/right_middle_femur
-    - drqp/right_middle_tibia
-    - drqp/left_back_coxa
-    - drqp/left_back_femur
-    - drqp/left_back_tibia
-    - drqp/right_back_coxa
-    - drqp/right_back_femur
-    - drqp/right_back_tibia
+  joint_trajectory_controller:
+    type: FollowJointTrajectory
+    action_ns: follow_joint_trajectory
+    default: true
+    joints:
+      - drqp/left_front_coxa
+      - drqp/left_front_femur
+      - drqp/left_front_tibia
+      - drqp/right_front_coxa
+      - drqp/right_front_femur
+      - drqp/right_front_tibia
+      - drqp/left_middle_coxa
+      - drqp/left_middle_femur
+      - drqp/left_middle_tibia
+      - drqp/right_middle_coxa
+      - drqp/right_middle_femur
+      - drqp/right_middle_tibia
+      - drqp/left_back_coxa
+      - drqp/left_back_femur
+      - drqp/left_back_tibia
+      - drqp/right_back_coxa
+      - drqp/right_back_femur
+      - drqp/right_back_tibia
