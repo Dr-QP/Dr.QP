@@ -13,7 +13,6 @@ allow_trajectory_execution: true
 # query/state services.  Uncomment to add extras.
 capabilities: ''
 disable_capabilities: ''
-moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
 
 # Trajectory execution
 trajectory_execution:
