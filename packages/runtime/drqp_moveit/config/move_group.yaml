@@ -30,5 +30,11 @@ planning_scene_monitor_options:
   monitored_planning_scene_topic: '/move_group/monitored_planning_scene'
   wait_for_initial_state_timeout: 10.0
 
+# Publish the planning scene of the physical robot so that rviz plugin can know actual robot
+publish_planning_scene: true
+publish_geometry_updates: true
+publish_state_updates: true
+publish_transforms_updates: true
+
 # Sensor integration is intentionally omitted until a concrete source is
 # configured; launch_ros cannot infer a type for an empty sequence parameter.
