@@ -176,8 +176,8 @@ class TestBrainNode(unittest.TestCase):
 
             action_client.destroy.assert_called_once_with()
 
-    def test_process_imu_uses_tf_lookup_from_base_to_message_frame_issue357(self):
-        """Issue 357: resolve IMU mount orientation from TF using the IMU message frame."""
+    def test_process_imu_uses_tf_rotation_without_extra_inversion_issue357(self):
+        """Issue 357: pass the TF-provided IMU->base rotation directly to tilt extraction."""
         brain = HexapodBrain()
         expected_rotation = R.identity()
         brain.tf_buffer = mock.Mock()
@@ -203,7 +203,7 @@ class TestBrainNode(unittest.TestCase):
             lookup_args, _ = brain.tf_buffer.lookup_transform.call_args
             assert lookup_args[:2] == ('drqp/base_center_link', 'drqp/custom_imu')
             _, kwargs = body_tilt_from_imu.call_args
-            _assert_rotation_matches(kwargs['base_center_to_imu_rotation'], expected_rotation)
+            _assert_rotation_matches(kwargs['imu_to_base_rotation'], expected_rotation)
             assert brain.current_body_tilt is mock.sentinel.body_tilt
         finally:
             brain.destroy_node()
@@ -235,7 +235,7 @@ class TestBrainNode(unittest.TestCase):
             lookup_args, _ = brain.tf_buffer.lookup_transform.call_args
             assert lookup_args[:2] == ('drqp/base_center_link', 'drqp/imu_link')
             _, kwargs = body_tilt_from_imu.call_args
-            _assert_rotation_matches(kwargs['base_center_to_imu_rotation'], expected_rotation)
+            _assert_rotation_matches(kwargs['imu_to_base_rotation'], expected_rotation)
             assert brain.current_body_tilt is mock.sentinel.body_tilt
         finally:
             brain.destroy_node()

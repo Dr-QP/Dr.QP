@@ -34,20 +34,26 @@ def body_tilt_from_imu(
     orientation,
     *,
     base_center_to_imu_rotation=_USE_DEFAULT_ROTATION,
+    imu_to_base_rotation=None,
 ) -> Point3D:
     """
     Return base_center_link roll and pitch in radians from an IMU quaternion.
 
     Omitting ``base_center_to_imu_rotation`` uses the default hardware mount transform.
     Pass ``None`` to use the IMU orientation without mount compensation.
+    Pass ``imu_to_base_rotation`` to use a TF-provided IMU->base rotation directly
+    without inverting it on the hot path.
     A sentinel is used for the default because ``None`` is a public, meaningful input.
     """
     imu_in_world = R.from_quat([orientation.x, orientation.y, orientation.z, orientation.w])
-    if base_center_to_imu_rotation is _USE_DEFAULT_ROTATION:
-        base_center_to_imu_rotation = BASE_CENTER_TO_IMU_ROTATION
-    base_in_world = imu_in_world
-    if base_center_to_imu_rotation is not None:
-        base_in_world = imu_in_world * base_center_to_imu_rotation.inv()
+    if imu_to_base_rotation is not None:
+        base_in_world = imu_in_world * imu_to_base_rotation
+    else:
+        if base_center_to_imu_rotation is _USE_DEFAULT_ROTATION:
+            base_center_to_imu_rotation = BASE_CENTER_TO_IMU_ROTATION
+        base_in_world = imu_in_world
+        if base_center_to_imu_rotation is not None:
+            base_in_world = imu_in_world * base_center_to_imu_rotation.inv()
     roll, pitch, _ = base_in_world.as_euler('xyz', degrees=False)
     return Point3D([roll, pitch, 0.0])
 
@@ -69,11 +75,11 @@ def apply_imu_balance(
         tilt_error = measured_body_tilt - target_body_tilt
 
     tilt_bounds = np.array([max_tilt_rad, max_tilt_rad, 0.0])
-    clipped_tilt = np.clip(tilt_error.numpy(), -tilt_bounds, tilt_bounds)
+    clipped_correction = np.clip(tilt_error.numpy() * gain, -tilt_bounds, tilt_bounds)
     requested_rotation = R.from_rotvec(body_rotation.numpy())
     balance_correction = R.from_euler(
         'xyz',
-        [-clipped_tilt[0] * gain, -clipped_tilt[1] * gain, 0.0],
+        [-clipped_correction[0], -clipped_correction[1], 0.0],
         degrees=False,
     )
     return Point3D((balance_correction * requested_rotation).as_rotvec())

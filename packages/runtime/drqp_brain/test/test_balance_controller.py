@@ -64,6 +64,20 @@ def test_body_tilt_from_imu_can_use_raw_orientation_without_mount_compensation()
     assert tilt.z == pytest.approx(0.0)
 
 
+def test_body_tilt_from_imu_accepts_direct_imu_to_base_rotation_issue357():
+    base_in_world = R.from_euler('xyz', [0.08, -0.11, 0.27], degrees=False)
+    imu_in_world = base_in_world * BASE_CENTER_TO_IMU_ROTATION
+
+    tilt = body_tilt_from_imu(
+        make_quaternion_msg(imu_in_world),
+        imu_to_base_rotation=BASE_CENTER_TO_IMU_ROTATION.inv(),
+    )
+
+    assert tilt.x == pytest.approx(0.08)
+    assert tilt.y == pytest.approx(-0.11)
+    assert tilt.z == pytest.approx(0.0)
+
+
 def test_apply_imu_balance_cancels_tilt_and_preserves_yaw():
     balanced = apply_imu_balance(
         Point3D([0.0, 0.0, 0.20]),
@@ -92,6 +106,19 @@ def test_apply_imu_balance_clamps_large_tilt():
     assert balanced_rotation.as_matrix() == pytest.approx(expected_rotation.as_matrix())
 
 
+def test_apply_imu_balance_clamps_applied_correction_after_gain_issue356():
+    balanced = apply_imu_balance(
+        Point3D([0.0, 0.0, 0.0]),
+        Point3D([0.3, -0.3, 0.0]),
+        gain=2.0,
+        max_tilt_rad=0.25,
+    )
+    balanced_rotation = R.from_rotvec(balanced.numpy())
+    expected_rotation = R.from_euler('xyz', [-0.25, 0.25, 0.0], degrees=False)
+
+    assert balanced_rotation.as_matrix() == pytest.approx(expected_rotation.as_matrix(), abs=1e-7)
+
+
 def test_apply_imu_balance_holds_captured_target_orientation_issue356():
     balanced = apply_imu_balance(
         Point3D([0.0, 0.0, 0.20]),
@@ -103,4 +130,4 @@ def test_apply_imu_balance_holds_captured_target_orientation_issue356():
         [0.0, 0.0, 0.20]
     )
 
-    assert balanced_rotation.as_matrix() == pytest.approx(expected_rotation.as_matrix())
+    assert balanced_rotation.as_matrix() == pytest.approx(expected_rotation.as_matrix(), abs=1e-7)

@@ -209,8 +209,8 @@ class HexapodBrain(rclpy.node.Node):
         if msg.gait_type in gait_names:
             self.gait_index = gait_names.index(msg.gait_type)
 
-    def _lookup_base_center_to_imu_rotation(self, imu_frame: str):
-        """Return the TF-derived IMU mount rotation when TF-based compensation is enabled."""
+    def _lookup_imu_to_base_rotation(self, imu_frame: str):
+        """Return the TF-derived IMU->base rotation when TF-based compensation is enabled."""
         if self.tf_buffer is None:
             return None
 
@@ -243,7 +243,7 @@ class HexapodBrain(rclpy.node.Node):
 
         imu_frame = msg.header.frame_id or 'drqp/imu_link'
         try:
-            base_center_to_imu_rotation = self._lookup_base_center_to_imu_rotation(imu_frame)
+            imu_to_base_rotation = self._lookup_imu_to_base_rotation(imu_frame)
         except TransformException as exc:
             self.get_logger().warning(
                 f'Failed to lookup transform from drqp/base_center_link to {imu_frame}: {exc}'
@@ -252,10 +252,16 @@ class HexapodBrain(rclpy.node.Node):
             self.last_imu_update = None
             return
 
-        self.current_body_tilt = body_tilt_from_imu(
-            msg.orientation,
-            base_center_to_imu_rotation=base_center_to_imu_rotation,
-        )
+        if imu_to_base_rotation is None:
+            self.current_body_tilt = body_tilt_from_imu(
+                msg.orientation,
+                base_center_to_imu_rotation=None,
+            )
+        else:
+            self.current_body_tilt = body_tilt_from_imu(
+                msg.orientation,
+                imu_to_base_rotation=imu_to_base_rotation,
+            )
         self.last_imu_update = self.get_clock().now()
         if self.balance_mode_enabled and self.target_body_tilt is None:
             self.target_body_tilt = self.current_body_tilt
