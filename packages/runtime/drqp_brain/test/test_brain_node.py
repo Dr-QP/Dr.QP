@@ -93,7 +93,7 @@ def _assert_rotation_matches(actual: R, expected: R):
     assert actual.as_matrix() == pytest.approx(
         expected.as_matrix(),
         abs=1e-8,
-    ), 'Expected TF-derived IMU mount rotation to match the mocked transform'
+    ), 'Rotation matrices do not match within tolerance'
 
 
 class TestBrainNode(unittest.TestCase):

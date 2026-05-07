@@ -97,6 +97,7 @@ class HexapodBrain(rclpy.node.Node):
         self.tf_buffer = None
         self.tf_listener = None
         if self.transform_imu_to_base_frame:
+            # TF infrastructure is only needed when IMU mount compensation is enabled.
             self.tf_buffer = Buffer()
             # Retain the listener on the instance so the TF subscriptions stay active.
             self.tf_listener = TransformListener(self.tf_buffer, self)
@@ -218,6 +219,7 @@ class HexapodBrain(rclpy.node.Node):
             'drqp/base_center_link',
             imu_frame,
             # Zero time requests the latest transform available in the TF buffer.
+            # The lookup raises TransformException immediately if the transform is unavailable.
             Time(seconds=0),
         )
 
