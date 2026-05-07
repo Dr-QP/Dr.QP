@@ -39,6 +39,7 @@ def body_tilt_from_imu(
 
     Omitting ``base_center_to_imu_rotation`` uses the default hardware mount transform.
     Pass ``None`` to use the IMU orientation without mount compensation.
+    A sentinel is used for the default because ``None`` is a public, meaningful input.
     """
     imu_in_world = R.from_quat([orientation.x, orientation.y, orientation.z, orientation.w])
     if base_center_to_imu_rotation is _DEFAULT_SENTINEL:

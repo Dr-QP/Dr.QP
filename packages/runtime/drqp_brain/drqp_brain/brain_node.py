@@ -210,22 +210,16 @@ class HexapodBrain(rclpy.node.Node):
             self.gait_index = gait_names.index(msg.gait_type)
 
     def _lookup_base_center_to_imu_rotation(self, imu_frame: str):
-        """Return TF-derived IMU mount rotation, or the static fallback when TF is unavailable."""
+        """Return the TF-derived IMU mount rotation when TF-based compensation is enabled."""
         if self.tf_buffer is None:
             return None
 
-        try:
-            transform = self.tf_buffer.lookup_transform(
-                'drqp/base_center_link',
-                imu_frame,
-                # Zero time requests the latest transform available in the TF buffer.
-                Time(seconds=0),
-            )
-        except TransformException as exc:
-            self.get_logger().warning(
-                f'Failed to lookup transform from drqp/base_center_link to {imu_frame}: {exc}'
-            )
-            return BASE_CENTER_TO_IMU_ROTATION
+        transform = self.tf_buffer.lookup_transform(
+            'drqp/base_center_link',
+            imu_frame,
+            # Zero time requests the latest transform available in the TF buffer.
+            Time(seconds=0),
+        )
 
         rotation = transform.transform.rotation
         return R.from_quat([rotation.x, rotation.y, rotation.z, rotation.w])
@@ -246,9 +240,16 @@ class HexapodBrain(rclpy.node.Node):
             self.last_imu_update = None
             return
 
-        base_center_to_imu_rotation = self._lookup_base_center_to_imu_rotation(
-            msg.header.frame_id or 'drqp/imu_link'
-        )
+        imu_frame = msg.header.frame_id or 'drqp/imu_link'
+        try:
+            base_center_to_imu_rotation = self._lookup_base_center_to_imu_rotation(imu_frame)
+        except TransformException as exc:
+            self.get_logger().warning(
+                f'Failed to lookup transform from drqp/base_center_link to {imu_frame}: {exc}'
+            )
+            self.current_body_tilt = None
+            self.last_imu_update = None
+            return
 
         self.current_body_tilt = body_tilt_from_imu(
             msg.orientation,
