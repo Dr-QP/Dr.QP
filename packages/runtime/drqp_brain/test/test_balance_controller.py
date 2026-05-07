@@ -99,8 +99,8 @@ def test_apply_imu_balance_holds_captured_target_orientation_issue356():
         target_body_tilt=Point3D([0.12, -0.08, 0.0]),
     )
     balanced_rotation = R.from_rotvec(balanced.numpy())
-    expected_rotation = R.from_euler(
-        'xyz', [-0.06, -0.06, 0.0], degrees=False
-    ) * R.from_rotvec([0.0, 0.0, 0.20])
+    expected_rotation = R.from_euler('xyz', [-0.06, -0.06, 0.0], degrees=False) * R.from_rotvec(
+        [0.0, 0.0, 0.20]
+    )
 
     assert balanced_rotation.as_matrix() == pytest.approx(expected_rotation.as_matrix())

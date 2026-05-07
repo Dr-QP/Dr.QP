@@ -181,7 +181,9 @@ class TestBrainNode(unittest.TestCase):
         brain = HexapodBrain()
         expected_rotation = R.identity()
         brain.tf_buffer = mock.Mock()
-        brain.tf_buffer.lookup_transform.return_value = make_transform_with_rotation(expected_rotation)
+        brain.tf_buffer.lookup_transform.return_value = make_transform_with_rotation(
+            expected_rotation
+        )
         try:
             with mock.patch(
                 'drqp_brain.brain_node.body_tilt_from_imu',
@@ -211,7 +213,9 @@ class TestBrainNode(unittest.TestCase):
         brain = HexapodBrain()
         expected_rotation = R.from_euler('xyz', [0.0, 0.35, 0.0], degrees=False)
         brain.tf_buffer = mock.Mock()
-        brain.tf_buffer.lookup_transform.return_value = make_transform_with_rotation(expected_rotation)
+        brain.tf_buffer.lookup_transform.return_value = make_transform_with_rotation(
+            expected_rotation
+        )
         try:
             with mock.patch(
                 'drqp_brain.brain_node.body_tilt_from_imu',

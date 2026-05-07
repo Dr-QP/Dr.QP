@@ -35,8 +35,8 @@ from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 import rclpy
 from rclpy.executors import ExternalShutdownException
 import rclpy.node
-import rclpy.utilities
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
+import rclpy.utilities
 import sensor_msgs.msg
 import std_msgs.msg
 

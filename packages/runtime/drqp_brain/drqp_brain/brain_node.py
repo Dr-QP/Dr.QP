@@ -25,7 +25,6 @@ import argparse
 from control_msgs.action import FollowJointTrajectory
 from drqp_brain.balance_controller import (
     apply_imu_balance,
-    BASE_CENTER_TO_IMU_ROTATION,
     body_tilt_from_imu,
 )
 from drqp_brain.joint_trajectory_builder import JointTrajectoryBuilder
@@ -44,10 +43,10 @@ import rclpy.utilities
 from scipy.spatial.transform import Rotation as R
 from sensor_msgs.msg import Imu
 import std_msgs.msg
-import trajectory_msgs.msg
 from tf2_ros import TransformException
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
+import trajectory_msgs.msg
 
 
 class HexapodBrain(rclpy.node.Node):

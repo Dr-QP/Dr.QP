@@ -35,7 +35,8 @@ def body_tilt_from_imu(
     *,
     base_center_to_imu_rotation=_USE_DEFAULT_ROTATION,
 ) -> Point3D:
-    """Return base_center_link roll and pitch in radians from an IMU quaternion.
+    """
+    Return base_center_link roll and pitch in radians from an IMU quaternion.
 
     Omitting ``base_center_to_imu_rotation`` uses the default hardware mount transform.
     Pass ``None`` to use the IMU orientation without mount compensation.

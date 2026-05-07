@@ -264,7 +264,6 @@ class TestJoystickTranslatorNode(unittest.TestCase):
             self.assertEqual(feedback.id, RIGHT_RUMBLE_CHANNEL_ID)
             self.assertGreater(feedback.intensity, 0.0)
 
-
     def test_r1_toggles_balance_mode_independently_of_walking_issue356(self):
         """Issue 356: R1 should toggle a dedicated balance mode without replacing walking input."""
         balance_mode_pub = getattr(self.node, 'balance_mode_pub', None)
@@ -294,7 +293,9 @@ class TestJoystickTranslatorNode(unittest.TestCase):
             if len(self.balance_mode_messages) >= 2 and self.movement_commands:
                 break
 
-        self.assertGreater(len(self.movement_commands), 0, 'Walking command should still be published')
+        self.assertGreater(
+            len(self.movement_commands), 0, 'Walking command should still be published'
+        )
         self.assertEqual([msg.data for msg in self.balance_mode_messages[-2:]], [True, False])
 
 
