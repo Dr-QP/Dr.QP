@@ -39,6 +39,18 @@ def body_tilt_from_imu(
     """
     Return base_center_link roll and pitch in radians from an IMU quaternion.
 
+    Parameters
+    ----------
+    orientation
+        IMU quaternion in ROS message form.
+    base_center_to_imu_rotation
+        Optional base->IMU mount rotation. Omit to use the default hardware
+        mount transform, or pass ``None`` to skip mount compensation.
+    imu_to_base_rotation
+        Optional IMU->base rotation, typically from TF. When provided, it takes
+        precedence over ``base_center_to_imu_rotation`` and avoids an extra
+        inversion on the hot path.
+
     Omitting ``base_center_to_imu_rotation`` uses the default hardware mount transform.
     Pass ``None`` to use the IMU orientation without mount compensation.
     Pass ``imu_to_base_rotation`` to use a TF-provided IMU->base rotation directly

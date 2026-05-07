@@ -252,11 +252,9 @@ class HexapodBrain(rclpy.node.Node):
             self.last_imu_update = None
             return
 
-        tilt_kwargs = (
-            {'base_center_to_imu_rotation': None}
-            if imu_to_base_rotation is None
-            else {'imu_to_base_rotation': imu_to_base_rotation}
-        )
+        tilt_kwargs = {'base_center_to_imu_rotation': None}
+        if imu_to_base_rotation is not None:
+            tilt_kwargs = {'imu_to_base_rotation': imu_to_base_rotation}
         self.current_body_tilt = body_tilt_from_imu(
             msg.orientation,
             **tilt_kwargs,
