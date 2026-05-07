@@ -152,7 +152,7 @@ class TestBrainNode(unittest.TestCase):
 
             action_client.destroy.assert_called_once_with()
 
-    def test_balance_mode_captures_target_orientation_until_disabled_issue356(self, proc_output):
+    def test_balance_mode_captures_target_orientation_until_disabled_issue356(self):
         """Issue 356: keep the toggle-captured target tilt until balance mode is disabled."""
         brain = HexapodBrain()
         try:
@@ -184,7 +184,7 @@ class TestBrainNode(unittest.TestCase):
             brain.destroy_node()
 
     def test_loop_uses_imu_balance_correction(self, proc_output):
-        """Apply IMU roll and pitch compensation relative to the captured target tilt."""
+        """Apply IMU roll and pitch compensation relative to the current measured tilt."""
         with mock.patch('drqp_brain.brain_node.JointTrajectoryBuilder') as trajectory_builder_cls:
             brain = HexapodBrain()
             try:
