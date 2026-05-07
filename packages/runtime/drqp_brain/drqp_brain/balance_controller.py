@@ -27,13 +27,13 @@ from scipy.spatial.transform import Rotation as R
 # Matches the fixed base_center_to_imu joint orientation in
 # packages/runtime/drqp_control/urdf/body.urdf.xacro.
 BASE_CENTER_TO_IMU_ROTATION = R.from_euler('xyz', [np.pi, 0.0, np.pi / 2.0])
-_DEFAULT_BASE_CENTER_TO_IMU_ROTATION = object()
+DEFAULT_BASE_CENTER_TO_IMU_ROTATION_SENTINEL = object()
 
 
 def body_tilt_from_imu(
     orientation,
     *,
-    base_center_to_imu_rotation=_DEFAULT_BASE_CENTER_TO_IMU_ROTATION,
+    base_center_to_imu_rotation=DEFAULT_BASE_CENTER_TO_IMU_ROTATION_SENTINEL,
 ) -> Point3D:
     """Return base_center_link roll and pitch in radians from an IMU quaternion.
 
@@ -41,7 +41,7 @@ def body_tilt_from_imu(
     Pass ``None`` to use the IMU orientation without mount compensation.
     """
     imu_in_world = R.from_quat([orientation.x, orientation.y, orientation.z, orientation.w])
-    if base_center_to_imu_rotation is _DEFAULT_BASE_CENTER_TO_IMU_ROTATION:
+    if base_center_to_imu_rotation is DEFAULT_BASE_CENTER_TO_IMU_ROTATION_SENTINEL:
         base_center_to_imu_rotation = BASE_CENTER_TO_IMU_ROTATION
     base_in_world = imu_in_world
     if base_center_to_imu_rotation is not None:

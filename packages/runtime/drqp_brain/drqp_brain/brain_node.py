@@ -45,17 +45,9 @@ from scipy.spatial.transform import Rotation as R
 from sensor_msgs.msg import Imu
 import std_msgs.msg
 import trajectory_msgs.msg
+from tf2_ros import TransformException
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
-
-
-_TF_LOOKUP_EXCEPTION_NAMES = {
-    'ConnectivityException',
-    'ExtrapolationException',
-    'LookupException',
-    'TimeoutException',
-    'TransformException',
-}
 
 
 class HexapodBrain(rclpy.node.Node):
@@ -225,11 +217,9 @@ class HexapodBrain(rclpy.node.Node):
             transform = self.tf_buffer.lookup_transform(
                 'drqp/base_center_link',
                 imu_frame,
-                Time(),
+                Time(seconds=0),
             )
-        except Exception as exc:
-            if exc.__class__.__name__ not in _TF_LOOKUP_EXCEPTION_NAMES:
-                raise
+        except TransformException as exc:
             self.get_logger().warning(
                 f'Failed to lookup transform from drqp/base_center_link to {imu_frame}: {exc}'
             )
