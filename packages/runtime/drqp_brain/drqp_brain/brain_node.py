@@ -98,6 +98,7 @@ class HexapodBrain(rclpy.node.Node):
         self.tf_listener = None
         if self.transform_imu_to_base_frame:
             self.tf_buffer = Buffer()
+            # Retain the listener on the instance so the TF subscriptions stay active.
             self.tf_listener = TransformListener(self.tf_buffer, self)
 
         self.robot_state = None

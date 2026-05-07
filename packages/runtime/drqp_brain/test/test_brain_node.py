@@ -90,7 +90,10 @@ def make_transform_with_rotation(rotation: R) -> mock.Mock:
 
 def _assert_rotation_matches(actual: R, expected: R):
     """Assert two scipy rotations represent the same orientation."""
-    assert actual.as_matrix() == pytest.approx(expected.as_matrix())
+    assert actual.as_matrix() == pytest.approx(
+        expected.as_matrix(),
+        abs=1e-8,
+    ), 'Expected TF-derived IMU mount rotation to match the mocked transform'
 
 
 class TestBrainNode(unittest.TestCase):
