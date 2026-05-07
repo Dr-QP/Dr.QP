@@ -39,10 +39,23 @@ from rclpy.duration import Duration
 from rclpy.executors import ExternalShutdownException
 import rclpy.node
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
+from rclpy.time import Time
 import rclpy.utilities
+from scipy.spatial.transform import Rotation as R
 from sensor_msgs.msg import Imu
 import std_msgs.msg
 import trajectory_msgs.msg
+from tf2_ros.buffer import Buffer
+from tf2_ros.transform_listener import TransformListener
+
+
+_TF_LOOKUP_EXCEPTION_NAMES = {
+    'ConnectivityException',
+    'ExtrapolationException',
+    'LookupException',
+    'TimeoutException',
+    'TransformException',
+}
 
 
 class HexapodBrain(rclpy.node.Node):
@@ -89,6 +102,11 @@ class HexapodBrain(rclpy.node.Node):
             qos_profile=10,
         )
         self.imu_sub = self.create_subscription(Imu, '/imu/data', self.process_imu, qos_profile=10)
+        self.tf_buffer = None
+        self.tf_listener = None
+        if self.transform_imu_to_base_frame:
+            self.tf_buffer = Buffer()
+            self.tf_listener = TransformListener(self.tf_buffer, self)
 
         self.robot_state = None
         self.current_body_tilt = None
@@ -198,6 +216,28 @@ class HexapodBrain(rclpy.node.Node):
         if msg.gait_type in gait_names:
             self.gait_index = gait_names.index(msg.gait_type)
 
+    def _lookup_base_center_to_imu_rotation(self, imu_frame: str):
+        """Return TF-derived IMU mount rotation, or the static fallback when TF is unavailable."""
+        if self.tf_buffer is None:
+            return None
+
+        try:
+            transform = self.tf_buffer.lookup_transform(
+                'drqp/base_center_link',
+                imu_frame,
+                Time(),
+            )
+        except Exception as exc:
+            if exc.__class__.__name__ not in _TF_LOOKUP_EXCEPTION_NAMES:
+                raise
+            self.get_logger().warning(
+                f'Failed to lookup transform from drqp/base_center_link to {imu_frame}: {exc}'
+            )
+            return BASE_CENTER_TO_IMU_ROTATION
+
+        rotation = transform.transform.rotation
+        return R.from_quat([rotation.x, rotation.y, rotation.z, rotation.w])
+
     def process_imu(self, msg: Imu):
         """Store the latest body tilt estimate from the IMU orientation."""
         quaternion = np.array(
@@ -214,11 +254,13 @@ class HexapodBrain(rclpy.node.Node):
             self.last_imu_update = None
             return
 
+        base_center_to_imu_rotation = self._lookup_base_center_to_imu_rotation(
+            msg.header.frame_id or 'drqp/imu_link'
+        )
+
         self.current_body_tilt = body_tilt_from_imu(
             msg.orientation,
-            base_center_to_imu_rotation=(
-                BASE_CENTER_TO_IMU_ROTATION if self.transform_imu_to_base_frame else None
-            ),
+            base_center_to_imu_rotation=base_center_to_imu_rotation,
         )
         self.last_imu_update = self.get_clock().now()
         if self.balance_mode_enabled and self.target_body_tilt is None:
