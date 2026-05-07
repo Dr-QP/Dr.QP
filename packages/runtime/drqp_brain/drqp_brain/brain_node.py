@@ -252,16 +252,15 @@ class HexapodBrain(rclpy.node.Node):
             self.last_imu_update = None
             return
 
-        if imu_to_base_rotation is None:
-            self.current_body_tilt = body_tilt_from_imu(
-                msg.orientation,
-                base_center_to_imu_rotation=None,
-            )
-        else:
-            self.current_body_tilt = body_tilt_from_imu(
-                msg.orientation,
-                imu_to_base_rotation=imu_to_base_rotation,
-            )
+        tilt_kwargs = (
+            {'base_center_to_imu_rotation': None}
+            if imu_to_base_rotation is None
+            else {'imu_to_base_rotation': imu_to_base_rotation}
+        )
+        self.current_body_tilt = body_tilt_from_imu(
+            msg.orientation,
+            **tilt_kwargs,
+        )
         self.last_imu_update = self.get_clock().now()
         if self.balance_mode_enabled and self.target_body_tilt is None:
             self.target_body_tilt = self.current_body_tilt
