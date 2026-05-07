@@ -60,6 +60,18 @@ def generate_test_description():
     )
 
 
+def make_imu_msg_from_base_tilt(roll: float, pitch: float, yaw: float = 0.0) -> Imu:
+    """Build an IMU message from a base_center_link orientation."""
+    imu_in_world = (
+        R.from_euler('xyz', [roll, pitch, yaw], degrees=False) * BASE_CENTER_TO_IMU_ROTATION
+    )
+    qx, qy, qz, qw = imu_in_world.as_quat()
+    return Imu(
+        orientation=Quaternion(x=qx, y=qy, z=qz, w=qw),
+        orientation_covariance=[0.0] * 9,
+    )
+
+
 class TestBrainNode(unittest.TestCase):
     """Test the drqp_brain node."""
 
@@ -140,12 +152,39 @@ class TestBrainNode(unittest.TestCase):
 
             action_client.destroy.assert_called_once_with()
 
-    def test_loop_uses_imu_balance_correction(self, proc_output):
-        """Apply IMU roll and pitch compensation before stepping the walker."""
-        base_in_world = R.from_euler('xyz', [0.12, -0.08, 0.35], degrees=False)
-        imu_in_world = base_in_world * BASE_CENTER_TO_IMU_ROTATION
-        qx, qy, qz, qw = imu_in_world.as_quat()
+    def test_balance_mode_captures_target_orientation_until_disabled_issue356(self, proc_output):
+        """Issue 356: keep the toggle-captured target tilt until balance mode is disabled."""
+        brain = HexapodBrain()
+        try:
+            brain.process_imu(make_imu_msg_from_base_tilt(0.05, -0.04, 0.2))
 
+            assert brain.balance_mode_enabled is False
+            assert brain.target_body_tilt is None
+            assert brain.get_imu_body_tilt() is None
+
+            brain.process_balance_mode(std_msgs.msg.Bool(data=True))
+
+            assert brain.balance_mode_enabled is True
+            assert brain.target_body_tilt.x == pytest.approx(0.05)
+            assert brain.target_body_tilt.y == pytest.approx(-0.04)
+
+            brain.process_imu(make_imu_msg_from_base_tilt(0.09, -0.02, 0.2))
+
+            assert brain.target_body_tilt.x == pytest.approx(0.05)
+            assert brain.target_body_tilt.y == pytest.approx(-0.04)
+            assert brain.get_imu_body_tilt().x == pytest.approx(0.09)
+            assert brain.get_imu_body_tilt().y == pytest.approx(-0.02)
+
+            brain.process_balance_mode(std_msgs.msg.Bool(data=False))
+
+            assert brain.balance_mode_enabled is False
+            assert brain.target_body_tilt is None
+            assert brain.get_imu_body_tilt() is None
+        finally:
+            brain.destroy_node()
+
+    def test_loop_uses_imu_balance_correction(self, proc_output):
+        """Apply IMU roll and pitch compensation relative to the captured target tilt."""
         with mock.patch('drqp_brain.brain_node.JointTrajectoryBuilder') as trajectory_builder_cls:
             brain = HexapodBrain()
             try:
@@ -155,12 +194,9 @@ class TestBrainNode(unittest.TestCase):
                 brain.current_movement.body_translation = Vector3(x=0.0, y=0.0, z=0.0)
                 brain.current_movement.body_rotation = Vector3(x=0.0, y=0.0, z=0.4)
                 brain.current_movement.gait_type = MovementCommandConstants.GAIT_TRIPOD
-                brain.process_imu(
-                    Imu(
-                        orientation=Quaternion(x=qx, y=qy, z=qz, w=qw),
-                        orientation_covariance=[0.0] * 9,
-                    )
-                )
+                brain.process_imu(make_imu_msg_from_base_tilt(0.0, 0.0, 0.35))
+                brain.process_balance_mode(std_msgs.msg.Bool(data=True))
+                brain.process_imu(make_imu_msg_from_base_tilt(0.12, -0.08, 0.35))
 
                 brain.loop()
 

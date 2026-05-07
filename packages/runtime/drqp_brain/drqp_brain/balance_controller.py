@@ -49,6 +49,7 @@ def apply_imu_balance(
     body_rotation: Point3D,
     measured_body_tilt: Point3D | None,
     *,
+    target_body_tilt: Point3D | None = None,
     gain: float = 1.0,
     max_tilt_rad: float = np.pi / 4.0,
 ) -> Point3D:
@@ -56,8 +57,12 @@ def apply_imu_balance(
     if measured_body_tilt is None:
         return body_rotation
 
+    tilt_error = measured_body_tilt
+    if target_body_tilt is not None:
+        tilt_error = measured_body_tilt - target_body_tilt
+
     tilt_bounds = np.array([max_tilt_rad, max_tilt_rad, 0.0])
-    clipped_tilt = np.clip(measured_body_tilt.numpy(), -tilt_bounds, tilt_bounds)
+    clipped_tilt = np.clip(tilt_error.numpy(), -tilt_bounds, tilt_bounds)
     requested_rotation = R.from_rotvec(body_rotation.numpy())
     balance_correction = R.from_euler(
         'xyz',

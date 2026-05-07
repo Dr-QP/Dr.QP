@@ -29,6 +29,7 @@ import unittest
 import builtin_interfaces
 import builtin_interfaces.msg
 from controller_manager.test_utils import check_controllers_running, check_node_running
+from drqp_brain.balance_controller import body_tilt_from_imu
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 from geometry_msgs.msg import Pose, Vector3
 from launch import LaunchDescription
@@ -126,6 +127,7 @@ class GazeboRobotControlBase(unittest.TestCase):
         self.current_clock = None
         self.robot_pose = None
         self.robot_pose_stamp_ns = None
+        self.current_imu_message = None
 
         qos_profile = QoSProfile(depth=1)
         qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
@@ -144,6 +146,7 @@ class GazeboRobotControlBase(unittest.TestCase):
             10,
         )
         self.clock_sub = self.node.create_subscription(Clock, '/clock', self._clock_callback, 10)
+        self.imu_sub = self.node.create_subscription(Imu, '/imu/data', self._imu_callback, 10)
 
         self.event_pub = self.node.create_publisher(std_msgs.msg.String, '/robot_event', 10)
         self.movement_pub = self.node.create_publisher(
@@ -185,9 +188,22 @@ class GazeboRobotControlBase(unittest.TestCase):
         self.robot_pose = msg.pose.pose
         self.robot_pose_stamp_ns = self._time_msg_to_nanoseconds(msg.header.stamp)
 
+    def _imu_callback(self, msg: Imu) -> None:
+        self.current_imu_message = msg
+
     @staticmethod
     def _time_msg_to_nanoseconds(msg: builtin_interfaces.msg.Time) -> int:
         return (msg.sec * 1_000_000_000) + msg.nanosec
+
+    @staticmethod
+    def _roll_pitch_from_quaternion(quaternion) -> tuple[float, float]:
+        sinr_cosp = 2.0 * (quaternion.w * quaternion.x + quaternion.y * quaternion.z)
+        cosr_cosp = 1.0 - 2.0 * (quaternion.x * quaternion.x + quaternion.y * quaternion.y)
+        roll = math.atan2(sinr_cosp, cosr_cosp)
+
+        sinp = 2.0 * (quaternion.w * quaternion.y - quaternion.z * quaternion.x)
+        pitch = math.asin(max(-1.0, min(1.0, sinp)))
+        return roll, pitch
 
     def _spin_until(
         self,
@@ -479,6 +495,59 @@ class GazeboRobotControlBase(unittest.TestCase):
         """Verify the simulated IMU publishes on /imu/data via the Gazebo bridge."""
         with WaitForTopics([('/imu/data', Imu)], timeout=self.CLOCK_TIMEOUT) as wait:
             self.assertTrue(wait.wait(), 'Did not receive /imu/data from Gazebo IMU sensor')
+
+    def assert_imu_data_reports_orientation(self) -> None:
+        """Issue 356: Gazebo IMU data should include mounted-link orientation for ROS consumers."""
+        self.assert_imu_data()
+        self._spin_until(
+            lambda: self.current_imu_message is not None,
+            self.CLOCK_TIMEOUT,
+            'Did not capture /imu/data after Gazebo IMU topic became available',
+        )
+        self._wait_for_pose()
+
+        orientation = self.current_imu_message.orientation
+        orientation_norm = math.sqrt(
+            orientation.x**2 + orientation.y**2 + orientation.z**2 + orientation.w**2
+        )
+        self.assertAlmostEqual(
+            orientation_norm,
+            1.0,
+            delta=0.05,
+            msg='Expected Gazebo IMU orientation quaternion to be normalized in /imu/data',
+        )
+        self.assertGreaterEqual(
+            self.current_imu_message.orientation_covariance[0],
+            0.0,
+            'Expected Gazebo IMU orientation to be marked available in /imu/data',
+        )
+
+        angle_from_identity = 2.0 * math.acos(
+            min(1.0, max(0.0, abs(orientation.w) / orientation_norm))
+        )
+        self.assertGreater(
+            angle_from_identity,
+            0.5,
+            (
+                'Expected Gazebo to preserve the non-identity imu_link orientation '
+                'instead of publishing a default orientation'
+            ),
+        )
+
+        imu_body_tilt = body_tilt_from_imu(orientation)
+        base_roll, base_pitch = self._roll_pitch_from_quaternion(self.robot_pose.orientation)
+        self.assertAlmostEqual(
+            imu_body_tilt.x,
+            base_roll,
+            delta=0.1,
+            msg='Expected IMU orientation to reconstruct the spawned base roll',
+        )
+        self.assertAlmostEqual(
+            imu_body_tilt.y,
+            base_pitch,
+            delta=0.1,
+            msg='Expected IMU orientation to reconstruct the spawned base pitch',
+        )
 
     def assert_robot_spawned(self) -> None:
         """Verify robot model is spawned and state machine publishes state."""

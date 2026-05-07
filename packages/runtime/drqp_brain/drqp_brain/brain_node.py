@@ -92,6 +92,8 @@ class HexapodBrain(rclpy.node.Node):
 
         self.robot_state = None
         self.current_body_tilt = None
+        self.target_body_tilt = None
+        self.balance_mode_enabled = False
         self.last_imu_update = None
 
         qos_profile = QoSProfile(depth=1)
@@ -99,6 +101,12 @@ class HexapodBrain(rclpy.node.Node):
         qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
         self.robot_state_sub = self.create_subscription(
             std_msgs.msg.String, '/robot_state', self.process_robot_state, qos_profile=qos_profile
+        )
+        self.balance_mode_sub = self.create_subscription(
+            std_msgs.msg.Bool,
+            '/robot/balance_mode',
+            self.process_balance_mode,
+            qos_profile=qos_profile,
         )
         self.robot_event_pub = self.create_publisher(
             std_msgs.msg.String, '/robot_event', qos_profile=10
@@ -213,15 +221,27 @@ class HexapodBrain(rclpy.node.Node):
             ),
         )
         self.last_imu_update = self.get_clock().now()
+        if self.balance_mode_enabled and self.target_body_tilt is None:
+            self.target_body_tilt = self.current_body_tilt
 
     def next_control_mode(self):
         """Log control mode changes (control mode is now handled by translator)."""
         self.get_logger().info('Control mode changed in translator node')
 
+    def process_balance_mode(self, msg: std_msgs.msg.Bool):
+        """Enable or disable IMU balancing around the captured body tilt."""
+        self.balance_mode_enabled = self.enable_imu_balance and msg.data
+        if not self.balance_mode_enabled:
+            self.target_body_tilt = None
+            return
+
+        self.target_body_tilt = self.get_imu_body_tilt()
+
     def get_imu_body_tilt(self):
         """Return the latest IMU-derived tilt when balancing data is fresh enough."""
         if (
             not self.enable_imu_balance
+            or not self.balance_mode_enabled
             or self.current_body_tilt is None
             or self.last_imu_update is None
             or self.get_clock().now() - self.last_imu_update > self.imu_balance_timeout
@@ -262,6 +282,7 @@ class HexapodBrain(rclpy.node.Node):
         body_rotation = apply_imu_balance(
             body_rotation,
             self.get_imu_body_tilt(),
+            target_body_tilt=self.target_body_tilt,
             gain=self.imu_balance_gain,
             max_tilt_rad=self.imu_balance_max_tilt_rad,
         )

@@ -50,6 +50,9 @@ class TestGazeboRobotControlNodesAndClock(GazeboRobotControlBase):
     def test_imu_data_is_published(self):
         self.assert_imu_data()
 
+    def test_imu_data_reports_orientation_issue356(self):
+        self.assert_imu_data_reports_orientation()
+
 
 @post_shutdown_test()
 class TestSimulationShutdown(SimulationShutdownBase):

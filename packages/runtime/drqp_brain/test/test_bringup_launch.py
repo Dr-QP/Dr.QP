@@ -29,3 +29,11 @@ def test_bringup_launch_loads_the_imu_node():
     assert "name='load_imu'" in launch_source
     assert "executable='drqp_imu'" in launch_source
     assert 'UnlessCondition(use_gazebo)' in launch_source
+
+
+def test_bringup_launch_uses_same_imu_transform_path_in_gazebo_and_hardware_issue356():
+    """Issue 356: Gazebo should not bypass the base-to-IMU transform path."""
+    launch_file = Path(__file__).resolve().parents[1] / 'launch' / 'bringup.launch.py'
+    launch_source = launch_file.read_text(encoding='utf-8')
+
+    assert "'transform_imu_to_base_frame': IfElseSubstitution(" not in launch_source
