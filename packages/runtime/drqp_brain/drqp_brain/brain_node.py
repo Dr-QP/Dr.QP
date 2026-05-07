@@ -217,6 +217,7 @@ class HexapodBrain(rclpy.node.Node):
             transform = self.tf_buffer.lookup_transform(
                 'drqp/base_center_link',
                 imu_frame,
+                # Zero time requests the latest transform available in the TF buffer.
                 Time(seconds=0),
             )
         except TransformException as exc:

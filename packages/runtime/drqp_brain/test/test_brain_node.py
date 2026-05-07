@@ -88,7 +88,7 @@ def make_transform_with_rotation(rotation: R) -> mock.Mock:
     return transform
 
 
-def assert_rotation_matches(actual: R, expected: R):
+def _assert_rotation_matches(actual: R, expected: R):
     """Assert two scipy rotations represent the same orientation."""
     assert actual.as_matrix() == pytest.approx(expected.as_matrix())
 
@@ -198,7 +198,7 @@ class TestBrainNode(unittest.TestCase):
             lookup_args, _ = brain.tf_buffer.lookup_transform.call_args
             assert lookup_args[:2] == ('drqp/base_center_link', 'drqp/custom_imu')
             _, kwargs = body_tilt_from_imu.call_args
-            assert_rotation_matches(kwargs['base_center_to_imu_rotation'], expected_rotation)
+            _assert_rotation_matches(kwargs['base_center_to_imu_rotation'], expected_rotation)
             assert brain.current_body_tilt is mock.sentinel.body_tilt
         finally:
             brain.destroy_node()
@@ -228,7 +228,7 @@ class TestBrainNode(unittest.TestCase):
             lookup_args, _ = brain.tf_buffer.lookup_transform.call_args
             assert lookup_args[:2] == ('drqp/base_center_link', 'drqp/imu_link')
             _, kwargs = body_tilt_from_imu.call_args
-            assert_rotation_matches(kwargs['base_center_to_imu_rotation'], expected_rotation)
+            _assert_rotation_matches(kwargs['base_center_to_imu_rotation'], expected_rotation)
             assert brain.current_body_tilt is mock.sentinel.body_tilt
         finally:
             brain.destroy_node()
