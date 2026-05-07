@@ -51,12 +51,6 @@ def body_tilt_from_imu(
         precedence over ``base_center_to_imu_rotation`` and avoids an extra
         inversion on the hot path.
 
-    Omitting ``base_center_to_imu_rotation`` uses the default hardware mount transform.
-    Pass ``None`` to use the IMU orientation without mount compensation.
-    Pass ``imu_to_base_rotation`` to use a TF-provided IMU->base rotation directly
-    without inverting it on the hot path. When provided, ``imu_to_base_rotation``
-    takes precedence over ``base_center_to_imu_rotation``; callers should supply
-    one path or the other.
     A sentinel is used for the default because ``None`` is a public, meaningful input.
     """
     imu_in_world = R.from_quat([orientation.x, orientation.y, orientation.z, orientation.w])
