@@ -403,7 +403,23 @@ class GazeboRobotControlBase(unittest.TestCase):
 
     @staticmethod
     def _quaternion_from_roll_pitch_yaw(roll: float, pitch: float, yaw: float) -> tuple[float, ...]:
-        """Convert XYZ Euler angles to a quaternion tuple in (x, y, z, w) order."""
+        """
+        Convert XYZ Euler angles in radians to a quaternion tuple.
+
+        Parameters
+        ----------
+        roll
+            Rotation around the X axis in radians.
+        pitch
+            Rotation around the Y axis in radians.
+        yaw
+            Rotation around the Z axis in radians.
+
+        Returns
+        -------
+        tuple[float, ...]
+            Quaternion in `(x, y, z, w)` order using XYZ Euler convention.
+        """
         half_roll = roll / 2.0
         half_pitch = pitch / 2.0
         half_yaw = yaw / 2.0
@@ -421,6 +437,21 @@ class GazeboRobotControlBase(unittest.TestCase):
         )
 
     def _run_gz_command(self, args: list[str], error_context: str) -> str:
+        """
+        Run a Gazebo CLI command and return its stdout.
+
+        Parameters
+        ----------
+        args
+            Full `gz` command argument list.
+        error_context
+            Human-readable context included in failures.
+
+        Returns
+        -------
+        str
+            Captured stdout from the Gazebo command.
+        """
         # These commands are built from test constants plus explicit helper inputs;
         # this helper intentionally does not execute arbitrary user-provided shell.
         try:
@@ -462,6 +493,7 @@ class GazeboRobotControlBase(unittest.TestCase):
         pitch: float = 0.0,
         yaw: float = 0.0,
     ) -> None:
+        """Set the balance board pose in Gazebo using roll, pitch, and yaw radians."""
         x, y, z, w = self._quaternion_from_roll_pitch_yaw(roll, pitch, yaw)
         request = ' '.join(
             [
@@ -489,6 +521,19 @@ class GazeboRobotControlBase(unittest.TestCase):
         )
 
     def _sample_entity_pose_from_gazebo(self, entity_name: str) -> Pose:
+        """
+        Read a named entity pose from Gazebo's world pose info topic.
+
+        Parameters
+        ----------
+        entity_name
+            Gazebo entity name expected in `/world/<world>/pose/info`.
+
+        Returns
+        -------
+        Pose
+            Latest pose reported for the requested entity.
+        """
         raw_output = self._run_gz_command(
             [
                 'gz',
@@ -513,6 +558,23 @@ class GazeboRobotControlBase(unittest.TestCase):
         expected_pitch: float = 0.0,
         tolerance: float = 0.03,
     ) -> tuple[float, float]:
+        """
+        Poll Gazebo until the balance board reaches the requested tilt.
+
+        Parameters
+        ----------
+        expected_roll
+            Expected board roll in radians.
+        expected_pitch
+            Expected board pitch in radians.
+        tolerance
+            Acceptable absolute error in radians for both axes.
+
+        Returns
+        -------
+        tuple[float, float]
+            Observed board roll and pitch in radians.
+        """
         deadline = time.monotonic() + self.MOVEMENT_TIMEOUT
         last_roll = 0.0
         last_pitch = 0.0
@@ -1077,7 +1139,7 @@ def _parse_pose_block(lines: list[str]) -> dict[str, Pose | str]:
         axis, raw_value = stripped.split(':', maxsplit=1)
         if current_section == 'position' and axis in position:
             position[axis] = float(raw_value.strip())
-        if current_section == 'orientation' and axis in orientation:
+        elif current_section == 'orientation' and axis in orientation:
             orientation[axis] = float(raw_value.strip())
 
     pose = Pose()
