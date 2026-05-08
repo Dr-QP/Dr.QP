@@ -460,10 +460,12 @@ class GazeboRobotControlBase(unittest.TestCase):
         yaw: float = 0.0,
     ) -> None:
         x, y, z, w = self._quaternion_from_roll_pitch_yaw(roll, pitch, yaw)
-        request = (
-            f'name: "{BALANCE_BOARD_MODEL_NAME}" '
-            f'position {{ x: 0.0 y: 0.0 z: {BALANCE_BOARD_POSE_Z:.3f} }} '
-            f'orientation {{ x: {x:.8f} y: {y:.8f} z: {z:.8f} w: {w:.8f} }}'
+        request = ' '.join(
+            [
+                f'name: "{BALANCE_BOARD_MODEL_NAME}"',
+                f'position {{ x: 0.0 y: 0.0 z: {BALANCE_BOARD_POSE_Z:.3f} }}',
+                f'orientation {{ x: {x:.8f} y: {y:.8f} z: {z:.8f} w: {w:.8f} }}',
+            ]
         )
         self._run_gz_command(
             [
@@ -983,7 +985,7 @@ def _extract_blocks(raw_output: str, block_name: str) -> list[list[str]]:
     """Extract protobuf-style blocks for the given name from Gazebo CLI output."""
     blocks = []
     lines = raw_output.splitlines()
-    opening = f'{block_name} {{'
+    opening = block_name + ' {'
     index = 0
     while index < len(lines):
         if lines[index].strip() != opening:
