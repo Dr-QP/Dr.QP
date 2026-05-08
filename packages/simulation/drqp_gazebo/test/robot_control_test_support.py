@@ -403,6 +403,7 @@ class GazeboRobotControlBase(unittest.TestCase):
 
     @staticmethod
     def _quaternion_from_roll_pitch_yaw(roll: float, pitch: float, yaw: float) -> tuple[float, ...]:
+        """Convert XYZ Euler angles to a quaternion tuple in (x, y, z, w) order."""
         half_roll = roll / 2.0
         half_pitch = pitch / 2.0
         half_yaw = yaw / 2.0
@@ -972,7 +973,19 @@ class GazeboRobotControlBase(unittest.TestCase):
 
 
 def _parse_gazebo_pose_info(raw_output: str) -> list[dict[str, Pose | str]]:
-    """Parse Gazebo CLI pose info output into named poses."""
+    """
+    Parse Gazebo CLI pose info output into named pose dictionaries.
+
+    Parameters
+    ----------
+    raw_output
+        Text emitted by `gz topic -e -n 1 -t /world/<world>/pose/info`.
+
+    Returns
+    -------
+    list[dict[str, Pose | str]]
+        Parsed entities with `name` and `pose` keys.
+    """
     entities = []
     for block in _extract_blocks(raw_output, 'pose'):
         entity = _parse_pose_block(block)
@@ -982,7 +995,21 @@ def _parse_gazebo_pose_info(raw_output: str) -> list[dict[str, Pose | str]]:
 
 
 def _extract_blocks(raw_output: str, block_name: str) -> list[list[str]]:
-    """Extract protobuf-style blocks for the given name from Gazebo CLI output."""
+    """
+    Extract nested protobuf-style blocks from Gazebo CLI text output.
+
+    Parameters
+    ----------
+    raw_output
+        Text output containing repeated `<block_name> { ... }` sections.
+    block_name
+        Name of the protobuf block to extract.
+
+    Returns
+    -------
+    list[list[str]]
+        One list of inner lines for each extracted block.
+    """
     blocks = []
     lines = raw_output.splitlines()
     opening = block_name + ' {'
@@ -1011,7 +1038,20 @@ def _extract_blocks(raw_output: str, block_name: str) -> list[list[str]]:
 
 
 def _parse_pose_block(lines: list[str]) -> dict[str, Pose | str]:
-    """Parse a single Gazebo CLI pose block."""
+    """
+    Parse one Gazebo CLI pose block into a named pose dictionary.
+
+    Parameters
+    ----------
+    lines
+        Inner lines from a Gazebo `pose { ... }` block containing `name`,
+        `position { ... }`, and `orientation { ... }` sections.
+
+    Returns
+    -------
+    dict[str, Pose | str]
+        Dictionary with `name` and `pose` keys.
+    """
     name = ''
     position = {'x': 0.0, 'y': 0.0, 'z': 0.0}
     orientation = {'x': 0.0, 'y': 0.0, 'z': 0.0, 'w': 1.0}
