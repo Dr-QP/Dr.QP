@@ -29,6 +29,7 @@ from launch.substitutions import (
     IfElseSubstitution,
     LaunchConfiguration,
     PathJoinSubstitution,
+    TextSubstitution,
 )
 from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
@@ -85,7 +86,7 @@ def generate_launch_description():
     robot_pitch = LaunchConfiguration('robot_pitch')
     robot_yaw = LaunchConfiguration('robot_yaw')
     container_name = 'drqp_gazebo_container'
-    gz_args = ['-r -v 3 ', world_sdf]
+    gz_args = [TextSubstitution(text='-r -v 3 '), world_sdf]
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
@@ -100,7 +101,11 @@ def generate_launch_description():
             'gz_args': IfElseSubstitution(
                 sim_gui,
                 gz_args,
-                ['-r -v 3 ', world_sdf, ' --headless-rendering -s'],
+                [
+                    TextSubstitution(text='-r -v 3 '),
+                    world_sdf,
+                    TextSubstitution(text=' --headless-rendering -s'),
+                ],
             ),
             'on_exit_shutdown': 'true',
         }.items(),
