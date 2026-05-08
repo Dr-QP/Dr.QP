@@ -421,6 +421,8 @@ class GazeboRobotControlBase(unittest.TestCase):
         )
 
     def _run_gz_command(self, args: list[str], error_context: str) -> str:
+        # These commands are built from test constants plus explicit helper inputs;
+        # this helper intentionally does not execute arbitrary user-provided shell.
         try:
             completed = subprocess.run(
                 args,
@@ -1025,7 +1027,7 @@ def _extract_blocks(raw_output: str, block_name: str) -> list[list[str]]:
             stripped = lines[index].strip()
             if stripped.endswith('{'):
                 depth += 1
-            if stripped == '}':
+            elif stripped == '}':
                 depth -= 1
                 if depth == 0:
                     break
