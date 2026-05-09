@@ -46,11 +46,7 @@ def generate_launch_description():
     from moveit_launch_utils import get_moveit_params
 
     pkg = get_package_share_path('drqp_moveit')
-    control_launch_path = get_package_share_path('drqp_control') / 'launch'
-    use_sim_time = LaunchConfiguration('use_sim_time')
     use_gazebo = LaunchConfiguration('use_gazebo')
-    publish_fake_joint_states = LaunchConfiguration('publish_fake_joint_states')
-    gui = LaunchConfiguration('gui')
     hardware_device_address = LaunchConfiguration('hardware_device_address')
 
     move_group_node = Node(
@@ -59,35 +55,11 @@ def generate_launch_description():
         output='screen',
         parameters=get_moveit_params(
             pkg, use_gazebo=use_gazebo, hardware_device_address=hardware_device_address
-        )
-        + [{'use_sim_time': use_sim_time}],
-    )
-
-    robot_state_publisher = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(str(control_launch_path / 'rsp.launch.py')),
-        condition=IfCondition(publish_fake_joint_states),
-        launch_arguments={
-            'use_sim_time': use_sim_time,
-        }.items(),
-    )
-
-    joint_state_publisher = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(str(control_launch_path / 'jsp.launch.py')),
-        condition=IfCondition(publish_fake_joint_states),
-        launch_arguments={
-            'use_sim_time': use_sim_time,
-            'gui': gui,
-        }.items(),
+        ) + [{'use_sim_time': use_gazebo}],
     )
 
     return LaunchDescription(
         [
-            DeclareLaunchArgument(
-                name='use_sim_time',
-                default_value='false',
-                choices=['true', 'false'],
-                description='Use simulation time',
-            ),
             DeclareLaunchArgument(
                 name='use_gazebo',
                 default_value='false',
@@ -102,20 +74,6 @@ def generate_launch_description():
                     'Use "mock_servo" for fake hardware.'
                 ),
             ),
-            DeclareLaunchArgument(
-                name='publish_fake_joint_states',
-                default_value='false',
-                choices=['true', 'false'],
-                description='Start robot_state_publisher and joint_state_publisher',
-            ),
-            DeclareLaunchArgument(
-                name='gui',
-                default_value='false',
-                choices=['true', 'false'],
-                description='Start joint_state_publisher_gui instead of joint_state_publisher',
-            ),
-            robot_state_publisher,
-            joint_state_publisher,
             move_group_node,
         ]
     )
