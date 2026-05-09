@@ -47,7 +47,6 @@ def generate_launch_description():
     rviz_config = str(pkg / 'config' / 'moveit.rviz')
 
     use_rviz = LaunchConfiguration('use_rviz')
-    use_sim_time = LaunchConfiguration('use_sim_time')
     use_gazebo = LaunchConfiguration('use_gazebo')
     hardware_device_address = LaunchConfiguration('hardware_device_address')
 
@@ -58,7 +57,7 @@ def generate_launch_description():
         output='log',
         arguments=['-d', rviz_config],
         parameters=get_moveit_params(pkg, use_gazebo, hardware_device_address)
-        + [{'use_sim_time': use_sim_time}],
+        + [{'use_sim_time': use_gazebo}],
         condition=IfCondition(use_rviz),
     )
 
@@ -69,12 +68,6 @@ def generate_launch_description():
                 default_value='true',
                 choices=['true', 'false'],
                 description='Start RViz2 with MoveIt Motion Planning plugin',
-            ),
-            DeclareLaunchArgument(
-                name='use_sim_time',
-                default_value='false',
-                choices=['true', 'false'],
-                description='Use simulation time for RViz',
             ),
             DeclareLaunchArgument(
                 name='use_gazebo',
