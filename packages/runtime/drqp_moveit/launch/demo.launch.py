@@ -45,14 +45,12 @@ def generate_launch_description():
     moveit_rviz_launch_path = moveit_pkg / 'launch' / 'moveit_rviz.launch.py'
 
     show_rviz = LaunchConfiguration('show_rviz')
-    gui = LaunchConfiguration('gui')
 
     move_group_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(str(move_group_launch_path)),
         launch_arguments={
             'use_sim_time': 'false',
             'publish_fake_joint_states': 'false',
-            'gui': gui,
             'hardware_device_address': 'mock_servo',
         }.items(),
     )
@@ -64,6 +62,19 @@ def generate_launch_description():
         }.items(),
     )
 
+    # Load bringup.launch.py from drqp_brain to start robot_state_publisher and joint_state_publisher
+    bringup_launch_path = get_package_share_path('drqp_brain') / 'launch' / 'bringup.launch.py'
+    bringup_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(str(bringup_launch_path)),
+        launch_arguments={
+            'use_gazebo': 'false',
+            'use_sim_time': 'false',
+            'load_joystick': 'false',
+            'load_controllers': 'true',
+            'load_imu': 'false',
+        }.items(),
+    )
+
     return LaunchDescription(
         [
             DeclareLaunchArgument(
@@ -72,13 +83,8 @@ def generate_launch_description():
                 choices=['true', 'false'],
                 description='Start RViz2 with MoveIt Motion Planning plugin',
             ),
-            DeclareLaunchArgument(
-                name='gui',
-                default_value='false',
-                choices=['true', 'false'],
-                description='Start joint_state_publisher_gui instead of joint_state_publisher',
-            ),
             move_group_launch,
             moveit_rviz_launch,
+            bringup_launch,
         ]
     )
