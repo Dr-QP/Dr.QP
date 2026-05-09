@@ -38,7 +38,7 @@ public:
   {
     assert(id_ != kBroadcastId);
     XYZrobotServoStatus status = {};
-    status.position = positions_[id_];
+    status.position = positions_.count(id_) ? positions_[id_] : 512;
     return status;
   }
 
