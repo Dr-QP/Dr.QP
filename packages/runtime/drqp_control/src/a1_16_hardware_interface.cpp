@@ -142,7 +142,7 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
   }
 
   try {
-    // Read all servos and set commands to current position
+    // Read all servos and configure their limits.
     for (const auto servoId : robotConfig_.getServoIds()) {
       readServoStatus(servoId);
 
@@ -158,6 +158,7 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
         get_logger(), "Servo %i: Max PWM: %i, Min position: %i, Max position: %i ", servoId,
         limits->max_pwm, limits->min_position, limits->max_position);
     }
+    // Set commands to the current servo position
     for (const auto& jointName : robotConfig_.getJointNames()) {
       const auto position = get_state(jointName + "/position");
       set_command(jointName + "/position", position);
