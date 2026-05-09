@@ -27,7 +27,6 @@ from launch_ros.actions import Node, SetParameter
 
 def generate_launch_description():
     gui = LaunchConfiguration('gui')
-    use_sim_time = LaunchConfiguration('use_sim_time')
 
     # Depending on gui parameter, either launch joint_state_publisher or joint_state_publisher_gui
     joint_state_publisher_node = Node(
@@ -50,18 +49,7 @@ def generate_launch_description():
                 choices=['true', 'false'],
                 description='Enable joint_state_publisher_gui',
             ),
-            DeclareLaunchArgument(
-                name='use_sim_time',
-                default_value='false',
-                choices=['true', 'false'],
-                description='Use simulation time for joint state publisher',
-            ),
-            GroupAction(
-                [
-                    SetParameter('use_sim_time', value=use_sim_time),
-                    joint_state_publisher_node,
-                    joint_state_publisher_gui_node,
-                ]
-            ),
+            joint_state_publisher_node,
+            joint_state_publisher_gui_node,
         ]
     )
