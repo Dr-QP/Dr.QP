@@ -66,6 +66,8 @@ public:
     double max_torque;  // 0..1
     double min_angle_radians;
     double max_angle_radians;
+
+    double initial_position_radians; // Optional initial position for the joint for MockServo, ignored for real servo
   };
 
   void addServo(const ServoJointParams& params);

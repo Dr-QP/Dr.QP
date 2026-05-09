@@ -85,6 +85,7 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
             .max_torque = std::stod(get_param(commandInterface.parameters, "max_torque")),
             .min_angle_radians = std::stod(get_param(commandInterface.parameters, "min")),
             .max_angle_radians = std::stod(get_param(commandInterface.parameters, "max")),
+            .initial_position_radians = std::stod(get_param(commandInterface.parameters, "initial_position_rads")),
           });
       }
     }
