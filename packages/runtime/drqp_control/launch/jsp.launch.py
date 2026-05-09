@@ -19,10 +19,10 @@
 # THE SOFTWARE.
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, GroupAction
 from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetParameter
 
 
 def generate_launch_description():
@@ -34,14 +34,12 @@ def generate_launch_description():
         package='joint_state_publisher',
         executable='joint_state_publisher',
         condition=UnlessCondition(gui),
-        parameters=[{'use_sim_time': use_sim_time}],
     )
 
     joint_state_publisher_gui_node = Node(
         package='joint_state_publisher_gui',
         executable='joint_state_publisher_gui',
         condition=IfCondition(gui),
-        parameters=[{'use_sim_time': use_sim_time}],
     )
 
     return LaunchDescription(
@@ -58,7 +56,12 @@ def generate_launch_description():
                 choices=['true', 'false'],
                 description='Use simulation time for joint state publisher',
             ),
-            joint_state_publisher_node,
-            joint_state_publisher_gui_node,
+            GroupAction(
+                [
+                    SetParameter('use_sim_time', value=use_sim_time),
+                    joint_state_publisher_node,
+                    joint_state_publisher_gui_node,
+                ]
+            ),
         ]
     )
