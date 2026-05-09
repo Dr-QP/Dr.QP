@@ -69,6 +69,12 @@ public:
     }
   }
 
+  void writeInitialPosition(uint16_t value) override
+  {
+    assert(id_ != kBroadcastId);
+    positions_[id_] = value;
+  }
+
   void writeMaxPwmRam(uint16_t value) override
   {
     maxPwm_ = value;

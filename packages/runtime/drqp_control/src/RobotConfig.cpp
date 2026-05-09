@@ -32,6 +32,7 @@ struct RobotConfig::ServoParams
   double max_torque = 1.0;
   double min_angle_rads = -M_PI;
   double max_angle_rads = M_PI;
+  double initial_position_rads = 0.0;
 };
 
 struct RobotConfig::JointParams
@@ -42,6 +43,7 @@ struct RobotConfig::JointParams
   double max_torque = 1.0;
   double min_angle_rads = -M_PI;
   double max_angle_rads = M_PI;
+  double initial_position_rads = 0.0;
 };
 
 RobotConfig::RobotConfig() : logger_(rclcpp::get_logger("RobotConfig")) {}
@@ -106,6 +108,10 @@ void RobotConfig::loadConfig(fs::path configPath)
       if (servo.second["max_torque"]) {
         max_torque = servo.second["max_torque"].as<double>();
       }
+      double initial_position_rads = 0.0;
+      if (servo.second["initial_position_rads"]) {
+        initial_position_rads = servo.second["initial_position_rads"].as<double>();
+      }
 
       addServo(
         ServoJointParams{
@@ -116,6 +122,7 @@ void RobotConfig::loadConfig(fs::path configPath)
           .max_torque = max_torque,
           .min_angle_radians = min_rads,
           .max_angle_radians = max_rads,
+          .initial_position_radians = initial_position_rads,
         });
     }
   } catch (const std::exception& e) {
@@ -137,14 +144,16 @@ void RobotConfig::addServo(const ServoJointParams& params)
     .offset_rads = params.offset_radians,
     .max_torque = params.max_torque,
     .min_angle_rads = true_min_rads,
-    .max_angle_rads = true_max_rads};
+    .max_angle_rads = true_max_rads,
+    .initial_position_rads = params.initial_position_radians};
   servoIdToJoint_[params.servo_id] = JointParams{
     .joint_name = params.joint_name,
     .ratio = ratio,
     .offset_rads = params.offset_radians,
     .max_torque = params.max_torque,
     .min_angle_rads = true_min_rads,
-    .max_angle_rads = true_max_rads};
+    .max_angle_rads = true_max_rads,
+    .initial_position_rads = params.initial_position_radians};
 }
 
 double safeClamp(double value, double min, double max)
@@ -212,11 +221,16 @@ std::optional<RobotConfig::ServoLimitValues> RobotConfig::getServoLimits(uint8_t
   const uint16_t minPosition = radiansToPosition(jointParams.min_angle_rads);
   const uint16_t maxPosition = radiansToPosition(jointParams.max_angle_rads);
   const uint16_t maxPWM = mapToRange<uint16_t>(jointParams.max_torque, 0.0, 1.0, 0, 1023);
+  const double rawInitialPosition = jointParams.initial_position_rads + jointParams.offset_rads;
+  const double clampedInitialPosition =
+    safeClamp(rawInitialPosition, jointParams.min_angle_rads, jointParams.max_angle_rads);
+  const uint16_t initialPosition = radiansToPosition(clampedInitialPosition * jointParams.ratio);
 
   return ServoLimitValues{
     .max_pwm = maxPWM,
     .min_position = minPosition,
     .max_position = maxPosition,
+    .initial_position = initialPosition,
   };
 }
 ////////////////////////////////////////////////////////////////////////

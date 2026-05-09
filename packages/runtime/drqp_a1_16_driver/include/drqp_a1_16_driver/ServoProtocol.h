@@ -152,6 +152,10 @@ public:
   virtual void reboot() = 0;
   virtual XYZrobotServoError getLastError() const = 0;
   virtual void ramRead(uint8_t startAddress, void* data, uint8_t dataSize) = 0;
+  virtual void writeInitialPosition(uint16_t value)
+  {
+    (void)value;
+  }
   virtual void writeMaxPwmRam(uint16_t value) = 0;
   virtual void writeMinMaxPositionRam(uint16_t min, uint16_t max) = 0;
 

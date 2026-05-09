@@ -85,7 +85,8 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
             .max_torque = std::stod(get_param(commandInterface.parameters, "max_torque")),
             .min_angle_radians = std::stod(get_param(commandInterface.parameters, "min")),
             .max_angle_radians = std::stod(get_param(commandInterface.parameters, "max")),
-            .initial_position_radians = std::stod(get_param(commandInterface.parameters, "initial_position_rads")),
+            .initial_position_radians =
+              std::stod(get_param(commandInterface.parameters, "initial_position_rads")),
           });
       }
     }
@@ -153,6 +154,8 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
         continue;
       }
       ServoPtr servo = makeServo(servoId);
+
+      servo->writeInitialPosition(limits->initial_position);
       servo->writeMaxPwmRam(limits->max_pwm);
       servo->writeMinMaxPositionRam(limits->min_position, limits->max_position);
       RCLCPP_INFO(
