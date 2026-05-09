@@ -51,8 +51,9 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(str(move_group_launch_path)),
         launch_arguments={
             'use_sim_time': 'false',
-            'publish_fake_joint_states': 'true',
+            'publish_fake_joint_states': 'false',
             'gui': gui,
+            'hardware_device_address': 'mock_servo',
         }.items(),
     )
 
