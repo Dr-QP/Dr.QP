@@ -62,14 +62,13 @@ class TestBrainNode(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         rclpy.init()
-
-    @classmethod
-    def tearDownClass(cls):
-        rclpy.shutdown()
+        cls.addClassCleanup(rclpy.try_shutdown)
 
     def setUp(self):
         self.node = rclpy.create_node('test_brain_consumer')
+        self.addCleanup(self.node.destroy_node)
 
         # Publishers for sending commands to brain node
         self.movement_pub = self.node.create_publisher(
@@ -78,9 +77,6 @@ class TestBrainNode(unittest.TestCase):
 
         # Publisher for robot state (brain node subscribes to this)
         self.state_pub = self.node.create_publisher(std_msgs.msg.String, '/robot_state', 10)
-
-    def tearDown(self):
-        self.node.destroy_node()
 
     def test_nothing(self, proc_output):
         """Smoke check."""

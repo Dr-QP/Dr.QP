@@ -181,6 +181,16 @@ SCENARIO("ROS node")
         CHECK_THAT(joint.position_as_radians, Catch::Matchers::WithinAbs(0.0, 0.01));
       }
 
+      THEN("Servo limits should include initial position")
+      {
+        const auto limits = robotConfig.getServoLimits(2);
+        REQUIRE(limits);
+
+        const auto expected = robotConfig.jointToServo({"test_robot/left_front_femur", 0.4});
+        REQUIRE(expected);
+        CHECK(limits->initial_position == expected->position);
+      }
+
       THEN("getJointNames should return all joints defined in config")
       {
         CHECK(robotConfig.numServos() == 5);

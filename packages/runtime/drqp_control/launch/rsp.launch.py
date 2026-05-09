@@ -54,7 +54,12 @@ def generate_launch_description():
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='screen',
-        parameters=[{'robot_description': robot_description_config, 'use_sim_time': use_gazebo}],
+        parameters=[
+            {
+                'robot_description': robot_description_config,
+                'use_sim_time': use_gazebo,
+            }
+        ],
     )
 
     # Launch!
@@ -69,7 +74,7 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 'hardware_device_address',
                 default_value='/dev/ttySC0',
-                description='Hardware device address for ros2_control',
+                description='Hardware device address for ros2_control in URDF. Use "mock_servo" for fake hardware.',
             ),
             node_robot_state_publisher,
         ]

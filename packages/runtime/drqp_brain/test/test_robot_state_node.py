@@ -59,17 +59,13 @@ class TestRobotStateMachineNode(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         rclpy.init()
-
-    @classmethod
-    def tearDownClass(cls):
-        rclpy.shutdown()
+        cls.addClassCleanup(rclpy.try_shutdown)
 
     def setUp(self):
         self.node = rclpy.create_node('test_state_consumer')
-
-    def tearDown(self):
-        self.node.destroy_node()
+        self.addCleanup(self.node.destroy_node)
 
     def test_processes_events_and_publishes_state(self, proc_output):
         """Check whether events are processed."""

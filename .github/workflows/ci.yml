@@ -175,6 +175,8 @@ jobs:
     name: Build and test ROS2 workspace
     needs: [merge-dev-image]
     timeout-minutes: 35
+    env:
+      DRQP_GAZEBO_TEST_MODE: all
     strategy:
       fail-fast: false
       matrix:
@@ -224,7 +226,7 @@ jobs:
         run: ./packages/cmake/llvm-cov-export-all.py ./build
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         if: ${{ env.ACT == '' && !cancelled() }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -235,7 +237,7 @@ jobs:
             packages/vendor/**
 
       - name: Test Summary
-        uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2
+        uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2.4
         if: ${{ env.ACT == '' && !cancelled() }}
         with:
           paths: 'build/*/test_results/*/*.xunit.xml'
@@ -252,7 +254,7 @@ jobs:
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
           report_type: test_results
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -325,7 +327,7 @@ jobs:
           sed -i "s|image:.*|image: ${MERGED_IMAGE}|g" .devcontainer/docker-compose.yml
 
       - name: Build and test dev container image
-        uses: devcontainers/ci@8bf61b26e9c3a98f69cb6ce2f88d24ff59b785c6 # v0.3
+        uses: devcontainers/ci@8bf61b26e9c3a98f69cb6ce2f88d24ff59b785c6 # v0.3.1900000417
         with:
           configFile: .devcontainer/devcontainer.json
           noCache: true

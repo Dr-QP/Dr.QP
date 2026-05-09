@@ -65,16 +65,18 @@ class FakeImuSensor:
         return self.sample
 
 
-class TestImuNode(unittest.TestCase):
-    """Test the IMU publisher node with a fake sensor backend."""
+class RclpyTestCase(unittest.TestCase):
+    """Provide a class-scoped ROS context for unittest-based ROS tests."""
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         rclpy.init()
+        cls.addClassCleanup(rclpy.try_shutdown)
 
-    @classmethod
-    def tearDownClass(cls):
-        rclpy.shutdown()
+
+class TestImuNode(RclpyTestCase):
+    """Test the IMU publisher node with a fake sensor backend."""
 
     def setUp(self):
         sample = ImuSample(
@@ -92,8 +94,10 @@ class TestImuNode(unittest.TestCase):
         self.addCleanup(self.sensor_patch.stop)
         self.sensor_patch.start()
         self.node = ImuNode()
+        self.addCleanup(self.node.destroy_node)
         self.node.timer.cancel()
         self.test_node = rclpy.create_node('test_imu_consumer')
+        self.addCleanup(self.test_node.destroy_node)
 
         self.imu_messages = []
         self.magnetic_field_messages = []
@@ -114,10 +118,6 @@ class TestImuNode(unittest.TestCase):
             lambda msg: self.temperature_messages.append(msg),
             10,
         )
-
-    def tearDown(self):
-        self.node.destroy_node()
-        self.test_node.destroy_node()
 
     def _spin_until(self, predicate, iterations: int = 10) -> bool:
         """Spin both nodes until the predicate is satisfied or the budget is exhausted."""
@@ -226,16 +226,8 @@ class TestImuNode(unittest.TestCase):
         self.assertEqual(imu_msg.linear_acceleration_covariance[0], -1.0)
 
 
-class TestImuNodeInitialization(unittest.TestCase):
+class TestImuNodeInitialization(RclpyTestCase):
     """Test IMU node startup failures caused by backend construction."""
-
-    @classmethod
-    def setUpClass(cls):
-        rclpy.init()
-
-    @classmethod
-    def tearDownClass(cls):
-        rclpy.shutdown()
 
     def test_constructor_wraps_sensor_construction_failures(self):
         """Report backend construction failures with an actionable startup error."""

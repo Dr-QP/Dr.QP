@@ -28,6 +28,8 @@ from test_utils import ensure_gz_sim_not_running
 class SimulationShutdownBase(unittest.TestCase):
     """Verify processes exit cleanly after the launch test finishes."""
 
+    __test__ = False  # Prevent unittest from collecting this base class as a test case.
+
     @classmethod
     def tearDownClass(cls) -> None:
         super().tearDownClass()
