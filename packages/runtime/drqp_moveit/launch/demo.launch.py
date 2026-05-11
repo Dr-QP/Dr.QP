@@ -62,7 +62,6 @@ def generate_launch_description():
         }.items(),
     )
 
-    # Load bringup.launch.py from drqp_brain to start robot_state_publisher and joint_state_publisher
     bringup_launch_path = get_package_share_path('drqp_brain') / 'launch' / 'bringup.launch.py'
     bringup_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(str(bringup_launch_path)),
