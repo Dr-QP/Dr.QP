@@ -21,7 +21,7 @@
 from launch_testing import post_shutdown_test
 import pytest
 from robot_control_test_support import (
-    create_simulation_launch_description,
+    create_balance_board_launch_description,
     GazeboRobotControlBase,
 )
 from simulation_shutdown_test_case import (
@@ -30,28 +30,17 @@ from simulation_shutdown_test_case import (
 
 
 @pytest.mark.slow
-@pytest.mark.smoke
 @pytest.mark.launch_test
 def generate_test_description():
-    return create_simulation_launch_description()
+    return create_balance_board_launch_description()
 
 
 @pytest.mark.slow
-@pytest.mark.smoke
-class TestGazeboRobotControlNodesAndClock(GazeboRobotControlBase):
-    """Verify simulation nodes are running and Gazebo clock is bridged."""
+class TestGazeboRobotControlBalanceMode(GazeboRobotControlBase):
+    """Verify balance mode keeps the robot body level on a tilted board."""
 
-    def test_nodes_and_clock(self):
-        self.assert_nodes_and_clock()
-
-    def test_controllers_are_active(self):
-        self.assert_controllers_are_active()
-
-    def test_imu_data_is_published(self):
-        self.assert_imu_data()
-
-    def test_imu_data_reports_orientation_issue356(self):
-        self.assert_imu_data_reports_orientation()
+    def test_balance_mode_levels_body_on_tilted_board(self):
+        self.assert_balance_mode_levels_body_on_tilted_board()
 
 
 @post_shutdown_test()

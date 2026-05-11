@@ -23,17 +23,29 @@
 import argparse
 
 from control_msgs.action import FollowJointTrajectory
+from drqp_brain.balance_controller import (
+    apply_imu_balance,
+    body_tilt_from_imu,
+)
 from drqp_brain.joint_trajectory_builder import JointTrajectoryBuilder
 from drqp_brain.models import HexapodModel
 from drqp_brain.walk_controller import GaitType, WalkController
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
+import numpy as np
 import rclpy
 from rclpy.action import ActionClient
+from rclpy.duration import Duration
 from rclpy.executors import ExternalShutdownException
 import rclpy.node
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
+from rclpy.time import Time
 import rclpy.utilities
+from scipy.spatial.transform import Rotation as R
+from sensor_msgs.msg import Imu
 import std_msgs.msg
+from tf2_ros import TransformException
+from tf2_ros.buffer import Buffer
+from tf2_ros.transform_listener import TransformListener
 import trajectory_msgs.msg
 
 
@@ -50,6 +62,18 @@ class HexapodBrain(rclpy.node.Node):
         super().__init__('drqp_brain')
 
         self.fps = 30
+        self.declare_parameter('enable_imu_balance', True)
+        self.declare_parameter('transform_imu_to_base_frame', True)
+        self.declare_parameter('imu_balance_gain', 1.0)
+        self.declare_parameter('imu_balance_max_tilt_rad', 0.35)
+        self.declare_parameter('imu_balance_timeout_sec', 1.0)
+        self.enable_imu_balance = self.get_parameter('enable_imu_balance').value
+        self.transform_imu_to_base_frame = self.get_parameter('transform_imu_to_base_frame').value
+        self.imu_balance_gain = self.get_parameter('imu_balance_gain').value
+        self.imu_balance_max_tilt_rad = self.get_parameter('imu_balance_max_tilt_rad').value
+        self.imu_balance_timeout = Duration(
+            seconds=self.get_parameter('imu_balance_timeout_sec').value
+        )
 
         self.gait_index = 0
         self.gaits = [GaitType.tripod, GaitType.ripple, GaitType.wave]
@@ -68,14 +92,32 @@ class HexapodBrain(rclpy.node.Node):
             self.process_movement_command,
             qos_profile=10,
         )
+        self.imu_sub = self.create_subscription(Imu, '/imu/data', self.process_imu, qos_profile=10)
+        self.tf_buffer = None
+        self.tf_listener = None
+        if self.transform_imu_to_base_frame:
+            # TF infrastructure is only needed when IMU mount compensation is enabled.
+            self.tf_buffer = Buffer()
+            # Retain the listener on the instance so the TF subscriptions stay active.
+            self.tf_listener = TransformListener(self.tf_buffer, self)
 
         self.robot_state = None
+        self.current_body_tilt = None
+        self.target_body_tilt = None
+        self.balance_mode_enabled = False
+        self.last_imu_update = None
 
         qos_profile = QoSProfile(depth=1)
         # make state available to late joiners
         qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
         self.robot_state_sub = self.create_subscription(
             std_msgs.msg.String, '/robot_state', self.process_robot_state, qos_profile=qos_profile
+        )
+        self.balance_mode_sub = self.create_subscription(
+            std_msgs.msg.Bool,
+            '/robot/balance_mode',
+            self.process_balance_mode,
+            qos_profile=qos_profile,
         )
         self.robot_event_pub = self.create_publisher(
             std_msgs.msg.String, '/robot_event', qos_profile=10
@@ -167,9 +209,84 @@ class HexapodBrain(rclpy.node.Node):
         if msg.gait_type in gait_names:
             self.gait_index = gait_names.index(msg.gait_type)
 
+    def _lookup_imu_to_base_rotation(self, imu_frame: str):
+        """Return the TF-derived IMU->base rotation when TF-based compensation is enabled."""
+        if self.tf_buffer is None:
+            return None
+
+        transform = self.tf_buffer.lookup_transform(
+            'drqp/base_center_link',
+            imu_frame,
+            # Zero time requests the latest transform available in the TF buffer.
+            # The lookup raises TransformException immediately if the transform is unavailable.
+            Time(seconds=0),
+        )
+
+        rotation = transform.transform.rotation
+        return R.from_quat([rotation.x, rotation.y, rotation.z, rotation.w])
+
+    def process_imu(self, msg: Imu):
+        """Store the latest body tilt estimate from the IMU orientation."""
+        quaternion = np.array(
+            [
+                msg.orientation.x,
+                msg.orientation.y,
+                msg.orientation.z,
+                msg.orientation.w,
+            ]
+        )
+        # Per sensor_msgs/Imu, a negative covariance means orientation is unavailable.
+        if msg.orientation_covariance[0] < 0 or np.allclose(quaternion, 0.0):
+            self.current_body_tilt = None
+            self.last_imu_update = None
+            return
+
+        imu_frame = msg.header.frame_id or 'drqp/imu_link'
+        try:
+            imu_to_base_rotation = self._lookup_imu_to_base_rotation(imu_frame)
+        except TransformException as exc:
+            self.get_logger().warning(
+                f'Failed to lookup transform from drqp/base_center_link to {imu_frame}: {exc}'
+            )
+            self.current_body_tilt = None
+            self.last_imu_update = None
+            return
+
+        tilt_kwargs = {'base_center_to_imu_rotation': None}
+        if imu_to_base_rotation is not None:
+            tilt_kwargs = {'imu_to_base_rotation': imu_to_base_rotation}
+        self.current_body_tilt = body_tilt_from_imu(
+            msg.orientation,
+            **tilt_kwargs,
+        )
+        self.last_imu_update = self.get_clock().now()
+        if self.balance_mode_enabled and self.target_body_tilt is None:
+            self.target_body_tilt = self.current_body_tilt
+
     def next_control_mode(self):
         """Log control mode changes (control mode is now handled by translator)."""
         self.get_logger().info('Control mode changed in translator node')
+
+    def process_balance_mode(self, msg: std_msgs.msg.Bool):
+        """Enable or disable IMU balancing around the captured body tilt."""
+        self.balance_mode_enabled = self.enable_imu_balance and msg.data
+        if not self.balance_mode_enabled:
+            self.target_body_tilt = None
+            return
+
+        self.target_body_tilt = self.get_imu_body_tilt()
+
+    def get_imu_body_tilt(self):
+        """Return the latest IMU-derived tilt when balancing data is fresh enough."""
+        if (
+            not self.enable_imu_balance
+            or not self.balance_mode_enabled
+            or self.current_body_tilt is None
+            or self.last_imu_update is None
+            or self.get_clock().now() - self.last_imu_update > self.imu_balance_timeout
+        ):
+            return None
+        return self.current_body_tilt
 
     def loop(self):
         self.walker.current_gait = self.gaits[self.gait_index]
@@ -200,6 +317,13 @@ class HexapodBrain(rclpy.node.Node):
                 self.current_movement.body_rotation.y,
                 self.current_movement.body_rotation.z,
             ]
+        )
+        body_rotation = apply_imu_balance(
+            body_rotation,
+            self.get_imu_body_tilt(),
+            target_body_tilt=self.target_body_tilt,
+            gain=self.imu_balance_gain,
+            max_tilt_rad=self.imu_balance_max_tilt_rad,
         )
 
         self.walker.next_step(
@@ -307,6 +431,7 @@ class HexapodBrain(rclpy.node.Node):
         self.walker.reset()
 
     def destroy_node(self):
+        """Clean up node resources before shutting down."""
         if self.__trajectory_client is not None:
             self.__trajectory_client.destroy()
             self.__trajectory_client = None

@@ -35,6 +35,7 @@ from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 import rclpy
 from rclpy.executors import ExternalShutdownException
 import rclpy.node
+from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 import rclpy.utilities
 import sensor_msgs.msg
 import std_msgs.msg
@@ -69,6 +70,7 @@ class JoystickTranslatorNode(rclpy.node.Node):
             ButtonIndex.DpadLeft: lambda b, e: self._prev_gait(),
             ButtonIndex.DpadRight: lambda b, e: self._next_gait(),
             ButtonIndex.L1: lambda b, e: self._publish_control_mode_change(),
+            ButtonIndex.R1: lambda b, e: self._toggle_balance_mode(),
             ButtonIndex.PS: lambda b, e: self._publish_event('kill_switch_pressed'),
             ButtonIndex.TouchpadButton: lambda b, e: self._publish_event('kill_switch_pressed'),
             ButtonIndex.Start: lambda b, e: self._publish_event('reboot_servos'),
@@ -88,6 +90,12 @@ class JoystickTranslatorNode(rclpy.node.Node):
         self.robot_event_pub = self.create_publisher(
             std_msgs.msg.String, '/robot_event', qos_profile=10
         )
+        latched_qos = QoSProfile(depth=1)
+        latched_qos.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
+        self.balance_mode_pub = self.create_publisher(
+            std_msgs.msg.Bool, '/robot/balance_mode', qos_profile=latched_qos
+        )
+        self.balance_mode_enabled = False
         self.joy_feedback_pub = self.create_publisher(
             sensor_msgs.msg.JoyFeedback,
             '/joy/set_feedback',
@@ -98,6 +106,7 @@ class JoystickTranslatorNode(rclpy.node.Node):
         self._feedback_timer = self.create_timer(0.02, self._dispatch_pending_feedback)
         self._haptics_warning_logged = False
 
+        self.balance_mode_pub.publish(std_msgs.msg.Bool(data=self.balance_mode_enabled))
         self.get_logger().info('Joystick translator node initialized')
 
     def _joy_callback(self, joy_msg: sensor_msgs.msg.Joy):
@@ -167,6 +176,11 @@ class JoystickTranslatorNode(rclpy.node.Node):
         self._schedule_haptic_feedback(
             control_mode_feedback_pattern(self.joystick_input_handler.control_mode)
         )
+
+    def _toggle_balance_mode(self):
+        """Toggle dedicated balance mode without affecting walking input."""
+        self.balance_mode_enabled = not self.balance_mode_enabled
+        self.balance_mode_pub.publish(std_msgs.msg.Bool(data=self.balance_mode_enabled))
 
     def _set_gait_index(self, new_index: int):
         """Update gait state and queue haptic feedback for confirmed changes."""
