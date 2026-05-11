@@ -67,7 +67,14 @@ def generate_launch_description():
             description='Seconds to wait after SIGTERM before sending SIGKILL to Gazebo.',
         )
     )
-    for argument_name in ('robot_x', 'robot_y', 'robot_z', 'robot_roll', 'robot_pitch', 'robot_yaw'):
+    for argument_name in (
+        'robot_x',
+        'robot_y',
+        'robot_z',
+        'robot_roll',
+        'robot_pitch',
+        'robot_yaw',
+    ):
         declared_arguments.append(
             DeclareLaunchArgument(
                 argument_name,

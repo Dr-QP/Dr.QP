@@ -402,7 +402,9 @@ class GazeboRobotControlBase(unittest.TestCase):
         return imu_body_tilt.x, imu_body_tilt.y
 
     @staticmethod
-    def _quaternion_from_roll_pitch_yaw(roll: float, pitch: float, yaw: float) -> tuple[float, ...]:
+    def _quaternion_from_roll_pitch_yaw(
+        roll: float, pitch: float, yaw: float
+    ) -> tuple[float, ...]:
         """
         Convert XYZ Euler angles in radians to a quaternion tuple.
 
@@ -419,6 +421,7 @@ class GazeboRobotControlBase(unittest.TestCase):
         -------
         tuple[float, ...]
             Quaternion in `(x, y, z, w)` order using XYZ Euler convention.
+
         """
         half_roll = roll / 2.0
         half_pitch = pitch / 2.0
@@ -451,6 +454,7 @@ class GazeboRobotControlBase(unittest.TestCase):
         -------
         str
             Captured stdout from the Gazebo command.
+
         """
         # These commands are built from test constants plus explicit helper inputs;
         # this helper intentionally does not execute arbitrary user-provided shell.
@@ -533,6 +537,7 @@ class GazeboRobotControlBase(unittest.TestCase):
         -------
         Pose
             Latest pose reported for the requested entity.
+
         """
         raw_output = self._run_gz_command(
             [
@@ -574,6 +579,7 @@ class GazeboRobotControlBase(unittest.TestCase):
         -------
         tuple[float, float]
             Observed board roll and pitch in radians.
+
         """
         deadline = time.monotonic() + self.MOVEMENT_TIMEOUT
         last_roll = 0.0
@@ -1049,6 +1055,7 @@ def _parse_gazebo_pose_info(raw_output: str) -> list[dict[str, Pose | str]]:
     -------
     list[dict[str, Pose | str]]
         Parsed entities with `name` and `pose` keys.
+
     """
     entities = []
     for block in _extract_blocks(raw_output, 'pose'):
@@ -1073,6 +1080,7 @@ def _extract_blocks(raw_output: str, block_name: str) -> list[list[str]]:
     -------
     list[list[str]]
         One list of inner lines for each extracted block.
+
     """
     blocks = []
     lines = raw_output.splitlines()
@@ -1115,6 +1123,7 @@ def _parse_pose_block(lines: list[str]) -> dict[str, Pose | str]:
     -------
     dict[str, Pose | str]
         Dictionary with `name` and `pose` keys.
+
     """
     name = ''
     position = {'x': 0.0, 'y': 0.0, 'z': 0.0}
