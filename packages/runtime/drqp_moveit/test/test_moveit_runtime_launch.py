@@ -206,10 +206,7 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         self._spin_until(
             controllers_are_active,
             self.READY_TIMEOUT,
-            (
-                'Timed out waiting for active controllers: '
-                f'{sorted(controller_names)}'
-            ),
+            (f'Timed out waiting for active controllers: {sorted(controller_names)}'),
         )
 
     def _current_joint_map(self) -> dict[str, float]:
