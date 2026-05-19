@@ -169,10 +169,8 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
 
         check_node_running(self.node, 'robot_state_publisher', timeout=self.READY_TIMEOUT)
         check_node_running(self.node, 'move_group', timeout=self.READY_TIMEOUT)
-        check_controllers_running(
-            self.node,
-            ['joint_state_broadcaster', 'joint_trajectory_controller'],
-            timeout=self.READY_TIMEOUT,
+        self._wait_for_active_controllers(
+            ['joint_state_broadcaster', 'joint_trajectory_controller']
         )
 
         for client, name in [
@@ -189,6 +187,29 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         self.assertTrue(
             self.follow_joint_trajectory_client.wait_for_server(timeout_sec=self.READY_TIMEOUT),
             'FollowJointTrajectory action is not available',
+        )
+
+    def _wait_for_active_controllers(self, controller_names: list[str]) -> None:
+        """Retry controller_manager checks until startup races settle."""
+
+        def controllers_are_active() -> bool:
+            try:
+                check_controllers_running(
+                    self.node,
+                    controller_names,
+                    timeout=1.0,
+                )
+            except AssertionError:
+                return False
+            return True
+
+        self._spin_until(
+            controllers_are_active,
+            self.READY_TIMEOUT,
+            (
+                'Timed out waiting for active controllers: '
+                f'{sorted(controller_names)}'
+            ),
         )
 
     def _current_joint_map(self) -> dict[str, float]:
