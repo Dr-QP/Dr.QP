@@ -65,22 +65,18 @@ TARGET_OBSTACLE_ID = 'issue43_left_front_target_blocker'
 @pytest.mark.slow
 @pytest.mark.launch_test
 def generate_test_description():
-    sim_launch = PathJoinSubstitution([FindPackageShare('drqp_gazebo'), 'launch', 'sim.launch.py'])
-    move_group_launch = PathJoinSubstitution(
-        [FindPackageShare('drqp_moveit'), 'launch', 'move_group.launch.py']
+    demo_gazebo_launch = PathJoinSubstitution(
+        [FindPackageShare('drqp_moveit'), 'launch', 'demo_gazebo.launch.py']
     )
     return LaunchDescription(
         [
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(sim_launch),
+                PythonLaunchDescriptionSource(demo_gazebo_launch),
                 launch_arguments={
+                    'show_rviz': 'false',
                     'sim_gui': 'false',
                     'gz_partition': build_test_gz_partition('moveit_runtime_launch'),
                 }.items(),
-            ),
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(move_group_launch),
-                launch_arguments={'use_sim_time': 'true'}.items(),
             ),
             TimerAction(period=1.0, actions=[ReadyToTest()]),
         ]

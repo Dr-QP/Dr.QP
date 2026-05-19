@@ -22,9 +22,9 @@
 Demo launch: Dr.QP + MoveIt 2 with Gazebo simulation.
 
 Starts:
-  1. drqp_gazebo sim.launch.py     – Gazebo + ros2_control + brain
-  2. move_group                    – MoveIt 2 planning node (sim time)
-  3. rviz2                         – RViz2 with the MoveIt Motion Planning plugin
+    1. drqp_gazebo sim.launch.py     – Gazebo + ros2_control + brain
+    2. move_group                    – MoveIt 2 planning node (sim time)
+    3. rviz2                         – RViz2 with the MoveIt Motion Planning plugin
 
 Run with::
 
