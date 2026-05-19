@@ -18,8 +18,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription, TimerAction
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
+from launch_testing.actions import ReadyToTest
 from moveit_launch_smoke_test_support import (
-    build_smoke_test_description,
     MoveItLaunchSmokeShutdownTestCase,
     MoveItLaunchSmokeTestCase,
 )
@@ -28,9 +33,30 @@ import pytest
 
 @pytest.mark.launch_test
 def generate_test_description():
-    return build_smoke_test_description(
-        'move_group.launch.py',
-        launch_arguments={'publish_fake_joint_states': 'true'},
+    move_group_launch = PathJoinSubstitution(
+        [FindPackageShare('drqp_moveit'), 'launch', 'move_group.launch.py']
+    )
+    bringup_launch = PathJoinSubstitution(
+        [FindPackageShare('drqp_brain'), 'launch', 'bringup.launch.py']
+    )
+
+    return LaunchDescription(
+        [
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(move_group_launch),
+                launch_arguments={'hardware_device_address': 'mock_servo'}.items(),
+            ),
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(bringup_launch),
+                launch_arguments={
+                    'use_gazebo': 'false',
+                    'load_joystick': 'false',
+                    'load_controllers': 'true',
+                    'load_imu': 'false',
+                }.items(),
+            ),
+            TimerAction(period=2.0, actions=[ReadyToTest()]),
+        ]
     )
 
 
