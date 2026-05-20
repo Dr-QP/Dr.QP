@@ -6,7 +6,7 @@ NEVER use GitHub API or GitHub MCP tools to update branch refs or push branch co
 
 ## Best Practices for Agents
 
-1. **Always source scripts/setup.bash** before build or test
+1. **Always use scripts/with-ros-env.sh** to run ROS commands like `colcon build` or `colcon test`
 2. **Use incremental builds** (`--packages-up-to <pkg>`) during development
 3. **Test specific packages** (`--packages-select <pkg>`) for rapid iteration
 4. **Use devcontainer** when running as remote agent (see [Cursor Cloud Sessions](#cursor-cloud-sessions) below)
