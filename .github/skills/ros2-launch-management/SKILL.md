@@ -70,13 +70,12 @@ Create a simple launch file to start one node with parameters.
        ])
    ```
 
-3. Test the launch file:
-   ```bash
-   source scripts/setup.bash
-   ros2 launch <package_name> basic.launch.py
-   ```
+3. Test the launch file through the ROS wrapper:
+    ```bash
+    scripts/with-ros-env.sh ros2 launch <package_name> basic.launch.py
+    ```
 
-4. Verify node started correctly with `ros2 node list`
+4. Verify the node started correctly with `scripts/with-ros-env.sh ros2 node list`
 
 **When to use**: Simple single-node launches with static configuration
 
@@ -178,17 +177,16 @@ Load parameters from external YAML configuration files.
    )
    ```
 
-4. Rebuild and launch:
-   ```bash
-   colcon build --packages-select <package_name>
-   source scripts/setup.bash
-   ros2 launch <package_name> params.launch.py
-   ```
+4. Rebuild and launch through the ROS wrapper:
+    ```bash
+    scripts/with-ros-env.sh python3 -m colcon build --packages-select <package_name>
+    scripts/with-ros-env.sh ros2 launch <package_name> params.launch.py
+    ```
 
 5. Verify parameters loaded:
-   ```bash
-   ros2 param list /<node_name>
-   ```
+    ```bash
+    scripts/with-ros-env.sh ros2 param list /<node_name>
+    ```
 
 **When to use**: Complex parameter configurations, multiple environments (dev/prod)
 
@@ -367,7 +365,7 @@ Troubleshoot launch file problems and node startup failures.
 
 | Issue | Cause | Solution |
 |-------|-------|----------|
-| "Package not found" | Package not installed or not sourced | Rebuild package and `source scripts/setup.bash` |
+| "Package not found" | Package not installed or not sourced | Rebuild the package and re-run the launch command via `scripts/with-ros-env.sh` |
 | "Executable not found" | Wrong executable name or not built | Check `install/<pkg>/lib/<pkg>/` for executables |
 | "Launch file not found" | Wrong path or not installed | Verify launch file in `install/<pkg>/share/<pkg>/launch/` |
 | Parameters not loaded | Wrong YAML syntax or file path | Validate YAML syntax, check file exists in install |

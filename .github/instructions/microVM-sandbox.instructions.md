@@ -26,13 +26,11 @@ Use `devcontainer exec` to run commands inside the container:
 devcontainer exec --workspace-folder /workspace bash -c "<command>"
 ```
 
-Before build or ROS 2 commands, source the setup script inside the exec:
+Build or ROS 2 commands, run them through the wrapper inside the exec:
 
 ```bash
-devcontainer exec --workspace-folder /workspace bash -c "
-  export ROS_DISTRO=jazzy CC=clang CXX=clang++ CMAKE_EXPORT_COMPILE_COMMANDS=1
-  source scripts/setup.bash
-  <ros2 commands here>
+devcontainer exec --workspace-folder /workspace bash -lc "
+  scripts/with-ros-env.sh <ros2 command here>
 "
 ```
 

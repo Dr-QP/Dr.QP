@@ -164,9 +164,8 @@ Systematically resolve failing tests.
 
 ```bash
    # ROS 2 example
-   source scripts/setup.bash
-   colcon test --packages-select <package>
-   colcon test-result --verbose
+   scripts/with-ros-env.sh python -m colcon test --packages-select <package>
+   scripts/with-ros-env.sh python -m colcon test-result --verbose
 ```
 
 5. **Push and verify CI passes**:

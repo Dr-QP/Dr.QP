@@ -22,7 +22,7 @@ Build ROS 2 packages efficiently using colcon with support for incremental devel
 
 - ROS 2 Jazzy installation
 - Workspace initialized with colcon
-- `scripts/setup.bash` available in workspace root
+- `scripts/with-ros-env.sh` available in workspace root
 - Build tools: CMake, Ninja/Make, compiler (clang or gcc)
 
 ## Step-by-Step Workflows
@@ -31,20 +31,15 @@ Build ROS 2 packages efficiently using colcon with support for incremental devel
 
 Use for rapid iteration when developing a specific package.
 
-1. Source the ROS environment:
+1. Build the package and its dependencies through the ROS wrapper:
    ```bash
-   source scripts/setup.bash
-   ```
-
-2. Build the package and its dependencies:
-   ```bash
-   python3 -m colcon build \
+   scripts/with-ros-env.sh python3 -m colcon build \
      --symlink-install \
      --event-handlers console_cohesion+ \
      --packages-up-to <package_name>
    ```
 
-3. Verify build success by checking `build/<package_name>/` and `install/<package_name>/` directories
+2. Verify build success by checking `build/<package_name>/` and `install/<package_name>/` directories
 
 **Typical execution time**: 2-5 minutes depending on package size
 
@@ -52,14 +47,9 @@ Use for rapid iteration when developing a specific package.
 
 Use when you've only modified internal package code.
 
-1. Source the ROS environment:
+1. Build only the specified package through the ROS wrapper:
    ```bash
-   source scripts/setup.bash
-   ```
-
-2. Build only the specified package:
-   ```bash
-   python3 -m colcon build \
+   scripts/with-ros-env.sh python3 -m colcon build \
      --symlink-install \
      --event-handlers console_cohesion+ \
      --packages-select <package_name>
@@ -71,58 +61,42 @@ Use when you've only modified internal package code.
 
 Use when you need to debug code execution or attach a debugger.
 
-1. Source the ROS environment:
+1. Build with debug symbols through the ROS wrapper:
    ```bash
-   source scripts/setup.bash
-   ```
-
-2. Build with debug symbols:
-   ```bash
-   python3 -m colcon build \
+   scripts/with-ros-env.sh python3 -m colcon build \
      --symlink-install \
      --event-handlers console_cohesion+ \
      --packages-up-to <package_name> \
      --cmake-args -GNinja -D CMAKE_BUILD_TYPE=Debug
    ```
 
-3. Debug symbols will be available in the build artifacts
+2. Debug symbols will be available in the build artifacts
 
 ### Workflow 4: Build with Coverage Instrumentation
 
 Use when preparing to run tests with coverage analysis.
 
-1. Source the ROS environment:
+1. Build with coverage enabled through the ROS wrapper:
    ```bash
-   source scripts/setup.bash
-   ```
-
-2. Build with coverage enabled:
-   ```bash
-   python3 -m colcon build \
+   scripts/with-ros-env.sh python3 -m colcon build \
      --symlink-install \
      --event-handlers console_cohesion+ \
      --packages-up-to <package_name> \
      --cmake-args -GNinja -D CMAKE_BUILD_TYPE=Debug -D DRQP_ENABLE_COVERAGE=ON
    ```
 
-3. After running tests, coverage data will be available in `build/<package_name>/coverage.info` (C++) or `.coverage` (Python)
+2. After running tests, coverage data will be available in `build/<package_name>/coverage.info` (C++) or `.coverage` (Python)
 
 ### Workflow 5: Full Workspace Build
 
 **WARNING**: Full builds take 10-20+ minutes. Only use when explicitly requested or making cross-cutting changes.
 
-1. Source the ROS environment:
+1. Build the entire workspace with all optimizations through the ROS wrapper:
    ```bash
-   source scripts/setup.bash
-   ```
-
-2. Build entire workspace with all optimizations:
-   ```bash
-   export CMAKE_EXPORT_COMPILE_COMMANDS=1
-   export CC=clang
-   export CXX=clang++
-
-   python3 -m colcon build \
+   CMAKE_EXPORT_COMPILE_COMMANDS=1 \
+   CC=clang \
+   CXX=clang++ \
+   scripts/with-ros-env.sh python3 -m colcon build \
      --symlink-install \
      --event-handlers console_cohesion+ \
      --base-paths "$(pwd)" \
@@ -133,7 +107,7 @@ Use when preparing to run tests with coverage analysis.
        --no-warn-unused-cli
    ```
 
-3. Wait for all packages to complete (monitor progress in console)
+2. Wait for all packages to complete (monitor progress in console)
 
 ## Common Build Options Reference
 
@@ -151,7 +125,7 @@ Use when preparing to run tests with coverage analysis.
 
 | Issue | Cause | Solution |
 |-------|-------|----------|
-| "Command 'colcon' not found" | Environment not sourced | Run `source scripts/setup.bash` |
+| "Command 'colcon' not found" | Environment not sourced | Re-run the command via `scripts/with-ros-env.sh` |
 | Compilation errors in C++ code | Missing dependencies or code errors | Check `log/latest_build/` for details |
 | "Package not found" error | Package doesn't exist or wrong name | Verify package name in `packages/runtime/` or `packages/simulation/` |
 | Build takes very long | Full workspace build or large package | Use `--packages-select` or `--packages-up-to` for incremental builds |

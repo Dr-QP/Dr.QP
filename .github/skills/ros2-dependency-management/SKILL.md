@@ -137,8 +137,7 @@ Add a new C++ library to a package's build/runtime dependencies.
 
 4. Rebuild the package:
    ```bash
-   source scripts/setup.bash
-   python3 -m colcon build --packages-select <package_name>
+   scripts/with-ros-env.sh python3 -m colcon build --packages-select <package_name>
    ```
 
 ### Workflow 5: Add Python Package Dependency
@@ -181,8 +180,7 @@ Add Python package to development or production use.
 
 3. Rebuild the package:
    ```bash
-   source scripts/setup.bash
-   python3 -m colcon build --packages-select <package_name>
+   scripts/with-ros-env.sh python3 -m colcon build --packages-select <package_name>
    ```
 
 ### Workflow 6: Troubleshoot Missing Dependency
@@ -207,8 +205,7 @@ Resolve "package not found" or "library not found" errors.
 5. Re-install dependencies and rebuild:
    ```bash
    ./scripts/ros-dep.sh
-   source scripts/setup.bash
-   python3 -m colcon build --packages-up-to <package_name>
+   scripts/with-ros-env.sh python3 -m colcon build --packages-up-to <package_name>
    ```
 
 ## Dependency File Locations

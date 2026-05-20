@@ -347,7 +347,7 @@ Diagnose performance issues and resource usage.
 | Issue | Cause | Solution |
 |-------|-------|----------|
 | "No topics found" | No nodes publishing | Check if nodes are running with `ros2 node list` |
-| "Command not found: ros2" | Environment not sourced | Run `source scripts/setup.bash` |
+| "Command not found: ros2" | Environment not sourced | Re-run the command via `scripts/with-ros-env.sh` |
 | Topic echo shows nothing | Wrong topic name or no messages | Verify topic name with `ros2 topic list`, check publisher with `ros2 topic info` |
 | rqt_graph empty | No active communication | Start nodes, ensure they're publishing/subscribing |
 | Service call hangs | Service not available or node busy | Check service exists with `ros2 service list`, verify node is responsive |
