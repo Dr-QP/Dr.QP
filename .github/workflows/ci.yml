@@ -208,7 +208,8 @@ jobs:
 
       - name: Test ROS workspace
         run: |
-          source "scripts/setup.bash" --update-venv
+          ./scripts/ros-dep.sh
+          source "scripts/setup.bash"
 
           echo ''
           cat "$(ros2 pkg prefix drqp_brain)/lib/drqp_brain/drqp_robot_state"
@@ -333,15 +334,16 @@ jobs:
             # Test that Docker is working in the dev container (Docker-in-Docker)
             docker run --rm hello-world | head -n 5
 
-            sudo apt update
-            rosdep update
-            ./scripts/ros-dep.sh
-            source "scripts/setup.bash"
-            python3 -m colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+
+             sudo apt update
+             rosdep update
+             ./scripts/ros-dep.sh
+             source "scripts/setup.bash"
+             python3 -m colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+
 
-            source "scripts/setup.bash" --update-venv
+             ./scripts/ros-dep.sh
+             source "scripts/setup.bash"
 
-            python3 -m colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure
+             python3 -m colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure
           env:
             # Pass the build args to devcontainer build
             DRQP_GAZEBO_TEST_MODE=${{ matrix.SIMULATION_TEST_MODE }}

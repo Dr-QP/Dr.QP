@@ -125,7 +125,7 @@ Refresh the development environment after `pyproject.toml` or `uv.lock` changes.
 
    This automatically updates `.venv` from the workspace dependency groups.
 
-2. Use `source scripts/setup.bash --update-venv` only after a build when you need to refresh `.venv-prod` from generated ROS package `requires.txt` metadata.
+2. After a build, run `./scripts/ros-dep.sh` when you need to install generated ROS package `requires.txt` metadata into the container's system interpreter.
 
 3. Verify updates completed:
 

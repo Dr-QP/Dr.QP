@@ -157,7 +157,7 @@
           // Force network mode for DDS network https://robotics.stackexchange.com/a/114955/38643
           // "FASTDDS_BUILTIN_TRANSPORTS": "UDPv4"
         },
-        "python": "${workspaceFolder}/.venv-prod/bin/python3",
+        "python": "${workspaceFolder}/.venv/bin/python3",
       }
     ]
   },
@@ -236,6 +236,9 @@
           "kind": "test",
           "isDefault": true
         },
+        "dependsOn": [
+          "Dr.QP rosdep"
+        ]
       },
 
       {
@@ -263,6 +266,9 @@
           "kind": "test",
           "isDefault": true
         },
+        "dependsOn": [
+          "Dr.QP rosdep"
+        ]
       },
       {
         "label": "Dr.QP coverage",
@@ -334,17 +340,6 @@
         "label": "Dr.QP venv",
         "type": "shell",
         "command": "./scripts/uv-sync.sh",
-        "options": {
-          "cwd": "${workspaceFolder}"
-        },
-        "problemMatcher": [
-          "$python"
-        ]
-      },
-      {
-        "label": "Dr.QP prod-venv",
-        "type": "shell",
-        "command": "${workspaceFolder}/docker/ros/deploy/prod-venv.sh build && ${workspaceFolder}/docker/ros/deploy/prod-venv.sh install",
         "options": {
           "cwd": "${workspaceFolder}"
         },

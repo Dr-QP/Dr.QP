@@ -2,21 +2,16 @@ script_file="${BASH_SOURCE[0]}"
 script_dir=$(dirname "$script_file")
 source "$script_dir/__utils.sh"
 
-(cd "$root_dir" && "$root_dir/docker/ros/deploy/prod-venv-create.sh")
-
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --update-venv)
-      "$root_dir/docker/ros/deploy/prod-venv.sh" "$root_dir/build"
-      "$root_dir/docker/ros/deploy/prod-venv.sh" "$root_dir/install"
-
-      shift
-      ;;
     --help)
-      echo "Usage: source $script_file [--update-venv]"
-      echo
-      echo "  --update-venv: Update the virtual environment"
+      echo "Usage: source $script_file"
       return
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      echo "Usage: source $script_file" >&2
+      return 1
       ;;
   esac
 done
@@ -36,5 +31,3 @@ fi
 
 # Restore 'set -u' if it was previously enabled.
 [[ $no_unset -eq 0 ]] && set -u
-
-source "$root_dir/docker/ros/deploy/prod-venv.sh"
