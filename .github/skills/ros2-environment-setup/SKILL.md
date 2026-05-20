@@ -308,16 +308,16 @@ Clean up environment and start fresh.
 
 ## Troubleshooting
 
-| Issue                       | Cause                                    | Solution                                                        |
-| --------------------------- | ---------------------------------------- | --------------------------------------------------------------- |
+| Issue                       | Cause                                    | Solution                                                                                                   |
+| --------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | "Command 'ros2' not found"  | ROS 2 not sourced                        | Run the command via `scripts/with-ros-env.sh`, or `source scripts/setup.bash` for an interactive ROS shell |
-| "Package not found" error   | Workspace overlay not loaded             | Ensure `install/local_setup.bash` exists, rebuild if needed     |
-| Python import "rclpy" fails | ROS 2 Python client not available        | Install: `rosdep install --from-paths packages --ignore-src -y` |
-| Venv not activating         | Venv not created or corrupted            | Delete `.venv` and recreate it with `uv sync`                   |
-| Devcontainer won't start    | Docker not running or insufficient space | Start Docker daemon and check disk space                        |
-| Conflicting Python versions | Multiple Python environments active      | Deactivate venv: `deactivate`, then verify `python3 --version`  |
-| Build uses wrong compiler   | Environment variables not set            | Export: `export CC=clang && export CXX=clang++`                 |
-| IDE can't find includes     | Compile commands missing                 | Build with `CMAKE_EXPORT_COMPILE_COMMANDS=1` enabled            |
+| "Package not found" error   | Workspace overlay not loaded             | Ensure `install/local_setup.bash` exists, rebuild if needed                                                |
+| Python import "rclpy" fails | ROS 2 Python client not available        | Install: `rosdep install --from-paths packages --ignore-src -y`                                            |
+| Venv not activating         | Venv not created or corrupted            | Delete `.venv` and recreate it with `uv sync`                                                              |
+| Devcontainer won't start    | Docker not running or insufficient space | Start Docker daemon and check disk space                                                                   |
+| Conflicting Python versions | Multiple Python environments active      | Deactivate venv: `deactivate`, then verify `python3 --version`                                             |
+| Build uses wrong compiler   | Environment variables not set            | Export: `export CC=clang && export CXX=clang++`                                                            |
+| IDE can't find includes     | Compile commands missing                 | Build with `CMAKE_EXPORT_COMPILE_COMMANDS=1` enabled                                                       |
 
 ## References
 
