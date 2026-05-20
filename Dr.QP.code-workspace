@@ -157,7 +157,7 @@
           // Force network mode for DDS network https://robotics.stackexchange.com/a/114955/38643
           // "FASTDDS_BUILTIN_TRANSPORTS": "UDPv4"
         },
-        "python": "${workspaceFolder}/.venv/bin/python3",
+        "python": "/usr/bin/python3",
       }
     ]
   },

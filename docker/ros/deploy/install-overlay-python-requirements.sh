@@ -6,7 +6,7 @@ if [[ ${#search_roots[@]} -eq 0 ]]; then
   search_roots=(build install)
 fi
 
-pip_install=(python3 -m pip install --break-system-packages)
+pip_install=(/usr/bin/python3 -m pip install --break-system-packages)
 if [[ $(id -u) -ne 0 ]]; then
   pip_install=(sudo "${pip_install[@]}")
 fi
