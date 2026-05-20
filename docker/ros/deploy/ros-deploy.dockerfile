@@ -70,7 +70,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       -t exec
 
 RUN --mount=type=bind,readonly,source=.,target=/deploy-scripts \
-    /deploy-scripts/scripts/install-overlay-python-requirements.sh \
+    /deploy-scripts/install-overlay-python-requirements.sh \
       "$OVERLAY_WS/install"
 
 ENV OVERLAY_WS=$OVERLAY_WS
