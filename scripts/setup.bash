@@ -31,3 +31,5 @@ fi
 
 # Restore 'set -u' if it was previously enabled.
 [[ $no_unset -eq 0 ]] && set -u
+
+true
