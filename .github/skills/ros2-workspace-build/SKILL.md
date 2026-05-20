@@ -1,7 +1,6 @@
 ---
 name: ros2-workspace-build
 description: Build ROS 2 Jazzy workspace using colcon. Use when asked to build a package, enable debug symbols, enable coverage instrumentation, compile workspace with specific flags, or perform incremental vs full builds. Supports single-package builds, dependency chains, debug builds, and coverage-enabled compilation.
-
 ---
 
 # ROS 2 Workspace Build
@@ -32,6 +31,7 @@ Build ROS 2 packages efficiently using colcon with support for incremental devel
 Use for rapid iteration when developing a specific package.
 
 1. Build the package and its dependencies through the ROS wrapper:
+
    ```bash
    scripts/with-ros-env.sh python3 -m colcon build \
      --symlink-install \
@@ -62,6 +62,7 @@ Use when you've only modified internal package code.
 Use when you need to debug code execution or attach a debugger.
 
 1. Build with debug symbols through the ROS wrapper:
+
    ```bash
    scripts/with-ros-env.sh python3 -m colcon build \
      --symlink-install \
@@ -77,6 +78,7 @@ Use when you need to debug code execution or attach a debugger.
 Use when preparing to run tests with coverage analysis.
 
 1. Build with coverage enabled through the ROS wrapper:
+
    ```bash
    scripts/with-ros-env.sh python3 -m colcon build \
      --symlink-install \
@@ -92,6 +94,7 @@ Use when preparing to run tests with coverage analysis.
 **WARNING**: Full builds take 10-20+ minutes. Only use when explicitly requested or making cross-cutting changes.
 
 1. Build the entire workspace with all optimizations through the ROS wrapper:
+
    ```bash
    CMAKE_EXPORT_COMPILE_COMMANDS=1 \
    CC=clang \
@@ -111,26 +114,26 @@ Use when preparing to run tests with coverage analysis.
 
 ## Common Build Options Reference
 
-| Option | Purpose | Example |
-|--------|---------|---------|
-| `--packages-up-to <pkg>` | Build package and all dependencies | `--packages-up-to drqp_serial` |
-| `--packages-select <pkg>` | Build only specified package | `--packages-select drqp_control` |
-| `--symlink-install` | Use symlinks for Python (faster) | Always recommended |
-| `--event-handlers console_cohesion+` | Cleaner console output | Always recommended |
-| `-GNinja` | Use Ninja build system (faster) | `-GNinja` |
-| `-D CMAKE_BUILD_TYPE=Debug` | Build with debug symbols | For debugging |
-| `-D DRQP_ENABLE_COVERAGE=ON` | Enable coverage instrumentation | For test coverage |
+| Option                               | Purpose                            | Example                          |
+| ------------------------------------ | ---------------------------------- | -------------------------------- |
+| `--packages-up-to <pkg>`             | Build package and all dependencies | `--packages-up-to drqp_serial`   |
+| `--packages-select <pkg>`            | Build only specified package       | `--packages-select drqp_control` |
+| `--symlink-install`                  | Use symlinks for Python (faster)   | Always recommended               |
+| `--event-handlers console_cohesion+` | Cleaner console output             | Always recommended               |
+| `-GNinja`                            | Use Ninja build system (faster)    | `-GNinja`                        |
+| `-D CMAKE_BUILD_TYPE=Debug`          | Build with debug symbols           | For debugging                    |
+| `-D DRQP_ENABLE_COVERAGE=ON`         | Enable coverage instrumentation    | For test coverage                |
 
 ## Troubleshooting
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| "Command 'colcon' not found" | Environment not sourced | Re-run the command via `scripts/with-ros-env.sh` |
-| Compilation errors in C++ code | Missing dependencies or code errors | Check `log/latest_build/` for details |
-| "Package not found" error | Package doesn't exist or wrong name | Verify package name in `packages/runtime/` or `packages/simulation/` |
-| Build takes very long | Full workspace build or large package | Use `--packages-select` or `--packages-up-to` for incremental builds |
-| "Permission denied" errors | Cannot write to install directory | Check workspace permissions with `ls -la install/` |
-| Linker errors after changes | Stale build artifacts | Run cleanup: `./scripts/clean.fish` then rebuild |
+| Issue                          | Cause                                 | Solution                                                             |
+| ------------------------------ | ------------------------------------- | -------------------------------------------------------------------- |
+| "Command 'colcon' not found"   | Environment not sourced               | Re-run the command via `scripts/with-ros-env.sh`                     |
+| Compilation errors in C++ code | Missing dependencies or code errors   | Check `log/latest_build/` for details                                |
+| "Package not found" error      | Package doesn't exist or wrong name   | Verify package name in `packages/runtime/` or `packages/simulation/` |
+| Build takes very long          | Full workspace build or large package | Use `--packages-select` or `--packages-up-to` for incremental builds |
+| "Permission denied" errors     | Cannot write to install directory     | Check workspace permissions with `ls -la install/`                   |
+| Linker errors after changes    | Stale build artifacts                 | Run cleanup: `./scripts/clean.fish` then rebuild                     |
 
 ## Build Output Locations
 
@@ -146,4 +149,3 @@ Use when preparing to run tests with coverage analysis.
 - Refer to the official colcon build documentation for a complete description of available options.
 - Define custom build profiles (e.g., debug, release, coverage) in your workspace configuration or project-level config files as needed.
 - If your repository provides helper scripts for automated builds, follow the usage instructions documented alongside those scripts.
-
