@@ -11,7 +11,7 @@ NEVER use GitHub API or GitHub MCP tools to update branch refs or push branch co
 3. **Test specific packages** (`--packages-select <pkg>`) for rapid iteration
 4. **Use devcontainer** when running as remote agent (see [Cursor Cloud Sessions](#cursor-cloud-sessions) below)
 5. **Only run full builds/tests** when explicitly requested
-6. **Collect test output** from `build/<package_name>/test_results/`
+6. **Collect test output** from `log/latest_test/<package_name>/stdout_stderr.log` or `streams.log` (timestamped) in same folder.
 7. **Check build logs** in `log/latest_build/` if builds fail
 8. **Use `--symlink-install`** for Python coverage and hot-reload
 9. **Enable coverage** with `--mixin coverage-pytest` when testing
