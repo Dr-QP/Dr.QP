@@ -14,25 +14,18 @@ fi
 for root in "${search_roots[@]}"; do
   [[ -d "$root" ]] || continue
 
-  while IFS= read -r -d '' path; do
-    mapfile -t requirements < <(
-      python3 - "$path" <<'PY'
-import sys
-from pathlib import Path
+  readarray -t requires < <(find "$root" -name requires.txt)
 
-for raw_line in Path(sys.argv[1]).read_text(encoding="utf-8").splitlines():
-    line = raw_line.strip()
-    if not line or line.startswith("#") or line.startswith("["):
-        continue
-    print(line)
-PY
-    )
-
-    if [[ ${#requirements[@]} -eq 0 ]]; then
+  for path in "${requires[@]}"; do
+    filtered="$(mktemp)"
+    grep -v -E '^\s*(#|\[|$)' "$path" > "$filtered"
+    if [[ ! -s "$filtered" ]]; then
+      rm -f "$filtered"
       continue
     fi
 
     echo "Installing requirements from $path"
-    "${pip_install[@]}" "${requirements[@]}"
-  done < <(find "$root" -name requires.txt -print0)
+    "${pip_install[@]}" -r "$filtered"
+    rm -f "$filtered"
+  done
 done
