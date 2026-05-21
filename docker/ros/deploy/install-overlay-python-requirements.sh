@@ -18,14 +18,11 @@ for root in "${search_roots[@]}"; do
 
   for path in "${requires[@]}"; do
     filtered="$(mktemp -t filtered-requires.XXXXXX)"
-    if grep -v -E '^\s*(#|\[|$)' "$path" > "$filtered"; then
-      :
-    else
-      status=$?
-      if [[ $status -ne 1 ]]; then
-        rm -f "$filtered"
-        exit "$status"
-      fi
+    status=0
+    grep -v -E '^\s*(#|\[|$)' "$path" > "$filtered" || status=$?
+    if [[ $status -ne 0 && $status -ne 1 ]]; then
+      rm -f "$filtered"
+      exit "$status"
     fi
     if [[ ! -s "$filtered" ]]; then
       rm -f "$filtered"
