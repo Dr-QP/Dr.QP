@@ -228,6 +228,111 @@ SCENARIO("ROS node")
           robotConfig.loadConfig(TEST_DATA_DIR_IN_SOURCE_TREE "/non_existing_config.yml"));
       }
     }
+
+    GIVEN("Robot config with direct servo definitions")
+    {
+      RobotConfig directConfig;
+
+      const auto expectInitialPositionMatchesJointToServo =
+        [&](const RobotConfig::ServoJointParams& params) {
+          CAPTURE(
+            params.joint_name, params.servo_id, params.inverted, params.offset_radians,
+            params.min_angle_radians, params.max_angle_radians, params.initial_position_radians);
+
+          directConfig.addServo(params);
+
+          const auto limits = directConfig.getServoLimits(params.servo_id);
+          REQUIRE(limits);
+
+          const auto expected = directConfig.jointToServo(
+            {.name = params.joint_name, .position_as_radians = params.initial_position_radians});
+          REQUIRE(expected);
+
+          CHECK(limits->initial_position == expected->position);
+        };
+
+      THEN("Servo limits should clamp initial positions through the joint-to-servo path")
+      {
+        using double_limits = std::numeric_limits<double>;
+
+        expectInitialPositionMatchesJointToServo({
+          .joint_name = "within_limits",
+          .servo_id = 41,
+          .inverted = false,
+          .offset_radians = 0.0,
+          .max_torque = 1.0,
+          .min_angle_radians = -1.0,
+          .max_angle_radians = 1.62,
+          .initial_position_radians = 0.4,
+        });
+
+        expectInitialPositionMatchesJointToServo({
+          .joint_name = "below_min",
+          .servo_id = 42,
+          .inverted = false,
+          .offset_radians = 0.0,
+          .max_torque = 1.0,
+          .min_angle_radians = -1.0,
+          .max_angle_radians = 1.62,
+          .initial_position_radians = -3.0,
+        });
+
+        expectInitialPositionMatchesJointToServo({
+          .joint_name = "above_max",
+          .servo_id = 43,
+          .inverted = false,
+          .offset_radians = 0.0,
+          .max_torque = 1.0,
+          .min_angle_radians = -1.0,
+          .max_angle_radians = 1.62,
+          .initial_position_radians = 3.0,
+        });
+
+        expectInitialPositionMatchesJointToServo({
+          .joint_name = "negative_infinity",
+          .servo_id = 44,
+          .inverted = false,
+          .offset_radians = 0.0,
+          .max_torque = 1.0,
+          .min_angle_radians = -1.0,
+          .max_angle_radians = 1.62,
+          .initial_position_radians = -double_limits::infinity(),
+        });
+
+        expectInitialPositionMatchesJointToServo({
+          .joint_name = "positive_infinity",
+          .servo_id = 45,
+          .inverted = false,
+          .offset_radians = 0.0,
+          .max_torque = 1.0,
+          .min_angle_radians = -1.0,
+          .max_angle_radians = 1.62,
+          .initial_position_radians = double_limits::infinity(),
+        });
+
+        expectInitialPositionMatchesJointToServo({
+          .joint_name = "nan_initial_position",
+          .servo_id = 46,
+          .inverted = false,
+          .offset_radians = 0.0,
+          .max_torque = 1.0,
+          .min_angle_radians = -1.0,
+          .max_angle_radians = 1.62,
+          .initial_position_radians = double_limits::quiet_NaN(),
+        });
+
+        expectInitialPositionMatchesJointToServo({
+          .joint_name = "inverted_with_offset",
+          .servo_id = 47,
+          .inverted = true,
+          .offset_radians = 0.2,
+          .max_torque = 1.0,
+          .min_angle_radians = -1.0,
+          .max_angle_radians = 1.62,
+          .initial_position_radians = 3.0,
+        });
+      }
+    }
   }
 
   rclcpp::shutdown();
