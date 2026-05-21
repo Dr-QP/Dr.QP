@@ -191,6 +191,15 @@ SCENARIO("ROS node")
         CHECK(limits->initial_position == expected->position);
       }
 
+      THEN("Servo limit endpoints should ignore offset")
+      {
+        const auto limits = robotConfig.getServoLimits(2);
+        REQUIRE(limits);
+
+        CHECK(limits->min_position == 348);
+        CHECK(limits->max_position == 775);
+      }
+
       THEN("getJointNames should return all joints defined in config")
       {
         CHECK(robotConfig.numServos() == 5);
@@ -250,6 +259,22 @@ SCENARIO("ROS node")
 
           CHECK(limits->initial_position == expected->position);
         };
+
+      const auto expectLimitEndpointsIgnoreOffset = [&](
+                                                      const RobotConfig::ServoJointParams& params,
+                                                      uint16_t expectedMin, uint16_t expectedMax) {
+        CAPTURE(
+          params.joint_name, params.servo_id, params.inverted, params.offset_radians,
+          params.min_angle_radians, params.max_angle_radians);
+
+        directConfig.addServo(params);
+
+        const auto limits = directConfig.getServoLimits(params.servo_id);
+        REQUIRE(limits);
+
+        CHECK(limits->min_position == expectedMin);
+        CHECK(limits->max_position == expectedMax);
+      };
 
       THEN("Servo limits should clamp initial positions through the joint-to-servo path")
       {
@@ -331,6 +356,32 @@ SCENARIO("ROS node")
           .max_angle_radians = 1.62,
           .initial_position_radians = 3.0,
         });
+
+        expectLimitEndpointsIgnoreOffset(
+          {
+            .joint_name = "offset_limits",
+            .servo_id = 48,
+            .inverted = false,
+            .offset_radians = 0.2,
+            .max_torque = 1.0,
+            .min_angle_radians = -1.0,
+            .max_angle_radians = 1.62,
+            .initial_position_radians = 0.0,
+          },
+          348, 775);
+
+        expectLimitEndpointsIgnoreOffset(
+          {
+            .joint_name = "inverted_offset_limits",
+            .servo_id = 49,
+            .inverted = true,
+            .offset_radians = 0.2,
+            .max_torque = 1.0,
+            .min_angle_radians = -1.0,
+            .max_angle_radians = 1.62,
+            .initial_position_radians = 0.0,
+          },
+          247, 674);
       }
     }
   }
