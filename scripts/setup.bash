@@ -3,9 +3,9 @@ script_dir=$(dirname "$script_file")
 source "$script_dir/__utils.sh"
 
 # ROS2 setup scripts may unset variables, so disable 'set -u' temporarily to avoid errors.
-restore_nounset=0
+nounset_was_set=0
 if [[ -o nounset ]]; then
-  restore_nounset=1
+  nounset_was_set=1
   set +u
 fi
 
@@ -18,6 +18,6 @@ if [[ -f "$root_dir/install/local_setup.bash" ]]; then
 fi
 
 # Restore 'set -u' if it was previously enabled.
-if [[ $restore_nounset -eq 1 ]]; then
+if [[ $nounset_was_set -eq 1 ]]; then
   set -u
 fi

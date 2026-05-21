@@ -17,8 +17,16 @@ for root in "${search_roots[@]}"; do
   readarray -t requires < <(find "$root" -name requires.txt)
 
   for path in "${requires[@]}"; do
-    filtered="$(mktemp)"
-    grep -v -E '^\s*(#|\[|$)' "$path" > "$filtered"
+    filtered="$(mktemp -t filtered-requires.XXXXXX)"
+    if grep -v -E '^\s*(#|\[|$)' "$path" > "$filtered"; then
+      :
+    else
+      status=$?
+      if [[ $status -ne 1 ]]; then
+        rm -f "$filtered"
+        exit "$status"
+      fi
+    fi
     if [[ ! -s "$filtered" ]]; then
       rm -f "$filtered"
       continue
