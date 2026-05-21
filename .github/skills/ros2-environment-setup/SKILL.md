@@ -60,11 +60,11 @@ Set up a fresh workspace for local development.
    source scripts/setup.bash
    ```
 
-    This script:
-    - Sources `/opt/ros/jazzy/setup.bash` (base ROS)
-    - Sources `install/local_setup.bash` if available (workspace overlay)
-    - Leaves Python on the system interpreter used by ROS runtime
-    - Sets ROS_DISTRO, ROS_PACKAGE_PATH, and other ROS variables
+   This script:
+   - Sources `/opt/ros/jazzy/setup.bash` (base ROS)
+   - Sources `install/local_setup.bash` if available (workspace overlay)
+   - Leaves Python on the system interpreter used by ROS runtime
+   - Sets ROS_DISTRO, ROS_PACKAGE_PATH, and other ROS variables
 
 3. Verify ROS environment is configured:
 
