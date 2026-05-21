@@ -53,8 +53,8 @@ public:
     uint16_t position;
   };
 
-  std::optional<ServoValues> jointToServo(const JointValues& joint);
-  std::optional<JointValues> servoToJoint(const ServoValues& servo);
+  std::optional<ServoValues> jointToServo(const JointValues& joint) const;
+  std::optional<JointValues> servoToJoint(const ServoValues& servo) const;
 
   struct ServoJointParams
   {
