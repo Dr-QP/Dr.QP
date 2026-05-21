@@ -229,7 +229,10 @@ std::optional<RobotConfig::ServoLimitValues> RobotConfig::getServoLimits(uint8_t
     minEndpointPosition < maxEndpointPosition ? maxEndpointPosition : minEndpointPosition;
   const uint16_t maxPWM = mapToRange<uint16_t>(jointParams.max_torque, 0.0, 1.0, 0, 1023);
 
-  const auto initialPosition = jointToServo({.name = jointParams.joint_name, .position_as_radians = jointParams.initial_position_rads})->position;
+  const auto initialPosition =
+    jointToServo(
+      {.name = jointParams.joint_name, .position_as_radians = jointParams.initial_position_rads})
+      ->position;
 
   return ServoLimitValues{
     .max_pwm = maxPWM,
