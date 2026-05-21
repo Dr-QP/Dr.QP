@@ -155,7 +155,9 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_configure(
       }
       ServoPtr servo = makeServo(servoId);
 
-      servo->writeInitialPosition(limits->initial_position);
+      if (useMockServo_) {
+        servo->writeInitialPosition(limits->initial_position);
+      }
       servo->writeMaxPwmRam(limits->max_pwm);
       servo->writeMinMaxPositionRam(limits->min_position, limits->max_position);
       RCLCPP_INFO(
