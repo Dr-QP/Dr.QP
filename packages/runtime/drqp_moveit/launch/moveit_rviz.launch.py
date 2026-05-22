@@ -48,7 +48,6 @@ def generate_launch_description():
 
     use_rviz = LaunchConfiguration('use_rviz')
     use_gazebo = LaunchConfiguration('use_gazebo')
-    hardware_device_address = LaunchConfiguration('hardware_device_address')
 
     rviz_node = Node(
         package='rviz2',
