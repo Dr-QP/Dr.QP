@@ -16,6 +16,7 @@ filtered_requirements_file=""
 cleanup_filtered_requirements_file() {
   if [[ -n "${filtered_requirements_file:-}" ]]; then
     rm -f "$filtered_requirements_file"
+    filtered_requirements_file=""
   fi
 }
 
@@ -35,15 +36,13 @@ install_requires_file() {
     return "$status"
   fi
   if [[ ! -s "$filtered_requirements_file" ]]; then
-    rm -f "$filtered_requirements_file"
-    filtered_requirements_file=""
+    cleanup_filtered_requirements_file
     return 0
   fi
 
   echo "Installing requirements from $path"
   "${pip_install[@]}" -r "$filtered_requirements_file"
-  rm -f "$filtered_requirements_file"
-  filtered_requirements_file=""
+  cleanup_filtered_requirements_file
 }
 
 for root in "${search_roots[@]}"; do
