@@ -62,13 +62,16 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update \
     && apt-get install -y --no-install-recommends \
-      python3-venv \
       python3-pip \
     && rosdep update \
     && rm -f "$OVERLAY_WS/install/COLCON_IGNORE" \
     && rosdep install --ignore-src -y \
       --from-paths "$OVERLAY_WS/install" \
       -t exec
+
+RUN --mount=type=bind,readonly,source=.,target=/deploy-scripts \
+    /deploy-scripts/install-overlay-python-requirements.sh \
+      "$OVERLAY_WS/install"
 
 ENV OVERLAY_WS=$OVERLAY_WS
 ENV ROS_DISTRO=$ROS_DISTRO
@@ -77,9 +80,6 @@ RUN groupadd -g "$DEPLOY_GID" "$DEPLOY_USER" \
     && useradd -l -m -u "$DEPLOY_UID" -g "$DEPLOY_GID" "$DEPLOY_USER" \
     && chown -R "$DEPLOY_USER:$DEPLOY_USER" "$OVERLAY_WS"
 USER $DEPLOY_USER
-
-RUN --mount=type=bind,readonly,source=.,target=/deploy-scripts \
-    /deploy-scripts/prod-venv.sh "$OVERLAY_WS/install"
 
 COPY ./ros_entrypoint.sh /
 ENTRYPOINT ["/ros_entrypoint.sh"]
