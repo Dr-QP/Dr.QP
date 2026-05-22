@@ -14,7 +14,9 @@ Systematic approach to resolving all PR feedback including review comments, CI f
 - Resolve CodeQL security findings
 - Improve Codecov patch coverage
 - Respond to reviewer questions
-- Update PR based on feedback
+- Update code, tests, and thread replies based on feedback
+- NEVER post work summary as PR title or body.
+- Do not edit PR title/body unless explicitly requested or the user asks for a PR refresh.
 
 ## Prerequisites
 
