@@ -11,27 +11,39 @@ if [[ $(id -u) -ne 0 ]]; then
   pip_install=(sudo "${pip_install[@]}")
 fi
 
+filtered_requirements_file=""
+
+cleanup_filtered_requirements_file() {
+  if [[ -n "${filtered_requirements_file:-}" ]]; then
+    rm -f "$filtered_requirements_file"
+  fi
+}
+
+trap cleanup_filtered_requirements_file EXIT
+
 install_requires_file() {
   local path="$1"
-  local filtered
   local status
 
   # Filter out INI-style sections and non-package lines.
   # pip does not understand [sections], so strip them before install.
-  filtered="$(mktemp -t filtered-requires.XXXXXX)"
-  trap 'rm -f "$filtered"' RETURN
+  filtered_requirements_file="$(mktemp -t filtered-requires.XXXXXX)"
 
   status=0
-  grep -v -E '^\s*(#|\[|$)' "$path" > "$filtered" || status=$?
+  grep -v -E '^\s*(#|\[|$)' "$path" > "$filtered_requirements_file" || status=$?
   if [[ $status -ne 0 && $status -ne 1 ]]; then
     return "$status"
   fi
-  if [[ ! -s "$filtered" ]]; then
+  if [[ ! -s "$filtered_requirements_file" ]]; then
+    rm -f "$filtered_requirements_file"
+    filtered_requirements_file=""
     return 0
   fi
 
   echo "Installing requirements from $path"
-  "${pip_install[@]}" -r "$filtered"
+  "${pip_install[@]}" -r "$filtered_requirements_file"
+  rm -f "$filtered_requirements_file"
+  filtered_requirements_file=""
 }
 
 for root in "${search_roots[@]}"; do
