@@ -32,8 +32,6 @@ install_requires_file() {
 
   echo "Installing requirements from $path"
   "${pip_install[@]}" -r "$filtered"
-  rm -f "$filtered"
-  trap - RETURN
 }
 
 for root in "${search_roots[@]}"; do
