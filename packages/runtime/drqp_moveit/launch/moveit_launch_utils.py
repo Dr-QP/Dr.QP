@@ -29,7 +29,7 @@ def load_yaml(path):
         return yaml.safe_load(file)
 
 
-def get_moveit_params(pkg_path, use_gazebo, hardware_device_address):
+def get_description_params(pkg_path, use_gazebo, hardware_device_address):
     drqp_control_pkg = get_package_share_path('drqp_control')
     robot_description_content = ParameterValue(
         Command(
@@ -45,6 +45,14 @@ def get_moveit_params(pkg_path, use_gazebo, hardware_device_address):
         value_type=str,
     )
     srdf_content = (pkg_path / 'config' / 'drqp.srdf').read_text()
+
+    return [
+        {'robot_description': robot_description_content},
+        {'robot_description_semantic': srdf_content},
+    ]
+
+
+def get_common_moveit_params(pkg_path):
     kinematics = load_yaml(pkg_path / 'config' / 'kinematics.yaml')
     joint_limits = load_yaml(pkg_path / 'config' / 'joint_limits.yaml')
     ompl = load_yaml(pkg_path / 'config' / 'ompl_planning.yaml')
@@ -52,11 +60,28 @@ def get_moveit_params(pkg_path, use_gazebo, hardware_device_address):
     move_group = load_yaml(pkg_path / 'config' / 'move_group.yaml')
 
     return [
-        {'robot_description': robot_description_content},
-        {'robot_description_semantic': srdf_content},
         {'robot_description_kinematics': kinematics},
         {'robot_description_planning': joint_limits},
         ompl,
         controllers,
         move_group,
     ]
+
+
+def get_move_group_params(pkg_path, use_gazebo, hardware_device_address):
+    return (
+        get_description_params(pkg_path, use_gazebo, hardware_device_address)
+        + [
+            {'publish_robot_description': True},
+            {'publish_robot_description_semantic': True},
+        ]
+        + get_common_moveit_params(pkg_path)
+    )
+
+
+def get_rviz_params(pkg_path):
+    return get_common_moveit_params(pkg_path)
+
+
+def get_moveit_params(pkg_path, use_gazebo, hardware_device_address):
+    return get_move_group_params(pkg_path, use_gazebo, hardware_device_address)

@@ -41,7 +41,7 @@ def generate_launch_description():
     if launch_dir not in sys.path:
         sys.path.insert(0, launch_dir)
 
-    from moveit_launch_utils import get_moveit_params
+    from moveit_launch_utils import get_move_group_params
 
     pkg = get_package_share_path('drqp_moveit')
     use_gazebo = LaunchConfiguration('use_gazebo')
@@ -51,7 +51,7 @@ def generate_launch_description():
         package='moveit_ros_move_group',
         executable='move_group',
         output='screen',
-        parameters=get_moveit_params(
+        parameters=get_move_group_params(
             pkg, use_gazebo=use_gazebo, hardware_device_address=hardware_device_address
         )
         + [{'use_sim_time': use_gazebo}],

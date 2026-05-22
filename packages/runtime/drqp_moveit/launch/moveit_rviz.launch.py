@@ -41,7 +41,7 @@ def generate_launch_description():
     if launch_dir not in sys.path:
         sys.path.insert(0, launch_dir)
 
-    from moveit_launch_utils import get_moveit_params
+    from moveit_launch_utils import get_rviz_params
 
     pkg = get_package_share_path('drqp_moveit')
     rviz_config = str(pkg / 'config' / 'moveit.rviz')
@@ -56,8 +56,7 @@ def generate_launch_description():
         name='rviz2',
         output='log',
         arguments=['-d', rviz_config],
-        parameters=get_moveit_params(pkg, use_gazebo, hardware_device_address)
-        + [{'use_sim_time': use_gazebo}],
+        parameters=get_rviz_params(pkg) + [{'use_sim_time': use_gazebo}],
         condition=IfCondition(use_rviz),
     )
 
