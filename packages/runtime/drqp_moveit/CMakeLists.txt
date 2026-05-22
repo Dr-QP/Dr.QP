@@ -24,6 +24,10 @@ if(BUILD_TESTING)
     APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/test
   )
   drqp_add_ros_isolated_launch_test(
+    test/test_demo_launch_rviz_smoke.py
+    APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/test
+  )
+  drqp_add_ros_isolated_launch_test(
     test/test_demo_gazebo_launch_smoke.py
     APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/test
   )
