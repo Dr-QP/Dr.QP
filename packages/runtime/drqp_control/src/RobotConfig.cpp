@@ -229,10 +229,18 @@ std::optional<RobotConfig::ServoLimitValues> RobotConfig::getServoLimits(uint8_t
     minEndpointPosition < maxEndpointPosition ? maxEndpointPosition : minEndpointPosition;
   const uint16_t maxPWM = mapToRange<uint16_t>(jointParams.max_torque, 0.0, 1.0, 0, 1023);
 
-  const auto initialPosition =
-    jointToServo(
-      {.name = jointParams.joint_name, .position_as_radians = jointParams.initial_position_rads})
-      ->position;
+  const auto initialServoPosition = jointToServo(
+    {.name = jointParams.joint_name, .position_as_radians = jointParams.initial_position_rads});
+  if (!initialServoPosition.has_value()) {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Failed to compute initial servo position for joint '%s' (servo id %u).",
+      jointParams.joint_name.c_str(),
+      servoId);
+    return std::nullopt;
+  }
+
+  const auto initialPosition = initialServoPosition->position;
 
   return ServoLimitValues{
     .max_pwm = maxPWM,
