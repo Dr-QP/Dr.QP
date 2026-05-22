@@ -165,7 +165,6 @@ celerybeat.pid
 *.env
 .venv
 .venv/
-.venv-prod/
 env/
 venv/
 ENV/

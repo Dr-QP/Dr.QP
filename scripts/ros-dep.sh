@@ -9,3 +9,7 @@ source "$script_dir/setup.bash"
 
 # -r is needed for arm64 install as it doesn't have gazebo
 rosdep install --from-paths "$sources_dir" --ignore-src -y -r
+
+"$root_dir/docker/ros/deploy/install-overlay-python-requirements.sh" \
+  "$root_dir/build" \
+  "$root_dir/install"

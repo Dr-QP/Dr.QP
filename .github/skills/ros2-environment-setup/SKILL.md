@@ -16,7 +16,7 @@ Initialize and configure the ROS 2 development environment for both local and re
 - Update environment variables for build system
 - Configure IDE for ROS 2 development
 - Reset or troubleshoot environment issues
-- Switch between development and production Python environments
+- Switch between development tooling and ROS runtime Python environments
 
 ## Prerequisites
 
@@ -63,7 +63,7 @@ Set up a fresh workspace for local development.
    This script:
    - Sources `/opt/ros/jazzy/setup.bash` (base ROS)
    - Sources `install/local_setup.bash` if available (workspace overlay)
-   - Activates production Python environment
+   - Leaves Python on the system interpreter used by ROS runtime
    - Sets ROS_DISTRO, ROS_PACKAGE_PATH, and other ROS variables
 
 3. Verify ROS environment is configured:
@@ -125,7 +125,7 @@ Refresh the development environment after `pyproject.toml` or `uv.lock` changes.
 
    This automatically updates `.venv` from the workspace dependency groups.
 
-2. Use `source scripts/setup.bash --update-venv` only after a build when you need to refresh `.venv-prod` from generated ROS package `requires.txt` metadata.
+2. After a build, run `./scripts/ros-dep.sh` when you need to install generated ROS package `requires.txt` metadata into the container's system interpreter.
 
 3. Verify updates completed:
 
