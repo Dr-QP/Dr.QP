@@ -17,6 +17,8 @@ for root in "${search_roots[@]}"; do
   readarray -t requires < <(find "$root" -name requires.txt)
 
   for path in "${requires[@]}"; do
+    # Filter out INI-style sections and non-package lines.
+    # pip does not understand [sections], so strip them before install.
     filtered="$(mktemp -t filtered-requires.XXXXXX)"
     status=0
     grep -v -E '^\s*(#|\[|$)' "$path" > "$filtered" || status=$?
