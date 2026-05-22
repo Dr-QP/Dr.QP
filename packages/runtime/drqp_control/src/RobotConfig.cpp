@@ -233,10 +233,8 @@ std::optional<RobotConfig::ServoLimitValues> RobotConfig::getServoLimits(uint8_t
     {.name = jointParams.joint_name, .position_as_radians = jointParams.initial_position_rads});
   if (!initialServoPosition.has_value()) {
     RCLCPP_ERROR(
-      get_logger(),
-      "Failed to compute initial servo position for joint '%s' (servo id %u).",
-      jointParams.joint_name.c_str(),
-      servoId);
+      get_logger(), "Failed to compute initial servo position for joint '%s' (servo id %u).",
+      jointParams.joint_name.c_str(), servoId);
     return std::nullopt;
   }
 
