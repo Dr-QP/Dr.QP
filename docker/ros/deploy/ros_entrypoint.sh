@@ -10,8 +10,8 @@ if [[ -f "$OVERLAY_PATH/install/local_setup.bash" ]]; then
   source $OVERLAY_PATH/install/local_setup.bash --
 fi
 
-if [[ -f "~/ros2_ws/install/local_setup.bash" ]]; then
-  source ~/ros2_ws/install/local_setup.bash --
+if [[ -f "$HOME/ros2_ws/install/local_setup.bash" ]]; then
+  source "$HOME/ros2_ws/install/local_setup.bash" --
 fi
 
 exec "$@"
