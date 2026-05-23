@@ -1,14 +1,8 @@
 ---
-# ROS 2 repository setup using new apt-source approach
-- name: Get latest ros-apt-source release version
-  ansible.builtin.uri:
-    url: https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest
-    return_content: true
-  register: ros_repo_release_info
-
 - name: Extract version from release info
   ansible.builtin.set_fact:
-    ros_repo_apt_source_version: "{{ ros_repo_release_info.json.tag_name }}"
+    # https://github.com/ros-infrastructure/ros-apt-source/releases
+    ros_repo_apt_source_version: "1.2.0"
 
 - name: Set ros2-apt-source package URL
   ansible.builtin.set_fact:

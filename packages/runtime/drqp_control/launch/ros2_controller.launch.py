@@ -30,7 +30,7 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     use_gazebo = LaunchConfiguration('use_gazebo')
-    show_rviz = LaunchConfiguration('show_rviz')
+    show_control_rviz = LaunchConfiguration('show_control_rviz')
 
     description_launch_path = get_package_share_path('drqp_control') / 'launch'
 
@@ -71,10 +71,10 @@ def generate_launch_description():
     return LaunchDescription(
         [
             DeclareLaunchArgument(
-                name='show_rviz',
+                name='show_control_rviz',
                 default_value='false',
                 choices=['true', 'false'],
-                description='Show rviz',
+                description='Show drqp_control RViz',
             ),
             DeclareLaunchArgument(
                 name='use_gazebo',
@@ -98,7 +98,7 @@ def generate_launch_description():
                         PythonLaunchDescriptionSource(
                             str(description_launch_path / 'rviz.launch.py'),
                         ),
-                        condition=IfCondition(show_rviz),
+                        condition=IfCondition(show_control_rviz),
                     ),
                 ]
             ),

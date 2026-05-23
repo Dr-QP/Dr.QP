@@ -21,7 +21,8 @@ Run ROS 2 tests efficiently and analyze results with comprehensive coverage repo
 ## Prerequisites
 
 - ROS 2 Jazzy installation
-- `scripts/setup.bash` available in workspace root
+- `scripts/with-ros-env.sh` available in workspace root for ROS 2 commands
+- `scripts/setup.bash --update-venv` available when `.venv-prod` needs a refresh
 - Packages already built with `colcon build`
 - Python 3.8+ for coverage tools
 - Optional: Node.js for interactive result viewer (xunit-viewer)
@@ -39,10 +40,10 @@ Use for rapid iteration when developing and testing a single package.
    source scripts/setup.bash
    ```
 
-2. Run tests for the package only:
+2. Run tests for the package only through the ROS wrapper:
 
    ```bash
-   python3 -m colcon test \
+   scripts/with-ros-env.sh python3 -m colcon test \
      --event-handlers console_cohesion+ summary+ status+ \
      --return-code-on-test-failure \
      --packages-select <package_name>
@@ -51,7 +52,7 @@ Use for rapid iteration when developing and testing a single package.
    For the full `drqp_gazebo` launch suite, opt out of the default smoke-only mode:
 
    ```bash
-   DRQP_GAZEBO_TEST_MODE=all python3 -m colcon test \
+   DRQP_GAZEBO_TEST_MODE=all scripts/with-ros-env.sh python3 -m colcon test \
       --event-handlers console_cohesion+ summary+ status+ \
       --return-code-on-test-failure \
       --packages-select drqp_gazebo \
@@ -77,10 +78,10 @@ Use when you need code coverage metrics alongside test execution.
    source scripts/setup.bash
    ```
 
-2. Run tests with coverage enabled:
+2. Run tests with coverage enabled through the ROS wrapper:
 
    ```bash
-   python3 -m colcon test \
+   scripts/with-ros-env.sh python3 -m colcon test \
      --event-handlers console_cohesion+ summary+ status+ \
      --return-code-on-test-failure \
      --packages-select <package_name> \
@@ -102,10 +103,10 @@ Use when you need code coverage metrics alongside test execution.
    source scripts/setup.bash
    ```
 
-2. Run all tests with coverage:
+2. Run all tests with coverage through the ROS wrapper:
 
    ```bash
-   python3 -m colcon test \
+   scripts/with-ros-env.sh python3 -m colcon test \
      --event-handlers console_cohesion+ summary+ status+ \
      --return-code-on-test-failure \
      --mixin coverage-pytest
@@ -124,10 +125,10 @@ Use to save time when retesting after fixing failures.
    source scripts/setup.bash
    ```
 
-2. Re-run only previously failed tests:
+2. Re-run only previously failed tests through the ROS wrapper:
 
    ```bash
-   python3 -m colcon test \
+   scripts/with-ros-env.sh python3 -m colcon test \
      --event-handlers console_cohesion+ summary+ status+ \
      --return-code-on-test-failure \
      --packages-select-test-failures
@@ -139,16 +140,16 @@ Use to save time when retesting after fixing failures.
 
 Examine test output and failure details.
 
-1. View test summary across workspace:
+1. View test summary across workspace through the ROS wrapper:
 
    ```bash
-   python3 -m colcon test-result --all
+   scripts/with-ros-env.sh python3 -m colcon test-result --all
    ```
 
 2. View verbose test results with error details:
 
    ```bash
-   python3 -m colcon test-result --verbose
+   scripts/with-ros-env.sh python3 -m colcon test-result --verbose
    ```
 
 3. Find detailed test logs:
@@ -160,24 +161,18 @@ Examine test output and failure details.
 
 Process LLVM coverage data and prepare for analysis.
 
-1. Source the ROS environment:
+1. Process LLVM coverage for C++ packages through the ROS wrapper:
 
    ```bash
-   source scripts/setup.bash
+   scripts/with-ros-env.sh ./packages/cmake/llvm-cov-export-all.py ./build
    ```
 
-2. Process LLVM coverage for C++ packages:
-
-   ```bash
-   ./packages/cmake/llvm-cov-export-all.py ./build
-   ```
-
-3. Coverage data is exported to formats compatible with:
+2. Coverage data is exported to formats compatible with:
    - Codecov integration
    - VS Code Coverage Gutters extension
    - Web-based coverage viewers
 
-4. View coverage in VS Code:
+3. View coverage in VS Code:
    - Install "Coverage Gutters" extension
    - Coverage files auto-discovered from `build/**/*.info`
 

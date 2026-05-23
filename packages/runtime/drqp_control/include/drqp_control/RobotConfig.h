@@ -53,8 +53,8 @@ public:
     uint16_t position;
   };
 
-  std::optional<ServoValues> jointToServo(const JointValues& joint);
-  std::optional<JointValues> servoToJoint(const ServoValues& servo);
+  std::optional<ServoValues> jointToServo(const JointValues& joint) const;
+  std::optional<JointValues> servoToJoint(const ServoValues& servo) const;
 
   struct ServoJointParams
   {
@@ -66,6 +66,8 @@ public:
     double max_torque;  // 0..1
     double min_angle_radians;
     double max_angle_radians;
+
+    double initial_position_radians = 0.0;
   };
 
   void addServo(const ServoJointParams& params);
@@ -83,6 +85,7 @@ public:
     uint16_t max_pwm;
     uint16_t min_position;
     uint16_t max_position;
+    uint16_t initial_position;
   };
   std::optional<ServoLimitValues> getServoLimits(uint8_t servoId) const;
 

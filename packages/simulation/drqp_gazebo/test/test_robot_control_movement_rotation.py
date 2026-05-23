@@ -39,6 +39,8 @@ def generate_test_description():
 class TestGazeboRobotControlRotationMovement(GazeboRobotControlBase):
     """Verify rotation command changes robot yaw."""
 
+    __test__ = True
+
     def test_movement_rotation(self):
         self.assert_rotation_movement()
 
@@ -46,6 +48,8 @@ class TestGazeboRobotControlRotationMovement(GazeboRobotControlBase):
 @post_shutdown_test()
 class TestSimulationShutdown(SimulationShutdownBase):
     """Verify processes exit cleanly after the launch test finishes."""
+
+    __test__ = True
 
     def test_exit_codes(self, proc_info):
         self.assert_exit_codes(proc_info)

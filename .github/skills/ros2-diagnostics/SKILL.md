@@ -1,7 +1,6 @@
 ---
 name: ros2-diagnostics
 description: Debug and troubleshoot ROS 2 systems using introspection tools. Use when asked to debug runtime issues, inspect topics and services, monitor message flow, analyze node communication, check system health, diagnose performance problems, analyze bag files, use rqt tools, or troubleshoot message frequency issues. Supports ros2 topic, ros2 service, ros2 node commands and rqt visualization tools.
-
 ---
 
 # ROS 2 Diagnostics
@@ -32,15 +31,15 @@ Debug and troubleshoot ROS 2 systems using command-line introspection tools and 
 
 ## Diagnostic Tools Overview
 
-| Tool | Purpose | Common Commands |
-|------|---------|----------------|
-| **ros2 topic** | Inspect topic communication | `list`, `echo`, `info`, `hz`, `bw` |
-| **ros2 service** | Inspect service communication | `list`, `call`, `type` |
-| **ros2 node** | Inspect node information | `list`, `info` |
-| **ros2 interface** | Show message/service definitions | `show`, `list` |
-| **ros2 bag** | Record and playback messages | `record`, `play`, `info` |
-| **rqt_graph** | Visualize node/topic graph | GUI application |
-| **rqt_console** | View node log messages | GUI application |
+| Tool               | Purpose                          | Common Commands                    |
+| ------------------ | -------------------------------- | ---------------------------------- |
+| **ros2 topic**     | Inspect topic communication      | `list`, `echo`, `info`, `hz`, `bw` |
+| **ros2 service**   | Inspect service communication    | `list`, `call`, `type`             |
+| **ros2 node**      | Inspect node information         | `list`, `info`                     |
+| **ros2 interface** | Show message/service definitions | `show`, `list`                     |
+| **ros2 bag**       | Record and playback messages     | `record`, `play`, `info`           |
+| **rqt_graph**      | Visualize node/topic graph       | GUI application                    |
+| **rqt_console**    | View node log messages           | GUI application                    |
 
 ## Step-by-Step Workflows
 
@@ -49,26 +48,31 @@ Debug and troubleshoot ROS 2 systems using command-line introspection tools and 
 Get overview of running ROS 2 system.
 
 1. List all running nodes:
+
    ```bash
    ros2 node list
    ```
 
 2. List all active topics:
+
    ```bash
    ros2 topic list
    ```
 
 3. List topics with message types:
+
    ```bash
    ros2 topic list -t
    ```
 
 4. List all available services:
+
    ```bash
    ros2 service list
    ```
 
 5. Check detailed information about a specific node:
+
    ```bash
    ros2 node info /<node_name>
    ```
@@ -87,11 +91,13 @@ Get overview of running ROS 2 system.
 Investigate topics not receiving or sending messages correctly.
 
 1. Check if topic exists:
+
    ```bash
    ros2 topic list | grep <topic_name>
    ```
 
 2. Get detailed topic information:
+
    ```bash
    ros2 topic info /<topic_name> --verbose
    ```
@@ -103,27 +109,32 @@ Investigate topics not receiving or sending messages correctly.
    - Quality of Service (QoS) settings
 
 3. Monitor message publication rate:
+
    ```bash
    ros2 topic hz /<topic_name>
    ```
 
 4. Check message bandwidth:
+
    ```bash
    ros2 topic bw /<topic_name>
    ```
 
 5. View actual message content:
+
    ```bash
    ros2 topic echo /<topic_name>
    ```
 
 6. View limited number of messages:
+
    ```bash
    ros2 topic echo /<topic_name> --once
    ros2 topic echo /<topic_name> --max-count 5
    ```
 
 7. View specific message fields:
+
    ```bash
    ros2 topic echo /<topic_name> --field data
    ros2 topic echo /<topic_name> --field pose.position
@@ -135,6 +146,7 @@ Investigate topics not receiving or sending messages correctly.
    ```
 
 **Common issues detected**:
+
 - No publishers → upstream node not running
 - No subscribers → downstream node not running
 - Low hz → performance issue or computation bottleneck
@@ -147,26 +159,31 @@ Investigate topics not receiving or sending messages correctly.
 Debug service call issues and inspect service definitions.
 
 1. List available services:
+
    ```bash
    ros2 service list
    ```
 
 2. Check service type:
+
    ```bash
    ros2 service type /<service_name>
    ```
 
 3. View service definition:
+
    ```bash
    ros2 interface show <service_type>
    ```
 
 4. Call a service manually:
+
    ```bash
    ros2 service call /<service_name> <service_type> "<request_yaml>"
    ```
 
    Example:
+
    ```bash
    ros2 service call /set_parameters rcl_interfaces/srv/SetParameters \
      "{parameters: [{name: 'max_velocity', value: {type: 3, double_value: 2.0}}]}"
@@ -184,16 +201,19 @@ Debug service call issues and inspect service definitions.
 Capture system data for offline analysis and debugging.
 
 1. Record all topics:
+
    ```bash
    ros2 bag record -a -o <bag_name>
    ```
 
 2. Record specific topics:
+
    ```bash
    ros2 bag record -o <bag_name> /<topic1> /<topic2> /<topic3>
    ```
 
 3. Get bag file information:
+
    ```bash
    ros2 bag info <bag_name>
    ```
@@ -205,17 +225,20 @@ Capture system data for offline analysis and debugging.
    - Topic types
 
 4. Play back recorded data:
+
    ```bash
    ros2 bag play <bag_name>
    ```
 
 5. Play at different speed:
+
    ```bash
    ros2 bag play <bag_name> --rate 0.5  # Half speed
    ros2 bag play <bag_name> --rate 2.0  # Double speed
    ```
 
 6. Play specific topics:
+
    ```bash
    ros2 bag play <bag_name> --topics /<topic1> /<topic2>
    ```
@@ -232,6 +255,7 @@ Capture system data for offline analysis and debugging.
 Use graphical tools to understand system structure.
 
 1. View node and topic graph:
+
    ```bash
    rqt_graph
    ```
@@ -244,6 +268,7 @@ Use graphical tools to understand system structure.
    - Refresh to see changes
 
 2. View and filter log messages:
+
    ```bash
    rqt_console
    ```
@@ -256,6 +281,7 @@ Use graphical tools to understand system structure.
    - Export logs
 
 3. Plot numeric data in real-time:
+
    ```bash
    rqt_plot
    ```
@@ -267,16 +293,19 @@ Use graphical tools to understand system structure.
    - Save plot data
 
 4. Monitor topic data in tree view:
+
    ```bash
    rqt_topic
    ```
 
 5. Call services with GUI:
+
    ```bash
    rqt_service_caller
    ```
 
 6. Launch multiple rqt plugins in one window:
+
    ```bash
    rqt
    ```
@@ -290,21 +319,25 @@ Use graphical tools to understand system structure.
 Diagnose performance issues and resource usage.
 
 1. Monitor node CPU and memory (requires system tools):
+
    ```bash
    top -p $(pgrep -f <node_executable>)
    ```
 
 2. Check topic publication frequency over time:
+
    ```bash
    ros2 topic hz /<topic_name> --window 100
    ```
 
 3. Monitor topic bandwidth:
+
    ```bash
    ros2 topic bw /<topic_name>
    ```
 
 4. Check for dropped messages (requires bag recording):
+
    ```bash
    # Record with timestamps
    ros2 bag record /<topic_name> -o debug_bag
@@ -314,11 +347,13 @@ Diagnose performance issues and resource usage.
    ```
 
 5. Profile node startup time:
+
    ```bash
    time ros2 run <package> <executable>
    ```
 
 6. Monitor parameter events:
+
    ```bash
    ros2 topic echo /parameter_events
    ```
@@ -333,40 +368,41 @@ Diagnose performance issues and resource usage.
 
 ## Diagnostic Patterns
 
-| Symptom | Likely Cause | Diagnostic Command |
-|---------|--------------|-------------------|
-| **Topic has no data** | No publisher running | `ros2 topic info /<topic> --verbose` |
-| **Messages too slow** | Publisher rate issue | `ros2 topic hz /<topic>` |
-| **High bandwidth** | Large messages or high rate | `ros2 topic bw /<topic>` |
-| **Service fails** | Wrong request format | `ros2 interface show <srv_type>` |
-| **Node not visible** | Node crashed or not started | `ros2 node list`, check logs |
+| Symptom                 | Likely Cause                      | Diagnostic Command                   |
+| ----------------------- | --------------------------------- | ------------------------------------ |
+| **Topic has no data**   | No publisher running              | `ros2 topic info /<topic> --verbose` |
+| **Messages too slow**   | Publisher rate issue              | `ros2 topic hz /<topic>`             |
+| **High bandwidth**      | Large messages or high rate       | `ros2 topic bw /<topic>`             |
+| **Service fails**       | Wrong request format              | `ros2 interface show <srv_type>`     |
+| **Node not visible**    | Node crashed or not started       | `ros2 node list`, check logs         |
 | **QoS incompatibility** | Mismatched reliability/durability | `ros2 topic info /<topic> --verbose` |
 
 ## Troubleshooting
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| "No topics found" | No nodes publishing | Check if nodes are running with `ros2 node list` |
-| "Command not found: ros2" | Environment not sourced | Run `source scripts/setup.bash` |
-| Topic echo shows nothing | Wrong topic name or no messages | Verify topic name with `ros2 topic list`, check publisher with `ros2 topic info` |
-| rqt_graph empty | No active communication | Start nodes, ensure they're publishing/subscribing |
-| Service call hangs | Service not available or node busy | Check service exists with `ros2 service list`, verify node is responsive |
-| High hz but application slow | Processing bottleneck not in ROS | Profile application code, check callback processing time |
-| Bag file won't play | Wrong format or corrupted | Check with `ros2 bag info`, verify SQLite3 format |
-| rqt won't start | Missing Python dependencies | Install: `sudo apt install ros-jazzy-rqt-*` |
+| Issue                        | Cause                              | Solution                                                                         |
+| ---------------------------- | ---------------------------------- | -------------------------------------------------------------------------------- |
+| "No topics found"            | No nodes publishing                | Check if nodes are running with `ros2 node list`                                 |
+| "Command not found: ros2"    | Environment not sourced            | Re-run the command via `scripts/with-ros-env.sh`                                 |
+| Topic echo shows nothing     | Wrong topic name or no messages    | Verify topic name with `ros2 topic list`, check publisher with `ros2 topic info` |
+| rqt_graph empty              | No active communication            | Start nodes, ensure they're publishing/subscribing                               |
+| Service call hangs           | Service not available or node busy | Check service exists with `ros2 service list`, verify node is responsive         |
+| High hz but application slow | Processing bottleneck not in ROS   | Profile application code, check callback processing time                         |
+| Bag file won't play          | Wrong format or corrupted          | Check with `ros2 bag info`, verify SQLite3 format                                |
+| rqt won't start              | Missing Python dependencies        | Install: `sudo apt install ros-jazzy-rqt-*`                                      |
 
 ## Quality of Service (QoS) Debugging
 
 Common QoS incompatibilities:
 
-| Publisher QoS | Subscriber QoS | Result |
-|---------------|----------------|--------|
-| RELIABLE | BEST_EFFORT | ✅ Compatible |
-| BEST_EFFORT | RELIABLE | ❌ Incompatible |
-| TRANSIENT_LOCAL | VOLATILE | ✅ Compatible |
-| VOLATILE | TRANSIENT_LOCAL | ❌ Incompatible |
+| Publisher QoS   | Subscriber QoS  | Result          |
+| --------------- | --------------- | --------------- |
+| RELIABLE        | BEST_EFFORT     | ✅ Compatible   |
+| BEST_EFFORT     | RELIABLE        | ❌ Incompatible |
+| TRANSIENT_LOCAL | VOLATILE        | ✅ Compatible   |
+| VOLATILE        | TRANSIENT_LOCAL | ❌ Incompatible |
 
 Check QoS settings:
+
 ```bash
 ros2 topic info /<topic> --verbose
 ```
@@ -374,6 +410,7 @@ ros2 topic info /<topic> --verbose
 ## Common Diagnostic Workflows
 
 ### Debug "No Messages Received"
+
 1. `ros2 topic list` → Verify topic exists
 2. `ros2 topic info /<topic> --verbose` → Check publishers/subscribers
 3. `ros2 topic echo /<topic>` → Verify messages are flowing
@@ -381,12 +418,14 @@ ros2 topic info /<topic> --verbose
 5. Check QoS compatibility
 
 ### Debug Node Communication
+
 1. `ros2 node list` → Verify nodes running
 2. `ros2 node info /<node>` → Check connections
 3. `rqt_graph` → Visualize connections
 4. `ros2 topic echo` → Verify data flow
 
 ### Debug Performance Issues
+
 1. `ros2 topic hz` → Check message rates
 2. `ros2 topic bw` → Check bandwidth usage
 3. `top` → Check CPU/memory usage

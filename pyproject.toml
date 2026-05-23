@@ -54,6 +54,12 @@ notebooks = [
 package = false
 default-groups = ["dev", "docs"]
 
+[tool.pytest.ini_options]
+markers = [
+  "slow: marks tests that exercise long-running or integration-heavy behavior",
+  "smoke: marks focused smoke coverage for core flows",
+]
+
 [tool.uv.sources]
 validate_agent_files = { path = "py_packages/validate_agent_files", editable = true }
 drqp_robot_mcp = { path = "py_packages/drqp_robot_mcp", editable = true }

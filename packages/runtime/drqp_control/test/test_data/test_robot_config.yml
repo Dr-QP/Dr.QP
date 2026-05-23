@@ -15,6 +15,7 @@ robot:
       offset_rads: 0.2 # Calibration offset
       min_rads: -1.0
       max_rads: 1.62
+      initial_position_rads: 0.4
     left_front_tibia:
       id: 18
       inverted: true

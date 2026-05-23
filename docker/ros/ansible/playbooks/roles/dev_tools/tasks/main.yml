@@ -56,6 +56,7 @@
       - python3-venv
       - ros-dev-tools
       - ffmpeg # for rendering notebooks animations
+      - htop # for monitoring resource usage in development
     state: present
     install_recommends: false
     update_cache: true

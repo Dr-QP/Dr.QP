@@ -66,6 +66,8 @@ Set up a fresh workspace for local development.
    - Leaves Python on the system interpreter used by ROS runtime
    - Sets ROS_DISTRO, ROS_PACKAGE_PATH, and other ROS variables
 
+   Use `scripts/with-ros-env.sh <command>` for one-off ROS or colcon commands when you do not need an interactive ROS shell.
+
 3. Verify ROS environment is configured:
 
    ```bash
@@ -182,13 +184,7 @@ Set up VS Code devcontainer for remote/GitHub Codespaces development.
 
 Set compiler and build system options for optimal performance.
 
-1. Source the base ROS environment:
-
-   ```bash
-   source scripts/setup.bash
-   ```
-
-2. Configure for development builds with clang:
+1. Configure for development builds with clang:
 
    ```bash
    export CMAKE_EXPORT_COMPILE_COMMANDS=1
@@ -201,7 +197,7 @@ Set compiler and build system options for optimal performance.
    - `CC=clang`: Use Clang C compiler (faster, better error messages)
    - `CXX=clang++`: Use Clang C++ compiler
 
-3. Verify environment:
+2. Verify environment:
 
    ```bash
    echo $CC          # Should print: clang
@@ -209,9 +205,9 @@ Set compiler and build system options for optimal performance.
    ls -la build/compile_commands.json  # IDE integration
    ```
 
-4. Build with optimized environment:
+3. Build with optimized environment:
    ```bash
-   python3 -m colcon build --packages-up-to <package_name>
+   scripts/with-ros-env.sh python3 -m colcon build --packages-up-to <package_name>
    ```
 
 ### Workflow 6: Verify Complete Environment Setup
@@ -221,22 +217,21 @@ Check that all components are properly configured.
 1. Verify ROS 2 core:
 
    ```bash
-   source scripts/setup.bash
-   ros2 topic list        # Should work (may be empty if no nodes running)
-   ros2 service list      # Should work
-   ros2 node list         # Should work
+   scripts/with-ros-env.sh ros2 topic list        # Should work (may be empty if no nodes running)
+   scripts/with-ros-env.sh ros2 service list      # Should work
+   scripts/with-ros-env.sh ros2 node list         # Should work
    ```
 
 2. Verify workspace packages:
 
    ```bash
-   ros2 pkg list | grep drqp     # Should show workspace packages
+   scripts/with-ros-env.sh bash -lc 'ros2 pkg list | grep drqp'     # Should show workspace packages
    ```
 
 3. Verify Python setup:
 
    ```bash
-   python3 -c "import rclpy; print('ROS 2 Python client ready')"
+   scripts/with-ros-env.sh python3 -c "import rclpy; print('ROS 2 Python client ready')"
    ```
 
 4. Verify development tools:
@@ -313,16 +308,16 @@ Clean up environment and start fresh.
 
 ## Troubleshooting
 
-| Issue                       | Cause                                    | Solution                                                        |
-| --------------------------- | ---------------------------------------- | --------------------------------------------------------------- |
-| "Command 'ros2' not found"  | ROS 2 not sourced                        | Run `source scripts/setup.bash`                                 |
-| "Package not found" error   | Workspace overlay not loaded             | Ensure `install/local_setup.bash` exists, rebuild if needed     |
-| Python import "rclpy" fails | ROS 2 Python client not available        | Install: `rosdep install --from-paths packages --ignore-src -y` |
-| Venv not activating         | Venv not created or corrupted            | Delete `.venv` and recreate it with `uv sync`                   |
-| Devcontainer won't start    | Docker not running or insufficient space | Start Docker daemon and check disk space                        |
-| Conflicting Python versions | Multiple Python environments active      | Deactivate venv: `deactivate`, then verify `python3 --version`  |
-| Build uses wrong compiler   | Environment variables not set            | Export: `export CC=clang && export CXX=clang++`                 |
-| IDE can't find includes     | Compile commands missing                 | Build with `CMAKE_EXPORT_COMPILE_COMMANDS=1` enabled            |
+| Issue                       | Cause                                    | Solution                                                                                                   |
+| --------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| "Command 'ros2' not found"  | ROS 2 not sourced                        | Run the command via `scripts/with-ros-env.sh`, or `source scripts/setup.bash` for an interactive ROS shell |
+| "Package not found" error   | Workspace overlay not loaded             | Ensure `install/local_setup.bash` exists, rebuild if needed                                                |
+| Python import "rclpy" fails | ROS 2 Python client not available        | Install: `rosdep install --from-paths packages --ignore-src -y`                                            |
+| Venv not activating         | Venv not created or corrupted            | Delete `.venv` and recreate it with `uv sync`                                                              |
+| Devcontainer won't start    | Docker not running or insufficient space | Start Docker daemon and check disk space                                                                   |
+| Conflicting Python versions | Multiple Python environments active      | Deactivate venv: `deactivate`, then verify `python3 --version`                                             |
+| Build uses wrong compiler   | Environment variables not set            | Export: `export CC=clang && export CXX=clang++`                                                            |
+| IDE can't find includes     | Compile commands missing                 | Build with `CMAKE_EXPORT_COMPILE_COMMANDS=1` enabled                                                       |
 
 ## References
 
