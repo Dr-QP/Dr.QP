@@ -39,6 +39,7 @@ def generate_test_description():
 
 
 class TestDemoLaunchRvizSmoke(unittest.TestCase):
+    """Smoke test for the demo.launch.py RViz visualization."""
 
     def test_only_one_rviz_process_starts(self, proc_info):
         rviz_processes = [name for name in proc_info.process_names() if 'rviz2' in name]
