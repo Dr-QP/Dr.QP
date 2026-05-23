@@ -22,9 +22,10 @@
 Demo launch: Dr.QP + MoveIt 2 in RViz2 (fake hardware, no simulation).
 
 Starts:
-  1. drqp_brain             - brings up the Dr.QP robot system with mock servo hardware and no Gazebo simulation
-  2. move_group             - MoveIt 2 planning node
-  3. rviz2                  - RViz2 with the MoveIt Motion Planning plugin
+    1. drqp_brain           - brings up the Dr.QP robot system with mock
+                              servo hardware and no Gazebo simulation
+    2. move_group           - MoveIt 2 planning node
+    3. rviz2                - RViz2 with the MoveIt Motion Planning plugin
 
 Run with::
 
