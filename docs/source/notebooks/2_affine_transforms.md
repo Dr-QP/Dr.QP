@@ -58,7 +58,7 @@ Alongside the conversion, we are going to bring all the algorithms to work in fu
 As a first step in conversion, let's replace hand crafted rotations with rotation matrices.
 
 ```{code-cell} ipython3
-from drqp_brain.geometry import Leg3D, Line3D, Point3D
+from drqp_kinematics.geometry import Leg3D, Line3D, Point3D
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
@@ -182,7 +182,7 @@ jupyter_utils.display_file(
 ```
 
 ```{code-cell} ipython3
-from drqp_brain.models import HexapodLeg, LegModel
+from drqp_kinematics.models import HexapodLeg, LegModel
 from plotting import plot_leg3d
 
 coxa = 5
@@ -255,7 +255,7 @@ jupyter_utils.display_file(
 ```
 
 ```{code-cell} ipython3
-from drqp_brain.models import HexapodModel
+from drqp_kinematics.models import HexapodModel
 from plotting import plot_hexapod
 
 # Dr.QP Dimensions
@@ -327,7 +327,7 @@ The algorithm is as follows:
  3. Run inverse kinematics for all legs with the foot positions captured in step 1.
 
 ```{code-cell} ipython3
-from drqp_brain.geometry import AffineTransform
+from drqp_kinematics.geometry import AffineTransform
 
 orig_alpha, orig_beta, orig_gamma = 0, -25, 110
 drqp = DrQP()
@@ -462,7 +462,7 @@ if not skip_in_local_runs_because_its_slow:
 To make all the learnings and findings reusable in other notebooks, lets move all the code into modules and double check it works.
 
 ```{code-cell} ipython3
-from drqp_brain.models import HexapodModel
+from drqp_kinematics.models import HexapodModel
 from plotting import plot_hexapod, update_hexapod_plot
 
 hexapod = HexapodModel()

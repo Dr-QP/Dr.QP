@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2025 Anton Matosov
+# Copyright (c) 2017-2026 Anton Matosov
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,4 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from drqp_kinematics.geometry.leg import *  # noqa: F401,F403
+from .leg import Leg3D  # noqa: F401
+from .line import Line, Line3D  # noqa: F401
+from .point import Point, Point3D, SimplePoint3D  # noqa: F401
+from .transforms import AffineTransform  # noqa: F401

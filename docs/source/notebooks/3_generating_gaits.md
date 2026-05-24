@@ -108,7 +108,7 @@ jupyter_utils.display_file(
 The `GaitsVisualizer` class provides a convenient way to visualize the gaits. The `visualize_continuous` method visualizes each axis of the gait in 2D, while the `visualize_continuous_in_3d` method visualizes the gait in 3D.
 
 ```{code-cell} ipython3
-from drqp_brain.models import HexapodModel
+from drqp_kinematics.models import HexapodModel
 from drqp_brain.parametric_gait_generator import GaitType, ParametricGaitGenerator
 from plotting import animate_hexapod_gait, GaitsVisualizer, is_sphinx_build
 
@@ -214,7 +214,7 @@ dy & dx
 \end{equation}
 
 ```{code-cell} ipython3
-from drqp_brain.geometry import AffineTransform, Point3D
+from drqp_kinematics.geometry import AffineTransform, Point3D
 
 
 class DirectionalGaitGenerator:
@@ -403,7 +403,7 @@ jupyter_utils.display_file(
 ```
 
 ```{code-cell} ipython3
-from drqp_brain.models import HexapodModel
+from drqp_kinematics.models import HexapodModel
 from drqp_brain.walk_controller import WalkController
 import numpy as np
 from plotting import animate_plot, is_sphinx_build

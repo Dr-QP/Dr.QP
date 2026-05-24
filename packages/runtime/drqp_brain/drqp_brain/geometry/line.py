@@ -18,47 +18,4 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from .point import Point, Point3D
-
-
-class Line:
-    """A simple 2D line class."""
-
-    def __init__(self, start: Point, end: Point, label: str):
-        self.start = start
-        self.end = end
-        self.label = label
-
-    def extended(self, length: float = 1.0):
-        return Line(
-            self.start, self.end + (self.end - self.start).normalized() * length, self.label
-        )
-
-    def __repr__(self):
-        return f'Line({self.start}, {self.end}, {self.label})'
-
-
-class Line3D:
-    """A simple 3D line class."""
-
-    def __init__(self, start: Point3D, end: Point3D, label: str):
-        self.start = start
-        self.end = end
-        self.label = label
-
-    def extended(self, length: float = 1.0):
-        return Line3D(
-            self.start, self.end + (self.end - self.start).normalized() * length, self.label
-        )
-
-    @property
-    def xy(self):
-        return Line(self.start.xy, self.end.xy, self.label)
-
-    @property
-    def xz(self):
-        return Line(self.start.xz, self.end.xz, self.label)
-
-    @property
-    def yz(self):
-        return Line(self.start.yz, self.end.yz, self.label)
+from drqp_kinematics.geometry.line import *  # noqa: F401,F403

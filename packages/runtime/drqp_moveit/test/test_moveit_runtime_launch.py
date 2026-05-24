@@ -24,7 +24,7 @@ import unittest
 from control_msgs.action import FollowJointTrajectory
 from controller_manager.test_utils import check_controllers_running, check_node_running
 from drqp_brain.joint_trajectory_builder import kFemurOffsetAngle, kTibiaOffsetAngle
-from drqp_brain.models import HexapodModel
+from drqp_kinematics.models import HexapodModel
 from geometry_msgs.msg import Pose, PoseStamped, Quaternion
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
