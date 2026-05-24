@@ -23,15 +23,15 @@
 import argparse
 
 from control_msgs.action import FollowJointTrajectory
-from drqp_brain.geometry import AffineTransform
 from drqp_brain.joint_trajectory_builder import (
     JointTrajectoryBuilder,
     kFemurOffsetAngle,
     kTibiaOffsetAngle,
 )
-from drqp_brain.models import HexapodModel
 from drqp_brain.walk_controller import GaitType, WalkController
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
+from drqp_kinematics.geometry import AffineTransform, Point3D
+from drqp_kinematics.models import HexapodModel
 from geometry_msgs.msg import PoseStamped, Quaternion
 from moveit_msgs.msg import MoveItErrorCodes, RobotState
 from moveit_msgs.srv import GetPositionIK
@@ -207,9 +207,6 @@ class HexapodBrain(rclpy.node.Node):
         self.walker.current_gait = self.gaits[self.gait_index]
         self.walker.phase_step = 1 / self.phase_steps_per_cycle[self.gait_index]
         previous_state = self._snapshot_motion_state()
-
-        # Convert Vector3 messages to Point3D (or numpy arrays) for walker
-        from drqp_brain.geometry import Point3D
 
         stride_direction = Point3D(
             [

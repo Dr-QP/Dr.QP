@@ -18,8 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from drqp_brain.models import HexapodLeg, Point3D
 from drqp_brain.parametric_gait_generator import GaitType, ParametricGaitGenerator
+from drqp_kinematics.geometry import Point3D
+from drqp_kinematics.models import HexapodLeg
 import numpy as np
 import pytest
 

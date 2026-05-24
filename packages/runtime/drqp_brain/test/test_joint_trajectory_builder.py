@@ -26,7 +26,7 @@ from drqp_brain.joint_trajectory_builder import (
     kFemurOffsetAngle,
     kTibiaOffsetAngle,
 )
-from drqp_brain.models import HexapodModel
+from drqp_kinematics.models import HexapodModel
 import numpy as np
 import pytest
 import rclpy.time

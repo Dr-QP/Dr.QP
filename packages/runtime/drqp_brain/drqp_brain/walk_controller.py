@@ -18,8 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from drqp_brain.geometry import AffineTransform, Point3D
 from drqp_brain.parametric_gait_generator import GaitType, ParametricGaitGenerator
+from drqp_kinematics.geometry import AffineTransform, Point3D
 import numpy as np
 
 

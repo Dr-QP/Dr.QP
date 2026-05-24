@@ -21,7 +21,7 @@
 from typing import Callable
 
 from control_msgs.action import FollowJointTrajectory
-from drqp_brain.models import HexapodModel
+from drqp_kinematics.models import HexapodModel
 import numpy as np
 from rclpy.action import ActionClient
 import rclpy.node

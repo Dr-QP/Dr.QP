@@ -18,10 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from drqp_brain.geometry import AffineTransform, Point3D
-from drqp_brain.models import HexapodModel
 from drqp_brain.parametric_gait_generator import GaitType
 from drqp_brain.walk_controller import WalkController
+from drqp_kinematics.geometry import AffineTransform, Point3D
+from drqp_kinematics.models import HexapodModel
 import numpy as np
 import pytest
 
