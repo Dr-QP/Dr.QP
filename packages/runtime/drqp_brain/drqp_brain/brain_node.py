@@ -21,6 +21,7 @@
 # THE SOFTWARE.
 
 import argparse
+import threading
 
 from control_msgs.action import FollowJointTrajectory
 from drqp_brain.joint_trajectory_builder import (
@@ -38,8 +39,9 @@ from moveit_msgs.srv import GetPositionIK
 import numpy as np
 import rclpy
 from rclpy.action import ActionClient
+from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.duration import Duration
-from rclpy.executors import ExternalShutdownException
+from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
 import rclpy.node
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 import rclpy.utilities
@@ -67,6 +69,7 @@ class HexapodBrain(rclpy.node.Node):
         super().__init__('drqp_brain')
 
         self.fps = 30
+        self.motion_callback_group = ReentrantCallbackGroup()
 
         self.gait_index = 0
         self.gaits = [GaitType.tripod, GaitType.ripple, GaitType.wave]
@@ -115,7 +118,12 @@ class HexapodBrain(rclpy.node.Node):
 
         self.setup_hexapod()
 
-        self.loop_timer = self.create_timer(1 / self.fps, self.loop, autostart=False)
+        self.loop_timer = self.create_timer(
+            1 / self.fps,
+            self.loop,
+            callback_group=self.motion_callback_group,
+            autostart=False,
+        )
 
     @property
     def trajectory_client(self):
@@ -132,7 +140,11 @@ class HexapodBrain(rclpy.node.Node):
     def ik_client(self):
         """Create the MoveIt IK client only when a leg solve is needed."""
         if self.__ik_client is None:
-            self.__ik_client = self.create_client(GetPositionIK, MOVEIT_IK_SERVICE)
+            self.__ik_client = self.create_client(
+                GetPositionIK,
+                MOVEIT_IK_SERVICE,
+                callback_group=self.motion_callback_group,
+            )
         return self.__ik_client
 
     def setup_hexapod(self):
@@ -291,7 +303,13 @@ class HexapodBrain(rclpy.node.Node):
     def _call_ik(self, leg, foot_target, robot_state: RobotState):
         request = self._build_ik_request(leg, foot_target, robot_state)
         future = self.ik_client.call_async(request)
-        rclpy.spin_until_future_complete(self, future, timeout_sec=MOVEIT_IK_TIMEOUT_SEC)
+        completed = threading.Event()
+        future.add_done_callback(lambda _: completed.set())
+        if not completed.wait(timeout=MOVEIT_IK_TIMEOUT_SEC):
+            raise RuntimeError(
+                f'MoveIt IK request timed out for {leg.label.name} after '
+                f'{MOVEIT_IK_TIMEOUT_SEC:.1f}s'
+            )
 
         if not future.done():
             raise RuntimeError(
@@ -496,16 +514,21 @@ class HexapodBrain(rclpy.node.Node):
 
 def main():
     node = None
+    executor = None
     try:
         parser = argparse.ArgumentParser('Dr.QP Robot controller ROS node')
         filtered_args = rclpy.utilities.remove_ros_args()
         args = parser.parse_args(args=filtered_args[1:])
         rclpy.init()
         node = HexapodBrain(**vars(args))
-        rclpy.spin(node)
+        executor = MultiThreadedExecutor(num_threads=2)
+        executor.add_node(node)
+        executor.spin()
     except (KeyboardInterrupt, ExternalShutdownException):
         pass  # codeql[py/empty-except]
     finally:
+        if executor is not None:
+            executor.shutdown()
         if node is not None:
             node.destroy_node()
         # Only call shutdown if ROS is still initialized
