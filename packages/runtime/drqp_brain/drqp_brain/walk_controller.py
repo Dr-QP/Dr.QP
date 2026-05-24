@@ -66,10 +66,33 @@ class WalkController:
         body_rotation: Point3D | None = None,
         verbose: bool = False,
     ):
+        feet_targets = self.next_step_targets(
+            stride_direction=stride_direction,
+            rotation_direction=rotation_direction,
+            phase_override=phase_override,
+            body_direction=body_direction,
+            body_rotation=body_rotation,
+            verbose=verbose,
+        )
+        self.apply_feet_targets(feet_targets)
+        return feet_targets
+
+    def next_step_targets(
+        self,
+        stride_direction: Point3D,
+        rotation_direction: float,
+        phase_override: float | None = None,
+        body_direction: Point3D | None = None,
+        body_rotation: Point3D | None = None,
+        verbose: bool = False,
+    ):
         self.__update_body_transform(body_direction, body_rotation)
         self.__next_phase(phase_override)
         feet_targets = self.__next_feet_targets(stride_direction, rotation_direction, verbose)
-        self.__move_feet(feet_targets)
+        return feet_targets
+
+    def apply_feet_targets(self, legs_and_targets):
+        self.__move_feet(legs_and_targets)
 
     def __next_phase(self, phase_override: float | None = None):
         if phase_override is not None:

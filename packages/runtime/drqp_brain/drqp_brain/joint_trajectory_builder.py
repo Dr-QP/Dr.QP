@@ -40,23 +40,49 @@ class JointTrajectoryBuilder:
         self.hexapod = hexapod
         self.points = []
 
+    def _ordered_joint_entries(self):
+        for leg in self.hexapod.legs:
+            for joint_name in ('coxa', 'femur', 'tibia'):
+                yield leg, joint_name, f'drqp/{leg.label.name}_{joint_name}'
+
     def add_point_from_hexapod(self, reach_in_seconds_from_start, effort=1.0, joint_mask=None):
         positions = []
         efforts = []
         self.joint_names = []
 
-        for leg in self.hexapod.legs:
-            for joint, angle in [
-                ('coxa', leg.coxa_angle),
-                ('femur', leg.femur_angle + kFemurOffsetAngle),
-                ('tibia', leg.tibia_angle + kTibiaOffsetAngle),
-            ]:
-                if joint_mask is not None and joint not in joint_mask:
-                    efforts.append(0.0)
-                else:
-                    efforts.append(effort)
-                positions.append(float(np.radians(angle)))
-                self.joint_names.append(f'drqp/{leg.label.name}_{joint}')
+        for leg, joint_name, controller_joint_name in self._ordered_joint_entries():
+            angle = {
+                'coxa': leg.coxa_angle,
+                'femur': leg.femur_angle + kFemurOffsetAngle,
+                'tibia': leg.tibia_angle + kTibiaOffsetAngle,
+            }[joint_name]
+
+            if joint_mask is not None and joint_name not in joint_mask:
+                efforts.append(0.0)
+            else:
+                efforts.append(effort)
+            positions.append(float(np.radians(angle)))
+            self.joint_names.append(controller_joint_name)
+
+        self.add_point(positions, efforts, reach_in_seconds_from_start)
+
+    def add_point_from_joint_targets(
+        self,
+        joint_targets: dict[str, float],
+        reach_in_seconds_from_start: float,
+        effort: float = 1.0,
+    ):
+        positions = []
+        efforts = []
+        self.joint_names = []
+
+        for _, _, controller_joint_name in self._ordered_joint_entries():
+            if controller_joint_name not in joint_targets:
+                raise KeyError(f'Missing joint target for {controller_joint_name}')
+
+            positions.append(float(joint_targets[controller_joint_name]))
+            efforts.append(effort)
+            self.joint_names.append(controller_joint_name)
 
         self.add_point(positions, efforts, reach_in_seconds_from_start)
 

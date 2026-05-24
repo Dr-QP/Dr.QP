@@ -33,6 +33,8 @@ def generate_launch_description():
     load_joystick = LaunchConfiguration('load_joystick')
     load_controllers = LaunchConfiguration('load_controllers')
     load_imu = LaunchConfiguration('load_imu')
+    load_moveit = LaunchConfiguration('load_moveit')
+    hardware_device_address = LaunchConfiguration('hardware_device_address')
 
     return LaunchDescription(
         [
@@ -60,6 +62,17 @@ def generate_launch_description():
                 choices=['true', 'false'],
                 description='Load the BNO055 IMU node',
             ),
+            DeclareLaunchArgument(
+                name='load_moveit',
+                default_value='true',
+                choices=['true', 'false'],
+                description='Load the MoveIt move_group node',
+            ),
+            DeclareLaunchArgument(
+                name='hardware_device_address',
+                default_value='/dev/ttySC0',
+                description='Hardware device address passed through to MoveIt robot description',
+            ),
             GroupAction(
                 [
                     SetParameter('use_sim_time', value=use_gazebo),
@@ -74,6 +87,22 @@ def generate_launch_description():
                             ),
                         ),
                         condition=IfCondition(load_controllers),
+                    ),
+                    IncludeLaunchDescription(
+                        PythonLaunchDescriptionSource(
+                            PathJoinSubstitution(
+                                [
+                                    FindPackageShare('drqp_moveit'),
+                                    'launch',
+                                    'move_group.launch.py',
+                                ]
+                            )
+                        ),
+                        condition=IfCondition(load_moveit),
+                        launch_arguments={
+                            'use_gazebo': use_gazebo,
+                            'hardware_device_address': hardware_device_address,
+                        }.items(),
                     ),
                     DeclareLaunchArgument(
                         name='load_joystick',
