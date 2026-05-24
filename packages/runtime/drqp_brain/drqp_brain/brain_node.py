@@ -48,7 +48,6 @@ from sensor_msgs.msg import JointState
 import std_msgs.msg
 import trajectory_msgs.msg
 
-
 MOVEIT_IK_SERVICE = '/compute_ik'
 MOVEIT_IK_TIMEOUT_SEC = 1.0
 BASE_FRAME = 'drqp/base_center_link'
@@ -300,8 +299,7 @@ class HexapodBrain(rclpy.node.Node):
             )
         if future.exception() is not None:
             raise RuntimeError(
-                f'MoveIt IK request failed for {leg.label.name}: '
-                f'{future.exception()}'
+                f'MoveIt IK request failed for {leg.label.name}: {future.exception()}'
             )
 
         response = future.result()

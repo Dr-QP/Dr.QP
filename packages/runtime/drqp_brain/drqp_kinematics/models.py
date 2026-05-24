@@ -20,8 +20,9 @@
 
 import enum
 
-from drqp_kinematics.geometry import AffineTransform, Line3D, Point3D
 import numpy as np
+
+from drqp_kinematics.geometry import AffineTransform, Line3D, Point3D
 
 
 class HexapodLeg(enum.Enum):
@@ -227,9 +228,7 @@ class LegModel:
         self.coxa_link = self.coxa_joint @ AffineTransform.from_translation(
             [self.coxa_length, 0, 0]
         )
-        self.femur_joint = self.coxa_link @ AffineTransform.from_rotvec(
-            [0, beta, 0], degrees=True
-        )
+        self.femur_joint = self.coxa_link @ AffineTransform.from_rotvec([0, beta, 0], degrees=True)
         self.femur_link = self.femur_joint @ AffineTransform.from_translation(
             [self.femur_length, 0, 0]
         )

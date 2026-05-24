@@ -50,19 +50,19 @@ A good starting point for the transition is a 0.25 phase mark where all legs hav
 
 So here is the plan for transition stage:
 
- 1. It runs for 0.25 of the phase
- 2. We start with X cycle at 0.25
- 3. We start Z cycle 0, but compress first 0.5 of it to 0.25.
- 4. At 0.5 both cycles sync up and cycle continues till 1.0
- 5. Then we start the full cycle.
+1.  It runs for 0.25 of the phase
+2.  We start with X cycle at 0.25
+3.  We start Z cycle 0, but compress first 0.5 of it to 0.25.
+4.  At 0.5 both cycles sync up and cycle continues till 1.0
+5.  Then we start the full cycle.
 
 Transition out of gait is similar, but starts at 0 and ends at 0.25 or X and Z cycles is compressed to 0.25.
 
 Below is the implementation of the transition. This kind of code works for the animation and is suitable for tripod gait, but with increase of gait complexity and with joystick style controls it would be impossible to implement it this way. We are going to explore a different approach later in this notebook.
 
 ```{code-cell} ipython3
-from drqp_kinematics.models import HexapodModel
 from drqp_brain.parametric_gait_generator import GaitType, ParametricGaitGenerator
+from drqp_kinematics.models import HexapodModel
 
 hexapod = HexapodModel()
 hexapod.forward_kinematics(0, -25, 110)
