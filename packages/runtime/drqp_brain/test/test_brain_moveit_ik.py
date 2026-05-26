@@ -153,7 +153,9 @@ def test_loop_skips_redundant_ik_when_feet_targets_do_not_change():
                 'next_step_targets',
                 side_effect=[feet_targets, feet_targets],
             ),
-            mock.patch.object(brain, 'solve_joint_targets', return_value=joint_targets) as solve_mock,
+            mock.patch.object(
+                brain, 'solve_joint_targets', return_value=joint_targets
+            ) as solve_mock,
             mock.patch.object(brain.joint_trajectory_pub, 'publish') as publish_mock,
         ):
             brain.loop()
