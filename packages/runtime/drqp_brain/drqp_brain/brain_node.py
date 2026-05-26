@@ -112,7 +112,6 @@ class HexapodBrain(rclpy.node.Node):
         self.__trajectory_client = None
         self.__ik_client = None
         self._last_published_foot_targets = None
-        self._last_commanded_joint_targets = None
         self._joint_state_warning_logged = False
         self._ik_service_warning_logged = False
         self.latest_joint_state = None
@@ -183,7 +182,7 @@ class HexapodBrain(rclpy.node.Node):
             0, -35, 130
         )  # reasonable hexa, servos out of reach for 0.06 height
         step_length = 0.10  # in meters
-        step_height = 0.03  # in meters
+        step_height = 0.01  # in meters
 
         self.walker = WalkController(
             self.hexapod,
@@ -288,7 +287,6 @@ class HexapodBrain(rclpy.node.Node):
             reach_in_seconds_from_start=1 / self.fps,
         )
         trajectory.publish(self.joint_trajectory_pub)
-        self._last_commanded_joint_targets = joint_targets.copy()
         self._last_published_foot_targets = foot_targets_key
 
     def process_joint_state(self, msg: JointState):
@@ -308,6 +306,7 @@ class HexapodBrain(rclpy.node.Node):
 
             leg_joint_targets = self._extract_leg_joint_targets(leg, response.solution)
             joint_targets.update(leg_joint_targets)
+            robot_state = response.solution
 
         return joint_targets
 
@@ -348,12 +347,6 @@ class HexapodBrain(rclpy.node.Node):
             velocity=list(latest.velocity),
             effort=list(latest.effort),
         )
-        if self._last_commanded_joint_targets is not None:
-            for index, joint_name in enumerate(robot_state.joint_state.name):
-                if joint_name in self._last_commanded_joint_targets:
-                    robot_state.joint_state.position[index] = self._last_commanded_joint_targets[
-                        joint_name
-                    ]
         return robot_state
 
     def _build_ik_request(self, leg, foot_target, robot_state: RobotState):
@@ -545,7 +538,6 @@ class HexapodBrain(rclpy.node.Node):
         self.get_logger().info('Stopping')
         self.loop_timer.cancel()
         self.walker.reset()
-        self._last_commanded_joint_targets = None
         self._last_published_foot_targets = None
 
     def destroy_node(self):
