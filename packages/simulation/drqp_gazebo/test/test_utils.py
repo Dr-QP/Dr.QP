@@ -22,8 +22,11 @@
 
 import inspect
 import subprocess
+import time
 
-__skip_gz_sim_cleanup = True
+
+_GZ_SIM_CMD_PATTERN = r'gz sim( |$)'
+_GZ_SIM_CLEANUP_TIMEOUT_SEC = 5.0
 
 
 def _caller_trace(max_depth: int = 3) -> str:
@@ -44,13 +47,30 @@ def ensure_gz_sim_not_running():
     This is needed to ensure clean test isolation.
     See https://github.com/ros2/launch/issues/545 for details.
     """
-    if __skip_gz_sim_cleanup:
-        return
-
     trace = _caller_trace()
     print(
-        f'Ensuring no gz sim processes are running... [pkill -9 -f "^gz sim"] caller={trace}',
+        (
+            'Ensuring no gz sim processes are running... '
+            f'[pkill -9 -f "{_GZ_SIM_CMD_PATTERN}"] caller={trace}'
+        ),
         flush=True,
     )
-    shell_cmd = ['pkill', '-9', '-f', '^gz sim']
-    subprocess.run(shell_cmd, check=False)
+    subprocess.run(['pkill', '-9', '-f', _GZ_SIM_CMD_PATTERN], check=False)
+
+    deadline = time.monotonic() + _GZ_SIM_CLEANUP_TIMEOUT_SEC
+    while time.monotonic() < deadline:
+        result = subprocess.run(
+            ['pgrep', '-f', _GZ_SIM_CMD_PATTERN],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            return
+        time.sleep(0.1)
+
+    pid_list = ' '.join(result.stdout.split()) if result.stdout else '<unknown>'
+    raise RuntimeError(
+        'Timed out waiting for lingering Gazebo processes to exit after cleanup. '
+        f'Remaining pids: {pid_list}. Caller: {trace}'
+    )
