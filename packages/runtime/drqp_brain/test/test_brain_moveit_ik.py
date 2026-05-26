@@ -21,6 +21,7 @@
 from unittest import mock
 
 from drqp_brain.brain_node import HexapodBrain
+from drqp_kinematics.geometry import AffineTransform, Point3D
 import pytest
 import rclpy
 
@@ -42,6 +43,14 @@ def _make_joint_targets(brain: HexapodBrain) -> dict[str, float]:
     }
 
 
+def _make_feet_targets(brain: HexapodBrain):
+    return [(leg, leg.tibia_end.copy()) for leg in brain.hexapod.legs]
+
+
+def _ik_ready_patch(brain: HexapodBrain):
+    return mock.patch.object(brain, '_ik_ready', return_value=True)
+
+
 def test_loop_uses_moveit_joint_targets_instead_of_leg_move_to():
     """Loop should consume MoveIt joint targets without falling back to custom leg IK."""
     brain = HexapodBrain()
@@ -52,6 +61,7 @@ def test_loop_uses_moveit_joint_targets_instead_of_leg_move_to():
             leg.move_to = mock.Mock(side_effect=AssertionError('custom IK must not run'))
 
         with (
+            _ik_ready_patch(brain),
             mock.patch.object(
                 brain,
                 'solve_joint_targets',
@@ -83,6 +93,7 @@ def test_loop_warns_and_skips_publish_when_moveit_returns_no_solution():
         command.rotation_speed = 0.5
 
         with (
+            _ik_ready_patch(brain),
             mock.patch.object(
                 brain,
                 'solve_joint_targets',
@@ -109,6 +120,7 @@ def test_loop_logs_error_and_skips_publish_when_moveit_service_fails():
     brain = HexapodBrain()
     try:
         with (
+            _ik_ready_patch(brain),
             mock.patch.object(
                 brain,
                 'solve_joint_targets',
@@ -123,5 +135,95 @@ def test_loop_logs_error_and_skips_publish_when_moveit_service_fails():
         solve_joint_targets.assert_called_once()
         error_mock.assert_called_once()
         publish_mock.assert_not_called()
+    finally:
+        brain.destroy_node()
+
+
+def test_loop_skips_redundant_ik_when_feet_targets_do_not_change():
+    """Identical stabilized foot targets should not re-enter MoveIt every timer tick."""
+    brain = HexapodBrain()
+    try:
+        feet_targets = _make_feet_targets(brain)
+        joint_targets = _make_joint_targets(brain)
+
+        with (
+            _ik_ready_patch(brain),
+            mock.patch.object(
+                brain.walker,
+                'next_step_targets',
+                side_effect=[feet_targets, feet_targets],
+            ),
+            mock.patch.object(brain, 'solve_joint_targets', return_value=joint_targets) as solve_mock,
+            mock.patch.object(brain.joint_trajectory_pub, 'publish') as publish_mock,
+        ):
+            brain.loop()
+            brain.loop()
+
+        solve_mock.assert_called_once_with(feet_targets)
+        publish_mock.assert_called_once()
+    finally:
+        brain.destroy_node()
+
+
+def test_loop_retries_redundant_targets_after_timeout():
+    """A failed solve must not poison the redundant-target cache."""
+    brain = HexapodBrain()
+    try:
+        feet_targets = _make_feet_targets(brain)
+        joint_targets = _make_joint_targets(brain)
+
+        with (
+            _ik_ready_patch(brain),
+            mock.patch.object(
+                brain.walker,
+                'next_step_targets',
+                side_effect=[feet_targets, feet_targets],
+            ),
+            mock.patch.object(
+                brain,
+                'solve_joint_targets',
+                side_effect=[RuntimeError('MoveIt IK request timed out'), joint_targets],
+            ) as solve_mock,
+            mock.patch.object(brain.joint_trajectory_pub, 'publish') as publish_mock,
+            mock.patch.object(brain.get_logger(), 'error') as error_mock,
+        ):
+            brain.loop()
+            brain.loop()
+
+        assert solve_mock.call_count == 2
+        error_mock.assert_called_once()
+        publish_mock.assert_called_once()
+    finally:
+        brain.destroy_node()
+
+
+def test_make_pose_stamped_converts_target_into_base_frame():
+    """MoveIt IK requests should express target positions in the declared BASE_FRAME."""
+    brain = HexapodBrain()
+    try:
+        body_transform = AffineTransform.from_translation([0.1, -0.2, 0.3])
+        brain.hexapod.body_transform = body_transform
+        leg = next(iter(brain.hexapod.legs))
+        foot_target = Point3D([0.5, 0.4, -0.1])
+
+        pose = brain._make_pose_stamped(leg, foot_target)
+        expected = body_transform.inverse.apply_point(foot_target)
+
+        assert pose.pose.position.x == pytest.approx(expected.x)
+        assert pose.pose.position.y == pytest.approx(expected.y)
+        assert pose.pose.position.z == pytest.approx(expected.z)
+    finally:
+        brain.destroy_node()
+
+
+def test_loop_warns_once_while_waiting_for_initial_joint_state():
+    """Startup readiness issues should be transient warnings rather than log spam every tick."""
+    brain = HexapodBrain()
+    try:
+        with mock.patch.object(brain.get_logger(), 'warning') as warning_mock:
+            brain.loop()
+            brain.loop()
+
+        warning_mock.assert_called_once_with('No joint state available to seed MoveIt IK requests')
     finally:
         brain.destroy_node()

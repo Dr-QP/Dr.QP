@@ -39,7 +39,7 @@ from moveit_msgs.srv import GetPositionIK
 import numpy as np
 import rclpy
 from rclpy.action import ActionClient
-from rclpy.callback_groups import ReentrantCallbackGroup
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup, ReentrantCallbackGroup
 from rclpy.duration import Duration
 from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
 import rclpy.node
@@ -52,7 +52,7 @@ import trajectory_msgs.msg
 
 
 MOVEIT_IK_SERVICE = '/compute_ik'
-MOVEIT_IK_TIMEOUT_SEC = 1.0
+MOVEIT_IK_TIMEOUT_SEC = 2.0
 BASE_FRAME = 'drqp/base_center_link'
 
 
@@ -68,8 +68,12 @@ class HexapodBrain(rclpy.node.Node):
     def __init__(self):
         super().__init__('drqp_brain')
 
-        self.fps = 30
-        self.motion_callback_group = ReentrantCallbackGroup()
+        # MoveIt IK is invoked once per leg, so the walking loop must stay well
+        # below the service throughput seen in simulation.
+        self.fps = 8
+        self.loop_callback_group = MutuallyExclusiveCallbackGroup()
+        self.ik_callback_group = ReentrantCallbackGroup()
+        self.state_callback_group = ReentrantCallbackGroup()
 
         self.gait_index = 0
         self.gaits = [GaitType.tripod, GaitType.ripple, GaitType.wave]
@@ -108,12 +112,17 @@ class HexapodBrain(rclpy.node.Node):
         )
         self.__trajectory_client = None
         self.__ik_client = None
+        self._last_published_foot_targets = None
+        self._last_commanded_joint_targets = None
+        self._joint_state_warning_logged = False
+        self._ik_service_warning_logged = False
         self.latest_joint_state = None
         self.joint_state_sub = self.create_subscription(
             JointState,
             '/joint_states',
             self.process_joint_state,
             qos_profile=10,
+            callback_group=self.state_callback_group,
         )
 
         self.setup_hexapod()
@@ -121,7 +130,7 @@ class HexapodBrain(rclpy.node.Node):
         self.loop_timer = self.create_timer(
             1 / self.fps,
             self.loop,
-            callback_group=self.motion_callback_group,
+            callback_group=self.loop_callback_group,
             autostart=False,
         )
 
@@ -143,7 +152,7 @@ class HexapodBrain(rclpy.node.Node):
             self.__ik_client = self.create_client(
                 GetPositionIK,
                 MOVEIT_IK_SERVICE,
-                callback_group=self.motion_callback_group,
+                callback_group=self.ik_callback_group,
             )
         return self.__ik_client
 
@@ -174,7 +183,7 @@ class HexapodBrain(rclpy.node.Node):
         self.hexapod.forward_kinematics(
             0, -35, 130
         )  # reasonable hexa, servos out of reach for 0.06 height
-        step_length = 0.14  # in meters
+        step_length = 0.10  # in meters
         step_height = 0.03  # in meters
 
         self.walker = WalkController(
@@ -251,6 +260,13 @@ class HexapodBrain(rclpy.node.Node):
             body_rotation=body_rotation,
         )
 
+        if not self._ik_ready():
+            return
+
+        foot_targets_key = self._foot_targets_key(feet_targets)
+        if foot_targets_key == self._last_published_foot_targets:
+            return
+
         try:
             joint_targets = self.solve_joint_targets(feet_targets)
         except RuntimeError as exc:
@@ -270,20 +286,17 @@ class HexapodBrain(rclpy.node.Node):
         trajectory = JointTrajectoryBuilder(self.hexapod)
         trajectory.add_point_from_joint_targets(
             joint_targets,
-            reach_in_seconds_from_start=self.walker.phase_step,
+            reach_in_seconds_from_start=1 / self.fps,
         )
         trajectory.publish(self.joint_trajectory_pub)
+        self._last_commanded_joint_targets = joint_targets.copy()
+        self._last_published_foot_targets = foot_targets_key
 
     def process_joint_state(self, msg: JointState):
         self.latest_joint_state = msg
+        self._joint_state_warning_logged = False
 
     def solve_joint_targets(self, legs_and_targets):
-        if self.latest_joint_state is None:
-            raise RuntimeError('No joint state available to seed MoveIt IK requests')
-
-        if not self.ik_client.wait_for_service(timeout_sec=0.0):
-            raise RuntimeError(f'MoveIt IK service {MOVEIT_IK_SERVICE} is unavailable')
-
         robot_state = self._current_robot_state()
         joint_targets = {}
         for leg, foot_target in legs_and_targets:
@@ -296,7 +309,6 @@ class HexapodBrain(rclpy.node.Node):
 
             leg_joint_targets = self._extract_leg_joint_targets(leg, response.solution)
             joint_targets.update(leg_joint_targets)
-            robot_state = response.solution
 
         return joint_targets
 
@@ -338,13 +350,19 @@ class HexapodBrain(rclpy.node.Node):
             velocity=list(latest.velocity),
             effort=list(latest.effort),
         )
+        if self._last_commanded_joint_targets is not None:
+            for index, joint_name in enumerate(robot_state.joint_state.name):
+                if joint_name in self._last_commanded_joint_targets:
+                    robot_state.joint_state.position[index] = self._last_commanded_joint_targets[
+                        joint_name
+                    ]
         return robot_state
 
     def _build_ik_request(self, leg, foot_target, robot_state: RobotState):
         request = GetPositionIK.Request()
         request.ik_request.group_name = f'{leg.label.name}_leg'
         request.ik_request.robot_state = robot_state
-        request.ik_request.avoid_collisions = True
+        request.ik_request.avoid_collisions = False
         request.ik_request.ik_link_name = f'drqp/{leg.label.name}_foot_link'
         request.ik_request.pose_stamped = self._make_pose_stamped(leg, foot_target)
         request.ik_request.timeout = Duration(seconds=MOVEIT_IK_TIMEOUT_SEC).to_msg()
@@ -353,9 +371,10 @@ class HexapodBrain(rclpy.node.Node):
     def _make_pose_stamped(self, leg, foot_target):
         pose = PoseStamped()
         pose.header.frame_id = BASE_FRAME
-        pose.pose.position.x = float(foot_target.x)
-        pose.pose.position.y = float(foot_target.y)
-        pose.pose.position.z = float(foot_target.z)
+        base_frame_target = self.hexapod.body_transform.inverse.apply_point(foot_target)
+        pose.pose.position.x = float(base_frame_target.x)
+        pose.pose.position.y = float(base_frame_target.y)
+        pose.pose.position.z = float(base_frame_target.z)
 
         orientation = Rotation.from_matrix(leg.tibia_link.rotation).as_quat()
         pose.pose.orientation = Quaternion(
@@ -374,6 +393,33 @@ class HexapodBrain(rclpy.node.Node):
                 raise RuntimeError(f'MoveIt IK response missing joint target for {joint_name}')
             joint_targets[joint_name] = joint_map[joint_name]
         return joint_targets
+
+    def _foot_targets_key(self, legs_and_targets):
+        return tuple(
+            (
+                leg.label.name,
+                round(float(foot_target.x), 6),
+                round(float(foot_target.y), 6),
+                round(float(foot_target.z), 6),
+            )
+            for leg, foot_target in legs_and_targets
+        )
+
+    def _ik_ready(self) -> bool:
+        if self.latest_joint_state is None:
+            if not self._joint_state_warning_logged:
+                self.get_logger().warning('No joint state available to seed MoveIt IK requests')
+                self._joint_state_warning_logged = True
+            return False
+
+        if not self.ik_client.wait_for_service(timeout_sec=0.0):
+            if not self._ik_service_warning_logged:
+                self.get_logger().warning(f'MoveIt IK service {MOVEIT_IK_SERVICE} is unavailable')
+                self._ik_service_warning_logged = True
+            return False
+
+        self._ik_service_warning_logged = False
+        return True
 
     def _controller_joint_names(self, leg):
         return [f'drqp/{leg.label.name}_{joint_name}' for joint_name in ('coxa', 'femur', 'tibia')]
@@ -501,6 +547,8 @@ class HexapodBrain(rclpy.node.Node):
         self.get_logger().info('Stopping')
         self.loop_timer.cancel()
         self.walker.reset()
+        self._last_commanded_joint_targets = None
+        self._last_published_foot_targets = None
 
     def destroy_node(self):
         if self.__trajectory_client is not None:
@@ -521,7 +569,7 @@ def main():
         args = parser.parse_args(args=filtered_args[1:])
         rclpy.init()
         node = HexapodBrain(**vars(args))
-        executor = MultiThreadedExecutor(num_threads=2)
+        executor = MultiThreadedExecutor(num_threads=4)
         executor.add_node(node)
         executor.spin()
     except (KeyboardInterrupt, ExternalShutdownException):
