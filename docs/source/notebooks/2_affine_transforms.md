@@ -320,11 +320,11 @@ With the ability to position all legs, its time to work on the inverse kinematic
 
 The algorithm is as follows:
 
- 1. Capture the reference stance
+1.  Capture the reference stance
     - Run forward kinematics for all legs with the same angles in a desired position (neutral, wide, narrow, specific gait).
     - Capture global positions of all leg foot tips
- 2. Apply transform to the robot's body (translation, rotation, twist).
- 3. Run inverse kinematics for all legs with the foot positions captured in step 1.
+2.  Apply transform to the robot's body (translation, rotation, twist).
+3.  Run inverse kinematics for all legs with the foot positions captured in step 1.
 
 ```{code-cell} ipython3
 from drqp_kinematics.geometry import AffineTransform

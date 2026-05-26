@@ -17,8 +17,8 @@ The next step in developing the robot kinematics is to generate various gaits. F
 
 The gait cycle of a hexapod robot refers to the sequential movement of its six legs to achieve locomotion. It consists of two main phases for each leg:
 
- 1. Stance Phase – The leg is in contact with the ground, providing support and propulsion as it moves backward relative to the body.
- 2. Swing Phase – The leg lifts off the ground, moves forward, and prepares for the next stance phase.
+1.  Stance Phase – The leg is in contact with the ground, providing support and propulsion as it moves backward relative to the body.
+2.  Swing Phase – The leg lifts off the ground, moves forward, and prepares for the next stance phase.
 
 To get an idea of the variance and complexity between gaits, Fig 1. shows four typical gaits. The six legs, right and left hind, middle and front, indicated as RH, RM, RF, LH, LM, and LF. Stance phase is shown in white, swing phase in black.
 
@@ -108,8 +108,8 @@ jupyter_utils.display_file(
 The `GaitsVisualizer` class provides a convenient way to visualize the gaits. The `visualize_continuous` method visualizes each axis of the gait in 2D, while the `visualize_continuous_in_3d` method visualizes the gait in 3D.
 
 ```{code-cell} ipython3
-from drqp_kinematics.models import HexapodModel
 from drqp_brain.parametric_gait_generator import GaitType, ParametricGaitGenerator
+from drqp_kinematics.models import HexapodModel
 from plotting import animate_hexapod_gait, GaitsVisualizer, is_sphinx_build
 
 hexapod = HexapodModel()
@@ -403,8 +403,8 @@ jupyter_utils.display_file(
 ```
 
 ```{code-cell} ipython3
-from drqp_kinematics.models import HexapodModel
 from drqp_brain.walk_controller import WalkController
+from drqp_kinematics.models import HexapodModel
 import numpy as np
 from plotting import animate_plot, is_sphinx_build
 
