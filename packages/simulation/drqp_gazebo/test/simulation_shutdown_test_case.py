@@ -22,7 +22,6 @@ import unittest
 
 from launch_testing import asserts
 from launch_testing.proc_info_handler import ProcInfoHandler
-from test_utils import ensure_gz_sim_not_running
 
 
 class SimulationShutdownBase(unittest.TestCase):
@@ -33,7 +32,6 @@ class SimulationShutdownBase(unittest.TestCase):
     @classmethod
     def tearDownClass(cls) -> None:
         super().tearDownClass()
-        ensure_gz_sim_not_running()
 
     def assert_exit_codes(self, proc_info):
         """Check if the processes exited normally (except Gazebo)."""

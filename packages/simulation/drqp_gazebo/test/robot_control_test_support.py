@@ -50,7 +50,6 @@ from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 from rosgraph_msgs.msg import Clock
 from sensor_msgs.msg import Imu
 import std_msgs.msg
-from test_utils import ensure_gz_sim_not_running
 
 ODOM_TOPIC = '/odom'
 
@@ -65,8 +64,6 @@ def build_test_gz_partition(test_name: str) -> str:
 
 def create_simulation_launch_description(test_name: str | None = None) -> LaunchDescription:
     """Launch Gazebo simulation and wait for initialization before tests."""
-    ensure_gz_sim_not_running()
-
     if test_name is None:
         test_name = Path(inspect.stack()[1].filename).stem
 
