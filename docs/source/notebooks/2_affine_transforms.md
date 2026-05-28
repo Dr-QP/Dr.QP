@@ -151,12 +151,12 @@ Code from `drqp_brain/geometry/transforms.py`:
 import jupyter_utils
 
 jupyter_utils.display_file(
-    '../../../packages/runtime/drqp_brain/drqp_brain/geometry/transforms.py',
+    '../../../packages/runtime/drqp_brain/drqp_kinematics/geometry/transforms.py',
     start_after='THE SOFTWARE.',
 )
 ```
 
-```{literalinclude} ../../../packages/runtime/drqp_brain/drqp_brain/geometry/transforms.py
+```{literalinclude} ../../../packages/runtime/drqp_brain/drqp_kinematics/geometry/transforms.py
 :start-after: THE SOFTWARE.
 ```
 
@@ -170,13 +170,13 @@ The code below is an excerpt from `LegModel` class in `drqp_brain/models.py` fil
 import jupyter_utils
 
 jupyter_utils.display_file(
-    '../../../packages/runtime/drqp_brain/drqp_brain/models.py',
+    '../../../packages/runtime/drqp_brain/drqp_kinematics/models.py',
     start_after='# Leg Forward kinematics - START',
     end_before='# Leg Forward kinematics - END',
 )
 ```
 
-```{literalinclude} ../../../packages/runtime/drqp_brain/drqp_brain/models.py
+```{literalinclude} ../../../packages/runtime/drqp_brain/drqp_kinematics/models.py
 :start-after: '# Leg Forward kinematics - START'
 :end-before: '# Leg Forward kinematics - END'
 ```
@@ -246,11 +246,11 @@ Code from `drqp_brain/models.py`:
 import jupyter_utils
 
 jupyter_utils.display_file(
-    '../../../packages/runtime/drqp_brain/drqp_brain/models.py', start_after='THE SOFTWARE.'
+    '../../../packages/runtime/drqp_brain/drqp_kinematics/models.py', start_after='THE SOFTWARE.'
 )
 ```
 
-```{literalinclude} ../../../packages/runtime/drqp_brain/drqp_brain/models.py
+```{literalinclude} ../../../packages/runtime/drqp_brain/drqp_kinematics/models.py
 :start-after: THE SOFTWARE.
 ```
 
