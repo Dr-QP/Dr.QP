@@ -1,12 +1,10 @@
 
+include(../../../cmake/RosIsolatedLaunchTest.cmake)
+
 find_package(ament_cmake_ros REQUIRED)
 find_package(launch_testing_ament_cmake REQUIRED)
-function(add_ros_isolated_launch_test path)
-  set(RUNNER "${ament_cmake_ros_DIR}/run_test_isolated.py")
-  add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
-endfunction()
 
-add_ros_isolated_launch_test(test_a1_16_hardware_interface.py)
+drqp_add_ros_isolated_launch_test(test_a1_16_hardware_interface.py)
 
 find_package(catch_ros2 REQUIRED)
 add_executable(drqp_control_tests

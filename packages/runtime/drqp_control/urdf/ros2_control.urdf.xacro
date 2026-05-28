@@ -9,7 +9,7 @@
         <param name="max_torque">${max_torque}</param>
         <param name="min">${radians(-90)}</param>
         <param name="max">${radians(90)}</param>
-        <param name="initial_value">0.0</param> <!-- Initial value for mock_hardware -->
+        <param name="initial_position_rads">0.0</param> <!-- Initial value for mock_hardware -->
       </command_interface>
       <command_interface name="effort" />
       <state_interface name="velocity" />
@@ -25,7 +25,7 @@
         <param name="max_torque">${max_torque}</param>
         <param name="min">${radians(-98)}</param>
         <param name="max">${radians(90)}</param>
-        <param name="initial_value">0.0</param> <!-- Initial value for mock_hardware -->
+        <param name="initial_position_rads">0.0</param> <!-- Initial value for mock_hardware -->
       </command_interface>
       <command_interface name="effort" />
       <state_interface name="velocity" />
@@ -41,7 +41,7 @@
         <param name="max_torque">${max_torque}</param>
         <param name="min">${radians(-80)}</param>
         <param name="max">${radians(110)}</param>
-        <param name="initial_value">0.0</param> <!-- Initial value for mock_hardware -->
+        <param name="initial_position_rads">0.0</param> <!-- Initial value for mock_hardware -->
       </command_interface>
       <command_interface name="effort" />
       <state_interface name="velocity" />
