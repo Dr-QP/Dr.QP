@@ -18,8 +18,8 @@ from drqp_robot_mcp.controller import RobotMcpController
 
 pytestmark = pytest.mark.skip(
     reason=(
-        'Temporarily disabled while drqp_robot_mcp migrates to '
-        'packages/simulation/drqp_robot_mcp.'
+        'Temporarily disabled while the migrated drqp_robot_mcp boot sequence '
+        'is stabilized for simulation integration coverage.'
     )
 )
 
