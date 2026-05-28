@@ -32,6 +32,7 @@ struct RobotConfig::ServoParams
   double max_torque = 1.0;
   double min_angle_rads = -M_PI;
   double max_angle_rads = M_PI;
+  double initial_position_rads = 0.0;
 };
 
 struct RobotConfig::JointParams
@@ -42,6 +43,7 @@ struct RobotConfig::JointParams
   double max_torque = 1.0;
   double min_angle_rads = -M_PI;
   double max_angle_rads = M_PI;
+  double initial_position_rads = 0.0;
 };
 
 RobotConfig::RobotConfig() : logger_(rclcpp::get_logger("RobotConfig")) {}
@@ -106,6 +108,10 @@ void RobotConfig::loadConfig(fs::path configPath)
       if (servo.second["max_torque"]) {
         max_torque = servo.second["max_torque"].as<double>();
       }
+      double initial_position_rads = 0.0;
+      if (servo.second["initial_position_rads"]) {
+        initial_position_rads = servo.second["initial_position_rads"].as<double>();
+      }
 
       addServo(
         ServoJointParams{
@@ -116,6 +122,7 @@ void RobotConfig::loadConfig(fs::path configPath)
           .max_torque = max_torque,
           .min_angle_radians = min_rads,
           .max_angle_radians = max_rads,
+          .initial_position_radians = initial_position_rads,
         });
     }
   } catch (const std::exception& e) {
@@ -137,14 +144,16 @@ void RobotConfig::addServo(const ServoJointParams& params)
     .offset_rads = params.offset_radians,
     .max_torque = params.max_torque,
     .min_angle_rads = true_min_rads,
-    .max_angle_rads = true_max_rads};
+    .max_angle_rads = true_max_rads,
+    .initial_position_rads = params.initial_position_radians};
   servoIdToJoint_[params.servo_id] = JointParams{
     .joint_name = params.joint_name,
     .ratio = ratio,
     .offset_rads = params.offset_radians,
     .max_torque = params.max_torque,
     .min_angle_rads = true_min_rads,
-    .max_angle_rads = true_max_rads};
+    .max_angle_rads = true_max_rads,
+    .initial_position_rads = params.initial_position_radians};
 }
 
 double safeClamp(double value, double min, double max)
@@ -158,7 +167,7 @@ double safeClamp(double value, double min, double max)
   return std::clamp(value, min, max);
 }
 
-std::optional<RobotConfig::ServoValues> RobotConfig::jointToServo(const JointValues& joint)
+std::optional<RobotConfig::ServoValues> RobotConfig::jointToServo(const JointValues& joint) const
 {
   if (jointToServoId_.count(joint.name) == 0) {
     return std::nullopt;
@@ -172,7 +181,7 @@ std::optional<RobotConfig::ServoValues> RobotConfig::jointToServo(const JointVal
   return ServoValues{.id = servoParams.id, .position = position};
 }
 
-std::optional<RobotConfig::JointValues> RobotConfig::servoToJoint(const ServoValues& servo)
+std::optional<RobotConfig::JointValues> RobotConfig::servoToJoint(const ServoValues& servo) const
 {
   if (servoIdToJoint_.count(servo.id) == 0) {
     return std::nullopt;
@@ -209,14 +218,33 @@ std::optional<RobotConfig::ServoLimitValues> RobotConfig::getServoLimits(uint8_t
   }
 
   const JointParams jointParams = servoIdToJoint_.at(servoId);
-  const uint16_t minPosition = radiansToPosition(jointParams.min_angle_rads);
-  const uint16_t maxPosition = radiansToPosition(jointParams.max_angle_rads);
+
+  const uint16_t minEndpointPosition =
+    radiansToPosition(jointParams.min_angle_rads * jointParams.ratio);
+  const uint16_t maxEndpointPosition =
+    radiansToPosition(jointParams.max_angle_rads * jointParams.ratio);
+  const uint16_t minPosition =
+    minEndpointPosition < maxEndpointPosition ? minEndpointPosition : maxEndpointPosition;
+  const uint16_t maxPosition =
+    minEndpointPosition < maxEndpointPosition ? maxEndpointPosition : minEndpointPosition;
   const uint16_t maxPWM = mapToRange<uint16_t>(jointParams.max_torque, 0.0, 1.0, 0, 1023);
+
+  const auto initialServoPosition = jointToServo(
+    {.name = jointParams.joint_name, .position_as_radians = jointParams.initial_position_rads});
+  if (!initialServoPosition.has_value()) {
+    RCLCPP_ERROR(
+      get_logger(), "Failed to compute initial servo position for joint '%s' (servo id %u).",
+      jointParams.joint_name.c_str(), servoId);
+    return std::nullopt;
+  }
+
+  const auto initialPosition = initialServoPosition->position;
 
   return ServoLimitValues{
     .max_pwm = maxPWM,
     .min_position = minPosition,
     .max_position = maxPosition,
+    .initial_position = initialPosition,
   };
 }
 ////////////////////////////////////////////////////////////////////////

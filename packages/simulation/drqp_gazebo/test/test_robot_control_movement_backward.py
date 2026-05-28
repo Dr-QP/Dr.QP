@@ -39,6 +39,8 @@ def generate_test_description():
 class TestGazeboRobotControlBackwardMovement(GazeboRobotControlBase):
     """Verify backward movement command produces backward motion."""
 
+    __test__ = True
+
     def test_movement_backward(self):
         self.assert_backward_movement()
 
@@ -46,6 +48,8 @@ class TestGazeboRobotControlBackwardMovement(GazeboRobotControlBase):
 @post_shutdown_test()
 class TestSimulationShutdown(SimulationShutdownBase):
     """Verify processes exit cleanly after the launch test finishes."""
+
+    __test__ = True
 
     def test_exit_codes(self, proc_info):
         self.assert_exit_codes(proc_info)

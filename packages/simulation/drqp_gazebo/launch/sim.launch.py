@@ -23,9 +23,11 @@ from launch.actions import (
     DeclareLaunchArgument,
     GroupAction,
     IncludeLaunchDescription,
+    SetEnvironmentVariable,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
+    EnvironmentVariable,
     IfElseSubstitution,
     LaunchConfiguration,
     PathJoinSubstitution,
@@ -82,10 +84,27 @@ def generate_launch_description():
                 description=f'Robot spawn {argument_name.removeprefix("robot_")} pose component.',
             )
         )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'gz_partition',
+            default_value=[
+                EnvironmentVariable('HOSTNAME', default_value='unknown-host'),
+                ':',
+                EnvironmentVariable('USER', default_value='unknown-user'),
+                '-domain-',
+                EnvironmentVariable('ROS_DOMAIN_ID', default_value='0'),
+            ],
+            description=(
+                'Gazebo transport partition. Defaults to '
+                '<HOSTNAME>:<USERNAME>-domain-<ROS_DOMAIN_ID>.'
+            ),
+        )
+    )
 
     # Initialize Arguments
     sim_gui = LaunchConfiguration('sim_gui')
     world_sdf = LaunchConfiguration('world_sdf')
+    gz_partition = LaunchConfiguration('gz_partition')
     robot_x = LaunchConfiguration('robot_x')
     robot_y = LaunchConfiguration('robot_y')
     robot_z = LaunchConfiguration('robot_z')
@@ -175,6 +194,7 @@ def generate_launch_description():
     return LaunchDescription(
         declared_arguments
         + [
+            SetEnvironmentVariable('GZ_PARTITION', gz_partition),
             GroupAction(
                 [
                     SetParameter('use_sim_time', value=True),
@@ -183,6 +203,6 @@ def generate_launch_description():
                     gazebo_bridge,
                     gz_spawn_entity,
                 ]
-            )
+            ),
         ]
     )

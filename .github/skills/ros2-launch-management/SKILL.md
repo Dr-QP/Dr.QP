@@ -1,7 +1,6 @@
 ---
 name: ros2-launch-management
 description: Create, configure, and debug ROS 2 launch files using Python launch API. Use when asked to create launch files, configure launch parameters, debug launch issues, compose launch files, handle launch events, coordinate multi-robot launches, or troubleshoot node startup problems. Supports parameter passing, substitutions, event handlers, and launch file includes.
-
 ---
 
 # ROS 2 Launch Management
@@ -29,14 +28,14 @@ Create and manage ROS 2 launch files for orchestrating multi-node systems with p
 
 ## Launch File Structure
 
-| Component | Purpose | Example |
-|-----------|---------|---------|
-| **Import statements** | Load launch API modules | `from launch import LaunchDescription` |
-| **Node declarations** | Define nodes to launch | `Node(package='pkg', executable='node')` |
-| **Parameters** | Pass configuration to nodes | `parameters=[{'param': value}]` |
-| **Substitutions** | Dynamic value resolution | `PathJoinSubstitution`, `LaunchConfiguration` |
-| **Event handlers** | React to process events | `RegisterEventHandler` |
-| **Includes** | Compose from other launch files | `IncludeLaunchDescription` |
+| Component             | Purpose                         | Example                                       |
+| --------------------- | ------------------------------- | --------------------------------------------- |
+| **Import statements** | Load launch API modules         | `from launch import LaunchDescription`        |
+| **Node declarations** | Define nodes to launch          | `Node(package='pkg', executable='node')`      |
+| **Parameters**        | Pass configuration to nodes     | `parameters=[{'param': value}]`               |
+| **Substitutions**     | Dynamic value resolution        | `PathJoinSubstitution`, `LaunchConfiguration` |
+| **Event handlers**    | React to process events         | `RegisterEventHandler`                        |
+| **Includes**          | Compose from other launch files | `IncludeLaunchDescription`                    |
 
 ## Step-by-Step Workflows
 
@@ -45,11 +44,13 @@ Create and manage ROS 2 launch files for orchestrating multi-node systems with p
 Create a simple launch file to start one node with parameters.
 
 1. Navigate to package launch directory:
+
    ```bash
    cd <workspace_root>/packages/runtime/<package_name>/launch/
    ```
 
 2. Create launch file (e.g., `basic.launch.py`):
+
    ```python
    from launch import LaunchDescription
    from launch_ros.actions import Node
@@ -70,13 +71,13 @@ Create a simple launch file to start one node with parameters.
        ])
    ```
 
-3. Test the launch file:
+3. Test the launch file through the ROS wrapper:
+
    ```bash
-   source scripts/setup.bash
-   ros2 launch <package_name> basic.launch.py
+   scripts/with-ros-env.sh ros2 launch <package_name> basic.launch.py
    ```
 
-4. Verify node started correctly with `ros2 node list`
+4. Verify the node started correctly with `scripts/with-ros-env.sh ros2 node list`
 
 **When to use**: Simple single-node launches with static configuration
 
@@ -85,6 +86,7 @@ Create a simple launch file to start one node with parameters.
 Launch multiple nodes with different configurations and namespaces.
 
 1. Create launch file with multiple nodes:
+
    ```python
    from launch import LaunchDescription
    from launch_ros.actions import Node
@@ -123,6 +125,7 @@ Launch multiple nodes with different configurations and namespaces.
    ```
 
 2. Launch the system:
+
    ```bash
    ros2 launch <package_name> multi_node.launch.py
    ```
@@ -140,15 +143,17 @@ Launch multiple nodes with different configurations and namespaces.
 Load parameters from external YAML configuration files.
 
 1. Create parameters YAML file (`config/robot_params.yaml`):
+
    ```yaml
    /**:
      ros__parameters:
-       robot_name: "Dr.QP"
+       robot_name: 'Dr.QP'
        max_velocity: 1.5
        control_frequency: 50
    ```
 
 2. Create launch file that loads YAML:
+
    ```python
    import os
    from launch import LaunchDescription
@@ -172,22 +177,23 @@ Load parameters from external YAML configuration files.
    ```
 
 3. Ensure YAML is installed by adding to `CMakeLists.txt`:
+
    ```cmake
    install(DIRECTORY config
      DESTINATION share/${PROJECT_NAME}
    )
    ```
 
-4. Rebuild and launch:
+4. Rebuild and launch through the ROS wrapper:
+
    ```bash
-   colcon build --packages-select <package_name>
-   source scripts/setup.bash
-   ros2 launch <package_name> params.launch.py
+   scripts/with-ros-env.sh python3 -m colcon build --packages-select <package_name>
+   scripts/with-ros-env.sh ros2 launch <package_name> params.launch.py
    ```
 
 5. Verify parameters loaded:
    ```bash
-   ros2 param list /<node_name>
+   scripts/with-ros-env.sh ros2 param list /<node_name>
    ```
 
 **When to use**: Complex parameter configurations, multiple environments (dev/prod)
@@ -197,6 +203,7 @@ Load parameters from external YAML configuration files.
 Use launch arguments and conditionals for flexible configuration.
 
 1. Create launch file with arguments:
+
    ```python
    from launch import LaunchDescription
    from launch.actions import DeclareLaunchArgument
@@ -239,6 +246,7 @@ Use launch arguments and conditionals for flexible configuration.
    ```
 
 2. Launch with arguments:
+
    ```bash
    ros2 launch <package_name> conditional.launch.py use_sim:=true robot_name:=drqp1
    ```
@@ -255,6 +263,7 @@ Use launch arguments and conditionals for flexible configuration.
 Build complex launch configurations by including other launch files.
 
 1. Create base launch file (`base.launch.py`):
+
    ```python
    from launch import LaunchDescription
    from launch_ros.actions import Node
@@ -270,6 +279,7 @@ Build complex launch configurations by including other launch files.
    ```
 
 2. Create main launch file that includes base:
+
    ```python
    import os
    from launch import LaunchDescription
@@ -313,33 +323,39 @@ Build complex launch configurations by including other launch files.
 Troubleshoot launch file problems and node startup failures.
 
 1. Enable verbose output:
+
    ```bash
    ros2 launch <package_name> <launch_file> --debug
    ```
 
 2. Check launch file syntax without running:
+
    ```bash
    python3 <launch_file_path>
    # Should complete without errors if syntax is valid
    ```
 
 3. View launch file tree structure:
+
    ```bash
    ros2 launch <package_name> <launch_file> --show-all-subprocesses-output
    ```
 
 4. Check if package and executables exist:
+
    ```bash
    ros2 pkg prefix <package_name>
    ls $(ros2 pkg prefix <package_name>)/lib/<package_name>/
    ```
 
 5. Test node separately without launch:
+
    ```bash
    ros2 run <package_name> <executable>
    ```
 
 6. Check parameter file syntax:
+
    ```bash
    cat <params_file>.yaml
    # Verify YAML syntax is correct
@@ -354,33 +370,34 @@ Troubleshoot launch file problems and node startup failures.
 
 ## Common Launch Patterns
 
-| Pattern | Use Case | Key Components |
-|---------|----------|----------------|
-| **Single Node** | Simple node startup | `Node()` with parameters |
-| **Multi-Node** | Coordinated system | Multiple `Node()` declarations |
-| **Parameterized** | External configuration | YAML files, `parameters=` |
-| **Conditional** | Environment-specific | `DeclareLaunchArgument`, `IfCondition` |
-| **Composed** | Modular systems | `IncludeLaunchDescription` |
-| **Event-Driven** | Process monitoring | `RegisterEventHandler` |
+| Pattern           | Use Case               | Key Components                         |
+| ----------------- | ---------------------- | -------------------------------------- |
+| **Single Node**   | Simple node startup    | `Node()` with parameters               |
+| **Multi-Node**    | Coordinated system     | Multiple `Node()` declarations         |
+| **Parameterized** | External configuration | YAML files, `parameters=`              |
+| **Conditional**   | Environment-specific   | `DeclareLaunchArgument`, `IfCondition` |
+| **Composed**      | Modular systems        | `IncludeLaunchDescription`             |
+| **Event-Driven**  | Process monitoring     | `RegisterEventHandler`                 |
 
 ## Troubleshooting
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| "Package not found" | Package not installed or not sourced | Rebuild package and `source scripts/setup.bash` |
-| "Executable not found" | Wrong executable name or not built | Check `install/<pkg>/lib/<pkg>/` for executables |
-| "Launch file not found" | Wrong path or not installed | Verify launch file in `install/<pkg>/share/<pkg>/launch/` |
-| Parameters not loaded | Wrong YAML syntax or file path | Validate YAML syntax, check file exists in install |
-| Node crashes immediately | Parameter mismatch or missing dependencies | Check node logs, verify required parameters |
-| Multiple nodes same name | Name collision | Use unique names or namespaces |
-| Include not working | Wrong package name or launch file path | Verify `get_package_share_directory()` returns correct path |
-| Arguments not passed | Wrong syntax in command line | Use `arg_name:=value` (colon-equals) not equals |
+| Issue                    | Cause                                      | Solution                                                                        |
+| ------------------------ | ------------------------------------------ | ------------------------------------------------------------------------------- |
+| "Package not found"      | Package not installed or not sourced       | Rebuild the package and re-run the launch command via `scripts/with-ros-env.sh` |
+| "Executable not found"   | Wrong executable name or not built         | Check `install/<pkg>/lib/<pkg>/` for executables                                |
+| "Launch file not found"  | Wrong path or not installed                | Verify launch file in `install/<pkg>/share/<pkg>/launch/`                       |
+| Parameters not loaded    | Wrong YAML syntax or file path             | Validate YAML syntax, check file exists in install                              |
+| Node crashes immediately | Parameter mismatch or missing dependencies | Check node logs, verify required parameters                                     |
+| Multiple nodes same name | Name collision                             | Use unique names or namespaces                                                  |
+| Include not working      | Wrong package name or launch file path     | Verify `get_package_share_directory()` returns correct path                     |
+| Arguments not passed     | Wrong syntax in command line               | Use `arg_name:=value` (colon-equals) not equals                                 |
 
 ## Launch File Installation
 
 To make launch files available after building:
 
 1. Add to `CMakeLists.txt`:
+
    ```cmake
    # Install launch files
    install(DIRECTORY launch
@@ -389,6 +406,7 @@ To make launch files available after building:
    ```
 
 2. Rebuild package:
+
    ```bash
    colcon build --packages-select <package_name>
    ```

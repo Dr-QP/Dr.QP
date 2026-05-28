@@ -38,7 +38,7 @@ public:
   {
     assert(id_ != kBroadcastId);
     XYZrobotServoStatus status = {};
-    status.position = positions_[id_];
+    status.position = positions_.count(id_) ? positions_[id_] : 512;
     return status;
   }
 
@@ -67,6 +67,12 @@ public:
     for (uint8_t i = 0; i < dataSize; ++i) {
       dataPtr[i] = 0xBE;
     }
+  }
+
+  void writeInitialPosition(uint16_t value) override
+  {
+    assert(id_ != kBroadcastId);
+    positions_[id_] = value;
   }
 
   void writeMaxPwmRam(uint16_t value) override

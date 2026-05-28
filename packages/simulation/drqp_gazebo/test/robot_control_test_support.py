@@ -22,9 +22,12 @@
 
 from collections.abc import Callable
 from copy import deepcopy
+import inspect
 import math
-from pathlib import Path
 import subprocess
+import os
+from pathlib import Path
+import re
 import time
 import unittest
 
@@ -60,11 +63,23 @@ BALANCE_BOARD_WORLD_PATH = str(
 )
 
 
+def build_test_gz_partition(test_name: str) -> str:
+    domain_id = os.environ.get('ROS_DOMAIN_ID', '0')
+    sanitized_name = re.sub(r'[^a-z0-9]+', '-', test_name.lower()).strip('-')
+    if not sanitized_name:
+        sanitized_name = 'test'
+    return f'drqp-domain-{domain_id}-{sanitized_name}'
+
+
 def create_simulation_launch_description(
+    test_name: str | None = None,
     launch_arguments: dict[str, str] | None = None,
 ) -> LaunchDescription:
     """Launch Gazebo simulation and wait for initialization before tests."""
     ensure_gz_sim_not_running()
+
+    if test_name is None:
+        test_name = Path(inspect.stack()[1].filename).stem
 
     simulation_launch = PathJoinSubstitution(
         [
@@ -76,6 +91,7 @@ def create_simulation_launch_description(
     combined_launch_arguments = {'sim_gui': 'false'}
     if launch_arguments is not None:
         combined_launch_arguments.update(launch_arguments)
+    combined_launch_arguments['gz_partition'] = build_test_gz_partition(test_name)
     return LaunchDescription(
         [
             IncludeLaunchDescription(
@@ -117,6 +133,14 @@ def assert_clean_exit_codes(proc_info: ProcInfoHandler) -> None:
 class GazeboRobotControlBase(unittest.TestCase):
     """Shared harness and helpers for robot control behavior tests."""
 
+    __test__ = False  # Prevent unittest from collecting this base class as a test case.
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        rclpy.init()
+        cls.addClassCleanup(rclpy.try_shutdown)
+
     # Configurable timeouts.
     READY_TIMEOUT = 90.0
     SPAWN_TIMEOUT = 90.0
@@ -134,17 +158,10 @@ class GazeboRobotControlBase(unittest.TestCase):
     MIN_ARM_DISARM_HEIGHT_DELTA = 0.02
     POSTURE_HEIGHT_EPSILON = 0.01
 
-    @classmethod
-    def setUpClass(cls) -> None:
-        rclpy.init()
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        rclpy.shutdown()
-
     def setUp(self) -> None:
         """Set up test node and publishers/subscribers."""
         self.node = rclpy.create_node('test_gazebo_robot_control')
+        self.addCleanup(self.node.destroy_node)
 
         self.current_robot_state = None
         self.current_clock = None
@@ -199,10 +216,6 @@ class GazeboRobotControlBase(unittest.TestCase):
         )
         self._wait_for_sim_time(self.POSE_SETTLE_DURATION, wall_timeout_sec=self.CLOCK_TIMEOUT)
         self._wait_for_pose()
-
-    def tearDown(self) -> None:
-        """Clean up test node."""
-        self.node.destroy_node()
 
     def _robot_state_callback(self, msg: std_msgs.msg.String) -> None:
         self.current_robot_state = msg.data

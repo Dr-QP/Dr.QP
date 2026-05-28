@@ -6,17 +6,18 @@ NEVER use GitHub API or GitHub MCP tools to update branch refs or push branch co
 
 ## Best Practices for Agents
 
-1. **Always source scripts/setup.bash** before build or test
+1. **Always use scripts/with-ros-env.sh** to run ROS commands like `colcon build` or `colcon test`
 2. **Use incremental builds** (`--packages-up-to <pkg>`) during development
 3. **Test specific packages** (`--packages-select <pkg>`) for rapid iteration
 4. **Use devcontainer** when running as remote agent (see [Cursor Cloud Sessions](#cursor-cloud-sessions) below)
 5. **Only run full builds/tests** when explicitly requested
-6. **Collect test output** from `build/<package_name>/test_results/`
+6. **Collect test output** from `log/latest_test/<package_name>/stdout_stderr.log` or `streams.log` (timestamped) in same folder.
 7. **Check build logs** in `log/latest_build/` if builds fail
 8. **Use `--symlink-install`** for Python coverage and hot-reload
 9. **Enable coverage** with `--mixin coverage-pytest` when testing
 10. **Re-run failed tests** with `--packages-select-test-failures`
 11. **When available in VS Code, use `vscode/askQuestions`** for all yes/no and multiple-choice user questions
+12. **For Python ROS tests, initialize `rclpy` once per test class**. Use `setUpClass()` with `cls.addClassCleanup(rclpy.try_shutdown)` for `unittest` classes, or the pytest equivalent class-scoped setup/teardown. Keep node, client, subscription, and action cleanup at the test level with `self.addCleanup(...)` or fixture finalizers.
 
 ### When in Doubt
 

@@ -180,6 +180,7 @@ Update PR based on code review feedback.
    - Add new accomplishments to "What Changed"
    - Update "How to Test" if testing changes
    - Document why feedback was accepted or rejected
+   - Only amend the existing PR description when the overall scope or test instructions materially changed; preserve prior content and append deltas instead of rewriting from scratch.
 
 4. Reply to comments:
    - Acknowledge the feedback

@@ -26,17 +26,15 @@ Use `devcontainer exec` to run commands inside the container:
 devcontainer exec --workspace-folder /workspace bash -c "<command>"
 ```
 
-Before build or ROS 2 commands, source the setup script inside the exec:
+Build or ROS 2 commands, run them through the wrapper inside the exec:
 
 ```bash
-devcontainer exec --workspace-folder /workspace bash -c "
-  export ROS_DISTRO=jazzy CC=clang CXX=clang++ CMAKE_EXPORT_COMPILE_COMMANDS=1
-  source scripts/setup.bash
-  <ros2 commands here>
+devcontainer exec --workspace-folder /workspace bash -lc "
+  scripts/with-ros-env.sh <ros2 command here>
 "
 ```
 
-For test runs that need the production venv (with `python-statemachine`), use `source scripts/setup.bash --update-venv` **after a successful `colcon build`**. The `--update-venv` flag scans `build/` and `install/` for `requires.txt` files. Inside the devcontainer these directories exist as Docker volume mount points, but they will be empty until the first build — so `find` may return nothing (harmless). Outside the devcontainer the directories may not exist at all, producing noisy errors. Build, test, and lint commands should mirror those used in the repository CI workflows (see `.github/workflows/ci.yml`).
+For test runs that need generated workspace Python dependencies (for example `python-statemachine`), run `./scripts/ros-dep.sh` **after a successful `colcon build`** before `source scripts/setup.bash` and `colcon test`. The helper scans `build/` and `install/` for generated `requires.txt` files and installs them into the container's system interpreter with `pip --break-system-packages`. Inside the devcontainer these directories exist as Docker volume mount points, but they may be empty until the first build — that should no-op cleanly. Build, test, and lint commands should mirror those used in the repository CI workflows (see `.github/workflows/ci.yml`).
 
 ### Gotchas
 
@@ -44,5 +42,5 @@ For test runs that need the production venv (with `python-statemachine`), use `s
 - `--symlink-install` is required for Python coverage collection and hot-reloading.
 - Some packages emit CMake warnings about unused `DRQP_ENABLE_COVERAGE` — these are benign.
 - The `drqp_gazebo` simulation tests run headless and take ~20 seconds.
-- The production venv (`.venv-prod`) is separate from the dev venv (`.venv`). The `setup.bash --update-venv` flag populates `.venv-prod` from `requires.txt` files in `build/` and `install/` directories.
+- Generated workspace Python requirements are installed into the container's system interpreter by `./scripts/ros-dep.sh`; the developer `.venv` remains separate for local tooling.
 - The cloud VM's host Docker daemon must be running before `devcontainer up`.

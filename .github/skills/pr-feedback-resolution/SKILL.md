@@ -1,6 +1,6 @@
 ---
 name: pr-feedback-resolution
-description: "Systematic workflow for resolving pull request feedback, review threads, CI failures, CodeQL findings, and Codecov patch coverage gaps. Use when addressing PR review comments, skipping resolved threads, classifying reviewer intent, fixing failing checks, or preparing a PR for re-review. Keywords: PR feedback, review comments, resolved threads, CI failures, CodeQL, Codecov, re-review."
+description: 'Systematic workflow for resolving pull request feedback, review threads, CI failures, CodeQL findings, and Codecov patch coverage gaps. Use when addressing PR review comments, skipping resolved threads, classifying reviewer intent, fixing failing checks, or preparing a PR for re-review. Keywords: PR feedback, review comments, resolved threads, CI failures, CodeQL, Codecov, re-review.'
 ---
 
 # PR Feedback Resolution Skill
@@ -14,7 +14,9 @@ Systematic approach to resolving all PR feedback including review comments, CI f
 - Resolve CodeQL security findings
 - Improve Codecov patch coverage
 - Respond to reviewer questions
-- Update PR based on feedback
+- Update code, tests, and thread replies based on feedback
+- NEVER post work summary as PR title or body.
+- Do not edit PR title/body unless explicitly requested or the user asks for a PR refresh.
 
 ## Prerequisites
 
@@ -164,9 +166,8 @@ Systematically resolve failing tests.
 
 ```bash
    # ROS 2 example
-   source scripts/setup.bash
-   colcon test --packages-select <package>
-   colcon test-result --verbose
+   scripts/with-ros-env.sh python -m colcon test --packages-select <package>
+   scripts/with-ros-env.sh python -m colcon test-result --verbose
 ```
 
 5. **Push and verify CI passes**:

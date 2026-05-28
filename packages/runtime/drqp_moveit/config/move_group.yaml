@@ -1,0 +1,40 @@
+# move_group node parameters for Dr.QP.
+#
+# These are loaded alongside the SRDF, kinematics, and planning pipeline
+# configs when the move_group executable starts.
+
+# Explicit pipeline selection is required by recent MoveIt releases.
+default_planning_pipeline: ompl
+planning_pipelines:
+  - ompl
+allow_trajectory_execution: true
+
+# Capabilities to load.  The defaults cover planning, execution, and
+# query/state services.  Uncomment to add extras.
+capabilities: ''
+disable_capabilities: ''
+
+# Trajectory execution
+trajectory_execution:
+  allowed_execution_duration_scaling: 1.2
+  allowed_goal_duration_margin: 0.5
+  allowed_start_tolerance: 0.01
+
+# Planning scene monitor
+planning_scene_monitor_options:
+  name: 'planning_scene_monitor'
+  robot_description: 'robot_description'
+  joint_state_topic: '/joint_states'
+  attached_collision_object_topic: '/move_group/planning_scene_monitor'
+  publish_planning_scene_topic: '/move_group/publish_planning_scene'
+  monitored_planning_scene_topic: '/move_group/monitored_planning_scene'
+  wait_for_initial_state_timeout: 10.0
+
+# Publish the planning scene of the physical robot so that rviz plugin can know actual robot
+publish_planning_scene: true
+publish_geometry_updates: true
+publish_state_updates: true
+publish_transforms_updates: true
+
+# Sensor integration is intentionally omitted until a concrete source is
+# configured; launch_ros cannot infer a type for an empty sequence parameter.
