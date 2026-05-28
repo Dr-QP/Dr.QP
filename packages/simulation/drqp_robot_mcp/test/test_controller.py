@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from pathlib import Path
 import time
 
 import pytest
@@ -41,7 +42,7 @@ class FakeController(RobotMcpController):
     """Controller test double that avoids ROS middleware dependencies."""
 
     def __init__(self, states: list[RobotStateSnapshot]):
-        super().__init__(workspace_root='/workspace')
+        super().__init__()
         self.states = list(states)
         self.published_events: list[str] = []
         self.waited_states: list[str] = []
@@ -95,6 +96,18 @@ class FakeController(RobotMcpController):
         self.current_state = make_snapshot(target_state)
         self.states = [self.current_state]
         return self.current_state
+
+
+def test_controller_uses_runtime_directory_for_launch_files(monkeypatch) -> None:
+    """Controller launch state files should use the runtime helper location."""
+    runtime_dir = Path('/tmp/drqp-runtime')
+
+    monkeypatch.setattr(controller_module.runtime, 'get_runtime_directory', lambda: runtime_dir)
+
+    controller = RobotMcpController()
+
+    assert controller.launch_pid_path == runtime_dir / 'sim.launch.pid'
+    assert controller.launch_log_path == runtime_dir / 'sim.launch.log'
 
 
 def test_boot_up_starts_simulation_and_initializes_robot() -> None:

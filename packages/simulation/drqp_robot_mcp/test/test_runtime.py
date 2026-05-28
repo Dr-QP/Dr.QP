@@ -70,7 +70,6 @@ def test_start_simulation_returns_unavailable_when_gazebo_launch_is_missing(
     monkeypatch.setattr(runtime, '_gazebo_launch_is_available', lambda: False)
 
     result = runtime.start_simulation(
-        workspace_root=tmp_path,
         pid_path=pid_path,
         log_path=log_path,
     )
@@ -101,7 +100,6 @@ def test_start_simulation_uses_direct_ros2_launch_without_shell(
     monkeypatch.setattr(runtime.subprocess, 'Popen', fake_popen)
 
     result = runtime.start_simulation(
-        workspace_root=tmp_path,
         pid_path=pid_path,
         log_path=log_path,
     )
@@ -114,9 +112,41 @@ def test_start_simulation_uses_direct_ros2_launch_without_shell(
         'sim.launch.py',
         'sim_gui:=false',
     ]
-    assert captured['kwargs']['cwd'] == tmp_path
     assert captured['kwargs']['start_new_session'] is True
     assert 'shell' not in captured['kwargs']
+
+
+def test_get_runtime_directory_prefers_ros_home(monkeypatch) -> None:
+    """Runtime files should prefer the ROS_HOME directory when available."""
+    monkeypatch.setenv('ROS_HOME', '/tmp/ros-home')
+    monkeypatch.setenv('XDG_STATE_HOME', '/tmp/state-home')
+    monkeypatch.setenv('HOME', '/tmp/home')
+
+    result = runtime.get_runtime_directory()
+
+    assert result == Path('/tmp/ros-home/drqp_robot_mcp')
+
+
+def test_get_runtime_directory_falls_back_to_xdg_state_home(monkeypatch) -> None:
+    """XDG state is used when ROS_HOME is unavailable."""
+    monkeypatch.delenv('ROS_HOME', raising=False)
+    monkeypatch.setenv('XDG_STATE_HOME', '/tmp/state-home')
+    monkeypatch.setenv('HOME', '/tmp/home')
+
+    result = runtime.get_runtime_directory()
+
+    assert result == Path('/tmp/state-home/ros/drqp_robot_mcp')
+
+
+def test_get_runtime_directory_falls_back_to_home(monkeypatch) -> None:
+    """HOME is used when neither ROS_HOME nor XDG state is available."""
+    monkeypatch.delenv('ROS_HOME', raising=False)
+    monkeypatch.delenv('XDG_STATE_HOME', raising=False)
+    monkeypatch.setenv('HOME', '/tmp/home')
+
+    result = runtime.get_runtime_directory()
+
+    assert result == Path('/tmp/home/.ros/drqp_robot_mcp')
 
 
 def test_pid_is_running_returns_false_for_zombie_process(monkeypatch) -> None:

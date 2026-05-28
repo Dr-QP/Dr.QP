@@ -12,7 +12,6 @@ from typing import Any, Callable
 
 
 def start_simulation(
-    workspace_root: Path,
     pid_path: Path,
     log_path: Path,
     gui: bool = False,
@@ -49,7 +48,6 @@ def start_simulation(
                 'sim.launch.py',
                 f'sim_gui:={str(gui).lower()}',
             ],
-            cwd=workspace_root,
             stdout=log_file,
             stderr=subprocess.STDOUT,
             start_new_session=True,
@@ -448,19 +446,30 @@ def _parse_pose_block(lines: list[str]) -> dict[str, Any]:
 
 def _gazebo_launch_is_available() -> bool:
     """Return whether Gazebo launch support is present in this environment."""
-    if shutil.which('ros2') is None:
-        return False
     try:
-        subprocess.run(  # noqa: S603
-            ['ros2', 'pkg', 'prefix', 'drqp_gazebo'],
-            check=True,
-            capture_output=True,
-            text=True,
-            timeout=5.0,
-        )
-    except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        from ament_index_python.packages import PackageNotFoundError, get_package_prefix
+
+        get_package_prefix('drqp_gazebo')
+    except (ImportError, PackageNotFoundError):
         return False
     return True
+
+
+def get_runtime_directory(app_name: str = 'drqp_robot_mcp') -> Path:
+    """Return the writable runtime directory for this package.
+
+    Prefer ROS_HOME so runtime files align with ROS conventions instead of the
+    repository checkout location.
+    """
+    ros_home = os.environ.get('ROS_HOME')
+    if ros_home:
+        return Path(ros_home).expanduser() / app_name
+
+    state_home = os.environ.get('XDG_STATE_HOME')
+    if state_home:
+        return Path(state_home).expanduser() / 'ros' / app_name
+
+    return Path.home() / '.ros' / app_name
 
 
 def _read_pid(pid_path: Path) -> int | None:

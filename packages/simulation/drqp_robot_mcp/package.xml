@@ -10,6 +10,7 @@
   <exec_depend>drqp_brain</exec_depend>
   <exec_depend>drqp_gazebo</exec_depend>
   <exec_depend>drqp_interfaces</exec_depend>
+  <exec_depend>python3-ament-index-python</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>rclpy</exec_depend>

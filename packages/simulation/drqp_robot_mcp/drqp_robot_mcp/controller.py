@@ -44,15 +44,14 @@ class RobotMcpController:
 
     def __init__(
         self,
-        workspace_root: str | Path | None = None,
         world_name: str = 'empty',
         robot_name: str = 'drqp',
     ) -> None:
-        self.workspace_root = Path(workspace_root or Path.cwd()).resolve()
         self.world_name = world_name
         self.robot_name = robot_name
-        self.launch_pid_path = self.workspace_root / '.tmp' / 'drqp_robot_mcp' / 'sim.launch.pid'
-        self.launch_log_path = self.workspace_root / '.tmp' / 'drqp_robot_mcp' / 'sim.launch.log'
+        self.runtime_dir = runtime.get_runtime_directory()
+        self.launch_pid_path = self.runtime_dir / 'sim.launch.pid'
+        self.launch_log_path = self.runtime_dir / 'sim.launch.log'
         self._recording_lock = threading.Lock()
         self._recording: _RecordingSession | None = None
 
@@ -417,7 +416,6 @@ class RobotMcpController:
     def _start_simulation(self) -> dict[str, Any]:
         """Start the background Gazebo launch process when available."""
         return runtime.start_simulation(
-            self.workspace_root,
             self.launch_pid_path,
             self.launch_log_path,
             False,
