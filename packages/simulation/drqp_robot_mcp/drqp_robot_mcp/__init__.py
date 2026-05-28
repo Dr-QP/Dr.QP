@@ -1,0 +1,1 @@
+"""ROS package for the Dr.QP robot MCP server."""
