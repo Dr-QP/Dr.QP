@@ -16,14 +16,6 @@ import pytest
 from drqp_robot_mcp.controller import RobotMcpController
 
 
-pytestmark = pytest.mark.skip(
-    reason=(
-        'Temporarily disabled while the migrated drqp_robot_mcp boot sequence '
-        'is stabilized for simulation integration coverage.'
-    )
-)
-
-
 def _simulation_available() -> bool:
     if os.environ.get('ROS_DISTRO') is None:
         return False
