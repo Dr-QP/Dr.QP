@@ -246,7 +246,8 @@ Code from `drqp_kinematics/models.py`:
 import jupyter_utils
 
 jupyter_utils.display_file(
-    '../../../packages/runtime/drqp_kinematics/drqp_kinematics/models.py', start_after='THE SOFTWARE.'
+    '../../../packages/runtime/drqp_kinematics/drqp_kinematics/models.py',
+    start_after='THE SOFTWARE.',
 )
 ```
 
@@ -321,8 +322,8 @@ With the ability to position all legs, its time to work on the inverse kinematic
 The algorithm is as follows:
 
 1. Capture the reference stance
-    - Run forward kinematics for all legs with the same angles in a desired position (neutral, wide, narrow, specific gait).
-    - Capture global positions of all leg foot tips
+   - Run forward kinematics for all legs with the same angles in a desired position (neutral, wide, narrow, specific gait).
+   - Capture global positions of all leg foot tips
 2. Apply transform to the robot's body (translation, rotation, twist).
 3. Run inverse kinematics for all legs with the foot positions captured in step 1.
 

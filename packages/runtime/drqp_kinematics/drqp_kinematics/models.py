@@ -250,6 +250,7 @@ class LegModel:
         self.femur_end.label = rf'$\gamma$={gamma}°'
         self.tibia_end = self.tibia_link.apply_point(identity_point)
         self.tibia_end.label = 'Foot'
+
     # Leg Forward kinematics - END
 
     def move_to(self, foot_target: Point3D, verbose=False):
