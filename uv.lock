@@ -918,18 +918,18 @@ requires-dist = [
 
 [[package]]
 name = "drqp-robot-mcp"
-version = "1.0.0"
-source = { editable = "py_packages/drqp_robot_mcp" }
+version = "0.1.0"
+source = { editable = "packages/simulation/drqp_robot_mcp" }
 dependencies = [
     { name = "mcp", extra = ["cli"] },
+    { name = "setuptools" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "mcp", extras = ["cli"], specifier = ">=1.26.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
+    { name = "setuptools" },
 ]
-provides-extras = ["dev"]
 
 [[package]]
 name = "drqp-workspace"
@@ -999,7 +999,7 @@ notebooks = [
 dev = [
     { name = "ansible", specifier = ">=11.4" },
     { name = "ansible-lint", specifier = ">=25.2.1" },
-    { name = "drqp-robot-mcp", editable = "py_packages/drqp_robot_mcp" },
+    { name = "drqp-robot-mcp", editable = "packages/simulation/drqp_robot_mcp" },
     { name = "esbonio", specifier = ">=0.16" },
     { name = "pre-commit", specifier = ">=4.2.0" },
     { name = "pydantic", specifier = ">=2.0" },
