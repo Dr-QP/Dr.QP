@@ -15,7 +15,6 @@ from .models import (
     WorldStateSnapshot,
 )
 
-
 mcp = FastMCP(
     'Dr.QP Robot MCP',
     instructions=(

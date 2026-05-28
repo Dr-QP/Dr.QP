@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, UTC
 import math
 from pathlib import Path
 import threading
@@ -66,16 +66,9 @@ class RobotMcpController:
             simulation_was_started = bool(simulation.get('started', False))
             try:
                 state_before_snapshot = self._poll_state(
-                    predicate=lambda snapshot: (
-                        snapshot.lifecycle_state is not None
-                        or bool(snapshot.joint_states)
-                        or snapshot.simulation_running
-                    ),
+                    predicate=lambda snapshot: snapshot.lifecycle_state is not None,
                     timeout_sec=min(timeout_sec, 60.0),
-                    error_message=(
-                        'Timed out waiting for the robot state topic after '
-                        'starting simulation.'
-                    ),
+                    error_message='Timed out waiting for the robot state topic after starting simulation.',
                 )
             except ControllerError as exc:
                 if not bool(simulation.get('available', True)):
@@ -83,12 +76,6 @@ class RobotMcpController:
                 raise
 
         state_before = state_before_snapshot.lifecycle_state
-        if state_before is None and (
-            bool(state_before_snapshot.joint_states)
-            or state_before_snapshot.simulation_running
-        ):
-            state_before = 'torque_off'
-
         if state_before == 'torque_on':
             return LifecycleActionResult(
                 action='boot_up',
@@ -125,7 +112,6 @@ class RobotMcpController:
             message='Robot reached torque_on.',
             log_path=str(self.launch_log_path),
         )
-
 
     def shut_down(self, timeout_sec: float = 120.0) -> LifecycleActionResult:
         """Shut the robot down through its lifecycle state machine."""
@@ -168,20 +154,17 @@ class RobotMcpController:
             log_path=str(self.launch_log_path),
         )
 
-
     def get_robot_state(self, timeout_sec: float = 10.0) -> RobotStateSnapshot:
         """Return the latest robot snapshot."""
         return RobotStateSnapshot.from_mapping(
             runtime.get_robot_state(self.world_name, self.robot_name, timeout_sec)
         )
 
-
     def get_world_state(self, timeout_sec: float = 10.0) -> WorldStateSnapshot:
         """Return the latest Gazebo world snapshot."""
         return WorldStateSnapshot.from_mapping(
             runtime.get_world_state(self.world_name, timeout_sec)
         )
-
 
     def send_motion_command(
         self,
@@ -229,11 +212,9 @@ class RobotMcpController:
             )
         )
 
-
     def stop_motion(self) -> MotionCommandResult:
         """Publish a zeroed movement command to stop robot motion."""
         return self.send_motion_command()
-
 
     def walk_for_duration(
         self,
@@ -298,7 +279,6 @@ class RobotMcpController:
             message='Published walking sequence.',
         )
 
-
     def start_recording(self, sample_interval_sec: float = 0.5) -> RecordingStatus:
         """Start recording robot snapshots."""
         if sample_interval_sec <= 0:
@@ -330,7 +310,6 @@ class RobotMcpController:
             message='Started recording robot state snapshots.',
         )
 
-
     def stop_recording(self) -> RecordedRobotStates:
         """Stop recording and return captured snapshots."""
         with self._recording_lock:
@@ -350,7 +329,6 @@ class RobotMcpController:
             sample_count=len(session.samples),
             samples=session.samples,
         )
-
 
     def get_recording_status(self) -> RecordingStatus:
         """Return current recording status."""
@@ -373,14 +351,12 @@ class RobotMcpController:
                 message='Robot state recording is active.',
             )
 
-
     def _record_worker(self, session: _RecordingSession) -> None:
         """Record robot snapshots until stopped."""
         while not session.stop_event.is_set():
             session.samples.append(self.get_robot_state())
             if session.stop_event.wait(session.sample_interval_sec):
                 break
-
 
     def _wait_for_state(
         self,
@@ -395,7 +371,6 @@ class RobotMcpController:
                 f'Latest observed state: {result.get("state")!r}.'
             )
         return self.get_robot_state()
-
 
     def _poll_state(
         self,
@@ -413,7 +388,6 @@ class RobotMcpController:
             latest = self.get_robot_state()
         raise ControllerError(error_message)
 
-
     def _start_simulation(self) -> dict[str, Any]:
         """Start the background Gazebo launch process when available."""
         return runtime.start_simulation(
@@ -423,11 +397,9 @@ class RobotMcpController:
             False,
         )
 
-
     def _publish_event(self, event: str) -> dict[str, Any]:
         """Publish a lifecycle event onto the local ROS graph."""
         return runtime.publish_event(event)
-
 
     def _publish_movement_command(
         self,
@@ -446,14 +418,12 @@ class RobotMcpController:
             gait_type=gait_type,
         )
 
-
     def _validate_normalized(self, name: str, value: float) -> float:
         """Validate normalized joystick input in the inclusive range [-1, 1]."""
         normalized_value = float(value)
         if normalized_value < -1.0 or normalized_value > 1.0:
             raise ValueError(f'{name} must be between -1.0 and 1.0.')
         return normalized_value
-
 
     def _validate_gait_type(self, gait_type: str) -> str:
         """Validate gait names against the supported movement command contract."""

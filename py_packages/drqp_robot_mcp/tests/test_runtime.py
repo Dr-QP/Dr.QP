@@ -189,11 +189,11 @@ def test_publish_movement_command_publishes_expected_message(monkeypatch) -> Non
     monkeypatch.setitem(sys.modules, 'drqp_interfaces.msg', fake_interfaces_module)
 
     result = runtime.publish_movement_command(
-        stride_direction={'x': 1.0, 'y': -0.5, 'z': 0.0},
-        rotation_speed=0.25,
-        body_translation={'x': 0.0, 'y': 0.0, 'z': 0.1},
-        body_rotation={'x': 0.0, 'y': -0.2, 'z': 0.3},
-        gait_type='wave',
+      stride_direction={'x': 1.0, 'y': -0.5, 'z': 0.0},
+      rotation_speed=0.25,
+      body_translation={'x': 0.0, 'y': 0.0, 'z': 0.1},
+      body_rotation={'x': 0.0, 'y': -0.2, 'z': 0.3},
+      gait_type='wave',
     )
 
     assert result['published'] is True
