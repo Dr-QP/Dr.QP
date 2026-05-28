@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import math
 import time
 
+import pytest
+
+import drqp_robot_mcp.controller as controller_module
 from drqp_robot_mcp.controller import RobotMcpController
 from drqp_robot_mcp.models import Pose, Quaternion, RobotStateSnapshot, Vector3
 
@@ -217,3 +221,31 @@ def test_stop_motion_publishes_zeroed_tripod_command() -> None:
         }
     ]
     assert result.gait_type == 'tripod'
+
+
+def test_walk_for_duration_republishes_motion_command_and_stops(monkeypatch) -> None:
+    """Walk sequences publish the same command repeatedly before stopping."""
+    controller = FakeController([make_snapshot('torque_on')])
+    sleep_calls: list[float] = []
+    monkeypatch.setattr(controller_module.time, 'sleep', sleep_calls.append)
+
+    result = controller.walk_for_duration(
+        stride_x=1.0,
+        duration_sec=0.5,
+        publish_hz=4.0,
+    )
+
+    assert result.publish_count == math.ceil(0.5 * 4.0)
+    assert result.stop_command_sent is True
+    assert len(controller.movement_commands) == result.publish_count + 1
+    assert controller.movement_commands[0]['stride_direction']['x'] == 1.0
+    assert controller.movement_commands[-1]['stride_direction']['x'] == 0.0
+    assert sleep_calls == [0.25]
+
+
+def test_walk_for_duration_rejects_non_positive_duration() -> None:
+    """Walk sequencing requires a positive duration."""
+    controller = FakeController([make_snapshot('torque_on')])
+
+    with pytest.raises(ValueError, match='duration_sec'):
+        controller.walk_for_duration(duration_sec=0.0)

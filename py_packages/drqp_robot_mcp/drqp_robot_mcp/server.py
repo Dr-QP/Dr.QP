@@ -8,6 +8,7 @@ from .controller import RobotMcpController
 from .models import (
     LifecycleActionResult,
     MotionCommandResult,
+    MotionSequenceResult,
     RecordedRobotStates,
     RecordingStatus,
     RobotStateSnapshot,
@@ -103,6 +104,42 @@ def drqp_robot_send_motion_command(
 def drqp_robot_stop_motion() -> MotionCommandResult:
     """Publish a zeroed motion command to stop walking or body motion."""
     return controller.stop_motion()
+
+
+@mcp.tool()
+def drqp_robot_walk_for_duration(
+    duration_sec: float,
+    publish_hz: float = 5.0,
+    stop_after: bool = True,
+    stride_x: float = 0.0,
+    stride_y: float = 0.0,
+    stride_z: float = 0.0,
+    rotation_speed: float = 0.0,
+    body_x: float = 0.0,
+    body_y: float = 0.0,
+    body_z: float = 0.0,
+    body_roll: float = 0.0,
+    body_pitch: float = 0.0,
+    body_yaw: float = 0.0,
+    gait_type: str = 'tripod',
+) -> MotionSequenceResult:
+    """Repeat a walking command for a fixed duration and optionally stop after."""
+    return controller.walk_for_duration(
+        duration_sec=duration_sec,
+        publish_hz=publish_hz,
+        stop_after=stop_after,
+        stride_x=stride_x,
+        stride_y=stride_y,
+        stride_z=stride_z,
+        rotation_speed=rotation_speed,
+        body_x=body_x,
+        body_y=body_y,
+        body_z=body_z,
+        body_roll=body_roll,
+        body_pitch=body_pitch,
+        body_yaw=body_yaw,
+        gait_type=gait_type,
+    )
 
 
 def main() -> None:

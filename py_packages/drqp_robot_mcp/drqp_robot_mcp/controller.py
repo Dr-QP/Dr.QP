@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, UTC
+import math
 from pathlib import Path
 import threading
 import time
@@ -13,6 +14,7 @@ from . import runtime
 from .models import (
     LifecycleActionResult,
     MotionCommandResult,
+    MotionSequenceResult,
     RecordedRobotStates,
     RecordingStatus,
     RobotStateSnapshot,
@@ -213,6 +215,69 @@ class RobotMcpController:
     def stop_motion(self) -> MotionCommandResult:
         """Publish a zeroed movement command to stop robot motion."""
         return self.send_motion_command()
+
+    def walk_for_duration(
+        self,
+        *,
+        duration_sec: float,
+        publish_hz: float = 5.0,
+        stop_after: bool = True,
+        stride_x: float = 0.0,
+        stride_y: float = 0.0,
+        stride_z: float = 0.0,
+        rotation_speed: float = 0.0,
+        body_x: float = 0.0,
+        body_y: float = 0.0,
+        body_z: float = 0.0,
+        body_roll: float = 0.0,
+        body_pitch: float = 0.0,
+        body_yaw: float = 0.0,
+        gait_type: str = 'tripod',
+    ) -> MotionSequenceResult:
+        """Publish the same walking command repeatedly for a fixed duration."""
+        normalized_duration_sec = float(duration_sec)
+        normalized_publish_hz = float(publish_hz)
+        if normalized_duration_sec <= 0.0:
+            raise ValueError('duration_sec must be positive.')
+        if normalized_publish_hz <= 0.0:
+            raise ValueError('publish_hz must be positive.')
+
+        publish_count = max(1, math.ceil(normalized_duration_sec * normalized_publish_hz))
+        interval_sec = 1.0 / normalized_publish_hz
+        command_result: MotionCommandResult | None = None
+        for publish_index in range(publish_count):
+            command_result = self.send_motion_command(
+                stride_x=stride_x,
+                stride_y=stride_y,
+                stride_z=stride_z,
+                rotation_speed=rotation_speed,
+                body_x=body_x,
+                body_y=body_y,
+                body_z=body_z,
+                body_roll=body_roll,
+                body_pitch=body_pitch,
+                body_yaw=body_yaw,
+                gait_type=gait_type,
+            )
+            if publish_index < publish_count - 1:
+                time.sleep(interval_sec)
+
+        if command_result is None:
+            raise RuntimeError('walk_for_duration did not publish any motion commands.')
+
+        stop_command_sent = False
+        if stop_after:
+            self.stop_motion()
+            stop_command_sent = True
+
+        return MotionSequenceResult(
+            duration_sec=normalized_duration_sec,
+            publish_hz=normalized_publish_hz,
+            publish_count=publish_count,
+            stop_command_sent=stop_command_sent,
+            command=command_result,
+            message='Published walking sequence.',
+        )
 
     def start_recording(self, sample_interval_sec: float = 0.5) -> RecordingStatus:
         """Start recording robot snapshots."""

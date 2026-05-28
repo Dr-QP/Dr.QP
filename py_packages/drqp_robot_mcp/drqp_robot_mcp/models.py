@@ -211,6 +211,18 @@ class MotionCommandResult:
 
 
 @dataclass
+class MotionSequenceResult:
+    """Result of publishing a repeated walking sequence."""
+
+    duration_sec: float
+    publish_hz: float
+    publish_count: int
+    stop_command_sent: bool
+    command: MotionCommandResult
+    message: str
+
+
+@dataclass
 class RecordingStatus:
     """Current robot state recording status."""
 
