@@ -479,7 +479,26 @@ def _pid_is_running(pid: int) -> bool:
         os.kill(pid, 0)
     except OSError:
         return False
-    return True
+
+    try:
+        result = subprocess.run(  # noqa: S603
+            ['ps', '-o', 'stat=', '-p', str(pid)],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=1.0,
+        )
+    except (FileNotFoundError, subprocess.SubprocessError):
+        return True
+
+    if result.returncode != 0:
+        return False
+
+    status = result.stdout.strip()
+    if not status:
+        return False
+
+    return not status.startswith('Z')
 
 
 def _value_at(values: Any, index: int) -> float | None:

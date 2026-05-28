@@ -86,7 +86,7 @@ def _terminate_simulation(controller: RobotMcpController) -> None:
 @pytest.mark.skipif(not _simulation_available(), reason='ROS 2 Gazebo environment is unavailable.')
 def test_walk_for_duration_moves_robot_in_simulation() -> None:
     """The higher-level walk command moves the robot in Gazebo end to end."""
-    controller = RobotMcpController(workspace_root=Path(__file__).resolve().parents[3])
+    controller = RobotMcpController(workspace_root=Path(__file__).resolve().parents[4])
     boot_result = controller.boot_up(timeout_sec=120.0)
 
     try:

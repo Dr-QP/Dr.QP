@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from drqp_robot_mcp.models import MotionCommandResult, MotionSequenceResult
 from drqp_robot_mcp import server
-from drqp_robot_mcp.models import Vector3
+from drqp_robot_mcp.models import MotionCommandResult, MotionSequenceResult, Vector3
 
 
 def test_drqp_robot_send_motion_command_delegates_to_controller(monkeypatch) -> None:

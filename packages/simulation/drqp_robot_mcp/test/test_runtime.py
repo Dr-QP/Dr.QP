@@ -112,11 +112,24 @@ def test_start_simulation_uses_direct_ros2_launch_without_shell(
         'launch',
         'drqp_gazebo',
         'sim.launch.py',
-      'sim_gui:=false',
+        'sim_gui:=false',
     ]
     assert captured['kwargs']['cwd'] == tmp_path
     assert captured['kwargs']['start_new_session'] is True
     assert 'shell' not in captured['kwargs']
+
+
+def test_pid_is_running_returns_false_for_zombie_process(monkeypatch) -> None:
+    """Zombie launch processes must be treated as stale, not running."""
+
+    def fake_run(command, **kwargs):
+        assert command == ['ps', '-o', 'stat=', '-p', '4321']
+        return SimpleNamespace(stdout='Z\n', returncode=0)
+
+    monkeypatch.setattr(runtime.os, 'kill', lambda pid, sig: None)
+    monkeypatch.setattr(runtime.subprocess, 'run', fake_run)
+
+    assert runtime._pid_is_running(4321) is False
 
 
 def test_publish_movement_command_publishes_expected_message(monkeypatch) -> None:
@@ -176,11 +189,11 @@ def test_publish_movement_command_publishes_expected_message(monkeypatch) -> Non
     monkeypatch.setitem(sys.modules, 'drqp_interfaces.msg', fake_interfaces_module)
 
     result = runtime.publish_movement_command(
-      stride_direction={'x': 1.0, 'y': -0.5, 'z': 0.0},
-      rotation_speed=0.25,
-      body_translation={'x': 0.0, 'y': 0.0, 'z': 0.1},
-      body_rotation={'x': 0.0, 'y': -0.2, 'z': 0.3},
-      gait_type='wave',
+        stride_direction={'x': 1.0, 'y': -0.5, 'z': 0.0},
+        rotation_speed=0.25,
+        body_translation={'x': 0.0, 'y': 0.0, 'z': 0.1},
+        body_rotation={'x': 0.0, 'y': -0.2, 'z': 0.3},
+        gait_type='wave',
     )
 
     assert result['published'] is True
