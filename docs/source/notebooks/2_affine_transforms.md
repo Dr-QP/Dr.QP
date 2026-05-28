@@ -143,7 +143,7 @@ display_and_close(plt.gcf())
 
 This was a good start, but code is hard to read and understand due to excessive repetitions. Let's introduce a transform system, similar to the one used in ROS TF2 library.
 
-Code from `drqp_brain/geometry/transforms.py`:
+Code from `drqp_brain/drqp_kinematics/geometry/transforms.py`:
 
 ```{code-cell} ipython3
 :tags: [remove-cell]
