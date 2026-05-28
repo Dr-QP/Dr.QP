@@ -22,4 +22,9 @@ setup(
     maintainer_email='anton.matosov@gmail.com',
     description='MCP server package for interacting with the Dr.QP simulation.',
     license='MIT',
+    entry_points={
+        'console_scripts': [
+            'drqp_robot_mcp = drqp_robot_mcp.server:main',
+        ],
+    },
 )

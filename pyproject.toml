@@ -62,6 +62,6 @@ markers = [
 
 [tool.uv.sources]
 validate_agent_files = { path = "py_packages/validate_agent_files", editable = true }
-drqp_robot_mcp = { path = "py_packages/drqp_robot_mcp", editable = true }
+drqp_robot_mcp = { path = "packages/simulation/drqp_robot_mcp", editable = true }
 sphinxcontrib-spotlight = { path = "py_packages/sphinxcontrib_spotlight", editable = true }
 drqp_brain = { path = "packages/runtime/drqp_brain", editable = true }

@@ -112,7 +112,7 @@ def test_start_simulation_uses_direct_ros2_launch_without_shell(
         'launch',
         'drqp_gazebo',
         'sim.launch.py',
-        'gui:=false',
+      'sim_gui:=false',
     ]
     assert captured['kwargs']['cwd'] == tmp_path
     assert captured['kwargs']['start_new_session'] is True
