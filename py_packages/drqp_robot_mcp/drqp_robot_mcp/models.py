@@ -178,6 +178,39 @@ class LifecycleActionResult:
 
 
 @dataclass
+class MotionCommandResult:
+    """Result of publishing a robot motion command."""
+
+    stride_direction: Vector3
+    rotation_speed: float
+    body_translation: Vector3
+    body_rotation: Vector3
+    gait_type: str
+    message: str
+
+    @classmethod
+    def from_mapping(cls, data: dict[str, Any]) -> 'MotionCommandResult':
+        """Create a motion command result from a JSON mapping."""
+        stride_direction = Vector3.from_mapping(data.get('stride_direction'))
+        body_translation = Vector3.from_mapping(data.get('body_translation'))
+        body_rotation = Vector3.from_mapping(data.get('body_rotation'))
+        if (
+            stride_direction is None
+            or body_translation is None
+            or body_rotation is None
+        ):
+            raise ValueError('Motion command result is missing vector fields.')
+        return cls(
+            stride_direction=stride_direction,
+            rotation_speed=float(data.get('rotation_speed', 0.0)),
+            body_translation=body_translation,
+            body_rotation=body_rotation,
+            gait_type=str(data.get('gait_type', 'tripod')),
+            message=str(data.get('message', 'Published motion command.')),
+        )
+
+
+@dataclass
 class RecordingStatus:
     """Current robot state recording status."""
 

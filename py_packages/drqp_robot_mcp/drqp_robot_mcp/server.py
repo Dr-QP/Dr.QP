@@ -7,6 +7,7 @@ from mcp.server.fastmcp import FastMCP
 from .controller import RobotMcpController
 from .models import (
     LifecycleActionResult,
+    MotionCommandResult,
     RecordedRobotStates,
     RecordingStatus,
     RobotStateSnapshot,
@@ -66,6 +67,42 @@ def drqp_robot_get_recording_status() -> RecordingStatus:
 def drqp_robot_get_world_state(timeout_sec: float = 10.0) -> WorldStateSnapshot:
     """Return Gazebo world poses and simulation time when Gazebo is available."""
     return controller.get_world_state(timeout_sec=timeout_sec)
+
+
+@mcp.tool()
+def drqp_robot_send_motion_command(
+    stride_x: float = 0.0,
+    stride_y: float = 0.0,
+    stride_z: float = 0.0,
+    rotation_speed: float = 0.0,
+    body_x: float = 0.0,
+    body_y: float = 0.0,
+    body_z: float = 0.0,
+    body_roll: float = 0.0,
+    body_pitch: float = 0.0,
+    body_yaw: float = 0.0,
+    gait_type: str = 'tripod',
+) -> MotionCommandResult:
+    """Publish a normalized joystick-like movement command for the robot."""
+    return controller.send_motion_command(
+        stride_x=stride_x,
+        stride_y=stride_y,
+        stride_z=stride_z,
+        rotation_speed=rotation_speed,
+        body_x=body_x,
+        body_y=body_y,
+        body_z=body_z,
+        body_roll=body_roll,
+        body_pitch=body_pitch,
+        body_yaw=body_yaw,
+        gait_type=gait_type,
+    )
+
+
+@mcp.tool()
+def drqp_robot_stop_motion() -> MotionCommandResult:
+    """Publish a zeroed motion command to stop walking or body motion."""
+    return controller.stop_motion()
 
 
 def main() -> None:

@@ -94,6 +94,60 @@ def publish_event(event: str) -> dict[str, Any]:
     return _with_rclpy(_operation)
 
 
+def publish_movement_command(
+    stride_direction: dict[str, float],
+    rotation_speed: float,
+    body_translation: dict[str, float],
+    body_rotation: dict[str, float],
+    gait_type: str,
+) -> dict[str, Any]:
+    """Publish a movement command onto /robot/movement_command."""
+
+    def _operation() -> dict[str, Any]:
+        import geometry_msgs.msg
+        import rclpy
+        from rclpy.node import Node
+
+        import drqp_interfaces.msg
+
+        node = Node('drqp_robot_mcp_movement_command_publisher')
+        publisher = node.create_publisher(
+            drqp_interfaces.msg.MovementCommand,
+            '/robot/movement_command',
+            10,
+        )
+        deadline = time.monotonic() + 2.0
+        while time.monotonic() < deadline and publisher.get_subscription_count() == 0:
+            rclpy.spin_once(node, timeout_sec=0.1)
+
+        message = drqp_interfaces.msg.MovementCommand()
+        message.stride_direction = geometry_msgs.msg.Vector3(**stride_direction)
+        message.rotation_speed = rotation_speed
+        message.body_translation = geometry_msgs.msg.Vector3(**body_translation)
+        message.body_rotation = geometry_msgs.msg.Vector3(**body_rotation)
+        message.gait_type = gait_type
+
+        publisher.publish(message)
+        for _ in range(5):
+            rclpy.spin_once(node, timeout_sec=0.05)
+
+        subscriptions = publisher.get_subscription_count()
+        node.destroy_node()
+        return {
+            'published': True,
+            'topic': '/robot/movement_command',
+            'subscription_count': subscriptions,
+            'stride_direction': stride_direction,
+            'rotation_speed': rotation_speed,
+            'body_translation': body_translation,
+            'body_rotation': body_rotation,
+            'gait_type': gait_type,
+            'message': 'Published motion command.',
+        }
+
+    return _with_rclpy(_operation)
+
+
 def wait_for_state(target_state: str, timeout_sec: float) -> dict[str, Any]:
     """Wait until /robot_state reaches the requested state."""
     state = _read_robot_lifecycle_state(timeout_sec=timeout_sec, expected=target_state)

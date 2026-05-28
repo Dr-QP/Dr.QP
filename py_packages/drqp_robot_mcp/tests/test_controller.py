@@ -43,6 +43,7 @@ class FakeController(RobotMcpController):
         self.waited_states: list[str] = []
         self.start_calls = 0
         self.current_state = self.states[-1]
+        self.movement_commands: list[dict[str, object]] = []
 
     def get_robot_state(self, timeout_sec: float = 10.0) -> RobotStateSnapshot:
         del timeout_sec
@@ -61,6 +62,24 @@ class FakeController(RobotMcpController):
     def _publish_event(self, event: str) -> dict[str, object]:
         self.published_events.append(event)
         return {'published': True, 'event': event}
+
+    def _publish_movement_command(
+        self,
+        stride_direction: dict[str, float],
+        rotation_speed: float,
+        body_translation: dict[str, float],
+        body_rotation: dict[str, float],
+        gait_type: str,
+    ) -> dict[str, object]:
+        command = {
+            'stride_direction': stride_direction,
+            'rotation_speed': rotation_speed,
+            'body_translation': body_translation,
+            'body_rotation': body_rotation,
+            'gait_type': gait_type,
+        }
+        self.movement_commands.append(command)
+        return {'published': True, **command}
 
     def _wait_for_state(
         self,
@@ -139,3 +158,62 @@ def test_recording_collects_multiple_samples() -> None:
     assert status.active is True
     assert recorded.sample_count >= 2
     assert all(sample.lifecycle_state == 'torque_on' for sample in recorded.samples)
+
+
+def test_send_motion_command_publishes_normalized_command() -> None:
+    """Motion commands are delegated to the runtime publishing seam."""
+    controller = FakeController([make_snapshot('torque_on')])
+
+    result = controller.send_motion_command(
+        stride_x=1.0,
+        stride_y=-0.25,
+        rotation_speed=0.5,
+        body_z=0.2,
+        body_pitch=-0.1,
+        gait_type='ripple',
+    )
+
+    assert controller.movement_commands == [
+        {
+            'stride_direction': {'x': 1.0, 'y': -0.25, 'z': 0.0},
+            'rotation_speed': 0.5,
+            'body_translation': {'x': 0.0, 'y': 0.0, 'z': 0.2},
+            'body_rotation': {'x': 0.0, 'y': -0.1, 'z': 0.0},
+            'gait_type': 'ripple',
+        }
+    ]
+    assert result.gait_type == 'ripple'
+    assert result.rotation_speed == 0.5
+    assert result.stride_direction.x == 1.0
+    assert result.body_translation.z == 0.2
+    assert result.body_rotation.y == -0.1
+
+
+def test_send_motion_command_rejects_out_of_range_input() -> None:
+    """Motion inputs must stay within the normalized message contract."""
+    controller = FakeController([make_snapshot('torque_on')])
+
+    try:
+        controller.send_motion_command(stride_x=1.5)
+    except ValueError as exc:
+        assert 'stride_x' in str(exc)
+    else:
+        raise AssertionError('Expected ValueError for out-of-range stride_x')
+
+
+def test_stop_motion_publishes_zeroed_tripod_command() -> None:
+    """Stop motion resets all joystick axes to zero."""
+    controller = FakeController([make_snapshot('torque_on')])
+
+    result = controller.stop_motion()
+
+    assert controller.movement_commands == [
+        {
+            'stride_direction': {'x': 0.0, 'y': 0.0, 'z': 0.0},
+            'rotation_speed': 0.0,
+            'body_translation': {'x': 0.0, 'y': 0.0, 'z': 0.0},
+            'body_rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0},
+            'gait_type': 'tripod',
+        }
+    ]
+    assert result.gait_type == 'tripod'

@@ -12,6 +12,7 @@ from typing import Any, Callable
 from . import runtime
 from .models import (
     LifecycleActionResult,
+    MotionCommandResult,
     RecordedRobotStates,
     RecordingStatus,
     RobotStateSnapshot,
@@ -36,6 +37,8 @@ class _RecordingSession:
 
 class RobotMcpController:
     """Coordinate local ROS 2, optional Gazebo, and robot lifecycle operations."""
+
+    _VALID_GAITS = {'tripod', 'ripple', 'wave'}
 
     def __init__(
         self,
@@ -161,6 +164,56 @@ class RobotMcpController:
             runtime.get_world_state(self.world_name, timeout_sec)
         )
 
+    def send_motion_command(
+        self,
+        *,
+        stride_x: float = 0.0,
+        stride_y: float = 0.0,
+        stride_z: float = 0.0,
+        rotation_speed: float = 0.0,
+        body_x: float = 0.0,
+        body_y: float = 0.0,
+        body_z: float = 0.0,
+        body_roll: float = 0.0,
+        body_pitch: float = 0.0,
+        body_yaw: float = 0.0,
+        gait_type: str = 'tripod',
+    ) -> MotionCommandResult:
+        """Publish a normalized motion command for joystick-like control."""
+        stride_direction = {
+            'x': self._validate_normalized('stride_x', stride_x),
+            'y': self._validate_normalized('stride_y', stride_y),
+            'z': self._validate_normalized('stride_z', stride_z),
+        }
+        normalized_rotation_speed = self._validate_normalized(
+            'rotation_speed',
+            rotation_speed,
+        )
+        body_translation = {
+            'x': self._validate_normalized('body_x', body_x),
+            'y': self._validate_normalized('body_y', body_y),
+            'z': self._validate_normalized('body_z', body_z),
+        }
+        body_rotation = {
+            'x': self._validate_normalized('body_roll', body_roll),
+            'y': self._validate_normalized('body_pitch', body_pitch),
+            'z': self._validate_normalized('body_yaw', body_yaw),
+        }
+        normalized_gait = self._validate_gait_type(gait_type)
+        return MotionCommandResult.from_mapping(
+            self._publish_movement_command(
+                stride_direction=stride_direction,
+                rotation_speed=normalized_rotation_speed,
+                body_translation=body_translation,
+                body_rotation=body_rotation,
+                gait_type=normalized_gait,
+            )
+        )
+
+    def stop_motion(self) -> MotionCommandResult:
+        """Publish a zeroed movement command to stop robot motion."""
+        return self.send_motion_command()
+
     def start_recording(self, sample_interval_sec: float = 0.5) -> RecordingStatus:
         """Start recording robot snapshots."""
         if sample_interval_sec <= 0:
@@ -282,6 +335,40 @@ class RobotMcpController:
     def _publish_event(self, event: str) -> dict[str, Any]:
         """Publish a lifecycle event onto the local ROS graph."""
         return runtime.publish_event(event)
+
+    def _publish_movement_command(
+        self,
+        stride_direction: dict[str, float],
+        rotation_speed: float,
+        body_translation: dict[str, float],
+        body_rotation: dict[str, float],
+        gait_type: str,
+    ) -> dict[str, Any]:
+        """Publish a motion command onto the local ROS graph."""
+        return runtime.publish_movement_command(
+            stride_direction=stride_direction,
+            rotation_speed=rotation_speed,
+            body_translation=body_translation,
+            body_rotation=body_rotation,
+            gait_type=gait_type,
+        )
+
+    def _validate_normalized(self, name: str, value: float) -> float:
+        """Validate normalized joystick input in the inclusive range [-1, 1]."""
+        normalized_value = float(value)
+        if normalized_value < -1.0 or normalized_value > 1.0:
+            raise ValueError(f'{name} must be between -1.0 and 1.0.')
+        return normalized_value
+
+    def _validate_gait_type(self, gait_type: str) -> str:
+        """Validate gait names against the supported movement command contract."""
+        normalized_gait_type = gait_type.strip().lower()
+        if normalized_gait_type not in self._VALID_GAITS:
+            supported = ', '.join(sorted(self._VALID_GAITS))
+            raise ValueError(
+                f'gait_type must be one of {supported}; got {gait_type!r}.'
+            )
+        return normalized_gait_type
 
 
 def _utc_now() -> str:
