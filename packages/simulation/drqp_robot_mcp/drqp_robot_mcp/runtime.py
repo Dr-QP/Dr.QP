@@ -465,10 +465,6 @@ def get_runtime_directory(app_name: str = 'drqp_robot_mcp') -> Path:
     if ros_home:
         return Path(ros_home).expanduser() / app_name
 
-    state_home = os.environ.get('XDG_STATE_HOME')
-    if state_home:
-        return Path(state_home).expanduser() / 'ros' / app_name
-
     return Path.home() / '.ros' / app_name
 
 
