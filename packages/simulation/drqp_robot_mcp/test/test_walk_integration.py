@@ -16,21 +16,6 @@ import pytest
 from drqp_robot_mcp.controller import RobotMcpController
 
 
-def _simulation_available() -> bool:
-    if os.environ.get('ROS_DISTRO') is None:
-        return False
-    if shutil.which('ros2') is None:
-        return False
-    if subprocess.run(
-        ['ros2', 'pkg', 'prefix', 'drqp_gazebo'],
-        check=False,
-        capture_output=True,
-        text=True,
-    ).returncode != 0:
-        return False
-    return True
-
-
 def _pose_distance(before, after) -> float:
     delta_x = after.position.x - before.position.x
     delta_y = after.position.y - before.position.y
@@ -75,7 +60,6 @@ def _terminate_simulation(controller: RobotMcpController) -> None:
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(not _simulation_available(), reason='ROS 2 Gazebo environment is unavailable.')
 def test_walk_for_duration_moves_robot_in_simulation() -> None:
     """The higher-level walk command moves the robot in Gazebo end to end."""
     controller = RobotMcpController(workspace_root=Path(__file__).resolve().parents[4])
