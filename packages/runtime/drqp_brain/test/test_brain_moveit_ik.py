@@ -200,7 +200,7 @@ def test_loop_retries_redundant_targets_after_timeout():
 
 
 def test_make_pose_stamped_converts_target_into_base_frame():
-    """MoveIt IK requests should express target positions in the declared BASE_FRAME."""
+    """Verify IK targets are expressed in the declared BASE_FRAME."""
     brain = HexapodBrain()
     try:
         body_transform = AffineTransform.from_translation([0.1, -0.2, 0.3])

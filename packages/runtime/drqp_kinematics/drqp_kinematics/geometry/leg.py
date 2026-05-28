@@ -18,47 +18,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from .point import Point, Point3D
+from .line import Line3D
 
 
-class Line:
-    """A simple 2D line class."""
+class Leg3D:
+    """A 3D leg class."""
 
-    def __init__(self, start: Point, end: Point, label: str):
-        self.start = start
-        self.end = end
-        self.label = label
+    def __init__(self, lines: list[Line3D]):
+        self.lines = lines
 
-    def extended(self, length: float = 1.0):
-        return Line(
-            self.start, self.end + (self.end - self.start).normalized() * length, self.label
-        )
-
-    def __repr__(self):
-        return f'Line({self.start}, {self.end}, {self.label})'
-
-
-class Line3D:
-    """A simple 3D line class."""
-
-    def __init__(self, start: Point3D, end: Point3D, label: str):
-        self.start = start
-        self.end = end
-        self.label = label
-
-    def extended(self, length: float = 1.0):
-        return Line3D(
-            self.start, self.end + (self.end - self.start).normalized() * length, self.label
-        )
+    def __iter__(self):
+        return iter(self.lines)
 
     @property
     def xy(self):
-        return Line(self.start.xy, self.end.xy, self.label)
+        return [line.xy for line in self.lines]
 
     @property
     def xz(self):
-        return Line(self.start.xz, self.end.xz, self.label)
+        return [line.xz for line in self.lines]
 
     @property
     def yz(self):
-        return Line(self.start.yz, self.end.yz, self.label)
+        return [line.yz for line in self.lines]

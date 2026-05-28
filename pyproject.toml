@@ -48,6 +48,7 @@ notebooks = [
   "Pygments>=2.17.2",
   "jupytext==1.17.2",
   "drqp_brain",
+  "drqp_kinematics",
 ]
 
 [tool.uv]
@@ -65,3 +66,4 @@ validate_agent_files = { path = "py_packages/validate_agent_files", editable = t
 drqp_robot_mcp = { path = "py_packages/drqp_robot_mcp", editable = true }
 sphinxcontrib-spotlight = { path = "py_packages/sphinxcontrib_spotlight", editable = true }
 drqp_brain = { path = "packages/runtime/drqp_brain", editable = true }
+drqp_kinematics = { path = "packages/runtime/drqp_kinematics", editable = true }

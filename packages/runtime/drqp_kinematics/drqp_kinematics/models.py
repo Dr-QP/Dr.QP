@@ -216,6 +216,7 @@ class LegModel:
             f'tibia_end={self.tibia_end})'
         )
 
+    # Leg Forward kinematics - START
     def forward_kinematics(self, alpha, beta, gamma):
         self.update_base_transforms()
         self.coxa_angle = alpha
@@ -249,6 +250,7 @@ class LegModel:
         self.femur_end.label = rf'$\gamma$={gamma}°'
         self.tibia_end = self.tibia_link.apply_point(identity_point)
         self.tibia_end.label = 'Foot'
+    # Leg Forward kinematics - END
 
     def move_to(self, foot_target: Point3D, verbose=False):
         reached_target, alpha, beta, gamma = self.inverse_kinematics(foot_target, verbose)

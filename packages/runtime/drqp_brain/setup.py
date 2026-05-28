@@ -5,7 +5,9 @@ package_name = 'drqp_brain'
 setup(
     name=package_name,
     version='0.1.0',
-    packages=find_packages(exclude=['test']),
+    packages=find_packages(
+        exclude=['test', 'test.*', 'drqp_kinematics', 'drqp_kinematics.*']
+    ),
     data_files=[
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
@@ -13,6 +15,7 @@ setup(
     ],
     install_requires=[
         'setuptools',
+        'drqp_kinematics',
         'python-statemachine>=2.5.0',
         'numpy',
         'scipy',
