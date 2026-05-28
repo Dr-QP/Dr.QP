@@ -9,6 +9,7 @@ import shutil
 import signal
 import subprocess
 import time
+from typing import Any
 
 import pytest
 
@@ -37,6 +38,33 @@ def _pose_distance(before, after) -> float:
     return math.sqrt((delta_x * delta_x) + (delta_y * delta_y) + (delta_z * delta_z))
 
 
+def _read_odom_pose(timeout_sec: float) -> Any | None:
+    import rclpy
+    from nav_msgs.msg import Odometry
+
+    did_init = False
+    if not rclpy.ok():
+        rclpy.init()
+        did_init = True
+
+    node = rclpy.create_node('drqp_robot_mcp_walk_integration_pose_reader')
+    latest_pose: dict[str, Any | None] = {'value': None}
+
+    def callback(message: Odometry) -> None:
+        latest_pose['value'] = message.pose.pose
+
+    node.create_subscription(Odometry, '/odom', callback, 10)
+    deadline = time.monotonic() + timeout_sec
+    try:
+        while time.monotonic() < deadline and latest_pose['value'] is None:
+            rclpy.spin_once(node, timeout_sec=0.1)
+        return latest_pose['value']
+    finally:
+        node.destroy_node()
+        if did_init and rclpy.ok():
+            rclpy.shutdown()
+
+
 def _terminate_simulation(controller: RobotMcpController) -> None:
     pid_text = controller.launch_pid_path.read_text(encoding='utf-8').strip()
     pid = int(pid_text)
@@ -54,8 +82,8 @@ def test_walk_for_duration_moves_robot_in_simulation() -> None:
     boot_result = controller.boot_up(timeout_sec=120.0)
 
     try:
-        start_state = controller.get_robot_state(timeout_sec=10.0)
-        assert start_state.robot_pose is not None
+        start_pose = _read_odom_pose(timeout_sec=10.0)
+        assert start_pose is not None
 
         sequence_result = controller.walk_for_duration(
             stride_x=1.0,
@@ -66,18 +94,18 @@ def test_walk_for_duration_moves_robot_in_simulation() -> None:
 
         deadline = time.time() + 15.0
         moved_distance = 0.0
-        end_state = start_state
+        end_pose = start_pose
         while time.time() < deadline:
-            end_state = controller.get_robot_state(timeout_sec=10.0)
-            if end_state.robot_pose is None:
+            end_pose = _read_odom_pose(timeout_sec=2.0)
+            if end_pose is None:
                 time.sleep(0.5)
                 continue
-            moved_distance = _pose_distance(start_state.robot_pose, end_state.robot_pose)
+            moved_distance = _pose_distance(start_pose, end_pose)
             if moved_distance >= 0.02:
                 break
             time.sleep(0.5)
 
-        assert end_state.robot_pose is not None
+        assert end_pose is not None
         assert moved_distance >= 0.02
     finally:
         controller.stop_motion()
