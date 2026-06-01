@@ -66,6 +66,9 @@ class HexapodBrain(rclpy.node.Node):
 
     def __init__(self):
         super().__init__('drqp_brain')
+        self._shutdown_lock = threading.Lock()
+        self._is_shutting_down = False
+        self._pending_futures = set()
 
         # MoveIt IK is invoked once per leg, so the walking loop must stay well
         # below the service throughput seen in simulation.
@@ -223,6 +226,9 @@ class HexapodBrain(rclpy.node.Node):
         self.get_logger().info('Control mode changed in translator node')
 
     def loop(self):
+        if self._is_shutting_down:
+            return
+
         self.walker.current_gait = self.gaits[self.gait_index]
         self.walker.phase_step = 1 / self.phase_steps_per_cycle[self.gait_index]
         previous_state = self._snapshot_motion_state()
@@ -311,27 +317,57 @@ class HexapodBrain(rclpy.node.Node):
         return joint_targets
 
     def _call_ik(self, leg, foot_target, robot_state: RobotState):
+        if self._is_shutting_down:
+            raise RuntimeError('MoveIt IK request aborted because drqp_brain is shutting down')
+
         request = self._build_ik_request(leg, foot_target, robot_state)
-        future = self.ik_client.call_async(request)
+        try:
+            future = self.ik_client.call_async(request)
+        except Exception as exc:
+            raise RuntimeError(
+                f'MoveIt IK request failed for {leg.label.name}: {exc}'
+            ) from exc
+
+        self._track_future(future)
         completed = threading.Event()
         future.add_done_callback(lambda _: completed.set())
         if not completed.wait(timeout=MOVEIT_IK_TIMEOUT_SEC):
+            self._safe_cancel_future(future, f'MoveIt IK request for {leg.label.name}')
+            if self._is_shutting_down:
+                raise RuntimeError(
+                    f'MoveIt IK request aborted for {leg.label.name} during shutdown'
+                )
             raise RuntimeError(
                 f'MoveIt IK request timed out for {leg.label.name} after '
                 f'{MOVEIT_IK_TIMEOUT_SEC:.1f}s'
             )
 
         if not future.done():
+            self._safe_cancel_future(future, f'MoveIt IK request for {leg.label.name}')
             raise RuntimeError(
                 f'MoveIt IK request timed out for {leg.label.name} after '
                 f'{MOVEIT_IK_TIMEOUT_SEC:.1f}s'
             )
-        if future.exception() is not None:
+
+        try:
+            future_exception = future.exception()
+        except Exception as exc:
             raise RuntimeError(
-                f'MoveIt IK request failed for {leg.label.name}: {future.exception()}'
+                f'MoveIt IK request failed for {leg.label.name}: {exc}'
+            ) from exc
+
+        if future_exception is not None:
+            raise RuntimeError(
+                f'MoveIt IK request failed for {leg.label.name}: {future_exception}'
             )
 
-        response = future.result()
+        try:
+            response = future.result()
+        except Exception as exc:
+            raise RuntimeError(
+                f'MoveIt IK request failed for {leg.label.name}: {exc}'
+            ) from exc
+
         if response is None:
             raise RuntimeError(f'MoveIt IK returned no response for {leg.label.name}')
         return response
@@ -397,13 +433,25 @@ class HexapodBrain(rclpy.node.Node):
         )
 
     def _ik_ready(self) -> bool:
+        if self._is_shutting_down:
+            return False
+
         if self.latest_joint_state is None:
             if not self._joint_state_warning_logged:
                 self.get_logger().warning('No joint state available to seed MoveIt IK requests')
                 self._joint_state_warning_logged = True
             return False
 
-        if not self.ik_client.wait_for_service(timeout_sec=0.0):
+        try:
+            service_available = self.ik_client.wait_for_service(timeout_sec=0.0)
+        except Exception as exc:
+            if not self._is_shutting_down:
+                self.get_logger().warning(
+                    f'MoveIt IK service {MOVEIT_IK_SERVICE} readiness check failed: {exc}'
+                )
+            return False
+
+        if not service_available:
             if not self._ik_service_warning_logged:
                 self.get_logger().warning(f'MoveIt IK service {MOVEIT_IK_SERVICE} is unavailable')
                 self._ik_service_warning_logged = True
@@ -509,6 +557,9 @@ class HexapodBrain(rclpy.node.Node):
         self.robot_event_pub.publish(std_msgs.msg.String(data='servos_rebooting_done'))
 
     def process_robot_state(self, msg: std_msgs.msg.String):
+        if self._is_shutting_down:
+            return
+
         if self.robot_state == msg.data:
             return
 
@@ -535,19 +586,79 @@ class HexapodBrain(rclpy.node.Node):
             self.reboot_servos()
 
     def stop_walk_controller(self):
-        self.get_logger().info('Stopping')
-        self.loop_timer.cancel()
+        if not self._is_shutting_down:
+            self.get_logger().info('Stopping')
+        try:
+            self.loop_timer.cancel()
+        except Exception:
+            pass
         self.walker.reset()
         self._last_published_foot_targets = None
 
-    def destroy_node(self):
+    def _track_future(self, future):
+        self._pending_futures.add(future)
+        try:
+            future.add_done_callback(self._discard_future)
+        except AttributeError:
+            pass
+        return future
+
+    def _discard_future(self, future):
+        self._pending_futures.discard(future)
+        try:
+            future.exception()
+        except Exception:
+            pass
+
+    def _safe_cancel_future(self, future, description: str):
+        if future.done():
+            return
+        try:
+            future.cancel()
+        except Exception as exc:
+            self._log_shutdown_warning(f'Failed to cancel {description}: {exc}')
+
+    def _cancel_pending_futures(self):
+        for future in list(self._pending_futures):
+            self._safe_cancel_future(future, 'async ROS future')
+        self._pending_futures.clear()
+
+    def _safe_destroy_client(self, client, description: str):
+        try:
+            client.destroy()
+        except Exception as exc:
+            self._log_shutdown_warning(f'Failed to destroy {description}: {exc}')
+
+    def _log_shutdown_warning(self, message: str):
+        try:
+            self.get_logger().warning(message)
+        except Exception:
+            pass
+
+    def destroy_node(self) -> None:
+        with self._shutdown_lock:
+            if self._is_shutting_down:
+                return
+            self._is_shutting_down = True
+
+        try:
+            self.stop_walk_controller()
+        except Exception as exc:
+            self._log_shutdown_warning(f'Failed to stop walk controller: {exc}')
+
+        self._cancel_pending_futures()
+
         if self.__trajectory_client is not None:
-            self.__trajectory_client.destroy()
+            self._safe_destroy_client(self.__trajectory_client, 'trajectory action client')
             self.__trajectory_client = None
         if self.__ik_client is not None:
-            self.__ik_client.destroy()
+            self._safe_destroy_client(self.__ik_client, 'MoveIt IK client')
             self.__ik_client = None
-        return super().destroy_node()
+
+        try:
+            super().destroy_node()
+        except Exception as exc:
+            self._log_shutdown_warning(f'Failed to destroy drqp_brain node: {exc}')
 
 
 def main():

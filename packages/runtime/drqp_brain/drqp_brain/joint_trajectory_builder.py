@@ -111,13 +111,33 @@ class JointTrajectoryBuilder:
         )
 
         goal_handle_future = action_client.send_goal_async(goal)
+        track_future = getattr(node, '_track_future', None)
+        if callable(track_future):
+            track_future(goal_handle_future)
+
+        def log_callback_warning(message: str):
+            try:
+                node.get_logger().warning(message)
+            except Exception:
+                pass
 
         def result_response_callback(future):
-            node.get_logger().debug(f'Result received: {future.result().result}')
-            result_callback()
+            if getattr(node, '_is_shutting_down', False) is True:
+                return
+            try:
+                node.get_logger().debug(f'Result received: {future.result().result}')
+                result_callback()
+            except Exception as exc:
+                log_callback_warning(f'Ignoring trajectory result callback during shutdown: {exc}')
 
         def goal_response_callback(future):
-            goal_handle = future.result()
+            if getattr(node, '_is_shutting_down', False) is True:
+                return
+            try:
+                goal_handle = future.result()
+            except Exception as exc:
+                log_callback_warning(f'Ignoring trajectory goal response during shutdown: {exc}')
+                return
             if not goal_handle.accepted:
                 node.get_logger().error('Goal rejected')
                 return
@@ -125,6 +145,8 @@ class JointTrajectoryBuilder:
             node.get_logger().debug('Goal accepted')
 
             result_future = goal_handle.get_result_async()
+            if callable(track_future):
+                track_future(result_future)
             result_future.add_done_callback(result_response_callback)
 
         goal_handle_future.add_done_callback(goal_response_callback)
