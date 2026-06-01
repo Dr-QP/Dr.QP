@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from typing import Callable
+from typing import Callable, Protocol
 
 from control_msgs.action import FollowJointTrajectory
 from drqp_kinematics.models import HexapodModel
@@ -31,6 +31,21 @@ import trajectory_msgs.msg
 
 kFemurOffsetAngle = -13.11
 kTibiaOffsetAngle = -32.9
+
+
+class ShutdownAwareNode(Protocol):
+    class Logger(Protocol):
+        def warning(self, message: str) -> None: ...
+
+        def debug(self, message: str) -> None: ...
+
+        def error(self, message: str) -> None: ...
+
+    _is_shutting_down: bool
+
+    def _track_future(self, future): ...
+
+    def get_logger(self) -> Logger: ...
 
 
 class JointTrajectoryBuilder:
@@ -102,7 +117,7 @@ class JointTrajectoryBuilder:
     def publish_action(
         self,
         action_client: ActionClient,
-        node: rclpy.node.Node,
+        node: ShutdownAwareNode,
         result_callback: Callable,
     ):
         goal = FollowJointTrajectory.Goal()
@@ -111,9 +126,7 @@ class JointTrajectoryBuilder:
         )
 
         goal_handle_future = action_client.send_goal_async(goal)
-        track_future = getattr(node, '_track_future', None)
-        if callable(track_future):
-            track_future(goal_handle_future)
+        node._track_future(goal_handle_future)
 
         def log_callback_warning(message: str):
             try:
@@ -122,7 +135,7 @@ class JointTrajectoryBuilder:
                 pass
 
         def result_response_callback(future):
-            if getattr(node, '_is_shutting_down', False) is True:
+            if node._is_shutting_down is True:
                 return
             try:
                 node.get_logger().debug(f'Result received: {future.result().result}')
@@ -131,7 +144,7 @@ class JointTrajectoryBuilder:
                 log_callback_warning(f'Ignoring trajectory result callback during shutdown: {exc}')
 
         def goal_response_callback(future):
-            if getattr(node, '_is_shutting_down', False) is True:
+            if node._is_shutting_down is True:
                 return
             try:
                 goal_handle = future.result()
@@ -145,8 +158,7 @@ class JointTrajectoryBuilder:
             node.get_logger().debug('Goal accepted')
 
             result_future = goal_handle.get_result_async()
-            if callable(track_future):
-                track_future(result_future)
+            node._track_future(result_future)
             result_future.add_done_callback(result_response_callback)
 
         goal_handle_future.add_done_callback(goal_response_callback)
