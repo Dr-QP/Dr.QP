@@ -145,6 +145,140 @@ def test_get_runtime_directory_falls_back_to_home(monkeypatch) -> None:
     assert result == Path('/tmp/home/.ros/drqp_robot_mcp')
 
 
+def test_get_robot_state_uses_bridged_odometry_instead_of_gz_cli(monkeypatch) -> None:
+    """Robot pose should come from the ROS bridge, not a Gazebo CLI subprocess."""
+
+    class FakeString:
+        def __init__(self, data: str = '') -> None:
+            self.data = data
+
+    class FakeQoSProfile:
+        def __init__(self, depth: int) -> None:
+            self.depth = depth
+            self.durability = None
+
+    class FakeDurabilityPolicy:
+        TRANSIENT_LOCAL = 'transient_local'
+
+    class FakePublisher:
+        def get_subscription_count(self) -> int:
+            return 1
+
+        def publish(self, message: object) -> None:
+            del message
+
+    class FakeNode:
+        def __init__(self) -> None:
+            self.subscriptions: dict[str, object] = {}
+
+        def create_publisher(self, msg_type, topic: str, qos_depth: int) -> FakePublisher:
+            del msg_type, topic
+            assert qos_depth == 10
+            return FakePublisher()
+
+        def create_subscription(self, msg_type, topic: str, callback, qos):
+            del msg_type, qos
+            self.subscriptions[topic] = callback
+            return object()
+
+        def destroy_node(self) -> None:
+            return None
+
+    class FakeExecutor:
+        def add_node(self, node: object) -> None:
+            self.node = node
+
+        def remove_node(self, node: object) -> None:
+            assert node is self.node
+
+        def spin_once(self, timeout_sec: float = 0.1) -> None:
+            return None
+
+        def shutdown(self) -> None:
+            return None
+
+    class FakeVector3:
+        def __init__(self, *, x: float = 0.0, y: float = 0.0, z: float = 0.0) -> None:
+            self.x = x
+            self.y = y
+            self.z = z
+
+    class FakeMovementCommand:
+        def __init__(self) -> None:
+            self.stride_direction = None
+            self.rotation_speed = 0.0
+            self.body_translation = None
+            self.body_rotation = None
+            self.gait_type = ''
+
+    fake_node = FakeNode()
+    fake_rclpy = SimpleNamespace(
+        ok=lambda: True,
+        init=lambda: None,
+        shutdown=lambda: None,
+        create_node=lambda name: fake_node,
+    )
+
+    monkeypatch.setattr(
+        runtime,
+        '_load_ros_dependencies',
+        lambda: runtime._RosDependencies(
+            rclpy=fake_rclpy,
+            executor_factory=FakeExecutor,
+            odometry_message_type=object,
+            string_message_type=FakeString,
+            vector3_message_type=FakeVector3,
+            movement_command_type=FakeMovementCommand,
+            qos_profile_type=FakeQoSProfile,
+            durability_policy=FakeDurabilityPolicy,
+        ),
+    )
+    monkeypatch.setattr(
+        runtime.subprocess,
+        'run',
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError('get_robot_state should not shell out to gz topic')
+        ),
+    )
+    monkeypatch.setitem(sys.modules, 'sensor_msgs.msg', ModuleType('sensor_msgs.msg'))
+    monkeypatch.setitem(sys.modules, 'rosgraph_msgs.msg', ModuleType('rosgraph_msgs.msg'))
+    sys.modules['sensor_msgs.msg'].JointState = object
+    sys.modules['rosgraph_msgs.msg'].Clock = object
+
+    runtime_session = runtime.RosRuntimeSession()
+    runtime_session._ensure_started()
+
+    fake_node.subscriptions['/robot_state'](SimpleNamespace(data='torque_on'))
+    fake_node.subscriptions['/clock'](
+        SimpleNamespace(clock=SimpleNamespace(sec=12, nanosec=500_000_000))
+    )
+    fake_node.subscriptions['/odom'](
+        SimpleNamespace(
+            pose=SimpleNamespace(
+                pose=SimpleNamespace(
+                    position=SimpleNamespace(x=1.25, y=-0.5, z=0.3),
+                    orientation=SimpleNamespace(x=0.0, y=0.0, z=0.707, w=0.707),
+                )
+            )
+        )
+    )
+
+    result = runtime_session.get_robot_state(
+        world_name='empty',
+        robot_name='drqp',
+        timeout_sec=1.0,
+    )
+
+    assert result['available'] is True
+    assert result['simulation_running'] is True
+    assert result['world_name'] == 'empty'
+    assert result['simulation_time_sec'] == pytest.approx(12.5)
+    assert result['robot_pose']['position']['x'] == pytest.approx(1.25)
+    assert result['robot_pose']['position']['y'] == pytest.approx(-0.5)
+    assert result['robot_pose']['orientation']['z'] == pytest.approx(0.707)
+    assert result['robot_pose']['orientation']['w'] == pytest.approx(0.707)
+
+
 def test_pid_is_running_returns_false_for_zombie_process(monkeypatch) -> None:
     """Zombie launch processes must be treated as stale, not running."""
 
@@ -239,6 +373,7 @@ def test_publish_movement_command_publishes_expected_message(monkeypatch) -> Non
         lambda: runtime._RosDependencies(
             rclpy=fake_rclpy,
             executor_factory=FakeExecutor,
+            odometry_message_type=object,
             string_message_type=FakeString,
             vector3_message_type=FakeVector3,
             movement_command_type=FakeMovementCommand,

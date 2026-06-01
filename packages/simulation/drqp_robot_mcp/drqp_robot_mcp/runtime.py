@@ -20,6 +20,7 @@ class _RosDependencies:
 
     rclpy: Any
     executor_factory: Any
+    odometry_message_type: Any
     string_message_type: Any
     vector3_message_type: Any
     movement_command_type: Any
@@ -50,6 +51,7 @@ class RosRuntimeSession:
         self._started: _StartedRosRuntime | None = None
         self._spin_error: BaseException | None = None
         self._lifecycle_state: str | None = None
+        self._robot_pose: dict[str, Any] | None = None
         self._joint_states: dict[str, dict[str, float | None]] = {}
         self._simulation_time_sec: float | None = None
 
@@ -147,36 +149,28 @@ class RosRuntimeSession:
         with self._state_changed:
             self._raise_spin_error_locked()
             lifecycle_state = self._lifecycle_state
+            robot_pose = None if self._robot_pose is None else self._robot_pose.copy()
             joint_states = {
                 name: values.copy()
                 for name, values in self._joint_states.items()
             }
             simulation_time_sec = self._simulation_time_sec
 
-        world_state = _get_world_state_snapshot(
-            world_name=world_name,
-            timeout_sec=_time_left(deadline),
-            simulation_time_sec=simulation_time_sec,
-        )
-        robot_pose = _find_robot_pose(world_state.get('entities', []), robot_name)
-
         available = (
             lifecycle_state is not None
             or bool(joint_states)
             or robot_pose is not None
-            or bool(world_state.get('available'))
+            or simulation_time_sec is not None
         )
-        simulation_running = bool(world_state.get('available'))
+        simulation_running = simulation_time_sec is not None
 
         return {
             'timestamp': datetime.now(UTC).isoformat(),
             'available': available,
             'simulation_running': simulation_running,
             'lifecycle_state': lifecycle_state,
-            'world_name': (
-                world_state.get('world_name') if world_state.get('available') else None
-            ),
-            'simulation_time_sec': world_state.get('simulation_time_sec'),
+            'world_name': world_name if simulation_running else None,
+            'simulation_time_sec': simulation_time_sec,
             'robot_pose': robot_pose,
             'joint_states': joint_states,
             'note': None if available else 'Robot topics are not yet available.',
@@ -276,6 +270,12 @@ class RosRuntimeSession:
                 10,
             )
             node.create_subscription(
+                dependencies.odometry_message_type,
+                '/odom',
+                self._handle_odometry_message,
+                10,
+            )
+            node.create_subscription(
                 Clock,
                 '/clock',
                 self._handle_clock_message,
@@ -334,6 +334,12 @@ class RosRuntimeSession:
             self._joint_states = joint_states
             self._state_changed.notify_all()
 
+    def _handle_odometry_message(self, message: Any) -> None:
+        """Cache the latest robot pose from the bridged odometry topic."""
+        with self._state_changed:
+            self._robot_pose = _pose_to_mapping(message.pose.pose)
+            self._state_changed.notify_all()
+
     def _handle_clock_message(self, message: Any) -> None:
         """Cache the latest simulation clock message."""
         simulation_time_sec = float(message.clock.sec) + (
@@ -351,6 +357,7 @@ class RosRuntimeSession:
                 self._raise_spin_error_locked()
                 if (
                     self._lifecycle_state is not None
+                    or self._robot_pose is not None
                     or bool(self._joint_states)
                     or self._simulation_time_sec is not None
                 ):
@@ -394,6 +401,7 @@ def _load_ros_dependencies() -> _RosDependencies:
     """Import ROS modules lazily so module import stays cheap."""
     import rclpy
     from geometry_msgs.msg import Vector3
+    from nav_msgs.msg import Odometry
     from rclpy.executors import SingleThreadedExecutor
     from rclpy.qos import QoSDurabilityPolicy, QoSProfile
     from std_msgs.msg import String
@@ -403,6 +411,7 @@ def _load_ros_dependencies() -> _RosDependencies:
     return _RosDependencies(
         rclpy=rclpy,
         executor_factory=SingleThreadedExecutor,
+        odometry_message_type=Odometry,
         string_message_type=String,
         vector3_message_type=Vector3,
         movement_command_type=drqp_interfaces.msg.MovementCommand,
@@ -580,6 +589,23 @@ def _find_robot_pose(
         if name == robot_name or name.startswith(f'{robot_name}_'):
             return entity.get('pose')
     return None
+
+
+def _pose_to_mapping(message: Any) -> dict[str, Any]:
+    """Convert a ROS pose-like object into the MCP pose payload shape."""
+    return {
+        'position': {
+            'x': float(message.position.x),
+            'y': float(message.position.y),
+            'z': float(message.position.z),
+        },
+        'orientation': {
+            'x': float(message.orientation.x),
+            'y': float(message.orientation.y),
+            'z': float(message.orientation.z),
+            'w': float(message.orientation.w),
+        },
+    }
 
 
 def parse_gazebo_pose_info(raw_output: str) -> list[dict[str, Any]]:
