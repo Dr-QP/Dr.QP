@@ -577,6 +577,7 @@ class HexapodBrain(rclpy.node.Node):
         try:
             self.loop_timer.cancel()
         except (InvalidHandle, RCLError, RuntimeError, TimerCancelledError):
+            # Timer teardown is best-effort; the node may already be destroying it.
             pass
         self.walker.reset()
         self._last_published_foot_targets = None
@@ -613,6 +614,7 @@ class HexapodBrain(rclpy.node.Node):
         try:
             self.get_logger().warning(message)
         except RCLPY_SHUTDOWN_ERRORS:
+            # rosout may already be unavailable during node teardown.
             pass
 
     def destroy_node(self) -> None:

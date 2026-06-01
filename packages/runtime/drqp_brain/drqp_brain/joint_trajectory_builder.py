@@ -41,9 +41,11 @@ RCLPY_CALLBACK_ERRORS = (InvalidHandle, NotInitializedException, RCLError, Runti
 class ShutdownAwareNode(Protocol):
     _is_shutting_down: bool
 
-    def _track_future(self, future): ...
+    def _track_future(self, future):
+        raise NotImplementedError
 
-    def get_logger(self) -> RcutilsLogger: ...
+    def get_logger(self) -> RcutilsLogger:
+        raise NotImplementedError
 
 
 class JointTrajectoryBuilder:
@@ -130,6 +132,7 @@ class JointTrajectoryBuilder:
             try:
                 node.get_logger().warning(message)
             except RCLPY_CALLBACK_ERRORS:
+                # Callback teardown warnings are best-effort once ROS logging is gone.
                 pass
 
         def result_response_callback(future):
