@@ -6,7 +6,17 @@ from pathlib import Path
 import sys
 from types import ModuleType, SimpleNamespace
 
+import pytest
+
 from drqp_robot_mcp import runtime
+
+
+@pytest.fixture(autouse=True)
+def shutdown_runtime_session() -> None:
+    """Reset the shared runtime singleton between tests."""
+    runtime.shutdown_default_ros_runtime()
+    yield
+    runtime.shutdown_default_ros_runtime()
 
 
 def test_parse_gazebo_pose_info_extracts_entity_poses() -> None:
@@ -152,6 +162,18 @@ def test_publish_movement_command_publishes_expected_message(monkeypatch) -> Non
     """Movement commands are published on the robot control topic."""
     published: list[object] = []
 
+    class FakeString:
+        def __init__(self, data: str = '') -> None:
+            self.data = data
+
+    class FakeQoSProfile:
+        def __init__(self, depth: int) -> None:
+            self.depth = depth
+            self.durability = None
+
+    class FakeDurabilityPolicy:
+        TRANSIENT_LOCAL = 'transient_local'
+
     class FakePublisher:
         def get_subscription_count(self) -> int:
             return 1
@@ -160,13 +182,34 @@ def test_publish_movement_command_publishes_expected_message(monkeypatch) -> Non
             published.append(message)
 
     class FakeNode:
+        def __init__(self) -> None:
+            self.publishers: dict[str, FakePublisher] = {}
+            self.subscriptions: list[tuple[str, object]] = []
+
         def create_publisher(self, msg_type, topic: str, qos_depth: int) -> FakePublisher:
-            assert topic == '/robot/movement_command'
             assert qos_depth == 10
-            self.msg_type = msg_type
+            self.publishers[topic] = FakePublisher()
             return FakePublisher()
 
+        def create_subscription(self, msg_type, topic: str, callback, qos):
+            del msg_type, qos
+            self.subscriptions.append((topic, callback))
+            return object()
+
         def destroy_node(self) -> None:
+            return None
+
+    class FakeExecutor:
+        def add_node(self, node: object) -> None:
+            self.node = node
+
+        def remove_node(self, node: object) -> None:
+            assert node is self.node
+
+        def spin_once(self, timeout_sec: float = 0.1) -> None:
+            return None
+
+        def shutdown(self) -> None:
             return None
 
     class FakeVector3:
@@ -183,26 +226,30 @@ def test_publish_movement_command_publishes_expected_message(monkeypatch) -> Non
             self.body_rotation = None
             self.gait_type = ''
 
-    fake_rclpy = ModuleType('rclpy')
-    fake_rclpy.spin_once = lambda node, timeout_sec=0.1: None
-    fake_node_module = ModuleType('rclpy.node')
-    fake_node_module.Node = lambda name: FakeNode()
-    fake_geometry_package = ModuleType('geometry_msgs')
-    fake_geometry_module = ModuleType('geometry_msgs.msg')
-    fake_geometry_module.Vector3 = FakeVector3
-    fake_geometry_package.msg = fake_geometry_module
-    fake_interfaces_package = ModuleType('drqp_interfaces')
-    fake_interfaces_module = ModuleType('drqp_interfaces.msg')
-    fake_interfaces_module.MovementCommand = FakeMovementCommand
-    fake_interfaces_package.msg = fake_interfaces_module
+    fake_rclpy = SimpleNamespace(
+        ok=lambda: True,
+        init=lambda: None,
+        shutdown=lambda: None,
+        create_node=lambda name: FakeNode(),
+    )
 
-    monkeypatch.setattr(runtime, '_with_rclpy', lambda operation: operation())
-    monkeypatch.setitem(sys.modules, 'rclpy', fake_rclpy)
-    monkeypatch.setitem(sys.modules, 'rclpy.node', fake_node_module)
-    monkeypatch.setitem(sys.modules, 'geometry_msgs', fake_geometry_package)
-    monkeypatch.setitem(sys.modules, 'geometry_msgs.msg', fake_geometry_module)
-    monkeypatch.setitem(sys.modules, 'drqp_interfaces', fake_interfaces_package)
-    monkeypatch.setitem(sys.modules, 'drqp_interfaces.msg', fake_interfaces_module)
+    monkeypatch.setattr(
+        runtime,
+        '_load_ros_dependencies',
+        lambda: runtime._RosDependencies(
+            rclpy=fake_rclpy,
+            executor_factory=FakeExecutor,
+            string_message_type=FakeString,
+            vector3_message_type=FakeVector3,
+            movement_command_type=FakeMovementCommand,
+            qos_profile_type=FakeQoSProfile,
+            durability_policy=FakeDurabilityPolicy,
+        ),
+    )
+    monkeypatch.setitem(sys.modules, 'sensor_msgs.msg', ModuleType('sensor_msgs.msg'))
+    monkeypatch.setitem(sys.modules, 'rosgraph_msgs.msg', ModuleType('rosgraph_msgs.msg'))
+    sys.modules['sensor_msgs.msg'].JointState = object
+    sys.modules['rosgraph_msgs.msg'].Clock = object
 
     result = runtime.publish_movement_command(
         stride_direction={'x': 1.0, 'y': -0.5, 'z': 0.0},

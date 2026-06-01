@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import atexit
+
 from mcp.server.fastmcp import FastMCP
 
 from .controller import RobotMcpController
@@ -25,6 +27,7 @@ mcp = FastMCP(
     ),
 )
 controller = RobotMcpController()
+atexit.register(controller.close)
 
 
 @mcp.tool()
@@ -145,7 +148,10 @@ def drqp_robot_walk_for_duration(
 
 def main() -> None:
     """Run the MCP server over stdio."""
-    mcp.run()
+    try:
+        mcp.run()
+    finally:
+        controller.close()
 
 
 if __name__ == '__main__':

@@ -2,11 +2,54 @@
 
 from __future__ import annotations
 
-from drqp_robot_mcp import server
+import importlib
+import sys
+from types import ModuleType
+
+import pytest
+
 from drqp_robot_mcp.models import MotionCommandResult, MotionSequenceResult, Vector3
 
 
-def test_drqp_robot_send_motion_command_delegates_to_controller(monkeypatch) -> None:
+class _FakeFastMCP:
+    """Small FastMCP test double that records registered tools."""
+
+    def __init__(self, name: str, instructions: str) -> None:
+        self.name = name
+        self.instructions = instructions
+        self.tools: dict[str, object] = {}
+
+    def tool(self):
+        def decorator(function):
+            self.tools[function.__name__] = function
+            return function
+
+        return decorator
+
+    def run(self) -> None:
+        return None
+
+
+@pytest.fixture
+def server(monkeypatch):
+    """Import the server module with a stub FastMCP implementation."""
+    fastmcp_module = ModuleType('mcp.server.fastmcp')
+    fastmcp_module.FastMCP = _FakeFastMCP
+
+    monkeypatch.setitem(sys.modules, 'mcp', ModuleType('mcp'))
+    monkeypatch.setitem(sys.modules, 'mcp.server', ModuleType('mcp.server'))
+    monkeypatch.setitem(sys.modules, 'mcp.server.fastmcp', fastmcp_module)
+    sys.modules.pop('drqp_robot_mcp.server', None)
+
+    imported = importlib.import_module('drqp_robot_mcp.server')
+    yield imported
+    sys.modules.pop('drqp_robot_mcp.server', None)
+
+
+def test_drqp_robot_send_motion_command_delegates_to_controller(
+    monkeypatch,
+    server,
+) -> None:
     """The MCP tool delegates motion commands to the shared controller."""
     captured: dict[str, object] = {}
 
@@ -30,7 +73,7 @@ def test_drqp_robot_send_motion_command_delegates_to_controller(monkeypatch) -> 
     assert result.gait_type == 'tripod'
 
 
-def test_drqp_robot_stop_motion_delegates_to_controller(monkeypatch) -> None:
+def test_drqp_robot_stop_motion_delegates_to_controller(monkeypatch, server) -> None:
     """The MCP tool exposes a dedicated stop motion operation."""
 
     def fake_stop_motion() -> MotionCommandResult:
@@ -50,7 +93,10 @@ def test_drqp_robot_stop_motion_delegates_to_controller(monkeypatch) -> None:
     assert result.message == 'Published stop command.'
 
 
-def test_drqp_robot_walk_for_duration_delegates_to_controller(monkeypatch) -> None:
+def test_drqp_robot_walk_for_duration_delegates_to_controller(
+    monkeypatch,
+    server,
+) -> None:
     """The MCP tool exposes repeated walking commands through the controller."""
     captured: dict[str, object] = {}
 

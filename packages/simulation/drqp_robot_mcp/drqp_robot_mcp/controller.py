@@ -46,14 +46,20 @@ class RobotMcpController:
         self,
         world_name: str = 'empty',
         robot_name: str = 'drqp',
+        runtime_session: runtime.RosRuntimeSession | None = None,
     ) -> None:
         self.world_name = world_name
         self.robot_name = robot_name
+        self.runtime = runtime_session or runtime.get_default_ros_runtime()
         self.runtime_dir = runtime.get_runtime_directory()
         self.launch_pid_path = self.runtime_dir / 'sim.launch.pid'
         self.launch_log_path = self.runtime_dir / 'sim.launch.log'
         self._recording_lock = threading.Lock()
         self._recording: _RecordingSession | None = None
+
+    def close(self) -> None:
+        """Release long-lived ROS resources owned by this controller."""
+        self.runtime.close()
 
     def boot_up(self, timeout_sec: float = 120.0) -> LifecycleActionResult:
         """Boot the robot to the `torque_on` state."""
@@ -171,14 +177,18 @@ class RobotMcpController:
     def get_robot_state(self, timeout_sec: float = 10.0) -> RobotStateSnapshot:
         """Return the latest robot snapshot."""
         return RobotStateSnapshot.from_mapping(
-            runtime.get_robot_state(self.world_name, self.robot_name, timeout_sec)
+            self.runtime.get_robot_state(
+                self.world_name,
+                self.robot_name,
+                timeout_sec,
+            )
         )
 
 
     def get_world_state(self, timeout_sec: float = 10.0) -> WorldStateSnapshot:
         """Return the latest Gazebo world snapshot."""
         return WorldStateSnapshot.from_mapping(
-            runtime.get_world_state(self.world_name, timeout_sec)
+            self.runtime.get_world_state(self.world_name, timeout_sec)
         )
 
 
@@ -387,7 +397,7 @@ class RobotMcpController:
         timeout_sec: float,
     ) -> RobotStateSnapshot:
         """Wait for the robot to reach the requested lifecycle state."""
-        result = runtime.wait_for_state(target_state, timeout_sec)
+        result = self.runtime.wait_for_state(target_state, timeout_sec)
         if not bool(result.get('reached', False)):
             raise ControllerError(
                 f"Timed out waiting for robot state '{target_state}'. "
@@ -424,7 +434,7 @@ class RobotMcpController:
 
     def _publish_event(self, event: str) -> dict[str, Any]:
         """Publish a lifecycle event onto the local ROS graph."""
-        return runtime.publish_event(event)
+        return self.runtime.publish_event(event)
 
 
     def _publish_movement_command(
@@ -436,7 +446,7 @@ class RobotMcpController:
         gait_type: str,
     ) -> dict[str, Any]:
         """Publish a motion command onto the local ROS graph."""
-        return runtime.publish_movement_command(
+        return self.runtime.publish_movement_command(
             stride_direction=stride_direction,
             rotation_speed=rotation_speed,
             body_translation=body_translation,
