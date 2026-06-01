@@ -321,13 +321,7 @@ class HexapodBrain(rclpy.node.Node):
             raise RuntimeError('MoveIt IK request aborted because drqp_brain is shutting down')
 
         request = self._build_ik_request(leg, foot_target, robot_state)
-        try:
-            future = self.ik_client.call_async(request)
-        except Exception as exc:
-            raise RuntimeError(
-                f'MoveIt IK request failed for {leg.label.name}: {exc}'
-            ) from exc
-
+        future = self.ik_client.call_async(request)
         self._track_future(future)
         completed = threading.Event()
         future.add_done_callback(lambda _: completed.set())
@@ -349,24 +343,12 @@ class HexapodBrain(rclpy.node.Node):
                 f'{MOVEIT_IK_TIMEOUT_SEC:.1f}s'
             )
 
-        try:
-            future_exception = future.exception()
-        except Exception as exc:
-            raise RuntimeError(
-                f'MoveIt IK request failed for {leg.label.name}: {exc}'
-            ) from exc
-
+        future_exception = future.exception()
         if future_exception is not None:
             raise RuntimeError(
-                f'MoveIt IK request failed for {leg.label.name}: {future_exception}'
-            )
-
-        try:
-            response = future.result()
-        except Exception as exc:
-            raise RuntimeError(
-                f'MoveIt IK request failed for {leg.label.name}: {exc}'
-            ) from exc
+                f'MoveIt IK request for {leg.label.name} raised an exception: {future_exception}'
+            ) from future_exception
+        response = future.result()
 
         if response is None:
             raise RuntimeError(f'MoveIt IK returned no response for {leg.label.name}')
