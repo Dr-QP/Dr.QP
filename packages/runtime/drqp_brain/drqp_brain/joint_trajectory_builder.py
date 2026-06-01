@@ -23,7 +23,10 @@ from typing import Callable, Protocol
 from control_msgs.action import FollowJointTrajectory
 from drqp_kinematics.models import HexapodModel
 import numpy as np
+from rclpy._rclpy_pybind11 import InvalidHandle, RCLError
 from rclpy.action import ActionClient
+from rclpy.exceptions import NotInitializedException
+from rclpy.impl.rcutils_logger import RcutilsLogger
 import rclpy.node
 import rclpy.publisher
 import rclpy.time
@@ -32,20 +35,15 @@ import trajectory_msgs.msg
 kFemurOffsetAngle = -13.11
 kTibiaOffsetAngle = -32.9
 
+RCLPY_CALLBACK_ERRORS = (InvalidHandle, NotInitializedException, RCLError, RuntimeError)
+
 
 class ShutdownAwareNode(Protocol):
-    class Logger(Protocol):
-        def warning(self, message: str) -> None: ...
-
-        def debug(self, message: str) -> None: ...
-
-        def error(self, message: str) -> None: ...
-
     _is_shutting_down: bool
 
     def _track_future(self, future): ...
 
-    def get_logger(self) -> Logger: ...
+    def get_logger(self) -> RcutilsLogger: ...
 
 
 class JointTrajectoryBuilder:
@@ -131,7 +129,7 @@ class JointTrajectoryBuilder:
         def log_callback_warning(message: str):
             try:
                 node.get_logger().warning(message)
-            except Exception:
+            except RCLPY_CALLBACK_ERRORS:
                 pass
 
         def result_response_callback(future):
@@ -140,7 +138,7 @@ class JointTrajectoryBuilder:
             try:
                 node.get_logger().debug(f'Result received: {future.result().result}')
                 result_callback()
-            except Exception as exc:
+            except RCLPY_CALLBACK_ERRORS as exc:
                 log_callback_warning(f'Ignoring trajectory result callback during shutdown: {exc}')
 
         def goal_response_callback(future):
@@ -148,7 +146,7 @@ class JointTrajectoryBuilder:
                 return
             try:
                 goal_handle = future.result()
-            except Exception as exc:
+            except RCLPY_CALLBACK_ERRORS as exc:
                 log_callback_warning(f'Ignoring trajectory goal response during shutdown: {exc}')
                 return
             if not goal_handle.accepted:

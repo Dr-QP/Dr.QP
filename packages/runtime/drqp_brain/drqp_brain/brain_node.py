@@ -38,9 +38,11 @@ from moveit_msgs.msg import MoveItErrorCodes, RobotState
 from moveit_msgs.srv import GetPositionIK
 import numpy as np
 import rclpy
+from rclpy._rclpy_pybind11 import InvalidHandle, RCLError
 from rclpy.action import ActionClient
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup, ReentrantCallbackGroup
 from rclpy.duration import Duration
+from rclpy.exceptions import NotInitializedException, TimerCancelledError
 from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
 import rclpy.node
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
@@ -53,6 +55,8 @@ import trajectory_msgs.msg
 MOVEIT_IK_SERVICE = '/compute_ik'
 MOVEIT_IK_TIMEOUT_SEC = 2.0
 BASE_FRAME = 'drqp/base_center_link'
+
+RCLPY_SHUTDOWN_ERRORS = (InvalidHandle, NotInitializedException, RCLError, RuntimeError)
 
 
 class HexapodBrain(rclpy.node.Node):
@@ -426,7 +430,7 @@ class HexapodBrain(rclpy.node.Node):
 
         try:
             service_available = self.ik_client.wait_for_service(timeout_sec=0.0)
-        except Exception as exc:
+        except RCLPY_SHUTDOWN_ERRORS as exc:
             if not self._is_shutting_down:
                 self.get_logger().warning(
                     f'MoveIt IK service {MOVEIT_IK_SERVICE} readiness check failed: {exc}'
@@ -572,7 +576,7 @@ class HexapodBrain(rclpy.node.Node):
             self.get_logger().info('Stopping')
         try:
             self.loop_timer.cancel()
-        except Exception:
+        except (InvalidHandle, RCLError, RuntimeError, TimerCancelledError):
             pass
         self.walker.reset()
         self._last_published_foot_targets = None
@@ -587,18 +591,12 @@ class HexapodBrain(rclpy.node.Node):
 
     def _discard_future(self, future):
         self._pending_futures.discard(future)
-        try:
-            future.exception()
-        except Exception:
-            pass
+        future.exception()
 
     def _safe_cancel_future(self, future, description: str):
         if future.done():
             return
-        try:
-            future.cancel()
-        except Exception as exc:
-            self._log_shutdown_warning(f'Failed to cancel {description}: {exc}')
+        future.cancel()
 
     def _cancel_pending_futures(self):
         for future in list(self._pending_futures):
@@ -608,13 +606,13 @@ class HexapodBrain(rclpy.node.Node):
     def _safe_destroy_client(self, client, description: str):
         try:
             client.destroy()
-        except Exception as exc:
+        except RCLPY_SHUTDOWN_ERRORS as exc:
             self._log_shutdown_warning(f'Failed to destroy {description}: {exc}')
 
     def _log_shutdown_warning(self, message: str):
         try:
             self.get_logger().warning(message)
-        except Exception:
+        except RCLPY_SHUTDOWN_ERRORS:
             pass
 
     def destroy_node(self) -> None:
@@ -623,10 +621,7 @@ class HexapodBrain(rclpy.node.Node):
                 return
             self._is_shutting_down = True
 
-        try:
-            self.stop_walk_controller()
-        except Exception as exc:
-            self._log_shutdown_warning(f'Failed to stop walk controller: {exc}')
+        self.stop_walk_controller()
 
         self._cancel_pending_futures()
 
@@ -639,7 +634,7 @@ class HexapodBrain(rclpy.node.Node):
 
         try:
             super().destroy_node()
-        except Exception as exc:
+        except RCLPY_SHUTDOWN_ERRORS as exc:
             self._log_shutdown_warning(f'Failed to destroy drqp_brain node: {exc}')
 
 
