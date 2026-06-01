@@ -19,6 +19,7 @@
     - { role: cmake_kitware, tags: ["cmake"], when: not source_install } # Install Kitware CMake beforehand for prebuilt install
     - { role: cmake_system, tags: ["cmake"], when: source_install }
     - { role: ros_repo, tags: ["ros_repo"] }
+    - { role: osrf_repo, tags: ["osrf_repo"] }
     - { role: dev_tools, tags: ["dev_tools"] }
     - { role: github_cli, tags: ["github_cli"] }
     - { role: colcon_setup, tags: ["colcon_setup"] }
