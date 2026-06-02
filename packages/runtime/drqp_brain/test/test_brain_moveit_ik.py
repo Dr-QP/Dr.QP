@@ -159,10 +159,16 @@ def test_loop_skips_redundant_ik_when_feet_targets_do_not_change():
             mock.patch.object(brain.joint_trajectory_pub, 'publish') as publish_mock,
         ):
             brain.loop()
+            phase_after_first_publish = brain.walker.current_phase
+            body_transform_after_first_publish = brain.hexapod.body_transform.matrix.copy()
             brain.loop()
 
         solve_mock.assert_called_once_with(feet_targets)
         publish_mock.assert_called_once()
+        assert brain.walker.current_phase == pytest.approx(phase_after_first_publish)
+        assert brain.hexapod.body_transform.matrix == pytest.approx(
+            body_transform_after_first_publish
+        )
     finally:
         brain.destroy_node()
 
@@ -227,5 +233,33 @@ def test_loop_warns_once_while_waiting_for_initial_joint_state():
             brain.loop()
 
         warning_mock.assert_called_once_with('No joint state available to seed MoveIt IK requests')
+    finally:
+        brain.destroy_node()
+
+
+def test_loop_restores_motion_state_when_ik_is_not_ready_issue358():
+    """Failed readiness checks must not advance gait or body state."""
+    brain = HexapodBrain()
+    try:
+        command = brain.current_movement
+        command.stride_direction.x = 1.0
+        command.stride_direction.y = -0.4
+        command.rotation_speed = 0.5
+        command.body_translation.z = 0.16
+        command.body_rotation.y = 0.2
+
+        original_direction = brain.walker.current_direction.copy()
+        original_rotation = brain.walker.current_rotation_direction
+        original_phase = brain.walker.current_phase
+        original_body_transform = brain.hexapod.body_transform.matrix.copy()
+
+        with mock.patch.object(brain.joint_trajectory_pub, 'publish') as publish_mock:
+            brain.loop()
+
+        publish_mock.assert_not_called()
+        assert brain.walker.current_direction == original_direction
+        assert brain.walker.current_rotation_direction == original_rotation
+        assert brain.walker.current_phase == original_phase
+        assert brain.hexapod.body_transform.matrix == pytest.approx(original_body_transform)
     finally:
         brain.destroy_node()

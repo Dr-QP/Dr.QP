@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from concurrent.futures import CancelledError
 from unittest import mock
 
 from drqp_brain.brain_node import HexapodBrain
@@ -35,6 +36,7 @@ def ros_context():
 
 
 class PendingFuture:
+
     def __init__(self):
         self.cancel = mock.Mock(return_value=True)
 
@@ -101,3 +103,17 @@ def test_destroy_node_continues_cleanup_when_client_destroy_raises():
     finally:
         if rclpy.ok():
             rclpy.try_shutdown()
+
+
+def test_discard_future_ignores_cancelled_future_exception_issue358():
+    brain = HexapodBrain()
+    try:
+        future = mock.Mock()
+        future.exception.side_effect = CancelledError()
+        brain._pending_futures.add(future)
+
+        brain._discard_future(future)
+
+        assert future not in brain._pending_futures
+    finally:
+        brain.destroy_node()

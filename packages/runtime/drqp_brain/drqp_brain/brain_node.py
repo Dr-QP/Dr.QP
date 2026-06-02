@@ -21,6 +21,7 @@
 # THE SOFTWARE.
 
 import argparse
+from concurrent.futures import CancelledError
 import threading
 
 from control_msgs.action import FollowJointTrajectory
@@ -269,10 +270,12 @@ class HexapodBrain(rclpy.node.Node):
         )
 
         if not self._ik_ready():
+            self._restore_motion_state(previous_state)
             return
 
         foot_targets_key = self._foot_targets_key(feet_targets)
         if foot_targets_key == self._last_published_foot_targets:
+            self._restore_motion_state(previous_state)
             return
 
         try:
@@ -592,7 +595,11 @@ class HexapodBrain(rclpy.node.Node):
 
     def _discard_future(self, future):
         self._pending_futures.discard(future)
-        future.exception()
+        try:
+            future.exception()
+        except CancelledError:
+            # Pending ROS futures are routinely cancelled during shutdown.
+            return
 
     def _safe_cancel_future(self, future, description: str):
         if future.done():
