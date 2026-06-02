@@ -67,7 +67,7 @@ This namespace owns:
 
 - reading system runtime state,
 - streaming system runtime state,
-- exposing the availability and health of the data sources required by the `simulation` and `robot` namespaces.
+- exposing the availability and health of the data sources required by the `robot` namespace and, when present, the `simulation` namespace.
 
 ## 4. Namespace boundaries
 
@@ -101,7 +101,8 @@ System state answers questions such as:
 
 - Is the ROS runtime available?
 - Is the MCP runtime connected to the required data sources?
-- Are simulation, robot state, and motion command channels available?
+- Are robot state and motion command channels available?
+- Are simulation channels available when simulation is present?
 - Are there degraded or unavailable subsystems?
 
 System state is infrastructure-oriented and integration-oriented.
@@ -110,7 +111,9 @@ System state is infrastructure-oriented and integration-oriented.
 
 The MCP behaves as a stateful control surface over one active Dr.QP runtime context.
 
-- Calls operate against one logical robot and one active world context.
+- Calls operate against one logical robot and, when simulation exists, one active world context.
+- The MCP may run against a simulated robot or a real robot.
+- Simulation may be absent entirely when the MCP is attached to a real robot runtime.
 - Simulation may be already running before the MCP is used.
 - Robot lifecycle state may be unavailable until the relevant runtime data appears.
 - State tools return the latest known consistent snapshot for their namespace.
@@ -180,15 +183,14 @@ It contains:
 - world name,
 - simulation time,
 - robot entity name,
-- robot pose sourced from odometry,
+- robot pose in the simulated world,
 - optional note.
 
 Functional semantics:
 
-- this is the robot pose exposed by odometry within the simulation environment,
+- this is the robot as seen by the simulation environment,
 - this state belongs to the `simulation` namespace even though it describes the robot,
-- it exists to separate robot pose observation from robot lifecycle and joint state,
-- callers can rely on this pose matching the live robot pose stream rather than a separate world query approximation.
+- it exists to separate simulated world pose from robot lifecycle and joint state.
 
 ### 7.3 Simulation world state
 
@@ -263,8 +265,6 @@ Supported gait types are:
 - `ripple`
 - `wave`
 
-Gait names are treated case-insensitively and normalized before use.
-
 ### 7.6 System state
 
 System state represents ROS and MCP integration health.
@@ -274,18 +274,21 @@ It contains:
 - timestamp,
 - overall availability flag,
 - ROS runtime availability,
-- simulation channel availability,
 - robot lifecycle channel availability,
 - joint-state availability,
 - motion-command channel availability,
-- world-state channel availability,
+- simulation channel availability when simulation is present,
+- world-state channel availability when simulation is present,
+- deployment mode,
 - optional list of degraded subsystems,
 - optional note.
 
 Functional semantics:
 
 - system state is not a substitute for simulation or robot state,
-- it explains whether the required underlying data sources and command paths are available.
+- `deployment_mode` identifies whether the MCP is currently operating in `real_robot` or `simulation` mode,
+- robot and system state remain valid even when all simulation-related fields are unavailable,
+- simulation-specific availability fields may be `null`, omitted, or explicitly unavailable when simulation is not part of the current deployment.
 
 ### 7.7 Shared pose and joint models
 
@@ -428,8 +431,6 @@ Input:
 Behavior:
 
 - Reads current robot state before acting.
-- Assumes simulation may already be running or may have been brought up separately.
-- If no lifecycle information is available but robot-local state is otherwise observable, treats the robot as bootable from an available off state.
 - If the robot is already in `torque_on`, returns success without changing state.
 - If the robot is in `torque_off` or `finalized`, requests initialization and waits for `torque_on`.
 - If the robot is already `initializing`, waits for `torque_on`.
@@ -745,9 +746,11 @@ Event payload:
 Expected update triggers:
 
 - ROS runtime availability changes,
-- simulation channel availability changes,
 - robot lifecycle channel availability changes,
-- world-state channel availability changes,
+- motion-command channel availability changes,
+- simulation channel availability changes when simulation is present,
+- world-state channel availability changes when simulation is present,
+- deployment-mode changes,
 - degraded subsystem changes.
 
 ## 10. Validation and error behavior
@@ -792,7 +795,8 @@ Examples:
 
 - `simulation.world_state` may return simulation time but zero entities when world-state data is not yet available,
 - `robot.state` may return unavailable with a note when lifecycle and joint state are absent,
-- `system.state` may report degraded subsystems while the MCP remains partially usable.
+- `system.state` may report degraded subsystems while the MCP remains partially usable,
+- `system.state` may report simulation as unavailable while remaining fully valid for a real robot deployment.
 
 ### 10.4 Publication semantics
 
@@ -817,20 +821,23 @@ Successful stream subscription means the MCP accepted the subscription and will 
 ### 11.2 Robot requirements
 
 - The MCP shall expose robot boot and shutdown operations separate from simulation start and stop.
+- All `robot` request-response interfaces shall make sense and remain usable when no simulation is present.
 - The MCP shall be able to bring the robot to `torque_on` from an available off state.
-- The MCP shall treat an otherwise observable robot with unavailable lifecycle state as bootable from an available off state.
 - The MCP shall tolerate shutdown requests when the robot is already not active.
-- The MCP shall expose robot lifecycle and joint state separately from the odometry-backed pose surfaced by `simulation.robot_state`.
+- The MCP shall expose robot lifecycle and joint state separately from simulated world pose.
 - The MCP shall support normalized motion commands with at least the `tripod`, `ripple`, and `wave` gait modes.
 - The MCP shall expose a dedicated stop command.
 - The MCP shall support bounded walking sequences.
 - The MCP shall support robot-state recording and robot-state streaming.
+- All `robot` streams shall remain meaningful on a real robot deployment without simulation state.
 
 ### 11.3 System requirements
 
 - The MCP shall expose a system namespace for ROS and MCP runtime state that is not owned solely by simulation or robot.
+- All `system` request-response interfaces shall make sense and remain usable when no simulation is present.
 - The MCP shall surface degraded subsystem state explicitly.
 - The MCP shall support streaming system state.
+- All `system` streams shall remain meaningful on a real robot deployment without simulation state.
 
 ### 11.4 Separation requirements
 
@@ -844,7 +851,9 @@ Successful stream subscription means the MCP accepted the subscription and will 
 The following assumptions are functionally relevant to callers:
 
 - The MCP operates against the current ROS 2 environment.
-- The odometry-backed robot pose belongs to the `simulation.robot_state` surface.
+- The `robot` namespace is valid for both simulated and real robot deployments.
+- The `system` namespace is valid for both simulated and real robot deployments.
+- Simulated robot pose belongs to the `simulation.robot_state` surface.
 - Robot lifecycle and joint state belong to the `robot.state` surface.
 - World state belongs to the `simulation.world_state` surface.
 - System runtime and channel health belong to the `system.state` surface.
