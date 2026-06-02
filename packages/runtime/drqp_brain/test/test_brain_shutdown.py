@@ -36,6 +36,8 @@ def ros_context():
 
 
 class PendingFuture:
+    """A mock future that simulates a pending state and allows cancellation."""
+
     def __init__(self):
         self.cancel = mock.Mock(return_value=True)
 
