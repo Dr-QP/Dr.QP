@@ -242,14 +242,8 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           codecov-token: ${{ secrets.CODECOV_TOKEN }}
-
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        # upload the logs even when the build fails
-        if: always()
-        with:
-          name: colcon-logs-${{ matrix.arch }}
-          path: log
-          retention-days: 90
+          logs-artifact-name: colcon-logs-${{ matrix.arch }}
+          reports-artifact-name: colcon-test-reports-${{ matrix.arch }}
 
   dev-container-ci:
     name: Devcontainer image
@@ -337,6 +331,8 @@ jobs:
         uses: ./.github/actions/publish-test-results
         with:
           codecov-token: ${{ secrets.CODECOV_TOKEN }}
+          logs-artifact-name: devcontainer-logs-${{ matrix.arch }}
+          reports-artifact-name: devcontainer-test-reports-${{ matrix.arch }}
 
   build-deploy-image:
     name: Deployment image

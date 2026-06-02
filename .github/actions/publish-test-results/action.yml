@@ -5,6 +5,12 @@ inputs:
   codecov-token:
     description: Codecov token used to upload test results
     required: true
+  logs-artifact-name:
+    description: Artifact name used when uploading logs
+    required: true
+  reports-artifact-name:
+    description: Artifact name used when uploading xUnit reports
+    required: true
   reports-glob:
     description: Glob passed to test-summary/action
     required: false
@@ -13,6 +19,14 @@ inputs:
     description: Directory to scan for xUnit XML reports
     required: false
     default: build
+  logs-path:
+    description: Path uploaded as the logs artifact
+    required: false
+    default: log
+  retention-days:
+    description: Retention period for uploaded artifacts
+    required: false
+    default: '90'
 
 runs:
   using: composite
@@ -47,3 +61,21 @@ runs:
         report_type: test_results
         token: ${{ inputs.codecov-token }}
         files: ${{ steps.test_reports.outputs.result }}
+
+    - name: Upload test reports artifact
+      if: ${{ always() && !cancelled() }}
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      with:
+        name: ${{ inputs.reports-artifact-name }}
+        path: ${{ inputs.reports-glob }}
+        if-no-files-found: ignore
+        retention-days: ${{ inputs.retention-days }}
+
+    - name: Upload logs artifact
+      if: ${{ always() && !cancelled() }}
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      with:
+        name: ${{ inputs.logs-artifact-name }}
+        path: ${{ inputs.logs-path }}
+        if-no-files-found: ignore
+        retention-days: ${{ inputs.retention-days }}
