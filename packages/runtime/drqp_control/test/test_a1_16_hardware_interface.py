@@ -240,7 +240,6 @@ class TestA116HardwareInterface(unittest.TestCase):
         trajectory_goal = FollowJointTrajectory.Goal()
         trajectory_goal.trajectory.joint_names = self.joint_names
         trajectory_goal.trajectory.points = [target_point]
-        trajectory_goal.trajectory.header.stamp = self.node.get_clock().now().to_msg()
         trajectory_goal.trajectory.header.frame_id = 'test_frame'
 
         goal_handle_future = self.trajectory_client.send_goal_async(trajectory_goal)
