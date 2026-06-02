@@ -36,7 +36,6 @@ def ros_context():
 
 
 class PendingFuture:
-
     def __init__(self):
         self.cancel = mock.Mock(return_value=True)
 
