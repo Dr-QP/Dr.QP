@@ -56,6 +56,7 @@ class RobotMcpController:
         self.launch_log_path = self.runtime_dir / 'sim.launch.log'
         self._recording_lock = threading.Lock()
         self._recording: _RecordingSession | None = None
+        self._latest_motion_command: dict[str, Any] | None = None
 
     def close(self) -> None:
         """Release long-lived ROS resources owned by this controller."""
@@ -192,6 +193,144 @@ class RobotMcpController:
         )
 
 
+    def start_simulation(self, timeout_sec: float = 120.0) -> dict[str, Any]:
+        """Ensure the simulation process is running and observable."""
+        state_before = self.get_simulation_state(timeout_sec=min(timeout_sec, 1.0))
+        result = self._start_simulation()
+        state_after = self._poll_simulation_state(
+            predicate=lambda snapshot: bool(snapshot['available']),
+            timeout_sec=min(timeout_sec, 30.0),
+            error_message='Timed out waiting for the simulation to become observable.',
+        )
+        return {
+            'action': 'start',
+            'state_before': state_before,
+            'state_after': state_after,
+            'simulation_was_started': bool(result.get('started', False)),
+            'running': bool(state_after['running']),
+            'message': str(result.get('message', 'Started Gazebo simulation launch.')),
+            'log_path': str(result.get('log_path', self.launch_log_path)),
+        }
+
+
+    def stop_simulation(self, timeout_sec: float = 120.0) -> dict[str, Any]:
+        """Stop the simulation process tracked by the runtime PID file."""
+        state_before = self.get_simulation_state(timeout_sec=min(timeout_sec, 1.0))
+        result = runtime.stop_simulation(
+            self.launch_pid_path,
+            self.launch_log_path,
+            timeout_sec=timeout_sec,
+        )
+        if bool(result.get('stopped', False)):
+            self.runtime.reset_simulation_state()
+        state_after = self.get_simulation_state(timeout_sec=0.1)
+        if not bool(result.get('stopped', False)) and bool(state_before['running']):
+            raise ControllerError(str(result.get('message')))
+        return {
+            'action': 'stop',
+            'state_before': state_before,
+            'state_after': state_after,
+            'simulation_was_started': False,
+            'running': bool(state_after['running']),
+            'message': str(result.get('message', 'Stopped Gazebo simulation launch.')),
+            'log_path': str(result.get('log_path', self.launch_log_path)),
+        }
+
+
+    def get_simulation_state(self, timeout_sec: float = 10.0) -> dict[str, Any]:
+        """Return the simulation runtime surface required by the spec."""
+        robot_state = self.get_robot_state(timeout_sec=timeout_sec)
+        process_running = self._simulation_process_running()
+        available = bool(robot_state.simulation_running or process_running)
+        note = robot_state.note
+        if process_running and not robot_state.simulation_running:
+            note = 'Simulation process is running but runtime signals are not yet available.'
+        return {
+            'timestamp': robot_state.timestamp,
+            'available': available,
+            'running': bool(robot_state.simulation_running or process_running),
+            'world_name': self.world_name if available else None,
+            'simulation_time_sec': robot_state.simulation_time_sec,
+            'note': note,
+            'status_details': None,
+        }
+
+
+    def get_simulation_robot_state(self, timeout_sec: float = 10.0) -> dict[str, Any]:
+        """Return the simulated robot pose surface required by the spec."""
+        robot_state = self.get_robot_state(timeout_sec=timeout_sec)
+        available = robot_state.robot_pose is not None or robot_state.simulation_running
+        return {
+            'timestamp': robot_state.timestamp,
+            'available': available,
+            'world_name': self.world_name if available else None,
+            'simulation_time_sec': robot_state.simulation_time_sec,
+            'robot_entity_name': self.robot_name,
+            'robot_pose': self._pose_to_payload(robot_state.robot_pose),
+            'note': None if robot_state.robot_pose is not None else robot_state.note,
+        }
+
+
+    def get_simulation_world_state(self, timeout_sec: float = 10.0) -> dict[str, Any]:
+        """Return the simulated world-state surface required by the spec."""
+        world_state = self.get_world_state(timeout_sec=timeout_sec)
+        return {
+            'timestamp': _utc_now(),
+            'available': world_state.available,
+            'world_name': world_state.world_name,
+            'simulation_time_sec': world_state.simulation_time_sec,
+            'entity_count': world_state.entity_count,
+            'entities': [
+                {
+                    'name': entity.name,
+                    'entity_id': entity.entity_id,
+                    'pose': self._pose_to_payload(entity.pose),
+                }
+                for entity in world_state.entities
+            ],
+            'source': world_state.source,
+            'note': world_state.note,
+        }
+
+
+    def get_robot_namespace_state(self, timeout_sec: float = 10.0) -> dict[str, Any]:
+        """Return the robot-local state surface required by the spec."""
+        robot_state = self.get_robot_state(timeout_sec=timeout_sec)
+        latest_motion_command = None
+        if self._latest_motion_command is not None:
+            latest_motion_command = dict(self._latest_motion_command)
+        return {
+            'timestamp': robot_state.timestamp,
+            'available': robot_state.available,
+            'lifecycle_state': robot_state.lifecycle_state,
+            'active': robot_state.lifecycle_state == 'torque_on',
+            'joint_states': {
+                name: {
+                    'position': value.position,
+                    'velocity': value.velocity,
+                    'effort': value.effort,
+                }
+                for name, value in robot_state.joint_states.items()
+            },
+            'latest_motion_command': latest_motion_command,
+            'note': robot_state.note,
+        }
+
+
+    def get_system_state(self, timeout_sec: float = 10.0) -> dict[str, Any]:
+        """Return the system runtime health surface required by the spec."""
+        system_state = self.runtime.get_system_state(self.world_name, timeout_sec)
+        if self._simulation_process_running():
+            system_state['deployment_mode'] = 'simulation'
+            if not system_state['simulation_channel_available']:
+                degraded_subsystems = list(system_state['degraded_subsystems'])
+                if 'simulation_runtime' not in degraded_subsystems:
+                    degraded_subsystems.append('simulation_runtime')
+                system_state['degraded_subsystems'] = degraded_subsystems
+                system_state['note'] = 'Simulation is running but runtime signals are degraded.'
+        return system_state
+
+
     def send_motion_command(
         self,
         *,
@@ -228,15 +367,24 @@ class RobotMcpController:
             'z': self._validate_normalized('body_yaw', body_yaw),
         }
         normalized_gait = self._validate_gait_type(gait_type)
-        return MotionCommandResult.from_mapping(
-            self._publish_movement_command(
-                stride_direction=stride_direction,
-                rotation_speed=normalized_rotation_speed,
-                body_translation=body_translation,
-                body_rotation=body_rotation,
-                gait_type=normalized_gait,
-            )
+        result = self._publish_movement_command(
+            stride_direction=stride_direction,
+            rotation_speed=normalized_rotation_speed,
+            body_translation=body_translation,
+            body_rotation=body_rotation,
+            gait_type=normalized_gait,
         )
+        command_result = MotionCommandResult.from_mapping(result)
+        self._latest_motion_command = {
+            'stride_direction': dict(stride_direction),
+            'rotation_speed': normalized_rotation_speed,
+            'body_translation': dict(body_translation),
+            'body_rotation': dict(body_rotation),
+            'gait_type': normalized_gait,
+            'timestamp': _utc_now(),
+            'note': result.get('message'),
+        }
+        return command_result
 
 
     def stop_motion(self) -> MotionCommandResult:
@@ -383,6 +531,46 @@ class RobotMcpController:
             )
 
 
+    def stream_simulation_state(self) -> dict[str, Any]:
+        """Return the current simulation state stream event payload."""
+        return self._stream_event(
+            'simulation.state.stream',
+            self.get_simulation_state(),
+        )
+
+
+    def stream_simulation_robot_state(self) -> dict[str, Any]:
+        """Return the current simulated robot state stream event payload."""
+        return self._stream_event(
+            'simulation.robot_state.stream',
+            self.get_simulation_robot_state(),
+        )
+
+
+    def stream_simulation_world_state(self) -> dict[str, Any]:
+        """Return the current world state stream event payload."""
+        return self._stream_event(
+            'simulation.world_state.stream',
+            self.get_simulation_world_state(),
+        )
+
+
+    def stream_robot_state(self) -> dict[str, Any]:
+        """Return the current robot state stream event payload."""
+        return self._stream_event(
+            'robot.state.stream',
+            self.get_robot_namespace_state(),
+        )
+
+
+    def stream_system_state(self) -> dict[str, Any]:
+        """Return the current system state stream event payload."""
+        return self._stream_event(
+            'system.state.stream',
+            self.get_system_state(),
+        )
+
+
     def _record_worker(self, session: _RecordingSession) -> None:
         """Record robot snapshots until stopped."""
         while not session.stop_event.is_set():
@@ -472,6 +660,62 @@ class RobotMcpController:
                 f'gait_type must be one of {supported}; got {gait_type!r}.'
             )
         return normalized_gait_type
+
+
+    def _poll_simulation_state(
+        self,
+        predicate: Callable[[dict[str, Any]], bool],
+        timeout_sec: float,
+        error_message: str,
+    ) -> dict[str, Any]:
+        """Poll simulation state until a predicate succeeds or timeout expires."""
+        deadline = time.monotonic() + timeout_sec
+        latest = self.get_simulation_state(timeout_sec=0.1)
+        while time.monotonic() < deadline:
+            if predicate(latest):
+                return latest
+            time.sleep(0.5)
+            latest = self.get_simulation_state(timeout_sec=0.1)
+        raise ControllerError(error_message)
+
+
+    def _simulation_process_running(self) -> bool:
+        """Return whether the tracked simulation launch process is still alive."""
+        current_pid = runtime._read_pid(self.launch_pid_path)
+        return current_pid is not None and runtime._pid_is_running(current_pid)
+
+
+    def _pose_to_payload(self, pose: Any) -> dict[str, Any] | None:
+        """Convert a pose model into a plain JSON-serializable payload."""
+        if pose is None:
+            return None
+        return {
+            'position': {
+                'x': pose.position.x,
+                'y': pose.position.y,
+                'z': pose.position.z,
+            },
+            'orientation': {
+                'x': pose.orientation.x,
+                'y': pose.orientation.y,
+                'z': pose.orientation.z,
+                'w': pose.orientation.w,
+            },
+        }
+
+
+    def _stream_event(
+        self,
+        stream_name: str,
+        payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Wrap a snapshot payload in the stream event envelope from the spec."""
+        return {
+            'timestamp': payload.get('timestamp', _utc_now()),
+            'stream_name': stream_name,
+            'event_type': 'snapshot',
+            'payload': payload,
+        }
 
 
 def _utc_now() -> str:

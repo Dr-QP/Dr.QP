@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 import os
 from pathlib import Path
+import signal
 import shutil
 import subprocess
 import threading
@@ -270,6 +271,65 @@ class RosRuntimeSession:
 
         if started.did_init and started.dependencies.rclpy.ok():
             started.dependencies.rclpy.shutdown()
+
+    def reset_simulation_state(self) -> None:
+        """Clear cached simulation-only state after simulation shutdown."""
+        with self._state_changed:
+            self._robot_pose = None
+            self._world_states = {}
+            self._simulation_time_sec = None
+            self._state_changed.notify_all()
+
+    def get_system_state(
+        self,
+        world_name: str,
+        timeout_sec: float,
+    ) -> dict[str, Any]:
+        """Return the current ROS and transport integration health snapshot."""
+        started = self._ensure_started()
+        self._wait_for_runtime_data(timeout_sec)
+
+        with self._state_changed:
+            self._raise_spin_error_locked()
+            lifecycle_state = self._lifecycle_state
+            joint_state_available = bool(self._joint_states)
+            simulation_channel_available = self._simulation_time_sec is not None
+            world_state_channel_available = world_name in self._world_states
+
+        motion_command_channel_available = (
+            started.movement_command_publisher.get_subscription_count() > 0
+        )
+        robot_lifecycle_channel_available = lifecycle_state is not None
+        deployment_mode = (
+            'simulation' if simulation_channel_available else 'real_robot'
+        )
+        degraded_subsystems = []
+        if not robot_lifecycle_channel_available:
+            degraded_subsystems.append('robot_lifecycle')
+        if not joint_state_available:
+            degraded_subsystems.append('joint_states')
+        if not motion_command_channel_available:
+            degraded_subsystems.append('motion_command')
+        if deployment_mode == 'simulation' and not world_state_channel_available:
+            degraded_subsystems.append('world_state')
+
+        return {
+            'timestamp': datetime.now(UTC).isoformat(),
+            'available': True,
+            'ros_runtime_available': True,
+            'robot_lifecycle_channel_available': (
+                robot_lifecycle_channel_available
+            ),
+            'joint_state_available': joint_state_available,
+            'motion_command_channel_available': (
+                motion_command_channel_available
+            ),
+            'simulation_channel_available': simulation_channel_available,
+            'world_state_channel_available': world_state_channel_available,
+            'deployment_mode': deployment_mode,
+            'degraded_subsystems': degraded_subsystems,
+            'note': None if not degraded_subsystems else 'One or more subsystems are degraded.',
+        }
 
     def _ensure_started(self) -> _StartedRosRuntime:
         """Initialize the shared ROS node on first use."""
@@ -623,6 +683,58 @@ def start_simulation(
     }
 
 
+def stop_simulation(
+    pid_path: Path,
+    log_path: Path,
+    timeout_sec: float = 120.0,
+) -> dict[str, Any]:
+    """Stop the Gazebo simulation launch process tracked by the runtime PID file."""
+    current_pid = _read_pid(pid_path)
+    if current_pid is None or not _pid_is_running(current_pid):
+        if pid_path.exists():
+            pid_path.unlink(missing_ok=True)
+        return {
+            'stopped': False,
+            'available': False,
+            'pid': current_pid,
+            'message': 'Simulation launch is already stopped.',
+            'log_path': str(log_path),
+        }
+
+    try:
+        os.killpg(current_pid, signal.SIGTERM)
+    except ProcessLookupError:
+        pid_path.unlink(missing_ok=True)
+        return {
+            'stopped': True,
+            'available': False,
+            'pid': current_pid,
+            'message': 'Simulation launch was already exiting.',
+            'log_path': str(log_path),
+        }
+
+    deadline = time.monotonic() + timeout_sec
+    while time.monotonic() < deadline:
+        if not _pid_is_running(current_pid):
+            pid_path.unlink(missing_ok=True)
+            return {
+                'stopped': True,
+                'available': False,
+                'pid': current_pid,
+                'message': 'Stopped Gazebo simulation launch.',
+                'log_path': str(log_path),
+            }
+        time.sleep(0.1)
+
+    return {
+        'stopped': False,
+        'available': True,
+        'pid': current_pid,
+        'message': 'Timed out waiting for the Gazebo simulation launch to stop.',
+        'log_path': str(log_path),
+    }
+
+
 def publish_event(event: str) -> dict[str, Any]:
     """Publish a robot event onto /robot_event."""
     return get_default_ros_runtime().publish_event(event)
@@ -666,6 +778,11 @@ def get_robot_state(
         robot_name=robot_name,
         timeout_sec=timeout_sec,
     )
+
+
+def get_system_state(world_name: str, timeout_sec: float) -> dict[str, Any]:
+    """Return the current ROS and transport integration health snapshot."""
+    return get_default_ros_runtime().get_system_state(world_name, timeout_sec)
 
 
 def _get_world_state_snapshot(
