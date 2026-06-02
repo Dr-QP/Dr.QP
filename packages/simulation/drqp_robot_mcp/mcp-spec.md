@@ -102,7 +102,7 @@ System state answers questions such as:
 - Is the ROS runtime available?
 - Is the MCP runtime connected to the required data sources?
 - Are robot state and motion command channels available?
-- Are simulation channels available when simulation is present?
+- Are simulation channels available?
 - Are there degraded or unavailable subsystems?
 
 System state is infrastructure-oriented and integration-oriented.
@@ -277,8 +277,8 @@ It contains:
 - robot lifecycle channel availability,
 - joint-state availability,
 - motion-command channel availability,
-- simulation channel availability when simulation is present,
-- world-state channel availability when simulation is present,
+- simulation channel availability,
+- world-state channel availability,
 - deployment mode,
 - optional list of degraded subsystems,
 - optional note.
@@ -287,8 +287,7 @@ Functional semantics:
 
 - system state is not a substitute for simulation or robot state,
 - `deployment_mode` identifies whether the MCP is currently operating in `real_robot` or `simulation` mode,
-- robot and system state remain valid even when all simulation-related fields are unavailable,
-- simulation-specific availability fields may be `null`, omitted, or explicitly unavailable when simulation is not part of the current deployment.
+- it explains whether the required underlying data sources and command paths are available.
 
 ### 7.7 Shared pose and joint models
 
@@ -748,8 +747,8 @@ Expected update triggers:
 - ROS runtime availability changes,
 - robot lifecycle channel availability changes,
 - motion-command channel availability changes,
-- simulation channel availability changes when simulation is present,
-- world-state channel availability changes when simulation is present,
+- simulation channel availability changes,
+- world-state channel availability changes,
 - deployment-mode changes,
 - degraded subsystem changes.
 
@@ -795,8 +794,7 @@ Examples:
 
 - `simulation.world_state` may return simulation time but zero entities when world-state data is not yet available,
 - `robot.state` may return unavailable with a note when lifecycle and joint state are absent,
-- `system.state` may report degraded subsystems while the MCP remains partially usable,
-- `system.state` may report simulation as unavailable while remaining fully valid for a real robot deployment.
+- `system.state` may report degraded subsystems while the MCP remains partially usable.
 
 ### 10.4 Publication semantics
 
@@ -821,7 +819,6 @@ Successful stream subscription means the MCP accepted the subscription and will 
 ### 11.2 Robot requirements
 
 - The MCP shall expose robot boot and shutdown operations separate from simulation start and stop.
-- All `robot` request-response interfaces shall make sense and remain usable when no simulation is present.
 - The MCP shall be able to bring the robot to `torque_on` from an available off state.
 - The MCP shall tolerate shutdown requests when the robot is already not active.
 - The MCP shall expose robot lifecycle and joint state separately from simulated world pose.
@@ -834,7 +831,6 @@ Successful stream subscription means the MCP accepted the subscription and will 
 ### 11.3 System requirements
 
 - The MCP shall expose a system namespace for ROS and MCP runtime state that is not owned solely by simulation or robot.
-- All `system` request-response interfaces shall make sense and remain usable when no simulation is present.
 - The MCP shall surface degraded subsystem state explicitly.
 - The MCP shall support streaming system state.
 - All `system` streams shall remain meaningful on a real robot deployment without simulation state.
@@ -851,8 +847,6 @@ Successful stream subscription means the MCP accepted the subscription and will 
 The following assumptions are functionally relevant to callers:
 
 - The MCP operates against the current ROS 2 environment.
-- The `robot` namespace is valid for both simulated and real robot deployments.
-- The `system` namespace is valid for both simulated and real robot deployments.
 - Simulated robot pose belongs to the `simulation.robot_state` surface.
 - Robot lifecycle and joint state belong to the `robot.state` surface.
 - World state belongs to the `simulation.world_state` surface.
