@@ -4,57 +4,228 @@
 
 This document specifies the externally observable functionality of the Dr.QP robot MCP.
 
-The MCP provides a tool-driven interface for:
+The specification defines a namespace-based MCP interface with a clean separation between:
 
-- bringing simulation up and down,
-- bringing the robot into and out of the `torque_on` lifecycle state,
-- reading robot state,
-- reading simulation world state,
+- simulation control and simulated state,
+- robot lifecycle and motion control,
+- system-level ROS runtime and transport state.
+
+The MCP must support both request-response tools and streaming state interfaces. The request-response tools are used for imperative actions and point-in-time inspection. The streaming interfaces are used for continuous state observation.
+
+This is a functional specification. It defines capabilities, interface shape, returned data, expected behavior, and observable guarantees. It does not prescribe implementation structure, transport library choice, topic wiring, process layout, or concurrency design except where required to define behavior.
+
+## 2. Design goals for the interface
+
+The MCP interface shall:
+
+- present a clear namespace hierarchy,
+- separate simulation state from robot state,
+- separate controllable robot actions from passive system observation,
+- provide point-in-time state reads,
+- provide streaming state interfaces for all major state surfaces,
+- allow clients to compose simulation control, robot control, and system inspection independently.
+
+## 3. Top-level namespaces
+
+The MCP interface is organized into three namespaces.
+
+### 3.1 `simulation`
+
+The `simulation` namespace is responsible for simulation lifecycle and simulated state.
+
+This namespace owns:
+
+- starting simulation,
+- stopping simulation,
+- reading simulation runtime state,
+- reading simulated robot state,
+- reading simulated world state,
+- streaming simulation state,
+- streaming simulated robot state,
+- streaming simulated world state.
+
+### 3.2 `robot`
+
+The `robot` namespace is responsible for robot lifecycle, robot-local state, motion control, and robot-state recording.
+
+This namespace owns:
+
+- booting the robot into an active lifecycle state,
+- shutting the robot down through its lifecycle,
+- reading robot lifecycle and joint state,
 - issuing motion commands,
-- running fixed-duration walking sequences, and
-- recording robot state snapshots over time.
+- stopping motion,
+- running bounded walking sequences,
+- managing robot-state recording,
+- streaming robot state.
 
-This specification is intentionally functional rather than architectural. It describes what the MCP does, what data it returns, and how callers should expect it to behave. Internal class layout, middleware structure, process model, and other implementation details are out of scope unless they are necessary to explain behavior.
+### 3.3 `system`
 
-## 2. Functional scope
+The `system` namespace is responsible for ROS and MCP runtime state that does not belong exclusively to either simulation state or robot state.
 
-The Dr.QP robot MCP exposes a single logical robot control and inspection surface for the currently configured Dr.QP simulation/runtime environment.
+This namespace owns:
 
-Within scope:
+- reading system runtime state,
+- streaming system runtime state,
+- exposing the availability and health of the data sources required by the `simulation` and `robot` namespaces.
 
-- simulation bring-up and shutdown,
-- robot lifecycle control for torque-on and torque-off/finalized transitions,
-- current robot state inspection,
-- current world state inspection,
-- direct motion-command publication,
-- repeated walking commands for a bounded duration,
-- snapshot recording of robot state over time.
+## 4. Namespace boundaries
 
-Out of scope:
+### 4.1 Simulation state
 
-- path planning,
-- task planning,
-- map building,
-- collision checking,
-- inverse kinematics APIs,
-- arbitrary world mutation,
-- multi-robot coordination,
-- persistent storage of recordings beyond the tool response.
+Simulation state answers questions such as:
 
-## 3. Operating model
+- Is the simulation running?
+- Is simulation time available?
+- What world is active?
+- What are the current entity poses in the world?
+- What is the simulated pose of the robot in the world?
 
-The MCP behaves as a stateful control surface over a single active robot runtime.
+Simulation state is world-oriented and environment-oriented.
 
-- Calls operate against one robot instance and one active world context.
-- The MCP may observe a runtime that is already active, or it may need to start the simulation environment before robot lifecycle operations can complete.
-- Some information may be unavailable temporarily while the runtime is starting or while a data source has not yet produced messages.
-- World-state inspection is intended for Gazebo-backed simulation environments.
+### 4.2 Robot state
 
-## 4. Core functional concepts
+Robot state answers questions such as:
 
-### 4.1 Robot lifecycle state
+- What lifecycle state is the robot in?
+- Are joint states available?
+- What are the current joint values?
+- Is the robot active for torque-enabled behavior?
+- What robot command state was most recently accepted?
 
-The MCP reports and reacts to a robot lifecycle state. Observed states include:
+Robot state is robot-oriented and control-oriented.
+
+### 4.3 System state
+
+System state answers questions such as:
+
+- Is the ROS runtime available?
+- Is the MCP runtime connected to the required data sources?
+- Are simulation, robot state, and motion command channels available?
+- Are there degraded or unavailable subsystems?
+
+System state is infrastructure-oriented and integration-oriented.
+
+## 5. Operating model
+
+The MCP behaves as a stateful control surface over one active Dr.QP runtime context.
+
+- Calls operate against one logical robot and one active world context.
+- Simulation may be already running before the MCP is used.
+- Robot lifecycle state may be unavailable until the relevant runtime data appears.
+- State tools return the latest known consistent snapshot for their namespace.
+- Streaming interfaces continuously emit state updates for their namespace.
+- Action tools do not implicitly subscribe a client to streams.
+- Streams do not imply control authority.
+
+## 6. Interface naming rules
+
+All MCP operations shall use namespaced names.
+
+Examples:
+
+- `simulation.start`
+- `simulation.stop`
+- `simulation.state`
+- `simulation.robot_state`
+- `simulation.world_state`
+- `robot.boot`
+- `robot.shutdown`
+- `robot.state`
+- `robot.move`
+- `robot.stop`
+- `robot.walk_for_duration`
+- `system.state`
+
+All streaming interfaces shall use `.stream` suffixes on the corresponding state surface.
+
+Examples:
+
+- `simulation.state.stream`
+- `simulation.robot_state.stream`
+- `simulation.world_state.stream`
+- `robot.state.stream`
+- `system.state.stream`
+
+## 7. Core state models
+
+### 7.1 Simulation runtime state
+
+Simulation runtime state represents the current availability of the simulation environment.
+
+It contains:
+
+- timestamp,
+- availability flag,
+- running flag,
+- world name,
+- simulation time,
+- optional note,
+- optional status details for startup, shutdown, or degraded operation.
+
+Functional semantics:
+
+- `available` means the simulation environment is observable by the MCP,
+- `running` means the simulation is currently active rather than merely configured,
+- `simulation_time_sec` is present when simulation time is available.
+
+### 7.2 Simulation robot state
+
+Simulation robot state represents the robot as an entity inside the simulation world.
+
+It contains:
+
+- timestamp,
+- availability flag,
+- world name,
+- simulation time,
+- robot entity name,
+- robot pose sourced from odometry,
+- optional note.
+
+Functional semantics:
+
+- this is the robot pose exposed by odometry within the simulation environment,
+- this state belongs to the `simulation` namespace even though it describes the robot,
+- it exists to separate robot pose observation from robot lifecycle and joint state,
+- callers can rely on this pose matching the live robot pose stream rather than a separate world query approximation.
+
+### 7.3 Simulation world state
+
+Simulation world state represents the current entity poses in the active world.
+
+It contains:
+
+- timestamp,
+- availability flag,
+- world name,
+- simulation time,
+- entity count,
+- list of world entities,
+- source identifier,
+- optional note.
+
+Each world entity contains:
+
+- entity name,
+- entity identifier when available,
+- entity pose.
+
+### 7.4 Robot state
+
+Robot state represents robot lifecycle and robot-local kinematic state.
+
+It contains:
+
+- timestamp,
+- availability flag,
+- lifecycle state,
+- active flag,
+- joint states keyed by joint name,
+- optional latest accepted motion command summary,
+- optional note.
+
+Observed lifecycle states include:
 
 - `torque_on`
 - `torque_off`
@@ -64,55 +235,27 @@ The MCP reports and reacts to a robot lifecycle state. Observed states include:
 - `servos_rebooting`
 - unavailable or unknown state represented as `null`
 
-These states are used by lifecycle tools to determine whether work is required, whether a state transition must be awaited, or whether the request cannot be completed.
+Functional semantics:
 
-### 4.2 Robot state snapshot
+- `active = true` means the robot is in `torque_on`,
+- robot state does not need to contain simulated world pose,
+- robot state may be partially available when lifecycle or joints are missing.
 
-A robot state snapshot is the main read model for the robot. It represents the latest known robot condition and includes:
+### 7.5 Motion command state
 
-- a timestamp for when the snapshot was produced,
-- whether any robot-related data is currently available,
-- whether simulation appears to be running,
-- the current lifecycle state if known,
-- the current world name when simulation is active,
-- current simulation time if known,
-- the robot pose,
-- joint states keyed by joint name,
-- an optional note when data is unavailable or incomplete.
+Motion command state represents the most recent accepted motion command.
 
-The robot pose is functionally defined as the robot pose exposed by odometry. This matters because callers can rely on the pose matching the live robot pose stream rather than a separate world-query approximation.
-
-### 4.3 World state snapshot
-
-A world state snapshot represents the latest known world entity poses for the active simulation world and includes:
-
-- whether world-state data is available,
-- the world name,
-- simulation time if known,
-- entity count,
-- a list of entities,
-- the source identifier,
-- an optional note when world data is unavailable or partially unavailable.
-
-Each world entity contains:
-
-- entity name,
-- entity identifier when available,
-- entity pose.
-
-World state is functionally defined as coming from the live Gazebo world pose stream when available.
-
-### 4.4 Motion command
-
-A motion command is a normalized joystick-like command that combines:
+It contains:
 
 - stride direction in `x`, `y`, and `z`,
-- rotational speed,
+- rotation speed,
 - body translation in `x`, `y`, and `z`,
 - body rotation as roll, pitch, and yaw,
-- gait type.
+- gait type,
+- timestamp,
+- optional note.
 
-All numeric motion inputs are normalized values in the inclusive range `[-1.0, 1.0]`.
+All numeric command inputs are normalized values in the inclusive range `[-1.0, 1.0]`.
 
 Supported gait types are:
 
@@ -122,29 +265,50 @@ Supported gait types are:
 
 Gait names are treated case-insensitively and normalized before use.
 
-### 4.5 Recording session
+### 7.6 System state
 
-A recording session captures a sequence of robot state snapshots at a fixed sampling interval.
+System state represents ROS and MCP integration health.
 
-A recording session has:
+It contains:
 
-- active or idle state,
-- sample interval,
-- start timestamp,
-- current sample count while active,
-- final sample list when stopped.
+- timestamp,
+- overall availability flag,
+- ROS runtime availability,
+- simulation channel availability,
+- robot lifecycle channel availability,
+- joint-state availability,
+- motion-command channel availability,
+- world-state channel availability,
+- optional list of degraded subsystems,
+- optional note.
 
-Only one recording session may be active at a time.
+Functional semantics:
 
-## 5. Exposed MCP tools
+- system state is not a substitute for simulation or robot state,
+- it explains whether the required underlying data sources and command paths are available.
 
-The MCP exposes the following tools.
+### 7.7 Shared pose and joint models
 
-### 5.1 `drqp_robot_sim_bring_up`
+A pose contains:
+
+- `position` with `x`, `y`, `z`,
+- `orientation` with quaternion `x`, `y`, `z`, `w`.
+
+Joint states are returned as a mapping from joint name to:
+
+- `position`,
+- `velocity`,
+- `effort`.
+
+Each joint-state field may be `null` when that value is not present.
+
+## 8. Request-response interfaces
+
+### 8.1 `simulation.start`
 
 Purpose:
 
-- make the simulation environment available without also asserting a robot lifecycle transition.
+- make the simulation environment available.
 
 Input:
 
@@ -153,29 +317,105 @@ Input:
 Behavior:
 
 - Attempts to ensure the simulation environment is running.
-- If simulation is already running, returns success without changing robot lifecycle state.
-- If simulation must be started, waits for simulation-related state to become observable.
-- Does not require the robot to reach `torque_on` as part of the contract.
-- May return robot state information when it becomes available during simulation startup.
+- If simulation is already running, returns a structured success or no-op result.
+- Waits for simulation-related state to become observable.
+- Does not require the robot to reach `torque_on`.
+- May make simulated robot state and world state available as a side effect.
 - Fails when simulation cannot be started or does not become observable within the timeout.
 
 Output:
 
-- lifecycle or environment action result containing:
-	action,
-	state before,
-	state after,
-	whether simulation was started by this call,
-	whether simulation is running at completion,
-	a user-facing message,
-	an optional log path.
+- simulation lifecycle result containing:
+  action,
+  simulation state before,
+  simulation state after,
+  whether simulation was started by this call,
+  running flag at completion,
+  message,
+  optional log path.
 
-Functional guarantees:
+### 8.2 `simulation.stop`
 
-- successful completion means simulation is available for follow-on robot inspection or control operations;
-- repeated calls are safe when simulation is already running.
+Purpose:
 
-### 5.2 `drqp_robot_torque_on`
+- stop the simulation environment.
+
+Input:
+
+- `timeout_sec` with default `120.0`.
+
+Behavior:
+
+- Attempts to stop the active simulation environment.
+- If simulation is already stopped or unavailable, returns a structured success or no-op result.
+- Does not imply robot lifecycle shutdown.
+- Waits for simulation to become unavailable or non-running when the environment supports orderly shutdown.
+
+Output:
+
+- simulation lifecycle result with the same general shape as `simulation.start`.
+
+### 8.3 `simulation.state`
+
+Purpose:
+
+- return the latest simulation runtime state.
+
+Input:
+
+- `timeout_sec` with default `10.0`.
+
+Behavior:
+
+- Waits briefly for simulation runtime data.
+- Returns the latest consistent simulation snapshot.
+- May return partial information when only some simulation signals are available.
+
+Output:
+
+- simulation runtime state.
+
+### 8.4 `simulation.robot_state`
+
+Purpose:
+
+- return the latest simulated robot state.
+
+Input:
+
+- `timeout_sec` with default `10.0`.
+
+Behavior:
+
+- Waits briefly for simulated robot pose data.
+- Returns the latest consistent simulated robot snapshot.
+- This interface is world-oriented and shall not be treated as a substitute for robot lifecycle state.
+
+Output:
+
+- simulation robot state.
+
+### 8.5 `simulation.world_state`
+
+Purpose:
+
+- return the latest simulated world state.
+
+Input:
+
+- `timeout_sec` with default `10.0`.
+
+Behavior:
+
+- Waits briefly for world-state data.
+- Returns the latest world snapshot when available.
+- May still return simulation time with zero entities when world-state transport is not yet available.
+
+Output:
+
+- simulation world state.
+
+### 8.6 `robot.boot`
 
 Purpose:
 
@@ -189,7 +429,7 @@ Behavior:
 
 - Reads current robot state before acting.
 - Assumes simulation may already be running or may have been brought up separately.
-- If no lifecycle information is available but robot state becomes observable, treats the robot as bootable from an off state.
+- If no lifecycle information is available but robot-local state is otherwise observable, treats the robot as bootable from an available off state.
 - If the robot is already in `torque_on`, returns success without changing state.
 - If the robot is in `torque_off` or `finalized`, requests initialization and waits for `torque_on`.
 - If the robot is already `initializing`, waits for `torque_on`.
@@ -199,25 +439,19 @@ Behavior:
 
 Output:
 
-- lifecycle action result containing:
-	action,
-	state before,
-	state after,
-	whether simulation was started by this call,
-	whether simulation is running at completion,
-	a user-facing message,
-	an optional log path.
+- robot lifecycle action result containing:
+  action,
+  state before,
+  state after,
+  active flag after completion,
+  message,
+  optional note.
 
-Functional guarantees:
-
-- successful completion means the robot reached `torque_on`;
-- repeated calls are safe when the robot is already in `torque_on`.
-
-### 5.3 `drqp_robot_torque_off`
+### 8.7 `robot.shutdown`
 
 Purpose:
 
-- move the robot out of the active `torque_on` state without requiring simulation shutdown.
+- move the robot out of the active `torque_on` state.
 
 Input:
 
@@ -233,47 +467,17 @@ Behavior:
 - If current state is already `finalized` or `torque_off`, returns that state as the post-condition.
 - If current state is `servos_rebooting`, waits for `torque_off`.
 - Fails on unsupported lifecycle states.
-- Does not require simulation to stop as part of the contract.
+- Does not require simulation shutdown.
 
 Output:
 
-- lifecycle action result with the same shape as torque-on.
+- robot lifecycle action result with the same general shape as `robot.boot`.
 
-Functional guarantees:
-
-- successful completion means the robot is no longer in the active `torque_on` state;
-- repeated calls are safe when the robot is already not active.
-
-### 5.4 `drqp_robot_sim_shut_down`
+### 8.8 `robot.state`
 
 Purpose:
 
-- stop the simulation environment after robot activity has been brought down or is otherwise safe to stop.
-
-Input:
-
-- `timeout_sec` with default `120.0`.
-
-Behavior:
-
-- Attempts to stop the active simulation environment.
-- If simulation is already stopped or unavailable, returns a structured success or no-op result.
-- Does not imply any robot lifecycle transition on its own; callers should use `drqp_robot_torque_off` first when they need orderly robot shutdown before simulation stop.
-- Waits for simulation to become unavailable or non-running when the environment supports an orderly shutdown contract.
-
-Output:
-
-- lifecycle or environment action result with the same general shape as simulation bring-up.
-
-Functional guarantees:
-
-- successful completion means simulation is no longer available to the MCP or is confirmed already stopped.
-
-### 5.5 `drqp_robot_get_state`
-
-Purpose:
-
-- return the latest robot lifecycle, pose, time, and joint-state snapshot.
+- return the latest robot lifecycle and joint-state snapshot.
 
 Input:
 
@@ -281,122 +485,15 @@ Input:
 
 Behavior:
 
-- Waits briefly for any robot-related runtime data to arrive.
-- Returns the latest cached state even if only partial data is available.
-- Marks the snapshot as unavailable only when no lifecycle, pose, joint, or simulation-time data is present.
-- Marks simulation as running when simulation time is available.
+- Waits briefly for robot-related runtime data.
+- Returns the latest cached robot state even if only partial data is available.
+- Marks the snapshot as unavailable only when no robot-local state is present.
 
 Output:
 
-- robot state snapshot.
+- robot state.
 
-Functional semantics:
-
-- `available = true` means at least one meaningful robot-related data source is available;
-- `simulation_running = true` means simulation time is advancing or at least present;
-- `note` explains missing data when the snapshot is empty.
-
-### 5.6 `drqp_robot_start_state_recording`
-
-Purpose:
-
-- begin sampling robot state at a fixed interval.
-
-Input:
-
-- `sample_interval_sec` with default `0.5`.
-
-Behavior:
-
-- Starts a new recording session immediately.
-- Captures robot state snapshots repeatedly until stopped.
-- Rejects non-positive sampling intervals.
-- Rejects attempts to start a second recording while one is already active.
-
-Output:
-
-- recording status marked active with:
-	current interval,
-	zero initial sample count,
-	start timestamp,
-	status message.
-
-### 5.7 `drqp_robot_stop_state_recording`
-
-Purpose:
-
-- stop the active recording session and return the captured samples.
-
-Behavior:
-
-- Stops the active recording loop.
-- Waits for the recording worker to finish.
-- Returns all samples captured so far.
-- Rejects requests when no recording session is active.
-
-Output:
-
-- recorded robot states containing:
-	start timestamp,
-	stop timestamp,
-	sampling interval,
-	sample count,
-	ordered list of robot state snapshots.
-
-Functional guarantees:
-
-- samples are returned in capture order;
-- `sample_count` equals the length of `samples`.
-
-### 5.8 `drqp_robot_get_recording_status`
-
-Purpose:
-
-- report whether recording is active.
-
-Behavior:
-
-- Returns an active status when recording is underway.
-- Returns an idle status when no session exists.
-
-Output:
-
-- recording status containing:
-	active flag,
-	sample interval or `null`,
-	current sample count,
-	start timestamp or `null`,
-	status message.
-
-### 5.9 `drqp_robot_get_world_state`
-
-Purpose:
-
-- return the latest known simulated world entity poses.
-
-Input:
-
-- `timeout_sec` with default `10.0`.
-
-Behavior:
-
-- Attempts to obtain the active world pose stream.
-- Waits briefly for a world-state update.
-- Returns the latest cached world state when available.
-- If no world-state message has arrived, still reports simulation time when available.
-- Returns a structured unavailable or partial result rather than failing when world-state transport is absent.
-
-Output:
-
-- world state snapshot.
-
-Functional semantics:
-
-- `available = true` can mean either entity data is available or simulation is known to be running;
-- `entity_count` may be zero when the world stream is unavailable or has not produced data yet;
-- `note` explains transport or availability issues.
-
-### 5.10 `drqp_robot_send_motion_command`
+### 8.9 `robot.move`
 
 Purpose:
 
@@ -412,32 +509,21 @@ Inputs:
 
 Defaults:
 
-- all numeric inputs default to `0.0`;
+- all numeric inputs default to `0.0`,
 - gait defaults to `tripod`.
 
 Behavior:
 
-- Validates every numeric input against the inclusive range `[-1.0, 1.0]`.
+- Validates every numeric input against `[-1.0, 1.0]`.
 - Validates gait type against the supported gait set.
 - Publishes the requested command.
 - Returns the normalized command content that was accepted.
 
 Output:
 
-- motion command result containing:
-	stride direction,
-	rotation speed,
-	body translation,
-	body rotation,
-	gait type,
-	status message.
+- motion command state.
 
-Functional guarantees:
-
-- the response reflects the effective command values after normalization of gait casing and whitespace;
-- invalid input is rejected before publication.
-
-### 5.11 `drqp_robot_stop_motion`
+### 8.10 `robot.stop`
 
 Purpose:
 
@@ -445,13 +531,13 @@ Purpose:
 
 Behavior:
 
-- Equivalent to sending a motion command with all axes set to zero and gait `tripod`.
+- Equivalent to calling `robot.move` with all axes set to zero and gait `tripod`.
 
 Output:
 
-- motion command result for the zeroed command.
+- motion command state for the zeroed command.
 
-### 5.12 `drqp_robot_walk_for_duration`
+### 8.11 `robot.walk_for_duration`
 
 Purpose:
 
@@ -462,7 +548,7 @@ Inputs:
 - `duration_sec`,
 - `publish_hz` with default `5.0`,
 - `stop_after` with default `true`,
-- the same motion parameters accepted by `drqp_robot_send_motion_command`.
+- the same motion parameters accepted by `robot.move`.
 
 Behavior:
 
@@ -476,94 +562,197 @@ Behavior:
 Output:
 
 - motion sequence result containing:
-	requested duration,
-	publish rate,
-	publish count,
-	whether a stop command was sent,
-	the final non-zero command result,
-	status message.
+  requested duration,
+  publish rate,
+  publish count,
+  whether a stop command was sent,
+  final accepted non-zero command,
+  message.
 
-Functional guarantees:
+### 8.12 `robot.recording.start`
 
-- the repeated sequence is bounded in time by the requested duration and publish rate contract;
-- when `stop_after = true`, a stop command is issued after the final movement publish.
+Purpose:
 
-## 6. Response models
+- begin sampling `robot.state` at a fixed interval.
 
-### 6.1 Pose model
+Input:
 
-A pose contains:
+- `sample_interval_sec` with default `0.5`.
 
-- `position` with `x`, `y`, `z`
-- `orientation` with quaternion `x`, `y`, `z`, `w`
+Behavior:
 
-### 6.2 Joint-state model
+- Starts a new recording session immediately.
+- Captures robot-state snapshots repeatedly until stopped.
+- Rejects non-positive sampling intervals.
+- Rejects attempts to start a second recording while one is already active.
 
-Joint states are returned as a mapping from joint name to:
+Output:
 
-- `position`
-- `velocity`
-- `effort`
+- recording status with active flag, sample interval, zero initial sample count, start timestamp, and status message.
 
-Each field may be `null` when that value is not present for a joint.
+### 8.13 `robot.recording.stop`
 
-### 6.3 Lifecycle action result
+Purpose:
 
-Lifecycle action responses contain:
+- stop the active recording session and return the captured samples.
 
-- `action`
-- `state_before`
-- `state_after`
-- `simulation_was_started`
-- `simulation_running`
-- `message`
-- `log_path`
+Behavior:
 
-### 6.4 Motion command result
+- Stops the active recording loop.
+- Waits for the recording worker to finish.
+- Returns all captured `robot.state` samples in order.
+- Rejects requests when no recording session is active.
 
-Motion command responses contain:
+Output:
 
-- normalized stride direction vector,
-- normalized rotation speed,
-- normalized body translation vector,
-- normalized body rotation vector,
-- gait type,
-- message.
+- recorded robot states containing start timestamp, stop timestamp, sampling interval, sample count, and ordered robot-state samples.
 
-### 6.5 Motion sequence result
+### 8.14 `robot.recording.status`
 
-Walking sequence responses contain:
+Purpose:
 
-- `duration_sec`
-- `publish_hz`
-- `publish_count`
-- `stop_command_sent`
-- `command`
-- `message`
+- report whether robot-state recording is active.
 
-### 6.6 Recording status
+Behavior:
 
-Recording status responses contain:
+- Returns an active status when recording is underway.
+- Returns an idle status when no session exists.
 
-- `active`
-- `sample_interval_sec`
-- `sample_count`
-- `started_at`
-- `message`
+Output:
 
-### 6.7 Recorded robot states
+- recording status containing active flag, sample interval or `null`, current sample count, start timestamp or `null`, and status message.
 
-Completed recording responses contain:
+### 8.15 `system.state`
 
-- `started_at`
-- `stopped_at`
-- `sample_interval_sec`
-- `sample_count`
-- `samples`
+Purpose:
 
-## 7. Validation and error behavior
+- return the latest system runtime state.
 
-### 7.1 Input validation
+Input:
+
+- `timeout_sec` with default `10.0`.
+
+Behavior:
+
+- Waits briefly for system integration signals.
+- Returns the latest snapshot of ROS runtime and channel availability.
+- Returns degraded state rather than failing when some subsystems are missing but the MCP remains partially functional.
+
+Output:
+
+- system state.
+
+## 9. Streaming interfaces
+
+Streaming interfaces provide continuous state updates for clients that need observation over time.
+
+### 9.1 General streaming contract
+
+All state streams shall:
+
+- emit an initial snapshot as soon as one is available,
+- emit subsequent updates when the underlying state changes,
+- permit periodic heartbeats even when state does not change,
+- include timestamps on all events,
+- identify the stream name and event type,
+- terminate cleanly when the client unsubscribes or when the MCP session ends,
+- surface degraded or unavailable state as data rather than silently stalling whenever possible.
+
+All state streams may support optional parameters such as:
+
+- `min_update_interval_sec`,
+- `heartbeat_interval_sec`,
+- `include_unchanged`.
+
+### 9.2 `simulation.state.stream`
+
+Purpose:
+
+- stream simulation runtime state.
+
+Event payload:
+
+- full simulation runtime state snapshot.
+
+Expected update triggers:
+
+- simulation start,
+- simulation stop,
+- world-name availability changes,
+- simulation-time availability changes,
+- degraded runtime status changes.
+
+### 9.3 `simulation.robot_state.stream`
+
+Purpose:
+
+- stream the simulated robot state.
+
+Event payload:
+
+- full simulation robot state snapshot.
+
+Expected update triggers:
+
+- simulated robot pose changes,
+- simulated robot availability changes,
+- simulation-time changes when pose data is coupled to simulation updates.
+
+### 9.4 `simulation.world_state.stream`
+
+Purpose:
+
+- stream simulated world state.
+
+Event payload:
+
+- full simulation world state snapshot.
+
+Expected update triggers:
+
+- world entity pose changes,
+- entity count changes,
+- world availability changes,
+- simulation-time changes when world-state updates are emitted.
+
+### 9.5 `robot.state.stream`
+
+Purpose:
+
+- stream robot lifecycle and joint state.
+
+Event payload:
+
+- full robot state snapshot.
+
+Expected update triggers:
+
+- lifecycle state changes,
+- joint-state changes,
+- active flag changes,
+- latest accepted motion command summary changes.
+
+### 9.6 `system.state.stream`
+
+Purpose:
+
+- stream system runtime and integration health state.
+
+Event payload:
+
+- full system state snapshot.
+
+Expected update triggers:
+
+- ROS runtime availability changes,
+- simulation channel availability changes,
+- robot lifecycle channel availability changes,
+- world-state channel availability changes,
+- degraded subsystem changes.
+
+## 10. Validation and error behavior
+
+### 10.1 Input validation
 
 The MCP rejects requests in these cases:
 
@@ -571,102 +760,103 @@ The MCP rejects requests in these cases:
 - unsupported gait type,
 - non-positive recording interval,
 - non-positive walk duration,
-- non-positive walk publish rate,
+- non-positive walk publish rate.
+
+The MCP also rejects invalid recording lifecycle requests:
+
 - attempt to start a recording when one is already active,
 - attempt to stop recording when no recording is active.
 
-### 7.2 Timeout behavior
+### 10.2 Timeout behavior
 
 Timeouts are used to bound waits for:
 
+- simulation availability,
+- robot lifecycle transitions,
+- simulation robot state availability,
+- simulation world-state availability,
 - robot state availability,
-- lifecycle state transitions,
-- world-state availability.
+- system-state availability.
 
 On timeout:
 
-- state-reading tools return the best currently known partial snapshot when possible;
-- lifecycle-transition tools fail when the requested terminal state is not reached in time;
-- simulation bring-up or shutdown tools fail when simulation availability does not reach the requested condition in time.
+- state-reading tools return the best currently known partial snapshot when possible,
+- lifecycle-transition tools fail when the requested terminal state is not reached in time,
+- simulation start or stop tools fail when simulation availability does not reach the requested condition in time.
 
-### 7.3 Partial availability
+### 10.3 Partial availability
 
 The MCP favors structured partial responses over hard failure for inspection operations.
 
 Examples:
 
-- robot state may be returned with `available = false` and a note when no robot topics have appeared yet;
-- world state may be returned with simulation time but zero entities when Gazebo world-pose data is not yet available;
-- shutdown may return a structured result when lifecycle state is unavailable rather than forcing an invalid transition.
+- `simulation.world_state` may return simulation time but zero entities when world-state data is not yet available,
+- `robot.state` may return unavailable with a note when lifecycle and joint state are absent,
+- `system.state` may report degraded subsystems while the MCP remains partially usable.
 
-### 7.4 Publication semantics
+### 10.4 Publication semantics
 
-For lifecycle and motion commands, successful completion means the MCP accepted the request and published the corresponding command or event. It does not by itself guarantee that downstream robot behavior has physically completed, except where the tool explicitly waits for a lifecycle state transition.
+For robot lifecycle and motion commands, successful completion means the MCP accepted the request and published the corresponding control message or lifecycle request. It does not by itself guarantee that all downstream physical or simulated behavior beyond the specified contract has completed, except where the tool explicitly waits for a terminal lifecycle state.
 
-`drqp_robot_walk_for_duration` is higher level: it guarantees repeated command publication according to the request and, when enabled, an explicit stop command afterward.
+`robot.walk_for_duration` is higher level: it guarantees repeated command publication according to the request and, when enabled, an explicit stop command afterward.
 
-## 8. Observable behavior requirements
+### 10.5 Streaming semantics
 
-The current MCP behavior establishes the following functional requirements.
+Successful stream subscription means the MCP accepted the subscription and will emit events as state becomes available. It does not guarantee a fixed event frequency unless the stream contract explicitly includes heartbeat behavior.
 
-### 8.1 Simulation bring-up and shutdown
+## 11. Observable behavior requirements
 
-- The MCP shall expose a simulation bring-up operation distinct from robot lifecycle activation.
-- The MCP shall attempt to make simulation available when the environment supports simulation startup.
-- The MCP shall return an idempotent success or no-op result when simulation is already running.
-- The MCP shall expose a simulation shutdown operation distinct from robot lifecycle deactivation.
+### 11.1 Simulation requirements
 
-### 8.2 Torque-on and torque-off behavior
+- The MCP shall expose simulation lifecycle operations separate from robot lifecycle operations.
+- The MCP shall expose simulation runtime state separately from robot lifecycle state.
+- The MCP shall expose simulated robot state separately from robot lifecycle and joint state.
+- The MCP shall expose simulated world state with names, identifiers, and poses when world-state data is available.
+- The MCP shall support streaming interfaces for simulation runtime state, simulated robot state, and simulated world state.
 
-- The MCP shall be able to bring the robot to `torque_on` from an already available `torque_off` state.
-- The MCP shall treat an available robot state with no lifecycle state but with live simulation or joint data as effectively bootable from an off state.
-- The MCP shall return an idempotent success result when the robot is already in `torque_on`.
-- The MCP shall be able to shut the robot down from `torque_on` without implying simulation shutdown.
-- The MCP shall tolerate torque-off requests when the robot is already shut down.
-- The MCP shall not invent lifecycle state when none is observable.
+### 11.2 Robot requirements
 
-### 8.3 State inspection
-
-- The MCP shall expose the latest robot pose from odometry.
-- The MCP shall expose simulation time when available.
-- The MCP shall expose joint states keyed by joint name.
-- The MCP shall keep returning the latest known snapshot rather than requiring a new state message for every request.
-
-### 8.4 World inspection
-
-- The MCP shall expose world entities with names, identifiers, and poses when Gazebo world-state data is available.
-- The MCP shall identify the world-state source as Gazebo.
-- The MCP shall continue to report advancing simulation time across successive snapshots when the simulation is running.
-
-### 8.5 Motion control
-
-- The MCP shall allow callers to command stride, rotation, and body pose offsets through normalized inputs.
-- The MCP shall reject invalid movement magnitudes before sending a command.
+- The MCP shall expose robot boot and shutdown operations separate from simulation start and stop.
+- The MCP shall be able to bring the robot to `torque_on` from an available off state.
+- The MCP shall treat an otherwise observable robot with unavailable lifecycle state as bootable from an available off state.
+- The MCP shall tolerate shutdown requests when the robot is already not active.
+- The MCP shall expose robot lifecycle and joint state separately from the odometry-backed pose surfaced by `simulation.robot_state`.
+- The MCP shall support normalized motion commands with at least the `tripod`, `ripple`, and `wave` gait modes.
 - The MCP shall expose a dedicated stop command.
-- The MCP shall support at least the `tripod`, `ripple`, and `wave` gait modes.
+- The MCP shall support bounded walking sequences.
+- The MCP shall support robot-state recording and robot-state streaming.
 
-### 8.6 Recording
+### 11.3 System requirements
 
-- The MCP shall capture multiple robot-state samples during an active recording session.
-- The MCP shall report live sample count while recording is active.
-- The MCP shall return the full captured sample list when recording stops.
+- The MCP shall expose a system namespace for ROS and MCP runtime state that is not owned solely by simulation or robot.
+- The MCP shall surface degraded subsystem state explicitly.
+- The MCP shall support streaming system state.
 
-## 9. Assumptions visible to callers
+### 11.4 Separation requirements
+
+- Simulation state and robot state shall be modeled and exposed as separate state surfaces.
+- A client shall be able to inspect simulation state without using robot lifecycle tools.
+- A client shall be able to inspect robot state without reading world-state data.
+- A client shall be able to subscribe to simulation, robot, and system state streams independently.
+
+## 12. Assumptions visible to callers
 
 The following assumptions are functionally relevant to callers:
 
 - The MCP operates against the current ROS 2 environment.
-- Robot pose is sourced from odometry.
-- World state is sourced from Gazebo world pose information when Gazebo is available.
-- The returned world name identifies the active simulation world known to the MCP.
-- Tool responses are snapshots of the latest known state, not a continuously streaming session.
+- The odometry-backed robot pose belongs to the `simulation.robot_state` surface.
+- Robot lifecycle and joint state belong to the `robot.state` surface.
+- World state belongs to the `simulation.world_state` surface.
+- System runtime and channel health belong to the `system.state` surface.
+- Request-response tools return snapshots.
+- Stream interfaces return continuous updates over time.
 
-## 10. Non-functional exclusions
+## 13. Non-functional exclusions
 
 This specification does not define:
 
 - internal concurrency model,
-- topic names except where required to explain behavior contracts,
+- specific ROS topic names except where unavoidable for behavior definition,
 - transport libraries,
 - server transport mode,
 - dependency-loading strategy,
