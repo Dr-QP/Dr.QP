@@ -238,28 +238,10 @@ jobs:
             packages/vendor/**
 
       - name: Test Summary
-        uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2.4
-        if: ${{ env.ACT == '' && !cancelled() }}
-        with:
-          paths: 'build/*/test_results/*/*.xunit.xml'
-
-      - name: Discover test reports
+        uses: ./.github/actions/publish-test-results
         if: ${{ !cancelled() }}
-        run: |
-          test_reports=$(find build -name "*.xunit.xml" | tr '\n' ',')
-          test_reports=${test_reports%,}  # Remove trailing comma
-
-          echo "result=$test_reports" >> "$GITHUB_OUTPUT"
-          echo "$test_reports"
-        id: test_reports
-
-      - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}
-        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
-          report_type: test_results
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ${{ steps.test_reports.outputs.result }}
+          codecov-token: ${{ secrets.CODECOV_TOKEN }}
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         # upload the logs even when the build fails
@@ -349,6 +331,12 @@ jobs:
           env:
             # Pass the build args to devcontainer build
             DRQP_GAZEBO_TEST_MODE=${{ matrix.SIMULATION_TEST_MODE }}
+
+      - name: Publish devcontainer test results
+        if: ${{ !cancelled() }}
+        uses: ./.github/actions/publish-test-results
+        with:
+          codecov-token: ${{ secrets.CODECOV_TOKEN }}
 
   build-deploy-image:
     name: Deployment image

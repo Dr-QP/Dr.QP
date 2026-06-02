@@ -1,0 +1,49 @@
+name: Publish test results
+description: Summarize xUnit reports and upload them to Codecov as test results
+
+inputs:
+  codecov-token:
+    description: Codecov token used to upload test results
+    required: true
+  reports-glob:
+    description: Glob passed to test-summary/action
+    required: false
+    default: build/*/test_results/*/*.xunit.xml
+  reports-root:
+    description: Directory to scan for xUnit XML reports
+    required: false
+    default: build
+
+runs:
+  using: composite
+  steps:
+    - name: Test Summary
+      uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2.4
+      if: ${{ env.ACT == '' && !cancelled() }}
+      with:
+        paths: ${{ inputs.reports-glob }}
+
+    - name: Discover test reports
+      id: test_reports
+      if: ${{ !cancelled() }}
+      shell: bash -xeuo pipefail {0}
+      env:
+        INPUTS_REPORTS_ROOT: ${{ inputs.reports-root }}
+      run: |
+        test_reports=$(find "$INPUTS_REPORTS_ROOT" -name "*.xunit.xml" | tr '\n' ',')
+        test_reports=${test_reports%,}
+
+        echo "result=$test_reports" >> "$GITHUB_OUTPUT"
+        if [[ -n "$test_reports" ]]; then
+          echo "$test_reports"
+        else
+          echo "No xUnit test reports found under $INPUTS_REPORTS_ROOT"
+        fi
+
+    - name: Upload test results to Codecov
+      if: ${{ !cancelled() && steps.test_reports.outputs.result != '' }}
+      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
+      with:
+        report_type: test_results
+        token: ${{ inputs.codecov-token }}
+        files: ${{ steps.test_reports.outputs.result }}
