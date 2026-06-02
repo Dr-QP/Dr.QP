@@ -7,15 +7,14 @@ import signal
 import time
 from typing import Any
 
-import pytest
-
-from drqp_robot_mcp.controller import RobotMcpController
 from drqp_robot_mcp import runtime
+from drqp_robot_mcp.controller import RobotMcpController
+import pytest
 
 
 def _read_odom_pose(timeout_sec: float) -> Any | None:
-    import rclpy
     from nav_msgs.msg import Odometry
+    import rclpy
 
     did_init = False
     if not rclpy.ok():
@@ -53,18 +52,10 @@ def _assert_pose_matches_odometry(snapshot_pose: dict[str, Any], odom_pose: Any)
     assert snapshot_pose['position']['x'] == pytest.approx(odom_pose.position.x)
     assert snapshot_pose['position']['y'] == pytest.approx(odom_pose.position.y)
     assert snapshot_pose['position']['z'] == pytest.approx(odom_pose.position.z)
-    assert snapshot_pose['orientation']['x'] == pytest.approx(
-        odom_pose.orientation.x
-    )
-    assert snapshot_pose['orientation']['y'] == pytest.approx(
-        odom_pose.orientation.y
-    )
-    assert snapshot_pose['orientation']['z'] == pytest.approx(
-        odom_pose.orientation.z
-    )
-    assert snapshot_pose['orientation']['w'] == pytest.approx(
-        odom_pose.orientation.w
-    )
+    assert snapshot_pose['orientation']['x'] == pytest.approx(odom_pose.orientation.x)
+    assert snapshot_pose['orientation']['y'] == pytest.approx(odom_pose.orientation.y)
+    assert snapshot_pose['orientation']['z'] == pytest.approx(odom_pose.orientation.z)
+    assert snapshot_pose['orientation']['w'] == pytest.approx(odom_pose.orientation.w)
 
 
 @pytest.mark.slow
@@ -108,10 +99,7 @@ def test_runtime_robot_pose_stays_available_from_live_odom_bridge() -> None:
                 continue
             if candidate_snapshot['simulation_time_sec'] is None:
                 continue
-            if (
-                candidate_snapshot['simulation_time_sec']
-                <= first_snapshot['simulation_time_sec']
-            ):
+            if candidate_snapshot['simulation_time_sec'] <= first_snapshot['simulation_time_sec']:
                 continue
 
             latest_snapshot = candidate_snapshot

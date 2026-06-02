@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, UTC
 import math
-from pathlib import Path
 import threading
 import time
 from typing import Any, Callable
@@ -79,8 +78,7 @@ class RobotMcpController:
                     ),
                     timeout_sec=min(timeout_sec, 60.0),
                     error_message=(
-                        'Timed out waiting for the robot state topic after '
-                        'starting simulation.'
+                        'Timed out waiting for the robot state topic after starting simulation.'
                     ),
                 )
             except ControllerError as exc:
@@ -90,8 +88,7 @@ class RobotMcpController:
 
         state_before = state_before_snapshot.lifecycle_state
         if state_before is None and (
-            bool(state_before_snapshot.joint_states)
-            or state_before_snapshot.simulation_running
+            bool(state_before_snapshot.joint_states) or state_before_snapshot.simulation_running
         ):
             state_before = 'torque_off'
 
@@ -131,7 +128,6 @@ class RobotMcpController:
             message='Robot reached torque_on.',
             log_path=str(self.launch_log_path),
         )
-
 
     def shut_down(self, timeout_sec: float = 120.0) -> LifecycleActionResult:
         """Shut the robot down through its lifecycle state machine."""
@@ -174,7 +170,6 @@ class RobotMcpController:
             log_path=str(self.launch_log_path),
         )
 
-
     def get_robot_state(self, timeout_sec: float = 10.0) -> RobotStateSnapshot:
         """Return the latest robot snapshot."""
         return RobotStateSnapshot.from_mapping(
@@ -185,13 +180,11 @@ class RobotMcpController:
             )
         )
 
-
     def get_world_state(self, timeout_sec: float = 10.0) -> WorldStateSnapshot:
         """Return the latest Gazebo world snapshot."""
         return WorldStateSnapshot.from_mapping(
             self.runtime.get_world_state(self.world_name, timeout_sec)
         )
-
 
     def start_simulation(self, timeout_sec: float = 120.0) -> dict[str, Any]:
         """Ensure the simulation process is running and observable."""
@@ -211,7 +204,6 @@ class RobotMcpController:
             'message': str(result.get('message', 'Started Gazebo simulation launch.')),
             'log_path': str(result.get('log_path', self.launch_log_path)),
         }
-
 
     def stop_simulation(self, timeout_sec: float = 120.0) -> dict[str, Any]:
         """Stop the simulation process tracked by the runtime PID file."""
@@ -236,7 +228,6 @@ class RobotMcpController:
             'log_path': str(result.get('log_path', self.launch_log_path)),
         }
 
-
     def get_simulation_state(self, timeout_sec: float = 10.0) -> dict[str, Any]:
         """Return the simulation runtime surface required by the spec."""
         robot_state = self.get_robot_state(timeout_sec=timeout_sec)
@@ -255,7 +246,6 @@ class RobotMcpController:
             'status_details': None,
         }
 
-
     def get_simulation_robot_state(self, timeout_sec: float = 10.0) -> dict[str, Any]:
         """Return the simulated robot pose surface required by the spec."""
         robot_state = self.get_robot_state(timeout_sec=timeout_sec)
@@ -269,7 +259,6 @@ class RobotMcpController:
             'robot_pose': self._pose_to_payload(robot_state.robot_pose),
             'note': None if robot_state.robot_pose is not None else robot_state.note,
         }
-
 
     def get_simulation_world_state(self, timeout_sec: float = 10.0) -> dict[str, Any]:
         """Return the simulated world-state surface required by the spec."""
@@ -291,7 +280,6 @@ class RobotMcpController:
             'source': world_state.source,
             'note': world_state.note,
         }
-
 
     def get_robot_namespace_state(self, timeout_sec: float = 10.0) -> dict[str, Any]:
         """Return the robot-local state surface required by the spec."""
@@ -316,7 +304,6 @@ class RobotMcpController:
             'note': robot_state.note,
         }
 
-
     def get_system_state(self, timeout_sec: float = 10.0) -> dict[str, Any]:
         """Return the system runtime health surface required by the spec."""
         system_state = self.runtime.get_system_state(self.world_name, timeout_sec)
@@ -329,7 +316,6 @@ class RobotMcpController:
                 system_state['degraded_subsystems'] = degraded_subsystems
                 system_state['note'] = 'Simulation is running but runtime signals are degraded.'
         return system_state
-
 
     def send_motion_command(
         self,
@@ -386,11 +372,9 @@ class RobotMcpController:
         }
         return command_result
 
-
     def stop_motion(self) -> MotionCommandResult:
         """Publish a zeroed movement command to stop robot motion."""
         return self.send_motion_command()
-
 
     def walk_for_duration(
         self,
@@ -455,7 +439,6 @@ class RobotMcpController:
             message='Published walking sequence.',
         )
 
-
     def start_recording(self, sample_interval_sec: float = 0.5) -> RecordingStatus:
         """Start recording robot snapshots."""
         if sample_interval_sec <= 0:
@@ -487,7 +470,6 @@ class RobotMcpController:
             message='Started recording robot state snapshots.',
         )
 
-
     def stop_recording(self) -> RecordedRobotStates:
         """Stop recording and return captured snapshots."""
         with self._recording_lock:
@@ -507,7 +489,6 @@ class RobotMcpController:
             sample_count=len(session.samples),
             samples=session.samples,
         )
-
 
     def get_recording_status(self) -> RecordingStatus:
         """Return current recording status."""
@@ -530,14 +511,12 @@ class RobotMcpController:
                 message='Robot state recording is active.',
             )
 
-
     def stream_simulation_state(self) -> dict[str, Any]:
         """Return the current simulation state stream event payload."""
         return self._stream_event(
             'simulation.state.stream',
             self.get_simulation_state(),
         )
-
 
     def stream_simulation_robot_state(self) -> dict[str, Any]:
         """Return the current simulated robot state stream event payload."""
@@ -546,14 +525,12 @@ class RobotMcpController:
             self.get_simulation_robot_state(),
         )
 
-
     def stream_simulation_world_state(self) -> dict[str, Any]:
         """Return the current world state stream event payload."""
         return self._stream_event(
             'simulation.world_state.stream',
             self.get_simulation_world_state(),
         )
-
 
     def stream_robot_state(self) -> dict[str, Any]:
         """Return the current robot state stream event payload."""
@@ -562,7 +539,6 @@ class RobotMcpController:
             self.get_robot_namespace_state(),
         )
 
-
     def stream_system_state(self) -> dict[str, Any]:
         """Return the current system state stream event payload."""
         return self._stream_event(
@@ -570,14 +546,12 @@ class RobotMcpController:
             self.get_system_state(),
         )
 
-
     def _record_worker(self, session: _RecordingSession) -> None:
         """Record robot snapshots until stopped."""
         while not session.stop_event.is_set():
             session.samples.append(self.get_robot_state())
             if session.stop_event.wait(session.sample_interval_sec):
                 break
-
 
     def _wait_for_state(
         self,
@@ -592,7 +566,6 @@ class RobotMcpController:
                 f'Latest observed state: {result.get("state")!r}.'
             )
         return self.get_robot_state()
-
 
     def _poll_state(
         self,
@@ -610,7 +583,6 @@ class RobotMcpController:
             latest = self.get_robot_state()
         raise ControllerError(error_message)
 
-
     def _start_simulation(self) -> dict[str, Any]:
         """Start the background Gazebo launch process when available."""
         return runtime.start_simulation(
@@ -619,11 +591,9 @@ class RobotMcpController:
             False,
         )
 
-
     def _publish_event(self, event: str) -> dict[str, Any]:
         """Publish a lifecycle event onto the local ROS graph."""
         return self.runtime.publish_event(event)
-
 
     def _publish_movement_command(
         self,
@@ -642,7 +612,6 @@ class RobotMcpController:
             gait_type=gait_type,
         )
 
-
     def _validate_normalized(self, name: str, value: float) -> float:
         """Validate normalized joystick input in the inclusive range [-1, 1]."""
         normalized_value = float(value)
@@ -650,17 +619,13 @@ class RobotMcpController:
             raise ValueError(f'{name} must be between -1.0 and 1.0.')
         return normalized_value
 
-
     def _validate_gait_type(self, gait_type: str) -> str:
         """Validate gait names against the supported movement command contract."""
         normalized_gait_type = gait_type.strip().lower()
         if normalized_gait_type not in self._VALID_GAITS:
             supported = ', '.join(sorted(self._VALID_GAITS))
-            raise ValueError(
-                f'gait_type must be one of {supported}; got {gait_type!r}.'
-            )
+            raise ValueError(f'gait_type must be one of {supported}; got {gait_type!r}.')
         return normalized_gait_type
-
 
     def _poll_simulation_state(
         self,
@@ -678,12 +643,10 @@ class RobotMcpController:
             latest = self.get_simulation_state(timeout_sec=0.1)
         raise ControllerError(error_message)
 
-
     def _simulation_process_running(self) -> bool:
         """Return whether the tracked simulation launch process is still alive."""
         current_pid = runtime._read_pid(self.launch_pid_path)
         return current_pid is not None and runtime._pid_is_running(current_pid)
-
 
     def _pose_to_payload(self, pose: Any) -> dict[str, Any] | None:
         """Convert a pose model into a plain JSON-serializable payload."""
@@ -702,7 +665,6 @@ class RobotMcpController:
                 'w': pose.orientation.w,
             },
         }
-
 
     def _stream_event(
         self,

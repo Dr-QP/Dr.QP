@@ -7,10 +7,9 @@ import signal
 import subprocess
 import time
 
-import pytest
-
 from drqp_robot_mcp import runtime
 from drqp_robot_mcp.controller import RobotMcpController
+import pytest
 
 
 def _terminate_simulation(controller: RobotMcpController) -> None:

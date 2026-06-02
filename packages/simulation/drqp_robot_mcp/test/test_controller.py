@@ -6,11 +6,10 @@ import math
 from pathlib import Path
 import time
 
-import pytest
-
 import drqp_robot_mcp.controller as controller_module
 from drqp_robot_mcp.controller import RobotMcpController
 from drqp_robot_mcp.models import Pose, Quaternion, RobotStateSnapshot, Vector3
+import pytest
 
 
 def make_snapshot(

@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import atexit
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, UTC
 import os
 from pathlib import Path
 import signal
-import shutil
 import subprocess
 import threading
 import time
@@ -72,9 +71,7 @@ class RosRuntimeSession:
         """Publish a robot lifecycle event onto `/robot_event`."""
         started = self._ensure_started()
         self._wait_for_subscribers(started.event_publisher, timeout_sec=2.0)
-        started.event_publisher.publish(
-            started.dependencies.string_message_type(data=event)
-        )
+        started.event_publisher.publish(started.dependencies.string_message_type(data=event))
         self._wait_for_delivery(duration_sec=0.25)
         return {
             'published': True,
@@ -95,16 +92,10 @@ class RosRuntimeSession:
         self._wait_for_subscribers(started.movement_command_publisher, timeout_sec=2.0)
 
         message = started.dependencies.movement_command_type()
-        message.stride_direction = started.dependencies.vector3_message_type(
-            **stride_direction
-        )
+        message.stride_direction = started.dependencies.vector3_message_type(**stride_direction)
         message.rotation_speed = rotation_speed
-        message.body_translation = started.dependencies.vector3_message_type(
-            **body_translation
-        )
-        message.body_rotation = started.dependencies.vector3_message_type(
-            **body_rotation
-        )
+        message.body_translation = started.dependencies.vector3_message_type(**body_translation)
+        message.body_rotation = started.dependencies.vector3_message_type(**body_rotation)
         message.gait_type = gait_type
 
         started.movement_command_publisher.publish(message)
@@ -112,9 +103,7 @@ class RosRuntimeSession:
         return {
             'published': True,
             'topic': '/robot/movement_command',
-            'subscription_count': (
-                started.movement_command_publisher.get_subscription_count()
-            ),
+            'subscription_count': (started.movement_command_publisher.get_subscription_count()),
             'stride_direction': stride_direction,
             'rotation_speed': rotation_speed,
             'body_translation': body_translation,
@@ -162,10 +151,7 @@ class RosRuntimeSession:
             self._raise_spin_error_locked()
             lifecycle_state = self._lifecycle_state
             robot_pose = None if self._robot_pose is None else self._robot_pose.copy()
-            joint_states = {
-                name: values.copy()
-                for name, values in self._joint_states.items()
-            }
+            joint_states = {name: values.copy() for name, values in self._joint_states.items()}
             simulation_time_sec = self._simulation_time_sec
 
         available = (
@@ -300,9 +286,7 @@ class RosRuntimeSession:
             started.movement_command_publisher.get_subscription_count() > 0
         )
         robot_lifecycle_channel_available = lifecycle_state is not None
-        deployment_mode = (
-            'simulation' if simulation_channel_available else 'real_robot'
-        )
+        deployment_mode = 'simulation' if simulation_channel_available else 'real_robot'
         degraded_subsystems = []
         if not robot_lifecycle_channel_available:
             degraded_subsystems.append('robot_lifecycle')
@@ -317,13 +301,9 @@ class RosRuntimeSession:
             'timestamp': datetime.now(UTC).isoformat(),
             'available': True,
             'ros_runtime_available': True,
-            'robot_lifecycle_channel_available': (
-                robot_lifecycle_channel_available
-            ),
+            'robot_lifecycle_channel_available': (robot_lifecycle_channel_available),
             'joint_state_available': joint_state_available,
-            'motion_command_channel_available': (
-                motion_command_channel_available
-            ),
+            'motion_command_channel_available': (motion_command_channel_available),
             'simulation_channel_available': simulation_channel_available,
             'world_state_channel_available': world_state_channel_available,
             'deployment_mode': deployment_mode,
@@ -368,8 +348,8 @@ class RosRuntimeSession:
                 self._handle_state_message,
                 state_qos,
             )
-            from sensor_msgs.msg import JointState
             from rosgraph_msgs.msg import Clock
+            from sensor_msgs.msg import JointState
 
             node.create_subscription(
                 JointState,
@@ -423,9 +403,11 @@ class RosRuntimeSession:
                 self._gazebo_transport_node = dependencies.node_factory()
 
             topic = f'/world/{world_name}/pose/info'
-            callback = lambda message, subscribed_world=world_name: self._handle_world_state_message(
-                subscribed_world,
-                message,
+            callback = lambda message, subscribed_world=world_name: (
+                self._handle_world_state_message(
+                    subscribed_world,
+                    message,
+                )
             )
             subscribed = self._gazebo_transport_node.subscribe(
                 dependencies.pose_v_message_type,
@@ -433,9 +415,7 @@ class RosRuntimeSession:
                 callback,
             )
             if not subscribed:
-                raise RuntimeError(
-                    f'Failed to subscribe to Gazebo world pose topic: {topic}'
-                )
+                raise RuntimeError(f'Failed to subscribe to Gazebo world pose topic: {topic}')
 
             self._world_state_subscriptions[world_name] = callback
 
@@ -492,9 +472,7 @@ class RosRuntimeSession:
 
     def _handle_clock_message(self, message: Any) -> None:
         """Cache the latest simulation clock message."""
-        simulation_time_sec = float(message.clock.sec) + (
-            message.clock.nanosec / 1_000_000_000
-        )
+        simulation_time_sec = float(message.clock.sec) + (message.clock.nanosec / 1_000_000_000)
         with self._state_changed:
             self._simulation_time_sec = simulation_time_sec
             self._state_changed.notify_all()
@@ -564,14 +542,13 @@ class RosRuntimeSession:
 
 def _load_ros_dependencies() -> _RosDependencies:
     """Import ROS modules lazily so module import stays cheap."""
-    import rclpy
+    import drqp_interfaces.msg
     from geometry_msgs.msg import Vector3
     from nav_msgs.msg import Odometry
+    import rclpy
     from rclpy.executors import SingleThreadedExecutor
     from rclpy.qos import QoSDurabilityPolicy, QoSProfile
     from std_msgs.msg import String
-
-    import drqp_interfaces.msg
 
     return _RosDependencies(
         rclpy=rclpy,
@@ -854,11 +831,7 @@ def _pose_to_mapping(message: Any) -> dict[str, Any]:
 
 def _world_state_to_mapping(world_name: str, message: Any) -> dict[str, Any]:
     """Convert a Gazebo Pose_V message into the MCP payload shape."""
-    entities = [
-        _world_entity_to_mapping(entity)
-        for entity in message.pose
-        if entity.name
-    ]
+    entities = [_world_entity_to_mapping(entity) for entity in message.pose if entity.name]
     return {
         'world_name': world_name,
         'simulation_time_sec': _simulation_time_sec_from_pose_v(message),
@@ -990,7 +963,7 @@ def _parse_pose_block(lines: list[str]) -> dict[str, Any]:
 def _gazebo_launch_is_available() -> bool:
     """Return whether Gazebo launch support is present in this environment."""
     try:
-        from ament_index_python.packages import PackageNotFoundError, get_package_prefix
+        from ament_index_python.packages import get_package_prefix, PackageNotFoundError
 
         get_package_prefix('drqp_gazebo')
     except (ImportError, PackageNotFoundError):
@@ -999,7 +972,8 @@ def _gazebo_launch_is_available() -> bool:
 
 
 def get_runtime_directory(app_name: str = 'drqp_robot_mcp') -> Path:
-    """Return the writable runtime directory for this package.
+    """
+    Return the writable runtime directory for this package.
 
     Prefer ROS_HOME so runtime files align with ROS conventions instead of the
     repository checkout location.

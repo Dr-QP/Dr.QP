@@ -8,7 +8,6 @@ from mcp.server.fastmcp import FastMCP
 
 from .controller import RobotMcpController
 
-
 mcp = FastMCP(
     'Dr.QP Robot MCP',
     instructions=(
@@ -86,17 +85,17 @@ def robot_move(
     """Publish a normalized motion command for robot walking or posture."""
     return _motion_command_state(
         controller.send_motion_command(
-        stride_x=stride_x,
-        stride_y=stride_y,
-        stride_z=stride_z,
-        rotation_speed=rotation_speed,
-        body_x=body_x,
-        body_y=body_y,
-        body_z=body_z,
-        body_roll=body_roll,
-        body_pitch=body_pitch,
-        body_yaw=body_yaw,
-        gait_type=gait_type,
+            stride_x=stride_x,
+            stride_y=stride_y,
+            stride_z=stride_z,
+            rotation_speed=rotation_speed,
+            body_x=body_x,
+            body_y=body_y,
+            body_z=body_z,
+            body_roll=body_roll,
+            body_pitch=body_pitch,
+            body_yaw=body_yaw,
+            gait_type=gait_type,
         )
     )
 
@@ -127,20 +126,20 @@ def robot_walk_for_duration(
     """Repeat a walking command for a bounded duration."""
     return _motion_sequence_result(
         controller.walk_for_duration(
-        duration_sec=duration_sec,
-        publish_hz=publish_hz,
-        stop_after=stop_after,
-        stride_x=stride_x,
-        stride_y=stride_y,
-        stride_z=stride_z,
-        rotation_speed=rotation_speed,
-        body_x=body_x,
-        body_y=body_y,
-        body_z=body_z,
-        body_roll=body_roll,
-        body_pitch=body_pitch,
-        body_yaw=body_yaw,
-        gait_type=gait_type,
+            duration_sec=duration_sec,
+            publish_hz=publish_hz,
+            stop_after=stop_after,
+            stride_x=stride_x,
+            stride_y=stride_y,
+            stride_z=stride_z,
+            rotation_speed=rotation_speed,
+            body_x=body_x,
+            body_y=body_y,
+            body_z=body_z,
+            body_roll=body_roll,
+            body_pitch=body_pitch,
+            body_yaw=body_yaw,
+            gait_type=gait_type,
         )
     )
 
@@ -160,10 +159,7 @@ def robot_recording_stop() -> dict[str, object]:
         'stopped_at': recorded.stopped_at,
         'sample_interval_sec': recorded.sample_interval_sec,
         'sample_count': recorded.sample_count,
-        'samples': [
-            _robot_state_payload(sample)
-            for sample in recorded.samples
-        ],
+        'samples': [_robot_state_payload(sample) for sample in recorded.samples],
     }
 
 

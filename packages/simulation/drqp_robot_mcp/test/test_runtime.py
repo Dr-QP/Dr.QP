@@ -6,9 +6,8 @@ from pathlib import Path
 import sys
 from types import ModuleType, SimpleNamespace
 
-import pytest
-
 from drqp_robot_mcp import runtime
+import pytest
 
 
 @pytest.fixture(autouse=True)

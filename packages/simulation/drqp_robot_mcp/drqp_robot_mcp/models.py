@@ -194,11 +194,7 @@ class MotionCommandResult:
         stride_direction = Vector3.from_mapping(data.get('stride_direction'))
         body_translation = Vector3.from_mapping(data.get('body_translation'))
         body_rotation = Vector3.from_mapping(data.get('body_rotation'))
-        if (
-            stride_direction is None
-            or body_translation is None
-            or body_rotation is None
-        ):
+        if stride_direction is None or body_translation is None or body_rotation is None:
             raise ValueError('Motion command result is missing vector fields.')
         return cls(
             stride_direction=stride_direction,

@@ -1,6 +1,5 @@
 from setuptools import find_packages, setup
 
-
 package_name = 'drqp_robot_mcp'
 
 

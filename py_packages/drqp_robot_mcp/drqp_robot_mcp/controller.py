@@ -430,9 +430,7 @@ class RobotMcpController:
         normalized_gait_type = gait_type.strip().lower()
         if normalized_gait_type not in self._VALID_GAITS:
             supported = ', '.join(sorted(self._VALID_GAITS))
-            raise ValueError(
-                f'gait_type must be one of {supported}; got {gait_type!r}.'
-            )
+            raise ValueError(f'gait_type must be one of {supported}; got {gait_type!r}.')
         return normalized_gait_type
 
 

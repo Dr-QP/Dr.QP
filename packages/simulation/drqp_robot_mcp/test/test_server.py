@@ -4,13 +4,10 @@ from __future__ import annotations
 
 import importlib
 import sys
-from types import SimpleNamespace
-from types import ModuleType
-
-import pytest
+from types import ModuleType, SimpleNamespace
 
 from drqp_robot_mcp.models import MotionCommandResult, MotionSequenceResult, Vector3
-
+import pytest
 
 EXPECTED_TOOL_NAMES = {
     'simulation.start',

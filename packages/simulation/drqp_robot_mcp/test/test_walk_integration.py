@@ -4,15 +4,12 @@ from __future__ import annotations
 
 import math
 import os
-import shutil
 import signal
-import subprocess
 import time
 from typing import Any
 
-import pytest
-
 from drqp_robot_mcp.controller import RobotMcpController
+import pytest
 
 
 def _pose_distance(before, after) -> float:
@@ -23,8 +20,8 @@ def _pose_distance(before, after) -> float:
 
 
 def _read_odom_pose(timeout_sec: float) -> Any | None:
-    import rclpy
     from nav_msgs.msg import Odometry
+    import rclpy
 
     did_init = False
     if not rclpy.ok():
