@@ -22,7 +22,7 @@ Systematic approach to resolving all PR feedback including review comments, CI f
 
 - Active pull request with feedback
 - Access to GitHub API for PR details
-- Access to CI logs and test results
+- Access to CI logs and test results via the [extract-github-actions-logs](../extract-github-actions-logs/) skill
 - Access to CodeQL security scan results
 - Access to Codecov reports
 
@@ -77,7 +77,7 @@ After fetching, **filter out resolved threads** using these rules (apply in orde
 
 2. **Get CI check results**:
    - Check GitHub Actions workflow runs
-   - Download test logs from artifacts
+   - Use the [extract-github-actions-logs](../extract-github-actions-logs/) skill to fetch job logs and download uploaded colcon logs or xUnit report artifacts
    - Review lint/format check outputs
    - Check build logs for errors
 
@@ -145,8 +145,14 @@ Systematically resolve failing tests.
 
 1. **Collect test output**:
 
+   - For GitHub Actions failures, first use the [extract-github-actions-logs](../extract-github-actions-logs/) skill to:
+     - fetch the failing job log with `gh run view ... --job ... --log`
+     - download `colcon-logs-<arch>` artifacts when available
+     - download `colcon-test-reports-<arch>` artifacts when available
+   - Inspect the downloaded xUnit XML files and colcon log directories before reproducing locally.
+
 ```bash
-   # For ROS 2 workspace
+   # For local ROS 2 workspace follow-up after reviewing CI evidence
    cat build/<package_name>/test_results/<package_name>/*.xml
 ```
 
@@ -453,5 +459,6 @@ Maintain an internal execution log documenting:
 ## Related Resources
 
 - [Code Review Standards](../code-review-standards/) - PR description and review practices
+- [Extract GitHub Actions Logs](../extract-github-actions-logs/) - Fetch CI job logs and download colcon log/test-report artifacts
 - [Shared Engineering Guidelines](../../instructions/engineering.instructions.md) - Clean Code, SOLID, TDD
 - [Principal Engineer](../../agents/principal-engineer.agent.md) - Primary implementation agent with TDD orchestration
