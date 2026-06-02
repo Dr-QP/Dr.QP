@@ -279,6 +279,165 @@ def test_get_robot_state_uses_bridged_odometry_instead_of_gz_cli(monkeypatch) ->
     assert result['robot_pose']['orientation']['w'] == pytest.approx(0.707)
 
 
+def test_get_world_state_uses_gazebo_transport_instead_of_gz_cli(monkeypatch) -> None:
+    """World state should come from Gazebo Transport, not a CLI subprocess."""
+
+    class FakeString:
+        def __init__(self, data: str = '') -> None:
+            self.data = data
+
+    class FakeQoSProfile:
+        def __init__(self, depth: int) -> None:
+            self.depth = depth
+            self.durability = None
+
+    class FakeDurabilityPolicy:
+        TRANSIENT_LOCAL = 'transient_local'
+
+    class FakePublisher:
+        def get_subscription_count(self) -> int:
+            return 1
+
+        def publish(self, message: object) -> None:
+            del message
+
+    class FakeNode:
+        def __init__(self) -> None:
+            self.subscriptions: dict[str, object] = {}
+
+        def create_publisher(self, msg_type, topic: str, qos_depth: int) -> FakePublisher:
+            del msg_type, topic
+            assert qos_depth == 10
+            return FakePublisher()
+
+        def create_subscription(self, msg_type, topic: str, callback, qos):
+            del msg_type, qos
+            self.subscriptions[topic] = callback
+            return object()
+
+        def destroy_node(self) -> None:
+            return None
+
+    class FakeGazeboNode:
+        def __init__(self) -> None:
+            self.subscriptions: dict[str, object] = {}
+
+        def subscribe(self, msg_type, topic: str, callback) -> bool:
+            del msg_type
+            self.subscriptions[topic] = callback
+            return True
+
+    class FakeExecutor:
+        def add_node(self, node: object) -> None:
+            self.node = node
+
+        def remove_node(self, node: object) -> None:
+            assert node is self.node
+
+        def spin_once(self, timeout_sec: float = 0.1) -> None:
+            return None
+
+        def shutdown(self) -> None:
+            return None
+
+    class FakeVector3:
+        def __init__(self, *, x: float = 0.0, y: float = 0.0, z: float = 0.0) -> None:
+            self.x = x
+            self.y = y
+            self.z = z
+
+    class FakeMovementCommand:
+        def __init__(self) -> None:
+            self.stride_direction = None
+            self.rotation_speed = 0.0
+            self.body_translation = None
+            self.body_rotation = None
+            self.gait_type = ''
+
+    fake_node = FakeNode()
+    fake_gazebo_node = FakeGazeboNode()
+    fake_rclpy = SimpleNamespace(
+        ok=lambda: True,
+        init=lambda: None,
+        shutdown=lambda: None,
+        create_node=lambda name: fake_node,
+    )
+
+    monkeypatch.setattr(
+        runtime,
+        '_load_ros_dependencies',
+        lambda: runtime._RosDependencies(
+            rclpy=fake_rclpy,
+            executor_factory=FakeExecutor,
+            odometry_message_type=object,
+            string_message_type=FakeString,
+            vector3_message_type=FakeVector3,
+            movement_command_type=FakeMovementCommand,
+            qos_profile_type=FakeQoSProfile,
+            durability_policy=FakeDurabilityPolicy,
+        ),
+    )
+    monkeypatch.setattr(
+        runtime,
+        '_load_gazebo_transport_dependencies',
+        lambda: runtime._GazeboTransportDependencies(
+            node_factory=lambda: fake_gazebo_node,
+            pose_v_message_type=object,
+        ),
+    )
+    monkeypatch.setattr(
+        runtime.subprocess,
+        'run',
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError('get_world_state should not shell out to gz topic')
+        ),
+    )
+    monkeypatch.setitem(sys.modules, 'sensor_msgs.msg', ModuleType('sensor_msgs.msg'))
+    monkeypatch.setitem(sys.modules, 'rosgraph_msgs.msg', ModuleType('rosgraph_msgs.msg'))
+    sys.modules['sensor_msgs.msg'].JointState = object
+    sys.modules['rosgraph_msgs.msg'].Clock = object
+
+    runtime_session = runtime.RosRuntimeSession()
+    runtime_session._ensure_started()
+    runtime_session._ensure_world_state_subscription('empty')
+
+    fake_gazebo_node.subscriptions['/world/empty/pose/info'](
+        SimpleNamespace(
+            HasField=lambda field: field == 'header',
+            header=SimpleNamespace(stamp=SimpleNamespace(sec=8, nsec=250_000_000)),
+            pose=[
+                SimpleNamespace(
+                    name='drqp',
+                    id=2,
+                    position=SimpleNamespace(x=1.0, y=-0.5, z=0.25),
+                    orientation=SimpleNamespace(x=0.0, y=0.0, z=0.0, w=1.0),
+                )
+            ],
+        )
+    )
+
+    result = runtime_session.get_world_state(world_name='empty', timeout_sec=1.0)
+
+    assert result == {
+        'available': True,
+        'world_name': 'empty',
+        'simulation_time_sec': pytest.approx(8.25),
+        'entity_count': 1,
+        'entities': [
+            {
+                'name': 'drqp',
+                'entity_id': 2,
+                'pose': {
+                    'position': {'x': 1.0, 'y': -0.5, 'z': 0.25},
+                    'orientation': {'x': 0.0, 'y': 0.0, 'z': 0.0, 'w': 1.0},
+                },
+            }
+        ],
+        'source': 'gazebo',
+        'note': None,
+    }
+
+
 def test_pid_is_running_returns_false_for_zombie_process(monkeypatch) -> None:
     """Zombie launch processes must be treated as stale, not running."""
 

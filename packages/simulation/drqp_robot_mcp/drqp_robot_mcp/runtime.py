@@ -29,6 +29,14 @@ class _RosDependencies:
 
 
 @dataclass(slots=True)
+class _GazeboTransportDependencies:
+    """Loaded Gazebo Transport dependencies required by world-state reads."""
+
+    node_factory: Any
+    pose_v_message_type: Any
+
+
+@dataclass(slots=True)
 class _StartedRosRuntime:
     """State for a running ROS runtime session."""
 
@@ -50,8 +58,12 @@ class RosRuntimeSession:
         self._state_changed = threading.Condition(self._lock)
         self._started: _StartedRosRuntime | None = None
         self._spin_error: BaseException | None = None
+        self._gazebo_transport_dependencies: _GazeboTransportDependencies | None = None
+        self._gazebo_transport_node: Any | None = None
         self._lifecycle_state: str | None = None
         self._robot_pose: dict[str, Any] | None = None
+        self._world_states: dict[str, dict[str, Any]] = {}
+        self._world_state_subscriptions: dict[str, Any] = {}
         self._joint_states: dict[str, dict[str, float | None]] = {}
         self._simulation_time_sec: float | None = None
 
@@ -142,7 +154,6 @@ class RosRuntimeSession:
         timeout_sec: float,
     ) -> dict[str, Any]:
         """Read the latest robot lifecycle state, joints, and pose."""
-        deadline = time.monotonic() + timeout_sec
         self._ensure_started()
         self._wait_for_runtime_data(timeout_sec)
 
@@ -177,19 +188,51 @@ class RosRuntimeSession:
         }
 
     def get_world_state(self, world_name: str, timeout_sec: float) -> dict[str, Any]:
-        """Read the latest Gazebo world entity poses."""
+        """Read the latest Gazebo world entity poses via Transport."""
         self._ensure_started()
-        self._wait_for_runtime_data(min(timeout_sec, 0.5))
+        note: str | None = None
+        try:
+            self._ensure_world_state_subscription(world_name)
+            self._wait_for_world_state(world_name, timeout_sec)
+        except RuntimeError as exc:
+            note = str(exc)
 
         with self._state_changed:
             self._raise_spin_error_locked()
+            cached_world_state = self._world_states.get(world_name)
             simulation_time_sec = self._simulation_time_sec
 
-        return _get_world_state_snapshot(
-            world_name=world_name,
-            timeout_sec=timeout_sec,
-            simulation_time_sec=simulation_time_sec,
-        )
+        if cached_world_state is None:
+            return {
+                'available': simulation_time_sec is not None,
+                'world_name': world_name,
+                'simulation_time_sec': simulation_time_sec,
+                'entity_count': 0,
+                'entities': [],
+                'source': 'gazebo',
+                'note': (
+                    note
+                    or (
+                        None
+                        if simulation_time_sec is not None
+                        else 'World state transport is not yet available.'
+                    )
+                ),
+            }
+
+        world_state = {
+            'available': True,
+            'world_name': cached_world_state['world_name'],
+            'simulation_time_sec': cached_world_state['simulation_time_sec'],
+            'entity_count': cached_world_state['entity_count'],
+            'entities': [entity.copy() for entity in cached_world_state['entities']],
+            'source': cached_world_state['source'],
+            'note': None,
+        }
+        if world_state['simulation_time_sec'] is None:
+            world_state['simulation_time_sec'] = simulation_time_sec
+
+        return world_state
 
     def close(self) -> None:
         """Stop the executor thread and release the ROS node."""
@@ -219,6 +262,11 @@ class RosRuntimeSession:
                 shutdown()
         except Exception:
             pass
+
+        with self._state_changed:
+            self._gazebo_transport_node = None
+            self._world_state_subscriptions = {}
+            self._world_states = {}
 
         if started.did_init and started.dependencies.rclpy.ok():
             started.dependencies.rclpy.shutdown()
@@ -303,6 +351,42 @@ class RosRuntimeSession:
             )
             return self._started
 
+    def _ensure_world_state_subscription(self, world_name: str) -> None:
+        """Create a Gazebo Transport subscription on first use for a world."""
+        with self._state_changed:
+            if world_name in self._world_state_subscriptions:
+                return
+
+            dependencies = self._ensure_gazebo_transport_dependencies_locked()
+            if self._gazebo_transport_node is None:
+                _ensure_gazebo_partition_environment()
+                self._gazebo_transport_node = dependencies.node_factory()
+
+            topic = f'/world/{world_name}/pose/info'
+            callback = lambda message, subscribed_world=world_name: self._handle_world_state_message(
+                subscribed_world,
+                message,
+            )
+            subscribed = self._gazebo_transport_node.subscribe(
+                dependencies.pose_v_message_type,
+                topic,
+                callback,
+            )
+            if not subscribed:
+                raise RuntimeError(
+                    f'Failed to subscribe to Gazebo world pose topic: {topic}'
+                )
+
+            self._world_state_subscriptions[world_name] = callback
+
+    def _ensure_gazebo_transport_dependencies_locked(
+        self,
+    ) -> _GazeboTransportDependencies:
+        """Load Gazebo Transport dependencies once for world-state reads."""
+        if self._gazebo_transport_dependencies is None:
+            self._gazebo_transport_dependencies = _load_gazebo_transport_dependencies()
+        return self._gazebo_transport_dependencies
+
     def _spin_executor(self, executor: Any, stop_event: threading.Event) -> None:
         """Continuously spin the shared ROS executor in a background thread."""
         while not stop_event.is_set():
@@ -340,6 +424,12 @@ class RosRuntimeSession:
             self._robot_pose = _pose_to_mapping(message.pose.pose)
             self._state_changed.notify_all()
 
+    def _handle_world_state_message(self, world_name: str, message: Any) -> None:
+        """Cache the latest Gazebo world-state message for a world."""
+        with self._state_changed:
+            self._world_states[world_name] = _world_state_to_mapping(world_name, message)
+            self._state_changed.notify_all()
+
     def _handle_clock_message(self, message: Any) -> None:
         """Cache the latest simulation clock message."""
         simulation_time_sec = float(message.clock.sec) + (
@@ -361,6 +451,21 @@ class RosRuntimeSession:
                     or bool(self._joint_states)
                     or self._simulation_time_sec is not None
                 ):
+                    return
+
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    return
+
+                self._state_changed.wait(timeout=min(0.1, remaining))
+
+    def _wait_for_world_state(self, world_name: str, timeout_sec: float) -> None:
+        """Wait briefly for a bridged world-state message to arrive."""
+        deadline = time.monotonic() + timeout_sec
+        with self._state_changed:
+            while True:
+                self._raise_spin_error_locked()
+                if world_name in self._world_states:
                     return
 
                 remaining = deadline - time.monotonic()
@@ -418,6 +523,28 @@ def _load_ros_dependencies() -> _RosDependencies:
         qos_profile_type=QoSProfile,
         durability_policy=QoSDurabilityPolicy,
     )
+
+
+def _load_gazebo_transport_dependencies() -> _GazeboTransportDependencies:
+    """Import Gazebo Transport modules lazily for world-state subscriptions."""
+    from gz.msgs10.pose_v_pb2 import Pose_V
+    from gz.transport13 import Node
+
+    return _GazeboTransportDependencies(
+        node_factory=Node,
+        pose_v_message_type=Pose_V,
+    )
+
+
+def _ensure_gazebo_partition_environment() -> None:
+    """Match the launch-file default Gazebo partition when none is set."""
+    if os.environ.get('GZ_PARTITION'):
+        return
+
+    hostname = os.environ.get('HOSTNAME') or 'unknown-host'
+    user = os.environ.get('USER') or 'unknown-user'
+    ros_domain_id = os.environ.get('ROS_DOMAIN_ID') or '0'
+    os.environ['GZ_PARTITION'] = f'{hostname}:{user}-domain-{ros_domain_id}'
 
 
 _DEFAULT_ROS_RUNTIME: RosRuntimeSession | None = None
@@ -606,6 +733,52 @@ def _pose_to_mapping(message: Any) -> dict[str, Any]:
             'w': float(message.orientation.w),
         },
     }
+
+
+def _world_state_to_mapping(world_name: str, message: Any) -> dict[str, Any]:
+    """Convert a Gazebo Pose_V message into the MCP payload shape."""
+    entities = [
+        _world_entity_to_mapping(entity)
+        for entity in message.pose
+        if entity.name
+    ]
+    return {
+        'world_name': world_name,
+        'simulation_time_sec': _simulation_time_sec_from_pose_v(message),
+        'entity_count': len(entities),
+        'entities': entities,
+        'source': 'gazebo',
+    }
+
+
+def _world_entity_to_mapping(message: Any) -> dict[str, Any]:
+    """Convert a Gazebo pose message into the MCP payload shape."""
+    return {
+        'name': str(message.name),
+        'entity_id': int(message.id),
+        'pose': {
+            'position': {
+                'x': float(message.position.x),
+                'y': float(message.position.y),
+                'z': float(message.position.z),
+            },
+            'orientation': {
+                'x': float(message.orientation.x),
+                'y': float(message.orientation.y),
+                'z': float(message.orientation.z),
+                'w': float(message.orientation.w),
+            },
+        },
+    }
+
+
+def _simulation_time_sec_from_pose_v(message: Any) -> float | None:
+    """Extract simulation time from a Gazebo Pose_V message header."""
+    if not message.HasField('header'):
+        return None
+
+    stamp = message.header.stamp
+    return float(stamp.sec) + (float(stamp.nsec) / 1_000_000_000.0)
 
 
 def parse_gazebo_pose_info(raw_output: str) -> list[dict[str, Any]]:
