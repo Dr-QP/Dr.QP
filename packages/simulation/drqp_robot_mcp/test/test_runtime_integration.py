@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import os
-import signal
-import subprocess
 import time
 from typing import Any
 
@@ -12,22 +9,7 @@ from drqp_robot_mcp import runtime
 from drqp_robot_mcp.controller import RobotMcpController
 import pytest
 
-
-def _reset_local_simulation_state() -> None:
-    """Clear any stale local runtime or Gazebo processes before booting."""
-    runtime.shutdown_default_ros_runtime()
-    subprocess.run(
-        ['pkill', '-9', '-f', 'ros2 launch drqp_gazebo sim.launch.py'],
-        check=False,
-    )
-    subprocess.run(
-        ['pkill', '-9', '-f', 'ruby .*/gz sim -r -v 3 empty.sdf'],
-        check=False,
-    )
-    subprocess.run(
-        ['pkill', '-9', '-f', '^gz sim -r -v 3 empty.sdf'],
-        check=False,
-    )
+from simulation_test_support import reset_local_simulation_state, terminate_simulation
 
 
 def _read_odom_pose(timeout_sec: float) -> Any | None:
@@ -57,15 +39,6 @@ def _read_odom_pose(timeout_sec: float) -> Any | None:
             rclpy.shutdown()
 
 
-def _terminate_simulation(controller: RobotMcpController) -> None:
-    pid_text = controller.launch_pid_path.read_text(encoding='utf-8').strip()
-    pid = int(pid_text)
-    try:
-        os.killpg(pid, signal.SIGTERM)
-    except ProcessLookupError:
-        return
-
-
 def _assert_pose_matches_odometry(snapshot_pose: dict[str, Any], odom_pose: Any) -> None:
     assert snapshot_pose['position']['x'] == pytest.approx(odom_pose.position.x)
     assert snapshot_pose['position']['y'] == pytest.approx(odom_pose.position.y)
@@ -79,7 +52,7 @@ def _assert_pose_matches_odometry(snapshot_pose: dict[str, Any], odom_pose: Any)
 @pytest.mark.slow
 def test_runtime_robot_pose_stays_available_from_live_odom_bridge() -> None:
     """The runtime robot snapshot keeps exposing pose from the live /odom bridge."""
-    _reset_local_simulation_state()
+    reset_local_simulation_state()
     controller = RobotMcpController()
     boot_result = None
 
@@ -139,4 +112,4 @@ def test_runtime_robot_pose_stays_available_from_live_odom_bridge() -> None:
         controller.close()
         runtime.shutdown_default_ros_runtime()
         if boot_result is not None and boot_result.simulation_was_started and controller.launch_pid_path.exists():
-            _terminate_simulation(controller)
+            terminate_simulation(controller)

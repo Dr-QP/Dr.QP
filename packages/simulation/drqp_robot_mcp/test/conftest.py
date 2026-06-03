@@ -19,8 +19,13 @@
 # THE SOFTWARE.
 
 import os
+import sys
+from pathlib import Path
 
 import pytest
+
+# Ensure the test directory is on sys.path so shared test helpers can be imported.
+sys.path.insert(0, str(Path(__file__).parent))
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
