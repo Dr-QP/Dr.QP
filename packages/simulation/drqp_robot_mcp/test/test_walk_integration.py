@@ -5,11 +5,30 @@ from __future__ import annotations
 import math
 import os
 import signal
+import subprocess
 import time
 from typing import Any
 
+from drqp_robot_mcp import runtime
 from drqp_robot_mcp.controller import RobotMcpController
 import pytest
+
+
+def _reset_local_simulation_state() -> None:
+    """Clear any stale local runtime or Gazebo processes before booting."""
+    runtime.shutdown_default_ros_runtime()
+    subprocess.run(
+        ['pkill', '-9', '-f', 'ros2 launch drqp_gazebo sim.launch.py'],
+        check=False,
+    )
+    subprocess.run(
+        ['pkill', '-9', '-f', 'ruby .*/gz sim -r -v 3 empty.sdf'],
+        check=False,
+    )
+    subprocess.run(
+        ['pkill', '-9', '-f', '^gz sim -r -v 3 empty.sdf'],
+        check=False,
+    )
 
 
 def _pose_distance(before, after) -> float:
@@ -58,10 +77,13 @@ def _terminate_simulation(controller: RobotMcpController) -> None:
 @pytest.mark.slow
 def test_walk_for_duration_moves_robot_in_simulation() -> None:
     """The higher-level walk command moves the robot in Gazebo end to end."""
+    _reset_local_simulation_state()
     controller = RobotMcpController()
-    boot_result = controller.boot_up(timeout_sec=120.0)
+    boot_result = None
 
     try:
+        boot_result = controller.boot_up(timeout_sec=120.0)
+
         start_pose = _read_odom_pose(timeout_sec=10.0)
         assert start_pose is not None
 
@@ -90,5 +112,7 @@ def test_walk_for_duration_moves_robot_in_simulation() -> None:
     finally:
         controller.stop_motion()
         controller.shut_down(timeout_sec=60.0)
-        if boot_result.simulation_was_started and controller.launch_pid_path.exists():
+        controller.close()
+        runtime.shutdown_default_ros_runtime()
+        if boot_result is not None and boot_result.simulation_was_started and controller.launch_pid_path.exists():
             _terminate_simulation(controller)

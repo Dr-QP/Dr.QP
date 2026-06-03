@@ -15,7 +15,7 @@ pytest.skip(
 import math
 import time
 
-import drqp_robot_mcp.controller as controller_module
+from drqp_robot_mcp import controller as controller_module
 from drqp_robot_mcp.controller import RobotMcpController
 from drqp_robot_mcp.models import Pose, Quaternion, RobotStateSnapshot, Vector3
 import pytest

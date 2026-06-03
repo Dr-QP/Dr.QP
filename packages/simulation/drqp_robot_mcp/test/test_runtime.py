@@ -616,7 +616,7 @@ def test_close_reports_teardown_failures_and_continues_cleanup(
         did_init=True,
     )
 
-    with caplog.at_level('WARNING'):
+    with caplog.at_level('WARNING', logger='drqp_robot_mcp.runtime'):
         runtime_session.close()
 
     assert runtime_session._started is None

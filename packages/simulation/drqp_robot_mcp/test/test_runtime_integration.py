@@ -4,12 +4,30 @@ from __future__ import annotations
 
 import os
 import signal
+import subprocess
 import time
 from typing import Any
 
 from drqp_robot_mcp import runtime
 from drqp_robot_mcp.controller import RobotMcpController
 import pytest
+
+
+def _reset_local_simulation_state() -> None:
+    """Clear any stale local runtime or Gazebo processes before booting."""
+    runtime.shutdown_default_ros_runtime()
+    subprocess.run(
+        ['pkill', '-9', '-f', 'ros2 launch drqp_gazebo sim.launch.py'],
+        check=False,
+    )
+    subprocess.run(
+        ['pkill', '-9', '-f', 'ruby .*/gz sim -r -v 3 empty.sdf'],
+        check=False,
+    )
+    subprocess.run(
+        ['pkill', '-9', '-f', '^gz sim -r -v 3 empty.sdf'],
+        check=False,
+    )
 
 
 def _read_odom_pose(timeout_sec: float) -> Any | None:
@@ -61,10 +79,13 @@ def _assert_pose_matches_odometry(snapshot_pose: dict[str, Any], odom_pose: Any)
 @pytest.mark.slow
 def test_runtime_robot_pose_stays_available_from_live_odom_bridge() -> None:
     """The runtime robot snapshot keeps exposing pose from the live /odom bridge."""
+    _reset_local_simulation_state()
     controller = RobotMcpController()
-    boot_result = controller.boot_up(timeout_sec=120.0)
+    boot_result = None
 
     try:
+        boot_result = controller.boot_up(timeout_sec=120.0)
+
         first_odom_pose = _read_odom_pose(timeout_sec=10.0)
         assert first_odom_pose is not None
 
@@ -117,5 +138,5 @@ def test_runtime_robot_pose_stays_available_from_live_odom_bridge() -> None:
         controller.shut_down(timeout_sec=60.0)
         controller.close()
         runtime.shutdown_default_ros_runtime()
-        if boot_result.simulation_was_started and controller.launch_pid_path.exists():
+        if boot_result is not None and boot_result.simulation_was_started and controller.launch_pid_path.exists():
             _terminate_simulation(controller)
