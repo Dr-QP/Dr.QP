@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+# ruff: noqa: E402
+
 import pytest
 
 pytest.skip(
@@ -18,7 +20,6 @@ import time
 from drqp_robot_mcp import controller as controller_module
 from drqp_robot_mcp.controller import RobotMcpController
 from drqp_robot_mcp.models import Pose, Quaternion, RobotStateSnapshot, Vector3
-import pytest
 
 
 def make_snapshot(
@@ -50,7 +51,7 @@ class FakeController(RobotMcpController):
     """Controller test double that avoids ROS middleware dependencies."""
 
     def __init__(self, states: list[RobotStateSnapshot]):
-        super().__init__(workspace_root='/workspace')
+        super().__init__()
         self.states = list(states)
         self.published_events: list[str] = []
         self.waited_states: list[str] = []

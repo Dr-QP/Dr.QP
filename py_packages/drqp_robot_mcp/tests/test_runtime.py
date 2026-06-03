@@ -81,7 +81,6 @@ def test_start_simulation_returns_unavailable_when_gazebo_launch_is_missing(
     monkeypatch.setattr(runtime, '_gazebo_launch_is_available', lambda: False)
 
     result = runtime.start_simulation(
-        workspace_root=tmp_path,
         pid_path=pid_path,
         log_path=log_path,
     )
@@ -112,7 +111,6 @@ def test_start_simulation_uses_direct_ros2_launch_without_shell(
     monkeypatch.setattr(runtime.subprocess, 'Popen', fake_popen)
 
     result = runtime.start_simulation(
-        workspace_root=tmp_path,
         pid_path=pid_path,
         log_path=log_path,
     )
