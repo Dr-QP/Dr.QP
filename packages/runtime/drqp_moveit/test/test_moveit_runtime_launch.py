@@ -24,7 +24,7 @@ import unittest
 from control_msgs.action import FollowJointTrajectory
 from controller_manager.test_utils import check_controllers_running, check_node_running
 from drqp_brain.joint_trajectory_builder import kFemurOffsetAngle, kTibiaOffsetAngle
-from drqp_brain.models import HexapodModel
+from drqp_kinematics.models import HexapodModel
 from geometry_msgs.msg import Pose, PoseStamped, Quaternion
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
@@ -383,7 +383,11 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
             'Timed out waiting for joint states to match the executed trajectory',
         )
 
-    def _apply_target_obstacle(self, target_pose: PoseStamped) -> None:
+    def _apply_target_obstacle(
+        self,
+        target_pose: PoseStamped,
+        blocked_state: RobotState | None = None,
+    ) -> None:
         collision_object = CollisionObject()
         collision_object.header.frame_id = BASE_FRAME
         collision_object.id = TARGET_OBSTACLE_ID
@@ -401,6 +405,13 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         response = self._call_service(self.apply_planning_scene_client, request)
         self.assertTrue(response.success, 'Failed to apply obstacle to the planning scene')
         self._active_obstacle_ids.add(TARGET_OBSTACLE_ID)
+
+        if blocked_state is not None:
+            self._spin_until(
+                lambda: not self._state_validity(blocked_state).valid,
+                timeout_sec=5.0,
+                error_message='Obstacle did not invalidate the target state in time',
+            )
 
     def _remove_obstacle(self, obstacle_id: str) -> None:
         collision_object = CollisionObject()
@@ -494,7 +505,7 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
             ik_response.solution,
             LEFT_FRONT_JOINTS,
         )
-        self._apply_target_obstacle(target_pose)
+        self._apply_target_obstacle(target_pose, blocked_state=ik_response.solution)
 
         validity_response = self._state_validity(ik_response.solution)
         self.assertFalse(

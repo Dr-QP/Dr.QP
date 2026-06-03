@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2025 Anton Matosov
+# Copyright (c) 2017-2026 Anton Matosov
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,26 +18,4 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from .line import Line3D
-
-
-class Leg3D:
-    """A 3D leg class."""
-
-    def __init__(self, lines: list[Line3D]):
-        self.lines = lines
-
-    def __iter__(self):
-        return iter(self.lines)
-
-    @property
-    def xy(self):
-        return [line.xy for line in self.lines]
-
-    @property
-    def xz(self):
-        return [line.xz for line in self.lines]
-
-    @property
-    def yz(self):
-        return [line.yz for line in self.lines]
+from .models import HexapodLeg, HexapodModel, LegModel, safe_arccos  # noqa: F401

@@ -1,4 +1,4 @@
-# # Copyright (c) 2017-2025 Anton Matosov
+# Copyright (c) 2017-2026 Anton Matosov
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -99,7 +99,6 @@ class AffineTransform:
         transformed_point = self._matrix @ point4d
         return transformed_point[:3]
 
-    # operator @
     def __matmul__(self, other):
         return AffineTransform(self._matrix @ other._matrix)
 

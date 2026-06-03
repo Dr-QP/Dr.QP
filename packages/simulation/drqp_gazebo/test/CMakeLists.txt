@@ -12,6 +12,7 @@ set(drqp_gazebo_smoke_launch_tests
 set(drqp_gazebo_full_launch_tests
   test_robot_control_movement_backward.py
   test_robot_control_movement_forward.py
+  test_robot_control_movement_forward_sustained.py
   test_robot_control_movement_left.py
   test_robot_control_movement_right.py
   test_robot_control_movement_rotation.py

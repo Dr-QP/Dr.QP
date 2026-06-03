@@ -484,6 +484,7 @@
       "/build/**": true,
       "/install/**": true,
       "/log/**": true,
+      "docs/_build/**": true,
     },
     "clangd.enable": true,
     "clangd.path": "clangd",
