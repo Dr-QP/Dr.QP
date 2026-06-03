@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2025 Anton Matosov
+# Copyright (c) 2017-2026 Anton Matosov
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -35,26 +35,22 @@ class Point:
     def __add__(self, other):
         if isinstance(other, Point):
             return Point(self.x + other.x, self.y + other.y, other.label)
-        else:
-            return Point(self.x + other, self.y + other, self.label)
+        return Point(self.x + other, self.y + other, self.label)
 
     def __sub__(self, other):
         if isinstance(other, Point):
             return Point(self.x - other.x, self.y - other.y, other.label)
-        else:
-            return Point(self.x - other, self.y - other, self.label)
+        return Point(self.x - other, self.y - other, self.label)
 
     def __mul__(self, other):
         if isinstance(other, Point):
             return Point(self.x * other.x, self.y * other.y, other.label)
-        else:
-            return Point(self.x * other, self.y * other, self.label)
+        return Point(self.x * other, self.y * other, self.label)
 
     def __truediv__(self, other):
         if isinstance(other, Point):
             return Point(self.x / other.x, self.y / other.y, other.label)
-        else:
-            return Point(self.x / other, self.y / other, self.label)
+        return Point(self.x / other, self.y / other, self.label)
 
     def __eq__(self, other):
         return np.allclose(self.numpy(), other.numpy())
@@ -66,11 +62,6 @@ class Point:
         return np.array([self.x, self.y])
 
     def rotate(self, angle):
-        """
-        Rotate the point by the given angle.
-
-        https://en.wikipedia.org/wiki/Rotation_matrix
-        """
         x = self.x * np.cos(angle) - self.y * np.sin(angle)
         y = self.x * np.sin(angle) + self.y * np.cos(angle)
         return Point(x, y, self.label)
@@ -169,22 +160,6 @@ class Point3D:
         return self / np.linalg.norm(self._array)
 
     def interpolate(self, other, alpha):
-        """
-        Interpolates between two points.
-
-        Parameters
-        ----------
-        other: Point3D
-          The other point to interpolate to.
-
-        alpha: float
-          The interpolation factor. 0.0 is this point, 1.0 is the other point.
-
-        Returns
-        -------
-            Point3D
-
-        """
         return Point3D(
             [
                 float(np.interp(alpha, [0, 1], [self.x, other.x])),
@@ -196,26 +171,22 @@ class Point3D:
     def __add__(self, other):
         if isinstance(other, Point3D):
             return Point3D(self._array + other._array, other.label)
-        else:
-            return Point3D(self._array + other, self.label)
+        return Point3D(self._array + other, self.label)
 
     def __sub__(self, other):
         if isinstance(other, Point3D):
             return Point3D(self._array - other._array, other.label)
-        else:
-            return Point3D(self._array - other, self.label)
+        return Point3D(self._array - other, self.label)
 
     def __mul__(self, other):
         if isinstance(other, Point3D):
             return Point3D(self._array * other._array, other.label)
-        else:
-            return Point3D(self._array * other, self.label)
+        return Point3D(self._array * other, self.label)
 
     def __truediv__(self, other):
         if isinstance(other, Point3D):
             return Point3D(self._array / other._array, other.label)
-        else:
-            return Point3D(self._array / other, self.label)
+        return Point3D(self._array / other, self.label)
 
     def __eq__(self, other):
         return np.allclose(self._array, other._array, atol=1e-3)
@@ -224,15 +195,6 @@ class Point3D:
         return Point3D(self._array, self.label)
 
     def to_vector3(self):
-        """
-        Convert Point3D to geometry_msgs/Vector3.
-
-        Returns
-        -------
-        geometry_msgs.msg.Vector3
-            Vector3 message with x, y, z from this point
-
-        """
         from geometry_msgs.msg import Vector3
 
         return Vector3(x=float(self.x), y=float(self.y), z=float(self.z))

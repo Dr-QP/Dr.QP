@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 
-from drqp_brain.geometry.point import Point, Point3D, SimplePoint3D
+from drqp_kinematics.geometry import Point, Point3D, SimplePoint3D
 import numpy as np
 
 

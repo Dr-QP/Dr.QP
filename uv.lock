@@ -899,6 +899,7 @@ version = "0.1.0"
 source = { editable = "packages/runtime/drqp_brain" }
 dependencies = [
     { name = "adafruit-circuitpython-bno055" },
+    { name = "drqp-kinematics" },
     { name = "lgpio" },
     { name = "numpy" },
     { name = "python-statemachine" },
@@ -909,9 +910,27 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "adafruit-circuitpython-bno055" },
+    { name = "drqp-kinematics" },
     { name = "lgpio" },
     { name = "numpy" },
     { name = "python-statemachine", specifier = ">=2.5.0" },
+    { name = "scipy" },
+    { name = "setuptools" },
+]
+
+[[package]]
+name = "drqp-kinematics"
+version = "0.1.0"
+source = { editable = "packages/runtime/drqp_kinematics" }
+dependencies = [
+    { name = "numpy" },
+    { name = "scipy" },
+    { name = "setuptools" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "numpy" },
     { name = "scipy" },
     { name = "setuptools" },
 ]
@@ -954,6 +973,7 @@ dev = [
 ]
 docs = [
     { name = "drqp-brain" },
+    { name = "drqp-kinematics" },
     { name = "ipympl" },
     { name = "jupyterlab" },
     { name = "jupytext" },
@@ -980,6 +1000,7 @@ docs = [
 ]
 notebooks = [
     { name = "drqp-brain" },
+    { name = "drqp-kinematics" },
     { name = "ipympl" },
     { name = "jupyterlab" },
     { name = "jupytext" },
@@ -1013,6 +1034,7 @@ dev = [
 ]
 docs = [
     { name = "drqp-brain", editable = "packages/runtime/drqp_brain" },
+    { name = "drqp-kinematics", editable = "packages/runtime/drqp_kinematics" },
     { name = "ipympl", specifier = ">=0.9.7" },
     { name = "jupyterlab", specifier = ">=4.4" },
     { name = "jupytext", specifier = "==1.17.2" },
@@ -1039,6 +1061,7 @@ docs = [
 ]
 notebooks = [
     { name = "drqp-brain", editable = "packages/runtime/drqp_brain" },
+    { name = "drqp-kinematics", editable = "packages/runtime/drqp_kinematics" },
     { name = "ipympl", specifier = ">=0.9.7" },
     { name = "jupyterlab", specifier = ">=4.4" },
     { name = "jupytext", specifier = "==1.17.2" },

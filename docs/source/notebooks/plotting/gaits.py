@@ -19,8 +19,8 @@
 # THE SOFTWARE.
 
 
-from drqp_brain.geometry import AffineTransform, Point3D
-from drqp_brain.models import HexapodLeg
+from drqp_kinematics.geometry import AffineTransform, Point3D
+from drqp_kinematics.models import HexapodLeg
 from IPython.display import display
 import numpy as np
 

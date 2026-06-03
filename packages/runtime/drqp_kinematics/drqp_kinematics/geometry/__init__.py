@@ -18,39 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Shared test utilities for Gazebo simulation tests."""
-
-import inspect
-import subprocess
-
-__skip_gz_sim_cleanup = True
-
-
-def _caller_trace(max_depth: int = 3) -> str:
-    """Return a compact caller chain for debugging test teardown/setup flows."""
-    stack = inspect.stack()
-    # Stack[0] is _caller_trace and stack[1] is the direct wrapper/caller in this module.
-    callers = stack[2:][:max_depth]
-    if not callers:
-        return '<unknown caller>'
-
-    return ' <- '.join(f'{frame.function}@{frame.filename}:{frame.lineno}' for frame in callers)
-
-
-def ensure_gz_sim_not_running():
-    """
-    Remove any remaining Gazebo processes.
-
-    This is needed to ensure clean test isolation.
-    See https://github.com/ros2/launch/issues/545 for details.
-    """
-    if __skip_gz_sim_cleanup:
-        return
-
-    trace = _caller_trace()
-    print(
-        f'Ensuring no gz sim processes are running... [pkill -9 -f "^gz sim"] caller={trace}',
-        flush=True,
-    )
-    shell_cmd = ['pkill', '-9', '-f', '^gz sim']
-    subprocess.run(shell_cmd, check=False)
+from .leg import Leg3D  # noqa: F401
+from .line import Line, Line3D  # noqa: F401
+from .point import Point, Point3D, SimplePoint3D  # noqa: F401
+from .transforms import AffineTransform  # noqa: F401

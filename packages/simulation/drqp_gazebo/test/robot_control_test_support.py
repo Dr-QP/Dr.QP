@@ -50,7 +50,6 @@ from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 from rosgraph_msgs.msg import Clock
 from sensor_msgs.msg import Imu
 import std_msgs.msg
-from test_utils import ensure_gz_sim_not_running
 
 ODOM_TOPIC = '/odom'
 
@@ -65,8 +64,6 @@ def build_test_gz_partition(test_name: str) -> str:
 
 def create_simulation_launch_description(test_name: str | None = None) -> LaunchDescription:
     """Launch Gazebo simulation and wait for initialization before tests."""
-    ensure_gz_sim_not_running()
-
     if test_name is None:
         test_name = Path(inspect.stack()[1].filename).stem
 
@@ -96,7 +93,7 @@ def create_simulation_launch_description(test_name: str | None = None) -> Launch
 def filter_out_gazebo_processes(proc_info: ProcInfoHandler) -> ProcInfoHandler:
     """Filter out Gazebo processes that are terminated by launch teardown."""
     filtered_proc_info = ProcInfoHandler()
-    skipped_procs = ('gazebo', 'gz', 'bridge_node')
+    skipped_procs = ('gazebo', 'gz', 'bridge_node', 'move_group')
     for proc_name in proc_info.process_names():
         if not any(skip in proc_name for skip in skipped_procs):
             filtered_proc_info.append(proc_info[proc_name])
@@ -551,6 +548,31 @@ class GazeboRobotControlBase(unittest.TestCase):
             )
         except RuntimeError as error:
             self.fail(f'Forward movement test failed. Error: {error}')
+
+    def assert_sustained_forward_movement(self) -> None:
+        self._arm_robot()
+        try:
+            first_forward_delta, _, _ = self._run_movement_and_measure(stride_x=1.0)
+            second_forward_delta, _, _ = self._run_movement_and_measure(stride_x=1.0)
+            self.assertGreater(
+                first_forward_delta,
+                0.01,
+                msg=(
+                    'Robot did not move forward significantly during the first window: '
+                    f'forward_delta={first_forward_delta:.3f}m (expected > 0.01m)'
+                ),
+            )
+            self.assertGreater(
+                second_forward_delta,
+                0.01,
+                msg=(
+                    'Robot forward motion was not sustained into the second window: '
+                    f'forward_delta={second_forward_delta:.3f}m (expected > 0.01m)'
+                ),
+            )
+            self.assertEqual(self.current_robot_state, 'torque_on')
+        except RuntimeError as error:
+            self.fail(f'Sustained forward movement test failed. Error: {error}')
 
     def assert_backward_movement(self) -> None:
         self._arm_robot()

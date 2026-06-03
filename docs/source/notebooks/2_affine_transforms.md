@@ -58,7 +58,7 @@ Alongside the conversion, we are going to bring all the algorithms to work in fu
 As a first step in conversion, let's replace hand crafted rotations with rotation matrices.
 
 ```{code-cell} ipython3
-from drqp_brain.geometry import Leg3D, Line3D, Point3D
+from drqp_kinematics.geometry import Leg3D, Line3D, Point3D
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
@@ -143,7 +143,7 @@ display_and_close(plt.gcf())
 
 This was a good start, but code is hard to read and understand due to excessive repetitions. Let's introduce a transform system, similar to the one used in ROS TF2 library.
 
-Code from `drqp_brain/geometry/transforms.py`:
+Code from `drqp_kinematics/geometry/transforms.py`:
 
 ```{code-cell} ipython3
 :tags: [remove-cell]
@@ -151,18 +151,18 @@ Code from `drqp_brain/geometry/transforms.py`:
 import jupyter_utils
 
 jupyter_utils.display_file(
-    '../../../packages/runtime/drqp_brain/drqp_brain/geometry/transforms.py',
+    '../../../packages/runtime/drqp_kinematics/drqp_kinematics/geometry/transforms.py',
     start_after='THE SOFTWARE.',
 )
 ```
 
-```{literalinclude} ../../../packages/runtime/drqp_brain/drqp_brain/geometry/transforms.py
+```{literalinclude} ../../../packages/runtime/drqp_kinematics/drqp_kinematics/geometry/transforms.py
 :start-after: THE SOFTWARE.
 ```
 
 With this `AffineTransform` class we can now create a chain of transformations instead of hand crafting them. Let's rewrite the forward kinematics code using transforms.
 
-The code below is an excerpt from `LegModel` class in `drqp_brain/models.py` file:
+The code below is an excerpt from `LegModel` in `drqp_kinematics/models.py`:
 
 ```{code-cell} ipython3
 :tags: [remove-cell]
@@ -170,19 +170,19 @@ The code below is an excerpt from `LegModel` class in `drqp_brain/models.py` fil
 import jupyter_utils
 
 jupyter_utils.display_file(
-    '../../../packages/runtime/drqp_brain/drqp_brain/models.py',
+    '../../../packages/runtime/drqp_kinematics/drqp_kinematics/models.py',
     start_after='# Leg Forward kinematics - START',
     end_before='# Leg Forward kinematics - END',
 )
 ```
 
-```{literalinclude} ../../../packages/runtime/drqp_brain/drqp_brain/models.py
+```{literalinclude} ../../../packages/runtime/drqp_kinematics/drqp_kinematics/models.py
 :start-after: '# Leg Forward kinematics - START'
 :end-before: '# Leg Forward kinematics - END'
 ```
 
 ```{code-cell} ipython3
-from drqp_brain.models import HexapodLeg, LegModel
+from drqp_kinematics.models import HexapodLeg, LegModel
 from plotting import plot_leg3d
 
 coxa = 5
@@ -238,7 +238,7 @@ display_and_close(fig)
 
 With full 3D kinematics model and plotting support lets put it all together and create a 6 legged robot model.
 
-Code from `drqp_brain/models.py`:
+Code from `drqp_kinematics/models.py`:
 
 ```{code-cell} ipython3
 :tags: [remove-cell]
@@ -246,16 +246,17 @@ Code from `drqp_brain/models.py`:
 import jupyter_utils
 
 jupyter_utils.display_file(
-    '../../../packages/runtime/drqp_brain/drqp_brain/models.py', start_after='THE SOFTWARE.'
+    '../../../packages/runtime/drqp_kinematics/drqp_kinematics/models.py',
+    start_after='THE SOFTWARE.',
 )
 ```
 
-```{literalinclude} ../../../packages/runtime/drqp_brain/drqp_brain/models.py
+```{literalinclude} ../../../packages/runtime/drqp_kinematics/drqp_kinematics/models.py
 :start-after: THE SOFTWARE.
 ```
 
 ```{code-cell} ipython3
-from drqp_brain.models import HexapodModel
+from drqp_kinematics.models import HexapodModel
 from plotting import plot_hexapod
 
 # Dr.QP Dimensions
@@ -320,14 +321,14 @@ With the ability to position all legs, its time to work on the inverse kinematic
 
 The algorithm is as follows:
 
- 1. Capture the reference stance
-    - Run forward kinematics for all legs with the same angles in a desired position (neutral, wide, narrow, specific gait).
-    - Capture global positions of all leg foot tips
- 2. Apply transform to the robot's body (translation, rotation, twist).
- 3. Run inverse kinematics for all legs with the foot positions captured in step 1.
+1. Capture the reference stance
+   - Run forward kinematics for all legs with the same angles in a desired position (neutral, wide, narrow, specific gait).
+   - Capture global positions of all leg foot tips
+2. Apply transform to the robot's body (translation, rotation, twist).
+3. Run inverse kinematics for all legs with the foot positions captured in step 1.
 
 ```{code-cell} ipython3
-from drqp_brain.geometry import AffineTransform
+from drqp_kinematics.geometry import AffineTransform
 
 orig_alpha, orig_beta, orig_gamma = 0, -25, 110
 drqp = DrQP()
@@ -462,7 +463,7 @@ if not skip_in_local_runs_because_its_slow:
 To make all the learnings and findings reusable in other notebooks, lets move all the code into modules and double check it works.
 
 ```{code-cell} ipython3
-from drqp_brain.models import HexapodModel
+from drqp_kinematics.models import HexapodModel
 from plotting import plot_hexapod, update_hexapod_plot
 
 hexapod = HexapodModel()

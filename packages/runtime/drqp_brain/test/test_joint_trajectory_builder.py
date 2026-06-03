@@ -26,7 +26,7 @@ from drqp_brain.joint_trajectory_builder import (
     kFemurOffsetAngle,
     kTibiaOffsetAngle,
 )
-from drqp_brain.models import HexapodModel
+from drqp_kinematics.models import HexapodModel
 import numpy as np
 import pytest
 import rclpy.time
@@ -145,6 +145,27 @@ class TestJointTrajectoryBuilder:
         assert point.positions.tolist() == pytest.approx(positions)
         assert point.effort.tolist() == pytest.approx(effort)
         assert point.time_from_start == rclpy.time.Duration(seconds=seconds).to_msg()
+
+    def test_add_point_from_joint_targets(self, trajectory_builder):
+        """Test adding a point from MoveIt joint targets without applying model offsets."""
+        joint_targets = {
+            f'drqp/{leg.label.name}_{joint_name}': value
+            for value, leg in enumerate(trajectory_builder.hexapod.legs, start=1)
+            for joint_name in ('coxa', 'femur', 'tibia')
+        }
+
+        trajectory_builder.add_point_from_joint_targets(
+            joint_targets,
+            reach_in_seconds_from_start=1.25,
+            effort=0.7,
+        )
+
+        point = trajectory_builder.points[0]
+        assert point.time_from_start == rclpy.time.Duration(seconds=1.25).to_msg()
+        assert point.effort.tolist() == pytest.approx([0.7] * 18)
+        assert point.positions.tolist() == pytest.approx(
+            [joint_targets[name] for name in trajectory_builder.joint_names]
+        )
 
     def test_publish(self, trajectory_builder, mock_publisher):
         """Test publishing trajectory message."""
