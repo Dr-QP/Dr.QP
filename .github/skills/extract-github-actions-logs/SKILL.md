@@ -1,6 +1,6 @@
 ---
 name: extract-github-actions-logs
-description: Extract logs from a GitHub Actions run or job with the GitHub CLI. Use when asked to fetch failing CI logs, inspect a GitHub Actions run, or pull logs from a run or job URL. Keywords: github actions logs, failing ci logs, workflow run logs, job logs, gh run view.
+description: 'Extract logs from a GitHub Actions run or job with the GitHub CLI. Use when asked to fetch failing CI logs, inspect a GitHub Actions run, or pull logs from a run or job URL. Keywords: github actions logs, failing ci logs, workflow run logs, job logs, gh run view.'
 ---
 
 # Extract GitHub Actions Logs
