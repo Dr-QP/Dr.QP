@@ -568,7 +568,7 @@ def test_publish_movement_command_publishes_expected_message(monkeypatch) -> Non
 
 
 def test_close_reports_teardown_failures_and_continues_cleanup(
-    caplog,
+    capsys,
 ) -> None:
     """Runtime close should log teardown failures while finishing cleanup."""
 
@@ -616,14 +616,14 @@ def test_close_reports_teardown_failures_and_continues_cleanup(
         did_init=True,
     )
 
-    with caplog.at_level('WARNING', logger='drqp_robot_mcp.runtime'):
-        runtime_session.close()
+    runtime_session.close()
+    stderr_output = capsys.readouterr().err
 
     assert runtime_session._started is None
     assert fake_rclpy.shutdown_called is True
-    assert 'remove node from executor' in caplog.text
-    assert 'destroy ROS node' in caplog.text
-    assert 'shut down executor' in caplog.text
+    assert 'remove node from executor' in stderr_output
+    assert 'destroy ROS node' in stderr_output
+    assert 'shut down executor' in stderr_output
 
 
 def test_gazebo_launch_is_available_returns_false_when_ament_index_import_fails(
