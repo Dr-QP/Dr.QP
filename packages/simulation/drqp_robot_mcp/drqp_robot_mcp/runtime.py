@@ -415,6 +415,7 @@ class RosRuntimeSession:
                 self._gazebo_transport_node = dependencies.node_factory()
 
             topic = f'/world/{world_name}/pose/info'
+
             def callback(message: Any, subscribed_world: str = world_name) -> None:
                 self._handle_world_state_message(
                     subscribed_world,
