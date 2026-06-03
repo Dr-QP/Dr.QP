@@ -144,7 +144,6 @@ Resolve code review feedback systematically.
 Systematically resolve failing tests.
 
 1. **Collect test output**:
-
    - For GitHub Actions failures, first use the [extract-github-actions-logs](../extract-github-actions-logs/) skill to:
      - fetch the failing job log with `gh run view ... --job ... --log`
      - download `colcon-logs-<arch>` artifacts when available
