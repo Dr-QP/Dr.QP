@@ -118,12 +118,12 @@ gh api repos/<owner>/<repo>/code-scanning/alerts \
 
 ## Troubleshooting
 
-| Problem | Likely cause | Action |
-| --- | --- | --- |
-| `gh api` returns 401 or 403 | Missing auth or insufficient permissions | Run `gh auth status`, then authenticate or use an account with repo access |
-| No alerts returned for a PR | No open CodeQL alerts on that PR, wrong PR number, or alerts already fixed | Verify the PR number and retry without `-f state=open` if history is needed |
-| Mixed scanner results | The repo uses multiple code scanning tools | Add `-f tool_name=CodeQL` |
-| Branch query returns nothing | Incorrect ref format | Use `refs/heads/<branch-name>` for branches |
+| Problem                      | Likely cause                                                               | Action                                                                      |
+| ---------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `gh api` returns 401 or 403  | Missing auth or insufficient permissions                                   | Run `gh auth status`, then authenticate or use an account with repo access  |
+| No alerts returned for a PR  | No open CodeQL alerts on that PR, wrong PR number, or alerts already fixed | Verify the PR number and retry without `-f state=open` if history is needed |
+| Mixed scanner results        | The repo uses multiple code scanning tools                                 | Add `-f tool_name=CodeQL`                                                   |
+| Branch query returns nothing | Incorrect ref format                                                       | Use `refs/heads/<branch-name>` for branches                                 |
 
 ## References
 
