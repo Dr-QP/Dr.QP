@@ -1,0 +1,17 @@
+name: CodeQL scheduled
+
+on:
+  schedule:
+    # Schedule for codeql is needed in case new vulnerabilities are found in dependencies
+    # or new rules are added to CodeQL both of which happens outside of this repository.
+    - cron: '32 17 * * 5' # “At 17:32 on Friday.” https://crontab.guru/#32_17_*_*_5
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  codeql:
+    name: CodeQL Advanced
+    uses: ./.github/workflows/codeql.yml
+    secrets: inherit

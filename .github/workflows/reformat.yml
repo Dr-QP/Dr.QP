@@ -1,17 +1,22 @@
 name: Reformat code
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-    tags:
-      - v*
-  pull_request:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
-  cancel-in-progress: true
+  workflow_call:
+    inputs:
+      should_run:
+        description: Whether the formatter should execute for this invocation.
+        required: false
+        default: true
+        type: boolean
+      validate_all_codebase:
+        description: Whether super-linter should validate the full repository.
+        required: false
+        default: false
+        type: boolean
+    outputs:
+      changed:
+        description: Whether formatting produced file changes in the checked out tree.
+        value: ${{ jobs.reformat.outputs.changed }}
 
 env:
   COMMIT_MESSAGE: Apply linter fixes and reformatting
@@ -21,68 +26,14 @@ defaults:
     shell: bash -xeuo pipefail {0}
 
 jobs:
-  paths-filter:
-    name: Need to run?
-    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-    permissions: {}
-    timeout-minutes: 10
-    outputs:
-      pass: ${{ steps.override.outputs.pass }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-        with:
-          persist-credentials: false
-
-      - name: Filters
-        uses: ./.github/actions/paths-filter
-        id: filter
-        with:
-          extra-filter: |
-            - .github/workflows/reformat.yml
-            - docs/source/notebooks/**
-            - ansible/**
-            - packages/**/*.cpp
-            - packages/**/*.h
-            - packages/**/*.py
-            - py_packages/**/*.py
-            - scripts/cpp-reformat.sh
-            - scripts/python-reformat.sh
-            - .clang-format
-            - '**/*.md'
-            - '**/*.markdown'
-            - '**/*.yml'
-            - '**/*.yaml'
-            - '**/*.json'
-            - '**/*.sh'
-            - '**/*.bash'
-            - '**/*.zsh'
-            - '**/Dockerfile'
-            - '**/Dockerfile.*'
-
-      - name: Override pass for draft AI PRs
-        id: override
-        run: |
-          pass="${STEPS_FILTER_OUTPUTS_PASS}"
-          if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.pull_request.draft }}" == "true" ]]; then
-            case "${GITHUB_ACTOR}" in
-              *copilot*|*cursor*|*codex*|*claude*)
-                pass='false'
-                ;;
-            esac
-          fi
-
-          echo "pass=$pass" >> "$GITHUB_OUTPUT"
-        env:
-          STEPS_FILTER_OUTPUTS_PASS: ${{ steps.filter.outputs.pass }}
-
   reformat:
     name: Reformat
-    needs: paths-filter
-    if: needs.paths-filter.outputs.pass == 'true'
+    if: inputs.should_run
     runs-on: 'ubuntu-24.04' # superlinter only supports x86_64 for now
     container:
       image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
     permissions:
       statuses: write # To update PR status
       issues: write # To post pull request summary comments
@@ -117,7 +68,7 @@ jobs:
         uses: super-linter/super-linter@61abc07d755095a68f4987d1c2c3d1d64408f1f9 # v8
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'workflow_dispatch' }}
+          VALIDATE_ALL_CODEBASE: ${{ inputs.validate_all_codebase }}
           FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
 
           # Comment on the workflow only summary instead of the pull request conversation to avoid spamming notifications for every push to a PR.
@@ -146,8 +97,17 @@ jobs:
           FIX_JSONC_PRETTIER: true
           FIX_GITHUB_ACTIONS_ZIZMOR: true
 
+      - name: Detect formatter changes
+        id: diff
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Verify if not recursive commit
-        if: always()
+        if: always() && steps.diff.outputs.changed == 'true'
         id: verify
         run: |
           skip_commit=false
@@ -169,7 +129,7 @@ jobs:
 
       - name: Commit all changed files back to the repository
         uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7
-        if: always() && steps.verify.outputs.skip_commit != 'true'
+        if: always() && steps.diff.outputs.changed == 'true' && steps.verify.outputs.skip_commit != 'true'
         id: commit
         with:
           # Specify the branch to commit to instead of checkout, otherwise super-linter's GITHUB_SHA validation fails to find the commit.
@@ -178,7 +138,7 @@ jobs:
           commit_message: ${{ env.COMMIT_MESSAGE }}
 
       - name: Verify changes were committed if any
-        if: always()
+        if: always() && steps.diff.outputs.changed == 'true'
         run: |
           git diff --exit-code
           git diff --exit-code --cached
