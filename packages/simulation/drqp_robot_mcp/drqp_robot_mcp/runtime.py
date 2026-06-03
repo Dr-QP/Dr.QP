@@ -238,7 +238,7 @@ class RosRuntimeSession:
 
         try:
             started.executor.remove_node(started.node)
-        except Exception:
+        except Exception:  # noqa: BLE001
             _LOGGER.warning(
                 'Failed to remove node from executor during runtime close.',
                 exc_info=True,
@@ -246,7 +246,7 @@ class RosRuntimeSession:
 
         try:
             started.node.destroy_node()
-        except Exception:
+        except Exception:  # noqa: BLE001
             _LOGGER.warning(
                 'Failed to destroy ROS node during runtime close.',
                 exc_info=True,
@@ -256,7 +256,7 @@ class RosRuntimeSession:
             shutdown = getattr(started.executor, 'shutdown', None)
             if callable(shutdown):
                 shutdown()
-        except Exception:
+        except Exception:  # noqa: BLE001
             _LOGGER.warning(
                 'Failed to shut down executor during runtime close.',
                 exc_info=True,
@@ -415,12 +415,12 @@ class RosRuntimeSession:
                 self._gazebo_transport_node = dependencies.node_factory()
 
             topic = f'/world/{world_name}/pose/info'
-            callback = lambda message, subscribed_world=world_name: (
+            def callback(message: Any, subscribed_world: str = world_name) -> None:
                 self._handle_world_state_message(
                     subscribed_world,
                     message,
                 )
-            )
+
             subscribed = self._gazebo_transport_node.subscribe(
                 dependencies.pose_v_message_type,
                 topic,
@@ -444,7 +444,7 @@ class RosRuntimeSession:
         while not stop_event.is_set():
             try:
                 executor.spin_once(timeout_sec=0.1)
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001
                 with self._state_changed:
                     self._spin_error = exc
                     self._state_changed.notify_all()
