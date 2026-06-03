@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import builtins
 from pathlib import Path
 import sys
 from types import ModuleType, SimpleNamespace
@@ -564,3 +565,102 @@ def test_publish_movement_command_publishes_expected_message(monkeypatch) -> Non
     assert command.body_rotation.y == -0.2
     assert command.body_rotation.z == 0.3
     assert command.gait_type == 'wave'
+
+
+def test_close_reports_teardown_failures_and_continues_cleanup(
+    caplog,
+) -> None:
+    """Runtime close should log teardown failures while finishing cleanup."""
+
+    class FakeNode:
+        def destroy_node(self) -> None:
+            raise RuntimeError('destroy failed')
+
+    class FakeExecutor:
+        def remove_node(self, node: object) -> None:
+            del node
+            raise RuntimeError('remove failed')
+
+        def shutdown(self) -> None:
+            raise RuntimeError('shutdown failed')
+
+    class FakeRclpy:
+        def __init__(self) -> None:
+            self.shutdown_called = False
+
+        def ok(self) -> bool:
+            return True
+
+        def shutdown(self) -> None:
+            self.shutdown_called = True
+
+    fake_rclpy = FakeRclpy()
+    runtime_session = runtime.RosRuntimeSession()
+    runtime_session._started = runtime._StartedRosRuntime(
+        dependencies=runtime._RosDependencies(
+            rclpy=fake_rclpy,
+            executor_factory=None,
+            odometry_message_type=None,
+            string_message_type=None,
+            vector3_message_type=None,
+            movement_command_type=None,
+            qos_profile_type=None,
+            durability_policy=None,
+        ),
+        node=FakeNode(),
+        executor=FakeExecutor(),
+        event_publisher=None,
+        movement_command_publisher=None,
+        stop_event=SimpleNamespace(set=lambda: None),
+        spin_thread=SimpleNamespace(join=lambda timeout=0.0: None),
+        did_init=True,
+    )
+
+    with caplog.at_level('WARNING'):
+        runtime_session.close()
+
+    assert runtime_session._started is None
+    assert fake_rclpy.shutdown_called is True
+    assert 'remove node from executor' in caplog.text
+    assert 'destroy ROS node' in caplog.text
+    assert 'shut down executor' in caplog.text
+
+
+def test_gazebo_launch_is_available_returns_false_when_ament_index_import_fails(
+    monkeypatch,
+) -> None:
+    """Import errors in ament_index_python should report Gazebo as unavailable."""
+    original_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == 'ament_index_python.packages':
+            raise ImportError('ament index unavailable')
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, '__import__', fake_import)
+
+    assert runtime._gazebo_launch_is_available() is False
+
+
+def test_gazebo_launch_is_available_returns_false_when_package_is_missing(
+    monkeypatch,
+) -> None:
+    """Missing drqp_gazebo package prefixes should report Gazebo as unavailable."""
+
+    class FakePackageNotFoundError(Exception):
+        """Test double for missing ament package lookups."""
+
+    fake_ament_module = ModuleType('ament_index_python')
+    fake_packages_module = ModuleType('ament_index_python.packages')
+
+    def fake_get_package_prefix(package_name: str) -> str:
+        assert package_name == 'drqp_gazebo'
+        raise FakePackageNotFoundError('missing package')
+
+    fake_packages_module.get_package_prefix = fake_get_package_prefix
+    fake_packages_module.PackageNotFoundError = FakePackageNotFoundError
+    fake_ament_module.packages = fake_packages_module
+    monkeypatch.setitem(sys.modules, 'ament_index_python', fake_ament_module)
+    monkeypatch.setitem(sys.modules, 'ament_index_python.packages', fake_packages_module)
+
+    assert runtime._gazebo_launch_is_available() is False

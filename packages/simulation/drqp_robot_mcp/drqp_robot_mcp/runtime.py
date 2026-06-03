@@ -5,6 +5,7 @@ from __future__ import annotations
 import atexit
 from dataclasses import dataclass
 from datetime import datetime, UTC
+import logging
 import os
 from pathlib import Path
 import signal
@@ -12,6 +13,9 @@ import subprocess
 import threading
 import time
 from typing import Any
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -236,19 +240,28 @@ class RosRuntimeSession:
         try:
             started.executor.remove_node(started.node)
         except Exception:
-            pass
+            _LOGGER.warning(
+                'Failed to remove node from executor during runtime close.',
+                exc_info=True,
+            )
 
         try:
             started.node.destroy_node()
         except Exception:
-            pass
+            _LOGGER.warning(
+                'Failed to destroy ROS node during runtime close.',
+                exc_info=True,
+            )
 
         try:
             shutdown = getattr(started.executor, 'shutdown', None)
             if callable(shutdown):
                 shutdown()
         except Exception:
-            pass
+            _LOGGER.warning(
+                'Failed to shut down executor during runtime close.',
+                exc_info=True,
+            )
 
         with self._state_changed:
             self._gazebo_transport_node = None
@@ -964,9 +977,12 @@ def _gazebo_launch_is_available() -> bool:
     """Return whether Gazebo launch support is present in this environment."""
     try:
         from ament_index_python.packages import get_package_prefix, PackageNotFoundError
+    except ImportError:
+        return False
 
+    try:
         get_package_prefix('drqp_gazebo')
-    except (ImportError, PackageNotFoundError):
+    except PackageNotFoundError:
         return False
     return True
 

@@ -2,6 +2,16 @@
 
 from __future__ import annotations
 
+import pytest
+
+pytest.skip(
+    (
+        'Legacy tests under py_packages/drqp_robot_mcp are superseded by '
+        'packages/simulation/drqp_robot_mcp/test.'
+    ),
+    allow_module_level=True,
+)
+
 from pathlib import Path
 import sys
 from types import ModuleType, SimpleNamespace
