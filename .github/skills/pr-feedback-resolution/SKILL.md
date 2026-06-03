@@ -21,7 +21,7 @@ Systematic approach to resolving all PR feedback including review comments, CI f
 ## Prerequisites
 
 - Active pull request with feedback
-- Access to GitHub API for PR details
+- Access to `gh` or GitHub MCP for PR details
 - Access to CI logs and test results via the [extract-github-actions-logs](../extract-github-actions-logs/) skill
 - Access to CodeQL security scan results
 - Access to Codecov reports
@@ -45,7 +45,7 @@ Gather complete context before making changes.
 1. **Fetch PR review comments**:
 
 ```bash
-    # Use GitHub MCP or an API that returns per-thread resolution state
+    # Use GitHub graphql API that returns per-thread resolution state
     gh api graphql -f owner='<owner>' -f repo='<repo>' -F number=<pr-number> -f query='\
        query($owner: String!, $repo: String!, $number: Int!) {\
           repository(owner: $owner, name: $repo) {\
@@ -82,7 +82,7 @@ After fetching, **filter out resolved threads** using these rules (apply in orde
    - Check build logs for errors
 
 3. **Get CodeQL security findings**:
-   - Access CodeQL scan results via GitHub UI
+   - Access CodeQL scan results via `gh` API
    - Review severity and CWE classifications
    - Note file locations and line numbers
 
