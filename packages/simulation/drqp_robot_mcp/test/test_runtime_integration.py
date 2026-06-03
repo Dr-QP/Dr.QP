@@ -8,7 +8,6 @@ from typing import Any
 from drqp_robot_mcp import runtime
 from drqp_robot_mcp.controller import RobotMcpController
 import pytest
-
 from simulation_test_support import reset_local_simulation_state, terminate_simulation
 
 
@@ -111,5 +110,9 @@ def test_runtime_robot_pose_stays_available_from_live_odom_bridge() -> None:
         controller.shut_down(timeout_sec=60.0)
         controller.close()
         runtime.shutdown_default_ros_runtime()
-        if boot_result is not None and boot_result.simulation_was_started and controller.launch_pid_path.exists():
+        if (
+            boot_result is not None
+            and boot_result.simulation_was_started
+            and controller.launch_pid_path.exists()
+        ):
             terminate_simulation(controller)

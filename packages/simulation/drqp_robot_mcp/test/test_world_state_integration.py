@@ -7,7 +7,6 @@ import time
 from drqp_robot_mcp import runtime
 from drqp_robot_mcp.controller import RobotMcpController
 import pytest
-
 from simulation_test_support import reset_local_simulation_state, terminate_simulation
 
 

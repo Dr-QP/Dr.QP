@@ -19,8 +19,8 @@
 # THE SOFTWARE.
 
 import os
-import sys
 from pathlib import Path
+import sys
 
 import pytest
 
