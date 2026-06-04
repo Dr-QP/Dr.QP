@@ -32,6 +32,10 @@ jobs:
         contains(github.actor, 'cursor') ||
         contains(github.actor, 'codex') ||
         contains(github.actor, 'claude'))
+    permissions:
+      issues: write
+      pull-requests: write
+      statuses: write
     uses: ./.github/workflows/reformat.yml
     with:
       caller_event_name: ${{ github.event_name }}
