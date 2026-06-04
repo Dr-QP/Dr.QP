@@ -22,9 +22,31 @@ env:
   REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
 
 jobs:
+  paths-filter:
+    name: Need to run?
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    permissions: {}
+    timeout-minutes: 10
+    outputs:
+      pass: ${{ steps.filter.outputs.pass }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Filters
+        uses: ./.github/actions/paths-filter
+        id: filter
+        with:
+          extra-filter: |
+            - .github/workflows/ci.yml
+
   build-dev-image:
     name: Development image
     timeout-minutes: 35
+    needs: paths-filter
+    if: needs.paths-filter.outputs.pass == 'true' || github.event_name == 'workflow_dispatch'
     permissions:
       packages: write
     strategy:

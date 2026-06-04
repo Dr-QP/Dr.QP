@@ -26,9 +26,65 @@ defaults:
     shell: bash -xeuo pipefail {0}
 
 jobs:
+  paths-filter:
+    name: Need to run?
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    permissions: {}
+    timeout-minutes: 10
+    outputs:
+      pass: ${{ steps.override.outputs.pass }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Filters
+        uses: ./.github/actions/paths-filter
+        id: filter
+        with:
+          extra-filter: |
+            - .github/workflows/reformat.yml
+            - docs/source/notebooks/**
+            - ansible/**
+            - packages/**/*.cpp
+            - packages/**/*.h
+            - packages/**/*.py
+            - py_packages/**/*.py
+            - scripts/cpp-reformat.sh
+            - scripts/python-reformat.sh
+            - .clang-format
+            - '**/*.md'
+            - '**/*.markdown'
+            - '**/*.yml'
+            - '**/*.yaml'
+            - '**/*.json'
+            - '**/*.sh'
+            - '**/*.bash'
+            - '**/*.zsh'
+            - '**/Dockerfile'
+            - '**/Dockerfile.*'
+
+      - name: Override pass for draft AI PRs
+        id: override
+        run: |
+          pass="${STEPS_FILTER_OUTPUTS_PASS}"
+          if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.pull_request.draft }}" == "true" ]]; then
+            case "${GITHUB_ACTOR}" in
+              *copilot*|*cursor*|*codex*|*claude*)
+                pass='false'
+                ;;
+            esac
+          fi
+
+          echo "pass=$pass" >> "$GITHUB_OUTPUT"
+        env:
+          STEPS_FILTER_OUTPUTS_PASS: ${{ steps.filter.outputs.pass }}
+
   reformat:
     name: Reformat
-    if: inputs.should_run
+    needs: paths-filter
+    if: inputs.should_run && (needs.paths-filter.outputs.pass == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: 'ubuntu-24.04' # superlinter only supports x86_64 for now
     container:
       image: ghcr.io/dr-qp/jazzy-ros-desktop:edge

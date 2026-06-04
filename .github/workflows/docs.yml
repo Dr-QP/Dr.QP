@@ -3,8 +3,31 @@ on:
   workflow_call:
 
 jobs:
+  paths-filter:
+    name: Need to run?
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    permissions: {}
+    timeout-minutes: 10
+    outputs:
+      pass: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # all history for all branches and tags.
+
+      - name: Filter
+        id: filter
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        with:
+          filters: |
+            docs:
+              - docs/**
+              - .github/workflows/docs.yml
+
   docs:
     name: docs
+    needs: [paths-filter]
+    if: needs.paths-filter.outputs.pass == 'true' || github.event_name == 'workflow_dispatch'
     timeout-minutes: 10
     permissions: {}
     runs-on: ubuntu-latest
