@@ -77,6 +77,8 @@ jobs:
     needs: [reformat]
     if: >-
       (needs.reformat.result == 'skipped' || needs.reformat.outputs.changed != 'true')
+    permissions:
+      security-events: write
     uses: ./.github/workflows/codeql.yml
     with:
       force_run: ${{ github.event_name == 'workflow_dispatch' }}
