@@ -52,6 +52,8 @@ jobs:
     needs: [reformat]
     if: >-
       (needs.reformat.result == 'skipped' || needs.reformat.outputs.changed != 'true')
+    permissions:
+      packages: write
     uses: ./.github/workflows/ci.yml
     with:
       caller_event_name: ${{ github.event_name }}
