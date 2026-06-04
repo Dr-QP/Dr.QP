@@ -78,6 +78,7 @@ jobs:
     if: >-
       (needs.reformat.result == 'skipped' || needs.reformat.outputs.changed != 'true')
     permissions:
+      packages: read
       security-events: write
     uses: ./.github/workflows/codeql.yml
     with:
