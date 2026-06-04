@@ -3,8 +3,23 @@ name: CI/CD
 on:
   workflow_call:
     inputs:
+      caller_event_name:
+        description: Event name from the calling workflow.
+        required: false
+        default: ''
+        type: string
+      caller_pr_head_sha:
+        description: Pull request head SHA from the calling workflow.
+        required: false
+        default: ''
+        type: string
       clean_build:
         description: Build images from scratch instead of reusing the edge image.
+        required: false
+        default: false
+        type: boolean
+      force_run:
+        description: Run CI even when the path filter does not match.
         required: false
         default: false
         type: boolean
@@ -46,7 +61,7 @@ jobs:
     name: Development image
     timeout-minutes: 35
     needs: paths-filter
-    if: needs.paths-filter.outputs.pass == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.paths-filter.outputs.pass == 'true' || inputs.force_run
     permissions:
       packages: write
     strategy:
@@ -63,7 +78,7 @@ jobs:
 
       - name: Check commit message for clean-build
         id: clean_build_msg
-        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        if: inputs.caller_event_name == 'push' || inputs.caller_event_name == 'pull_request'
         continue-on-error: true
         uses: gsactions/commit-message-checker@16fa2d5de096ae0d35626443bcd24f1e756cafee # v2
         with:
@@ -74,7 +89,7 @@ jobs:
         env:
           CLEAN_BUILD_DISPATCH: ${{ inputs.clean_build }}
           CLEAN_BUILD_COMMIT: ${{ steps.clean_build_msg.outcome == 'success' }}
-          CLEAN_BUILD_MERGE_GROUP: ${{ github.event_name == 'merge_group' }}
+          CLEAN_BUILD_MERGE_GROUP: ${{ inputs.caller_event_name == 'merge_group' }}
           IS_MAIN: ${{ github.ref == 'refs/heads/main' || contains(github.ref, 'tags/v') }}
         run: |
           echo "ansible_base=ubuntu:24.04" >> "$GITHUB_OUTPUT"
@@ -354,7 +369,7 @@ jobs:
           registry-token: ${{ secrets.GITHUB_TOKEN }}
           build-args: |
             ROS_DISTRO=${{ env.ROS_DISTRO }}
-            GIT_SHA=${{ github.event.pull_request && github.event.pull_request.head.sha || github.sha }}
+            GIT_SHA=${{ inputs.caller_pr_head_sha || github.sha }}
             BUILD_IMAGE=${{ needs.merge-dev-image.outputs.image }}
 
   merge-deploy-image:

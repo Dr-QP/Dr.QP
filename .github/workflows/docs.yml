@@ -1,6 +1,12 @@
 name: Build docs
 on:
   workflow_call:
+    inputs:
+      force_run:
+        description: Run docs even when the path filter does not match.
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   paths-filter:
@@ -27,7 +33,7 @@ jobs:
   docs:
     name: docs
     needs: [paths-filter]
-    if: needs.paths-filter.outputs.pass == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.paths-filter.outputs.pass == 'true' || inputs.force_run
     timeout-minutes: 10
     permissions: {}
     runs-on: ubuntu-latest

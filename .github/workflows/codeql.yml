@@ -2,6 +2,12 @@ name: "CodeQL Advanced"
 
 on:
   workflow_call:
+    inputs:
+      force_run:
+        description: Run CodeQL even when the path filter does not match.
+        required: false
+        default: false
+        type: boolean
 
 env:
   ROS_DISTRO: jazzy # duplicated in job.container.image
@@ -30,7 +36,7 @@ jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
     needs: paths-filter
-    if: needs.paths-filter.outputs.pass == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.paths-filter.outputs.pass == 'true' || inputs.force_run
     # Runner size impacts CodeQL analysis time. To learn more, please see:
     #   - https://gh.io/recommended-hardware-resources-for-running-codeql
     #   - https://gh.io/supported-runners-and-hardware-resources

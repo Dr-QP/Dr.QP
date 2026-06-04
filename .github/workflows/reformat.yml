@@ -3,6 +3,36 @@ name: Reformat code
 on:
   workflow_call:
     inputs:
+      caller_event_name:
+        description: Event name from the calling workflow.
+        required: false
+        default: ''
+        type: string
+      caller_pr_head_ref:
+        description: Pull request head ref from the calling workflow.
+        required: false
+        default: ''
+        type: string
+      caller_pr_head_repo_full_name:
+        description: Pull request head repository full name from the calling workflow.
+        required: false
+        default: ''
+        type: string
+      caller_pr_head_sha:
+        description: Pull request head SHA from the calling workflow.
+        required: false
+        default: ''
+        type: string
+      caller_pr_is_draft:
+        description: Whether the calling pull request is a draft.
+        required: false
+        default: false
+        type: boolean
+      force_run:
+        description: Run reformat even when the path filter does not match.
+        required: false
+        default: false
+        type: boolean
       should_run:
         description: Whether the formatter should execute for this invocation.
         required: false
@@ -17,6 +47,9 @@ on:
       changed:
         description: Whether formatting produced file changes in the checked out tree.
         value: ${{ jobs.reformat.outputs.changed }}
+    secrets:
+      REPO_PAT:
+        required: false
 
 env:
   COMMIT_MESSAGE: Apply linter fixes and reformatting
@@ -69,7 +102,7 @@ jobs:
         id: override
         run: |
           pass="${STEPS_FILTER_OUTPUTS_PASS}"
-          if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.pull_request.draft }}" == "true" ]]; then
+          if [[ "${{ inputs.caller_event_name }}" == "pull_request" && "${{ inputs.caller_pr_is_draft }}" == "true" ]]; then
             case "${GITHUB_ACTOR}" in
               *copilot*|*cursor*|*codex*|*claude*)
                 pass='false'
@@ -84,7 +117,7 @@ jobs:
   reformat:
     name: Reformat
     needs: paths-filter
-    if: inputs.should_run && (needs.paths-filter.outputs.pass == 'true' || github.event_name == 'workflow_dispatch')
+    if: inputs.should_run && (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
     runs-on: 'ubuntu-24.04' # superlinter only supports x86_64 for now
     container:
       image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
@@ -167,7 +200,7 @@ jobs:
         id: verify
         run: |
           skip_commit=false
-          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+          if [[ "${{ inputs.caller_event_name }}" != "pull_request" ]]; then
             echo "Not a pull request. Skipping commit."
             skip_commit=true
           elif [[ "${GITHUB_EVENT_PULL_REQUEST_HEAD_REPO_FULL_NAME}" != "${{ github.repository }}" ]]; then
@@ -180,8 +213,8 @@ jobs:
 
           echo "skip_commit=$skip_commit" >> "$GITHUB_OUTPUT"
         env:
-          GITHUB_EVENT_PULL_REQUEST_HEAD_REPO_FULL_NAME: ${{ github.event.pull_request.head.repo.full_name }}
-          GITHUB_EVENT_PULL_REQUEST_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          GITHUB_EVENT_PULL_REQUEST_HEAD_REPO_FULL_NAME: ${{ inputs.caller_pr_head_repo_full_name }}
+          GITHUB_EVENT_PULL_REQUEST_HEAD_SHA: ${{ inputs.caller_pr_head_sha }}
 
       - name: Commit all changed files back to the repository
         uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7
@@ -190,7 +223,7 @@ jobs:
         with:
           # Specify the branch to commit to instead of checkout, otherwise super-linter's GITHUB_SHA validation fails to find the commit.
           # For pull requests, this will be the source branch; for pushes, this will be the current branch.
-          branch: ${{ github.event.pull_request.head.ref || github.head_ref || github.ref }}
+          branch: ${{ inputs.caller_pr_head_ref || github.head_ref || github.ref }}
           commit_message: ${{ env.COMMIT_MESSAGE }}
 
       - name: Verify changes were committed if any
