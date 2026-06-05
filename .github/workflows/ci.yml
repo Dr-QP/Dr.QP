@@ -82,6 +82,7 @@ jobs:
         continue-on-error: true
         uses: gsactions/commit-message-checker@16fa2d5de096ae0d35626443bcd24f1e756cafee # v2
         with:
+          error: 'Commit message does not request a clean build.'
           pattern: '\[ci:clean_build\]'
 
       - name: Set base image refs

@@ -22,6 +22,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
   reformat:
     name: Reformat code
@@ -45,7 +47,8 @@ jobs:
       caller_pr_is_draft: ${{ github.event.pull_request.draft || false }}
       force_run: ${{ github.event_name == 'workflow_dispatch' }}
       validate_all_codebase: ${{ github.event_name == 'workflow_dispatch' }}
-    secrets: inherit
+    secrets:
+      REPO_PAT: ${{ secrets.REPO_PAT }}
 
   ci:
     name: CI/CD
@@ -60,17 +63,18 @@ jobs:
       caller_pr_head_sha: ${{ github.event.pull_request.head.sha || '' }}
       clean_build: ${{ github.event_name == 'workflow_dispatch' && inputs.clean_build || false }}
       force_run: ${{ github.event_name == 'workflow_dispatch' }}
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   docs:
     name: Build docs
     needs: [reformat]
     if: >-
       (needs.reformat.result == 'skipped' || needs.reformat.outputs.changed != 'true')
+    permissions: {}
     uses: ./.github/workflows/docs.yml
     with:
       force_run: ${{ github.event_name == 'workflow_dispatch' }}
-    secrets: inherit
 
   codeql:
     name: CodeQL Advanced
@@ -83,4 +87,3 @@ jobs:
     uses: ./.github/workflows/codeql.yml
     with:
       force_run: ${{ github.event_name == 'workflow_dispatch' }}
-    secrets: inherit

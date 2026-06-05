@@ -10,10 +10,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
   codeql:
     name: CodeQL Advanced
+    permissions:
+      packages: read
+      security-events: write
     uses: ./.github/workflows/codeql.yml
     with:
       force_run: true
-    secrets: inherit
