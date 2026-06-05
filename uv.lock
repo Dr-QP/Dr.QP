@@ -903,7 +903,6 @@ dependencies = [
     { name = "numpy" },
     { name = "python-statemachine" },
     { name = "scipy" },
-    { name = "setuptools" },
 ]
 
 [package.metadata]
@@ -913,7 +912,6 @@ requires-dist = [
     { name = "numpy" },
     { name = "python-statemachine", specifier = ">=2.5.0" },
     { name = "scipy" },
-    { name = "setuptools" },
 ]
 
 [[package]]
@@ -923,14 +921,12 @@ source = { editable = "packages/runtime/drqp_kinematics" }
 dependencies = [
     { name = "numpy" },
     { name = "scipy" },
-    { name = "setuptools" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "numpy" },
     { name = "scipy" },
-    { name = "setuptools" },
 ]
 
 [[package]]
@@ -939,14 +935,10 @@ version = "0.1.0"
 source = { editable = "packages/simulation/drqp_robot_mcp" }
 dependencies = [
     { name = "mcp", extra = ["cli"] },
-    { name = "setuptools" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "mcp", extras = ["cli"], specifier = ">=1.26.0" },
-    { name = "setuptools" },
-]
+requires-dist = [{ name = "mcp", extras = ["cli"], specifier = ">=1.26.0" }]
 
 [[package]]
 name = "drqp-workspace"
