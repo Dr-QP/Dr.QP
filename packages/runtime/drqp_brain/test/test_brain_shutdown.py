@@ -172,8 +172,9 @@ def test_cancel_pending_futures_logs_when_done_future_result_raises():
         future.cancel.assert_not_called()
         future.result.assert_called_once_with()
         shutdown_warning.assert_called_once()
-        assert 'Pending future finished with exception during cancel' in (
-            shutdown_warning.call_args.args[0]
+        assert (
+            'Pending future finished with exception during cancel'
+            in (shutdown_warning.call_args.args[0])
         )
         assert not brain._pending_futures
     finally:
