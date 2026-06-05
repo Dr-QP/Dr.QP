@@ -1,64 +1,71 @@
 name: Build docs
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - v*
-  pull_request:
-  merge_group:
-    types:
-      - checks_requested
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
-  cancel-in-progress: true
+  workflow_call:
+    inputs:
+      force_run:
+        description: Run docs even when the path filter does not match.
+        required: false
+        default: false
+        type: boolean
 
 jobs:
-  docs:
-    name: docs
-    timeout-minutes: 10
+  paths-filter:
+    name: Need to run?
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions: {}
-    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      pass: ${{ steps.filter.outputs.docs }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0 # all history for all branches and tags.
-
-      - name: Install ffmpeg
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg --no-install-recommends
+          persist-credentials: false
 
       - name: Filter
         id: filter
-        uses: dorny/paths-filter@v3.0.2
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         with:
           filters: |
             docs:
               - docs/**
               - .github/workflows/docs.yml
 
+  docs:
+    name: docs
+    needs: [paths-filter]
+    if: needs.paths-filter.outputs.pass == 'true' || inputs.force_run
+    timeout-minutes: 10
+    permissions: {}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0 # all history for all branches and tags.
+          persist-credentials: false
+
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg --no-install-recommends
+
       - name: Setup Python venv
-        if: ${{ steps.filter.outputs.docs == 'true' }}
         uses: ./.github/actions/setup-python-venv
 
         # Multiple builds are not supported, so run them one after another. See https://github.com/sphinx-doc/sphinx/issues/10096
       - name: sphinx - check redirects diff
-        if: ${{ steps.filter.outputs.docs == 'true' }}
         shell: bash
         run: |
           .venv/bin/sphinx-build -nW --keep-going -b rediraffecheckdiff docs/source/ docs/_build/html
 
       - name: sphinx - build html
-        if: ${{ steps.filter.outputs.docs == 'true' }}
         shell: bash
         run: |
           .venv/bin/sphinx-build -nW --keep-going -b html docs/source/ docs/_build/html
 
       - name: Upload docs build error logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: docs-build-logs
           path: docs/_build/html/reports/notebooks
