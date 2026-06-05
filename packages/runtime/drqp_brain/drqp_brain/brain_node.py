@@ -23,6 +23,8 @@
 import argparse
 from concurrent.futures import CancelledError
 import threading
+import time
+import traceback
 
 from control_msgs.action import FollowJointTrajectory
 from drqp_brain.joint_trajectory_builder import (
@@ -594,12 +596,26 @@ class HexapodBrain(rclpy.node.Node):
         return future
 
     def _discard_future(self, future):
+        # Remove from tracking set first
         self._pending_futures.discard(future)
+        # Ensure exception is retrieved so asyncio does not print "exception was never retrieved"
         try:
-            future.exception()
+            # If the future completed normally, this will return the result.
+            # If it raised, result() will re-raise and the except block will capture traceback.
+            future.result()
         except CancelledError:
             # Pending ROS futures are routinely cancelled during shutdown.
             return
+        except Exception:
+            # Log the full traceback where possible; during shutdown rosout may be unavailable.
+            try:
+                self._log_shutdown_warning(
+                    f'Pending future finished with exception: {traceback.format_exc()}'
+                )
+            except Exception:
+                # If logging fails, swallow to avoid raising during teardown.
+                pass
+        # No return value needed
 
     def _safe_cancel_future(self, future, description: str):
         if future.done():
@@ -607,8 +623,41 @@ class HexapodBrain(rclpy.node.Node):
         future.cancel()
 
     def _cancel_pending_futures(self):
+        # Cancel pending futures and attempt to retrieve their exceptions to avoid
+        # "exception was never retrieved" warnings from asyncio during teardown.
         for future in list(self._pending_futures):
-            self._safe_cancel_future(future, 'async ROS future')
+            try:
+                if not future.done():
+                    future.cancel()
+                # Wait briefly for the future to finish, but don't block long.
+                for _ in range(20):
+                    if future.done():
+                        break
+                    time.sleep(0.01)
+                if future.done():
+                    try:
+                        future.result()
+                    except CancelledError:
+                        # Expected during shutdown.
+                        pass
+                    except Exception:
+                        try:
+                            self._log_shutdown_warning(
+                                f'Pending future finished with exception during cancel: {traceback.format_exc()}'
+                            )
+                        except Exception:
+                            pass
+            except Exception:
+                # Defensive: ensure shutdown continues even if future handling fails.
+                try:
+                    self._log_shutdown_warning(
+                        f'Error while cancelling pending future: {traceback.format_exc()}'
+                    )
+                except Exception:
+                    pass
+            finally:
+                self._pending_futures.discard(future)
+        # All tracked futures cleared
         self._pending_futures.clear()
 
     def _safe_destroy_client(self, client, description: str):
@@ -616,6 +665,14 @@ class HexapodBrain(rclpy.node.Node):
             client.destroy()
         except RCLPY_SHUTDOWN_ERRORS as exc:
             self._log_shutdown_warning(f'Failed to destroy {description}: {exc}')
+        except Exception:
+            # Log unexpected exceptions with traceback; during shutdown logging may be limited.
+            try:
+                self._log_shutdown_warning(
+                    f'Unexpected exception destroying {description}: {traceback.format_exc()}'
+                )
+            except Exception:
+                pass
 
     def _log_shutdown_warning(self, message: str):
         try:
