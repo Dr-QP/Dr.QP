@@ -899,7 +899,6 @@ version = "0.1.0"
 source = { editable = "packages/runtime/drqp_brain" }
 dependencies = [
     { name = "adafruit-circuitpython-bno055" },
-    { name = "drqp-kinematics" },
     { name = "lgpio" },
     { name = "numpy" },
     { name = "python-statemachine" },
@@ -910,7 +909,6 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "adafruit-circuitpython-bno055" },
-    { name = "drqp-kinematics" },
     { name = "lgpio" },
     { name = "numpy" },
     { name = "python-statemachine", specifier = ">=2.5.0" },

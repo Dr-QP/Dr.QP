@@ -1,17 +1,55 @@
 name: Reformat code
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-    tags:
-      - v*
-  pull_request:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
-  cancel-in-progress: true
+  workflow_call:
+    inputs:
+      caller_event_name:
+        description: Event name from the calling workflow.
+        required: false
+        default: ''
+        type: string
+      caller_pr_head_ref:
+        description: Pull request head ref from the calling workflow.
+        required: false
+        default: ''
+        type: string
+      caller_pr_head_repo_full_name:
+        description: Pull request head repository full name from the calling workflow.
+        required: false
+        default: ''
+        type: string
+      caller_pr_head_sha:
+        description: Pull request head SHA from the calling workflow.
+        required: false
+        default: ''
+        type: string
+      caller_pr_is_draft:
+        description: Whether the calling pull request is a draft.
+        required: false
+        default: false
+        type: boolean
+      force_run:
+        description: Run reformat even when the path filter does not match.
+        required: false
+        default: false
+        type: boolean
+      should_run:
+        description: Whether the formatter should execute for this invocation.
+        required: false
+        default: true
+        type: boolean
+      validate_all_codebase:
+        description: Whether super-linter should validate the full repository.
+        required: false
+        default: false
+        type: boolean
+    outputs:
+      changed:
+        description: Whether formatting produced file changes in the checked out tree.
+        value: ${{ jobs.reformat.outputs.changed }}
+    secrets:
+      REPO_PAT:
+        required: false
 
 env:
   COMMIT_MESSAGE: Apply linter fixes and reformatting
@@ -64,7 +102,7 @@ jobs:
         id: override
         run: |
           pass="${STEPS_FILTER_OUTPUTS_PASS}"
-          if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.pull_request.draft }}" == "true" ]]; then
+          if [[ "${INPUTS_CALLER_EVENT_NAME}" == "pull_request" && "${{ inputs.caller_pr_is_draft }}" == "true" ]]; then
             case "${GITHUB_ACTOR}" in
               *copilot*|*cursor*|*codex*|*claude*)
                 pass='false'
@@ -75,14 +113,17 @@ jobs:
           echo "pass=$pass" >> "$GITHUB_OUTPUT"
         env:
           STEPS_FILTER_OUTPUTS_PASS: ${{ steps.filter.outputs.pass }}
+          INPUTS_CALLER_EVENT_NAME: ${{ inputs.caller_event_name }}
 
   reformat:
     name: Reformat
     needs: paths-filter
-    if: needs.paths-filter.outputs.pass == 'true'
+    if: inputs.should_run && (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
     runs-on: 'ubuntu-24.04' # superlinter only supports x86_64 for now
     container:
       image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
     permissions:
       statuses: write # To update PR status
       issues: write # To post pull request summary comments
@@ -113,11 +154,12 @@ jobs:
           source scripts/setup.bash
           ./scripts/python-reformat.sh
 
-      - name: Run Super-Linter
-        uses: super-linter/super-linter@61abc07d755095a68f4987d1c2c3d1d64408f1f9 # v8
+      - name: Run Super-Linter autofixes
+        continue-on-error: true
+        uses: super-linter/super-linter@61abc07d755095a68f4987d1c2c3d1d64408f1f9 # v8.5.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'workflow_dispatch' }}
+          VALIDATE_ALL_CODEBASE: ${{ inputs.validate_all_codebase }}
           FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
 
           # Comment on the workflow only summary instead of the pull request conversation to avoid spamming notifications for every push to a PR.
@@ -125,33 +167,34 @@ jobs:
           ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false
           ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: true
 
-          # Markdown: lint via Prettier only
+          # Run only fix-capable linters before the commit step.
           VALIDATE_MARKDOWN_PRETTIER: true
-          FIX_MARKDOWN_PRETTIER: true
-
-          # Additional file types not currently covered by existing CI linters
-          # Note: Ansible YAML under docker/ros/ansible/** is excluded via .prettierignore
-          # so ansible-lint --fix remains the single formatter for those files.
           VALIDATE_YAML_PRETTIER: true
           VALIDATE_JSON_PRETTIER: true
           VALIDATE_JSONC_PRETTIER: true
-          VALIDATE_BASH: true
-          VALIDATE_DOCKERFILE_HADOLINT: true
-          VALIDATE_GITHUB_ACTIONS: true
           VALIDATE_GITHUB_ACTIONS_ZIZMOR: true
-          VALIDATE_GITLEAKS: true
 
+          FIX_MARKDOWN_PRETTIER: true
           FIX_YAML_PRETTIER: true
           FIX_JSON_PRETTIER: true
           FIX_JSONC_PRETTIER: true
           FIX_GITHUB_ACTIONS_ZIZMOR: true
 
+      - name: Detect formatter changes
+        id: diff
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Verify if not recursive commit
-        if: always()
+        if: always() && steps.diff.outputs.changed == 'true'
         id: verify
         run: |
           skip_commit=false
-          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+          if [[ "${INPUTS_CALLER_EVENT_NAME}" != "pull_request" ]]; then
             echo "Not a pull request. Skipping commit."
             skip_commit=true
           elif [[ "${GITHUB_EVENT_PULL_REQUEST_HEAD_REPO_FULL_NAME}" != "${{ github.repository }}" ]]; then
@@ -164,21 +207,44 @@ jobs:
 
           echo "skip_commit=$skip_commit" >> "$GITHUB_OUTPUT"
         env:
-          GITHUB_EVENT_PULL_REQUEST_HEAD_REPO_FULL_NAME: ${{ github.event.pull_request.head.repo.full_name }}
-          GITHUB_EVENT_PULL_REQUEST_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          GITHUB_EVENT_PULL_REQUEST_HEAD_REPO_FULL_NAME: ${{ inputs.caller_pr_head_repo_full_name }}
+          GITHUB_EVENT_PULL_REQUEST_HEAD_SHA: ${{ inputs.caller_pr_head_sha }}
+          INPUTS_CALLER_EVENT_NAME: ${{ inputs.caller_event_name }}
 
       - name: Commit all changed files back to the repository
         uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7
-        if: always() && steps.verify.outputs.skip_commit != 'true'
+        if: always() && steps.diff.outputs.changed == 'true' && steps.verify.outputs.skip_commit != 'true'
         id: commit
         with:
           # Specify the branch to commit to instead of checkout, otherwise super-linter's GITHUB_SHA validation fails to find the commit.
           # For pull requests, this will be the source branch; for pushes, this will be the current branch.
-          branch: ${{ github.event.pull_request.head.ref || github.head_ref || github.ref }}
+          branch: ${{ inputs.caller_pr_head_ref || github.head_ref || github.ref }}
           commit_message: ${{ env.COMMIT_MESSAGE }}
 
       - name: Verify changes were committed if any
-        if: always()
+        if: always() && steps.diff.outputs.changed == 'true'
         run: |
           git diff --exit-code
           git diff --exit-code --cached
+
+      - name: Run Super-Linter checks
+        if: steps.commit.outcome != 'success'
+        uses: super-linter/super-linter@61abc07d755095a68f4987d1c2c3d1d64408f1f9 # v8.5.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: ${{ inputs.validate_all_codebase }}
+          FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
+
+          SAVE_SUPER_LINTER_SUMMARY: true
+          ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false
+          ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: true
+
+          VALIDATE_MARKDOWN_PRETTIER: true
+          VALIDATE_YAML_PRETTIER: true
+          VALIDATE_JSON_PRETTIER: true
+          VALIDATE_JSONC_PRETTIER: true
+          VALIDATE_BASH: true
+          VALIDATE_DOCKERFILE_HADOLINT: true
+          VALIDATE_GITHUB_ACTIONS: true
+          VALIDATE_GITHUB_ACTIONS_ZIZMOR: true
+          VALIDATE_GITLEAKS: true
