@@ -102,7 +102,7 @@ jobs:
         id: override
         run: |
           pass="${STEPS_FILTER_OUTPUTS_PASS}"
-          if [[ "${{ inputs.caller_event_name }}" == "pull_request" && "${{ inputs.caller_pr_is_draft }}" == "true" ]]; then
+          if [[ "${INPUTS_CALLER_EVENT_NAME}" == "pull_request" && "${{ inputs.caller_pr_is_draft }}" == "true" ]]; then
             case "${GITHUB_ACTOR}" in
               *copilot*|*cursor*|*codex*|*claude*)
                 pass='false'
@@ -113,6 +113,7 @@ jobs:
           echo "pass=$pass" >> "$GITHUB_OUTPUT"
         env:
           STEPS_FILTER_OUTPUTS_PASS: ${{ steps.filter.outputs.pass }}
+          INPUTS_CALLER_EVENT_NAME: ${{ inputs.caller_event_name }}
 
   reformat:
     name: Reformat
@@ -155,7 +156,7 @@ jobs:
 
       - name: Run Super-Linter autofixes
         continue-on-error: true
-        uses: super-linter/super-linter@61abc07d755095a68f4987d1c2c3d1d64408f1f9 # v8
+        uses: super-linter/super-linter@61abc07d755095a68f4987d1c2c3d1d64408f1f9 # v8.5.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: ${{ inputs.validate_all_codebase }}
@@ -193,7 +194,7 @@ jobs:
         id: verify
         run: |
           skip_commit=false
-          if [[ "${{ inputs.caller_event_name }}" != "pull_request" ]]; then
+          if [[ "${INPUTS_CALLER_EVENT_NAME}" != "pull_request" ]]; then
             echo "Not a pull request. Skipping commit."
             skip_commit=true
           elif [[ "${GITHUB_EVENT_PULL_REQUEST_HEAD_REPO_FULL_NAME}" != "${{ github.repository }}" ]]; then
@@ -208,6 +209,7 @@ jobs:
         env:
           GITHUB_EVENT_PULL_REQUEST_HEAD_REPO_FULL_NAME: ${{ inputs.caller_pr_head_repo_full_name }}
           GITHUB_EVENT_PULL_REQUEST_HEAD_SHA: ${{ inputs.caller_pr_head_sha }}
+          INPUTS_CALLER_EVENT_NAME: ${{ inputs.caller_event_name }}
 
       - name: Commit all changed files back to the repository
         uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7
@@ -227,7 +229,7 @@ jobs:
 
       - name: Run Super-Linter checks
         if: steps.commit.outcome != 'success'
-        uses: super-linter/super-linter@61abc07d755095a68f4987d1c2c3d1d64408f1f9 # v8
+        uses: super-linter/super-linter@61abc07d755095a68f4987d1c2c3d1d64408f1f9 # v8.5.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: ${{ inputs.validate_all_codebase }}
