@@ -12,7 +12,6 @@ setup(
         ('share/' + package_name, ['package.xml']),
     ],
     install_requires=[
-        'setuptools',
         'mcp[cli]>=1.26.0',
     ],
     tests_require=['pytest'],
