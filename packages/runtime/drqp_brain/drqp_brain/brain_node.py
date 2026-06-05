@@ -23,7 +23,6 @@
 import argparse
 from concurrent.futures import CancelledError
 import threading
-import time
 import traceback
 
 from control_msgs.action import FollowJointTrajectory
@@ -629,11 +628,6 @@ class HexapodBrain(rclpy.node.Node):
             try:
                 if not future.done():
                     future.cancel()
-                # Wait briefly for the future to finish, but don't block long.
-                for _ in range(20):
-                    if future.done():
-                        break
-                    time.sleep(0.01)
                 if future.done():
                     try:
                         future.result()
