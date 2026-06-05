@@ -153,7 +153,8 @@ jobs:
           source scripts/setup.bash
           ./scripts/python-reformat.sh
 
-      - name: Run Super-Linter
+      - name: Run Super-Linter autofixes
+        continue-on-error: true
         uses: super-linter/super-linter@61abc07d755095a68f4987d1c2c3d1d64408f1f9 # v8
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -165,22 +166,14 @@ jobs:
           ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false
           ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: true
 
-          # Markdown: lint via Prettier only
+          # Run only fix-capable linters before the commit step.
           VALIDATE_MARKDOWN_PRETTIER: true
-          FIX_MARKDOWN_PRETTIER: true
-
-          # Additional file types not currently covered by existing CI linters
-          # Note: Ansible YAML under docker/ros/ansible/** is excluded via .prettierignore
-          # so ansible-lint --fix remains the single formatter for those files.
           VALIDATE_YAML_PRETTIER: true
           VALIDATE_JSON_PRETTIER: true
           VALIDATE_JSONC_PRETTIER: true
-          VALIDATE_BASH: true
-          VALIDATE_DOCKERFILE_HADOLINT: true
-          VALIDATE_GITHUB_ACTIONS: true
           VALIDATE_GITHUB_ACTIONS_ZIZMOR: true
-          VALIDATE_GITLEAKS: true
 
+          FIX_MARKDOWN_PRETTIER: true
           FIX_YAML_PRETTIER: true
           FIX_JSON_PRETTIER: true
           FIX_JSONC_PRETTIER: true
@@ -231,3 +224,24 @@ jobs:
         run: |
           git diff --exit-code
           git diff --exit-code --cached
+
+      - name: Run Super-Linter checks
+        uses: super-linter/super-linter@61abc07d755095a68f4987d1c2c3d1d64408f1f9 # v8
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: ${{ inputs.validate_all_codebase }}
+          FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
+
+          SAVE_SUPER_LINTER_SUMMARY: true
+          ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false
+          ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: true
+
+          VALIDATE_MARKDOWN_PRETTIER: true
+          VALIDATE_YAML_PRETTIER: true
+          VALIDATE_JSON_PRETTIER: true
+          VALIDATE_JSONC_PRETTIER: true
+          VALIDATE_BASH: true
+          VALIDATE_DOCKERFILE_HADOLINT: true
+          VALIDATE_GITHUB_ACTIONS: true
+          VALIDATE_GITHUB_ACTIONS_ZIZMOR: true
+          VALIDATE_GITLEAKS: true
