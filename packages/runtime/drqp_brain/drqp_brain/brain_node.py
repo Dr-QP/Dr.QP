@@ -643,7 +643,8 @@ class HexapodBrain(rclpy.node.Node):
                     except Exception:
                         try:
                             self._log_shutdown_warning(
-                                f'Pending future finished with exception during cancel: {traceback.format_exc()}'
+                                'Pending future finished with exception '
+                                f'during cancel: {traceback.format_exc()}'
                             )
                         except Exception:
                             pass
