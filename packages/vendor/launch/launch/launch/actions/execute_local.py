@@ -497,7 +497,8 @@ class ExecuteLocal(Action):
             try:
                 self.__children = psutil.Process(pid).children(recursive=True)
             except psutil.NoSuchProcess:
-                pass
+                # Process exited before we could inspect child processes.
+                self.__children = []
         return [
             cast(Action, self.__sigterm_timer),
             cast(Action, self.__sigkill_timer),

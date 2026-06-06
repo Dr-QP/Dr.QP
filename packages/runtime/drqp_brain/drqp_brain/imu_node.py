@@ -235,7 +235,7 @@ def main():
             print(str(exc), file=sys.stderr)
         raise SystemExit(1)
     except (KeyboardInterrupt, ExternalShutdownException):
-        pass  # codeql[py/empty-except]
+        return
     finally:
         if node is not None:
             node.destroy_node()
