@@ -6,6 +6,7 @@ NEVER use GitHub API or GitHub MCP tools to update branch refs or push branch co
 
 ## Best Practices for Agents
 
+0. NEVER change git config on local or global level unless explicitly instructed. NEVER switch/change remote.
 1. **Always use scripts/with-ros-env.sh** to run ROS commands like `colcon build` or `colcon test`
 2. **Use incremental builds** (`--packages-up-to <pkg>`) during development
 3. **Test specific packages** (`--packages-select <pkg>`) for rapid iteration
