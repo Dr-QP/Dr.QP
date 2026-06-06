@@ -134,11 +134,12 @@ def test_discard_future_ignores_cancelled_future_exception_issue358():
     brain = HexapodBrain()
     try:
         future = mock.Mock()
-        future.exception.side_effect = CancelledError()
+        future.result.side_effect = CancelledError()
         brain._pending_futures.add(future)
 
         brain._discard_future(future)
 
+        future.result.assert_called_once_with()
         assert future not in brain._pending_futures
     finally:
         brain.destroy_node()
