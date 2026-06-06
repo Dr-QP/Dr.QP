@@ -285,9 +285,11 @@ jobs:
             run_downstream='true'
           fi
 
-          echo "changed=$changed" >> "$GITHUB_OUTPUT"
-          echo "reformat_result=$reformat_result" >> "$GITHUB_OUTPUT"
-          echo "run_downstream=$run_downstream" >> "$GITHUB_OUTPUT"
+          {
+            echo "changed=$changed"
+            echo "reformat_result=$reformat_result"
+            echo "run_downstream=$run_downstream"
+          } >> "$GITHUB_OUTPUT"
         env:
           NEEDS_REFORMAT_RESULT: ${{ needs.reformat.result }}
           NEEDS_REFORMAT_OUTPUT_CHANGED: ${{ needs.reformat.outputs.changed }}
