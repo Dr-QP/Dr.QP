@@ -32,10 +32,10 @@ jobs:
       max-parallel: 1
       matrix:
         copy:
-        - src: ghcr.io/catthehacker/ubuntu:act-24.04
-          dest: act-24.04
-        - src: ghcr.io/catthehacker/ubuntu:act-22.04
-          dest: act-22.04
+          - src: ghcr.io/catthehacker/ubuntu:act-24.04
+            dest: act-24.04
+          - src: ghcr.io/catthehacker/ubuntu:act-22.04
+            dest: act-22.04
     steps:
       - name: Force SLUG to lowercase
         uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0

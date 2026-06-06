@@ -124,7 +124,6 @@ jobs:
           - 24.04
           - 22.04
     steps:
-
       - name: Checkout nektos/act repo
         uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
         if: ${{ env.RUN_TESTS == 'true' }}
@@ -159,4 +158,4 @@ jobs:
         if: ${{ env.RUN_TESTS == 'true' && always() || false}}
         continue-on-error: true
         with:
-          paths: "unit-tests.xml"
+          paths: 'unit-tests.xml'
