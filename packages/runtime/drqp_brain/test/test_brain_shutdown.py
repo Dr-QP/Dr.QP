@@ -45,6 +45,30 @@ class PendingFuture:
         return False
 
 
+class AlwaysPendingFuture:
+    """A mock future that never completes and tracks done() calls."""
+
+    def __init__(self):
+        self.done_calls = 0
+        self.cancel = mock.Mock(return_value=True)
+        self.result = mock.Mock()
+
+    def done(self):
+        self.done_calls += 1
+        return False
+
+
+class DoneFutureWithException:
+    """A mock future that is already done and raises on result()."""
+
+    def __init__(self, exception: Exception):
+        self.cancel = mock.Mock(return_value=False)
+        self.result = mock.Mock(side_effect=exception)
+
+    def done(self):
+        return True
+
+
 def test_destroy_node_stops_walk_controller_before_destroying_ros_entities():
     brain = HexapodBrain()
     try:
@@ -110,11 +134,49 @@ def test_discard_future_ignores_cancelled_future_exception_issue358():
     brain = HexapodBrain()
     try:
         future = mock.Mock()
-        future.exception.side_effect = CancelledError()
+        future.result.side_effect = CancelledError()
         brain._pending_futures.add(future)
 
         brain._discard_future(future)
 
+        future.result.assert_called_once_with()
         assert future not in brain._pending_futures
+    finally:
+        brain.destroy_node()
+
+
+def test_cancel_pending_futures_does_not_poll_pending_future_completion():
+    brain = HexapodBrain()
+    try:
+        future = AlwaysPendingFuture()
+        brain._pending_futures.add(future)
+
+        brain._cancel_pending_futures()
+
+        future.cancel.assert_called_once_with()
+        future.result.assert_not_called()
+        assert future.done_calls <= 2
+        assert not brain._pending_futures
+    finally:
+        brain.destroy_node()
+
+
+def test_cancel_pending_futures_logs_when_done_future_result_raises():
+    brain = HexapodBrain()
+    try:
+        future = DoneFutureWithException(RuntimeError('boom'))
+        brain._pending_futures.add(future)
+
+        with mock.patch.object(brain, '_log_shutdown_warning') as shutdown_warning:
+            brain._cancel_pending_futures()
+
+        future.cancel.assert_not_called()
+        future.result.assert_called_once_with()
+        shutdown_warning.assert_called_once()
+        assert (
+            'Pending future finished with exception during cancel'
+            in (shutdown_warning.call_args.args[0])
+        )
+        assert not brain._pending_futures
     finally:
         brain.destroy_node()
