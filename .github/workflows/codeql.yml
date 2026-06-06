@@ -10,6 +10,7 @@ on:
         type: boolean
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   ROS_DISTRO: jazzy # duplicated in job.container.image
   CMAKE_EXPORT_COMPILE_COMMANDS: '1'
   REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
@@ -24,7 +25,7 @@ jobs:
       pass: ${{ steps.filter.outputs.pass }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
         with:
           persist-credentials: false
 
@@ -77,7 +78,7 @@ jobs:
         # your codebase is analyzed, see https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/codeql-code-scanning-for-compiled-languages
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
         with:
           persist-credentials: false
 
@@ -89,7 +90,7 @@ jobs:
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4
+        uses: github/codeql-action/init@411bbbe57033eedfc1a82d68c01345aa96c737d7 # v4
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
@@ -121,7 +122,7 @@ jobs:
           colcon build --cmake-args -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4
+        uses: github/codeql-action/analyze@411bbbe57033eedfc1a82d68c01345aa96c737d7 # v4
         with:
           category: '/language:${{matrix.language}}'
           output: sarif-results
@@ -134,14 +135,14 @@ jobs:
           echo "file=$PWD/$file" >> "$GITHUB_OUTPUT"
 
       - name: Upload loc as a Build Artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{matrix.language}}-raw.sarif
           path: ${{ steps.sarif.outputs.file }}
           retention-days: 7
 
       - name: filter-sarif
-        uses: advanced-security/filter-sarif@f3b8118a9349d88f7b1c0c488476411145b6270d # v1
+        uses: advanced-security/filter-sarif@2da736ff05ef065cb2894ac6892e47b5eac2c3c0 # v1.1
         with:
           input: ${{ steps.sarif.outputs.file }}
           output: ${{ steps.sarif.outputs.file }}
@@ -155,7 +156,7 @@ jobs:
             -**/packages/vendor/**
 
       - name: Upload SARIF
-        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4
+        uses: github/codeql-action/upload-sarif@411bbbe57033eedfc1a82d68c01345aa96c737d7 # v4
         id: upload-sarif
         with:
           sarif_file: ${{ steps.sarif.outputs.file }}
@@ -165,7 +166,7 @@ jobs:
       - name: Dismiss alerts that were suppressed with inline comments
         # run auto dismissal only on main branch, aka reviewed code only, since dismissals are global
         if: ${{ github.ref == 'refs/heads/main' }}
-        uses: advanced-security/dismiss-alerts@efd44793f4ee18db9e6201c219fb96de57b11ed1 # v1
+        uses: advanced-security/dismiss-alerts@046d6b48d2e43cf563f96f67332c47c432eff83e # v2.0.2
         with:
           sarif-id: ${{ steps.upload-sarif.outputs.sarif-id }}
           sarif-file: ${{ steps.sarif.outputs.file }}
@@ -173,7 +174,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
 
       - name: Upload loc as a Build Artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{matrix.language}}-filtered.sarif
           path: ${{ steps.sarif.outputs.file }}
