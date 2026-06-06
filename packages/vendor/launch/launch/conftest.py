@@ -15,11 +15,11 @@
 from pathlib import PurePath
 
 
-def pytest_ignore_collect(path):
+def pytest_ignore_collect(collection_path):
     # pytest doctest messes up when trying to import .launch.py packages, ignore them.
     # It also messes up when trying to import launch.logging.handlers due to conflicts with
     # logging.handlers, ignore that as well.
-    return str(path).endswith(
+    return str(collection_path).endswith(
         (
             '.launch.py',
             str(PurePath('logging') / 'handlers.py'),
