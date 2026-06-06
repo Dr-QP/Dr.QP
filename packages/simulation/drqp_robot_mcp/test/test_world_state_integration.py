@@ -14,6 +14,11 @@ from .simulation_test_support import reset_local_simulation_state, terminate_sim
 @pytest.mark.slow
 def test_get_world_state_uses_live_gazebo_transport() -> None:
     """World snapshots should come from Gazebo Transport and keep updating."""
+    pytest.importorskip(
+        'gz.msgs10.pose_v_pb2',
+        reason='Gazebo Python transport bindings are required for world-state integration tests',
+    )
+
     reset_local_simulation_state()
     controller = RobotMcpController()
     simulation = runtime.start_simulation(
