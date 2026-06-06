@@ -246,11 +246,11 @@ hardware_interface::return_type a1_16_hardware_interface::read(
   try {
     const auto servoIds = robotConfig_.getServoIds();
     const uint8_t servoId = servoIds[servoIndexLastRead_];
+    servoIndexLastRead_ = (servoIndexLastRead_ + 1) % servoIds.size();
 
     if (torqueIsOn_[servoId] == ServoTorque::On) {
       return hardware_interface::return_type::OK;
     }
-    servoIndexLastRead_ = (servoIndexLastRead_ + 1) % servoIds.size();
 
     return readServoStatus(servoId);
   } catch (const std::exception& e) {

@@ -115,6 +115,25 @@ class RosRuntimeSession:
             'message': 'Published motion command.',
         }
 
+    def wait_for_trajectory_action_server(self, timeout_sec: float) -> bool:
+        """Wait for the joint trajectory controller action server."""
+        started = self._ensure_started()
+
+        from control_msgs.action import FollowJointTrajectory
+        from rclpy.action import ActionClient
+
+        action_client = ActionClient(
+            started.node,
+            FollowJointTrajectory,
+            '/joint_trajectory_controller/follow_joint_trajectory',
+        )
+        try:
+            return bool(action_client.wait_for_server(timeout_sec=timeout_sec))
+        finally:
+            destroy = getattr(action_client, 'destroy', None)
+            if callable(destroy):
+                destroy()
+
     def wait_for_state(self, target_state: str, timeout_sec: float) -> dict[str, Any]:
         """Wait until `/robot_state` reaches the requested state."""
         deadline = time.monotonic() + timeout_sec
@@ -773,6 +792,11 @@ def get_robot_state(
 def get_system_state(world_name: str, timeout_sec: float) -> dict[str, Any]:
     """Return the current ROS and transport integration health snapshot."""
     return get_default_ros_runtime().get_system_state(world_name, timeout_sec)
+
+
+def wait_for_trajectory_action_server(timeout_sec: float) -> bool:
+    """Wait for the joint trajectory controller action server."""
+    return get_default_ros_runtime().wait_for_trajectory_action_server(timeout_sec)
 
 
 def _get_world_state_snapshot(

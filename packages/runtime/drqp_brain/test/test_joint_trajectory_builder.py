@@ -49,6 +49,7 @@ def mock_publisher():
 def mock_action_client():
     """Create a mock action client."""
     client = Mock()
+    client.wait_for_server.return_value = True
     client.send_goal_async.return_value = Mock()
     return client
 
@@ -196,6 +197,8 @@ class TestJointTrajectoryBuilder:
 
         trajectory_builder.publish_action(mock_action_client, mock_node, result_callback)
 
+        mock_action_client.wait_for_server.assert_called_once_with(timeout_sec=5.0)
+
         # Verify goal was sent
         mock_action_client.send_goal_async.assert_called_once()
         sent_goal = mock_action_client.send_goal_async.call_args[0][0]
@@ -203,6 +206,28 @@ class TestJointTrajectoryBuilder:
         assert isinstance(sent_goal, FollowJointTrajectory.Goal)
         assert sent_goal.trajectory.joint_names == trajectory_builder.joint_names
         assert sent_goal.trajectory.points == trajectory_builder.points
+        mock_node._track_future.assert_called_once_with(goal_handle_future)
+
+    def test_publish_action_does_not_send_goal_when_action_server_is_not_ready(
+        self,
+        trajectory_builder,
+        mock_action_client,
+        mock_node,
+    ):
+        """Skip sending a goal when the action server is not ready yet."""
+        result_callback = Mock()
+        trajectory_builder.add_point_from_hexapod(1.0)
+        mock_action_client.wait_for_server.return_value = False
+
+        trajectory_builder.publish_action(mock_action_client, mock_node, result_callback)
+
+        mock_action_client.wait_for_server.assert_called_once_with(timeout_sec=5.0)
+        mock_action_client.send_goal_async.assert_not_called()
+        mock_node._track_future.assert_not_called()
+        result_callback.assert_not_called()
+        mock_node.get_logger().error.assert_called_once_with(
+            'Timed out waiting for trajectory action server'
+        )
 
     def test_publish_action_goal_rejected(self, trajectory_builder, mock_action_client, mock_node):
         """Test handling of rejected action goal."""

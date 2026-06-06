@@ -48,6 +48,10 @@ class FakeController(RobotMcpController):
         self.start_calls = 0
         self.current_state = self.states[-1]
         self.movement_commands: list[dict[str, object]] = []
+        self.system_states: list[dict[str, object]] = []
+        self.system_state_calls = 0
+        self.trajectory_action_server_calls = 0
+        self.trajectory_action_server_ready = True
 
     def get_robot_state(self, timeout_sec: float = 10.0) -> RobotStateSnapshot:
         del timeout_sec
@@ -84,6 +88,26 @@ class FakeController(RobotMcpController):
         }
         self.movement_commands.append(command)
         return {'published': True, **command}
+
+    def get_system_state(self, timeout_sec: float = 10.0) -> dict[str, object]:
+        del timeout_sec
+        self.system_state_calls += 1
+        if self.system_states:
+            if len(self.system_states) > 1:
+                return self.system_states.pop(0)
+            return self.system_states[0]
+        return {
+            'robot_lifecycle_channel_available': True,
+            'joint_state_available': True,
+            'motion_command_channel_available': True,
+            'simulation_channel_available': True,
+            'deployment_mode': 'simulation',
+        }
+
+    def _wait_for_trajectory_action_server(self, timeout_sec: float) -> bool:
+        del timeout_sec
+        self.trajectory_action_server_calls += 1
+        return self.trajectory_action_server_ready
 
     def _wait_for_state(
         self,
@@ -135,6 +159,39 @@ def test_boot_up_initializes_without_starting_simulation_when_state_exists() -> 
     assert result.state_before == 'torque_off'
     assert result.state_after == 'torque_on'
     assert result.simulation_was_started is False
+
+
+def test_boot_up_waits_for_simulation_control_surfaces_before_initialize(monkeypatch) -> None:
+    """Boot-up should wait for simulation channels before publishing initialize."""
+    controller = FakeController([make_snapshot(None, available=False, simulation_running=False)])
+    controller.system_states = [
+        {
+            'robot_lifecycle_channel_available': True,
+            'joint_state_available': False,
+            'motion_command_channel_available': False,
+            'simulation_channel_available': False,
+            'deployment_mode': 'simulation',
+        },
+        {
+            'robot_lifecycle_channel_available': True,
+            'joint_state_available': True,
+            'motion_command_channel_available': True,
+            'simulation_channel_available': True,
+            'deployment_mode': 'simulation',
+        },
+    ]
+    sleep_calls: list[float] = []
+    monkeypatch.setattr(controller_module.time, 'sleep', sleep_calls.append)
+
+    result = controller.boot_up(timeout_sec=5.0)
+
+    assert controller.start_calls == 1
+    assert controller.system_state_calls >= 2
+    assert controller.trajectory_action_server_calls == 1
+    assert sleep_calls == [0.5]
+    assert controller.published_events == ['initialize']
+    assert controller.waited_states == ['torque_on']
+    assert result.state_after == 'torque_on'
 
 
 def test_shut_down_finalizes_robot_from_torque_on() -> None:

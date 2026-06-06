@@ -104,6 +104,8 @@ class RobotMcpController:
             )
 
         if state_before in {'torque_off', 'finalized'}:
+            if simulation_was_started or self._simulation_process_running():
+                self._wait_for_boot_ready(timeout_sec=min(timeout_sec, 30.0))
             self._publish_event('initialize')
             state_after_snapshot = self._wait_for_state('torque_on', timeout_sec)
         elif state_before == 'initializing':
@@ -595,6 +597,10 @@ class RobotMcpController:
         """Publish a lifecycle event onto the local ROS graph."""
         return self.runtime.publish_event(event)
 
+    def _wait_for_trajectory_action_server(self, timeout_sec: float) -> bool:
+        """Wait for the joint trajectory controller action server."""
+        return self.runtime.wait_for_trajectory_action_server(timeout_sec)
+
     def _publish_movement_command(
         self,
         stride_direction: dict[str, float],
@@ -641,6 +647,41 @@ class RobotMcpController:
                 return latest
             time.sleep(0.5)
             latest = self.get_simulation_state(timeout_sec=0.1)
+        raise ControllerError(error_message)
+
+    def _wait_for_boot_ready(self, timeout_sec: float) -> dict[str, Any]:
+        """Wait for simulation-side control surfaces before booting the lifecycle."""
+        ready_state = self._poll_system_state(
+            predicate=lambda snapshot: (
+                bool(snapshot.get('robot_lifecycle_channel_available'))
+                and bool(snapshot.get('joint_state_available'))
+                and bool(snapshot.get('motion_command_channel_available'))
+                and (
+                    snapshot.get('deployment_mode') != 'simulation'
+                    or bool(snapshot.get('simulation_channel_available'))
+                )
+            ),
+            timeout_sec=timeout_sec,
+            error_message='Timed out waiting for simulation control surfaces to become ready.',
+        )
+        if not self._wait_for_trajectory_action_server(timeout_sec=min(timeout_sec, 5.0)):
+            raise ControllerError('Timed out waiting for the joint trajectory action server.')
+        return ready_state
+
+    def _poll_system_state(
+        self,
+        predicate: Callable[[dict[str, Any]], bool],
+        timeout_sec: float,
+        error_message: str,
+    ) -> dict[str, Any]:
+        """Poll system state until a predicate succeeds or timeout expires."""
+        deadline = time.monotonic() + timeout_sec
+        latest = self.get_system_state(timeout_sec=0.1)
+        while time.monotonic() < deadline:
+            if predicate(latest):
+                return latest
+            time.sleep(0.5)
+            latest = self.get_system_state(timeout_sec=0.1)
         raise ControllerError(error_message)
 
     def _simulation_process_running(self) -> bool:
