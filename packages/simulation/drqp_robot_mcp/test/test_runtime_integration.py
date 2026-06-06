@@ -40,13 +40,39 @@ def _read_odom_pose(timeout_sec: float) -> Any | None:
 
 
 def _assert_pose_matches_odometry(snapshot_pose: dict[str, Any], odom_pose: Any) -> None:
-    assert snapshot_pose['position']['x'] == pytest.approx(odom_pose.position.x)
-    assert snapshot_pose['position']['y'] == pytest.approx(odom_pose.position.y)
-    assert snapshot_pose['position']['z'] == pytest.approx(odom_pose.position.z)
-    assert snapshot_pose['orientation']['x'] == pytest.approx(odom_pose.orientation.x)
-    assert snapshot_pose['orientation']['y'] == pytest.approx(odom_pose.orientation.y)
-    assert snapshot_pose['orientation']['z'] == pytest.approx(odom_pose.orientation.z)
-    assert snapshot_pose['orientation']['w'] == pytest.approx(odom_pose.orientation.w)
+    # Runtime snapshots and odom callbacks are sampled asynchronously, so use
+    # realistic bounds instead of exact float equality.
+    position_tolerance_m = 0.05
+    orientation_tolerance = 0.01
+
+    assert snapshot_pose['position']['x'] == pytest.approx(
+        odom_pose.position.x,
+        abs=position_tolerance_m,
+    )
+    assert snapshot_pose['position']['y'] == pytest.approx(
+        odom_pose.position.y,
+        abs=position_tolerance_m,
+    )
+    assert snapshot_pose['position']['z'] == pytest.approx(
+        odom_pose.position.z,
+        abs=position_tolerance_m,
+    )
+    assert snapshot_pose['orientation']['x'] == pytest.approx(
+        odom_pose.orientation.x,
+        abs=orientation_tolerance,
+    )
+    assert snapshot_pose['orientation']['y'] == pytest.approx(
+        odom_pose.orientation.y,
+        abs=orientation_tolerance,
+    )
+    assert snapshot_pose['orientation']['z'] == pytest.approx(
+        odom_pose.orientation.z,
+        abs=orientation_tolerance,
+    )
+    assert snapshot_pose['orientation']['w'] == pytest.approx(
+        odom_pose.orientation.w,
+        abs=orientation_tolerance,
+    )
 
 
 @pytest.mark.slow
