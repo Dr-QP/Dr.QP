@@ -47,6 +47,12 @@ on:
       changed:
         description: Whether formatting produced file changes in the checked out tree.
         value: ${{ jobs.reformat.outputs.changed }}
+      reformat_result:
+        description: Result of the internal reformat job (success, failure, cancelled, skipped).
+        value: ${{ jobs.reformat.result }}
+      run_downstream:
+        description: Whether downstream workflows should run (reformat skipped or no changes produced).
+        value: ${{ jobs.reformat.result == 'skipped' || jobs.reformat.outputs.changed != 'true' }}
     secrets:
       REPO_PAT:
         required: false
