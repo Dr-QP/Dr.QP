@@ -30,13 +30,6 @@ permissions: {}
 jobs:
   reformat:
     name: Reformat code
-    if: >-
-      github.event_name != 'pull_request' ||
-      github.event.pull_request.draft != true ||
-      !(contains(github.actor, 'copilot') ||
-        contains(github.actor, 'cursor') ||
-        contains(github.actor, 'codex') ||
-        contains(github.actor, 'claude'))
     permissions:
       issues: write
       pull-requests: write
@@ -56,8 +49,7 @@ jobs:
   ci:
     name: CI/CD
     needs: [reformat]
-    if: >-
-      (needs.reformat.result == 'skipped' || needs.reformat.outputs.changed != 'true')
+    if: needs.reformat.outputs.run_downstream == 'true'
     permissions:
       packages: write
     uses: ./.github/workflows/ci.yml
@@ -72,8 +64,7 @@ jobs:
   docs:
     name: Build docs
     needs: [reformat]
-    if: >-
-      (needs.reformat.result == 'skipped' || needs.reformat.outputs.changed != 'true')
+    if: needs.reformat.outputs.run_downstream == 'true'
     permissions: {}
     uses: ./.github/workflows/docs.yml
     with:
@@ -82,8 +73,7 @@ jobs:
   codeql:
     name: CodeQL Advanced
     needs: [reformat]
-    if: >-
-      (needs.reformat.result == 'skipped' || needs.reformat.outputs.changed != 'true')
+    if: needs.reformat.outputs.run_downstream == 'true'
     permissions:
       packages: read
       security-events: write

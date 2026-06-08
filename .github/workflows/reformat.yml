@@ -46,7 +46,13 @@ on:
     outputs:
       changed:
         description: Whether formatting produced file changes in the checked out tree.
-        value: ${{ jobs.reformat.outputs.changed }}
+        value: ${{ jobs.gate.outputs.changed }}
+      reformat_result:
+        description: Result of the internal reformat job (success, failure, cancelled, skipped).
+        value: ${{ jobs.gate.outputs.reformat_result }}
+      run_downstream:
+        description: Whether downstream workflows should run (reformat skipped or no changes produced).
+        value: ${{ jobs.gate.outputs.run_downstream }}
     secrets:
       REPO_PAT:
         required: false
@@ -249,3 +255,42 @@ jobs:
           VALIDATE_GITHUB_ACTIONS: true
           VALIDATE_GITHUB_ACTIONS_ZIZMOR: true
           VALIDATE_GITLEAKS: true
+
+  gate:
+    name: Reformat outputs gate
+    needs: [paths-filter, reformat]
+    if: always()
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    permissions: {}
+    outputs:
+      changed: ${{ steps.compute.outputs.changed }}
+      reformat_result: ${{ steps.compute.outputs.reformat_result }}
+      run_downstream: ${{ steps.compute.outputs.run_downstream }}
+    steps:
+      - name: Compute reusable outputs
+        id: compute
+        run: |
+          reformat_result="${NEEDS_REFORMAT_RESULT}"
+          changed="${NEEDS_REFORMAT_OUTPUT_CHANGED}"
+
+          if [[ -z "$reformat_result" ]]; then
+            reformat_result='skipped'
+          fi
+
+          if [[ "$changed" != 'true' ]]; then
+            changed='false'
+          fi
+
+          run_downstream='false'
+          if [[ "$reformat_result" == 'skipped' || "$changed" != 'true' ]]; then
+            run_downstream='true'
+          fi
+
+          {
+            echo "changed=$changed"
+            echo "reformat_result=$reformat_result"
+            echo "run_downstream=$run_downstream"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          NEEDS_REFORMAT_RESULT: ${{ needs.reformat.result }}
+          NEEDS_REFORMAT_OUTPUT_CHANGED: ${{ needs.reformat.outputs.changed }}
