@@ -289,6 +289,13 @@ class RobotMcpController:
         latest_motion_command = None
         if self._latest_motion_command is not None:
             latest_motion_command = dict(self._latest_motion_command)
+            body_rotation = latest_motion_command.get('body_rotation')
+            if isinstance(body_rotation, dict) and {'x', 'y', 'z'} <= body_rotation.keys():
+                latest_motion_command['body_rotation'] = {
+                    'roll': float(body_rotation['x']),
+                    'pitch': float(body_rotation['y']),
+                    'yaw': float(body_rotation['z']),
+                }
         return {
             'timestamp': robot_state.timestamp,
             'available': robot_state.available,
@@ -367,7 +374,11 @@ class RobotMcpController:
             'stride_direction': dict(stride_direction),
             'rotation_speed': normalized_rotation_speed,
             'body_translation': dict(body_translation),
-            'body_rotation': dict(body_rotation),
+            'body_rotation': {
+                'roll': body_rotation['x'],
+                'pitch': body_rotation['y'],
+                'yaw': body_rotation['z'],
+            },
             'gait_type': normalized_gait,
             'timestamp': _utc_now(),
             'note': result.get('message'),

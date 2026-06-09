@@ -205,6 +205,8 @@ class RosRuntimeSession:
             self._wait_for_world_state(world_name, timeout_sec)
         except RuntimeError as exc:
             note = str(exc)
+        except ImportError as exc:
+            note = f'Gazebo transport bindings are unavailable: {exc}'
 
         with self._state_changed:
             self._raise_spin_error_locked()
@@ -797,56 +799,6 @@ def get_system_state(world_name: str, timeout_sec: float) -> dict[str, Any]:
 def wait_for_trajectory_action_server(timeout_sec: float) -> bool:
     """Wait for the joint trajectory controller action server."""
     return get_default_ros_runtime().wait_for_trajectory_action_server(timeout_sec)
-
-
-def _get_world_state_snapshot(
-    world_name: str,
-    timeout_sec: float,
-    simulation_time_sec: float | None = None,
-) -> dict[str, Any]:
-    """Read Gazebo entity poses from pose info and ROS clock."""
-    entities: list[dict[str, Any]] = []
-    note: str | None = None
-
-    try:
-        raw_output = subprocess.run(  # noqa: S603
-            ['gz', 'topic', '-e', '-n', '1', '-t', f'/world/{world_name}/pose/info'],
-            check=True,
-            capture_output=True,
-            text=True,
-            timeout=timeout_sec,
-        )
-        entities = parse_gazebo_pose_info(raw_output.stdout)
-    except FileNotFoundError:
-        note = 'Gazebo CLI is not installed in the current environment.'
-    except subprocess.CalledProcessError as exc:
-        note = exc.stderr.strip() or exc.stdout.strip() or 'Gazebo pose topic is unavailable.'
-    except subprocess.TimeoutExpired:
-        note = 'Timed out waiting for Gazebo world pose information.'
-
-    available = bool(entities) or simulation_time_sec is not None
-
-    return {
-        'available': available,
-        'world_name': world_name,
-        'simulation_time_sec': simulation_time_sec,
-        'entity_count': len(entities),
-        'entities': entities,
-        'source': 'gazebo',
-        'note': note,
-    }
-
-
-def _find_robot_pose(
-    entities: list[dict[str, Any]],
-    robot_name: str,
-) -> dict[str, Any] | None:
-    """Return the best matching robot pose from world entities."""
-    for entity in entities:
-        name = entity.get('name', '')
-        if name == robot_name or name.startswith(f'{robot_name}_'):
-            return entity.get('pose')
-    return None
 
 
 def _pose_to_mapping(message: Any) -> dict[str, Any]:

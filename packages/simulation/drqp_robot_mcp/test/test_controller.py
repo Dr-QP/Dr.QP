@@ -262,6 +262,48 @@ def test_send_motion_command_publishes_normalized_command() -> None:
     assert result.body_rotation.y == -0.1
 
 
+def test_get_robot_namespace_state_reports_roll_pitch_yaw_body_rotation() -> None:
+    """Robot namespace state should expose body rotation as roll/pitch/yaw."""
+    controller = FakeController([make_snapshot('torque_on')])
+
+    controller.send_motion_command(
+        body_roll=0.3,
+        body_pitch=-0.2,
+        body_yaw=0.1,
+    )
+    state = controller.get_robot_namespace_state()
+
+    latest_motion = state['latest_motion_command']
+    assert latest_motion is not None
+    assert latest_motion['body_rotation'] == {
+        'roll': 0.3,
+        'pitch': -0.2,
+        'yaw': 0.1,
+    }
+
+
+def test_get_robot_namespace_state_normalizes_legacy_body_rotation_keys() -> None:
+    """Robot namespace state should normalize legacy x/y/z body rotation keys."""
+    controller = FakeController([make_snapshot('torque_on')])
+    controller._latest_motion_command = {
+        'stride_direction': {'x': 0.0, 'y': 0.0, 'z': 0.0},
+        'rotation_speed': 0.0,
+        'body_translation': {'x': 0.0, 'y': 0.0, 'z': 0.0},
+        'body_rotation': {'x': 0.25, 'y': -0.5, 'z': 0.75},
+        'gait_type': 'tripod',
+        'timestamp': '2026-03-07T00:00:00+00:00',
+        'note': 'legacy payload',
+    }
+
+    state = controller.get_robot_namespace_state()
+
+    assert state['latest_motion_command']['body_rotation'] == {
+        'roll': 0.25,
+        'pitch': -0.5,
+        'yaw': 0.75,
+    }
+
+
 def test_send_motion_command_rejects_out_of_range_input() -> None:
     """Motion inputs must stay within the normalized message contract."""
     controller = FakeController([make_snapshot('torque_on')])

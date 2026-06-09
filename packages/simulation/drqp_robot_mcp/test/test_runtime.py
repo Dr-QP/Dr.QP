@@ -439,6 +439,28 @@ def test_get_world_state_uses_gazebo_transport_instead_of_gz_cli(monkeypatch) ->
     }
 
 
+def test_get_world_state_handles_missing_gazebo_transport_bindings(monkeypatch) -> None:
+    """Missing Gazebo transport Python bindings should return a degraded snapshot."""
+    runtime_session = runtime.RosRuntimeSession()
+    monkeypatch.setattr(runtime_session, '_ensure_started', lambda: None)
+
+    monkeypatch.setattr(
+        runtime,
+        '_load_gazebo_transport_dependencies',
+        lambda: (_ for _ in ()).throw(ImportError('No module named gz.transport13')),
+    )
+
+    result = runtime_session.get_world_state(world_name='empty', timeout_sec=0.1)
+
+    assert result['available'] is False
+    assert result['world_name'] == 'empty'
+    assert result['entity_count'] == 0
+    assert result['entities'] == []
+    assert result['source'] == 'gazebo'
+    assert result['note'] is not None
+    assert 'Gazebo transport bindings are unavailable' in result['note']
+
+
 def test_pid_is_running_returns_false_for_zombie_process(monkeypatch) -> None:
     """Zombie launch processes must be treated as stale, not running."""
 
