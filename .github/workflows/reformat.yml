@@ -125,15 +125,13 @@ jobs:
     name: Reformat
     needs: paths-filter
     if: inputs.should_run && (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
-    runs-on: 'ubuntu-24.04' # superlinter only supports x86_64 for now
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     container:
       image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
     outputs:
-      changed: ${{ steps.diff.outputs.changed }}
+      changed: ${{ steps.commit-format-changes.outputs.changed }}
     permissions:
-      statuses: write # To update PR status
-      issues: write # To post pull request summary comments
-      pull-requests: write # To interact with pull request metadata/comments
+      contents: write # To commit formatting changes
     timeout-minutes: 15
     steps:
       - name: Checkout repository
@@ -159,6 +157,37 @@ jobs:
         run: |
           source scripts/setup.bash
           ./scripts/python-reformat.sh
+
+      - name: Commit formatter changes
+        id: commit-format-changes
+        uses: ./.github/actions/commit-format-changes
+        with:
+          branch: ${{ inputs.caller_pr_head_ref || github.head_ref || github.ref }}
+          caller-event-name: ${{ inputs.caller_event_name }}
+          caller-pr-head-repo-full-name: ${{ inputs.caller_pr_head_repo_full_name }}
+          caller-pr-head-sha: ${{ inputs.caller_pr_head_sha }}
+          commit-message: ${{ env.COMMIT_MESSAGE }}
+
+  super-linter:
+    name: Super-Linter
+    needs: paths-filter
+    if: inputs.should_run && (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
+    runs-on: 'ubuntu-24.04'
+    outputs:
+      changed: ${{ steps.commit-format-changes.outputs.changed }}
+    permissions:
+      contents: write # To commit formatting changes
+      statuses: write # To update PR status
+      issues: write # To post pull request summary comments
+      pull-requests: write # To interact with pull request metadata/comments
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          fetch-depth: 0 # Required for git diff to work properly
+          token: ${{ secrets.REPO_PAT }} # Use PAT to allow CI reruns on pushed commits
+          persist-credentials: true # Needed to commit changes back to the repository
 
       - name: Run Super-Linter autofixes
         continue-on-error: true
@@ -186,55 +215,18 @@ jobs:
           FIX_JSONC_PRETTIER: true
           FIX_GITHUB_ACTIONS_ZIZMOR: true
 
-      - name: Detect formatter changes
-        id: diff
-        run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Verify if not recursive commit
-        if: always() && steps.diff.outputs.changed == 'true'
-        id: verify
-        run: |
-          skip_commit=false
-          if [[ "${INPUTS_CALLER_EVENT_NAME}" != "pull_request" ]]; then
-            echo "Not a pull request. Skipping commit."
-            skip_commit=true
-          elif [[ "${GITHUB_EVENT_PULL_REQUEST_HEAD_REPO_FULL_NAME}" != "${{ github.repository }}" ]]; then
-            echo "Pull request is from a fork. Skipping commit."
-            skip_commit=true
-          elif [[ "$(git show -s --format=%B "${GITHUB_EVENT_PULL_REQUEST_HEAD_SHA}")" == "$COMMIT_MESSAGE" ]]; then
-            echo "Reformatted in previous commit. Skipping commit."
-            skip_commit=true
-          fi
-
-          echo "skip_commit=$skip_commit" >> "$GITHUB_OUTPUT"
-        env:
-          GITHUB_EVENT_PULL_REQUEST_HEAD_REPO_FULL_NAME: ${{ inputs.caller_pr_head_repo_full_name }}
-          GITHUB_EVENT_PULL_REQUEST_HEAD_SHA: ${{ inputs.caller_pr_head_sha }}
-          INPUTS_CALLER_EVENT_NAME: ${{ inputs.caller_event_name }}
-
-      - name: Commit all changed files back to the repository
-        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7
-        if: always() && steps.diff.outputs.changed == 'true' && steps.verify.outputs.skip_commit != 'true'
-        id: commit
+      - name: Commit formatter changes
+        id: commit-format-changes
+        uses: ./.github/actions/commit-format-changes
         with:
-          # Specify the branch to commit to instead of checkout, otherwise super-linter's GITHUB_SHA validation fails to find the commit.
-          # For pull requests, this will be the source branch; for pushes, this will be the current branch.
           branch: ${{ inputs.caller_pr_head_ref || github.head_ref || github.ref }}
-          commit_message: ${{ env.COMMIT_MESSAGE }}
-
-      - name: Verify changes were committed if any
-        if: always() && steps.diff.outputs.changed == 'true'
-        run: |
-          git diff --exit-code
-          git diff --exit-code --cached
+          caller-event-name: ${{ inputs.caller_event_name }}
+          caller-pr-head-repo-full-name: ${{ inputs.caller_pr_head_repo_full_name }}
+          caller-pr-head-sha: ${{ inputs.caller_pr_head_sha }}
+          commit-message: ${{ env.COMMIT_MESSAGE }}
 
       - name: Run Super-Linter checks
-        if: steps.commit.outcome != 'success'
+        if: steps.commit-format-changes.outputs.committed != 'true'
         uses: super-linter/super-linter@61abc07d755095a68f4987d1c2c3d1d64408f1f9 # v8.5.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -257,7 +249,7 @@ jobs:
 
   gate:
     name: Reformat outputs gate
-    needs: [paths-filter, reformat]
+    needs: [paths-filter, reformat, super-linter]
     if: always()
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions: {}
@@ -269,15 +261,18 @@ jobs:
       - name: Compute reusable outputs
         id: compute
         run: |
-          reformat_result="${NEEDS_REFORMAT_RESULT}"
-          changed="${NEEDS_REFORMAT_OUTPUT_CHANGED}"
-
-          if [[ -z "$reformat_result" ]]; then
+          reformat_result='success'
+          if [[ "${NEEDS_REFORMAT_RESULT}" == 'failure' || "${NEEDS_SUPER_LINTER_RESULT}" == 'failure' ]]; then
+            reformat_result='failure'
+          elif [[ "${NEEDS_REFORMAT_RESULT}" == 'cancelled' || "${NEEDS_SUPER_LINTER_RESULT}" == 'cancelled' ]]; then
+            reformat_result='cancelled'
+          elif [[ "${NEEDS_REFORMAT_RESULT}" == 'skipped' && "${NEEDS_SUPER_LINTER_RESULT}" == 'skipped' ]]; then
             reformat_result='skipped'
           fi
 
-          if [[ "$changed" != 'true' ]]; then
-            changed='false'
+          changed='false'
+          if [[ "${NEEDS_REFORMAT_OUTPUT_CHANGED}" == 'true' || "${NEEDS_SUPER_LINTER_OUTPUT_CHANGED}" == 'true' ]]; then
+            changed='true'
           fi
 
           run_downstream='false'
@@ -293,3 +288,5 @@ jobs:
         env:
           NEEDS_REFORMAT_RESULT: ${{ needs.reformat.result }}
           NEEDS_REFORMAT_OUTPUT_CHANGED: ${{ needs.reformat.outputs.changed }}
+          NEEDS_SUPER_LINTER_RESULT: ${{ needs.super-linter.result }}
+          NEEDS_SUPER_LINTER_OUTPUT_CHANGED: ${{ needs.super-linter.outputs.changed }}
