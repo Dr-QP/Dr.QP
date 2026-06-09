@@ -123,8 +123,11 @@ jobs:
 
   reformat:
     name: Reformat
-    needs: paths-filter
-    if: inputs.should_run && (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
+    needs: [paths-filter, super-linter]
+    if: >-
+      inputs.should_run &&
+      (needs.paths-filter.outputs.pass == 'true' || inputs.force_run) &&
+      needs.super-linter.outputs.changed != 'true'
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     container:
       image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
@@ -249,7 +252,7 @@ jobs:
 
   gate:
     name: Reformat outputs gate
-    needs: [paths-filter, reformat, super-linter]
+    needs: [paths-filter, super-linter, reformat]
     if: always()
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions: {}
