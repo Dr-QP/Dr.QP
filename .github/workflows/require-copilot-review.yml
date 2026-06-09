@@ -1,4 +1,4 @@
-name: Require Copilot Review
+name: Require AI Review
 
 on:
   pull_request:
@@ -20,20 +20,23 @@ on:
 
 permissions:
   contents: read
+  issues: read
   pull-requests: read
 
 jobs:
-  copilot-review-present:
-    name: copilot-review-present
+  ai-review-present:
+    name: ai-review-present
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
-      - name: Verify Copilot reviewed PR
+      - name: Verify AI reviewed PR
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
+          github-token: ${{ github.token }}
           script: |
             if (context.eventName === 'merge_group') {
-              core.info('Merge group event, skipping Copilot review check');
+              core.info('Merge group event, skipping AI review check');
               return;
             }
 
@@ -52,38 +55,102 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const pull_number = pr.number;
-
-            const reviews = await github.paginate(
-              github.rest.pulls.listReviews,
-              {
-                owner,
-                repo,
-                pull_number,
-                per_page: 100,
-              }
-            );
-
-            const copilotLogins = new Set([
+            const currentHeadSha = pr.head.sha;
+            const copilotReviewerLogins = new Set([
               'copilot-pull-request-reviewer[bot]',
             ]);
+            const codexReactionLogins = new Set([
+              'chatgpt-codex-connector[bot]',
+            ]);
+            const acceptedReviewStates = new Set([
+              'approved',
+              'changes_requested',
+              'commented',
+            ]);
 
-            // Require an active submitted Copilot review for any commit in the PR.
-            const matchingReview = reviews.find((review) => {
-              const login = review.user?.login;
-              const state = review.state;
+            const isAcceptedCurrentHeadCopilotReview = (review) => {
+              const login = review?.user?.login;
+              const state = review?.state?.toLowerCase();
               return (
-                copilotLogins.has(login) &&
-                state &&
-                state !== 'PENDING' &&
-                state !== 'DISMISSED'
+                copilotReviewerLogins.has(login) &&
+                acceptedReviewStates.has(state) &&
+                review.commit_id === currentHeadSha
               );
-            });
+            };
 
-            if (!matchingReview) {
-              core.setFailed('Copilot has not submitted a review for this PR.');
+            const isAcceptedCodexReaction = (reaction) => {
+              return (
+                codexReactionLogins.has(reaction?.user?.login) &&
+                reaction?.content === '+1'
+              );
+            };
+
+            const eventReview = context.payload.review;
+            if (isAcceptedCurrentHeadCopilotReview(eventReview)) {
+              core.info(
+                `Found accepted current-head Copilot review by ${eventReview.user.login} from event payload for ${eventReview.commit_id} with state ${eventReview.state}.`
+              );
               return;
             }
 
-            core.info(
-              `Found Copilot review by ${matchingReview.user.login} for ${matchingReview.commit_id} with state ${matchingReview.state}.`
+            const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+            const deadline = Date.now() + 8 * 60 * 1000;
+            let attempt = 1;
+
+            while (Date.now() < deadline) {
+              const reviews = await github.paginate(
+                github.rest.pulls.listReviews,
+                {
+                  owner,
+                  repo,
+                  pull_number,
+                  per_page: 100,
+                }
+              );
+
+              const reviewSummary = reviews
+                .map((review) => `${review.user?.login ?? 'unknown'}:${review.state}:${review.commit_id}`)
+                .join(', ');
+              core.info(`Attempt ${attempt}: observed PR reviews: ${reviewSummary || 'none'}`);
+
+              const matchingReview = [...reviews]
+                .reverse()
+                .find(isAcceptedCurrentHeadCopilotReview);
+
+              if (matchingReview) {
+                core.info(
+                  `Found accepted current-head Copilot review by ${matchingReview.user.login} for ${matchingReview.commit_id} with state ${matchingReview.state}.`
+                );
+                return;
+              }
+
+              const reactions = await github.paginate(
+                github.rest.reactions.listForIssue,
+                {
+                  owner,
+                  repo,
+                  issue_number: pull_number,
+                  per_page: 100,
+                }
+              );
+
+              const reactionSummary = reactions
+                .map((reaction) => `${reaction.user?.login ?? 'unknown'}:${reaction.content}:${reaction.created_at}`)
+                .join(', ');
+              core.info(`Attempt ${attempt}: observed PR reactions: ${reactionSummary || 'none'}`);
+
+              const matchingReaction = reactions.find(isAcceptedCodexReaction);
+              if (matchingReaction) {
+                core.info(
+                  `Found accepted Codex review marker by ${matchingReaction.user.login}: ${matchingReaction.content} reaction created at ${matchingReaction.created_at}.`
+                );
+                return;
+              }
+
+              attempt += 1;
+              await sleep(30 * 1000);
+            }
+
+            core.setFailed(
+              `Neither Copilot nor Codex has marked this PR as AI-reviewed. Expected either a current-head Copilot review for ${currentHeadSha} or a +1 reaction from chatgpt-codex-connector[bot].`
             );
