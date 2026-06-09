@@ -133,6 +133,7 @@ jobs:
     outputs:
       changed: ${{ steps.diff.outputs.changed }}
     permissions:
+      contents: read # Needed by zizmor online audits that resolve GitHub repository metadata
       statuses: write # To update PR status
       issues: write # To post pull request summary comments
       pull-requests: write # To interact with pull request metadata/comments
