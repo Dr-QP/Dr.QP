@@ -53,30 +53,38 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const pull_number = pr.number;
+            const copilotLogin = 'copilot-pull-request-reviewer[bot]';
 
-            const reviews = await github.paginate(
-              github.rest.pulls.listReviews,
-              {
-                owner,
-                repo,
-                pull_number,
-                per_page: 100,
-              }
-            );
+            const eventReview = context.payload.review;
+            const eventReviewState = eventReview?.state?.toLowerCase();
+            if (
+              eventReview?.user?.login === copilotLogin &&
+              eventReviewState &&
+              eventReviewState !== 'pending' &&
+              eventReviewState !== 'dismissed'
+            ) {
+              core.info(
+                `Found Copilot review from event payload for ${eventReview.commit_id} with state ${eventReview.state}.`
+              );
+              return;
+            }
 
-            const copilotLogins = new Set([
-              'copilot-pull-request-reviewer[bot]',
-            ]);
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner,
+              repo,
+              pull_number,
+              per_page: 100,
+            });
 
             // Require an active submitted Copilot review for any commit in the PR.
-            const matchingReview = reviews.find((review) => {
+            const matchingReview = [...reviews].reverse().find((review) => {
               const login = review.user?.login;
-              const state = review.state;
+              const state = review.state?.toLowerCase();
               return (
-                copilotLogins.has(login) &&
+                login === copilotLogin &&
                 state &&
-                state !== 'PENDING' &&
-                state !== 'DISMISSED'
+                state !== 'pending' &&
+                state !== 'dismissed'
               );
             });
 
