@@ -31,6 +31,7 @@ jobs:
       - name: Verify Copilot reviewed PR
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
+          github-token: ${{ github.token }}
           script: |
             if (context.eventName === 'merge_group') {
               core.info('Merge group event, skipping Copilot review check');
