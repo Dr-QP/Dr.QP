@@ -58,7 +58,6 @@ jobs:
             const currentHeadSha = pr.head.sha;
             const copilotReviewerLogins = new Set([
               'copilot-pull-request-reviewer[bot]',
-              'codex',
             ]);
             const codexReactionLogins = new Set([
               'chatgpt-codex-connector[bot]',
