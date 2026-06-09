@@ -53,18 +53,21 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const pull_number = pr.number;
-            const copilotLogin = 'copilot-pull-request-reviewer[bot]';
+            const acceptedReviewerLogins = new Set([
+              'copilot-pull-request-reviewer[bot]',
+              'codex',
+            ]);
 
             const eventReview = context.payload.review;
             const eventReviewState = eventReview?.state?.toLowerCase();
             if (
-              eventReview?.user?.login === copilotLogin &&
+              acceptedReviewerLogins.has(eventReview?.user?.login) &&
               eventReviewState &&
               eventReviewState !== 'pending' &&
               eventReviewState !== 'dismissed'
             ) {
               core.info(
-                `Found Copilot review from event payload for ${eventReview.commit_id} with state ${eventReview.state}.`
+                `Found accepted review by ${eventReview.user.login} from event payload for ${eventReview.commit_id} with state ${eventReview.state}.`
               );
               return;
             }
@@ -81,7 +84,7 @@ jobs:
               const login = review.user?.login;
               const state = review.state?.toLowerCase();
               return (
-                login === copilotLogin &&
+                acceptedReviewerLogins.has(login) &&
                 state &&
                 state !== 'pending' &&
                 state !== 'dismissed'
@@ -89,10 +92,10 @@ jobs:
             });
 
             if (!matchingReview) {
-              core.setFailed('Copilot has not submitted a review for this PR.');
+              core.setFailed('Neither Copilot nor Codex has submitted a review for this PR.');
               return;
             }
 
             core.info(
-              `Found Copilot review by ${matchingReview.user.login} for ${matchingReview.commit_id} with state ${matchingReview.state}.`
+              `Found accepted review by ${matchingReview.user.login} for ${matchingReview.commit_id} with state ${matchingReview.state}.`
             );
