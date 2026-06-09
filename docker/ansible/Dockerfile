@@ -7,7 +7,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=bind,readonly,source=..,target=/scripts \
     apt-get update && apt-get install -y --no-install-recommends \
     python3 \
-    python3-pip \
     sudo \
     locales \
     && /scripts/setup-ansible.sh
