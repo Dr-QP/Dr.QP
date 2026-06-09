@@ -31,7 +31,7 @@ jobs:
   reformat:
     name: Reformat code
     permissions:
-      contents: read
+      contents: write
       issues: write
       pull-requests: write
       statuses: write
