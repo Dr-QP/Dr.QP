@@ -181,12 +181,16 @@ jobs:
 
   merge-all:
     name: Code Analysis finished
-    needs: [analyze]
+    needs: [paths-filter, analyze]
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions: {}
     timeout-minutes: 10
-    if: ${{ success() || cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}
+    if: always()
     steps:
+      - name: Execution was not needed!
+        if: needs.paths-filter.outputs.pass != 'true' && !inputs.force_run
+        run: |
+          exit 0
       - name: All jobs succeeded!
         if: ${{ success() }}
         run: |
