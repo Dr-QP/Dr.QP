@@ -2,7 +2,6 @@ ARG BASE_IMAGE=ubuntu:24.04
 FROM $BASE_IMAGE
 
 # Install Ansible
-# hadolint ignore=DL3008
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     --mount=type=bind,readonly,source=..,target=/scripts \
