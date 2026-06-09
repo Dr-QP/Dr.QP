@@ -1,4 +1,4 @@
-name: Require Copilot Review
+name: Require AI Review
 
 on:
   pull_request:
@@ -23,17 +23,18 @@ permissions:
   pull-requests: read
 
 jobs:
-  copilot-review-present:
-    name: copilot-review-present
+  ai-review-present:
+    name: ai-review-present
     runs-on: ubuntu-latest
 
     steps:
-      - name: Verify Copilot reviewed PR
+      - name: Verify AI reviewed current PR head
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
+          github-token: ${{ github.token }}
           script: |
             if (context.eventName === 'merge_group') {
-              core.info('Merge group event, skipping Copilot review check');
+              core.info('Merge group event, skipping AI review check');
               return;
             }
 
@@ -52,6 +53,35 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const pull_number = pr.number;
+            const currentHeadSha = pr.head.sha;
+            const acceptedReviewerLogins = new Set([
+              'copilot-pull-request-reviewer[bot]',
+              'codex',
+              'codex[bot]',
+            ]);
+            const acceptedReviewStates = new Set([
+              'approved',
+              'changes_requested',
+              'commented',
+            ]);
+
+            const isAcceptedCurrentHeadReview = (review) => {
+              const login = review?.user?.login;
+              const state = review?.state?.toLowerCase();
+              return (
+                acceptedReviewerLogins.has(login) &&
+                acceptedReviewStates.has(state) &&
+                review.commit_id === currentHeadSha
+              );
+            };
+
+            const eventReview = context.payload.review;
+            if (isAcceptedCurrentHeadReview(eventReview)) {
+              core.info(
+                `Found accepted current-head AI review by ${eventReview.user.login} from event payload for ${eventReview.commit_id} with state ${eventReview.state}.`
+              );
+              return;
+            }
 
             const reviews = await github.paginate(
               github.rest.pulls.listReviews,
@@ -63,27 +93,22 @@ jobs:
               }
             );
 
-            const copilotLogins = new Set([
-              'copilot-pull-request-reviewer[bot]',
-            ]);
+            const reviewSummary = reviews
+              .map((review) => `${review.user?.login ?? 'unknown'}:${review.state}:${review.commit_id}`)
+              .join(', ');
+            core.info(`Observed PR reviews: ${reviewSummary || 'none'}`);
 
-            // Require an active submitted Copilot review for any commit in the PR.
-            const matchingReview = reviews.find((review) => {
-              const login = review.user?.login;
-              const state = review.state;
-              return (
-                copilotLogins.has(login) &&
-                state &&
-                state !== 'PENDING' &&
-                state !== 'DISMISSED'
-              );
-            });
+            const matchingReview = [...reviews]
+              .reverse()
+              .find(isAcceptedCurrentHeadReview);
 
             if (!matchingReview) {
-              core.setFailed('Copilot has not submitted a review for this PR.');
+              core.setFailed(
+                `Neither Copilot nor Codex has submitted an accepted review for the current PR head (${currentHeadSha}).`
+              );
               return;
             }
 
             core.info(
-              `Found Copilot review by ${matchingReview.user.login} for ${matchingReview.commit_id} with state ${matchingReview.state}.`
+              `Found accepted current-head AI review by ${matchingReview.user.login} for ${matchingReview.commit_id} with state ${matchingReview.state}.`
             );
