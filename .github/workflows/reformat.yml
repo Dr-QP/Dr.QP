@@ -222,6 +222,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: ${{ inputs.validate_all_codebase }}
 
+          # Comment on the workflow summary instead of the pull request conversation to avoid
+          # spamming notifications for every push to a PR.
+          SAVE_SUPER_LINTER_SUMMARY: true
+          ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false
+          ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: true
+
       - name: Create Super-Linter patch
         id: patch
         run: |
@@ -254,6 +260,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: ${{ inputs.validate_all_codebase }}
+
+          # Comment on the workflow summary instead of the pull request conversation to avoid
+          # spamming notifications for every push to a PR.
+          SAVE_SUPER_LINTER_SUMMARY: true
+          ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false
+          ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: true
 
       - name: Log debug stats
         if: ${{ always() }}
