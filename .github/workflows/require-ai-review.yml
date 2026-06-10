@@ -67,8 +67,15 @@ jobs:
             const codexReactionLogins = new Set([
               'chatgpt-codex-connector[bot]',
             ]);
+            const codexReviewerLogins = new Set([
+              'chatgpt-codex-connector[bot]',
+            ]);
             const acceptedReviewStates = new Set([
               'approved',
+              'changes_requested',
+              'commented',
+            ]);
+            const codexFeedbackReviewStates = new Set([
               'changes_requested',
               'commented',
             ]);
@@ -90,7 +97,24 @@ jobs:
               );
             };
 
+            const isCurrentHeadCodexFeedbackReview = (review) => {
+              const login = review?.user?.login;
+              const state = review?.state?.toLowerCase();
+              return (
+                codexReviewerLogins.has(login) &&
+                codexFeedbackReviewStates.has(state) &&
+                review.commit_id === currentHeadSha
+              );
+            };
+
             const eventReview = context.payload.review;
+            if (isCurrentHeadCodexFeedbackReview(eventReview)) {
+              core.setFailed(
+                `Codex submitted feedback for current head ${eventReview.commit_id} with state ${eventReview.state}; failing until feedback is addressed.`
+              );
+              return;
+            }
+
             if (isAcceptedCurrentHeadCopilotReview(eventReview)) {
               core.info(
                 `Found accepted current-head Copilot review by ${eventReview.user.login} from event payload for ${eventReview.commit_id} with state ${eventReview.state}.`
@@ -117,6 +141,17 @@ jobs:
                 .map((review) => `${review.user?.login ?? 'unknown'}:${review.state}:${review.commit_id}`)
                 .join(', ');
               core.info(`Attempt ${attempt}: observed PR reviews: ${reviewSummary || 'none'}`);
+
+              const codexFeedbackReview = [...reviews]
+                .reverse()
+                .find(isCurrentHeadCodexFeedbackReview);
+
+              if (codexFeedbackReview) {
+                core.setFailed(
+                  `Codex submitted feedback for current head ${codexFeedbackReview.commit_id} with state ${codexFeedbackReview.state}; failing until feedback is addressed.`
+                );
+                return;
+              }
 
               const matchingReview = [...reviews]
                 .reverse()
