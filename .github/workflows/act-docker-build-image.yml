@@ -158,7 +158,7 @@ jobs:
         if: ${{ env.RUN_TESTS == 'true' }}
         env:
           ACT_TEST_IMAGE: ${{ needs.merge.outputs.image }}
-        run: go run main.go -P ubuntu-latest=${{ needs.merge.outputs.image }} -C ./pkg/runner/testdata/ -W ./basic/push.yml
+        run: go run main.go -P "ubuntu-latest=${ACT_TEST_IMAGE}" -C ./pkg/runner/testdata/ -W ./basic/push.yml
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
