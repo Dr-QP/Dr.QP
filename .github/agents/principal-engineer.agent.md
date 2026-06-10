@@ -7,7 +7,6 @@ tools:
     'context7/*',
     'sequentialthinking/*',
     'github/*',
-    'augmentcode/*',
     'agent',
     'edit',
     'execute',
