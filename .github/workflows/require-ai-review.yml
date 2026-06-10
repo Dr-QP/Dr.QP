@@ -57,17 +57,16 @@ jobs:
             //   return;
             // }
 
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const pull_number = pr.number;
+            const pullRequest = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+            };
             const currentHeadSha = pr.head.sha;
             const copilotReviewerLogins = new Set([
               'copilot-pull-request-reviewer[bot]',
             ]);
-            const codexReactionLogins = new Set([
-              'chatgpt-codex-connector[bot]',
-            ]);
-            const codexReviewerLogins = new Set([
+            const codexLogins = new Set([
               'chatgpt-codex-connector[bot]',
             ]);
             const acceptedReviewStates = new Set([
@@ -80,45 +79,113 @@ jobs:
               'commented',
             ]);
 
-            const isAcceptedCurrentHeadCopilotReview = (review) => {
+            const reviewLogin = (review) => review?.user?.login;
+            const reviewState = (review) => review?.state?.toLowerCase();
+            const isCurrentHeadReview = (review) => review?.commit_id === currentHeadSha;
+
+            const isCopilotCurrentHeadReview = (review) => {
               const login = review?.user?.login;
               const state = review?.state?.toLowerCase();
               return (
                 copilotReviewerLogins.has(login) &&
                 acceptedReviewStates.has(state) &&
-                review.commit_id === currentHeadSha
+                isCurrentHeadReview(review)
               );
             };
 
-            const isAcceptedCodexReaction = (reaction) => {
+            const isCodexApprovalReaction = (reaction) => {
               return (
-                codexReactionLogins.has(reaction?.user?.login) &&
+                codexLogins.has(reaction?.user?.login) &&
                 reaction?.content === '+1'
               );
             };
 
-            const isCurrentHeadCodexFeedbackReview = (review) => {
-              const login = review?.user?.login;
-              const state = review?.state?.toLowerCase();
+            const isCodexCurrentHeadFeedbackReview = (review) => {
               return (
-                codexReviewerLogins.has(login) &&
-                codexFeedbackReviewStates.has(state) &&
-                review.commit_id === currentHeadSha
+                codexLogins.has(reviewLogin(review)) &&
+                codexFeedbackReviewStates.has(reviewState(review)) &&
+                isCurrentHeadReview(review)
+              );
+            };
+
+            const summarizeReviews = (reviews) => {
+              return reviews
+                .map((review) => `${reviewLogin(review) ?? 'unknown'}:${review.state}:${review.commit_id}`)
+                .join(', ');
+            };
+
+            const summarizeReactions = (reactions) => {
+              return reactions
+                .map((reaction) => `${reaction.user?.login ?? 'unknown'}:${reaction.content}:${reaction.created_at}`)
+                .join(', ');
+            };
+
+            const failIfCodexSubmittedFeedback = (review) => {
+              if (!isCodexCurrentHeadFeedbackReview(review)) {
+                return false;
+              }
+
+              core.setFailed(
+                `Codex submitted feedback for current head ${review.commit_id} with state ${review.state}; failing until feedback is addressed.`
+              );
+              return true;
+            };
+
+            const passIfCopilotReviewedCurrentHead = (review, source) => {
+              if (!isCopilotCurrentHeadReview(review)) {
+                return false;
+              }
+
+              const sourcePhrase = source ? ` ${source}` : '';
+              core.info(
+                `Found accepted current-head Copilot review by ${review.user.login}${sourcePhrase} for ${review.commit_id} with state ${review.state}.`
+              );
+              return true;
+            };
+
+            const passIfCodexApprovedWithReaction = (reaction) => {
+              if (!isCodexApprovalReaction(reaction)) {
+                return false;
+              }
+
+              core.info(
+                `Found accepted Codex review marker by ${reaction.user.login}: ${reaction.content} reaction created at ${reaction.created_at}.`
+              );
+              return true;
+            };
+
+            const latestMatchingReview = (reviews, predicate) => {
+              return [...reviews].reverse().find(predicate);
+            };
+
+            const listReviews = async () => {
+              return github.paginate(
+                github.rest.pulls.listReviews,
+                {
+                  ...pullRequest,
+                  per_page: 100,
+                }
+              );
+            };
+
+            const listReactions = async () => {
+              return github.paginate(
+                github.rest.reactions.listForIssue,
+                {
+                  owner: pullRequest.owner,
+                  repo: pullRequest.repo,
+                  issue_number: pullRequest.pull_number,
+                  per_page: 100,
+                }
               );
             };
 
             const eventReview = context.payload.review;
-            if (isCurrentHeadCodexFeedbackReview(eventReview)) {
-              core.setFailed(
-                `Codex submitted feedback for current head ${eventReview.commit_id} with state ${eventReview.state}; failing until feedback is addressed.`
-              );
+            if (failIfCodexSubmittedFeedback(eventReview)) {
               return;
             }
 
-            if (isAcceptedCurrentHeadCopilotReview(eventReview)) {
-              core.info(
-                `Found accepted current-head Copilot review by ${eventReview.user.login} from event payload for ${eventReview.commit_id} with state ${eventReview.state}.`
-              );
+            if (passIfCopilotReviewedCurrentHead(eventReview, 'from event payload')) {
               return;
             }
 
@@ -127,63 +194,30 @@ jobs:
             let attempt = 1;
 
             while (Date.now() < deadline) {
-              const reviews = await github.paginate(
-                github.rest.pulls.listReviews,
-                {
-                  owner,
-                  repo,
-                  pull_number,
-                  per_page: 100,
-                }
+              const reviews = await listReviews();
+              core.info(`Attempt ${attempt}: observed PR reviews: ${summarizeReviews(reviews) || 'none'}`);
+
+              const codexFeedbackReview = latestMatchingReview(
+                reviews,
+                isCodexCurrentHeadFeedbackReview
               );
-
-              const reviewSummary = reviews
-                .map((review) => `${review.user?.login ?? 'unknown'}:${review.state}:${review.commit_id}`)
-                .join(', ');
-              core.info(`Attempt ${attempt}: observed PR reviews: ${reviewSummary || 'none'}`);
-
-              const codexFeedbackReview = [...reviews]
-                .reverse()
-                .find(isCurrentHeadCodexFeedbackReview);
-
-              if (codexFeedbackReview) {
-                core.setFailed(
-                  `Codex submitted feedback for current head ${codexFeedbackReview.commit_id} with state ${codexFeedbackReview.state}; failing until feedback is addressed.`
-                );
+              if (failIfCodexSubmittedFeedback(codexFeedbackReview)) {
                 return;
               }
 
-              const matchingReview = [...reviews]
-                .reverse()
-                .find(isAcceptedCurrentHeadCopilotReview);
-
-              if (matchingReview) {
-                core.info(
-                  `Found accepted current-head Copilot review by ${matchingReview.user.login} for ${matchingReview.commit_id} with state ${matchingReview.state}.`
-                );
+              const matchingReview = latestMatchingReview(
+                reviews,
+                isCopilotCurrentHeadReview
+              );
+              if (passIfCopilotReviewedCurrentHead(matchingReview, '')) {
                 return;
               }
 
-              const reactions = await github.paginate(
-                github.rest.reactions.listForIssue,
-                {
-                  owner,
-                  repo,
-                  issue_number: pull_number,
-                  per_page: 100,
-                }
-              );
+              const reactions = await listReactions();
+              core.info(`Attempt ${attempt}: observed PR reactions: ${summarizeReactions(reactions) || 'none'}`);
 
-              const reactionSummary = reactions
-                .map((reaction) => `${reaction.user?.login ?? 'unknown'}:${reaction.content}:${reaction.created_at}`)
-                .join(', ');
-              core.info(`Attempt ${attempt}: observed PR reactions: ${reactionSummary || 'none'}`);
-
-              const matchingReaction = reactions.find(isAcceptedCodexReaction);
-              if (matchingReaction) {
-                core.info(
-                  `Found accepted Codex review marker by ${matchingReaction.user.login}: ${matchingReaction.content} reaction created at ${matchingReaction.created_at}.`
-                );
+              const matchingReaction = reactions.find(isCodexApprovalReaction);
+              if (passIfCodexApprovedWithReaction(matchingReaction)) {
                 return;
               }
 
