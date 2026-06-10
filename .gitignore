@@ -163,6 +163,8 @@ celerybeat.pid
 # Environments
 .env
 *.env
+!.github/super-linter-autofix.env
+!.github/super-linter-checks.env
 .venv
 .venv/
 env/

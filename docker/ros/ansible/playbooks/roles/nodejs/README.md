@@ -10,7 +10,7 @@ and uses Bun for global JavaScript CLI installation.
   hosts: all
   become: true
   roles:
-    - { role: nodejs, tags: ["nodejs"] }
+    - { role: nodejs, tags: ['nodejs'] }
 ```
 
 ## Notes
