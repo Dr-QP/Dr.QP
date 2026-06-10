@@ -123,6 +123,12 @@ jobs:
           STEPS_FILTER_OUTPUTS_PASS: ${{ steps.filter.outputs.pass }}
           INPUTS_CALLER_EVENT_NAME: ${{ inputs.caller_event_name }}
 
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
+
   reformat:
     name: Reformat
     needs: paths-filter
@@ -179,6 +185,12 @@ jobs:
           path: ./.tmp/format-patches/reformat.patch
           if-no-files-found: error
           retention-days: 1
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
 
   super-linter:
     name: Super-Linter
@@ -242,6 +254,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: ${{ inputs.validate_all_codebase }}
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
 
   commit-format-changes:
     name: Commit format changes
@@ -415,17 +433,29 @@ jobs:
           STEPS_COMMIT_SUPER_LINTER_OUTCOME: ${{ steps.commit-super-linter.outcome }}
           STEPS_VERIFY_OUTPUTS_SKIP_COMMIT: ${{ steps.verify.outputs.skip_commit }}
 
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
+
   gate:
     name: Reformat outputs gate
     needs: [paths-filter, super-linter, reformat, commit-format-changes]
     if: always()
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-    permissions: {}
+    permissions:
+      contents: read
     outputs:
       changed: ${{ steps.compute.outputs.changed }}
       reformat_result: ${{ steps.compute.outputs.reformat_result }}
       run_downstream: ${{ steps.compute.outputs.run_downstream }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
       - name: Compute reusable outputs
         id: compute
         run: |
@@ -459,3 +489,9 @@ jobs:
           NEEDS_SUPER_LINTER_RESULT: ${{ needs.super-linter.result }}
           NEEDS_SUPER_LINTER_OUTPUT_CHANGED: ${{ needs.super-linter.outputs.changed }}
           NEEDS_COMMIT_FORMAT_CHANGES_RESULT: ${{ needs.commit-format-changes.result }}
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}

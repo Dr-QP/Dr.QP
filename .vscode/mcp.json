@@ -14,14 +14,6 @@
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/"
     },
-    "augmentcode": {
-      "type": "stdio",
-      "command": "auggie",
-      "args": [
-        "--mcp",
-        "--mcp-auto-workspace"
-      ]
-    },
     // Docker MCP freqently having DNS issues
     // "MCP_DOCKER": {
     //   "command": "docker",
