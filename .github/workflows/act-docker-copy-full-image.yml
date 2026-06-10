@@ -25,6 +25,7 @@ jobs:
     name: Copy image
     runs-on: ubuntu-24.04
     permissions:
+      contents: read
       packages: write
     timeout-minutes: 20
     strategy:
@@ -37,6 +38,11 @@ jobs:
           - src: ghcr.io/catthehacker/ubuntu:act-22.04
             dest: act-22.04
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
       - name: Force SLUG to lowercase
         uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
         with:
@@ -46,12 +52,33 @@ jobs:
 
       - name: Push to GitHub Container Registry
         if: env.PUSH_GHCR
-        run: skopeo copy -a --src-creds ${{ github.actor }}:${{ github.token }} --dest-creds ${{ github.actor }}:${{ github.token }} docker://${{ matrix.copy.src }} docker://ghcr.io/${{ env.SLUG }}:${{ matrix.copy.dest }}
+        run: |
+          skopeo copy -a \
+            --src-creds "${GITHUB_ACTOR}:${{ github.token }}" \
+            --dest-creds "${GITHUB_ACTOR}:${{ github.token }}" \
+            "docker://${{ matrix.copy.src }}" \
+            "docker://ghcr.io/${SLUG}:${{ matrix.copy.dest }}"
 
       - name: Push to Quay
         if: env.PUSH_QUAY
-        run: skopeo copy -a --src-creds ${{ github.actor }}:${{ github.token }} --dest-creds ${{ secrets.QUAY_USER }}:${{ secrets.QUAY_TOKEN }} docker://${{ matrix.copy.src }} docker://quay.io/${{ env.SLUG }}:${{ matrix.copy.dest }}
+        run: |
+          skopeo copy -a \
+            --src-creds "${GITHUB_ACTOR}:${{ github.token }}" \
+            --dest-creds "${{ secrets.QUAY_USER }}:${{ secrets.QUAY_TOKEN }}" \
+            "docker://${{ matrix.copy.src }}" \
+            "docker://quay.io/${SLUG}:${{ matrix.copy.dest }}"
 
       - name: Push to Docker Hub
         if: env.PUSH_DOCKER_HUB
-        run: skopeo copy -a --src-creds ${{ github.actor }}:${{ github.token }} --dest-creds ${{ secrets.DOCKER_USER }}:${{ secrets.DOCKER_TOKEN }} docker://${{ matrix.copy.src }} docker://docker.io/${{ env.SLUG }}:${{ matrix.copy.dest }}
+        run: |
+          skopeo copy -a \
+            --src-creds "${GITHUB_ACTOR}:${{ github.token }}" \
+            --dest-creds "${{ secrets.DOCKER_USER }}:${{ secrets.DOCKER_TOKEN }}" \
+            "docker://${{ matrix.copy.src }}" \
+            "docker://docker.io/${SLUG}:${{ matrix.copy.dest }}"
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}

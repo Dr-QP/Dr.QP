@@ -5,9 +5,11 @@ on:
   push:
     paths:
       - .github/workflows/copilot-setup-steps.yml
+      - .github/actions/log-debug-stats/**
   pull_request:
     paths:
       - .github/workflows/copilot-setup-steps.yml
+      - .github/actions/log-debug-stats/**
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
@@ -18,7 +20,18 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
       - name: Install devcontainer CLI
         run: bun add -g @devcontainers/cli
       - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}

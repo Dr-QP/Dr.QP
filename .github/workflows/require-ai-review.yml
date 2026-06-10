@@ -1,0 +1,239 @@
+name: Require AI Review
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - review_requested
+      - review_request_removed
+  pull_request_review:
+    types:
+      - submitted
+      - dismissed
+      - edited
+  merge_group:
+    types:
+      - checks_requested
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  ai-review-present:
+    name: ai-review-present
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Verify AI reviewed PR
+        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            if (context.eventName === 'merge_group') {
+              core.info('Merge group event, skipping AI review check');
+              return;
+            }
+
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              core.setFailed('No pull_request in event payload');
+              return;
+            }
+
+            // Optional: skip drafts if you do not want to block drafts
+            // if (pr.draft) {
+            //   core.info('Draft PR, skipping');
+            //   return;
+            // }
+
+            const pullRequest = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+            };
+            const currentHeadSha = pr.head.sha;
+            const copilotReviewerLogins = new Set([
+              'copilot-pull-request-reviewer[bot]',
+            ]);
+            const codexLogins = new Set([
+              'chatgpt-codex-connector[bot]',
+            ]);
+            const acceptedReviewStates = new Set([
+              'approved',
+              'changes_requested',
+              'commented',
+            ]);
+            const codexFeedbackReviewStates = new Set([
+              'changes_requested',
+              'commented',
+            ]);
+
+            const reviewLogin = (review) => review?.user?.login;
+            const reviewState = (review) => review?.state?.toLowerCase();
+            const isCurrentHeadReview = (review) => review?.commit_id === currentHeadSha;
+
+            const isCopilotCurrentHeadReview = (review) => {
+              const login = review?.user?.login;
+              const state = review?.state?.toLowerCase();
+              return (
+                copilotReviewerLogins.has(login) &&
+                acceptedReviewStates.has(state) &&
+                isCurrentHeadReview(review)
+              );
+            };
+
+            const isCodexApprovalReaction = (reaction) => {
+              return (
+                codexLogins.has(reaction?.user?.login) &&
+                reaction?.content === '+1'
+              );
+            };
+
+            const isCodexCurrentHeadFeedbackReview = (review) => {
+              return (
+                codexLogins.has(reviewLogin(review)) &&
+                codexFeedbackReviewStates.has(reviewState(review)) &&
+                isCurrentHeadReview(review)
+              );
+            };
+
+            const summarizeReviews = (reviews) => {
+              return reviews
+                .map((review) => `${reviewLogin(review) ?? 'unknown'}:${review.state}:${review.commit_id}`)
+                .join(', ');
+            };
+
+            const summarizeReactions = (reactions) => {
+              return reactions
+                .map((reaction) => `${reaction.user?.login ?? 'unknown'}:${reaction.content}:${reaction.created_at}`)
+                .join(', ');
+            };
+
+            const failIfCodexSubmittedFeedback = (review) => {
+              if (!isCodexCurrentHeadFeedbackReview(review)) {
+                return false;
+              }
+
+              core.setFailed(
+                `Codex submitted feedback for current head ${review.commit_id} with state ${review.state}; failing until feedback is addressed.`
+              );
+              return true;
+            };
+
+            const passIfCopilotReviewedCurrentHead = (review, source) => {
+              if (!isCopilotCurrentHeadReview(review)) {
+                return false;
+              }
+
+              const sourcePhrase = source ? ` ${source}` : '';
+              core.info(
+                `Found accepted current-head Copilot review by ${review.user.login}${sourcePhrase} for ${review.commit_id} with state ${review.state}.`
+              );
+              return true;
+            };
+
+            const passIfCodexApprovedWithReaction = (reaction) => {
+              if (!isCodexApprovalReaction(reaction)) {
+                return false;
+              }
+
+              core.info(
+                `Found accepted Codex review marker by ${reaction.user.login}: ${reaction.content} reaction created at ${reaction.created_at}.`
+              );
+              return true;
+            };
+
+            const latestMatchingReview = (reviews, predicate) => {
+              return [...reviews].reverse().find(predicate);
+            };
+
+            const listReviews = async () => {
+              return github.paginate(
+                github.rest.pulls.listReviews,
+                {
+                  ...pullRequest,
+                  per_page: 100,
+                }
+              );
+            };
+
+            const listReactions = async () => {
+              return github.paginate(
+                github.rest.reactions.listForIssue,
+                {
+                  owner: pullRequest.owner,
+                  repo: pullRequest.repo,
+                  issue_number: pullRequest.pull_number,
+                  per_page: 100,
+                }
+              );
+            };
+
+            const eventReview = context.payload.review;
+            if (failIfCodexSubmittedFeedback(eventReview)) {
+              return;
+            }
+
+            if (passIfCopilotReviewedCurrentHead(eventReview, 'from event payload')) {
+              return;
+            }
+
+            const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+            const deadline = Date.now() + 8 * 60 * 1000;
+            let attempt = 1;
+
+            while (Date.now() < deadline) {
+              const reviews = await listReviews();
+              core.info(`Attempt ${attempt}: observed PR reviews: ${summarizeReviews(reviews) || 'none'}`);
+
+              const codexFeedbackReview = latestMatchingReview(
+                reviews,
+                isCodexCurrentHeadFeedbackReview
+              );
+              if (failIfCodexSubmittedFeedback(codexFeedbackReview)) {
+                return;
+              }
+
+              const matchingReview = latestMatchingReview(
+                reviews,
+                isCopilotCurrentHeadReview
+              );
+              if (passIfCopilotReviewedCurrentHead(matchingReview, '')) {
+                return;
+              }
+
+              const reactions = await listReactions();
+              core.info(`Attempt ${attempt}: observed PR reactions: ${summarizeReactions(reactions) || 'none'}`);
+
+              const matchingReaction = reactions.find(isCodexApprovalReaction);
+              if (passIfCodexApprovedWithReaction(matchingReaction)) {
+                return;
+              }
+
+              attempt += 1;
+              await sleep(30 * 1000);
+            }
+
+            core.setFailed(
+              `Neither Copilot nor Codex has marked this PR as AI-reviewed. Expected either a current-head Copilot review for ${currentHeadSha} or a +1 reaction from chatgpt-codex-connector[bot].`
+            );
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}

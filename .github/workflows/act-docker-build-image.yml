@@ -7,12 +7,14 @@ on:
   push:
     paths:
       - .github/workflows/act-docker-build-image.yml
+      - .github/actions/log-debug-stats/**
       - docker/act/**
     branches:
       - main
   pull_request:
     paths:
       - .github/workflows/act-docker-build-image.yml
+      - .github/actions/log-debug-stats/**
       - docker/act/**
   workflow_dispatch:
 
@@ -38,6 +40,7 @@ jobs:
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     timeout-minutes: 20
     permissions:
+      contents: read
       packages: write
     strategy:
       fail-fast: true
@@ -51,6 +54,8 @@ jobs:
           - 22.04
     steps:
       - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+        with:
+          persist-credentials: false
       - name: Force SLUG to lowercase
         uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
         with:
@@ -72,10 +77,17 @@ jobs:
           build-args: |
             DISTRO_VERSION=${{ matrix.distro_version }}
 
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
+
   merge:
     name: Merge multiarch act image
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:
+      contents: read
       packages: write
     needs: build
     timeout-minutes: 10
@@ -97,6 +109,8 @@ jobs:
             core.exportVariable('SLUG', process.env.SLUG.toLowerCase());
 
       - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+        with:
+          persist-credentials: false
       - name: Merge and push act docker image
         id: merge
         uses: ./.github/actions/docker/multiarch-merge
@@ -106,12 +120,20 @@ jobs:
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
           registry-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
+
   test:
     name: Test act image
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     needs: merge
     timeout-minutes: 100
     permissions:
+      contents: read
       packages: read
     strategy:
       fail-fast: false
@@ -130,6 +152,7 @@ jobs:
         with:
           repository: nektos/act
           ref: v0.2.75
+          persist-credentials: false
 
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         if: ${{ env.RUN_TESTS == 'true' }}
@@ -140,7 +163,7 @@ jobs:
         if: ${{ env.RUN_TESTS == 'true' }}
         env:
           ACT_TEST_IMAGE: ${{ needs.merge.outputs.image }}
-        run: go run main.go -P ubuntu-latest=${{ needs.merge.outputs.image }} -C ./pkg/runner/testdata/ -W ./basic/push.yml
+        run: go run main.go -P "ubuntu-latest=${ACT_TEST_IMAGE}" -C ./pkg/runner/testdata/ -W ./basic/push.yml
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4.1.0
@@ -159,3 +182,15 @@ jobs:
         continue-on-error: true
         with:
           paths: 'unit-tests.xml'
+
+      - name: Checkout repository
+        if: ${{ always() }}
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
