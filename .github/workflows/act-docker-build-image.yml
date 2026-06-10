@@ -52,9 +52,11 @@ jobs:
           - 24.04
           - 22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
       - name: Force SLUG to lowercase
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           github-token: n/a
           script: |
@@ -99,13 +101,15 @@ jobs:
           - 22.04
     steps:
       - name: Force SLUG to lowercase
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           github-token: n/a
           script: |
             core.exportVariable('SLUG', process.env.SLUG.toLowerCase());
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
       - name: Merge and push act docker image
         id: merge
         uses: ./.github/actions/docker/multiarch-merge
@@ -141,15 +145,15 @@ jobs:
           - 24.04
           - 22.04
     steps:
-
       - name: Checkout nektos/act repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         if: ${{ env.RUN_TESTS == 'true' }}
         with:
           repository: nektos/act
           ref: v0.2.75
+          persist-credentials: false
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         if: ${{ env.RUN_TESTS == 'true' }}
         with:
           go-version-file: go.mod
@@ -161,7 +165,7 @@ jobs:
         run: go run main.go -P "ubuntu-latest=${ACT_TEST_IMAGE}" -C ./pkg/runner/testdata/ -W ./basic/push.yml
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
 
       - name: Run Tests
         if: ${{ env.RUN_TESTS == 'true' }}
@@ -172,11 +176,11 @@ jobs:
         shell: bash
 
       - name: Test Summary
-        uses: test-summary/action@v2
+        uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2
         if: ${{ env.RUN_TESTS == 'true' && always() || false}}
         continue-on-error: true
         with:
-          paths: "unit-tests.xml"
+          paths: 'unit-tests.xml'
 
       - name: Checkout repository
         if: ${{ always() }}
