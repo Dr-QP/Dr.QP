@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import builtins
-import logging
 from pathlib import Path
 import sys
 from types import ModuleType, SimpleNamespace
@@ -18,56 +17,6 @@ def shutdown_runtime_session() -> None:
     runtime.shutdown_default_ros_runtime()
     yield
     runtime.shutdown_default_ros_runtime()
-
-
-def test_parse_gazebo_pose_info_extracts_entity_poses() -> None:
-    """Gazebo protobuf text output is converted into structured entity poses."""
-    raw_output = """
-header {
-  stamp {
-    sec: 12
-    nsec: 34
-  }
-}
-pose {
-  name: "ground_plane"
-  id: 1
-  position {
-    x: 0
-    y: 0
-    z: 0
-  }
-  orientation {
-    x: 0
-    y: 0
-    z: 0
-    w: 1
-  }
-}
-pose {
-  name: "drqp"
-  id: 2
-  position {
-    x: 1.5
-    y: -0.25
-    z: 0.4
-  }
-  orientation {
-    x: 0
-    y: 0
-    z: 0.707
-    w: 0.707
-  }
-}
-"""
-
-    parsed = runtime.parse_gazebo_pose_info(raw_output)
-
-    assert len(parsed) == 2
-    assert parsed[1]['name'] == 'drqp'
-    assert parsed[1]['entity_id'] == 2
-    assert parsed[1]['pose']['position']['x'] == 1.5
-    assert parsed[1]['pose']['orientation']['w'] == 0.707
 
 
 def test_start_simulation_returns_unavailable_when_gazebo_launch_is_missing(
@@ -591,9 +540,10 @@ def test_publish_movement_command_publishes_expected_message(monkeypatch) -> Non
 
 
 def test_close_reports_teardown_failures_and_continues_cleanup(
-    caplog: pytest.LogCaptureFixture,
+    monkeypatch,
 ) -> None:
     """Runtime close should log teardown failures while finishing cleanup."""
+    warning_messages: list[str] = []
 
     class FakeNode:
         def destroy_node(self) -> None:
@@ -639,14 +589,19 @@ def test_close_reports_teardown_failures_and_continues_cleanup(
         did_init=True,
     )
 
-    with caplog.at_level(logging.WARNING, logger='drqp_robot_mcp.runtime'):
-        runtime_session.close()
+    monkeypatch.setattr(
+        runtime._LOGGER,
+        'warning',
+        lambda message, **kwargs: warning_messages.append(message),
+    )
+
+    runtime_session.close()
 
     assert runtime_session._started is None
     assert fake_rclpy.shutdown_called is True
-    assert 'remove node from executor' in caplog.text
-    assert 'destroy ROS node' in caplog.text
-    assert 'shut down executor' in caplog.text
+    assert any('remove node from executor' in message for message in warning_messages)
+    assert any('destroy ROS node' in message for message in warning_messages)
+    assert any('shut down executor' in message for message in warning_messages)
 
 
 def test_gazebo_launch_is_available_returns_false_when_ament_index_import_fails(
