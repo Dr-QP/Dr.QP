@@ -284,6 +284,7 @@ jobs:
       (needs.paths-filter.outputs.pass == 'true' || inputs.force_run) &&
       (needs.super-linter.outputs.changed == 'true' || needs.reformat.outputs.changed == 'true')
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    environment: reformat-commit
     outputs:
       committed: ${{ steps.result.outputs.committed_any }}
       failed_patches: ${{ steps.result.outputs.failed_patches }}
