@@ -16,3 +16,39 @@ runs:
         script: |
           const { data } = await github.request('GET /rate_limit');
           core.info(JSON.stringify(data, null, 2));
+
+          const exhausted = Object.entries(data.resources ?? {})
+            .filter(([, resource]) => Number(resource.limit) > 0 && Number(resource.remaining) <= 0)
+            .sort(([left], [right]) => left.localeCompare(right));
+
+          if (exhausted.length > 0) {
+            core.warning(
+              `GitHub API rate limit exhausted for: ${exhausted
+                .map(([name]) => name)
+                .join(', ')}`
+            );
+
+            const resetTime = (reset) => new Date(Number(reset) * 1000).toISOString();
+
+            await core.summary
+              .addHeading('GitHub API Rate Limit Exhausted', 3)
+              .addRaw('API-backed tools may fail with HTTP 403 until the exhausted bucket resets.')
+              .addEOL()
+              .addTable([
+                [
+                  { data: 'Resource', header: true },
+                  { data: 'Used', header: true },
+                  { data: 'Limit', header: true },
+                  { data: 'Remaining', header: true },
+                  { data: 'Reset (UTC)', header: true },
+                ],
+                ...exhausted.map(([name, resource]) => [
+                  `\`${name}\``,
+                  String(resource.used),
+                  String(resource.limit),
+                  String(resource.remaining),
+                  resetTime(resource.reset),
+                ]),
+              ])
+              .write();
+          }
