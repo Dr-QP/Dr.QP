@@ -115,18 +115,18 @@ session daemon, which is non-trivial on Ubuntu 24.04 / Raspberry Pi 5 — see
 
 ## Existing Dr.QP infrastructure fit
 
-| Asset | Status | Location |
-| --- | --- | --- |
+| Asset                                      | Status     | Location                                                             |
+| ------------------------------------------ | ---------- | -------------------------------------------------------------------- |
 | udev rules for DualSense hidraw (USB + BT) | ✅ Present | `docker/ros/ansible/playbooks/roles/dualsense_hidapi/tasks/main.yml` |
-| `libhidapi-dev` installed | ✅ Present | same Ansible role |
-| Bluetooth pairing documented | ✅ Present | `GettingStarted/ansible` |
-| RPi 5 + Ubuntu 24.04 target documented | ✅ Present | `GettingStarted/setting-up-raspberry-pi` |
-| Control-mode change decision point | ✅ Present | `drqp_brain/joystick_translator_node.py` |
-| `ffmpeg` installed in runtime | ❌ Missing | Not in Ansible playbooks |
-| SAxense build step | ❌ Missing | Not in Ansible playbooks |
-| Process lifecycle for SAxense | ❌ Missing | No ROS 2 node or supervisor entry |
-| Pre-recorded haptic WAV clips | ❌ Missing | No assets |
-| Reconnect detection and re-spawn | ❌ Missing | No implementation |
+| `libhidapi-dev` installed                  | ✅ Present | same Ansible role                                                    |
+| Bluetooth pairing documented               | ✅ Present | `GettingStarted/ansible`                                             |
+| RPi 5 + Ubuntu 24.04 target documented     | ✅ Present | `GettingStarted/setting-up-raspberry-pi`                             |
+| Control-mode change decision point         | ✅ Present | `drqp_brain/joystick_translator_node.py`                             |
+| `ffmpeg` installed in runtime              | ❌ Missing | Not in Ansible playbooks                                             |
+| SAxense build step                         | ❌ Missing | Not in Ansible playbooks                                             |
+| Process lifecycle for SAxense              | ❌ Missing | No ROS 2 node or supervisor entry                                    |
+| Pre-recorded haptic WAV clips              | ❌ Missing | No assets                                                            |
+| Reconnect detection and re-spawn           | ❌ Missing | No implementation                                                    |
 
 The udev rules in `99-dualsense.rules` already set `MODE="0666"` for both USB
 and Bluetooth hidraw paths — no permission changes are needed for SAxense.
@@ -136,13 +136,13 @@ and Bluetooth hidraw paths — no permission changes are needed for SAxense.
 SAxense itself introduces ~10.67 ms of buffering (64-sample write interval).
 The remaining latency comes from the Bluetooth stack, not SAxense or hidraw:
 
-| Stage | Estimated latency |
-| --- | --- |
-| SAxense PCM buffer | ~10–11 ms |
-| Bluetooth HID output path | ~20–40 ms |
-| Controller motor response | ~5–10 ms |
-| Total (expected) | **~35–60 ms** |
-| Total (degraded / high-load) | up to 200–500 ms |
+| Stage                        | Estimated latency |
+| ---------------------------- | ----------------- |
+| SAxense PCM buffer           | ~10–11 ms         |
+| Bluetooth HID output path    | ~20–40 ms         |
+| Controller motor response    | ~5–10 ms          |
+| Total (expected)             | **~35–60 ms**     |
+| Total (degraded / high-load) | up to 200–500 ms  |
 
 The SAxense README explicitly warns that "up to a couple seconds in some rare
 cases" is possible when using the PipeWire loopback capture mode. The ffmpeg
@@ -153,6 +153,7 @@ They have not been measured on the Dr.QP target hardware.** The acceptance
 criterion of 20 captured measurements must be met before any integration ships.
 
 (known-issues-with-pipewire-on-ubuntu-2404--raspberry-pi-5)=
+
 ## Known issues with PipeWire on Ubuntu 24.04 / Raspberry Pi 5
 
 Community documentation (tested July 2024 on RPi 5 + Ubuntu 24.04) confirms:
@@ -178,15 +179,15 @@ indicate that the HID format is not fully settled and the protocol may change.
 
 ## Acceptance criteria status
 
-| Criterion | Status | Notes |
-| --- | --- | --- |
-| Reproducible setup procedure | Partial | udev rules and hidapi are in place. `ffmpeg`, SAxense build, and process management are not yet automated. |
-| 3 distinct feedback patterns | Achievable | Pre-recorded 3000 Hz stereo WAV clips for mode\_change, gait\_change, and error can be authored with `sox` or `ffmpeg`. Not yet created. |
-| Latency for 20 events | Not met | Hardware measurements required. Estimated 35–60 ms normal, up to 500 ms degraded. |
-| Disconnect/reconnect behavior | Partial | Failure modes are known; implementation is unwritten. |
-| CPU/memory impact | Not met | SAxense uses `mlockall` and a real-time timer. Impact on RPi 5 is unknown. |
-| Clear recommendation | Met | Recommendation is Go with constraints. |
-| Integration approach and fallback | Met | Detailed below. |
+| Criterion                         | Status     | Notes                                                                                                                                  |
+| --------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Reproducible setup procedure      | Partial    | udev rules and hidapi are in place. `ffmpeg`, SAxense build, and process management are not yet automated.                             |
+| 3 distinct feedback patterns      | Achievable | Pre-recorded 3000 Hz stereo WAV clips for mode_change, gait_change, and error can be authored with `sox` or `ffmpeg`. Not yet created. |
+| Latency for 20 events             | Not met    | Hardware measurements required. Estimated 35–60 ms normal, up to 500 ms degraded.                                                      |
+| Disconnect/reconnect behavior     | Partial    | Failure modes are known; implementation is unwritten.                                                                                  |
+| CPU/memory impact                 | Not met    | SAxense uses `mlockall` and a real-time timer. Impact on RPi 5 is unknown.                                                             |
+| Clear recommendation              | Met        | Recommendation is Go with constraints.                                                                                                 |
+| Integration approach and fallback | Met        | Detailed below.                                                                                                                        |
 
 ## Recommended integration approach
 
@@ -223,8 +224,8 @@ drqp_brain (ROS 2 node)
 - Ansible: install `ffmpeg` (`apt`)
 - Ansible or Dockerfile: `git clone https://github.com/egormanga/SAxense`, run
   `make`, install binary to `/usr/local/bin/SAxense`
-- Asset directory: store pre-recorded haptic clips (mode\_change.wav,
-  gait\_change.wav, error.wav) as project resources
+- Asset directory: store pre-recorded haptic clips (mode_change.wav,
+  gait_change.wav, error.wav) as project resources
 
 ### Process lifecycle
 
@@ -234,14 +235,14 @@ drqp_brain (ROS 2 node)
 
 ## Failure modes and mitigations
 
-| Failure | Mitigation |
-| --- | --- |
-| hidraw device absent at startup | Log warning; skip haptics silently |
-| SAxense binary absent | Log warning on first invocation only; degrade to no haptics |
-| subprocess crash mid-clip | Launch asynchronously, capture stderr, detect failure via child return code or polling; log once; continue |
-| Multiple rapid events | Allow concurrent clips or cancel previous; do not block control loop |
-| hidraw path changes after reconnect | Re-discover device path on each invocation |
-| PipeWire latency spike (Option B) | Use Option A (ffmpeg) instead |
+| Failure                             | Mitigation                                                                                                 |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| hidraw device absent at startup     | Log warning; skip haptics silently                                                                         |
+| SAxense binary absent               | Log warning on first invocation only; degrade to no haptics                                                |
+| subprocess crash mid-clip           | Launch asynchronously, capture stderr, detect failure via child return code or polling; log once; continue |
+| Multiple rapid events               | Allow concurrent clips or cancel previous; do not block control loop                                       |
+| hidraw path changes after reconnect | Re-discover device path on each invocation                                                                 |
+| PipeWire latency spike (Option B)   | Use Option A (ffmpeg) instead                                                                              |
 
 ## What must happen before code ships
 
@@ -273,12 +274,12 @@ above, and then open a follow-up implementation issue linked to
 
 ## Alternatives considered and rejected
 
-| Alternative | Why rejected |
-| --- | --- |
-| `pydualsense` for haptics | Cannot send haptic output over Bluetooth (USB-only output) |
-| `dualsensectl` | Configuration tool; no haptic audio streaming capability |
-| `dualsense-controller` PyPI package | Same USB-only haptics limitation |
-| SDL2 haptic API ([docs](https://wiki.libsdl.org/SDL2/CategoryHaptic)) | Cross-platform rumble and force-feedback via Linux kernel evdev FF interface; Python binding via `pysdl2`; supports `FF_RUMBLE` and waveform effects where the kernel exposes them; on Linux Bluetooth, `hid-playstation` driver exposes only basic `FF_RUMBLE` — no raw-HID PCM path; rumble use case already covered by #241 |
+| Alternative                                                           | Why rejected                                                                                                                                                                                                                                                                                                                                                                                         |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pydualsense` for haptics                                             | Cannot send haptic output over Bluetooth (USB-only output)                                                                                                                                                                                                                                                                                                                                           |
+| `dualsensectl`                                                        | Configuration tool; no haptic audio streaming capability                                                                                                                                                                                                                                                                                                                                             |
+| `dualsense-controller` PyPI package                                   | Same USB-only haptics limitation                                                                                                                                                                                                                                                                                                                                                                     |
+| SDL2 haptic API ([docs](https://wiki.libsdl.org/SDL2/CategoryHaptic)) | Cross-platform rumble and force-feedback via Linux kernel evdev FF interface; Python binding via `pysdl2`; supports `FF_RUMBLE` and waveform effects where the kernel exposes them; on Linux Bluetooth, `hid-playstation` driver exposes only basic `FF_RUMBLE` — no raw-HID PCM path; rumble use case already covered by #241                                                                       |
 | SDL3 haptic API ([docs](https://wiki.libsdl.org/SDL3/CategoryHaptic)) | Updated API with improved DualSense support including `SDL_HAPTIC_CUSTOM` for custom waveforms on supporting hardware; still kernel-FF-based on Linux Bluetooth; does not expose the 3000 Hz stereo u8 PCM path needed for audio-quality haptics; Python bindings (`pysdl3` / ctypes) less mature; viable for richer rumble or adaptive trigger effects but does not replace SAxense for PCM haptics |
-| PipeWire loopback (SAxense Option B) | Higher latency risk, requires working BT audio stack; deferred |
-| Kernel rumble driver (`FF_RUMBLE`) | Basic rumble only; no frequency-shaped vibration; already covered by #241 |
+| PipeWire loopback (SAxense Option B)                                  | Higher latency risk, requires working BT audio stack; deferred                                                                                                                                                                                                                                                                                                                                       |
+| Kernel rumble driver (`FF_RUMBLE`)                                    | Basic rumble only; no frequency-shaped vibration; already covered by #241                                                                                                                                                                                                                                                                                                                            |
