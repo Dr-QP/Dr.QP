@@ -28,7 +28,7 @@ runs:
       id: cache-venv
       with:
         path: .venv
-        key: setup-venv-${{ runner.os }}-py-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('uv.lock') }}-uv-sync-frozen-all
+        key: setup-venv-${{ runner.os }}-${{ runner.arch }}-py-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('uv.lock') }}-uv-sync-frozen-all
 
     - name: Create venv
       if: steps.cache-venv.outputs.cache-hit != 'true'
@@ -43,6 +43,5 @@ runs:
       shell: bash
 
     - name: Install dependencies
-      if: steps.cache-venv.outputs.cache-hit != 'true'
       run: uv sync --frozen --active --all-groups --all-extras
       shell: bash
