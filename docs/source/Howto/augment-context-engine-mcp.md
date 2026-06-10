@@ -1,3 +1,3 @@
 # Augment Context Engine MCP
 
-Augment has removed free tier even for opensource and now charges $100+ per month for usage. Augment Code is no longer used in this project.
+Augment Code is no longer used in this project because the free tier for open-source/private-repository use is no longer part of the supported workflow and paid usage is required.
