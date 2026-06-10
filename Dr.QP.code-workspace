@@ -64,7 +64,8 @@
       "ms-azuretools.vscode-containers",
       "Ranch-Hand-Robotics.rde-ros-2",
       "Ranch-Hand-Robotics.urdf-editor",
-      "esbenp.prettier-vscode"
+      "esbenp.prettier-vscode",
+      "openai.chatgpt"
     ]
     // cSpell:enable
   },

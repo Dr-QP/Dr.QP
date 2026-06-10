@@ -7,12 +7,14 @@ on:
   push:
     paths:
       - .github/workflows/act-docker-build-image.yml
+      - .github/actions/log-debug-stats/**
       - docker/act/**
     branches:
       - main
   pull_request:
     paths:
       - .github/workflows/act-docker-build-image.yml
+      - .github/actions/log-debug-stats/**
       - docker/act/**
   workflow_dispatch:
 
@@ -37,6 +39,7 @@ jobs:
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     timeout-minutes: 20
     permissions:
+      contents: read
       packages: write
     strategy:
       fail-fast: true
@@ -49,9 +52,11 @@ jobs:
           - 24.04
           - 22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
       - name: Force SLUG to lowercase
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           github-token: n/a
           script: |
@@ -71,10 +76,17 @@ jobs:
           build-args: |
             DISTRO_VERSION=${{ matrix.distro_version }}
 
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
+
   merge:
     name: Merge multiarch act image
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:
+      contents: read
       packages: write
     needs: build
     timeout-minutes: 10
@@ -89,13 +101,15 @@ jobs:
           - 22.04
     steps:
       - name: Force SLUG to lowercase
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           github-token: n/a
           script: |
             core.exportVariable('SLUG', process.env.SLUG.toLowerCase());
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
       - name: Merge and push act docker image
         id: merge
         uses: ./.github/actions/docker/multiarch-merge
@@ -105,12 +119,20 @@ jobs:
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
           registry-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
+
   test:
     name: Test act image
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     needs: merge
     timeout-minutes: 100
     permissions:
+      contents: read
       packages: read
     strategy:
       fail-fast: false
@@ -123,15 +145,15 @@ jobs:
           - 24.04
           - 22.04
     steps:
-
       - name: Checkout nektos/act repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         if: ${{ env.RUN_TESTS == 'true' }}
         with:
           repository: nektos/act
           ref: v0.2.75
+          persist-credentials: false
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         if: ${{ env.RUN_TESTS == 'true' }}
         with:
           go-version-file: go.mod
@@ -140,10 +162,10 @@ jobs:
         if: ${{ env.RUN_TESTS == 'true' }}
         env:
           ACT_TEST_IMAGE: ${{ needs.merge.outputs.image }}
-        run: go run main.go -P ubuntu-latest=${{ needs.merge.outputs.image }} -C ./pkg/runner/testdata/ -W ./basic/push.yml
+        run: go run main.go -P "ubuntu-latest=${ACT_TEST_IMAGE}" -C ./pkg/runner/testdata/ -W ./basic/push.yml
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
 
       - name: Run Tests
         if: ${{ env.RUN_TESTS == 'true' }}
@@ -154,8 +176,20 @@ jobs:
         shell: bash
 
       - name: Test Summary
-        uses: test-summary/action@v2
+        uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2
         if: ${{ env.RUN_TESTS == 'true' && always() || false}}
         continue-on-error: true
         with:
-          paths: "unit-tests.xml"
+          paths: 'unit-tests.xml'
+
+      - name: Checkout repository
+        if: ${{ always() }}
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
