@@ -99,6 +99,7 @@ run_super_linter()
     -e LOG_LEVEL="$log_level" \
     --env-file "$root_dir/$env_file" \
     "${mounts[@]}" \
+    --platform linux/amd64 \
     "$image"
 }
 
