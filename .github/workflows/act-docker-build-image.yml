@@ -7,12 +7,14 @@ on:
   push:
     paths:
       - .github/workflows/act-docker-build-image.yml
+      - .github/actions/log-debug-stats/**
       - docker/act/**
     branches:
       - main
   pull_request:
     paths:
       - .github/workflows/act-docker-build-image.yml
+      - .github/actions/log-debug-stats/**
       - docker/act/**
   workflow_dispatch:
 
@@ -37,6 +39,7 @@ jobs:
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     timeout-minutes: 20
     permissions:
+      contents: read
       packages: write
     strategy:
       fail-fast: true
@@ -71,10 +74,17 @@ jobs:
           build-args: |
             DISTRO_VERSION=${{ matrix.distro_version }}
 
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
+
   merge:
     name: Merge multiarch act image
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:
+      contents: read
       packages: write
     needs: build
     timeout-minutes: 10
@@ -105,12 +115,20 @@ jobs:
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
           registry-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
+
   test:
     name: Test act image
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     needs: merge
     timeout-minutes: 100
     permissions:
+      contents: read
       packages: read
     strategy:
       fail-fast: false
@@ -159,3 +177,15 @@ jobs:
         continue-on-error: true
         with:
           paths: "unit-tests.xml"
+
+      - name: Checkout repository
+        if: ${{ always() }}
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}

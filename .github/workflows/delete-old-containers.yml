@@ -19,9 +19,15 @@ jobs:
   delete-container-version:
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:
+      contents: read
       packages: write
     timeout-minutes: 20
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
       - name: Delete package version
         uses: actions/delete-package-versions@v5
         with:
@@ -37,3 +43,8 @@ jobs:
           package-type: 'container'
           delete-only-untagged-versions: true
 
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}

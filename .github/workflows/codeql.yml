@@ -34,6 +34,13 @@ jobs:
         with:
           extra-filter: |
             - .github/workflows/codeql.yml
+            - .github/actions/log-debug-stats/**
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
 
   analyze:
     name: Analyze (${{ matrix.language }})
@@ -179,14 +186,26 @@ jobs:
           path: ${{ steps.sarif.outputs.file }}
           retention-days: 7
 
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
+
   merge-all:
     name: Code Analysis finished
     needs: [paths-filter, analyze]
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-    permissions: {}
+    permissions:
+      contents: read
     timeout-minutes: 10
     if: always()
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
       - name: Execution was not needed!
         if: needs.paths-filter.outputs.pass != 'true' && !inputs.force_run
         run: |
@@ -203,3 +222,9 @@ jobs:
         if: ${{ cancelled() || contains(needs.*.result, 'cancelled') }}
         run: |
           exit 1
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
