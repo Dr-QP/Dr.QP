@@ -105,7 +105,7 @@ def create_simulation_launch_description(
 def create_balance_board_launch_description() -> LaunchDescription:
     """Launch Gazebo with a tiltable board beneath the robot spawn point."""
     return create_simulation_launch_description(
-        {
+        launch_arguments={
             'world_sdf': BALANCE_BOARD_WORLD_PATH,
             'robot_z': '0.15',
         }

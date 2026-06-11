@@ -10,6 +10,7 @@ set(drqp_gazebo_smoke_launch_tests
 )
 
 set(drqp_gazebo_full_launch_tests
+  test_robot_control_balance_mode.py
   test_robot_control_movement_backward.py
   test_robot_control_movement_forward.py
   test_robot_control_movement_forward_sustained.py
@@ -31,4 +32,3 @@ foreach(test_file IN LISTS drqp_gazebo_launch_tests)
     APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}
   )
 endforeach()
-

@@ -51,7 +51,10 @@ def body_tilt_from_imu(
         precedence over ``base_center_to_imu_rotation`` and avoids an extra
         inversion on the hot path.
 
+    Notes
+    -----
     A sentinel is used for the default because ``None`` is a public, meaningful input.
+
     """
     imu_in_world = R.from_quat([orientation.x, orientation.y, orientation.z, orientation.w])
     if imu_to_base_rotation is not None:

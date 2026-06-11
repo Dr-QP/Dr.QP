@@ -267,6 +267,10 @@ class TestBrainNode(unittest.TestCase):
     def test_balance_mode_captures_target_orientation_until_disabled_issue356(self):
         """Issue 356: keep the toggle-captured target tilt until balance mode is disabled."""
         brain = HexapodBrain()
+        brain.tf_buffer = mock.Mock()
+        brain.tf_buffer.lookup_transform.return_value = make_transform_with_rotation(
+            BASE_CENTER_TO_IMU_ROTATION.inv()
+        )
         try:
             brain.process_imu(make_imu_msg_from_base_tilt(0.05, -0.04, 0.2))
 
@@ -299,6 +303,10 @@ class TestBrainNode(unittest.TestCase):
         """Apply IMU roll and pitch compensation relative to the current measured tilt."""
         with mock.patch('drqp_brain.brain_node.JointTrajectoryBuilder') as trajectory_builder_cls:
             brain = HexapodBrain()
+            brain.tf_buffer = mock.Mock()
+            brain.tf_buffer.lookup_transform.return_value = make_transform_with_rotation(
+                BASE_CENTER_TO_IMU_ROTATION.inv()
+            )
             try:
                 brain.walker.next_step_targets = mock.Mock(return_value=[])
                 brain._ik_ready = mock.Mock(return_value=False)
