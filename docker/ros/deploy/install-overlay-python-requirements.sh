@@ -6,10 +6,16 @@ if [[ ${#search_roots[@]} -eq 0 ]]; then
   search_roots=(build install)
 fi
 
-pip_install=(/usr/bin/python3 -m pip install --break-system-packages)
+pip_install=(/usr/bin/python3 -m pip install --break-system-packages --ignore-installed)
 if [[ $(id -u) -ne 0 ]]; then
   pip_install=(sudo "${pip_install[@]}")
 fi
+
+# Colcon still invokes setup.py develop for ament_python packages. Newer
+# setuptools versions removed compatibility for that path, so keep the
+# resolver constrained while installing generated requirements.
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+constraints_file="$script_dir/pip-constraints.txt"
 
 filtered_requirements_file=""
 
@@ -41,7 +47,11 @@ install_requires_file() {
   fi
 
   echo "Installing requirements from $path"
-  "${pip_install[@]}" -r "$filtered_requirements_file"
+  if [[ -f "$constraints_file" ]]; then
+    "${pip_install[@]}" -c "$constraints_file" -r "$filtered_requirements_file"
+  else
+    "${pip_install[@]}" -r "$filtered_requirements_file"
+  fi
   cleanup_filtered_requirements_file
 }
 

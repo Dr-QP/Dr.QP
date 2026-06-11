@@ -2,23 +2,14 @@
 
 from __future__ import annotations
 
-# ruff: noqa: E402
-import pytest
-
-pytest.skip(
-    (
-        'Legacy tests under py_packages/drqp_robot_mcp are superseded by '
-        'packages/simulation/drqp_robot_mcp/test.'
-    ),
-    allow_module_level=True,
-)
-
 import math
+from pathlib import Path
 import time
 
-from drqp_robot_mcp import controller as controller_module
+import drqp_robot_mcp.controller as controller_module
 from drqp_robot_mcp.controller import RobotMcpController
 from drqp_robot_mcp.models import Pose, Quaternion, RobotStateSnapshot, Vector3
+import pytest
 
 
 def make_snapshot(
@@ -57,6 +48,10 @@ class FakeController(RobotMcpController):
         self.start_calls = 0
         self.current_state = self.states[-1]
         self.movement_commands: list[dict[str, object]] = []
+        self.system_states: list[dict[str, object]] = []
+        self.system_state_calls = 0
+        self.trajectory_action_server_calls = 0
+        self.trajectory_action_server_ready = True
 
     def get_robot_state(self, timeout_sec: float = 10.0) -> RobotStateSnapshot:
         del timeout_sec
@@ -94,6 +89,26 @@ class FakeController(RobotMcpController):
         self.movement_commands.append(command)
         return {'published': True, **command}
 
+    def get_system_state(self, timeout_sec: float = 10.0) -> dict[str, object]:
+        del timeout_sec
+        self.system_state_calls += 1
+        if self.system_states:
+            if len(self.system_states) > 1:
+                return self.system_states.pop(0)
+            return self.system_states[0]
+        return {
+            'robot_lifecycle_channel_available': True,
+            'joint_state_available': True,
+            'motion_command_channel_available': True,
+            'simulation_channel_available': True,
+            'deployment_mode': 'simulation',
+        }
+
+    def _wait_for_trajectory_action_server(self, timeout_sec: float) -> bool:
+        del timeout_sec
+        self.trajectory_action_server_calls += 1
+        return self.trajectory_action_server_ready
+
     def _wait_for_state(
         self,
         target_state: str,
@@ -104,6 +119,18 @@ class FakeController(RobotMcpController):
         self.current_state = make_snapshot(target_state)
         self.states = [self.current_state]
         return self.current_state
+
+
+def test_controller_uses_runtime_directory_for_launch_files(monkeypatch) -> None:
+    """Controller launch state files should use the runtime helper location."""
+    runtime_dir = Path('/tmp/drqp-runtime')
+
+    monkeypatch.setattr(controller_module.runtime, 'get_runtime_directory', lambda: runtime_dir)
+
+    controller = RobotMcpController()
+
+    assert controller.launch_pid_path == runtime_dir / 'sim.launch.pid'
+    assert controller.launch_log_path == runtime_dir / 'sim.launch.log'
 
 
 def test_boot_up_starts_simulation_and_initializes_robot() -> None:
@@ -132,6 +159,39 @@ def test_boot_up_initializes_without_starting_simulation_when_state_exists() -> 
     assert result.state_before == 'torque_off'
     assert result.state_after == 'torque_on'
     assert result.simulation_was_started is False
+
+
+def test_boot_up_waits_for_simulation_control_surfaces_before_initialize(monkeypatch) -> None:
+    """Boot-up should wait for simulation channels before publishing initialize."""
+    controller = FakeController([make_snapshot(None, available=False, simulation_running=False)])
+    controller.system_states = [
+        {
+            'robot_lifecycle_channel_available': True,
+            'joint_state_available': False,
+            'motion_command_channel_available': False,
+            'simulation_channel_available': False,
+            'deployment_mode': 'simulation',
+        },
+        {
+            'robot_lifecycle_channel_available': True,
+            'joint_state_available': True,
+            'motion_command_channel_available': True,
+            'simulation_channel_available': True,
+            'deployment_mode': 'simulation',
+        },
+    ]
+    sleep_calls: list[float] = []
+    monkeypatch.setattr(controller_module.time, 'sleep', sleep_calls.append)
+
+    result = controller.boot_up(timeout_sec=5.0)
+
+    assert controller.start_calls == 1
+    assert controller.system_state_calls >= 2
+    assert controller.trajectory_action_server_calls == 1
+    assert sleep_calls == [0.5]
+    assert controller.published_events == ['initialize']
+    assert controller.waited_states == ['torque_on']
+    assert result.state_after == 'torque_on'
 
 
 def test_shut_down_finalizes_robot_from_torque_on() -> None:
@@ -200,6 +260,48 @@ def test_send_motion_command_publishes_normalized_command() -> None:
     assert result.stride_direction.x == 1.0
     assert result.body_translation.z == 0.2
     assert result.body_rotation.y == -0.1
+
+
+def test_get_robot_namespace_state_reports_roll_pitch_yaw_body_rotation() -> None:
+    """Robot namespace state should expose body rotation as roll/pitch/yaw."""
+    controller = FakeController([make_snapshot('torque_on')])
+
+    controller.send_motion_command(
+        body_roll=0.3,
+        body_pitch=-0.2,
+        body_yaw=0.1,
+    )
+    state = controller.get_robot_namespace_state()
+
+    latest_motion = state['latest_motion_command']
+    assert latest_motion is not None
+    assert latest_motion['body_rotation'] == {
+        'roll': 0.3,
+        'pitch': -0.2,
+        'yaw': 0.1,
+    }
+
+
+def test_get_robot_namespace_state_normalizes_legacy_body_rotation_keys() -> None:
+    """Robot namespace state should normalize legacy x/y/z body rotation keys."""
+    controller = FakeController([make_snapshot('torque_on')])
+    controller._latest_motion_command = {
+        'stride_direction': {'x': 0.0, 'y': 0.0, 'z': 0.0},
+        'rotation_speed': 0.0,
+        'body_translation': {'x': 0.0, 'y': 0.0, 'z': 0.0},
+        'body_rotation': {'x': 0.25, 'y': -0.5, 'z': 0.75},
+        'gait_type': 'tripod',
+        'timestamp': '2026-03-07T00:00:00+00:00',
+        'note': 'legacy payload',
+    }
+
+    state = controller.get_robot_namespace_state()
+
+    assert state['latest_motion_command']['body_rotation'] == {
+        'roll': 0.25,
+        'pitch': -0.5,
+        'yaw': 0.75,
+    }
 
 
 def test_send_motion_command_rejects_out_of_range_input() -> None:

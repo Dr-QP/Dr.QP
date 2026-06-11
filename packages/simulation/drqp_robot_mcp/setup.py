@@ -1,6 +1,7 @@
 from setuptools import find_packages, setup
 
-package_name = 'drqp_kinematics'
+package_name = 'drqp_robot_mcp'
+
 
 setup(
     name=package_name,
@@ -11,13 +12,17 @@ setup(
         ('share/' + package_name, ['package.xml']),
     ],
     install_requires=[
-        'numpy',
-        'scipy',
+        'mcp[cli]>=1.26.0',
     ],
     tests_require=['pytest'],
     zip_safe=True,
     maintainer='Anton Matosov',
     maintainer_email='anton.matosov@gmail.com',
-    description='Reusable hexapod geometry and kinematics models',
+    description='MCP server package for interacting with the Dr.QP simulation.',
     license='MIT',
+    entry_points={
+        'console_scripts': [
+            'drqp_robot_mcp = drqp_robot_mcp.server:main',
+        ],
+    },
 )

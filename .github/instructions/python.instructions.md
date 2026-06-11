@@ -27,6 +27,13 @@ For general engineering principles, code quality standards, and best practices, 
 - Place function and class docstrings immediately after the `def` or `class` keyword
 - Use blank lines to separate functions, classes, and code blocks where appropriate
 
+### Exception Handling
+
+- Do not write empty exception handlers (`except ...: pass`)
+- Handle expected exceptions explicitly by at least one of: logging context, returning a safe fallback value, re-raising with context, or raising `SystemExit` for CLI interruption paths
+- If an exception must be intentionally ignored, document the reason in a clear explanatory comment and keep the ignored scope minimal
+- Prefer specific exception types over broad `except Exception` catches
+
 ### Edge Cases and Testing
 
 - Always use `pytest` for writing tests
