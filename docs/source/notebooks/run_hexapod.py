@@ -83,7 +83,7 @@ if __name__ == '__main__':
         args = parser.parse_args()
         main(**vars(args))
     except KeyboardInterrupt:
-        pass  # codeql[py/empty-except]
+        raise SystemExit(130)
     except RuntimeError as e:
         print(e)
     finally:

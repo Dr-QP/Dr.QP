@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, UTC
+import math
 from pathlib import Path
 import threading
 import time
@@ -12,6 +13,8 @@ from typing import Any, Callable
 from . import runtime
 from .models import (
     LifecycleActionResult,
+    MotionCommandResult,
+    MotionSequenceResult,
     RecordedRobotStates,
     RecordingStatus,
     RobotStateSnapshot,
@@ -36,6 +39,8 @@ class _RecordingSession:
 
 class RobotMcpController:
     """Coordinate local ROS 2, optional Gazebo, and robot lifecycle operations."""
+
+    _VALID_GAITS = {'tripod', 'ripple', 'wave'}
 
     def __init__(
         self,
@@ -161,6 +166,119 @@ class RobotMcpController:
             runtime.get_world_state(self.world_name, timeout_sec)
         )
 
+    def send_motion_command(
+        self,
+        *,
+        stride_x: float = 0.0,
+        stride_y: float = 0.0,
+        stride_z: float = 0.0,
+        rotation_speed: float = 0.0,
+        body_x: float = 0.0,
+        body_y: float = 0.0,
+        body_z: float = 0.0,
+        body_roll: float = 0.0,
+        body_pitch: float = 0.0,
+        body_yaw: float = 0.0,
+        gait_type: str = 'tripod',
+    ) -> MotionCommandResult:
+        """Publish a normalized motion command for joystick-like control."""
+        stride_direction = {
+            'x': self._validate_normalized('stride_x', stride_x),
+            'y': self._validate_normalized('stride_y', stride_y),
+            'z': self._validate_normalized('stride_z', stride_z),
+        }
+        normalized_rotation_speed = self._validate_normalized(
+            'rotation_speed',
+            rotation_speed,
+        )
+        body_translation = {
+            'x': self._validate_normalized('body_x', body_x),
+            'y': self._validate_normalized('body_y', body_y),
+            'z': self._validate_normalized('body_z', body_z),
+        }
+        body_rotation = {
+            'x': self._validate_normalized('body_roll', body_roll),
+            'y': self._validate_normalized('body_pitch', body_pitch),
+            'z': self._validate_normalized('body_yaw', body_yaw),
+        }
+        normalized_gait = self._validate_gait_type(gait_type)
+        return MotionCommandResult.from_mapping(
+            self._publish_movement_command(
+                stride_direction=stride_direction,
+                rotation_speed=normalized_rotation_speed,
+                body_translation=body_translation,
+                body_rotation=body_rotation,
+                gait_type=normalized_gait,
+            )
+        )
+
+    def stop_motion(self) -> MotionCommandResult:
+        """Publish a zeroed movement command to stop robot motion."""
+        return self.send_motion_command()
+
+    def walk_for_duration(
+        self,
+        *,
+        duration_sec: float,
+        publish_hz: float = 5.0,
+        stop_after: bool = True,
+        stride_x: float = 0.0,
+        stride_y: float = 0.0,
+        stride_z: float = 0.0,
+        rotation_speed: float = 0.0,
+        body_x: float = 0.0,
+        body_y: float = 0.0,
+        body_z: float = 0.0,
+        body_roll: float = 0.0,
+        body_pitch: float = 0.0,
+        body_yaw: float = 0.0,
+        gait_type: str = 'tripod',
+    ) -> MotionSequenceResult:
+        """Publish the same walking command repeatedly for a fixed duration."""
+        normalized_duration_sec = float(duration_sec)
+        normalized_publish_hz = float(publish_hz)
+        if normalized_duration_sec <= 0.0:
+            raise ValueError('duration_sec must be positive.')
+        if normalized_publish_hz <= 0.0:
+            raise ValueError('publish_hz must be positive.')
+
+        publish_count = max(1, math.ceil(normalized_duration_sec * normalized_publish_hz))
+        interval_sec = 1.0 / normalized_publish_hz
+        command_result: MotionCommandResult | None = None
+        for publish_index in range(publish_count):
+            command_result = self.send_motion_command(
+                stride_x=stride_x,
+                stride_y=stride_y,
+                stride_z=stride_z,
+                rotation_speed=rotation_speed,
+                body_x=body_x,
+                body_y=body_y,
+                body_z=body_z,
+                body_roll=body_roll,
+                body_pitch=body_pitch,
+                body_yaw=body_yaw,
+                gait_type=gait_type,
+            )
+            if publish_index < publish_count - 1:
+                time.sleep(interval_sec)
+
+        if command_result is None:
+            raise RuntimeError('walk_for_duration did not publish any motion commands.')
+
+        stop_command_sent = False
+        if stop_after:
+            self.stop_motion()
+            stop_command_sent = True
+
+        return MotionSequenceResult(
+            duration_sec=normalized_duration_sec,
+            publish_hz=normalized_publish_hz,
+            publish_count=publish_count,
+            stop_command_sent=stop_command_sent,
+            command=command_result,
+            message='Published walking sequence.',
+        )
+
     def start_recording(self, sample_interval_sec: float = 0.5) -> RecordingStatus:
         """Start recording robot snapshots."""
         if sample_interval_sec <= 0:
@@ -282,6 +400,38 @@ class RobotMcpController:
     def _publish_event(self, event: str) -> dict[str, Any]:
         """Publish a lifecycle event onto the local ROS graph."""
         return runtime.publish_event(event)
+
+    def _publish_movement_command(
+        self,
+        stride_direction: dict[str, float],
+        rotation_speed: float,
+        body_translation: dict[str, float],
+        body_rotation: dict[str, float],
+        gait_type: str,
+    ) -> dict[str, Any]:
+        """Publish a motion command onto the local ROS graph."""
+        return runtime.publish_movement_command(
+            stride_direction=stride_direction,
+            rotation_speed=rotation_speed,
+            body_translation=body_translation,
+            body_rotation=body_rotation,
+            gait_type=gait_type,
+        )
+
+    def _validate_normalized(self, name: str, value: float) -> float:
+        """Validate normalized joystick input in the inclusive range [-1, 1]."""
+        normalized_value = float(value)
+        if normalized_value < -1.0 or normalized_value > 1.0:
+            raise ValueError(f'{name} must be between -1.0 and 1.0.')
+        return normalized_value
+
+    def _validate_gait_type(self, gait_type: str) -> str:
+        """Validate gait names against the supported movement command contract."""
+        normalized_gait_type = gait_type.strip().lower()
+        if normalized_gait_type not in self._VALID_GAITS:
+            supported = ', '.join(sorted(self._VALID_GAITS))
+            raise ValueError(f'gait_type must be one of {supported}; got {gait_type!r}.')
+        return normalized_gait_type
 
 
 def _utc_now() -> str:

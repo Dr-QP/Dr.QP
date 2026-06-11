@@ -12,7 +12,6 @@ setup(
         ('share/' + package_name + '/launch', ['launch/bringup.launch.py']),
     ],
     install_requires=[
-        'setuptools',
         'python-statemachine>=2.5.0',
         'numpy',
         'scipy',

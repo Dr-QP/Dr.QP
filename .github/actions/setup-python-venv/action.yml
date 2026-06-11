@@ -10,15 +10,38 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Setup Python
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+      id: setup-python
+      with:
+        python-version: ${{ inputs.python-version }}
+
     - name: Install uv
-      uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7
+      uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
       with:
         version: '0.10.9'
         # we just cache the venv-dir directly in action-setup-venv
         enable-cache: false
 
-    - uses: getsentry/action-setup-venv@6e8aebf461914919d9de6e3082669d6bfecc400c # v3.1.0
+    - name: Restore venv cache
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+      id: cache-venv
       with:
-        python-version: ${{ inputs.python-version }}
-        cache-dependency-path: uv.lock
-        install-cmd: uv sync --frozen --active --all-groups --all-extras
+        path: .venv
+        key: setup-venv-${{ runner.os }}-${{ runner.arch }}-py-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('uv.lock') }}-uv-sync-frozen-all
+
+    - name: Create venv
+      if: steps.cache-venv.outputs.cache-hit != 'true'
+      run: python -m venv .venv
+      shell: bash
+
+    - name: Activate venv
+      run: |
+        source .venv/bin/activate
+        echo "VIRTUAL_ENV=${VIRTUAL_ENV}" >> "${GITHUB_ENV}"
+        echo "${VIRTUAL_ENV}/bin" >> "${GITHUB_PATH}"
+      shell: bash
+
+    - name: Install dependencies
+      run: uv sync --frozen --active --all-groups --all-extras
+      shell: bash

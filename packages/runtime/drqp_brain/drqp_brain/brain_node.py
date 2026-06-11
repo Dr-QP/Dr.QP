@@ -22,6 +22,7 @@
 
 import argparse
 from concurrent.futures import CancelledError
+import sys
 import threading
 import traceback
 
@@ -715,10 +716,9 @@ class HexapodBrain(rclpy.node.Node):
 
     def _track_future(self, future):
         self._pending_futures.add(future)
-        try:
-            future.add_done_callback(self._discard_future)
-        except AttributeError:
-            pass
+        add_done_callback = getattr(future, 'add_done_callback', None)
+        if callable(add_done_callback):
+            add_done_callback(self._discard_future)
         return future
 
     def _discard_future(self, future):
@@ -739,8 +739,11 @@ class HexapodBrain(rclpy.node.Node):
                     f'Pending future finished with exception: {traceback.format_exc()}'
                 )
             except Exception:
-                # If logging fails, swallow to avoid raising during teardown.
-                pass
+                # If logging fails, emit a stderr fallback and continue teardown.
+                print(
+                    'Pending future finished with exception during shutdown.',
+                    file=sys.stderr,
+                )
         # No return value needed
 
     def _safe_cancel_future(self, future, description: str):
@@ -768,7 +771,10 @@ class HexapodBrain(rclpy.node.Node):
                                 f'during cancel: {traceback.format_exc()}'
                             )
                         except Exception:
-                            pass
+                            print(
+                                'Pending future finished with exception during cancel.',
+                                file=sys.stderr,
+                            )
             except Exception:
                 # Defensive: ensure shutdown continues even if future handling fails.
                 try:
@@ -776,7 +782,10 @@ class HexapodBrain(rclpy.node.Node):
                         f'Error while cancelling pending future: {traceback.format_exc()}'
                     )
                 except Exception:
-                    pass
+                    print(
+                        'Error while cancelling pending future during shutdown.',
+                        file=sys.stderr,
+                    )
             finally:
                 self._pending_futures.discard(future)
         # All tracked futures cleared
@@ -794,7 +803,10 @@ class HexapodBrain(rclpy.node.Node):
                     f'Unexpected exception destroying {description}: {traceback.format_exc()}'
                 )
             except Exception:
-                pass
+                print(
+                    f'Unexpected exception destroying {description} during shutdown.',
+                    file=sys.stderr,
+                )
 
     def _log_shutdown_warning(self, message: str):
         try:
@@ -839,7 +851,7 @@ def main():
         executor.add_node(node)
         executor.spin()
     except (KeyboardInterrupt, ExternalShutdownException):
-        pass  # codeql[py/empty-except]
+        return
     finally:
         if executor is not None:
             executor.shutdown()

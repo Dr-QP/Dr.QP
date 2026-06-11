@@ -1,0 +1,22 @@
+---
+- name: Ensure OSRF keyring directory exists
+  ansible.builtin.file:
+    path: /usr/share/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Add OSRF Gazebo GPG key
+  ansible.builtin.get_url:
+    url: https://packages.osrfoundation.org/gazebo.gpg
+    dest: /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
+    mode: "0644"
+    force: false
+
+- name: Add OSRF Gazebo repository
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ system_arch }} signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg]
+      https://packages.osrfoundation.org/gazebo/ubuntu-stable {{ system_dist }} main
+    state: present
+    filename: gazebo-stable
+    update_cache: true

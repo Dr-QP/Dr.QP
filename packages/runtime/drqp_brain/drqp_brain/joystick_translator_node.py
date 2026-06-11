@@ -276,7 +276,7 @@ def main():
         node = JoystickTranslatorNode(**vars(args))
         rclpy.spin(node)
     except (KeyboardInterrupt, ExternalShutdownException):
-        pass  # codeql[py/empty-except]
+        return
     finally:
         if node is not None:
             node.destroy_node()

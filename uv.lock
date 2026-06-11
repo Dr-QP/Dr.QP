@@ -903,7 +903,6 @@ dependencies = [
     { name = "numpy" },
     { name = "python-statemachine" },
     { name = "scipy" },
-    { name = "setuptools" },
 ]
 
 [package.metadata]
@@ -913,7 +912,6 @@ requires-dist = [
     { name = "numpy" },
     { name = "python-statemachine", specifier = ">=2.5.0" },
     { name = "scipy" },
-    { name = "setuptools" },
 ]
 
 [[package]]
@@ -923,30 +921,24 @@ source = { editable = "packages/runtime/drqp_kinematics" }
 dependencies = [
     { name = "numpy" },
     { name = "scipy" },
-    { name = "setuptools" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "numpy" },
     { name = "scipy" },
-    { name = "setuptools" },
 ]
 
 [[package]]
 name = "drqp-robot-mcp"
-version = "1.0.0"
-source = { editable = "py_packages/drqp_robot_mcp" }
+version = "0.1.0"
+source = { editable = "packages/simulation/drqp_robot_mcp" }
 dependencies = [
     { name = "mcp", extra = ["cli"] },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "mcp", extras = ["cli"], specifier = ">=1.26.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
-]
-provides-extras = ["dev"]
+requires-dist = [{ name = "mcp", extras = ["cli"], specifier = ">=1.26.0" }]
 
 [[package]]
 name = "drqp-workspace"
@@ -1018,7 +1010,7 @@ notebooks = [
 dev = [
     { name = "ansible", specifier = ">=11.4" },
     { name = "ansible-lint", specifier = ">=25.2.1" },
-    { name = "drqp-robot-mcp", editable = "py_packages/drqp_robot_mcp" },
+    { name = "drqp-robot-mcp", editable = "packages/simulation/drqp_robot_mcp" },
     { name = "esbonio", specifier = ">=0.16" },
     { name = "pre-commit", specifier = ">=4.2.0" },
     { name = "pydantic", specifier = ">=2.0" },

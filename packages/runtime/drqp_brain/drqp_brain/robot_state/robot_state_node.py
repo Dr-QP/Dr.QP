@@ -72,7 +72,7 @@ def main():
     try:
         rclpy.spin(node)
     except (KeyboardInterrupt, ExternalShutdownException):
-        pass  # codeql[py/empty-except]
+        return
     finally:
         node.destroy_node()
         # Only call shutdown if ROS is still initialized
