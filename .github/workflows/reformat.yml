@@ -81,6 +81,8 @@ jobs:
     timeout-minutes: 10
     outputs:
       pass: ${{ steps.override.outputs.pass }}
+      skip_reformat: ${{ steps.skip-tags.outputs.skip_reformat }}
+      skip_super_linter: ${{ steps.skip-tags.outputs.skip_super_linter }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
@@ -93,6 +95,7 @@ jobs:
         with:
           event-name: ${{ inputs.caller_event_name }}
           extra-filter: |
+            - .github/super-linter-*.env
             - .github/workflows/reformat.yml
             - docs/source/notebooks/**
             - ansible/**
@@ -131,6 +134,34 @@ jobs:
           STEPS_FILTER_OUTPUTS_PASS: ${{ steps.filter.outputs.pass }}
           INPUTS_CALLER_EVENT_NAME: ${{ inputs.caller_event_name }}
 
+      - name: Detect trusted skip tags
+        id: skip-tags
+        run: |
+          trusted_skip=false
+          if [[ "${INPUTS_CALLER_EVENT_NAME}" != "pull_request" || "${INPUTS_CALLER_PR_HEAD_REPO_FULL_NAME}" == "${GITHUB_REPOSITORY}" ]]; then
+            trusted_skip=true
+          fi
+
+          skip_reformat=false
+          skip_super_linter=false
+          if [[ "$trusted_skip" == 'true' ]]; then
+            if [[ "${INPUTS_CALLER_PR_BODY}" == *'[ci:no-reformat]'* ]]; then
+              skip_reformat=true
+            fi
+            if [[ "${INPUTS_CALLER_PR_BODY}" == *'[ci:no-super-linter]'* ]]; then
+              skip_super_linter=true
+            fi
+          fi
+
+          {
+            echo "skip_reformat=$skip_reformat"
+            echo "skip_super_linter=$skip_super_linter"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          INPUTS_CALLER_EVENT_NAME: ${{ inputs.caller_event_name }}
+          INPUTS_CALLER_PR_BODY: ${{ inputs.caller_pr_body }}
+          INPUTS_CALLER_PR_HEAD_REPO_FULL_NAME: ${{ inputs.caller_pr_head_repo_full_name }}
+
       - name: Log debug stats
         if: ${{ always() }}
         uses: ./.github/actions/log-debug-stats
@@ -142,7 +173,7 @@ jobs:
     needs: paths-filter
     if: >-
       inputs.should_run &&
-      ! contains(inputs.caller_pr_body, '[ci:no-reformat]') &&
+      needs.paths-filter.outputs.skip_reformat != 'true' &&
       (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     container:
@@ -208,7 +239,7 @@ jobs:
     needs: paths-filter
     if: >-
       inputs.should_run &&
-      ! contains(inputs.caller_pr_body, '[ci:no-super-linter]') &&
+      needs.paths-filter.outputs.skip_super_linter != 'true' &&
       (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
     runs-on: 'ubuntu-24.04'
     outputs:
