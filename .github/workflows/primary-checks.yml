@@ -1,0 +1,83 @@
+name: Primary checks
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  pull_request:
+  merge_group:
+    types:
+      - checks_requested
+  workflow_dispatch:
+    inputs:
+      clean_build:
+        description: 'Build images from scratch (no base from main)'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  reformat:
+    name: Reformat code
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      statuses: write
+    uses: ./.github/workflows/reformat.yml
+    with:
+      caller_event_name: ${{ github.event_name }}
+      caller_pr_head_ref: ${{ github.event.pull_request.head.ref || '' }}
+      caller_pr_head_repo_full_name: ${{ github.event.pull_request.head.repo.full_name || '' }}
+      caller_pr_head_sha: ${{ github.event.pull_request.head.sha || '' }}
+      caller_pr_is_draft: ${{ github.event.pull_request.draft || false }}
+      force_run: ${{ github.event_name == 'workflow_dispatch' }}
+      validate_all_codebase: ${{ github.event_name == 'workflow_dispatch' }}
+    secrets:
+      REPO_PAT: ${{ secrets.REPO_PAT }}
+
+  ci:
+    name: CI/CD
+    needs: [reformat]
+    if: needs.reformat.outputs.run_downstream == 'true'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/ci.yml
+    with:
+      caller_event_name: ${{ github.event_name }}
+      caller_pr_head_sha: ${{ github.event.pull_request.head.sha || '' }}
+      clean_build: ${{ github.event_name == 'workflow_dispatch' && inputs.clean_build || false }}
+      force_run: ${{ github.event_name == 'workflow_dispatch' }}
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  docs:
+    name: Build docs
+    needs: [reformat]
+    if: needs.reformat.outputs.run_downstream == 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/docs.yml
+    with:
+      force_run: ${{ github.event_name == 'workflow_dispatch' }}
+
+  codeql:
+    name: CodeQL Advanced
+    needs: [reformat]
+    if: needs.reformat.outputs.run_downstream == 'true'
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+    uses: ./.github/workflows/codeql.yml
+    with:
+      force_run: ${{ github.event_name == 'workflow_dispatch' }}

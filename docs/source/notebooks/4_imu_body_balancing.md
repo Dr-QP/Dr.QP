@@ -14,8 +14,9 @@ kernelspec:
 # 4. IMU-Based Body Balancing
 
 This notebook documents the balancing loop added to the walking controller.
-The goal is to keep the robot body flat in the world XY plane while the feet
-stay in contact with sloped terrain.
+When balance mode is enabled, the controller captures the current IMU-derived
+body tilt as the target orientation and holds that target while the feet stay in
+contact with sloped terrain.
 
 ## Control idea
 
@@ -28,15 +29,22 @@ requested body rotation before each walking step:
 
 ```{code-cell} ipython3
 from drqp_brain.balance_controller import apply_imu_balance
-from drqp_brain.geometry import Point3D
+from drqp_kinematics.geometry import Point3D
 
 requested_body_rotation = Point3D([0.0, 0.0, 0.0])
 measured_body_tilt = Point3D([0.08, -0.05, 0.0])
+target_body_tilt = Point3D([0.02, -0.01, 0.0])
 
-apply_imu_balance(requested_body_rotation, measured_body_tilt)
+apply_imu_balance(
+    requested_body_rotation,
+    measured_body_tilt,
+    target_body_tilt=target_body_tilt,
+)
 ```
 
-The compensation keeps yaw commands untouched and only cancels roll and pitch.
+The compensation keeps yaw commands untouched and only corrects roll and pitch
+relative to the captured target. Omitting `target_body_tilt` uses a level-to-world
+target.
 
 ## IMU frame conversion
 
@@ -61,8 +69,8 @@ body_tilt_from_imu(Quaternion(x=qx, y=qy, z=qz, w=qw))
 
 ## Tuning notes
 
-- Roll and pitch compensation are clamped before they are applied to the body
-  transform.
+- Roll and pitch compensation are applied relative to the captured target tilt
+  and clamped before they are applied to the body transform.
 - Yaw is left under operator control.
 - If IMU data becomes unavailable or stale, the walking controller falls back to
   the requested body rotation without balance compensation.

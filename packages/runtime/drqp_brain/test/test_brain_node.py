@@ -38,6 +38,7 @@ import rclpy
 from scipy.spatial.transform import Rotation as R
 from sensor_msgs.msg import Imu
 import std_msgs.msg
+from tf2_ros import TransformException
 
 
 @pytest.mark.launch_test
@@ -236,6 +237,31 @@ class TestBrainNode(unittest.TestCase):
         finally:
             brain.destroy_node()
 
+    def test_process_imu_throttles_repeated_tf_lookup_warnings_issue357(self):
+        """Issue 357: warn once for repeated TF lookup failures, then log at debug."""
+        brain = HexapodBrain()
+        brain.tf_buffer = mock.Mock()
+        brain.tf_buffer.lookup_transform.side_effect = TransformException('missing transform')
+        logger = mock.Mock()
+        brain.get_logger = mock.Mock(return_value=logger)
+        try:
+            brain.process_imu(make_imu_msg_from_base_tilt(0.03, -0.02, 0.1))
+            brain.process_imu(make_imu_msg_from_base_tilt(0.04, -0.01, 0.1))
+
+            assert logger.warning.call_count == 1
+            assert logger.debug.call_count == 1
+
+            brain.tf_buffer.lookup_transform.side_effect = None
+            brain.tf_buffer.lookup_transform.return_value = make_transform_with_rotation(R.identity())
+            brain.process_imu(make_imu_msg_from_base_tilt(0.04, -0.01, 0.1))
+
+            brain.tf_buffer.lookup_transform.side_effect = TransformException('missing transform')
+            brain.process_imu(make_imu_msg_from_base_tilt(0.04, -0.01, 0.1))
+
+            assert logger.warning.call_count == 2
+        finally:
+            brain.destroy_node()
+
     def test_balance_mode_captures_target_orientation_until_disabled_issue356(self):
         """Issue 356: keep the toggle-captured target tilt until balance mode is disabled."""
         brain = HexapodBrain()
@@ -272,7 +298,8 @@ class TestBrainNode(unittest.TestCase):
         with mock.patch('drqp_brain.brain_node.JointTrajectoryBuilder') as trajectory_builder_cls:
             brain = HexapodBrain()
             try:
-                brain.walker.next_step = mock.Mock()
+                brain.walker.next_step_targets = mock.Mock(return_value=[])
+                brain._ik_ready = mock.Mock(return_value=False)
                 brain.current_movement.stride_direction = Vector3(x=0.0, y=0.0, z=0.0)
                 brain.current_movement.rotation_speed = 0.0
                 brain.current_movement.body_translation = Vector3(x=0.0, y=0.0, z=0.0)
@@ -284,14 +311,14 @@ class TestBrainNode(unittest.TestCase):
 
                 brain.loop()
 
-                body_rotation = brain.walker.next_step.call_args.kwargs['body_rotation']
+                body_rotation = brain.walker.next_step_targets.call_args.kwargs['body_rotation']
                 expected_rotation = R.from_euler(
                     'xyz', [-0.12, 0.08, 0.0], degrees=False
                 ) * R.from_rotvec([0.0, 0.0, 0.4])
                 assert R.from_rotvec(body_rotation.numpy()).as_matrix() == pytest.approx(
                     expected_rotation.as_matrix()
                 )
-                trajectory_builder_cls.assert_called_once()
+                trajectory_builder_cls.assert_not_called()
             finally:
                 brain.destroy_node()
 

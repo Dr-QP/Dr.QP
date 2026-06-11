@@ -1,77 +1,107 @@
 name: Build docs
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - v*
-  pull_request:
-  merge_group:
-    types:
-      - checks_requested
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
-  cancel-in-progress: true
+  workflow_call:
+    inputs:
+      force_run:
+        description: Run docs even when the path filter does not match.
+        required: false
+        default: false
+        type: boolean
 
 jobs:
+  paths-filter:
+    name: Need to run?
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    permissions: {}
+    timeout-minutes: 10
+    outputs:
+      pass: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0 # all history for all branches and tags.
+          persist-credentials: false
+
+      - name: Filter
+        id: filter
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        with:
+          filters: |
+            docs:
+              - docs/**
+              - .github/workflows/docs.yml
+              - .github/actions/log-debug-stats/**
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
+
   docs:
     name: docs
+    needs: [paths-filter]
+    if: needs.paths-filter.outputs.pass == 'true' || inputs.force_run
     timeout-minutes: 10
     permissions: {}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0 # all history for all branches and tags.
+          persist-credentials: false
 
       - name: Install ffmpeg
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg --no-install-recommends
 
-      - name: Filter
-        id: filter
-        uses: dorny/paths-filter@v3.0.2
-        with:
-          filters: |
-            docs:
-              - docs/**
-              - .github/workflows/docs.yml
-
       - name: Setup Python venv
-        if: ${{ steps.filter.outputs.docs == 'true' }}
         uses: ./.github/actions/setup-python-venv
 
         # Multiple builds are not supported, so run them one after another. See https://github.com/sphinx-doc/sphinx/issues/10096
       - name: sphinx - check redirects diff
-        if: ${{ steps.filter.outputs.docs == 'true' }}
         shell: bash
         run: |
           .venv/bin/sphinx-build -nW --keep-going -b rediraffecheckdiff docs/source/ docs/_build/html
 
       - name: sphinx - build html
-        if: ${{ steps.filter.outputs.docs == 'true' }}
         shell: bash
         run: |
           .venv/bin/sphinx-build -nW --keep-going -b html docs/source/ docs/_build/html
 
       - name: Upload docs build error logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: docs-build-logs
           path: docs/_build/html/reports/notebooks
           retention-days: 7
           if-no-files-found: ignore
 
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
+
   merge-all:
     name: Docs build finished
-    needs: [docs]
+    needs: [paths-filter, docs]
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-    permissions: {}
-    if: ${{ success() || cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}
+    permissions:
+      contents: read
+    if: always()
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Execution was not needed!
+        if: needs.paths-filter.outputs.pass != 'true' && !inputs.force_run
+        run: |
+          exit 0
       - name: All jobs succeeded!
         if: ${{ success() }}
         run: |
@@ -84,3 +114,9 @@ jobs:
         if: ${{ cancelled() || contains(needs.*.result, 'cancelled') }}
         run: |
           exit 1
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}

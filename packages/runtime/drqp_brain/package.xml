@@ -9,8 +9,11 @@
 
   <exec_depend>drqp_interfaces</exec_depend>
   <exec_depend>drqp_control</exec_depend>
+  <exec_depend>drqp_kinematics</exec_depend>
   <exec_depend>drqp_joy</exec_depend>
-  <!-- <exec_depend>drqp_moveit</exec_depend> -->
+  <exec_depend>drqp_moveit</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>moveit_msgs</exec_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>launch</exec_depend>

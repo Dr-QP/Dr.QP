@@ -14,8 +14,6 @@
       bin: mcp-inspector
     - package: "@github/copilot"
       bin: copilot
-    - package: "@augmentcode/auggie"
-      bin: auggie
     - package: "@anthropic-ai/claude-code"
       bin: claude
   loop_control:

@@ -20,9 +20,9 @@
 
 from unittest.mock import Mock
 
-from drqp_brain.geometry import Point3D
 from drqp_brain.joystick_button import ButtonIndex
 from drqp_brain.joystick_input_handler import all_control_modes, ControlMode, JoystickInputHandler
+from drqp_kinematics.geometry import Point3D
 import pytest
 import sensor_msgs.msg
 

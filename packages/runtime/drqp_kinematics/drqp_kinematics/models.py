@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2025 Anton Matosov
+# Copyright (c) 2017-2026 Anton Matosov
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,8 +20,9 @@
 
 import enum
 
-from drqp_brain.geometry import AffineTransform, Line3D, Point3D
 import numpy as np
+
+from drqp_kinematics.geometry import AffineTransform, Line3D, Point3D
 
 
 class HexapodLeg(enum.Enum):
@@ -35,19 +36,18 @@ class HexapodLeg(enum.Enum):
 
 def safe_arccos(num):
     if num < -1:
-        return False, np.pi  # np.acos(-1)
-    elif num > 1:
-        return False, 0.0  # np.acos(1)
-    else:
-        return True, np.arccos(num)
+        return False, np.pi
+    if num > 1:
+        return False, 0.0
+    return True, np.arccos(num)
 
 
 class HexapodModel:
     def __init__(
         self,
-        front_offset=100.0,  # x offset for the front and back legs
-        side_offset=100.0,  # y offset fo the front and back legs
-        middle_offset=100.0,  # x offset for the middle legs
+        front_offset=100.0,
+        side_offset=100.0,
+        middle_offset=100.0,
         coxa_len=100.0,
         femur_len=100.0,
         tibia_len=100.0,
@@ -80,7 +80,6 @@ class HexapodModel:
             rotation=leg_rotation * 3,
             location_on_body=[-front_offset, side_offset, 0.0],
         )
-
         self.right_front = LegModel(
             coxa_len,
             femur_len,
@@ -116,11 +115,7 @@ class HexapodModel:
                 self.right_back,
             ]
         }
-
-        # Head, x-forward
         self.__head_base_line = Line3D(Point3D([0, 0, 0]), Point3D([front_offset, 0, 0]), 'Head')
-
-        # Setting body transform has to be last as it will update head and all the lgs
         self.body_transform = body_transform
 
     def forward_kinematics(self, alpha, beta, gamma):
@@ -128,11 +123,7 @@ class HexapodModel:
             leg.forward_kinematics(alpha, beta, gamma)
 
     def move_legs_to(self, foot_targets, verbose=False):
-        results = []
-        for leg, target in zip(self.legs, foot_targets):
-            reached = leg.move_to(target, verbose)
-            results.append(reached)
-        return results
+        return [leg.move_to(target, verbose) for leg, target in zip(self.legs, foot_targets)]
 
     @property
     def legs(self):
@@ -150,7 +141,6 @@ class HexapodModel:
     def body_transform(self, body_transform):
         for leg in self.legs:
             leg.body_transform = body_transform
-
         self.head = body_transform.apply_line(self.__head_base_line)
 
 
@@ -170,15 +160,11 @@ class LegModel:
         self.coxa_length = coxa_length
         self.femur_length = femur_length
         self.tibia_length = tibia_length
-
         self.label = label
-
         self.location_on_body = location_on_body
         self.rotation = rotation
         self._body_transform = body_transform
         self.update_base_transforms()
-
-        # Initialize leg to neutral position
         self.forward_kinematics(0, 0, 0)
 
     @property
@@ -221,83 +207,68 @@ class LegModel:
         return iter(self.lines)
 
     def __repr__(self):
-        return f'LegModel(body_start={self.body_start},\
-            body_end={self.body_end}, \
-            coxa_end={self.coxa_end}, \
-            femur_end={self.femur_end}, \
-            tibia_end={self.tibia_end})'
+        return (
+            'LegModel('
+            f'body_start={self.body_start}, '
+            f'body_end={self.body_end}, '
+            f'coxa_end={self.coxa_end}, '
+            f'femur_end={self.femur_end}, '
+            f'tibia_end={self.tibia_end})'
+        )
 
     # Leg Forward kinematics - START
-    def forward_kinematics(
-        self,
-        alpha,
-        beta,
-        gamma,
-    ):
+    def forward_kinematics(self, alpha, beta, gamma):
         self.update_base_transforms()
-
         self.coxa_angle = alpha
         self.femur_angle = beta
         self.tibia_angle = gamma
 
         self.coxa_joint = self.body_joint @ AffineTransform.from_rotvec(
-            [0, 0, alpha],
-            degrees=True,
+            [0, 0, alpha], degrees=True
         )
         self.coxa_link = self.coxa_joint @ AffineTransform.from_translation(
             [self.coxa_length, 0, 0]
         )
-
-        self.femur_joint = self.coxa_link @ AffineTransform.from_rotvec(
-            [0, beta, 0],
-            degrees=True,
-        )
+        self.femur_joint = self.coxa_link @ AffineTransform.from_rotvec([0, beta, 0], degrees=True)
         self.femur_link = self.femur_joint @ AffineTransform.from_translation(
             [self.femur_length, 0, 0]
         )
-
         self.tibia_joint = self.femur_link @ AffineTransform.from_rotvec(
-            [0, gamma, 0],
-            degrees=True,
+            [0, gamma, 0], degrees=True
         )
         self.tibia_link = self.tibia_joint @ AffineTransform.from_translation(
             [self.tibia_length, 0, 0]
         )
 
-        # Calculate global positions using transformations
         identity_point = Point3D([0, 0, 0])
-
         self.body_start = self.body_transform.apply_point(identity_point)
-
         self.body_end = self.body_link.apply_point(identity_point)
         self.body_end.label = rf'$\alpha$={alpha}°'
-
         self.coxa_end = self.coxa_link.apply_point(identity_point)
         self.coxa_end.label = rf'$\beta$={beta}°'
-
         self.femur_end = self.femur_link.apply_point(identity_point)
         self.femur_end.label = rf'$\gamma$={gamma}°'
-
         self.tibia_end = self.tibia_link.apply_point(identity_point)
         self.tibia_end.label = 'Foot'
-        # Leg Forward kinematics - END
+
+    # Leg Forward kinematics - END
 
     def move_to(self, foot_target: Point3D, verbose=False):
         reached_target, alpha, beta, gamma = self.inverse_kinematics(foot_target, verbose)
         if verbose:
             print(
-                f'{self.label} moving to {foot_target}. \
-                  new angles: {alpha=:.4f}\t{beta=:.4f}\t{gamma=:.4f}'
+                f'{self.label} moving to {foot_target}. '
+                f'new angles: {alpha=:.4f}\t{beta=:.4f}\t{gamma=:.4f}'
             )
         self.forward_kinematics(alpha, beta, gamma)
         return reached_target
 
     def inverse_kinematics(self, foot_target: Point3D, verbose=False):
         localized_foot_target = self.to_local(foot_target)
-        alpha, X_tick = self._inverse_kinematics_xy(localized_foot_target)
+        alpha, x_tick = self._inverse_kinematics_xy(localized_foot_target)
         solvable, beta, gamma = self._inverse_kinematics_xz(
             localized_foot_target.z,
-            X_tick,
+            x_tick,
             verbose=verbose,
         )
         return solvable, alpha, beta, gamma
@@ -308,57 +279,34 @@ class LegModel:
     @staticmethod
     def _inverse_kinematics_xy(localized_foot_target: Point3D):
         alpha = np.degrees(np.arctan2(localized_foot_target.y, localized_foot_target.x))
-        X_tick = np.hypot(localized_foot_target.x, localized_foot_target.y)
-        return alpha, X_tick
+        x_tick = np.hypot(localized_foot_target.x, localized_foot_target.y)
+        return alpha, x_tick
 
-    def _inverse_kinematics_xz(
-        self,
-        z_offset: float,
-        X_tick: float,
-        verbose=False,
-    ):
-        """
-        XZ axis Inverse kinematics solver for 3DOF leg.
-
-        Math as described above
-
-        Parameters
-        ----------
-        z_offset:
-          z offset from the coxa joint of the foot target in meters
-
-        X_tick:
-          X distance from the coxa joint of the foot target in meters,
-          returned by the inverse_kinematics_xy
-
-        verbose:
-          print debug information
-
-        """
-        D = -z_offset
-        T = X_tick - self.coxa_length
-        L = np.hypot(D, T)
+    def _inverse_kinematics_xz(self, z_offset: float, x_tick: float, verbose=False):
+        d_offset = -z_offset
+        t_offset = x_tick - self.coxa_length
+        span = np.hypot(d_offset, t_offset)
 
         solvable_theta1, theta1_rad = safe_arccos(
-            (L**2 + self.femur_length**2 - self.tibia_length**2) / (2 * L * self.femur_length)
+            (span**2 + self.femur_length**2 - self.tibia_length**2)
+            / (2 * span * self.femur_length)
         )
         theta1 = np.degrees(theta1_rad)
-
-        theta2 = np.degrees(np.arctan2(T, D))
+        theta2 = np.degrees(np.arctan2(t_offset, d_offset))
         solvable_phi, phi_rad = safe_arccos(
-            (self.tibia_length**2 + self.femur_length**2 - L**2)
+            (self.tibia_length**2 + self.femur_length**2 - span**2)
             / (2 * self.tibia_length * self.femur_length)
         )
         phi = np.degrees(phi_rad)
 
-        # The right hand coordinate system is used, so the angle offsets are inverted
         beta = 90 - (theta1 + theta2)
         gamma = 180 - phi
         if verbose:
             print(
-                f'{theta1=} - solvable={solvable_theta1}\n\
-                {theta2=}\n{phi=} - solvable={solvable_phi}\n\n\
-                {beta=}\n\
-                {gamma=}'
+                f'{theta1=} - solvable={solvable_theta1}\n'
+                f'{theta2=}\n'
+                f'{phi=} - solvable={solvable_phi}\n\n'
+                f'{beta=}\n'
+                f'{gamma=}'
             )
         return solvable_theta1 and solvable_phi, beta, gamma
