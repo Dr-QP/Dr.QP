@@ -24,48 +24,19 @@ from drqp_kinematics.geometry import Point3D
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-# Matches the fixed base_center_to_imu joint orientation in
-# packages/runtime/drqp_control/urdf/body.urdf.xacro.
-BASE_CENTER_TO_IMU_ROTATION = R.from_euler('xyz', [np.pi, 0.0, np.pi / 2.0])
-_USE_DEFAULT_ROTATION = object()
 
-
-def body_tilt_from_imu(
-    orientation,
-    *,
-    base_center_to_imu_rotation=_USE_DEFAULT_ROTATION,
-    imu_to_base_rotation=None,
-) -> Point3D:
+def body_tilt_from_imu(orientation) -> Point3D:
     """
-    Return base_center_link roll and pitch in radians from an IMU quaternion.
+    Return body roll and pitch in radians from an IMU quaternion.
 
     Parameters
     ----------
     orientation
-        IMU quaternion in ROS message form.
-    base_center_to_imu_rotation
-        Optional base->IMU mount rotation. Omit to use the default hardware
-        mount transform, or pass ``None`` to skip mount compensation.
-    imu_to_base_rotation
-        Optional IMU->base rotation, typically from TF. When provided, it takes
-        precedence over ``base_center_to_imu_rotation`` and avoids an extra
-        inversion on the hot path.
-
-    Notes
-    -----
-    A sentinel is used for the default because ``None`` is a public, meaningful input.
+        Body-orientation quaternion in ROS message form.
 
     """
-    imu_in_world = R.from_quat([orientation.x, orientation.y, orientation.z, orientation.w])
-    if imu_to_base_rotation is not None:
-        base_in_world = imu_in_world * imu_to_base_rotation
-    else:
-        if base_center_to_imu_rotation is _USE_DEFAULT_ROTATION:
-            base_center_to_imu_rotation = BASE_CENTER_TO_IMU_ROTATION
-        base_in_world = imu_in_world
-        if base_center_to_imu_rotation is not None:
-            base_in_world = imu_in_world * base_center_to_imu_rotation.inv()
-    roll, pitch, _ = base_in_world.as_euler('xyz', degrees=False)
+    body_in_world = R.from_quat([orientation.x, orientation.y, orientation.z, orientation.w])
+    roll, pitch, _ = body_in_world.as_euler('xyz', degrees=False)
     return Point3D([roll, pitch, 0.0])
 
 

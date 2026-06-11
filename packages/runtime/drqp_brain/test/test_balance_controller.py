@@ -22,7 +22,6 @@
 
 from drqp_brain.balance_controller import (
     apply_imu_balance,
-    BASE_CENTER_TO_IMU_ROTATION,
     body_tilt_from_imu,
 )
 from drqp_kinematics.geometry import Point3D
@@ -38,9 +37,8 @@ def make_quaternion_msg(rotation: R) -> Quaternion:
 
 def test_body_tilt_from_imu_returns_base_center_roll_and_pitch():
     base_in_world = R.from_euler('xyz', [0.18, -0.12, 0.41], degrees=False)
-    imu_in_world = base_in_world * BASE_CENTER_TO_IMU_ROTATION
 
-    tilt = body_tilt_from_imu(make_quaternion_msg(imu_in_world))
+    tilt = body_tilt_from_imu(make_quaternion_msg(base_in_world))
 
     assert tilt.x == pytest.approx(0.18)
     assert tilt.y == pytest.approx(-0.12)
@@ -48,33 +46,18 @@ def test_body_tilt_from_imu_returns_base_center_roll_and_pitch():
 
 
 def test_body_tilt_from_imu_is_zero_for_level_body():
-    tilt = body_tilt_from_imu(make_quaternion_msg(BASE_CENTER_TO_IMU_ROTATION))
+    tilt = body_tilt_from_imu(make_quaternion_msg(R.identity()))
 
     assert tilt == Point3D([0.0, 0.0, 0.0])
 
 
-def test_body_tilt_from_imu_can_use_raw_orientation_without_mount_compensation():
+def test_body_tilt_from_imu_ignores_yaw_when_extracting_body_tilt():
     tilt = body_tilt_from_imu(
-        make_quaternion_msg(R.from_euler('xyz', [0.07, -0.09, 0.2], degrees=False)),
-        base_center_to_imu_rotation=R.identity(),
+        make_quaternion_msg(R.from_euler('xyz', [0.07, -0.09, 0.2], degrees=False))
     )
 
     assert tilt.x == pytest.approx(0.07)
     assert tilt.y == pytest.approx(-0.09)
-    assert tilt.z == pytest.approx(0.0)
-
-
-def test_body_tilt_from_imu_accepts_direct_imu_to_base_rotation_issue357():
-    base_in_world = R.from_euler('xyz', [0.08, -0.11, 0.27], degrees=False)
-    imu_in_world = base_in_world * BASE_CENTER_TO_IMU_ROTATION
-
-    tilt = body_tilt_from_imu(
-        make_quaternion_msg(imu_in_world),
-        imu_to_base_rotation=BASE_CENTER_TO_IMU_ROTATION.inv(),
-    )
-
-    assert tilt.x == pytest.approx(0.08)
-    assert tilt.y == pytest.approx(-0.11)
     assert tilt.z == pytest.approx(0.0)
 
 

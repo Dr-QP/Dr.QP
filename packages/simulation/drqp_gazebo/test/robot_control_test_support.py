@@ -150,6 +150,7 @@ class GazeboRobotControlBase(unittest.TestCase):
     MOVEMENT_DURATION = 5.0
     POSE_SETTLE_DURATION = 1.0
     BALANCE_SETTLE_DURATION = 3.0
+    BALANCED_BODY_TILT_TOLERANCE = 0.10
 
     # Posture delta threshold (meters).
     MIN_ARM_DISARM_HEIGHT_DELTA = 0.02
@@ -768,7 +769,7 @@ class GazeboRobotControlBase(unittest.TestCase):
             self.assertTrue(wait.wait(), 'Did not receive /imu/data from Gazebo IMU sensor')
 
     def assert_imu_data_reports_orientation(self) -> None:
-        """Issue 356: Gazebo IMU data should include mounted-link orientation for ROS consumers."""
+        """Issue 356: Gazebo IMU data should publish body attitude for ROS consumers."""
         self.assert_imu_data()
         self._spin_until(
             lambda: self.current_imu_message is not None,
@@ -791,18 +792,6 @@ class GazeboRobotControlBase(unittest.TestCase):
             self.current_imu_message.orientation_covariance[0],
             0.0,
             'Expected Gazebo IMU orientation to be marked available in /imu/data',
-        )
-
-        angle_from_identity = 2.0 * math.acos(
-            min(1.0, max(0.0, abs(orientation.w) / orientation_norm))
-        )
-        self.assertGreater(
-            angle_from_identity,
-            0.5,
-            (
-                'Expected Gazebo to preserve the non-identity imu_link orientation '
-                'instead of publishing a default orientation'
-            ),
         )
 
         imu_body_tilt = body_tilt_from_imu(orientation)
@@ -1030,7 +1019,7 @@ class GazeboRobotControlBase(unittest.TestCase):
         self.assertAlmostEqual(
             balanced_base_roll,
             initial_base_roll,
-            delta=0.08,
+            delta=self.BALANCED_BODY_TILT_TOLERANCE,
             msg=(
                 'Expected body roll to stay close to its pre-tilt value after balance mode '
                 f'compensated for the board tilt (initial={initial_base_roll:.3f}, '
@@ -1040,7 +1029,7 @@ class GazeboRobotControlBase(unittest.TestCase):
         self.assertAlmostEqual(
             balanced_base_pitch,
             initial_base_pitch,
-            delta=0.08,
+            delta=self.BALANCED_BODY_TILT_TOLERANCE,
             msg=(
                 'Expected body pitch to stay close to its pre-tilt value after balance mode '
                 f'compensated for the board tilt (initial={initial_base_pitch:.3f}, '

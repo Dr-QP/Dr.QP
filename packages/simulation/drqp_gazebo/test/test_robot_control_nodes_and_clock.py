@@ -43,16 +43,8 @@ class TestGazeboRobotControlNodesAndClock(GazeboRobotControlBase):
 
     __test__ = True
 
-    def test_nodes_and_clock(self):
-        self.assert_nodes_and_clock()
-
-    def test_controllers_are_active(self):
-        self.assert_controllers_are_active()
-
-    def test_imu_data_is_published(self):
-        self.assert_imu_data()
-
-    def test_imu_data_reports_orientation_issue356(self):
+    def test_imu_data_reports_orientation(self):
+        # All the other assertions are already a part of setup, see _wait_for_simulation_ready()
         self.assert_imu_data_reports_orientation()
 
 

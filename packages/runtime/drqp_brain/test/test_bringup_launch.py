@@ -34,8 +34,8 @@ def test_bringup_launch_loads_the_imu_node():
     assert 'UnlessCondition(use_gazebo)' in launch_source
 
 
-def test_bringup_launch_uses_same_imu_transform_path_in_gazebo_and_hardware_issue356():
-    """Issue 356: Gazebo should not bypass the base-to-IMU transform path."""
+def test_bringup_launch_does_not_configure_brain_imu_transform_path_issue356():
+    """Issue 356: IMU mount conversion belongs upstream of drqp_brain."""
     launch_file = Path(__file__).resolve().parents[1] / 'launch' / 'bringup.launch.py'
     launch_source = launch_file.read_text(encoding='utf-8')
 
