@@ -17,9 +17,21 @@ runs:
           const { data } = await github.request('GET /rate_limit');
           core.info(JSON.stringify(data, null, 2));
 
-          const exhausted = Object.entries(data.resources ?? {})
-            .filter(([, resource]) => Number(resource.limit) > 0 && Number(resource.remaining) <= 0)
+          const resetTime = (reset) => new Date(Number(reset) * 1000).toISOString();
+
+          const resources = Object.entries(data.resources ?? {})
             .sort(([left], [right]) => left.localeCompare(right));
+
+          core.info('GitHub API rate limit summary:');
+          for (const [name, resource] of resources) {
+            const exhausted = Number(resource.limit) > 0 && Number(resource.remaining) <= 0;
+            core.info(
+              `${exhausted ? '[EXHAUSTED] ' : ''}${name}: used=${resource.used}, limit=${resource.limit}, remaining=${resource.remaining}, reset=${resetTime(resource.reset)}`
+            );
+          }
+
+          const exhausted = resources
+            .filter(([, resource]) => Number(resource.limit) > 0 && Number(resource.remaining) <= 0);
 
           if (exhausted.length > 0) {
             core.warning(
@@ -28,27 +40,42 @@ runs:
                 .join(', ')}`
             );
 
-            const resetTime = (reset) => new Date(Number(reset) * 1000).toISOString();
+            for (const [name, resource] of exhausted) {
+              core.warning(
+                `${name}: used=${resource.used}, limit=${resource.limit}, remaining=${resource.remaining}, reset=${resetTime(resource.reset)}`
+              );
+            }
+          }
 
-            await core.summary
-              .addHeading('GitHub API Rate Limit Exhausted', 3)
-              .addRaw('API-backed tools may fail with HTTP 403 until the exhausted bucket resets.')
-              .addEOL()
-              .addTable([
-                [
-                  { data: 'Resource', header: true },
-                  { data: 'Used', header: true },
-                  { data: 'Limit', header: true },
-                  { data: 'Remaining', header: true },
-                  { data: 'Reset (UTC)', header: true },
-                ],
-                ...exhausted.map(([name, resource]) => [
+          const summary = core.summary
+            .addHeading('GitHub API Rate Limit Summary', 3)
+            .addTable([
+              [
+                { data: 'Resource', header: true },
+                { data: 'Status', header: true },
+                { data: 'Used', header: true },
+                { data: 'Limit', header: true },
+                { data: 'Remaining', header: true },
+                { data: 'Reset (UTC)', header: true },
+              ],
+              ...resources.map(([name, resource]) => {
+                const exhausted = Number(resource.limit) > 0 && Number(resource.remaining) <= 0;
+                return [
                   `\`${name}\``,
+                  exhausted ? ':warning: Exhausted' : 'OK',
                   String(resource.used),
                   String(resource.limit),
                   String(resource.remaining),
                   resetTime(resource.reset),
-                ]),
-              ])
-              .write();
+                ];
+              }),
+            ]);
+
+          if (exhausted.length > 0) {
+            summary
+              .addEOL()
+              .addHeading('GitHub API Rate Limit Exhausted', 3)
+              .addRaw('API-backed tools may fail with HTTP 403 until the exhausted bucket resets.');
           }
+
+          await summary.write();
