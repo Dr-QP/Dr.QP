@@ -18,12 +18,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from typing import Callable
+from typing import Callable, Protocol
 
 from control_msgs.action import FollowJointTrajectory
-from drqp_brain.models import HexapodModel
+from drqp_kinematics.models import HexapodModel
 import numpy as np
+from rclpy._rclpy_pybind11 import InvalidHandle, RCLError
 from rclpy.action import ActionClient
+from rclpy.exceptions import NotInitializedException
+from rclpy.impl.rcutils_logger import RcutilsLogger
 import rclpy.node
 import rclpy.publisher
 import rclpy.time
@@ -31,6 +34,18 @@ import trajectory_msgs.msg
 
 kFemurOffsetAngle = -13.11
 kTibiaOffsetAngle = -32.9
+
+RCLPY_CALLBACK_ERRORS = (InvalidHandle, NotInitializedException, RCLError, RuntimeError)
+
+
+class ShutdownAwareNode(Protocol):
+    _is_shutting_down: bool
+
+    def _track_future(self, future):
+        raise NotImplementedError
+
+    def get_logger(self) -> RcutilsLogger:
+        raise NotImplementedError
 
 
 class JointTrajectoryBuilder:
@@ -40,23 +55,49 @@ class JointTrajectoryBuilder:
         self.hexapod = hexapod
         self.points = []
 
+    def _ordered_joint_entries(self):
+        for leg in self.hexapod.legs:
+            for joint_name in ('coxa', 'femur', 'tibia'):
+                yield leg, joint_name, f'drqp/{leg.label.name}_{joint_name}'
+
     def add_point_from_hexapod(self, reach_in_seconds_from_start, effort=1.0, joint_mask=None):
         positions = []
         efforts = []
         self.joint_names = []
 
-        for leg in self.hexapod.legs:
-            for joint, angle in [
-                ('coxa', leg.coxa_angle),
-                ('femur', leg.femur_angle + kFemurOffsetAngle),
-                ('tibia', leg.tibia_angle + kTibiaOffsetAngle),
-            ]:
-                if joint_mask is not None and joint not in joint_mask:
-                    efforts.append(0.0)
-                else:
-                    efforts.append(effort)
-                positions.append(float(np.radians(angle)))
-                self.joint_names.append(f'dr_qp/{leg.label.name}_{joint}')
+        for leg, joint_name, controller_joint_name in self._ordered_joint_entries():
+            angle = {
+                'coxa': leg.coxa_angle,
+                'femur': leg.femur_angle + kFemurOffsetAngle,
+                'tibia': leg.tibia_angle + kTibiaOffsetAngle,
+            }[joint_name]
+
+            if joint_mask is not None and joint_name not in joint_mask:
+                efforts.append(0.0)
+            else:
+                efforts.append(effort)
+            positions.append(float(np.radians(angle)))
+            self.joint_names.append(controller_joint_name)
+
+        self.add_point(positions, efforts, reach_in_seconds_from_start)
+
+    def add_point_from_joint_targets(
+        self,
+        joint_targets: dict[str, float],
+        reach_in_seconds_from_start: float,
+        effort: float = 1.0,
+    ):
+        positions = []
+        efforts = []
+        self.joint_names = []
+
+        for _, _, controller_joint_name in self._ordered_joint_entries():
+            if controller_joint_name not in joint_targets:
+                raise KeyError(f'Missing joint target for {controller_joint_name}')
+
+            positions.append(float(joint_targets[controller_joint_name]))
+            efforts.append(effort)
+            self.joint_names.append(controller_joint_name)
 
         self.add_point(positions, efforts, reach_in_seconds_from_start)
 
@@ -76,7 +117,7 @@ class JointTrajectoryBuilder:
     def publish_action(
         self,
         action_client: ActionClient,
-        node: rclpy.node.Node,
+        node: ShutdownAwareNode,
         result_callback: Callable,
     ):
         goal = FollowJointTrajectory.Goal()
@@ -85,13 +126,32 @@ class JointTrajectoryBuilder:
         )
 
         goal_handle_future = action_client.send_goal_async(goal)
+        node._track_future(goal_handle_future)
+
+        def log_callback_warning(message: str):
+            try:
+                node.get_logger().warning(message)
+            except RCLPY_CALLBACK_ERRORS:
+                # Callback teardown warnings are best-effort once ROS logging is gone.
+                pass
 
         def result_response_callback(future):
-            node.get_logger().debug(f'Result received: {future.result().result}')
-            result_callback()
+            if node._is_shutting_down is True:
+                return
+            try:
+                node.get_logger().debug(f'Result received: {future.result().result}')
+                result_callback()
+            except RCLPY_CALLBACK_ERRORS as exc:
+                log_callback_warning(f'Ignoring trajectory result callback during shutdown: {exc}')
 
         def goal_response_callback(future):
-            goal_handle = future.result()
+            if node._is_shutting_down is True:
+                return
+            try:
+                goal_handle = future.result()
+            except RCLPY_CALLBACK_ERRORS as exc:
+                log_callback_warning(f'Ignoring trajectory goal response during shutdown: {exc}')
+                return
             if not goal_handle.accepted:
                 node.get_logger().error('Goal rejected')
                 return
@@ -99,6 +159,7 @@ class JointTrajectoryBuilder:
             node.get_logger().debug('Goal accepted')
 
             result_future = goal_handle.get_result_async()
+            node._track_future(result_future)
             result_future.add_done_callback(result_response_callback)
 
         goal_handle_future.add_done_callback(goal_response_callback)

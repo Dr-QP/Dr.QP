@@ -181,6 +181,25 @@ SCENARIO("ROS node")
         CHECK_THAT(joint.position_as_radians, Catch::Matchers::WithinAbs(0.0, 0.01));
       }
 
+      THEN("Servo limits should include initial position")
+      {
+        const auto limits = robotConfig.getServoLimits(2);
+        REQUIRE(limits);
+
+        const auto expected = robotConfig.jointToServo({"test_robot/left_front_femur", 0.4});
+        REQUIRE(expected);
+        CHECK(limits->initial_position == expected->position);
+      }
+
+      THEN("Servo limit endpoints should ignore offset")
+      {
+        const auto limits = robotConfig.getServoLimits(2);
+        REQUIRE(limits);
+
+        CHECK(limits->min_position == 348);
+        CHECK(limits->max_position == 775);
+      }
+
       THEN("getJointNames should return all joints defined in config")
       {
         CHECK(robotConfig.numServos() == 5);
@@ -216,6 +235,153 @@ SCENARIO("ROS node")
         CHECK_THROWS(robotConfig.loadConfig(TEST_DATA_DIR_IN_SOURCE_TREE "/non_robot_config.yml"));
         CHECK_THROWS(
           robotConfig.loadConfig(TEST_DATA_DIR_IN_SOURCE_TREE "/non_existing_config.yml"));
+      }
+    }
+
+    GIVEN("Robot config with direct servo definitions")
+    {
+      RobotConfig directConfig;
+
+      const auto expectInitialPositionMatchesJointToServo =
+        [&](const RobotConfig::ServoJointParams& params) {
+          CAPTURE(
+            params.joint_name, params.servo_id, params.inverted, params.offset_radians,
+            params.min_angle_radians, params.max_angle_radians, params.initial_position_radians);
+
+          directConfig.addServo(params);
+
+          const auto limits = directConfig.getServoLimits(params.servo_id);
+          REQUIRE(limits);
+
+          const auto expected = directConfig.jointToServo(
+            {.name = params.joint_name, .position_as_radians = params.initial_position_radians});
+          REQUIRE(expected);
+
+          CHECK(limits->initial_position == expected->position);
+        };
+
+      const auto expectLimitEndpointsIgnoreOffset = [&](
+                                                      const RobotConfig::ServoJointParams& params,
+                                                      uint16_t expectedMin, uint16_t expectedMax) {
+        CAPTURE(
+          params.joint_name, params.servo_id, params.inverted, params.offset_radians,
+          params.min_angle_radians, params.max_angle_radians);
+
+        directConfig.addServo(params);
+
+        const auto limits = directConfig.getServoLimits(params.servo_id);
+        REQUIRE(limits);
+
+        CHECK(limits->min_position == expectedMin);
+        CHECK(limits->max_position == expectedMax);
+      };
+
+      THEN("Servo limits should clamp initial positions through the joint-to-servo path")
+      {
+        using double_limits = std::numeric_limits<double>;
+
+        expectInitialPositionMatchesJointToServo({
+          .joint_name = "within_limits",
+          .servo_id = 41,
+          .inverted = false,
+          .offset_radians = 0.0,
+          .max_torque = 1.0,
+          .min_angle_radians = -1.0,
+          .max_angle_radians = 1.62,
+          .initial_position_radians = 0.4,
+        });
+
+        expectInitialPositionMatchesJointToServo({
+          .joint_name = "below_min",
+          .servo_id = 42,
+          .inverted = false,
+          .offset_radians = 0.0,
+          .max_torque = 1.0,
+          .min_angle_radians = -1.0,
+          .max_angle_radians = 1.62,
+          .initial_position_radians = -3.0,
+        });
+
+        expectInitialPositionMatchesJointToServo({
+          .joint_name = "above_max",
+          .servo_id = 43,
+          .inverted = false,
+          .offset_radians = 0.0,
+          .max_torque = 1.0,
+          .min_angle_radians = -1.0,
+          .max_angle_radians = 1.62,
+          .initial_position_radians = 3.0,
+        });
+
+        expectInitialPositionMatchesJointToServo({
+          .joint_name = "negative_infinity",
+          .servo_id = 44,
+          .inverted = false,
+          .offset_radians = 0.0,
+          .max_torque = 1.0,
+          .min_angle_radians = -1.0,
+          .max_angle_radians = 1.62,
+          .initial_position_radians = -double_limits::infinity(),
+        });
+
+        expectInitialPositionMatchesJointToServo({
+          .joint_name = "positive_infinity",
+          .servo_id = 45,
+          .inverted = false,
+          .offset_radians = 0.0,
+          .max_torque = 1.0,
+          .min_angle_radians = -1.0,
+          .max_angle_radians = 1.62,
+          .initial_position_radians = double_limits::infinity(),
+        });
+
+        expectInitialPositionMatchesJointToServo({
+          .joint_name = "nan_initial_position",
+          .servo_id = 46,
+          .inverted = false,
+          .offset_radians = 0.0,
+          .max_torque = 1.0,
+          .min_angle_radians = -1.0,
+          .max_angle_radians = 1.62,
+          .initial_position_radians = double_limits::quiet_NaN(),
+        });
+
+        expectInitialPositionMatchesJointToServo({
+          .joint_name = "inverted_with_offset",
+          .servo_id = 47,
+          .inverted = true,
+          .offset_radians = 0.2,
+          .max_torque = 1.0,
+          .min_angle_radians = -1.0,
+          .max_angle_radians = 1.62,
+          .initial_position_radians = 3.0,
+        });
+
+        expectLimitEndpointsIgnoreOffset(
+          {
+            .joint_name = "offset_limits",
+            .servo_id = 48,
+            .inverted = false,
+            .offset_radians = 0.2,
+            .max_torque = 1.0,
+            .min_angle_radians = -1.0,
+            .max_angle_radians = 1.62,
+            .initial_position_radians = 0.0,
+          },
+          348, 775);
+
+        expectLimitEndpointsIgnoreOffset(
+          {
+            .joint_name = "inverted_offset_limits",
+            .servo_id = 49,
+            .inverted = true,
+            .offset_radians = 0.2,
+            .max_torque = 1.0,
+            .min_angle_radians = -1.0,
+            .max_angle_radians = 1.62,
+            .initial_position_radians = 0.0,
+          },
+          247, 674);
       }
     }
   }

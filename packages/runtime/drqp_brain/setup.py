@@ -5,7 +5,7 @@ package_name = 'drqp_brain'
 setup(
     name=package_name,
     version='0.1.0',
-    packages=find_packages(exclude=['test']),
+    packages=find_packages(exclude=['test', 'test.*']),
     data_files=[
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
@@ -16,6 +16,8 @@ setup(
         'python-statemachine>=2.5.0',
         'numpy',
         'scipy',
+        'adafruit-circuitpython-bno055',
+        'lgpio',
     ],
     tests_require=['pytest'],  # must be here, otherwise colcon will skip tests
     zip_safe=True,
@@ -28,6 +30,7 @@ setup(
             'drqp_brain = drqp_brain.brain_node:main',
             'drqp_robot_state = drqp_brain.robot_state.robot_state_node:main',
             'drqp_joystick_translator = drqp_brain.joystick_translator_node:main',
+            'drqp_imu = drqp_brain.imu_node:main',
         ],
     },
 )

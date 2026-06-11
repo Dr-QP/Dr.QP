@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 from ament_copyright.main import main
 import pytest
 
@@ -19,5 +21,6 @@ import pytest
 @pytest.mark.copyright
 @pytest.mark.linter
 def test_copyright():
-    rc = main(argv=['.', 'test'])
+    package_root = os.path.dirname(os.path.dirname(__file__))
+    rc = main(argv=[package_root])
     assert rc == 0, 'Found errors'

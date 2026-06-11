@@ -47,7 +47,6 @@
       "slevesque.vscode-3dviewer",
       "corker.vscode-micromamba",
       "github.vscode-pull-request-github",
-      "augment.vscode-augment",
       "charliermarsh.ruff",
       "tamasfe.even-better-toml",
       "davidanson.vscode-markdownlint",
@@ -65,7 +64,8 @@
       "ms-azuretools.vscode-containers",
       "Ranch-Hand-Robotics.rde-ros-2",
       "Ranch-Hand-Robotics.urdf-editor",
-      "esbenp.prettier-vscode"
+      "esbenp.prettier-vscode",
+      "openai.chatgpt"
     ]
     // cSpell:enable
   },
@@ -157,7 +157,7 @@
           // Force network mode for DDS network https://robotics.stackexchange.com/a/114955/38643
           // "FASTDDS_BUILTIN_TRANSPORTS": "UDPv4"
         },
-        "python": "${workspaceFolder}/.venv-prod/bin/python3",
+        "python": "/usr/bin/python3",
       }
     ]
   },
@@ -167,9 +167,10 @@
 
       {
         "label": "Dr.QP colcon build",
-        "type": "ROS2",
-        "command": "python3",
+        "type": "shell",
+        "command": "${workspaceFolder}/scripts/with-ros-env.sh",
         "args": [
+          "python3",
           "-m",
           "colcon",
           "build",
@@ -209,9 +210,10 @@
       },
       {
         "label": "Dr.QP colcon test",
-        "type": "ROS2",
-        "command": "python3",
+        "type": "shell",
+        "command": "${workspaceFolder}/scripts/with-ros-env.sh",
         "args": [
+          "python3",
           "-m",
           "colcon",
           "test",
@@ -234,13 +236,17 @@
           "kind": "test",
           "isDefault": true
         },
+        "dependsOn": [
+          "Dr.QP rosdep"
+        ]
       },
 
       {
         "label": "Dr.QP colcon test failed only",
-        "type": "ROS2",
-        "command": "python3",
+        "type": "shell",
+        "command": "${workspaceFolder}/scripts/with-ros-env.sh",
         "args": [
+          "python3",
           "-m",
           "colcon",
           "test",
@@ -260,6 +266,9 @@
           "kind": "test",
           "isDefault": true
         },
+        "dependsOn": [
+          "Dr.QP rosdep"
+        ]
       },
       {
         "label": "Dr.QP coverage",
@@ -317,8 +326,8 @@
       },
       {
         "label": "Dr.QP rosdep",
-        "type": "ROS2",
-        "command": "./scripts/ros-dep.sh",
+        "type": "shell",
+        "command": "${workspaceFolder}/scripts/ros-dep.sh",
         "problemMatcher": []
       },
       {
@@ -330,18 +339,7 @@
       {
         "label": "Dr.QP venv",
         "type": "shell",
-        "command": "python3 -m venv ${workspaceFolder}/.venv && ${workspaceFolder}/.venv/bin/python3 -m pip install -r ${workspaceFolder}/requirements.txt --use-pep517 --upgrade", // Keep in sync with the command in .devcontainer/devcontainer.json
-        "options": {
-          "cwd": "${workspaceFolder}"
-        },
-        "problemMatcher": [
-          "$python"
-        ]
-      },
-      {
-        "label": "Dr.QP prod-venv",
-        "type": "shell",
-        "command": "${workspaceFolder}/docker/ros/deploy/prod-venv.sh build && ${workspaceFolder}/docker/ros/deploy/prod-venv.sh install",
+        "command": "./scripts/uv-sync.sh",
         "options": {
           "cwd": "${workspaceFolder}"
         },
@@ -466,12 +464,13 @@
       "/opt/ros/jazzy/local/lib/python3.12/dist-packages"
     ],
     "python.testing.pytestArgs": [
-        "packages"
+        "packages",
+        "py_packages"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "[python]": {
-      "editor.formatOnSave": true,
+      "editor.formatOnSave": false,
       "editor.defaultFormatter": "charliermarsh.ruff" // cSpell:disable-line
     },
     "ruff.organizeImports": true,
@@ -485,6 +484,7 @@
       "/build/**": true,
       "/install/**": true,
       "/log/**": true,
+      "docs/_build/**": true,
     },
     "clangd.enable": true,
     "clangd.path": "clangd",
@@ -524,7 +524,6 @@
       "debugpy",
       "deflist",
       "dollarmath",
-      "dr_qp",
       "drqp",
       "EEPROM",
       "esbonio",
@@ -586,10 +585,11 @@
       "**/ansible/**/*.yml": "ansible",
       "**/ansible/**/*.yaml": "ansible",
     },
+    "ansible.mcpServer.enabled": true,
     "python.analysis.typeCheckingMode": "standard",
     "python.defaultInterpreterPath": "/usr/bin/python3",
 
-    "ros2-topic-viewer.rosSetupScript": "/media/anton/dev/ros_workspaces/drqp_ws/src/Dr.QP/install/setup.bash",
+    "ros2-topic-viewer.rosSetupScript": "scripts/setup.bash",
     "ansibleVault.encryptVaultId": "",
 
     "github.copilot.chat.codeGeneration.useInstructionFiles": true,
@@ -600,17 +600,33 @@
     },
     "chat.agent.enabled": true,
     "chat.agent.maxRequests": 250,
+    "chat.useAgentSkills": true,
+    "chat.useAgentsMdFile": true,
     "chat.mcp.gallery.enabled": true,
     "chat.mcp.autostart": "newAndOutdated",
     "chat.tools.terminal.autoApprove": {
-      "*": {
-        "approve": true,
-      }
+      "/.*/": true, // Allow all commands, denied commands will still need approval.
+      "gh": true,
+      "rm": false
     },
+    "chat.tools.terminal.ignoreDefaultAutoApproveRules": false,
+    "chat.tools.terminal.blockDetectedFileWrites": "outsideWorkspace",
     "chat.tools.urls.autoApprove": {
+      "https://code.visualstudio.com": true,
+      "https://raw.githubusercontent.com/github/github-mcp-server/": true,
       "https://github.com": true,
-      "https://www.google.com/search": true
+      "https://code.visualstudio.com/docs": true,
+      "https://docs.github.com": true,
+      "https://*.github.com": {
+        "approveRequest": true
+      },
+      "https://www.google.com/search": true,
+      "https://docs.docker.com": true,
+      "https://code.claude.com/docs/en/": true,
     },
     "chat.tools.terminal.autoReplyToPrompts": true,
+
+    "python.terminal.activateEnvironment": false,
+    "python.terminal.activateEnvInCurrentTerminal": false
   }
 }

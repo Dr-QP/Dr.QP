@@ -7,5 +7,5 @@ Notebooks are stored in the myst format, which is a markdown-based format that i
 ## Running Notebooks
 
 1. Clone the repository and open the workspace as usual.
-2. Run `Dr.QP venv` task from VSCode
+2. Run `Dr.QP venv` task from VSCode (`uv sync`)
 3. Run `Dr.QP sync notebooks` task from VSCode

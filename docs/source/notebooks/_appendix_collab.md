@@ -70,7 +70,9 @@ if IN_COLAB:
         !mv -f Dr.QP/* .
         !mv -f docs/source/notebooks/* .
         !rm -rf Dr.QP
-        %pip install -r requirements.txt
+        %pip install uv
+        !uv export --group notebooks --no-hashes --no-emit-project > /tmp/nb_reqs.txt
+        %pip install -r /tmp/nb_reqs.txt
 
         print('\n\n\nRestarting runtime to pick up the new modules...')
         os.kill(os.getpid(), 9)

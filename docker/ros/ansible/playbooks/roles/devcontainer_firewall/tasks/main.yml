@@ -1,0 +1,31 @@
+---
+- name: Install firewall tools
+  ansible.builtin.apt:
+    name:
+      - iptables
+      - ipset
+      - dnsutils
+      - iproute2
+      - jq
+      - curl
+      - aggregate
+    state: present
+    update_cache: true
+    install_recommends: false
+
+- name: Install init-firewall.sh script
+  ansible.builtin.copy:
+    src: init-firewall.sh
+    dest: /usr/local/bin/init-firewall.sh
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Allow passwordless sudo for init-firewall.sh
+  ansible.builtin.copy:
+    src: devcontainer-firewall-sudoers
+    dest: /etc/sudoers.d/devcontainer-firewall
+    owner: root
+    group: root
+    mode: "0440"
+    validate: /usr/sbin/visudo -cf %s

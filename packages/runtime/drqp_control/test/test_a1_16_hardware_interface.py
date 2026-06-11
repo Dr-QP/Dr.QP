@@ -73,20 +73,20 @@ class TestA116HardwareInterface(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         rclpy.init()
-
-    @classmethod
-    def tearDownClass(cls):
-        rclpy.shutdown()
+        cls.addClassCleanup(rclpy.try_shutdown)
 
     def setUp(self):
         self.node = rclpy.create_node('test_servo_driver_' + self.id().replace('.', '_'))
+        self.addCleanup(self.node.destroy_node)
         self._wait_for_controller(self.node)
         self.trajectory_client = ActionClient(
             self.node,
             FollowJointTrajectory,
             '/joint_trajectory_controller/follow_joint_trajectory',
         )
+        self.addCleanup(self.trajectory_client.destroy)
         self.assertTrue(self.trajectory_client.wait_for_server(timeout_sec=10.0))
 
         self.dynamic_joint_states_sub = self.node.create_subscription(
@@ -95,25 +95,26 @@ class TestA116HardwareInterface(unittest.TestCase):
             self.dynamic_joint_states_callback,
             10,
         )
+        self.addCleanup(self.dynamic_joint_states_sub.destroy)
         self.joint_names = [
-            'dr_qp/left_front_coxa',
-            'dr_qp/left_front_femur',
-            'dr_qp/left_front_tibia',
-            'dr_qp/right_front_coxa',
-            'dr_qp/right_front_femur',
-            'dr_qp/right_front_tibia',
-            'dr_qp/left_middle_coxa',
-            'dr_qp/left_middle_femur',
-            'dr_qp/left_middle_tibia',
-            'dr_qp/right_middle_coxa',
-            'dr_qp/right_middle_femur',
-            'dr_qp/right_middle_tibia',
-            'dr_qp/left_back_coxa',
-            'dr_qp/left_back_femur',
-            'dr_qp/left_back_tibia',
-            'dr_qp/right_back_coxa',
-            'dr_qp/right_back_femur',
-            'dr_qp/right_back_tibia',
+            'drqp/left_front_coxa',
+            'drqp/left_front_femur',
+            'drqp/left_front_tibia',
+            'drqp/right_front_coxa',
+            'drqp/right_front_femur',
+            'drqp/right_front_tibia',
+            'drqp/left_middle_coxa',
+            'drqp/left_middle_femur',
+            'drqp/left_middle_tibia',
+            'drqp/right_middle_coxa',
+            'drqp/right_middle_femur',
+            'drqp/right_middle_tibia',
+            'drqp/left_back_coxa',
+            'drqp/left_back_femur',
+            'drqp/left_back_tibia',
+            'drqp/right_back_coxa',
+            'drqp/right_back_femur',
+            'drqp/right_back_tibia',
         ]
         self.non_joint_interface_names = ['battery_state']
         self._reset_feedback()
@@ -124,6 +125,7 @@ class TestA116HardwareInterface(unittest.TestCase):
             effort=1,
             expected_position=neutral_position,
         )
+        self.addCleanup(self._reset_feedback)
 
     def _wait_for_controller(self, node):
         needed_controllers = ['joint_trajectory_controller', 'joint_state_broadcaster']
@@ -154,12 +156,6 @@ class TestA116HardwareInterface(unittest.TestCase):
         self.joint_efforts = joint_efforts
         self.last_feedback = rclpy.time.Time.from_msg(msg.header.stamp)
         # self.node.get_logger().info(f'Feedback received: {self.joint_positions}')
-
-    def tearDown(self):
-        self.trajectory_client.destroy()
-        self.dynamic_joint_states_sub.destroy()
-        self.node.destroy_node()
-        self._reset_feedback()
 
     def test_node_start(self):
         check_node_running(self.node, 'robot_state_publisher')
@@ -244,7 +240,6 @@ class TestA116HardwareInterface(unittest.TestCase):
         trajectory_goal = FollowJointTrajectory.Goal()
         trajectory_goal.trajectory.joint_names = self.joint_names
         trajectory_goal.trajectory.points = [target_point]
-        trajectory_goal.trajectory.header.stamp = self.node.get_clock().now().to_msg()
         trajectory_goal.trajectory.header.frame_id = 'test_frame'
 
         goal_handle_future = self.trajectory_client.send_goal_async(trajectory_goal)

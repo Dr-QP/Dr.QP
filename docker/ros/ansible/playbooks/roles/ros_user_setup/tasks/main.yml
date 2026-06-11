@@ -55,7 +55,7 @@
 - name: Add workspace setup to .bashrc
   ansible.builtin.lineinfile:
     path: "{{ user_home }}/.bashrc"
-    line: "source {{ ros_user_setup_workspace_dir }}/install/setup.bash"
+    line: "source {{ ros_user_setup_workspace_dir }}/scripts/setup.bash"
     state: present
     create: true
     owner: "{{ ros_user_setup_uid }}"

@@ -1,9 +1,12 @@
 ---
 description: 'Improve code quality, apply security best practices, and enhance design whilst maintaining green tests and GitHub issue compliance.'
-name: 'TDD Refactor Phase'
-model: Claude Sonnet 4.5
+name: 'TDD Refactor'
+model: GPT-5.4
 tools:
   [
+    'context7/*',
+    'sequentialthinking/*',
+    'github/*',
     'edit/editFiles',
     'execute/getTerminalOutput',
     'execute/runInTerminal',

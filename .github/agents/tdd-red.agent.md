@@ -1,9 +1,12 @@
 ---
 description: 'Guide test-first development by writing failing tests that describe desired behaviour from GitHub issue context before implementation exists.'
-name: 'TDD Red Phase'
-model: Claude Sonnet 4.5
+name: 'TDD Red'
+model: GPT-5.4
 tools:
   [
+    'context7/*',
+    'sequentialthinking/*',
+    'github/*',
     'edit/editFiles',
     'execute/getTerminalOutput',
     'execute/runInTerminal',

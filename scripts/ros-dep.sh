@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 
-script_dir=$(dirname $0)
+script_dir=$(dirname "$0")
 source "$script_dir/__utils.sh"
 
 sudo apt-get update
 
+source "$script_dir/setup.bash"
+
 # -r is needed for arm64 install as it doesn't have gazebo
 rosdep install --from-paths "$sources_dir" --ignore-src -y -r
+
+"$root_dir/docker/ros/deploy/install-overlay-python-requirements.sh" \
+  "$root_dir/build" \
+  "$root_dir/install"

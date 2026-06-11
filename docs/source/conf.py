@@ -64,7 +64,7 @@ extensions = [
     'sphinx.ext.duration',
     'sphinx.ext.intersphinx',
     'sphinxext.rediraffe',
-    'sphinxcontrib.lightbox2',
+    'sphinxcontrib.spotlight',
     'myst_nb',  # for embedding jupyter notebooks
     # Disabled for now due to conflict with myst_nb
     # see https://github.com/executablebooks/MyST-NB/issues/421
@@ -105,9 +105,6 @@ intersphinx_mapping = {
 intersphinx_disabled_domains = ['std']
 
 templates_path = ['_templates']
-
-lightbox2_wrap_around = False
-lightbox2_fit_images_in_viewport = True
 
 # -- Redirects -----------------------------------------------------------------
 
@@ -186,14 +183,7 @@ epub_show_urls = 'footnote'
 
 
 def setup(app: Sphinx) -> Dict[str, Any]:
-    """
-    Add custom configuration to sphinx app.
-
-    Args:
-    -----
-        app: the Sphinx application
-
-    """
+    """Add custom configuration to Sphinx app."""
     # Set default if not already defined in the shell
     os.environ.setdefault('SPHINX_BUILD', '1')
 

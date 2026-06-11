@@ -9,7 +9,7 @@ For general engineering principles, code quality standards, and best practices, 
 
 ## Python-Specific Instructions
 
-- Use **[ros2-environment-setup](../skills/ros2-environment-setup/SKILL.md)**: to initialize and configure the development environment
+- Use **[ros2-environment-setup](../skills/ros2-environment-setup/)**: to initialize and configure the development environment
 
 ### Documentation & Type Hints
 

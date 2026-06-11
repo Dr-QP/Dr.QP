@@ -112,6 +112,9 @@ target/
 profile_default/
 ipython_config.py
 
+# C++ profiling
+*.profraw
+
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is
 #   intended to run in multiple environments; otherwise, check them in:
@@ -159,8 +162,9 @@ celerybeat.pid
 
 # Environments
 .env
+*.env
+.venv
 .venv/
-.venv-prod/
 env/
 venv/
 ENV/
@@ -350,6 +354,13 @@ nodesource_setup.sh
 
 # Ansible
 .ansible/
+
+# Copilot
+.copilot-tracking/
+.tmp/
+
+# Superpowers plans
+docs/superpowers/
 
 # Super-Linter
 super-linter-output/

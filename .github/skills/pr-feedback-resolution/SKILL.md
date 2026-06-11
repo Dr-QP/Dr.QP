@@ -1,6 +1,6 @@
 ---
 name: pr-feedback-resolution
-description: Systematic workflow for addressing PR feedback, CI failures, security findings, and coverage gaps. Use when resolving code review comments, fixing CI issues, addressing CodeQL alerts, or improving test coverage.
+description: 'Systematic workflow for resolving pull request feedback, review threads, CI failures, CodeQL findings, and Codecov patch coverage gaps. Use when addressing PR review comments, skipping resolved threads, classifying reviewer intent, fixing failing checks, or preparing a PR for re-review. Keywords: PR feedback, review comments, resolved threads, CI failures, CodeQL, Codecov, re-review.'
 ---
 
 # PR Feedback Resolution Skill
@@ -14,15 +14,27 @@ Systematic approach to resolving all PR feedback including review comments, CI f
 - Resolve CodeQL security findings
 - Improve Codecov patch coverage
 - Respond to reviewer questions
-- Update PR based on feedback
+- Update code, tests, and thread replies based on feedback
+- NEVER post work summary as PR title or body.
+- Do not edit PR title/body unless explicitly requested or the user asks for a PR refresh.
 
 ## Prerequisites
 
 - Active pull request with feedback
 - Access to GitHub API for PR details
-- Access to CI logs and test results
+- Access to CI logs and test results via the [extract-github-actions-logs](../extract-github-actions-logs/) skill
 - Access to CodeQL security scan results
 - Access to Codecov reports
+
+## When to Delegate
+
+When performing code changes as part of PR feedback resolution:
+
+- **Delegate to Principal Engineer agent** for all code implementation. The Principal Engineer orchestrates TDD internally.
+- **Never invoke** tdd-red, tdd-green, or tdd-refactor agents directly—Principal Engineer handles these.
+- **Delegate for research**: Use task-researcher when blocked on understanding requirements.
+- **Delegate for planning**: Use task-planner only for complex multi-step remediation.
+- For small, unambiguous fixes (docs or metadata) when intent is explicit, apply changes directly.
 
 ## Core Workflows
 
@@ -31,14 +43,41 @@ Systematic approach to resolving all PR feedback including review comments, CI f
 Gather complete context before making changes.
 
 1. **Fetch PR review comments**:
-   ```bash
-   # Use GitHub MCP or API
-   gh pr view <pr-number> --comments
-   ```
+
+```bash
+    # Use GitHub MCP or an API that returns per-thread resolution state
+    gh api graphql -f owner='<owner>' -f repo='<repo>' -F number=<pr-number> -f query='\
+       query($owner: String!, $repo: String!, $number: Int!) {\
+          repository(owner: $owner, name: $repo) {\
+             pullRequest(number: $number) {\
+                reviewThreads(first: 100) {\
+                   nodes {\
+                      isResolved\
+                      comments(first: 100) {\
+                         nodes {\
+                            body\
+                            author { login }\
+                            url\
+                         }\
+                      }\
+                   }\
+                }\
+             }\
+          }\
+       }'
+```
+
+    The fetch mechanism must expose each review thread's resolved state such as `isResolved`; `gh pr view <pr-number> --comments` alone is insufficient because it flattens comments and omits thread resolution metadata.
+
+After fetching, **filter out resolved threads** using these rules (apply in order):
+
+- **Skip if GitHub-resolved**: If a review thread is marked as resolved on GitHub, exclude the entire thread — do not process any comments in it.
+- **Skip if last comment signals completion**: Treat the thread as resolved and skip it entirely only if the last comment clearly and positively signals completion using a case-insensitive whole-word or whole-phrase match on terms like "done", "complete", "fixed", "addressed", "ignore", "wontfix", "won't fix", "LGTM", or "no action needed". Do not treat the thread as resolved if the term appears inside another word such as "prefixed" or in an obviously negative or uncertain context near the term such as "not fixed yet", "still not addressed", "is this fixed?", or "doesn't look done".
+- **Override with last-comment instructions**: If the last comment in an unresolved thread contains explicit instructions (e.g., "instead do X", "use Y here", "change this to Z"), treat those instructions as the authoritative user intent for that thread and ignore earlier comments in the thread.
 
 2. **Get CI check results**:
    - Check GitHub Actions workflow runs
-   - Download test logs from artifacts
+   - Use the [extract-github-actions-logs](../extract-github-actions-logs/) skill to fetch job logs and download uploaded colcon logs or xUnit report artifacts
    - Review lint/format check outputs
    - Check build logs for errors
 
@@ -60,7 +99,7 @@ Gather complete context before making changes.
 
 ### Workflow 2: Classify Review Comment Intent
 
-Determine confidence level before making changes.
+Determine confidence level before making changes. **Only process threads that passed the Workflow 1 filters** — resolved or completion-signaled threads are never classified.
 
 1. **Analyze comment language**:
    - **Explicit requests**: "Change X to Y", "Add Z", "Remove A"
@@ -70,25 +109,25 @@ Determine confidence level before making changes.
 
 2. **Compute confidence score**:
    - **90-100%**: Explicit change request with clear instructions
-   - **80-89%**: Strong suggestion with clear direction
-   - **60-79%**: Suggestion or question with unclear intent
-   - **<60%**: Observation or open-ended question
+   - **70-89%**: Strong suggestion with clear direction
+   - **50-69%**: Suggestion or question with unclear intent
+   - **<50%**: Observation or open-ended question
 
 3. **Decision matrix**:
-   - **≥80% confidence**: Proceed with change, document rationale
-   - **<80% confidence**: Reply asking for clarification, do not change code
+   - **≥70% confidence**: Proceed with change, document rationale
+   - **<70% confidence**: Reply asking for clarification, do not change code
 
 ### Workflow 3: Address Review Comments
 
 Resolve code review feedback systematically.
 
-1. **For each high-confidence comment (≥80%)**:
+1. **For each high-confidence comment (≥70%)**:
    - Validate approach with principal engineer perspective
    - Use TDD cycle: write test → implement → refactor
    - Link commit/change to specific review comment
    - Mark comment as resolved after verification
 
-2. **For each low-confidence comment (<80%)**:
+2. **For each low-confidence comment (<70%)**:
    - Reply in-thread with interpretation and ask for confirmation
    - Example: "I understand this as [interpretation]. Should I [proposed action]?"
    - Wait for clarification before making changes
@@ -105,10 +144,16 @@ Resolve code review feedback systematically.
 Systematically resolve failing tests.
 
 1. **Collect test output**:
-   ```bash
-   # For ROS 2 workspace
+   - For GitHub Actions failures, first use the [extract-github-actions-logs](../extract-github-actions-logs/) skill to:
+     - fetch the failing job log with `gh run view ... --job ... --log`
+     - download `colcon-logs-<arch>` artifacts when available
+     - download `colcon-test-reports-<arch>` artifacts when available
+   - Inspect the downloaded xUnit XML files and colcon log directories before reproducing locally.
+
+```bash
+   # For local ROS 2 workspace follow-up after reviewing CI evidence
    cat build/<package_name>/test_results/<package_name>/*.xml
-   ```
+```
 
 2. **Diagnose root cause**:
    - Read test failure messages
@@ -123,12 +168,12 @@ Systematically resolve failing tests.
    - Add regression test if bug revealed
 
 4. **Verify fix locally**:
-   ```bash
+
+```bash
    # ROS 2 example
-   source scripts/setup.bash
-   colcon test --packages-select <package>
-   colcon test-result --verbose
-   ```
+   scripts/with-ros-env.sh python -m colcon test --packages-select <package>
+   scripts/with-ros-env.sh python -m colcon test-result --verbose
+```
 
 5. **Push and verify CI passes**:
    - Commit fix with descriptive message
@@ -173,10 +218,11 @@ Address security vulnerabilities safely.
 Add tests for uncovered code.
 
 1. **Identify coverage gaps**:
-   ```bash
+
+```bash
    # From Codecov report or local coverage
    # Note uncovered line ranges in modified files
-   ```
+```
 
 2. **Prioritize coverage**:
    - **Critical paths**: Business logic, error handling
@@ -189,12 +235,13 @@ Add tests for uncovered code.
    - Use TDD Refactor: Improve test clarity
 
 4. **Verify coverage improvement**:
-   ```bash
+
+```bash
    # ROS 2 example with coverage
    colcon build --cmake-args -DDRQP_ENABLE_COVERAGE=ON
    colcon test
    # Check coverage report
-   ```
+```
 
 5. **Target coverage goal**:
    - Aim for 80%+ patch coverage minimum
@@ -213,12 +260,7 @@ Ensure all feedback is addressed before requesting re-review.
    - [ ] Patch coverage meets target (≥80%)
    - [ ] All tests passing locally and in CI
 
-2. **Post resolution summary**:
-   - List resolved comments with links
-   - List CI failures fixed with evidence
-   - List security findings resolved
-   - Show coverage improvements
-   - Include test results and CI run links
+2. **Post resolution summary** using the Feedback Resolution Summary template (see Pattern below)
 
 3. **Request re-review**:
    - Tag original reviewers
@@ -227,9 +269,70 @@ Ensure all feedback is addressed before requesting re-review.
 
 ## Common Patterns
 
+### Pattern: Thread Resolution Filtering
+
+When iterating over PR review threads, apply these filters in order before any classification or action:
+
+| Check                    | Condition                                                                                                                                                                                                                                                                                                 | Action                                                          |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| GitHub-resolved          | Thread is marked resolved in GitHub UI                                                                                                                                                                                                                                                                    | **Skip entire thread**                                          |
+| Completion signal        | Last comment is a short, positive-only acknowledgement such as exactly "done", "complete", "fixed", "addressed", "resolved", "ignore", "wontfix", "won't fix", "LGTM", "looks good to me", "no action needed" (case-insensitive), with no trailing "but", "however", questions, or additional suggestions | **Skip entire thread**                                          |
+| Last-comment instruction | Last comment contains explicit instructions (e.g., "instead do X", "use Y", "change to Z")                                                                                                                                                                                                                | **Follow last comment only**; ignore earlier comments in thread |
+| Default                  | None of the above                                                                                                                                                                                                                                                                                         | Process thread normally using all comments                      |
+
+This filtering must be applied **before** computing confidence scores or taking any action.
+
+### Pattern: Feedback Resolution Summary Template
+
+Post this template as a PR comment after completing all work:
+
+<!-- validate_skills: ignore-cross-reference-start -->
+
+```markdown
+## Feedback Resolution Summary
+
+### Review Comments Addressed
+
+- [Comment #1](link): Changed X to Y per reviewer request
+- [Comment #2](link): Added error handling for edge case A
+- [Comment #3](link): **Clarification requested** - awaiting response on approach
+
+### CI Failures Fixed
+
+- **Tests**: Fixed 3 failing tests in drqp_serial ([logs](link))
+- **Lint**: Resolved formatting issues in 5 files
+- **Build**: Updated dependency declarations
+
+### Security Findings Resolved
+
+- **CodeQL-001**: Fixed SQL injection in query builder ([finding](link))
+- **CodeQL-002**: Addressed path traversal vulnerability ([finding](link))
+
+### Coverage Improvements
+
+- Added tests for new serial timeout logic (+15 lines covered)
+- Added edge case tests for error handling (+8 lines covered)
+- **Current patch coverage**: 87% (target: from Codecov report/config)
+
+### Test Results
+
+- All tests passing: [CI run](link)
+- Coverage report: [Codecov](link)
+
+### Files Modified
+
+- [drqp_serial/src/driver.cpp](link): Timeout implementation
+- [drqp_serial/test/test_driver.cpp](link): Added timeout tests
+- [drqp_interfaces/msg/Status.msg](link): Added timeout status field
+```
+
+<!-- validate_skills: ignore-cross-reference-end -->
+
+Mark all resolved comments as resolved using GitHub API.
+
 ### Pattern: Clarification Template
 
-When comment intent is unclear (<80% confidence):
+When comment intent is unclear (<70% confidence):
 
 ```markdown
 @reviewer Thanks for the feedback! I want to make sure I understand correctly:
@@ -279,16 +382,32 @@ Safe remediation of CodeQL alerts:
 6. Document security considerations
 7. Request security review if uncertain
 
+## Execution Log
+
+Maintain an internal execution log documenting:
+
+- **Comment tracking**: Review comment URL → confidence score → action taken → resolution status
+- **CI failures**: Check name → failure reason → fix applied → verification result
+- **Security findings**: CodeQL ID → severity → remediation → test added
+- **Coverage gaps**: File:lines → tests added → coverage delta
+- **Evidence trail**: All links to commits, CI runs, comments, findings
+
 ## Quality Standards
 
 ### Code Changes
+
 - Follow repository engineering standards
 - Use TDD cycle for all changes
 - Maintain or improve test coverage
 - No introduction of new technical debt
 - Document non-obvious decisions
+- **Safety-first**: 70% intent confidence minimum for code changes; below 70% ask for clarification
+- Avoid risky refactors without explicit reviewer request
+- Avoid behavior changes unless explicitly requested
+- Prefer targeted, minimal diffs
 
 ### Communication
+
 - Clear, professional, constructive tone
 - Link to evidence (commits, logs, reports)
 - Explain rationale for decisions
@@ -296,6 +415,7 @@ Safe remediation of CodeQL alerts:
 - Thank reviewers for feedback
 
 ### Verification
+
 - All tests pass locally before pushing
 - CI checks green before requesting re-review
 - Coverage targets met
@@ -305,18 +425,23 @@ Safe remediation of CodeQL alerts:
 ## Troubleshooting
 
 ### Problem: Cannot determine comment intent
+
 **Solution**: Reply asking for clarification with your interpretation and proposed action. Do not guess or assume.
 
 ### Problem: CI fails intermittently (flaky test)
+
 **Solution**: Identify source of non-determinism (timing, randomness, external dependency). Fix test to be deterministic or mark as integration test.
 
 ### Problem: CodeQL false positive
+
 **Solution**: Review carefully; often not false positive. If genuinely incorrect, document why and request CodeQL suppression approval.
 
 ### Problem: Coverage target cannot be met
+
 **Solution**: Document why certain code is untestable (external API, hardware dependency, etc.). Consider refactoring for testability.
 
 ### Problem: Review comment asks for significant refactor
+
 **Solution**: Assess scope vs PR goals. If out of scope, propose follow-up issue. If in scope, create plan and confirm with reviewer before proceeding.
 
 ## Success Criteria
@@ -328,10 +453,11 @@ Safe remediation of CodeQL alerts:
 - [ ] Changes follow engineering standards
 - [ ] PR ready for re-review
 - [ ] Evidence documented and linked
-- [ ] Timeline met (30 minutes agent time)
+- [ ] Timeline met (30 minutes agent time; CI waits excluded)
 
 ## Related Resources
 
-- [Code Review Standards](../code-review-standards/SKILL.md) - PR description and review practices
+- [Code Review Standards](../code-review-standards/) - PR description and review practices
+- [Extract GitHub Actions Logs](../extract-github-actions-logs/) - Fetch CI job logs and download colcon log/test-report artifacts
 - [Shared Engineering Guidelines](../../instructions/engineering.instructions.md) - Clean Code, SOLID, TDD
-- [Feedback Handler Agent](../../agents/feedback-handler.agent.md) - Automated PR feedback resolution
+- [Principal Engineer](../../agents/principal-engineer.agent.md) - Primary implementation agent with TDD orchestration

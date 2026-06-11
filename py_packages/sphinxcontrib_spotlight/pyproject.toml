@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sphinxcontrib-spotlight"
+version = "0.1.0"
+description = "Sphinx extension for Spotlight.js - a lightweight image lightbox with SVG support."
+readme = "README.md"
+license = "MIT"
+license-files = [
+  "THIRD_PARTY_LICENSES.md",
+  "../../LICENSE",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "sphinx>=5.0",
+    "docutils",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sphinxcontrib*"]
+exclude = ["tests*"]
+
+[tool.setuptools.package-data]
+"sphinxcontrib.spotlight" = ["_static/**/*"]

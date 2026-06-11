@@ -12,6 +12,8 @@
     - { role: locale_setup, tags: ["locale_setup"] }
     - { role: utc_timezone, tags: ["utc_timezone"] }
     - { role: ros_user_setup, tags: ["setup_user"], when: setup_user }
+    - { role: docker_mcp, tags: ["docker_mcp"], when: install_docker_mcp | default(false) | bool }
+    - { role: docker_pass, tags: ["docker_pass"], when: install_docker_mcp | default(false) | bool }
     - { role: fish_setup, tags: ["fish_setup"] }
     - { role: bash_setup, tags: ["bash_setup"] }
     - { role: cmake_kitware, tags: ["cmake"], when: not source_install } # Install Kitware CMake beforehand for prebuilt install
@@ -24,7 +26,11 @@
     - { role: ros_install_prebuilt, tags: ["ros_install", "ros_install_prebuilt"], when: not source_install }
     - { role: ros_install_source, tags: ["ros_install", "ros_install_source"], when: source_install }
     - { role: ros_dependencies, tags: ["ros_dependencies"] }
+    - { role: bun_setup, tags: ["bun_setup", "nodejs", "agentic_tools"] }
     - { role: nodejs, tags: ["nodejs"] }
+    - { role: uv_setup, tags: ["uv_setup"] }
+    - { role: agentic_tools, tags: ["agentic_tools"], when: install_agentic_tools | default(false) | bool }
     - { role: cmake_kitware, tags: ["cmake"] }
     - { role: clang, tags: ["clang"] }
     - { role: xpra_setup, tags: ["xpra_setup"], when: install_xpra | default(false) | bool }
+    - { role: devcontainer_firewall, tags: ["devcontainer_firewall"], when: install_devcontainer_firewall | default(false) | bool }

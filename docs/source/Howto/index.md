@@ -1,6 +1,7 @@
 # How-tos
 
 ```{toctree}
+augment-context-engine-mcp
 install-vscode-tunnel-as-service
 ros2-containers-and-networking
 remote-x11-tools

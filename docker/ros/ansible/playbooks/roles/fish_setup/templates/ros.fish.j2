@@ -38,6 +38,10 @@ function find_up
   end
 end
 
+function xpra_display
+  set -xg DISPLAY ":100"
+end
+
 function ros2_activate
   if test -f /opt/ros/{{ ros_distro }}/setup.bash
     echo "Found ros-{{ ros_distro }} in /opt/ros"

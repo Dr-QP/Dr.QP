@@ -16,36 +16,38 @@ outputs:
 runs:
   using: composite
   steps:
-  - name: Build filters
-    id: build-filters
-    shell: bash
-    run: |
-      # Build the filters YAML with proper formatting for extra-filter
-      EXTRA=$(printf '%s\n' "${{ inputs.extra-filter }}" | \
-        sed -En 's/^[[:space:]]*-[[:space:]]*//p' | \
-        sed -E 's/^/  - /' | \
-        sed '/^  - $/d')
-      {
-        echo "filters<<EOF"
-        cat <<'YAML'
-      ros:
-        - .clang-format
-        - .devcontainer/**
-        - .github/actions/**
-        - codecov.yml
-        - docker/**
-        - packages/**
-        - scripts/**
-      YAML
-        if [ -n "$EXTRA" ]; then
-          printf '%s\n' "$EXTRA"
-        fi
-        echo "EOF"
-      } >> "$GITHUB_OUTPUT"
+    - name: Build filters
+      id: build-filters
+      shell: bash -xeuo pipefail {0}
+      run: |
+        # Build the filters YAML with proper formatting for extra-filter
+        EXTRA=$(printf '%s\n' "${INPUTS_EXTRA_FILTER}" | \
+          sed -En 's/^[[:space:]]*-[[:space:]]*//p' | \
+          sed -E 's/^/  - /' | \
+          sed '/^  - $/d')
+        {
+          echo "filters<<EOF"
+          cat <<'YAML'
+        ros:
+          - .clang-format
+          - .devcontainer/**
+          - .github/actions/**
+          - codecov.yml
+          - docker/**
+          - packages/**
+          - scripts/**
+        YAML
+          if [ -n "$EXTRA" ]; then
+            printf '%s\n' "$EXTRA"
+          fi
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+      env:
+        INPUTS_EXTRA_FILTER: ${{ inputs.extra-filter }}
 
-  - name: Filter
-    id: filter
-    uses: dorny/paths-filter@v3.0.2
-    with:
-      base: ${{ inputs.base-branch }}
-      filters: ${{ steps.build-filters.outputs.filters }}
+    - name: Filter
+      id: filter
+      uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+      with:
+        base: ${{ inputs.base-branch }}
+        filters: ${{ steps.build-filters.outputs.filters }}

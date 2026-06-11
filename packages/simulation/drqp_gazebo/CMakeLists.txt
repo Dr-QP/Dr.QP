@@ -4,21 +4,12 @@ project(drqp_gazebo)
 find_package(ament_cmake REQUIRED)
 
 install(
-  DIRECTORY
-    config
-    launch
+  DIRECTORY config launch
   DESTINATION share/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)
-  find_package(ament_cmake_ros REQUIRED)
-  find_package(launch_testing_ament_cmake REQUIRED)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
-
   add_subdirectory(test)
 endif()
 
 ament_package()
-
-

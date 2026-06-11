@@ -24,7 +24,9 @@ jobs:
       pass: ${{ steps.filter.outputs.pass }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Filters
         uses: ./.github/actions/paths-filter
@@ -35,11 +37,17 @@ jobs:
             - .github/instructions/**
             - .github/skills/**
             - .github/workflows/copilot.yml
-            - scripts/validate-skills.py
-            - scripts/validate_skills/**
+            - .github/actions/log-debug-stats/**
+            - py_packages/**/*.py
 
-  validate-skills:
-    name: Validate Agent Skills
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
+
+  validate-copilot-files:
+    name: Validate Copilot Customizations
     runs-on: ubuntu-latest
     needs: paths-filter
     permissions:
@@ -48,36 +56,54 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Setup Python venv
         uses: ./.github/actions/setup-python-venv
 
-      - name: Test validate skills
+      - name: Test validate_agent_files
         run: |
-          pytest scripts/validate_skills/tests --cov=scripts/validate_skills --cov-report=xml
+          pytest py_packages/validate_agent_files/tests \
+            --cov=validate_agent_files --cov-report=xml
 
-      - name: Validate Agent Skills
-        run: |
-          python3 scripts/validate-skills.py --recommend
+      - name: Validate Copilot Customizations
+        run: validate_agent_files --recommend .github
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         if: ${{ !cancelled() }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          flags: validate-skills
-          name: validate-skills-coverage
+          flags: validate-agent-files
+          name: validate-agent-files-coverage
           files: coverage.xml
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
 
   finished:
     name: Validation finished
-    needs: [paths-filter, validate-skills]
+    needs: [paths-filter, validate-copilot-files]
     runs-on: ubuntu-latest
-    permissions: {}
+    permissions:
+      contents: read
     timeout-minutes: 10
-    if: ${{ success() || cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}
+    if: always()
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Execution was not needed!
+        if: needs.paths-filter.outputs.pass != 'true'
+        run: |
+          exit 0
       - name: All jobs succeeded!
         if: ${{ success() }}
         run: |
@@ -90,3 +116,9 @@ jobs:
         if: ${{ cancelled() || contains(needs.*.result, 'cancelled') }}
         run: |
           exit 1
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}

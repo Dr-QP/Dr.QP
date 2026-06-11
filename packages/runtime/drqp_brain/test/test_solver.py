@@ -20,8 +20,8 @@
 
 import math
 
-from drqp_brain.geometry.point import Point3D
-from drqp_brain.models import HexapodLeg, LegModel, safe_arccos
+from drqp_kinematics.geometry.point import Point3D
+from drqp_kinematics.models import HexapodLeg, LegModel, safe_arccos
 import pytest
 
 

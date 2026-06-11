@@ -1,0 +1,20 @@
+---
+- name: Install agentic tools globally with Bun
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/bun
+      - add
+      - --global
+      - "{{ item.package }}"
+    creates: "/usr/local/bin/{{ item.bin }}"
+  environment:
+    BUN_INSTALL: /usr/local
+  loop:
+    - package: "@modelcontextprotocol/inspector"
+      bin: mcp-inspector
+    - package: "@github/copilot"
+      bin: copilot
+    - package: "@anthropic-ai/claude-code"
+      bin: claude
+  loop_control:
+    label: "{{ item.package }}"

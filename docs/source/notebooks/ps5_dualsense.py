@@ -28,7 +28,7 @@
 import curses
 import time
 
-from drqp_brain.geometry import Point3D
+from drqp_kinematics.geometry import Point3D
 import numpy as np
 from pydualsense import pydualsense
 

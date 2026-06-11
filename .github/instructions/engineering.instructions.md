@@ -7,6 +7,12 @@ applyTo: '**'
 
 Unified engineering standards and best practices that apply across all code, agents, skills, and instructions in this workspace.
 
+## Reuse Policy
+
+- Treat this file as the canonical source for general engineering guidance
+- Keep skills and agent files task-specific; link here instead of copying broad quality, testing, or review checklists
+- Repeat shared guidance only when a task needs a tighter rule, different default, or concrete workflow-specific example
+
 ## Core Engineering Principles
 
 ### Code Quality & Clarity
@@ -60,7 +66,7 @@ Unified engineering standards and best practices that apply across all code, age
   - Keep dependencies up-to-date
 
 - **Include documentation and comments**:
-  - Explain *why* decisions were made, not *what* the code does
+  - Explain _why_ decisions were made, not _what_ the code does
   - Document algorithm approaches for complex code
   - Use comments sparingly for non-obvious logic
   - Keep comments synchronized with code
@@ -122,14 +128,15 @@ Unified engineering standards and best practices that apply across all code, age
   - Use triple-quoted strings
 
 - Example:
+
   ```python
   def calculate_area(radius: float) -> float:
       """
       Calculate the area of a circle given the radius.
-      
+
       Args:
           radius: The radius of the circle in units
-          
+
       Returns:
           The area in square units (π * r²)
       """
@@ -182,7 +189,8 @@ When reviewing code:
 - **Verify standards**: Does it follow project conventions?
 
 **Provide constructive feedback**:
-- Explain *why* a change is needed
+
+- Explain _why_ a change is needed
 - Suggest alternatives if rejecting an approach
 - Acknowledge good work and learning
 - Be respectful and collaborative
@@ -209,4 +217,3 @@ Before completing work:
 - Participate in code reviews to share knowledge
 - Refactor legacy code to apply new patterns
 - Share knowledge through documentation and mentoring
-

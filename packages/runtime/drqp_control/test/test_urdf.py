@@ -30,8 +30,7 @@ import pytest
 def urdf_file():
     """Make URDF file path."""
     package_path = get_package_share_directory('drqp_control')
-    urdf_file_path = os.path.join(package_path, 'urdf', 'dr_qp.urdf.xacro')
-    return urdf_file_path
+    return os.path.join(package_path, 'urdf', 'drqp.urdf.xacro')
 
 
 def test_urdf_file_exists(urdf_file):
