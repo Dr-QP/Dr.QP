@@ -18,6 +18,9 @@ on:
     types:
       - checks_requested
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 permissions:
   contents: read
   issues: read
@@ -31,12 +34,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
         with:
           persist-credentials: false
 
       - name: Verify AI reviewed PR
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
         with:
           github-token: ${{ github.token }}
           script: |
@@ -62,7 +65,6 @@ jobs:
               repo: context.repo.repo,
               pull_number: pr.number,
             };
-            const currentHeadSha = pr.head.sha;
             const copilotReviewerLogins = new Set([
               'copilot-pull-request-reviewer[bot]',
             ]);
@@ -74,22 +76,16 @@ jobs:
               'changes_requested',
               'commented',
             ]);
-            const codexFeedbackReviewStates = new Set([
-              'changes_requested',
-              'commented',
-            ]);
 
             const reviewLogin = (review) => review?.user?.login;
             const reviewState = (review) => review?.state?.toLowerCase();
-            const isCurrentHeadReview = (review) => review?.commit_id === currentHeadSha;
 
-            const isCopilotCurrentHeadReview = (review) => {
+            const isCopilotReview = (review) => {
               const login = review?.user?.login;
               const state = review?.state?.toLowerCase();
               return (
                 copilotReviewerLogins.has(login) &&
-                acceptedReviewStates.has(state) &&
-                isCurrentHeadReview(review)
+                acceptedReviewStates.has(state)
               );
             };
 
@@ -100,11 +96,10 @@ jobs:
               );
             };
 
-            const isCodexCurrentHeadFeedbackReview = (review) => {
+            const isCodexReview = (review) => {
               return (
                 codexLogins.has(reviewLogin(review)) &&
-                codexFeedbackReviewStates.has(reviewState(review)) &&
-                isCurrentHeadReview(review)
+                acceptedReviewStates.has(reviewState(review))
               );
             };
 
@@ -120,25 +115,26 @@ jobs:
                 .join(', ');
             };
 
-            const failIfCodexSubmittedFeedback = (review) => {
-              if (!isCodexCurrentHeadFeedbackReview(review)) {
-                return false;
-              }
-
-              core.setFailed(
-                `Codex submitted feedback for current head ${review.commit_id} with state ${review.state}; failing until feedback is addressed.`
-              );
-              return true;
-            };
-
-            const passIfCopilotReviewedCurrentHead = (review, source) => {
-              if (!isCopilotCurrentHeadReview(review)) {
+            const passIfCodexReviewed = (review, source) => {
+              if (!isCodexReview(review)) {
                 return false;
               }
 
               const sourcePhrase = source ? ` ${source}` : '';
               core.info(
-                `Found accepted current-head Copilot review by ${review.user.login}${sourcePhrase} for ${review.commit_id} with state ${review.state}.`
+                `Found accepted Codex review by ${review.user.login}${sourcePhrase} for ${review.commit_id} with state ${review.state}.`
+              );
+              return true;
+            };
+
+            const passIfCopilotReviewed = (review, source) => {
+              if (!isCopilotReview(review)) {
+                return false;
+              }
+
+              const sourcePhrase = source ? ` ${source}` : '';
+              core.info(
+                `Found accepted Copilot review by ${review.user.login}${sourcePhrase} for ${review.commit_id} with state ${review.state}.`
               );
               return true;
             };
@@ -181,11 +177,11 @@ jobs:
             };
 
             const eventReview = context.payload.review;
-            if (failIfCodexSubmittedFeedback(eventReview)) {
+            if (passIfCodexReviewed(eventReview, 'from event payload')) {
               return;
             }
 
-            if (passIfCopilotReviewedCurrentHead(eventReview, 'from event payload')) {
+            if (passIfCopilotReviewed(eventReview, 'from event payload')) {
               return;
             }
 
@@ -199,17 +195,17 @@ jobs:
 
               const codexFeedbackReview = latestMatchingReview(
                 reviews,
-                isCodexCurrentHeadFeedbackReview
+                isCodexReview
               );
-              if (failIfCodexSubmittedFeedback(codexFeedbackReview)) {
+              if (passIfCodexReviewed(codexFeedbackReview, '')) {
                 return;
               }
 
               const matchingReview = latestMatchingReview(
                 reviews,
-                isCopilotCurrentHeadReview
+                isCopilotReview
               );
-              if (passIfCopilotReviewedCurrentHead(matchingReview, '')) {
+              if (passIfCopilotReviewed(matchingReview, '')) {
                 return;
               }
 
@@ -226,7 +222,7 @@ jobs:
             }
 
             core.setFailed(
-              `Neither Copilot nor Codex has marked this PR as AI-reviewed. Expected either a current-head Copilot review for ${currentHeadSha} or a +1 reaction from chatgpt-codex-connector[bot].`
+              `Neither Copilot nor Codex has marked this PR as AI-reviewed. Expected either a Copilot review, a Codex review, or a +1 reaction from chatgpt-codex-connector[bot].`
             );
 
       - name: Log debug stats

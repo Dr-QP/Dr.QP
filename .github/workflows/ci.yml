@@ -32,6 +32,7 @@ defaults:
     shell: bash -xeuo pipefail {0}
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   ROS_DISTRO: jazzy
   REGISTRY: ghcr.io
   REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
@@ -46,7 +47,7 @@ jobs:
       pass: ${{ steps.filter.outputs.pass }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
         with:
           persist-credentials: false
 
@@ -79,7 +80,7 @@ jobs:
           - arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
         with:
           persist-credentials: false
 
@@ -169,7 +170,7 @@ jobs:
       image: ${{ steps.merge.outputs.image }}
       image_pinned: ${{ steps.merge.outputs.image_pinned }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
         with:
           persist-credentials: false
 
@@ -219,7 +220,7 @@ jobs:
           cp -r /root/.colcon "$HOME"
           colcon mixin list
 
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
         with:
           persist-credentials: false
 
@@ -252,7 +253,7 @@ jobs:
         run: ./packages/cmake/llvm-cov-export-all.py ./build
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
+        uses: codecov/codecov-action@cddd853df119a48c5be31a973f8cd97e12e35e16 # v6.0.1
         if: ${{ env.ACT == '' && !cancelled() }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -318,11 +319,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install skopeo -y
 
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
         with:
           persist-credentials: false
-      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ env.REGISTRY_USERNAME }}
@@ -335,7 +336,7 @@ jobs:
           sed -i "s|image:.*|image: ${MERGED_IMAGE}|g" .devcontainer/docker-compose.yml
 
       - name: Build and test dev container image
-        uses: devcontainers/ci@8bf61b26e9c3a98f69cb6ce2f88d24ff59b785c6 # v0.3.1900000417
+        uses: devcontainers/ci@513af61f4de4f75d37e4438f184ba4358f0fc1ca # v0.3.1900000450
         with:
           configFile: .devcontainer/devcontainer.json
           noCache: true
@@ -385,7 +386,7 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
         with:
           persist-credentials: false
 
@@ -421,7 +422,7 @@ jobs:
     outputs:
       image: ${{ steps.merge.outputs.image }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
         with:
           persist-credentials: false
       - name: Merge and push deployment docker image

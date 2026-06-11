@@ -11,6 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   SLUG: ${{ github.repository_owner }}/catthehacker-ubuntu
   PUSH_GHCR: ${{ github.repository == (github.event.pull_request.head.repo.full_name || github.repository) && '1' || '' }}
   PUSH_QUAY: ${{ secrets.QUAY_USER && secrets.QUAY_TOKEN && '1' || '' }}
@@ -43,7 +44,7 @@ jobs:
           persist-credentials: false
 
       - name: Force SLUG to lowercase
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
         with:
           github-token: n/a
           script: |

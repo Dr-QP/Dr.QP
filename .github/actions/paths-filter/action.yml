@@ -1,6 +1,10 @@
 name: Shared paths filters
 description: A set of filters to be used to fitler jobs
 inputs:
+  event-name:
+    description: GitHub event name
+    required: false
+    default: ''
   base-branch:
     description: Base branch
     required: false
@@ -12,7 +16,7 @@ inputs:
 outputs:
   pass:
     description: Filtered file present
-    value: ${{ steps.filter.outputs.ros }}
+    value: ${{ steps.filter-pr.outputs.ros || steps.filter-base.outputs.ros }}
 runs:
   using: composite
   steps:
@@ -45,9 +49,17 @@ runs:
       env:
         INPUTS_EXTRA_FILTER: ${{ inputs.extra-filter }}
 
-    - name: Filter
-      id: filter
-      uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+    - name: Filter (pull request)
+      if: inputs.event-name == 'pull_request'
+      id: filter-pr
+      uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+      with:
+        filters: ${{ steps.build-filters.outputs.filters }}
+
+    - name: Filter (non pull request)
+      if: inputs.event-name != 'pull_request'
+      id: filter-base
+      uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
       with:
         base: ${{ inputs.base-branch }}
         filters: ${{ steps.build-filters.outputs.filters }}
