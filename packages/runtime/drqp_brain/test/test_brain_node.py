@@ -252,7 +252,9 @@ class TestBrainNode(unittest.TestCase):
             assert logger.debug.call_count == 1
 
             brain.tf_buffer.lookup_transform.side_effect = None
-            brain.tf_buffer.lookup_transform.return_value = make_transform_with_rotation(R.identity())
+            brain.tf_buffer.lookup_transform.return_value = make_transform_with_rotation(
+                R.identity()
+            )
             brain.process_imu(make_imu_msg_from_base_tilt(0.04, -0.01, 0.1))
 
             brain.tf_buffer.lookup_transform.side_effect = TransformException('missing transform')
