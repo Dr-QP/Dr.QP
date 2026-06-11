@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from drqp_brain.geometry import Point3D
+from drqp_kinematics.geometry import Point3D
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 

@@ -25,7 +25,7 @@ from drqp_brain.balance_controller import (
     BASE_CENTER_TO_IMU_ROTATION,
     body_tilt_from_imu,
 )
-from drqp_brain.geometry import Point3D
+from drqp_kinematics.geometry import Point3D
 from geometry_msgs.msg import Quaternion
 import pytest
 from scipy.spatial.transform import Rotation as R
