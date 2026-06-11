@@ -23,6 +23,11 @@ on:
         required: false
         default: ''
         type: string
+      caller_pr_body:
+        description: Pull request body from the calling workflow.
+        required: false
+        default: ''
+        type: string
       caller_pr_is_draft:
         description: Whether the calling pull request is a draft.
         required: false
@@ -135,7 +140,10 @@ jobs:
   reformat:
     name: Reformat
     needs: paths-filter
-    if: inputs.should_run && (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
+    if: >-
+      inputs.should_run &&
+      !contains(inputs.caller_pr_body, '[ci:no-reformat]') &&
+      (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     container:
       image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
@@ -198,7 +206,10 @@ jobs:
   super-linter:
     name: Super-Linter
     needs: paths-filter
-    if: inputs.should_run && (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
+    if: >-
+      inputs.should_run &&
+      !contains(inputs.caller_pr_body, '[ci:no-super-linter]') &&
+      (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
     runs-on: 'ubuntu-24.04'
     outputs:
       changed: ${{ steps.patch.outputs.changed }}

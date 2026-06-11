@@ -41,6 +41,7 @@ jobs:
       caller_pr_head_ref: ${{ github.event.pull_request.head.ref || '' }}
       caller_pr_head_repo_full_name: ${{ github.event.pull_request.head.repo.full_name || '' }}
       caller_pr_head_sha: ${{ github.event.pull_request.head.sha || '' }}
+      caller_pr_body: ${{ github.event.pull_request.body || '' }}
       caller_pr_is_draft: ${{ github.event.pull_request.draft || false }}
       force_run: ${{ github.event_name == 'workflow_dispatch' }}
       validate_all_codebase: ${{ github.event_name == 'workflow_dispatch' }}
