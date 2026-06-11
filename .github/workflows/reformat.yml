@@ -142,7 +142,7 @@ jobs:
     needs: paths-filter
     if: >-
       inputs.should_run &&
-      !contains(inputs.caller_pr_body, '[ci:no-reformat]') &&
+      ! contains(inputs.caller_pr_body, '[ci:no-reformat]') &&
       (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     container:
@@ -208,7 +208,7 @@ jobs:
     needs: paths-filter
     if: >-
       inputs.should_run &&
-      !contains(inputs.caller_pr_body, '[ci:no-super-linter]') &&
+      ! contains(inputs.caller_pr_body, '[ci:no-super-linter]') &&
       (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
     runs-on: 'ubuntu-24.04'
     outputs:
