@@ -61,8 +61,8 @@ runs:
               ...resources.map(([name, resource]) => {
                 const exhausted = Number(resource.limit) > 0 && Number(resource.remaining) <= 0;
                 return [
-                  `\`${name}\``,
-                  exhausted ? ':warning: Exhausted' : 'OK',
+                  name,
+                  exhausted ? '💥 Exhausted 💥' : 'OK',
                   String(resource.used),
                   String(resource.limit),
                   String(resource.remaining),
