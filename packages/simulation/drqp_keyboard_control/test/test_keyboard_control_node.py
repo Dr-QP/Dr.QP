@@ -234,9 +234,9 @@ def test_walk_command_maps_sticks_and_left_trigger():
     command = state.movement_command()
 
     assert command.stride_direction.x == pytest.approx(0.5)
-    assert command.stride_direction.y == pytest.approx(0.25)
+    assert command.stride_direction.y == pytest.approx(-0.25)
     assert command.stride_direction.z == pytest.approx(0.4)
-    assert command.rotation_speed == pytest.approx(-0.75)
+    assert command.rotation_speed == pytest.approx(0.75)
 
 
 def test_body_position_mode_uses_sticks():
@@ -249,7 +249,7 @@ def test_body_position_mode_uses_sticks():
     command = state.movement_command()
 
     assert command.body_translation.x == pytest.approx(0.3)
-    assert command.body_translation.y == pytest.approx(-0.4)
+    assert command.body_translation.y == pytest.approx(0.4)
     assert command.body_translation.z == pytest.approx(0.8)
     assert command.stride_direction.x == pytest.approx(0.0)
 
@@ -263,9 +263,9 @@ def test_body_rotation_mode_uses_sticks():
 
     command = state.movement_command()
 
-    assert command.body_rotation.x == pytest.approx(0.6)
+    assert command.body_rotation.x == pytest.approx(-0.6)
     assert command.body_rotation.y == pytest.approx(-0.5)
-    assert command.body_rotation.z == pytest.approx(0.7)
+    assert command.body_rotation.z == pytest.approx(-0.7)
     assert command.rotation_speed == pytest.approx(0.0)
 
 

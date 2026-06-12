@@ -208,21 +208,21 @@ class GuiControlState:
         if self.control_mode == ControlMode.Walk:
             command.stride_direction = Vector3(
                 x=axes.left_y,
-                y=axes.left_x,
+                y=-axes.left_x,
                 z=axes.left_trigger,
             )
-            command.rotation_speed = float(axes.right_x)
+            command.rotation_speed = float(-axes.right_x)
         elif self.control_mode == ControlMode.BodyPosition:
             command.body_translation = Vector3(
                 x=axes.left_y,
-                y=axes.left_x,
+                y=-axes.left_x,
                 z=axes.right_y,
             )
         elif self.control_mode == ControlMode.BodyRotation:
             command.body_rotation = Vector3(
-                x=axes.left_x,
+                x=-axes.left_x,
                 y=axes.left_y,
-                z=axes.right_x,
+                z=-axes.right_x,
             )
 
         return command
