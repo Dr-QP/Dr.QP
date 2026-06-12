@@ -133,7 +133,7 @@ def test_trigger_slider_clamps():
         state.set_left_trigger,
     )
 
-    trigger.begin_drag((150.0, 25.0))
+    trigger.begin_drag((110.0, 25.0))
     assert state.left_trigger == pytest.approx(1.0)
 
     trigger.update_drag((-10.0, 25.0))
