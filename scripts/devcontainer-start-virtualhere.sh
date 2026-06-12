@@ -24,10 +24,18 @@ sleep 1
 DEVICE_NAME="DualSense Wireless Controller"
 DEVICE_ADDR="$(
   "$vhclient" -t "LIST" \
-    | grep "$DEVICE_NAME" \
-    | sed -E 's/.*\(([^()]*)\).*/\1/' \
-    | head -n1
+    | awk -v device="$DEVICE_NAME" '
+        $0 ~ device && match($0, /\(host\.[0-9]+\)/) {
+          print substr($0, RSTART + 1, RLENGTH - 2)
+          exit
+        }
+      '
 )"
+
+if [[ -z "$DEVICE_ADDR" ]]; then
+    echo "VirtualHere \"$DEVICE_NAME\" not found; skipping device use"
+    exit 0
+fi
 
 echo "VirtualHere \"$DEVICE_NAME\" address: ${DEVICE_ADDR}"
 "$vhclient" -t "USE,$DEVICE_ADDR"
