@@ -37,11 +37,17 @@ import rclpy
 from rclpy.executors import ExternalShutdownException
 import rclpy.node
 import rclpy.utilities
+import std_msgs.msg
 
 
 LEFT_STICK_KEYS = frozenset({'w', 'a', 's', 'd'})
 RIGHT_STICK_KEYS = frozenset({'up', 'down', 'left', 'right'})
 MOTION_KEYS = LEFT_STICK_KEYS | RIGHT_STICK_KEYS
+EVENT_KEYS = {
+    'esc': 'kill_switch_pressed',
+    'delete': 'reboot_servos',
+    'backspace': 'finalize',
+}
 
 
 @dataclass
@@ -133,9 +139,9 @@ class KeyboardControlState:
 
         self._expire_keys(now)
         return KeyboardAxes(
-            left_x=self._axis('d', 'a'),
+            left_x=self._axis('a', 'd'),
             left_y=self._axis('w', 's'),
-            right_x=self._axis('right', 'left'),
+            right_x=self._axis('left', 'right'),
             right_y=self._axis('up', 'down'),
         )
 
@@ -184,6 +190,7 @@ class TerminalKeyReader:
         '\x1b[B': 'down',
         '\x1b[C': 'right',
         '\x1b[D': 'left',
+        '\x1b[3~': 'delete',
     }
 
     def __init__(self, stdin: TextIO = sys.stdin):
@@ -212,10 +219,12 @@ class TerminalKeyReader:
         if char == '\t':
             return 'tab'
         if char == '\x1b':
-            sequence = char + self._read_available(2)
-            return self._ESCAPE_KEYS.get(sequence)
+            sequence = char + self._read_available(3)
+            return self._ESCAPE_KEYS.get(sequence, 'esc')
         if char == ' ':
             return 'space'
+        if char in {'\x08', '\x7f'}:
+            return 'backspace'
         return char
 
     def _read_available(self, limit: int) -> str:
@@ -251,12 +260,21 @@ class KeyboardControlNode(rclpy.node.Node):
             '/robot/movement_command',
             qos_profile=10,
         )
+        self.robot_event_pub = self.create_publisher(
+            std_msgs.msg.String,
+            '/robot_event',
+            qos_profile=10,
+        )
         self._publish_timer = self.create_timer(1.0 / publish_rate_hz, self._publish_command)
         self.get_logger().info('Keyboard control node initialized')
 
     def handle_key(self, key: str):
         """Handle a normalized key press from the terminal reader."""
-        return self.state.handle_key(key)
+        normalized_key = key.lower()
+        if normalized_key in EVENT_KEYS:
+            self._publish_event(EVENT_KEYS[normalized_key])
+            return True
+        return self.state.handle_key(normalized_key)
 
     def ui_lines(self, now: float | None = None) -> list[str]:
         """Return the current terminal UI as plain text lines."""
@@ -274,16 +292,21 @@ class KeyboardControlNode(rclpy.node.Node):
                 'Right stick arrows: '
                 f'x={axes.right_x:+.2f} y={axes.right_y:+.2f}'
             ),
-            '',
-            'W/S forward/back, A/D left/right, arrows for right stick',
-            '+/- adjust sensitivity, 1 tripod, 2 ripple, 3 wave, TAB mode, H help',
-            'Space stops active keys, Ctrl-C exits',
-            '',
         ]
 
         if self.state.show_detailed_help:
             lines.extend(
                 [
+                    '',
+                    'Key bindings:',
+                    '  W/S forward/back, A/D left/right',
+                    '  Arrow keys control the right stick',
+                    '  +/- adjust sensitivity',
+                    '  1 tripod, 2 ripple, 3 wave',
+                    '  TAB toggles mode, H hides help',
+                    '  Esc kill switch, Del reboot servos, Backspace finalize',
+                    '  Space stops active keys, Ctrl-C exits',
+                    '',
                     'Mode behavior:',
                     '  Walk: WASD controls stride, left/right arrows rotate',
                     '  BodyPosition: WASD moves body x/y, up/down arrows move body z',
@@ -295,12 +318,18 @@ class KeyboardControlNode(rclpy.node.Node):
                 ]
             )
         else:
-            lines.append('Press H for detailed help')
+            lines.extend(['', 'Press H for help'])
 
         return lines
 
     def _publish_command(self):
         self.movement_command_pub.publish(self.state.movement_command())
+
+    def _publish_event(self, event: str):
+        msg = std_msgs.msg.String()
+        msg.data = event
+        self.robot_event_pub.publish(msg)
+        self.get_logger().info(f'Published event: {event}')
 
 
 class KeyboardControlScreen:
@@ -311,8 +340,12 @@ class KeyboardControlScreen:
         curses.KEY_DOWN: 'down',
         curses.KEY_LEFT: 'left',
         curses.KEY_RIGHT: 'right',
+        curses.KEY_DC: 'delete',
+        curses.KEY_BACKSPACE: 'backspace',
         9: 'tab',
+        27: 'esc',
         32: 'space',
+        127: 'backspace',
     }
 
     def __init__(

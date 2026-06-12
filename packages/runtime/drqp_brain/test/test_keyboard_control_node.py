@@ -19,12 +19,15 @@
 # THE SOFTWARE.
 
 import curses
+from io import StringIO
+from unittest.mock import Mock
 
 from drqp_brain.joystick_input_handler import ControlMode
 from drqp_brain.keyboard_control_node import (
     KeyboardControlNode,
     KeyboardControlScreen,
     KeyboardControlState,
+    TerminalKeyReader,
 )
 from drqp_interfaces.msg import MovementCommandConstants
 import pytest
@@ -42,7 +45,7 @@ def test_wasd_maps_to_walk_stride_direction():
     command = state.movement_command(now)
 
     assert command.stride_direction.x == pytest.approx(0.5)
-    assert command.stride_direction.y == pytest.approx(-0.5)
+    assert command.stride_direction.y == pytest.approx(0.5)
     assert command.stride_direction.z == pytest.approx(0.0)
     assert command.rotation_speed == pytest.approx(0.0)
 
@@ -55,7 +58,7 @@ def test_arrows_map_to_walk_rotation():
 
     command = state.movement_command(1.0)
 
-    assert command.rotation_speed == pytest.approx(0.7)
+    assert command.rotation_speed == pytest.approx(-0.7)
 
 
 def test_body_position_mode_uses_wasd_and_arrow_z():
@@ -69,7 +72,7 @@ def test_body_position_mode_uses_wasd_and_arrow_z():
     command = state.movement_command(1.0)
 
     assert command.body_translation.x == pytest.approx(0.0)
-    assert command.body_translation.y == pytest.approx(0.4)
+    assert command.body_translation.y == pytest.approx(-0.4)
     assert command.body_translation.z == pytest.approx(0.4)
     assert command.stride_direction.x == pytest.approx(0.0)
 
@@ -85,9 +88,9 @@ def test_body_rotation_mode_uses_wasd_and_arrow_yaw():
 
     command = state.movement_command(2.0)
 
-    assert command.body_rotation.x == pytest.approx(-0.6)
+    assert command.body_rotation.x == pytest.approx(0.6)
     assert command.body_rotation.y == pytest.approx(-0.6)
-    assert command.body_rotation.z == pytest.approx(-0.6)
+    assert command.body_rotation.z == pytest.approx(0.6)
     assert command.rotation_speed == pytest.approx(0.0)
 
 
@@ -240,6 +243,46 @@ def test_curses_screen_normalizes_arrow_and_tab_keys():
     )
 
 
+def test_curses_screen_normalizes_event_keys():
+    """The curses input path should support robot event key bindings."""
+    assert (
+        KeyboardControlScreen(FakeCursesScreen(27), None, refresh_rate_hz=8.0).read_key()
+        == 'esc'
+    )
+    assert (
+        KeyboardControlScreen(
+            FakeCursesScreen(curses.KEY_DC),
+            None,
+            refresh_rate_hz=8.0,
+        ).read_key()
+        == 'delete'
+    )
+    assert (
+        KeyboardControlScreen(
+            FakeCursesScreen(curses.KEY_BACKSPACE),
+            None,
+            refresh_rate_hz=8.0,
+        ).read_key()
+        == 'backspace'
+    )
+    assert (
+        KeyboardControlScreen(FakeCursesScreen(127), None, refresh_rate_hz=8.0).read_key()
+        == 'backspace'
+    )
+
+
+def test_plain_terminal_reader_normalizes_event_keys(monkeypatch):
+    """The --no-ui terminal reader should support robot event key bindings."""
+    monkeypatch.setattr(
+        'drqp_brain.keyboard_control_node.select.select',
+        lambda readable, writable, exceptional, timeout: (readable, writable, exceptional),
+    )
+
+    assert TerminalKeyReader(StringIO('\x1b')).read_key(0.0) == 'esc'
+    assert TerminalKeyReader(StringIO('\x1b[3~')).read_key(0.0) == 'delete'
+    assert TerminalKeyReader(StringIO('\x7f')).read_key(0.0) == 'backspace'
+
+
 def test_curses_render_paints_full_black_background(monkeypatch):
     """Each frame should clear the whole screen with the configured background."""
     monkeypatch.setattr(curses, 'doupdate', lambda: None)
@@ -254,3 +297,39 @@ def test_curses_render_paints_full_black_background(monkeypatch):
     assert fake_screen.calls[-1] == ('noutrefresh',)
     drawn_text = [call[3] for call in fake_screen.calls if call[0] == 'addnstr']
     assert drawn_text == ['Dr.QP Keyboard Control', '', 'Mode: Walk']
+
+
+def test_keyboard_event_keys_publish_robot_events(ros_context):
+    """Esc, Delete, and Backspace should publish matching robot events."""
+    node = KeyboardControlNode()
+    node.robot_event_pub.publish = Mock()
+    try:
+        assert node.handle_key('esc') is True
+        assert node.handle_key('delete') is True
+        assert node.handle_key('backspace') is True
+    finally:
+        node.destroy_node()
+
+    event_names = [
+        call.args[0].data for call in node.robot_event_pub.publish.call_args_list
+    ]
+    assert event_names == ['kill_switch_pressed', 'reboot_servos', 'finalize']
+
+
+def test_ui_lines_keep_key_hints_in_help_section(ros_context):
+    """The terminal UI should show key bindings only in expanded help."""
+    node = KeyboardControlNode()
+    try:
+        lines = node.ui_lines(1.0)
+        node.state.handle_key('h', 1.0)
+        help_lines = node.ui_lines(1.0)
+    finally:
+        node.destroy_node()
+
+    assert 'Esc kill switch, Del reboot servos, Backspace finalize' not in lines
+    assert 'Press H for help' in lines
+    assert 'Key bindings:' in help_lines
+    assert any(
+        'Esc kill switch, Del reboot servos, Backspace finalize' in line
+        for line in help_lines
+    )
