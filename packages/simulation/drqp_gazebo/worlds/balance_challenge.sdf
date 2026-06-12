@@ -292,7 +292,7 @@
 
       <link name="link">
         <visual name="approach_visual">
-          <pose>-2.2 0 0.01 0 0 0</pose>
+          <pose>-2.8 0 0.01 0 0 0</pose>
           <geometry>
             <box>
               <size>1.4 1.4 0.02</size>
@@ -304,7 +304,7 @@
           </material>
         </visual>
         <collision name="approach_collision">
-          <pose>-2.2 0 0.01 0 0 0</pose>
+          <pose>-2.8 0 0.01 0 0 0</pose>
           <geometry>
             <box>
               <size>1.4 1.4 0.02</size>
@@ -313,19 +313,19 @@
         </collision>
 
         <collision name="hump_1_collision">
-          <pose>-1.2 0 -0.20 1.5708 0 0</pose>
+          <pose>-1.2 0 -0.52 1.5708 0 0</pose>
           <geometry>
             <cylinder>
-              <radius>0.32</radius>
+              <radius>0.64</radius>
               <length>1.4</length>
             </cylinder>
           </geometry>
         </collision>
         <visual name="hump_1_visual">
-          <pose>-1.2 0 -0.20 1.5708 0 0</pose>
+          <pose>-1.2 0 -0.52 1.5708 0 0</pose>
           <geometry>
             <cylinder>
-              <radius>0.32</radius>
+              <radius>0.64</radius>
               <length>1.4</length>
             </cylinder>
           </geometry>
@@ -336,19 +336,19 @@
         </visual>
 
         <collision name="hump_2_collision">
-          <pose>0 0 -0.18 1.5708 0 0</pose>
+          <pose>0 0 -0.52 1.5708 0 0</pose>
           <geometry>
             <cylinder>
-              <radius>0.34</radius>
+              <radius>0.68</radius>
               <length>1.4</length>
             </cylinder>
           </geometry>
         </collision>
         <visual name="hump_2_visual">
-          <pose>0 0 -0.18 1.5708 0 0</pose>
+          <pose>0 0 -0.52 1.5708 0 0</pose>
           <geometry>
             <cylinder>
-              <radius>0.34</radius>
+              <radius>0.68</radius>
               <length>1.4</length>
             </cylinder>
           </geometry>
@@ -359,19 +359,19 @@
         </visual>
 
         <collision name="hump_3_collision">
-          <pose>1.2 0 -0.22 1.5708 0 0</pose>
+          <pose>1.2 0 -0.52 1.5708 0 0</pose>
           <geometry>
             <cylinder>
-              <radius>0.30</radius>
+              <radius>0.60</radius>
               <length>1.4</length>
             </cylinder>
           </geometry>
         </collision>
         <visual name="hump_3_visual">
-          <pose>1.2 0 -0.22 1.5708 0 0</pose>
+          <pose>1.2 0 -0.52 1.5708 0 0</pose>
           <geometry>
             <cylinder>
-              <radius>0.30</radius>
+              <radius>0.60</radius>
               <length>1.4</length>
             </cylinder>
           </geometry>
@@ -382,7 +382,7 @@
         </visual>
 
         <visual name="exit_visual">
-          <pose>2.2 0 0.01 0 0 0</pose>
+          <pose>2.8 0 0.01 0 0 0</pose>
           <geometry>
             <box>
               <size>1.4 1.4 0.02</size>
@@ -394,7 +394,7 @@
           </material>
         </visual>
         <collision name="exit_collision">
-          <pose>2.2 0 0.01 0 0 0</pose>
+          <pose>2.8 0 0.01 0 0 0</pose>
           <geometry>
             <box>
               <size>1.4 1.4 0.02</size>
