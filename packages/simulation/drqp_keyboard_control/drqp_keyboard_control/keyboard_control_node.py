@@ -215,17 +215,6 @@ class GuiControlState:
 
         return command
 
-    def control_activity(self) -> dict[str, bool]:
-        """Return visual activity flags for control indicators."""
-        axes = self.axes()
-        return {
-            'keyboard': bool(self.held_keys),
-            'left_stick': bool(self.left_stick_active or axes.left_x or axes.left_y),
-            'right_stick': bool(self.right_stick_active or axes.right_x or axes.right_y),
-            'left_trigger': self.left_trigger > 0.0,
-            'right_trigger': self.right_trigger > 0.0,
-        }
-
     def _axis(self, positive_key: str, negative_key: str) -> float:
         value = 0.0
         if positive_key in self.held_keys:
@@ -592,7 +581,6 @@ class PygameKeyboardControlApp:
         self._draw_trigger(self.right_trigger, axes.right_trigger)
         self._draw_stick(self.left_stick, axes.left_x, axes.left_y)
         self._draw_stick(self.right_stick, axes.right_x, axes.right_y)
-        self._draw_indicators()
         pygame.display.flip()
 
     def _draw_button(self, button: ButtonControl):
@@ -667,21 +655,6 @@ class PygameKeyboardControlApp:
             (178, 187, 197),
             self.small_font,
         )
-
-    def _draw_indicators(self):
-        activity = self.node.state.control_activity()
-        labels = [
-            ('Keyboard', activity['keyboard']),
-            ('Left Stick', activity['left_stick']),
-            ('Right Stick', activity['right_stick']),
-            ('Left Trigger', activity['left_trigger']),
-            ('Right Trigger', activity['right_trigger']),
-        ]
-        for index, (label, active) in enumerate(labels):
-            rect = RectSpec(145.0 + index * 140.0, 500.0, 124.0, 32.0)
-            self._draw_rect(rect, (55, 105, 84) if active else (47, 54, 61), border_radius=6)
-            self._draw_rect_outline(rect, (99, 111, 124), border_radius=6)
-            self._draw_centered_text(label, rect, (230, 235, 240), self.small_font)
 
     def _draw_text(
         self,

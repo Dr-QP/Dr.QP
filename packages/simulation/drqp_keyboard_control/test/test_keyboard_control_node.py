@@ -302,23 +302,6 @@ def test_delete_and_backspace_publish_robot_events(ros_context):
     assert event_names == ['reboot_servos', 'finalize']
 
 
-def test_control_activity_reflects_inputs():
-    """Visual indicators should reflect keyboard, stick, and trigger activity."""
-    state = GuiControlState()
-
-    state.key_down('w')
-    state.set_right_stick(0.2, 0.0)
-    state.set_left_trigger(0.1)
-    state.set_right_trigger(0.0)
-
-    activity = state.control_activity()
-    assert activity['keyboard'] is True
-    assert activity['left_stick'] is True
-    assert activity['right_stick'] is True
-    assert activity['left_trigger'] is True
-    assert activity['right_trigger'] is False
-
-
 def test_clamp_vector_limits_to_unit_circle():
     """The vector helper should preserve direction while limiting magnitude."""
     x, y = clamp_vector(3.0, 4.0)
