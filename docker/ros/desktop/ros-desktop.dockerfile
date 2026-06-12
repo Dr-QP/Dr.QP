@@ -23,6 +23,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            install_docker=true \
            install_docker_mcp=true \
            install_agentic_tools=true \
+           install_virtualhere_usb_client=true \
            install_devcontainer_firewall=true \
          "
 
