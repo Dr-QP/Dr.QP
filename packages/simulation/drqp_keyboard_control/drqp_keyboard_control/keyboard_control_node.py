@@ -35,7 +35,6 @@ import std_msgs.msg
 from drqp_keyboard_control.gui_controls import clamp, clamp_vector
 from drqp_keyboard_control.keyboard_control_app import PygameKeyboardControlApp
 
-
 LEFT_STICK_KEYS = frozenset({'w', 'a', 's', 'd'})
 RIGHT_STICK_KEYS = frozenset({'up', 'down', 'left', 'right'})
 MOTION_KEYS = LEFT_STICK_KEYS | RIGHT_STICK_KEYS
@@ -45,6 +44,7 @@ EVENT_KEYS = {
     'delete': 'reboot_servos',
     'backspace': 'finalize',
 }
+
 
 @dataclass(frozen=True)
 class VirtualAxes:

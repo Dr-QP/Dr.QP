@@ -24,8 +24,8 @@ from drqp_brain.joystick_input_handler import ControlMode
 from drqp_interfaces.msg import MovementCommandConstants
 from drqp_keyboard_control.gui_controls import (
     ButtonControl,
-    clamp_vector,
     CheckboxControl,
+    clamp_vector,
     RectSpec,
     StickControl,
     TriggerControl,
@@ -39,8 +39,8 @@ from drqp_keyboard_control.keyboard_control_node import (
     KeyboardControlNode,
 )
 from drqp_keyboard_control.sdl_window import (
-    set_sdl_window_always_on_top,
     sdl_library_candidates,
+    set_sdl_window_always_on_top,
 )
 import pytest
 import rclpy
@@ -339,9 +339,7 @@ def test_space_and_escape_publish_kill_switch_once_per_keydown(ros_context):
     finally:
         node.destroy_node()
 
-    event_names = [
-        call.args[0].data for call in node.robot_event_pub.publish.call_args_list
-    ]
+    event_names = [call.args[0].data for call in node.robot_event_pub.publish.call_args_list]
     assert event_names == ['kill_switch_pressed', 'kill_switch_pressed']
 
 
@@ -355,9 +353,7 @@ def test_delete_and_backspace_publish_robot_events(ros_context):
     finally:
         node.destroy_node()
 
-    event_names = [
-        call.args[0].data for call in node.robot_event_pub.publish.call_args_list
-    ]
+    event_names = [call.args[0].data for call in node.robot_event_pub.publish.call_args_list]
     assert event_names == ['reboot_servos', 'finalize']
 
 

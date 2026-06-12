@@ -30,7 +30,6 @@ from drqp_keyboard_control.gui_controls import (
 )
 from drqp_keyboard_control.sdl_window import set_sdl_window_always_on_top
 
-
 KEYBOARD_HELP_LINES = [
     'W/A/S/D: left stick',
     'Arrow keys: right stick',
