@@ -60,7 +60,7 @@
       <pose>-2.5 0 0 0 0 0</pose>
 
       <link name="fulcrum">
-        <pose>0 0 0.18 0 1.5708 0</pose>
+        <pose>0 0 0.18 1.5708 0 0</pose>
         <gravity>false</gravity>
         <inertial>
           <mass>200.0</mass>
@@ -95,9 +95,26 @@
         </visual>
       </link>
 
-      <link name="board">
+      <link name="pivot">
         <pose>0 0 0.41 0 0 0</pose>
+        <gravity>false</gravity>
         <inertial>
+          <mass>200.0</mass>
+          <inertia>
+            <ixx>4.0</ixx>
+            <iyy>4.0</iyy>
+            <izz>4.0</izz>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyz>0</iyz>
+          </inertia>
+        </inertial>
+      </link>
+
+      <link name="board">
+        <pose>0 0 0.41 0 0.08 0</pose>
+        <inertial>
+          <pose>-0.35 0 0 0 0 0</pose>
           <mass>18.0</mass>
           <inertia>
             <ixx>3.004</ixx>
@@ -140,8 +157,12 @@
         <parent>world</parent>
         <child>fulcrum</child>
       </joint>
+      <joint name="pivot_fixed" type="fixed">
+        <parent>world</parent>
+        <child>pivot</child>
+      </joint>
       <joint name="board_pivot" type="revolute">
-        <parent>fulcrum</parent>
+        <parent>pivot</parent>
         <child>board</child>
         <axis>
           <xyz>0 1 0</xyz>
@@ -150,8 +171,8 @@
             <upper>0.45</upper>
           </limit>
           <dynamics>
-            <damping>1.4</damping>
-            <friction>0.04</friction>
+            <damping>0.25</damping>
+            <friction>0.0</friction>
           </dynamics>
         </axis>
       </joint>
