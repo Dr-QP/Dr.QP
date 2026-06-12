@@ -326,11 +326,13 @@ class KeyboardControlScreen:
         self.node = node
         self.refresh_period = 1.0 / refresh_rate_hz
         self.last_render_at = 0.0
+        self.screen_attr = curses.A_NORMAL
 
     def run(self):
         """Run the curses input and redraw loop."""
         curses.noecho()
         curses.cbreak()
+        self._configure_screen()
         self.stdscr.keypad(True)
         self.stdscr.timeout(20)
         try:
@@ -360,6 +362,15 @@ class KeyboardControlScreen:
             return chr(key_code)
         return None
 
+    def _configure_screen(self):
+        """Configure terminal colors for a full-screen black background."""
+        try:
+            curses.start_color()
+            curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
+            self.screen_attr = curses.color_pair(1)
+        except curses.error:
+            self.screen_attr = curses.A_NORMAL
+
     def render(self, *, force: bool = False):
         """Redraw the screen without producing scrollback."""
         now = time.monotonic()
@@ -368,11 +379,12 @@ class KeyboardControlScreen:
 
         self.last_render_at = now
         height, width = self.stdscr.getmaxyx()
+        self.stdscr.bkgd(' ', self.screen_attr)
         self.stdscr.erase()
         for row, line in enumerate(self.node.ui_lines(now)):
             if row >= height:
                 break
-            self.stdscr.addnstr(row, 0, line, max(0, width - 1))
+            self.stdscr.addnstr(row, 0, line, max(0, width - 1), self.screen_attr)
         self.stdscr.noutrefresh()
         curses.doupdate()
 

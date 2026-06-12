@@ -166,6 +166,35 @@ class FakeCursesScreen:
         return self.key_code
 
 
+class FakeRenderScreen:
+    """Minimal screen stub for render behavior tests."""
+
+    def __init__(self):
+        self.calls = []
+
+    def getmaxyx(self):
+        return (8, 40)
+
+    def bkgd(self, char, attr):
+        self.calls.append(('bkgd', char, attr))
+
+    def erase(self):
+        self.calls.append(('erase',))
+
+    def addnstr(self, row, column, text, limit, attr):
+        self.calls.append(('addnstr', row, column, text, limit, attr))
+
+    def noutrefresh(self):
+        self.calls.append(('noutrefresh',))
+
+
+class FakeUiNode:
+    """Minimal node stub for render behavior tests."""
+
+    def ui_lines(self, now):
+        return ['Dr.QP Keyboard Control', '', 'Mode: Walk']
+
+
 @pytest.fixture
 def ros_context():
     """Initialize ROS only for tests that construct a node."""
@@ -209,3 +238,19 @@ def test_curses_screen_normalizes_arrow_and_tab_keys():
         KeyboardControlScreen(FakeCursesScreen(ord('+')), None, refresh_rate_hz=8.0).read_key()
         == '+'
     )
+
+
+def test_curses_render_paints_full_black_background(monkeypatch):
+    """Each frame should clear the whole screen with the configured background."""
+    monkeypatch.setattr(curses, 'doupdate', lambda: None)
+    fake_screen = FakeRenderScreen()
+    screen = KeyboardControlScreen(fake_screen, FakeUiNode(), refresh_rate_hz=8.0)
+    screen.screen_attr = 123
+
+    screen.render(force=True)
+
+    assert fake_screen.calls[0] == ('bkgd', ' ', 123)
+    assert fake_screen.calls[1] == ('erase',)
+    assert fake_screen.calls[-1] == ('noutrefresh',)
+    drawn_text = [call[3] for call in fake_screen.calls if call[0] == 'addnstr']
+    assert drawn_text == ['Dr.QP Keyboard Control', '', 'Mode: Walk']
