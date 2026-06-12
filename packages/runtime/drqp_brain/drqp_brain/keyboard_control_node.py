@@ -278,12 +278,12 @@ class KeyboardControlNode(rclpy.node.Node):
             'W/S forward/back, A/D left/right, arrows for right stick',
             '+/- adjust sensitivity, 1 tripod, 2 ripple, 3 wave, TAB mode, H help',
             'Space stops active keys, Ctrl-C exits',
+            '',
         ]
 
         if self.state.show_detailed_help:
             lines.extend(
                 [
-                    '',
                     'Mode behavior:',
                     '  Walk: WASD controls stride, left/right arrows rotate',
                     '  BodyPosition: WASD moves body x/y, up/down arrows move body z',
@@ -417,7 +417,7 @@ def main():
         parser = argparse.ArgumentParser('Terminal keyboard robot control ROS node')
         parser.add_argument('--sensitivity', type=float, default=0.5)
         parser.add_argument('--sensitivity-step', type=float, default=0.1)
-        parser.add_argument('--key-timeout-sec', type=float, default=0.25)
+        parser.add_argument('--key-timeout-sec', type=float, default=0.1)
         parser.add_argument('--publish-rate-hz', type=float, default=20.0)
         parser.add_argument('--ui-refresh-rate-hz', type=float, default=8.0)
         parser.add_argument('--no-ui', action='store_true')
