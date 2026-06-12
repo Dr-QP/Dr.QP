@@ -159,10 +159,10 @@
 
     <model name="motor_tilt_platform">
       <static>false</static>
-      <pose>2.5 0 0 0 0 0</pose>
+      <pose>0.5 0 0 0 0 0</pose>
 
       <link name="base">
-        <pose>-1.0 0 0.06 0 0 0</pose>
+        <pose>0 0 0.041 0 0 0</pose>
         <inertial>
           <mass>150.0</mass>
           <inertia>
@@ -174,18 +174,13 @@
             <iyz>0</iyz>
           </inertia>
         </inertial>
-        <collision name="collision">
-          <geometry>
-            <box>
-              <size>0.12 1.4 0.12</size>
-            </box>
-          </geometry>
-        </collision>
         <visual name="visual">
+          <pose>0 0 0 1.5708 0 0</pose>
           <geometry>
-            <box>
-              <size>0.12 1.4 0.12</size>
-            </box>
+            <cylinder>
+              <radius>0.04</radius>
+              <length>1.4</length>
+            </cylinder>
           </geometry>
           <material>
             <ambient>0.20 0.26 0.32 1</ambient>
@@ -195,19 +190,20 @@
       </link>
 
       <link name="platform">
-        <pose>1.0 0 0.25 0 0 0</pose>
+        <pose>0 0 0.041 0 0 0</pose>
         <inertial>
           <mass>35.0</mass>
           <inertia>
-            <ixx>4.210</ixx>
-            <iyy>33.390</iyy>
-            <izz>37.567</izz>
+            <ixx>5.728</ixx>
+            <iyy>186.685</iyy>
+            <izz>192.383</izz>
             <ixy>0</ixy>
             <ixz>0</ixz>
             <iyz>0</iyz>
           </inertia>
         </inertial>
         <collision name="collision">
+          <pose>2.0 0 0 0 0 0</pose>
           <geometry>
             <box>
               <size>4.0 1.4 0.08</size>
@@ -223,6 +219,7 @@
           </surface>
         </collision>
         <visual name="visual">
+          <pose>2.0 0 0 0 0 0</pose>
           <geometry>
             <box>
               <size>4.0 1.4 0.08</size>
@@ -243,7 +240,7 @@
         <parent>base</parent>
         <child>platform</child>
         <axis>
-          <xyz>0 1 0</xyz>
+          <xyz>0 -1 0</xyz>
           <limit>
             <lower>0.0</lower>
             <upper>0.349066</upper>
@@ -260,11 +257,11 @@
       <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
         <joint_name>tilt_hinge</joint_name>
         <topic>/balance_challenge/motor_tilt_platform/target_position</topic>
-        <p_gain>800.0</p_gain>
+        <p_gain>5000.0</p_gain>
         <i_gain>0.0</i_gain>
-        <d_gain>60.0</d_gain>
-        <cmd_max>2500.0</cmd_max>
-        <cmd_min>-2500.0</cmd_min>
+        <d_gain>300.0</d_gain>
+        <cmd_max>10000.0</cmd_max>
+        <cmd_min>-10000.0</cmd_min>
       </plugin>
     </model>
 
