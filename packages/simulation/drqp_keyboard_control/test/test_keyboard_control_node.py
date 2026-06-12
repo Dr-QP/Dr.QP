@@ -32,6 +32,7 @@ from drqp_keyboard_control.keyboard_control_node import (
     PygameKeyboardControlApp,
     RectSpec,
     set_sdl_window_always_on_top,
+    sdl_library_candidates,
     StickControl,
     TriggerControl,
 )
@@ -224,6 +225,14 @@ def test_stay_on_top_toggle_updates_state_and_applies_best_effort():
 def test_set_sdl_window_always_on_top_fails_without_window_id():
     """The platform topmost helper should safely no-op when unavailable."""
     assert set_sdl_window_always_on_top(None, True) is False
+
+
+def test_sdl_library_candidates_are_unique():
+    """SDL lookup should return a deduplicated best-effort candidate list."""
+    candidates = sdl_library_candidates()
+
+    assert candidates == list(dict.fromkeys(candidates))
+    assert all(candidates)
 
 
 def test_tab_cycles_control_modes():

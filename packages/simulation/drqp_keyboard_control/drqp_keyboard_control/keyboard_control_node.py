@@ -24,6 +24,7 @@ import argparse
 import ctypes
 import ctypes.util
 from dataclasses import dataclass, field
+from pathlib import Path
 import math
 from typing import Callable
 
@@ -812,10 +813,18 @@ def set_sdl_window_always_on_top(window_id: int | None, enabled: bool) -> bool:
     if window_id is None:
         return False
 
-    library_name = ctypes.util.find_library('SDL2') or ctypes.util.find_library('SDL2-2.0')
-    if library_name is None:
-        return False
+    for library_name in sdl_library_candidates():
+        if _set_sdl_window_always_on_top_with_library(library_name, window_id, enabled):
+            return True
 
+    return False
+
+
+def _set_sdl_window_always_on_top_with_library(
+    library_name: str,
+    window_id: int,
+    enabled: bool,
+) -> bool:
     try:
         sdl = ctypes.CDLL(library_name)
         get_window = sdl.SDL_GetWindowFromID
@@ -829,10 +838,49 @@ def set_sdl_window_always_on_top(window_id: int | None, enabled: bool) -> bool:
         set_always_on_top.argtypes = [ctypes.c_void_p, ctypes.c_int]
         set_always_on_top.restype = None
         set_always_on_top(window, 1 if enabled else 0)
-    except (AttributeError, OSError):
+    except (AttributeError, OSError, TypeError, ValueError):
         return False
 
     return True
+
+
+def sdl_library_candidates() -> list[str]:
+    """Return likely SDL library paths, including Pygame-bundled binaries."""
+    candidates = [
+        ctypes.util.find_library('SDL2'),
+        ctypes.util.find_library('SDL2-2.0'),
+    ]
+
+    try:
+        import pygame
+
+        pygame_dir = Path(pygame.__file__).resolve().parent
+        search_dirs = [
+            pygame_dir,
+            pygame_dir / '.dylibs',
+            pygame_dir.parent / '.dylibs',
+            pygame_dir / 'pygame.libs',
+            pygame_dir.parent / 'pygame.libs',
+        ]
+        patterns = (
+            'libSDL2*.dylib',
+            'SDL2*.dylib',
+            'libSDL2*.so*',
+            'SDL2*.dll',
+        )
+        for search_dir in search_dirs:
+            if not search_dir.is_dir():
+                continue
+            for pattern in patterns:
+                candidates.extend(str(path) for path in search_dir.glob(pattern))
+    except (ImportError, OSError):
+        pass
+
+    unique_candidates = []
+    for candidate in candidates:
+        if candidate and candidate not in unique_candidates:
+            unique_candidates.append(candidate)
+    return unique_candidates
 
 
 def main():
