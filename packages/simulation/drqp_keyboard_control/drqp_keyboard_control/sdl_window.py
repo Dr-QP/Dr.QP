@@ -20,7 +20,11 @@
 
 import ctypes
 import ctypes.util
+import logging
 from pathlib import Path
+
+
+logger = logging.getLogger(__name__)
 
 
 def set_sdl_window_always_on_top(window_id: int | None, enabled: bool) -> bool:
@@ -89,7 +93,7 @@ def sdl_library_candidates() -> list[str]:
             for pattern in patterns:
                 candidates.extend(str(path) for path in search_dir.glob(pattern))
     except (ImportError, OSError):
-        pass
+        logger.debug("Unable to inspect pygame-bundled SDL libraries", exc_info=True)
 
     unique_candidates = []
     for candidate in candidates:
