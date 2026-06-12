@@ -21,14 +21,12 @@
 from pathlib import Path
 
 
-def test_bringup_launch_loads_the_imu_node():
-    """Ensure bringup wires the Dr.QP IMU node into robot startup."""
-    launch_file = Path(__file__).resolve().parents[1] / 'launch' / 'bringup.launch.py'
+def test_sim_launch_owns_keyboard_control_gui():
+    """Keyboard GUI control should live in simulation launch, not runtime bringup."""
+    launch_file = Path(__file__).resolve().parents[1] / 'launch' / 'sim.launch.py'
     launch_source = launch_file.read_text(encoding='utf-8')
 
-    assert "name='load_imu'" in launch_source
-    assert "name='load_moveit'" in launch_source
-    assert "FindPackageShare('drqp_moveit')" in launch_source
-    assert "'move_group.launch.py'" in launch_source
-    assert "executable='drqp_imu'" in launch_source
-    assert 'UnlessCondition(use_gazebo)' in launch_source
+    assert "'load_keyboard_control'" in launch_source
+    assert "package='drqp_keyboard_control'" in launch_source
+    assert "executable='drqp_keyboard_control'" in launch_source
+    assert 'condition=IfCondition(load_keyboard_control)' in launch_source

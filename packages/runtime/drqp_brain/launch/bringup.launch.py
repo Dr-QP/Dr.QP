@@ -31,7 +31,6 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     use_gazebo = LaunchConfiguration('use_gazebo')
     load_joystick = LaunchConfiguration('load_joystick')
-    load_keyboard_control = LaunchConfiguration('load_keyboard_control')
     load_controllers = LaunchConfiguration('load_controllers')
     load_imu = LaunchConfiguration('load_imu')
     load_moveit = LaunchConfiguration('load_moveit')
@@ -50,12 +49,6 @@ def generate_launch_description():
                 default_value='false',
                 choices=['true', 'false'],
                 description='Load joy game_controller_node',
-            ),
-            DeclareLaunchArgument(
-                name='load_keyboard_control',
-                default_value='false',
-                choices=['true', 'false'],
-                description='Load terminal keyboard control node',
             ),
             DeclareLaunchArgument(
                 name='load_controllers',
@@ -128,13 +121,6 @@ def generate_launch_description():
                         executable='drqp_joystick_translator',
                         output='screen',
                         condition=IfCondition(load_joystick),
-                    ),
-                    Node(
-                        package='drqp_brain',
-                        executable='drqp_keyboard_control',
-                        output='screen',
-                        emulate_tty=True,
-                        condition=IfCondition(load_keyboard_control),
                     ),
                     GroupAction(
                         condition=UnlessCondition(use_gazebo),

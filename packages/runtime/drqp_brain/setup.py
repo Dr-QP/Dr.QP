@@ -29,7 +29,6 @@ setup(
             'drqp_brain = drqp_brain.brain_node:main',
             'drqp_robot_state = drqp_brain.robot_state.robot_state_node:main',
             'drqp_joystick_translator = drqp_brain.joystick_translator_node:main',
-            'drqp_keyboard_control = drqp_brain.keyboard_control_node:main',
             'drqp_imu = drqp_brain.imu_node:main',
         ],
     },
