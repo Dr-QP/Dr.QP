@@ -187,9 +187,7 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         self._assert_single_move_group_node()
 
     def _assert_single_move_group_node(self) -> None:
-        move_group_nodes = [
-            name for name in self.node.get_node_names() if name == 'move_group'
-        ]
+        move_group_nodes = [name for name in self.node.get_node_names() if name == 'move_group']
         self.assertEqual(
             len(move_group_nodes),
             1,

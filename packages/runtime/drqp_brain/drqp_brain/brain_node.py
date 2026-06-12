@@ -360,8 +360,7 @@ class HexapodBrain(rclpy.node.Node):
 
     def _foot_targets_window_key(self, foot_target_sets):
         return tuple(
-            self._foot_targets_key(legs_and_targets)
-            for legs_and_targets in foot_target_sets
+            self._foot_targets_key(legs_and_targets) for legs_and_targets in foot_target_sets
         )
 
     def _ik_ready(self) -> bool:
