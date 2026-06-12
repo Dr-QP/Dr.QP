@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
@@ -34,7 +35,6 @@ from launch.substitutions import (
     PathJoinSubstitution,
     TextSubstitution,
 )
-from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
 from ros_gz_bridge.actions import RosGzBridge
@@ -45,9 +45,7 @@ def _resolve_world_sdf(world_sdf):
         return world_sdf
 
     world_file = world_sdf if world_sdf.endswith('.sdf') else f'{world_sdf}.sdf'
-    package_world_path = (
-        get_package_share_directory('drqp_gazebo') + f'/worlds/{world_file}'
-    )
+    package_world_path = get_package_share_directory('drqp_gazebo') + f'/worlds/{world_file}'
     try:
         with open(package_world_path, encoding='utf-8'):
             return package_world_path
