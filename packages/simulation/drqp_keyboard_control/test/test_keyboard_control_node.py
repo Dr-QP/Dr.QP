@@ -27,6 +27,7 @@ from drqp_keyboard_control.keyboard_control_node import (
     clamp_vector,
     GuiControlState,
     KeyboardControlNode,
+    KEYBOARD_HELP_LINES,
     RectSpec,
     StickControl,
     TriggerControl,
@@ -300,6 +301,23 @@ def test_delete_and_backspace_publish_robot_events(ros_context):
         call.args[0].data for call in node.robot_event_pub.publish.call_args_list
     ]
     assert event_names == ['reboot_servos', 'finalize']
+
+
+def test_keyboard_help_lines_cover_all_bindings():
+    """Help content should list all keyboard controls."""
+    help_text = '\n'.join(KEYBOARD_HELP_LINES)
+
+    for expected in (
+        'W/A/S/D',
+        'Arrow keys',
+        'Tab',
+        '1/2/3',
+        '+/-',
+        'Space or Esc',
+        'Delete',
+        'Backspace',
+    ):
+        assert expected in help_text
 
 
 def test_clamp_vector_limits_to_unit_circle():

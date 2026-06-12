@@ -45,6 +45,18 @@ EVENT_KEYS = {
     'backspace': 'finalize',
 }
 
+KEYBOARD_HELP_LINES = [
+    'W/A/S/D: left stick',
+    'Arrow keys: right stick',
+    'Hold multiple movement keys together',
+    'Tab: cycle mode',
+    '1/2/3: select Tripod/Ripple/Wave',
+    '+/-: adjust keyboard sensitivity',
+    'Space or Esc: kill switch',
+    'Delete: reboot servos',
+    'Backspace: finalize',
+]
+
 
 @dataclass(frozen=True)
 class VirtualAxes:
@@ -403,6 +415,7 @@ class PygameKeyboardControlApp:
         self.active_stick: StickControl | None = None
         self.active_trigger: TriggerControl | None = None
         self.buttons: list[ButtonControl] = []
+        self.show_help = False
 
         pygame.init()
         pygame.display.set_caption('Dr.QP Keyboard Control')
@@ -413,26 +426,26 @@ class PygameKeyboardControlApp:
 
         self.left_stick = StickControl(
             'Left Stick',
-            (240.0, 385.0),
+            (220.0, 385.0),
             105.0,
             self.node.state.set_left_stick,
             self.node.state.release_left_stick,
         )
         self.right_stick = StickControl(
             'Right Stick',
-            (740.0, 385.0),
+            (520.0, 385.0),
             105.0,
             self.node.state.set_right_stick,
             self.node.state.release_right_stick,
         )
         self.left_trigger = TriggerControl(
             'Left Trigger',
-            RectSpec(75.0, 280.0, 34.0, 210.0),
+            RectSpec(55.0, 280.0, 34.0, 210.0),
             self.node.state.set_left_trigger,
         )
         self.right_trigger = TriggerControl(
             'Right Trigger',
-            RectSpec(870.0, 280.0, 34.0, 210.0),
+            RectSpec(655.0, 280.0, 34.0, 210.0),
             self.node.state.set_right_trigger,
         )
         self._build_buttons()
@@ -446,7 +459,7 @@ class PygameKeyboardControlApp:
             self.clock.tick(self.frame_rate_hz)
 
     def _build_buttons(self):
-        mode_x = 275.0
+        mode_x = 150.0
         for index, mode in enumerate(all_control_modes):
             self.buttons.append(
                 ButtonControl(
@@ -477,10 +490,21 @@ class PygameKeyboardControlApp:
             self.buttons.append(
                 ButtonControl(
                     label,
-                    RectSpec(305.0 + index * 130.0, 560.0, 118.0, 42.0),
+                    RectSpec(185.0 + index * 130.0, 560.0, 118.0, 42.0),
                     action,
                 )
             )
+        self.buttons.append(
+            ButtonControl(
+                'Help',
+                RectSpec(600.0, 35.0, 74.0, 38.0),
+                self._toggle_help,
+                lambda: self.show_help,
+            )
+        )
+
+    def _toggle_help(self):
+        self.show_help = not self.show_help
 
     def _handle_events(self):
         for event in self.pygame.event.get():
@@ -581,6 +605,8 @@ class PygameKeyboardControlApp:
         self._draw_trigger(self.right_trigger, axes.right_trigger)
         self._draw_stick(self.left_stick, axes.left_x, axes.left_y)
         self._draw_stick(self.right_stick, axes.right_x, axes.right_y)
+        if self.show_help:
+            self._draw_help()
         pygame.display.flip()
 
     def _draw_button(self, button: ButtonControl):
@@ -656,6 +682,19 @@ class PygameKeyboardControlApp:
             self.small_font,
         )
 
+    def _draw_help(self):
+        panel = RectSpec(180.0, 150.0, 390.0, 285.0)
+        self._draw_rect(panel, (34, 39, 45), border_radius=6)
+        self._draw_rect_outline(panel, (118, 132, 146), border_radius=6)
+        self._draw_text('Keyboard Controls', (panel.x + 18, panel.y + 16), (235, 239, 244))
+        for index, line in enumerate(KEYBOARD_HELP_LINES):
+            self._draw_text(
+                line,
+                (panel.x + 18, panel.y + 50 + index * 24),
+                (203, 211, 219),
+                self.small_font,
+            )
+
     def _draw_text(
         self,
         text: str,
@@ -710,7 +749,7 @@ def main():
         parser.add_argument('--sensitivity', type=float, default=0.5)
         parser.add_argument('--sensitivity-step', type=float, default=0.1)
         parser.add_argument('--publish-rate-hz', type=float, default=20.0)
-        parser.add_argument('--width', type=int, default=980)
+        parser.add_argument('--width', type=int, default=760)
         parser.add_argument('--height', type=int, default=640)
         parser.add_argument('--frame-rate-hz', type=float, default=60.0)
         filtered_args = rclpy.utilities.remove_ros_args()
