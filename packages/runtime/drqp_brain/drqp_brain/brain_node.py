@@ -32,34 +32,27 @@ from drqp_brain.joint_trajectory_builder import (
     kFemurOffsetAngle,
     kTibiaOffsetAngle,
 )
+from drqp_brain.locomotion_kinematics import (
+    MoveItServiceLocomotionKinematics,
+    RCLPY_SHUTDOWN_ERRORS,
+)
 from drqp_brain.walk_controller import GaitType, WalkController
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 from drqp_kinematics.geometry import AffineTransform, Point3D
 from drqp_kinematics.models import HexapodModel
-from geometry_msgs.msg import PoseStamped, Quaternion
-from moveit_msgs.msg import MoveItErrorCodes, RobotState
-from moveit_msgs.srv import GetPositionIK
 import numpy as np
 import rclpy
 from rclpy._rclpy_pybind11 import InvalidHandle, RCLError
 from rclpy.action import ActionClient
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup, ReentrantCallbackGroup
-from rclpy.duration import Duration
-from rclpy.exceptions import NotInitializedException, TimerCancelledError
+from rclpy.exceptions import TimerCancelledError
 from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
 import rclpy.node
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 import rclpy.utilities
-from scipy.spatial.transform import Rotation
 from sensor_msgs.msg import JointState
 import std_msgs.msg
 import trajectory_msgs.msg
-
-MOVEIT_IK_SERVICE = '/compute_ik'
-MOVEIT_IK_TIMEOUT_SEC = 2.0
-BASE_FRAME = 'drqp/base_center_link'
-
-RCLPY_SHUTDOWN_ERRORS = (InvalidHandle, NotInitializedException, RCLError, RuntimeError)
 
 
 class HexapodBrain(rclpy.node.Node):
@@ -123,7 +116,6 @@ class HexapodBrain(rclpy.node.Node):
         self.__ik_client = None
         self._last_published_foot_targets = None
         self._joint_state_warning_logged = False
-        self._ik_service_warning_logged = False
         self.latest_joint_state = None
         self.joint_state_sub = self.create_subscription(
             JointState,
@@ -134,6 +126,13 @@ class HexapodBrain(rclpy.node.Node):
         )
 
         self.setup_hexapod()
+        self.kinematics = MoveItServiceLocomotionKinematics(
+            node=self,
+            hexapod=self.hexapod,
+            callback_group=self.ik_callback_group,
+            track_future=self._track_future,
+            is_shutting_down=lambda: self._is_shutting_down,
+        )
 
         self.loop_timer = self.create_timer(
             1 / self.fps,
@@ -156,13 +155,7 @@ class HexapodBrain(rclpy.node.Node):
     @property
     def ik_client(self):
         """Create the MoveIt IK client only when a leg solve is needed."""
-        if self.__ik_client is None:
-            self.__ik_client = self.create_client(
-                GetPositionIK,
-                MOVEIT_IK_SERVICE,
-                callback_group=self.ik_callback_group,
-            )
-        return self.__ik_client
+        return self.kinematics.ik_client
 
     def setup_hexapod(self):
         drqp_coxa = 0.053  # in meters
@@ -309,108 +302,28 @@ class HexapodBrain(rclpy.node.Node):
         self._joint_state_warning_logged = False
 
     def solve_joint_targets(self, legs_and_targets):
-        robot_state = self._current_robot_state()
-        joint_targets = {}
-        for leg, foot_target in legs_and_targets:
-            response = self._call_ik(leg, foot_target, robot_state)
-            if response.error_code.val != MoveItErrorCodes.SUCCESS:
-                self.get_logger().warning(
-                    f'MoveIt IK failed for {leg.label.name} with code {response.error_code.val}'
-                )
-                return None
+        result = self.kinematics.solve(legs_and_targets, self.latest_joint_state)
+        if not result.succeeded:
+            self.get_logger().warning(result.failure_reason)
+            return None
+        return result.joint_targets
 
-            leg_joint_targets = self._extract_leg_joint_targets(leg, response.solution)
-            joint_targets.update(leg_joint_targets)
-            robot_state = response.solution
+    def _call_ik(self, leg, foot_target, robot_state):
+        return self.kinematics.call_ik(leg, foot_target, robot_state)
 
-        return joint_targets
-
-    def _call_ik(self, leg, foot_target, robot_state: RobotState):
-        if self._is_shutting_down:
-            raise RuntimeError('MoveIt IK request aborted because drqp_brain is shutting down')
-
-        request = self._build_ik_request(leg, foot_target, robot_state)
-        future = self.ik_client.call_async(request)
-        self._track_future(future)
-        completed = threading.Event()
-        future.add_done_callback(lambda _: completed.set())
-        if not completed.wait(timeout=MOVEIT_IK_TIMEOUT_SEC):
-            self._safe_cancel_future(future, f'MoveIt IK request for {leg.label.name}')
-            if self._is_shutting_down:
-                raise RuntimeError(
-                    f'MoveIt IK request aborted for {leg.label.name} during shutdown'
-                )
-            raise RuntimeError(
-                f'MoveIt IK request timed out for {leg.label.name} after '
-                f'{MOVEIT_IK_TIMEOUT_SEC:.1f}s'
-            )
-
-        if not future.done():
-            self._safe_cancel_future(future, f'MoveIt IK request for {leg.label.name}')
-            raise RuntimeError(
-                f'MoveIt IK request timed out for {leg.label.name} after '
-                f'{MOVEIT_IK_TIMEOUT_SEC:.1f}s'
-            )
-
-        future_exception = future.exception()
-        if future_exception is not None:
-            raise RuntimeError(
-                f'MoveIt IK request for {leg.label.name} raised an exception: {future_exception}'
-            ) from future_exception
-        response = future.result()
-
-        if response is None:
-            raise RuntimeError(f'MoveIt IK returned no response for {leg.label.name}')
-        return response
-
-    def _current_robot_state(self) -> RobotState:
-        robot_state = RobotState()
+    def _current_robot_state(self):
         latest = self.latest_joint_state
         assert latest is not None
-        robot_state.joint_state = JointState(
-            header=latest.header,
-            name=list(latest.name),
-            position=list(latest.position),
-            velocity=list(latest.velocity),
-            effort=list(latest.effort),
-        )
-        return robot_state
+        return self.kinematics.current_robot_state(latest)
 
-    def _build_ik_request(self, leg, foot_target, robot_state: RobotState):
-        request = GetPositionIK.Request()
-        request.ik_request.group_name = f'{leg.label.name}_leg'
-        request.ik_request.robot_state = robot_state
-        request.ik_request.avoid_collisions = False
-        request.ik_request.ik_link_name = f'drqp/{leg.label.name}_foot_link'
-        request.ik_request.pose_stamped = self._make_pose_stamped(leg, foot_target)
-        request.ik_request.timeout = Duration(seconds=MOVEIT_IK_TIMEOUT_SEC).to_msg()
-        return request
+    def _build_ik_request(self, leg, foot_target, robot_state):
+        return self.kinematics.build_ik_request(leg, foot_target, robot_state)
 
     def _make_pose_stamped(self, leg, foot_target):
-        pose = PoseStamped()
-        pose.header.frame_id = BASE_FRAME
-        base_frame_target = self.hexapod.body_transform.inverse.apply_point(foot_target)
-        pose.pose.position.x = float(base_frame_target.x)
-        pose.pose.position.y = float(base_frame_target.y)
-        pose.pose.position.z = float(base_frame_target.z)
+        return self.kinematics.make_pose_stamped(leg, foot_target)
 
-        orientation = Rotation.from_matrix(leg.tibia_link.rotation).as_quat()
-        pose.pose.orientation = Quaternion(
-            x=float(orientation[0]),
-            y=float(orientation[1]),
-            z=float(orientation[2]),
-            w=float(orientation[3]),
-        )
-        return pose
-
-    def _extract_leg_joint_targets(self, leg, robot_state: RobotState):
-        joint_map = dict(zip(robot_state.joint_state.name, robot_state.joint_state.position))
-        joint_targets = {}
-        for joint_name in self._controller_joint_names(leg):
-            if joint_name not in joint_map:
-                raise RuntimeError(f'MoveIt IK response missing joint target for {joint_name}')
-            joint_targets[joint_name] = joint_map[joint_name]
-        return joint_targets
+    def _extract_leg_joint_targets(self, leg, robot_state):
+        return self.kinematics.extract_leg_joint_targets(leg, robot_state)
 
     def _foot_targets_key(self, legs_and_targets):
         return tuple(
@@ -433,26 +346,10 @@ class HexapodBrain(rclpy.node.Node):
                 self._joint_state_warning_logged = True
             return False
 
-        try:
-            service_available = self.ik_client.wait_for_service(timeout_sec=0.0)
-        except RCLPY_SHUTDOWN_ERRORS as exc:
-            if not self._is_shutting_down:
-                self.get_logger().warning(
-                    f'MoveIt IK service {MOVEIT_IK_SERVICE} readiness check failed: {exc}'
-                )
-            return False
-
-        if not service_available:
-            if not self._ik_service_warning_logged:
-                self.get_logger().warning(f'MoveIt IK service {MOVEIT_IK_SERVICE} is unavailable')
-                self._ik_service_warning_logged = True
-            return False
-
-        self._ik_service_warning_logged = False
-        return True
+        return self.kinematics.ready()
 
     def _controller_joint_names(self, leg):
-        return [f'drqp/{leg.label.name}_{joint_name}' for joint_name in ('coxa', 'femur', 'tibia')]
+        return self.kinematics.controller_joint_names(leg)
 
     def apply_joint_targets(self, joint_targets: dict[str, float]):
         for leg in self.hexapod.legs:
@@ -704,6 +601,7 @@ class HexapodBrain(rclpy.node.Node):
         if self.__ik_client is not None:
             self._safe_destroy_client(self.__ik_client, 'MoveIt IK client')
             self.__ik_client = None
+        self.kinematics.destroy()
 
         try:
             super().destroy_node()
