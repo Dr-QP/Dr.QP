@@ -169,11 +169,11 @@ class GuiControlState:
     def axes(self) -> VirtualAxes:
         """Return merged keyboard and pointer controller axes."""
         keyboard_left = (
-            self._axis('a', 'd') * self.sensitivity,
+            self._axis('d', 'a') * self.sensitivity,
             self._axis('w', 's') * self.sensitivity,
         )
         keyboard_right = (
-            self._axis('left', 'right') * self.sensitivity,
+            self._axis('right', 'left') * self.sensitivity,
             self._axis('up', 'down') * self.sensitivity,
         )
         left_x, left_y = self.left_stick if self.left_stick_active else keyboard_left

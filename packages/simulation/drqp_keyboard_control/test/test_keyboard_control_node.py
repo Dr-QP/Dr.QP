@@ -69,9 +69,9 @@ def test_multiple_keyboard_keys_combine_across_sticks():
         state.key_down(key)
 
     axes = state.axes()
-    assert axes.left_x == pytest.approx(-0.75)
+    assert axes.left_x == pytest.approx(0.75)
     assert axes.left_y == pytest.approx(0.75)
-    assert axes.right_x == pytest.approx(0.75)
+    assert axes.right_x == pytest.approx(-0.75)
     assert axes.right_y == pytest.approx(0.75)
 
 
