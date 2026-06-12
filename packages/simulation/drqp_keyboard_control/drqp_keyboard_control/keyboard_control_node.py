@@ -524,7 +524,7 @@ class PygameKeyboardControlApp:
         self.buttons.append(
             ButtonControl(
                 'Help',
-                RectSpec(600.0, 35.0, 74.0, 38.0),
+                RectSpec(150.0, 141.0, 136.0, 38.0),
                 self._toggle_help,
                 lambda: self.show_help,
             )
@@ -532,7 +532,7 @@ class PygameKeyboardControlApp:
         self.checkboxes.append(
             CheckboxControl(
                 'Stay on top',
-                RectSpec(585.0, 92.0, 120.0, 28.0),
+                RectSpec(300.0, 146.0, 120.0, 28.0),
                 self._toggle_stay_on_top,
                 lambda: self.stay_on_top,
             )
