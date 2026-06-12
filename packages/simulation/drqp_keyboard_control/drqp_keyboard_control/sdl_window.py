@@ -23,7 +23,6 @@ import ctypes.util
 import logging
 from pathlib import Path
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -93,7 +92,7 @@ def sdl_library_candidates() -> list[str]:
             for pattern in patterns:
                 candidates.extend(str(path) for path in search_dir.glob(pattern))
     except (ImportError, OSError):
-        logger.debug("Unable to inspect pygame-bundled SDL libraries", exc_info=True)
+        logger.debug('Unable to inspect pygame-bundled SDL libraries', exc_info=True)
 
     unique_candidates = []
     for candidate in candidates:
