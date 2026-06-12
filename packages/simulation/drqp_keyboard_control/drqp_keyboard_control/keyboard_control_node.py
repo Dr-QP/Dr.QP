@@ -21,6 +21,8 @@
 # THE SOFTWARE.
 
 import argparse
+import ctypes
+import ctypes.util
 from dataclasses import dataclass, field
 import math
 from typing import Callable
@@ -393,6 +395,27 @@ class ButtonControl:
         self.pressed = False
 
 
+@dataclass
+class CheckboxControl:
+    """Clickable checkbox GUI control."""
+
+    label: str
+    rect: RectSpec
+    action: Callable[[], None]
+    selected: Callable[[], bool]
+    pressed: bool = False
+
+    def click(self, pos: tuple[float, float]) -> bool:
+        if not self.rect.contains(pos):
+            return False
+        self.pressed = True
+        self.action()
+        return True
+
+    def release(self):
+        self.pressed = False
+
+
 class PygameKeyboardControlApp:
     """Pygame GUI wrapper around KeyboardControlNode."""
 
@@ -415,11 +438,14 @@ class PygameKeyboardControlApp:
         self.active_stick: StickControl | None = None
         self.active_trigger: TriggerControl | None = None
         self.buttons: list[ButtonControl] = []
+        self.checkboxes: list[CheckboxControl] = []
         self.show_help = False
+        self.stay_on_top = False
 
         pygame.init()
         pygame.display.set_caption('Dr.QP Keyboard Control')
         self.screen = pygame.display.set_mode((self.width, self.height))
+        self.window_id = self._display_window_id()
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 28)
         self.small_font = pygame.font.Font(None, 22)
@@ -502,9 +528,33 @@ class PygameKeyboardControlApp:
                 lambda: self.show_help,
             )
         )
+        self.checkboxes.append(
+            CheckboxControl(
+                'Stay on top',
+                RectSpec(585.0, 92.0, 120.0, 28.0),
+                self._toggle_stay_on_top,
+                lambda: self.stay_on_top,
+            )
+        )
 
     def _toggle_help(self):
         self.show_help = not self.show_help
+
+    def _toggle_stay_on_top(self):
+        requested_state = not self.stay_on_top
+        if self._apply_stay_on_top(requested_state):
+            self.stay_on_top = requested_state
+
+    def _apply_stay_on_top(self, enabled: bool) -> bool:
+        return set_sdl_window_always_on_top(self.window_id, enabled)
+
+    def _display_window_id(self) -> int | None:
+        try:
+            from pygame._sdl2.video import Window
+
+            return int(Window.from_display_module().id)
+        except (AttributeError, ImportError, TypeError, ValueError):
+            return None
 
     def _handle_events(self):
         for event in self.pygame.event.get():
@@ -528,6 +578,9 @@ class PygameKeyboardControlApp:
     def _begin_pointer(self, pos: tuple[float, float]):
         for button in self.buttons:
             if button.click(pos):
+                return
+        for checkbox in self.checkboxes:
+            if checkbox.click(pos):
                 return
 
         if self.left_stick.hit_test(pos):
@@ -554,6 +607,8 @@ class PygameKeyboardControlApp:
     def _end_pointer(self):
         for button in self.buttons:
             button.release()
+        for checkbox in self.checkboxes:
+            checkbox.release()
         if self.active_stick is not None:
             self.active_stick.end_drag()
             self.active_stick = None
@@ -599,6 +654,8 @@ class PygameKeyboardControlApp:
 
         for button in self.buttons:
             self._draw_button(button)
+        for checkbox in self.checkboxes:
+            self._draw_checkbox(checkbox)
 
         axes = self.node.state.axes()
         self._draw_trigger(self.left_trigger, axes.left_trigger)
@@ -618,6 +675,17 @@ class PygameKeyboardControlApp:
         self._draw_rect_outline(button.rect, (111, 126, 140), border_radius=6)
         text_color = (245, 247, 250) if selected or button.pressed else (203, 211, 219)
         self._draw_centered_text(button.label, button.rect, text_color, self.small_font)
+
+    def _draw_checkbox(self, checkbox: CheckboxControl):
+        box = RectSpec(checkbox.rect.x, checkbox.rect.y + 4.0, 20.0, 20.0)
+        text_pos = (checkbox.rect.x + 28.0, checkbox.rect.y + 5.0)
+        border_color = (150, 163, 177) if not checkbox.pressed else (210, 218, 226)
+        self._draw_rect(box, (47, 54, 61), border_radius=4)
+        self._draw_rect_outline(box, border_color, border_radius=4)
+        if checkbox.selected():
+            inner = RectSpec(box.x + 5.0, box.y + 5.0, 10.0, 10.0)
+            self._draw_rect(inner, (86, 160, 133), border_radius=2)
+        self._draw_text(checkbox.label, text_pos, (203, 211, 219), self.small_font)
 
     def _draw_trigger(self, trigger: TriggerControl, value: float):
         self._draw_text(trigger.name, (trigger.rect.x - 26, trigger.rect.y - 28), (203, 211, 219))
@@ -738,6 +806,34 @@ class PygameKeyboardControlApp:
             width=1,
             border_radius=border_radius,
         )
+
+
+def set_sdl_window_always_on_top(window_id: int | None, enabled: bool) -> bool:
+    """Set the Pygame SDL window topmost flag when SDL exposes the API."""
+    if window_id is None:
+        return False
+
+    library_name = ctypes.util.find_library('SDL2') or ctypes.util.find_library('SDL2-2.0')
+    if library_name is None:
+        return False
+
+    try:
+        sdl = ctypes.CDLL(library_name)
+        get_window = sdl.SDL_GetWindowFromID
+        get_window.argtypes = [ctypes.c_uint32]
+        get_window.restype = ctypes.c_void_p
+        window = get_window(ctypes.c_uint32(window_id))
+        if not window:
+            return False
+
+        set_always_on_top = sdl.SDL_SetWindowAlwaysOnTop
+        set_always_on_top.argtypes = [ctypes.c_void_p, ctypes.c_int]
+        set_always_on_top.restype = None
+        set_always_on_top(window, 1 if enabled else 0)
+    except (AttributeError, OSError):
+        return False
+
+    return True
 
 
 def main():

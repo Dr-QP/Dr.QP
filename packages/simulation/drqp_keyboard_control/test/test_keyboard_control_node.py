@@ -25,10 +25,13 @@ from drqp_interfaces.msg import MovementCommandConstants
 from drqp_keyboard_control.keyboard_control_node import (
     ButtonControl,
     clamp_vector,
+    CheckboxControl,
     GuiControlState,
     KeyboardControlNode,
     KEYBOARD_HELP_LINES,
+    PygameKeyboardControlApp,
     RectSpec,
+    set_sdl_window_always_on_top,
     StickControl,
     TriggerControl,
 )
@@ -181,6 +184,47 @@ def test_mode_and_gait_toggle_selection():
     assert state.gait == MovementCommandConstants.GAIT_WAVE
     assert mode_button.selected() is True
     assert gait_button.selected() is True
+
+
+def test_checkbox_click_invokes_action_and_tracks_pressed_state():
+    """Checkbox controls should behave like click targets."""
+    calls = []
+    checkbox = CheckboxControl(
+        'Stay on top',
+        RectSpec(0.0, 0.0, 120.0, 28.0),
+        lambda: calls.append('toggle'),
+        lambda: bool(calls),
+    )
+
+    assert checkbox.click((10.0, 10.0)) is True
+    assert calls == ['toggle']
+    assert checkbox.selected() is True
+    assert checkbox.pressed is True
+
+    checkbox.release()
+    assert checkbox.pressed is False
+
+
+def test_stay_on_top_toggle_updates_state_only_when_applied():
+    """Stay-on-top state should follow successful platform application."""
+    app = PygameKeyboardControlApp.__new__(PygameKeyboardControlApp)
+    app.stay_on_top = False
+    requested_states = []
+    app._apply_stay_on_top = lambda enabled: requested_states.append(enabled) or True
+
+    app._toggle_stay_on_top()
+    assert app.stay_on_top is True
+    assert requested_states == [True]
+
+    app._apply_stay_on_top = lambda enabled: requested_states.append(enabled) and False
+    app._toggle_stay_on_top()
+    assert app.stay_on_top is True
+    assert requested_states == [True, False]
+
+
+def test_set_sdl_window_always_on_top_fails_without_window_id():
+    """The platform topmost helper should safely no-op when unavailable."""
+    assert set_sdl_window_always_on_top(None, True) is False
 
 
 def test_tab_cycles_control_modes():
