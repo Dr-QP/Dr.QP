@@ -25,6 +25,7 @@ from launch.actions import (
     IncludeLaunchDescription,
     SetEnvironmentVariable,
 )
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
     EnvironmentVariable,
@@ -63,6 +64,14 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            'load_keyboard_control',
+            default_value='false',
+            choices=['true', 'false'],
+            description='Load the simulation GUI keyboard control node.',
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             'gz_partition',
             default_value=[
                 EnvironmentVariable('HOSTNAME', default_value='unknown-host'),
@@ -80,6 +89,7 @@ def generate_launch_description():
 
     # Initialize Arguments
     sim_gui = LaunchConfiguration('sim_gui')
+    load_keyboard_control = LaunchConfiguration('load_keyboard_control')
     gz_partition = LaunchConfiguration('gz_partition')
     container_name = 'drqp_gazebo_container'
     gz_args = '-r -v 3 empty.sdf'
@@ -129,6 +139,12 @@ def generate_launch_description():
             'false',
         ],
     )
+    keyboard_control = Node(
+        package='drqp_keyboard_control',
+        executable='drqp_keyboard_control',
+        output='screen',
+        condition=IfCondition(load_keyboard_control),
+    )
 
     drqp_system = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -156,6 +172,7 @@ def generate_launch_description():
                     gazebo,
                     gazebo_bridge,
                     gz_spawn_entity,
+                    keyboard_control,
                 ]
             ),
         ]
