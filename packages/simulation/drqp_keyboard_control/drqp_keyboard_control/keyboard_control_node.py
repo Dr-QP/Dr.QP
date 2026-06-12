@@ -541,9 +541,8 @@ class PygameKeyboardControlApp:
         self.show_help = not self.show_help
 
     def _toggle_stay_on_top(self):
-        requested_state = not self.stay_on_top
-        if self._apply_stay_on_top(requested_state):
-            self.stay_on_top = requested_state
+        self.stay_on_top = not self.stay_on_top
+        self._apply_stay_on_top(self.stay_on_top)
 
     def _apply_stay_on_top(self, enabled: bool) -> bool:
         return set_sdl_window_always_on_top(self.window_id, enabled)

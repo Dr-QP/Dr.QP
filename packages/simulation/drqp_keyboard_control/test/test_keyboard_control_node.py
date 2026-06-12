@@ -205,20 +205,19 @@ def test_checkbox_click_invokes_action_and_tracks_pressed_state():
     assert checkbox.pressed is False
 
 
-def test_stay_on_top_toggle_updates_state_only_when_applied():
-    """Stay-on-top state should follow successful platform application."""
+def test_stay_on_top_toggle_updates_state_and_applies_best_effort():
+    """Stay-on-top checkbox should reflect clicks even if the platform call fails."""
     app = PygameKeyboardControlApp.__new__(PygameKeyboardControlApp)
     app.stay_on_top = False
     requested_states = []
-    app._apply_stay_on_top = lambda enabled: requested_states.append(enabled) or True
+    app._apply_stay_on_top = lambda enabled: requested_states.append(enabled) and False
 
     app._toggle_stay_on_top()
     assert app.stay_on_top is True
     assert requested_states == [True]
 
-    app._apply_stay_on_top = lambda enabled: requested_states.append(enabled) and False
     app._toggle_stay_on_top()
-    assert app.stay_on_top is True
+    assert app.stay_on_top is False
     assert requested_states == [True, False]
 
 
