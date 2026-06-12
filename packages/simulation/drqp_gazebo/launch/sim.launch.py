@@ -63,6 +63,14 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            'load_moveit',
+            default_value='true',
+            choices=['true', 'false'],
+            description='Load the MoveIt move_group node through drqp_brain bringup.',
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             'gz_partition',
             default_value=[
                 EnvironmentVariable('HOSTNAME', default_value='unknown-host'),
@@ -80,6 +88,7 @@ def generate_launch_description():
 
     # Initialize Arguments
     sim_gui = LaunchConfiguration('sim_gui')
+    load_moveit = LaunchConfiguration('load_moveit')
     gz_partition = LaunchConfiguration('gz_partition')
     container_name = 'drqp_gazebo_container'
     gz_args = '-r -v 3 empty.sdf'
@@ -142,6 +151,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             'use_gazebo': 'true',
+            'load_moveit': load_moveit,
         }.items(),
     )
 
