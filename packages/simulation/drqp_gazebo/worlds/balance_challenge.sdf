@@ -195,19 +195,6 @@
             <iyz>0</iyz>
           </inertia>
         </inertial>
-        <visual name="visual">
-          <pose>0 0 0 1.5708 0 0</pose>
-          <geometry>
-            <cylinder>
-              <radius>0.04</radius>
-              <length>1.4</length>
-            </cylinder>
-          </geometry>
-          <material>
-            <ambient>0.20 0.26 0.32 1</ambient>
-            <diffuse>0.20 0.26 0.32 1</diffuse>
-          </material>
-        </visual>
       </link>
 
       <link name="platform">
