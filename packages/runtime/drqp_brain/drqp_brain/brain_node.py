@@ -33,9 +33,7 @@ from drqp_brain.joint_trajectory_builder import (
     kTibiaOffsetAngle,
 )
 from drqp_brain.locomotion_kinematics import (
-    FallbackLocomotionKinematics,
     MoveItPyLocomotionKinematics,
-    MoveItServiceLocomotionKinematics,
     RCLPY_SHUTDOWN_ERRORS,
 )
 from drqp_brain.walk_controller import GaitType, WalkController
@@ -72,11 +70,9 @@ class HexapodBrain(rclpy.node.Node):
         self._is_shutting_down = False
         self._pending_futures = set()
 
-        # MoveIt IK is invoked once per leg, so the walking loop must stay well
-        # below the service throughput seen in simulation.
+        # MoveItPy is kept in-process for walking kinematics and whole-state validation.
         self.fps = 8
         self.loop_callback_group = MutuallyExclusiveCallbackGroup()
-        self.ik_callback_group = ReentrantCallbackGroup()
         self.state_callback_group = ReentrantCallbackGroup()
 
         self.gait_index = 0
@@ -115,9 +111,9 @@ class HexapodBrain(rclpy.node.Node):
             qos_profile=10,
         )
         self.__trajectory_client = None
-        self.__ik_client = None
         self._last_published_foot_targets = None
         self._joint_state_warning_logged = False
+        self.walking_trajectory_points = 2
         self.latest_joint_state = None
         self.joint_state_sub = self.create_subscription(
             JointState,
@@ -128,19 +124,10 @@ class HexapodBrain(rclpy.node.Node):
         )
 
         self.setup_hexapod()
-        self.kinematics = FallbackLocomotionKinematics(
-            primary=MoveItPyLocomotionKinematics(
-                node=self,
-                hexapod=self.hexapod,
-                is_shutting_down=lambda: self._is_shutting_down,
-            ),
-            fallback=MoveItServiceLocomotionKinematics(
-                node=self,
-                hexapod=self.hexapod,
-                callback_group=self.ik_callback_group,
-                track_future=self._track_future,
-                is_shutting_down=lambda: self._is_shutting_down,
-            ),
+        self.kinematics = MoveItPyLocomotionKinematics(
+            node=self,
+            hexapod=self.hexapod,
+            is_shutting_down=lambda: self._is_shutting_down,
         )
 
         self.loop_timer = self.create_timer(
@@ -160,11 +147,6 @@ class HexapodBrain(rclpy.node.Node):
                 '/joint_trajectory_controller/follow_joint_trajectory',
             )
         return self.__trajectory_client
-
-    @property
-    def ik_client(self):
-        """Create the MoveIt IK client only when a leg solve is needed."""
-        return self.kinematics.ik_client
 
     def setup_hexapod(self):
         drqp_coxa = 0.053  # in meters
@@ -277,32 +259,41 @@ class HexapodBrain(rclpy.node.Node):
             self._restore_motion_state(previous_state)
             return
 
-        foot_targets_key = self._foot_targets_key(feet_targets)
+        feet_target_window = self._build_walking_feet_target_window(
+            first_feet_targets=feet_targets,
+            stride_direction=stride_direction,
+            rotation_direction=self.current_movement.rotation_speed,
+            body_translation=body_translation,
+            body_rotation=body_rotation,
+        )
+        foot_targets_key = self._foot_targets_window_key(feet_target_window)
         if foot_targets_key == self._last_published_foot_targets:
             self._restore_motion_state(previous_state)
             return
 
         try:
-            joint_targets = self.solve_joint_targets(feet_targets)
+            trajectory_targets = self._solve_walking_trajectory_targets(feet_target_window)
         except RuntimeError as exc:
             self._restore_motion_state(previous_state)
             self.get_logger().error(str(exc))
             return
 
-        if joint_targets is None:
+        if trajectory_targets is None:
             self._restore_motion_state(previous_state)
             self.get_logger().warning(
                 'MoveIt IK rejected the current foot targets; skipping trajectory publish'
             )
             return
 
+        joint_targets = trajectory_targets[-1][1]
         self.apply_joint_targets(joint_targets)
 
         trajectory = JointTrajectoryBuilder(self.hexapod)
-        trajectory.add_point_from_joint_targets(
-            joint_targets,
-            reach_in_seconds_from_start=1 / self.fps,
-        )
+        for point_index, (_, point_joint_targets) in enumerate(trajectory_targets, start=1):
+            trajectory.add_point_from_joint_targets(
+                point_joint_targets,
+                reach_in_seconds_from_start=point_index / self.fps,
+            )
         trajectory.publish(self.joint_trajectory_pub)
         self._last_published_foot_targets = foot_targets_key
 
@@ -317,16 +308,38 @@ class HexapodBrain(rclpy.node.Node):
             return None
         return result.joint_targets
 
-    def _call_ik(self, leg, foot_target, robot_state):
-        return self.kinematics.call_ik(leg, foot_target, robot_state)
+    def _build_walking_feet_target_window(
+        self,
+        first_feet_targets,
+        stride_direction: Point3D,
+        rotation_direction: float,
+        body_translation: Point3D,
+        body_rotation: Point3D,
+    ):
+        feet_target_window = [first_feet_targets]
+        feet_targets = first_feet_targets
+        for point_index in range(max(1, self.walking_trajectory_points)):
+            if point_index > 0:
+                feet_targets = self.walker.next_step_targets(
+                    stride_direction=stride_direction,
+                    rotation_direction=rotation_direction,
+                    body_direction=body_translation / 8.0,
+                    body_rotation=body_rotation,
+                )
+                feet_target_window.append(feet_targets)
 
-    def _current_robot_state(self):
-        latest = self.latest_joint_state
-        assert latest is not None
-        return self.kinematics.current_robot_state(latest)
+        return feet_target_window
 
-    def _build_ik_request(self, leg, foot_target, robot_state):
-        return self.kinematics.build_ik_request(leg, foot_target, robot_state)
+    def _solve_walking_trajectory_targets(self, feet_target_window):
+        trajectory_targets = []
+        for feet_targets in feet_target_window:
+            joint_targets = self.solve_joint_targets(feet_targets)
+            if joint_targets is None:
+                return None
+
+            trajectory_targets.append((feet_targets, joint_targets))
+
+        return trajectory_targets
 
     def _make_pose_stamped(self, leg, foot_target):
         return self.kinematics.make_pose_stamped(leg, foot_target)
@@ -345,13 +358,19 @@ class HexapodBrain(rclpy.node.Node):
             for leg, foot_target in legs_and_targets
         )
 
+    def _foot_targets_window_key(self, foot_target_sets):
+        return tuple(
+            self._foot_targets_key(legs_and_targets)
+            for legs_and_targets in foot_target_sets
+        )
+
     def _ik_ready(self) -> bool:
         if self._is_shutting_down:
             return False
 
         if self.latest_joint_state is None:
             if not self._joint_state_warning_logged:
-                self.get_logger().warning('No joint state available to seed MoveIt IK requests')
+                self.get_logger().warning('No joint state available to seed MoveItPy')
                 self._joint_state_warning_logged = True
             return False
 
@@ -607,9 +626,6 @@ class HexapodBrain(rclpy.node.Node):
         if self.__trajectory_client is not None:
             self._safe_destroy_client(self.__trajectory_client, 'trajectory action client')
             self.__trajectory_client = None
-        if self.__ik_client is not None:
-            self._safe_destroy_client(self.__ik_client, 'MoveIt IK client')
-            self.__ik_client = None
         self.kinematics.destroy()
 
         try:

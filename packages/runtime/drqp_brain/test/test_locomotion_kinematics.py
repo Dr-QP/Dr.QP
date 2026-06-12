@@ -18,15 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from types import SimpleNamespace
 from unittest.mock import Mock
 
-from drqp_brain.locomotion_kinematics import (
-    MoveItPyLocomotionKinematics,
-    MoveItServiceLocomotionKinematics,
-)
+from drqp_brain.locomotion_kinematics import MoveItPyLocomotionKinematics
 from drqp_kinematics.models import HexapodModel
-from moveit_msgs.msg import MoveItErrorCodes, RobotState
 import pytest
 from sensor_msgs.msg import JointState
 
@@ -38,19 +33,6 @@ def hexapod():
     return hexapod
 
 
-@pytest.fixture
-def kinematics(hexapod):
-    node = Mock()
-    node.get_logger.return_value = Mock()
-    return MoveItServiceLocomotionKinematics(
-        node=node,
-        hexapod=hexapod,
-        callback_group=Mock(),
-        track_future=Mock(),
-        is_shutting_down=lambda: False,
-    )
-
-
 def _all_joint_names(hexapod):
     return [
         f'drqp/{leg.label.name}_{joint_name}'
@@ -59,89 +41,61 @@ def _all_joint_names(hexapod):
     ]
 
 
-def _robot_state(joint_values):
-    state = RobotState()
-    state.joint_state = JointState(
-        name=list(joint_values.keys()),
-        position=list(joint_values.values()),
-    )
-    return state
+class FakeJointModelGroup:
+    """Fake MoveIt joint model group with configurable bounds validation."""
+
+    def __init__(self, group_name, valid=True):
+        self.group_name = group_name
+        self.valid = valid
+        self.positions_seen = []
+
+    def satisfies_position_bounds(self, positions):
+        self.positions_seen.append(list(positions))
+        return self.valid
 
 
-def _success_response(solution_state):
-    return SimpleNamespace(
-        error_code=SimpleNamespace(val=MoveItErrorCodes.SUCCESS),
-        solution=solution_state,
-    )
+class FakeRobotModel:
+    """Fake MoveIt robot model exposing joint model groups."""
+
+    def __init__(self, invalid_group_name=None):
+        self.invalid_group_name = invalid_group_name
+        self.groups = {}
+
+    def get_joint_model_group(self, group_name):
+        if group_name not in self.groups:
+            self.groups[group_name] = FakeJointModelGroup(
+                group_name,
+                valid=group_name != self.invalid_group_name,
+            )
+        return self.groups[group_name]
 
 
-def test_solve_merges_leg_solutions_into_complete_robot_state(kinematics, hexapod):
-    """Sequential leg IK results should build one complete RobotState."""
-    all_names = _all_joint_names(hexapod)
-    latest_joint_state = JointState(name=all_names, position=[0.0] * len(all_names))
-    selected_legs = list(hexapod.legs)[:2]
-    foot_targets = [(leg, leg.tibia_end.copy()) for leg in selected_legs]
-    states_seen_by_ik = []
+class FakePlanningSceneMonitor:
+    """Fake planning scene monitor with read-only scene access."""
 
-    def fake_call_ik(leg, _foot_target, robot_state):
-        states_seen_by_ik.append(
-            dict(zip(robot_state.joint_state.name, robot_state.joint_state.position))
-        )
-        joint_values = dict(zip(robot_state.joint_state.name, robot_state.joint_state.position))
-        for index, joint_name in enumerate(kinematics.controller_joint_names(leg), start=1):
-            joint_values[joint_name] = float(index + len(states_seen_by_ik) * 10)
-        return _success_response(_robot_state(joint_values))
+    def __init__(self, colliding=False):
+        self.colliding = colliding
 
-    kinematics.call_ik = fake_call_ik
+    def read_only(self):
+        return self
 
-    result = kinematics.solve(foot_targets, latest_joint_state)
+    def __enter__(self):
+        return self
 
-    assert result.succeeded
-    assert set(result.joint_targets) == {
-        joint_name
-        for leg in selected_legs
-        for joint_name in kinematics.controller_joint_names(leg)
-    }
-    first_leg_targets = kinematics.controller_joint_names(selected_legs[0])
-    assert states_seen_by_ik[1][first_leg_targets[0]] == pytest.approx(11.0)
-    assert dict(zip(result.robot_state.joint_state.name, result.robot_state.joint_state.position))[
-        first_leg_targets[0]
-    ] == pytest.approx(11.0)
+    def __exit__(self, *_exc_info):
+        return False
 
-
-def test_validate_complete_state_reports_missing_controller_joints(kinematics, hexapod):
-    """Validation should fail before publishing incomplete whole-robot states."""
-    incomplete_names = _all_joint_names(hexapod)[:-1]
-    state = RobotState()
-    state.joint_state = JointState(name=incomplete_names, position=[0.0] * len(incomplete_names))
-
-    failure = kinematics.validate_complete_state(state)
-
-    assert failure is not None
-    assert 'RobotState is missing joint targets' in failure
-
-
-def test_validate_complete_state_reports_non_finite_controller_joints(kinematics, hexapod):
-    """Validation should reject NaN or infinite controller targets."""
-    all_names = _all_joint_names(hexapod)
-    values = [0.0] * len(all_names)
-    values[3] = float('nan')
-    state = RobotState()
-    state.joint_state = JointState(name=all_names, position=values)
-
-    failure = kinematics.validate_complete_state(state)
-
-    assert failure is not None
-    assert 'RobotState contains non-finite joint targets' in failure
+    def is_state_colliding(self, _robot_state, _group_name, _verbose):
+        return self.colliding
 
 
 class FakeMoveItPy:
     """Fake MoveItPy facade for unit tests."""
 
-    def __init__(self, node_name):
+    def __init__(self, node_name, invalid_group_name=None, colliding=False):
         self.node_name = node_name
-        self.robot_model = object()
-        self.planning_scene_monitor = None
+        self.robot_model = FakeRobotModel(invalid_group_name=invalid_group_name)
+        self.planning_scene_monitor = FakePlanningSceneMonitor(colliding=colliding)
         self.shutdown_called = False
 
     def get_robot_model(self):
@@ -221,3 +175,110 @@ def test_moveit_py_solver_uses_in_process_robot_state_ik(hexapod):
         f'drqp/{leg.label.name}_femur': pytest.approx(0.2),
         f'drqp/{leg.label.name}_tibia': pytest.approx(0.3),
     }
+    assert result.backend_name == 'moveit_py'
+    assert result.validated
+
+
+def test_moveit_py_solver_returns_complete_six_leg_joint_targets(hexapod):
+    """A normal walking tick should solve and validate every controller joint."""
+    node = Mock()
+    node.get_name.return_value = 'drqp_brain'
+    node.get_logger.return_value = Mock()
+    helper = MoveItPyLocomotionKinematics(
+        node=node,
+        hexapod=hexapod,
+        is_shutting_down=lambda: False,
+        moveit_py_factory=lambda **kwargs: FakeMoveItPy(**kwargs),
+        robot_state_cls=FakeMoveItRobotState,
+    )
+    joint_names = _all_joint_names(hexapod)
+    latest_joint_state = JointState(name=joint_names, position=[0.0] * len(joint_names))
+    foot_targets = [(leg, leg.tibia_end.copy()) for leg in hexapod.legs]
+
+    result = helper.solve(foot_targets, latest_joint_state)
+
+    assert result.succeeded
+    assert result.validated
+    assert set(result.joint_targets) == set(joint_names)
+
+
+def test_moveit_py_validation_reports_non_finite_controller_joints(hexapod):
+    """Validation should reject NaN or infinite controller targets."""
+    node = Mock()
+    node.get_name.return_value = 'drqp_brain'
+    node.get_logger.return_value = Mock()
+
+    class NonFiniteRobotState(FakeMoveItRobotState):
+        """Fake robot state that injects an invalid joint target."""
+
+        def set_from_ik(self, group_name, pose, tip_name, timeout):
+            solved = super().set_from_ik(group_name, pose, tip_name, timeout)
+            self.group_positions[group_name][1] = float('nan')
+            return solved
+
+    helper = MoveItPyLocomotionKinematics(
+        node=node,
+        hexapod=hexapod,
+        is_shutting_down=lambda: False,
+        moveit_py_factory=lambda **kwargs: FakeMoveItPy(**kwargs),
+        robot_state_cls=NonFiniteRobotState,
+    )
+    joint_names = _all_joint_names(hexapod)
+    latest_joint_state = JointState(name=joint_names, position=[0.0] * len(joint_names))
+    leg = next(iter(hexapod.legs))
+
+    result = helper.solve([(leg, leg.tibia_end.copy())], latest_joint_state)
+
+    assert not result.succeeded
+    assert not result.validated
+    assert 'RobotState contains non-finite joint targets' in result.failure_reason
+
+
+def test_moveit_py_validation_reports_joint_bounds_failure(hexapod):
+    """Validation should reject states outside MoveIt joint bounds."""
+    node = Mock()
+    node.get_name.return_value = 'drqp_brain'
+    node.get_logger.return_value = Mock()
+    invalid_group_name = f'{next(iter(hexapod.legs)).label.name}_leg'
+    helper = MoveItPyLocomotionKinematics(
+        node=node,
+        hexapod=hexapod,
+        is_shutting_down=lambda: False,
+        moveit_py_factory=lambda **kwargs: FakeMoveItPy(
+            invalid_group_name=invalid_group_name,
+            **kwargs,
+        ),
+        robot_state_cls=FakeMoveItRobotState,
+    )
+    joint_names = _all_joint_names(hexapod)
+    latest_joint_state = JointState(name=joint_names, position=[0.0] * len(joint_names))
+    leg = next(iter(hexapod.legs))
+
+    result = helper.solve([(leg, leg.tibia_end.copy())], latest_joint_state)
+
+    assert not result.succeeded
+    assert not result.validated
+    assert result.failure_reason == f'RobotState violates joint bounds for {invalid_group_name}'
+
+
+def test_moveit_py_validation_reports_collision_failure(hexapod):
+    """Validation should reject self-colliding complete robot states."""
+    node = Mock()
+    node.get_name.return_value = 'drqp_brain'
+    node.get_logger.return_value = Mock()
+    helper = MoveItPyLocomotionKinematics(
+        node=node,
+        hexapod=hexapod,
+        is_shutting_down=lambda: False,
+        moveit_py_factory=lambda **kwargs: FakeMoveItPy(colliding=True, **kwargs),
+        robot_state_cls=FakeMoveItRobotState,
+    )
+    joint_names = _all_joint_names(hexapod)
+    latest_joint_state = JointState(name=joint_names, position=[0.0] * len(joint_names))
+    leg = next(iter(hexapod.legs))
+
+    result = helper.solve([(leg, leg.tibia_end.copy())], latest_joint_state)
+
+    assert not result.succeeded
+    assert not result.validated
+    assert result.failure_reason == 'RobotState is in self-collision'
