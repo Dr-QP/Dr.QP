@@ -33,6 +33,8 @@ from drqp_brain.joint_trajectory_builder import (
     kTibiaOffsetAngle,
 )
 from drqp_brain.locomotion_kinematics import (
+    FallbackLocomotionKinematics,
+    MoveItPyLocomotionKinematics,
     MoveItServiceLocomotionKinematics,
     RCLPY_SHUTDOWN_ERRORS,
 )
@@ -126,12 +128,19 @@ class HexapodBrain(rclpy.node.Node):
         )
 
         self.setup_hexapod()
-        self.kinematics = MoveItServiceLocomotionKinematics(
-            node=self,
-            hexapod=self.hexapod,
-            callback_group=self.ik_callback_group,
-            track_future=self._track_future,
-            is_shutting_down=lambda: self._is_shutting_down,
+        self.kinematics = FallbackLocomotionKinematics(
+            primary=MoveItPyLocomotionKinematics(
+                node=self,
+                hexapod=self.hexapod,
+                is_shutting_down=lambda: self._is_shutting_down,
+            ),
+            fallback=MoveItServiceLocomotionKinematics(
+                node=self,
+                hexapod=self.hexapod,
+                callback_group=self.ik_callback_group,
+                track_future=self._track_future,
+                is_shutting_down=lambda: self._is_shutting_down,
+            ),
         )
 
         self.loop_timer = self.create_timer(

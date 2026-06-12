@@ -21,7 +21,10 @@
 from types import SimpleNamespace
 from unittest.mock import Mock
 
-from drqp_brain.locomotion_kinematics import MoveItServiceLocomotionKinematics
+from drqp_brain.locomotion_kinematics import (
+    MoveItPyLocomotionKinematics,
+    MoveItServiceLocomotionKinematics,
+)
 from drqp_kinematics.models import HexapodModel
 from moveit_msgs.msg import MoveItErrorCodes, RobotState
 import pytest
@@ -130,3 +133,91 @@ def test_validate_complete_state_reports_non_finite_controller_joints(kinematics
 
     assert failure is not None
     assert 'RobotState contains non-finite joint targets' in failure
+
+
+class FakeMoveItPy:
+    """Fake MoveItPy facade for unit tests."""
+
+    def __init__(self, node_name):
+        self.node_name = node_name
+        self.robot_model = object()
+        self.planning_scene_monitor = None
+        self.shutdown_called = False
+
+    def get_robot_model(self):
+        return self.robot_model
+
+    def get_planning_scene_monitor(self):
+        return self.planning_scene_monitor
+
+    def shutdown(self):
+        self.shutdown_called = True
+
+
+class FakeMoveItRobotState:
+    """Fake MoveIt robot state with group-position and IK hooks."""
+
+    def __init__(self, robot_model):
+        self.robot_model = robot_model
+        self.group_positions = {}
+        self.ik_calls = []
+        self.update_count = 0
+
+    def set_joint_group_positions(self, group_name, positions):
+        self.group_positions[group_name] = list(positions)
+
+    def set_from_ik(self, group_name, pose, tip_name, timeout):
+        self.ik_calls.append((group_name, pose, tip_name, timeout))
+        self.group_positions[group_name] = [0.1, 0.2, 0.3]
+        return True
+
+    def update(self):
+        self.update_count += 1
+
+    def get_joint_group_positions(self, group_name):
+        return self.group_positions[group_name]
+
+
+def test_moveit_py_solver_uses_in_process_robot_state_ik(hexapod):
+    """Verify MoveItPy helper solves leg IK without calling the service backend."""
+    node = Mock()
+    node.get_name.return_value = 'drqp_brain'
+    node.get_logger.return_value = Mock()
+    created_moveit_py = []
+    created_robot_states = []
+
+    def moveit_py_factory(**kwargs):
+        instance = FakeMoveItPy(**kwargs)
+        created_moveit_py.append(instance)
+        return instance
+
+    class CapturingRobotState(FakeMoveItRobotState):
+        """Capture created fake robot states."""
+
+        def __init__(self, robot_model):
+            super().__init__(robot_model)
+            created_robot_states.append(self)
+
+    helper = MoveItPyLocomotionKinematics(
+        node=node,
+        hexapod=hexapod,
+        is_shutting_down=lambda: False,
+        moveit_py_factory=moveit_py_factory,
+        robot_state_cls=CapturingRobotState,
+    )
+    joint_names = _all_joint_names(hexapod)
+    latest_joint_state = JointState(name=joint_names, position=[0.0] * len(joint_names))
+    leg = next(iter(hexapod.legs))
+
+    result = helper.solve([(leg, leg.tibia_end.copy())], latest_joint_state)
+
+    assert result.succeeded
+    assert created_moveit_py[0].node_name == 'drqp_brain'
+    robot_state = created_robot_states[0]
+    assert robot_state.ik_calls[0][0] == f'{leg.label.name}_leg'
+    assert robot_state.ik_calls[0][2] == f'drqp/{leg.label.name}_foot_link'
+    assert result.joint_targets == {
+        f'drqp/{leg.label.name}_coxa': pytest.approx(0.1),
+        f'drqp/{leg.label.name}_femur': pytest.approx(0.2),
+        f'drqp/{leg.label.name}_tibia': pytest.approx(0.3),
+    }

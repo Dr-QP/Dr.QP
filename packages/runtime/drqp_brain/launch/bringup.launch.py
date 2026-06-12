@@ -19,6 +19,8 @@
 # THE SOFTWARE.
 
 
+import sys
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
 from launch.conditions import IfCondition, UnlessCondition
@@ -26,6 +28,22 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
+
+
+def _moveit_params(use_gazebo, hardware_device_address):
+    from ament_index_python.packages import get_package_share_path
+
+    launch_dir = str(get_package_share_path('drqp_moveit') / 'launch')
+    if launch_dir not in sys.path:
+        sys.path.insert(0, launch_dir)
+
+    from moveit_launch_utils import get_moveit_params
+
+    return get_moveit_params(
+        get_package_share_path('drqp_moveit'),
+        use_gazebo=use_gazebo,
+        hardware_device_address=hardware_device_address,
+    )
 
 
 def generate_launch_description():
@@ -137,6 +155,8 @@ def generate_launch_description():
                         package='drqp_brain',
                         executable='drqp_brain',
                         output='screen',
+                        parameters=_moveit_params(use_gazebo, hardware_device_address)
+                        + [{'use_sim_time': use_gazebo}],
                     ),
                     Node(
                         package='drqp_brain',
