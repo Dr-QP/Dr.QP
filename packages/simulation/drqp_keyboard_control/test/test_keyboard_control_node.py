@@ -140,6 +140,22 @@ def test_trigger_slider_clamps():
     assert state.left_trigger == pytest.approx(0.0)
 
 
+def test_vertical_trigger_slider_maps_top_to_pressed():
+    """Vertical trigger sliders should put full trigger at the top."""
+    state = GuiControlState()
+    trigger = TriggerControl(
+        'Right Trigger',
+        RectSpec(20.0, 10.0, 30.0, 100.0),
+        state.set_right_trigger,
+    )
+
+    trigger.begin_drag((35.0, 10.0))
+    assert state.right_trigger == pytest.approx(1.0)
+
+    trigger.update_drag((35.0, 110.0))
+    assert state.right_trigger == pytest.approx(0.0)
+
+
 def test_mode_and_gait_toggle_selection():
     """Visual toggle actions should update mode and gait state directly."""
     state = GuiControlState()

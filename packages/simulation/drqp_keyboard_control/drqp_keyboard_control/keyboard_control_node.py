@@ -361,7 +361,10 @@ class TriggerControl:
         self.update_drag(pos)
 
     def update_drag(self, pos: tuple[float, float]):
-        value = (pos[0] - self.rect.x) / self.rect.width
+        if self.rect.height > self.rect.width:
+            value = 1.0 - ((pos[1] - self.rect.y) / self.rect.height)
+        else:
+            value = (pos[0] - self.rect.x) / self.rect.width
         self.setter(clamp(value, 0.0, 1.0))
 
     def end_drag(self):
@@ -421,26 +424,26 @@ class PygameKeyboardControlApp:
 
         self.left_stick = StickControl(
             'Left Stick',
-            (220.0, 385.0),
+            (240.0, 385.0),
             105.0,
             self.node.state.set_left_stick,
             self.node.state.release_left_stick,
         )
         self.right_stick = StickControl(
             'Right Stick',
-            (760.0, 385.0),
+            (740.0, 385.0),
             105.0,
             self.node.state.set_right_stick,
             self.node.state.release_right_stick,
         )
         self.left_trigger = TriggerControl(
             'Left Trigger',
-            RectSpec(90.0, 120.0, 320.0, 34.0),
+            RectSpec(75.0, 280.0, 34.0, 210.0),
             self.node.state.set_left_trigger,
         )
         self.right_trigger = TriggerControl(
             'Right Trigger',
-            RectSpec(570.0, 120.0, 320.0, 34.0),
+            RectSpec(870.0, 280.0, 34.0, 210.0),
             self.node.state.set_right_trigger,
         )
         self._build_buttons()
@@ -454,7 +457,7 @@ class PygameKeyboardControlApp:
             self.clock.tick(self.frame_rate_hz)
 
     def _build_buttons(self):
-        mode_x = 90.0
+        mode_x = 275.0
         for index, mode in enumerate(all_control_modes):
             self.buttons.append(
                 ButtonControl(
@@ -470,7 +473,7 @@ class PygameKeyboardControlApp:
             self.buttons.append(
                 ButtonControl(
                     label,
-                    RectSpec(530.0 + index * 120.0, 35.0, 106.0, 38.0),
+                    RectSpec(mode_x + index * 150.0, 88.0, 136.0, 38.0),
                     lambda selected_index=index: self.node.state.set_gait_index(selected_index),
                     lambda selected_index=index: self.node.state.gait_index == selected_index,
                 )
@@ -574,10 +577,9 @@ class PygameKeyboardControlApp:
     def _render(self):
         pygame = self.pygame
         self.screen.fill((21, 24, 28))
-        self._draw_text('Dr.QP Keyboard Control', (90, 82), (226, 231, 236), self.font)
         self._draw_text(
             f'Sensitivity {self.node.state.sensitivity:.2f}',
-            (725, 82),
+            (775, 88),
             (178, 187, 197),
             self.small_font,
         )
@@ -604,15 +606,36 @@ class PygameKeyboardControlApp:
         self._draw_centered_text(button.label, button.rect, text_color, self.small_font)
 
     def _draw_trigger(self, trigger: TriggerControl, value: float):
-        self._draw_text(trigger.name, (trigger.rect.x, trigger.rect.y - 28), (203, 211, 219))
+        self._draw_text(trigger.name, (trigger.rect.x - 26, trigger.rect.y - 28), (203, 211, 219))
         self._draw_rect(trigger.rect, (45, 51, 58), border_radius=6)
-        fill = RectSpec(trigger.rect.x, trigger.rect.y, trigger.rect.width * value, trigger.rect.height)
+        if trigger.rect.height > trigger.rect.width:
+            fill_height = trigger.rect.height * value
+            fill = RectSpec(
+                trigger.rect.x,
+                trigger.rect.y + trigger.rect.height - fill_height,
+                trigger.rect.width,
+                fill_height,
+            )
+            knob = (
+                round(trigger.rect.x + trigger.rect.width / 2.0),
+                round(trigger.rect.y + trigger.rect.height * (1.0 - value)),
+            )
+        else:
+            fill = RectSpec(
+                trigger.rect.x,
+                trigger.rect.y,
+                trigger.rect.width * value,
+                trigger.rect.height,
+            )
+            knob = (
+                round(trigger.rect.x + trigger.rect.width * value),
+                round(trigger.rect.y + trigger.rect.height / 2.0),
+            )
         self._draw_rect(fill, (80, 130, 184), border_radius=6)
-        knob_x = trigger.rect.x + trigger.rect.width * value
         self.pygame.draw.circle(
             self.screen,
             (235, 239, 244),
-            (round(knob_x), round(trigger.rect.y + trigger.rect.height / 2.0)),
+            knob,
             14,
         )
 
