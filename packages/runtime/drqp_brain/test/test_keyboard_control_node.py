@@ -18,10 +18,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import curses
+
 from drqp_brain.joystick_input_handler import ControlMode
-from drqp_brain.keyboard_control_node import KeyboardControlState
+from drqp_brain.keyboard_control_node import (
+    KeyboardControlNode,
+    KeyboardControlScreen,
+    KeyboardControlState,
+)
 from drqp_interfaces.msg import MovementCommandConstants
 import pytest
+import rclpy
 
 
 def test_wasd_maps_to_walk_stride_direction():
@@ -147,3 +154,58 @@ def test_h_toggles_detailed_help():
 
     state.handle_key('h', 1.1)
     assert state.show_detailed_help is False
+
+
+class FakeCursesScreen:
+    """Minimal screen stub for key normalization tests."""
+
+    def __init__(self, key_code):
+        self.key_code = key_code
+
+    def getch(self):
+        return self.key_code
+
+
+@pytest.fixture
+def ros_context():
+    """Initialize ROS only for tests that construct a node."""
+    did_init = False
+    if not rclpy.ok():
+        rclpy.init()
+        did_init = True
+
+    yield
+
+    if did_init and rclpy.ok():
+        rclpy.shutdown()
+
+
+def test_ui_lines_do_not_emit_ansi_clear_sequences(ros_context):
+    """Curses owns screen clearing; UI lines should remain plain text."""
+    node = KeyboardControlNode()
+    try:
+        lines = node.ui_lines(1.0)
+    finally:
+        node.destroy_node()
+
+    assert lines[0] == 'Dr.QP Keyboard Control'
+    assert all('\033' not in line for line in lines)
+
+
+def test_curses_screen_normalizes_arrow_and_tab_keys():
+    """The curses input path should preserve the requested key bindings."""
+    assert (
+        KeyboardControlScreen(
+            FakeCursesScreen(curses.KEY_DOWN),
+            None,
+            refresh_rate_hz=8.0,
+        ).read_key()
+        == 'down'
+    )
+    assert KeyboardControlScreen(FakeCursesScreen(9), None, refresh_rate_hz=8.0).read_key() == (
+        'tab'
+    )
+    assert (
+        KeyboardControlScreen(FakeCursesScreen(ord('+')), None, refresh_rate_hz=8.0).read_key()
+        == '+'
+    )

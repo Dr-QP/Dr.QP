@@ -21,6 +21,7 @@
 # THE SOFTWARE.
 
 import argparse
+import curses
 from dataclasses import dataclass, field
 import select
 import sys
@@ -237,9 +238,6 @@ class KeyboardControlNode(rclpy.node.Node):
         sensitivity_step: float = 0.1,
         key_timeout_sec: float = 0.25,
         publish_rate_hz: float = 20.0,
-        ui_refresh_rate_hz: float = 8.0,
-        ui_enabled: bool = True,
-        output: TextIO = sys.stdout,
     ):
         super().__init__('keyboard_control')
         self.state = KeyboardControlState(
@@ -247,10 +245,6 @@ class KeyboardControlNode(rclpy.node.Node):
             sensitivity_step=sensitivity_step,
             key_timeout_sec=key_timeout_sec,
         )
-        self.output = output
-        self.ui_enabled = ui_enabled
-        self._last_render_at = 0.0
-        self._ui_refresh_period = 1.0 / ui_refresh_rate_hz
 
         self.movement_command_pub = self.create_publisher(
             MovementCommand,
@@ -262,22 +256,15 @@ class KeyboardControlNode(rclpy.node.Node):
 
     def handle_key(self, key: str):
         """Handle a normalized key press from the terminal reader."""
-        if self.state.handle_key(key):
-            self.render_ui(force=True)
+        return self.state.handle_key(key)
 
-    def render_ui(self, *, force: bool = False):
-        """Render the terminal status UI."""
-        if not self.ui_enabled:
-            return
-
-        now = time.monotonic()
-        if not force and now - self._last_render_at < self._ui_refresh_period:
-            return
-
-        self._last_render_at = now
+    def ui_lines(self, now: float | None = None) -> list[str]:
+        """Return the current terminal UI as plain text lines."""
+        if now is None:
+            now = time.monotonic()
         axes = self.state.axes(now)
         lines = [
-            '\033[2J\033[HDr.QP Keyboard Control',
+            'Dr.QP Keyboard Control',
             '',
             f'Mode: {self.state.control_mode.name}',
             f'Gait: {self.state.gait}   Sensitivity: {self.state.sensitivity:.2f}',
@@ -310,12 +297,105 @@ class KeyboardControlNode(rclpy.node.Node):
         else:
             lines.append('Press H for detailed help')
 
-        self.output.write('\n'.join(lines))
-        self.output.write('\033[J\n')
-        self.output.flush()
+        return lines
 
     def _publish_command(self):
         self.movement_command_pub.publish(self.state.movement_command())
+
+
+class KeyboardControlScreen:
+    """Curses terminal UI for keyboard control."""
+
+    _SPECIAL_KEYS = {
+        curses.KEY_UP: 'up',
+        curses.KEY_DOWN: 'down',
+        curses.KEY_LEFT: 'left',
+        curses.KEY_RIGHT: 'right',
+        9: 'tab',
+        32: 'space',
+    }
+
+    def __init__(
+        self,
+        stdscr,
+        node: KeyboardControlNode,
+        *,
+        refresh_rate_hz: float,
+    ):
+        self.stdscr = stdscr
+        self.node = node
+        self.refresh_period = 1.0 / refresh_rate_hz
+        self.last_render_at = 0.0
+
+    def run(self):
+        """Run the curses input and redraw loop."""
+        curses.noecho()
+        curses.cbreak()
+        self.stdscr.keypad(True)
+        self.stdscr.timeout(20)
+        try:
+            curses.curs_set(0)
+        except curses.error:
+            pass
+
+        self.render(force=True)
+        while rclpy.ok():
+            key = self.read_key()
+            if key is not None and self.node.handle_key(key):
+                self.render(force=True)
+
+            rclpy.spin_once(self.node, timeout_sec=0.0)
+            self.render()
+
+    def read_key(self) -> str | None:
+        """Read one normalized key from curses."""
+        key_code = self.stdscr.getch()
+        if key_code == -1:
+            return None
+        if key_code == 3:
+            raise KeyboardInterrupt
+        if key_code in self._SPECIAL_KEYS:
+            return self._SPECIAL_KEYS[key_code]
+        if 0 <= key_code <= 255:
+            return chr(key_code)
+        return None
+
+    def render(self, *, force: bool = False):
+        """Redraw the screen without producing scrollback."""
+        now = time.monotonic()
+        if not force and now - self.last_render_at < self.refresh_period:
+            return
+
+        self.last_render_at = now
+        height, width = self.stdscr.getmaxyx()
+        self.stdscr.erase()
+        for row, line in enumerate(self.node.ui_lines(now)):
+            if row >= height:
+                break
+            self.stdscr.addnstr(row, 0, line, max(0, width - 1))
+        self.stdscr.noutrefresh()
+        curses.doupdate()
+
+
+def _run_curses_keyboard_control(
+    stdscr,
+    node: KeyboardControlNode,
+    refresh_rate_hz: float,
+):
+    KeyboardControlScreen(
+        stdscr,
+        node,
+        refresh_rate_hz=refresh_rate_hz,
+    ).run()
+
+
+def _run_plain_keyboard_control(node: KeyboardControlNode):
+    with TerminalKeyReader() as key_reader:
+        while rclpy.ok():
+            key = key_reader.read_key(timeout_sec=0.02)
+            if key is not None:
+                node.handle_key(key)
+            rclpy.spin_once(node, timeout_sec=0.0)
 
 
 def main():
@@ -338,18 +418,16 @@ def main():
             sensitivity_step=args.sensitivity_step,
             key_timeout_sec=args.key_timeout_sec,
             publish_rate_hz=args.publish_rate_hz,
-            ui_refresh_rate_hz=args.ui_refresh_rate_hz,
-            ui_enabled=not args.no_ui,
         )
 
-        node.render_ui(force=True)
-        with TerminalKeyReader() as key_reader:
-            while rclpy.ok():
-                key = key_reader.read_key(timeout_sec=0.02)
-                if key is not None:
-                    node.handle_key(key)
-                rclpy.spin_once(node, timeout_sec=0.0)
-                node.render_ui()
+        if args.no_ui:
+            _run_plain_keyboard_control(node)
+        else:
+            curses.wrapper(
+                _run_curses_keyboard_control,
+                node,
+                args.ui_refresh_rate_hz,
+            )
     except (KeyboardInterrupt, ExternalShutdownException):
         return
     finally:
