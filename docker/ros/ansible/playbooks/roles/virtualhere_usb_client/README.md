@@ -7,13 +7,13 @@ with `-n` to start in daemon mode.
 
 ## Variables
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `virtualhere_usb_client_service_name` | `virtualhereclient` | Systemd service name. |
-| `virtualhere_usb_client_install_path` | `/usr/sbin/vhclient` | Destination for the installed client binary. |
-| `virtualhere_usb_client_download_url` | Selected from `ansible_facts['architecture']` | Override URL for custom architectures or pinned binaries. |
-| `virtualhere_usb_client_extra_args` | `""` | Additional arguments passed after `-n`. |
-| `virtualhere_usb_client_manage_service` | `true` when systemd is available | Start, enable, and restart the systemd service. |
+| Variable                                | Default                                       | Description                                               |
+| --------------------------------------- | --------------------------------------------- | --------------------------------------------------------- |
+| `virtualhere_usb_client_service_name`   | `virtualhereclient`                           | Systemd service name.                                     |
+| `virtualhere_usb_client_install_path`   | `/usr/sbin/vhclient`                          | Destination for the installed client binary.              |
+| `virtualhere_usb_client_download_url`   | Selected from `ansible_facts['architecture']` | Override URL for custom architectures or pinned binaries. |
+| `virtualhere_usb_client_extra_args`     | `""`                                          | Additional arguments passed after `-n`.                   |
+| `virtualhere_usb_client_manage_service` | `true` when systemd is available              | Start, enable, and restart the systemd service.           |
 
 Supported architecture defaults:
 
