@@ -23,6 +23,7 @@ from launch.actions import (
     DeclareLaunchArgument,
     GroupAction,
     IncludeLaunchDescription,
+    OpaqueFunction,
     SetEnvironmentVariable,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -33,9 +34,56 @@ from launch.substitutions import (
     PathJoinSubstitution,
     TextSubstitution,
 )
+from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
 from ros_gz_bridge.actions import RosGzBridge
+
+
+def _resolve_world_sdf(world_sdf):
+    if '/' in world_sdf:
+        return world_sdf
+
+    world_file = world_sdf if world_sdf.endswith('.sdf') else f'{world_sdf}.sdf'
+    package_world_path = (
+        get_package_share_directory('drqp_gazebo') + f'/worlds/{world_file}'
+    )
+    try:
+        with open(package_world_path, encoding='utf-8'):
+            return package_world_path
+    except FileNotFoundError:
+        return world_sdf
+
+
+def _start_gazebo(context, sim_gui, world_sdf):
+    resolved_world_sdf = _resolve_world_sdf(context.perform_substitution(world_sdf))
+    resolved_world_sdf_substitution = TextSubstitution(text=resolved_world_sdf)
+    gz_args = [TextSubstitution(text='-r -v 3 '), resolved_world_sdf_substitution]
+    return [
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare('ros_gz_sim'),
+                        'launch',
+                        'gz_sim.launch.py',
+                    ]
+                )
+            ),
+            launch_arguments={
+                'gz_args': IfElseSubstitution(
+                    sim_gui,
+                    gz_args,
+                    [
+                        TextSubstitution(text='-r -v 3 '),
+                        resolved_world_sdf_substitution,
+                        TextSubstitution(text=' --headless-rendering -s'),
+                    ],
+                ),
+                'on_exit_shutdown': 'true',
+            }.items(),
+        )
+    ]
 
 
 def generate_launch_description():
@@ -45,7 +93,10 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'world_sdf',
             default_value='empty.sdf',
-            description='Gazebo world SDF file to load.',
+            description=(
+                'Gazebo world SDF file to load. Accepts a path, a Gazebo built-in '
+                'world, or a world name from drqp_gazebo/worlds.'
+            ),
         )
     )
     declared_arguments.append(
@@ -112,30 +163,7 @@ def generate_launch_description():
     robot_pitch = LaunchConfiguration('robot_pitch')
     robot_yaw = LaunchConfiguration('robot_yaw')
     container_name = 'drqp_gazebo_container'
-    gz_args = [TextSubstitution(text='-r -v 3 '), world_sdf]
-    gazebo = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [
-                    FindPackageShare('ros_gz_sim'),
-                    'launch',
-                    'gz_sim.launch.py',
-                ]
-            )
-        ),
-        launch_arguments={
-            'gz_args': IfElseSubstitution(
-                sim_gui,
-                gz_args,
-                [
-                    TextSubstitution(text='-r -v 3 '),
-                    world_sdf,
-                    TextSubstitution(text=' --headless-rendering -s'),
-                ],
-            ),
-            'on_exit_shutdown': 'true',
-        }.items(),
-    )
+    gazebo = OpaqueFunction(function=_start_gazebo, args=[sim_gui, world_sdf])
     gazebo_bridge = RosGzBridge(
         bridge_name='drqp_gazebo_bridge',
         config_file=PathJoinSubstitution(
