@@ -13,3 +13,5 @@ ENABLE_FIREWALL=${ENABLE_FIREWALL:-"false"}
 if command -v docker >/dev/null 2>&1 && docker pass --help >/dev/null 2>&1; then
     "$script_dir/devcontainer-setup-pass.sh"
 fi
+
+"$script_dir/devcontainer-start-virtualhere.sh"
