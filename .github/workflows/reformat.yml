@@ -60,7 +60,7 @@ on:
         value: ${{ jobs.gate.outputs.run_downstream }}
     secrets:
       REPO_PAT:
-        required: false
+        required: true
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
