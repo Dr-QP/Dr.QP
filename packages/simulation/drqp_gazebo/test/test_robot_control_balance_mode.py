@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2025 Anton Matosov
+# Copyright (c) 2017-2026 Anton Matosov
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,25 +18,34 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from pathlib import Path
+from launch_testing import post_shutdown_test
+import pytest
+from robot_control_test_support import (
+    create_balance_board_launch_description,
+    GazeboRobotControlBase,
+)
+from simulation_shutdown_test_case import (
+    SimulationShutdownBase,
+)
 
 
-def test_bringup_launch_loads_the_imu_node():
-    """Ensure bringup wires the Dr.QP IMU node into robot startup."""
-    launch_file = Path(__file__).resolve().parents[1] / 'launch' / 'bringup.launch.py'
-    launch_source = launch_file.read_text(encoding='utf-8')
-
-    assert "name='load_imu'" in launch_source
-    assert "name='load_moveit'" in launch_source
-    assert "FindPackageShare('drqp_moveit')" in launch_source
-    assert "'move_group.launch.py'" in launch_source
-    assert "executable='drqp_imu'" in launch_source
-    assert 'UnlessCondition(use_gazebo)' in launch_source
+@pytest.mark.slow
+@pytest.mark.launch_test
+def generate_test_description():
+    return create_balance_board_launch_description()
 
 
-def test_bringup_launch_does_not_configure_brain_imu_transform_path_issue356():
-    """Issue 356: IMU mount conversion belongs upstream of drqp_brain."""
-    launch_file = Path(__file__).resolve().parents[1] / 'launch' / 'bringup.launch.py'
-    launch_source = launch_file.read_text(encoding='utf-8')
+@pytest.mark.slow
+class TestGazeboRobotControlBalanceMode(GazeboRobotControlBase):
+    """Verify balance mode keeps the robot body level on a tilted board."""
 
-    assert "'transform_imu_to_base_frame': IfElseSubstitution(" not in launch_source
+    def test_balance_mode_levels_body_on_tilted_board(self):
+        self.assert_balance_mode_levels_body_on_tilted_board()
+
+
+@post_shutdown_test()
+class TestSimulationShutdown(SimulationShutdownBase):
+    """Verify processes exit cleanly after the launch test finishes."""
+
+    def test_exit_codes(self, proc_info):
+        self.assert_exit_codes(proc_info)
