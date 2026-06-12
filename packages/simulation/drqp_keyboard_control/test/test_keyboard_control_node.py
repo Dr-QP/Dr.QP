@@ -22,19 +22,25 @@ from unittest.mock import Mock
 
 from drqp_brain.joystick_input_handler import ControlMode
 from drqp_interfaces.msg import MovementCommandConstants
-from drqp_keyboard_control.keyboard_control_node import (
+from drqp_keyboard_control.gui_controls import (
     ButtonControl,
     clamp_vector,
     CheckboxControl,
-    GuiControlState,
-    KeyboardControlNode,
-    KEYBOARD_HELP_LINES,
-    PygameKeyboardControlApp,
     RectSpec,
-    set_sdl_window_always_on_top,
-    sdl_library_candidates,
     StickControl,
     TriggerControl,
+)
+from drqp_keyboard_control.keyboard_control_app import (
+    KEYBOARD_HELP_LINES,
+    PygameKeyboardControlApp,
+)
+from drqp_keyboard_control.keyboard_control_node import (
+    GuiControlState,
+    KeyboardControlNode,
+)
+from drqp_keyboard_control.sdl_window import (
+    set_sdl_window_always_on_top,
+    sdl_library_candidates,
 )
 import pytest
 import rclpy
