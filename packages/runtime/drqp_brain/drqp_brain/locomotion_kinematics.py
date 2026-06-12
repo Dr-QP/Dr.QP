@@ -23,7 +23,7 @@ import importlib
 import math
 from typing import Callable
 
-from geometry_msgs.msg import PoseStamped, Quaternion
+from geometry_msgs.msg import Pose, PoseStamped, Quaternion
 import numpy as np
 from rclpy._rclpy_pybind11 import InvalidHandle, RCLError
 from rclpy.exceptions import NotInitializedException
@@ -100,7 +100,7 @@ class MoveItPyLocomotionKinematics:
         for leg, foot_target in legs_and_targets:
             group_name = self.group_name(leg)
             tip_name = self.tip_link_name(leg)
-            pose = self.make_pose_stamped(leg, foot_target).pose
+            pose = self._model_frame_pose(robot_state, leg, foot_target)
             solved = robot_state.set_from_ik(
                 group_name,
                 pose,
@@ -148,7 +148,10 @@ class MoveItPyLocomotionKinematics:
             robot_state_cls = robot_state_module.RobotState
 
         try:
-            self._moveit_py = moveit_py_factory(node_name=self._node.get_name())
+            self._moveit_py = moveit_py_factory(
+                node_name=self._node.get_name(),
+                provide_planning_service=False,
+            )
             self._robot_model = self._moveit_py.get_robot_model()
             self._planning_scene_monitor = self._moveit_py.get_planning_scene_monitor()
             self._robot_state_cls = robot_state_cls
@@ -180,6 +183,46 @@ class MoveItPyLocomotionKinematics:
 
         robot_state.update()
         return robot_state
+
+    def _model_frame_pose(self, robot_state, leg, foot_target):
+        base_pose = self.make_pose_stamped(leg, foot_target).pose
+        model_to_base = np.asarray(robot_state.get_frame_transform(BASE_FRAME))
+        if model_to_base.shape != (4, 4):
+            raise RuntimeError(
+                f'MoveItPy returned invalid transform for {BASE_FRAME}: '
+                f'expected 4x4, got {model_to_base.shape}'
+            )
+
+        base_position = np.asarray(
+            [
+                base_pose.position.x,
+                base_pose.position.y,
+                base_pose.position.z,
+                1.0,
+            ]
+        )
+        model_position = model_to_base @ base_position
+        model_orientation = Rotation.from_matrix(model_to_base[:3, :3]) * Rotation.from_quat(
+            [
+                base_pose.orientation.x,
+                base_pose.orientation.y,
+                base_pose.orientation.z,
+                base_pose.orientation.w,
+            ]
+        )
+        orientation = model_orientation.as_quat()
+
+        pose = Pose()
+        pose.position.x = float(model_position[0])
+        pose.position.y = float(model_position[1])
+        pose.position.z = float(model_position[2])
+        pose.orientation = Quaternion(
+            x=float(orientation[0]),
+            y=float(orientation[1]),
+            z=float(orientation[2]),
+            w=float(orientation[3]),
+        )
+        return pose
 
     def make_pose_stamped(self, leg, foot_target):
         pose = PoseStamped()
@@ -291,8 +334,9 @@ class MoveItPyLocomotionKinematics:
         except Exception as exc:
             try:
                 self._node.get_logger().warning(f'Failed to shut down MoveItPy helper: {exc}')
-            except RCLPY_SHUTDOWN_ERRORS:
-                pass
+            except RCLPY_SHUTDOWN_ERRORS as log_exc:
+                if not self._is_shutting_down():
+                    raise log_exc from exc
         self._moveit_py = None
         self._robot_model = None
         self._planning_scene_monitor = None

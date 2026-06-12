@@ -22,6 +22,7 @@ from unittest.mock import Mock
 
 from drqp_brain.locomotion_kinematics import MoveItPyLocomotionKinematics
 from drqp_kinematics.models import HexapodModel
+import numpy as np
 import pytest
 from sensor_msgs.msg import JointState
 
@@ -57,8 +58,9 @@ class FakeJointModelGroup:
 class FakeRobotModel:
     """Fake MoveIt robot model exposing joint model groups."""
 
-    def __init__(self, invalid_group_name=None):
+    def __init__(self, invalid_group_name=None, model_to_base=None):
         self.invalid_group_name = invalid_group_name
+        self.model_to_base = model_to_base
         self.groups = {}
 
     def get_joint_model_group(self, group_name):
@@ -92,9 +94,20 @@ class FakePlanningSceneMonitor:
 class FakeMoveItPy:
     """Fake MoveItPy facade for unit tests."""
 
-    def __init__(self, node_name, invalid_group_name=None, colliding=False):
+    def __init__(
+        self,
+        node_name,
+        provide_planning_service=True,
+        invalid_group_name=None,
+        colliding=False,
+        model_to_base=None,
+    ):
         self.node_name = node_name
-        self.robot_model = FakeRobotModel(invalid_group_name=invalid_group_name)
+        self.provide_planning_service = provide_planning_service
+        self.robot_model = FakeRobotModel(
+            invalid_group_name=invalid_group_name,
+            model_to_base=model_to_base,
+        )
         self.planning_scene_monitor = FakePlanningSceneMonitor(colliding=colliding)
         self.shutdown_called = False
 
@@ -130,6 +143,11 @@ class FakeMoveItRobotState:
 
     def get_joint_group_positions(self, group_name):
         return self.group_positions[group_name]
+
+    def get_frame_transform(self, _frame_id):
+        if self.robot_model.model_to_base is None:
+            return np.eye(4)
+        return self.robot_model.model_to_base
 
 
 def test_moveit_py_solver_uses_in_process_robot_state_ik(hexapod):
@@ -167,6 +185,7 @@ def test_moveit_py_solver_uses_in_process_robot_state_ik(hexapod):
 
     assert result.succeeded
     assert created_moveit_py[0].node_name == 'drqp_brain'
+    assert created_moveit_py[0].provide_planning_service is False
     robot_state = created_robot_states[0]
     assert robot_state.ik_calls[0][0] == f'{leg.label.name}_leg'
     assert robot_state.ik_calls[0][2] == f'drqp/{leg.label.name}_foot_link'
@@ -177,6 +196,52 @@ def test_moveit_py_solver_uses_in_process_robot_state_ik(hexapod):
     }
     assert result.backend_name == 'moveit_py'
     assert result.validated
+
+
+def test_moveit_py_solver_transforms_base_frame_target_to_model_frame(hexapod):
+    """Robot IK receives poses in the model frame, not the helper base frame."""
+    node = Mock()
+    node.get_name.return_value = 'drqp_brain'
+    node.get_logger.return_value = Mock()
+    model_to_base = np.eye(4)
+    model_to_base[:3, 3] = [0.1, -0.2, 0.3]
+    created_robot_states = []
+
+    class CapturingRobotState(FakeMoveItRobotState):
+        """Capture created fake robot states."""
+
+        def __init__(self, robot_model):
+            super().__init__(robot_model)
+            created_robot_states.append(self)
+
+    helper = MoveItPyLocomotionKinematics(
+        node=node,
+        hexapod=hexapod,
+        is_shutting_down=lambda: False,
+        moveit_py_factory=lambda **kwargs: FakeMoveItPy(
+            model_to_base=model_to_base,
+            **kwargs,
+        ),
+        robot_state_cls=CapturingRobotState,
+    )
+    joint_names = _all_joint_names(hexapod)
+    latest_joint_state = JointState(name=joint_names, position=[0.0] * len(joint_names))
+    leg = next(iter(hexapod.legs))
+    expected_base_pose = helper.make_pose_stamped(leg, leg.tibia_end.copy()).pose
+
+    result = helper.solve([(leg, leg.tibia_end.copy())], latest_joint_state)
+
+    assert result.succeeded
+    pose_seen_by_ik = created_robot_states[0].ik_calls[0][1]
+    assert pose_seen_by_ik.position.x == pytest.approx(
+        expected_base_pose.position.x + model_to_base[0, 3]
+    )
+    assert pose_seen_by_ik.position.y == pytest.approx(
+        expected_base_pose.position.y + model_to_base[1, 3]
+    )
+    assert pose_seen_by_ik.position.z == pytest.approx(
+        expected_base_pose.position.z + model_to_base[2, 3]
+    )
 
 
 def test_moveit_py_solver_returns_complete_six_leg_joint_targets(hexapod):

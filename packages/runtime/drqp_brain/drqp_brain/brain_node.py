@@ -317,16 +317,16 @@ class HexapodBrain(rclpy.node.Node):
         body_rotation: Point3D,
     ):
         feet_target_window = [first_feet_targets]
-        feet_targets = first_feet_targets
         for point_index in range(max(1, self.walking_trajectory_points)):
             if point_index > 0:
-                feet_targets = self.walker.next_step_targets(
-                    stride_direction=stride_direction,
-                    rotation_direction=rotation_direction,
-                    body_direction=body_translation / 8.0,
-                    body_rotation=body_rotation,
+                feet_target_window.append(
+                    self.walker.next_step_targets(
+                        stride_direction=stride_direction,
+                        rotation_direction=rotation_direction,
+                        body_direction=body_translation / 8.0,
+                        body_rotation=body_rotation,
+                    )
                 )
-                feet_target_window.append(feet_targets)
 
         return feet_target_window
 
