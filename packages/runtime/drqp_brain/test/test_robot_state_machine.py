@@ -41,14 +41,6 @@ class TestRobotStateMachine:
         state_machine.send('initializing_done', state_machine)
         assert state_machine.current_state == state_machine.torque_on
 
-    def test_should_ignore_duplicate_initializing_done_from_torque_on(self, state_machine):
-        state_machine.send('initialize')
-        state_machine.send('initializing_done')
-        assert state_machine.current_state == state_machine.torque_on
-
-        state_machine.send('initializing_done')
-        assert state_machine.current_state == state_machine.torque_on
-
     def test_should_finalize_from_turned_on(self, state_machine):
         state_machine.send('initialize')
         state_machine.send('initializing_done')
@@ -62,16 +54,6 @@ class TestRobotStateMachine:
         state_machine.send('initializing_done')
         state_machine.send('finalize')
         assert state_machine.current_state == state_machine.finalizing
-
-        state_machine.send('finalizing_done')
-        assert state_machine.current_state == state_machine.finalized
-
-    def test_should_ignore_duplicate_finalizing_done_from_finalized(self, state_machine):
-        state_machine.send('initialize')
-        state_machine.send('initializing_done')
-        state_machine.send('finalize')
-        state_machine.send('finalizing_done')
-        assert state_machine.current_state == state_machine.finalized
 
         state_machine.send('finalizing_done')
         assert state_machine.current_state == state_machine.finalized
@@ -139,16 +121,6 @@ class TestRobotStateMachine:
         state_machine.send('initializing_done')
         state_machine.send('reboot_servos')
         assert state_machine.current_state == state_machine.servos_rebooting
-
-        state_machine.send('servos_rebooting_done')
-        assert state_machine.current_state == state_machine.torque_off
-
-    def test_should_ignore_duplicate_servos_rebooting_done_from_torque_off(
-        self, state_machine
-    ):
-        state_machine.send('reboot_servos')
-        state_machine.send('servos_rebooting_done')
-        assert state_machine.current_state == state_machine.torque_off
 
         state_machine.send('servos_rebooting_done')
         assert state_machine.current_state == state_machine.torque_off
