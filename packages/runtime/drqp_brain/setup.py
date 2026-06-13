@@ -10,11 +10,13 @@ setup(
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', ['launch/bringup.launch.py']),
+        ('share/' + package_name + '/config', ['config/stride_limits.yaml']),
     ],
     install_requires=[
         'python-statemachine>=2.5.0',
         'numpy',
         'scipy',
+        'PyYAML',
         'adafruit-circuitpython-bno055',
         'lgpio',
     ],
@@ -27,6 +29,7 @@ setup(
     entry_points={
         'console_scripts': [
             'drqp_brain = drqp_brain.brain_node:main',
+            'drqp_generate_stride_limits = drqp_brain.generate_stride_limits:main',
             'drqp_robot_state = drqp_brain.robot_state.robot_state_node:main',
             'drqp_joystick_translator = drqp_brain.joystick_translator_node:main',
             'drqp_imu = drqp_brain.imu_node:main',
