@@ -35,7 +35,7 @@ class RobotStateMachine(StateMachine):
 
     # Transitions/Events
     initialize = torque_off.to(initializing) | finalized.to(initializing)
-    initializing_done = initializing.to(torque_on)
+    initializing_done = initializing.to(torque_on) | torque_on.to(torque_on)
     turn_off = (
         torque_on.to(torque_off)
         | initializing.to(torque_off)
@@ -43,7 +43,7 @@ class RobotStateMachine(StateMachine):
         | finalized.to(torque_off)
     )
     finalize = torque_on.to(finalizing)
-    finalizing_done = finalizing.to(finalized)
+    finalizing_done = finalizing.to(finalized) | finalized.to(finalized)
     reboot_servos = (
         torque_off.to(servos_rebooting)
         | initializing.to(servos_rebooting)
@@ -51,6 +51,6 @@ class RobotStateMachine(StateMachine):
         | finalizing.to(servos_rebooting)
         | finalized.to(servos_rebooting)
     )
-    servos_rebooting_done = servos_rebooting.to(torque_off)
+    servos_rebooting_done = servos_rebooting.to(torque_off) | torque_off.to(torque_off)
 
     kill_switch_pressed = turn_off | initialize
