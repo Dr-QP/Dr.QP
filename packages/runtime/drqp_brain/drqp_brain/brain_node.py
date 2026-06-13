@@ -26,6 +26,7 @@ import sys
 import threading
 import traceback
 
+from ament_index_python.packages import get_package_share_path, PackageNotFoundError
 from control_msgs.action import FollowJointTrajectory
 from drqp_brain.instance_guard import InstanceAlreadyRunningError, InstanceGuard
 from drqp_brain.joint_trajectory_builder import (
@@ -37,6 +38,7 @@ from drqp_brain.locomotion_kinematics import (
     MoveItPyLocomotionKinematics,
     RCLPY_SHUTDOWN_ERRORS,
 )
+from drqp_brain.stride_limits import DirectionalStrideLimits
 from drqp_brain.walk_controller import GaitType, WalkController
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 from drqp_kinematics.geometry import AffineTransform, Point3D
@@ -191,7 +193,16 @@ class HexapodBrain(rclpy.node.Node):
             rotation_speed_degrees=45,
             gait=self.gaits[self.gait_index],
             phase_steps_per_cycle=self.fps / 2.5,
+            stride_limits=self._load_stride_limits(),
         )
+
+    def _load_stride_limits(self):
+        try:
+            config_path = get_package_share_path('drqp_brain') / 'config' / 'stride_limits.yaml'
+            return DirectionalStrideLimits.from_file(config_path)
+        except (FileNotFoundError, KeyError, PackageNotFoundError, ValueError) as exc:
+            self.get_logger().warning(f'Walking stride limits are unavailable: {exc}')
+            return None
 
     def prev_gait(self):
         self.gait_index = (self.gait_index - 1) % len(self.gaits)
