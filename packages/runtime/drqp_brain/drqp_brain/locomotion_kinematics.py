@@ -71,21 +71,24 @@ class MoveItPyLocomotionKinematics:
         self._moveit_py = None
         self._robot_model = None
         self._planning_scene_monitor = None
+        self._initialization_failed = False
         self._initialization_error_logged = False
 
     def ready(self) -> bool:
-        if self._is_shutting_down():
+        if self._is_shutting_down() or self._initialization_failed:
             return False
 
         try:
             self._ensure_moveit_py()
         except RuntimeError as exc:
+            self._initialization_failed = True
             if not self._initialization_error_logged:
-                self._node.get_logger().warning(
-                    f'MoveItPy locomotion helper is unavailable: {exc}'
+                self._node.get_logger().error(
+                    f'MoveItPy locomotion helper failed permanently: {exc}'
                 )
                 self._initialization_error_logged = True
             return False
+
         return True
 
     def solve(
@@ -149,7 +152,7 @@ class MoveItPyLocomotionKinematics:
 
         try:
             self._moveit_py = moveit_py_factory(
-                node_name=self._node.get_name(),
+                node_name='drqp_brain_moveit_py',
                 provide_planning_service=False,
             )
             self._robot_model = self._moveit_py.get_robot_model()
