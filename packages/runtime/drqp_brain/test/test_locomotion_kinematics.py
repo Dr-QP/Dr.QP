@@ -54,6 +54,19 @@ class FakeJointModelGroup:
         self.positions_seen.append(list(positions))
         return self.valid
 
+    @property
+    def active_joint_model_bounds(self):
+        return [[FakeVariableBounds(valid=self.valid)] for _ in range(3)]
+
+
+class FakeVariableBounds:
+    """Fake MoveIt variable bounds entry."""
+
+    def __init__(self, valid=True):
+        self.position_bounded = True
+        self.min_position = -1.0
+        self.max_position = 1.0 if valid else 0.0
+
 
 class FakeRobotModel:
     """Fake MoveIt robot model exposing joint model groups."""
@@ -97,12 +110,14 @@ class FakeMoveItPy:
     def __init__(
         self,
         node_name,
+        config_dict=None,
         provide_planning_service=True,
         invalid_group_name=None,
         colliding=False,
         model_to_base=None,
     ):
         self.node_name = node_name
+        self.config_dict = config_dict
         self.provide_planning_service = provide_planning_service
         self.robot_model = FakeRobotModel(
             invalid_group_name=invalid_group_name,
@@ -133,6 +148,10 @@ class FakeMoveItRobotState:
     def set_joint_group_positions(self, group_name, positions):
         self.group_positions[group_name] = list(positions)
 
+    def set_to_default_values(self):
+        for group_name in self.group_positions:
+            self.group_positions[group_name] = [0.0, 0.0, 0.0]
+
     def set_from_ik(self, group_name, pose, tip_name, timeout):
         self.ik_calls.append((group_name, pose, tip_name, timeout))
         self.group_positions[group_name] = [0.1, 0.2, 0.3]
@@ -142,7 +161,7 @@ class FakeMoveItRobotState:
         self.update_count += 1
 
     def get_joint_group_positions(self, group_name):
-        return self.group_positions[group_name]
+        return self.group_positions.get(group_name, [0.0, 0.0, 0.0])
 
     def get_frame_transform(self, _frame_id):
         if self.robot_model.model_to_base is None:
@@ -150,11 +169,44 @@ class FakeMoveItRobotState:
         return self.robot_model.model_to_base
 
 
-def test_moveit_py_solver_uses_in_process_robot_state_ik(hexapod):
-    """Verify MoveItPy helper solves leg IK without calling the service backend."""
+class FakeParameter:
+    """Minimal launch parameter override value wrapper."""
+
+    def __init__(self, value):
+        self.value = value
+
+
+def _node_with_moveit_params():
     node = Mock()
     node.get_name.return_value = 'drqp_brain'
     node.get_logger.return_value = Mock()
+    node.get_parameters_by_prefix.return_value = {}
+    node._parameter_overrides = {
+        'robot_description': FakeParameter('<robot name="drqp"/>'),
+        'robot_description_semantic': FakeParameter('<robot name="drqp"/>'),
+        'robot_description_kinematics.left_front_leg.kinematics_solver': FakeParameter(
+            'kdl_kinematics_plugin/KDLKinematicsPlugin'
+        ),
+        'robot_description_planning.joint_limits.drqp/left_front_coxa.max_velocity': (
+            FakeParameter(3.14)
+        ),
+        'ompl.planning_plugin': FakeParameter('ompl_interface/OMPLPlanner'),
+        'planning_pipelines': FakeParameter(('ompl',)),
+        'default_planning_pipeline': FakeParameter('ompl'),
+        'planning_scene_monitor_options.joint_state_topic': FakeParameter('/joint_states'),
+        'moveit_simple_controller_manager.controller_names': FakeParameter(
+            ('joint_trajectory_controller',)
+        ),
+        'trajectory_execution.allowed_goal_duration_margin': FakeParameter(0.5),
+        'allow_trajectory_execution': FakeParameter(True),
+        'use_sim_time': FakeParameter(True),
+    }
+    return node
+
+
+def test_moveit_py_solver_uses_in_process_robot_state_ik(hexapod):
+    """Verify MoveItPy helper solves leg IK without calling the service backend."""
+    node = _node_with_moveit_params()
     created_moveit_py = []
     created_robot_states = []
 
@@ -184,7 +236,24 @@ def test_moveit_py_solver_uses_in_process_robot_state_ik(hexapod):
     result = helper.solve([(leg, leg.tibia_end.copy())], latest_joint_state)
 
     assert result.succeeded
-    assert created_moveit_py[0].node_name == 'drqp_brain'
+    assert created_moveit_py[0].node_name == 'drqp_brain_moveit_py'
+    assert created_moveit_py[0].config_dict['planning_pipelines'] == {
+        'pipeline_names': ['ompl'],
+        'namespace': '',
+    }
+    assert created_moveit_py[0].config_dict['robot_description_kinematics'][
+        'left_front_leg'
+    ]['kinematics_solver'] == 'kdl_kinematics_plugin/KDLKinematicsPlugin'
+    assert created_moveit_py[0].config_dict['allow_trajectory_execution'] is False
+    assert 'moveit_simple_controller_manager' not in created_moveit_py[0].config_dict
+    assert 'trajectory_execution' not in created_moveit_py[0].config_dict
+    assert 'use_sim_time' not in created_moveit_py[0].config_dict
+    assert (
+        created_moveit_py[0].config_dict['planning_scene_monitor_options'][
+            'wait_for_initial_state_timeout'
+        ]
+        == 0.0
+    )
     assert created_moveit_py[0].provide_planning_service is False
     robot_state = created_robot_states[0]
     assert robot_state.ik_calls[0][0] == f'{leg.label.name}_leg'
@@ -200,9 +269,7 @@ def test_moveit_py_solver_uses_in_process_robot_state_ik(hexapod):
 
 def test_moveit_py_solver_transforms_base_frame_target_to_model_frame(hexapod):
     """Robot IK receives poses in the model frame, not the helper base frame."""
-    node = Mock()
-    node.get_name.return_value = 'drqp_brain'
-    node.get_logger.return_value = Mock()
+    node = _node_with_moveit_params()
     model_to_base = np.eye(4)
     model_to_base[:3, 3] = [0.1, -0.2, 0.3]
     created_robot_states = []
@@ -246,9 +313,7 @@ def test_moveit_py_solver_transforms_base_frame_target_to_model_frame(hexapod):
 
 def test_moveit_py_solver_returns_complete_six_leg_joint_targets(hexapod):
     """A normal walking tick should solve and validate every controller joint."""
-    node = Mock()
-    node.get_name.return_value = 'drqp_brain'
-    node.get_logger.return_value = Mock()
+    node = _node_with_moveit_params()
     helper = MoveItPyLocomotionKinematics(
         node=node,
         hexapod=hexapod,
@@ -269,9 +334,7 @@ def test_moveit_py_solver_returns_complete_six_leg_joint_targets(hexapod):
 
 def test_moveit_py_validation_reports_non_finite_controller_joints(hexapod):
     """Validation should reject NaN or infinite controller targets."""
-    node = Mock()
-    node.get_name.return_value = 'drqp_brain'
-    node.get_logger.return_value = Mock()
+    node = _node_with_moveit_params()
 
     class NonFiniteRobotState(FakeMoveItRobotState):
         """Fake robot state that injects an invalid joint target."""
@@ -301,9 +364,7 @@ def test_moveit_py_validation_reports_non_finite_controller_joints(hexapod):
 
 def test_moveit_py_validation_reports_joint_bounds_failure(hexapod):
     """Validation should reject states outside MoveIt joint bounds."""
-    node = Mock()
-    node.get_name.return_value = 'drqp_brain'
-    node.get_logger.return_value = Mock()
+    node = _node_with_moveit_params()
     invalid_group_name = f'{next(iter(hexapod.legs)).label.name}_leg'
     helper = MoveItPyLocomotionKinematics(
         node=node,
@@ -328,9 +389,7 @@ def test_moveit_py_validation_reports_joint_bounds_failure(hexapod):
 
 def test_moveit_py_validation_reports_collision_failure(hexapod):
     """Validation should reject self-colliding complete robot states."""
-    node = Mock()
-    node.get_name.return_value = 'drqp_brain'
-    node.get_logger.return_value = Mock()
+    node = _node_with_moveit_params()
     helper = MoveItPyLocomotionKinematics(
         node=node,
         hexapod=hexapod,

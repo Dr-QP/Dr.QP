@@ -21,6 +21,7 @@
 from dataclasses import dataclass
 import importlib
 import math
+import sys
 from typing import Callable
 
 from geometry_msgs.msg import Pose, PoseStamped, Quaternion
@@ -34,6 +35,35 @@ MOVEIT_IK_TIMEOUT_SEC = 2.0
 BASE_FRAME = 'drqp/base_center_link'
 
 RCLPY_SHUTDOWN_ERRORS = (InvalidHandle, NotInitializedException, RCLError, RuntimeError)
+
+MOVEIT_CONFIG_ROOTS = (
+    'allow_trajectory_execution',
+    'capabilities',
+    'default_planning_pipeline',
+    'disable_capabilities',
+    'ompl',
+    'planning_pipelines',
+    'planning_scene_monitor_options',
+    'publish_geometry_updates',
+    'publish_planning_scene',
+    'publish_robot_description',
+    'publish_robot_description_semantic',
+    'publish_state_updates',
+    'publish_transforms_updates',
+    'robot_description',
+    'robot_description_kinematics',
+    'robot_description_planning',
+    'robot_description_semantic',
+)
+
+REQUIRED_MOVEIT_CONFIG_ROOTS = (
+    'ompl',
+    'planning_pipelines',
+    'robot_description',
+    'robot_description_kinematics',
+    'robot_description_planning',
+    'robot_description_semantic',
+)
 
 
 @dataclass(frozen=True)
@@ -151,10 +181,8 @@ class MoveItPyLocomotionKinematics:
             robot_state_cls = robot_state_module.RobotState
 
         try:
-            self._moveit_py = moveit_py_factory(
-                node_name='drqp_brain_moveit_py',
-                provide_planning_service=False,
-            )
+            config_dict = self._moveit_config_dict()
+            self._moveit_py = self._create_moveit_py(moveit_py_factory, config_dict)
             self._robot_model = self._moveit_py.get_robot_model()
             self._planning_scene_monitor = self._moveit_py.get_planning_scene_monitor()
             self._robot_state_cls = robot_state_cls
@@ -164,12 +192,110 @@ class MoveItPyLocomotionKinematics:
             self._planning_scene_monitor = None
             raise RuntimeError(str(exc)) from exc
 
+    @staticmethod
+    def _create_moveit_py(moveit_py_factory, config_dict):
+        original_argv = sys.argv
+        try:
+            sys.argv = original_argv[:1]
+            return moveit_py_factory(
+                node_name='drqp_brain_moveit_py',
+                config_dict=config_dict,
+                provide_planning_service=False,
+            )
+        finally:
+            sys.argv = original_argv
+
+    def _moveit_config_dict(self):
+        flat_parameters = self._moveit_parameter_values()
+        config = {}
+
+        for root in MOVEIT_CONFIG_ROOTS:
+            nested_prefix = f'{root}.'
+            nested_values = {
+                name[len(nested_prefix):]: value
+                for name, value in flat_parameters.items()
+                if name.startswith(nested_prefix)
+            }
+            if nested_values:
+                config[root] = self._nested_parameter_dict(nested_values)
+            elif root in flat_parameters:
+                config[root] = self._plain_parameter_value(flat_parameters[root])
+
+        self._normalize_planning_pipelines(config)
+        self._prepare_planning_scene_monitor_options(config)
+        config['allow_trajectory_execution'] = False
+
+        missing_roots = [root for root in REQUIRED_MOVEIT_CONFIG_ROOTS if root not in config]
+        if missing_roots:
+            raise RuntimeError(
+                'MoveItPy locomotion helper is missing required MoveIt parameters: '
+                f'{", ".join(missing_roots)}'
+            )
+
+        return config
+
+    def _moveit_parameter_values(self):
+        values = {}
+
+        try:
+            values.update(self._node.get_parameters_by_prefix(''))
+        except AttributeError:
+            pass
+
+        for name, parameter in getattr(self._node, '_parameter_overrides', {}).items():
+            values[name] = getattr(parameter, 'value', parameter)
+
+        return values
+
+    @classmethod
+    def _nested_parameter_dict(cls, flat_values):
+        nested = {}
+        for name, value in flat_values.items():
+            target = nested
+            parts = name.split('.')
+            for part in parts[:-1]:
+                target = target.setdefault(part, {})
+            target[parts[-1]] = cls._plain_parameter_value(value)
+        return nested
+
+    @classmethod
+    def _plain_parameter_value(cls, value):
+        if isinstance(value, tuple):
+            return [cls._plain_parameter_value(item) for item in value]
+        if isinstance(value, list):
+            return [cls._plain_parameter_value(item) for item in value]
+        if isinstance(value, dict):
+            return {key: cls._plain_parameter_value(item) for key, item in value.items()}
+        return value
+
+    @staticmethod
+    def _normalize_planning_pipelines(config):
+        pipelines = config.get('planning_pipelines')
+        if isinstance(pipelines, (list, tuple)):
+            config['planning_pipelines'] = {
+                'pipeline_names': list(pipelines),
+                'namespace': '',
+            }
+        elif isinstance(pipelines, dict):
+            pipelines.setdefault('namespace', '')
+            if 'pipeline_names' not in pipelines and 'default_planning_pipeline' in config:
+                pipelines['pipeline_names'] = [config['default_planning_pipeline']]
+        elif 'default_planning_pipeline' in config:
+            config['planning_pipelines'] = {
+                'pipeline_names': [config['default_planning_pipeline']],
+                'namespace': '',
+            }
+
+    @staticmethod
+    def _prepare_planning_scene_monitor_options(config):
+        options = config.setdefault('planning_scene_monitor_options', {})
+        options['wait_for_initial_state_timeout'] = 0.0
+
     def _seed_robot_state(self, latest_joint_state: JointState):
         robot_state = self._robot_state_cls(self._robot_model)
         latest_positions = dict(zip(latest_joint_state.name, latest_joint_state.position))
 
         for leg in self._hexapod.legs:
-            group_name = self.group_name(leg)
             joint_names = self.controller_joint_names(leg)
             missing_names = [
                 joint_name for joint_name in joint_names if joint_name not in latest_positions
@@ -179,10 +305,7 @@ class MoveItPyLocomotionKinematics:
                     f'Current joint state is missing joint targets: {", ".join(missing_names)}'
                 )
 
-            robot_state.set_joint_group_positions(
-                group_name,
-                np.asarray([latest_positions[joint_name] for joint_name in joint_names]),
-            )
+        robot_state.set_to_default_values()
 
         robot_state.update()
         return robot_state
@@ -292,8 +415,9 @@ class MoveItPyLocomotionKinematics:
             try:
                 joint_model_group = self._robot_model.get_joint_model_group(group_name)
                 positions = robot_state.get_joint_group_positions(group_name)
-                satisfies_bounds = joint_model_group.satisfies_position_bounds(
-                    np.asarray(positions)
+                satisfies_bounds = self._satisfies_position_bounds(
+                    joint_model_group,
+                    positions,
                 )
             except Exception as exc:
                 return f'Unable to validate RobotState joint bounds: {exc}'
@@ -302,6 +426,28 @@ class MoveItPyLocomotionKinematics:
                 return f'RobotState violates joint bounds for {group_name}'
 
         return None
+
+    @staticmethod
+    def _satisfies_position_bounds(joint_model_group, positions) -> bool:
+        bounds_by_joint = getattr(joint_model_group, 'active_joint_model_bounds', None)
+        if bounds_by_joint is None:
+            return joint_model_group.satisfies_position_bounds(np.asarray(positions))
+
+        if len(bounds_by_joint) != len(positions):
+            raise RuntimeError(
+                f'expected {len(positions)} joint bounds, got {len(bounds_by_joint)}'
+            )
+
+        tolerance = 1e-9
+        for position, variable_bounds in zip(positions, bounds_by_joint):
+            for bounds in variable_bounds:
+                if not getattr(bounds, 'position_bounded', False):
+                    continue
+                if position < bounds.min_position - tolerance:
+                    return False
+                if position > bounds.max_position + tolerance:
+                    return False
+        return True
 
     def _collision_failure(self, robot_state) -> str | None:
         if self._planning_scene_monitor is None:
