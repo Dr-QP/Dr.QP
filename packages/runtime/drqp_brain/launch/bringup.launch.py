@@ -21,6 +21,7 @@
 
 import sys
 
+from drqp_brain.instance_guard import make_launch_instance_guard
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
 from launch.conditions import IfCondition, UnlessCondition
@@ -56,6 +57,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            make_launch_instance_guard('drqp_brain_stack'),
             DeclareLaunchArgument(
                 name='use_gazebo',
                 default_value='false',

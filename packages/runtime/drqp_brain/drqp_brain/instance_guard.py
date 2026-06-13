@@ -32,9 +32,11 @@ class InstanceAlreadyRunningError(RuntimeError):
 class InstanceGuard:
     """Hold an advisory file lock to prevent duplicate local process instances."""
 
-    def __init__(self, name: str, lock_dir: Path | str = Path('.tmp')):
+    def __init__(self, name: str, lock_dir: Path | str | None = None):
         self.name = name
-        self._lock_path = Path(lock_dir) / f'{name}.lock'
+        self._lock_path = (Path(lock_dir) if lock_dir is not None else default_lock_dir()) / (
+            f'{name}.lock'
+        )
         self._lock_file = None
 
     @property
@@ -76,3 +78,42 @@ class InstanceGuard:
 
     def __exit__(self, _exc_type, _exc, _traceback):
         self.release()
+
+
+def get_runtime_directory(app_name: str = 'drqp_brain') -> Path:
+    """
+    Return the writable runtime directory for this package.
+
+    Prefer ROS_HOME so runtime files align with ROS conventions instead of the
+    repository checkout location.
+    """
+    ros_home = os.environ.get('ROS_HOME')
+    if ros_home:
+        return Path(ros_home).expanduser() / app_name
+
+    return Path.home() / '.ros' / app_name
+
+
+def default_lock_dir() -> Path:
+    """Return the ROS-local temporary directory for instance locks."""
+    return get_runtime_directory() / 'tmp'
+
+
+def make_launch_instance_guard(name: str):
+    """Create a launch action that holds an instance lock for launch lifetime."""
+    from launch.actions import OpaqueFunction
+
+    return OpaqueFunction(function=_acquire_launch_instance_guard, args=(name,))
+
+
+def _acquire_launch_instance_guard(_context, name: str):
+    from launch.actions import RegisterEventHandler
+    from launch.event_handlers import OnShutdown
+
+    guard = InstanceGuard(name)
+    guard.acquire()
+
+    def release_guard(_event, _context):
+        guard.release()
+
+    return [RegisterEventHandler(OnShutdown(on_shutdown=release_guard))]
