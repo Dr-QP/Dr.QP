@@ -241,9 +241,12 @@ def test_moveit_py_solver_uses_in_process_robot_state_ik(hexapod):
         'pipeline_names': ['ompl'],
         'namespace': '',
     }
-    assert created_moveit_py[0].config_dict['robot_description_kinematics'][
-        'left_front_leg'
-    ]['kinematics_solver'] == 'kdl_kinematics_plugin/KDLKinematicsPlugin'
+    assert (
+        created_moveit_py[0].config_dict['robot_description_kinematics']['left_front_leg'][
+            'kinematics_solver'
+        ]
+        == 'kdl_kinematics_plugin/KDLKinematicsPlugin'
+    )
     assert created_moveit_py[0].config_dict['allow_trajectory_execution'] is False
     assert 'moveit_simple_controller_manager' not in created_moveit_py[0].config_dict
     assert 'trajectory_execution' not in created_moveit_py[0].config_dict

@@ -212,7 +212,7 @@ class MoveItPyLocomotionKinematics:
         for root in MOVEIT_CONFIG_ROOTS:
             nested_prefix = f'{root}.'
             nested_values = {
-                name[len(nested_prefix):]: value
+                name[len(nested_prefix) :]: value
                 for name, value in flat_parameters.items()
                 if name.startswith(nested_prefix)
             }
