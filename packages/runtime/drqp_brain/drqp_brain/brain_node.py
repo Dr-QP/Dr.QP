@@ -27,6 +27,7 @@ import threading
 import traceback
 
 from control_msgs.action import FollowJointTrajectory
+from drqp_brain.instance_guard import InstanceAlreadyRunningError, InstanceGuard
 from drqp_brain.joint_trajectory_builder import (
     JointTrajectoryBuilder,
     kFemurOffsetAngle,
@@ -52,6 +53,15 @@ import rclpy.utilities
 from sensor_msgs.msg import JointState
 import std_msgs.msg
 import trajectory_msgs.msg
+
+
+def _assert_no_existing_brain_node(node: rclpy.node.Node) -> None:
+    for node_name, namespace in node.get_node_names_and_namespaces():
+        if node_name == 'drqp_brain':
+            qualified_name = f'{namespace.rstrip("/")}/{node_name}'
+            raise InstanceAlreadyRunningError(
+                f'Another drqp_brain ROS node is already running as {qualified_name}.'
+            )
 
 
 class HexapodBrain(rclpy.node.Node):
@@ -638,18 +648,30 @@ class HexapodBrain(rclpy.node.Node):
 def main():
     node = None
     executor = None
+    guard_node = None
     try:
         parser = argparse.ArgumentParser('Dr.QP Robot controller ROS node')
         filtered_args = rclpy.utilities.remove_ros_args()
         args = parser.parse_args(args=filtered_args[1:])
-        rclpy.init()
-        node = HexapodBrain(**vars(args))
-        executor = MultiThreadedExecutor(num_threads=4)
-        executor.add_node(node)
-        executor.spin()
+        with InstanceGuard('drqp_brain'):
+            rclpy.init()
+            guard_node = rclpy.create_node('drqp_brain_startup_guard')
+            _assert_no_existing_brain_node(guard_node)
+            guard_node.destroy_node()
+            guard_node = None
+
+            node = HexapodBrain(**vars(args))
+            executor = MultiThreadedExecutor(num_threads=4)
+            executor.add_node(node)
+            executor.spin()
     except (KeyboardInterrupt, ExternalShutdownException):
-        return
+        return 0
+    except InstanceAlreadyRunningError as exc:
+        print(f'drqp_brain startup refused: {exc}', file=sys.stderr)
+        return 1
     finally:
+        if guard_node is not None:
+            guard_node.destroy_node()
         if executor is not None:
             executor.shutdown()
         if node is not None:
@@ -657,7 +679,8 @@ def main():
         # Only call shutdown if ROS is still initialized
         if rclpy.ok():
             rclpy.shutdown()
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
