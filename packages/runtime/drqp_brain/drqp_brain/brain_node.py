@@ -48,7 +48,6 @@ from rclpy.callback_groups import MutuallyExclusiveCallbackGroup, ReentrantCallb
 from rclpy.exceptions import TimerCancelledError
 from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
 import rclpy.node
-from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 import rclpy.utilities
 from sensor_msgs.msg import JointState
 import std_msgs.msg
@@ -95,11 +94,8 @@ class HexapodBrain(rclpy.node.Node):
 
         self.robot_state = None
 
-        qos_profile = QoSProfile(depth=1)
-        # make state available to late joiners
-        qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
         self.robot_state_sub = self.create_subscription(
-            std_msgs.msg.String, '/robot_state', self.process_robot_state, qos_profile=qos_profile
+            std_msgs.msg.String, '/robot_state', self.process_robot_state, qos_profile=10
         )
         self.robot_event_pub = self.create_publisher(
             std_msgs.msg.String, '/robot_event', qos_profile=10
@@ -485,10 +481,11 @@ class HexapodBrain(rclpy.node.Node):
             self.stop_walk_controller()
             self.turn_torque_off()
         elif self.robot_state == 'initializing':
+            self.stop_walk_controller()
             self.initialization_sequence()
         elif self.robot_state == 'torque_on':
             self.get_logger().info('Torque is on, starting')
-            self.loop_timer.reset()
+            self.start_walk_controller()
         elif self.robot_state == 'finalizing':
             self.stop_walk_controller()
             self.finalization_sequence()
@@ -499,6 +496,11 @@ class HexapodBrain(rclpy.node.Node):
             self.get_logger().info('Rebooting servos')
             self.stop_walk_controller()
             self.reboot_servos()
+
+    def start_walk_controller(self):
+        if not self._is_shutting_down:
+            self.get_logger().info('Starting')
+        self.loop_timer.reset()
 
     def stop_walk_controller(self):
         if not self._is_shutting_down:
