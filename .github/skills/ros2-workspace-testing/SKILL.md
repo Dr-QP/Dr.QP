@@ -202,6 +202,23 @@ Explore test results with interactive visualization.
 | `build/<package_name>/coverage.info`                | C++ coverage data      | LCOV        |
 | `build/<package_name>/.coverage`                    | Python coverage data   | Coverage.py |
 
+## Python ROS Test Structure
+
+- Write Python ROS tests as `unittest.TestCase` classes so ROS context setup, node cleanup, and test fixture lifetimes stay explicit.
+- For tests that construct ROS nodes, initialize `rclpy` once per test class:
+
+  ```python
+  class RclpyTestCase(unittest.TestCase):
+      @classmethod
+      def setUpClass(cls):
+          super().setUpClass()
+          rclpy.init()
+          cls.addClassCleanup(rclpy.try_shutdown)
+  ```
+
+- Keep node, publisher, subscription, client, and action cleanup at the test level with `self.addCleanup(...)`.
+- Use existing examples such as `packages/runtime/drqp_brain/test/test_imu_node.py` when migrating plain pytest functions to `unittest.TestCase` classes.
+
 ## Troubleshooting
 
 | Issue                                  | Cause                                      | Solution                                                                     |
