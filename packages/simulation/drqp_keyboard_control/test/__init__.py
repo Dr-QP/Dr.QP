@@ -14,9 +14,12 @@ from pytest import PytestDeprecationWarning
 
 def _run_pytest_suite() -> None:
     test_dir = Path(__file__).parent
-    with warnings.catch_warnings(), mock.patch.dict(
-        os.environ,
-        {'PYTEST_DISABLE_PLUGIN_AUTOLOAD': '1'},
+    with (
+        warnings.catch_warnings(),
+        mock.patch.dict(
+            os.environ,
+            {'PYTEST_DISABLE_PLUGIN_AUTOLOAD': '1'},
+        ),
     ):
         warnings.filterwarnings(
             'ignore',
