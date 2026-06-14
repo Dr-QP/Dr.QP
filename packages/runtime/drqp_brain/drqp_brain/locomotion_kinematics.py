@@ -42,6 +42,8 @@ MOVEIT_CONFIG_ROOTS = (
     'capabilities',
     'default_planning_pipeline',
     'disable_capabilities',
+    'moveit_controller_manager',
+    'moveit_simple_controller_manager',
     'ompl',
     'planning_pipelines',
     'planning_scene_monitor_options',

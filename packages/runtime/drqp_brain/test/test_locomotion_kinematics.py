@@ -194,8 +194,23 @@ def _node_with_moveit_params():
         'planning_pipelines': FakeParameter(('ompl',)),
         'default_planning_pipeline': FakeParameter('ompl'),
         'planning_scene_monitor_options.joint_state_topic': FakeParameter('/joint_states'),
+        'moveit_controller_manager': FakeParameter(
+            'moveit_simple_controller_manager/MoveItSimpleControllerManager'
+        ),
         'moveit_simple_controller_manager.controller_names': FakeParameter(
             ('joint_trajectory_controller',)
+        ),
+        'moveit_simple_controller_manager.joint_trajectory_controller.type': (
+            FakeParameter('FollowJointTrajectory')
+        ),
+        'moveit_simple_controller_manager.joint_trajectory_controller.action_ns': (
+            FakeParameter('follow_joint_trajectory')
+        ),
+        'moveit_simple_controller_manager.joint_trajectory_controller.default': (
+            FakeParameter(True)
+        ),
+        'moveit_simple_controller_manager.joint_trajectory_controller.joints': (
+            FakeParameter(('drqp/left_front_coxa', 'drqp/left_front_femur'))
         ),
         'trajectory_execution.allowed_goal_duration_margin': FakeParameter(0.5),
         'allow_trajectory_execution': FakeParameter(True),
@@ -277,7 +292,19 @@ def test_moveit_py_solver_uses_in_process_robot_state_ik(hexapod):
         == 'kdl_kinematics_plugin/KDLKinematicsPlugin'
     )
     assert created_moveit_py[0].config_dict['allow_trajectory_execution'] is False
-    assert 'moveit_simple_controller_manager' not in created_moveit_py[0].config_dict
+    assert (
+        created_moveit_py[0].config_dict['moveit_controller_manager']
+        == 'moveit_simple_controller_manager/MoveItSimpleControllerManager'
+    )
+    assert created_moveit_py[0].config_dict['moveit_simple_controller_manager'] == {
+        'controller_names': ['joint_trajectory_controller'],
+        'joint_trajectory_controller': {
+            'type': 'FollowJointTrajectory',
+            'action_ns': 'follow_joint_trajectory',
+            'default': True,
+            'joints': ['drqp/left_front_coxa', 'drqp/left_front_femur'],
+        },
+    }
     assert 'trajectory_execution' not in created_moveit_py[0].config_dict
     assert 'use_sim_time' not in created_moveit_py[0].config_dict
     assert (
