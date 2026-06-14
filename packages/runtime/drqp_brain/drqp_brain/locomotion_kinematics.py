@@ -205,10 +205,6 @@ class MoveItPyLocomotionKinematics:
                 config_dict=config_dict,
                 provide_planning_service=False,
             )
-            logger = getattr(moveit_py, 'get_logger', lambda: None)()
-            if logger is not None:
-                # Avoid repeated "Using position only ik" spam from MoveItPy.
-                logger.set_level(LoggingSeverity.WARN)
             return moveit_py
         finally:
             sys.argv = original_argv
