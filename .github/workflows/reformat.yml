@@ -23,6 +23,11 @@ on:
         required: false
         default: ''
         type: string
+      caller_pr_body:
+        description: Pull request body from the calling workflow.
+        required: false
+        default: ''
+        type: string
       caller_pr_is_draft:
         description: Whether the calling pull request is a draft.
         required: false
@@ -55,9 +60,10 @@ on:
         value: ${{ jobs.gate.outputs.run_downstream }}
     secrets:
       REPO_PAT:
-        required: false
+        required: true
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   COMMIT_MESSAGE: Apply linter fixes and reformatting
   REFORMAT_COMMIT_MESSAGE: Apply ROS formatter fixes
   SUPER_LINTER_COMMIT_MESSAGE: Apply super-linter fixes
@@ -70,13 +76,16 @@ jobs:
   paths-filter:
     name: Need to run?
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-    permissions: {}
+    permissions:
+      pull-requests: read
     timeout-minutes: 10
     outputs:
       pass: ${{ steps.override.outputs.pass }}
+      skip_reformat: ${{ steps.skip-tags.outputs.skip_reformat }}
+      skip_super_linter: ${{ steps.skip-tags.outputs.skip_super_linter }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
         with:
           persist-credentials: false
 
@@ -84,7 +93,9 @@ jobs:
         uses: ./.github/actions/paths-filter
         id: filter
         with:
+          event-name: ${{ inputs.caller_event_name }}
           extra-filter: |
+            - .github/super-linter-*.env
             - .github/workflows/reformat.yml
             - docs/source/notebooks/**
             - ansible/**
@@ -123,6 +134,34 @@ jobs:
           STEPS_FILTER_OUTPUTS_PASS: ${{ steps.filter.outputs.pass }}
           INPUTS_CALLER_EVENT_NAME: ${{ inputs.caller_event_name }}
 
+      - name: Detect trusted skip tags
+        id: skip-tags
+        run: |
+          trusted_skip=false
+          if [[ "${INPUTS_CALLER_EVENT_NAME}" != "pull_request" || "${INPUTS_CALLER_PR_HEAD_REPO_FULL_NAME}" == "${GITHUB_REPOSITORY}" ]]; then
+            trusted_skip=true
+          fi
+
+          skip_reformat=false
+          skip_super_linter=false
+          if [[ "$trusted_skip" == 'true' ]]; then
+            if [[ "${INPUTS_CALLER_PR_BODY}" == *'[ci:no-reformat]'* ]]; then
+              skip_reformat=true
+            fi
+            if [[ "${INPUTS_CALLER_PR_BODY}" == *'[ci:no-super-linter]'* ]]; then
+              skip_super_linter=true
+            fi
+          fi
+
+          {
+            echo "skip_reformat=$skip_reformat"
+            echo "skip_super_linter=$skip_super_linter"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          INPUTS_CALLER_EVENT_NAME: ${{ inputs.caller_event_name }}
+          INPUTS_CALLER_PR_BODY: ${{ inputs.caller_pr_body }}
+          INPUTS_CALLER_PR_HEAD_REPO_FULL_NAME: ${{ inputs.caller_pr_head_repo_full_name }}
+
       - name: Log debug stats
         if: ${{ always() }}
         uses: ./.github/actions/log-debug-stats
@@ -132,7 +171,10 @@ jobs:
   reformat:
     name: Reformat
     needs: paths-filter
-    if: inputs.should_run && (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
+    if: >-
+      inputs.should_run &&
+      needs.paths-filter.outputs.skip_reformat != 'true' &&
+      (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     container:
       image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
@@ -142,7 +184,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout repository
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
         with:
           fetch-depth: 0 # Required for git diff to work properly
           persist-credentials: false
@@ -195,7 +237,10 @@ jobs:
   super-linter:
     name: Super-Linter
     needs: paths-filter
-    if: inputs.should_run && (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
+    if: >-
+      inputs.should_run &&
+      needs.paths-filter.outputs.skip_super_linter != 'true' &&
+      (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
     runs-on: 'ubuntu-24.04'
     outputs:
       changed: ${{ steps.patch.outputs.changed }}
@@ -207,10 +252,13 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout repository
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
         with:
           fetch-depth: 0 # Required for git diff to work properly
           persist-credentials: false
+
+      - name: Load Super-Linter autofix configuration
+        run: grep -vE '^[[:space:]]*(#|$)' .github/super-linter-autofix.env >> "$GITHUB_ENV"
 
       - name: Run Super-Linter autofixes
         continue-on-error: true
@@ -218,25 +266,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: ${{ inputs.validate_all_codebase }}
-          FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
 
-          # Comment on the workflow only summary instead of the pull request conversation to avoid spamming notifications for every push to a PR.
+          # Comment on the workflow summary instead of the pull request conversation to avoid
+          # spamming notifications for every push to a PR.
           SAVE_SUPER_LINTER_SUMMARY: true
           ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false
           ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: true
-
-          # Run only fix-capable linters before the commit step.
-          VALIDATE_MARKDOWN_PRETTIER: true
-          VALIDATE_YAML_PRETTIER: true
-          VALIDATE_JSON_PRETTIER: true
-          VALIDATE_JSONC_PRETTIER: true
-          VALIDATE_GITHUB_ACTIONS_ZIZMOR: true
-
-          FIX_MARKDOWN_PRETTIER: true
-          FIX_YAML_PRETTIER: true
-          FIX_JSON_PRETTIER: true
-          FIX_JSONC_PRETTIER: true
-          FIX_GITHUB_ACTIONS_ZIZMOR: true
 
       - name: Create Super-Linter patch
         id: patch
@@ -260,27 +295,29 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+      - name: Load Super-Linter check configuration
+        if: steps.patch.outputs.changed != 'true'
+        run: grep -vE '^[[:space:]]*(#|$)' .github/super-linter-checks.env >> "$GITHUB_ENV"
+
       - name: Run Super-Linter checks
         if: steps.patch.outputs.changed != 'true'
         uses: super-linter/super-linter@61abc07d755095a68f4987d1c2c3d1d64408f1f9 # v8.5.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: ${{ inputs.validate_all_codebase }}
-          FILTER_REGEX_EXCLUDE: '(^|/)(build|install|log|\.venv|packages/vendor|\.git)/'
 
+          # Comment on the workflow summary instead of the pull request conversation to avoid
+          # spamming notifications for every push to a PR.
           SAVE_SUPER_LINTER_SUMMARY: true
           ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false
           ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: true
 
-          VALIDATE_MARKDOWN_PRETTIER: true
-          VALIDATE_YAML_PRETTIER: true
-          VALIDATE_JSON_PRETTIER: true
-          VALIDATE_JSONC_PRETTIER: true
-          VALIDATE_BASH: true
-          VALIDATE_DOCKERFILE_HADOLINT: true
-          VALIDATE_GITHUB_ACTIONS: true
-          VALIDATE_GITHUB_ACTIONS_ZIZMOR: true
-          VALIDATE_GITLEAKS: true
+      - name: Attach superlinter logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: super-linter-logs
+          path: super-linter.log
 
       - name: Log debug stats
         if: ${{ always() }}
@@ -297,6 +334,7 @@ jobs:
       (needs.paths-filter.outputs.pass == 'true' || inputs.force_run) &&
       (needs.super-linter.outputs.changed == 'true' || needs.reformat.outputs.changed == 'true')
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    environment: reformat-commit
     outputs:
       committed: ${{ steps.result.outputs.committed_any }}
       failed_patches: ${{ steps.result.outputs.failed_patches }}
@@ -306,14 +344,14 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout repository
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
         with:
           fetch-depth: 0 # Required for git diff to work properly
           token: ${{ secrets.REPO_PAT }} # Use PAT to allow CI reruns on pushed commits
           persist-credentials: true # Needed to commit changes back to the repository
 
       - name: Download formatter patches
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           path: ./.tmp/format-patches
           pattern: format-patch-*
@@ -479,7 +517,7 @@ jobs:
       run_downstream: ${{ steps.compute.outputs.run_downstream }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 

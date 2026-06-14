@@ -1,0 +1,3 @@
+# Keep setuptools compatible with colcon/ament_python setup.py develop path.
+setuptools<80
+pytest<9

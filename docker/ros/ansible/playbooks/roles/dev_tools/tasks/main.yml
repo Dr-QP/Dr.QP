@@ -40,6 +40,7 @@
       - python3-flake8-docstrings
       - python3-flake8-import-order
       - python3-flake8-quotes
+      - python3-gz-transport13
       - python3-mypy
       - python3-pip
       - python3-pytest

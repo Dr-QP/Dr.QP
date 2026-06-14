@@ -22,3 +22,9 @@ These guidelines supplement the [general Python coding conventions](./python.ins
 ## Testing
 
 - Always use `pytest` for writing tests and executing them in local environments
+
+## Exception Handling in Scripts and Notebooks
+
+- Avoid empty exception blocks (`except ...: pass`), including `KeyboardInterrupt`
+- For user interrupts in CLI-style entry points, prefer explicit termination such as `raise SystemExit(130)` or an explicit `return` from `main()`
+- For recoverable failures, log a concise message that preserves context instead of silently swallowing the error

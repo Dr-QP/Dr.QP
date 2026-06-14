@@ -2,8 +2,21 @@
 
 from __future__ import annotations
 
+# ruff: noqa: E402
+import pytest
+
+pytest.skip(
+    (
+        'Legacy tests under py_packages/drqp_robot_mcp are superseded by '
+        'packages/simulation/drqp_robot_mcp/test.'
+    ),
+    allow_module_level=True,
+)
+
+import math
 import time
 
+from drqp_robot_mcp import controller as controller_module
 from drqp_robot_mcp.controller import RobotMcpController
 from drqp_robot_mcp.models import Pose, Quaternion, RobotStateSnapshot, Vector3
 
@@ -37,12 +50,13 @@ class FakeController(RobotMcpController):
     """Controller test double that avoids ROS middleware dependencies."""
 
     def __init__(self, states: list[RobotStateSnapshot]):
-        super().__init__(workspace_root='/workspace')
+        super().__init__()
         self.states = list(states)
         self.published_events: list[str] = []
         self.waited_states: list[str] = []
         self.start_calls = 0
         self.current_state = self.states[-1]
+        self.movement_commands: list[dict[str, object]] = []
 
     def get_robot_state(self, timeout_sec: float = 10.0) -> RobotStateSnapshot:
         del timeout_sec
@@ -61,6 +75,24 @@ class FakeController(RobotMcpController):
     def _publish_event(self, event: str) -> dict[str, object]:
         self.published_events.append(event)
         return {'published': True, 'event': event}
+
+    def _publish_movement_command(
+        self,
+        stride_direction: dict[str, float],
+        rotation_speed: float,
+        body_translation: dict[str, float],
+        body_rotation: dict[str, float],
+        gait_type: str,
+    ) -> dict[str, object]:
+        command = {
+            'stride_direction': stride_direction,
+            'rotation_speed': rotation_speed,
+            'body_translation': body_translation,
+            'body_rotation': body_rotation,
+            'gait_type': gait_type,
+        }
+        self.movement_commands.append(command)
+        return {'published': True, **command}
 
     def _wait_for_state(
         self,
@@ -139,3 +171,90 @@ def test_recording_collects_multiple_samples() -> None:
     assert status.active is True
     assert recorded.sample_count >= 2
     assert all(sample.lifecycle_state == 'torque_on' for sample in recorded.samples)
+
+
+def test_send_motion_command_publishes_normalized_command() -> None:
+    """Motion commands are delegated to the runtime publishing seam."""
+    controller = FakeController([make_snapshot('torque_on')])
+
+    result = controller.send_motion_command(
+        stride_x=1.0,
+        stride_y=-0.25,
+        rotation_speed=0.5,
+        body_z=0.2,
+        body_pitch=-0.1,
+        gait_type='ripple',
+    )
+
+    assert controller.movement_commands == [
+        {
+            'stride_direction': {'x': 1.0, 'y': -0.25, 'z': 0.0},
+            'rotation_speed': 0.5,
+            'body_translation': {'x': 0.0, 'y': 0.0, 'z': 0.2},
+            'body_rotation': {'x': 0.0, 'y': -0.1, 'z': 0.0},
+            'gait_type': 'ripple',
+        }
+    ]
+    assert result.gait_type == 'ripple'
+    assert result.rotation_speed == 0.5
+    assert result.stride_direction.x == 1.0
+    assert result.body_translation.z == 0.2
+    assert result.body_rotation.y == -0.1
+
+
+def test_send_motion_command_rejects_out_of_range_input() -> None:
+    """Motion inputs must stay within the normalized message contract."""
+    controller = FakeController([make_snapshot('torque_on')])
+
+    try:
+        controller.send_motion_command(stride_x=1.5)
+    except ValueError as exc:
+        assert 'stride_x' in str(exc)
+    else:
+        raise AssertionError('Expected ValueError for out-of-range stride_x')
+
+
+def test_stop_motion_publishes_zeroed_tripod_command() -> None:
+    """Stop motion resets all joystick axes to zero."""
+    controller = FakeController([make_snapshot('torque_on')])
+
+    result = controller.stop_motion()
+
+    assert controller.movement_commands == [
+        {
+            'stride_direction': {'x': 0.0, 'y': 0.0, 'z': 0.0},
+            'rotation_speed': 0.0,
+            'body_translation': {'x': 0.0, 'y': 0.0, 'z': 0.0},
+            'body_rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0},
+            'gait_type': 'tripod',
+        }
+    ]
+    assert result.gait_type == 'tripod'
+
+
+def test_walk_for_duration_republishes_motion_command_and_stops(monkeypatch) -> None:
+    """Walk sequences publish the same command repeatedly before stopping."""
+    controller = FakeController([make_snapshot('torque_on')])
+    sleep_calls: list[float] = []
+    monkeypatch.setattr(controller_module.time, 'sleep', sleep_calls.append)
+
+    result = controller.walk_for_duration(
+        stride_x=1.0,
+        duration_sec=0.5,
+        publish_hz=4.0,
+    )
+
+    assert result.publish_count == math.ceil(0.5 * 4.0)
+    assert result.stop_command_sent is True
+    assert len(controller.movement_commands) == result.publish_count + 1
+    assert controller.movement_commands[0]['stride_direction']['x'] == 1.0
+    assert controller.movement_commands[-1]['stride_direction']['x'] == 0.0
+    assert sleep_calls == [0.25]
+
+
+def test_walk_for_duration_rejects_non_positive_duration() -> None:
+    """Walk sequencing requires a positive duration."""
+    controller = FakeController([make_snapshot('torque_on')])
+
+    with pytest.raises(ValueError, match='duration_sec'):
+        controller.walk_for_duration(duration_sec=0.0)

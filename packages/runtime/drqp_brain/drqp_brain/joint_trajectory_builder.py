@@ -125,6 +125,10 @@ class JointTrajectoryBuilder:
             joint_names=self.joint_names, points=self.points
         )
 
+        if not action_client.wait_for_server(timeout_sec=5.0):
+            node.get_logger().error('Timed out waiting for trajectory action server')
+            return
+
         goal_handle_future = action_client.send_goal_async(goal)
         node._track_future(goal_handle_future)
 

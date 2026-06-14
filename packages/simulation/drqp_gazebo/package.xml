@@ -10,7 +10,10 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>drqp_brain</depend>
+  <depend>gz_msgs_vendor</depend>
+  <depend>gz_transport_vendor</depend>
 
+  <exec_depend>drqp_keyboard_control</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>rosgraph_msgs</exec_depend>
@@ -24,7 +27,6 @@
   <test_depend>ament_cmake_ros</test_depend>
   <test_depend>drqp_lint_common</test_depend>
   <test_depend>controller_manager</test_depend>
-  <test_depend>drqp_interfaces</test_depend>
   <test_depend>geometry_msgs</test_depend>
   <test_depend>launch_testing</test_depend>
   <test_depend>launch_testing_ament_cmake</test_depend>

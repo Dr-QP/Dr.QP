@@ -21,9 +21,9 @@ Systematic approach to resolving all PR feedback including review comments, CI f
 ## Prerequisites
 
 - Active pull request with feedback
-- Access to GitHub API for PR details
+- Access to `gh` or GitHub MCP for PR details
 - Access to CI logs and test results via the [extract-github-actions-logs](../extract-github-actions-logs/) skill
-- Access to CodeQL security scan results
+- Access to CodeQL security scan results via the [get-codeql-data](../get-codeql-data/) skill
 - Access to Codecov reports
 
 ## When to Delegate
@@ -45,7 +45,7 @@ Gather complete context before making changes.
 1. **Fetch PR review comments**:
 
 ```bash
-    # Use GitHub MCP or an API that returns per-thread resolution state
+    # Use GitHub graphql API that returns per-thread resolution state
     gh api graphql -f owner='<owner>' -f repo='<repo>' -F number=<pr-number> -f query='\
        query($owner: String!, $repo: String!, $number: Int!) {\
           repository(owner: $owner, name: $repo) {\
@@ -82,7 +82,7 @@ After fetching, **filter out resolved threads** using these rules (apply in orde
    - Check build logs for errors
 
 3. **Get CodeQL security findings**:
-   - Access CodeQL scan results via GitHub UI
+   - Use the [get-codeql-data](../get-codeql-data/) skill to fetch PR-scoped or repository-scoped CodeQL alerts with `gh api`
    - Review severity and CWE classifications
    - Note file locations and line numbers
 
@@ -185,6 +185,7 @@ Systematically resolve failing tests.
 Address security vulnerabilities safely.
 
 1. **Analyze finding details**:
+   - Use the [get-codeql-data](../get-codeql-data/) skill to fetch the current open alerts before planning remediation
    - Review severity (Critical, High, Medium, Low)
    - Understand CWE classification
    - Read CodeQL explanation and remediation guidance
@@ -209,7 +210,7 @@ Address security vulnerabilities safely.
    - Add additional edge cases
 
 5. **Verify resolution**:
-   - Wait for next CodeQL scan
+   - Re-check alerts with the [get-codeql-data](../get-codeql-data/) skill after the next scan or code scanning refresh
    - Confirm finding is resolved
    - Document fix in PR comment
 
@@ -459,5 +460,6 @@ Maintain an internal execution log documenting:
 
 - [Code Review Standards](../code-review-standards/) - PR description and review practices
 - [Extract GitHub Actions Logs](../extract-github-actions-logs/) - Fetch CI job logs and download colcon log/test-report artifacts
+- [Get CodeQL Data](../get-codeql-data/) - Fetch PR, branch, or repository CodeQL alerts with `gh api`
 - [Shared Engineering Guidelines](../../instructions/engineering.instructions.md) - Clean Code, SOLID, TDD
 - [Principal Engineer](../../agents/principal-engineer.agent.md) - Primary implementation agent with TDD orchestration
