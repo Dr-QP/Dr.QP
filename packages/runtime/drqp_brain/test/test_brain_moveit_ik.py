@@ -107,8 +107,9 @@ def test_loop_warns_and_skips_publish_when_moveit_returns_no_solution():
         ):
             brain.loop()
 
-        solve_joint_targets.assert_called_once()
+        assert solve_joint_targets.call_count == 2
         warning_mock.assert_called_once()
+        assert 'zero walking motion' in warning_mock.call_args.args[0]
         publish_mock.assert_not_called()
         assert brain.walker.current_direction == original_direction
         assert brain.walker.current_rotation_direction == original_rotation
@@ -166,7 +167,7 @@ def test_loop_skips_redundant_ik_when_feet_targets_do_not_change():
             body_transform_after_first_publish = brain.hexapod.body_transform.matrix.copy()
             brain.loop()
 
-        solve_mock.assert_called_once_with(feet_targets)
+        solve_mock.assert_called_once_with(feet_targets, log_failure=False)
         publish_mock.assert_called_once()
         assert brain.walker.current_phase == pytest.approx(phase_after_first_publish)
         assert brain.hexapod.body_transform.matrix == pytest.approx(

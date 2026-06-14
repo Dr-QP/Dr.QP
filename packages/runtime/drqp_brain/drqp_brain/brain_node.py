@@ -26,7 +26,6 @@ import sys
 import threading
 import traceback
 
-from ament_index_python.packages import get_package_share_path, PackageNotFoundError
 from control_msgs.action import FollowJointTrajectory
 from drqp_brain.instance_guard import InstanceAlreadyRunningError, InstanceGuard
 from drqp_brain.joint_trajectory_builder import (
@@ -38,7 +37,7 @@ from drqp_brain.locomotion_kinematics import (
     MoveItPyLocomotionKinematics,
     RCLPY_SHUTDOWN_ERRORS,
 )
-from drqp_brain.stride_limits import DirectionalStrideLimits
+from drqp_brain.motion_feasibility_limiter import MotionFeasibilityLimiter
 from drqp_brain.walk_controller import GaitType, WalkController
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 from drqp_kinematics.geometry import AffineTransform, Point3D
@@ -64,6 +63,10 @@ def _assert_no_existing_brain_node(node: rclpy.node.Node) -> None:
             raise InstanceAlreadyRunningError(
                 f'Another drqp_brain ROS node is already running as {qualified_name}.'
             )
+
+
+def _point_to_tuple(point: Point3D) -> tuple[float, float, float]:
+    return (round(float(point.x), 6), round(float(point.y), 6), round(float(point.z), 6))
 
 
 class HexapodBrain(rclpy.node.Node):
@@ -193,16 +196,17 @@ class HexapodBrain(rclpy.node.Node):
             rotation_speed_degrees=45,
             gait=self.gaits[self.gait_index],
             phase_steps_per_cycle=self.fps / 2.5,
-            stride_limits=self._load_stride_limits(),
         )
-
-    def _load_stride_limits(self):
-        try:
-            config_path = get_package_share_path('drqp_brain') / 'config' / 'stride_limits.yaml'
-            return DirectionalStrideLimits.from_file(config_path)
-        except (FileNotFoundError, KeyError, PackageNotFoundError, ValueError) as exc:
-            self.get_logger().warning(f'Walking stride limits are unavailable: {exc}')
-            return None
+        self.motion_limiter = MotionFeasibilityLimiter(
+            snapshot_motion_state=self._snapshot_motion_state,
+            restore_motion_state=self._restore_motion_state,
+            build_feet_target_window=self._build_walking_feet_target_window,
+            solve_trajectory_targets=lambda window: self._solve_walking_trajectory_targets(
+                window,
+                log_failure=False,
+            ),
+            motion_window_key=self._motion_window_key,
+        )
 
     def prev_gait(self):
         self.gait_index = (self.gait_index - 1) % len(self.gaits)
@@ -265,43 +269,55 @@ class HexapodBrain(rclpy.node.Node):
             ]
         )
 
-        feet_targets = self.walker.next_step_targets(
-            stride_direction=stride_direction,
-            rotation_direction=self.current_movement.rotation_speed,
-            body_direction=body_translation / 8.0,
-            body_rotation=body_rotation,
-        )
-
         if not self._ik_ready():
             self._restore_motion_state(previous_state)
             return
 
-        feet_target_window = self._build_walking_feet_target_window(
-            first_feet_targets=feet_targets,
-            stride_direction=stride_direction,
-            rotation_direction=self.current_movement.rotation_speed,
-            body_translation=body_translation,
-            body_rotation=body_rotation,
-        )
-        foot_targets_key = self._foot_targets_window_key(feet_target_window)
-        if foot_targets_key == self._last_published_foot_targets:
-            self._restore_motion_state(previous_state)
-            return
-
         try:
-            trajectory_targets = self._solve_walking_trajectory_targets(feet_target_window)
+            feasibility = self.motion_limiter.find_feasible_motion(
+                previous_state=previous_state,
+                stride_direction=stride_direction,
+                rotation_direction=self.current_movement.rotation_speed,
+                body_translation=body_translation,
+                body_rotation=body_rotation,
+                last_published_motion_key=self._last_published_foot_targets,
+            )
         except RuntimeError as exc:
             self._restore_motion_state(previous_state)
             self.get_logger().error(str(exc))
             return
 
-        if trajectory_targets is None:
-            self._restore_motion_state(previous_state)
-            self.get_logger().warning(
-                'MoveIt IK rejected the current foot targets; skipping trajectory publish'
-            )
+        if feasibility.redundant:
             return
 
+        if not feasibility.feasible:
+            if feasibility.body_pose_infeasible:
+                self.get_logger().warning(
+                    'MoveIt IK rejected the requested body pose even with zero walking motion; '
+                    f'gait={self.walker.current_gait.name}, '
+                    f'phase={previous_state["current_phase"]:.3f}, '
+                    f'body_translation={_point_to_tuple(body_translation)}, '
+                    f'body_rotation={_point_to_tuple(body_rotation)}'
+                )
+            else:
+                self.get_logger().warning(
+                    'MoveIt IK rejected the current foot targets; skipping trajectory publish'
+                )
+            return
+
+        candidate = feasibility.candidate
+        if candidate.scale < 1.0:
+            self.get_logger().warning(
+                'IK limiter scaled walking motion to '
+                f'{candidate.scale:.3f}; gait={self.walker.current_gait.name}, '
+                f'phase={previous_state["current_phase"]:.3f}, '
+                f'requested_stride={_point_to_tuple(stride_direction)}, '
+                f'accepted_stride={_point_to_tuple(candidate.stride_direction)}, '
+                f'requested_rotation={self.current_movement.rotation_speed:.3f}, '
+                f'accepted_rotation={candidate.rotation_direction:.3f}'
+            )
+
+        trajectory_targets = candidate.trajectory_targets
         joint_targets = trajectory_targets[-1][1]
         self.apply_joint_targets(joint_targets)
 
@@ -312,28 +328,35 @@ class HexapodBrain(rclpy.node.Node):
                 reach_in_seconds_from_start=point_index / self.fps,
             )
         trajectory.publish(self.joint_trajectory_pub)
-        self._last_published_foot_targets = foot_targets_key
+        self._last_published_foot_targets = candidate.motion_key
 
     def process_joint_state(self, msg: JointState):
         self.latest_joint_state = msg
         self._joint_state_warning_logged = False
 
-    def solve_joint_targets(self, legs_and_targets):
+    def solve_joint_targets(self, legs_and_targets, log_failure: bool = True):
         result = self.kinematics.solve(legs_and_targets, self.latest_joint_state)
-        if not result.succeeded:
+        if not result.succeeded and log_failure:
             self.get_logger().warning(result.failure_reason)
+        if not result.succeeded:
             return None
         return result.joint_targets
 
     def _build_walking_feet_target_window(
         self,
-        first_feet_targets,
         stride_direction: Point3D,
         rotation_direction: float,
         body_translation: Point3D,
         body_rotation: Point3D,
     ):
-        feet_target_window = [first_feet_targets]
+        feet_target_window = [
+            self.walker.next_step_targets(
+                stride_direction=stride_direction,
+                rotation_direction=rotation_direction,
+                body_direction=body_translation / 8.0,
+                body_rotation=body_rotation,
+            )
+        ]
         for point_index in range(max(1, self.walking_trajectory_points)):
             if point_index > 0:
                 feet_target_window.append(
@@ -347,10 +370,10 @@ class HexapodBrain(rclpy.node.Node):
 
         return feet_target_window
 
-    def _solve_walking_trajectory_targets(self, feet_target_window):
+    def _solve_walking_trajectory_targets(self, feet_target_window, log_failure: bool = True):
         trajectory_targets = []
         for feet_targets in feet_target_window:
-            joint_targets = self.solve_joint_targets(feet_targets)
+            joint_targets = self.solve_joint_targets(feet_targets, log_failure=log_failure)
             if joint_targets is None:
                 return None
 
@@ -379,6 +402,12 @@ class HexapodBrain(rclpy.node.Node):
         return tuple(
             self._foot_targets_key(legs_and_targets) for legs_and_targets in foot_target_sets
         )
+
+    def _motion_window_key(self, foot_target_sets):
+        body_transform_key = tuple(
+            round(float(value), 6) for value in self.hexapod.body_transform.matrix.reshape(-1)
+        )
+        return (self._foot_targets_window_key(foot_target_sets), body_transform_key)
 
     def _ik_ready(self) -> bool:
         if self._is_shutting_down:

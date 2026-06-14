@@ -32,7 +32,6 @@ class WalkController:
         rotation_speed_degrees=10.0,
         phase_steps_per_cycle=30.0,
         gait=GaitType.wave,
-        stride_limits=None,
     ):
         self.hexapod = hexapod
         self.leg_tips_on_ground = [(leg, leg.tibia_end.copy()) for leg in hexapod.legs]
@@ -40,7 +39,6 @@ class WalkController:
         self.step_length = step_length
         self.step_height = step_height
         self.rotation_speed_degrees = rotation_speed_degrees
-        self.stride_limits = stride_limits
         self.gait_gen = ParametricGaitGenerator(step_length=1.0, step_height=1.0, gait=gait)
 
         self.phase_step = 1 / phase_steps_per_cycle
@@ -119,7 +117,6 @@ class WalkController:
             0.3, [0, 1], [self.current_rotation_direction, rotation_direction]
         )
         self.current_direction = self.current_direction.interpolate(stride_direction, 0.3)
-        self.current_direction = self.__clamp_current_direction()
         new_stride_ratio = (
             abs(self.current_direction.x)
             + abs(self.current_direction.y)
@@ -194,16 +191,6 @@ class WalkController:
             result.append((leg, foot_target))
 
         return result
-
-    def __clamp_current_direction(self):
-        if self.stride_limits is None:
-            return self.current_direction
-
-        return self.stride_limits.clamp_direction(
-            self.current_gait,
-            self.current_direction,
-            self.step_length,
-        )
 
     @staticmethod
     def __make_direction_transform(direction):
