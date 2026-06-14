@@ -1,0 +1,13 @@
+[Unit]
+Description=VirtualHere USB Client
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+ExecStart={{ [virtualhere_usb_client_install_path, '--daemon', virtualhere_usb_client_extra_args] | reject('equalto', '') | join(' ') }}
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

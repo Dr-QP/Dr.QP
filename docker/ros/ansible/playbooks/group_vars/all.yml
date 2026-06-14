@@ -17,3 +17,6 @@ install_xpra: false # Enable in ros-desktop.dockerfile via -e install_xpra=true
 
 # Agentic tools configuration
 install_agentic_tools: false
+
+# VirtualHere USB client configuration
+install_virtualhere_usb_client: false

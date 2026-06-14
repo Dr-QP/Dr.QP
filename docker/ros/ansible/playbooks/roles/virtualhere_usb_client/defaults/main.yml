@@ -1,0 +1,27 @@
+---
+# Default variables for the VirtualHere USB client role
+
+# Systemd service name.
+virtualhere_usb_client_service_name: virtualhereclient
+
+# Install location for the selected VirtualHere client binary.
+virtualhere_usb_client_install_path: /usr/sbin/vhclient
+
+# File mode for the installed client binary.
+virtualhere_usb_client_binary_mode: "0755"
+
+# VirtualHere client download URLs by CPU architecture.
+virtualhere_usb_client_download_urls:
+  aarch64: https://www.virtualhere.com/sites/default/files/usbclient/vhclientarm64
+  arm64: https://www.virtualhere.com/sites/default/files/usbclient/vhclientarm64
+  x86_64: https://www.virtualhere.com/sites/default/files/usbclient/vhclientx86_64
+  amd64: https://www.virtualhere.com/sites/default/files/usbclient/vhclientx86_64
+
+# Override this to pin a custom binary URL.
+virtualhere_usb_client_download_url: "{{ virtualhere_usb_client_download_urls.get(ansible_facts['architecture'] | default('')) }}"
+
+# Additional arguments passed to the daemon.
+virtualhere_usb_client_extra_args: ""
+
+# Manage service state when systemd is available.
+virtualhere_usb_client_manage_service: "{{ ansible_facts['service_mgr'] | default('') == 'systemd' }}"
