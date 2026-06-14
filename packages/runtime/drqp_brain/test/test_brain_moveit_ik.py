@@ -176,6 +176,34 @@ def test_loop_skips_redundant_ik_when_feet_targets_do_not_change():
         brain.destroy_node()
 
 
+def test_loop_solves_body_only_commands_when_feet_targets_do_not_change():
+    """Body-only movement should still reach MoveIt even when feet stay planted."""
+    brain = HexapodBrain()
+    try:
+        brain.walking_trajectory_points = 1
+        feet_targets = _make_feet_targets(brain)
+        joint_targets = _make_joint_targets(brain)
+
+        with (
+            _ik_ready_patch(brain),
+            mock.patch.object(
+                brain, 'solve_joint_targets', return_value=joint_targets
+            ) as solve_mock,
+            mock.patch.object(brain.joint_trajectory_pub, 'publish') as publish_mock,
+        ):
+            brain.loop()
+            brain.current_movement.body_translation.z = 0.16
+            brain.current_movement.body_rotation.y = 0.2
+            brain.loop()
+
+        assert solve_mock.call_count == 2
+        assert solve_mock.call_args_list[0].args[0] == feet_targets
+        assert solve_mock.call_args_list[1].args[0] == feet_targets
+        assert publish_mock.call_count == 2
+    finally:
+        brain.destroy_node()
+
+
 def test_loop_retries_redundant_targets_after_timeout():
     """A failed solve must not poison the redundant-target cache."""
     brain = HexapodBrain()

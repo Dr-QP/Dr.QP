@@ -205,7 +205,10 @@ class MoveItPyLocomotionKinematics:
                 config_dict=config_dict,
                 provide_planning_service=False,
             )
-            moveit_py.get_logger().set_level(LoggingSeverity.WARN) # to avoid `Using position only ik` spam
+            logger = getattr(moveit_py, 'get_logger', lambda: None)()
+            if logger is not None:
+                # Avoid repeated "Using position only ik" spam from MoveItPy.
+                logger.set_level(LoggingSeverity.WARN)
             return moveit_py
         finally:
             sys.argv = original_argv
@@ -217,7 +220,7 @@ class MoveItPyLocomotionKinematics:
         for root in MOVEIT_CONFIG_ROOTS:
             nested_prefix = f'{root}.'
             nested_values = {
-                name[len(nested_prefix) :]: value
+                name[len(nested_prefix):]: value
                 for name, value in flat_parameters.items()
                 if name.startswith(nested_prefix)
             }
