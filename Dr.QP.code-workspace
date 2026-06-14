@@ -204,7 +204,8 @@
           "env": {
             "CMAKE_EXPORT_COMPILE_COMMANDS": "1",
             "CC": "clang",
-            "CXX": "clang++"
+            "CXX": "clang++",
+            "DRQP_GAZEBO_TEST_MODE": "smoke", // or "all"
           }
         }
       },
