@@ -63,3 +63,12 @@ set files_to_clean **/*.egg-info/*
 if count $files_to_clean >/dev/null
     rm -rf $files_to_clean
 end
+set files_to_clean **/.coverage.*
+if count $files_to_clean >/dev/null
+    rm -rf $files_to_clean
+end
+
+set files_to_clean **/.tmp/*
+if count $files_to_clean >/dev/null
+    rm -rf $files_to_clean
+end
