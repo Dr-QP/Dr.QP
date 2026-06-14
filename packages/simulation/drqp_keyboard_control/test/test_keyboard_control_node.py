@@ -357,6 +357,40 @@ def test_delete_and_backspace_publish_robot_events(ros_context):
     assert event_names == ['reboot_servos', 'finalize']
 
 
+def test_publish_stop_command_clears_motion_inputs_before_publishing(ros_context):
+    """GUI shutdown should send one final zero movement command."""
+    node = KeyboardControlNode()
+    node.movement_command_pub.publish = Mock()
+    try:
+        node.state.key_down('w')
+        node.state.set_left_stick(0.5, 0.5)
+        node.state.set_right_stick(-0.25, 0.0)
+        node.state.set_left_trigger(0.75)
+        node.state.set_right_trigger(0.5)
+
+        node.publish_stop_command()
+    finally:
+        node.destroy_node()
+
+    command = node.movement_command_pub.publish.call_args.args[0]
+    assert command.stride_direction.x == pytest.approx(0.0)
+    assert command.stride_direction.y == pytest.approx(0.0)
+    assert command.stride_direction.z == pytest.approx(0.0)
+    assert command.rotation_speed == pytest.approx(0.0)
+
+
+def test_app_shutdown_requests_stop_command():
+    """Closing the pygame window should ask the node to stop the robot."""
+    app = PygameKeyboardControlApp.__new__(PygameKeyboardControlApp)
+    app.running = True
+    app.node = Mock()
+
+    app._request_shutdown()
+
+    app.node.publish_stop_command.assert_called_once_with()
+    assert app.running is False
+
+
 def test_keyboard_help_lines_cover_all_bindings():
     """Help content should list all keyboard controls."""
     help_text = '\n'.join(KEYBOARD_HELP_LINES)

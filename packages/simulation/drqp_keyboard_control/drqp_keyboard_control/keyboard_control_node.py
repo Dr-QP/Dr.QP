@@ -158,6 +158,14 @@ class GuiControlState:
         self.right_stick = (0.0, 0.0)
         self.right_stick_active = False
 
+    def reset_motion_inputs(self):
+        """Clear all latched motion inputs."""
+        self.held_keys.clear()
+        self.release_left_stick()
+        self.release_right_stick()
+        self.left_trigger = 0.0
+        self.right_trigger = 0.0
+
     def set_left_trigger(self, value: float):
         """Set left trigger slider value."""
         self.left_trigger = clamp(value, 0.0, 1.0)
@@ -267,6 +275,11 @@ class KeyboardControlNode(rclpy.node.Node):
 
     def _publish_command(self):
         self.movement_command_pub.publish(self.state.movement_command())
+
+    def publish_stop_command(self):
+        """Publish a zero movement command before the GUI exits."""
+        self.state.reset_motion_inputs()
+        self._publish_command()
 
     def _publish_event(self, event: str):
         msg = std_msgs.msg.String()

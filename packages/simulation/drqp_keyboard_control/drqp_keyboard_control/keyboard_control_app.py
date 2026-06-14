@@ -171,6 +171,10 @@ class PygameKeyboardControlApp:
         self.stay_on_top = not self.stay_on_top
         self._apply_stay_on_top(self.stay_on_top)
 
+    def _request_shutdown(self):
+        self.node.publish_stop_command()
+        self.running = False
+
     def _apply_stay_on_top(self, enabled: bool) -> bool:
         return set_sdl_window_always_on_top(self.window_id, enabled)
 
@@ -185,7 +189,7 @@ class PygameKeyboardControlApp:
     def _handle_events(self):
         for event in self.pygame.event.get():
             if event.type == self.pygame.QUIT:
-                self.running = False
+                self._request_shutdown()
             elif event.type == self.pygame.KEYDOWN:
                 key = self._normalize_key(event.key)
                 if key is not None:
@@ -272,7 +276,7 @@ class PygameKeyboardControlApp:
         self.screen.fill((21, 24, 28))
         self._draw_text(
             f'Sensitivity {self.node.state.sensitivity:.2f}',
-            (775, 88),
+            (185, 612),
             (178, 187, 197),
             self.small_font,
         )
