@@ -87,6 +87,7 @@ def generate_launch_description():
             'follow_camera_delay',
             default_value='5.0',
             description='Seconds to wait after robot spawn before sending the Gazebo GUI follow command.',
+        )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
