@@ -1,21 +1,24 @@
 #!/usr/bin/env fish
 
 function clean
-  set files_to_clean $argv[1]
-  echo "Cleaning '$files_to_clean'..."
-  rm -rf "$files_to_clean"
-  echo "Done."
+    set pattern $argv[1]
+    set find_pattern "./$pattern"
+    set files_to_clean (find . -path "$find_pattern" -print0 | string split0)
+
+    if test (count $files_to_clean) -gt 0
+        echo "Cleaning $pattern"
+        rm -rf -- $files_to_clean
+    end
 end
 
-clean '**/build/*'
-clean '**/_build/*'
-clean '**/install/*'
-clean '**/log/*'
-clean '**/lcov/*'
-clean '**/.cache/*'
-clean '**/__pycache__/*'
-clean '**/.pytest_cache/*'
-clean '**/*.egg-info/*'
-clean '**/.tmp'
-
-
+clean "**/build/*"
+clean "**/_build/*"
+clean "**/install/*"
+clean "**/log/*"
+clean "**/lcov/*"
+clean "**/.cache/*"
+clean "**/__pycache__/*"
+clean "**/.pytest_cache/*"
+clean "**/*.coverage.*"
+clean "**/*.egg-info/*"
+clean "**/.tmp"
