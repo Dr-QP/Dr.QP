@@ -202,6 +202,15 @@ Explore test results with interactive visualization.
 | `build/<package_name>/coverage.info`                | C++ coverage data      | LCOV        |
 | `build/<package_name>/.coverage`                    | Python coverage data   | Coverage.py |
 
+## Python ROS Test Structure
+
+- Python ROS tests may use pytest functions or `unittest.TestCase` classes. Match the package's existing style instead of migrating solely for ROS context management.
+- For pytest-style tests in `ament_python` packages, keep `tests_require=['pytest']` in `setup.py`, `python3-pytest` in `package.xml`, and add a `test/__init__.py` `load_tests(...)` bridge when colcon discovers the package through unittest.
+- For plain pytest suites that do not need external pytest plugins, the `load_tests(...)` bridge may set `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` around `pytest.main(...)` to avoid unrelated global plugin incompatibilities.
+- When pytest tests construct ROS nodes, use fixtures to initialize `rclpy` and shut it down with `rclpy.try_shutdown()` or only shut it down when the fixture initialized it.
+- When unittest tests construct ROS nodes, initialize `rclpy` once per class with `setUpClass()` and register `cls.addClassCleanup(rclpy.try_shutdown)`.
+- Keep node, publisher, subscription, client, and action cleanup at the test level with fixture finalizers or `self.addCleanup(...)`.
+
 ## Troubleshooting
 
 | Issue                                  | Cause                                      | Solution                                                                     |

@@ -87,6 +87,13 @@ def generate_launch_description():
             'follow_camera_delay',
             default_value='5.0',
             description='Seconds to wait after robot spawn before sending the Gazebo GUI follow command.',
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'load_keyboard_control',
+            default_value='false',
+            choices=['true', 'false'],
+            description='Load the simulation GUI keyboard control node.',
         )
     )
     declared_arguments.append(
@@ -111,6 +118,7 @@ def generate_launch_description():
     world = LaunchConfiguration('world')
     follow_camera = LaunchConfiguration('follow_camera')
     follow_camera_delay = LaunchConfiguration('follow_camera_delay')
+    load_keyboard_control = LaunchConfiguration('load_keyboard_control')
     gz_partition = LaunchConfiguration('gz_partition')
     container_name = 'drqp_gazebo_container'
     gz_args = ['-r -v 3 ', world]
@@ -159,6 +167,12 @@ def generate_launch_description():
             '-allow_renaming',
             'false',
         ],
+    )
+    keyboard_control = Node(
+        package='drqp_keyboard_control',
+        executable='drqp_keyboard_control',
+        output='screen',
+        condition=IfCondition(load_keyboard_control),
     )
 
     follow_camera_command = RegisterEventHandler(
@@ -219,6 +233,7 @@ def generate_launch_description():
                     gazebo_bridge,
                     gz_spawn_entity,
                     follow_camera_command,
+                    keyboard_control,
                 ]
             ),
         ]
