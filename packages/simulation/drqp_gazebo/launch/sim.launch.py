@@ -69,14 +69,6 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            'load_moveit',
-            default_value='true',
-            choices=['true', 'false'],
-            description='Load the MoveIt move_group node through drqp_brain bringup.',
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
             'world',
             default_value='empty.sdf',
             description='Gazebo world file or resource to load.',
@@ -116,7 +108,6 @@ def generate_launch_description():
 
     # Initialize Arguments
     sim_gui = LaunchConfiguration('sim_gui')
-    load_moveit = LaunchConfiguration('load_moveit')
     world = LaunchConfiguration('world')
     follow_camera = LaunchConfiguration('follow_camera')
     follow_camera_delay = LaunchConfiguration('follow_camera_delay')
