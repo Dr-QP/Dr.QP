@@ -475,19 +475,3 @@ class MoveItPyLocomotionKinematics:
     @staticmethod
     def controller_joint_names(leg):
         return [f'drqp/{leg.label.name}_{joint_name}' for joint_name in ('coxa', 'femur', 'tibia')]
-
-    def destroy(self):
-        if self._moveit_py is None:
-            return
-
-        try:
-            self._moveit_py.shutdown()
-        except Exception as exc:
-            try:
-                self._node.get_logger().warning(f'Failed to shut down MoveItPy helper: {exc}')
-            except RCLPY_SHUTDOWN_ERRORS as log_exc:
-                if not self._is_shutting_down():
-                    raise log_exc from exc
-        self._moveit_py = None
-        self._robot_model = None
-        self._planning_scene_monitor = None

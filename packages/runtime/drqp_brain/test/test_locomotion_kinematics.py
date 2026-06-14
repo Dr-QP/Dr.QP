@@ -124,16 +124,12 @@ class FakeMoveItPy:
             model_to_base=model_to_base,
         )
         self.planning_scene_monitor = FakePlanningSceneMonitor(colliding=colliding)
-        self.shutdown_called = False
 
     def get_robot_model(self):
         return self.robot_model
 
     def get_planning_scene_monitor(self):
         return self.planning_scene_monitor
-
-    def shutdown(self):
-        self.shutdown_called = True
 
 
 class FakeMoveItRobotState:

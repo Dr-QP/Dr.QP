@@ -22,6 +22,7 @@
 
 import argparse
 from concurrent.futures import CancelledError
+import os
 import sys
 import threading
 import traceback
@@ -643,7 +644,6 @@ class HexapodBrain(rclpy.node.Node):
         if self.__trajectory_client is not None:
             self._safe_destroy_client(self.__trajectory_client, 'trajectory action client')
             self.__trajectory_client = None
-        self.kinematics.destroy()
 
         try:
             super().destroy_node()
@@ -655,6 +655,7 @@ def main():
     node = None
     executor = None
     guard_node = None
+    clean_process_exit = False
     try:
         parser = argparse.ArgumentParser('Dr.QP Robot controller ROS node')
         filtered_args = rclpy.utilities.remove_ros_args()
@@ -671,6 +672,7 @@ def main():
             executor.add_node(node)
             executor.spin()
     except (KeyboardInterrupt, ExternalShutdownException):
+        clean_process_exit = True
         return 0
     except InstanceAlreadyRunningError as exc:
         print(f'drqp_brain startup refused: {exc}', file=sys.stderr)
@@ -685,6 +687,8 @@ def main():
         # Only call shutdown if ROS is still initialized
         if rclpy.ok():
             rclpy.shutdown()
+        if clean_process_exit:
+            os._exit(0)
     return 0
 
 
