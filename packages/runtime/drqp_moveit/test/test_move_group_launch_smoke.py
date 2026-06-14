@@ -53,7 +53,6 @@ def generate_test_description():
                     'load_joystick': 'false',
                     'load_controllers': 'true',
                     'load_imu': 'false',
-                    'load_moveit': 'false',
                     'hardware_device_address': 'mock_servo',
                 }.items(),
             ),

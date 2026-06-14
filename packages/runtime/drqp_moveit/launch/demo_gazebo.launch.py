@@ -71,7 +71,6 @@ def generate_launch_description():
         launch_arguments={
             'sim_gui': sim_gui,
             'gz_partition': gz_partition,
-            'load_moveit': 'false',
         }.items(),
     )
 

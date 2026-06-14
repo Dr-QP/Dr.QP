@@ -27,8 +27,7 @@ def test_bringup_launch_loads_the_imu_node():
     launch_source = launch_file.read_text(encoding='utf-8')
 
     assert "name='load_imu'" in launch_source
-    assert "name='load_moveit'" in launch_source
-    assert "FindPackageShare('drqp_moveit')" in launch_source
-    assert "'move_group.launch.py'" in launch_source
+    assert "get_package_share_path('drqp_moveit')" in launch_source
+    assert "'move_group.launch.py'" not in launch_source
     assert "executable='drqp_imu'" in launch_source
     assert 'UnlessCondition(use_gazebo)' in launch_source
