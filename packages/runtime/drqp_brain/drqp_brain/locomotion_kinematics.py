@@ -28,7 +28,6 @@ from geometry_msgs.msg import Pose, PoseStamped, Quaternion
 import numpy as np
 from rclpy._rclpy_pybind11 import InvalidHandle, RCLError
 from rclpy.exceptions import NotInitializedException
-from rclpy.logging import LoggingSeverity
 from scipy.spatial.transform import Rotation
 from sensor_msgs.msg import JointState
 
@@ -216,7 +215,7 @@ class MoveItPyLocomotionKinematics:
         for root in MOVEIT_CONFIG_ROOTS:
             nested_prefix = f'{root}.'
             nested_values = {
-                name[len(nested_prefix):]: value
+                name[len(nested_prefix) :]: value
                 for name, value in flat_parameters.items()
                 if name.startswith(nested_prefix)
             }
