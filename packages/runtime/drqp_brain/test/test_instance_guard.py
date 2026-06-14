@@ -29,6 +29,10 @@ from drqp_brain.instance_guard import (
 import pytest
 
 
+def _workspace_root():
+    return Path(__file__).resolve().parents[4]
+
+
 def test_instance_guard_uses_ros_home_tmp_lock_file(monkeypatch):
     """Store locks under the ROS_HOME app runtime directory by default."""
     ros_home = Path.cwd() / '.tmp' / 'ros_home'
@@ -51,7 +55,7 @@ def test_runtime_directory_falls_back_to_home_ros(monkeypatch):
 
 def test_instance_guard_uses_ros_home_tmp_from_package_subdirectory(monkeypatch):
     """Resolve the same lock path even when ROS launches from a package cwd."""
-    workspace_root = Path.cwd()
+    workspace_root = _workspace_root()
     ros_home = workspace_root / '.tmp' / 'ros_home'
     monkeypatch.setenv('ROS_HOME', str(ros_home))
     monkeypatch.chdir(workspace_root / 'packages' / 'runtime' / 'drqp_brain')
@@ -63,7 +67,7 @@ def test_instance_guard_uses_ros_home_tmp_from_package_subdirectory(monkeypatch)
 
 def test_instance_guard_rejects_duplicate_from_different_cwd(monkeypatch):
     """Use one ROS_HOME lock file across different process working directories."""
-    workspace_root = Path.cwd()
+    workspace_root = _workspace_root()
     ros_home = workspace_root / '.tmp' / 'ros_home'
     monkeypatch.setenv('ROS_HOME', str(ros_home))
 

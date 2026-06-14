@@ -212,7 +212,7 @@ class MoveItPyLocomotionKinematics:
         for root in MOVEIT_CONFIG_ROOTS:
             nested_prefix = f'{root}.'
             nested_values = {
-                name[len(nested_prefix) :]: value
+                name[len(nested_prefix):]: value
                 for name, value in flat_parameters.items()
                 if name.startswith(nested_prefix)
             }
@@ -236,11 +236,10 @@ class MoveItPyLocomotionKinematics:
 
     def _moveit_parameter_values(self):
         values = {}
+        get_parameters_by_prefix = getattr(self._node, 'get_parameters_by_prefix', None)
 
-        try:
-            values.update(self._node.get_parameters_by_prefix(''))
-        except AttributeError:
-            pass
+        if callable(get_parameters_by_prefix):
+            values.update(get_parameters_by_prefix(''))
 
         for name, parameter in getattr(self._node, '_parameter_overrides', {}).items():
             values[name] = getattr(parameter, 'value', parameter)

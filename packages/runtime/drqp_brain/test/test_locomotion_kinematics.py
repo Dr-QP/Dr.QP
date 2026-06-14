@@ -204,6 +204,35 @@ def _node_with_moveit_params():
     return node
 
 
+def test_moveit_config_reads_overrides_without_prefix_api(hexapod):
+    """Support launch-test fakes that only expose parameter overrides."""
+
+    class OverrideOnlyNode:
+        """Minimal node double without get_parameters_by_prefix."""
+
+        def __init__(self):
+            source = _node_with_moveit_params()
+            self._parameter_overrides = source._parameter_overrides
+
+        def get_name(self):
+            return 'drqp_brain'
+
+        def get_logger(self):
+            return Mock()
+
+    helper = MoveItPyLocomotionKinematics(
+        node=OverrideOnlyNode(),
+        hexapod=hexapod,
+        is_shutting_down=lambda: False,
+        moveit_py_factory=FakeMoveItPy,
+        robot_state_cls=FakeMoveItRobotState,
+    )
+    config = helper._moveit_config_dict()
+
+    assert config['robot_description'] == '<robot name="drqp"/>'
+    assert config['allow_trajectory_execution'] is False
+
+
 def test_moveit_py_solver_uses_in_process_robot_state_ik(hexapod):
     """Verify MoveItPy helper solves leg IK without calling the service backend."""
     node = _node_with_moveit_params()
