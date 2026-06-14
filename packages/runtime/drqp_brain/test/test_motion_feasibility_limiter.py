@@ -25,8 +25,14 @@ import pytest
 
 class FakeMotionHarness:
 
-    def __init__(self, safe_scale_limit: float, search_iterations: int = 8):
+    def __init__(
+        self,
+        safe_scale_limit: float,
+        search_iterations: int = 8,
+        safe_body_z_limit: float = float('inf'),
+    ):
         self.safe_scale_limit = safe_scale_limit
+        self.safe_body_z_limit = safe_body_z_limit
         self.state = {
             'phase': 0,
             'stride': Point3D([0, 0, 0]),
@@ -80,7 +86,8 @@ class FakeMotionHarness:
     def solve(self, foot_target_window):
         scale = float(foot_target_window[0][0][1].x)
         self.solved_scales.append(scale)
-        if scale <= self.safe_scale_limit:
+        body_z = float(self.state['body_translation'].z)
+        if scale <= self.safe_scale_limit and body_z <= self.safe_body_z_limit:
             return [(foot_target_window[0], {'fake_joint': scale})]
         return None
 
@@ -153,7 +160,7 @@ def test_reports_body_pose_infeasible_when_zero_walking_fails():
     assert not result.feasible
     assert result.body_pose_infeasible
     assert harness.state == previous_state
-    assert harness.solved_scales == [1.0, 0.0]
+    assert harness.solved_scales == [1.0, 0.0, 0.0]
 
 
 def test_accepts_zero_walking_when_body_pose_is_feasible():
@@ -171,10 +178,42 @@ def test_accepts_zero_walking_when_body_pose_is_feasible():
     assert result.feasible
     assert not result.body_pose_infeasible
     assert result.candidate.scale == pytest.approx(0.0)
+    assert result.candidate.body_scale == pytest.approx(1.0)
     assert harness.state['stride'] == Point3D([0, 0, 0])
     assert harness.state['rotation'] == pytest.approx(0.0)
     assert harness.state['body_translation'] == Point3D([0, 0, 0.3])
     assert harness.state['body_rotation'] == Point3D([0, 0.2, 0])
+
+
+def test_scales_body_pose_when_zero_walking_still_fails():
+    harness = FakeMotionHarness(
+        safe_scale_limit=1.0,
+        safe_body_z_limit=0.625,
+        search_iterations=8,
+    )
+    previous_state = harness.snapshot()
+
+    result = harness.limiter.find_feasible_motion(
+        previous_state=previous_state,
+        stride_direction=Point3D([0, 0, 0]),
+        rotation_direction=0.0,
+        body_translation=Point3D([0, 0, 1.0]),
+        body_rotation=Point3D([0.4, 0.2, 0.1]),
+    )
+
+    assert result.feasible
+    assert not result.body_pose_infeasible
+    assert result.candidate.scale == pytest.approx(0.0)
+    assert result.candidate.body_scale <= 0.625
+    assert result.candidate.body_scale == pytest.approx(0.625, abs=1 / 256)
+    assert harness.state['stride'] == Point3D([0, 0, 0])
+    assert harness.state['rotation'] == pytest.approx(0.0)
+    assert harness.state['body_translation'].z == pytest.approx(result.candidate.body_scale)
+    assert harness.state['body_rotation'].x == pytest.approx(0.4 * result.candidate.body_scale)
+    assert harness.state['body_rotation'].y == pytest.approx(0.2 * result.candidate.body_scale)
+    assert harness.state['body_rotation'].z == pytest.approx(
+        0.1 * result.candidate.body_scale
+    )
 
 
 def test_redundant_motion_is_detected_without_ik_solve():

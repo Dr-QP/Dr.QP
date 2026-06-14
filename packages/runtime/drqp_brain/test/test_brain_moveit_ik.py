@@ -107,7 +107,7 @@ def test_loop_warns_and_skips_publish_when_moveit_returns_no_solution():
         ):
             brain.loop()
 
-        assert solve_joint_targets.call_count == 2
+        assert solve_joint_targets.call_count == 3
         warning_mock.assert_called_once()
         assert 'zero walking motion' in warning_mock.call_args.args[0]
         publish_mock.assert_not_called()

@@ -306,15 +306,20 @@ class HexapodBrain(rclpy.node.Node):
             return
 
         candidate = feasibility.candidate
-        if candidate.scale < 1.0:
+        if candidate.scale < 1.0 or candidate.body_scale < 1.0:
             self.get_logger().warning(
-                'IK limiter scaled walking motion to '
-                f'{candidate.scale:.3f}; gait={self.walker.current_gait.name}, '
+                'IK limiter scaled movement to '
+                f'walking={candidate.scale:.3f}, body={candidate.body_scale:.3f}; '
+                f'gait={self.walker.current_gait.name}, '
                 f'phase={previous_state["current_phase"]:.3f}, '
                 f'requested_stride={_point_to_tuple(stride_direction)}, '
                 f'accepted_stride={_point_to_tuple(candidate.stride_direction)}, '
                 f'requested_rotation={self.current_movement.rotation_speed:.3f}, '
-                f'accepted_rotation={candidate.rotation_direction:.3f}'
+                f'accepted_rotation={candidate.rotation_direction:.3f}, '
+                f'requested_body_translation={_point_to_tuple(body_translation)}, '
+                f'accepted_body_translation={_point_to_tuple(candidate.body_translation)}, '
+                f'requested_body_rotation={_point_to_tuple(body_rotation)}, '
+                f'accepted_body_rotation={_point_to_tuple(candidate.body_rotation)}'
             )
 
         trajectory_targets = candidate.trajectory_targets

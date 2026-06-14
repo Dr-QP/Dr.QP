@@ -27,8 +27,11 @@ from drqp_kinematics.geometry import Point3D
 @dataclass(frozen=True)
 class FeasibleMotionCandidate:
     scale: float
+    body_scale: float
     stride_direction: Point3D
     rotation_direction: float
+    body_translation: Point3D
+    body_rotation: Point3D
     feet_target_window: list
     trajectory_targets: list
     motion_key: tuple
@@ -81,7 +84,8 @@ class MotionFeasibilityLimiter:
             rotation_direction,
             body_translation,
             body_rotation,
-            scale=1.0,
+            walking_scale=1.0,
+            body_scale=1.0,
             last_published_motion_key=last_published_motion_key,
         )
         if full_motion.redundant or full_motion.candidate is not None:
@@ -94,12 +98,62 @@ class MotionFeasibilityLimiter:
             rotation_direction,
             body_translation,
             body_rotation,
-            scale=0.0,
+            walking_scale=0.0,
+            body_scale=1.0,
             last_published_motion_key=last_published_motion_key,
         )
         if zero_motion.redundant:
             return zero_motion
-        if zero_motion.candidate is None:
+        if zero_motion.candidate is not None:
+            low = 0.0
+            high = 1.0
+            best = zero_motion
+            failed_scale = full_motion.failed_scale
+            for _ in range(self._search_iterations):
+                scale = (low + high) / 2.0
+                candidate = self._try_candidate(
+                    previous_state,
+                    stride_direction,
+                    rotation_direction,
+                    body_translation,
+                    body_rotation,
+                    walking_scale=scale,
+                    body_scale=1.0,
+                    last_published_motion_key=last_published_motion_key,
+                )
+                if candidate.candidate is None:
+                    high = scale
+                    failed_scale = scale
+                else:
+                    low = scale
+                    best = candidate
+
+            if best.candidate is None:
+                return MotionFeasibilityResult(
+                    candidate=None,
+                    body_pose_infeasible=True,
+                    failed_scale=failed_scale,
+                )
+
+            self._restore_accepted_state(best)
+            return MotionFeasibilityResult(
+                candidate=best.candidate,
+                failed_scale=failed_scale,
+            )
+
+        neutral_body = self._try_candidate(
+            previous_state,
+            stride_direction,
+            rotation_direction,
+            body_translation,
+            body_rotation,
+            walking_scale=0.0,
+            body_scale=0.0,
+            last_published_motion_key=last_published_motion_key,
+        )
+        if neutral_body.redundant:
+            return neutral_body
+        if neutral_body.candidate is None:
             return MotionFeasibilityResult(
                 candidate=None,
                 body_pose_infeasible=True,
@@ -108,24 +162,25 @@ class MotionFeasibilityLimiter:
 
         low = 0.0
         high = 1.0
-        best = zero_motion
-        failed_scale = full_motion.failed_scale
+        best = neutral_body
+        failed_scale = zero_motion.failed_scale
         for _ in range(self._search_iterations):
-            scale = (low + high) / 2.0
+            body_scale = (low + high) / 2.0
             candidate = self._try_candidate(
                 previous_state,
                 stride_direction,
                 rotation_direction,
                 body_translation,
                 body_rotation,
-                scale=scale,
+                walking_scale=0.0,
+                body_scale=body_scale,
                 last_published_motion_key=last_published_motion_key,
             )
             if candidate.candidate is None:
-                high = scale
-                failed_scale = scale
+                high = body_scale
+                failed_scale = body_scale
             else:
-                low = scale
+                low = body_scale
                 best = candidate
 
         if best.candidate is None:
@@ -148,18 +203,21 @@ class MotionFeasibilityLimiter:
         rotation_direction: float,
         body_translation: Point3D,
         body_rotation: Point3D,
-        scale: float,
+        walking_scale: float,
+        body_scale: float,
         last_published_motion_key: tuple | None,
     ) -> MotionFeasibilityResult:
         self._restore_motion_state(previous_state)
-        scaled_stride = _scale_planar_stride(stride_direction, scale)
-        scaled_rotation = rotation_direction * scale
+        scaled_stride = _scale_planar_stride(stride_direction, walking_scale)
+        scaled_rotation = rotation_direction * walking_scale
+        scaled_body_translation = _scale_point(body_translation, body_scale)
+        scaled_body_rotation = _scale_point(body_rotation, body_scale)
         try:
             feet_target_window = self._build_feet_target_window(
                 scaled_stride,
                 scaled_rotation,
-                body_translation,
-                body_rotation,
+                scaled_body_translation,
+                scaled_body_rotation,
             )
             motion_key = self._motion_window_key(feet_target_window)
             motion_state = self._snapshot_motion_state()
@@ -174,14 +232,17 @@ class MotionFeasibilityLimiter:
         if trajectory_targets is None:
             return MotionFeasibilityResult(
                 candidate=None,
-                failed_scale=scale,
+                failed_scale=walking_scale,
             )
 
         return MotionFeasibilityResult(
             candidate=FeasibleMotionCandidate(
-                scale=scale,
+                scale=walking_scale,
+                body_scale=body_scale,
                 stride_direction=scaled_stride,
                 rotation_direction=scaled_rotation,
+                body_translation=scaled_body_translation,
+                body_rotation=scaled_body_rotation,
                 feet_target_window=feet_target_window,
                 trajectory_targets=trajectory_targets,
                 motion_key=motion_key,
@@ -202,4 +263,15 @@ def _scale_planar_stride(stride_direction: Point3D, scale: float) -> Point3D:
             float(stride_direction.z),
         ],
         stride_direction.label,
+    )
+
+
+def _scale_point(point: Point3D, scale: float) -> Point3D:
+    return Point3D(
+        [
+            float(point.x) * scale,
+            float(point.y) * scale,
+            float(point.z) * scale,
+        ],
+        point.label,
     )
