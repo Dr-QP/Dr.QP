@@ -28,6 +28,7 @@ from geometry_msgs.msg import Pose, PoseStamped, Quaternion
 import numpy as np
 from rclpy._rclpy_pybind11 import InvalidHandle, RCLError
 from rclpy.exceptions import NotInitializedException
+from rclpy.logging import LoggingSeverity
 from scipy.spatial.transform import Rotation
 from sensor_msgs.msg import JointState
 
@@ -197,11 +198,13 @@ class MoveItPyLocomotionKinematics:
         original_argv = sys.argv
         try:
             sys.argv = original_argv[:1]
-            return moveit_py_factory(
+            moveit_py = moveit_py_factory(
                 node_name='drqp_brain_moveit_py',
                 config_dict=config_dict,
                 provide_planning_service=False,
             )
+            moveit_py.get_logger().set_level(LoggingSeverity.WARN) # to avoid `Using position only ik` spam
+            return moveit_py
         finally:
             sys.argv = original_argv
 
