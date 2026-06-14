@@ -1,9 +1,11 @@
-"""Tests for the ROS-packaged drqp_robot_mcp migration."""
+"""Tests for drqp_keyboard_control."""
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import unittest
+from unittest import mock
 import warnings
 
 import pytest
@@ -12,7 +14,13 @@ from pytest import PytestDeprecationWarning
 
 def _run_pytest_suite() -> None:
     test_dir = Path(__file__).parent
-    with warnings.catch_warnings():
+    with (
+        warnings.catch_warnings(),
+        mock.patch.dict(
+            os.environ,
+            {'PYTEST_DISABLE_PLUGIN_AUTOLOAD': '1'},
+        ),
+    ):
         warnings.filterwarnings(
             'ignore',
             message=r'The \(path: py\.path\.local\) argument is deprecated.*',
