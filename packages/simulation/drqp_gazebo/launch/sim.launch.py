@@ -21,12 +21,18 @@
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
+    ExecuteProcess,
     GroupAction,
     IncludeLaunchDescription,
+    RegisterEventHandler,
     SetEnvironmentVariable,
+    TimerAction,
 )
+from launch.conditions import IfCondition
+from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
+    AllSubstitution,
     EnvironmentVariable,
     IfElseSubstitution,
     LaunchConfiguration,
@@ -63,6 +69,36 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            'load_moveit',
+            default_value='true',
+            choices=['true', 'false'],
+            description='Load the MoveIt move_group node through drqp_brain bringup.',
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'world',
+            default_value='empty.sdf',
+            description='Gazebo world file or resource to load.',
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'follow_camera',
+            default_value='true',
+            choices=['true', 'false'],
+            description='Ask Gazebo GUI to follow the spawned drqp model.',
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'follow_camera_delay',
+            default_value='5.0',
+            description='Seconds to wait after robot spawn before sending the Gazebo GUI follow command.',
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             'gz_partition',
             default_value=[
                 EnvironmentVariable('HOSTNAME', default_value='unknown-host'),
@@ -80,9 +116,13 @@ def generate_launch_description():
 
     # Initialize Arguments
     sim_gui = LaunchConfiguration('sim_gui')
+    load_moveit = LaunchConfiguration('load_moveit')
+    world = LaunchConfiguration('world')
+    follow_camera = LaunchConfiguration('follow_camera')
+    follow_camera_delay = LaunchConfiguration('follow_camera_delay')
     gz_partition = LaunchConfiguration('gz_partition')
     container_name = 'drqp_gazebo_container'
-    gz_args = '-r -v 3 empty.sdf'
+    gz_args = ['-r -v 3 ', world]
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
@@ -97,7 +137,7 @@ def generate_launch_description():
             'gz_args': IfElseSubstitution(
                 sim_gui,
                 gz_args,
-                gz_args + ' --headless-rendering -s',
+                [*gz_args, ' --headless-rendering -s'],
             ),
             'on_exit_shutdown': 'true',
         }.items(),
@@ -130,6 +170,37 @@ def generate_launch_description():
         ],
     )
 
+    follow_camera_command = RegisterEventHandler(
+        OnProcessExit(
+            target_action=gz_spawn_entity,
+            on_exit=[
+                TimerAction(
+                    period=follow_camera_delay,
+                    actions=[
+                        ExecuteProcess(
+                            cmd=[
+                                'gz',
+                                'service',
+                                '-s',
+                                '/gui/follow',
+                                '--reqtype',
+                                'gz.msgs.StringMsg',
+                                '--reptype',
+                                'gz.msgs.Boolean',
+                                '--timeout',
+                                '5000',
+                                '--req',
+                                'data: "drqp"',
+                            ],
+                            output='screen',
+                        ),
+                    ],
+                    condition=IfCondition(AllSubstitution(sim_gui, follow_camera)),
+                ),
+            ],
+        )
+    )
+
     drqp_system = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
@@ -156,6 +227,7 @@ def generate_launch_description():
                     gazebo,
                     gazebo_bridge,
                     gz_spawn_entity,
+                    follow_camera_command,
                 ]
             ),
         ]
