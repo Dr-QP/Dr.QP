@@ -25,7 +25,7 @@ from control_msgs.action import FollowJointTrajectory
 from controller_manager.test_utils import check_controllers_running, check_node_running
 from drqp_brain.joint_trajectory_builder import kFemurOffsetAngle, kTibiaOffsetAngle
 from drqp_kinematics.models import HexapodModel
-from geometry_msgs.msg import Pose, PoseStamped, Quaternion
+from geometry_msgs.msg import PoseStamped, Quaternion
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -42,7 +42,7 @@ from moveit_msgs.msg import (
     PlanningScene,
     RobotState,
 )
-from moveit_msgs.srv import ApplyPlanningScene, GetMotionPlan, GetPositionIK, GetStateValidity
+from moveit_msgs.srv import ApplyPlanningScene, GetMotionPlan, GetStateValidity
 import pytest
 import rclpy
 from rclpy.action import ActionClient
@@ -53,7 +53,6 @@ from shape_msgs.msg import SolidPrimitive
 
 BASE_FRAME = 'drqp/base_center_link'
 GROUP_NAME = 'left_front_leg'
-IK_LINK_NAME = 'drqp/left_front_foot_link'
 LEFT_FRONT_JOINTS = [
     'drqp/left_front_coxa',
     'drqp/left_front_femur',
@@ -119,8 +118,6 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         self.clock_sub = self.node.create_subscription(Clock, '/clock', self._clock_callback, 10)
         self.addCleanup(self.clock_sub.destroy)
 
-        self.ik_client = self.node.create_client(GetPositionIK, '/compute_ik')
-        self.addCleanup(self.ik_client.destroy)
         self.motion_plan_client = self.node.create_client(
             GetMotionPlan,
             '/plan_kinematic_path',
@@ -174,7 +171,6 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         )
 
         for client, name in [
-            (self.ik_client, '/compute_ik'),
             (self.motion_plan_client, '/plan_kinematic_path'),
             (self.state_validity_client, '/check_state_validity'),
             (self.apply_planning_scene_client, '/apply_planning_scene'),
@@ -187,6 +183,15 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         self.assertTrue(
             self.follow_joint_trajectory_client.wait_for_server(timeout_sec=self.READY_TIMEOUT),
             'FollowJointTrajectory action is not available',
+        )
+        self._assert_single_move_group_node()
+
+    def _assert_single_move_group_node(self) -> None:
+        move_group_nodes = [name for name in self.node.get_node_names() if name == 'move_group']
+        self.assertEqual(
+            len(move_group_nodes),
+            1,
+            f'Expected one move_group node, found {len(move_group_nodes)}',
         )
 
     def _wait_for_active_controllers(self, controller_names: list[str]) -> None:
@@ -254,19 +259,6 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         }
         return target_pose, expected_joints
 
-    def _unreachable_target(self) -> PoseStamped:
-        reachable_pose, _ = self._reachable_target()
-        unreachable_pose = PoseStamped()
-        unreachable_pose.header.frame_id = BASE_FRAME
-        unreachable_pose.pose = Pose(
-            position=reachable_pose.pose.position,
-            orientation=reachable_pose.pose.orientation,
-        )
-        unreachable_pose.pose.position.x += 0.30
-        unreachable_pose.pose.position.y += 0.30
-        unreachable_pose.pose.position.z += 0.20
-        return unreachable_pose
-
     def _call_service(self, client, request, timeout_sec: float = 30.0):
         future = client.call_async(request)
         rclpy.spin_until_future_complete(self.node, future, timeout_sec=timeout_sec)
@@ -275,16 +267,6 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         response = future.result()
         self.assertIsNotNone(response)
         return response
-
-    def _solve_ik(self, target_pose: PoseStamped):
-        request = GetPositionIK.Request()
-        request.ik_request.group_name = GROUP_NAME
-        request.ik_request.robot_state = self._current_robot_state()
-        request.ik_request.avoid_collisions = True
-        request.ik_request.ik_link_name = IK_LINK_NAME
-        request.ik_request.pose_stamped = target_pose
-        request.ik_request.timeout.sec = 1
-        return self._call_service(self.ik_client, request)
 
     def _goal_constraints_for(self, target_positions: dict[str, float]) -> Constraints:
         constraints = Constraints()
@@ -312,13 +294,14 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         motion_plan_request.max_acceleration_scaling_factor = 0.2
         return self._call_service(self.motion_plan_client, request)
 
-    def _joint_positions_from_robot_state(
-        self,
-        robot_state: RobotState,
-        joint_names: list[str],
-    ) -> dict[str, float]:
+    def _robot_state_with_joint_targets(self, target_positions: dict[str, float]) -> RobotState:
+        robot_state = self._current_robot_state()
         joint_map = dict(zip(robot_state.joint_state.name, robot_state.joint_state.position))
-        return {joint_name: joint_map[joint_name] for joint_name in joint_names}
+        joint_map.update(target_positions)
+        robot_state.joint_state.position = [
+            joint_map[joint_name] for joint_name in robot_state.joint_state.name
+        ]
+        return robot_state
 
     def _assert_joint_map_close(
         self,
@@ -438,29 +421,12 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         request.group_name = GROUP_NAME
         return self._call_service(self.state_validity_client, request)
 
-    def test_issue43_left_front_leg_get_position_ik_matches_leg_model_and_get_motion_plan_succeeds(
+    def test_issue43_left_front_leg_analytical_target_get_motion_plan_succeeds(
         self,
     ):
-        target_pose, expected_joint_positions = self._reachable_target()
+        _, expected_joint_positions = self._reachable_target()
 
-        ik_response = self._solve_ik(target_pose)
-        self.assertEqual(
-            ik_response.error_code.val,
-            MoveItErrorCodes.SUCCESS,
-            f'IK failed with code {ik_response.error_code.val}',
-        )
-
-        actual_joint_positions = self._joint_positions_from_robot_state(
-            ik_response.solution,
-            LEFT_FRONT_JOINTS,
-        )
-        self._assert_joint_map_close(
-            actual_joint_positions,
-            expected_joint_positions,
-            tolerance=self.JOINT_TOLERANCE,
-        )
-
-        plan_response = self._plan_to_joint_target(actual_joint_positions)
+        plan_response = self._plan_to_joint_target(expected_joint_positions)
         self.assertEqual(
             plan_response.motion_plan_response.error_code.val,
             MoveItErrorCodes.SUCCESS,
@@ -472,14 +438,7 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         )
 
     def test_issue43_execute_trajectory_reaches_planned_goal_via_joint_trajectory_controller(self):
-        target_pose, _ = self._reachable_target()
-        ik_response = self._solve_ik(target_pose)
-        self.assertEqual(ik_response.error_code.val, MoveItErrorCodes.SUCCESS)
-
-        target_joint_positions = self._joint_positions_from_robot_state(
-            ik_response.solution,
-            LEFT_FRONT_JOINTS,
-        )
+        _, target_joint_positions = self._reachable_target()
         plan_response = self._plan_to_joint_target(target_joint_positions)
         self.assertEqual(
             plan_response.motion_plan_response.error_code.val,
@@ -497,17 +456,11 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         )
 
     def test_issue43_collision_object_blocks_goal_state_and_plan_is_rejected(self):
-        target_pose, _ = self._reachable_target()
-        ik_response = self._solve_ik(target_pose)
-        self.assertEqual(ik_response.error_code.val, MoveItErrorCodes.SUCCESS)
+        target_pose, target_joint_positions = self._reachable_target()
+        blocked_state = self._robot_state_with_joint_targets(target_joint_positions)
+        self._apply_target_obstacle(target_pose, blocked_state=blocked_state)
 
-        target_joint_positions = self._joint_positions_from_robot_state(
-            ik_response.solution,
-            LEFT_FRONT_JOINTS,
-        )
-        self._apply_target_obstacle(target_pose, blocked_state=ik_response.solution)
-
-        validity_response = self._state_validity(ik_response.solution)
+        validity_response = self._state_validity(blocked_state)
         self.assertFalse(
             validity_response.valid, 'Expected the blocked target state to be invalid'
         )
@@ -518,31 +471,6 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
             MoveItErrorCodes.SUCCESS,
             'Expected planning to fail for a blocked target state',
         )
-
-    def test_issue43_unreachable_left_front_target_fails_without_joint_motion(self):
-        before_joint_positions = self._current_joint_map()
-        unreachable_pose = self._unreachable_target()
-
-        ik_response = self._solve_ik(unreachable_pose)
-        self.assertNotEqual(
-            ik_response.error_code.val,
-            MoveItErrorCodes.SUCCESS,
-            'Expected MoveIt IK to reject an unreachable target',
-        )
-
-        self._spin_until(
-            lambda: self.latest_joint_state is not None,
-            timeout_sec=2.0,
-            error_message='Joint states stopped updating after unreachable IK request',
-        )
-        after_joint_positions = self._current_joint_map()
-        for joint_name in LEFT_FRONT_JOINTS:
-            self.assertAlmostEqual(
-                before_joint_positions[joint_name],
-                after_joint_positions[joint_name],
-                delta=0.01,
-                msg=f'{joint_name} moved after an unreachable target request',
-            )
 
 
 @post_shutdown_test()

@@ -73,8 +73,10 @@ def test_loop_uses_moveit_joint_targets_instead_of_leg_move_to():
         ):
             brain.loop()
 
-        solve_joint_targets.assert_called_once()
+        assert solve_joint_targets.call_count == brain.walking_trajectory_points
         publish_mock.assert_called_once()
+        published_msg = publish_mock.call_args.args[0]
+        assert len(published_msg.points) == brain.walking_trajectory_points
         warning_mock.assert_not_called()
     finally:
         brain.destroy_node()
@@ -115,8 +117,8 @@ def test_loop_warns_and_skips_publish_when_moveit_returns_no_solution():
         brain.destroy_node()
 
 
-def test_loop_logs_error_and_skips_publish_when_moveit_service_fails():
-    """Loop should log and stop cleanly when the MoveIt IK service is unavailable."""
+def test_loop_logs_error_and_skips_publish_when_moveit_py_fails():
+    """Loop should log and stop cleanly when in-process MoveIt solving fails."""
     brain = HexapodBrain()
     try:
         with (
@@ -125,7 +127,7 @@ def test_loop_logs_error_and_skips_publish_when_moveit_service_fails():
                 brain,
                 'solve_joint_targets',
                 create=True,
-                side_effect=RuntimeError('compute_ik unavailable'),
+                side_effect=RuntimeError('MoveItPy unavailable'),
             ) as solve_joint_targets,
             mock.patch.object(brain.joint_trajectory_pub, 'publish') as publish_mock,
             mock.patch.object(brain.get_logger(), 'error') as error_mock,
@@ -143,6 +145,7 @@ def test_loop_skips_redundant_ik_when_feet_targets_do_not_change():
     """Identical stabilized foot targets should not re-enter MoveIt every timer tick."""
     brain = HexapodBrain()
     try:
+        brain.walking_trajectory_points = 1
         feet_targets = _make_feet_targets(brain)
         joint_targets = _make_joint_targets(brain)
 
@@ -173,10 +176,39 @@ def test_loop_skips_redundant_ik_when_feet_targets_do_not_change():
         brain.destroy_node()
 
 
+def test_loop_solves_body_only_commands_when_feet_targets_do_not_change():
+    """Body-only movement should still reach MoveIt even when feet stay planted."""
+    brain = HexapodBrain()
+    try:
+        brain.walking_trajectory_points = 1
+        feet_targets = _make_feet_targets(brain)
+        joint_targets = _make_joint_targets(brain)
+
+        with (
+            _ik_ready_patch(brain),
+            mock.patch.object(
+                brain, 'solve_joint_targets', return_value=joint_targets
+            ) as solve_mock,
+            mock.patch.object(brain.joint_trajectory_pub, 'publish') as publish_mock,
+        ):
+            brain.loop()
+            brain.current_movement.body_translation.z = 0.16
+            brain.current_movement.body_rotation.y = 0.2
+            brain.loop()
+
+        assert solve_mock.call_count == 2
+        assert solve_mock.call_args_list[0].args[0] == feet_targets
+        assert solve_mock.call_args_list[1].args[0] == feet_targets
+        assert publish_mock.call_count == 2
+    finally:
+        brain.destroy_node()
+
+
 def test_loop_retries_redundant_targets_after_timeout():
     """A failed solve must not poison the redundant-target cache."""
     brain = HexapodBrain()
     try:
+        brain.walking_trajectory_points = 1
         feet_targets = _make_feet_targets(brain)
         joint_targets = _make_joint_targets(brain)
 
@@ -232,7 +264,17 @@ def test_loop_warns_once_while_waiting_for_initial_joint_state():
             brain.loop()
             brain.loop()
 
-        warning_mock.assert_called_once_with('No joint state available to seed MoveIt IK requests')
+        warning_mock.assert_called_once_with('No joint state available to seed MoveItPy')
+    finally:
+        brain.destroy_node()
+
+
+def test_brain_does_not_create_moveit_service_client():
+    """Walking kinematics should not keep a service client compatibility path."""
+    with mock.patch.object(HexapodBrain, 'create_client') as create_client:
+        brain = HexapodBrain()
+    try:
+        create_client.assert_not_called()
     finally:
         brain.destroy_node()
 

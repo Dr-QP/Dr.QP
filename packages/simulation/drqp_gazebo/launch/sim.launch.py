@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from drqp_brain.instance_guard import make_launch_instance_guard
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
@@ -227,7 +228,8 @@ def generate_launch_description():
     )
 
     return LaunchDescription(
-        declared_arguments
+        [make_launch_instance_guard('drqp_gazebo_sim')]
+        + declared_arguments
         + [
             SetEnvironmentVariable('GZ_PARTITION', gz_partition),
             GroupAction(
