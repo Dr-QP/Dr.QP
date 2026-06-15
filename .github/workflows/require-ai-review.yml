@@ -72,9 +72,8 @@ jobs:
               'chatgpt-codex-connector[bot]',
             ]);
             const claudeLogins = new Set([
-              'github-actions[bot]',
+              'claude[bot]',
             ]);
-            const claudeReviewMarker = '<!-- claude-ai-reviewed -->';
             const acceptedReviewStates = new Set([
               'approved',
               'changes_requested',
@@ -110,8 +109,7 @@ jobs:
             const isClaudeReview = (review) => {
               return (
                 claudeLogins.has(reviewLogin(review)) &&
-                acceptedReviewStates.has(reviewState(review)) &&
-                review.body?.includes(claudeReviewMarker)
+                acceptedReviewStates.has(reviewState(review))
               );
             };
 
