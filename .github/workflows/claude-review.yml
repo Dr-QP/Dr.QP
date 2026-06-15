@@ -24,6 +24,7 @@ jobs:
       pull-requests: write
       id-token: write
     timeout-minutes: 15
+    environment: claude-review
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6.0.3 # v6.0.3
