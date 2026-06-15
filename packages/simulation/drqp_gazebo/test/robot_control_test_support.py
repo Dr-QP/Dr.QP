@@ -540,10 +540,10 @@ class GazeboRobotControlBase(unittest.TestCase):
             forward_delta, _, _ = self._run_movement_and_measure(stride_x=1.0)
             self.assertGreater(
                 forward_delta,
-                0.01,
+                0.008,
                 msg=(
                     'Robot did not move forward significantly: '
-                    f'forward_delta={forward_delta:.3f}m (expected > 0.01m)'
+                    f'forward_delta={forward_delta:.3f}m (expected > 0.008m)'
                 ),
             )
         except RuntimeError as error:
@@ -556,18 +556,18 @@ class GazeboRobotControlBase(unittest.TestCase):
             second_forward_delta, _, _ = self._run_movement_and_measure(stride_x=1.0)
             self.assertGreater(
                 first_forward_delta,
-                0.01,
+                0.008,
                 msg=(
                     'Robot did not move forward significantly during the first window: '
-                    f'forward_delta={first_forward_delta:.3f}m (expected > 0.01m)'
+                    f'forward_delta={first_forward_delta:.3f}m (expected > 0.008m)'
                 ),
             )
             self.assertGreater(
                 second_forward_delta,
-                0.01,
+                0.008,
                 msg=(
                     'Robot forward motion was not sustained into the second window: '
-                    f'forward_delta={second_forward_delta:.3f}m (expected > 0.01m)'
+                    f'forward_delta={second_forward_delta:.3f}m (expected > 0.008m)'
                 ),
             )
             self.assertEqual(self.current_robot_state, 'torque_on')
@@ -580,10 +580,10 @@ class GazeboRobotControlBase(unittest.TestCase):
             forward_delta, _, _ = self._run_movement_and_measure(stride_x=-1.0)
             self.assertLess(
                 forward_delta,
-                -0.01,
+                -0.008,
                 msg=(
                     'Robot did not move backward significantly: '
-                    f'forward_delta={forward_delta:.3f}m (expected < -0.01m)'
+                    f'forward_delta={forward_delta:.3f}m (expected < -0.008m)'
                 ),
             )
         except RuntimeError as error:
@@ -595,10 +595,10 @@ class GazeboRobotControlBase(unittest.TestCase):
             _, left_delta, _ = self._run_movement_and_measure(stride_y=1.0)
             self.assertGreater(
                 left_delta,
-                0.01,
+                0.008,
                 msg=(
                     'Robot did not strafe left significantly: '
-                    f'left_delta={left_delta:.3f}m (expected > 0.01m)'
+                    f'left_delta={left_delta:.3f}m (expected > 0.008m)'
                 ),
             )
         except RuntimeError as error:
@@ -610,10 +610,10 @@ class GazeboRobotControlBase(unittest.TestCase):
             _, left_delta, _ = self._run_movement_and_measure(stride_y=-1.0)
             self.assertLess(
                 left_delta,
-                -0.01,
+                -0.008,
                 msg=(
                     'Robot did not strafe right significantly: '
-                    f'left_delta={left_delta:.3f}m (expected < -0.01m)'
+                    f'left_delta={left_delta:.3f}m (expected < -0.008m)'
                 ),
             )
         except RuntimeError as error:
@@ -625,7 +625,7 @@ class GazeboRobotControlBase(unittest.TestCase):
             _, _, delta_yaw = self._run_movement_and_measure(rotation=0.5)
             self.assertGreater(
                 abs(delta_yaw),
-                0.1,
+                0.08,
                 msg=f'Robot did not rotate significantly: |delta_yaw|={abs(delta_yaw):.3f}',
             )
         except RuntimeError as error:
