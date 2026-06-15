@@ -22,7 +22,8 @@ import unittest
 from unittest import mock
 
 from control_msgs.action import FollowJointTrajectory
-from drqp_brain.brain_node import HexapodBrain
+from drqp_brain.brain_node import _assert_no_existing_brain_node, HexapodBrain
+from drqp_brain.instance_guard import InstanceAlreadyRunningError
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 from geometry_msgs.msg import Vector3
 from launch import LaunchDescription
@@ -35,6 +36,18 @@ from launch_testing.actions import ReadyToTest
 import pytest
 import rclpy
 import std_msgs.msg
+
+
+def test_existing_brain_node_detection_rejects_duplicate_ros_node():
+    """Refuse startup when the ROS graph already contains drqp_brain."""
+    node = mock.Mock()
+    node.get_node_names_and_namespaces.return_value = [
+        ('robot_state_publisher', '/'),
+        ('drqp_brain', '/'),
+    ]
+
+    with pytest.raises(InstanceAlreadyRunningError, match='/drqp_brain'):
+        _assert_no_existing_brain_node(node)
 
 
 @pytest.mark.launch_test

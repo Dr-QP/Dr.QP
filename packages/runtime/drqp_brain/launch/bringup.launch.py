@@ -19,6 +19,9 @@
 # THE SOFTWARE.
 
 
+import sys
+
+from drqp_brain.instance_guard import make_launch_instance_guard
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
 from launch.conditions import IfCondition, UnlessCondition
@@ -28,16 +31,32 @@ from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
 
 
+def _moveit_params(use_gazebo, hardware_device_address):
+    from ament_index_python.packages import get_package_share_path
+
+    launch_dir = str(get_package_share_path('drqp_moveit') / 'launch')
+    if launch_dir not in sys.path:
+        sys.path.insert(0, launch_dir)
+
+    from moveit_launch_utils import get_moveit_params
+
+    return get_moveit_params(
+        get_package_share_path('drqp_moveit'),
+        use_gazebo=use_gazebo,
+        hardware_device_address=hardware_device_address,
+    )
+
+
 def generate_launch_description():
     use_gazebo = LaunchConfiguration('use_gazebo')
     load_joystick = LaunchConfiguration('load_joystick')
     load_controllers = LaunchConfiguration('load_controllers')
     load_imu = LaunchConfiguration('load_imu')
-    load_moveit = LaunchConfiguration('load_moveit')
     hardware_device_address = LaunchConfiguration('hardware_device_address')
 
     return LaunchDescription(
         [
+            make_launch_instance_guard('drqp_brain_stack'),
             DeclareLaunchArgument(
                 name='use_gazebo',
                 default_value='false',
@@ -63,12 +82,6 @@ def generate_launch_description():
                 description='Load the BNO055 IMU node',
             ),
             DeclareLaunchArgument(
-                name='load_moveit',
-                default_value='true',
-                choices=['true', 'false'],
-                description='Load the MoveIt move_group node',
-            ),
-            DeclareLaunchArgument(
                 name='hardware_device_address',
                 default_value='/dev/ttySC0',
                 description='Hardware device address passed through to MoveIt robot description',
@@ -87,22 +100,6 @@ def generate_launch_description():
                             ),
                         ),
                         condition=IfCondition(load_controllers),
-                    ),
-                    IncludeLaunchDescription(
-                        PythonLaunchDescriptionSource(
-                            PathJoinSubstitution(
-                                [
-                                    FindPackageShare('drqp_moveit'),
-                                    'launch',
-                                    'move_group.launch.py',
-                                ]
-                            )
-                        ),
-                        condition=IfCondition(load_moveit),
-                        launch_arguments={
-                            'use_gazebo': use_gazebo,
-                            'hardware_device_address': hardware_device_address,
-                        }.items(),
                     ),
                     DeclareLaunchArgument(
                         name='load_joystick',
@@ -137,6 +134,8 @@ def generate_launch_description():
                         package='drqp_brain',
                         executable='drqp_brain',
                         output='screen',
+                        parameters=_moveit_params(use_gazebo, hardware_device_address)
+                        + [{'use_sim_time': use_gazebo}],
                     ),
                     Node(
                         package='drqp_brain',

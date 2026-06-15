@@ -21,9 +21,11 @@
 from concurrent.futures import CancelledError
 from unittest import mock
 
+from drqp_brain import brain_node
 from drqp_brain.brain_node import HexapodBrain
 import pytest
 import rclpy
+from rclpy.executors import ExternalShutdownException
 
 
 @pytest.fixture(autouse=True)
@@ -88,34 +90,64 @@ def test_destroy_node_stops_walk_controller_before_destroying_ros_entities():
             rclpy.try_shutdown()
 
 
-def test_destroy_node_cancels_pending_futures_before_destroying_ik_client():
+def test_destroy_node_cancels_pending_futures_before_destroying_clients():
     brain = HexapodBrain()
     try:
         future = PendingFuture()
-        ik_client = mock.Mock()
-        brain._HexapodBrain__ik_client = ik_client
+        trajectory_client = mock.Mock()
+        brain._HexapodBrain__trajectory_client = trajectory_client
         brain._track_future(future)
 
         with mock.patch('rclpy.node.Node.destroy_node', return_value=True):
             brain.destroy_node()
 
         future.cancel.assert_called_once_with()
-        ik_client.destroy.assert_called_once_with()
+        trajectory_client.destroy.assert_called_once_with()
         assert not brain._pending_futures
     finally:
         if rclpy.ok():
             rclpy.try_shutdown()
 
 
+def test_main_exits_process_after_external_shutdown_cleanup():
+    guard_node = mock.Mock()
+    brain = mock.Mock()
+    executor = mock.Mock()
+    executor.spin.side_effect = ExternalShutdownException()
+
+    with (
+        mock.patch(
+            'drqp_brain.brain_node.rclpy.utilities.remove_ros_args',
+            return_value=['drqp_brain'],
+        ),
+        mock.patch('drqp_brain.brain_node.InstanceGuard'),
+        mock.patch('drqp_brain.brain_node.rclpy.init') as init,
+        mock.patch('drqp_brain.brain_node.rclpy.create_node', return_value=guard_node),
+        mock.patch('drqp_brain.brain_node._assert_no_existing_brain_node'),
+        mock.patch('drqp_brain.brain_node.HexapodBrain', return_value=brain),
+        mock.patch('drqp_brain.brain_node.MultiThreadedExecutor', return_value=executor),
+        mock.patch('drqp_brain.brain_node.rclpy.ok', return_value=True),
+        mock.patch('drqp_brain.brain_node.rclpy.shutdown') as shutdown,
+        mock.patch('drqp_brain.brain_node.os._exit', side_effect=SystemExit(0)) as exit_process,
+        pytest.raises(SystemExit) as exc_info,
+    ):
+        brain_node.main()
+
+    assert exc_info.value.code == 0
+    init.assert_called_once_with()
+    guard_node.destroy_node.assert_called_once_with()
+    executor.shutdown.assert_called_once_with()
+    brain.destroy_node.assert_called_once_with()
+    shutdown.assert_called_once_with()
+    exit_process.assert_called_once_with(0)
+
+
 def test_destroy_node_continues_cleanup_when_client_destroy_raises():
     brain = HexapodBrain()
     try:
         trajectory_client = mock.Mock()
-        ik_client = mock.Mock()
         trajectory_client.destroy.side_effect = RuntimeError('trajectory destroy failed')
-        ik_client.destroy.side_effect = RuntimeError('ik destroy failed')
         brain._HexapodBrain__trajectory_client = trajectory_client
-        brain._HexapodBrain__ik_client = ik_client
 
         with (
             mock.patch.object(brain, 'get_logger') as get_logger,
@@ -123,7 +155,7 @@ def test_destroy_node_continues_cleanup_when_client_destroy_raises():
         ):
             brain.destroy_node()
 
-        assert get_logger.return_value.warning.call_count >= 2
+        assert get_logger.return_value.warning.call_count >= 1
         destroy_super.assert_called_once_with()
     finally:
         if rclpy.ok():

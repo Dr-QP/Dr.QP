@@ -19,6 +19,7 @@ NEVER use GitHub API or GitHub MCP tools to update branch refs or push branch co
 10. **Re-run failed tests** with `--packages-select-test-failures`
 11. **When available in VS Code, use `vscode/askQuestions`** for all yes/no and multiple-choice user questions
 12. **For Python ROS tests, initialize `rclpy` once per test class**. Use `setUpClass()` with `cls.addClassCleanup(rclpy.try_shutdown)` for `unittest` classes, or the pytest equivalent class-scoped setup/teardown. Keep node, client, subscription, and action cleanup at the test level with `self.addCleanup(...)` or fixture finalizers.
+13. **Codex: run ROS build/test/lint commands with sandbox escalation** (`require_escalated`) because the managed sandbox blocks dependency downloads, ROS domain sockets, Gazebo/launch process behavior, and ROS log writes under `/root/.ros`. Still use `scripts/with-ros-env.sh`, incremental build/test selectors, and explain the escalation reason in the request.
 
 ### When in Doubt
 
