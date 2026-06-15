@@ -65,7 +65,8 @@
       "Ranch-Hand-Robotics.rde-ros-2",
       "Ranch-Hand-Robotics.urdf-editor",
       "esbenp.prettier-vscode",
-      "openai.chatgpt"
+      "openai.chatgpt",
+      "anthropic.claude-code"
     ]
     // cSpell:enable
   },
