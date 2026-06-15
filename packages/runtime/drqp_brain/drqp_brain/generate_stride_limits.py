@@ -228,7 +228,7 @@ def _flatten_parameters(prefix: str, value, output: dict):
 
 
 def default_output_path():
-    return Path(__file__).resolve().parents[1] / 'config' / 'stride_limits.yaml'
+    return Path(get_package_share_path('drqp_brain')) / 'config' / 'stride_limits.yaml'
 
 
 def parse_args(argv):
@@ -245,9 +245,8 @@ def parse_args(argv):
 def main(argv=None):
     args = parse_args(sys.argv[1:] if argv is None else argv)
     rclpy.init()
-    helper = None
     try:
-        is_safe, helper = make_moveit_step_length_checker(
+        is_safe, _ = make_moveit_step_length_checker(
             phase_samples=args.phase_samples,
             joint_margin_degrees=args.joint_margin_degrees,
         )
@@ -262,8 +261,6 @@ def main(argv=None):
         with open(args.output, 'w') as file:
             yaml.safe_dump(config, file, sort_keys=False)
     finally:
-        if helper is not None:
-            helper.destroy()
         rclpy.try_shutdown()
 
 

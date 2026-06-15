@@ -50,11 +50,16 @@ class DirectionalStrideLimits:
 
     @classmethod
     def from_file(cls, path: Path | str):
-        with open(path) as file:
-            return cls.from_dict(yaml.safe_load(file))
+        try:
+            with open(path) as file:
+                return cls.from_dict(yaml.safe_load(file))
+        except yaml.YAMLError as exc:
+            raise ValueError(f'stride limits file contains invalid YAML: {exc}') from exc
 
     @classmethod
     def from_dict(cls, data):
+        if not isinstance(data, dict):
+            raise ValueError(f'stride limits must be a mapping, got {type(data).__name__}')
         if data.get('version') != 1:
             raise ValueError(f'unsupported stride limits version: {data.get("version")}')
 

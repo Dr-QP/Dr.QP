@@ -87,6 +87,30 @@ def test_find_max_step_length_binary_searches_highest_safe_candidate():
     assert result == pytest.approx(0.125, abs=0.001)
 
 
+def test_stride_limits_from_dict_raises_on_none():
+    with pytest.raises(ValueError, match='mapping'):
+        DirectionalStrideLimits.from_dict(None)
+
+
+def test_stride_limits_from_dict_raises_on_non_dict():
+    with pytest.raises(ValueError, match='mapping'):
+        DirectionalStrideLimits.from_dict(['not', 'a', 'dict'])
+
+
+def test_stride_limits_from_file_raises_on_invalid_yaml(tmp_path):
+    bad_yaml = tmp_path / 'stride_limits.yaml'
+    bad_yaml.write_text(': invalid: yaml: }\n')
+    with pytest.raises(ValueError, match='invalid YAML'):
+        DirectionalStrideLimits.from_file(bad_yaml)
+
+
+def test_stride_limits_from_file_raises_on_empty_file(tmp_path):
+    empty = tmp_path / 'stride_limits.yaml'
+    empty.write_text('')
+    with pytest.raises(ValueError, match='mapping'):
+        DirectionalStrideLimits.from_file(empty)
+
+
 def test_generate_stride_limits_emits_all_requested_directions_for_each_gait():
     config = generate_stride_limits(
         is_step_length_safe=lambda _gait, _direction, step_length: step_length <= 0.125,
