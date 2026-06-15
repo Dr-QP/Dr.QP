@@ -4,11 +4,11 @@
 
 This repository shares its AI tooling between **GitHub Copilot** and **Claude Code**. The canonical source of truth lives in `.github/` and is consumed by both systems:
 
-| Artifact | Source of truth | Copilot location | Claude Code location |
-| --- | --- | --- | --- |
-| Agents | `.github/agents/` | `.github/agents/` | `.claude/agents/` (trampolines) |
-| Skills | `.github/skills/` | `.github/skills/` | `.claude/skills/` → symlink |
-| Instructions | `.github/instructions/` | `.github/instructions/` | Referenced from this file |
+| Artifact     | Source of truth         | Copilot location        | Claude Code location            |
+| ------------ | ----------------------- | ----------------------- | ------------------------------- |
+| Agents       | `.github/agents/`       | `.github/agents/`       | `.claude/agents/` (trampolines) |
+| Skills       | `.github/skills/`       | `.github/skills/`       | `.claude/skills/` → symlink     |
+| Instructions | `.github/instructions/` | `.github/instructions/` | Referenced from this file       |
 
 **Always edit the `.github/` source files.** The symlink and trampolines pick up changes automatically; no duplication required.
 
