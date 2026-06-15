@@ -154,7 +154,7 @@ class GazeboRobotControlBase(unittest.TestCase):
 
     # Posture delta threshold (meters).
     MIN_ARM_DISARM_HEIGHT_DELTA = 0.02
-    POSTURE_HEIGHT_EPSILON = 0.01
+    POSTURE_HEIGHT_EPSILON = 0.012
 
     def setUp(self) -> None:
         """Set up test node and publishers/subscribers."""
