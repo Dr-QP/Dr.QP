@@ -84,7 +84,7 @@ jobs:
       skip_super_linter: ${{ steps.skip-tags.outputs.skip_super_linter }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+        uses: actions/checkout@v6.0.3 # v6.0.3
         with:
           persist-credentials: false
 
@@ -199,7 +199,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout repository
-        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+        uses: actions/checkout@v6.0.3 # v6.0.3
         with:
           fetch-depth: 0 # Required for git diff to work properly
           persist-credentials: false
@@ -267,7 +267,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout repository
-        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+        uses: actions/checkout@v6.0.3 # v6.0.3
         with:
           fetch-depth: 0 # Required for git diff to work properly
           persist-credentials: false
@@ -359,7 +359,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout repository
-        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+        uses: actions/checkout@v6.0.3 # v6.0.3
         with:
           fetch-depth: 0 # Required for git diff to work properly
           token: ${{ secrets.REPO_PAT }} # Use PAT to allow CI reruns on pushed commits
