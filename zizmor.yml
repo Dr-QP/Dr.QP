@@ -1,5 +1,7 @@
 rules:
   unpinned-uses:
-    disable: true
+    config:
+      policies:
+        "*": any
   known-vulnerable-actions:
     disable: true
