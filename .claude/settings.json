@@ -12,7 +12,8 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(git)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(.github/skills/*/scripts/*)"
     ]
   },
   "hooks": {
