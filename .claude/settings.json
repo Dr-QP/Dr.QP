@@ -14,7 +14,10 @@
       "Bash(git)",
       "Bash(git *)",
       "Bash(.github/skills/*/scripts/*)",
-      "Bash(gh *)"
+      "Bash(gh)",
+      "Bash(gh *)",
+      "Skill(claude-api)",
+      "Skill(claude-api:*)"
     ]
   },
   "hooks": {
