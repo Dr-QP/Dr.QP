@@ -52,14 +52,14 @@ runs:
     - name: Filter (pull request)
       if: inputs.event-name == 'pull_request'
       id: filter-pr
-      uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+      uses: dorny/paths-filter@v4.0.1
       with:
         filters: ${{ steps.build-filters.outputs.filters }}
 
     - name: Filter (non pull request)
       if: inputs.event-name != 'pull_request'
       id: filter-base
-      uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+      uses: dorny/paths-filter@v4.0.1
       with:
         base: ${{ inputs.base-branch }}
         filters: ${{ steps.build-filters.outputs.filters }}
