@@ -47,7 +47,7 @@ jobs:
       pass: ${{ steps.filter.outputs.pass }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+        uses: actions/checkout@v6.0.3 # v6.0.3
         with:
           persist-credentials: false
 
@@ -80,7 +80,7 @@ jobs:
           - arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     steps:
-      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+      - uses: actions/checkout@v6.0.3 # v6.0.3
         with:
           persist-credentials: false
 
@@ -170,7 +170,7 @@ jobs:
       image: ${{ steps.merge.outputs.image }}
       image_pinned: ${{ steps.merge.outputs.image_pinned }}
     steps:
-      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+      - uses: actions/checkout@v6.0.3 # v6.0.3
         with:
           persist-credentials: false
 
@@ -220,7 +220,7 @@ jobs:
           cp -r /root/.colcon "$HOME"
           colcon mixin list
 
-      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+      - uses: actions/checkout@v6.0.3 # v6.0.3
         with:
           persist-credentials: false
 
@@ -253,7 +253,7 @@ jobs:
         run: ./packages/cmake/llvm-cov-export-all.py ./build
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@cddd853df119a48c5be31a973f8cd97e12e35e16 # v6.0.1
+        uses: codecov/codecov-action@v7.0.0 # v6.0.1
         if: ${{ env.ACT == '' && !cancelled() }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -319,7 +319,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install skopeo -y
 
-      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+      - uses: actions/checkout@v6.0.3 # v6.0.3
         with:
           persist-credentials: false
       - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
@@ -397,7 +397,7 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+      - uses: actions/checkout@v6.0.3 # v6.0.3
         with:
           persist-credentials: false
 
@@ -433,7 +433,7 @@ jobs:
     outputs:
       image: ${{ steps.merge.outputs.image }}
     steps:
-      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+      - uses: actions/checkout@v6.0.3 # v6.0.3
         with:
           persist-credentials: false
       - name: Merge and push deployment docker image

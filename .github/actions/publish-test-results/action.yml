@@ -59,7 +59,7 @@ runs:
 
     - name: Upload test results to Codecov
       if: ${{ !cancelled() && steps.test_reports.outputs.result != '' }}
-      uses: codecov/codecov-action@cddd853df119a48c5be31a973f8cd97e12e35e16 # v6.0.1
+      uses: codecov/codecov-action@v7.0.0 # v6.0.1
       with:
         report_type: test_results
         token: ${{ inputs.codecov-token }}
