@@ -176,35 +176,39 @@ def generate_launch_description():
         condition=IfCondition(load_keyboard_control),
     )
 
-    follow_camera_command = RegisterEventHandler(
-        OnProcessExit(
-            target_action=gz_spawn_entity,
-            on_exit=[
-                TimerAction(
-                    period=follow_camera_delay,
-                    actions=[
-                        ExecuteProcess(
-                            cmd=[
-                                'gz',
-                                'service',
-                                '-s',
-                                '/gui/follow',
-                                '--reqtype',
-                                'gz.msgs.StringMsg',
-                                '--reptype',
-                                'gz.msgs.Boolean',
-                                '--timeout',
-                                '5000',
-                                '--req',
-                                'data: "drqp"',
+    follow_camera_command = GroupAction(
+        condition=IfCondition(AllSubstitution(sim_gui, follow_camera)),
+        actions=[
+            RegisterEventHandler(
+                OnProcessExit(
+                    target_action=gz_spawn_entity,
+                    on_exit=[
+                        TimerAction(
+                            period=follow_camera_delay,
+                            actions=[
+                                ExecuteProcess(
+                                    cmd=[
+                                        'gz',
+                                        'service',
+                                        '-s',
+                                        '/gui/follow',
+                                        '--reqtype',
+                                        'gz.msgs.StringMsg',
+                                        '--reptype',
+                                        'gz.msgs.Boolean',
+                                        '--timeout',
+                                        '5000',
+                                        '--req',
+                                        'data: "drqp"',
+                                    ],
+                                    output='screen',
+                                ),
                             ],
-                            output='screen',
                         ),
                     ],
-                    condition=IfCondition(AllSubstitution(sim_gui, follow_camera)),
-                ),
-            ],
-        )
+                )
+            )
+        ],
     )
 
     drqp_system = IncludeLaunchDescription(
