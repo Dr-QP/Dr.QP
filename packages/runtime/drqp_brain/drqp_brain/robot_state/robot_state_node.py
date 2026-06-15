@@ -18,6 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import sys
+
+from drqp_brain.instance_guard import InstanceAlreadyRunningError, InstanceGuard
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
@@ -67,18 +70,25 @@ class RobotStateNode(Node):
 
 
 def main():
-    rclpy.init()
-    node = RobotStateNode()
+    node = None
     try:
-        rclpy.spin(node)
+        with InstanceGuard('drqp_robot_state'):
+            rclpy.init()
+            node = RobotStateNode()
+            rclpy.spin(node)
     except (KeyboardInterrupt, ExternalShutdownException):
-        return
+        return 0
+    except InstanceAlreadyRunningError as exc:
+        print(f'drqp_robot_state startup refused: {exc}', file=sys.stderr)
+        return 1
     finally:
-        node.destroy_node()
+        if node is not None:
+            node.destroy_node()
         # Only call shutdown if ROS is still initialized
         if rclpy.ok():
             rclpy.shutdown()
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

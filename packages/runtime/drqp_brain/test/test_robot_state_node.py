@@ -18,9 +18,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from pathlib import Path
 import time
 import unittest
 
+from drqp_brain.instance_guard import InstanceGuard
+from drqp_brain.robot_state import robot_state_node
 from launch import LaunchDescription
 from launch.actions import TimerAction
 from launch.substitutions import FindExecutable
@@ -32,6 +35,14 @@ import pytest
 import rclpy
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 import std_msgs.msg
+
+
+def test_robot_state_main_refuses_duplicate_instance(monkeypatch):
+    """Refuse startup when another robot state node owns the instance lock."""
+    monkeypatch.setenv('ROS_HOME', str(Path.cwd() / '.tmp' / 'ros_home'))
+
+    with InstanceGuard('drqp_robot_state'):
+        assert robot_state_node.main() == 1
 
 
 @pytest.mark.launch_test

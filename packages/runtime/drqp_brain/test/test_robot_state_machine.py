@@ -30,113 +30,113 @@ class TestRobotStateMachine:
         return RobotStateMachine()
 
     def test_initial_state(self, state_machine):
-        assert state_machine.current_state == state_machine.torque_off
+        assert state_machine.torque_off in state_machine.configuration
         # img_path = './robot_state_machine.png'
         # state_machine._graph().write_png(img_path)
 
     def test_should_initializing_done_from_initialization(self, state_machine):
         state_machine.send('initialize')
-        assert state_machine.current_state == state_machine.initializing
+        assert state_machine.initializing in state_machine.configuration
 
         state_machine.send('initializing_done', state_machine)
-        assert state_machine.current_state == state_machine.torque_on
+        assert state_machine.torque_on in state_machine.configuration
 
     def test_should_finalize_from_turned_on(self, state_machine):
         state_machine.send('initialize')
         state_machine.send('initializing_done')
-        assert state_machine.current_state == state_machine.torque_on
+        assert state_machine.torque_on in state_machine.configuration
 
         state_machine.send('finalize')
-        assert state_machine.current_state == state_machine.finalizing
+        assert state_machine.finalizing in state_machine.configuration
 
     def test_should_done_from_finalizing(self, state_machine):
         state_machine.send('initialize')
         state_machine.send('initializing_done')
         state_machine.send('finalize')
-        assert state_machine.current_state == state_machine.finalizing
+        assert state_machine.finalizing in state_machine.configuration
 
         state_machine.send('finalizing_done')
-        assert state_machine.current_state == state_machine.finalized
+        assert state_machine.finalized in state_machine.configuration
 
     def test_should_turn_off_from_initialization(self, state_machine):
         state_machine.send('initialize')
-        assert state_machine.current_state == state_machine.initializing
+        assert state_machine.initializing in state_machine.configuration
 
         state_machine.send('turn_off')
-        assert state_machine.current_state == state_machine.torque_off
+        assert state_machine.torque_off in state_machine.configuration
 
     def test_should_turn_off_from_turned_on(self, state_machine):
         state_machine.send('initialize')
         state_machine.send('initializing_done')
-        assert state_machine.current_state == state_machine.torque_on
+        assert state_machine.torque_on in state_machine.configuration
 
         state_machine.send('turn_off')
-        assert state_machine.current_state == state_machine.torque_off
+        assert state_machine.torque_off in state_machine.configuration
 
     def test_should_turn_off_from_finalizing(self, state_machine):
         state_machine.send('initialize')
         state_machine.send('initializing_done')
         state_machine.send('finalize')
-        assert state_machine.current_state == state_machine.finalizing
+        assert state_machine.finalizing in state_machine.configuration
 
         state_machine.send('turn_off')
-        assert state_machine.current_state == state_machine.torque_off
+        assert state_machine.torque_off in state_machine.configuration
 
     def test_should_turn_off_from_finalized(self, state_machine):
         state_machine.send('initialize')
         state_machine.send('initializing_done')
         state_machine.send('finalize')
         state_machine.send('finalizing_done')
-        assert state_machine.current_state == state_machine.finalized
+        assert state_machine.finalized in state_machine.configuration
 
         state_machine.send('turn_off')
-        assert state_machine.current_state == state_machine.torque_off
+        assert state_machine.torque_off in state_machine.configuration
 
     def test_should_reboot_servos_from_torque_on(self, state_machine):
         state_machine.send('initialize')
         state_machine.send('initializing_done')
-        assert state_machine.current_state == state_machine.torque_on
+        assert state_machine.torque_on in state_machine.configuration
 
         state_machine.send('reboot_servos')
-        assert state_machine.current_state == state_machine.servos_rebooting
+        assert state_machine.servos_rebooting in state_machine.configuration
 
     def test_should_reboot_servos_from_initializing(self, state_machine):
         state_machine.send('initialize')
-        assert state_machine.current_state == state_machine.initializing
+        assert state_machine.initializing in state_machine.configuration
 
         state_machine.send('reboot_servos')
-        assert state_machine.current_state == state_machine.servos_rebooting
+        assert state_machine.servos_rebooting in state_machine.configuration
 
     def test_should_reboot_servos_from_finalizing(self, state_machine):
         state_machine.send('initialize')
         state_machine.send('initializing_done')
         state_machine.send('finalize')
-        assert state_machine.current_state == state_machine.finalizing
+        assert state_machine.finalizing in state_machine.configuration
 
         state_machine.send('reboot_servos')
-        assert state_machine.current_state == state_machine.servos_rebooting
+        assert state_machine.servos_rebooting in state_machine.configuration
 
     def test_should_transition_to_torque_off_after_reboot(self, state_machine):
         state_machine.send('initialize')
         state_machine.send('initializing_done')
         state_machine.send('reboot_servos')
-        assert state_machine.current_state == state_machine.servos_rebooting
+        assert state_machine.servos_rebooting in state_machine.configuration
 
         state_machine.send('servos_rebooting_done')
-        assert state_machine.current_state == state_machine.torque_off
+        assert state_machine.torque_off in state_machine.configuration
 
     def test_should_reboot_servos_from_torque_off(self, state_machine):
-        assert state_machine.current_state == state_machine.torque_off
+        assert state_machine.torque_off in state_machine.configuration
 
         state_machine.send('reboot_servos')
-        assert state_machine.current_state == state_machine.servos_rebooting
+        assert state_machine.servos_rebooting in state_machine.configuration
 
     def test_should_reboot_servos_from_finalized(self, state_machine):
         state_machine.send('initialize')
         state_machine.send('initializing_done')
         state_machine.send('finalize')
         state_machine.send('finalizing_done')
-        assert state_machine.current_state == state_machine.finalized
+        assert state_machine.finalized in state_machine.configuration
 
         state_machine.send('reboot_servos')
-        assert state_machine.current_state == state_machine.servos_rebooting
+        assert state_machine.servos_rebooting in state_machine.configuration
