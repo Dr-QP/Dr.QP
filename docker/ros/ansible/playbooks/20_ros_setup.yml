@@ -31,6 +31,7 @@
     - { role: nodejs, tags: ["nodejs"] }
     - { role: uv_setup, tags: ["uv_setup"] }
     - { role: agentic_tools, tags: ["agentic_tools"], when: install_agentic_tools | default(false) | bool }
+    - { role: virtualhere_usb_client, tags: ["virtualhere_usb_client"], when: install_virtualhere_usb_client | default(false) | bool }
     - { role: cmake_kitware, tags: ["cmake"] }
     - { role: clang, tags: ["clang"] }
     - { role: xpra_setup, tags: ["xpra_setup"], when: install_xpra | default(false) | bool }

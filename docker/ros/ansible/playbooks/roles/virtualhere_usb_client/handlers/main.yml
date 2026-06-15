@@ -1,0 +1,7 @@
+---
+- name: Restart VirtualHere USB client
+  ansible.builtin.systemd_service:
+    name: "{{ virtualhere_usb_client_service_name }}.service"
+    state: restarted
+    daemon_reload: true
+  when: virtualhere_usb_client_manage_service | bool
