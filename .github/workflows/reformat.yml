@@ -145,7 +145,10 @@ jobs:
           skip_super_linter=false
           if [[ "$trusted_skip" == 'true' ]]; then
             if [[ "${INPUTS_CALLER_EVENT_NAME}" == "pull_request" ]]; then
-              head_commit_subject="$(git show -s --format=%s "${INPUTS_CALLER_PR_HEAD_SHA}")"
+              if ! head_commit_subject="$(git show -s --format=%s "${INPUTS_CALLER_PR_HEAD_SHA}" 2>/dev/null)"; then
+                git fetch --no-tags --depth=1 origin "${INPUTS_CALLER_PR_HEAD_SHA}"
+                head_commit_subject="$(git show -s --format=%s "${INPUTS_CALLER_PR_HEAD_SHA}")"
+              fi
               case "$head_commit_subject" in
                 "${INPUTS_SUPER_LINTER_COMMIT_MESSAGE}"|"${INPUTS_REFORMAT_COMMIT_MESSAGE}")
                   echo "Formatter commit detected. Skipping reformat and super-linter."
