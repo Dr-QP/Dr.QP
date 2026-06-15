@@ -56,7 +56,7 @@ class DirectionalStrideLimits:
     @classmethod
     def from_dict(cls, data):
         if data.get('version') != 1:
-            raise ValueError(f"unsupported stride limits version: {data.get('version')}")
+            raise ValueError(f'unsupported stride limits version: {data.get("version")}')
 
         gait_limits = {}
         for gait_name, raw_samples in data.get('gaits', {}).items():

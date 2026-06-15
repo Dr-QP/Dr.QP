@@ -102,6 +102,5 @@ def test_generate_stride_limits_emits_all_requested_directions_for_each_gait():
     for samples in config['gaits'].values():
         assert [sample['angle_degrees'] for sample in samples] == [0.0, 90.0, 180.0, 270.0]
         assert all(
-            sample['max_step_length_m'] == pytest.approx(0.125, abs=0.001)
-            for sample in samples
+            sample['max_step_length_m'] == pytest.approx(0.125, abs=0.001) for sample in samples
         )
