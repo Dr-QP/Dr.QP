@@ -60,7 +60,7 @@
       <pose>-2.5 0 0 0 0 0</pose>
 
       <link name="fulcrum">
-        <pose>0 0 0.18 1.5708 0 0</pose>
+        <pose>0 0 0.05 1.5708 0 0</pose>
         <gravity>false</gravity>
         <inertial>
           <mass>200.0</mass>
@@ -84,7 +84,7 @@
         <visual name="visual">
           <geometry>
             <cylinder>
-              <radius>0.18</radius>
+              <radius>0.05</radius>
               <length>1.4</length>
             </cylinder>
           </geometry>
