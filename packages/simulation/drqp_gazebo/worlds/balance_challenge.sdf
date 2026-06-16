@@ -251,7 +251,7 @@
           <xyz>0 -1 0</xyz>
           <limit>
             <lower>0.0</lower>
-            <upper>0.349066</upper>
+            <upper>0.2</upper>
             <effort>2500.0</effort>
             <velocity>0.08</velocity>
           </limit>
@@ -396,7 +396,7 @@
         <match field="sim.sec">10</match>
       </input>
       <output type="gz.msgs.Double" topic="/balance_challenge/motor_tilt_platform/target_position">
-        data: 0.349066
+        data: 0.2
       </output>
     </plugin>
     <plugin filename="gz-sim-triggered-publisher-system" name="gz::sim::systems::TriggeredPublisher">
@@ -413,7 +413,7 @@
         <match field="sim.sec">30</match>
       </input>
       <output type="gz.msgs.Double" topic="/balance_challenge/motor_tilt_platform/target_position">
-        data: 0.349066
+        data: 0.2
       </output>
     </plugin>
     <plugin filename="gz-sim-triggered-publisher-system" name="gz::sim::systems::TriggeredPublisher">
@@ -430,7 +430,7 @@
         <match field="sim.sec">50</match>
       </input>
       <output type="gz.msgs.Double" topic="/balance_challenge/motor_tilt_platform/target_position">
-        data: 0.349066
+        data: 0.2
       </output>
     </plugin>
     <plugin filename="gz-sim-triggered-publisher-system" name="gz::sim::systems::TriggeredPublisher">
@@ -447,7 +447,7 @@
         <match field="sim.sec">70</match>
       </input>
       <output type="gz.msgs.Double" topic="/balance_challenge/motor_tilt_platform/target_position">
-        data: 0.349066
+        data: 0.2
       </output>
     </plugin>
     <plugin filename="gz-sim-triggered-publisher-system" name="gz::sim::systems::TriggeredPublisher">
@@ -464,15 +464,7 @@
         <match field="sim.sec">90</match>
       </input>
       <output type="gz.msgs.Double" topic="/balance_challenge/motor_tilt_platform/target_position">
-        data: 0.349066
-      </output>
-    </plugin>
-    <plugin filename="gz-sim-triggered-publisher-system" name="gz::sim::systems::TriggeredPublisher">
-      <input type="gz.msgs.Clock" topic="/clock">
-        <match field="sim.sec">95</match>
-      </input>
-      <output type="gz.msgs.Double" topic="/balance_challenge/motor_tilt_platform/target_position">
-        data: 0.0
+        data: 0.2
       </output>
     </plugin>
   </world>
