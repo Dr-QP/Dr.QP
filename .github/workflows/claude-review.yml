@@ -1,4 +1,4 @@
-name: Claude PR Review
+name: Claude Responder
 
 on:
   issue_comment:
@@ -20,21 +20,36 @@ on:
       - reopened
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number}}-${{ github.event.comment.id || github.event.review.id }}
   cancel-in-progress: true
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log debug info
+        run: |
+          echo 'Event Name: ${{ github.event_name }}'
+          echo 'Repository: ${{ github.repository }}'
+          echo 'Pull Request Number: ${{ github.event.pull_request.number || '' }}'
+          echo 'Issue Number: ${{ github.event.issue.number || '' }}'
+          echo 'Comment ID: ${{ github.event.comment.id || '' }}'
+          echo 'Review ID: ${{ github.event.review.id || '' }}'
+          echo 'Repository Owner: ${{ github.repository_owner }}'
+
   review:
     if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude'))) ||
-      (github.event_name == 'pull_request')
-    name: Claude Code Review
+      github.repository_owner == 'Dr-QP' && (
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+        (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude'))) ||
+        (github.event_name == 'pull_request')
+      )
+    name: Claude Responder
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -46,13 +61,15 @@ jobs:
     environment: claude-review
     steps:
       - name: Checkout repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@v6.0.3
         with:
           fetch-depth: 1
           persist-credentials: false
 
+        # Automated review when a PR is opened/reopened: always run the pr-review skill.
       - name: Claude PR Review
-        uses: anthropics/claude-code-action@d5726de019ec4498aa667642bc3a80fca83aa102 # v1.0.148
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # Trigger when specific user is assigned to an issue
@@ -61,25 +78,22 @@ jobs:
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
 
-            You are reviewing a pull request in a ROS 2 robotics workspace. Analyze the diff and provide a thorough code review focused on:
-            - Code quality, correctness, and best practices
-            - Potential bugs or edge cases
-            - Security implications
-            - Performance considerations
-            - ROS 2 conventions (node lifecycle, topic/service naming, parameter handling)
-            - C++/Python style and idioms
-            - Test coverage and quality
-
-            Use `gh pr diff ${{ github.event.pull_request.number }}` to see the full diff.
-            Use `gh pr view ${{ github.event.pull_request.number }}` to see the PR description.
-
-            Use `gh pr comment ${{ github.event.pull_request.number }} --body "..."` for overall top-level feedback.
-            Use `mcp__github_inline_comment__create_inline_comment` (with `confirmed: true`) to add inline comments on specific lines.
-
-            Only post GitHub comments — do not submit review text as messages.
+            Use the pr-review skill to review this pull request.
           claude_args: >-
             --allowedTools
-            "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+            "Skill,mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+
+      # Comment/mention-driven requests (issue_comment, pull_request_review_comment,
+      # pull_request_review, issues): no fixed prompt, so Claude responds to whatever
+      # was actually asked in the comment. It can invoke the pr-review skill itself
+      # if the request is a review.
+      - name: Claude Code Respond
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Trigger when specific user is assigned to an issue
+          assignee_trigger: 'claude-bot'
 
       - name: Log debug stats
         if: ${{ always() }}
