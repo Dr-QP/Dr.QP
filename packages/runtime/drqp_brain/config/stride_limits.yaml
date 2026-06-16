@@ -1,0 +1,103 @@
+version: 1
+directions_count: 16
+joint_margin_degrees: 0.25
+gaits:
+  ripple:
+    - angle_degrees: 0.0
+      max_step_length_m: 0.138184
+    - angle_degrees: 22.5
+      max_step_length_m: 0.090576
+    - angle_degrees: 45.0
+      max_step_length_m: 0.081543
+    - angle_degrees: 67.5
+      max_step_length_m: 0.090332
+    - angle_degrees: 90.0
+      max_step_length_m: 0.081543
+    - angle_degrees: 112.5
+      max_step_length_m: 0.090332
+    - angle_degrees: 135.0
+      max_step_length_m: 0.081543
+    - angle_degrees: 157.5
+      max_step_length_m: 0.090576
+    - angle_degrees: 180.0
+      max_step_length_m: 0.138184
+    - angle_degrees: 202.5
+      max_step_length_m: 0.090576
+    - angle_degrees: 225.0
+      max_step_length_m: 0.081543
+    - angle_degrees: 247.5
+      max_step_length_m: 0.090332
+    - angle_degrees: 270.0
+      max_step_length_m: 0.081543
+    - angle_degrees: 292.5
+      max_step_length_m: 0.090332
+    - angle_degrees: 315.0
+      max_step_length_m: 0.081543
+    - angle_degrees: 337.5
+      max_step_length_m: 0.090576
+  wave:
+    - angle_degrees: 0.0
+      max_step_length_m: 0.138184
+    - angle_degrees: 22.5
+      max_step_length_m: 0.090576
+    - angle_degrees: 45.0
+      max_step_length_m: 0.081543
+    - angle_degrees: 67.5
+      max_step_length_m: 0.090332
+    - angle_degrees: 90.0
+      max_step_length_m: 0.081543
+    - angle_degrees: 112.5
+      max_step_length_m: 0.090332
+    - angle_degrees: 135.0
+      max_step_length_m: 0.081543
+    - angle_degrees: 157.5
+      max_step_length_m: 0.090576
+    - angle_degrees: 180.0
+      max_step_length_m: 0.138184
+    - angle_degrees: 202.5
+      max_step_length_m: 0.090576
+    - angle_degrees: 225.0
+      max_step_length_m: 0.081543
+    - angle_degrees: 247.5
+      max_step_length_m: 0.090332
+    - angle_degrees: 270.0
+      max_step_length_m: 0.081543
+    - angle_degrees: 292.5
+      max_step_length_m: 0.090332
+    - angle_degrees: 315.0
+      max_step_length_m: 0.081543
+    - angle_degrees: 337.5
+      max_step_length_m: 0.090576
+  tripod:
+    - angle_degrees: 0.0
+      max_step_length_m: 0.138184
+    - angle_degrees: 22.5
+      max_step_length_m: 0.090576
+    - angle_degrees: 45.0
+      max_step_length_m: 0.081543
+    - angle_degrees: 67.5
+      max_step_length_m: 0.090332
+    - angle_degrees: 90.0
+      max_step_length_m: 0.081543
+    - angle_degrees: 112.5
+      max_step_length_m: 0.090332
+    - angle_degrees: 135.0
+      max_step_length_m: 0.081543
+    - angle_degrees: 157.5
+      max_step_length_m: 0.090576
+    - angle_degrees: 180.0
+      max_step_length_m: 0.138184
+    - angle_degrees: 202.5
+      max_step_length_m: 0.090576
+    - angle_degrees: 225.0
+      max_step_length_m: 0.081543
+    - angle_degrees: 247.5
+      max_step_length_m: 0.090332
+    - angle_degrees: 270.0
+      max_step_length_m: 0.081543
+    - angle_degrees: 292.5
+      max_step_length_m: 0.090332
+    - angle_degrees: 315.0
+      max_step_length_m: 0.081543
+    - angle_degrees: 337.5
+      max_step_length_m: 0.090576

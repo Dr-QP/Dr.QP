@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 from drqp_brain.parametric_gait_generator import GaitType
+from drqp_brain.stride_limits import DirectionalStrideLimits
 from drqp_brain.walk_controller import WalkController
 from drqp_kinematics.geometry import AffineTransform, Point3D
 from drqp_kinematics.models import HexapodModel
@@ -113,6 +114,51 @@ class TestWalkController:
         feet_at_end = [leg.tibia_end.copy() for leg in hexapod.legs]
         for at_rest, at_end in zip(feet_at_rest, feet_at_end):
             assert at_rest == at_end
+
+    def test_stride_limits_allow_safe_lateral_stride(self, hexapod):
+        walker = WalkController(
+            hexapod,
+            step_length=0.10,
+            stride_limits=self._make_stride_limits(lateral_step_length=0.08),
+            gait=GaitType.tripod,
+        )
+
+        for _ in range(20):
+            walker.next_step(stride_direction=Point3D([0, 0.8, 0]), rotation_direction=0.0)
+
+        assert walker.current_direction == Point3D([0, 0.8, 0])
+
+    def test_stride_limits_clamp_full_lateral_stride(self, hexapod):
+        walker = WalkController(
+            hexapod,
+            step_length=0.10,
+            stride_limits=self._make_stride_limits(lateral_step_length=0.08),
+            gait=GaitType.tripod,
+        )
+
+        for _ in range(20):
+            walker.next_step(stride_direction=Point3D([0, 0.9, 0]), rotation_direction=0.0)
+
+        assert walker.current_direction == Point3D([0, 0.8, 0])
+
+    @staticmethod
+    def _make_stride_limits(lateral_step_length):
+        return DirectionalStrideLimits.from_dict(
+            {
+                'version': 1,
+                'directions_count': 4,
+                'joint_margin_degrees': 0.25,
+                'gaits': {
+                    gait.name: [
+                        {'angle_degrees': 0.0, 'max_step_length_m': 0.10},
+                        {'angle_degrees': 90.0, 'max_step_length_m': lateral_step_length},
+                        {'angle_degrees': 180.0, 'max_step_length_m': 0.10},
+                        {'angle_degrees': 270.0, 'max_step_length_m': lateral_step_length},
+                    ]
+                    for gait in GaitType
+                },
+            }
+        )
 
     def test_current_rotation_ramping(self, walker, hexapod):
         walker.current_rotation_direction = 0.0
