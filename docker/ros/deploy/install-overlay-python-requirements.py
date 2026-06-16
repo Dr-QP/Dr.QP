@@ -7,6 +7,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -37,10 +38,25 @@ def collect_requirements(requires_files: list[Path]) -> tuple[list[str], list[Pa
             contributing_files.append(path)
             requirements.extend(path_requirements)
 
-    return requirements, contributing_files
+    # Deduplicate while preserving first-seen order, since the same package
+    # can be listed in multiple requires.txt files.
+    return list(dict.fromkeys(requirements)), contributing_files
 
 
-def build_pip_command(constraints_file: Path, requirements: list[str]) -> list[str]:
+def write_requirements_file(requirements: list[str]) -> Path:
+    """
+    Write requirements to a temp file so pip reads them with `-r`.
+
+    Passing requirements as positional CLI arguments only avoids ARG_MAX up
+    to ~2 MB; a temp file keeps this safe regardless of requirement count.
+    """
+    fd, path = tempfile.mkstemp(prefix="filtered-requires-", suffix=".txt")
+    with os.fdopen(fd, "w", encoding="utf-8") as requirements_file:
+        requirements_file.write("\n".join(requirements) + "\n")
+    return Path(path)
+
+
+def build_pip_command(constraints_file: Path, requirements_file: Path) -> list[str]:
     command = [
         "/usr/bin/python3",
         "-m",
@@ -53,7 +69,7 @@ def build_pip_command(constraints_file: Path, requirements: list[str]) -> list[s
     if constraints_file.is_file():
         command.extend(["-c", str(constraints_file)])
 
-    command.extend(requirements)
+    command.extend(["-r", str(requirements_file)])
 
     if os.geteuid() != 0:
         command.insert(0, "sudo")
@@ -78,10 +94,14 @@ def main() -> int:
     for path in contributing_files:
         print(f"  {path}")
 
-    subprocess.run(
-        build_pip_command(constraints_file, requirements),
-        check=True,
-    )
+    requirements_file = write_requirements_file(requirements)
+    try:
+        subprocess.run(
+            build_pip_command(constraints_file, requirements_file),
+            check=True,
+        )
+    finally:
+        requirements_file.unlink(missing_ok=True)
 
     return 0
 

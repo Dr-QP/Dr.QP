@@ -25,6 +25,7 @@ from launch.actions import (
     ExecuteProcess,
     GroupAction,
     IncludeLaunchDescription,
+    LogInfo,
     RegisterEventHandler,
     SetEnvironmentVariable,
     TimerAction,
@@ -123,6 +124,7 @@ def generate_launch_description():
     load_keyboard_control = LaunchConfiguration('load_keyboard_control')
     gz_partition = LaunchConfiguration('gz_partition')
     container_name = 'drqp_gazebo_container'
+    robot_entity_name = 'drqp'
     gz_args = ['-r -v 3 ', world]
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -165,7 +167,7 @@ def generate_launch_description():
             '-topic',
             '/robot_description',
             '-name',
-            'drqp',
+            robot_entity_name,
             '-allow_renaming',
             'false',
         ],
@@ -177,36 +179,52 @@ def generate_launch_description():
         condition=IfCondition(load_keyboard_control),
     )
 
+    def on_spawn_exit(event, _context):
+        # gz_spawn_entity exits 0 even when the spawn itself failed inside Gazebo,
+        # but a non-zero returncode means the process never ran to begin with
+        # (e.g. malformed URDF). Skip the follow command in that case instead of
+        # letting `gz service` time out against a nonexistent entity.
+        if event.returncode != 0:
+            return [
+                LogInfo(
+                    msg=(
+                        'Skipping camera follow: entity spawn process exited with '
+                        f'code {event.returncode}.'
+                    )
+                )
+            ]
+        return [
+            TimerAction(
+                period=follow_camera_delay,
+                actions=[
+                    ExecuteProcess(
+                        cmd=[
+                            'gz',
+                            'service',
+                            '-s',
+                            '/gui/follow',
+                            '--reqtype',
+                            'gz.msgs.StringMsg',
+                            '--reptype',
+                            'gz.msgs.Boolean',
+                            '--timeout',
+                            '5000',
+                            '--req',
+                            f'data: "{robot_entity_name}"',
+                        ],
+                        output='screen',
+                    ),
+                ],
+            ),
+        ]
+
     follow_camera_command = GroupAction(
         condition=IfCondition(AllSubstitution(sim_gui, follow_camera)),
         actions=[
             RegisterEventHandler(
                 OnProcessExit(
                     target_action=gz_spawn_entity,
-                    on_exit=[
-                        TimerAction(
-                            period=follow_camera_delay,
-                            actions=[
-                                ExecuteProcess(
-                                    cmd=[
-                                        'gz',
-                                        'service',
-                                        '-s',
-                                        '/gui/follow',
-                                        '--reqtype',
-                                        'gz.msgs.StringMsg',
-                                        '--reptype',
-                                        'gz.msgs.Boolean',
-                                        '--timeout',
-                                        '5000',
-                                        '--req',
-                                        'data: "drqp"',
-                                    ],
-                                    output='screen',
-                                ),
-                            ],
-                        ),
-                    ],
+                    on_exit=on_spawn_exit,
                 )
             )
         ],
