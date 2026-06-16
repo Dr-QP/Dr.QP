@@ -57,7 +57,7 @@
 
     <model name="physics_seesaw">
       <static>false</static>
-      <pose>-2.5 0 0 0 0 0</pose>
+      <pose>-5 0 0 0 0 0</pose>
 
       <link name="fulcrum">
         <pose>0 0 0.05 1.5708 0 0</pose>
@@ -180,7 +180,7 @@
 
     <model name="motor_tilt_platform">
       <static>false</static>
-      <pose>0.5 0 0 0 0 0</pose>
+      <pose>-1.5 0 0 0 0 0</pose>
 
       <link name="base">
         <pose>0 0 0.011 0 0 0</pose>
