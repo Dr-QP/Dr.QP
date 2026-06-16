@@ -81,20 +81,6 @@ jobs:
             --allowedTools
             "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
 
-      - name: Post Claude review marker
-        if: success()
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          script: |
-            await github.rest.pulls.createReview({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number,
-              commit_id: context.payload.pull_request.head.sha,
-              event: 'COMMENT',
-              body: '<!-- claude-ai-reviewed -->\n✅ **Claude AI Code Review Complete**\n\nClaude has completed an automated code review. See inline comments and PR comments for feedback.',
-            });
-
       - name: Log debug stats
         if: ${{ always() }}
         uses: ./.github/actions/log-debug-stats
