@@ -61,7 +61,7 @@ runs:
         REGISTRY_CACHE: type=registry,ref=${{ inputs.image }}:cache-${{ inputs.future-tag }}${{ inputs.arch }}
         GHA_CACHE: type=gha,scope=${{ inputs.image }}-${{ inputs.future-tag }}${{ inputs.arch }}
       with:
-        context: ${{ inputs.context }}
+        context: ${{ inputs.context }} # zizmor: ignore[template-injection] context is always a static path literal at all call sites
         file: ${{ inputs.file }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: ${{ env.ACT != '' && env.REGISTRY_CACHE || env.GHA_CACHE }}

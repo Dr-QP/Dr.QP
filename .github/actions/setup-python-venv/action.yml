@@ -36,7 +36,8 @@ runs:
       shell: bash
 
     - name: Activate venv
-      run: |
+      run:
+        | # zizmor: ignore[github-env] VIRTUAL_ENV is a local venv path, not attacker-controlled
         source .venv/bin/activate
         echo "VIRTUAL_ENV=${VIRTUAL_ENV}" >> "${GITHUB_ENV}"
         echo "${VIRTUAL_ENV}/bin" >> "${GITHUB_PATH}"
