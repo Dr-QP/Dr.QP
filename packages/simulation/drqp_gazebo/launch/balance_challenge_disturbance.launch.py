@@ -25,8 +25,8 @@ DISTURBANCE_TOPIC = '/balance_challenge/motor_tilt_platform/target_position'
 TILT_UP_POSITION = 0.2
 TILT_DOWN_POSITION = 0.0
 TILT_UP_HOLD_SECONDS = 5
-TILT_DOWN_HOLD_SECONDS = 15
-INITIAL_DELAY_SECONDS = 10
+TILT_DOWN_HOLD_SECONDS = 5
+INITIAL_DELAY_SECONDS = 5
 
 
 def generate_launch_description():
