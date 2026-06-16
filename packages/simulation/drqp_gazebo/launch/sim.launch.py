@@ -126,18 +126,18 @@ def generate_launch_description():
             description='Seconds to wait after SIGTERM before sending SIGKILL to Gazebo.',
         )
     )
-    for argument_name in (
-        'robot_x',
-        'robot_y',
-        'robot_z',
-        'robot_roll',
-        'robot_pitch',
-        'robot_yaw',
+    for argument_name, default_value in (
+        ('robot_x', '0.0'),
+        ('robot_y', '0.0'),
+        ('robot_z', '1'),
+        ('robot_roll', '0.0'),
+        ('robot_pitch', '0.0'),
+        ('robot_yaw', '0.0'),
     ):
         declared_arguments.append(
             DeclareLaunchArgument(
                 argument_name,
-                default_value='0.0',
+                default_value=default_value,
                 description=f'Robot spawn {argument_name.removeprefix("robot_")} pose component.',
             )
         )
