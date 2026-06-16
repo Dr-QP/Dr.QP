@@ -44,6 +44,8 @@ from drqp_keyboard_control.sdl_window import (
 )
 import pytest
 import rclpy
+from rclpy.qos import QoSDurabilityPolicy, QoSProfile
+import std_msgs.msg
 
 
 @pytest.fixture
@@ -357,6 +359,67 @@ def test_delete_and_backspace_publish_robot_events(ros_context):
     assert event_names == ['reboot_servos', 'finalize']
 
 
+def test_b_key_toggles_balance_mode_and_publishes(ros_context):
+    """B should toggle balance mode and publish the latched state each time."""
+    node = KeyboardControlNode()
+    node.balance_mode_pub.publish = Mock()
+    try:
+        assert node.handle_key_down('b') is True
+        assert node.balance_mode_enabled is True
+        assert node.handle_key_down('b') is True
+        assert node.balance_mode_enabled is False
+    finally:
+        node.destroy_node()
+
+    published = [call.args[0].data for call in node.balance_mode_pub.publish.call_args_list]
+    assert published == [True, False]
+
+
+def test_balance_mode_publishes_initial_false_for_late_joiners(ros_context):
+    """Startup should publish a latched False so late subscribers see a defined state."""
+    node = KeyboardControlNode()
+    consumer = rclpy.create_node('balance_mode_consumer')
+    received = []
+    latched_qos = QoSProfile(depth=1)
+    latched_qos.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
+    consumer.create_subscription(
+        std_msgs.msg.Bool,
+        '/robot/balance_mode',
+        lambda msg: received.append(msg.data),
+        qos_profile=latched_qos,
+    )
+    try:
+        for _ in range(10):
+            rclpy.spin_once(consumer, timeout_sec=0.1)
+            if received:
+                break
+    finally:
+        node.destroy_node()
+        consumer.destroy_node()
+
+    assert received == [False]
+
+
+def test_balance_mode_checkbox_toggles_node_directly():
+    """Balance Mode checkbox should call into the node's toggle method directly."""
+    app = PygameKeyboardControlApp.__new__(PygameKeyboardControlApp)
+    app.node = Mock()
+    app.node.balance_mode_enabled = False
+    app.buttons = []
+    app.checkboxes = []
+    app.show_help = False
+    app.stay_on_top = False
+
+    app._build_buttons()
+
+    balance_checkbox = next(c for c in app.checkboxes if c.label == 'Balance Mode')
+    assert balance_checkbox.selected() is False
+
+    pos = (balance_checkbox.rect.x + 1.0, balance_checkbox.rect.y + 1.0)
+    assert balance_checkbox.click(pos) is True
+    app.node._toggle_balance_mode.assert_called_once_with()
+
+
 def test_publish_stop_command_clears_motion_inputs_before_publishing(ros_context):
     """GUI shutdown should send one final zero movement command."""
     node = KeyboardControlNode()
@@ -400,6 +463,7 @@ def test_keyboard_help_lines_cover_all_bindings():
         'Arrow keys',
         'Tab',
         '1/2/3',
+        'B: toggle balance mode',
         '+/-',
         'Space or Esc',
         'Delete',
