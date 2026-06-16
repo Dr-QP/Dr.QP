@@ -22,13 +22,19 @@ from drqp_brain.instance_guard import make_launch_instance_guard
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
+    ExecuteProcess,
     GroupAction,
     IncludeLaunchDescription,
+    LogInfo,
+    RegisterEventHandler,
     SetEnvironmentVariable,
+    TimerAction,
 )
 from launch.conditions import IfCondition
+from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
+    AllSubstitution,
     EnvironmentVariable,
     IfElseSubstitution,
     LaunchConfiguration,
@@ -65,6 +71,28 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            'world',
+            default_value='empty.sdf',
+            description='Gazebo world file or resource to load.',
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'follow_camera',
+            default_value='true',
+            choices=['true', 'false'],
+            description='Ask Gazebo GUI to follow the spawned drqp model.',
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'follow_camera_delay',
+            default_value='5.0',
+            description='Seconds to wait after robot spawn before sending the Gazebo GUI follow command.',
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             'load_keyboard_control',
             default_value='false',
             choices=['true', 'false'],
@@ -90,10 +118,14 @@ def generate_launch_description():
 
     # Initialize Arguments
     sim_gui = LaunchConfiguration('sim_gui')
+    world = LaunchConfiguration('world')
+    follow_camera = LaunchConfiguration('follow_camera')
+    follow_camera_delay = LaunchConfiguration('follow_camera_delay')
     load_keyboard_control = LaunchConfiguration('load_keyboard_control')
     gz_partition = LaunchConfiguration('gz_partition')
     container_name = 'drqp_gazebo_container'
-    gz_args = '-r -v 3 empty.sdf'
+    robot_entity_name = 'drqp'
+    gz_args = ['-r -v 3 ', world]
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
@@ -108,7 +140,7 @@ def generate_launch_description():
             'gz_args': IfElseSubstitution(
                 sim_gui,
                 gz_args,
-                gz_args + ' --headless-rendering -s',
+                [*gz_args, ' --headless-rendering -s'],
             ),
             'on_exit_shutdown': 'true',
         }.items(),
@@ -135,7 +167,7 @@ def generate_launch_description():
             '-topic',
             '/robot_description',
             '-name',
-            'drqp',
+            robot_entity_name,
             '-allow_renaming',
             'false',
         ],
@@ -145,6 +177,57 @@ def generate_launch_description():
         executable='drqp_keyboard_control',
         output='screen',
         condition=IfCondition(load_keyboard_control),
+    )
+
+    def on_spawn_exit(event, _context):
+        # gz_spawn_entity exits 0 even when the spawn itself failed inside Gazebo,
+        # but a non-zero returncode means the process never ran to begin with
+        # (e.g. malformed URDF). Skip the follow command in that case instead of
+        # letting `gz service` time out against a nonexistent entity.
+        if event.returncode != 0:
+            return [
+                LogInfo(
+                    msg=(
+                        'Skipping camera follow: entity spawn process exited with '
+                        f'code {event.returncode}.'
+                    )
+                )
+            ]
+        return [
+            TimerAction(
+                period=follow_camera_delay,
+                actions=[
+                    ExecuteProcess(
+                        cmd=[
+                            'gz',
+                            'service',
+                            '-s',
+                            '/gui/follow',
+                            '--reqtype',
+                            'gz.msgs.StringMsg',
+                            '--reptype',
+                            'gz.msgs.Boolean',
+                            '--timeout',
+                            '5000',
+                            '--req',
+                            f'data: "{robot_entity_name}"',
+                        ],
+                        output='screen',
+                    ),
+                ],
+            ),
+        ]
+
+    follow_camera_command = GroupAction(
+        condition=IfCondition(AllSubstitution(sim_gui, follow_camera)),
+        actions=[
+            RegisterEventHandler(
+                OnProcessExit(
+                    target_action=gz_spawn_entity,
+                    on_exit=on_spawn_exit,
+                )
+            )
+        ],
     )
 
     drqp_system = IncludeLaunchDescription(
@@ -174,6 +257,7 @@ def generate_launch_description():
                     gazebo,
                     gazebo_bridge,
                     gz_spawn_entity,
+                    follow_camera_command,
                     keyboard_control,
                 ]
             ),

@@ -253,7 +253,7 @@ jobs:
         run: ./packages/cmake/llvm-cov-export-all.py ./build
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v6.0.1
+        uses: codecov/codecov-action@v7.0.0
         if: ${{ env.ACT == '' && !cancelled() }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -353,7 +353,15 @@ jobs:
             ./scripts/ros-dep.sh
             source "scripts/setup.bash"
 
-            python3 -m colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure
+            test_status=0
+            python3 -m colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure || test_status=$?
+
+            mkdir -p ./.tmp/devcontainer-ci
+            rm -rf ./.tmp/devcontainer-ci/build ./.tmp/devcontainer-ci/log
+            cp -a build ./.tmp/devcontainer-ci/build
+            cp -a log ./.tmp/devcontainer-ci/log
+
+            exit "$test_status"
           env:
             # Pass the build args to devcontainer build
             DRQP_GAZEBO_TEST_MODE=${{ matrix.SIMULATION_TEST_MODE }}
@@ -365,6 +373,9 @@ jobs:
           codecov-token: ${{ secrets.CODECOV_TOKEN }}
           logs-artifact-name: devcontainer-logs-${{ matrix.arch }}
           reports-artifact-name: devcontainer-test-reports-${{ matrix.arch }}
+          reports-glob: .tmp/devcontainer-ci/build/*/test_results/*/*.xunit.xml
+          reports-root: .tmp/devcontainer-ci/build
+          logs-path: .tmp/devcontainer-ci/log
 
       - name: Log debug stats
         if: ${{ always() }}

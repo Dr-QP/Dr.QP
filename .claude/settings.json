@@ -16,7 +16,10 @@
       "Bash(.github/skills/*/scripts/*)",
       "Bash(gh)",
       "Bash(gh *)",
-      "Skill(*)"
+      "Skill(*)",
+      "Bash(pip show *)",
+      "Bash(pip install *)",
+      "Bash(python3 -m py_compile *)"
     ]
   },
   "hooks": {
