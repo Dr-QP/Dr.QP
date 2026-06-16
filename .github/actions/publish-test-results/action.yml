@@ -44,7 +44,10 @@ runs:
       env:
         INPUTS_REPORTS_ROOT: ${{ inputs.reports-root }}
       run: |
-        test_reports=$(find "$INPUTS_REPORTS_ROOT" -name "*.xunit.xml" | tr '\n' ',')
+        test_reports=''
+        if [[ -d "$INPUTS_REPORTS_ROOT" ]]; then
+          test_reports=$(find "$INPUTS_REPORTS_ROOT" -name "*.xunit.xml" | tr '\n' ',')
+        fi
         test_reports=${test_reports%,}
 
         echo "result=$test_reports" >> "$GITHUB_OUTPUT"
@@ -56,7 +59,7 @@ runs:
 
     - name: Upload test results to Codecov
       if: ${{ !cancelled() && steps.test_reports.outputs.result != '' }}
-      uses: codecov/codecov-action@v6.0.1
+      uses: codecov/codecov-action@v7.0.0
       with:
         report_type: test_results
         token: ${{ inputs.codecov-token }}
