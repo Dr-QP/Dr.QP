@@ -12,7 +12,7 @@ creating the pull request.
 
 ## GitHub MCP Tools Required
 
-This skill **MUST** use GitHub MCP tools for GitHub operations and **MUST NOT** use `gh` CLI commands.
+This skill may use GitHub MCP tools for GitHub operations or `gh` CLI commands if available and authenticated.
 
 Required MCP tools:
 
