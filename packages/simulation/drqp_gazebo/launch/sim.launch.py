@@ -130,7 +130,7 @@ def generate_launch_description():
     for argument_name, default_value in (
         ('robot_x', '0.0'),
         ('robot_y', '0.0'),
-        ('robot_z', '1'),
+        ('robot_z', '0.03'),
         ('robot_roll', '0.0'),
         ('robot_pitch', '0.0'),
         ('robot_yaw', '0.0'),
