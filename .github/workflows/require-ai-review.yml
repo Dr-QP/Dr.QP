@@ -34,7 +34,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
@@ -71,6 +71,9 @@ jobs:
             const codexLogins = new Set([
               'chatgpt-codex-connector[bot]',
             ]);
+            const claudeLogins = new Set([
+              'claude[bot]',
+            ]);
             const acceptedReviewStates = new Set([
               'approved',
               'changes_requested',
@@ -99,6 +102,13 @@ jobs:
             const isCodexReview = (review) => {
               return (
                 codexLogins.has(reviewLogin(review)) &&
+                acceptedReviewStates.has(reviewState(review))
+              );
+            };
+
+            const isClaudeReview = (review) => {
+              return (
+                claudeLogins.has(reviewLogin(review)) &&
                 acceptedReviewStates.has(reviewState(review))
               );
             };
@@ -135,6 +145,18 @@ jobs:
               const sourcePhrase = source ? ` ${source}` : '';
               core.info(
                 `Found accepted Copilot review by ${review.user.login}${sourcePhrase} for ${review.commit_id} with state ${review.state}.`
+              );
+              return true;
+            };
+
+            const passIfClaudeReviewed = (review, source) => {
+              if (!isClaudeReview(review)) {
+                return false;
+              }
+
+              const sourcePhrase = source ? ` ${source}` : '';
+              core.info(
+                `Found accepted Claude review by ${review.user.login}${sourcePhrase} for ${review.commit_id} with state ${review.state}.`
               );
               return true;
             };
@@ -185,6 +207,10 @@ jobs:
               return;
             }
 
+            if (passIfClaudeReviewed(eventReview, 'from event payload')) {
+              return;
+            }
+
             const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
             const deadline = Date.now() + 8 * 60 * 1000;
             let attempt = 1;
@@ -209,6 +235,14 @@ jobs:
                 return;
               }
 
+              const claudeFeedbackReview = latestMatchingReview(
+                reviews,
+                isClaudeReview
+              );
+              if (passIfClaudeReviewed(claudeFeedbackReview, '')) {
+                return;
+              }
+
               const reactions = await listReactions();
               core.info(`Attempt ${attempt}: observed PR reactions: ${summarizeReactions(reactions) || 'none'}`);
 
@@ -222,7 +256,7 @@ jobs:
             }
 
             core.setFailed(
-              `Neither Copilot nor Codex has marked this PR as AI-reviewed. Expected either a Copilot review, a Codex review, or a +1 reaction from chatgpt-codex-connector[bot].`
+              `No AI review found for this PR. Expected a review from Copilot (copilot-pull-request-reviewer[bot]), Codex (chatgpt-codex-connector[bot] review or +1 reaction), or Claude (claude[bot]).`
             );
 
       - name: Log debug stats
