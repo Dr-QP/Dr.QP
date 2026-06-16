@@ -19,12 +19,15 @@
 # THE SOFTWARE.
 
 from dataclasses import dataclass
+import logging
 import math
 from pathlib import Path
 
 from drqp_brain.parametric_gait_generator import GaitType
 from drqp_kinematics.geometry import Point3D
 import yaml
+
+_logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -48,6 +51,17 @@ class DirectionalStrideLimits:
             if len(samples) < 2:
                 raise ValueError(f'{gait.name} stride limits must include at least two samples')
 
+        self._extended_gait_limits: dict[GaitType, list[DirectionalStrideSample]] = {
+            gait: [
+                *samples,
+                DirectionalStrideSample(
+                    angle_degrees=samples[0].angle_degrees + 360.0,
+                    max_step_length_m=samples[0].max_step_length_m,
+                ),
+            ]
+            for gait, samples in self._gait_limits.items()
+        }
+
     @classmethod
     def from_file(cls, path: Path | str):
         try:
@@ -66,19 +80,27 @@ class DirectionalStrideLimits:
         gait_limits = {}
         for gait_name, raw_samples in data.get('gaits', {}).items():
             gait = GaitType[gait_name]
-            gait_limits[gait] = [
-                DirectionalStrideSample(
-                    angle_degrees=float(sample['angle_degrees']) % 360.0,
-                    max_step_length_m=float(sample['max_step_length_m']),
+            samples = []
+            for sample in raw_samples:
+                max_step_length_m = float(sample['max_step_length_m'])
+                if max_step_length_m < 0.0:
+                    raise ValueError(
+                        f'max_step_length_m must be non-negative, got {max_step_length_m}'
+                    )
+                samples.append(
+                    DirectionalStrideSample(
+                        angle_degrees=float(sample['angle_degrees']) % 360.0,
+                        max_step_length_m=max_step_length_m,
+                    )
                 )
-                for sample in raw_samples
-            ]
+            gait_limits[gait] = samples
 
         return cls(gait_limits)
 
     def max_step_length(self, gait: GaitType, direction: Point3D) -> float | None:
         samples = self._gait_limits.get(gait)
         if samples is None:
+            _logger.debug('No stride limits configured for gait %s; clamping disabled', gait.name)
             return None
 
         planar_norm = math.hypot(float(direction.x), float(direction.y))
@@ -86,7 +108,7 @@ class DirectionalStrideLimits:
             return None
 
         angle = math.degrees(math.atan2(float(direction.y), float(direction.x))) % 360.0
-        return self._interpolate_limit(samples, angle)
+        return self._interpolate_limit(self._extended_gait_limits[gait], angle)
 
     def clamp_direction(
         self,
@@ -117,15 +139,9 @@ class DirectionalStrideLimits:
         )
 
     @staticmethod
-    def _interpolate_limit(samples: list[DirectionalStrideSample], angle: float) -> float:
-        extended_samples = samples + [
-            DirectionalStrideSample(
-                angle_degrees=samples[0].angle_degrees + 360.0,
-                max_step_length_m=samples[0].max_step_length_m,
-            )
-        ]
+    def _interpolate_limit(extended_samples: list[DirectionalStrideSample], angle: float) -> float:
         normalized_angle = angle
-        if normalized_angle < samples[0].angle_degrees:
+        if normalized_angle < extended_samples[0].angle_degrees:
             normalized_angle += 360.0
 
         for start, end in zip(extended_samples, extended_samples[1:]):
@@ -139,4 +155,4 @@ class DirectionalStrideLimits:
                     + (end.max_step_length_m - start.max_step_length_m) * ratio
                 )
 
-        return samples[-1].max_step_length_m
+        return extended_samples[-2].max_step_length_m

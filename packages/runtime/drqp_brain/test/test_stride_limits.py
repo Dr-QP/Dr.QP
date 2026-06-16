@@ -18,9 +18,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from drqp_brain.generate_stride_limits import find_max_step_length, generate_stride_limits
+import logging
+
+from drqp_brain.generate_stride_limits import (
+    find_max_step_length,
+    generate_stride_limits,
+    parse_args,
+)
 from drqp_brain.parametric_gait_generator import GaitType
-from drqp_brain.stride_limits import DirectionalStrideLimits
+from drqp_brain.stride_limits import DirectionalStrideLimits, DirectionalStrideSample
 from drqp_kinematics.geometry import Point3D
 import pytest
 
@@ -97,6 +103,44 @@ def test_stride_limits_from_dict_raises_on_non_dict():
         DirectionalStrideLimits.from_dict(['not', 'a', 'dict'])
 
 
+def test_stride_limits_max_step_length_logs_debug_when_gait_missing(caplog):
+    # Some ROS 2 packages (e.g. launch_testing) install a custom logging.Logger
+    # subclass via logging.setLoggerClass() that forces propagate=False on every
+    # newly created logger, including this module's. caplog's handler is attached
+    # to the root logger, so it would never see records unless we attach it
+    # directly to the logger under test as well.
+    stride_limits_logger = logging.getLogger('drqp_brain.stride_limits')
+    caplog.set_level(logging.DEBUG)
+    stride_limits_logger.addHandler(caplog.handler)
+    try:
+        limits = DirectionalStrideLimits(
+            {
+                GaitType.tripod: [
+                    DirectionalStrideSample(angle_degrees=0.0, max_step_length_m=0.12),
+                    DirectionalStrideSample(angle_degrees=180.0, max_step_length_m=0.12),
+                ],
+            }
+        )
+
+        result = limits.max_step_length(GaitType.wave, Point3D([1, 0, 0]))
+    finally:
+        stride_limits_logger.removeHandler(caplog.handler)
+
+    assert result is None
+    assert any(
+        record.levelno == logging.DEBUG and GaitType.wave.name in record.getMessage()
+        for record in caplog.records
+    )
+
+
+def test_stride_limits_from_dict_raises_on_negative_max_step_length():
+    data = _limits_data()
+    data['gaits'][GaitType.tripod.name][1]['max_step_length_m'] = -0.01
+
+    with pytest.raises(ValueError, match='non-negative'):
+        DirectionalStrideLimits.from_dict(data)
+
+
 def test_stride_limits_from_file_raises_on_invalid_yaml(tmp_path):
     bad_yaml = tmp_path / 'stride_limits.yaml'
     bad_yaml.write_text(': invalid: yaml: }\n')
@@ -109,6 +153,12 @@ def test_stride_limits_from_file_raises_on_empty_file(tmp_path):
     empty.write_text('')
     with pytest.raises(ValueError, match='mapping'):
         DirectionalStrideLimits.from_file(empty)
+
+
+def test_parse_args_does_not_eagerly_resolve_default_output_path():
+    args = parse_args(['--directions', '4'])
+
+    assert args.output is None
 
 
 def test_generate_stride_limits_emits_all_requested_directions_for_each_gait():

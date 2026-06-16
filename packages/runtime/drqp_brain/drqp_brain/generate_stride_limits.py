@@ -19,9 +19,9 @@
 # THE SOFTWARE.
 
 import argparse
+import logging
 from pathlib import Path
 import sys
-from unittest.mock import Mock
 
 from ament_index_python.packages import get_package_share_path
 from drqp_brain.locomotion_kinematics import MoveItPyLocomotionKinematics
@@ -41,6 +41,10 @@ DEFAULT_PHASE_SAMPLES = 32
 DEFAULT_SEARCH_ITERATIONS = 12
 DEFAULT_JOINT_MARGIN_DEGREES = 0.25
 
+# These must match the <limit lower="..." upper="..."/> tags in
+# packages/runtime/drqp_control/urdf/leg.urdf.xacro (radians there, degrees here).
+# NOT drqp_moveit/config/joint_limits.yaml -- that file only overrides
+# velocity/acceleration limits and carries no position-limit data.
 JOINT_LIMITS_DEGREES = {
     'coxa': (-90.0, 90.0),
     'femur': (-98.0, 90.0),
@@ -53,6 +57,32 @@ class ParameterValue:
 
     def __init__(self, value):
         self.value = value
+
+
+class _StubNode:
+    """
+    Minimal rclpy Node stand-in for offline MoveItPy config loading.
+
+    Implements only the members MoveItPy actually touches when constructing
+    a `MoveItConfigsBuilder`-style parameter set outside of a running node:
+    `get_name()`, `get_logger()`, `get_parameters_by_prefix()`, and the
+    private `_parameter_overrides` attribute it duck-types against. Using an
+    explicit stub instead of `unittest.mock.Mock()` means a rename of any of
+    these members on the real `Node`/MoveItPy side surfaces as a loud
+    `AttributeError` here instead of silently returning a `Mock`.
+    """
+
+    def __init__(self, parameter_overrides: dict):
+        self._parameter_overrides = parameter_overrides
+
+    def get_name(self) -> str:
+        return 'drqp_stride_limit_generator'
+
+    def get_logger(self) -> logging.Logger:
+        return logging.getLogger(self.get_name())
+
+    def get_parameters_by_prefix(self, prefix: str) -> dict:
+        return {}
 
 
 def create_hexapod():
@@ -163,7 +193,7 @@ def make_moveit_step_length_checker(
                 return False
         return True
 
-    return is_safe, helper
+    return is_safe
 
 
 def _joint_targets_have_margin(joint_targets: dict[str, float], margin_degrees: float) -> bool:
@@ -205,12 +235,7 @@ def _make_moveit_parameter_node():
         _flatten_parameters('', config, flattened)
         parameter_overrides.update(flattened)
 
-    node = Mock()
-    node.get_name.return_value = 'drqp_stride_limit_generator'
-    node.get_logger.return_value = Mock()
-    node.get_parameters_by_prefix.return_value = {}
-    node._parameter_overrides = parameter_overrides
-    return node
+    return _StubNode(parameter_overrides)
 
 
 def _load_yaml(path: Path):
@@ -233,7 +258,7 @@ def default_output_path():
 
 def parse_args(argv):
     parser = argparse.ArgumentParser(description='Generate directional walking stride limits.')
-    parser.add_argument('--output', type=Path, default=default_output_path())
+    parser.add_argument('--output', type=Path, default=None)
     parser.add_argument('--directions', type=int, default=DEFAULT_DIRECTIONS_COUNT)
     parser.add_argument('--max-step-length', type=float, default=DEFAULT_MAX_STEP_LENGTH_M)
     parser.add_argument('--phase-samples', type=int, default=DEFAULT_PHASE_SAMPLES)
@@ -246,7 +271,7 @@ def main(argv=None):
     args = parse_args(sys.argv[1:] if argv is None else argv)
     rclpy.init()
     try:
-        is_safe, _ = make_moveit_step_length_checker(
+        is_safe = make_moveit_step_length_checker(
             phase_samples=args.phase_samples,
             joint_margin_degrees=args.joint_margin_degrees,
         )
@@ -257,8 +282,9 @@ def main(argv=None):
             search_iterations=args.search_iterations,
             joint_margin_degrees=args.joint_margin_degrees,
         )
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        with open(args.output, 'w') as file:
+        output_path = args.output or default_output_path()
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, 'w') as file:
             yaml.safe_dump(config, file, sort_keys=False)
     finally:
         rclpy.try_shutdown()
