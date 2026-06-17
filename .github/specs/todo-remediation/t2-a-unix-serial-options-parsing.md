@@ -23,11 +23,11 @@ project currently works, but the contract is invisible.
 
 `transferConfig` follows the Arduino `HardwareSerial` bitmask convention:
 
-| Bits | Meaning |
-|------|---------|
-| 5–4 | Parity: 00=none, 10=even, 11=odd |
-| 3 | Stop bits: 0=one, 1=two |
-| 2–1 | Data bits offset: 00=5, 01=6, 10=7, 11=8 |
+| Bits | Meaning                                  |
+| ---- | ---------------------------------------- |
+| 5–4  | Parity: 00=none, 10=even, 11=odd         |
+| 3    | Stop bits: 0=one, 1=two                  |
+| 2–1  | Data bits offset: 00=5, 01=6, 10=7, 11=8 |
 
 Common values: `SERIAL_8N1 = 0x06`, `SERIAL_8E1 = 0x26`, `SERIAL_8O1 = 0x36`.
 
@@ -50,40 +50,48 @@ the approach that fits the rest of the codebase style.
 ## Implementation approach
 
 ### Turn 1 — Audit call sites and the `ISerial` interface
+
 Find every call to `begin()` across the codebase. Determine whether the interface is defined
 in a header shared with `SerialPlayer` and other implementations. Decide: bitmask decode vs.
 struct refactor.
 
 ### Turn 2 — Implement the chosen approach
+
 **Option A (bitmask decode):**
+
 ```cpp
 uint8_t dataBits = 5 + ((transferConfig >> 1) & 0x03);
 bool twoStopBits = (transferConfig >> 3) & 0x01;
 uint8_t parityBits = (transferConfig >> 4) & 0x03;
 // map to boost::asio options …
 ```
+
 **Option B (explicit struct):**
+
 ```cpp
 struct SerialConfig { uint8_t dataBits = 8; Parity parity = Parity::none; StopBits stopBits = StopBits::one; };
 ```
+
 Update `ISerial::begin`, `UnixSerial`, `SerialPlayer`, and all call sites.
 
 ### Turn 3 — Add/update tests
+
 Write or extend a unit test that exercises at least three `transferConfig` values and asserts
 the correct Boost ASIO options are set.
 
 ### Turn 4 — Verify build and tests
+
 Build `drqp_serial` and `drqp_a1_16_driver`. Run all serial-related tests.
 
 ## Files to modify
 
-| File | Change |
-|------|--------|
-| `packages/runtime/drqp_serial/src/UnixSerial.cpp` | Implement decoding / remove TODO |
-| `packages/runtime/drqp_serial/include/…/ISerial.h` | Update signature (Option B only) |
+| File                                                | Change                           |
+| --------------------------------------------------- | -------------------------------- |
+| `packages/runtime/drqp_serial/src/UnixSerial.cpp`   | Implement decoding / remove TODO |
+| `packages/runtime/drqp_serial/include/…/ISerial.h`  | Update signature (Option B only) |
 | `packages/runtime/drqp_serial/src/SerialPlayer.cpp` | Update signature (Option B only) |
-| Call sites in `drqp_a1_16_driver` | Update (Option B only) |
-| Relevant test file | Add coverage for non-8N1 configs |
+| Call sites in `drqp_a1_16_driver`                   | Update (Option B only)           |
+| Relevant test file                                  | Add coverage for non-8N1 configs |
 
 ## Dependencies
 

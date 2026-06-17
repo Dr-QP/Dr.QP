@@ -41,7 +41,9 @@ recompiling.
 ## Implementation approach
 
 ### Turn 1 — Choose a parsing library
+
 Check what is already available in the build graph. Options:
+
 - `cxxopts` (header-only, likely available).
 - `boost::program_options` (already a transitive dependency via Boost ASIO).
 - Manual `argv` loop (no new dependency).
@@ -49,20 +51,22 @@ Check what is already available in the build graph. Options:
 Prefer re-using an existing dependency to avoid adding a new one.
 
 ### Turn 2 — Implement parsing in `main()`
+
 Call the chosen parser before `testing::InitGoogleTest`. Pass `argc`/`argv` through. Populate
 `testOptions`. Print usage if `--help` is passed.
 
 ### Turn 3 — Verify
+
 Build the test. Run without flags (verify defaults), run with `--use-real-hardware` (verify
 override), run with an unknown flag (verify error). Update any CI scripts that invoke this test
 binary directly to confirm they still work with no arguments.
 
 ## Files to modify
 
-| File | Change |
-|------|--------|
-| `packages/runtime/drqp_a1_16_driver/test/TestXYZrobotServo.cpp` | Add CLI parsing in `main()` |
-| `packages/runtime/drqp_a1_16_driver/CMakeLists.txt` | Add new link dependency if needed |
+| File                                                            | Change                            |
+| --------------------------------------------------------------- | --------------------------------- |
+| `packages/runtime/drqp_a1_16_driver/test/TestXYZrobotServo.cpp` | Add CLI parsing in `main()`       |
+| `packages/runtime/drqp_a1_16_driver/CMakeLists.txt`             | Add new link dependency if needed |
 
 ## Dependencies
 

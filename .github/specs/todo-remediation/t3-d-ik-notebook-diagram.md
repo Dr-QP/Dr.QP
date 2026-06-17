@@ -19,6 +19,7 @@ leg that does not match Dr.QP's physical dimensions and angle conventions.
 ## Goal
 
 Replace or add a diagram that shows:
+
 - The Dr.QP leg link layout (coxa / femur / tibia).
 - The angle names as used in the notebook (`theta_coxa`, `theta_femur`, `theta_tibia` or
   equivalent).
@@ -34,20 +35,22 @@ Replace or add a diagram that shows:
 ## Implementation approach
 
 ### Turn 1 — Extract geometry from URDF and notebook
+
 Read the URDF (or xacro) to get link lengths and joint axis definitions. Read the notebook to
 identify which angle/plane names are used in the derivations. Produce a schematic (SVG, PNG,
 or an embedded matplotlib diagram generated in a notebook cell).
 
 ### Turn 2 — Embed and verify
+
 Insert the image reference or the generative notebook cell at line 291. Build the docs
 (`sphinx-build` or `jupyter nbconvert`) and confirm the diagram renders correctly.
 
 ## Files to modify
 
-| File | Change |
-|------|--------|
+| File                                                       | Change                                     |
+| ---------------------------------------------------------- | ------------------------------------------ |
 | `docs/source/notebooks/1_getting_started_with_robot_ik.md` | Remove TODO; add diagram reference or cell |
-| `docs/source/notebooks/images/` (or equivalent) | Add diagram file (if static image) |
+| `docs/source/notebooks/images/` (or equivalent)            | Add diagram file (if static image)         |
 
 ## Dependencies
 

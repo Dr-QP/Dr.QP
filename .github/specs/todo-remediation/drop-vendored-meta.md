@@ -10,39 +10,39 @@ They are documented here so they can be excluded from future audits.
 All annotated by upstream contributors (wjwwood, ivanpauno, hidmic, dhood, jacobperron,
 jacobperron). These are tracked in the upstream `ros2/launch` repository.
 
-| File | Line | Author | Note |
-|------|------|--------|------|
-| `substitutions/python_expression.py` | 120 | — | Backward compat note |
-| `launch_service.py` | 216 | wjwwood | SIGQUIT subprocess cleanup |
-| `logging/handlers.py` | 53 | hidmic | Module `__getattr__` migration |
-| `logging/__init__.py` | 83 | hidmic | TOCTTOU race in log dir creation |
-| `event_handlers/on_shutdown.py` | 54 | wjwwood | Callable signature validation |
-| `event_handlers/on_shutdown.py` | 69 | dhood | Known-actions description |
-| `event_handlers/on_process_io.py` | 33 | wjwwood | `__init__` flexibility |
-| `event_handlers/on_action_event_base.py` | 89 | wjwwood | Callable signature validation |
-| `event_handlers/on_action_event_base.py` | 127 | jacobperron | Entity description |
-| `frontend/expose.py` | 71 | ivanpauno | Signature check |
-| `frontend/expose.py` | 72 | ivanpauno | Annotation inference |
-| `actions/execute_local.py` | 343 | wjwwood | Windows SIGINT workaround |
-| `actions/execute_local.py` | 752 | — | `OnProcessExit` None callable |
-| `actions/log_info.py` | 21 | — | Remove after L-turtle release |
-| `actions/log.py` | 62 | — | Remove after Python 3.11 min |
-| `actions/log.py` | 95 | — | Remove after L-turtle release |
-| `launch_introspector.py` | 51 | wjwwood | Text formatting edge case |
-| `launch_introspector.py` | 80 | wjwwood | Complex branching description |
-| `substitutions/python_expression.py` | 84 | — | XXX type annotation confusion |
+| File                                     | Line | Author      | Note                             |
+| ---------------------------------------- | ---- | ----------- | -------------------------------- |
+| `substitutions/python_expression.py`     | 120  | —           | Backward compat note             |
+| `launch_service.py`                      | 216  | wjwwood     | SIGQUIT subprocess cleanup       |
+| `logging/handlers.py`                    | 53   | hidmic      | Module `__getattr__` migration   |
+| `logging/__init__.py`                    | 83   | hidmic      | TOCTTOU race in log dir creation |
+| `event_handlers/on_shutdown.py`          | 54   | wjwwood     | Callable signature validation    |
+| `event_handlers/on_shutdown.py`          | 69   | dhood       | Known-actions description        |
+| `event_handlers/on_process_io.py`        | 33   | wjwwood     | `__init__` flexibility           |
+| `event_handlers/on_action_event_base.py` | 89   | wjwwood     | Callable signature validation    |
+| `event_handlers/on_action_event_base.py` | 127  | jacobperron | Entity description               |
+| `frontend/expose.py`                     | 71   | ivanpauno   | Signature check                  |
+| `frontend/expose.py`                     | 72   | ivanpauno   | Annotation inference             |
+| `actions/execute_local.py`               | 343  | wjwwood     | Windows SIGINT workaround        |
+| `actions/execute_local.py`               | 752  | —           | `OnProcessExit` None callable    |
+| `actions/log_info.py`                    | 21   | —           | Remove after L-turtle release    |
+| `actions/log.py`                         | 62   | —           | Remove after Python 3.11 min     |
+| `actions/log.py`                         | 95   | —           | Remove after L-turtle release    |
+| `launch_introspector.py`                 | 51   | wjwwood     | Text formatting edge case        |
+| `launch_introspector.py`                 | 80   | wjwwood     | Complex branching description    |
+| `substitutions/python_expression.py`     | 84   | —           | XXX type annotation confusion    |
 
 ## Vendored rapidjson library (5 items)
 
 **Path prefix:** `packages/runtime/drqp_rapidjson/include/drqp_rapidjson/`
 
-| File | Line | Note |
-|------|------|------|
-| `schema.h` | 2204 | Return type question |
-| `schema.h` | 2278 | Cache pointer↔id mapping |
+| File       | Line | Note                                 |
+| ---------- | ---- | ------------------------------------ |
+| `schema.h` | 2204 | Return type question                 |
+| `schema.h` | 2278 | Cache pointer↔id mapping             |
 | `schema.h` | 2300 | Cache pointer↔id mapping (duplicate) |
-| `schema.h` | 2323 | Cache pointer↔id mapping (FindId) |
-| `reader.h` | 1722 | StrtodX overflow reporting |
+| `schema.h` | 2323 | Cache pointer↔id mapping (FindId)    |
+| `reader.h` | 1722 | StrtodX overflow reporting           |
 
 ## Ansible configuration template (3 items)
 

@@ -45,24 +45,28 @@ difference into `(-π, π]` before converting to degrees.
 ## Implementation approach
 
 ### Turn 1 — Diagnose
+
 Run the test with the assertion un-commented and capture the failure message. Compare
 `angular_distance` to `walker.rotation_speed_degrees / 4` to understand the discrepancy.
 Check whether phase `0.5` is the right sample point (foot should be mid-swing, not mid-stance).
 
 ### Turn 2 — Fix
+
 Apply the minimal correction. Likely candidates:
+
 - Wrap normalisation: `(a - b + np.pi) % (2 * np.pi) - np.pi` before `np.rad2deg`.
 - Phase choice: verify that at `phase_override=0.5` the leg is actually in the swing phase.
   If not, adjust to a phase that is clearly in swing for the rotation gait.
 
 ### Turn 3 — Verify
+
 Run the full test module. Confirm the previously-commented assertion now passes and no other
 test regresses.
 
 ## Files to modify
 
-| File | Change |
-|------|--------|
+| File                                                       | Change                                  |
+| ---------------------------------------------------------- | --------------------------------------- |
 | `packages/runtime/drqp_brain/test/test_walk_controller.py` | Uncomment and fix the angular assertion |
 
 ## Dependencies

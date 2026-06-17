@@ -34,19 +34,21 @@ loaded.
 ## Implementation approach
 
 ### Turn 1 — Implement
+
 Locate the `Recording` (or `Record`) struct that holds `request.bytes`. Add a `size_t writeOffset = 0`
 field. Replace the erase call with `writeOffset += size`. Update the comparison loop to index
 from `writeOffset`.
 
 ### Turn 2 — Verify
+
 Run all tests in `drqp_serial` and `drqp_a1_16_driver`. Ensure replay-based tests still pass.
 
 ## Files to modify
 
-| File | Change |
-|------|--------|
-| `packages/runtime/drqp_serial/src/SerialPlayer.cpp` | Remove erase; add offset tracking |
-| `packages/runtime/drqp_serial/include/…/SerialPlayer.h` (if struct is there) | Add `writeOffset` field |
+| File                                                                         | Change                            |
+| ---------------------------------------------------------------------------- | --------------------------------- |
+| `packages/runtime/drqp_serial/src/SerialPlayer.cpp`                          | Remove erase; add offset tracking |
+| `packages/runtime/drqp_serial/include/…/SerialPlayer.h` (if struct is there) | Add `writeOffset` field           |
 
 ## Priority note
 

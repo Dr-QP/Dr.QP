@@ -26,8 +26,8 @@ The ROS 2 package manifest has a placeholder description. This shows up in `ros2
 
 ## Files to modify
 
-| File | Change |
-|------|--------|
+| File                                        | Change                                    |
+| ------------------------------------------- | ----------------------------------------- |
 | `packages/runtime/drqp_control/package.xml` | Replace placeholder with real description |
 
 ## Dependencies

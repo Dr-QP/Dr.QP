@@ -41,46 +41,55 @@ with the serial driver replaced by a mock.
 ## Implementation approach
 
 ### Turn 1 — Study upstream reference
+
 Read `ros2_control/hardware_interface/test/` (referenced in the TODO comment) to understand
 the test fixture pattern: `MockHardwareInterface`, `HardwareInterfaceTestSuite`, how lifecycle
 transitions are driven without a full ROS 2 stack.
 
 ### Turn 2 — Identify seams in the hardware interface
+
 Read the current implementation headers and sources in `drqp_control/`. Identify:
+
 - Where the serial driver is injected (constructor? `on_init`?).
 - What types are used (`ISerial`, `XYZrobotServo`, etc.).
 - Whether a mock-friendly interface already exists in `drqp_serial` or `drqp_a1_16_driver`.
 
 ### Turn 3 — Create or extend a mock serial interface
+
 If no mock/fake `ISerial` exists, create one in `drqp_serial` or as a test-only header in
 `drqp_control/test/`. The mock should capture written bytes and allow injecting read bytes.
 Use gmock `MOCK_METHOD` macros.
 
 ### Turns 4–7 — Write test cases (TDD Red/Green cycle)
+
 Implement one test class per concern:
+
 - `HardwareInterfaceInitTest` — init/config parsing.
 - `HardwareInterfaceLifecycleTest` — activate/deactivate state transitions.
 - `HardwareInterfaceReadWriteTest` — command/state round-trips.
 
 ### Turn 8 — Wire CMakeLists
+
 Add `ament_add_gmock(test_a1_16_hardware_interface_unit …)` with correct link libraries.
 Mirror the structure from the upstream reference.
 
 ### Turn 9 — CI check
+
 Run `colcon build` and `colcon test` locally; confirm all tests pass and no unrelated tests
 regress.
 
 ### Turn 10 — Refactor / cleanup
+
 Remove any dead code introduced during exploration. Ensure test helpers are in a reusable
 location if they could be shared with future hardware interface tests.
 
 ## Files to modify / create
 
-| File | Change |
-|------|--------|
-| `packages/runtime/drqp_control/CMakeLists.txt` | Add `ament_add_gmock` target; remove placeholder TODO |
-| `packages/runtime/drqp_control/test/test_a1_16_hardware_interface_unit.cpp` | New file — gmock test suite |
-| `packages/runtime/drqp_serial/include/…/MockSerial.h` (if needed) | New file — gmock mock for `ISerial` |
+| File                                                                        | Change                                                |
+| --------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `packages/runtime/drqp_control/CMakeLists.txt`                              | Add `ament_add_gmock` target; remove placeholder TODO |
+| `packages/runtime/drqp_control/test/test_a1_16_hardware_interface_unit.cpp` | New file — gmock test suite                           |
+| `packages/runtime/drqp_serial/include/…/MockSerial.h` (if needed)           | New file — gmock mock for `ISerial`                   |
 
 ## Dependencies
 

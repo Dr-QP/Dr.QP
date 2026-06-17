@@ -40,23 +40,26 @@ coupling between command and hardware-interface state.
 ## Implementation approach
 
 ### Turn 1 — Study message type and existing subscriber pattern
+
 Read `control_msgs/msg/DynamicJointState.msg`. Note that `interface_values` is a list of
 `InterfaceValue` with `interface_names` and `values` arrays. Map out how to extract a named
 joint's position interface value. Study existing subscriber patterns in the test file.
 
 ### Turn 2 — Implement the subscription and helper
+
 Add a `DynamicJointState` subscriber alongside the existing `JointState` subscriber. Implement
 `_get_dynamic_joint_position(joint_name)` that extracts the `position` interface value for a
 given joint. Update `_assert_position()` to use this when `expected_position is not None`.
 
 ### Turn 3 — Run integration tests
+
 Run the hardware interface integration test suite (against a simulated or mocked controller
 manager). Verify that the new subscriber receives messages and the assertions pass.
 
 ## Files to modify
 
-| File | Change |
-|------|--------|
+| File                                                                  | Change                                                        |
+| --------------------------------------------------------------------- | ------------------------------------------------------------- |
 | `packages/runtime/drqp_control/test/test_a1_16_hardware_interface.py` | Add `DynamicJointState` subscriber; update `_assert_position` |
 
 ## Dependencies
