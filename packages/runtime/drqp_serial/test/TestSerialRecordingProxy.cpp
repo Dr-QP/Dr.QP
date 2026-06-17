@@ -63,8 +63,9 @@ SCENARIO("test serial player error reporting on write overflow")
   WHEN("writeBytes is called with more bytes than recorded")
   {
     size_t assertCallCount = 0;
-    player.assertEqual = [&](const uint8_t /*expected*/, const uint8_t /*actual*/,
-                             const size_t /*pos*/) { ++assertCallCount; };
+    player.assertEqual = [&](
+                           const uint8_t /*expected*/, const uint8_t /*actual*/,
+                           const size_t /*pos*/) { ++assertCallCount; };
 
     const std::array<uint8_t, 2> data = {'a', 'b'};
     const size_t written = player.writeBytes(data.data(), data.size());
