@@ -22,7 +22,6 @@ Run ROS 2 tests efficiently and analyze results with comprehensive coverage repo
 
 - ROS 2 Jazzy installation
 - `scripts/with-ros-env.sh` available in workspace root for ROS 2 commands
-- `scripts/setup.bash --update-venv` available when `.venv-prod` needs a refresh
 - Packages already built with `colcon build`
 - Python 3.8+ for coverage tools
 - Optional: Node.js for interactive result viewer (xunit-viewer)
