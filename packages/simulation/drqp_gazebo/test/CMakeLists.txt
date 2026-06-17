@@ -5,12 +5,9 @@ include(../../../cmake/RosIsolatedLaunchTest.cmake)
 
 ament_add_pytest_test(test_sim_launch_keyboard_control test_sim_launch_keyboard_control.py)
 
-set(drqp_gazebo_smoke_launch_tests
+set(drqp_gazebo_launch_tests
   test_robot_control_spawn.py
   test_robot_control_nodes_and_clock.py
-)
-
-set(drqp_gazebo_full_launch_tests
   test_robot_control_movement_backward.py
   test_robot_control_movement_forward.py
   test_robot_control_movement_forward_sustained.py
@@ -20,11 +17,6 @@ set(drqp_gazebo_full_launch_tests
   test_robot_control_verify_armed_posture.py
   test_robot_control_verify_disarmed_posture.py
 )
-
-set(drqp_gazebo_launch_tests ${drqp_gazebo_smoke_launch_tests})
-if("$ENV{DRQP_GAZEBO_TEST_MODE}" STREQUAL "all")
-  list(APPEND drqp_gazebo_launch_tests ${drqp_gazebo_full_launch_tests})
-endif()
 
 foreach(test_file IN LISTS drqp_gazebo_launch_tests)
   drqp_add_ros_isolated_launch_test(
