@@ -21,12 +21,11 @@
 import os
 
 import launch_pytest
-import pytest
-
 from moveit_launch_smoke_test_support import (
     build_smoke_test_description,
     MoveItLaunchSmokeTestCase,
 )
+import pytest
 
 
 @launch_pytest.fixture

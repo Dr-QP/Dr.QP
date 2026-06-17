@@ -29,9 +29,9 @@ from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
-from launch_ros.substitutions import FindPackageShare
 import launch_pytest
 from launch_pytest.actions import ReadyToTest
+from launch_ros.substitutions import FindPackageShare
 from moveit_launch_smoke_test_support import build_test_gz_partition
 from moveit_msgs.msg import (
     CollisionObject,
@@ -44,8 +44,8 @@ from moveit_msgs.msg import (
 from moveit_msgs.srv import ApplyPlanningScene, GetMotionPlan, GetStateValidity
 import pytest
 import rclpy
-import rclpy.time
 from rclpy.action import ActionClient
+import rclpy.time
 from rosgraph_msgs.msg import Clock
 from scipy.spatial.transform import Rotation as Rotation
 from sensor_msgs.msg import JointState

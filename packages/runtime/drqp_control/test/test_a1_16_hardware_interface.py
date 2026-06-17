@@ -30,9 +30,9 @@ from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
-from launch_ros.substitutions import FindPackageShare
 import launch_pytest
 from launch_pytest.actions import ReadyToTest
+from launch_ros.substitutions import FindPackageShare
 import numpy as np
 import pytest
 import rclpy

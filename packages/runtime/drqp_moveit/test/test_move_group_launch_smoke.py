@@ -18,18 +18,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import launch_pytest
-import pytest
-
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
-from launch_ros.substitutions import FindPackageShare
+import launch_pytest
 from launch_pytest.actions import ReadyToTest
+from launch_ros.substitutions import FindPackageShare
 from moveit_launch_smoke_test_support import (
     MoveItLaunchSmokeTestCase,
 )
+import pytest
 
 
 @launch_pytest.fixture

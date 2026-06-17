@@ -19,13 +19,12 @@
 # THE SOFTWARE.
 
 import launch_pytest
-import pytest
-
 from moveit_launch_smoke_test_support import (
     build_smoke_test_description,
     build_test_gz_partition,
     MoveItLaunchSmokeTestCase,
 )
+import pytest
 
 
 @launch_pytest.fixture
