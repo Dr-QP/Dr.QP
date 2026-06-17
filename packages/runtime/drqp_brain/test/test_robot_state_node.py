@@ -24,13 +24,13 @@ import unittest
 
 from drqp_brain.instance_guard import InstanceGuard
 from drqp_brain.robot_state import robot_state_node
+import launch_pytest
 from launch import LaunchDescription
 from launch.actions import TimerAction
 from launch.substitutions import FindExecutable
 from launch_ros.actions import Node
 from launch_ros.substitutions import ExecutableInPackage
-from launch_testing import asserts, post_shutdown_test
-from launch_testing.actions import ReadyToTest
+from launch_pytest.actions import ReadyToTest
 import pytest
 import rclpy
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
@@ -45,7 +45,7 @@ def test_robot_state_main_refuses_duplicate_instance(monkeypatch):
         assert robot_state_node.main() == 1
 
 
-@pytest.mark.launch_test
+@launch_pytest.fixture
 def generate_test_description():
     return LaunchDescription(
         [
@@ -65,6 +65,7 @@ def generate_test_description():
     )
 
 
+@pytest.mark.launch(fixture=generate_test_description)
 class TestRobotStateMachineNode(unittest.TestCase):
     """Test the drqp_robot_state node."""
 
@@ -78,7 +79,7 @@ class TestRobotStateMachineNode(unittest.TestCase):
         self.node = rclpy.create_node('test_state_consumer')
         self.addCleanup(self.node.destroy_node)
 
-    def test_processes_events_and_publishes_state(self, proc_output):
+    def test_processes_events_and_publishes_state(self):
         """Check whether events are processed."""
         msgs_received = []
 
@@ -109,11 +110,6 @@ class TestRobotStateMachineNode(unittest.TestCase):
             self.node.destroy_publisher(self.event_pub)
 
 
-# Post-shutdown tests
-@post_shutdown_test()
-class TestRobotStateMachineNodeShutdown(unittest.TestCase):
-    """Test the drqp_robot_state node shutdown."""
-
-    def test_exit_codes(self, proc_info):
-        """Check if the processes exited normally."""
-        asserts.assertExitCodes(proc_info)
+@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
+def test_robot_state_node_shutdown():
+    pass

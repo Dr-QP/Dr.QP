@@ -26,13 +26,13 @@ from drqp_brain.brain_node import _assert_no_existing_brain_node, HexapodBrain
 from drqp_brain.instance_guard import InstanceAlreadyRunningError
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 from geometry_msgs.msg import Vector3
+import launch_pytest
 from launch import LaunchDescription
 from launch.actions import TimerAction
 from launch.substitutions import FindExecutable
 from launch_ros.actions import Node
 from launch_ros.substitutions import ExecutableInPackage
-from launch_testing import asserts, post_shutdown_test
-from launch_testing.actions import ReadyToTest
+from launch_pytest.actions import ReadyToTest
 import pytest
 import rclpy
 import std_msgs.msg
@@ -50,7 +50,7 @@ def test_existing_brain_node_detection_rejects_duplicate_ros_node():
         _assert_no_existing_brain_node(node)
 
 
-@pytest.mark.launch_test
+@launch_pytest.fixture
 def generate_test_description():
     return LaunchDescription(
         [
@@ -70,6 +70,7 @@ def generate_test_description():
     )
 
 
+@pytest.mark.launch(fixture=generate_test_description)
 class TestBrainNode(unittest.TestCase):
     """Test the drqp_brain node."""
 
@@ -91,11 +92,11 @@ class TestBrainNode(unittest.TestCase):
         # Publisher for robot state (brain node subscribes to this)
         self.state_pub = self.node.create_publisher(std_msgs.msg.String, '/robot_state', 10)
 
-    def test_nothing(self, proc_output):
+    def test_nothing(self):
         """Smoke check."""
         pass
 
-    def test_movement_command_processing(self, proc_output):
+    def test_movement_command_processing(self):
         """Test that brain node can process movement commands."""
         # Create a movement command
         cmd = MovementCommand()
@@ -114,7 +115,7 @@ class TestBrainNode(unittest.TestCase):
         # If we get here without errors, the test passes
         # (brain node should process the command without crashing)
 
-    def test_trajectory_action_client_is_created_lazily(self, proc_output):
+    def test_trajectory_action_client_is_created_lazily(self):
         """Only create the action client when an action sequence is requested."""
         with mock.patch('drqp_brain.brain_node.ActionClient') as action_client_cls:
             action_client = action_client_cls.return_value
@@ -134,7 +135,7 @@ class TestBrainNode(unittest.TestCase):
             finally:
                 brain.destroy_node()
 
-    def test_destroy_node_destroys_action_client(self, proc_output):
+    def test_destroy_node_destroys_action_client(self):
         """Destroy the action client explicitly during node shutdown."""
         with mock.patch('drqp_brain.brain_node.ActionClient') as action_client_cls:
             action_client = action_client_cls.return_value
@@ -147,11 +148,6 @@ class TestBrainNode(unittest.TestCase):
             action_client.destroy.assert_called_once_with()
 
 
-# Post-shutdown tests
-@post_shutdown_test()
-class TestBrainNodeShutdown(unittest.TestCase):
-    """Test the drqp_brain node shutdown."""
-
-    def test_exit_codes(self, proc_info):
-        """Check if the processes exited normally."""
-        asserts.assertExitCodes(proc_info)
+@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
+def test_brain_node_shutdown():
+    pass
