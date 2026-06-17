@@ -167,6 +167,18 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            'spawn_robot',
+            default_value='true',
+            choices=['true', 'false'],
+            description=(
+                'Spawn the robot and bring up its control stack. Set to false to '
+                'launch only Gazebo and the world (e.g. to test the world fixture '
+                'in isolation).'
+            ),
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             'gz_partition',
             default_value=[
                 EnvironmentVariable('HOSTNAME', default_value='unknown-host'),
@@ -188,6 +200,7 @@ def generate_launch_description():
     follow_camera = LaunchConfiguration('follow_camera')
     follow_camera_delay = LaunchConfiguration('follow_camera_delay')
     load_keyboard_control = LaunchConfiguration('load_keyboard_control')
+    spawn_robot = LaunchConfiguration('spawn_robot')
     gz_partition = LaunchConfiguration('gz_partition')
     robot_x = LaunchConfiguration('robot_x')
     robot_y = LaunchConfiguration('robot_y')
@@ -328,17 +341,18 @@ def generate_launch_description():
         + declared_arguments
         + [
             SetEnvironmentVariable('GZ_PARTITION', gz_partition),
+            gazebo,
             GroupAction(
-                [
+                condition=IfCondition(spawn_robot),
+                actions=[
                     SetParameter('use_sim_time', value=True),
                     drqp_system,
-                    gazebo,
                     gazebo_bridge,
                     gz_spawn_entity,
                     follow_camera_command,
                     keyboard_control,
                     balance_challenge_disturbance,
-                ]
+                ],
             ),
         ]
     )

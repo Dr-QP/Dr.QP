@@ -113,6 +113,23 @@ def create_balance_board_launch_description() -> LaunchDescription:
     )
 
 
+def create_board_only_launch_description() -> LaunchDescription:
+    """Launch only Gazebo and the balance board world, with no robot.
+
+    Used to characterise the board fixture in isolation: it verifies the tilting
+    mechanism reaches its commanded angles without any coupling from the robot.
+    """
+    return create_simulation_launch_description(
+        launch_arguments={
+            'world_sdf': BALANCE_BOARD_WORLD_PATH,
+            'spawn_robot': 'false',
+            # No robot to view and no sensors to render, so skip the GUI to boot
+            # faster and keep this fixture check lightweight.
+            'sim_gui': 'false',
+        }
+    )
+
+
 def filter_out_gazebo_processes(proc_info: ProcInfoHandler) -> ProcInfoHandler:
     """Filter out Gazebo processes that are terminated by launch teardown."""
     filtered_proc_info = ProcInfoHandler()
@@ -152,6 +169,21 @@ class GazeboRobotControlBase(unittest.TestCase):
     POSE_SETTLE_DURATION = 1.0
     BALANCE_SETTLE_DURATION = 3.0
     BALANCED_BODY_TILT_TOLERANCE = 0.10
+    # Sim seconds to let a robot motion run before checking its effect on the board.
+    MOTION_RESPONSE_DURATION = 1.0
+
+    # Board tilt commands go through short-lived `gz topic -p` publishers whose
+    # message can be dropped before the controller's subscription is discovered.
+    # Republish a few times so a single drop does not leave an axis uncommanded.
+    BOARD_TILT_PUBLISH_ATTEMPTS = 3
+    BOARD_TILT_PUBLISH_INTERVAL = 0.15
+
+    # Absolute tolerance (radians) for the board reaching a commanded angle.
+    BOARD_TILT_TOLERANCE = 0.03
+    # Absolute tolerance (radians) for the board holding level while the robot
+    # moves on it. Looser than BOARD_TILT_TOLERANCE to absorb transient contact
+    # forces from the gait without masking a board that is back-driven off level.
+    BOARD_ALIGNMENT_TOLERANCE = 0.05
 
     # Posture delta threshold (meters).
     MIN_ARM_DISARM_HEIGHT_DELTA = 0.02
@@ -514,25 +546,30 @@ class GazeboRobotControlBase(unittest.TestCase):
         roll: float = 0.0,
         pitch: float = 0.0,
     ) -> None:
-        """Command the balance board to the given roll and pitch via joint position controllers."""
-        self._run_gz_command(
-            [
-                'gz', 'topic',
-                '-t', BALANCE_BOARD_ROLL_TOPIC,
-                '-m', 'gz.msgs.Double',
-                '-p', f'data: {roll}',
-            ],
-            error_context='Setting balance board roll target',
-        )
-        self._run_gz_command(
-            [
-                'gz', 'topic',
-                '-t', BALANCE_BOARD_PITCH_TOPIC,
-                '-m', 'gz.msgs.Double',
-                '-p', f'data: {pitch}',
-            ],
-            error_context='Setting balance board pitch target',
-        )
+        """Command the balance board to the given roll and pitch via joint position controllers.
+
+        ``gz topic -p`` publishes a single message from a short-lived publisher that
+        exits immediately, so the message is occasionally dropped before the
+        controller's subscription finishes discovery. A dropped publish would leave
+        one axis at zero (e.g. turning a diagonal command into a pure-pitch tilt) and
+        make ``_wait_for_board_tilt`` time out. Publish each target a few times to
+        make delivery reliable.
+        """
+        for topic, value, context in (
+            (BALANCE_BOARD_ROLL_TOPIC, roll, 'Setting balance board roll target'),
+            (BALANCE_BOARD_PITCH_TOPIC, pitch, 'Setting balance board pitch target'),
+        ):
+            for _ in range(self.BOARD_TILT_PUBLISH_ATTEMPTS):
+                self._run_gz_command(
+                    [
+                        'gz', 'topic',
+                        '-t', topic,
+                        '-m', 'gz.msgs.Double',
+                        '-p', f'data: {value}',
+                    ],
+                    error_context=context,
+                )
+                time.sleep(self.BOARD_TILT_PUBLISH_INTERVAL)
 
     def _sample_entity_pose_from_gazebo(self, entity_name: str) -> Pose:
         """
@@ -612,6 +649,58 @@ class GazeboRobotControlBase(unittest.TestCase):
             'Gazebo board tilt did not reach the expected pose. '
             f'Expected roll={expected_roll:.3f}, pitch={expected_pitch:.3f}; '
             f'last roll={last_roll:.3f}, pitch={last_pitch:.3f}'
+        )
+
+    def _sample_board_tilt(self) -> tuple[float, float]:
+        """Return the board's current roll and pitch in radians from Gazebo."""
+        board_pose = self._sample_entity_pose_from_gazebo(BALANCE_BOARD_BOARD_LINK_NAME)
+        return self._roll_pitch_from_quaternion(board_pose.orientation)
+
+    def _assert_board_reaches_tilt(self, board_roll: float, board_pitch: float) -> None:
+        """Command a tilt, assert the board reaches it, then return the board to level."""
+        self._set_board_tilt(roll=board_roll, pitch=board_pitch)
+        observed_roll, observed_pitch = self._wait_for_board_tilt(
+            expected_roll=board_roll,
+            expected_pitch=board_pitch,
+            tolerance=self.BOARD_TILT_TOLERANCE,
+        )
+        self.assertAlmostEqual(
+            observed_roll,
+            board_roll,
+            delta=self.BOARD_TILT_TOLERANCE,
+            msg=(
+                'Board roll did not reach commanded angle '
+                f'(commanded={board_roll:.3f}, observed={observed_roll:.3f})'
+            ),
+        )
+        self.assertAlmostEqual(
+            observed_pitch,
+            board_pitch,
+            delta=self.BOARD_TILT_TOLERANCE,
+            msg=(
+                'Board pitch did not reach commanded angle '
+                f'(commanded={board_pitch:.3f}, observed={observed_pitch:.3f})'
+            ),
+        )
+        self._set_board_tilt(roll=0.0, pitch=0.0)
+        self._wait_for_board_tilt(
+            expected_roll=0.0, expected_pitch=0.0, tolerance=self.BOARD_TILT_TOLERANCE
+        )
+
+    def _assert_board_stays_level(self, context_message: str) -> None:
+        """Assert the board is holding level within the alignment tolerance."""
+        observed_roll, observed_pitch = self._sample_board_tilt()
+        self.assertAlmostEqual(
+            observed_roll,
+            0.0,
+            delta=self.BOARD_ALIGNMENT_TOLERANCE,
+            msg=f'Board roll drifted off level {context_message} (roll={observed_roll:.3f})',
+        )
+        self.assertAlmostEqual(
+            observed_pitch,
+            0.0,
+            delta=self.BOARD_ALIGNMENT_TOLERANCE,
+            msg=f'Board pitch drifted off level {context_message} (pitch={observed_pitch:.3f})',
         )
 
     def _arm_robot(self) -> None:
@@ -699,11 +788,17 @@ class GazeboRobotControlBase(unittest.TestCase):
         stride_x: float = 0.0,
         stride_y: float = 0.0,
         rotation: float = 0.0,
+        *,
+        stride_z: float = 0.0,
+        body_translation_x: float = 0.0,
     ) -> None:
+        # stride_direction.z contributes to the stride magnitude with no horizontal
+        # heading, so stride_z=1 makes the robot step in place. body_translation_x
+        # shifts the body forward over the stance without taking a step.
         cmd = MovementCommand()
-        cmd.stride_direction = Vector3(x=stride_x, y=stride_y, z=0.0)
+        cmd.stride_direction = Vector3(x=stride_x, y=stride_y, z=stride_z)
         cmd.rotation_speed = rotation
-        cmd.body_translation = Vector3(x=0.0, y=0.0, z=0.0)
+        cmd.body_translation = Vector3(x=body_translation_x, y=0.0, z=0.0)
         cmd.body_rotation = Vector3(x=0.0, y=0.0, z=0.0)
         cmd.gait_type = MovementCommandConstants.GAIT_TRIPOD
         for _ in range(3):
@@ -711,7 +806,8 @@ class GazeboRobotControlBase(unittest.TestCase):
             rclpy.spin_once(self.node, timeout_sec=0.05)
             time.sleep(0.05)
         self.node.get_logger().info(
-            f'Published movement command: stride=({stride_x}, {stride_y}), rotation={rotation}'
+            f'Published movement command: stride=({stride_x}, {stride_y}, {stride_z}), '
+            f'body_translation_x={body_translation_x}, rotation={rotation}'
         )
 
     def _assert_posture_delta_or_static(
@@ -1108,6 +1204,38 @@ class GazeboRobotControlBase(unittest.TestCase):
             ),
         )
         self._set_balance_mode(True)
+
+
+class BalanceBoardWorldBase(GazeboRobotControlBase):
+    """Harness for testing the balance board fixture in isolation (no robot).
+
+    Reuses the board-driving helpers from :class:`GazeboRobotControlBase` but
+    launches Gazebo with ``spawn_robot:=false``, so there is no robot, ROS bridge,
+    or control stack. The board helpers talk to Gazebo over the ``gz`` CLI and need
+    no ROS node, so ``setUp`` only waits for the world to start serving poses.
+    """
+
+    __test__ = False  # Prevent unittest from collecting this base class as a test case.
+
+    def setUp(self) -> None:
+        """Wait for the board world to start; skip all robot-readiness waits."""
+        self._wait_for_board_world_ready()
+
+    def _wait_for_board_world_ready(self) -> Pose:
+        """Poll Gazebo until the board entity pose is served, tolerating startup errors."""
+        deadline = time.monotonic() + self.READY_TIMEOUT
+        last_error = ''
+        while time.monotonic() < deadline:
+            try:
+                return self._sample_entity_pose_from_gazebo(BALANCE_BOARD_BOARD_LINK_NAME)
+            except (AssertionError, RuntimeError) as error:
+                # gz CLI not up yet, or the world has not published poses; retry.
+                last_error = str(error)
+            time.sleep(0.5)
+        self.fail(
+            f'Balance board world did not become ready within {self.READY_TIMEOUT}s: '
+            f'{last_error}'
+        )
 
 
 def _parse_gazebo_pose_info(raw_output: str) -> list[dict[str, Pose | str]]:
