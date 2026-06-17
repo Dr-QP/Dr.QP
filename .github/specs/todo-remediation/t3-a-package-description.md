@@ -21,7 +21,7 @@ The ROS 2 package manifest has a placeholder description. This shows up in `ros2
 ## Suggested text
 
 ```xml
-<description>ROS 2 control hardware interface and controllers for the Dr.QP hexapod robot.</description>
+<description>ROS 2 hardware interface plugin for the Dr.QP hexapod robot, bridging ros2_control to the A1-16 servo driver.</description>
 ```
 
 ## Files to modify

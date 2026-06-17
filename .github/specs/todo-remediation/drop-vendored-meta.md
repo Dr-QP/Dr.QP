@@ -3,7 +3,7 @@
 These 29 items appear in code or files that the project does not own and should not modify.
 They are documented here so they can be excluded from future audits.
 
-## Vendored ROS 2 launch library (11 items)
+## Vendored ROS 2 launch library (19 items)
 
 **Path prefix:** `packages/vendor/launch/launch/launch/`
 
