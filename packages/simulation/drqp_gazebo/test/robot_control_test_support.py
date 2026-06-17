@@ -114,7 +114,8 @@ def create_balance_board_launch_description() -> LaunchDescription:
 
 
 def create_board_only_launch_description() -> LaunchDescription:
-    """Launch only Gazebo and the balance board world, with no robot.
+    """
+    Launch only Gazebo and the balance board world, with no robot.
 
     Used to characterise the board fixture in isolation: it verifies the tilting
     mechanism reaches its commanded angles without any coupling from the robot.
@@ -546,7 +547,8 @@ class GazeboRobotControlBase(unittest.TestCase):
         roll: float = 0.0,
         pitch: float = 0.0,
     ) -> None:
-        """Command the balance board to the given roll and pitch via joint position controllers.
+        """
+        Command the balance board to the given roll and pitch via joint position controllers.
 
         ``gz topic -p`` publishes a single message from a short-lived publisher that
         exits immediately, so the message is occasionally dropped before the
@@ -562,10 +564,14 @@ class GazeboRobotControlBase(unittest.TestCase):
             for _ in range(self.BOARD_TILT_PUBLISH_ATTEMPTS):
                 self._run_gz_command(
                     [
-                        'gz', 'topic',
-                        '-t', topic,
-                        '-m', 'gz.msgs.Double',
-                        '-p', f'data: {value}',
+                        'gz',
+                        'topic',
+                        '-t',
+                        topic,
+                        '-m',
+                        'gz.msgs.Double',
+                        '-p',
+                        f'data: {value}',
                     ],
                     error_context=context,
                 )
@@ -604,8 +610,7 @@ class GazeboRobotControlBase(unittest.TestCase):
                 return entity['pose']
         available = [e['name'] for e in entities]
         raise RuntimeError(
-            f'Gazebo pose info did not include entity "{entity_name}". '
-            f'Available: {available}'
+            f'Gazebo pose info did not include entity "{entity_name}". Available: {available}'
         )
 
     def _wait_for_board_tilt(
@@ -1176,10 +1181,16 @@ class GazeboRobotControlBase(unittest.TestCase):
         self._set_board_tilt(roll=0.0, pitch=0.0)
         board_r, board_p = self._wait_for_board_tilt(expected_roll=0.0, expected_pitch=0.0)
         self.assertAlmostEqual(
-            board_r, 0.0, delta=0.03, msg=f'Expected board roll to return to level (got {board_r:.3f})'
+            board_r,
+            0.0,
+            delta=0.03,
+            msg=f'Expected board roll to return to level (got {board_r:.3f})',
         )
         self.assertAlmostEqual(
-            board_p, 0.0, delta=0.03, msg=f'Expected board pitch to return to level (got {board_p:.3f})'
+            board_p,
+            0.0,
+            delta=0.03,
+            msg=f'Expected board pitch to return to level (got {board_p:.3f})',
         )
 
         self._set_balance_mode(False)
@@ -1207,7 +1218,8 @@ class GazeboRobotControlBase(unittest.TestCase):
 
 
 class BalanceBoardWorldBase(GazeboRobotControlBase):
-    """Harness for testing the balance board fixture in isolation (no robot).
+    """
+    Harness for testing the balance board fixture in isolation (no robot).
 
     Reuses the board-driving helpers from :class:`GazeboRobotControlBase` but
     launches Gazebo with ``spawn_robot:=false``, so there is no robot, ROS bridge,
@@ -1233,8 +1245,7 @@ class BalanceBoardWorldBase(GazeboRobotControlBase):
                 last_error = str(error)
             time.sleep(0.5)
         self.fail(
-            f'Balance board world did not become ready within {self.READY_TIMEOUT}s: '
-            f'{last_error}'
+            f'Balance board world did not become ready within {self.READY_TIMEOUT}s: {last_error}'
         )
 
 

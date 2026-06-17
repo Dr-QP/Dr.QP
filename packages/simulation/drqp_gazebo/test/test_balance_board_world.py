@@ -18,7 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Characterise the balance board fixture in isolation, with no robot.
+"""
+Characterise the balance board fixture in isolation, with no robot.
 
 This is the first of three layered balance-board tests. It verifies the tilting
 mechanism alone reaches every commanded roll/pitch angle, so that any failure in
@@ -40,14 +41,14 @@ _TILT_MAGNITUDE = 0.12
 _TILT_DIAGONAL = _TILT_MAGNITUDE / math.sqrt(2)
 
 _TILT_SCENARIOS = [
-    (0.0, +_TILT_MAGNITUDE),              # pitch+
-    (+_TILT_DIAGONAL, +_TILT_DIAGONAL),   # roll+ pitch+
-    (+_TILT_MAGNITUDE, 0.0),              # roll+
-    (+_TILT_DIAGONAL, -_TILT_DIAGONAL),   # roll+ pitch-
-    (0.0, -_TILT_MAGNITUDE),              # pitch-
-    (-_TILT_DIAGONAL, -_TILT_DIAGONAL),   # roll- pitch-
-    (-_TILT_MAGNITUDE, 0.0),              # roll-
-    (-_TILT_DIAGONAL, +_TILT_DIAGONAL),   # roll- pitch+
+    (0.0, +_TILT_MAGNITUDE),  # pitch+
+    (+_TILT_DIAGONAL, +_TILT_DIAGONAL),  # roll+ pitch+
+    (+_TILT_MAGNITUDE, 0.0),  # roll+
+    (+_TILT_DIAGONAL, -_TILT_DIAGONAL),  # roll+ pitch-
+    (0.0, -_TILT_MAGNITUDE),  # pitch-
+    (-_TILT_DIAGONAL, -_TILT_DIAGONAL),  # roll- pitch-
+    (-_TILT_MAGNITUDE, 0.0),  # roll-
+    (-_TILT_DIAGONAL, +_TILT_DIAGONAL),  # roll- pitch+
 ]
 
 

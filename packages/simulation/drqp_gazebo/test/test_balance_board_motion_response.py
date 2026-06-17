@@ -18,7 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Verify the level board holds its alignment while the robot moves on it.
+"""
+Verify the level board holds its alignment while the robot moves on it.
 
 This is the third of three layered balance-board tests. The board is left level
 and held there by its joint position controllers; the robot then steps in place
