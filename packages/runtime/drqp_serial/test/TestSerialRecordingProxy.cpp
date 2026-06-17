@@ -74,6 +74,7 @@ SCENARIO("test serial player error reporting on write overflow")
     {
       REQUIRE(assertCallCount == 1);
       REQUIRE(written == 2);
+      REQUIRE(!player.isEmpty());
     }
   }
 }
@@ -118,6 +119,7 @@ SCENARIO("test unix serial with serial proxy")
     THEN("same test should give same results")
     {
       simpleSerialTest(serialPlayer);
+      REQUIRE(serialPlayer.isEmpty());
 
       REQUIRE_NOTHROW(remove(kDestinationSerialRecordingFile));
     }
