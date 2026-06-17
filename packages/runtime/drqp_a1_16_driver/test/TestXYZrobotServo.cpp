@@ -46,7 +46,6 @@ constexpr uint16_t kStartGoal = 512;
 constexpr uint16_t kTestGoal = 812;
 
 /// Global test options
-// TODO(anton-matosov): Add command line options for these options
 struct TestOptions
 {
   std::string serialAddress = "/dev/ttySC0";
