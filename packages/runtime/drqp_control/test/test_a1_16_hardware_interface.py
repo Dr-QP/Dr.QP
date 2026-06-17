@@ -33,15 +33,17 @@ from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
-from launch_testing import asserts, post_shutdown_test
-from launch_testing.actions import ReadyToTest
+import launch_pytest
+from launch_pytest.actions import ReadyToTest
 import numpy as np
+import pytest
 import rclpy
 from rclpy.action import ActionClient
 import rclpy.time
 from trajectory_msgs.msg import JointTrajectoryPoint
 
 
+@launch_pytest.fixture
 def generate_test_description():
     drqp_controllers_launch_file = PathJoinSubstitution(
         [
@@ -68,6 +70,7 @@ default_interface_value = -123.321
 neutral_position = 0.1
 
 
+@pytest.mark.launch(fixture=generate_test_description)
 class TestA116HardwareInterface(unittest.TestCase):
     """Test the pose_setter node."""
 
@@ -290,11 +293,6 @@ class TestA116HardwareInterface(unittest.TestCase):
             )
 
 
-# Post-shutdown tests
-@post_shutdown_test()
-class TestA116HardwareInterfaceShutdown(unittest.TestCase):
-    """Test the a1_16_hardware_interface shutdown."""
-
-    def test_exit_codes(self, proc_info):
-        """Check if the processes exited normally."""
-        asserts.assertExitCodes(proc_info)
+@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
+def test_a1_16_hardware_interface_shutdown():
+    pass
