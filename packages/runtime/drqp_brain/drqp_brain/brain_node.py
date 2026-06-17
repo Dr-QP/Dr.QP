@@ -93,8 +93,8 @@ class HexapodBrain(rclpy.node.Node):
         self.loop_callback_group = MutuallyExclusiveCallbackGroup()
         self.state_callback_group = ReentrantCallbackGroup()
         self.declare_parameter('enable_imu_balance', True)
-        self.declare_parameter('imu_balance_gain', 1.0)
-        self.declare_parameter('imu_balance_max_tilt_rad', 0.35)
+        self.declare_parameter('imu_balance_gain', 2.0)
+        self.declare_parameter('imu_balance_max_tilt_rad', 0.15)
         self.declare_parameter('imu_balance_timeout_sec', 1.0)
         self.enable_imu_balance = self.get_parameter('enable_imu_balance').value
         self.imu_balance_gain = self.get_parameter('imu_balance_gain').value

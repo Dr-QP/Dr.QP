@@ -22,6 +22,7 @@
 
 from drqp_brain.balance_controller import (
     apply_imu_balance,
+    BASE_CENTER_TO_IMU_ROTATION,
     body_tilt_from_imu,
 )
 from drqp_kinematics.geometry import Point3D
@@ -35,10 +36,15 @@ def make_quaternion_msg(rotation: R) -> Quaternion:
     return Quaternion(x=x, y=y, z=z, w=w)
 
 
+def imu_orientation_for_body(body_in_world: R) -> Quaternion:
+    """Build the raw IMU sensor-frame quaternion for a given body attitude."""
+    return make_quaternion_msg(body_in_world * BASE_CENTER_TO_IMU_ROTATION)
+
+
 def test_body_tilt_from_imu_returns_base_center_roll_and_pitch():
     base_in_world = R.from_euler('xyz', [0.18, -0.12, 0.41], degrees=False)
 
-    tilt = body_tilt_from_imu(make_quaternion_msg(base_in_world))
+    tilt = body_tilt_from_imu(imu_orientation_for_body(base_in_world))
 
     assert tilt.x == pytest.approx(0.18)
     assert tilt.y == pytest.approx(-0.12)
@@ -46,14 +52,16 @@ def test_body_tilt_from_imu_returns_base_center_roll_and_pitch():
 
 
 def test_body_tilt_from_imu_is_zero_for_level_body():
-    tilt = body_tilt_from_imu(make_quaternion_msg(R.identity()))
+    tilt = body_tilt_from_imu(imu_orientation_for_body(R.identity()))
 
-    assert tilt == Point3D([0.0, 0.0, 0.0])
+    assert tilt.x == pytest.approx(0.0)
+    assert tilt.y == pytest.approx(0.0)
+    assert tilt.z == pytest.approx(0.0)
 
 
 def test_body_tilt_from_imu_ignores_yaw_when_extracting_body_tilt():
     tilt = body_tilt_from_imu(
-        make_quaternion_msg(R.from_euler('xyz', [0.07, -0.09, 0.2], degrees=False))
+        imu_orientation_for_body(R.from_euler('xyz', [0.07, -0.09, 0.2], degrees=False))
     )
 
     assert tilt.x == pytest.approx(0.07)

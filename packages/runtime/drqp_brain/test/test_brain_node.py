@@ -22,6 +22,7 @@ import unittest
 from unittest import mock
 
 from control_msgs.action import FollowJointTrajectory
+from drqp_brain.balance_controller import BASE_CENTER_TO_IMU_ROTATION
 from drqp_brain.brain_node import _assert_no_existing_brain_node, HexapodBrain
 from drqp_brain.instance_guard import InstanceAlreadyRunningError
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
@@ -79,8 +80,9 @@ def make_imu_msg_from_base_tilt(
     *,
     frame_id: str = 'drqp/imu_link',
 ) -> Imu:
-    """Build an IMU message whose orientation already represents body attitude."""
-    qx, qy, qz, qw = R.from_euler('xyz', [roll, pitch, yaw], degrees=False).as_quat()
+    """Build a raw IMU message whose sensor-frame orientation maps to the given body tilt."""
+    body_in_world = R.from_euler('xyz', [roll, pitch, yaw], degrees=False)
+    qx, qy, qz, qw = (body_in_world * BASE_CENTER_TO_IMU_ROTATION).as_quat()
     return Imu(
         header=std_msgs.msg.Header(frame_id=frame_id),
         orientation=Quaternion(x=qx, y=qy, z=qz, w=qw),
@@ -164,8 +166,8 @@ class TestBrainNode(unittest.TestCase):
 
             action_client.destroy.assert_called_once_with()
 
-    def test_process_imu_uses_body_orientation_directly(self):
-        """Treat IMU orientation as body attitude without TF mount compensation."""
+    def test_process_imu_compensates_static_mount_rotation(self):
+        """Recover body attitude by de-rotating the fixed IMU sensor mount."""
         brain = HexapodBrain()
         try:
             brain.process_imu(make_imu_msg_from_base_tilt(0.11, -0.07, 0.2))
@@ -176,7 +178,7 @@ class TestBrainNode(unittest.TestCase):
             brain.destroy_node()
 
     def test_process_imu_does_not_require_known_tf_frame(self):
-        """Gazebo IMU frames are accepted because orientation already describes body attitude."""
+        """Gazebo IMU frames are accepted because mount compensation uses a static rotation."""
         brain = HexapodBrain()
         try:
             brain.process_imu(
