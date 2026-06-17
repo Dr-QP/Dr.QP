@@ -1,11 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Edit(//opt/ros/overlay_ws/**)",
       "Read(//opt/ros/**)",
       "Read(//root/**)",
+      "Edit(//opt/ros/overlay_ws/**)",
       "Edit(//tmp/**)",
-      "Read(//tmp/**)",
       "WebSearch",
       "WebFetch(domain:docs.docker.com)",
       "WebFetch(domain:api.github.com)",
