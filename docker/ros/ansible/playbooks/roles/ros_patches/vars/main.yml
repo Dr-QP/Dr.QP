@@ -1,0 +1,12 @@
+---
+# ROS patch packages: upstream fixes not yet released in the official apt repo.
+#
+# Each entry:
+#   name  - apt package name (used for idempotency check and apt-mark hold)
+#   url   - direct URL to the .deb file
+#   arch  - (optional) restrict to this system_arch; omit to apply on all arches
+ros_patches_packages:
+  - name: ros-jazzy-launch-pytest
+    arch: arm64
+    url: >-
+      https://repo.ros2.org/ubuntu/building/pool/main/r/ros-jazzy-launch-pytest/ros-jazzy-launch-pytest_3.4.11-1noble.20260603.150049_arm64.deb
