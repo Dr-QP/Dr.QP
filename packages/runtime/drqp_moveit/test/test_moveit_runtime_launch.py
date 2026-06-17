@@ -62,7 +62,7 @@ TARGET_OBSTACLE_ID = 'issue43_left_front_target_blocker'
 
 
 @pytest.mark.slow
-@launch_pytest.fixture
+@launch_pytest.fixture(scope='class')
 def generate_test_description():
     demo_gazebo_launch = PathJoinSubstitution(
         [FindPackageShare('drqp_moveit'), 'launch', 'demo_gazebo.launch.py']

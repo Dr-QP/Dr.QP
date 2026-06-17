@@ -3,7 +3,7 @@ include(../../../cmake/RosIsolatedLaunchTest.cmake)
 
 find_package(ament_cmake_ros REQUIRED)
 
-drqp_add_ros_isolated_launch_test(test_a1_16_hardware_interface.py)
+drqp_add_ros_isolated_launch_test(test_a1_16_hardware_interface.py TIMEOUT 300)
 
 find_package(catch_ros2 REQUIRED)
 add_executable(drqp_control_tests

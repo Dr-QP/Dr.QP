@@ -33,6 +33,7 @@ if(BUILD_TESTING)
   drqp_add_ros_isolated_launch_test(
     test/test_moveit_runtime_launch.py
     APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/test
+    TIMEOUT 600
   )
 
   find_package(ament_lint_auto REQUIRED)

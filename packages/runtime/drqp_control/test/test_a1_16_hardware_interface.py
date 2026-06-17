@@ -41,7 +41,7 @@ import rclpy.time
 from trajectory_msgs.msg import JointTrajectoryPoint
 
 
-@launch_pytest.fixture
+@launch_pytest.fixture(scope='class')
 def generate_test_description():
     drqp_controllers_launch_file = PathJoinSubstitution(
         [
