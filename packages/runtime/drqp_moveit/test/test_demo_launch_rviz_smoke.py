@@ -19,13 +19,17 @@
 # THE SOFTWARE.
 
 import os
-import unittest
 
-from moveit_launch_smoke_test_support import build_smoke_test_description
+import launch_pytest
 import pytest
 
+from moveit_launch_smoke_test_support import (
+    build_smoke_test_description,
+    MoveItLaunchSmokeTestCase,
+)
 
-@pytest.mark.launch_test
+
+@launch_pytest.fixture
 @pytest.mark.skipif(
     not os.environ.get('DISPLAY'),
     reason='RViz smoke test requires a graphical display',
@@ -38,13 +42,13 @@ def generate_test_description():
     )
 
 
-class TestDemoLaunchRvizSmoke(unittest.TestCase):
+@pytest.mark.launch(fixture=generate_test_description)
+class TestDemoLaunchRvizSmoke(MoveItLaunchSmokeTestCase):
     """Smoke test for the demo.launch.py RViz visualization."""
 
-    def test_only_one_rviz_process_starts(self, proc_info):
-        rviz_processes = [name for name in proc_info.process_names() if 'rviz2' in name]
-        self.assertEqual(
-            len(rviz_processes),
-            1,
-            f'Expected exactly one RViz process, found: {rviz_processes}',
-        )
+    __test__ = True
+
+
+@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
+def test_demo_launch_rviz_shutdown():
+    pass

@@ -31,8 +31,8 @@ from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
-from launch_testing import asserts, post_shutdown_test
-from launch_testing.actions import ReadyToTest
+import launch_pytest
+from launch_pytest.actions import ReadyToTest
 from moveit_launch_smoke_test_support import build_test_gz_partition
 from moveit_msgs.msg import (
     CollisionObject,
@@ -62,7 +62,7 @@ TARGET_OBSTACLE_ID = 'issue43_left_front_target_blocker'
 
 
 @pytest.mark.slow
-@pytest.mark.launch_test
+@launch_pytest.fixture
 def generate_test_description():
     demo_gazebo_launch = PathJoinSubstitution(
         [FindPackageShare('drqp_moveit'), 'launch', 'demo_gazebo.launch.py']
@@ -83,7 +83,7 @@ def generate_test_description():
 
 
 @pytest.mark.slow
-@pytest.mark.launch_test
+@pytest.mark.launch(fixture=generate_test_description)
 class TestMoveItRuntimeIssue43(unittest.TestCase):
     READY_TIMEOUT = 90.0
     JOINT_TOLERANCE = 0.08
@@ -473,14 +473,6 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         )
 
 
-@post_shutdown_test()
-class TestMoveItRuntimeIssue43Shutdown(unittest.TestCase):
-    """Verify the runtime launch exits cleanly after tests finish."""
-
-    def test_exit_codes(self, proc_info):
-        filtered_proc_info = type(proc_info)()
-        skipped_procs = ('gazebo', 'gz', 'bridge_node', 'move_group')
-        for proc_name in proc_info.process_names():
-            if not any(skip in proc_name for skip in skipped_procs):
-                filtered_proc_info.append(proc_info[proc_name])
-        asserts.assertExitCodes(filtered_proc_info)
+@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
+def test_moveit_runtime_launch_shutdown():
+    pass

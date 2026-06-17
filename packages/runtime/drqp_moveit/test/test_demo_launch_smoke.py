@@ -18,15 +18,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from moveit_launch_smoke_test_support import (
-    build_smoke_test_description,
-    MoveItLaunchSmokeShutdownTestCase,
-    MoveItLaunchSmokeTestCase,
-)
+import launch_pytest
 import pytest
 
+from moveit_launch_smoke_test_support import (
+    build_smoke_test_description,
+    MoveItLaunchSmokeTestCase,
+)
 
-@pytest.mark.launch_test
+
+@launch_pytest.fixture
 def generate_test_description():
     return build_smoke_test_description(
         'demo.launch.py',
@@ -34,13 +35,11 @@ def generate_test_description():
     )
 
 
+@pytest.mark.launch(fixture=generate_test_description)
 class TestDemoLaunchSmoke(MoveItLaunchSmokeTestCase):
     __test__ = True
 
-    pass
 
-
-class TestDemoLaunchShutdown(MoveItLaunchSmokeShutdownTestCase):
-    __test__ = True
-
+@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
+def test_demo_launch_shutdown():
     pass

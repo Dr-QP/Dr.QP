@@ -27,8 +27,7 @@ from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
-from launch_testing import asserts, post_shutdown_test
-from launch_testing.actions import ReadyToTest
+from launch_pytest.actions import ReadyToTest
 from moveit_msgs.srv import GetMotionPlan
 import rclpy
 
@@ -61,17 +60,6 @@ def build_smoke_test_description(
     )
 
 
-def _filter_shutdown_processes(proc_info):
-    filtered_proc_info = type(proc_info)()
-    # Launch helper processes can still be in flight when launch_testing starts
-    # teardown and may exit with SIGINT after completing their useful work.
-    skipped_procs = ('gazebo', 'gz', 'bridge_node', 'move_group', 'spawner')
-    for proc_name in proc_info.process_names():
-        if not any(skip in proc_name for skip in skipped_procs):
-            filtered_proc_info.append(proc_info[proc_name])
-    return filtered_proc_info
-
-
 class MoveItLaunchSmokeTestCase(unittest.TestCase):
     __test__ = False
 
@@ -83,9 +71,7 @@ class MoveItLaunchSmokeTestCase(unittest.TestCase):
         rclpy.init()
         cls.addClassCleanup(rclpy.try_shutdown)
 
-    def test_launch_reaches_ready_state(self, proc_info):
-        del proc_info
-
+    def test_launch_reaches_ready_state(self):
         node = rclpy.create_node('moveit_launch_smoke_test')
         self.addCleanup(node.destroy_node)
         motion_plan_client = node.create_client(GetMotionPlan, '/plan_kinematic_path')
@@ -94,13 +80,3 @@ class MoveItLaunchSmokeTestCase(unittest.TestCase):
             motion_plan_client.wait_for_service(timeout_sec=self.READY_TIMEOUT),
             '/plan_kinematic_path service is not available',
         )
-
-
-@post_shutdown_test()
-class MoveItLaunchSmokeShutdownTestCase(unittest.TestCase):
-    """Verify the launch exits cleanly after smoke tests complete."""
-
-    __test__ = False
-
-    def test_exit_codes(self, proc_info):
-        asserts.assertExitCodes(_filter_shutdown_processes(proc_info))

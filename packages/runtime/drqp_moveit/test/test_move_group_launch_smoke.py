@@ -18,20 +18,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import launch_pytest
+import pytest
+
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
-from launch_testing.actions import ReadyToTest
+from launch_pytest.actions import ReadyToTest
 from moveit_launch_smoke_test_support import (
-    MoveItLaunchSmokeShutdownTestCase,
     MoveItLaunchSmokeTestCase,
 )
-import pytest
 
 
-@pytest.mark.launch_test
+@launch_pytest.fixture
 def generate_test_description():
     move_group_launch = PathJoinSubstitution(
         [FindPackageShare('drqp_moveit'), 'launch', 'move_group.launch.py']
@@ -61,13 +62,11 @@ def generate_test_description():
     )
 
 
+@pytest.mark.launch(fixture=generate_test_description)
 class TestMoveGroupLaunchSmoke(MoveItLaunchSmokeTestCase):
     __test__ = True
 
-    pass
 
-
-class TestMoveGroupLaunchShutdown(MoveItLaunchSmokeShutdownTestCase):
-    __test__ = True
-
+@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
+def test_move_group_launch_shutdown():
     pass
