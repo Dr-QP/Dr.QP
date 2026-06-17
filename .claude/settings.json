@@ -1,8 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Read(/opt/ros/**)",
-      "Read(/root/**)",
+      // //path - Absolute path from filesystem root
+      // https://code.claude.com/docs/en/permissions#read-and-edit
+      "Read(//opt/ros/**)",
+      "Read(//root/**)",
       "WebSearch",
       "WebFetch(domain:docs.docker.com)",
       "WebFetch(domain:api.github.com)",
@@ -16,7 +18,7 @@
       "Skill(*)",
       "Bash(pip show *)",
       "Bash(pip install *)",
-      "Bash(python3 -m py_compile *)"
+      "Bash(python3 -m py_compile *)",
     ],
     "additionalDirectories": [
       "/tmp",
