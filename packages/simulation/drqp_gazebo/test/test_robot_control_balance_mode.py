@@ -18,15 +18,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import math
+
 from launch_testing import post_shutdown_test
 import pytest
 from robot_control_test_support import (
     create_balance_board_launch_description,
     GazeboRobotControlBase,
 )
-from simulation_shutdown_test_case import (
-    SimulationShutdownBase,
-)
+from simulation_shutdown_test_case import SimulationShutdownBase
+
+_TILT_MAGNITUDE = 0.12
+_TILT_DIAGONAL = _TILT_MAGNITUDE / math.sqrt(2)
+
+_TILT_SCENARIOS = [
+    (0.0, +_TILT_MAGNITUDE),              # pitch+
+    (+_TILT_DIAGONAL, +_TILT_DIAGONAL),   # roll+ pitch+
+    (+_TILT_MAGNITUDE, 0.0),              # roll+
+    (+_TILT_DIAGONAL, -_TILT_DIAGONAL),   # roll+ pitch-
+    (0.0, -_TILT_MAGNITUDE),              # pitch-
+    (-_TILT_DIAGONAL, -_TILT_DIAGONAL),   # roll- pitch-
+    (-_TILT_MAGNITUDE, 0.0),              # roll-
+    (-_TILT_DIAGONAL, +_TILT_DIAGONAL),   # roll- pitch+
+]
 
 
 @pytest.mark.slow
@@ -37,10 +51,20 @@ def generate_test_description():
 
 @pytest.mark.slow
 class TestGazeboRobotControlBalanceMode(GazeboRobotControlBase):
-    """Verify balance mode keeps the robot body level on a tilted board."""
+    """Verify balance mode keeps the robot body level across all tilt directions."""
 
-    def test_balance_mode_levels_body_on_tilted_board(self):
-        self.assert_balance_mode_levels_body_on_tilted_board()
+    def test_balance_mode_levels_body_on_all_tilt_angles(self):
+        self._arm_robot()
+        initial_roll, initial_pitch = self._sample_base_roll_pitch(
+            settle_sim_time_sec=self.POSE_SETTLE_DURATION
+        )
+        self._set_balance_mode(True)
+
+        for board_roll, board_pitch in _TILT_SCENARIOS:
+            self._assert_body_level_at_board_tilt(
+                board_roll, board_pitch, initial_roll, initial_pitch
+            )
+            self._reset_board_and_balance_mode(initial_roll, initial_pitch)
 
 
 @post_shutdown_test()
