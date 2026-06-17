@@ -94,6 +94,11 @@ void SerialPlayer::flushRead() {}
 
 Record& SerialPlayer::currentRecord()
 {
+  // Advance when all request bytes have been verified and all response bytes consumed.
+  // On initial call currentRecord_ is default-constructed (empty request + empty response),
+  // so 0 >= 0 is true and the first record is loaded immediately — matching prior isEmpty() logic.
+  // Records with a zero-length request (pure-read) also satisfy this condition on first call,
+  // which is correct: they have no bytes to write-verify before serving the response.
   if (writePos_ >= currentRecord_.request.bytes.size() && currentRecord_.response.bytes.empty()) {
     assert(!records_.empty());
     currentRecord_ = records_.front();
