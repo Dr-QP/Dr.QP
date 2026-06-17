@@ -4,24 +4,13 @@ find_package(launch_testing_ament_cmake REQUIRED)
 
 include(../../../cmake/RosIsolatedLaunchTest.cmake)
 
-# drqp_add_ros_isolated_launch_test → add_launch_test → python -m launch_testing.launch_test <file>
-# That runner (launch_test.py:85) loads tests via LoadTestsFromPythonModule and drives them
-#  with LaunchTestRunner — pure unittest machinery, no pytest involved.
-
-# conftest.py is a pytest-only concept. Pytest discovers and executes conftest files during collection;
-# unittest never touches them. The pytest_collection_modifyitems hook in your conftest will simply
-# never be called in this code path.
-
-# If you want the DRQP_GAZEBO_TEST_MODE filtering to work for launch tests, you'd need to implement
-# it directly in the test files (e.g., check the env var in setUpClass or skip individual tests
-# with unittest.skipUnless), or find another hook point that launch_testing supports.
-
-set(drqp_gazebo_launch_tests
+set(drqp_gazebo_smoke_launch_tests
   test_robot_control_spawn.py
   test_robot_control_nodes_and_clock.py
   test_balance_board_world.py
+)
 
-  # Slow tests
+set(drqp_gazebo_full_launch_tests
   test_robot_control_balance_mode.py
   test_balance_board_armed.py
   test_balance_board_motion_response.py
@@ -35,7 +24,10 @@ set(drqp_gazebo_launch_tests
   test_robot_control_verify_disarmed_posture.py
 )
 
-set(DRQP_GAZEBO_TEST_MODE $ENV{DRQP_GAZEBO_TEST_MODE} CACHE STRING "Test mode for Dr.QP Gazebo tests" FORCE)
+set(drqp_gazebo_launch_tests ${drqp_gazebo_smoke_launch_tests})
+if("$ENV{DRQP_GAZEBO_TEST_MODE}" STREQUAL "all")
+  list(APPEND drqp_gazebo_launch_tests ${drqp_gazebo_full_launch_tests})
+endif()
 
 foreach(test_file IN LISTS drqp_gazebo_launch_tests)
   # Each launch test boots Gazebo and exercises several robot/board scenarios, so
@@ -43,8 +35,6 @@ foreach(test_file IN LISTS drqp_gazebo_launch_tests)
   drqp_add_ros_isolated_launch_test(
     ${test_file}
     TIMEOUT 300
-    APPEND_ENV
-      PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}
-      DRQP_GAZEBO_TEST_MODE=$ENV{DRQP_GAZEBO_TEST_MODE}
+    APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}
   )
 endforeach()
