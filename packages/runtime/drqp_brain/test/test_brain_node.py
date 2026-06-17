@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import unittest
 from unittest import mock
 
 from control_msgs.action import FollowJointTrajectory
@@ -71,18 +70,19 @@ def generate_test_description():
 
 
 @pytest.mark.launch(fixture=generate_test_description)
-class TestBrainNode(unittest.TestCase):
+class TestBrainNode:
     """Test the drqp_brain node."""
 
     @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
+    def setup_class(cls):
         rclpy.init()
-        cls.addClassCleanup(rclpy.try_shutdown)
 
-    def setUp(self):
+    @classmethod
+    def teardown_class(cls):
+        rclpy.try_shutdown()
+
+    def setup_method(self, method):
         self.node = rclpy.create_node('test_brain_consumer')
-        self.addCleanup(self.node.destroy_node)
 
         # Publishers for sending commands to brain node
         self.movement_pub = self.node.create_publisher(
@@ -91,6 +91,9 @@ class TestBrainNode(unittest.TestCase):
 
         # Publisher for robot state (brain node subscribes to this)
         self.state_pub = self.node.create_publisher(std_msgs.msg.String, '/robot_state', 10)
+
+    def teardown_method(self, method):
+        self.node.destroy_node()
 
     def test_nothing(self):
         """Smoke check."""

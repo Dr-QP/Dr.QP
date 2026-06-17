@@ -20,7 +20,6 @@
 
 import os
 import re
-import unittest
 
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
@@ -60,23 +59,25 @@ def build_smoke_test_description(
     )
 
 
-class MoveItLaunchSmokeTestCase(unittest.TestCase):
+class MoveItLaunchSmokeTestCase:
     __test__ = False
 
     READY_TIMEOUT = 60.0
 
     @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
+    def setup_class(cls) -> None:
         rclpy.init()
-        cls.addClassCleanup(rclpy.try_shutdown)
+
+    @classmethod
+    def teardown_class(cls) -> None:
+        rclpy.try_shutdown()
 
     def test_launch_reaches_ready_state(self):
         node = rclpy.create_node('moveit_launch_smoke_test')
-        self.addCleanup(node.destroy_node)
         motion_plan_client = node.create_client(GetMotionPlan, '/plan_kinematic_path')
-        self.addCleanup(motion_plan_client.destroy)
-        self.assertTrue(
-            motion_plan_client.wait_for_service(timeout_sec=self.READY_TIMEOUT),
-            '/plan_kinematic_path service is not available',
-        )
+        try:
+            assert motion_plan_client.wait_for_service(timeout_sec=self.READY_TIMEOUT), \
+                '/plan_kinematic_path service is not available'
+        finally:
+            motion_plan_client.destroy()
+            node.destroy_node()

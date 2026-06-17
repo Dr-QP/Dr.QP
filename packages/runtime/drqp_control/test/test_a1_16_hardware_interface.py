@@ -19,8 +19,6 @@
 # THE SOFTWARE.
 
 
-import unittest
-
 from control_msgs.action import FollowJointTrajectory
 from control_msgs.msg import DynamicJointState, InterfaceValue
 from controller_manager.test_utils import (
@@ -31,10 +29,10 @@ from controller_manager.test_utils import (
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-import launch_pytest
 from launch.substitutions import PathJoinSubstitution
-from launch_pytest.actions import ReadyToTest
 from launch_ros.substitutions import FindPackageShare
+import launch_pytest
+from launch_pytest.actions import ReadyToTest
 import numpy as np
 import pytest
 import rclpy
@@ -71,26 +69,28 @@ neutral_position = 0.1
 
 
 @pytest.mark.launch(fixture=generate_test_description)
-class TestA116HardwareInterface(unittest.TestCase):
+class TestA116HardwareInterface:
     """Test the pose_setter node."""
 
     @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
+    def setup_class(cls):
         rclpy.init()
-        cls.addClassCleanup(rclpy.try_shutdown)
 
-    def setUp(self):
-        self.node = rclpy.create_node('test_servo_driver_' + self.id().replace('.', '_'))
-        self.addCleanup(self.node.destroy_node)
+    @classmethod
+    def teardown_class(cls):
+        rclpy.try_shutdown()
+
+    def setup_method(self, method):
+        self.node = rclpy.create_node(
+            'test_servo_driver_' + type(self).__name__ + '_' + method.__name__
+        )
         self._wait_for_controller(self.node)
         self.trajectory_client = ActionClient(
             self.node,
             FollowJointTrajectory,
             '/joint_trajectory_controller/follow_joint_trajectory',
         )
-        self.addCleanup(self.trajectory_client.destroy)
-        self.assertTrue(self.trajectory_client.wait_for_server(timeout_sec=10.0))
+        assert self.trajectory_client.wait_for_server(timeout_sec=10.0)
 
         self.dynamic_joint_states_sub = self.node.create_subscription(
             DynamicJointState,
@@ -98,7 +98,6 @@ class TestA116HardwareInterface(unittest.TestCase):
             self.dynamic_joint_states_callback,
             10,
         )
-        self.addCleanup(self.dynamic_joint_states_sub.destroy)
         self.joint_names = [
             'drqp/left_front_coxa',
             'drqp/left_front_femur',
@@ -128,7 +127,12 @@ class TestA116HardwareInterface(unittest.TestCase):
             effort=1,
             expected_position=neutral_position,
         )
-        self.addCleanup(self._reset_feedback)
+
+    def teardown_method(self, method):
+        self._reset_feedback()
+        self.dynamic_joint_states_sub.destroy()
+        self.trajectory_client.destroy()
+        self.node.destroy_node()
 
     def _wait_for_controller(self, node):
         needed_controllers = ['joint_trajectory_controller', 'joint_state_broadcaster']
@@ -248,20 +252,20 @@ class TestA116HardwareInterface(unittest.TestCase):
         goal_handle_future = self.trajectory_client.send_goal_async(trajectory_goal)
         rclpy.spin_until_future_complete(self.node, goal_handle_future)
         goal_handle = goal_handle_future.result()
-        self.assertIsNotNone(goal_handle)
+        assert goal_handle is not None
         if goal_handle is None:
-            self.fail('Goal handle is None')
+            pytest.fail('Goal handle is None')
             return
         result_future = goal_handle.get_result_async()
         rclpy.spin_until_future_complete(self.node, result_future)
 
         result: FollowJointTrajectory.Result | None = result_future.result().result
 
-        self.assertIsNotNone(result)
+        assert result is not None
         if result is None:
-            self.fail('Result is None')
+            pytest.fail('Result is None')
             return
-        self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+        assert result.error_code == FollowJointTrajectory.Result.SUCCESSFUL
 
         # Wait for the feedback to be updated
         result_time = self.node.get_clock().now() + rclpy.time.Duration(seconds=0.05)
@@ -272,24 +276,22 @@ class TestA116HardwareInterface(unittest.TestCase):
             if self.last_feedback > result_time:
                 joint_positions = self.joint_positions
                 break
-            self.assertLess(self.node.get_clock().now(), timeout)
+            assert self.node.get_clock().now() < timeout
 
-        self.assertTrue(
-            np.all(np.isfinite(joint_positions)),
-            msg=f'Actual positions are not finite: {joint_positions}',
+        assert np.all(np.isfinite(joint_positions)), (
+            f'Actual positions are not finite: {joint_positions}'
         )
 
         # # TODO(anton-matosov): Use dynamic_joint_state to check the actual position
         if expected_position is not None:
-            self.assertTrue(
-                np.allclose(
-                    np.array(joint_positions),
-                    np.array([expected_position] * len(self.joint_names)),
-                    atol=tolerance,
-                ),
-                msg=f'Requested position {position} with effort {effort},'
+            assert np.allclose(
+                np.array(joint_positions),
+                np.array([expected_position] * len(self.joint_names)),
+                atol=tolerance,
+            ), (
+                f'Requested position {position} with effort {effort},'
                 f' Expected position {expected_position},'
-                f' got {joint_positions},',
+                f' got {joint_positions},'
             )
 
 

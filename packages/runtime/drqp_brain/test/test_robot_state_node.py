@@ -20,7 +20,6 @@
 
 from pathlib import Path
 import time
-import unittest
 
 from drqp_brain.instance_guard import InstanceGuard
 from drqp_brain.robot_state import robot_state_node
@@ -66,30 +65,34 @@ def generate_test_description():
 
 
 @pytest.mark.launch(fixture=generate_test_description)
-class TestRobotStateMachineNode(unittest.TestCase):
+class TestRobotStateMachineNode:
     """Test the drqp_robot_state node."""
 
     @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
+    def setup_class(cls):
         rclpy.init()
-        cls.addClassCleanup(rclpy.try_shutdown)
 
-    def setUp(self):
+    @classmethod
+    def teardown_class(cls):
+        rclpy.try_shutdown()
+
+    def setup_method(self, method):
         self.node = rclpy.create_node('test_state_consumer')
-        self.addCleanup(self.node.destroy_node)
+
+    def teardown_method(self, method):
+        self.node.destroy_node()
 
     def test_processes_events_and_publishes_state(self):
         """Check whether events are processed."""
         msgs_received = []
 
-        self.event_pub = self.node.create_publisher(
+        event_pub = self.node.create_publisher(
             std_msgs.msg.String, '/robot_event', qos_profile=10
         )
         qos_profile = QoSProfile(depth=1)
         # make state available to late joiners
         qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
-        self.robot_state_sub = self.node.create_subscription(
+        robot_state_sub = self.node.create_subscription(
             std_msgs.msg.String, '/robot_state', lambda msg: msgs_received.append(msg), qos_profile
         )
 
@@ -98,16 +101,16 @@ class TestRobotStateMachineNode(unittest.TestCase):
 
             while time.time() < end_time:
                 rclpy.spin_once(self.node, timeout_sec=0.01)
-                self.event_pub.publish(std_msgs.msg.String(data='initialize'))
+                event_pub.publish(std_msgs.msg.String(data='initialize'))
 
                 if len(msgs_received) > 0 and msgs_received[-1].data == 'initializing':
                     break
 
-            self.assertGreater(len(msgs_received), 0)
-            self.assertEqual(msgs_received[-1].data, 'initializing')
+            assert len(msgs_received) > 0
+            assert msgs_received[-1].data == 'initializing'
         finally:
-            self.node.destroy_subscription(self.robot_state_sub)
-            self.node.destroy_publisher(self.event_pub)
+            self.node.destroy_subscription(robot_state_sub)
+            self.node.destroy_publisher(event_pub)
 
 
 @pytest.mark.launch(fixture=generate_test_description, shutdown=True)
