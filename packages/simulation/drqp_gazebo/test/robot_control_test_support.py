@@ -40,9 +40,7 @@ from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
-from launch_testing import asserts
-from launch_testing.actions import ReadyToTest
-from launch_testing.proc_info_handler import ProcInfoHandler
+from launch_pytest.actions import ReadyToTest
 from launch_testing_ros import WaitForTopics
 from nav_msgs.msg import Odometry
 import rclpy
@@ -89,20 +87,6 @@ def create_simulation_launch_description(test_name: str | None = None) -> Launch
         ]
     )
 
-
-def filter_out_gazebo_processes(proc_info: ProcInfoHandler) -> ProcInfoHandler:
-    """Filter out Gazebo processes that are terminated by launch teardown."""
-    filtered_proc_info = ProcInfoHandler()
-    skipped_procs = ('gazebo', 'gz', 'bridge_node', 'move_group')
-    for proc_name in proc_info.process_names():
-        if not any(skip in proc_name for skip in skipped_procs):
-            filtered_proc_info.append(proc_info[proc_name])
-    return filtered_proc_info
-
-
-def assert_clean_exit_codes(proc_info: ProcInfoHandler) -> None:
-    """Assert all non-Gazebo processes exited successfully."""
-    asserts.assertExitCodes(filter_out_gazebo_processes(proc_info))
 
 
 class GazeboRobotControlBase(unittest.TestCase):

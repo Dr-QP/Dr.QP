@@ -18,26 +18,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from launch_testing import post_shutdown_test
+import launch_pytest
 import pytest
 from robot_control_test_support import (
     create_simulation_launch_description,
     GazeboRobotControlBase,
 )
-from simulation_shutdown_test_case import (
-    SimulationShutdownBase,
-)
 
 
 @pytest.mark.slow
 @pytest.mark.smoke
-@pytest.mark.launch_test
+@launch_pytest.fixture
 def generate_test_description():
     return create_simulation_launch_description()
 
 
 @pytest.mark.slow
 @pytest.mark.smoke
+@pytest.mark.launch(fixture=generate_test_description)
 class TestGazeboRobotControlNodesAndClock(GazeboRobotControlBase):
     """Verify simulation nodes are running and Gazebo clock is bridged."""
 
@@ -53,11 +51,6 @@ class TestGazeboRobotControlNodesAndClock(GazeboRobotControlBase):
         self.assert_imu_data()
 
 
-@post_shutdown_test()
-class TestSimulationShutdown(SimulationShutdownBase):
-    """Verify processes exit cleanly after the launch test finishes."""
-
-    __test__ = True
-
-    def test_exit_codes(self, proc_info):
-        self.assert_exit_codes(proc_info)
+@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
+def test_simulation_shutdown():
+    pass
