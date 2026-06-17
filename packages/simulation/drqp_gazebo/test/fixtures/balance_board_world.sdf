@@ -55,18 +55,58 @@
       </link>
     </model>
 
+    <!--
+      Pivoted balance board: anchor fixed to world at board center → roll_arm (X-axis
+      revolute) → board (Y-axis revolute).  Two JointPositionControllers drive each axis
+      gradually so the robot is never teleported into the surface.
+    -->
     <model name="balance_board">
       <static>false</static>
-      <pose>0 0 0.025 0 0 0</pose>
-      <link name="board">
+      <pose>0 0 0 0 0 0</pose>
+
+      <!-- Invisible anchor pinned to the world at the pivot point -->
+      <link name="anchor">
+        <pose>0 0 0.15 0 0 0</pose>
         <gravity>false</gravity>
-        <kinematic>true</kinematic>
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <ixx>0.01</ixx>
+            <iyy>0.01</iyy>
+            <izz>0.01</izz>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyz>0</iyz>
+          </inertia>
+        </inertial>
+      </link>
+
+      <!-- Intermediate link that carries the roll rotation (around world X) -->
+      <link name="roll_arm">
+        <pose>0 0 0.15 0 0 0</pose>
+        <gravity>false</gravity>
+        <inertial>
+          <mass>0.1</mass>
+          <inertia>
+            <ixx>0.001</ixx>
+            <iyy>0.001</iyy>
+            <izz>0.001</izz>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyz>0</iyz>
+          </inertia>
+        </inertial>
+      </link>
+
+      <!-- The actual board that the robot stands on -->
+      <link name="board">
+        <pose>0 0 0.15 0 0 0</pose>
         <inertial>
           <mass>20.0</mass>
           <inertia>
-            <ixx>0.334</ixx>
-            <iyy>0.334</iyy>
-            <izz>0.667</izz>
+            <ixx>1.074</ixx>
+            <iyy>1.074</iyy>
+            <izz>2.133</izz>
             <ixy>0</ixy>
             <ixz>0</ixz>
             <iyz>0</iyz>
@@ -99,6 +139,74 @@
           </material>
         </visual>
       </link>
+
+      <!-- Pin the anchor rigidly to the world -->
+      <joint name="anchor_fixed" type="fixed">
+        <parent>world</parent>
+        <child>anchor</child>
+      </joint>
+
+      <!-- Roll axis: rotates roll_arm around world X -->
+      <joint name="roll_hinge" type="revolute">
+        <parent>anchor</parent>
+        <child>roll_arm</child>
+        <axis>
+          <xyz>1 0 0</xyz>
+          <limit>
+            <lower>-0.25</lower>
+            <upper>0.25</upper>
+            <effort>500.0</effort>
+            <velocity>0.1</velocity>
+          </limit>
+          <dynamics>
+            <damping>2.0</damping>
+            <friction>0.0</friction>
+          </dynamics>
+        </axis>
+      </joint>
+
+      <!-- Pitch axis: rotates board around roll_arm's Y -->
+      <joint name="pitch_hinge" type="revolute">
+        <parent>roll_arm</parent>
+        <child>board</child>
+        <axis>
+          <xyz>0 1 0</xyz>
+          <limit>
+            <lower>-0.25</lower>
+            <upper>0.25</upper>
+            <effort>500.0</effort>
+            <velocity>0.1</velocity>
+          </limit>
+          <dynamics>
+            <damping>2.0</damping>
+            <friction>0.0</friction>
+          </dynamics>
+        </axis>
+      </joint>
+
+      <!-- Gradually drive the roll joint to the commanded angle -->
+      <plugin filename="gz-sim-joint-position-controller-system"
+              name="gz::sim::systems::JointPositionController">
+        <joint_name>roll_hinge</joint_name>
+        <topic>/balance_board/roll_target</topic>
+        <p_gain>2000.0</p_gain>
+        <i_gain>0.0</i_gain>
+        <d_gain>100.0</d_gain>
+        <cmd_max>500.0</cmd_max>
+        <cmd_min>-500.0</cmd_min>
+      </plugin>
+
+      <!-- Gradually drive the pitch joint to the commanded angle -->
+      <plugin filename="gz-sim-joint-position-controller-system"
+              name="gz::sim::systems::JointPositionController">
+        <joint_name>pitch_hinge</joint_name>
+        <topic>/balance_board/pitch_target</topic>
+        <p_gain>2000.0</p_gain>
+        <i_gain>0.0</i_gain>
+        <d_gain>100.0</d_gain>
+        <cmd_max>500.0</cmd_max>
+        <cmd_min>-500.0</cmd_min>
+      </plugin>
     </model>
   </world>
 </sdf>

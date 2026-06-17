@@ -55,8 +55,9 @@ import std_msgs.msg
 
 ODOM_TOPIC = '/odom'
 BALANCE_BOARD_WORLD_NAME = 'balance_test'
-BALANCE_BOARD_MODEL_NAME = 'balance_board'
-BALANCE_BOARD_POSE_Z = 0.025
+BALANCE_BOARD_BOARD_LINK_NAME = 'board'
+BALANCE_BOARD_ROLL_TOPIC = '/balance_board/roll_target'
+BALANCE_BOARD_PITCH_TOPIC = '/balance_board/pitch_target'
 BALANCE_BOARD_WORLD_PATH = str(
     Path(__file__).resolve().parent / 'fixtures' / 'balance_board_world.sdf'
 )
@@ -85,7 +86,7 @@ def create_simulation_launch_description(
             'sim.launch.py',
         ]
     )
-    combined_launch_arguments = {'sim_gui': 'false'}
+    combined_launch_arguments = {'sim_gui': 'true'}
     if launch_arguments is not None:
         combined_launch_arguments.update(launch_arguments)
     combined_launch_arguments['gz_partition'] = build_test_gz_partition(test_name)
@@ -107,7 +108,7 @@ def create_balance_board_launch_description() -> LaunchDescription:
     return create_simulation_launch_description(
         launch_arguments={
             'world_sdf': BALANCE_BOARD_WORLD_PATH,
-            'robot_z': '0.15',
+            'robot_z': '0.30',
         }
     )
 
@@ -512,33 +513,25 @@ class GazeboRobotControlBase(unittest.TestCase):
         *,
         roll: float = 0.0,
         pitch: float = 0.0,
-        yaw: float = 0.0,
     ) -> None:
-        """Set the balance board pose in Gazebo using roll, pitch, and yaw radians."""
-        x, y, z, w = self._quaternion_from_roll_pitch_yaw(roll, pitch, yaw)
-        request = ' '.join(
+        """Command the balance board to the given roll and pitch via joint position controllers."""
+        self._run_gz_command(
             [
-                f'name: "{BALANCE_BOARD_MODEL_NAME}"',
-                f'position {{ x: 0.0 y: 0.0 z: {BALANCE_BOARD_POSE_Z:.3f} }}',
-                f'orientation {{ x: {x:.8f} y: {y:.8f} z: {z:.8f} w: {w:.8f} }}',
-            ]
+                'gz', 'topic',
+                '-t', BALANCE_BOARD_ROLL_TOPIC,
+                '-m', 'gz.msgs.Double',
+                '-p', f'data: {roll}',
+            ],
+            error_context='Setting balance board roll target',
         )
         self._run_gz_command(
             [
-                'gz',
-                'service',
-                '-s',
-                f'/world/{BALANCE_BOARD_WORLD_NAME}/set_pose',
-                '--reqtype',
-                'gz.msgs.Pose',
-                '--reptype',
-                'gz.msgs.Boolean',
-                '--timeout',
-                str(int(self.GZ_COMMAND_TIMEOUT * 1000)),
-                '--req',
-                request,
+                'gz', 'topic',
+                '-t', BALANCE_BOARD_PITCH_TOPIC,
+                '-m', 'gz.msgs.Double',
+                '-p', f'data: {pitch}',
             ],
-            error_context='Tilting Gazebo balance board',
+            error_context='Setting balance board pitch target',
         )
 
     def _sample_entity_pose_from_gazebo(self, entity_name: str) -> Pose:
@@ -568,10 +561,15 @@ class GazeboRobotControlBase(unittest.TestCase):
             ],
             error_context=f'Reading Gazebo pose info for entity "{entity_name}"',
         )
-        for entity in _parse_gazebo_pose_info(raw_output):
+        entities = _parse_gazebo_pose_info(raw_output)
+        for entity in entities:
             if entity['name'] == entity_name:
                 return entity['pose']
-        raise RuntimeError(f'Gazebo pose info did not include entity "{entity_name}"')
+        available = [e['name'] for e in entities]
+        raise RuntimeError(
+            f'Gazebo pose info did not include entity "{entity_name}". '
+            f'Available: {available}'
+        )
 
     def _wait_for_board_tilt(
         self,
@@ -602,7 +600,7 @@ class GazeboRobotControlBase(unittest.TestCase):
         last_roll = 0.0
         last_pitch = 0.0
         while time.monotonic() < deadline:
-            board_pose = self._sample_entity_pose_from_gazebo(BALANCE_BOARD_MODEL_NAME)
+            board_pose = self._sample_entity_pose_from_gazebo(BALANCE_BOARD_BOARD_LINK_NAME)
             last_roll, last_pitch = self._roll_pitch_from_quaternion(board_pose.orientation)
             if (
                 abs(last_roll - expected_roll) <= tolerance
