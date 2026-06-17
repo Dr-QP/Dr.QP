@@ -50,6 +50,33 @@ void simpleSerialTest(SerialProtocol& serial)
   REQUIRE(read == "hello\n");
 }
 
+SCENARIO("test serial player error reporting on write overflow")
+{
+  static std::filesystem::path kSingleByteRecordingFile =
+    std::filesystem::path(TEST_DATA_DIR_IN_SOURCE_TREE) / "single_byte_recording.json";
+
+  REQUIRE(exists(kSingleByteRecordingFile));
+
+  RecordingProxy::SerialPlayer player;
+  player.load(kSingleByteRecordingFile);
+
+  WHEN("writeBytes is called with more bytes than recorded")
+  {
+    size_t assertCallCount = 0;
+    player.assertEqual = [&](const uint8_t /*expected*/, const uint8_t /*actual*/,
+                             const size_t /*pos*/) { ++assertCallCount; };
+
+    const std::array<uint8_t, 2> data = {'a', 'b'};
+    const size_t written = player.writeBytes(data.data(), data.size());
+
+    THEN("assertEqual is called once and writeBytes returns without crashing")
+    {
+      REQUIRE(assertCallCount == 1);
+      REQUIRE(written == 2);
+    }
+  }
+}
+
 SCENARIO("test unix serial with serial proxy")
 {
   static std::filesystem::path kSourceSerialRecordingFile =

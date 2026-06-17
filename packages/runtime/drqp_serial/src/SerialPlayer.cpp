@@ -59,6 +59,7 @@ size_t SerialPlayer::writeBytes(const void* buffer, size_t size)
   if (writePos_ + size > record.request.bytes.size()) {
     // If requested write is larger than was recorded, its a fail
     assertEqual(writePos_ + size, record.request.bytes.size(), 0);
+    return size;
   }
 
   for (size_t i = 0; i < size; ++i) {
