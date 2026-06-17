@@ -331,11 +331,23 @@ class TestWalkController:
             verbose=True,
         )
         feet_at_half_phase = [leg.tibia_end.copy() for leg in hexapod.legs]
-        for at_rest, after_step in zip(feet_at_rest, feet_at_half_phase):
+        for at_rest, after_step, leg in zip(feet_at_rest, feet_at_half_phase, hexapod.legs):
             diff = after_step - at_rest
             assert diff.z == pytest.approx(0, abs=1e-3)
             assert abs(diff.x) > 0
             assert abs(diff.y) > 0
+
+            gait_offsets = walker.gait_gen.get_offsets_at_phase_for_leg(
+                leg.label, walker.current_phase
+            )
+            angular_distance = np.rad2deg(
+                np.arctan2(after_step.y, after_step.x) - np.arctan2(at_rest.y, at_rest.x)
+            )
+            # Swing legs (positive gait offset x) rotate in the commanded direction;
+            # stance legs (negative gait offset x) rotate opposite to push the body.
+            assert np.sign(angular_distance) == np.sign(gait_offsets.x)
+            # Stride dilutes but does not exceed the pure-rotation angular bound.
+            assert 0 < abs(angular_distance) <= walker.rotation_speed_degrees / 2
 
     def test_body_translation(self, walker, hexapod):
         walker.next_step(
