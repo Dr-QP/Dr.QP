@@ -13,7 +13,6 @@ install(
 if(BUILD_TESTING)
   find_package(ament_cmake_ros REQUIRED)
   find_package(ament_cmake_pytest REQUIRED)
-  find_package(launch_testing_ament_cmake REQUIRED)
 
   drqp_add_ros_isolated_launch_test(
     test/test_move_group_launch_smoke.py

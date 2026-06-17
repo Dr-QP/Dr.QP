@@ -1,6 +1,5 @@
 find_package(ament_cmake_pytest REQUIRED)
 find_package(ament_cmake_ros REQUIRED)
-find_package(launch_testing_ament_cmake REQUIRED)
 
 include(../../../cmake/RosIsolatedLaunchTest.cmake)
 

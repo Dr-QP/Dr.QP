@@ -2,7 +2,6 @@
 include(../../../cmake/RosIsolatedLaunchTest.cmake)
 
 find_package(ament_cmake_ros REQUIRED)
-find_package(launch_testing_ament_cmake REQUIRED)
 
 drqp_add_ros_isolated_launch_test(test_a1_16_hardware_interface.py)
 
