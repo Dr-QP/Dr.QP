@@ -991,91 +991,125 @@ class GazeboRobotControlBase(unittest.TestCase):
             f'Current state: {self.current_robot_state}',
         )
 
-    def assert_balance_mode_levels_body_on_tilted_board(self) -> None:
-        """Verify balance mode keeps the body close to level while a board tilts underneath."""
-        board_pitch_target = 0.15
-
-        self._arm_robot()
-        self._wait_for_sim_time(self.POSE_SETTLE_DURATION)
-        initial_base_height = self._sample_base_height()
-        initial_base_roll, initial_base_pitch = self._sample_base_roll_pitch(
-            settle_sim_time_sec=self.POSE_SETTLE_DURATION
-        )
-
-        self._set_balance_mode(True)
-        self._wait_for_sim_time(self.POSE_SETTLE_DURATION)
-        board_roll, board_pitch = self._wait_for_board_tilt(expected_roll=0.0, expected_pitch=0.0)
-        self.assertAlmostEqual(board_roll, 0.0, delta=0.03)
-        self.assertAlmostEqual(board_pitch, 0.0, delta=0.03)
-
-        self._set_board_tilt(pitch=board_pitch_target)
-        board_roll, board_pitch = self._wait_for_board_tilt(
-            expected_roll=0.0,
-            expected_pitch=board_pitch_target,
+    def _assert_body_level_at_board_tilt(
+        self,
+        board_roll: float,
+        board_pitch: float,
+        initial_roll: float,
+        initial_pitch: float,
+    ) -> None:
+        pre_tilt_height = self._sample_base_height()
+        self._set_board_tilt(roll=board_roll, pitch=board_pitch)
+        board_r, board_p = self._wait_for_board_tilt(
+            expected_roll=board_roll, expected_pitch=board_pitch
         )
         self._wait_for_sim_time(self.BALANCE_SETTLE_DURATION)
-
-        balanced_base_roll, balanced_base_pitch = self._sample_base_roll_pitch(
+        balanced_roll, balanced_pitch = self._sample_base_roll_pitch(
             settle_sim_time_sec=self.POSE_SETTLE_DURATION
         )
-        balanced_base_height = self._sample_base_height()
-        balanced_imu_roll, balanced_imu_pitch = self._sample_imu_body_tilt(
+        balanced_height = self._sample_base_height()
+        imu_roll, imu_pitch = self._sample_imu_body_tilt(
             settle_sim_time_sec=self.POSE_SETTLE_DURATION
         )
 
         self.assertGreater(
-            abs(board_pitch),
-            0.10,
-            msg=f'Expected balance board to tilt noticeably, observed pitch={board_pitch:.3f}rad',
+            math.sqrt(board_r**2 + board_p**2),
+            0.08,
+            msg=f'Expected board to tilt noticeably (roll={board_r:.3f}, pitch={board_p:.3f})',
         )
         self.assertAlmostEqual(
-            balanced_base_roll,
-            initial_base_roll,
+            balanced_roll,
+            initial_roll,
             delta=self.BALANCED_BODY_TILT_TOLERANCE,
             msg=(
-                'Expected body roll to stay close to its pre-tilt value after balance mode '
-                f'compensated for the board tilt (initial={initial_base_roll:.3f}, '
-                f'balanced={balanced_base_roll:.3f})'
+                'Expected body roll to stay near initial after balance compensation '
+                f'(initial={initial_roll:.3f}, balanced={balanced_roll:.3f}, board_r={board_r:.3f})'
             ),
         )
         self.assertAlmostEqual(
-            balanced_base_pitch,
-            initial_base_pitch,
+            balanced_pitch,
+            initial_pitch,
             delta=self.BALANCED_BODY_TILT_TOLERANCE,
             msg=(
-                'Expected body pitch to stay close to its pre-tilt value after balance mode '
-                f'compensated for the board tilt (initial={initial_base_pitch:.3f}, '
-                f'balanced={balanced_base_pitch:.3f}, board={board_pitch:.3f})'
+                'Expected body pitch to stay near initial after balance compensation '
+                f'(initial={initial_pitch:.3f}, balanced={balanced_pitch:.3f}, board_p={board_p:.3f})'
             ),
         )
         self.assertAlmostEqual(
-            balanced_imu_roll,
-            balanced_base_roll,
+            imu_roll,
+            balanced_roll,
             delta=0.10,
-            msg='Expected IMU-derived roll to match the balanced body roll on the tilted board',
+            msg='Expected IMU-derived roll to match balanced body roll',
         )
         self.assertAlmostEqual(
-            balanced_imu_pitch,
-            balanced_base_pitch,
+            imu_pitch,
+            balanced_pitch,
             delta=0.10,
-            msg='Expected IMU-derived pitch to match the balanced body pitch on the tilted board',
+            msg='Expected IMU-derived pitch to match balanced body pitch',
         )
+        if abs(board_r) > 0.05:
+            self.assertGreater(
+                abs(board_r - balanced_roll),
+                0.05,
+                msg=(
+                    'Expected body roll to be notably closer to level than board '
+                    f'(board_r={board_r:.3f}, balanced_roll={balanced_roll:.3f})'
+                ),
+            )
+        if abs(board_p) > 0.05:
+            self.assertGreater(
+                abs(board_p - balanced_pitch),
+                0.05,
+                msg=(
+                    'Expected body pitch to be notably closer to level than board '
+                    f'(board_p={board_p:.3f}, balanced_pitch={balanced_pitch:.3f})'
+                ),
+            )
         self.assertGreater(
-            abs(board_pitch - balanced_base_pitch),
-            0.05,
+            balanced_height,
+            pre_tilt_height - 0.03,
             msg=(
-                'Expected the balanced body to stay noticeably closer to level ground than '
-                f'the tilted board (board={board_pitch:.3f}, body={balanced_base_pitch:.3f})'
+                'Expected robot to remain supported near board height after tilt '
+                f'(pre_tilt_z={pre_tilt_height:.3f}, balanced_z={balanced_height:.3f})'
             ),
         )
-        self.assertGreater(
-            balanced_base_height,
-            initial_base_height - 0.03,
+
+    def _reset_board_and_balance_mode(
+        self,
+        initial_roll: float,
+        initial_pitch: float,
+    ) -> None:
+        self._set_board_tilt(roll=0.0, pitch=0.0)
+        board_r, board_p = self._wait_for_board_tilt(expected_roll=0.0, expected_pitch=0.0)
+        self.assertAlmostEqual(
+            board_r, 0.0, delta=0.03, msg=f'Expected board roll to return to level (got {board_r:.3f})'
+        )
+        self.assertAlmostEqual(
+            board_p, 0.0, delta=0.03, msg=f'Expected board pitch to return to level (got {board_p:.3f})'
+        )
+
+        self._set_balance_mode(False)
+        self._wait_for_sim_time(self.POSE_SETTLE_DURATION)
+        roll, pitch = self._sample_base_roll_pitch(settle_sim_time_sec=self.POSE_SETTLE_DURATION)
+        self.assertAlmostEqual(
+            roll,
+            initial_roll,
+            delta=self.BALANCED_BODY_TILT_TOLERANCE,
             msg=(
-                'Expected the robot to remain supported near the board height after the tilt '
-                f'(initial_z={initial_base_height:.3f}, balanced_z={balanced_base_height:.3f})'
+                'Expected body roll near initial after disabling balance mode '
+                f'(initial={initial_roll:.3f}, actual={roll:.3f})'
             ),
         )
+        self.assertAlmostEqual(
+            pitch,
+            initial_pitch,
+            delta=self.BALANCED_BODY_TILT_TOLERANCE,
+            msg=(
+                'Expected body pitch near initial after disabling balance mode '
+                f'(initial={initial_pitch:.3f}, actual={pitch:.3f})'
+            ),
+        )
+        self._set_balance_mode(True)
 
 
 def _parse_gazebo_pose_info(raw_output: str) -> list[dict[str, Pose | str]]:
