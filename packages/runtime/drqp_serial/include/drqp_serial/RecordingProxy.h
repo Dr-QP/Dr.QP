@@ -42,11 +42,6 @@ struct Record
 {
   Packet request;
   Packet response;
-
-  bool isEmpty() const
-  {
-    return request.bytes.empty() && response.bytes.empty();
-  }
 };
 
 void write(rapidjson::Writer<rapidjson::OStreamWrapper>& writer, const Record& record);
