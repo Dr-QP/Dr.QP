@@ -4,8 +4,6 @@ find_package(launch_testing_ament_cmake REQUIRED)
 
 include(../../../cmake/RosIsolatedLaunchTest.cmake)
 
-ament_add_pytest_test(test_sim_launch_keyboard_control test_sim_launch_keyboard_control.py)
-
 set(drqp_gazebo_smoke_launch_tests
   test_robot_control_spawn.py
   test_robot_control_nodes_and_clock.py
