@@ -52,9 +52,7 @@ def body_tilt_from_imu(orientation) -> Point3D:
 
     """
     imu_in_world = R.from_quat([orientation.x, orientation.y, orientation.z, orientation.w])
-    body_in_world = (
-        BASE_CENTER_TO_IMU_ROTATION * imu_in_world * BASE_CENTER_TO_IMU_ROTATION.inv()
-    )
+    body_in_world = BASE_CENTER_TO_IMU_ROTATION * imu_in_world * BASE_CENTER_TO_IMU_ROTATION.inv()
     roll, pitch, _ = body_in_world.as_euler('xyz', degrees=False)
     return Point3D([roll, pitch, 0.0])
 
