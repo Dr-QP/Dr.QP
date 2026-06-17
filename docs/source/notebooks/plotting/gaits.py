@@ -227,7 +227,6 @@ class GaitsVisualizer:
                 offset = _gait_generator.get_offsets_at_phase_for_leg(leg, phase, **gen_args)
                 leg_tip = _leg_centers[leg]
                 if _rotation_gaits:
-                    # TODO(anton-matosov): Why does visualization code need to know about rotations?
                     rotation_transform = AffineTransform.from_rotvec(
                         [0, 0, offset.x], degrees=True
                     )

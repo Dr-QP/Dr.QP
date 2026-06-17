@@ -56,20 +56,16 @@ size_t SerialPlayer::writeBytes(const void* buffer, size_t size)
 
   Record& record = currentRecord();
 
-  if (size > record.request.bytes.size()) {
+  if (writePos_ + size > record.request.bytes.size()) {
     // If requested write is larger than was recorded, its a fail
-    assertEqual(size, record.request.bytes.size(), 0);
+    assertEqual(writePos_ + size, record.request.bytes.size(), 0);
   }
 
   for (size_t i = 0; i < size; ++i) {
-    // Compare what was written now with recording
-    assertEqual(record.request.bytes[i], data[i], i);
+    assertEqual(record.request.bytes[writePos_ + i], data[i], writePos_ + i);
   }
 
-  // Remove verified recording
-  // TODO(anton-matosov): Consider keeping a lastWritePosition instead of erasing.
-  //  Or use range and update it every write
-  record.request.bytes.erase(record.request.bytes.begin(), record.request.bytes.begin() + size);
+  writePos_ += size;
 
   return size;
 }
@@ -98,11 +94,11 @@ void SerialPlayer::flushRead() {}
 
 Record& SerialPlayer::currentRecord()
 {
-  if (currentRecord_.isEmpty()) {
-    assert(records_.size() != 0);
-
+  if (writePos_ >= currentRecord_.request.bytes.size() && currentRecord_.response.bytes.empty()) {
+    assert(!records_.empty());
     currentRecord_ = records_.front();
     records_.pop_front();
+    writePos_ = 0;
   }
   return currentRecord_;
 }
@@ -126,6 +122,7 @@ void SerialPlayer::load(const std::filesystem::path& fileName)
 
 bool SerialPlayer::isEmpty() const
 {
-  return records_.empty() && currentRecord_.isEmpty();
+  return records_.empty() && writePos_ >= currentRecord_.request.bytes.size() &&
+         currentRecord_.response.bytes.empty();
 }
 }  // namespace RecordingProxy

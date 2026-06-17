@@ -67,6 +67,7 @@ public:
 
 private:
   Record currentRecord_;
+  size_t writePos_ = 0;
   OperationType lastOperation_;
   std::deque<Record> records_;
   BeforeDestructionCallback beforeDestructionCallback_;

@@ -337,15 +337,6 @@ class TestWalkController:
             assert abs(diff.x) > 0
             assert abs(diff.y) > 0
 
-            # TODO fix this test
-            # angular_distance = np.rad2deg(
-            #     np.arctan2(after_step.y, after_step.x) - np.arctan2(at_rest.y, at_rest.x)
-            # )
-
-            # assert abs(angular_distance) == pytest.approx(
-            #     walker.rotation_speed_degrees / 4, abs=1e-2
-            # )
-
     def test_body_translation(self, walker, hexapod):
         walker.next_step(
             stride_direction=Point3D([0, 0, 0]),

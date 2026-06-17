@@ -276,7 +276,6 @@ class TestA116HardwareInterface(unittest.TestCase):
             msg=f'Actual positions are not finite: {joint_positions}',
         )
 
-        # # TODO(anton-matosov): Use dynamic_joint_state to check the actual position
         if expected_position is not None:
             self.assertTrue(
                 np.allclose(
