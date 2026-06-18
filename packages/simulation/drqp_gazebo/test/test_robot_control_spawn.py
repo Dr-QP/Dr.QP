@@ -31,8 +31,6 @@ def generate_test_description():
     return create_simulation_launch_description()
 
 
-@pytest.mark.slow
-@pytest.mark.smoke
 @pytest.mark.launch(fixture=generate_test_description)
 class TestGazeboRobotControlSpawn(GazeboRobotControlBase):
     """Verify robot model spawns and starts publishing state."""
@@ -43,8 +41,6 @@ class TestGazeboRobotControlSpawn(GazeboRobotControlBase):
         self.assert_robot_spawned()
 
 
-@pytest.mark.slow
-@pytest.mark.smoke
 @pytest.mark.launch(fixture=generate_test_description, shutdown=True)
 def test_simulation_shutdown():
     pass

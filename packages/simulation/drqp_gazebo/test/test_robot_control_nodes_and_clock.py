@@ -31,8 +31,6 @@ def generate_test_description():
     return create_simulation_launch_description()
 
 
-@pytest.mark.slow
-@pytest.mark.smoke
 @pytest.mark.launch(fixture=generate_test_description)
 class TestGazeboRobotControlNodesAndClock(GazeboRobotControlBase):
     """Verify simulation nodes are running and Gazebo clock is bridged."""
@@ -49,8 +47,6 @@ class TestGazeboRobotControlNodesAndClock(GazeboRobotControlBase):
         self.assert_imu_data()
 
 
-@pytest.mark.slow
-@pytest.mark.smoke
 @pytest.mark.launch(fixture=generate_test_description, shutdown=True)
 def test_simulation_shutdown():
     pass
