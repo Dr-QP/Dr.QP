@@ -65,6 +65,7 @@ def _configure_test_logging() -> None:
         force=True,
     )
 
+
 ODOM_TOPIC = '/odom'
 
 
@@ -203,7 +204,9 @@ class GazeboRobotControlBase:
         self.assert_controllers_are_active()
         logger.info('[sim_ready] Phase 2/6 DONE')
 
-        logger.info('[sim_ready] Phase 3/6: wait for /robot_event + /robot/movement_command subscribers')
+        logger.info(
+            '[sim_ready] Phase 3/6: wait for /robot_event + /robot/movement_command subscribers'
+        )
         self._spin_until(
             lambda: (
                 self.event_pub.get_subscription_count() > 0
@@ -221,7 +224,9 @@ class GazeboRobotControlBase:
         )
         logger.info('[sim_ready] Phase 4/6 DONE')
 
-        logger.info('[sim_ready] Phase 5/6: wait for sim time to advance %.1fs', self.POSE_SETTLE_DURATION)
+        logger.info(
+            '[sim_ready] Phase 5/6: wait for sim time to advance %.1fs', self.POSE_SETTLE_DURATION
+        )
         self._wait_for_sim_time(self.POSE_SETTLE_DURATION, wall_timeout_sec=self.CLOCK_TIMEOUT)
         logger.info('[sim_ready] Phase 5/6 DONE')
 
@@ -288,7 +293,7 @@ class GazeboRobotControlBase:
                 visible_nodes,
                 visible_topics[:30],
             )
-        except Exception as diag_err:
+        except Exception as diag_err:  #  noqa: BLE001 debug logging
             self.node.get_logger().error(
                 '[spin_until] TIMEOUT after %.0fs (diagnostics unavailable: %s): %s',
                 timeout_sec,
