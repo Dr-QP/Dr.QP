@@ -76,6 +76,7 @@ def _assert_pose_matches_odometry(snapshot_pose: dict[str, Any], odom_pose: Any)
 
 
 @pytest.mark.slow
+@pytest.mark.timeout(1200)
 def test_runtime_robot_pose_stays_available_from_live_odom_bridge() -> None:
     """The runtime robot snapshot keeps exposing pose from the live /odom bridge."""
     reset_local_simulation_state()

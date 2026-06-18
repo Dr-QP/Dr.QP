@@ -12,6 +12,7 @@ from .simulation_test_support import reset_local_simulation_state, terminate_sim
 
 
 @pytest.mark.slow
+@pytest.mark.timeout(1200)
 def test_get_world_state_uses_live_gazebo_transport() -> None:
     """World snapshots should come from Gazebo Transport and keep updating."""
     pytest.importorskip(
