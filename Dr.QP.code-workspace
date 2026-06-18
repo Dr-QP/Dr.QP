@@ -229,8 +229,8 @@
           "coverage-pytest",
           // "--packages-up-to",
           // "drqp_serial",
-          "--packages-select",
-          "drqp_control",
+          // "--packages-select",
+          // "drqp_control",
         ],
         "problemMatcher": [
           "$colcon-gcc"
