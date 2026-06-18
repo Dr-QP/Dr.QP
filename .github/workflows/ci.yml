@@ -278,15 +278,17 @@ jobs:
   dev-container-ci:
     name: Devcontainer image
     needs: [merge-dev-image]
-    timeout-minutes: 35
+    timeout-minutes: ${{ matrix.timeout_minutes }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - arch: ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
-            SIMULATION_TEST_MODE: ''
+            SIMULATION_TEST_MODE: '' # aka default (fast)
+            timeout_minutes: 35
           - arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
             SIMULATION_TEST_MODE: 'slow'
+            timeout_minutes: 50
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:
       packages: read
