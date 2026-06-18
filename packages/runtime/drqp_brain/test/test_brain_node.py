@@ -25,13 +25,13 @@ from drqp_brain.brain_node import _assert_no_existing_brain_node, HexapodBrain
 from drqp_brain.instance_guard import InstanceAlreadyRunningError
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 from geometry_msgs.msg import Vector3
-import launch_pytest
 from launch import LaunchDescription
 from launch.actions import TimerAction
 from launch.substitutions import FindExecutable
+import launch_pytest
+from launch_pytest.actions import ReadyToTest
 from launch_ros.actions import Node
 from launch_ros.substitutions import ExecutableInPackage
-from launch_pytest.actions import ReadyToTest
 import pytest
 import rclpy
 import std_msgs.msg

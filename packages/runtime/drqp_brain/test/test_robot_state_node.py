@@ -23,13 +23,13 @@ import time
 
 from drqp_brain.instance_guard import InstanceGuard
 from drqp_brain.robot_state import robot_state_node
-import launch_pytest
 from launch import LaunchDescription
 from launch.actions import TimerAction
 from launch.substitutions import FindExecutable
+import launch_pytest
+from launch_pytest.actions import ReadyToTest
 from launch_ros.actions import Node
 from launch_ros.substitutions import ExecutableInPackage
-from launch_pytest.actions import ReadyToTest
 import pytest
 import rclpy
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
@@ -85,9 +85,7 @@ class TestRobotStateMachineNode:
         """Check whether events are processed."""
         msgs_received = []
 
-        event_pub = self.node.create_publisher(
-            std_msgs.msg.String, '/robot_event', qos_profile=10
-        )
+        event_pub = self.node.create_publisher(std_msgs.msg.String, '/robot_event', qos_profile=10)
         qos_profile = QoSProfile(depth=1)
         # make state available to late joiners
         qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL

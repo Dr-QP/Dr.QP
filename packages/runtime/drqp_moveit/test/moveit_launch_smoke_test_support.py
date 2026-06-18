@@ -76,8 +76,9 @@ class MoveItLaunchSmokeTestCase:
         node = rclpy.create_node('moveit_launch_smoke_test')
         motion_plan_client = node.create_client(GetMotionPlan, '/plan_kinematic_path')
         try:
-            assert motion_plan_client.wait_for_service(timeout_sec=self.READY_TIMEOUT), \
+            assert motion_plan_client.wait_for_service(timeout_sec=self.READY_TIMEOUT), (
                 '/plan_kinematic_path service is not available'
+            )
         finally:
             motion_plan_client.destroy()
             node.destroy_node()

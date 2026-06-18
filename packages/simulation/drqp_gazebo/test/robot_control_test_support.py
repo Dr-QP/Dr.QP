@@ -31,7 +31,6 @@ import time
 
 import builtin_interfaces
 import builtin_interfaces.msg
-import pytest
 from controller_manager.test_utils import check_controllers_running, check_node_running
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 from geometry_msgs.msg import Pose, Vector3
@@ -39,10 +38,11 @@ from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
-from launch_ros.substitutions import FindPackageShare
 from launch_pytest.actions import ReadyToTest
+from launch_ros.substitutions import FindPackageShare
 from launch_testing_ros import WaitForTopics
 from nav_msgs.msg import Odometry
+import pytest
 import rclpy
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 from rosgraph_msgs.msg import Clock

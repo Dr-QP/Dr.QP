@@ -29,7 +29,6 @@ import pytest
 import rclpy
 import rclpy.time
 
-
 _SKIP_NO_DISPLAY = pytest.mark.skipif(
     not os.environ.get('DISPLAY'),
     reason='RViz smoke test requires a graphical display',

@@ -184,8 +184,9 @@ class TestMoveItRuntimeIssue43:
             (self.state_validity_client, '/check_state_validity'),
             (self.apply_planning_scene_client, '/apply_planning_scene'),
         ]:
-            assert client.wait_for_service(timeout_sec=self.READY_TIMEOUT), \
+            assert client.wait_for_service(timeout_sec=self.READY_TIMEOUT), (
                 f'{name} service is not available'
+            )
 
         assert self.follow_joint_trajectory_client.wait_for_server(
             timeout_sec=self.READY_TIMEOUT
@@ -424,8 +425,9 @@ class TestMoveItRuntimeIssue43:
         assert plan_response.motion_plan_response.error_code.val == MoveItErrorCodes.SUCCESS, (
             f'Planning failed with code {plan_response.motion_plan_response.error_code.val}'
         )
-        assert plan_response.motion_plan_response.trajectory.joint_trajectory.points, \
+        assert plan_response.motion_plan_response.trajectory.joint_trajectory.points, (
             'Expected a non-empty planned trajectory'
+        )
 
     def test_issue43_execute_trajectory_reaches_planned_goal_via_joint_trajectory_controller(self):
         _, target_joint_positions = self._reachable_target()
@@ -451,8 +453,9 @@ class TestMoveItRuntimeIssue43:
         assert not validity_response.valid, 'Expected the blocked target state to be invalid'
 
         plan_response = self._plan_to_joint_target(target_joint_positions)
-        assert plan_response.motion_plan_response.error_code.val != MoveItErrorCodes.SUCCESS, \
+        assert plan_response.motion_plan_response.error_code.val != MoveItErrorCodes.SUCCESS, (
             'Expected planning to fail for a blocked target state'
+        )
 
 
 @pytest.mark.launch(fixture=generate_test_description, shutdown=True)
