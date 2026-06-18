@@ -206,7 +206,6 @@
             "CMAKE_EXPORT_COMPILE_COMMANDS": "1",
             "CC": "clang",
             "CXX": "clang++",
-            "DRQP_GAZEBO_TEST_MODE": "smoke", // or "all"
           }
         }
       },
@@ -215,6 +214,8 @@
         "type": "shell",
         "command": "${workspaceFolder}/scripts/with-ros-env.sh",
         "args": [
+          "env",
+          "DRQP_TEST_MODE=fast", // "slow" for slow sim tests
           "python3",
           "-m",
           "colcon",
@@ -228,8 +229,8 @@
           "coverage-pytest",
           // "--packages-up-to",
           // "drqp_serial",
-          // "--packages-select",
-          // "drqp_brain",
+          "--packages-select",
+          "drqp_control",
         ],
         "problemMatcher": [
           "$colcon-gcc"
