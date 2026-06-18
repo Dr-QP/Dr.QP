@@ -1,3 +1,5 @@
+@AGENTS.md
+
 # Claude Code Guidelines
 
 ## Dual-System Arrangement
