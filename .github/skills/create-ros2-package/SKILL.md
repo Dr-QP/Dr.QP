@@ -103,7 +103,7 @@ Basic sections: Overview, Dependencies, Building (`colcon build --packages-up-to
 
 ### Step 9: Test Scaffolding
 
-C++: `test/test_<package_name>.cpp` with GTest, `ament_add_gmock`. Python: `test/__init__.py`, `test/test_<package_name>.py` with pytest.
+C++: `test/test_<package_name>.cpp` with GTest, `ament_add_gmock`. Python: `test/__init__.py`, `test/test_<package_name>.py` with pytest (never unittest). For ROS 2 node integration or launch tests use `launch_pytest`: add `@launch_pytest.fixture` on `generate_test_description` and `@pytest.mark.launch(fixture=generate_test_description)` on test classes. See [add-test-file](../add-test-file/) for templates.
 
 ### Step 10: Directory Placeholders
 

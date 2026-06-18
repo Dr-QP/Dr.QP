@@ -65,7 +65,51 @@ TEST_F(<ClassName>Test, MethodNameHandlesInvalidInput) { ... }
 
 **Python Unit:** pytest fixtures, `Test<ClassName>` class, assert patterns.
 
-**Python Integration:** `Test<NodeClass>Integration` class. Initialize ROS once in `setUpClass()` and register `cls.addClassCleanup(rclpy.try_shutdown)` so the ROS context is shared across the class. Keep node, client, subscription, and action cleanup in `setUp()` with `self.addCleanup(...)`, or use the pytest equivalent class-scoped setup/teardown plus fixture finalizers.
+**Python Node Integration:** Use pytest class-level setup/teardown for rclpy init/shutdown.
+Use `@pytest.fixture(autouse=True)` with `request.addfinalizer()` for per-test node/publisher/subscription cleanup.
+
+**Python Launch Integration:** Use `launch_pytest` for tests that launch ROS 2 nodes via `LaunchDescription`.
+Decorate `generate_test_description` with `@launch_pytest.fixture`; mark test classes with `@pytest.mark.launch(fixture=generate_test_description)`.
+Add a shutdown test function decorated with `@pytest.mark.launch(fixture=generate_test_description, shutdown=True)`.
+
+```python
+import launch_pytest
+import pytest
+import rclpy
+from launch import LaunchDescription
+from launch.actions import TimerAction
+from launch_pytest.actions import ReadyToTest
+from launch_ros.actions import Node
+
+@launch_pytest.fixture
+def generate_test_description():
+    return LaunchDescription([
+        Node(package='<pkg>', executable='<exe>', output='screen'),
+        TimerAction(period=2.0, actions=[ReadyToTest()]),
+    ])
+
+@pytest.mark.launch(fixture=generate_test_description)
+class Test<NodeClass>:
+    @classmethod
+    def setup_class(cls):
+        rclpy.init()
+
+    @classmethod
+    def teardown_class(cls):
+        rclpy.try_shutdown()
+
+    @pytest.fixture(autouse=True)
+    def _node_setup(self, request):
+        self.node = rclpy.create_node('test_<node_class>_consumer')
+        request.addfinalizer(self.node.destroy_node)
+
+    def test_smoke(self):
+        pass
+
+@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
+def test_<node_class>_shutdown():
+    pass
+```
 
 ### Step 5: Update Build Configuration
 
