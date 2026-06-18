@@ -61,7 +61,6 @@ LEFT_FRONT_JOINTS = [
 TARGET_OBSTACLE_ID = 'issue43_left_front_target_blocker'
 
 
-@pytest.mark.slow
 @launch_pytest.fixture(scope='class')
 def generate_test_description():
     demo_gazebo_launch = PathJoinSubstitution(
@@ -458,6 +457,7 @@ class TestMoveItRuntimeIssue43:
         )
 
 
+@pytest.mark.slow
 @pytest.mark.launch(fixture=generate_test_description, shutdown=True)
 def test_moveit_runtime_launch_shutdown():
     pass

@@ -26,7 +26,6 @@ from robot_control_test_support import (
 )
 
 
-@pytest.mark.slow
 @launch_pytest.fixture
 def generate_test_description():
     return create_simulation_launch_description()
@@ -43,6 +42,7 @@ class TestGazeboRobotControlDisarmedPosture(GazeboRobotControlBase):
         self.assert_disarmed_posture()
 
 
+@pytest.mark.slow
 @pytest.mark.launch(fixture=generate_test_description, shutdown=True)
 def test_simulation_shutdown():
     pass

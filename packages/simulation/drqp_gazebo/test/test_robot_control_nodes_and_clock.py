@@ -26,8 +26,6 @@ from robot_control_test_support import (
 )
 
 
-@pytest.mark.slow
-@pytest.mark.smoke
 @launch_pytest.fixture
 def generate_test_description():
     return create_simulation_launch_description()
@@ -51,6 +49,8 @@ class TestGazeboRobotControlNodesAndClock(GazeboRobotControlBase):
         self.assert_imu_data()
 
 
+@pytest.mark.slow
+@pytest.mark.smoke
 @pytest.mark.launch(fixture=generate_test_description, shutdown=True)
 def test_simulation_shutdown():
     pass
