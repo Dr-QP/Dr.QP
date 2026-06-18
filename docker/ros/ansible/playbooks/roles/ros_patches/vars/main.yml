@@ -10,3 +10,7 @@ ros_patches_packages:
     arch: arm64
     url: >-
       https://github.com/Dr-QP/Dr.QP/releases/download/launch-pytest-holder/ros-jazzy-launch-pytest_3.4.11-1noble.20260603.150049_arm64.deb
+  - name: ros-jazzy-launch-pytest
+    arch: amd64
+    url: >-
+      https://github.com/Dr-QP/Dr.QP/releases/download/launch-pytest-holder/ros-jazzy-launch-pytest_3.4.11-1noble.20260604.025918_amd64.deb
