@@ -20,9 +20,9 @@
 
 import enum
 
-from drqp_kinematics.geometry import AffineTransform, Line3D, Point3D
-
 import numpy as np
+
+from drqp_kinematics.geometry import AffineTransform, Line3D, Point3D
 
 
 class HexapodLeg(enum.Enum):
