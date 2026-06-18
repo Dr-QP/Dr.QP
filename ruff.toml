@@ -55,7 +55,7 @@ force-single-line = false
 force-sort-within-sections = true # sort all imports within section no matter the style
 combine-as-imports = true
 known-first-party = ["validate_agent_files"]
-known-third-party = ["rclpy", "sensor_msgs", "tf2_ros", "pytest", "drqp_brain"]
+known-third-party = ["rclpy", "sensor_msgs", "tf2_ros", "pytest", "drqp_brain", "drqp_kinematics"]
 case-sensitive = false
 order-by-type = false # ignore type, use alphabetical order
 
