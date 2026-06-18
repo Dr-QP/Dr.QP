@@ -32,3 +32,4 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     for item in items:
         if 'slow' in item.keywords and 'smoke' not in item.keywords:
             item.add_marker(skip_non_smoke)
+            print(f'\n\n### Skipping non-smoke test: {item.name}\n')
