@@ -150,15 +150,8 @@ class GazeboRobotControlBase:
         rclpy.try_shutdown()
 
     @pytest.fixture(autouse=True)
-    def _node_setup(self, request) -> None:
+    def _node_setup(self, request, generate_test_description) -> None:  # noqa: ARG002
         """Set up test node and publishers/subscribers."""
-        # launch_pytest does not inject the launch fixture into class-method tests
-        # automatically — @pytest.mark.launch on a class is inherited as a marker but
-        # pytest_pycollect_makeitem never adds usefixtures for the class's methods.
-        # Requesting the fixture by name here forces pytest_fixture_setup to start
-        # the launch service (and drive the event loop until ReadyToTest fires)
-        # before we try to discover any ROS nodes.
-        request.getfixturevalue('generate_test_description')
         _TEST_LOG.info(
             'node_setup START: test=%s  GZ_PARTITION=%s  ROS_DOMAIN_ID=%s',
             request.node.name,
