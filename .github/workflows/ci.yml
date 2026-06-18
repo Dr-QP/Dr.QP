@@ -245,7 +245,11 @@ jobs:
           python3 -c 'import statemachine'
           echo ''
 
-          python3 -m colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure
+          # TEMP: focus on the flaky test for hang diagnosis — remove after root cause found
+          export PYTEST_ADDOPTS="--log-cli-level=DEBUG --log-cli-format='%(asctime)s.%(msecs)03d [%(levelname)s] %(message)s' --log-date-format='%H:%M:%S'"
+          python3 -m colcon test --mixin coverage-pytest --event-handlers=console_direct+ --return-code-on-test-failure \
+            --packages-select drqp_gazebo \
+            --ctest-args -R test_robot_control_nodes_and_clock
 
       - name: Process llvm coverage
         run: ./packages/cmake/llvm-cov-export-all.py ./build
@@ -351,8 +355,12 @@ jobs:
             ./scripts/ros-dep.sh
             source "scripts/setup.bash"
 
+            # TEMP: focus on the flaky test for hang diagnosis — remove after root cause found
+            export PYTEST_ADDOPTS="--log-cli-level=DEBUG --log-cli-format='%(asctime)s.%(msecs)03d [%(levelname)s] %(message)s' --log-date-format='%H:%M:%S'"
             test_status=0
-            python3 -m colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure || test_status=$?
+            python3 -m colcon test --event-handlers=console_direct+ --return-code-on-test-failure \
+              --packages-select drqp_gazebo \
+              --ctest-args -R test_robot_control_nodes_and_clock || test_status=$?
 
             mkdir -p ./.tmp/devcontainer-ci
             rm -rf ./.tmp/devcontainer-ci/build ./.tmp/devcontainer-ci/log
