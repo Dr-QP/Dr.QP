@@ -11,7 +11,7 @@
     deb: "{{ ros_patches_temp_dir.path }}/{{ patch.name }}.deb"
     state: present
 
-- name: "Hold {{ patch.name }} to prevent apt from downgrading it"
+- name: "Hold patch package on apt-mark hold: {{ patch.name }}"
   ansible.builtin.dpkg_selections:
     name: "{{ patch.name }}"
     selection: hold
