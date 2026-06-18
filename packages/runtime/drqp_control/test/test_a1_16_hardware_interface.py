@@ -253,18 +253,13 @@ class TestA116HardwareInterface:
         rclpy.spin_until_future_complete(self.node, goal_handle_future)
         goal_handle = goal_handle_future.result()
         assert goal_handle is not None
-        if goal_handle is None:
-            pytest.fail('Goal handle is None')
-            return
+
         result_future = goal_handle.get_result_async()
         rclpy.spin_until_future_complete(self.node, result_future)
 
         result: FollowJointTrajectory.Result | None = result_future.result().result
 
         assert result is not None
-        if result is None:
-            pytest.fail('Result is None')
-            return
         assert result.error_code == FollowJointTrajectory.Result.SUCCESSFUL
 
         # Wait for the feedback to be updated

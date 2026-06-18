@@ -42,7 +42,6 @@ from launch_ros.substitutions import FindPackageShare
 from launch_pytest.actions import ReadyToTest
 from launch_testing_ros import WaitForTopics
 from nav_msgs.msg import Odometry
-import pytest
 import rclpy
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 from rosgraph_msgs.msg import Clock
@@ -475,10 +474,10 @@ class GazeboRobotControlBase:
         try:
             check_node_running(self.node, 'robot_state_publisher', timeout=self.SPAWN_TIMEOUT)
         except (AssertionError, RuntimeError, TimeoutError) as error:
-            pytest.fail(
+            raise RuntimeError(
                 'Robot model failed to spawn: robot_state_publisher not running within '
-                f'{self.SPAWN_TIMEOUT}s. Error: {error}'
-            )
+                f'{self.SPAWN_TIMEOUT}s'
+            ) from error
 
         self._wait_for_any_state(
             ('torque_off', 'finalized', 'initializing', 'finalizing', 'torque_on'),
@@ -517,78 +516,84 @@ class GazeboRobotControlBase:
         self._arm_robot()
         try:
             forward_delta, _, _ = self._run_movement_and_measure(stride_x=1.0)
-            assert forward_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
-                'Robot did not move forward significantly: '
-                f'forward_delta={forward_delta:.3f}m '
-                f'(expected > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
-            )
         except RuntimeError as error:
-            pytest.fail(f'Forward movement test failed. Error: {error}')
+            raise RuntimeError('Forward movement failed') from error
+
+        assert forward_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
+            'Robot did not move forward significantly: '
+            f'forward_delta={forward_delta:.3f}m '
+            f'(expected > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
+        )
 
     def assert_sustained_forward_movement(self) -> None:
         self._arm_robot()
         try:
             first_forward_delta, _, _ = self._run_movement_and_measure(stride_x=1.0)
             second_forward_delta, _, _ = self._run_movement_and_measure(stride_x=1.0)
-            assert first_forward_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
-                'Robot did not move forward significantly during the first window: '
-                f'forward_delta={first_forward_delta:.3f}m '
-                f'(expected > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
-            )
-            assert second_forward_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
-                'Robot forward motion was not sustained into the second window: '
-                f'forward_delta={second_forward_delta:.3f}m '
-                f'(expected > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
-            )
-            assert self.current_robot_state == 'torque_on'
         except RuntimeError as error:
-            pytest.fail(f'Sustained forward movement test failed. Error: {error}')
+            raise RuntimeError('Sustained forward movement failed') from error
+
+        assert first_forward_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
+            'Robot did not move forward significantly during the first window: '
+            f'forward_delta={first_forward_delta:.3f}m '
+            f'(expected > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
+        )
+        assert second_forward_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
+            'Robot forward motion was not sustained into the second window: '
+            f'forward_delta={second_forward_delta:.3f}m '
+            f'(expected > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
+        )
+        assert self.current_robot_state == 'torque_on'
 
     def assert_backward_movement(self) -> None:
         self._arm_robot()
         try:
             forward_delta, _, _ = self._run_movement_and_measure(stride_x=-1.0)
-            assert forward_delta < -self.MIN_LINEAR_MOVEMENT_DELTA, (
-                'Robot did not move backward significantly: '
-                f'forward_delta={forward_delta:.3f}m '
-                f'(expected < {-self.MIN_LINEAR_MOVEMENT_DELTA}m)'
-            )
         except RuntimeError as error:
-            pytest.fail(f'Backward movement test failed. Error: {error}')
+            raise RuntimeError('Backward movement failed') from error
+
+        assert forward_delta < -self.MIN_LINEAR_MOVEMENT_DELTA, (
+            'Robot did not move backward significantly: '
+            f'forward_delta={forward_delta:.3f}m '
+            f'(expected < {-self.MIN_LINEAR_MOVEMENT_DELTA}m)'
+        )
 
     def assert_left_movement(self) -> None:
         self._arm_robot()
         try:
             _, left_delta, _ = self._run_movement_and_measure(stride_y=1.0)
-            assert left_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
-                'Robot did not strafe left significantly: '
-                f'left_delta={left_delta:.3f}m '
-                f'(expected > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
-            )
         except RuntimeError as error:
-            pytest.fail(f'Left strafe test failed. Error: {error}')
+            raise RuntimeError('Left strafe movement failed') from error
+
+        assert left_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
+            'Robot did not strafe left significantly: '
+            f'left_delta={left_delta:.3f}m '
+            f'(expected > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
+        )
 
     def assert_right_movement(self) -> None:
         self._arm_robot()
         try:
             _, left_delta, _ = self._run_movement_and_measure(stride_y=-1.0)
-            assert left_delta < -self.MIN_LINEAR_MOVEMENT_DELTA, (
-                'Robot did not strafe right significantly: '
-                f'left_delta={left_delta:.3f}m '
-                f'(expected < {-self.MIN_LINEAR_MOVEMENT_DELTA}m)'
-            )
         except RuntimeError as error:
-            pytest.fail(f'Right strafe test failed. Error: {error}')
+            raise RuntimeError('Right strafe movement failed') from error
+
+        assert left_delta < -self.MIN_LINEAR_MOVEMENT_DELTA, (
+            'Robot did not strafe right significantly: '
+            f'left_delta={left_delta:.3f}m '
+            f'(expected < {-self.MIN_LINEAR_MOVEMENT_DELTA}m)'
+        )
 
     def assert_rotation_movement(self) -> None:
         self._arm_robot()
         try:
             _, _, delta_yaw = self._run_movement_and_measure(rotation=0.5)
-            assert abs(delta_yaw) > self.MIN_ROTATION_DELTA, (
-                f'Robot did not rotate significantly: |delta_yaw|={abs(delta_yaw):.3f}'
-            )
         except RuntimeError as error:
-            pytest.fail(f'Rotation movement test failed. Error: {error}')
+            raise RuntimeError('Rotation movement failed') from error
+
+        assert abs(delta_yaw) > self.MIN_ROTATION_DELTA, (
+            f'Robot did not rotate significantly: |delta_yaw|={abs(delta_yaw):.3f}'
+        )
 
     def assert_disarmed_posture(self) -> None:
         """Verify disarming lowers base, or static posture mode is consistent."""
