@@ -22,15 +22,11 @@
 
 from collections.abc import Callable
 from copy import deepcopy
-import faulthandler
 import inspect
-import logging
 import math
 import os
 from pathlib import Path
 import re
-import signal
-import sys
 import time
 
 import builtin_interfaces
@@ -52,19 +48,6 @@ from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 from rosgraph_msgs.msg import Clock
 from sensor_msgs.msg import Imu
 import std_msgs.msg
-
-_TEST_LOG = logging.getLogger(__name__)
-
-
-def _configure_test_logging() -> None:
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s.%(msecs)03d [%(levelname)s] %(name)s: %(message)s',
-        datefmt='%H:%M:%S',
-        stream=sys.stdout,
-        force=True,
-    )
-
 
 ODOM_TOPIC = '/odom'
 
@@ -133,31 +116,15 @@ class GazeboRobotControlBase:
 
     @classmethod
     def setup_class(cls) -> None:
-        _configure_test_logging()
-        # Dump all thread stacks on crash or SIGUSR1 — helps diagnose CI hangs.
-        faulthandler.enable(file=sys.stderr, all_threads=True)
-        try:
-            faulthandler.register(signal.SIGUSR1, file=sys.stderr, all_threads=True)
-        except (AttributeError, OSError) as e:
-            _TEST_LOG.warning('Could not register SIGUSR1 faulthandler: %s', e)
-        _TEST_LOG.info('setup_class: rclpy.init()')
         rclpy.init()
-        _TEST_LOG.info('setup_class: rclpy initialized OK')
 
     @classmethod
     def teardown_class(cls) -> None:
-        _TEST_LOG.info('teardown_class: rclpy.try_shutdown()')
         rclpy.try_shutdown()
 
     @pytest.fixture(autouse=True)
     def _node_setup(self, request, generate_test_description) -> None:  # noqa: ARG002
         """Set up test node and publishers/subscribers."""
-        _TEST_LOG.info(
-            'node_setup START: test=%s  GZ_PARTITION=%s  ROS_DOMAIN_ID=%s',
-            request.node.name,
-            os.environ.get('GZ_PARTITION', 'UNSET'),
-            os.environ.get('ROS_DOMAIN_ID', 'UNSET'),
-        )
         self.node = rclpy.create_node('test_gazebo_robot_control')
         request.addfinalizer(self.node.destroy_node)
 
@@ -189,24 +156,11 @@ class GazeboRobotControlBase:
             MovementCommand, '/robot/movement_command', 10
         )
 
-        _TEST_LOG.info('node_setup: calling _wait_for_simulation_ready')
         self._wait_for_simulation_ready()
-        _TEST_LOG.info('node_setup DONE: test=%s', request.node.name)
 
     def _wait_for_simulation_ready(self) -> None:
-        logger = self.node.get_logger()
-
-        logger.info('[sim_ready] Phase 1/6: assert_nodes_and_clock')
         self.assert_nodes_and_clock()
-        logger.info('[sim_ready] Phase 1/6 DONE')
-
-        logger.info('[sim_ready] Phase 2/6: assert_controllers_are_active')
         self.assert_controllers_are_active()
-        logger.info('[sim_ready] Phase 2/6 DONE')
-
-        logger.info(
-            '[sim_ready] Phase 3/6: wait for /robot_event + /robot/movement_command subscribers'
-        )
         self._spin_until(
             lambda: (
                 self.event_pub.get_subscription_count() > 0
@@ -215,24 +169,12 @@ class GazeboRobotControlBase:
             self.READY_TIMEOUT,
             'Timed out waiting for /robot_event and /robot/movement_command subscribers',
         )
-        logger.info('[sim_ready] Phase 3/6 DONE')
-
-        logger.info('[sim_ready] Phase 4/6: wait for torque_off state')
         self._wait_for_any_state(
             ('torque_off',),  # robot initial state
             self.SPAWN_TIMEOUT,
         )
-        logger.info('[sim_ready] Phase 4/6 DONE')
-
-        logger.info(
-            '[sim_ready] Phase 5/6: wait for sim time to advance %.1fs', self.POSE_SETTLE_DURATION
-        )
         self._wait_for_sim_time(self.POSE_SETTLE_DURATION, wall_timeout_sec=self.CLOCK_TIMEOUT)
-        logger.info('[sim_ready] Phase 5/6 DONE')
-
-        logger.info('[sim_ready] Phase 6/6: wait for odometry pose')
         self._wait_for_pose()
-        logger.info('[sim_ready] ALL PHASES DONE — simulation ready')
 
     def _robot_state_callback(self, msg: std_msgs.msg.String) -> None:
         self.current_robot_state = msg.data
@@ -249,8 +191,6 @@ class GazeboRobotControlBase:
     def _time_msg_to_nanoseconds(msg: builtin_interfaces.msg.Time) -> int:
         return (msg.sec * 1_000_000_000) + msg.nanosec
 
-    _SPIN_LOG_INTERVAL_SEC = 10.0
-
     def _spin_until(
         self,
         condition_fn: Callable[[], bool],
@@ -258,48 +198,12 @@ class GazeboRobotControlBase:
         error_message: str,
     ) -> bool:
         """Spin the node until a condition is met or timeout occurs."""
-        self.node.get_logger().info(
-            '[spin_until] START (timeout=%.0fs): %s', timeout_sec, error_message
-        )
         start_time = time.monotonic()
-        last_log_time = start_time
         while time.monotonic() - start_time < timeout_sec:
             rclpy.spin_once(self.node, timeout_sec=0.1)
             if condition_fn():
-                elapsed = time.monotonic() - start_time
-                self.node.get_logger().info('[spin_until] DONE in %.1fs', elapsed)
                 return True
-            now = time.monotonic()
-            if now - last_log_time >= self._SPIN_LOG_INTERVAL_SEC:
-                elapsed = now - start_time
-                self.node.get_logger().warning(
-                    '[spin_until] still waiting %.0f/%.0fs: %s',
-                    elapsed,
-                    timeout_sec,
-                    error_message,
-                )
-                last_log_time = now
             time.sleep(0.1)
-        # Log diagnostic snapshot before raising so CI logs have context.
-        try:
-            visible_nodes = self.node.get_node_names()
-            visible_topics = [n for n, _ in self.node.get_topic_names_and_types()]
-            self.node.get_logger().error(
-                '[spin_until] TIMEOUT after %.0fs: %s\n'
-                '  visible nodes  : %s\n'
-                '  visible topics : %s',
-                timeout_sec,
-                error_message,
-                visible_nodes,
-                visible_topics[:30],
-            )
-        except Exception as diag_err:  #  noqa: BLE001 debug logging
-            self.node.get_logger().error(
-                '[spin_until] TIMEOUT after %.0fs (diagnostics unavailable: %s): %s',
-                timeout_sec,
-                diag_err,
-                error_message,
-            )
         raise TimeoutError(error_message)
 
     def _publish_event(self, event_name: str) -> None:
@@ -544,33 +448,21 @@ class GazeboRobotControlBase:
     def assert_nodes_and_clock(self) -> None:
         """Verify simulation nodes are running and clock is available."""
         for node_name in ('robot_state_publisher', 'drqp_brain', 'drqp_robot_state'):
-            self.node.get_logger().info(
-                '[nodes] Waiting for node "%s" (timeout=%.0fs)', node_name, self.CLOCK_TIMEOUT
-            )
             check_node_running(self.node, node_name, timeout=self.CLOCK_TIMEOUT)
-            self.node.get_logger().info('[nodes] Found node "%s"', node_name)
 
-        self.node.get_logger().info(
-            '[nodes] Waiting for /clock topic (timeout=%.0fs)', self.CLOCK_TIMEOUT
-        )
         with WaitForTopics([('/clock', Clock)], timeout=self.CLOCK_TIMEOUT) as wait:
             assert wait.wait(), 'Did not receive /clock from Gazebo bridge'
-        self.node.get_logger().info('[nodes] /clock topic is publishing')
 
     def assert_controllers_are_active(self) -> None:
         """Verify ros2_control controllers are alive inside Gazebo."""
-        controller_names = ['joint_state_broadcaster', 'joint_trajectory_controller']
-        self.node.get_logger().info(
-            '[controllers] Waiting for controllers %s (timeout=%.0fs)',
-            controller_names,
-            self.CONTROLLER_TIMEOUT,
-        )
         check_controllers_running(
             self.node,
-            controller_names,
+            [
+                'joint_state_broadcaster',
+                'joint_trajectory_controller',
+            ],
             timeout=self.CONTROLLER_TIMEOUT,
         )
-        self.node.get_logger().info('[controllers] All controllers are active')
 
     def assert_imu_data(self) -> None:
         """Verify the simulated IMU publishes on /imu/data via the Gazebo bridge."""
