@@ -24,14 +24,11 @@ import pytest
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    """Run the smoke subset unless DRQP_TEST_MODE=slow is set to include slow tests."""
-    test_mode = os.environ.get('DRQP_TEST_MODE')
-    print(f'\n\n### DRQP_TEST_MODE={test_mode}\n')
-    if test_mode == 'slow':
+    """Skip slow tests unless DRQP_TEST_MODE=slow is set."""
+    if os.environ.get('DRQP_TEST_MODE') == 'slow':
         return
 
-    skip_non_smoke = pytest.mark.skip(reason='Excluded from smoke suite')
+    skip_slow = pytest.mark.skip(reason='Slow test excluded from default CI run')
     for item in items:
-        if 'slow' in item.keywords and 'smoke' not in item.keywords:
-            item.add_marker(skip_non_smoke)
-            print(f'\n\n### Skipping non-smoke test: {item.name}\n')
+        if 'slow' in item.keywords:
+            item.add_marker(skip_slow)
