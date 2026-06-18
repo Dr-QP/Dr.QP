@@ -201,8 +201,6 @@ jobs:
     name: Build and test ROS2 workspace
     needs: [merge-dev-image]
     timeout-minutes: 35
-    env:
-      DRQP_TEST_MODE: slow
     strategy:
       fail-fast: false
       matrix:
