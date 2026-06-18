@@ -103,8 +103,11 @@ class TestMoveItRuntimeIssue43:
     def teardown_class(cls):
         rclpy.try_shutdown()
 
-    def setup_method(self, method):
+    @pytest.fixture(autouse=True)
+    def _node_setup(self, request):
         self.node = rclpy.create_node('test_moveit_runtime_issue43')
+        request.addfinalizer(self.node.destroy_node)
+
         self.latest_joint_state = None
         self.latest_clock = None
         self._active_obstacle_ids: set[str] = set()
@@ -115,37 +118,39 @@ class TestMoveItRuntimeIssue43:
             self._joint_state_callback,
             10,
         )
+        request.addfinalizer(self.joint_state_sub.destroy)
+
         self.clock_sub = self.node.create_subscription(Clock, '/clock', self._clock_callback, 10)
+        request.addfinalizer(self.clock_sub.destroy)
 
         self.motion_plan_client = self.node.create_client(
             GetMotionPlan,
             '/plan_kinematic_path',
         )
+        request.addfinalizer(self.motion_plan_client.destroy)
+
         self.state_validity_client = self.node.create_client(
             GetStateValidity,
             '/check_state_validity',
         )
+        request.addfinalizer(self.state_validity_client.destroy)
+
         self.apply_planning_scene_client = self.node.create_client(
             ApplyPlanningScene,
             '/apply_planning_scene',
         )
+        request.addfinalizer(self.apply_planning_scene_client.destroy)
+
         self.follow_joint_trajectory_client = ActionClient(
             self.node,
             FollowJointTrajectory,
             '/joint_trajectory_controller/follow_joint_trajectory',
         )
+        request.addfinalizer(self.follow_joint_trajectory_client.destroy)
+
+        request.addfinalizer(self._clear_obstacles)
 
         self._wait_for_runtime_ready()
-
-    def teardown_method(self, method):
-        self._clear_obstacles()
-        self.follow_joint_trajectory_client.destroy()
-        self.apply_planning_scene_client.destroy()
-        self.state_validity_client.destroy()
-        self.motion_plan_client.destroy()
-        self.clock_sub.destroy()
-        self.joint_state_sub.destroy()
-        self.node.destroy_node()
 
     def _joint_state_callback(self, msg: JointState) -> None:
         self.latest_joint_state = msg

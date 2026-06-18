@@ -9,4 +9,4 @@ ros_patches_packages:
   - name: ros-jazzy-launch-pytest
     arch: arm64
     url: >-
-      https://repo.ros2.org/ubuntu/building/pool/main/r/ros-jazzy-launch-pytest/ros-jazzy-launch-pytest_3.4.11-1noble.20260603.150049_arm64.deb
+      https://github.com/Dr-QP/Dr.QP/releases/download/launch-pytest-holder/ros-jazzy-launch-pytest_3.4.11-1noble.20260603.150049_arm64.deb

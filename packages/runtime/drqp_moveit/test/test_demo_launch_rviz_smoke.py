@@ -26,13 +26,17 @@ from moveit_launch_smoke_test_support import (
     MoveItLaunchSmokeTestCase,
 )
 import pytest
+import rclpy
+import rclpy.time
 
 
-@launch_pytest.fixture
-@pytest.mark.skipif(
+_SKIP_NO_DISPLAY = pytest.mark.skipif(
     not os.environ.get('DISPLAY'),
     reason='RViz smoke test requires a graphical display',
 )
+
+
+@launch_pytest.fixture
 def generate_test_description():
     return build_smoke_test_description(
         'demo.launch.py',
@@ -41,13 +45,29 @@ def generate_test_description():
     )
 
 
+@_SKIP_NO_DISPLAY
 @pytest.mark.launch(fixture=generate_test_description)
 class TestDemoLaunchRvizSmoke(MoveItLaunchSmokeTestCase):
     """Smoke test for the demo.launch.py RViz visualization."""
 
     __test__ = True
 
+    def test_only_one_rviz_node_starts(self):
+        node = rclpy.create_node('rviz_count_checker')
+        try:
+            deadline = node.get_clock().now() + rclpy.time.Duration(seconds=10.0)
+            rviz_nodes: list[str] = []
+            while node.get_clock().now() < deadline:
+                rviz_nodes = [name for name in node.get_node_names() if 'rviz' in name]
+                if rviz_nodes:
+                    break
+                rclpy.spin_once(node, timeout_sec=0.5)
+            assert len(rviz_nodes) == 1, f'Expected exactly one RViz node, found: {rviz_nodes}'
+        finally:
+            node.destroy_node()
 
+
+@_SKIP_NO_DISPLAY
 @pytest.mark.launch(fixture=generate_test_description, shutdown=True)
 def test_demo_launch_rviz_shutdown():
     pass

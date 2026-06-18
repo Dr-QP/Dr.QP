@@ -76,11 +76,10 @@ class TestRobotStateMachineNode:
     def teardown_class(cls):
         rclpy.try_shutdown()
 
-    def setup_method(self, method):
+    @pytest.fixture(autouse=True)
+    def _node_setup(self, request):
         self.node = rclpy.create_node('test_state_consumer')
-
-    def teardown_method(self, method):
-        self.node.destroy_node()
+        request.addfinalizer(self.node.destroy_node)
 
     def test_processes_events_and_publishes_state(self):
         """Check whether events are processed."""

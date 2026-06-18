@@ -80,16 +80,22 @@ class TestA116HardwareInterface:
     def teardown_class(cls):
         rclpy.try_shutdown()
 
-    def setup_method(self, method):
+    @pytest.fixture(autouse=True)
+    def _node_setup(self, request):
         self.node = rclpy.create_node(
-            'test_servo_driver_' + type(self).__name__ + '_' + method.__name__
+            'test_servo_driver_' + type(self).__name__ + '_' + request.node.name
         )
+        request.addfinalizer(self.node.destroy_node)
+
         self._wait_for_controller(self.node)
+
         self.trajectory_client = ActionClient(
             self.node,
             FollowJointTrajectory,
             '/joint_trajectory_controller/follow_joint_trajectory',
         )
+        request.addfinalizer(self.trajectory_client.destroy)
+
         assert self.trajectory_client.wait_for_server(timeout_sec=10.0)
 
         self.dynamic_joint_states_sub = self.node.create_subscription(
@@ -98,6 +104,8 @@ class TestA116HardwareInterface:
             self.dynamic_joint_states_callback,
             10,
         )
+        request.addfinalizer(self.dynamic_joint_states_sub.destroy)
+
         self.joint_names = [
             'drqp/left_front_coxa',
             'drqp/left_front_femur',
@@ -120,6 +128,7 @@ class TestA116HardwareInterface:
         ]
         self.non_joint_interface_names = ['battery_state']
         self._reset_feedback()
+        request.addfinalizer(self._reset_feedback)
 
         # Get to the initial position
         self._check_position_control(
@@ -127,12 +136,6 @@ class TestA116HardwareInterface:
             effort=1,
             expected_position=neutral_position,
         )
-
-    def teardown_method(self, method):
-        self._reset_feedback()
-        self.dynamic_joint_states_sub.destroy()
-        self.trajectory_client.destroy()
-        self.node.destroy_node()
 
     def _wait_for_controller(self, node):
         needed_controllers = ['joint_trajectory_controller', 'joint_state_broadcaster']

@@ -81,19 +81,15 @@ class TestBrainNode:
     def teardown_class(cls):
         rclpy.try_shutdown()
 
-    def setup_method(self, method):
+    @pytest.fixture(autouse=True)
+    def _node_setup(self, request):
         self.node = rclpy.create_node('test_brain_consumer')
+        request.addfinalizer(self.node.destroy_node)
 
-        # Publishers for sending commands to brain node
         self.movement_pub = self.node.create_publisher(
             MovementCommand, '/robot/movement_command', 10
         )
-
-        # Publisher for robot state (brain node subscribes to this)
         self.state_pub = self.node.create_publisher(std_msgs.msg.String, '/robot_state', 10)
-
-    def teardown_method(self, method):
-        self.node.destroy_node()
 
     def test_nothing(self):
         """Smoke check."""

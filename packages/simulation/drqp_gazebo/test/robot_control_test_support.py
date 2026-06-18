@@ -31,6 +31,7 @@ import time
 
 import builtin_interfaces
 import builtin_interfaces.msg
+import pytest
 from controller_manager.test_utils import check_controllers_running, check_node_running
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 from geometry_msgs.msg import Pose, Vector3
@@ -121,9 +122,11 @@ class GazeboRobotControlBase:
     def teardown_class(cls) -> None:
         rclpy.try_shutdown()
 
-    def setup_method(self, method) -> None:
+    @pytest.fixture(autouse=True)
+    def _node_setup(self, request) -> None:
         """Set up test node and publishers/subscribers."""
         self.node = rclpy.create_node('test_gazebo_robot_control')
+        request.addfinalizer(self.node.destroy_node)
 
         self.current_robot_state = None
         self.current_clock = None
@@ -154,9 +157,6 @@ class GazeboRobotControlBase:
         )
 
         self._wait_for_simulation_ready()
-
-    def teardown_method(self, method) -> None:
-        self.node.destroy_node()
 
     def _wait_for_simulation_ready(self) -> None:
         self.assert_nodes_and_clock()

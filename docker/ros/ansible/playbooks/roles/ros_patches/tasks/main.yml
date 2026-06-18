@@ -10,28 +10,12 @@
   become: false
 
 - name: Download and install each patch package
+  ansible.builtin.include_tasks: install_patch.yml
   when: (patch.arch is not defined) or (patch.arch == system_arch)
   loop: "{{ ros_patches_packages }}"
   loop_control:
     loop_var: patch
     label: "{{ patch.name }}"
-  block:
-    - name: "Download {{ patch.name }}"
-      ansible.builtin.get_url:
-        url: "{{ patch.url }}"
-        dest: "{{ ros_patches_temp_dir.path }}/{{ patch.name }}.deb"
-        mode: "0644"
-      become: false
-
-    - name: "Install {{ patch.name }}"
-      ansible.builtin.apt:
-        deb: "{{ ros_patches_temp_dir.path }}/{{ patch.name }}.deb"
-        state: present
-
-    - name: "Hold {{ patch.name }} to prevent apt from downgrading it"
-      ansible.builtin.dpkg_selections:
-        name: "{{ patch.name }}"
-        selection: hold
 
 - name: Clean up temporary directory
   ansible.builtin.file:
