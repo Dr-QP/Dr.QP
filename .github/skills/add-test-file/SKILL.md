@@ -72,6 +72,15 @@ Use `@pytest.fixture(autouse=True)` with `request.addfinalizer()` for per-test n
 Decorate `generate_test_description` with `@launch_pytest.fixture`; mark test classes with `@pytest.mark.launch(fixture=generate_test_description)`.
 Add a shutdown test function decorated with `@pytest.mark.launch(fixture=generate_test_description, shutdown=True)`.
 
+**Critical — autouse setup must depend on the launch fixture:** When an `autouse` fixture (e.g. `_node_setup`)
+discovers nodes/topics or otherwise assumes the launched system is running, it MUST declare
+`generate_test_description` as a parameter. `@pytest.mark.launch` on a class is only an inherited marker —
+it does NOT make pytest start the launch before the autouse fixture runs. Without the explicit parameter,
+pytest may run `_node_setup` first (before any process launches), so node discovery times out. Declaring the
+parameter inserts the launch fixture into pytest's dependency graph, guaranteeing it starts first. The value
+is unused, so suppress the lint with `# noqa: ARG002`. (Tests that do all their work in the test method body,
+with no autouse setup, don't need this — the body always runs after fixtures.)
+
 ```python
 import launch_pytest
 import pytest
@@ -99,7 +108,9 @@ class Test<NodeClass>:
         rclpy.try_shutdown()
 
     @pytest.fixture(autouse=True)
-    def _node_setup(self, request):
+    def _node_setup(self, request, generate_test_description):  # noqa: ARG002
+        # Depend on generate_test_description so pytest starts the launch
+        # before this autouse fixture discovers nodes/topics. Value unused.
         self.node = rclpy.create_node('test_<node_class>_consumer')
         request.addfinalizer(self.node.destroy_node)
 

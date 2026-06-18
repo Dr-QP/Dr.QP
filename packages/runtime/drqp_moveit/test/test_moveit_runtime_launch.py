@@ -103,7 +103,7 @@ class TestMoveItRuntimeIssue43:
         rclpy.try_shutdown()
 
     @pytest.fixture(autouse=True)
-    def _node_setup(self, request):
+    def _node_setup(self, request, generate_test_description):  # noqa: ARG002
         self.node = rclpy.create_node('test_moveit_runtime_issue43')
         request.addfinalizer(self.node.destroy_node)
 

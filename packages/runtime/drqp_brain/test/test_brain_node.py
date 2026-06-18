@@ -82,7 +82,7 @@ class TestBrainNode:
         rclpy.try_shutdown()
 
     @pytest.fixture(autouse=True)
-    def _node_setup(self, request):
+    def _node_setup(self, request, generate_test_description):  # noqa: ARG002
         self.node = rclpy.create_node('test_brain_consumer')
         request.addfinalizer(self.node.destroy_node)
 
