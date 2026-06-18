@@ -559,13 +559,13 @@ class HexapodBrain(rclpy.node.Node):
         except CancelledError:
             # Pending ROS futures are routinely cancelled during shutdown.
             return
-        except Exception:
+        except Exception:  # noqa: BLE001 — shutdown teardown must swallow any future exception
             # Log the full traceback where possible; during shutdown rosout may be unavailable.
             try:
                 self._log_shutdown_warning(
                     f'Pending future finished with exception: {traceback.format_exc()}'
                 )
-            except Exception:
+            except Exception:  # noqa: BLE001 — logging itself may fail during shutdown
                 # If logging fails, emit a stderr fallback and continue teardown.
                 print(
                     'Pending future finished with exception during shutdown.',
@@ -591,24 +591,24 @@ class HexapodBrain(rclpy.node.Node):
                     except CancelledError:
                         # Expected during shutdown.
                         pass
-                    except Exception:
+                    except Exception:  # noqa: BLE001 — shutdown teardown must swallow any future exception
                         try:
                             self._log_shutdown_warning(
                                 'Pending future finished with exception '
                                 f'during cancel: {traceback.format_exc()}'
                             )
-                        except Exception:
+                        except Exception:  # noqa: BLE001 — logging itself may fail during shutdown
                             print(
                                 'Pending future finished with exception during cancel.',
                                 file=sys.stderr,
                             )
-            except Exception:
+            except Exception:  # noqa: BLE001 — shutdown teardown must swallow any future exception
                 # Defensive: ensure shutdown continues even if future handling fails.
                 try:
                     self._log_shutdown_warning(
                         f'Error while cancelling pending future: {traceback.format_exc()}'
                     )
-                except Exception:
+                except Exception:  # noqa: BLE001 — logging itself may fail during shutdown
                     print(
                         'Error while cancelling pending future during shutdown.',
                         file=sys.stderr,
@@ -623,13 +623,13 @@ class HexapodBrain(rclpy.node.Node):
             client.destroy()
         except RCLPY_SHUTDOWN_ERRORS as exc:
             self._log_shutdown_warning(f'Failed to destroy {description}: {exc}')
-        except Exception:
+        except Exception:  # noqa: BLE001 — shutdown teardown must swallow unexpected destroy errors
             # Log unexpected exceptions with traceback; during shutdown logging may be limited.
             try:
                 self._log_shutdown_warning(
                     f'Unexpected exception destroying {description}: {traceback.format_exc()}'
                 )
-            except Exception:
+            except Exception:  # noqa: BLE001 — logging itself may fail during shutdown
                 print(
                     f'Unexpected exception destroying {description} during shutdown.',
                     file=sys.stderr,
