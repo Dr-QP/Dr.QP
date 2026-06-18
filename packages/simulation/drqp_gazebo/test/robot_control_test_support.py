@@ -225,7 +225,7 @@ class GazeboRobotControlBase:
         logger.info('[sim_ready] Phase 4/6 DONE')
 
         logger.info(
-            f'[sim_ready] Phase 5/6: wait for sim time to advance {self.POSE_SETTLE_DURATION:.1f}s'
+            '[sim_ready] Phase 5/6: wait for sim time to advance %.1fs', self.POSE_SETTLE_DURATION
         )
         self._wait_for_sim_time(self.POSE_SETTLE_DURATION, wall_timeout_sec=self.CLOCK_TIMEOUT)
         logger.info('[sim_ready] Phase 5/6 DONE')
@@ -259,7 +259,7 @@ class GazeboRobotControlBase:
     ) -> bool:
         """Spin the node until a condition is met or timeout occurs."""
         self.node.get_logger().info(
-            f'[spin_until] START (timeout={timeout_sec:.0f}s): {error_message}'
+            '[spin_until] START (timeout=%.0fs): %s', timeout_sec, error_message
         )
         start_time = time.monotonic()
         last_log_time = start_time
@@ -267,13 +267,16 @@ class GazeboRobotControlBase:
             rclpy.spin_once(self.node, timeout_sec=0.1)
             if condition_fn():
                 elapsed = time.monotonic() - start_time
-                self.node.get_logger().info(f'[spin_until] DONE in {elapsed:.1f}s')
+                self.node.get_logger().info('[spin_until] DONE in %.1fs', elapsed)
                 return True
             now = time.monotonic()
             if now - last_log_time >= self._SPIN_LOG_INTERVAL_SEC:
                 elapsed = now - start_time
                 self.node.get_logger().warning(
-                    f'[spin_until] still waiting {elapsed:.0f}/{timeout_sec:.0f}s: {error_message}'
+                    '[spin_until] still waiting %.0f/%.0fs: %s',
+                    elapsed,
+                    timeout_sec,
+                    error_message,
                 )
                 last_log_time = now
             time.sleep(0.1)
@@ -282,14 +285,20 @@ class GazeboRobotControlBase:
             visible_nodes = self.node.get_node_names()
             visible_topics = [n for n, _ in self.node.get_topic_names_and_types()]
             self.node.get_logger().error(
-                f'[spin_until] TIMEOUT after {timeout_sec:.0f}s: {error_message}\n'
-                f'  visible nodes  : {visible_nodes}\n'
-                f'  visible topics : {visible_topics[:30]}'
+                '[spin_until] TIMEOUT after %.0fs: %s\n'
+                '  visible nodes  : %s\n'
+                '  visible topics : %s',
+                timeout_sec,
+                error_message,
+                visible_nodes,
+                visible_topics[:30],
             )
         except Exception as diag_err:  #  noqa: BLE001 debug logging
             self.node.get_logger().error(
-                f'[spin_until] TIMEOUT after {timeout_sec:.0f}s'
-                f' (diagnostics unavailable: {diag_err}): {error_message}'
+                '[spin_until] TIMEOUT after %.0fs (diagnostics unavailable: %s): %s',
+                timeout_sec,
+                diag_err,
+                error_message,
             )
         raise TimeoutError(error_message)
 
@@ -536,13 +545,13 @@ class GazeboRobotControlBase:
         """Verify simulation nodes are running and clock is available."""
         for node_name in ('robot_state_publisher', 'drqp_brain', 'drqp_robot_state'):
             self.node.get_logger().info(
-                f'[nodes] Waiting for node "{node_name}" (timeout={self.CLOCK_TIMEOUT:.0f}s)'
+                '[nodes] Waiting for node "%s" (timeout=%.0fs)', node_name, self.CLOCK_TIMEOUT
             )
             check_node_running(self.node, node_name, timeout=self.CLOCK_TIMEOUT)
-            self.node.get_logger().info(f'[nodes] Found node "{node_name}"')
+            self.node.get_logger().info('[nodes] Found node "%s"', node_name)
 
         self.node.get_logger().info(
-            f'[nodes] Waiting for /clock topic (timeout={self.CLOCK_TIMEOUT:.0f}s)'
+            '[nodes] Waiting for /clock topic (timeout=%.0fs)', self.CLOCK_TIMEOUT
         )
         with WaitForTopics([('/clock', Clock)], timeout=self.CLOCK_TIMEOUT) as wait:
             assert wait.wait(), 'Did not receive /clock from Gazebo bridge'
@@ -552,8 +561,9 @@ class GazeboRobotControlBase:
         """Verify ros2_control controllers are alive inside Gazebo."""
         controller_names = ['joint_state_broadcaster', 'joint_trajectory_controller']
         self.node.get_logger().info(
-            f'[controllers] Waiting for controllers {controller_names}'
-            f' (timeout={self.CONTROLLER_TIMEOUT:.0f}s)'
+            '[controllers] Waiting for controllers %s (timeout=%.0fs)',
+            controller_names,
+            self.CONTROLLER_TIMEOUT,
         )
         check_controllers_running(
             self.node,
