@@ -37,13 +37,9 @@ class TestGazeboRobotControlNodesAndClock(GazeboRobotControlBase):
 
     __test__ = True
 
-    def test_nodes_and_clock(self):
-        self.assert_nodes_and_clock()
-
-    def test_controllers_are_active(self):
-        self.assert_controllers_are_active()
-
     def test_imu_data_is_published(self):
+        self.assert_nodes_and_clock()
+        self.assert_controllers_are_active()
         self.assert_imu_data()
 
 
