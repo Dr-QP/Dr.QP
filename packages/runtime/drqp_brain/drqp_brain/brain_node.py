@@ -591,7 +591,7 @@ class HexapodBrain(rclpy.node.Node):
                     except CancelledError:
                         # Expected during shutdown.
                         pass
-                    except Exception:  # noqa: BLE001 — shutdown teardown must swallow any future exception
+                    except Exception:  # noqa: BLE001 — swallow any future exception in shutdown
                         try:
                             self._log_shutdown_warning(
                                 'Pending future finished with exception '
@@ -623,7 +623,7 @@ class HexapodBrain(rclpy.node.Node):
             client.destroy()
         except RCLPY_SHUTDOWN_ERRORS as exc:
             self._log_shutdown_warning(f'Failed to destroy {description}: {exc}')
-        except Exception:  # noqa: BLE001 — shutdown teardown must swallow unexpected destroy errors
+        except Exception:  # noqa: BLE001 — swallow unexpected destroy errors in shutdown
             # Log unexpected exceptions with traceback; during shutdown logging may be limited.
             try:
                 self._log_shutdown_warning(

@@ -421,7 +421,7 @@ class MoveItPyLocomotionKinematics:
                     joint_model_group,
                     positions,
                 )
-            except Exception as exc:  # noqa: BLE001 — MoveIt C++ bindings raise unpredictable types
+            except Exception as exc:  # noqa: BLE001 — MoveIt bindings raise unpredictable types
                 return f'Unable to validate RobotState joint bounds: {exc}'
 
             if not satisfies_bounds:
