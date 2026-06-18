@@ -221,7 +221,7 @@ Explore test results with interactive visualization.
 | Xunit-viewer won't start               | Node.js or npx not available               | Install Node.js or use alternative viewer                                    |
 | Test results missing or incomplete     | Build artifacts cleaned                    | Rebuild packages before testing                                              |
 | Tests timeout or hang                  | Test blocking on I/O or infinite loop      | Check test logs in `log/latest_test/`                                        |
-| `drqp_gazebo` launch tests are skipped | Default smoke-only mode is active          | Re-run with `DRQP_TEST_MODE=slow` to include the full Gazebo suite     |
+| `drqp_gazebo` launch tests are skipped | Default smoke-only mode is active          | Re-run with `DRQP_TEST_MODE=slow` to include the full Gazebo suite           |
 
 ## References
 
