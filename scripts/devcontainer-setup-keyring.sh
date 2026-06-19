@@ -11,6 +11,23 @@
 # IMPORTANT: login.keyring is the actual secret store. Overwriting it destroys
 # every secret already saved in it (e.g. `gh auth login` tokens), so we must
 # NEVER clobber an existing keyring.
+#
+# AT-REST STORAGE TRADEOFF: the login keyring is created with an EMPTY password
+# (see ensure_login_keyring), so GNOME Keyring stores its secrets UNENCRYPTED on
+# disk. This is deliberate: it lets the daemon start headless without an
+# interactive unlock prompt. It is acceptable for a single-user devcontainer
+# whose disk is already protected by host-level encryption (FileVault / the
+# Docker Desktop VM). The more secure path -- the externally mounted
+# docker-secrets-engine, where secrets never persist inside the container -- is
+# already wired up and preferred when available (DOCKER_PASS_EXTERNAL_ENGINE=1,
+# set by .devcontainer/devcontainer-init.sh).
+#
+# If the threat model changes and at-rest encryption is required, switch to
+# `gnome-keyring-daemon --login` (reads a password on stdin) with a STABLE
+# unlock password pulled from the host keychain / 1Password at init time. Do NOT
+# reuse DOCKER_PASS_EXPORT_KEY for this: it is regenerated randomly on every
+# devcontainer-init, so it cannot unlock a keyring that survives reloads.
+# See docs/source/Howto/devcontainer-secret-storage.md for the full discussion.
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -45,6 +62,9 @@ EOF
     chmod 600 "$env_file"
 }
 
+# Create an empty-password (unencrypted) login keyring only when none exists.
+# See the AT-REST STORAGE TRADEOFF note in the header for why this is unencrypted
+# and how to harden it.
 ensure_login_keyring() {
     mkdir -p "$keyring_dir"
 
