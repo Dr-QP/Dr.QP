@@ -28,11 +28,8 @@ fixture exposes a single ``GazeboRobotControlBase`` harness instance, and a fina
 been torn down.
 """
 
-from launch.actions import RegisterEventHandler
-from launch.event_handlers import OnProcessExit
+from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
 import launch_pytest
-from launch_testing import asserts
-from launch_testing.proc_info_handler import ProcInfoHandler
 import pytest
 import rclpy
 from robot_control_test_support import (
@@ -40,27 +37,18 @@ from robot_control_test_support import (
     GazeboRobotControlBase,
 )
 
-# Processes the simulation launch file tears down with SIGTERM on shutdown; they
-# routinely report a non-zero return code on exit, so they are excluded from the
-# clean-exit assertion. Mirrors the pre-launch_pytest post-shutdown filter and is
-# validated by the slow Gazebo/MoveIt CI suites that exercise process teardown.
-SHUTDOWN_KILLED_PROCESSES = ('gazebo', 'gz', 'bridge_node', 'move_group')
-
 
 @launch_pytest.fixture(scope='module')
 def generate_test_description():
     """
     Launch one simulation for the module and record process exit codes.
 
-    Returns the launch description together with a ``ProcInfoHandler`` populated
-    by an ``OnProcessExit`` handler, so the final shutdown test can assert that
-    every non-simulator process exited cleanly.
+    Returns the launch description together with a ``ProcInfoHandler`` so the
+    final shutdown test can assert that every non-simulator process exited
+    cleanly.
     """
-    proc_info = ProcInfoHandler()
     launch_description = create_simulation_launch_description()
-    launch_description.add_action(
-        RegisterEventHandler(OnProcessExit(on_exit=lambda event, _ctx: proc_info.append(event)))
-    )
+    proc_info = track_process_exit_codes(launch_description)
     return launch_description, proc_info
 
 
@@ -100,8 +88,4 @@ def test_simulation_processes_exit_cleanly(generate_test_description):
     recorded exit codes can be checked per process (with the simulator allowlist).
     """
     _launch_description, proc_info = generate_test_description
-    filtered = ProcInfoHandler()
-    for name in proc_info.process_names():
-        if not any(skip in name for skip in SHUTDOWN_KILLED_PROCESSES):
-            filtered.append(proc_info[name])
-    asserts.assertExitCodes(filtered)
+    assert_processes_exited_cleanly(proc_info)

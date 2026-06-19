@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>drqp_launch_testing</name>
+  <version>0.1.0</version>
+  <description>Reusable launch_pytest helpers for Dr.QP, including per-process exit-code verification</description>
+  <maintainer email="anton.matosov@gmail.com">Anton Matosov</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_testing</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
