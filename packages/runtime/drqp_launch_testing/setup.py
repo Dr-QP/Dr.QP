@@ -16,6 +16,6 @@ setup(
     maintainer='Anton Matosov',
     maintainer_email='anton.matosov@gmail.com',
     description='Reusable launch_pytest helpers for Dr.QP, including per-process '
-                'exit-code verification',
+    'exit-code verification',
     license='MIT',
 )
