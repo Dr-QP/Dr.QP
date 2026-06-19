@@ -26,7 +26,7 @@ from robot_control_test_support import (
 )
 
 
-@launch_pytest.fixture
+@launch_pytest.fixture(scope='class')
 def generate_test_description():
     return create_simulation_launch_description()
 
@@ -37,9 +37,13 @@ class TestGazeboRobotControlNodesAndClock(GazeboRobotControlBase):
 
     __test__ = True
 
-    def test_robot_basics(self):
+    def test_nodes_and_clock(self):
         self.assert_nodes_and_clock()
+
+    def test_controllers_are_active(self):
         self.assert_controllers_are_active()
+
+    def test_imu_data_is_published(self):
         self.assert_imu_data()
 
 
