@@ -4,6 +4,7 @@
     url: "{{ patch.url }}"
     dest: "{{ ros_patches_temp_dir.path }}/{{ patch.name }}.deb"
     mode: "0644"
+    checksum: "{{ patch.checksum }}"
   become: false
 
 - name: "Install {{ patch.name }}"
