@@ -85,8 +85,8 @@ The two correct patterns (and the traps to avoid) come straight from the matrix:
 ### Do not
 
 - **Do not** pair a separate `shutdown=True` function with a **function**- or
-  **class**-scoped fixture to check exit codes — it launches a *different,
-  throwaway* simulation, so it verifies nothing about the active test (matrix
+  **class**-scoped fixture to check exit codes — it launches a _different,
+  throwaway_ simulation, so it verifies nothing about the active test (matrix
   combos 1 & 2).
 - **Do not** make a non-function-scoped (class/module) test a generator — the
   installed launch_pytest/pytest pairing raises `TypeError`

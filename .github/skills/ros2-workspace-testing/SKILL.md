@@ -227,16 +227,16 @@ Use the `PYTEST_ADDOPTS` environment variable rather than `colcon test --pytest-
 
 ## Troubleshooting
 
-| Issue                                  | Cause                                      | Solution                                                                     |
-| -------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------- |
-| "No tests found"                       | Package has no tests or wrong package name | Verify `test/` directory exists in package                                   |
-| Tests fail with "module not found"     | Generated Python dependencies missing      | Run `./scripts/ros-dep.sh` after the build, then `source scripts/setup.bash` |
-| "Command 'pytest' not found"           | Developer `.venv` not synced               | Run `uv sync` and activate `.venv` when needed                               |
-| Coverage data not generated            | Coverage not enabled in build              | Rebuild with `--mixin coverage-pytest` during build                          |
-| Xunit-viewer won't start               | Node.js or npx not available               | Install Node.js or use alternative viewer                                    |
-| Test results missing or incomplete     | Build artifacts cleaned                    | Rebuild packages before testing                                              |
-| Tests timeout or hang                  | Test blocking on I/O or infinite loop      | Check test logs in `log/latest_test/`                                        |
-| `drqp_gazebo` launch tests are skipped | Default smoke-only mode is active          | Re-run with `DRQP_TEST_MODE=slow` to include the full Gazebo suite           |
+| Issue                                      | Cause                                            | Solution                                                                               |
+| ------------------------------------------ | ------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| "No tests found"                           | Package has no tests or wrong package name       | Verify `test/` directory exists in package                                             |
+| Tests fail with "module not found"         | Generated Python dependencies missing            | Run `./scripts/ros-dep.sh` after the build, then `source scripts/setup.bash`           |
+| "Command 'pytest' not found"               | Developer `.venv` not synced                     | Run `uv sync` and activate `.venv` when needed                                         |
+| Coverage data not generated                | Coverage not enabled in build                    | Rebuild with `--mixin coverage-pytest` during build                                    |
+| Xunit-viewer won't start                   | Node.js or npx not available                     | Install Node.js or use alternative viewer                                              |
+| Test results missing or incomplete         | Build artifacts cleaned                          | Rebuild packages before testing                                                        |
+| Tests timeout or hang                      | Test blocking on I/O or infinite loop            | Check test logs in `log/latest_test/`                                                  |
+| `drqp_gazebo` launch tests are skipped     | Default smoke-only mode is active                | Re-run with `DRQP_TEST_MODE=slow` to include the full Gazebo suite                     |
 | No output from passing launch_pytest tests | pytest captures stdout, shows it only on failure | Set `PYTEST_ADDOPTS=-rA` (not `--pytest-args`, which colcon can't pass to ctest tests) |
 
 ## References
