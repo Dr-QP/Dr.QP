@@ -18,29 +18,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""Verify robot model spawns and starts publishing state."""
+
+from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
 import launch_pytest
 import pytest
-from robot_control_test_support import (
-    create_simulation_launch_description,
-    GazeboRobotControlBase,
-)
+from robot_control_test_support import create_simulation_launch_description
 
 
 @launch_pytest.fixture
 def generate_test_description():
-    return create_simulation_launch_description()
+    """Launch the simulation and record process exit codes for the shutdown check."""
+    launch_description = create_simulation_launch_description()
+    proc_info = track_process_exit_codes(launch_description)
+    return launch_description, proc_info
 
 
 @pytest.mark.launch(fixture=generate_test_description)
-class TestGazeboRobotControlSpawn(GazeboRobotControlBase):
-    """Verify robot model spawns and starts publishing state."""
-
-    __test__ = True
-
-    def test_robot_spawn(self):
-        self.assert_robot_spawned()
-
-
-@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
-def test_simulation_shutdown():
-    pass
+def test_robot_spawn(robot, generate_test_description):
+    robot.assert_robot_spawned()
+    # Function-scoped generator: the simulation tears down at the yield, then the
+    # post-yield body verifies every non-simulator process exited cleanly.
+    yield
+    _launch_description, proc_info = generate_test_description
+    assert_processes_exited_cleanly(proc_info)

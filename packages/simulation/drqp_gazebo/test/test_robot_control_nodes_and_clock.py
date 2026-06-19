@@ -32,10 +32,7 @@ from drqp_launch_testing import assert_processes_exited_cleanly, track_process_e
 import launch_pytest
 import pytest
 import rclpy
-from robot_control_test_support import (
-    create_simulation_launch_description,
-    GazeboRobotControlBase,
-)
+from robot_control_test_support import create_simulation_launch_description, GazeboRobotControlBase
 
 
 @launch_pytest.fixture(scope='module')
@@ -54,7 +51,13 @@ def generate_test_description():
 
 @pytest.fixture(scope='module')
 def robot(generate_test_description):  # noqa: ARG001 (drives launch + sim readiness)
-    """Provide a single shared harness instance for all tests in the module."""
+    """
+    Module-scoped harness shared by every test in this file.
+
+    This file has multiple launch tests that must share ONE simulation, so it
+    overrides the function-scoped ``robot`` fixture in conftest.py with a
+    module-scoped one (matrix combo 4).
+    """
     rclpy.init()
     harness = GazeboRobotControlBase()
     harness.setup_node()

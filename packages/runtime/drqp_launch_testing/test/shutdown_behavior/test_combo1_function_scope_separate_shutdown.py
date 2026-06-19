@@ -18,28 +18,37 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Verify left strafe command produces left motion."""
+"""
+Combo 1: function-scoped fixture + separate ``shutdown=True`` test.
 
-from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
+Result: the active test and the shutdown test each get their OWN simulation, so
+the shutdown test CANNOT verify the active test's processes. Do not use this
+pattern for exit-code checks; use combo 5 (a generator test) instead.
+"""
+
 import launch_pytest
+from probe_support import make_probe_launch
 import pytest
-from robot_control_test_support import create_simulation_launch_description
+
+_SEEN = {}
 
 
 @launch_pytest.fixture
 def generate_test_description():
-    """Launch the simulation and record process exit codes for the shutdown check."""
-    launch_description = create_simulation_launch_description()
-    proc_info = track_process_exit_codes(launch_description)
-    return launch_description, proc_info
+    return make_probe_launch()
 
 
-@pytest.mark.slow
 @pytest.mark.launch(fixture=generate_test_description)
-def test_movement_left(robot, generate_test_description):
-    robot.assert_left_movement()
-    # Function-scoped generator: the simulation tears down at the yield, then the
-    # post-yield body verifies every non-simulator process exited cleanly.
-    yield
-    _launch_description, proc_info = generate_test_description
-    assert_processes_exited_cleanly(proc_info)
+def test_active(generate_test_description):
+    _ld, _proc_info, launch_id = generate_test_description
+    _SEEN['active'] = launch_id
+
+
+@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
+def test_shutdown(generate_test_description):
+    _ld, _proc_info, launch_id = generate_test_description
+    # Function scope re-invokes the fixture, so the shutdown test launches a
+    # fresh, separate simulation rather than reusing the active test's one.
+    assert launch_id != _SEEN['active'], (
+        'function-scoped shutdown test unexpectedly shared the active sim'
+    )

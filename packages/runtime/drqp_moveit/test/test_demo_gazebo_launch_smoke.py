@@ -18,18 +18,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""Smoke test that the MoveIt + Gazebo demo launch reaches a ready state."""
+
+from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
 import launch_pytest
 from moveit_launch_smoke_test_support import (
+    assert_move_group_ready,
     build_smoke_test_description,
     build_test_gz_partition,
-    MoveItLaunchSmokeTestCase,
 )
 import pytest
 
 
 @launch_pytest.fixture
 def generate_test_description():
-    return build_smoke_test_description(
+    """Launch the MoveIt+Gazebo demo and record process exit codes."""
+    launch_description = build_smoke_test_description(
         'demo_gazebo.launch.py',
         launch_arguments={
             'show_rviz': 'false',
@@ -38,13 +42,15 @@ def generate_test_description():
         },
         ready_delay=5.0,
     )
+    proc_info = track_process_exit_codes(launch_description)
+    return launch_description, proc_info
 
 
 @pytest.mark.launch(fixture=generate_test_description)
-class TestDemoGazeboLaunchSmoke(MoveItLaunchSmokeTestCase):
-    __test__ = True
-
-
-@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
-def test_demo_gazebo_launch_shutdown():
-    pass
+def test_launch_reaches_ready_state(move_group, generate_test_description):  # noqa: ARG001
+    assert_move_group_ready()
+    # Function-scoped generator: the stack tears down at the yield, then the
+    # post-yield body verifies every non-simulator process exited cleanly.
+    yield
+    _launch_description, proc_info = generate_test_description
+    assert_processes_exited_cleanly(proc_info)

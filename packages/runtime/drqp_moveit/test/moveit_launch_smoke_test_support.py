@@ -59,26 +59,21 @@ def build_smoke_test_description(
     )
 
 
-class MoveItLaunchSmokeTestCase:
-    __test__ = False
+READY_TIMEOUT = 60.0
 
-    READY_TIMEOUT = 60.0
 
-    @classmethod
-    def setup_class(cls) -> None:
-        rclpy.init()
+def assert_move_group_ready(timeout: float = READY_TIMEOUT) -> None:
+    """
+    Assert the MoveIt motion-plan service comes up within ``timeout`` seconds.
 
-    @classmethod
-    def teardown_class(cls) -> None:
-        rclpy.try_shutdown()
-
-    def test_launch_reaches_ready_state(self):
-        node = rclpy.create_node('moveit_launch_smoke_test')
-        motion_plan_client = node.create_client(GetMotionPlan, '/plan_kinematic_path')
-        try:
-            assert motion_plan_client.wait_for_service(timeout_sec=self.READY_TIMEOUT), (
-                '/plan_kinematic_path service is not available'
-            )
-        finally:
-            motion_plan_client.destroy()
-            node.destroy_node()
+    Requires ``rclpy`` to already be initialized (see the ``move_group`` fixture).
+    """
+    node = rclpy.create_node('moveit_launch_smoke_test')
+    motion_plan_client = node.create_client(GetMotionPlan, '/plan_kinematic_path')
+    try:
+        assert motion_plan_client.wait_for_service(timeout_sec=timeout), (
+            '/plan_kinematic_path service is not available'
+        )
+    finally:
+        motion_plan_client.destroy()
+        node.destroy_node()

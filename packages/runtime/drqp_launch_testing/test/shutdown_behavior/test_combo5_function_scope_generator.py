@@ -18,28 +18,32 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Verify left strafe command produces left motion."""
+"""
+Combo 5: function-scoped generator test (yield once).
 
-from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
+Result: a single launch test that yields exactly once runs its body before
+shutdown and its post-yield code after the SAME simulation has been torn down,
+so it observes that simulation's exit codes. This is the correct pattern for a
+file with a single launch test (no separate shutdown function is needed).
+"""
+
 import launch_pytest
+from probe_support import make_probe_launch, recorded_exit_codes
 import pytest
-from robot_control_test_support import create_simulation_launch_description
 
 
 @launch_pytest.fixture
 def generate_test_description():
-    """Launch the simulation and record process exit codes for the shutdown check."""
-    launch_description = create_simulation_launch_description()
-    proc_info = track_process_exit_codes(launch_description)
-    return launch_description, proc_info
+    return make_probe_launch()
 
 
-@pytest.mark.slow
 @pytest.mark.launch(fixture=generate_test_description)
-def test_movement_left(robot, generate_test_description):
-    robot.assert_left_movement()
-    # Function-scoped generator: the simulation tears down at the yield, then the
-    # post-yield body verifies every non-simulator process exited cleanly.
+def test_active_then_exit_codes(generate_test_description):
+    _ld, proc_info, _launch_id = generate_test_description
+    # --- pre-shutdown phase: simulation is running here ---
+    assert not recorded_exit_codes(proc_info), 'no process should have exited yet'
     yield
-    _launch_description, proc_info = generate_test_description
-    assert_processes_exited_cleanly(proc_info)
+    # --- post-shutdown phase: same simulation has been torn down ---
+    exits = recorded_exit_codes(proc_info)
+    assert exits, 'generator post-yield must observe a populated proc_info'
+    assert all(code == 0 for code in exits.values()), exits

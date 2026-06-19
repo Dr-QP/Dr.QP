@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2026 Anton Matosov
+# Copyright (c) 2026 Anton Matosov
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,28 +18,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Verify left strafe command produces left motion."""
+"""Shared fixtures for the functions-only MoveIt launch tests."""
 
-from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
-import launch_pytest
 import pytest
-from robot_control_test_support import create_simulation_launch_description
+import rclpy
 
 
-@launch_pytest.fixture
-def generate_test_description():
-    """Launch the simulation and record process exit codes for the shutdown check."""
-    launch_description = create_simulation_launch_description()
-    proc_info = track_process_exit_codes(launch_description)
-    return launch_description, proc_info
+@pytest.fixture
+def move_group(generate_test_description):  # noqa: ARG001 (drives the launch)
+    """
+    Own ``rclpy`` init/shutdown for a launched MoveIt stack.
 
-
-@pytest.mark.slow
-@pytest.mark.launch(fixture=generate_test_description)
-def test_movement_left(robot, generate_test_description):
-    robot.assert_left_movement()
-    # Function-scoped generator: the simulation tears down at the yield, then the
-    # post-yield body verifies every non-simulator process exited cleanly.
+    Resolves the launch fixture so the stack starts before the test, then yields
+    with ``rclpy`` initialized. Function-scoped (the smoke files each have a
+    single launch test using the combo-5 generator pattern).
+    """
+    rclpy.init()
     yield
-    _launch_description, proc_info = generate_test_description
-    assert_processes_exited_cleanly(proc_info)
+    rclpy.try_shutdown()
