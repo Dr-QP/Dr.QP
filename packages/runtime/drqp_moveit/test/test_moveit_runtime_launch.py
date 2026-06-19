@@ -24,6 +24,7 @@ from control_msgs.action import FollowJointTrajectory
 from controller_manager.test_utils import check_controllers_running, check_node_running
 from drqp_brain.joint_trajectory_builder import kFemurOffsetAngle, kTibiaOffsetAngle
 from drqp_kinematics.models import HexapodModel
+from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
 from geometry_msgs.msg import PoseStamped, Quaternion
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
@@ -32,7 +33,7 @@ from launch.substitutions import PathJoinSubstitution
 import launch_pytest
 from launch_pytest.actions import ReadyToTest
 from launch_ros.substitutions import FindPackageShare
-from moveit_launch_smoke_test_support import build_test_gz_partition
+from moveit_launch_smoke_test_support import assert_move_group_ready, build_test_gz_partition
 from moveit_msgs.msg import (
     CollisionObject,
     Constraints,
@@ -61,12 +62,12 @@ LEFT_FRONT_JOINTS = [
 TARGET_OBSTACLE_ID = 'issue43_left_front_target_blocker'
 
 
-@launch_pytest.fixture(scope='class')
+@launch_pytest.fixture
 def generate_test_description():
     demo_gazebo_launch = PathJoinSubstitution(
         [FindPackageShare('drqp_moveit'), 'launch', 'demo_gazebo.launch.py']
     )
-    return LaunchDescription(
+    launch_description = LaunchDescription(
         [
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(demo_gazebo_launch),
@@ -79,6 +80,7 @@ def generate_test_description():
             TimerAction(period=1.0, actions=[ReadyToTest()]),
         ]
     )
+    return launch_description, track_process_exit_codes(launch_description)
 
 
 @pytest.mark.slow
@@ -458,6 +460,20 @@ class TestMoveItRuntimeIssue43:
 
 
 @pytest.mark.slow
-@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
-def test_moveit_runtime_launch_shutdown():
-    pass
+@pytest.mark.launch(fixture=generate_test_description)
+def test_processes_exit_cleanly(generate_test_description):
+    """
+    Wait for MoveIt to come up, then verify a clean shutdown.
+
+    Function-scoped generator (its own simulation): waits for the motion-plan
+    service so processes are running before teardown, yields, then asserts every
+    non-simulator process exited cleanly once the simulation has shut down.
+    """
+    _launch_description, proc_info = generate_test_description
+    rclpy.init()
+    try:
+        assert_move_group_ready()
+    finally:
+        rclpy.try_shutdown()
+    yield
+    assert_processes_exited_cleanly(proc_info)

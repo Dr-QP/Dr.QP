@@ -26,6 +26,7 @@ from controller_manager.test_utils import (
     check_if_js_published,
     check_node_running,
 )
+from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -41,7 +42,7 @@ import rclpy.time
 from trajectory_msgs.msg import JointTrajectoryPoint
 
 
-@launch_pytest.fixture(scope='class')
+@launch_pytest.fixture
 def generate_test_description():
     drqp_controllers_launch_file = PathJoinSubstitution(
         [
@@ -50,7 +51,7 @@ def generate_test_description():
             'ros2_controller.launch.py',
         ]
     )
-    return LaunchDescription(
+    launch_description = LaunchDescription(
         [
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(drqp_controllers_launch_file),
@@ -62,6 +63,7 @@ def generate_test_description():
             TimerAction(period=0.1, actions=[ReadyToTest()]),
         ]
     )
+    return launch_description, track_process_exit_codes(launch_description)
 
 
 default_interface_value = -123.321
@@ -293,6 +295,24 @@ class TestA116HardwareInterface:
             )
 
 
-@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
-def test_a1_16_hardware_interface_shutdown():
-    pass
+@pytest.mark.launch(fixture=generate_test_description)
+def test_processes_exit_cleanly(generate_test_description):
+    """
+    Wait for the controllers to come up, then verify a clean shutdown.
+
+    Function-scoped generator (its own simulation): waits for readiness so the
+    controllers are running before teardown, yields, then asserts every process
+    exited cleanly once the launch service has shut the simulation down.
+    """
+    _launch_description, proc_info = generate_test_description
+    rclpy.init()
+    node = rclpy.create_node('test_a1_16_exit_codes_probe')
+    try:
+        check_controllers_running(
+            node, ['joint_trajectory_controller', 'joint_state_broadcaster']
+        )
+    finally:
+        node.destroy_node()
+        rclpy.try_shutdown()
+    yield
+    assert_processes_exited_cleanly(proc_info)
