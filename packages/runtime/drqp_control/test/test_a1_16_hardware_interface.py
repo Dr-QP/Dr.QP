@@ -308,9 +308,7 @@ def test_processes_exit_cleanly(generate_test_description):
     rclpy.init()
     node = rclpy.create_node('test_a1_16_exit_codes_probe')
     try:
-        check_controllers_running(
-            node, ['joint_trajectory_controller', 'joint_state_broadcaster']
-        )
+        check_controllers_running(node, ['joint_trajectory_controller', 'joint_state_broadcaster'])
     finally:
         node.destroy_node()
         rclpy.try_shutdown()
