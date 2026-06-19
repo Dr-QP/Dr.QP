@@ -29,7 +29,7 @@ It is brought up by `scripts/devcontainer-setup-keyring.sh`, which exposes the
 password**. A GNOME Keyring with an empty password is stored **unencrypted** on
 disk — the secrets are effectively plaintext.
 
-This is deliberate. An empty password lets the keyring daemon start *headless*,
+This is deliberate. An empty password lets the keyring daemon start _headless_,
 without an interactive unlock prompt on every container start or window reload.
 
 ### What this protects against
@@ -90,9 +90,9 @@ re-import.
 
 ## Summary
 
-| Option | Secrets at rest in container | Headless start | Notes |
-| ------ | ---------------------------- | -------------- | ----- |
-| Empty-password keyring (default) | Yes, unencrypted | Yes | Relies on host disk encryption |
-| External mounted engine | No (docker secrets) | Yes | Preferred; `gh` tokens still local |
-| Password-encrypted keyring | Yes, encrypted | Yes, if password is sourced non-interactively | Use host keychain / 1Password |
-| Ephemeral tmpfs | No | Yes | Re-import every session |
+| Option                           | Secrets at rest in container | Headless start                                | Notes                              |
+| -------------------------------- | ---------------------------- | --------------------------------------------- | ---------------------------------- |
+| Empty-password keyring (default) | Yes, unencrypted             | Yes                                           | Relies on host disk encryption     |
+| External mounted engine          | No (docker secrets)          | Yes                                           | Preferred; `gh` tokens still local |
+| Password-encrypted keyring       | Yes, encrypted               | Yes, if password is sourced non-interactively | Use host keychain / 1Password      |
+| Ephemeral tmpfs                  | No                           | Yes                                           | Re-import every session            |
