@@ -53,22 +53,15 @@ ensure_login_keyring() {
         return 0
     fi
 
-    cat >"$login_keyring" <<'EOF'
+    cat >"$login_keyring" <<EOF
 [keyring]
 display-name=login
-ctime=1750965549
+ctime=$(date +%s)
 mtime=0
 lock-on-idle=false
 lock-after=false
 EOF
     chmod 600 "$login_keyring"
-}
-
-require_command() {
-    if ! command -v "$1" >/dev/null 2>&1; then
-        echo "$1 is not installed" >&2
-        exit 1
-    fi
 }
 
 # Reuse a live Secret Service session, or restore a previously-saved one.
@@ -85,9 +78,15 @@ fi
 rm -f "$env_file"
 unset DBUS_SESSION_BUS_ADDRESS DBUS_SESSION_BUS_PID GNOME_KEYRING_CONTROL
 
-require_command dbus-daemon
-require_command gnome-keyring-daemon
-require_command gdbus
+# Skip gracefully when the GNOME keyring stack is unavailable. This script runs
+# unconditionally from the post-start hook, so a hard failure here would break
+# every container image that does not ship the keyring stack.
+for cmd in dbus-daemon gnome-keyring-daemon gdbus; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "$cmd is not installed; skipping keyring setup." >&2
+        exit 0
+    fi
+done
 
 ensure_login_keyring
 
@@ -97,8 +96,8 @@ DBUS_SESSION_BUS_PID="$(printf '%s\n' "$dbus_output" | sed -n '2p')"
 export DBUS_SESSION_BUS_ADDRESS DBUS_SESSION_BUS_PID
 
 keyring_output="$(gnome-keyring-daemon --start --components=secrets)"
-if [[ -n "$keyring_output" ]]; then
-    eval "$keyring_output"
+GNOME_KEYRING_CONTROL="$(printf '%s\n' "$keyring_output" | sed -n 's/^GNOME_KEYRING_CONTROL=//p')"
+if [[ -n "$GNOME_KEYRING_CONTROL" ]]; then
     export GNOME_KEYRING_CONTROL
 fi
 
