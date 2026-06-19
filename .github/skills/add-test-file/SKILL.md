@@ -71,7 +71,7 @@ Use `@pytest.fixture(autouse=True)` with `request.addfinalizer()` for per-test n
 **Python Launch Integration:** Use `launch_pytest` for tests that launch ROS 2 nodes via `LaunchDescription`.
 Write launch tests as **plain functions** (not test classes), share a node/harness through a `@pytest.fixture`,
 and **verify per-process exit codes** with `drqp_launch_testing` (`<test_depend>drqp_launch_testing</test_depend>`).
-Never ship a no-op `shutdown=True` test: that mechanism only checks the aggregate launch *service* return code,
+Never ship a no-op `shutdown=True` test: that mechanism only checks the aggregate launch _service_ return code,
 not that processes exited 0. Full rules + an executable behavior matrix: see
 [launch-testing.instructions.md](../../instructions/launch-testing.instructions.md) and
 `packages/runtime/drqp_launch_testing/test/shutdown_behavior/SPEC.md`.

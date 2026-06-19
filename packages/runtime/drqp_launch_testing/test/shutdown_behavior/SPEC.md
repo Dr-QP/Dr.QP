@@ -23,13 +23,13 @@ actually started (hence the `ready_delay` before `ReadyToTest`).
 
 ## The matrix
 
-| # | Fixture scope | Shutdown pattern | Shares the active sim? | Shutdown body sees exit codes? | Verdict |
-|---|---------------|------------------|------------------------|--------------------------------|---------|
-| 1 | function | separate `shutdown=True` function | ❌ separate sim | only of its own throwaway sim | ✗ don't use for exit checks |
-| 2 | class | separate `shutdown=True` function | ❌ separate sim | only of its own throwaway sim | ✗ don't use for exit checks |
-| 3 | class/module | generator method (yield) | n/a | n/a | ✗ **unsupported** (raises `TypeError`) |
-| 4 | module | separate `shutdown=True` function | ✅ same sim | ✅ yes | ✓ use for multi-test files |
-| 5 | function | generator test (yield once) | ✅ same sim | ✅ yes | ✓ use for single-test files |
+| #   | Fixture scope | Shutdown pattern                  | Shares the active sim? | Shutdown body sees exit codes? | Verdict                                |
+| --- | ------------- | --------------------------------- | ---------------------- | ------------------------------ | -------------------------------------- |
+| 1   | function      | separate `shutdown=True` function | ❌ separate sim        | only of its own throwaway sim  | ✗ don't use for exit checks            |
+| 2   | class         | separate `shutdown=True` function | ❌ separate sim        | only of its own throwaway sim  | ✗ don't use for exit checks            |
+| 3   | class/module  | generator method (yield)          | n/a                    | n/a                            | ✗ **unsupported** (raises `TypeError`) |
+| 4   | module        | separate `shutdown=True` function | ✅ same sim            | ✅ yes                         | ✓ use for multi-test files             |
+| 5   | function      | generator test (yield once)       | ✅ same sim            | ✅ yes                         | ✓ use for single-test files            |
 
 ### Why combo 3 is unsupported
 
