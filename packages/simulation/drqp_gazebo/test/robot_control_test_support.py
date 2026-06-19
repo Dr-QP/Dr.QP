@@ -123,10 +123,19 @@ class GazeboRobotControlBase:
         rclpy.try_shutdown()
 
     @pytest.fixture(autouse=True)
-    def _node_setup(self, request, generate_test_description) -> None:  # noqa: ARG002
+    def _node_setup(self, generate_test_description) -> None:  # noqa: ARG002
         """Set up test node and publishers/subscribers."""
+        self.setup_node()
+
+    def setup_node(self) -> None:
+        """
+        Create the test node and publishers/subscribers, then wait for readiness.
+
+        Exposed as a plain instance method so the harness can be driven both as a
+        pytest test class (via ``_node_setup``) and as a shared fixture instance
+        in a functions-only test module.
+        """
         self.node = rclpy.create_node('test_gazebo_robot_control')
-        request.addfinalizer(self.node.destroy_node)
 
         self.current_robot_state = None
         self.current_clock = None
