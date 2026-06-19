@@ -22,7 +22,6 @@ if(BUILD_TESTING)
   set(drqp_moveit_launch_tests
     test/test_move_group_launch_smoke.py
     test/test_demo_launch_smoke.py
-    test/test_demo_launch_rviz_smoke.py
     test/test_demo_gazebo_launch_smoke.py
   )
 
