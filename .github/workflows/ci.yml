@@ -87,17 +87,20 @@ jobs:
       - name: Check commit message for clean-build
         id: clean_build_msg
         if: inputs.caller_event_name == 'push' || inputs.caller_event_name == 'pull_request'
-        continue-on-error: true
-        uses: gsactions/commit-message-checker@v2
+        uses: actions/github-script@v7
         with:
-          error: 'Commit message does not request a clean build.'
-          pattern: '\[ci:clean_build\]'
+          script: |
+            const pattern = /\[ci:clean_build\]/;
+            const commitMessage = context.payload.head_commit?.message ?? '';
+            const prBody = context.payload.pull_request?.body ?? '';
+            const found = pattern.test(commitMessage) || pattern.test(prBody);
+            core.setOutput('found', found);
 
       - name: Set base image refs
         id: base_refs
         env:
           CLEAN_BUILD_DISPATCH: ${{ inputs.clean_build }}
-          CLEAN_BUILD_COMMIT: ${{ steps.clean_build_msg.outcome == 'success' }}
+          CLEAN_BUILD_COMMIT: ${{ steps.clean_build_msg.outputs.found == 'true' }}
           CLEAN_BUILD_MERGE_GROUP: ${{ inputs.caller_event_name == 'merge_group' }}
           IS_MAIN: ${{ github.ref == 'refs/heads/main' || contains(github.ref, 'tags/v') }}
         run: |
