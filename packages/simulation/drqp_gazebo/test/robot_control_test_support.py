@@ -33,11 +33,13 @@ import builtin_interfaces
 import builtin_interfaces.msg
 from controller_manager.test_utils import check_controllers_running, check_node_running
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
+from drqp_launch_testing import track_process_exit_codes
 from geometry_msgs.msg import Pose, Vector3
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
+import launch_pytest
 from launch_pytest.actions import ReadyToTest
 from launch_ros.substitutions import FindPackageShare
 from launch_testing_ros import WaitForTopics
@@ -86,6 +88,15 @@ def create_simulation_launch_description(test_name: str | None = None) -> Launch
             TimerAction(period=1.0, actions=[ReadyToTest()]),
         ]
     )
+
+
+@launch_pytest.fixture
+def generate_test_description(request):
+    """Launch the simulation and record process exit codes for the shutdown check."""
+    test_name = Path(request.fspath).stem
+    launch_description = create_simulation_launch_description(test_name=test_name)
+    proc_info = track_process_exit_codes(launch_description)
+    return launch_description, proc_info
 
 
 class GazeboRobotControlBase:

@@ -20,18 +20,9 @@
 
 """Verify backward movement command produces backward motion."""
 
-from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
-import launch_pytest
+from drqp_launch_testing import assert_processes_exited_cleanly
 import pytest
-from robot_control_test_support import create_simulation_launch_description
-
-
-@launch_pytest.fixture
-def generate_test_description():
-    """Launch the simulation and record process exit codes for the shutdown check."""
-    launch_description = create_simulation_launch_description()
-    proc_info = track_process_exit_codes(launch_description)
-    return launch_description, proc_info
+from robot_control_test_support import generate_test_description
 
 
 @pytest.mark.slow
