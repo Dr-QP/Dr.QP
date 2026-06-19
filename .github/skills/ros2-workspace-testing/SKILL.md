@@ -201,6 +201,21 @@ Explore test results with interactive visualization.
 | `build/<package_name>/coverage.info`                | C++ coverage data      | LCOV        |
 | `build/<package_name>/.coverage`                    | Python coverage data   | Coverage.py |
 
+### Showing Output of Passing Tests
+
+By default pytest captures stdout/stderr and only prints it for **failed** tests, so output from passing `launch_pytest` runs (ROS node logs, launch process output) is hidden even with `console_cohesion+`.
+
+To surface captured output for passing tests, set `PYTEST_ADDOPTS=-rA`:
+
+```bash
+PYTEST_ADDOPTS=-rA scripts/with-ros-env.sh python3 -m colcon test \
+  --event-handlers console_cohesion+ summary+ status+ \
+  --return-code-on-test-failure \
+  --packages-select <package_name>
+```
+
+Use the `PYTEST_ADDOPTS` environment variable rather than `colcon test --pytest-args`: colcon cannot forward `--pytest-args` to ctest-driven (`ament_cmake`) tests, but pytest reads `PYTEST_ADDOPTS` regardless of how it is invoked.
+
 ## Python ROS Test Structure
 
 - Python ROS tests may use pytest functions or `unittest.TestCase` classes. Match the package's existing style instead of migrating solely for ROS context management.
@@ -222,6 +237,7 @@ Explore test results with interactive visualization.
 | Test results missing or incomplete     | Build artifacts cleaned                    | Rebuild packages before testing                                              |
 | Tests timeout or hang                  | Test blocking on I/O or infinite loop      | Check test logs in `log/latest_test/`                                        |
 | `drqp_gazebo` launch tests are skipped | Default smoke-only mode is active          | Re-run with `DRQP_TEST_MODE=slow` to include the full Gazebo suite           |
+| No output from passing launch_pytest tests | pytest captures stdout, shows it only on failure | Set `PYTEST_ADDOPTS=-rA` (not `--pytest-args`, which colcon can't pass to ctest tests) |
 
 ## References
 

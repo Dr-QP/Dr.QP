@@ -245,7 +245,9 @@ jobs:
           python3 -c 'import statemachine'
           echo ''
 
-          python3 -m colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure
+          # -rA makes pytest report captured output for passing tests too (launch_pytest output is otherwise hidden on success).
+          # PYTEST_ADDOPTS is used instead of --pytest-args because colcon can't forward pytest args to ctest-driven (ament_cmake) tests.
+          PYTEST_ADDOPTS=-rA python3 -m colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure
 
       - name: Process llvm coverage
         run: ./packages/cmake/llvm-cov-export-all.py ./build
@@ -352,7 +354,9 @@ jobs:
             source "scripts/setup.bash"
 
             test_status=0
-            python3 -m colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure || test_status=$?
+            # -rA makes pytest report captured output for passing tests too (launch_pytest output is otherwise hidden on success).
+            # PYTEST_ADDOPTS is used instead of --pytest-args because colcon can't forward pytest args to ctest-driven (ament_cmake) tests.
+            PYTEST_ADDOPTS=-rA python3 -m colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure || test_status=$?
 
             mkdir -p ./.tmp/devcontainer-ci
             rm -rf ./.tmp/devcontainer-ci/build ./.tmp/devcontainer-ci/log
