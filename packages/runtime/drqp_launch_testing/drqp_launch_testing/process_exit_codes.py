@@ -55,7 +55,7 @@ from launch_testing.proc_info_handler import ProcInfoHandler
 # excluded from the clean-exit assertion by default. Membership is by substring
 # match against the process name. The list is validated by the slow Gazebo/MoveIt
 # CI suites that actually exercise process teardown.
-DEFAULT_SHUTDOWN_KILLED_PROCESSES = ('gazebo', 'gz', 'bridge_node', 'move_group')
+DEFAULT_SHUTDOWN_KILLED_PROCESSES = ('gazebo', 'gz', 'bridge_node', 'move_group', 'spawner')
 
 
 def track_process_exit_codes(launch_description: LaunchDescription) -> ProcInfoHandler:
