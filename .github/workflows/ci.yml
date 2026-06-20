@@ -233,7 +233,7 @@ jobs:
           source "scripts/setup.bash"
 
           # symlink-install is a must to collect proper coverage for python nodes
-          python3 -m colcon build --mixin coverage-pytest ninja rel-with-deb-info --event-handlers console_cohesion+ console_direct+ --symlink-install --cmake-args -D DRQP_ENABLE_COVERAGE=ON
+          python3 -m colcon build --mixin coverage-pytest ninja rel-with-deb-info --event-handlers=console_cohesion+ --symlink-install --cmake-args -D DRQP_ENABLE_COVERAGE=ON
 
       - name: Test ROS workspace
         run: |
@@ -250,7 +250,7 @@ jobs:
 
           # -rA makes pytest report captured output for passing tests too (launch_pytest output is otherwise hidden on success).
           # PYTEST_ADDOPTS is used instead of --pytest-args because colcon can't forward pytest args to ctest-driven (ament_cmake) tests.
-          PYTEST_ADDOPTS=-rA python3 -m colcon test --mixin coverage-pytest --event-handlers console_cohesion+ console_direct+ --return-code-on-test-failure
+          PYTEST_ADDOPTS=-rA python3 -m colcon test --mixin coverage-pytest --event-handlers=console_cohesion+ --return-code-on-test-failure
 
       - name: Process llvm coverage
         run: ./packages/cmake/llvm-cov-export-all.py ./build
@@ -351,7 +351,7 @@ jobs:
             rosdep update
             ./scripts/ros-dep.sh
             source "scripts/setup.bash"
-            python3 -m colcon build --mixin ninja rel-with-deb-info --event-handlers console_cohesion+ console_direct+
+            python3 -m colcon build --mixin ninja rel-with-deb-info --event-handlers=console_cohesion+
 
             ./scripts/ros-dep.sh
             source "scripts/setup.bash"
@@ -359,7 +359,7 @@ jobs:
             test_status=0
             # -rA makes pytest report captured output for passing tests too (launch_pytest output is otherwise hidden on success).
             # PYTEST_ADDOPTS is used instead of --pytest-args because colcon can't forward pytest args to ctest-driven (ament_cmake) tests.
-            PYTEST_ADDOPTS=-rA python3 -m colcon test --event-handlers console_cohesion+ console_direct+ --return-code-on-test-failure || test_status=$?
+            PYTEST_ADDOPTS=-rA python3 -m colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure || test_status=$?
 
             mkdir -p ./.tmp/devcontainer-ci
             rm -rf ./.tmp/devcontainer-ci/build ./.tmp/devcontainer-ci/log
