@@ -1097,12 +1097,8 @@ class GazeboRobotControlBase:
     ) -> None:
         self._set_board_tilt(roll=0.0, pitch=0.0)
         board_r, board_p = self._wait_for_board_tilt(expected_roll=0.0, expected_pitch=0.0)
-        assert abs(board_r) <= 0.03, (
-            f'Expected board roll to return to level (got {board_r:.3f})'
-        )
-        assert abs(board_p) <= 0.03, (
-            f'Expected board pitch to return to level (got {board_p:.3f})'
-        )
+        assert abs(board_r) <= 0.03, f'Expected board roll to return to level (got {board_r:.3f})'
+        assert abs(board_p) <= 0.03, f'Expected board pitch to return to level (got {board_p:.3f})'
 
         self._set_balance_mode(False)
         self._wait_for_sim_time(self.POSE_SETTLE_DURATION)
