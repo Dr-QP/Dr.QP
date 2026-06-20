@@ -8,6 +8,7 @@ from drqp_robot_mcp import runtime
 from drqp_robot_mcp.controller import RobotMcpController
 import pytest
 
+
 @pytest.mark.slow
 @pytest.mark.timeout(1200)
 def test_get_world_state_uses_live_gazebo_transport() -> None:
