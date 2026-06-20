@@ -10,6 +10,7 @@ from drqp_robot_mcp import runtime
 from drqp_robot_mcp.controller import RobotMcpController
 import pytest
 
+
 def _pose_distance(before, after) -> float:
     delta_x = after.position.x - before.position.x
     delta_y = after.position.y - before.position.y
