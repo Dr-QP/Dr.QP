@@ -215,9 +215,7 @@ def test_publish_measurements_marks_orientation_unavailable_when_none(imu_harnes
     imu_harness.wait_for_subscribers()
 
     imu_harness.node.publish_measurements()
-    delivered = imu_harness.spin_until(
-        lambda: len(imu_harness.imu_messages) > 0, iterations=20
-    )
+    delivered = imu_harness.spin_until(lambda: len(imu_harness.imu_messages) > 0, iterations=20)
 
     assert delivered, 'Expected IMU message to be delivered without orientation'
 
@@ -255,9 +253,7 @@ def test_constructor_wraps_sensor_construction_failures(rclpy_context):  # noqa:
 def test_main_exits_cleanly_when_sensor_backend_cannot_start():
     """Exit with code 1 and log the startup error without a traceback."""
     logger = mock.Mock()
-    imu_node_constructor = mock.Mock(
-        side_effect=SensorInitializationError('backend unavailable')
-    )
+    imu_node_constructor = mock.Mock(side_effect=SensorInitializationError('backend unavailable'))
 
     with (
         mock.patch('drqp_brain.imu_node.rclpy.init'),

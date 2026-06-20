@@ -72,9 +72,7 @@ def test_scheduler_repeats_control_mode_groups_with_longer_group_gap():
     current_time = [50.0]
     scheduler = HapticFeedbackScheduler(clock=lambda: current_time[0])
 
-    commands = scheduler.schedule(
-        control_mode_feedback_pattern(_FakeControlMode('BodyPosition'))
-    )
+    commands = scheduler.schedule(control_mode_feedback_pattern(_FakeControlMode('BodyPosition')))
 
     active_commands = [command for command in commands if command.intensity > 0.0]
     assert len(active_commands) == 6
@@ -95,7 +93,14 @@ def test_scheduler_returns_on_off_commands_for_each_pulse():
 
     assert len(commands) == 8
     assert [command.intensity for command in commands] == [
-        0.8, 0.0, 0.8, 0.0, 0.8, 0.0, 0.8, 0.0,
+        0.8,
+        0.0,
+        0.8,
+        0.0,
+        0.8,
+        0.0,
+        0.8,
+        0.0,
     ]
     assert [command.channel_id for command in commands] == [LEFT_RUMBLE_CHANNEL_ID] * 8
     assert commands[0].due_at == pytest.approx(10.0, abs=1e-7)

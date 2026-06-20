@@ -140,9 +140,7 @@ def test_button_to_robot_event(translator):
 def test_dispatch_pending_feedback_publishes_without_subscriber_check(translator):
     """Due haptic commands should be published without gating on discovery."""
     translator.node.joy_feedback_pub.publish = Mock()
-    translator.node._pending_feedback_commands = [
-        Mock(due_at=0.0, channel_id=0, intensity=0.8)
-    ]
+    translator.node._pending_feedback_commands = [Mock(due_at=0.0, channel_id=0, intensity=0.8)]
     translator.node.haptic_feedback_scheduler.now = Mock(return_value=0.0)
 
     translator.node._dispatch_pending_feedback()
@@ -220,9 +218,7 @@ def test_dispatch_pending_feedback_publishes_interrupt_and_new_pulse_in_same_tic
     assert stop_feedback.intensity == 0.0
     assert start_feedback.id == RIGHT_RUMBLE_CHANNEL_ID
     assert start_feedback.intensity > 0.0
-    assert translator.node._pending_feedback_commands[0].due_at == pytest.approx(
-        200.17, abs=1e-7
-    )
+    assert translator.node._pending_feedback_commands[0].due_at == pytest.approx(200.17, abs=1e-7)
 
 
 def test_control_mode_haptic_feedback_uses_working_rumble_channel(translator):
