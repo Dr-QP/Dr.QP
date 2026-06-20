@@ -495,13 +495,13 @@ class GazeboRobotControlBase:
             cos_roll * cos_pitch * cos_yaw + sin_roll * sin_pitch * sin_yaw,
         )
 
-    def _run_gz_command(self, args: list[str], error_context: str) -> str:
+    def _run_gz_command(self, gz_args: list[str], error_context: str) -> str:
         """
         Run a Gazebo CLI command and return its stdout.
 
         Parameters
         ----------
-        args
+        gz_args
             Full `gz` command argument list.
         error_context
             Human-readable context included in failures.
@@ -516,21 +516,25 @@ class GazeboRobotControlBase:
         # this helper intentionally does not execute arbitrary user-provided shell.
         try:
             completed = subprocess.run(
-                args,
+                gz_args,
                 check=True,
                 capture_output=True,
                 text=True,
                 timeout=self.GZ_COMMAND_TIMEOUT,
             )
         except FileNotFoundError as error:
-            self.fail(f'{error_context} failed because the Gazebo CLI is unavailable: {error}')
+            raise AssertionError(
+                f'{error_context} failed because the Gazebo CLI is unavailable: {error}'
+            )
         except subprocess.CalledProcessError as error:
-            self.fail(
+            raise AssertionError(
                 f'{error_context} failed with exit code {error.returncode}: '
                 f'{error.stderr.strip() or error.stdout.strip()}'
             )
         except subprocess.TimeoutExpired as error:
-            self.fail(f'{error_context} timed out after {self.GZ_COMMAND_TIMEOUT:.1f}s: {error}')
+            raise AssertionError(
+                f'{error_context} timed out after {self.GZ_COMMAND_TIMEOUT:.1f}s: {error}'
+            )
         return completed.stdout
 
     def _set_balance_mode(self, enabled: bool) -> None:
@@ -674,23 +678,13 @@ class GazeboRobotControlBase:
             expected_pitch=board_pitch,
             tolerance=self.BOARD_TILT_TOLERANCE,
         )
-        self.assertAlmostEqual(
-            observed_roll,
-            board_roll,
-            delta=self.BOARD_TILT_TOLERANCE,
-            msg=(
-                'Board roll did not reach commanded angle '
-                f'(commanded={board_roll:.3f}, observed={observed_roll:.3f})'
-            ),
+        assert abs(observed_roll - board_roll) <= self.BOARD_TILT_TOLERANCE, (
+            'Board roll did not reach commanded angle '
+            f'(commanded={board_roll:.3f}, observed={observed_roll:.3f})'
         )
-        self.assertAlmostEqual(
-            observed_pitch,
-            board_pitch,
-            delta=self.BOARD_TILT_TOLERANCE,
-            msg=(
-                'Board pitch did not reach commanded angle '
-                f'(commanded={board_pitch:.3f}, observed={observed_pitch:.3f})'
-            ),
+        assert abs(observed_pitch - board_pitch) <= self.BOARD_TILT_TOLERANCE, (
+            'Board pitch did not reach commanded angle '
+            f'(commanded={board_pitch:.3f}, observed={observed_pitch:.3f})'
         )
         self._set_board_tilt(roll=0.0, pitch=0.0)
         self._wait_for_board_tilt(
@@ -700,17 +694,11 @@ class GazeboRobotControlBase:
     def _assert_board_stays_level(self, context_message: str) -> None:
         """Assert the board is holding level within the alignment tolerance."""
         observed_roll, observed_pitch = self._sample_board_tilt()
-        self.assertAlmostEqual(
-            observed_roll,
-            0.0,
-            delta=self.BOARD_ALIGNMENT_TOLERANCE,
-            msg=f'Board roll drifted off level {context_message} (roll={observed_roll:.3f})',
+        assert abs(observed_roll) <= self.BOARD_ALIGNMENT_TOLERANCE, (
+            f'Board roll drifted off level {context_message} (roll={observed_roll:.3f})'
         )
-        self.assertAlmostEqual(
-            observed_pitch,
-            0.0,
-            delta=self.BOARD_ALIGNMENT_TOLERANCE,
-            msg=f'Board pitch drifted off level {context_message} (pitch={observed_pitch:.3f})',
+        assert abs(observed_pitch) <= self.BOARD_ALIGNMENT_TOLERANCE, (
+            f'Board pitch drifted off level {context_message} (pitch={observed_pitch:.3f})'
         )
 
     def _arm_robot(self) -> None:
@@ -880,31 +868,20 @@ class GazeboRobotControlBase:
         orientation_norm = math.sqrt(
             orientation.x**2 + orientation.y**2 + orientation.z**2 + orientation.w**2
         )
-        self.assertAlmostEqual(
-            orientation_norm,
-            1.0,
-            delta=0.05,
-            msg='Expected Gazebo IMU orientation quaternion to be normalized in /imu/data',
+        assert abs(orientation_norm - 1.0) <= 0.05, (
+            'Expected Gazebo IMU orientation quaternion to be normalized in /imu/data'
         )
-        self.assertGreaterEqual(
-            self.current_imu_message.orientation_covariance[0],
-            0.0,
-            'Expected Gazebo IMU orientation to be marked available in /imu/data',
+        assert self.current_imu_message.orientation_covariance[0] >= 0.0, (
+            'Expected Gazebo IMU orientation to be marked available in /imu/data'
         )
 
         imu_body_tilt = body_tilt_from_imu(orientation)
         base_roll, base_pitch = self._roll_pitch_from_quaternion(self.robot_pose.orientation)
-        self.assertAlmostEqual(
-            imu_body_tilt.x,
-            base_roll,
-            delta=0.1,
-            msg='Expected IMU orientation to reconstruct the spawned base roll',
+        assert abs(imu_body_tilt.x - base_roll) <= 0.1, (
+            'Expected IMU orientation to reconstruct the spawned base roll'
         )
-        self.assertAlmostEqual(
-            imu_body_tilt.y,
-            base_pitch,
-            delta=0.1,
-            msg='Expected IMU orientation to reconstruct the spawned base pitch',
+        assert abs(imu_body_tilt.y - base_pitch) <= 0.1, (
+            'Expected IMU orientation to reconstruct the spawned base pitch'
         )
 
     def assert_robot_spawned(self) -> None:
@@ -1081,66 +1058,36 @@ class GazeboRobotControlBase:
             settle_sim_time_sec=self.POSE_SETTLE_DURATION
         )
 
-        self.assertGreater(
-            math.sqrt(board_r**2 + board_p**2),
-            0.08,
-            msg=f'Expected board to tilt noticeably (roll={board_r:.3f}, pitch={board_p:.3f})',
+        assert math.sqrt(board_r**2 + board_p**2) > 0.08, (
+            f'Expected board to tilt noticeably (roll={board_r:.3f}, pitch={board_p:.3f})'
         )
-        self.assertAlmostEqual(
-            balanced_roll,
-            initial_roll,
-            delta=self.BALANCED_BODY_TILT_TOLERANCE,
-            msg=(
-                'Expected body roll to stay near initial after balance compensation '
-                f'(initial={initial_roll:.3f}, balanced={balanced_roll:.3f}, board_r={board_r:.3f})'
-            ),
+        assert abs(balanced_roll - initial_roll) <= self.BALANCED_BODY_TILT_TOLERANCE, (
+            'Expected body roll to stay near initial after balance compensation '
+            f'(initial={initial_roll:.3f}, balanced={balanced_roll:.3f}, board_r={board_r:.3f})'
         )
-        self.assertAlmostEqual(
-            balanced_pitch,
-            initial_pitch,
-            delta=self.BALANCED_BODY_TILT_TOLERANCE,
-            msg=(
-                'Expected body pitch to stay near initial after balance compensation '
-                f'(initial={initial_pitch:.3f}, balanced={balanced_pitch:.3f}, board_p={board_p:.3f})'
-            ),
+        assert abs(balanced_pitch - initial_pitch) <= self.BALANCED_BODY_TILT_TOLERANCE, (
+            'Expected body pitch to stay near initial after balance compensation '
+            f'(initial={initial_pitch:.3f}, balanced={balanced_pitch:.3f}, board_p={board_p:.3f})'
         )
-        self.assertAlmostEqual(
-            imu_roll,
-            balanced_roll,
-            delta=0.10,
-            msg='Expected IMU-derived roll to match balanced body roll',
+        assert abs(imu_roll - balanced_roll) <= 0.10, (
+            'Expected IMU-derived roll to match balanced body roll'
         )
-        self.assertAlmostEqual(
-            imu_pitch,
-            balanced_pitch,
-            delta=0.10,
-            msg='Expected IMU-derived pitch to match balanced body pitch',
+        assert abs(imu_pitch - balanced_pitch) <= 0.10, (
+            'Expected IMU-derived pitch to match balanced body pitch'
         )
         if abs(board_r) > 0.05:
-            self.assertGreater(
-                abs(board_r - balanced_roll),
-                0.05,
-                msg=(
-                    'Expected body roll to be notably closer to level than board '
-                    f'(board_r={board_r:.3f}, balanced_roll={balanced_roll:.3f})'
-                ),
+            assert abs(board_r - balanced_roll) > 0.05, (
+                'Expected body roll to be notably closer to level than board '
+                f'(board_r={board_r:.3f}, balanced_roll={balanced_roll:.3f})'
             )
         if abs(board_p) > 0.05:
-            self.assertGreater(
-                abs(board_p - balanced_pitch),
-                0.05,
-                msg=(
-                    'Expected body pitch to be notably closer to level than board '
-                    f'(board_p={board_p:.3f}, balanced_pitch={balanced_pitch:.3f})'
-                ),
+            assert abs(board_p - balanced_pitch) > 0.05, (
+                'Expected body pitch to be notably closer to level than board '
+                f'(board_p={board_p:.3f}, balanced_pitch={balanced_pitch:.3f})'
             )
-        self.assertGreater(
-            balanced_height,
-            pre_tilt_height - 0.03,
-            msg=(
-                'Expected robot to remain supported near board height after tilt '
-                f'(pre_tilt_z={pre_tilt_height:.3f}, balanced_z={balanced_height:.3f})'
-            ),
+        assert balanced_height > pre_tilt_height - 0.03, (
+            'Expected robot to remain supported near board height after tilt '
+            f'(pre_tilt_z={pre_tilt_height:.3f}, balanced_z={balanced_height:.3f})'
         )
 
     def _reset_board_and_balance_mode(
@@ -1150,39 +1097,23 @@ class GazeboRobotControlBase:
     ) -> None:
         self._set_board_tilt(roll=0.0, pitch=0.0)
         board_r, board_p = self._wait_for_board_tilt(expected_roll=0.0, expected_pitch=0.0)
-        self.assertAlmostEqual(
-            board_r,
-            0.0,
-            delta=0.03,
-            msg=f'Expected board roll to return to level (got {board_r:.3f})',
+        assert abs(board_r) <= 0.03, (
+            f'Expected board roll to return to level (got {board_r:.3f})'
         )
-        self.assertAlmostEqual(
-            board_p,
-            0.0,
-            delta=0.03,
-            msg=f'Expected board pitch to return to level (got {board_p:.3f})',
+        assert abs(board_p) <= 0.03, (
+            f'Expected board pitch to return to level (got {board_p:.3f})'
         )
 
         self._set_balance_mode(False)
         self._wait_for_sim_time(self.POSE_SETTLE_DURATION)
         roll, pitch = self._sample_base_roll_pitch(settle_sim_time_sec=self.POSE_SETTLE_DURATION)
-        self.assertAlmostEqual(
-            roll,
-            initial_roll,
-            delta=self.BALANCED_BODY_TILT_TOLERANCE,
-            msg=(
-                'Expected body roll near initial after disabling balance mode '
-                f'(initial={initial_roll:.3f}, actual={roll:.3f})'
-            ),
+        assert abs(roll - initial_roll) <= self.BALANCED_BODY_TILT_TOLERANCE, (
+            'Expected body roll near initial after disabling balance mode '
+            f'(initial={initial_roll:.3f}, actual={roll:.3f})'
         )
-        self.assertAlmostEqual(
-            pitch,
-            initial_pitch,
-            delta=self.BALANCED_BODY_TILT_TOLERANCE,
-            msg=(
-                'Expected body pitch near initial after disabling balance mode '
-                f'(initial={initial_pitch:.3f}, actual={pitch:.3f})'
-            ),
+        assert abs(pitch - initial_pitch) <= self.BALANCED_BODY_TILT_TOLERANCE, (
+            'Expected body pitch near initial after disabling balance mode '
+            f'(initial={initial_pitch:.3f}, actual={pitch:.3f})'
         )
         self._set_balance_mode(True)
 
@@ -1194,16 +1125,13 @@ class BalanceBoardWorldBase(GazeboRobotControlBase):
     Reuses the board-driving helpers from :class:`GazeboRobotControlBase` but
     launches Gazebo with ``spawn_robot:=false``, so there is no robot, ROS bridge,
     or control stack. The board helpers talk to Gazebo over the ``gz`` CLI and need
-    no ROS node, so ``setUp`` only waits for the world to start serving poses.
+    no ROS node, so the test fixture only waits for the world to start serving
+    poses via :meth:`wait_for_board_world_ready`.
     """
 
-    __test__ = False  # Prevent unittest from collecting this base class as a test case.
+    __test__ = False  # Prevent pytest from collecting this base class as a test case.
 
-    def setUp(self) -> None:
-        """Wait for the board world to start; skip all robot-readiness waits."""
-        self._wait_for_board_world_ready()
-
-    def _wait_for_board_world_ready(self) -> Pose:
+    def wait_for_board_world_ready(self) -> Pose:
         """Poll Gazebo until the board entity pose is served, tolerating startup errors."""
         deadline = time.monotonic() + self.READY_TIMEOUT
         last_error = ''
@@ -1214,7 +1142,7 @@ class BalanceBoardWorldBase(GazeboRobotControlBase):
                 # gz CLI not up yet, or the world has not published poses; retry.
                 last_error = str(error)
             time.sleep(0.5)
-        self.fail(
+        raise AssertionError(
             f'Balance board world did not become ready within {self.READY_TIMEOUT}s: {last_error}'
         )
 

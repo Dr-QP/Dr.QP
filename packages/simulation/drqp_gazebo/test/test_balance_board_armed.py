@@ -29,13 +29,10 @@ isolating the board-under-load behaviour from the balance controller.
 
 import math
 
-from launch_testing import post_shutdown_test
+from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
+import launch_pytest
 import pytest
-from robot_control_test_support import (
-    create_balance_board_launch_description,
-    GazeboRobotControlBase,
-)
-from simulation_shutdown_test_case import SimulationShutdownBase
+from robot_control_test_support import create_balance_board_launch_description
 
 _TILT_MAGNITUDE = 0.12
 _TILT_DIAGONAL = _TILT_MAGNITUDE / math.sqrt(2)
@@ -52,26 +49,24 @@ _TILT_SCENARIOS = [
 ]
 
 
-@pytest.mark.slow
-@pytest.mark.launch_test
+@launch_pytest.fixture
 def generate_test_description():
-    return create_balance_board_launch_description()
+    """Launch Gazebo with the robot riding the balance board and record exit codes."""
+    launch_description = create_balance_board_launch_description()
+    proc_info = track_process_exit_codes(launch_description)
+    return launch_description, proc_info
 
 
 @pytest.mark.slow
-class TestBalanceBoardArmedNoBalance(GazeboRobotControlBase):
-    """Verify the board reaches every commanded tilt with an armed, non-balancing robot."""
+@pytest.mark.launch(fixture=generate_test_description)
+def test_board_reaches_tilt_with_robot_riding(robot, generate_test_description):
+    robot._arm_robot()
+    # Balance mode stays off (default), so the robot rides the board passively.
+    for board_roll, board_pitch in _TILT_SCENARIOS:
+        robot._assert_board_reaches_tilt(board_roll, board_pitch)
 
-    def test_board_reaches_tilt_with_robot_riding(self):
-        self._arm_robot()
-        # Balance mode stays off (default), so the robot rides the board passively.
-        for board_roll, board_pitch in _TILT_SCENARIOS:
-            self._assert_board_reaches_tilt(board_roll, board_pitch)
-
-
-@post_shutdown_test()
-class TestSimulationShutdown(SimulationShutdownBase):
-    """Verify processes exit cleanly after the launch test finishes."""
-
-    def test_exit_codes(self, proc_info):
-        self.assert_exit_codes(proc_info)
+    # Function-scoped generator: the simulation tears down at the yield, then the
+    # post-yield body verifies every non-simulator process exited cleanly.
+    yield
+    _launch_description, proc_info = generate_test_description
+    assert_processes_exited_cleanly(proc_info)

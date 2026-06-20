@@ -28,45 +28,40 @@ back-drive the board off level, validating that the lightened board responds
 gently rather than being disturbed by foot contacts.
 """
 
-from launch_testing import post_shutdown_test
+from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
+import launch_pytest
 import pytest
-from robot_control_test_support import (
-    create_balance_board_launch_description,
-    GazeboRobotControlBase,
-)
-from simulation_shutdown_test_case import SimulationShutdownBase
+from robot_control_test_support import create_balance_board_launch_description
 
 
-@pytest.mark.slow
-@pytest.mark.launch_test
+@launch_pytest.fixture
 def generate_test_description():
-    return create_balance_board_launch_description()
+    """Launch Gazebo with the robot riding the balance board and record exit codes."""
+    launch_description = create_balance_board_launch_description()
+    proc_info = track_process_exit_codes(launch_description)
+    return launch_description, proc_info
 
 
 @pytest.mark.slow
-class TestBalanceBoardMotionResponse(GazeboRobotControlBase):
-    """Verify robot motion on a level board does not tilt the board off level."""
+@pytest.mark.launch(fixture=generate_test_description)
+def test_board_holds_level_during_robot_motion(robot, generate_test_description):
+    robot._arm_robot()
+    robot._assert_board_stays_level('before robot motion')
 
-    def test_board_holds_level_during_robot_motion(self):
-        self._arm_robot()
-        self._assert_board_stays_level('before robot motion')
+    # Step on the spot: stride_direction.z drives the gait with no heading.
+    robot._publish_movement_command(stride_z=1.0)
+    robot._wait_for_sim_time(robot.MOTION_RESPONSE_DURATION)
+    robot._assert_board_stays_level('while stepping in place')
+    robot._publish_movement_command()  # stop stepping
 
-        # Step on the spot: stride_direction.z drives the gait with no heading.
-        self._publish_movement_command(stride_z=1.0)
-        self._wait_for_sim_time(self.MOTION_RESPONSE_DURATION)
-        self._assert_board_stays_level('while stepping in place')
-        self._publish_movement_command()  # stop stepping
+    # Shift the body forward over the stance.
+    robot._publish_movement_command(body_translation_x=1.0)
+    robot._wait_for_sim_time(robot.MOTION_RESPONSE_DURATION)
+    robot._assert_board_stays_level('while moving body forward')
+    robot._publish_movement_command()  # stop
 
-        # Shift the body forward over the stance.
-        self._publish_movement_command(body_translation_x=1.0)
-        self._wait_for_sim_time(self.MOTION_RESPONSE_DURATION)
-        self._assert_board_stays_level('while moving body forward')
-        self._publish_movement_command()  # stop
-
-
-@post_shutdown_test()
-class TestSimulationShutdown(SimulationShutdownBase):
-    """Verify processes exit cleanly after the launch test finishes."""
-
-    def test_exit_codes(self, proc_info):
-        self.assert_exit_codes(proc_info)
+    # Function-scoped generator: the simulation tears down at the yield, then the
+    # post-yield body verifies every non-simulator process exited cleanly.
+    yield
+    _launch_description, proc_info = generate_test_description
+    assert_processes_exited_cleanly(proc_info)

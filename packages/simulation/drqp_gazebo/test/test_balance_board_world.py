@@ -29,13 +29,13 @@ be attributed to the robot or controller rather than the world fixture itself.
 
 import math
 
-from launch_testing import post_shutdown_test
+from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
+import launch_pytest
 import pytest
 from robot_control_test_support import (
     BalanceBoardWorldBase,
     create_board_only_launch_description,
 )
-from simulation_shutdown_test_case import SimulationShutdownBase
 
 _TILT_MAGNITUDE = 0.12
 _TILT_DIAGONAL = _TILT_MAGNITUDE / math.sqrt(2)
@@ -52,29 +52,38 @@ _TILT_SCENARIOS = [
 ]
 
 
-@pytest.mark.slow
-@pytest.mark.launch_test
+@launch_pytest.fixture
 def generate_test_description():
-    return create_board_only_launch_description()
+    """Launch only Gazebo and the board world (no robot) and record exit codes."""
+    launch_description = create_board_only_launch_description()
+    proc_info = track_process_exit_codes(launch_description)
+    return launch_description, proc_info
+
+
+@pytest.fixture
+def board(generate_test_description):  # noqa: ARG001 (drives the launch)
+    """
+    Provide a board-only harness bound to the launched world.
+
+    The board-only launch starts no robot, ROS bridge, or control stack, and the
+    board helpers talk to Gazebo over the ``gz`` CLI, so no ``rclpy`` node is
+    needed; the fixture only waits for the board world to start serving poses.
+    """
+    harness = BalanceBoardWorldBase()
+    harness.wait_for_board_world_ready()
+    yield harness
 
 
 @pytest.mark.slow
-class TestBalanceBoardWorld(BalanceBoardWorldBase):
-    """Verify the board fixture reaches every commanded tilt with no robot present."""
+@pytest.mark.launch(fixture=generate_test_description)
+def test_board_reaches_all_tilt_angles(board, generate_test_description):
+    for board_roll, board_pitch in _TILT_SCENARIOS:
+        board._assert_board_reaches_tilt(board_roll, board_pitch)
 
-    def test_board_reaches_all_tilt_angles(self):
-        for board_roll, board_pitch in _TILT_SCENARIOS:
-            self._assert_board_reaches_tilt(board_roll, board_pitch)
-
-
-@post_shutdown_test()
-class TestSimulationShutdown(SimulationShutdownBase):
-    """Verify processes exit cleanly after the launch test finishes."""
-
-    def test_exit_codes(self, proc_info):
-        # The board-only launch starts no robot or bridge processes; only Gazebo
-        # runs and it is SIGTERMed on teardown. With nothing left after filtering
-        # Gazebo out, there are no exit codes to assert.
-        if not self._filter_out_gazebo(proc_info).process_names():
-            return
-        self.assert_exit_codes(proc_info)
+    # Function-scoped generator: the board world tears down at the yield, then the
+    # post-yield body verifies every non-simulator process exited cleanly. The
+    # board-only launch starts only Gazebo, which is filtered out, so the check
+    # passes trivially when nothing else ran.
+    yield
+    _launch_description, proc_info = generate_test_description
+    assert_processes_exited_cleanly(proc_info)

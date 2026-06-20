@@ -18,15 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""Verify balance mode keeps the robot body level across board tilt directions."""
+
 import math
 
-from launch_testing import post_shutdown_test
+from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
+import launch_pytest
 import pytest
-from robot_control_test_support import (
-    create_balance_board_launch_description,
-    GazeboRobotControlBase,
-)
-from simulation_shutdown_test_case import SimulationShutdownBase
+from robot_control_test_support import create_balance_board_launch_description
 
 _TILT_MAGNITUDE = 0.12
 _TILT_DIAGONAL = _TILT_MAGNITUDE / math.sqrt(2)
@@ -43,33 +42,31 @@ _TILT_SCENARIOS = [
 ]
 
 
-@pytest.mark.slow
-@pytest.mark.launch_test
+@launch_pytest.fixture
 def generate_test_description():
-    return create_balance_board_launch_description()
+    """Launch Gazebo with the robot riding the balance board and record exit codes."""
+    launch_description = create_balance_board_launch_description()
+    proc_info = track_process_exit_codes(launch_description)
+    return launch_description, proc_info
 
 
 @pytest.mark.slow
-class TestGazeboRobotControlBalanceMode(GazeboRobotControlBase):
-    """Verify balance mode keeps the robot body level across all tilt directions."""
+@pytest.mark.launch(fixture=generate_test_description)
+def test_balance_mode_levels_body_on_all_tilt_angles(robot, generate_test_description):
+    robot._arm_robot()
+    initial_roll, initial_pitch = robot._sample_base_roll_pitch(
+        settle_sim_time_sec=robot.POSE_SETTLE_DURATION
+    )
+    robot._set_balance_mode(True)
 
-    def test_balance_mode_levels_body_on_all_tilt_angles(self):
-        self._arm_robot()
-        initial_roll, initial_pitch = self._sample_base_roll_pitch(
-            settle_sim_time_sec=self.POSE_SETTLE_DURATION
+    for board_roll, board_pitch in _TILT_SCENARIOS:
+        robot._assert_body_level_at_board_tilt(
+            board_roll, board_pitch, initial_roll, initial_pitch
         )
-        self._set_balance_mode(True)
+        robot._reset_board_and_balance_mode(initial_roll, initial_pitch)
 
-        for board_roll, board_pitch in _TILT_SCENARIOS:
-            self._assert_body_level_at_board_tilt(
-                board_roll, board_pitch, initial_roll, initial_pitch
-            )
-            self._reset_board_and_balance_mode(initial_roll, initial_pitch)
-
-
-@post_shutdown_test()
-class TestSimulationShutdown(SimulationShutdownBase):
-    """Verify processes exit cleanly after the launch test finishes."""
-
-    def test_exit_codes(self, proc_info):
-        self.assert_exit_codes(proc_info)
+    # Function-scoped generator: the simulation tears down at the yield, then the
+    # post-yield body verifies every non-simulator process exited cleanly.
+    yield
+    _launch_description, proc_info = generate_test_description
+    assert_processes_exited_cleanly(proc_info)
