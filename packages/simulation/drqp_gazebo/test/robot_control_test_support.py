@@ -86,7 +86,11 @@ def create_simulation_launch_description(
             'sim.launch.py',
         ]
     )
-    combined_launch_arguments = {'sim_gui': 'true'}
+    # Default Gazebo GUI off so CI (which has no display) drives the headless
+    # `--headless-rendering -s` path. Headless rendering still gives the gz Sensors
+    # system (IMU) a render engine, so leaving the GUI on instead stalls the server
+    # update loop on display-less runners and freezes `/clock`. Callers may override.
+    combined_launch_arguments = {'sim_gui': 'false'}
     if launch_arguments is not None:
         combined_launch_arguments.update(launch_arguments)
     combined_launch_arguments['gz_partition'] = build_test_gz_partition(test_name)
