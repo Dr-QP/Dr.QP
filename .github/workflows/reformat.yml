@@ -539,16 +539,16 @@ jobs:
         id: compute
         run: |
           reformat_result='success'
-          if [[ "${NEEDS_REFORMAT_RESULT}" == 'failure' || "${NEEDS_SUPER_LINTER_RESULT}" == 'failure' || "${NEEDS_COMMIT_FORMAT_CHANGES_RESULT}" == 'failure' ]]; then
+          if [[ "${REFORMAT_RESULT}" == 'failure' || "${SUPER_LINTER_RESULT}" == 'failure' || "${COMMIT_FORMAT_CHANGES_RESULT}" == 'failure' ]]; then
             reformat_result='failure'
-          elif [[ "${NEEDS_REFORMAT_RESULT}" == 'cancelled' || "${NEEDS_SUPER_LINTER_RESULT}" == 'cancelled' || "${NEEDS_COMMIT_FORMAT_CHANGES_RESULT}" == 'cancelled' ]]; then
+          elif [[ "${REFORMAT_RESULT}" == 'cancelled' || "${SUPER_LINTER_RESULT}" == 'cancelled' || "${COMMIT_FORMAT_CHANGES_RESULT}" == 'cancelled' ]]; then
             reformat_result='cancelled'
-          elif [[ "${NEEDS_REFORMAT_RESULT}" == 'skipped' && "${NEEDS_SUPER_LINTER_RESULT}" == 'skipped' ]]; then
+          elif [[ "${REFORMAT_RESULT}" == 'skipped' && "${SUPER_LINTER_RESULT}" == 'skipped' ]]; then
             reformat_result='skipped'
           fi
 
           changed='false'
-          if [[ "${NEEDS_REFORMAT_OUTPUT_CHANGED}" == 'true' || "${NEEDS_SUPER_LINTER_OUTPUT_CHANGED}" == 'true' ]]; then
+          if [[ "${REFORMAT_OUTPUT_CHANGED}" == 'true' || "${SUPER_LINTER_OUTPUT_CHANGED}" == 'true' ]]; then
             changed='true'
           fi
 
@@ -563,11 +563,11 @@ jobs:
             echo "run_downstream=$run_downstream"
           } >> "$GITHUB_OUTPUT"
         env:
-          NEEDS_REFORMAT_RESULT: ${{ needs.reformat.result }}
-          NEEDS_REFORMAT_OUTPUT_CHANGED: ${{ needs.reformat.outputs.changed }}
-          NEEDS_SUPER_LINTER_RESULT: ${{ needs.super-linter.result }}
-          NEEDS_SUPER_LINTER_OUTPUT_CHANGED: ${{ needs.super-linter.outputs.changed }}
-          NEEDS_COMMIT_FORMAT_CHANGES_RESULT: ${{ needs.commit-format-changes.result }}
+          REFORMAT_RESULT: ${{ needs.reformat.result }}
+          REFORMAT_OUTPUT_CHANGED: ${{ needs.reformat.outputs.changed }}
+          SUPER_LINTER_RESULT: ${{ needs.super-linter.result }}
+          SUPER_LINTER_OUTPUT_CHANGED: ${{ needs.super-linter.outputs.changed }}
+          COMMIT_FORMAT_CHANGES_RESULT: ${{ needs.commit-format-changes.result }}
 
       - name: Log debug stats
         if: ${{ always() }}
