@@ -46,7 +46,7 @@ def _read_odom_pose(timeout_sec: float) -> Any | None:
 
 
 @pytest.mark.slow
-@pytest.mark.timeout(1200)
+@pytest.mark.timeout(300)
 def test_walk_for_duration_moves_robot_in_simulation() -> None:
     """The higher-level walk command moves the robot in Gazebo end to end."""
     controller = RobotMcpController()
