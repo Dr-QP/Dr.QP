@@ -14,7 +14,9 @@ setup(
     install_requires=[
         'mcp[cli]>=1.26.0',
     ],
-    tests_require=['pytest'],
+    extras_require={
+        'test': ['pytest'],
+    },
     zip_safe=True,
     maintainer='Anton Matosov',
     maintainer_email='anton.matosov@gmail.com',

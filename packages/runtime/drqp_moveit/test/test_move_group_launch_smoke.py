@@ -18,21 +18,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""Smoke test that the move_group launch reaches a ready state."""
+
+from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
+import launch_pytest
+from launch_pytest.actions import ReadyToTest
 from launch_ros.substitutions import FindPackageShare
-from launch_testing.actions import ReadyToTest
-from moveit_launch_smoke_test_support import (
-    MoveItLaunchSmokeShutdownTestCase,
-    MoveItLaunchSmokeTestCase,
-)
+from moveit_launch_smoke_test_support import assert_move_group_ready
 import pytest
 
 
-@pytest.mark.launch_test
+@launch_pytest.fixture
 def generate_test_description():
+    """Launch move_group + bringup and record process exit codes."""
     move_group_launch = PathJoinSubstitution(
         [FindPackageShare('drqp_moveit'), 'launch', 'move_group.launch.py']
     )
@@ -40,7 +42,7 @@ def generate_test_description():
         [FindPackageShare('drqp_brain'), 'launch', 'bringup.launch.py']
     )
 
-    return LaunchDescription(
+    launch_description = LaunchDescription(
         [
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(move_group_launch),
@@ -59,15 +61,15 @@ def generate_test_description():
             TimerAction(period=2.0, actions=[ReadyToTest()]),
         ]
     )
+    proc_info = track_process_exit_codes(launch_description)
+    return launch_description, proc_info
 
 
-class TestMoveGroupLaunchSmoke(MoveItLaunchSmokeTestCase):
-    __test__ = True
-
-    pass
-
-
-class TestMoveGroupLaunchShutdown(MoveItLaunchSmokeShutdownTestCase):
-    __test__ = True
-
-    pass
+@pytest.mark.launch(fixture=generate_test_description)
+def test_launch_reaches_ready_state(move_group, generate_test_description):  # noqa: ARG001
+    assert_move_group_ready()
+    # Function-scoped generator: the stack tears down at the yield, then the
+    # post-yield body verifies every non-simulator process exited cleanly.
+    yield
+    _launch_description, proc_info = generate_test_description
+    assert_processes_exited_cleanly(proc_info)

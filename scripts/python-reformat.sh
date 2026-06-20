@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 script_dir=$(dirname "$0")
 source "$script_dir/__utils.sh"
 
@@ -7,7 +9,8 @@ notebooks_dir="$root_dir/docs/source/notebooks"
 tool_scripts_dir="$root_dir/scripts"
 py_packages_dir="$root_dir/py_packages"
 
-source "$root_dir"/.venv/bin/activate
+# shellcheck source=/dev/null
+source "$root_dir/.venv/bin/activate"
 
 ruff_format='ruff format --quiet'
 ruff_lint_fix='ruff check --quiet --fix'

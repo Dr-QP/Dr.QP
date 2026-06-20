@@ -1,3 +1,5 @@
+@AGENTS.md
+
 # Claude Code Guidelines
 
 ## Dual-System Arrangement
@@ -24,6 +26,7 @@ The following files in `.github/instructions/` are the detailed guidelines for t
 
 - **All code** → `.github/instructions/engineering.instructions.md` — shared engineering principles, SOLID, Clean Code, testing pyramid, C++/Python/ROS 2 conventions
 - **Python files** (`*.py`) → `.github/instructions/python.instructions.md` — PEP 8, type hints, docstrings, exception handling, pytest
+- **Launch tests** (`**/test/**/*.py` using `launch_pytest`) → `.github/instructions/launch-testing.instructions.md` — functions-only launch tests, per-process exit-code verification via `drqp_launch_testing`, fixture scope vs shutdown pattern
 - **Local scripts and docs** (`scripts/`, `docs/`) → `.github/instructions/python-local.instructions.md` — virtual env usage, notebook conventions
 - **Sandbox / CI environment** → `.github/instructions/microVM-sandbox.instructions.md` — devcontainer workflows, `devcontainer exec`, colcon build/test gotchas
 - **Creating agents** (`*.agent.md`) → `.github/instructions/agents.instructions.md` — frontmatter schema, tool configuration, handoffs, orchestration patterns

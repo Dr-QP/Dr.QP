@@ -20,15 +20,13 @@
 
 import os
 import re
-import unittest
 
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
+from launch_pytest.actions import ReadyToTest
 from launch_ros.substitutions import FindPackageShare
-from launch_testing import asserts, post_shutdown_test
-from launch_testing.actions import ReadyToTest
 from moveit_msgs.srv import GetMotionPlan
 import rclpy
 
@@ -61,46 +59,21 @@ def build_smoke_test_description(
     )
 
 
-def _filter_shutdown_processes(proc_info):
-    filtered_proc_info = type(proc_info)()
-    # Launch helper processes can still be in flight when launch_testing starts
-    # teardown and may exit with SIGINT after completing their useful work.
-    skipped_procs = ('gazebo', 'gz', 'bridge_node', 'move_group', 'spawner')
-    for proc_name in proc_info.process_names():
-        if not any(skip in proc_name for skip in skipped_procs):
-            filtered_proc_info.append(proc_info[proc_name])
-    return filtered_proc_info
+READY_TIMEOUT = 60.0
 
 
-class MoveItLaunchSmokeTestCase(unittest.TestCase):
-    __test__ = False
+def assert_move_group_ready(timeout: float = READY_TIMEOUT) -> None:
+    """
+    Assert the MoveIt motion-plan service comes up within ``timeout`` seconds.
 
-    READY_TIMEOUT = 60.0
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
-        rclpy.init()
-        cls.addClassCleanup(rclpy.try_shutdown)
-
-    def test_launch_reaches_ready_state(self, proc_info):
-        del proc_info
-
-        node = rclpy.create_node('moveit_launch_smoke_test')
-        self.addCleanup(node.destroy_node)
-        motion_plan_client = node.create_client(GetMotionPlan, '/plan_kinematic_path')
-        self.addCleanup(motion_plan_client.destroy)
-        self.assertTrue(
-            motion_plan_client.wait_for_service(timeout_sec=self.READY_TIMEOUT),
-            '/plan_kinematic_path service is not available',
+    Requires ``rclpy`` to already be initialized (see the ``move_group`` fixture).
+    """
+    node = rclpy.create_node('moveit_launch_smoke_test')
+    motion_plan_client = node.create_client(GetMotionPlan, '/plan_kinematic_path')
+    try:
+        assert motion_plan_client.wait_for_service(timeout_sec=timeout), (
+            '/plan_kinematic_path service is not available'
         )
-
-
-@post_shutdown_test()
-class MoveItLaunchSmokeShutdownTestCase(unittest.TestCase):
-    """Verify the launch exits cleanly after smoke tests complete."""
-
-    __test__ = False
-
-    def test_exit_codes(self, proc_info):
-        asserts.assertExitCodes(_filter_shutdown_processes(proc_info))
+    finally:
+        motion_plan_client.destroy()
+        node.destroy_node()

@@ -58,7 +58,6 @@ default-groups = ["dev", "docs"]
 [tool.pytest.ini_options]
 markers = [
   "slow: marks tests that exercise long-running or integration-heavy behavior",
-  "smoke: marks focused smoke coverage for core flows",
 ]
 
 [tool.uv.sources]

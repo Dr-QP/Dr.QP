@@ -569,6 +569,12 @@ jobs:
           NEEDS_SUPER_LINTER_OUTPUT_CHANGED: ${{ needs.super-linter.outputs.changed }}
           NEEDS_COMMIT_FORMAT_CHANGES_RESULT: ${{ needs.commit-format-changes.result }}
 
+      - name: Fail if changes were made and committed
+        if: ${{ steps.compute.outputs.changed == 'true' && steps.compute.outputs.run_downstream != 'true' }}
+        run: |
+          echo "Changes were made and committed, fail the job to avoid confusing green check-marks on commits"
+          exit 1
+
       - name: Log debug stats
         if: ${{ always() }}
         uses: ./.github/actions/log-debug-stats

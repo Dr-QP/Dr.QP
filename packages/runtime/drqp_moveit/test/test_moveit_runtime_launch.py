@@ -19,21 +19,21 @@
 # THE SOFTWARE.
 
 import math
-import unittest
 
 from control_msgs.action import FollowJointTrajectory
 from controller_manager.test_utils import check_controllers_running, check_node_running
 from drqp_brain.joint_trajectory_builder import kFemurOffsetAngle, kTibiaOffsetAngle
 from drqp_kinematics.models import HexapodModel
+from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
 from geometry_msgs.msg import PoseStamped, Quaternion
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
+import launch_pytest
+from launch_pytest.actions import ReadyToTest
 from launch_ros.substitutions import FindPackageShare
-from launch_testing import asserts, post_shutdown_test
-from launch_testing.actions import ReadyToTest
-from moveit_launch_smoke_test_support import build_test_gz_partition
+from moveit_launch_smoke_test_support import assert_move_group_ready, build_test_gz_partition
 from moveit_msgs.msg import (
     CollisionObject,
     Constraints,
@@ -46,6 +46,7 @@ from moveit_msgs.srv import ApplyPlanningScene, GetMotionPlan, GetStateValidity
 import pytest
 import rclpy
 from rclpy.action import ActionClient
+import rclpy.time
 from rosgraph_msgs.msg import Clock
 from scipy.spatial.transform import Rotation as Rotation
 from sensor_msgs.msg import JointState
@@ -61,13 +62,12 @@ LEFT_FRONT_JOINTS = [
 TARGET_OBSTACLE_ID = 'issue43_left_front_target_blocker'
 
 
-@pytest.mark.slow
-@pytest.mark.launch_test
+@launch_pytest.fixture
 def generate_test_description():
     demo_gazebo_launch = PathJoinSubstitution(
         [FindPackageShare('drqp_moveit'), 'launch', 'demo_gazebo.launch.py']
     )
-    return LaunchDescription(
+    launch_description = LaunchDescription(
         [
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(demo_gazebo_launch),
@@ -80,11 +80,12 @@ def generate_test_description():
             TimerAction(period=1.0, actions=[ReadyToTest()]),
         ]
     )
+    return launch_description, track_process_exit_codes(launch_description)
 
 
 @pytest.mark.slow
-@pytest.mark.launch_test
-class TestMoveItRuntimeIssue43(unittest.TestCase):
+@pytest.mark.launch(fixture=generate_test_description)
+class TestMoveItRuntimeIssue43:
     READY_TIMEOUT = 90.0
     JOINT_TOLERANCE = 0.08
 
@@ -96,14 +97,18 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
     TIBIA_LENGTH = math.hypot(0.0325 + 0.052797, 0.088395)
 
     @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
+    def setup_class(cls):
         rclpy.init()
-        cls.addClassCleanup(rclpy.try_shutdown)
 
-    def setUp(self):
+    @classmethod
+    def teardown_class(cls):
+        rclpy.try_shutdown()
+
+    @pytest.fixture(autouse=True)
+    def _node_setup(self, request, generate_test_description):  # noqa: ARG002
         self.node = rclpy.create_node('test_moveit_runtime_issue43')
-        self.addCleanup(self.node.destroy_node)
+        request.addfinalizer(self.node.destroy_node)
+
         self.latest_joint_state = None
         self.latest_clock = None
         self._active_obstacle_ids: set[str] = set()
@@ -114,32 +119,37 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
             self._joint_state_callback,
             10,
         )
-        self.addCleanup(self.joint_state_sub.destroy)
+        request.addfinalizer(self.joint_state_sub.destroy)
+
         self.clock_sub = self.node.create_subscription(Clock, '/clock', self._clock_callback, 10)
-        self.addCleanup(self.clock_sub.destroy)
+        request.addfinalizer(self.clock_sub.destroy)
 
         self.motion_plan_client = self.node.create_client(
             GetMotionPlan,
             '/plan_kinematic_path',
         )
-        self.addCleanup(self.motion_plan_client.destroy)
+        request.addfinalizer(self.motion_plan_client.destroy)
+
         self.state_validity_client = self.node.create_client(
             GetStateValidity,
             '/check_state_validity',
         )
-        self.addCleanup(self.state_validity_client.destroy)
+        request.addfinalizer(self.state_validity_client.destroy)
+
         self.apply_planning_scene_client = self.node.create_client(
             ApplyPlanningScene,
             '/apply_planning_scene',
         )
-        self.addCleanup(self.apply_planning_scene_client.destroy)
+        request.addfinalizer(self.apply_planning_scene_client.destroy)
+
         self.follow_joint_trajectory_client = ActionClient(
             self.node,
             FollowJointTrajectory,
             '/joint_trajectory_controller/follow_joint_trajectory',
         )
-        self.addCleanup(self.follow_joint_trajectory_client.destroy)
-        self.addCleanup(self._clear_obstacles)
+        request.addfinalizer(self.follow_joint_trajectory_client.destroy)
+
+        request.addfinalizer(self._clear_obstacles)
 
         self._wait_for_runtime_ready()
 
@@ -155,7 +165,7 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
             rclpy.spin_once(self.node, timeout_sec=0.1)
             if predicate():
                 return
-        self.fail(error_message)
+        pytest.fail(error_message)
 
     def _wait_for_runtime_ready(self) -> None:
         self._spin_until(
@@ -175,23 +185,19 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
             (self.state_validity_client, '/check_state_validity'),
             (self.apply_planning_scene_client, '/apply_planning_scene'),
         ]:
-            self.assertTrue(
-                client.wait_for_service(timeout_sec=self.READY_TIMEOUT),
-                f'{name} service is not available',
+            assert client.wait_for_service(timeout_sec=self.READY_TIMEOUT), (
+                f'{name} service is not available'
             )
 
-        self.assertTrue(
-            self.follow_joint_trajectory_client.wait_for_server(timeout_sec=self.READY_TIMEOUT),
-            'FollowJointTrajectory action is not available',
-        )
+        assert self.follow_joint_trajectory_client.wait_for_server(
+            timeout_sec=self.READY_TIMEOUT
+        ), 'FollowJointTrajectory action is not available'
         self._assert_single_move_group_node()
 
     def _assert_single_move_group_node(self) -> None:
         move_group_nodes = [name for name in self.node.get_node_names() if name == 'move_group']
-        self.assertEqual(
-            len(move_group_nodes),
-            1,
-            f'Expected one move_group node, found {len(move_group_nodes)}',
+        assert len(move_group_nodes) == 1, (
+            f'Expected one move_group node, found {len(move_group_nodes)}'
         )
 
     def _wait_for_active_controllers(self, controller_names: list[str]) -> None:
@@ -262,10 +268,10 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
     def _call_service(self, client, request, timeout_sec: float = 30.0):
         future = client.call_async(request)
         rclpy.spin_until_future_complete(self.node, future, timeout_sec=timeout_sec)
-        self.assertTrue(future.done(), f'{client.srv_name} request did not complete')
-        self.assertIsNone(future.exception(), future.exception())
+        assert future.done(), f'{client.srv_name} request did not complete'
+        assert future.exception() is None, future.exception()
         response = future.result()
-        self.assertIsNotNone(response)
+        assert response is not None
         return response
 
     def _goal_constraints_for(self, target_positions: dict[str, float]) -> Constraints:
@@ -310,15 +316,10 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         tolerance: float,
     ) -> None:
         for joint_name, expected_position in expected.items():
-            self.assertIn(joint_name, actual)
-            self.assertAlmostEqual(
-                actual[joint_name],
-                expected_position,
-                delta=tolerance,
-                msg=(
-                    f'{joint_name} mismatch: expected {expected_position:.4f}, '
-                    f'got {actual[joint_name]:.4f}'
-                ),
+            assert joint_name in actual
+            assert abs(actual[joint_name] - expected_position) <= tolerance, (
+                f'{joint_name} mismatch: expected {expected_position:.4f}, '
+                f'got {actual[joint_name]:.4f}'
             )
 
     def _execute_trajectory(self, robot_trajectory):
@@ -328,8 +329,8 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         goal_future = self.follow_joint_trajectory_client.send_goal_async(goal)
         rclpy.spin_until_future_complete(self.node, goal_future, timeout_sec=self.READY_TIMEOUT)
         goal_handle = goal_future.result()
-        self.assertIsNotNone(goal_handle)
-        self.assertTrue(goal_handle.accepted, 'FollowJointTrajectory goal was rejected')
+        assert goal_handle is not None
+        assert goal_handle.accepted, 'FollowJointTrajectory goal was rejected'
 
         result_future = goal_handle.get_result_async()
         rclpy.spin_until_future_complete(
@@ -338,11 +339,8 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
             timeout_sec=self.READY_TIMEOUT,
         )
         result = result_future.result()
-        self.assertIsNotNone(result)
-        self.assertEqual(
-            result.result.error_code,
-            FollowJointTrajectory.Result.SUCCESSFUL,
-        )
+        assert result is not None
+        assert result.result.error_code == FollowJointTrajectory.Result.SUCCESSFUL
         return result.result
 
     def _wait_for_joint_positions(
@@ -386,7 +384,7 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         request = ApplyPlanningScene.Request()
         request.scene = planning_scene
         response = self._call_service(self.apply_planning_scene_client, request)
-        self.assertTrue(response.success, 'Failed to apply obstacle to the planning scene')
+        assert response.success, 'Failed to apply obstacle to the planning scene'
         self._active_obstacle_ids.add(TARGET_OBSTACLE_ID)
 
         if blocked_state is not None:
@@ -408,7 +406,7 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         request = ApplyPlanningScene.Request()
         request.scene = planning_scene
         response = self._call_service(self.apply_planning_scene_client, request)
-        self.assertTrue(response.success, f'Failed to remove obstacle {obstacle_id}')
+        assert response.success, f'Failed to remove obstacle {obstacle_id}'
 
     def _clear_obstacles(self) -> None:
         for obstacle_id in list(self._active_obstacle_ids):
@@ -421,29 +419,21 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         request.group_name = GROUP_NAME
         return self._call_service(self.state_validity_client, request)
 
-    def test_issue43_left_front_leg_analytical_target_get_motion_plan_succeeds(
-        self,
-    ):
+    def test_issue43_left_front_leg_analytical_target_get_motion_plan_succeeds(self):
         _, expected_joint_positions = self._reachable_target()
 
         plan_response = self._plan_to_joint_target(expected_joint_positions)
-        self.assertEqual(
-            plan_response.motion_plan_response.error_code.val,
-            MoveItErrorCodes.SUCCESS,
-            f'Planning failed with code {plan_response.motion_plan_response.error_code.val}',
+        assert plan_response.motion_plan_response.error_code.val == MoveItErrorCodes.SUCCESS, (
+            f'Planning failed with code {plan_response.motion_plan_response.error_code.val}'
         )
-        self.assertTrue(
-            plan_response.motion_plan_response.trajectory.joint_trajectory.points,
-            'Expected a non-empty planned trajectory',
+        assert plan_response.motion_plan_response.trajectory.joint_trajectory.points, (
+            'Expected a non-empty planned trajectory'
         )
 
     def test_issue43_execute_trajectory_reaches_planned_goal_via_joint_trajectory_controller(self):
         _, target_joint_positions = self._reachable_target()
         plan_response = self._plan_to_joint_target(target_joint_positions)
-        self.assertEqual(
-            plan_response.motion_plan_response.error_code.val,
-            MoveItErrorCodes.SUCCESS,
-        )
+        assert plan_response.motion_plan_response.error_code.val == MoveItErrorCodes.SUCCESS
 
         robot_trajectory = plan_response.motion_plan_response.trajectory
         trajectory_joint_names = robot_trajectory.joint_trajectory.joint_names
@@ -461,26 +451,29 @@ class TestMoveItRuntimeIssue43(unittest.TestCase):
         self._apply_target_obstacle(target_pose, blocked_state=blocked_state)
 
         validity_response = self._state_validity(blocked_state)
-        self.assertFalse(
-            validity_response.valid, 'Expected the blocked target state to be invalid'
-        )
+        assert not validity_response.valid, 'Expected the blocked target state to be invalid'
 
         plan_response = self._plan_to_joint_target(target_joint_positions)
-        self.assertNotEqual(
-            plan_response.motion_plan_response.error_code.val,
-            MoveItErrorCodes.SUCCESS,
-            'Expected planning to fail for a blocked target state',
+        assert plan_response.motion_plan_response.error_code.val != MoveItErrorCodes.SUCCESS, (
+            'Expected planning to fail for a blocked target state'
         )
 
 
-@post_shutdown_test()
-class TestMoveItRuntimeIssue43Shutdown(unittest.TestCase):
-    """Verify the runtime launch exits cleanly after tests finish."""
+@pytest.mark.slow
+@pytest.mark.launch(fixture=generate_test_description)
+def test_processes_exit_cleanly(generate_test_description):
+    """
+    Wait for MoveIt to come up, then verify a clean shutdown.
 
-    def test_exit_codes(self, proc_info):
-        filtered_proc_info = type(proc_info)()
-        skipped_procs = ('gazebo', 'gz', 'bridge_node', 'move_group')
-        for proc_name in proc_info.process_names():
-            if not any(skip in proc_name for skip in skipped_procs):
-                filtered_proc_info.append(proc_info[proc_name])
-        asserts.assertExitCodes(filtered_proc_info)
+    Function-scoped generator (its own simulation): waits for the motion-plan
+    service so processes are running before teardown, yields, then asserts every
+    non-simulator process exited cleanly once the simulation has shut down.
+    """
+    _launch_description, proc_info = generate_test_description
+    rclpy.init()
+    try:
+        assert_move_group_ready()
+    finally:
+        rclpy.try_shutdown()
+    yield
+    assert_processes_exited_cleanly(proc_info)

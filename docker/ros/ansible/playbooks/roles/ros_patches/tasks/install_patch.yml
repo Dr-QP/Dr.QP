@@ -1,0 +1,18 @@
+---
+- name: "Download {{ patch.name }}"
+  ansible.builtin.get_url:
+    url: "{{ patch.url }}"
+    dest: "{{ ros_patches_temp_dir.path }}/{{ patch.name }}.deb"
+    mode: "0644"
+    checksum: "{{ patch.checksum }}"
+  become: false
+
+- name: "Install {{ patch.name }}"
+  ansible.builtin.apt:
+    deb: "{{ ros_patches_temp_dir.path }}/{{ patch.name }}.deb"
+    state: present
+
+- name: "Hold patch package on apt-mark hold: {{ patch.name }}"
+  ansible.builtin.dpkg_selections:
+    name: "{{ patch.name }}"
+    selection: hold

@@ -5,6 +5,7 @@ from __future__ import annotations
 import builtins
 from pathlib import Path
 import sys
+import time
 from types import ModuleType, SimpleNamespace
 
 from drqp_robot_mcp import runtime
@@ -95,7 +96,7 @@ def test_get_runtime_directory_falls_back_to_home(monkeypatch) -> None:
     assert result == Path('/tmp/home/.ros/drqp_robot_mcp')
 
 
-def test_get_robot_state_uses_bridged_odometry_instead_of_gz_cli(monkeypatch) -> None:
+def test_get_robot_state_uses_bridged_odometry_instead_of_gz_cli(request, monkeypatch) -> None:
     """Robot pose should come from the ROS bridge, not a Gazebo CLI subprocess."""
 
     class FakeString:
@@ -142,6 +143,7 @@ def test_get_robot_state_uses_bridged_odometry_instead_of_gz_cli(monkeypatch) ->
             assert node is self.node
 
         def spin_once(self, timeout_sec: float = 0.1) -> None:
+            time.sleep(timeout_sec)
             return None
 
         def shutdown(self) -> None:
@@ -197,6 +199,7 @@ def test_get_robot_state_uses_bridged_odometry_instead_of_gz_cli(monkeypatch) ->
 
     runtime_session = runtime.RosRuntimeSession()
     runtime_session._ensure_started()
+    request.addfinalizer(runtime_session.close)
 
     fake_node.subscriptions['/robot_state'](SimpleNamespace(data='torque_on'))
     fake_node.subscriptions['/clock'](
@@ -229,7 +232,7 @@ def test_get_robot_state_uses_bridged_odometry_instead_of_gz_cli(monkeypatch) ->
     assert result['robot_pose']['orientation']['w'] == pytest.approx(0.707)
 
 
-def test_get_world_state_uses_gazebo_transport_instead_of_gz_cli(monkeypatch) -> None:
+def test_get_world_state_uses_gazebo_transport_instead_of_gz_cli(request, monkeypatch) -> None:
     """World state should come from Gazebo Transport, not a CLI subprocess."""
 
     class FakeString:
@@ -285,6 +288,7 @@ def test_get_world_state_uses_gazebo_transport_instead_of_gz_cli(monkeypatch) ->
             assert node is self.node
 
         def spin_once(self, timeout_sec: float = 0.1) -> None:
+            time.sleep(timeout_sec)
             return None
 
         def shutdown(self) -> None:
@@ -349,43 +353,46 @@ def test_get_world_state_uses_gazebo_transport_instead_of_gz_cli(monkeypatch) ->
 
     runtime_session = runtime.RosRuntimeSession()
     runtime_session._ensure_started()
-    runtime_session._ensure_world_state_subscription('empty')
+    try:
+        runtime_session._ensure_world_state_subscription('empty')
 
-    fake_gazebo_node.subscriptions['/world/empty/pose/info'](
-        SimpleNamespace(
-            HasField=lambda field: field == 'header',
-            header=SimpleNamespace(stamp=SimpleNamespace(sec=8, nsec=250_000_000)),
-            pose=[
-                SimpleNamespace(
-                    name='drqp',
-                    id=2,
-                    position=SimpleNamespace(x=1.0, y=-0.5, z=0.25),
-                    orientation=SimpleNamespace(x=0.0, y=0.0, z=0.0, w=1.0),
-                )
-            ],
+        fake_gazebo_node.subscriptions['/world/empty/pose/info'](
+            SimpleNamespace(
+                HasField=lambda field: field == 'header',
+                header=SimpleNamespace(stamp=SimpleNamespace(sec=8, nsec=250_000_000)),
+                pose=[
+                    SimpleNamespace(
+                        name='drqp',
+                        id=2,
+                        position=SimpleNamespace(x=1.0, y=-0.5, z=0.25),
+                        orientation=SimpleNamespace(x=0.0, y=0.0, z=0.0, w=1.0),
+                    )
+                ],
+            )
         )
-    )
 
-    result = runtime_session.get_world_state(world_name='empty', timeout_sec=1.0)
+        result = runtime_session.get_world_state(world_name='empty', timeout_sec=1.0)
 
-    assert result == {
-        'available': True,
-        'world_name': 'empty',
-        'simulation_time_sec': pytest.approx(8.25),
-        'entity_count': 1,
-        'entities': [
-            {
-                'name': 'drqp',
-                'entity_id': 2,
-                'pose': {
-                    'position': {'x': 1.0, 'y': -0.5, 'z': 0.25},
-                    'orientation': {'x': 0.0, 'y': 0.0, 'z': 0.0, 'w': 1.0},
-                },
-            }
-        ],
-        'source': 'gazebo',
-        'note': None,
-    }
+        assert result == {
+            'available': True,
+            'world_name': 'empty',
+            'simulation_time_sec': pytest.approx(8.25),
+            'entity_count': 1,
+            'entities': [
+                {
+                    'name': 'drqp',
+                    'entity_id': 2,
+                    'pose': {
+                        'position': {'x': 1.0, 'y': -0.5, 'z': 0.25},
+                        'orientation': {'x': 0.0, 'y': 0.0, 'z': 0.0, 'w': 1.0},
+                    },
+                }
+            ],
+            'source': 'gazebo',
+            'note': None,
+        }
+    finally:
+        runtime_session.close()
 
 
 def test_get_world_state_handles_missing_gazebo_transport_bindings(monkeypatch) -> None:
@@ -472,6 +479,7 @@ def test_publish_movement_command_publishes_expected_message(monkeypatch) -> Non
             assert node is self.node
 
         def spin_once(self, timeout_sec: float = 0.1) -> None:
+            time.sleep(timeout_sec)
             return None
 
         def shutdown(self) -> None:

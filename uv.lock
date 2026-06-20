@@ -911,10 +911,12 @@ requires-dist = [
     { name = "adafruit-circuitpython-bno055" },
     { name = "lgpio" },
     { name = "numpy" },
+    { name = "pytest", marker = "extra == 'test'" },
     { name = "python-statemachine", specifier = ">=2.5.0" },
     { name = "pyyaml" },
     { name = "scipy" },
 ]
+provides-extras = ["test"]
 
 [[package]]
 name = "drqp-kinematics"
@@ -928,8 +930,10 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "numpy" },
+    { name = "pytest", marker = "extra == 'test'" },
     { name = "scipy" },
 ]
+provides-extras = ["test"]
 
 [[package]]
 name = "drqp-robot-mcp"
@@ -940,7 +944,11 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "mcp", extras = ["cli"], specifier = ">=1.26.0" }]
+requires-dist = [
+    { name = "mcp", extras = ["cli"], specifier = ">=1.26.0" },
+    { name = "pytest", marker = "extra == 'test'" },
+]
+provides-extras = ["test"]
 
 [[package]]
 name = "drqp-workspace"

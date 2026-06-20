@@ -18,24 +18,25 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import unittest
+"""Launch and unit tests for the drqp_brain node."""
+
 from unittest import mock
 
 from control_msgs.action import FollowJointTrajectory
 from drqp_brain.brain_node import _assert_no_existing_brain_node, HexapodBrain
 from drqp_brain.instance_guard import InstanceAlreadyRunningError
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
+from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
 from geometry_msgs.msg import Vector3
 from launch import LaunchDescription
 from launch.actions import TimerAction
 from launch.substitutions import FindExecutable
+import launch_pytest
+from launch_pytest.actions import ReadyToTest
 from launch_ros.actions import Node
 from launch_ros.substitutions import ExecutableInPackage
-from launch_testing import asserts, post_shutdown_test
-from launch_testing.actions import ReadyToTest
 import pytest
 import rclpy
-import std_msgs.msg
 
 
 def test_existing_brain_node_detection_rejects_duplicate_ros_node():
@@ -50,9 +51,52 @@ def test_existing_brain_node_detection_rejects_duplicate_ros_node():
         _assert_no_existing_brain_node(node)
 
 
-@pytest.mark.launch_test
+@pytest.fixture
+def rclpy_context():
+    """Initialize rclpy for unit tests that construct a HexapodBrain directly."""
+    rclpy.init()
+    yield
+    rclpy.try_shutdown()
+
+
+def test_trajectory_action_client_is_created_lazily(rclpy_context):  # noqa: ARG001 (needs rclpy)
+    """Only create the action client when an action sequence is requested."""
+    with mock.patch('drqp_brain.brain_node.ActionClient') as action_client_cls:
+        action_client = action_client_cls.return_value
+        action_client.send_goal_async.return_value.add_done_callback = mock.Mock()
+
+        brain = HexapodBrain()
+        try:
+            action_client_cls.assert_not_called()
+
+            brain.reboot_servos()
+
+            action_client_cls.assert_called_once_with(
+                brain,
+                FollowJointTrajectory,
+                '/joint_trajectory_controller/follow_joint_trajectory',
+            )
+        finally:
+            brain.destroy_node()
+
+
+def test_destroy_node_destroys_action_client(rclpy_context):  # noqa: ARG001 (needs rclpy)
+    """Destroy the action client explicitly during node shutdown."""
+    with mock.patch('drqp_brain.brain_node.ActionClient') as action_client_cls:
+        action_client = action_client_cls.return_value
+        action_client.send_goal_async.return_value.add_done_callback = mock.Mock()
+
+        brain = HexapodBrain()
+        brain.reboot_servos()
+        brain.destroy_node()
+
+        action_client.destroy.assert_called_once_with()
+
+
+@launch_pytest.fixture
 def generate_test_description():
-    return LaunchDescription(
+    """Launch the drqp_brain node and record process exit codes."""
+    launch_description = LaunchDescription(
         [
             Node(
                 executable=FindExecutable(name='python3'),
@@ -68,90 +112,38 @@ def generate_test_description():
             TimerAction(period=3.0, actions=[ReadyToTest()]),
         ]
     )
+    proc_info = track_process_exit_codes(launch_description)
+    return launch_description, proc_info
 
 
-class TestBrainNode(unittest.TestCase):
-    """Test the drqp_brain node."""
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        rclpy.init()
-        cls.addClassCleanup(rclpy.try_shutdown)
-
-    def setUp(self):
-        self.node = rclpy.create_node('test_brain_consumer')
-        self.addCleanup(self.node.destroy_node)
-
-        # Publishers for sending commands to brain node
-        self.movement_pub = self.node.create_publisher(
-            MovementCommand, '/robot/movement_command', 10
-        )
-
-        # Publisher for robot state (brain node subscribes to this)
-        self.state_pub = self.node.create_publisher(std_msgs.msg.String, '/robot_state', 10)
-
-    def test_nothing(self, proc_output):
-        """Smoke check."""
-        pass
-
-    def test_movement_command_processing(self, proc_output):
-        """Test that brain node can process movement commands."""
-        # Create a movement command
-        cmd = MovementCommand()
-        cmd.stride_direction = Vector3(x=1.0, y=0.0, z=0.0)
-        cmd.rotation_speed = 0.5
-        cmd.body_translation = Vector3(x=0.0, y=0.0, z=0.0)
-        cmd.body_rotation = Vector3(x=0.0, y=0.0, z=0.0)
-        cmd.gait_type = MovementCommandConstants.GAIT_TRIPOD
-
-        # Publish the command
-        self.movement_pub.publish(cmd)
-
-        # Spin to allow processing
-        rclpy.spin_once(self.node, timeout_sec=0.1)
-
-        # If we get here without errors, the test passes
-        # (brain node should process the command without crashing)
-
-    def test_trajectory_action_client_is_created_lazily(self, proc_output):
-        """Only create the action client when an action sequence is requested."""
-        with mock.patch('drqp_brain.brain_node.ActionClient') as action_client_cls:
-            action_client = action_client_cls.return_value
-            action_client.send_goal_async.return_value.add_done_callback = mock.Mock()
-
-            brain = HexapodBrain()
-            try:
-                action_client_cls.assert_not_called()
-
-                brain.reboot_servos()
-
-                action_client_cls.assert_called_once_with(
-                    brain,
-                    FollowJointTrajectory,
-                    '/joint_trajectory_controller/follow_joint_trajectory',
-                )
-            finally:
-                brain.destroy_node()
-
-    def test_destroy_node_destroys_action_client(self, proc_output):
-        """Destroy the action client explicitly during node shutdown."""
-        with mock.patch('drqp_brain.brain_node.ActionClient') as action_client_cls:
-            action_client = action_client_cls.return_value
-            action_client.send_goal_async.return_value.add_done_callback = mock.Mock()
-
-            brain = HexapodBrain()
-            brain.reboot_servos()
-            brain.destroy_node()
-
-            action_client.destroy.assert_called_once_with()
+@pytest.fixture
+def consumer(generate_test_description):  # noqa: ARG001 (drives the launch)
+    """Own rclpy init/shutdown and provide a consumer node for the launched node."""
+    rclpy.init()
+    node = rclpy.create_node('test_brain_consumer')
+    yield node
+    rclpy.try_shutdown()
 
 
-# Post-shutdown tests
-@post_shutdown_test()
-class TestBrainNodeShutdown(unittest.TestCase):
-    """Test the drqp_brain node shutdown."""
+@pytest.mark.launch(fixture=generate_test_description)
+def test_movement_command_processing(consumer, generate_test_description):
+    """Process a movement command, then verify the launched node exits cleanly."""
+    cmd = MovementCommand()
+    cmd.stride_direction = Vector3(x=1.0, y=0.0, z=0.0)
+    cmd.rotation_speed = 0.5
+    cmd.body_translation = Vector3(x=0.0, y=0.0, z=0.0)
+    cmd.body_rotation = Vector3(x=0.0, y=0.0, z=0.0)
+    cmd.gait_type = MovementCommandConstants.GAIT_TRIPOD
 
-    def test_exit_codes(self, proc_info):
-        """Check if the processes exited normally."""
-        asserts.assertExitCodes(proc_info)
+    movement_pub = consumer.create_publisher(MovementCommand, '/robot/movement_command', 10)
+    movement_pub.publish(cmd)
+
+    # Spin to allow processing; if we get here without errors the brain node
+    # processed the command without crashing.
+    rclpy.spin_once(consumer, timeout_sec=0.1)
+
+    # Function-scoped generator: the launched node is torn down at the yield,
+    # then the post-yield body verifies it exited cleanly.
+    yield
+    _launch_description, proc_info = generate_test_description
+    assert_processes_exited_cleanly(proc_info)

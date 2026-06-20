@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2025 Anton Matosov
+# Copyright (c) 2017-2026 Anton Matosov
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,15 +18,4 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from pathlib import Path
-
-
-def test_sim_launch_owns_keyboard_control_gui():
-    """Keyboard GUI control should live in simulation launch, not runtime bringup."""
-    launch_file = Path(__file__).resolve().parents[1] / 'launch' / 'sim.launch.py'
-    launch_source = launch_file.read_text(encoding='utf-8')
-
-    assert "'load_keyboard_control'" in launch_source
-    assert "package='drqp_keyboard_control'" in launch_source
-    assert "executable='drqp_keyboard_control'" in launch_source
-    assert 'condition=IfCondition(load_keyboard_control)' in launch_source
+"""Tests for drqp_launch_testing."""

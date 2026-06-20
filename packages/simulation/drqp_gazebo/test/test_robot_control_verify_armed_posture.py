@@ -18,38 +18,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from launch_testing import post_shutdown_test
+"""Verify base posture when robot is armed."""
+
+from drqp_launch_testing import assert_processes_exited_cleanly
 import pytest
-from robot_control_test_support import (
-    create_simulation_launch_description,
-    GazeboRobotControlBase,
-)
-from simulation_shutdown_test_case import (
-    SimulationShutdownBase,
-)
+from robot_control_test_support import generate_test_description
 
 
 @pytest.mark.slow
-@pytest.mark.launch_test
-def generate_test_description():
-    return create_simulation_launch_description()
-
-
-@pytest.mark.slow
-class TestGazeboRobotControlArmedPosture(GazeboRobotControlBase):
-    """Verify base posture when robot is armed."""
-
-    __test__ = True
-
-    def test_verify_armed_posture(self):
-        self.assert_armed_posture()
-
-
-@post_shutdown_test()
-class TestSimulationShutdown(SimulationShutdownBase):
-    """Verify processes exit cleanly after the launch test finishes."""
-
-    __test__ = True
-
-    def test_exit_codes(self, proc_info):
-        self.assert_exit_codes(proc_info)
+@pytest.mark.launch(fixture=generate_test_description)
+def test_verify_armed_posture(robot, generate_test_description):
+    robot.assert_armed_posture()
+    # Function-scoped generator: the simulation tears down at the yield, then the
+    # post-yield body verifies every non-simulator process exited cleanly.
+    yield
+    _launch_description, proc_info = generate_test_description
+    assert_processes_exited_cleanly(proc_info)

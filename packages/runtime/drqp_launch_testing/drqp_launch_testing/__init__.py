@@ -1,4 +1,4 @@
-# Copyright (c) 2026 Anton Matosov
+# Copyright (c) 2017-2026 Anton Matosov
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,33 +18,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import os
-import unittest
+"""Reusable launch_pytest helpers for Dr.QP launch tests."""
 
-from moveit_launch_smoke_test_support import build_smoke_test_description
-import pytest
-
-
-@pytest.mark.launch_test
-@pytest.mark.skipif(
-    not os.environ.get('DISPLAY'),
-    reason='RViz smoke test requires a graphical display',
+from .process_exit_codes import (
+    assert_processes_exited_cleanly,
+    DEFAULT_SHUTDOWN_KILLED_PROCESSES,
+    track_process_exit_codes,
 )
-def generate_test_description():
-    return build_smoke_test_description(
-        'demo.launch.py',
-        launch_arguments={'show_rviz': 'true'},
-        ready_delay=5.0,
-    )
 
-
-class TestDemoLaunchRvizSmoke(unittest.TestCase):
-    """Smoke test for the demo.launch.py RViz visualization."""
-
-    def test_only_one_rviz_process_starts(self, proc_info):
-        rviz_processes = [name for name in proc_info.process_names() if 'rviz2' in name]
-        self.assertEqual(
-            len(rviz_processes),
-            1,
-            f'Expected exactly one RViz process, found: {rviz_processes}',
-        )
+__all__ = [
+    'DEFAULT_SHUTDOWN_KILLED_PROCESSES',
+    'assert_processes_exited_cleanly',
+    'track_process_exit_codes',
+]

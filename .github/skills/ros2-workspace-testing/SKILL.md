@@ -22,7 +22,6 @@ Run ROS 2 tests efficiently and analyze results with comprehensive coverage repo
 
 - ROS 2 Jazzy installation
 - `scripts/with-ros-env.sh` available in workspace root for ROS 2 commands
-- `scripts/setup.bash --update-venv` available when `.venv-prod` needs a refresh
 - Packages already built with `colcon build`
 - Python 3.8+ for coverage tools
 - Optional: Node.js for interactive result viewer (xunit-viewer)
@@ -52,14 +51,14 @@ Use for rapid iteration when developing and testing a single package.
    For the full `drqp_gazebo` launch suite, opt out of the default smoke-only mode:
 
    ```bash
-   DRQP_GAZEBO_TEST_MODE=all scripts/with-ros-env.sh python3 -m colcon test \
+   DRQP_TEST_MODE=slow scripts/with-ros-env.sh python3 -m colcon test \
       --event-handlers console_cohesion+ summary+ status+ \
       --return-code-on-test-failure \
       --packages-select drqp_gazebo \
       --mixin coverage-pytest
    ```
 
-   Without `DRQP_GAZEBO_TEST_MODE=all`, `drqp_gazebo` runs only the smoke subset and skips non-smoke slow launch tests.
+   Without `DRQP_TEST_MODE=slow`, `drqp_gazebo` runs only the smoke subset and skips non-smoke slow launch tests.
 
 3. Check test results in console output (summary appears at end)
 
@@ -202,10 +201,25 @@ Explore test results with interactive visualization.
 | `build/<package_name>/coverage.info`                | C++ coverage data      | LCOV        |
 | `build/<package_name>/.coverage`                    | Python coverage data   | Coverage.py |
 
+### Showing Output of Passing Tests
+
+By default pytest captures stdout/stderr and only prints it for **failed** tests, so output from passing `launch_pytest` runs (ROS node logs, launch process output) is hidden even with `console_cohesion+`.
+
+To surface captured output for passing tests, set `PYTEST_ADDOPTS=-rA`:
+
+```bash
+PYTEST_ADDOPTS=-rA scripts/with-ros-env.sh python3 -m colcon test \
+  --event-handlers console_cohesion+ summary+ status+ \
+  --return-code-on-test-failure \
+  --packages-select <package_name>
+```
+
+Use the `PYTEST_ADDOPTS` environment variable rather than `colcon test --pytest-args`: colcon cannot forward `--pytest-args` to ctest-driven (`ament_cmake`) tests, but pytest reads `PYTEST_ADDOPTS` regardless of how it is invoked.
+
 ## Python ROS Test Structure
 
 - Python ROS tests may use pytest functions or `unittest.TestCase` classes. Match the package's existing style instead of migrating solely for ROS context management.
-- For pytest-style tests in `ament_python` packages, keep `tests_require=['pytest']` in `setup.py`, `python3-pytest` in `package.xml`, and add a `test/__init__.py` `load_tests(...)` bridge when colcon discovers the package through unittest.
+- For pytest-style tests in `ament_python` packages, declare pytest via `extras_require={'test': ['pytest']}` in `setup.py` (not the removed `tests_require` option), `python3-pytest` in `package.xml`, and add a `test/__init__.py` `load_tests(...)` bridge when colcon discovers the package through unittest.
 - For plain pytest suites that do not need external pytest plugins, the `load_tests(...)` bridge may set `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` around `pytest.main(...)` to avoid unrelated global plugin incompatibilities.
 - When pytest tests construct ROS nodes, use fixtures to initialize `rclpy` and shut it down with `rclpy.try_shutdown()` or only shut it down when the fixture initialized it.
 - When unittest tests construct ROS nodes, initialize `rclpy` once per class with `setUpClass()` and register `cls.addClassCleanup(rclpy.try_shutdown)`.
@@ -213,16 +227,17 @@ Explore test results with interactive visualization.
 
 ## Troubleshooting
 
-| Issue                                  | Cause                                      | Solution                                                                     |
-| -------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------- |
-| "No tests found"                       | Package has no tests or wrong package name | Verify `test/` directory exists in package                                   |
-| Tests fail with "module not found"     | Generated Python dependencies missing      | Run `./scripts/ros-dep.sh` after the build, then `source scripts/setup.bash` |
-| "Command 'pytest' not found"           | Developer `.venv` not synced               | Run `uv sync` and activate `.venv` when needed                               |
-| Coverage data not generated            | Coverage not enabled in build              | Rebuild with `--mixin coverage-pytest` during build                          |
-| Xunit-viewer won't start               | Node.js or npx not available               | Install Node.js or use alternative viewer                                    |
-| Test results missing or incomplete     | Build artifacts cleaned                    | Rebuild packages before testing                                              |
-| Tests timeout or hang                  | Test blocking on I/O or infinite loop      | Check test logs in `log/latest_test/`                                        |
-| `drqp_gazebo` launch tests are skipped | Default smoke-only mode is active          | Re-run with `DRQP_GAZEBO_TEST_MODE=all` to include the full Gazebo suite     |
+| Issue                                      | Cause                                            | Solution                                                                               |
+| ------------------------------------------ | ------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| "No tests found"                           | Package has no tests or wrong package name       | Verify `test/` directory exists in package                                             |
+| Tests fail with "module not found"         | Generated Python dependencies missing            | Run `./scripts/ros-dep.sh` after the build, then `source scripts/setup.bash`           |
+| "Command 'pytest' not found"               | Developer `.venv` not synced                     | Run `uv sync` and activate `.venv` when needed                                         |
+| Coverage data not generated                | Coverage not enabled in build                    | Rebuild with `--mixin coverage-pytest` during build                                    |
+| Xunit-viewer won't start                   | Node.js or npx not available                     | Install Node.js or use alternative viewer                                              |
+| Test results missing or incomplete         | Build artifacts cleaned                          | Rebuild packages before testing                                                        |
+| Tests timeout or hang                      | Test blocking on I/O or infinite loop            | Check test logs in `log/latest_test/`                                                  |
+| `drqp_gazebo` launch tests are skipped     | Default smoke-only mode is active                | Re-run with `DRQP_TEST_MODE=slow` to include the full Gazebo suite                     |
+| No output from passing launch_pytest tests | pytest captures stdout, shows it only on failure | Set `PYTEST_ADDOPTS=-rA` (not `--pytest-args`, which colcon can't pass to ctest tests) |
 
 ## References
 

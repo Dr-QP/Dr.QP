@@ -2,8 +2,7 @@
 
 function clean
     set pattern $argv[1]
-    set find_pattern "./$pattern"
-    set files_to_clean (find . -path "$find_pattern" -print0 | string split0)
+    set files_to_clean (find . -path "$pattern" -print0 | string split0)
 
     if test (count $files_to_clean) -gt 0
         echo "Cleaning $pattern"

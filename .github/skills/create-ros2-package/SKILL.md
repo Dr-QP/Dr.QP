@@ -91,7 +91,7 @@ Package format 3, name, version 0.0.0, description, maintainer, license. Build t
 
 ### Step 6: Generate setup.py (Python or Mixed)
 
-`find_packages(exclude=['test'])`, data files, entry points, and for `ament_python` packages set `tests_require=['pytest']` so `colcon test` runs Python tests. Reference: `packages/runtime/drqp_brain/setup.py`.
+`find_packages(exclude=['test'])`, data files, entry points, and for `ament_python` packages declare pytest via `extras_require={'test': ['pytest']}` (the removed `tests_require` option is ignored by modern setuptools and emits a warning) so `colcon test` runs Python tests. Reference: `packages/runtime/drqp_brain/setup.py`.
 
 ### Step 7: setup.cfg and .coveragerc (Python)
 
@@ -103,7 +103,7 @@ Basic sections: Overview, Dependencies, Building (`colcon build --packages-up-to
 
 ### Step 9: Test Scaffolding
 
-C++: `test/test_<package_name>.cpp` with GTest, `ament_add_gmock`. Python: `test/__init__.py`, `test/test_<package_name>.py` with pytest.
+C++: `test/test_<package_name>.cpp` with GTest, `ament_add_gmock`. Python: `test/__init__.py`, `test/test_<package_name>.py` with pytest (never unittest). For ROS 2 node integration or launch tests use `launch_pytest`: add `@launch_pytest.fixture` on `generate_test_description` and `@pytest.mark.launch(fixture=generate_test_description)` on test classes. See [add-test-file](../add-test-file/) for templates.
 
 ### Step 10: Directory Placeholders
 

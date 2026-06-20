@@ -14,7 +14,7 @@ setup(
         'numpy',
         'scipy',
     ],
-    tests_require=['pytest'],
+    extras_require={'test': ['pytest']},
     zip_safe=True,
     maintainer='Anton Matosov',
     maintainer_email='anton.matosov@gmail.com',
