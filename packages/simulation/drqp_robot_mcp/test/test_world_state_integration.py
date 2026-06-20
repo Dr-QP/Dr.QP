@@ -8,9 +8,6 @@ from drqp_robot_mcp import runtime
 from drqp_robot_mcp.controller import RobotMcpController
 import pytest
 
-from .simulation_test_support import reset_local_simulation_state, terminate_simulation
-
-
 @pytest.mark.slow
 @pytest.mark.timeout(1200)
 def test_get_world_state_uses_live_gazebo_transport() -> None:
@@ -20,13 +17,11 @@ def test_get_world_state_uses_live_gazebo_transport() -> None:
         reason='Gazebo Python transport bindings are required for world-state integration tests',
     )
 
-    reset_local_simulation_state()
     controller = RobotMcpController()
-    simulation = runtime.start_simulation(
+    runtime.start_simulation(
         pid_path=controller.launch_pid_path,
         log_path=controller.launch_log_path,
     )
-    simulation_was_started = bool(simulation.get('started', False))
 
     try:
         first_snapshot = controller.get_world_state(timeout_sec=10.0)
@@ -62,7 +57,6 @@ def test_get_world_state_uses_live_gazebo_transport() -> None:
         assert updated_snapshot.source == 'gazebo'
         assert updated_snapshot.entity_count >= first_snapshot.entity_count
     finally:
+        controller.stop_simulation(timeout_sec=60.0)
         controller.close()
         runtime.shutdown_default_ros_runtime()
-        if simulation_was_started and controller.launch_pid_path.exists():
-            terminate_simulation(controller)
