@@ -1,0 +1,24 @@
+---
+# Install ROS patch packages from the upstream building pool.
+# These are fixes that exist upstream but have not yet been promoted to the
+# official apt repo for the target architecture.
+
+- name: Create temporary directory for patch downloads
+  ansible.builtin.tempfile:
+    state: directory
+  register: ros_patches_temp_dir
+  become: false
+
+- name: Download and install each patch package
+  ansible.builtin.include_tasks: install_patch.yml
+  when: (patch.arch is not defined) or (patch.arch == system_arch)
+  loop: "{{ ros_patches_packages }}"
+  loop_control:
+    loop_var: patch
+    label: "{{ patch.name }}"
+
+- name: Clean up temporary directory
+  ansible.builtin.file:
+    path: "{{ ros_patches_temp_dir.path }}"
+    state: absent
+  become: false

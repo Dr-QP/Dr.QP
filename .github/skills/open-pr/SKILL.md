@@ -1,14 +1,14 @@
 ---
 name: open-pr
-description: 'Create GitHub pull requests from conversation context with accurate title/body generation, user confirmation, branch sync, and remote verification. Use when asked to open/create/submit a PR, draft a pull request, or finalize changes after implementation. Keywords: open pr, create pr, submit pr, pull request, github pr, draft pr, ready for review.'
+description: 'Create GitHub pull requests from conversation context with accurate title/body generation, branch sync, and remote verification. Use when asked to open/create/submit a PR, draft a pull request, or finalize changes after implementation. Keywords: open pr, create pr, submit pr, pull request, github pr, draft pr, ready for review.'
 ---
 
 # Open PR
 
 This skill instructs AI agents on how to create GitHub pull requests from conversation context
 with meaningful titles and proper formatting. The AI agent
-should analyze the conversation, extract PR details, and confirm with the user before
-creating the pull request.
+should analyze the conversation, extract PR details, and create the pull request directly
+without pausing for confirmation.
 
 ## GitHub MCP Tools Required
 
@@ -32,7 +32,6 @@ The PR body content **MUST** be generated using the
 The open-pr skill is responsible for:
 
 - optional issue linking in title/body when issue context exists
-- user confirmation
 - delegating branch sync with `origin/main` to the `update-branch` skill
 - remote branch verification
 - GitHub PR creation through MCP
@@ -117,26 +116,17 @@ Use the generated output as the PR body, and use one of these title formats:
 - If issue is not available: `Brief description`
 - Keep the title description concise and outcome-focused
 
-### 5. User Confirmation Phase
+### 5. Proceed Without Confirmation
 
-**CRITICAL:** The AI agent **MUST** display the complete PR draft to the user
-and wait for explicit confirmation before creating the PR.
+Do **not** pause to ask the user to approve the draft. Once the title and body
+are generated, continue directly to branch sync, remote verification, and PR
+creation.
 
-Present the draft in a clear format:
-
-```
-I've prepared this pull request:
-
----
-[Full PR content here]
----
-
-Should I create this PR?
-```
-
-- Wait for explicit "yes", "confirm", "create it", or similar affirmative response
-- If the user requests modifications, update the draft and present again
-- If the user declines, abort PR creation gracefully
+- Do not present the draft and wait for a "yes" before creating the PR
+- Still stop and surface the issue to the user only when a blocking error
+  occurs (e.g. merge conflicts during branch sync, push divergence, or a
+  failed PR creation) — these require user input to resolve
+- After the PR is created, report the resulting PR URL/number
 
 ### 6. Branch Sync with `origin/main`
 
@@ -175,7 +165,7 @@ If the script exits non-zero, display its actionable error output and abort PR c
 
 ### 8. GitHub PR Creation (MCP)
 
-Once confirmed and the branch is on remote, create the PR using `github/create_pull_request`.
+Once the branch is on remote, create the PR using `github/create_pull_request`.
 
 Use the tool with these fields:
 

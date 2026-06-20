@@ -421,7 +421,7 @@ class MoveItPyLocomotionKinematics:
                     joint_model_group,
                     positions,
                 )
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 — MoveIt bindings raise unpredictable types
                 return f'Unable to validate RobotState joint bounds: {exc}'
 
             if not satisfies_bounds:
@@ -459,7 +459,7 @@ class MoveItPyLocomotionKinematics:
             with self._planning_scene_monitor.read_only() as planning_scene:
                 if planning_scene.is_state_colliding(robot_state, '', False):
                     return 'RobotState is in self-collision'
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 — MoveIt C++ bindings raise unpredictable types
             return f'Unable to validate RobotState collision status: {exc}'
 
         return None

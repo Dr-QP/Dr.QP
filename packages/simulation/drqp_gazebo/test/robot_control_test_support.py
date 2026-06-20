@@ -29,24 +29,24 @@ from pathlib import Path
 import re
 import subprocess
 import time
-import unittest
 
 import builtin_interfaces
 import builtin_interfaces.msg
 from controller_manager.test_utils import check_controllers_running, check_node_running
 from drqp_brain.balance_controller import body_tilt_from_imu
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
+from drqp_launch_testing import track_process_exit_codes
 from geometry_msgs.msg import Pose, Vector3
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
+import launch_pytest
+from launch_pytest.actions import ReadyToTest
 from launch_ros.substitutions import FindPackageShare
-from launch_testing import asserts
-from launch_testing.actions import ReadyToTest
-from launch_testing.proc_info_handler import ProcInfoHandler
 from launch_testing_ros import WaitForTopics
 from nav_msgs.msg import Odometry
+import pytest
 import rclpy
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 from rosgraph_msgs.msg import Clock
@@ -131,31 +131,19 @@ def create_board_only_launch_description() -> LaunchDescription:
     )
 
 
-def filter_out_gazebo_processes(proc_info: ProcInfoHandler) -> ProcInfoHandler:
-    """Filter out Gazebo processes that are terminated by launch teardown."""
-    filtered_proc_info = ProcInfoHandler()
-    skipped_procs = ('gazebo', 'gz', 'bridge_node', 'move_group')
-    for proc_name in proc_info.process_names():
-        if not any(skip in proc_name for skip in skipped_procs):
-            filtered_proc_info.append(proc_info[proc_name])
-    return filtered_proc_info
+@launch_pytest.fixture
+def generate_test_description(request):
+    """Launch the simulation and record process exit codes for the shutdown check."""
+    test_name = Path(request.fspath).stem
+    launch_description = create_simulation_launch_description(test_name=test_name)
+    proc_info = track_process_exit_codes(launch_description)
+    return launch_description, proc_info
 
 
-def assert_clean_exit_codes(proc_info: ProcInfoHandler) -> None:
-    """Assert all non-Gazebo processes exited successfully."""
-    asserts.assertExitCodes(filter_out_gazebo_processes(proc_info))
-
-
-class GazeboRobotControlBase(unittest.TestCase):
+class GazeboRobotControlBase:
     """Shared harness and helpers for robot control behavior tests."""
 
-    __test__ = False  # Prevent unittest from collecting this base class as a test case.
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
-        rclpy.init()
-        cls.addClassCleanup(rclpy.try_shutdown)
+    __test__ = False  # Prevent pytest from collecting this base class as a test case.
 
     # Configurable timeouts.
     READY_TIMEOUT = 90.0
@@ -196,10 +184,28 @@ class GazeboRobotControlBase(unittest.TestCase):
     MIN_LINEAR_MOVEMENT_DELTA = 0.008
     MIN_ROTATION_DELTA = 0.08
 
-    def setUp(self) -> None:
+    @classmethod
+    def setup_class(cls) -> None:
+        rclpy.init()
+
+    @classmethod
+    def teardown_class(cls) -> None:
+        rclpy.try_shutdown()
+
+    @pytest.fixture(autouse=True)
+    def _node_setup(self, generate_test_description) -> None:  # noqa: ARG002
         """Set up test node and publishers/subscribers."""
+        self.setup_node()
+
+    def setup_node(self) -> None:
+        """
+        Create the test node and publishers/subscribers, then wait for readiness.
+
+        Exposed as a plain instance method so the harness can be driven both as a
+        pytest test class (via ``_node_setup``) and as a shared fixture instance
+        in a functions-only test module.
+        """
         self.node = rclpy.create_node('test_gazebo_robot_control')
-        self.addCleanup(self.node.destroy_node)
 
         self.current_robot_state = None
         self.current_clock = None
@@ -423,9 +429,8 @@ class GazeboRobotControlBase(unittest.TestCase):
 
     def _require_pose(self) -> None:
         self._wait_for_pose()
-        self.assertIsNotNone(
-            self.robot_pose,
-            f'Gazebo pose data is required but {ODOM_TOPIC} did not provide a pose',
+        assert self.robot_pose is not None, (
+            f'Gazebo pose data is required but {ODOM_TOPIC} did not provide a pose'
         )
 
     def _sample_base_height(self) -> float:
@@ -823,30 +828,18 @@ class GazeboRobotControlBase(unittest.TestCase):
     ) -> None:
         if abs(delta_z) >= self.MIN_ARM_DISARM_HEIGHT_DELTA:
             if expected_direction > 0:
-                self.assertGreater(
-                    delta_z,
-                    self.MIN_ARM_DISARM_HEIGHT_DELTA,
-                    context_message,
-                )
+                assert delta_z > self.MIN_ARM_DISARM_HEIGHT_DELTA, context_message
             else:
-                self.assertLess(
-                    delta_z,
-                    -self.MIN_ARM_DISARM_HEIGHT_DELTA,
-                    context_message,
-                )
+                assert delta_z < -self.MIN_ARM_DISARM_HEIGHT_DELTA, context_message
             return
 
         self.node.get_logger().warning(
             'Base height delta is below posture threshold; simulation appears to keep base '
             f'height nearly constant (delta_z={delta_z:.6f}m). Accepting static posture mode.'
         )
-        self.assertLessEqual(
-            abs(delta_z),
-            self.POSTURE_HEIGHT_EPSILON,
-            (
-                'Unexpected intermediate posture delta in static-height simulation mode: '
-                f'|delta_z|={abs(delta_z):.3f}m > {self.POSTURE_HEIGHT_EPSILON}m'
-            ),
+        assert abs(delta_z) <= self.POSTURE_HEIGHT_EPSILON, (
+            'Unexpected intermediate posture delta in static-height simulation mode: '
+            f'|delta_z|={abs(delta_z):.3f}m > {self.POSTURE_HEIGHT_EPSILON}m'
         )
 
     def assert_nodes_and_clock(self) -> None:
@@ -855,7 +848,7 @@ class GazeboRobotControlBase(unittest.TestCase):
             check_node_running(self.node, node_name, timeout=self.CLOCK_TIMEOUT)
 
         with WaitForTopics([('/clock', Clock)], timeout=self.CLOCK_TIMEOUT) as wait:
-            self.assertTrue(wait.wait(), 'Did not receive /clock from Gazebo bridge')
+            assert wait.wait(), 'Did not receive /clock from Gazebo bridge'
 
     def assert_controllers_are_active(self) -> None:
         """Verify ros2_control controllers are alive inside Gazebo."""
@@ -871,7 +864,7 @@ class GazeboRobotControlBase(unittest.TestCase):
     def assert_imu_data(self) -> None:
         """Verify the simulated IMU publishes on /imu/data via the Gazebo bridge."""
         with WaitForTopics([('/imu/data', Imu)], timeout=self.CLOCK_TIMEOUT) as wait:
-            self.assertTrue(wait.wait(), 'Did not receive /imu/data from Gazebo IMU sensor')
+            assert wait.wait(), 'Did not receive /imu/data from Gazebo IMU sensor'
 
     def assert_imu_data_reports_orientation(self) -> None:
         """Issue 356: Gazebo IMU data should publish body attitude for ROS consumers."""
@@ -919,20 +912,19 @@ class GazeboRobotControlBase(unittest.TestCase):
         try:
             check_node_running(self.node, 'robot_state_publisher', timeout=self.SPAWN_TIMEOUT)
         except (AssertionError, RuntimeError, TimeoutError) as error:
-            self.fail(
+            raise RuntimeError(
                 'Robot model failed to spawn: robot_state_publisher not running within '
-                f'{self.SPAWN_TIMEOUT}s. Error: {error}'
-            )
+                f'{self.SPAWN_TIMEOUT}s'
+            ) from error
 
         self._wait_for_any_state(
             ('torque_off', 'finalized', 'initializing', 'finalizing', 'torque_on'),
             self.SPAWN_TIMEOUT,
         )
 
-        self.assertIsNotNone(
-            self.current_robot_state,
+        assert self.current_robot_state is not None, (
             f'Robot failed to spawn: did not receive robot state within {self.SPAWN_TIMEOUT}s. '
-            'Check that Gazebo spawned the model "drqp" successfully.',
+            'Check that Gazebo spawned the model "drqp" successfully.'
         )
 
     def assert_armed_posture(self) -> None:
@@ -956,110 +948,90 @@ class GazeboRobotControlBase(unittest.TestCase):
                 f'(delta_z={delta_z:.3f}m <= {self.MIN_ARM_DISARM_HEIGHT_DELTA}m)'
             ),
         )
-        self.assertEqual(self.current_robot_state, 'torque_on')
+        assert self.current_robot_state == 'torque_on'
 
     def assert_forward_movement(self) -> None:
         self._arm_robot()
         try:
             forward_delta, _, _ = self._run_movement_and_measure(stride_x=1.0)
-            self.assertGreater(
-                forward_delta,
-                self.MIN_LINEAR_MOVEMENT_DELTA,
-                msg=(
-                    'Robot did not move forward significantly: '
-                    f'forward_delta={forward_delta:.3f}m '
-                    f'(expected > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
-                ),
-            )
         except RuntimeError as error:
-            self.fail(f'Forward movement test failed. Error: {error}')
+            raise RuntimeError('Forward movement failed') from error
+
+        assert forward_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
+            'Robot did not move forward significantly: '
+            f'forward_delta={forward_delta:.3f}m '
+            f'(expected > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
+        )
 
     def assert_sustained_forward_movement(self) -> None:
         self._arm_robot()
         try:
             first_forward_delta, _, _ = self._run_movement_and_measure(stride_x=1.0)
             second_forward_delta, _, _ = self._run_movement_and_measure(stride_x=1.0)
-            self.assertGreater(
-                first_forward_delta,
-                self.MIN_LINEAR_MOVEMENT_DELTA,
-                msg=(
-                    'Robot did not move forward significantly during the first window: '
-                    f'forward_delta={first_forward_delta:.3f}m '
-                    f'(expected > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
-                ),
-            )
-            self.assertGreater(
-                second_forward_delta,
-                self.MIN_LINEAR_MOVEMENT_DELTA,
-                msg=(
-                    'Robot forward motion was not sustained into the second window: '
-                    f'forward_delta={second_forward_delta:.3f}m '
-                    f'(expected > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
-                ),
-            )
-            self.assertEqual(self.current_robot_state, 'torque_on')
         except RuntimeError as error:
-            self.fail(f'Sustained forward movement test failed. Error: {error}')
+            raise RuntimeError('Sustained forward movement failed') from error
+
+        assert first_forward_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
+            'Robot did not move forward significantly during the first window: '
+            f'forward_delta={first_forward_delta:.3f}m '
+            f'(expected > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
+        )
+        assert second_forward_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
+            'Robot forward motion was not sustained into the second window: '
+            f'forward_delta={second_forward_delta:.3f}m '
+            f'(expected > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
+        )
+        assert self.current_robot_state == 'torque_on'
 
     def assert_backward_movement(self) -> None:
         self._arm_robot()
         try:
             forward_delta, _, _ = self._run_movement_and_measure(stride_x=-1.0)
-            self.assertLess(
-                forward_delta,
-                -self.MIN_LINEAR_MOVEMENT_DELTA,
-                msg=(
-                    'Robot did not move backward significantly: '
-                    f'forward_delta={forward_delta:.3f}m '
-                    f'(expected < {-self.MIN_LINEAR_MOVEMENT_DELTA}m)'
-                ),
-            )
         except RuntimeError as error:
-            self.fail(f'Backward movement test failed. Error: {error}')
+            raise RuntimeError('Backward movement failed') from error
+
+        assert forward_delta < -self.MIN_LINEAR_MOVEMENT_DELTA, (
+            'Robot did not move backward significantly: '
+            f'forward_delta={forward_delta:.3f}m '
+            f'(expected < {-self.MIN_LINEAR_MOVEMENT_DELTA}m)'
+        )
 
     def assert_left_movement(self) -> None:
         self._arm_robot()
         try:
             _, left_delta, _ = self._run_movement_and_measure(stride_y=1.0)
-            self.assertGreater(
-                left_delta,
-                self.MIN_LINEAR_MOVEMENT_DELTA,
-                msg=(
-                    'Robot did not strafe left significantly: '
-                    f'left_delta={left_delta:.3f}m '
-                    f'(expected > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
-                ),
-            )
         except RuntimeError as error:
-            self.fail(f'Left strafe test failed. Error: {error}')
+            raise RuntimeError('Left strafe movement failed') from error
+
+        assert left_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
+            'Robot did not strafe left significantly: '
+            f'left_delta={left_delta:.3f}m '
+            f'(expected > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
+        )
 
     def assert_right_movement(self) -> None:
         self._arm_robot()
         try:
             _, left_delta, _ = self._run_movement_and_measure(stride_y=-1.0)
-            self.assertLess(
-                left_delta,
-                -self.MIN_LINEAR_MOVEMENT_DELTA,
-                msg=(
-                    'Robot did not strafe right significantly: '
-                    f'left_delta={left_delta:.3f}m '
-                    f'(expected < {-self.MIN_LINEAR_MOVEMENT_DELTA}m)'
-                ),
-            )
         except RuntimeError as error:
-            self.fail(f'Right strafe test failed. Error: {error}')
+            raise RuntimeError('Right strafe movement failed') from error
+
+        assert left_delta < -self.MIN_LINEAR_MOVEMENT_DELTA, (
+            'Robot did not strafe right significantly: '
+            f'left_delta={left_delta:.3f}m '
+            f'(expected < {-self.MIN_LINEAR_MOVEMENT_DELTA}m)'
+        )
 
     def assert_rotation_movement(self) -> None:
         self._arm_robot()
         try:
             _, _, delta_yaw = self._run_movement_and_measure(rotation=0.5)
-            self.assertGreater(
-                abs(delta_yaw),
-                self.MIN_ROTATION_DELTA,
-                msg=f'Robot did not rotate significantly: |delta_yaw|={abs(delta_yaw):.3f}',
-            )
         except RuntimeError as error:
-            self.fail(f'Rotation movement test failed. Error: {error}')
+            raise RuntimeError('Rotation movement failed') from error
+
+        assert abs(delta_yaw) > self.MIN_ROTATION_DELTA, (
+            f'Robot did not rotate significantly: |delta_yaw|={abs(delta_yaw):.3f}'
+        )
 
     def assert_disarmed_posture(self) -> None:
         """Verify disarming lowers base, or static posture mode is consistent."""
@@ -1083,11 +1055,9 @@ class GazeboRobotControlBase(unittest.TestCase):
             ),
         )
 
-        self.assertEqual(
-            self.current_robot_state,
-            'finalized',
-            msg='Robot did not reach finalized state after disarm. '
-            f'Current state: {self.current_robot_state}',
+        assert self.current_robot_state == 'finalized', (
+            'Robot did not reach finalized state after disarm. '
+            f'Current state: {self.current_robot_state}'
         )
 
     def _assert_body_level_at_board_tilt(

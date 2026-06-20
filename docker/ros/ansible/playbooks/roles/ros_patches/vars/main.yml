@@ -1,0 +1,18 @@
+---
+# ROS patch packages: upstream fixes not yet released in the official apt repo.
+#
+# Each entry:
+#   name  - apt package name (used for idempotency check and apt-mark hold)
+#   url   - direct URL to the .deb file
+#   arch  - (optional) restrict to this system_arch; omit to apply on all arches
+ros_patches_packages:
+  - name: ros-jazzy-launch-pytest
+    arch: arm64
+    checksum: sha256:54c5214896683fe30d9d73e4760776df8cb6bd362d19a98f48cbac898fecd9bc
+    url: >-
+      https://github.com/Dr-QP/Dr.QP/releases/download/launch-pytest-holder/ros-jazzy-launch-pytest_3.4.11-1noble.20260603.150049_arm64.deb
+  - name: ros-jazzy-launch-pytest
+    arch: amd64
+    checksum: sha256:45a9a3fb440648be46643e5086f977cc073f9e7f6769301ee10226ac347ca2f5
+    url: >-
+      https://github.com/Dr-QP/Dr.QP/releases/download/launch-pytest-holder/ros-jazzy-launch-pytest_3.4.11-1noble.20260604.025918_amd64.deb

@@ -13,26 +13,30 @@ install(
 if(BUILD_TESTING)
   find_package(ament_cmake_ros REQUIRED)
   find_package(ament_cmake_pytest REQUIRED)
-  find_package(launch_testing_ament_cmake REQUIRED)
 
-  drqp_add_ros_isolated_launch_test(
+  # MoveIt launch tests spin up a full simulator/move_group stack and can
+  # legitimately take several minutes, so allow at least 5 minutes before
+  # timing out.
+  set(drqp_moveit_test_timeout 300)
+
+  set(drqp_moveit_launch_tests
     test/test_move_group_launch_smoke.py
-    APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/test
-  )
-  drqp_add_ros_isolated_launch_test(
     test/test_demo_launch_smoke.py
-    APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/test
-  )
-  drqp_add_ros_isolated_launch_test(
-    test/test_demo_launch_rviz_smoke.py
-    APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/test
-  )
-  drqp_add_ros_isolated_launch_test(
     test/test_demo_gazebo_launch_smoke.py
-    APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/test
   )
+
+  foreach(test_file IN LISTS drqp_moveit_launch_tests)
+    drqp_add_ros_isolated_launch_test(
+      ${test_file}
+      TIMEOUT ${drqp_moveit_test_timeout}
+      APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/test
+    )
+  endforeach()
+
+  # Full runtime launch exercises a real motion and needs a longer budget.
   drqp_add_ros_isolated_launch_test(
     test/test_moveit_runtime_launch.py
+    TIMEOUT 600
     APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/test
   )
 

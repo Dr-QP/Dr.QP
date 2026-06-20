@@ -79,6 +79,8 @@ Unified engineering standards and best practices that apply across all code, age
   - Implement minimal code to pass (Green)
   - Refactor to improve design (Refactor)
 
+- **Python tests: always use `pytest`** — never `unittest`. For ROS 2 launch/node integration tests use `launch_pytest` (`@launch_pytest.fixture`, `@pytest.mark.launch()`).
+
 - **Include edge case tests**:
   - Document expected behavior in test comments
   - Test boundary conditions

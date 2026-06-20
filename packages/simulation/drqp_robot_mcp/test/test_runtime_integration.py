@@ -9,8 +9,6 @@ from drqp_robot_mcp import runtime
 from drqp_robot_mcp.controller import RobotMcpController
 import pytest
 
-from .simulation_test_support import reset_local_simulation_state, terminate_simulation
-
 
 def _read_odom_pose(timeout_sec: float) -> Any | None:
     from nav_msgs.msg import Odometry
@@ -76,14 +74,13 @@ def _assert_pose_matches_odometry(snapshot_pose: dict[str, Any], odom_pose: Any)
 
 
 @pytest.mark.slow
+@pytest.mark.timeout(300)
 def test_runtime_robot_pose_stays_available_from_live_odom_bridge() -> None:
     """The runtime robot snapshot keeps exposing pose from the live /odom bridge."""
-    reset_local_simulation_state()
     controller = RobotMcpController()
-    boot_result = None
 
     try:
-        boot_result = controller.boot_up(timeout_sec=120.0)
+        controller.boot_up(timeout_sec=120.0)
 
         first_odom_pose = _read_odom_pose(timeout_sec=10.0)
         assert first_odom_pose is not None
@@ -135,11 +132,6 @@ def test_runtime_robot_pose_stays_available_from_live_odom_bridge() -> None:
     finally:
         controller.stop_motion()
         controller.shut_down(timeout_sec=60.0)
+        controller.stop_simulation(timeout_sec=60.0)
         controller.close()
         runtime.shutdown_default_ros_runtime()
-        if (
-            boot_result is not None
-            and boot_result.simulation_was_started
-            and controller.launch_pid_path.exists()
-        ):
-            terminate_simulation(controller)

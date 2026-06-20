@@ -36,7 +36,8 @@ For general engineering principles, code quality standards, and best practices, 
 
 ### Edge Cases and Testing
 
-- Always use `pytest` for writing tests
+- Always use `pytest` for writing tests — never `unittest`
+- For ROS 2 launch or node integration tests use `launch_pytest`: decorate `generate_test_description` with `@launch_pytest.fixture` and test classes with `@pytest.mark.launch(fixture=generate_test_description)`
 - Structure tests to be easily runnable in local environments
 - Limit number of tests per test file to maintain clarity and focus. Prefer multiple smaller, focused test files over large monolithic ones.
 - Always include test cases for critical paths of the application

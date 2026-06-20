@@ -10,7 +10,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 workspace_dir="$(cd "$script_dir/.." && pwd)"
 
 EXPORT_FILE="$workspace_dir/.tmp/docker-pass-export"
-DOCKER_PASS_ENV_FILE="$workspace_dir/.tmp/docker-pass-session.env"
+DOCKER_PASS_ENV_FILE="$workspace_dir/.tmp/keyring-session.env"
 DOCKER_PASS_EXTERNAL_ENGINE="${DOCKER_PASS_EXTERNAL_ENGINE:-0}"
 
 list_docker_mcp_secrets() {
