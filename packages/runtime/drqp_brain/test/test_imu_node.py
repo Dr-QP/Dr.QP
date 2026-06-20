@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import unittest
+from dataclasses import dataclass, field
 from unittest import mock
 
 from drqp_brain.imu_node import (
@@ -29,20 +29,19 @@ from drqp_brain.imu_node import (
     main,
     SensorInitializationError,
 )
+import pytest
 import rclpy
 from sensor_msgs.msg import Imu, MagneticField, Temperature
 
 
-class TestImuReadingConversion(unittest.TestCase):
-    """Test normalization helpers for raw IMU sensor readings."""
+def test_as_vector3_returns_none_when_any_axis_is_missing():
+    """Treat partially missing 3-axis readings as unavailable."""
+    assert _as_vector3((1.0, None, 3.0)) is None
 
-    def test_as_vector3_returns_none_when_any_axis_is_missing(self):
-        """Treat partially missing 3-axis readings as unavailable."""
-        self.assertIsNone(_as_vector3((1.0, None, 3.0)))
 
-    def test_as_quaternion_returns_none_when_any_axis_is_missing(self):
-        """Treat partially missing quaternion readings as unavailable."""
-        self.assertIsNone(_as_quaternion((1.0, 0.0, None, 0.0)))
+def test_as_quaternion_returns_none_when_any_axis_is_missing():
+    """Treat partially missing quaternion readings as unavailable."""
+    assert _as_quaternion((1.0, 0.0, None, 0.0)) is None
 
 
 class FakeImuSensor:
@@ -65,61 +64,18 @@ class FakeImuSensor:
         return self.sample
 
 
-class RclpyTestCase(unittest.TestCase):
-    """Provide a class-scoped ROS context for unittest-based ROS tests."""
+@dataclass
+class _ImuHarness:
+    """Bundle the IMU node under test, its fake sensor, and captured messages."""
 
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        rclpy.init()
-        cls.addClassCleanup(rclpy.try_shutdown)
+    node: ImuNode
+    test_node: 'rclpy.node.Node'
+    fake_sensor: FakeImuSensor
+    imu_messages: list = field(default_factory=list)
+    magnetic_field_messages: list = field(default_factory=list)
+    temperature_messages: list = field(default_factory=list)
 
-
-class TestImuNode(RclpyTestCase):
-    """Test the IMU publisher node with a fake sensor backend."""
-
-    def setUp(self):
-        sample = ImuSample(
-            orientation_wxyz=(1.0, 0.1, 0.2, 0.3),
-            angular_velocity=(0.4, 0.5, 0.6),
-            linear_acceleration=(1.1, 1.2, 1.3),
-            magnetic_field_microtesla=(11.0, 12.0, 13.0),
-            temperature_celsius=24.5,
-        )
-        self.fake_sensor = FakeImuSensor(sample=sample)
-        self.sensor_patch = mock.patch(
-            'drqp_brain.imu_node.Bno055Sensor',
-            return_value=self.fake_sensor,
-        )
-        self.addCleanup(self.sensor_patch.stop)
-        self.sensor_patch.start()
-        self.node = ImuNode()
-        self.addCleanup(self.node.destroy_node)
-        self.node.timer.cancel()
-        self.test_node = rclpy.create_node('test_imu_consumer')
-        self.addCleanup(self.test_node.destroy_node)
-
-        self.imu_messages = []
-        self.magnetic_field_messages = []
-        self.temperature_messages = []
-
-        self.imu_subscription = self.test_node.create_subscription(
-            Imu, '/imu/data', lambda msg: self.imu_messages.append(msg), 10
-        )
-        self.magnetic_field_subscription = self.test_node.create_subscription(
-            MagneticField,
-            '/imu/mag',
-            lambda msg: self.magnetic_field_messages.append(msg),
-            10,
-        )
-        self.temperature_subscription = self.test_node.create_subscription(
-            Temperature,
-            '/imu/temperature',
-            lambda msg: self.temperature_messages.append(msg),
-            10,
-        )
-
-    def _spin_until(self, predicate, iterations: int = 10) -> bool:
+    def spin_until(self, predicate, iterations: int = 10) -> bool:
         """Spin both nodes until the predicate is satisfied or the budget is exhausted."""
         for _ in range(iterations):
             rclpy.spin_once(self.node, timeout_sec=0.02)
@@ -128,9 +84,9 @@ class TestImuNode(RclpyTestCase):
                 return True
         return False
 
-    def _wait_for_subscribers(self):
+    def wait_for_subscribers(self) -> None:
         """Wait until the IMU publishers have active subscriptions."""
-        connected = self._spin_until(
+        connected = self.spin_until(
             lambda: (
                 self.node.imu_pub.get_subscription_count() > 0
                 and self.node.magnetic_field_pub.get_subscription_count() > 0
@@ -138,139 +94,182 @@ class TestImuNode(RclpyTestCase):
             ),
             iterations=20,
         )
-        self.assertTrue(connected, 'Expected IMU subscriptions to connect')
+        assert connected, 'Expected IMU subscriptions to connect'
         self.imu_messages.clear()
         self.magnetic_field_messages.clear()
         self.temperature_messages.clear()
 
-    def test_publish_measurements_publishes_imu_and_9dof_topics(self):
-        """Publish IMU, magnetic field, and temperature messages from one sample."""
-        self._wait_for_subscribers()
 
-        self.node.publish_measurements()
-        delivered = self._spin_until(
-            lambda: (
-                len(self.imu_messages) > 0
-                and len(self.magnetic_field_messages) > 0
-                and len(self.temperature_messages) > 0
-            ),
-            iterations=20,
+@pytest.fixture
+def rclpy_context():
+    """Provide a ROS context for tests that construct ROS nodes directly."""
+    rclpy.init()
+    try:
+        yield
+    finally:
+        rclpy.try_shutdown()
+
+
+@pytest.fixture
+def imu_harness(rclpy_context):  # noqa: ARG001 (needs rclpy)
+    """Provide an IMU node backed by a fake sensor wired to a consumer node."""
+    sample = ImuSample(
+        orientation_wxyz=(1.0, 0.1, 0.2, 0.3),
+        angular_velocity=(0.4, 0.5, 0.6),
+        linear_acceleration=(1.1, 1.2, 1.3),
+        magnetic_field_microtesla=(11.0, 12.0, 13.0),
+        temperature_celsius=24.5,
+    )
+    fake_sensor = FakeImuSensor(sample=sample)
+    with mock.patch('drqp_brain.imu_node.Bno055Sensor', return_value=fake_sensor):
+        node = ImuNode()
+        node.timer.cancel()
+        test_node = rclpy.create_node('test_imu_consumer')
+        harness = _ImuHarness(node=node, test_node=test_node, fake_sensor=fake_sensor)
+
+        test_node.create_subscription(
+            Imu, '/imu/data', lambda msg: harness.imu_messages.append(msg), 10
+        )
+        test_node.create_subscription(
+            MagneticField,
+            '/imu/mag',
+            lambda msg: harness.magnetic_field_messages.append(msg),
+            10,
+        )
+        test_node.create_subscription(
+            Temperature,
+            '/imu/temperature',
+            lambda msg: harness.temperature_messages.append(msg),
+            10,
         )
 
-        self.assertTrue(delivered, 'Expected IMU messages to be delivered')
-
-        imu_msg = self.imu_messages[-1]
-        self.assertEqual(imu_msg.header.frame_id, 'drqp/imu_link')
-        self.assertEqual(imu_msg.orientation.w, 1.0)
-        self.assertEqual(imu_msg.orientation.x, 0.1)
-        self.assertEqual(imu_msg.orientation.y, 0.2)
-        self.assertEqual(imu_msg.orientation.z, 0.3)
-        self.assertEqual(imu_msg.angular_velocity.x, 0.4)
-        self.assertEqual(imu_msg.angular_velocity.y, 0.5)
-        self.assertEqual(imu_msg.angular_velocity.z, 0.6)
-        self.assertEqual(imu_msg.linear_acceleration.x, 1.1)
-        self.assertEqual(imu_msg.linear_acceleration.y, 1.2)
-        self.assertEqual(imu_msg.linear_acceleration.z, 1.3)
-
-        magnetic_field_msg = self.magnetic_field_messages[-1]
-        self.assertEqual(magnetic_field_msg.header.frame_id, 'drqp/imu_link')
-        self.assertAlmostEqual(magnetic_field_msg.magnetic_field.x, 11.0e-6)
-        self.assertAlmostEqual(magnetic_field_msg.magnetic_field.y, 12.0e-6)
-        self.assertAlmostEqual(magnetic_field_msg.magnetic_field.z, 13.0e-6)
-
-        temperature_msg = self.temperature_messages[-1]
-        self.assertEqual(temperature_msg.header.frame_id, 'drqp/imu_link')
-        self.assertEqual(temperature_msg.temperature, 24.5)
-
-    def test_publish_measurements_skips_publish_on_sensor_failure(self):
-        """Avoid publishing stale ROS messages when a sensor read fails."""
-        self.fake_sensor.error = RuntimeError('i2c read failed')
-        self._wait_for_subscribers()
-
-        self.node.publish_measurements()
-        self._spin_until(lambda: False, iterations=5)
-
-        self.assertEqual(self.imu_messages, [])
-        self.assertEqual(self.magnetic_field_messages, [])
-        self.assertEqual(self.temperature_messages, [])
-
-    def test_publish_measurements_marks_orientation_unavailable_when_none(self):
-        """Publish gyro/accel even when orientation is absent; mark it unavailable."""
-        self.fake_sensor.sample = ImuSample(
-            orientation_wxyz=None,
-            angular_velocity=(0.7, 0.8, 0.9),
-            linear_acceleration=(2.1, 2.2, 2.3),
-            magnetic_field_microtesla=(5.0, 6.0, 7.0),
-            temperature_celsius=25.0,
-        )
-        self._wait_for_subscribers()
-
-        self.node.publish_measurements()
-        delivered = self._spin_until(lambda: len(self.imu_messages) > 0, iterations=20)
-
-        self.assertTrue(delivered, 'Expected IMU message to be delivered without orientation')
-
-        imu_msg = self.imu_messages[-1]
-        self.assertEqual(
-            imu_msg.orientation_covariance[0],
-            -1.0,
-            'orientation_covariance[0] must be -1 when orientation is unavailable',
-        )
-        self.assertEqual(imu_msg.angular_velocity.x, 0.7)
-        self.assertEqual(imu_msg.angular_velocity.y, 0.8)
-        self.assertEqual(imu_msg.angular_velocity.z, 0.9)
-        self.assertEqual(imu_msg.angular_velocity_covariance[0], -1.0)
-        self.assertEqual(imu_msg.linear_acceleration.x, 2.1)
-        self.assertEqual(imu_msg.linear_acceleration.y, 2.2)
-        self.assertEqual(imu_msg.linear_acceleration.z, 2.3)
-        self.assertEqual(imu_msg.linear_acceleration_covariance[0], -1.0)
+        try:
+            yield harness
+        finally:
+            test_node.destroy_node()
+            node.destroy_node()
 
 
-class TestImuNodeInitialization(RclpyTestCase):
-    """Test IMU node startup failures caused by backend construction."""
+def test_publish_measurements_publishes_imu_and_9dof_topics(imu_harness):
+    """Publish IMU, magnetic field, and temperature messages from one sample."""
+    imu_harness.wait_for_subscribers()
 
-    def test_constructor_wraps_sensor_construction_failures(self):
-        """Report backend construction failures with an actionable startup error."""
-        with (
-            mock.patch(
-                'drqp_brain.imu_node.Bno055Sensor',
-                side_effect=AttributeError('platform detection failed'),
-            ),
-            self.assertRaisesRegex(
-                SensorInitializationError,
-                'Failed to initialize the BNO055 IMU backend at I2C address 0x28',
-            ) as context,
-        ):
-            ImuNode()
+    imu_harness.node.publish_measurements()
+    delivered = imu_harness.spin_until(
+        lambda: (
+            len(imu_harness.imu_messages) > 0
+            and len(imu_harness.magnetic_field_messages) > 0
+            and len(imu_harness.temperature_messages) > 0
+        ),
+        iterations=20,
+    )
 
-        self.assertIsInstance(context.exception.__cause__, AttributeError)
+    assert delivered, 'Expected IMU messages to be delivered'
 
+    imu_msg = imu_harness.imu_messages[-1]
+    assert imu_msg.header.frame_id == 'drqp/imu_link'
+    assert imu_msg.orientation.w == 1.0
+    assert imu_msg.orientation.x == 0.1
+    assert imu_msg.orientation.y == 0.2
+    assert imu_msg.orientation.z == 0.3
+    assert imu_msg.angular_velocity.x == 0.4
+    assert imu_msg.angular_velocity.y == 0.5
+    assert imu_msg.angular_velocity.z == 0.6
+    assert imu_msg.linear_acceleration.x == 1.1
+    assert imu_msg.linear_acceleration.y == 1.2
+    assert imu_msg.linear_acceleration.z == 1.3
 
-class TestImuMain(unittest.TestCase):
-    """Test CLI behavior for IMU node startup failures."""
+    magnetic_field_msg = imu_harness.magnetic_field_messages[-1]
+    assert magnetic_field_msg.header.frame_id == 'drqp/imu_link'
+    assert magnetic_field_msg.magnetic_field.x == pytest.approx(11.0e-6)
+    assert magnetic_field_msg.magnetic_field.y == pytest.approx(12.0e-6)
+    assert magnetic_field_msg.magnetic_field.z == pytest.approx(13.0e-6)
 
-    def test_main_exits_cleanly_when_sensor_backend_cannot_start(self):
-        """Exit with code 1 and log the startup error without a traceback."""
-        logger = mock.Mock()
-        imu_node_constructor = mock.Mock(
-            side_effect=SensorInitializationError('backend unavailable')
-        )
-
-        with (
-            mock.patch('drqp_brain.imu_node.rclpy.init'),
-            mock.patch('drqp_brain.imu_node.ImuNode', imu_node_constructor),
-            mock.patch('drqp_brain.imu_node.rclpy.logging.get_logger', return_value=logger),
-            mock.patch('drqp_brain.imu_node.rclpy.ok', return_value=True),
-            mock.patch('drqp_brain.imu_node.rclpy.shutdown') as shutdown,
-        ):
-            with self.assertRaises(SystemExit) as context:
-                main()
-
-        self.assertEqual(context.exception.code, 1)
-        imu_node_constructor.assert_called_once_with()
-        logger.error.assert_called_once_with('backend unavailable')
-        shutdown.assert_called_once_with()
+    temperature_msg = imu_harness.temperature_messages[-1]
+    assert temperature_msg.header.frame_id == 'drqp/imu_link'
+    assert temperature_msg.temperature == 24.5
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_publish_measurements_skips_publish_on_sensor_failure(imu_harness):
+    """Avoid publishing stale ROS messages when a sensor read fails."""
+    imu_harness.fake_sensor.error = RuntimeError('i2c read failed')
+    imu_harness.wait_for_subscribers()
+
+    imu_harness.node.publish_measurements()
+    imu_harness.spin_until(lambda: False, iterations=5)
+
+    assert imu_harness.imu_messages == []
+    assert imu_harness.magnetic_field_messages == []
+    assert imu_harness.temperature_messages == []
+
+
+def test_publish_measurements_marks_orientation_unavailable_when_none(imu_harness):
+    """Publish gyro/accel even when orientation is absent; mark it unavailable."""
+    imu_harness.fake_sensor.sample = ImuSample(
+        orientation_wxyz=None,
+        angular_velocity=(0.7, 0.8, 0.9),
+        linear_acceleration=(2.1, 2.2, 2.3),
+        magnetic_field_microtesla=(5.0, 6.0, 7.0),
+        temperature_celsius=25.0,
+    )
+    imu_harness.wait_for_subscribers()
+
+    imu_harness.node.publish_measurements()
+    delivered = imu_harness.spin_until(
+        lambda: len(imu_harness.imu_messages) > 0, iterations=20
+    )
+
+    assert delivered, 'Expected IMU message to be delivered without orientation'
+
+    imu_msg = imu_harness.imu_messages[-1]
+    assert imu_msg.orientation_covariance[0] == -1.0, (
+        'orientation_covariance[0] must be -1 when orientation is unavailable'
+    )
+    assert imu_msg.angular_velocity.x == 0.7
+    assert imu_msg.angular_velocity.y == 0.8
+    assert imu_msg.angular_velocity.z == 0.9
+    assert imu_msg.angular_velocity_covariance[0] == -1.0
+    assert imu_msg.linear_acceleration.x == 2.1
+    assert imu_msg.linear_acceleration.y == 2.2
+    assert imu_msg.linear_acceleration.z == 2.3
+    assert imu_msg.linear_acceleration_covariance[0] == -1.0
+
+
+def test_constructor_wraps_sensor_construction_failures(rclpy_context):  # noqa: ARG001
+    """Report backend construction failures with an actionable startup error."""
+    with (
+        mock.patch(
+            'drqp_brain.imu_node.Bno055Sensor',
+            side_effect=AttributeError('platform detection failed'),
+        ),
+        pytest.raises(
+            SensorInitializationError,
+            match='Failed to initialize the BNO055 IMU backend at I2C address 0x28',
+        ) as context,
+    ):
+        ImuNode()
+
+    assert isinstance(context.value.__cause__, AttributeError)
+
+
+def test_main_exits_cleanly_when_sensor_backend_cannot_start():
+    """Exit with code 1 and log the startup error without a traceback."""
+    logger = mock.Mock()
+    imu_node_constructor = mock.Mock(
+        side_effect=SensorInitializationError('backend unavailable')
+    )
+
+    with (
+        mock.patch('drqp_brain.imu_node.rclpy.init'),
+        mock.patch('drqp_brain.imu_node.ImuNode', imu_node_constructor),
+        mock.patch('drqp_brain.imu_node.rclpy.logging.get_logger', return_value=logger),
+        mock.patch('drqp_brain.imu_node.rclpy.ok', return_value=True),
+        mock.patch('drqp_brain.imu_node.rclpy.shutdown') as shutdown,
+    ):
+        with pytest.raises(SystemExit) as context:
+            main()
+
+    assert context.value.code == 1
+    imu_node_constructor.assert_called_once_with()
+    logger.error.assert_called_once_with('backend unavailable')
+    shutdown.assert_called_once_with()
