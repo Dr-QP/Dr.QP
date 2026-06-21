@@ -66,6 +66,12 @@ def _start_gazebo(context, sim_gui, world_sdf):
     resolved_world_sdf = _resolve_world_sdf(context.perform_substitution(world_sdf))
     resolved_world_sdf_substitution = TextSubstitution(text=resolved_world_sdf)
     gz_args = [TextSubstitution(text='-r -v 3 '), resolved_world_sdf_substitution]
+    # Keep server/headless flags before the world path so `gz sim` reliably
+    # parses them as options instead of trailing arguments after the SDF file.
+    headless_gz_args = [
+        TextSubstitution(text='-r -v 3 --headless-rendering -s '),
+        resolved_world_sdf_substitution,
+    ]
     return [
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
@@ -81,11 +87,7 @@ def _start_gazebo(context, sim_gui, world_sdf):
                 'gz_args': IfElseSubstitution(
                     sim_gui,
                     gz_args,
-                    [
-                        TextSubstitution(text='-r -v 3 '),
-                        resolved_world_sdf_substitution,
-                        TextSubstitution(text=' --headless-rendering -s'),
-                    ],
+                    headless_gz_args,
                 ),
                 'on_exit_shutdown': 'true',
             }.items(),
