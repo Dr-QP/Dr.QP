@@ -28,12 +28,12 @@ from scipy.spatial.transform import Rotation as R
 # base_center_to_imu joint in packages/runtime/drqp_control/urdf/body.urdf.xacro.
 # The IMU chip is mounted flipped (roll pi) and turned a quarter turn (yaw pi/2).
 #
-# Gazebo's IMU reports orientation relative to the sensor's own start frame, so the
-# raw quaternion is the body attitude expressed in the IMU frame, i.e. the body
-# rotation conjugated by this mount: imu = mount.inv() * body * mount. To recover
-# the body attitude we therefore conjugate back (mount * imu * mount.inv()) rather
-# than applying a one-sided multiply. This uses the known static mount instead of a
-# TF lookup or the message frame_id, which are unreliable for the simulated IMU.
+# Gazebo's IMU plugin reports the sensor's absolute orientation in the world frame.
+# Because the IMU is rigidly mounted on the body, its world orientation is simply
+# body_in_world composed with the fixed sensor mount: imu = body * mount.
+# To recover the body orientation: body = imu * mount.inv().
+# This uses the known static mount instead of a TF lookup or the message frame_id,
+# which are unreliable for the simulated IMU.
 BASE_CENTER_TO_IMU_ROTATION = R.from_euler('xyz', [np.pi, 0.0, np.pi / 2.0])
 
 
@@ -41,9 +41,9 @@ def body_tilt_from_imu(orientation) -> Point3D:
     """
     Return body roll and pitch in radians from a raw IMU quaternion.
 
-    The IMU reports body attitude expressed in its own mounted sensor frame.
-    Conjugate by the fixed mount rotation to express the attitude in the body
-    frame before extracting roll and pitch.
+    Gazebo's IMU plugin reports the sensor's absolute orientation in the world
+    frame (imu = body * mount). Right-multiplying by the inverse mount rotation
+    recovers the body orientation: body = imu * mount.inv().
 
     Parameters
     ----------
@@ -52,7 +52,7 @@ def body_tilt_from_imu(orientation) -> Point3D:
 
     """
     imu_in_world = R.from_quat([orientation.x, orientation.y, orientation.z, orientation.w])
-    body_in_world = BASE_CENTER_TO_IMU_ROTATION * imu_in_world * BASE_CENTER_TO_IMU_ROTATION.inv()
+    body_in_world = imu_in_world * BASE_CENTER_TO_IMU_ROTATION.inv()
     roll, pitch, _ = body_in_world.as_euler('xyz', degrees=False)
     return Point3D([roll, pitch, 0.0])
 
