@@ -21,6 +21,7 @@ CONTAINER_MCP_DIR="/root/.docker/mcp"
 if [[ -d "$HOST_MCP_DIR" ]]; then
     echo "HOST_MCP_DIR=$HOST_MCP_DIR" >> "$script_dir/.env"
     echo "CONTAINER_MCP_DIR=$CONTAINER_MCP_DIR" >> "$script_dir/.env"
+    echo "COMPOSE_PROFILES=mcp" >> "$script_dir/.env"
 else
     # Ensure the container MCP dir exists to avoid bind mount errors, even if empty.
     mkdir -p "/tmp/stub-mcp"

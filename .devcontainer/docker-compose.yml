@@ -1,4 +1,25 @@
 services:
+  mcp-gateway:
+    image: docker/mcp-gateway
+    pull_policy: always
+    restart: unless-stopped
+    profiles: ["mcp"]
+    ports:
+      - "127.0.0.1:8811:8811"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${HOST_MCP_DIR:-/tmp/stub-mcp}:/mcp:ro
+      - ${HOST_SECRETS_SOCKET:-/tmp/stub-secrets-engine.sock}:/run/secrets/engine.sock:ro
+    command:
+      - --catalog=/mcp/catalogs/docker-mcp.yaml
+      - --config=/mcp/config.yaml
+      - --registry=/mcp/registry.yaml
+      - --tools-config=/mcp/tools.yaml
+      - --secrets=docker-desktop
+      - --watch=true
+      - --transport=sse
+      - --port=8811
+
   devcontainer:
     image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
     # Required for Docker in Docker (dind) to allow nested containers for ROS 2 development
