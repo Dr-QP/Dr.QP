@@ -22,6 +22,9 @@ if [[ -d "$HOST_MCP_DIR" ]]; then
     echo "HOST_MCP_DIR=$HOST_MCP_DIR" >> "$script_dir/.env"
     echo "CONTAINER_MCP_DIR=$CONTAINER_MCP_DIR" >> "$script_dir/.env"
     echo "COMPOSE_PROFILES=mcp" >> "$script_dir/.env"
+    # Ensure the secrets socket stub exists so Docker Compose always bind-mounts a file,
+    # not a directory (Linux creates a directory when the source path is missing).
+    touch "/tmp/stub-secrets-engine.sock"
 else
     # Ensure the container MCP dir exists to avoid bind mount errors, even if empty.
     mkdir -p "/tmp/stub-mcp"

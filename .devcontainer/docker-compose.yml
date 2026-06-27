@@ -1,7 +1,7 @@
 services:
   mcp-gateway:
     image: docker/mcp-gateway
-    pull_policy: always
+    pull_policy: if_not_present
     restart: unless-stopped
     profiles: ["mcp"]
     ports:
@@ -15,6 +15,8 @@ services:
       - --config=/mcp/config.yaml
       - --registry=/mcp/registry.yaml
       - --tools-config=/mcp/tools.yaml
+      # docker-desktop secrets provider: requires Docker Desktop on the host.
+      # The mcp profile only activates when ~/.docker/mcp exists, which Docker Desktop manages.
       - --secrets=docker-desktop
       - --watch=true
       - --transport=sse

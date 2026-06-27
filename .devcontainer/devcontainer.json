@@ -23,7 +23,7 @@
     "UV_PROJECT_ENVIRONMENT": "/uv/venvs/${localWorkspaceFolderBasename}/"
   },
 
-  "forwardPorts": ["14500-14599", 8811],
+  "forwardPorts": ["14500-14599", "8811"],
   "portsAttributes": {
     "14500-14599": {
       "label": "Xpra HTML5",
