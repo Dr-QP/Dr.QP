@@ -3,9 +3,9 @@ services:
     image: docker/mcp-gateway
     pull_policy: always
     restart: unless-stopped
-    profiles: ["mcp"]
+    profiles: ['mcp']
     ports:
-      - "127.0.0.1:8811:8811"
+      - '127.0.0.1:8811:8811'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${HOST_MCP_DIR:-/tmp/stub-mcp}:/mcp:ro
