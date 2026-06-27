@@ -1,3 +1,8 @@
 {
-  "mcpServers": {}
+  "mcpServers": {
+    "MCP_DOCKER": {
+      "type": "sse",
+      "url": "http://localhost:8811/sse"
+    }
+  }
 }
