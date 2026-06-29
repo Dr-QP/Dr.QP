@@ -12,6 +12,7 @@
   ansible.builtin.get_url:
     url: "{{ cc_filter_download_url }}"
     dest: "{{ cc_filter_install_path }}"
+    checksum: "{{ cc_filter_checksum }}"
     owner: root
     group: root
     mode: "{{ cc_filter_binary_mode }}"
@@ -27,17 +28,31 @@
         group: "{{ ros_user_setup_gid }}"
         mode: "0755"
 
+    - name: Stat existing Claude settings
+      ansible.builtin.stat:
+        path: "{{ cc_filter_claude_settings_path }}"
+      register: cc_filter_settings_stat
+
     - name: Read existing Claude settings
       ansible.builtin.slurp:
         src: "{{ cc_filter_claude_settings_path }}"
       register: cc_filter_existing_settings
-      failed_when: false
+      when: cc_filter_settings_stat.stat.exists
+
+    - name: Warn when existing hooks will be replaced
+      ansible.builtin.debug:
+        msg: >-
+          Existing Claude settings already define a 'hooks' key; cc-filter will
+          replace the PreToolUse, UserPromptSubmit, and SessionEnd entries.
+      when:
+        - cc_filter_existing_settings.content is defined
+        - "'hooks' in (cc_filter_existing_settings.content | b64decode | trim | default('{}', true) | from_json)"
 
     - name: Merge cc-filter hooks into Claude settings
       ansible.builtin.copy:
         content: >-
           {{
-            (cc_filter_existing_settings.content | default('') | b64decode | from_json
+            (cc_filter_existing_settings.content | b64decode | trim | default('{}', true) | from_json
              if cc_filter_existing_settings.content is defined
              else {})
             | combine({'hooks': cc_filter_hooks}, recursive=true)

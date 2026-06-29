@@ -34,5 +34,19 @@ Gated by `install_agentic_tools` in the playbook.
 | `cc_filter_install`         | `true`                     | Install the cc-filter binary.                      |
 | `cc_filter_version`         | `v0.0.6`                   | cc-filter release tag to download.                 |
 | `cc_filter_install_path`    | `/usr/local/bin/cc-filter` | Destination for the cc-filter binary.              |
+| `cc_filter_binary_mode`     | `"0755"`                   | File mode for the installed binary.                |
+| `cc_filter_checksums`       | per-arch sha256 map        | Expected binary checksums; bump with the version.  |
 | `cc_filter_configure_hooks` | `true`                     | Merge cc-filter hooks into Claude `settings.json`. |
 | `cc_filter_download_url`    | derived from version/arch  | Override to pin a custom binary URL.               |
+
+## Required External Variables
+
+These variables are not defined by this role and must be supplied by the
+playbook or inventory (the `extra_facts` and `ros_user_setup` roles provide them
+in this repository):
+
+| Variable                                | Description                                                      |
+| --------------------------------------- | ---------------------------------------------------------------- |
+| `system_arch`                                | Target CPU architecture (`amd64` or `arm64`) for the binary URL.       |
+| `user_home`                                  | Home directory of the target user (locates `~/.claude/settings.json`). |
+| `ros_user_setup_uid` / `ros_user_setup_gid`  | UID/GID used for ownership of the Claude config files.                 |
