@@ -12,6 +12,22 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${HOST_MCP_DIR:-/tmp/stub-mcp}:${CONTAINER_MCP_DIR:-/tmp/stub-mcp}:ro
       - ${HOST_SECRETS_SOCKET:-/tmp/stub-secrets-engine.sock}:${DOCKER_SECRETS_ENGINE_SOCKET:-/tmp/stub-secrets-engine.sock}:ro
+    # On a freshly (re)created container, Docker Desktop's per-container DNS proxy can take
+    # a moment to attach. The gateway's image-signature check does an outbound DNS lookup
+    # immediately on startup, and if it loses that race it exits; in-place restarts don't
+    # reliably re-trigger the DNS attach, so `restart: unless-stopped` alone can crash-loop
+    # forever. Wait for DNS to actually work before handing off to the real entrypoint.
+    entrypoint:
+      - sh
+      - -c
+      - |
+        for i in $$(seq 1 30); do
+          nslookup registry-1.docker.io >/dev/null 2>&1 && break
+          echo "mcp-gateway: waiting for network/DNS to be ready ($$i/30)..." >&2
+          sleep 1
+        done
+        exec /docker-mcp gateway run "$$@"
+      - sh
     command:
       # Docker Desktop's MCP Toolkit now stores configured servers as a "profile" in
       # ~/.docker/mcp/mcp-toolkit.db (mirrors `docker mcp gateway run --profile default`).
