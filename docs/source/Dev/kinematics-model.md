@@ -9,6 +9,7 @@ Kinematics of the Dr.QP robot is covered in a series of notebooks.
 ../notebooks/1_getting_started_with_robot_ik
 ../notebooks/2_affine_transforms
 ../notebooks/3_generating_gaits
+../notebooks/4_imu_body_balancing
 ../notebooks/4_migrating_kinematics_to_moveit2
 experiments
 ```

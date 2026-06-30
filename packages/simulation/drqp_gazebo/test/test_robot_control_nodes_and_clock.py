@@ -80,6 +80,12 @@ def test_imu_data_is_published(robot):
     robot.assert_imu_data()
 
 
+@pytest.mark.launch(fixture=generate_test_description)
+def test_imu_data_reports_orientation(robot):
+    # Other assertions are already part of setup; see _wait_for_simulation_ready().
+    robot.assert_imu_data_reports_orientation()
+
+
 @pytest.mark.launch(fixture=generate_test_description, shutdown=True)
 def test_simulation_processes_exit_cleanly(generate_test_description):
     """

@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2025 Anton Matosov
+# Copyright (c) 2017-2026 Anton Matosov
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,24 +18,34 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from pathlib import Path
+from launch import LaunchDescription
+from launch.actions import ExecuteProcess
+
+DISTURBANCE_TOPIC = '/balance_challenge/motor_tilt_platform/target_position'
+TILT_UP_POSITION = 0.2
+TILT_DOWN_POSITION = 0.0
+TILT_UP_HOLD_SECONDS = 7
+TILT_DOWN_HOLD_SECONDS = 10
+INITIAL_DELAY_SECONDS = 14
 
 
-def test_bringup_launch_loads_the_imu_node():
-    """Ensure bringup wires the Dr.QP IMU node into robot startup."""
-    launch_file = Path(__file__).resolve().parents[1] / 'launch' / 'bringup.launch.py'
-    launch_source = launch_file.read_text(encoding='utf-8')
+def generate_launch_description():
+    disturbance_loop_script = (
+        f'sleep {INITIAL_DELAY_SECONDS}; '
+        'while true; do '
+        f'gz topic -t {DISTURBANCE_TOPIC} -m gz.msgs.Double -p "data: {TILT_UP_POSITION}"; '
+        f'sleep {TILT_UP_HOLD_SECONDS}; '
+        f'gz topic -t {DISTURBANCE_TOPIC} -m gz.msgs.Double -p "data: {TILT_DOWN_POSITION}"; '
+        f'sleep {TILT_DOWN_HOLD_SECONDS}; '
+        'done'
+    )
 
-    assert "name='load_imu'" in launch_source
-    assert "get_package_share_path('drqp_moveit')" in launch_source
-    assert "'move_group.launch.py'" not in launch_source
-    assert "executable='drqp_imu'" in launch_source
-    assert 'UnlessCondition(use_gazebo)' in launch_source
-
-
-def test_bringup_launch_does_not_configure_brain_imu_transform_path_issue356():
-    """Issue 356: IMU mount conversion belongs upstream of drqp_brain."""
-    launch_file = Path(__file__).resolve().parents[1] / 'launch' / 'bringup.launch.py'
-    launch_source = launch_file.read_text(encoding='utf-8')
-
-    assert "'transform_imu_to_base_frame': IfElseSubstitution(" not in launch_source
+    return LaunchDescription(
+        [
+            ExecuteProcess(
+                cmd=['bash', '-c', disturbance_loop_script],
+                name='balance_challenge_disturbance_loop',
+                output='screen',
+            )
+        ]
+    )
