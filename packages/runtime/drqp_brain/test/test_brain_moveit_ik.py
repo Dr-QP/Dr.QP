@@ -27,7 +27,8 @@ import rclpy
 
 
 @pytest.fixture(autouse=True)
-def ros_context():
+def rclpy_context():
+    """Provide a ROS context for all tests in this module."""
     rclpy.init()
     try:
         yield

@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import unittest
+from dataclasses import dataclass, field
 from unittest.mock import Mock
 
 from drqp_brain.haptics import (
@@ -28,229 +28,218 @@ from drqp_brain.haptics import (
 )
 from drqp_brain.joystick_translator_node import JoystickTranslatorNode
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
+import pytest
 import rclpy
 import sensor_msgs.msg
 import std_msgs.msg
 
 
-class TestJoystickTranslatorNode(unittest.TestCase):
-    """Test the joystick translator node."""
+@dataclass
+class _TranslatorHarness:
+    """Bundle the node under test, a consumer node, and captured messages."""
 
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        rclpy.init()
-        cls.addClassCleanup(rclpy.try_shutdown)
+    node: JoystickTranslatorNode
+    test_node: 'rclpy.node.Node'
+    movement_commands: list = field(default_factory=list)
+    robot_events: list = field(default_factory=list)
+    joy_feedback_messages: list = field(default_factory=list)
 
-    def setUp(self):
-        self.node = JoystickTranslatorNode()
-        self.addCleanup(self.node.destroy_node)
-        self.test_node = rclpy.create_node('test_translator_consumer')
-        self.addCleanup(self.test_node.destroy_node)
 
-        # Store received messages
-        self.movement_commands = []
-        self.robot_events = []
-        self.joy_feedback_messages = []
+@pytest.fixture
+def translator(rclpy_context):  # noqa: ARG001 (needs rclpy)
+    """Provide a joystick translator node wired to a consumer node."""
+    node = JoystickTranslatorNode()
+    test_node = rclpy.create_node('test_translator_consumer')
+    harness = _TranslatorHarness(node=node, test_node=test_node)
 
-        # Subscribe to translator output
-        self.movement_sub = self.test_node.create_subscription(
-            MovementCommand,
-            '/robot/movement_command',
-            lambda msg: self.movement_commands.append(msg),
-            10,
-        )
+    test_node.create_subscription(
+        MovementCommand,
+        '/robot/movement_command',
+        lambda msg: harness.movement_commands.append(msg),
+        10,
+    )
+    test_node.create_subscription(
+        std_msgs.msg.String,
+        '/robot_event',
+        lambda msg: harness.robot_events.append(msg),
+        10,
+    )
+    test_node.create_subscription(
+        sensor_msgs.msg.JoyFeedback,
+        '/joy/set_feedback',
+        lambda msg: harness.joy_feedback_messages.append(msg),
+        10,
+    )
 
-        self.event_sub = self.test_node.create_subscription(
-            std_msgs.msg.String,
-            '/robot_event',
-            lambda msg: self.robot_events.append(msg),
-            10,
-        )
+    try:
+        yield harness
+    finally:
+        test_node.destroy_node()
+        node.destroy_node()
 
-        self.joy_feedback_sub = self.test_node.create_subscription(
-            sensor_msgs.msg.JoyFeedback,
-            '/joy/set_feedback',
-            lambda msg: self.joy_feedback_messages.append(msg),
-            10,
-        )
 
-    def test_joystick_to_movement_command(self):
-        """Test that joystick messages are translated to movement commands."""
-        # Create a joystick message with movement input
-        joy_msg = sensor_msgs.msg.Joy()
-        joy_msg.axes = [0.5, 0.3, -0.2, 0.1, 0.0, 0.0]  # axes
-        joy_msg.buttons = [0] * 21  # All buttons released
+def test_joystick_to_movement_command(translator):
+    """Test that joystick messages are translated to movement commands."""
+    # Create a joystick message with movement input
+    joy_msg = sensor_msgs.msg.Joy()
+    joy_msg.axes = [0.5, 0.3, -0.2, 0.1, 0.0, 0.0]  # axes
+    joy_msg.buttons = [0] * 21  # All buttons released
 
-        # Process the message
-        self.node._joy_callback(joy_msg)
+    # Process the message
+    translator.node._joy_callback(joy_msg)
 
-        # Spin to process callbacks
-        rclpy.spin_once(self.test_node, timeout_sec=0.1)
+    # Spin to process callbacks
+    rclpy.spin_once(translator.test_node, timeout_sec=0.1)
 
-        # Verify movement command was published
-        self.assertGreater(len(self.movement_commands), 0, 'Movement command should be published')
+    # Verify movement command was published
+    assert len(translator.movement_commands) > 0, 'Movement command should be published'
 
-        cmd = self.movement_commands[-1]
-        # Check that stride direction reflects joystick input
-        self.assertIsNotNone(cmd.stride_direction)
-        self.assertEqual(cmd.gait_type, MovementCommandConstants.GAIT_TRIPOD)  # Default gait
+    cmd = translator.movement_commands[-1]
+    # Check that stride direction reflects joystick input
+    assert cmd.stride_direction is not None
+    assert cmd.gait_type == MovementCommandConstants.GAIT_TRIPOD  # Default gait
 
-    def test_button_to_robot_event(self):
-        """Test that button presses generate robot events for state machine."""
-        # Wait for publisher/subscriber connection to be established
-        # This is necessary because DDS discovery in ROS 2 is asynchronous
-        max_wait_iterations = 10
-        for _ in range(max_wait_iterations):
-            if self.node.robot_event_pub.get_subscription_count() > 0:
-                break
-            rclpy.spin_once(self.node, timeout_sec=0.01)
-            rclpy.spin_once(self.test_node, timeout_sec=0.01)
 
-        # Create a joystick message with Select button pressed (finalize event)
-        joy_msg = sensor_msgs.msg.Joy()
-        joy_msg.axes = [0.0] * 6
-        joy_msg.buttons = [0] * 21
-        joy_msg.buttons[4] = 1  # Select button (index 4)
+def test_button_to_robot_event(translator):
+    """Test that button presses generate robot events for state machine."""
+    # Wait for publisher/subscriber connection to be established
+    # This is necessary because DDS discovery in ROS 2 is asynchronous
+    max_wait_iterations = 10
+    for _ in range(max_wait_iterations):
+        if translator.node.robot_event_pub.get_subscription_count() > 0:
+            break
+        rclpy.spin_once(translator.node, timeout_sec=0.01)
+        rclpy.spin_once(translator.test_node, timeout_sec=0.01)
 
-        # Process the message
-        self.node._joy_callback(joy_msg)
+    # Create a joystick message with Select button pressed (finalize event)
+    joy_msg = sensor_msgs.msg.Joy()
+    joy_msg.axes = [0.0] * 6
+    joy_msg.buttons = [0] * 21
+    joy_msg.buttons[4] = 1  # Select button (index 4)
 
-        # Spin multiple times to allow message propagation through DDS
-        # ROS 2 publishing is asynchronous and may require multiple event loop iterations
-        for _ in range(5):
-            rclpy.spin_once(self.node, timeout_sec=0.02)
-            rclpy.spin_once(self.test_node, timeout_sec=0.02)
-            if len(self.robot_events) > 0:
-                break
+    # Process the message
+    translator.node._joy_callback(joy_msg)
 
-        # Verify robot event was published
-        self.assertGreater(len(self.robot_events), 0, 'Robot event should be published')
+    # Spin multiple times to allow message propagation through DDS
+    # ROS 2 publishing is asynchronous and may require multiple event loop iterations
+    for _ in range(5):
+        rclpy.spin_once(translator.node, timeout_sec=0.02)
+        rclpy.spin_once(translator.test_node, timeout_sec=0.02)
+        if len(translator.robot_events) > 0:
+            break
 
-        event = self.robot_events[-1]
-        self.assertEqual(event.data, 'finalize')
+    # Verify robot event was published
+    assert len(translator.robot_events) > 0, 'Robot event should be published'
 
-    def test_dispatch_pending_feedback_publishes_without_subscriber_check(self):
-        """Due haptic commands should be published without gating on discovery."""
-        self.node.joy_feedback_pub.publish = Mock()
-        self.node._pending_feedback_commands = [Mock(due_at=0.0, channel_id=0, intensity=0.8)]
-        self.node.haptic_feedback_scheduler.now = Mock(return_value=0.0)
+    event = translator.robot_events[-1]
+    assert event.data == 'finalize'
 
-        self.node._dispatch_pending_feedback()
 
-        self.node.joy_feedback_pub.publish.assert_called_once()
-        self.assertEqual(self.node._pending_feedback_commands, [])
+def test_dispatch_pending_feedback_publishes_without_subscriber_check(translator):
+    """Due haptic commands should be published without gating on discovery."""
+    translator.node.joy_feedback_pub.publish = Mock()
+    translator.node._pending_feedback_commands = [Mock(due_at=0.0, channel_id=0, intensity=0.8)]
+    translator.node.haptic_feedback_scheduler.now = Mock(return_value=0.0)
 
-    def test_haptic_feedback_is_published_on_joy_set_feedback(self):
-        """Gait changes should publish JoyFeedback messages on /joy/set_feedback."""
-        joy_msg = sensor_msgs.msg.Joy()
-        joy_msg.axes = [0.0] * 6
-        joy_msg.buttons = [0] * 21
-        joy_msg.buttons[14] = 1
+    translator.node._dispatch_pending_feedback()
 
-        self.node._joy_callback(joy_msg)
+    translator.node.joy_feedback_pub.publish.assert_called_once()
+    assert translator.node._pending_feedback_commands == []
 
-        for _ in range(10):
-            rclpy.spin_once(self.node, timeout_sec=0.02)
-            rclpy.spin_once(self.test_node, timeout_sec=0.02)
-            if self.joy_feedback_messages:
-                break
 
-        self.assertGreater(
-            len(self.joy_feedback_messages),
-            0,
-            'Joy feedback should be published',
-        )
-        feedback = self.joy_feedback_messages[0]
-        self.assertEqual(
-            feedback.type,
-            sensor_msgs.msg.JoyFeedback.TYPE_RUMBLE,
-        )
-        self.assertEqual(feedback.id, LEFT_RUMBLE_CHANNEL_ID)
-        self.assertGreater(feedback.intensity, 0.0)
+def test_haptic_feedback_is_published_on_joy_set_feedback(translator):
+    """Gait changes should publish JoyFeedback messages on /joy/set_feedback."""
+    joy_msg = sensor_msgs.msg.Joy()
+    joy_msg.axes = [0.0] * 6
+    joy_msg.buttons = [0] * 21
+    joy_msg.buttons[14] = 1
 
-    def test_replacing_pending_control_mode_feedback_starts_new_pattern_immediately(self):
-        """A newer mode change should interrupt stale queued feedback immediately."""
-        current_time = [100.0]
-        self.node.haptic_feedback_scheduler = HapticFeedbackScheduler(
-            clock=lambda: current_time[0]
-        )
+    translator.node._joy_callback(joy_msg)
 
-        self.node._publish_control_mode_change()
-        current_time[0] = 100.02
-        self.node._publish_control_mode_change()
+    for _ in range(10):
+        rclpy.spin_once(translator.node, timeout_sec=0.02)
+        rclpy.spin_once(translator.test_node, timeout_sec=0.02)
+        if translator.joy_feedback_messages:
+            break
 
-        pending = self.node._pending_feedback_commands
-        active_due_ats = [command.due_at for command in pending if command.intensity > 0.0]
+    assert len(translator.joy_feedback_messages) > 0, 'Joy feedback should be published'
+    feedback = translator.joy_feedback_messages[0]
+    assert feedback.type == sensor_msgs.msg.JoyFeedback.TYPE_RUMBLE
+    assert feedback.id == LEFT_RUMBLE_CHANNEL_ID
+    assert feedback.intensity > 0.0
 
-        self.assertEqual(len(pending), 19)
-        self.assertAlmostEqual(pending[0].due_at, 100.02, places=7)
-        self.assertEqual(pending[0].intensity, 0.0)
-        self.assertEqual(len(active_due_ats), 9)
-        self.assertAlmostEqual(active_due_ats[0], 100.02, places=7)
-        self.assertAlmostEqual(active_due_ats[1], 100.22, places=7)
-        self.assertAlmostEqual(active_due_ats[2], 100.42, places=7)
-        self.assertAlmostEqual(active_due_ats[-1], 102.02, places=7)
 
-    def test_dispatch_pending_feedback_publishes_interrupt_and_new_pulse_in_same_tick(self):
-        """Interrupting stale feedback should emit stop and replacement pulse together."""
-        current_time = [200.0]
-        self.node.haptic_feedback_scheduler = HapticFeedbackScheduler(
-            clock=lambda: current_time[0]
-        )
-        self.node.joy_feedback_pub.publish = Mock()
+def test_replacing_pending_control_mode_feedback_starts_new_pattern_immediately(translator):
+    """A newer mode change should interrupt stale queued feedback immediately."""
+    current_time = [100.0]
+    translator.node.haptic_feedback_scheduler = HapticFeedbackScheduler(
+        clock=lambda: current_time[0]
+    )
 
-        self.node._publish_control_mode_change()
-        current_time[0] = 200.02
-        self.node._publish_control_mode_change()
+    translator.node._publish_control_mode_change()
+    current_time[0] = 100.02
+    translator.node._publish_control_mode_change()
 
-        self.node._dispatch_pending_feedback()
+    pending = translator.node._pending_feedback_commands
+    active_due_ats = [command.due_at for command in pending if command.intensity > 0.0]
 
-        self.assertEqual(self.node.joy_feedback_pub.publish.call_count, 2)
+    assert len(pending) == 19
+    assert pending[0].due_at == pytest.approx(100.02, abs=1e-7)
+    assert pending[0].intensity == 0.0
+    assert len(active_due_ats) == 9
+    assert active_due_ats[0] == pytest.approx(100.02, abs=1e-7)
+    assert active_due_ats[1] == pytest.approx(100.22, abs=1e-7)
+    assert active_due_ats[2] == pytest.approx(100.42, abs=1e-7)
+    assert active_due_ats[-1] == pytest.approx(102.02, abs=1e-7)
 
-        stop_feedback = self.node.joy_feedback_pub.publish.call_args_list[0].args[0]
-        start_feedback = self.node.joy_feedback_pub.publish.call_args_list[1].args[0]
 
-        self.assertEqual(stop_feedback.id, RIGHT_RUMBLE_CHANNEL_ID)
-        self.assertEqual(stop_feedback.intensity, 0.0)
-        self.assertEqual(start_feedback.id, RIGHT_RUMBLE_CHANNEL_ID)
-        self.assertGreater(start_feedback.intensity, 0.0)
-        self.assertAlmostEqual(
-            self.node._pending_feedback_commands[0].due_at,
-            200.17,
-            places=7,
-        )
+def test_dispatch_pending_feedback_publishes_interrupt_and_new_pulse_in_same_tick(translator):
+    """Interrupting stale feedback should emit stop and replacement pulse together."""
+    current_time = [200.0]
+    translator.node.haptic_feedback_scheduler = HapticFeedbackScheduler(
+        clock=lambda: current_time[0]
+    )
+    translator.node.joy_feedback_pub.publish = Mock()
 
-    def test_control_mode_haptic_feedback_uses_working_rumble_channel(self):
-        """Control-mode changes should repeat the mapped pulse group 3 times."""
-        self.node._publish_control_mode_change()
+    translator.node._publish_control_mode_change()
+    current_time[0] = 200.02
+    translator.node._publish_control_mode_change()
 
-        for _ in range(90):
-            rclpy.spin_once(self.node, timeout_sec=0.02)
-            rclpy.spin_once(self.test_node, timeout_sec=0.02)
-            active_pulses = [
-                feedback for feedback in self.joy_feedback_messages if feedback.intensity > 0.0
-            ]
-            if len(active_pulses) >= 6:
-                break
+    translator.node._dispatch_pending_feedback()
 
-        self.assertGreater(
-            len(self.joy_feedback_messages),
-            0,
-            'Control-mode joy feedback should be published',
-        )
+    assert translator.node.joy_feedback_pub.publish.call_count == 2
+
+    stop_feedback = translator.node.joy_feedback_pub.publish.call_args_list[0].args[0]
+    start_feedback = translator.node.joy_feedback_pub.publish.call_args_list[1].args[0]
+
+    assert stop_feedback.id == RIGHT_RUMBLE_CHANNEL_ID
+    assert stop_feedback.intensity == 0.0
+    assert start_feedback.id == RIGHT_RUMBLE_CHANNEL_ID
+    assert start_feedback.intensity > 0.0
+    assert translator.node._pending_feedback_commands[0].due_at == pytest.approx(200.17, abs=1e-7)
+
+
+def test_control_mode_haptic_feedback_uses_working_rumble_channel(translator):
+    """Control-mode changes should repeat the mapped pulse group 3 times."""
+    translator.node._publish_control_mode_change()
+
+    for _ in range(90):
+        rclpy.spin_once(translator.node, timeout_sec=0.02)
+        rclpy.spin_once(translator.test_node, timeout_sec=0.02)
         active_pulses = [
-            feedback for feedback in self.joy_feedback_messages if feedback.intensity > 0.0
+            feedback for feedback in translator.joy_feedback_messages if feedback.intensity > 0.0
         ]
-        self.assertEqual(len(active_pulses), 6)
-        for feedback in active_pulses:
-            self.assertEqual(
-                feedback.type,
-                sensor_msgs.msg.JoyFeedback.TYPE_RUMBLE,
-            )
-            self.assertEqual(feedback.id, RIGHT_RUMBLE_CHANNEL_ID)
-            self.assertGreater(feedback.intensity, 0.0)
+        if len(active_pulses) >= 6:
+            break
 
-
-if __name__ == '__main__':
-    unittest.main()
+    assert len(translator.joy_feedback_messages) > 0, (
+        'Control-mode joy feedback should be published'
+    )
+    active_pulses = [
+        feedback for feedback in translator.joy_feedback_messages if feedback.intensity > 0.0
+    ]
+    assert len(active_pulses) == 6
+    for feedback in active_pulses:
+        assert feedback.type == sensor_msgs.msg.JoyFeedback.TYPE_RUMBLE
+        assert feedback.id == RIGHT_RUMBLE_CHANNEL_ID
+        assert feedback.intensity > 0.0

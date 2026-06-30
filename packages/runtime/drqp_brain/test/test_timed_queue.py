@@ -18,83 +18,76 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import unittest
-
 from drqp_brain.timed_queue import TimedQueue
+import pytest
 import rclpy
 
 
-class TestTimedQueue(unittest.TestCase):
-    """Test the TimedQueue class."""
+@pytest.fixture
+def timed_queue(rclpy_context):  # noqa: ARG001 (needs rclpy)
+    """Provide a TimedQueue backed by a freshly initialized rclpy node."""
+    node = rclpy.create_node('test_timed_queue')
+    try:
+        yield TimedQueue(node)
+    finally:
+        node.destroy_node()
 
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        rclpy.init()
 
-    @classmethod
-    def tearDownClass(cls):
-        rclpy.try_shutdown()
-        super().tearDownClass()
+def test_added_action_is_executed_immediately(timed_queue):
+    """Check whether actions are executed immediately."""
+    executed = False
 
-    def setUp(self) -> None:
-        node = rclpy.create_node('test_timed_queue')
-        self.addCleanup(node.destroy_node)
-        self.timed_queue = TimedQueue(node)
+    def action():
+        nonlocal executed
+        executed = True
 
-    def test_added_action_is_executed_immediately(self):
-        """Check whether actions are executed immediately."""
-        executed = False
+    timed_queue.add(0.1, action)
+    rclpy.spin_once(timed_queue.node, timeout_sec=0.1)
+    assert executed
 
-        def action():
-            nonlocal executed
-            executed = True
 
-        self.timed_queue.add(0.1, action)
-        rclpy.spin_once(self.timed_queue.node, timeout_sec=0.1)
-        self.assertTrue(executed)
+def test_next_added_action_is_executed_after_delay(timed_queue):
+    """Check whether actions are executed after the delay."""
+    executed1 = False
+    executed2 = False
 
-    def test_next_added_action_is_executed_after_delay(self):
-        """Check whether actions are executed after the delay."""
-        executed1 = False
-        executed2 = False
+    def action1():
+        nonlocal executed1
+        executed1 = True
 
-        def action1():
-            nonlocal executed1
-            executed1 = True
+    def action2():
+        nonlocal executed2
+        executed2 = True
 
-        def action2():
-            nonlocal executed2
-            executed2 = True
+    timed_queue.add(0.2, action1)
+    timed_queue.add(0.2, action2)
+    rclpy.spin_once(timed_queue.node, timeout_sec=0.05)
+    assert executed1
+    assert not executed2
 
-        self.timed_queue.add(0.2, action1)
-        self.timed_queue.add(0.2, action2)
-        rclpy.spin_once(self.timed_queue.node, timeout_sec=0.05)
-        self.assertTrue(executed1)
-        self.assertFalse(executed2)
+    while timed_queue.timer is not None:
+        rclpy.spin_once(timed_queue.node, timeout_sec=0.05)
+    assert executed2
 
-        while self.timed_queue.timer is not None:
-            rclpy.spin_once(self.timed_queue.node, timeout_sec=0.05)
-        self.assertTrue(executed2)
 
-    def test_clear(self):
-        """Check whether the queue is cleared."""
-        executed1 = False
-        executed2 = False
+def test_clear(timed_queue):
+    """Check whether the queue is cleared."""
+    executed1 = False
+    executed2 = False
 
-        def action1():
-            nonlocal executed1
-            executed1 = True
+    def action1():
+        nonlocal executed1
+        executed1 = True
 
-        def action2():
-            nonlocal executed2
-            executed2 = True
+    def action2():
+        nonlocal executed2
+        executed2 = True
 
-        self.timed_queue.add(0.01, action1)
-        self.timed_queue.add(0.01, action2)
-        self.timed_queue.clear()
-        rclpy.spin_once(self.timed_queue.node, timeout_sec=0.05)
-        self.assertFalse(executed2)
+    timed_queue.add(0.01, action1)
+    timed_queue.add(0.01, action2)
+    timed_queue.clear()
+    rclpy.spin_once(timed_queue.node, timeout_sec=0.05)
+    assert not executed2
 
-        self.assertIsNone(self.timed_queue.timer)
-        self.assertEqual(len(self.timed_queue.queue), 0)
+    assert timed_queue.timer is None
+    assert len(timed_queue.queue) == 0
