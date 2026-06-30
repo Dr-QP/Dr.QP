@@ -21,6 +21,11 @@
 from dataclasses import dataclass, field
 from unittest.mock import Mock
 
+import pytest
+import rclpy
+import sensor_msgs.msg
+import std_msgs.msg
+
 from drqp_brain.haptics import (
     HapticFeedbackScheduler,
     LEFT_RUMBLE_CHANNEL_ID,
@@ -28,10 +33,6 @@ from drqp_brain.haptics import (
 )
 from drqp_brain.joystick_translator_node import JoystickTranslatorNode
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
-import pytest
-import rclpy
-import sensor_msgs.msg
-import std_msgs.msg
 
 
 @dataclass
@@ -46,9 +47,18 @@ class _TranslatorHarness:
 
 
 @pytest.fixture
-def translator():
-    """Provide a joystick translator node wired to a consumer node."""
+def rclpy_context():
+    """Provide a ROS context for tests that construct ROS nodes directly."""
     rclpy.init()
+    try:
+        yield
+    finally:
+        rclpy.try_shutdown()
+
+
+@pytest.fixture
+def translator(rclpy_context):  # noqa: ARG001 (needs rclpy)
+    """Provide a joystick translator node wired to a consumer node."""
     node = JoystickTranslatorNode()
     test_node = rclpy.create_node('test_translator_consumer')
     harness = _TranslatorHarness(node=node, test_node=test_node)
@@ -77,7 +87,6 @@ def translator():
     finally:
         test_node.destroy_node()
         node.destroy_node()
-        rclpy.try_shutdown()
 
 
 def test_joystick_to_movement_command(translator):
