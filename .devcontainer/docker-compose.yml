@@ -6,15 +6,19 @@ services:
     profiles: ['mcp']
     ports:
       - '127.0.0.1:8811:8811'
+    environment:
+      DOCKER_SECRETS_ENGINE_SOCKET: ${DOCKER_SECRETS_ENGINE_SOCKET:-/root/.cache/docker-secrets-engine/engine.sock}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ${HOST_MCP_DIR:-/tmp/stub-mcp}:/mcp:ro
-      - ${HOST_SECRETS_SOCKET:-/tmp/stub-secrets-engine.sock}:/run/secrets/engine.sock:ro
+      - ${HOST_MCP_DIR:-/tmp/stub-mcp}:${CONTAINER_MCP_DIR:-/tmp/stub-mcp}:ro
+      - ${HOST_SECRETS_SOCKET:-/tmp/stub-secrets-engine.sock}:${DOCKER_SECRETS_ENGINE_SOCKET:-/tmp/stub-secrets-engine.sock}:ro
     command:
-      - --catalog=/mcp/catalogs/docker-mcp.yaml
-      - --config=/mcp/config.yaml
-      - --registry=/mcp/registry.yaml
-      - --tools-config=/mcp/tools.yaml
+      # Docker Desktop's MCP Toolkit now stores configured servers as a "profile" in
+      # ~/.docker/mcp/mcp-toolkit.db (mirrors `docker mcp gateway run --profile default`).
+      # The legacy --catalog/--config/--registry/--tools-config flags read stale/empty
+      # YAML files and also require absolute paths to resolve under the container's
+      # $HOME/.docker/mcp, which ${CONTAINER_MCP_DIR} (mounted to match HOME=/root) satisfies.
+      - --profile=${MCP_GATEWAY_PROFILE:-default}
       # docker-desktop secrets provider: requires Docker Desktop on the host.
       # The mcp profile only activates when ~/.docker/mcp exists, which Docker Desktop manages.
       - --secrets=docker-desktop
