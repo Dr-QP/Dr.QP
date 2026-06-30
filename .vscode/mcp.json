@@ -16,7 +16,7 @@
     },
     "MCP_DOCKER": {
       "type": "sse",
-      "url": "http://localhost:8811/sse"
+      "url": "http://mcp-gateway:8811/sse"
     },
     "drqp_robot": {
       "type": "stdio",
