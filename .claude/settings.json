@@ -18,7 +18,8 @@
       "Skill(*)",
       "Bash(pip show *)",
       "Bash(pip install *)",
-      "Bash(python3 -m py_compile *)"
+      "Bash(python3 -m py_compile *)",
+      "mcp__MCP_DOCKER__*"
     ],
     "additionalDirectories": [
       "/tmp",
