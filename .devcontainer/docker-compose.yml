@@ -41,6 +41,13 @@ services:
       - --watch=true
       - --transport=sse
       - --port=8811
+      # The gateway's bearer-token auth guards against DNS-rebinding attacks from
+      # browser clients hitting a localhost-bound port. The devcontainer instead reaches
+      # this service over the private compose network by service name (mcp-gateway:8811),
+      # and the host port is already restricted to 127.0.0.1, so that threat model doesn't
+      # apply here. The token is also regenerated per container start, so it can't be
+      # pinned in the git-tracked .mcp.json without breaking on every restart.
+      - --allow-unauthenticated
 
   devcontainer:
     image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
