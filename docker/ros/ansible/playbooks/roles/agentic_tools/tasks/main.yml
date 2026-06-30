@@ -21,4 +21,4 @@
 
 - name: Install cc-filter security layer for Claude Code
   ansible.builtin.import_tasks: cc_filter.yml
-  when: cc_filter_install | bool
+  when: agentic_tools_cc_filter_install | bool

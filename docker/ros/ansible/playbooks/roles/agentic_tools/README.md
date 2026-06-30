@@ -29,15 +29,15 @@ Gated by `install_agentic_tools` in the playbook.
 
 ## Variables
 
-| Variable                    | Default                    | Description                                        |
-| --------------------------- | -------------------------- | -------------------------------------------------- |
-| `cc_filter_install`         | `true`                     | Install the cc-filter binary.                      |
-| `cc_filter_version`         | `v0.0.6`                   | cc-filter release tag to download.                 |
-| `cc_filter_install_path`    | `/usr/local/bin/cc-filter` | Destination for the cc-filter binary.              |
-| `cc_filter_binary_mode`     | `"0755"`                   | File mode for the installed binary.                |
-| `cc_filter_checksums`       | per-arch sha256 map        | Expected binary checksums; bump with the version.  |
-| `cc_filter_configure_hooks` | `true`                     | Merge cc-filter hooks into Claude `settings.json`. |
-| `cc_filter_download_url`    | derived from version/arch  | Override to pin a custom binary URL.               |
+| Variable                                  | Default                    | Description                                        |
+| ----------------------------------------- | -------------------------- | -------------------------------------------------- |
+| `agentic_tools_cc_filter_install`         | `true`                     | Install the cc-filter binary.                      |
+| `agentic_tools_cc_filter_version`         | `v0.0.6`                   | cc-filter release tag to download.                 |
+| `agentic_tools_cc_filter_install_path`    | `/usr/local/bin/cc-filter` | Destination for the cc-filter binary.              |
+| `agentic_tools_cc_filter_binary_mode`     | `"0755"`                   | File mode for the installed binary.                |
+| `agentic_tools_cc_filter_checksums`       | per-arch sha256 map        | Expected binary checksums; bump with the version.  |
+| `agentic_tools_cc_filter_configure_hooks` | `true`                     | Merge cc-filter hooks into Claude `settings.json`. |
+| `agentic_tools_cc_filter_download_url`    | derived from version/arch  | Override to pin a custom binary URL.               |
 
 ## Required External Variables
 
