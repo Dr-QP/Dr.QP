@@ -19,7 +19,7 @@
       "Bash(pip show *)",
       "Bash(pip install *)",
       "Bash(python3 -m py_compile *)",
-      "mcp__MCP_DOCKER"
+      "mcp__gateway"
     ],
     "additionalDirectories": [
       "/tmp",
