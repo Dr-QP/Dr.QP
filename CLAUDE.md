@@ -51,7 +51,7 @@ Consult the **Principal Engineer** agent for architecture, design decisions, and
 
 Skills from `.github/skills/` are available as Claude Code slash commands via the `.claude/skills/` symlink. Claude Code discovers these automatically and exposes them as `/skill-name`:
 
-**Git & GitHub**: `/git-commit`, `/open-pr`, `/generate-pr-description`, `/pr-feedback-resolution`, `/update-branch`, `/refine-issue`, `/extract-github-actions-logs`, `/get-codeql-data`
+**Git & GitHub**: `/git-commit`, `/open-pr`, `/generate-pr-description`, `/pr-feedback-resolution`, `/update-branch`, `/refine-issue`, `/extract-github-actions-logs`, `/get-codeql-data`, `/gh-auth`
 
 **ROS 2**: `/ros2-environment-setup`, `/ros2-workspace-build`, `/ros2-workspace-testing`, `/ros2-dependency-management`, `/ros2-diagnostics`, `/ros2-launch-management`, `/ros2-lifecycle-management`, `/ros2-parameter-tuning`
 
