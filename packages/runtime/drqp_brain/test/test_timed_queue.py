@@ -18,10 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from drqp_brain.timed_queue import TimedQueue
 import pytest
 import rclpy
-
-from drqp_brain.timed_queue import TimedQueue
 
 
 @pytest.fixture

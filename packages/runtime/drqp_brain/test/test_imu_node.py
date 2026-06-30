@@ -21,10 +21,6 @@
 from dataclasses import dataclass, field
 from unittest import mock
 
-import pytest
-import rclpy
-from sensor_msgs.msg import Imu, MagneticField, Temperature
-
 from drqp_brain.imu_node import (
     _as_quaternion,
     _as_vector3,
@@ -33,6 +29,9 @@ from drqp_brain.imu_node import (
     main,
     SensorInitializationError,
 )
+import pytest
+import rclpy
+from sensor_msgs.msg import Imu, MagneticField, Temperature
 
 
 def test_as_vector3_returns_none_when_any_axis_is_missing():
