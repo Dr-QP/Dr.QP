@@ -19,13 +19,16 @@
       "Bash(pip show *)",
       "Bash(pip install *)",
       "Bash(python3 -m py_compile *)",
-      "mcp__gateway"
+      "mcp__gateway__*"
     ],
     "additionalDirectories": [
       "/tmp",
       "/opt/ros/overlay_ws"
     ]
   },
+  "allowedMcpServers": [
+    { "serverName": "gateway" }
+  ],
   "hooks": {
     "SessionStart": [
       {
