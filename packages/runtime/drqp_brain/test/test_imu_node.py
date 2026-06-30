@@ -101,16 +101,6 @@ class _ImuHarness:
 
 
 @pytest.fixture
-def rclpy_context():
-    """Provide a ROS context for tests that construct ROS nodes directly."""
-    rclpy.init()
-    try:
-        yield
-    finally:
-        rclpy.try_shutdown()
-
-
-@pytest.fixture
 def imu_harness(rclpy_context):  # noqa: ARG001 (needs rclpy)
     """Provide an IMU node backed by a fake sensor wired to a consumer node."""
     sample = ImuSample(

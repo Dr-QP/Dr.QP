@@ -46,16 +46,6 @@ class _TranslatorHarness:
 
 
 @pytest.fixture
-def rclpy_context():
-    """Provide a ROS context for tests that construct ROS nodes directly."""
-    rclpy.init()
-    try:
-        yield
-    finally:
-        rclpy.try_shutdown()
-
-
-@pytest.fixture
 def translator(rclpy_context):  # noqa: ARG001 (needs rclpy)
     """Provide a joystick translator node wired to a consumer node."""
     node = JoystickTranslatorNode()

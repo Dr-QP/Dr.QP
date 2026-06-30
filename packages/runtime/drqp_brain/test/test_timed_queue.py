@@ -24,15 +24,13 @@ import rclpy
 
 
 @pytest.fixture
-def timed_queue():
+def timed_queue(rclpy_context):  # noqa: ARG001 (needs rclpy)
     """Provide a TimedQueue backed by a freshly initialized rclpy node."""
-    rclpy.init()
     node = rclpy.create_node('test_timed_queue')
     try:
         yield TimedQueue(node)
     finally:
         node.destroy_node()
-        rclpy.try_shutdown()
 
 
 def test_added_action_is_executed_immediately(timed_queue):

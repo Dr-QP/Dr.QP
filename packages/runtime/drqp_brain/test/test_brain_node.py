@@ -51,14 +51,6 @@ def test_existing_brain_node_detection_rejects_duplicate_ros_node():
         _assert_no_existing_brain_node(node)
 
 
-@pytest.fixture
-def rclpy_context():
-    """Initialize rclpy for unit tests that construct a HexapodBrain directly."""
-    rclpy.init()
-    yield
-    rclpy.try_shutdown()
-
-
 def test_trajectory_action_client_is_created_lazily(rclpy_context):  # noqa: ARG001 (needs rclpy)
     """Only create the action client when an action sequence is requested."""
     with mock.patch('drqp_brain.brain_node.ActionClient') as action_client_cls:
