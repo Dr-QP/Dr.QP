@@ -37,7 +37,7 @@ the host resolves the request immediately and ships `username=`/`password=` back
 into the container. The `password` value is the actual GitHub OAuth token VS Code holds
 for that account, not a literal password.
 
-Because this round-trip happens entirely over the existing Remote-* IPC channel (not a
+Because this round-trip happens entirely over the existing Remote-\* IPC channel (not a
 new OAuth flow), it's non-interactive: it either returns a token immediately or returns
 nothing within `git credential fill`'s normal timeout. There's no prompt, no browser
 window, no device code to relay — which is exactly what makes it usable from a
