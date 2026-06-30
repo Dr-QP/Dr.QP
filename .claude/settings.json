@@ -27,7 +27,9 @@
     ]
   },
   "allowedMcpServers": [
-    { "serverName": "gateway" }
+    {
+      "serverName": "gateway"
+    }
   ],
   "hooks": {
     "SessionStart": [
