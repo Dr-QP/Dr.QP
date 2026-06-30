@@ -1,0 +1,77 @@
+---
+# Install and configure cc-filter, a security layer in front of Claude Code hooks.
+# https://github.com/wissem/cc-filter
+- name: Fail when cc-filter architecture is unsupported
+  ansible.builtin.fail:
+    msg: >-
+      Unsupported architecture '{{ system_arch }}' for cc-filter. Set
+      cc_filter_download_url to a compatible binary URL.
+  when: system_arch not in ["amd64", "arm64"]
+
+- name: Download cc-filter binary
+  ansible.builtin.get_url:
+    url: "{{ cc_filter_download_url }}"
+    dest: "{{ cc_filter_install_path }}"
+    checksum: "{{ cc_filter_checksum }}"
+    owner: root
+    group: root
+    mode: "{{ cc_filter_binary_mode }}"
+
+- name: Configure Claude Code hooks for cc-filter
+  when: cc_filter_configure_hooks | bool
+  block:
+    - name: Ensure Claude config directory exists
+      ansible.builtin.file:
+        path: "{{ cc_filter_claude_settings_path | dirname }}"
+        state: directory
+        owner: "{{ ros_user_setup_uid }}"
+        group: "{{ ros_user_setup_gid }}"
+        mode: "0755"
+
+    - name: Stat existing Claude settings
+      ansible.builtin.stat:
+        path: "{{ cc_filter_claude_settings_path }}"
+      register: cc_filter_settings_stat
+
+    - name: Read existing Claude settings
+      ansible.builtin.slurp:
+        src: "{{ cc_filter_claude_settings_path }}"
+      register: cc_filter_existing_settings
+      when: cc_filter_settings_stat.stat.exists
+
+    - name: Warn when existing hooks will be replaced
+      ansible.builtin.debug:
+        msg: >-
+          Existing Claude settings already define a 'hooks' key; cc-filter will
+          replace the PreToolUse, UserPromptSubmit, and SessionEnd entries.
+      when:
+        - cc_filter_existing_settings.content is defined
+        - "'hooks' in (cc_filter_existing_settings.content | b64decode | trim | default('{}', true) | from_json)"
+
+    - name: Merge cc-filter hooks into Claude settings
+      ansible.builtin.copy:
+        content: >-
+          {{
+            (cc_filter_existing_settings.content | b64decode | trim | default('{}', true) | from_json
+             if cc_filter_existing_settings.content is defined
+             else {})
+            | combine({'hooks': cc_filter_hooks}, recursive=true)
+            | to_nice_json
+          }}
+        dest: "{{ cc_filter_claude_settings_path }}"
+        owner: "{{ ros_user_setup_uid }}"
+        group: "{{ ros_user_setup_gid }}"
+        mode: "0644"
+  vars:
+    cc_filter_hook: # noqa: var-naming[no-role-prefix]
+      - hooks:
+          - type: command
+            command: "{{ cc_filter_install_path }}"
+    cc_filter_hooks: # noqa: var-naming[no-role-prefix]
+      PreToolUse:
+        - matcher: "*"
+          hooks:
+            - type: command
+              command: "{{ cc_filter_install_path }}"
+      UserPromptSubmit: "{{ cc_filter_hook }}"
+      SessionEnd: "{{ cc_filter_hook }}"
