@@ -47,6 +47,10 @@ resolve_owner_repo() {
   gh repo view --json owner,name -q '.owner.login + "/" + .name'
 }
 
+repo_name() {
+  gh repo view --json name -q '.name'
+}
+
 branch_slug() {
   local branch_name="$1"
   printf '%s' "${branch_name}" \
@@ -60,10 +64,12 @@ codespace_display_name() {
   printf 'codex-%s' "$(branch_slug "${branch_name}")"
 }
 
-# Hardcoded to this repo's .devcontainer/devcontainer.json "workspaceFolder".
-# This skill is specific to this repo's devcontainer, not a general-purpose tool.
+# GitHub Codespaces clones the repository into /workspaces/<repo-name> and
+# runs the devcontainer from there, regardless of the docker-compose bind
+# mount this repo uses locally (/opt/ros/overlay_ws). Derive that remote path
+# from the repo name rather than hardcoding it.
 codespace_workspace_dir() {
-  printf '%s' "/opt/ros/overlay_ws"
+  printf '/workspaces/%s' "$(repo_name)"
 }
 
 repo_root_tmp_dir() {

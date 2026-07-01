@@ -9,7 +9,7 @@ source "${script_dir}/__common.sh"
 branch=""
 machine="standardLinux32gb"
 idle_timeout="30m"
-retention_period="1d"
+retention_period="24h"
 poll_interval=10
 poll_timeout=300
 dry_run=0
@@ -27,7 +27,8 @@ Options:
   --branch <name>             Branch to create/find the codespace for. Default: current branch
   --machine <name>            gh codespace create -m value. Default: standardLinux32gb
   --idle-timeout <dur>        gh codespace create --idle-timeout value. Default: 30m
-  --retention-period <dur>    gh codespace create --retention-period value. Default: 1d
+  --retention-period <dur>    gh codespace create --retention-period value. Go-style
+                               duration (h/m/s only, no 'd'; max 720h). Default: 24h
   --poll-interval <seconds>   Seconds between state polls while waiting for a new codespace. Default: 10
   --poll-timeout <seconds>    Total seconds to wait before giving up. Default: 300
   --dry-run                   Print what would happen without creating anything or writing

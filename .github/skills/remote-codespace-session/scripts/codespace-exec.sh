@@ -48,6 +48,11 @@ for arg in "$@"; do
   remote_cmd="${remote_cmd} $(printf '%q' "${arg}")"
 done
 
+# Pass the whole remote command as a SINGLE argument. 'gh codespace ssh --
+# <args>' forwards <args> to ssh, which flattens them into one string that the
+# remote shell re-parses; a 'bash -lc "<cmd>"' triple would lose its grouping
+# there (the '&&' would re-split at the top level), so build one string and let
+# the remote login shell run it directly.
 status=0
-gh codespace ssh -c "${name}" -- bash -lc "${remote_cmd}" || status=$?
+gh codespace ssh -c "${name}" -- "${remote_cmd}" || status=$?
 exit "${status}"

@@ -35,11 +35,12 @@ devcontainer without local Docker.
   `GH_TOKEN`/`GITHUB_TOKEN` environment secret configured in the Codex
   Tasks environment, not `gh auth login` and not `gh-auth`. Don't wire
   `gh-auth` into this skill.
-- This repo's `.devcontainer/devcontainer.json` sets `workspaceFolder` to
-  `/opt/ros/overlay_ws`. All four scripts operate against that fixed
-  remote path (via `__common.sh`'s `codespace_workspace_dir`), not the
-  `/workspaces/<repo>` path GitHub Codespaces uses by default for repos
-  without a custom `workspaceFolder`.
+- GitHub Codespaces clones this repo into `/workspaces/<repo-name>` (e.g.
+  `/workspaces/Dr.QP`) and runs the devcontainer from there — it overrides
+  the `/opt/ros/overlay_ws` bind mount this repo's `docker-compose.yml` uses
+  for *local* devcontainers. All four scripts operate against that
+  `/workspaces/<repo-name>` remote path, derived from the repo name via
+  `__common.sh`'s `codespace_workspace_dir`.
 
 ## Bundled Scripts
 
@@ -80,7 +81,8 @@ Expect one of two distinct failure modes (see `require_codespace_auth` in
 
 Flags: `--branch <name>` (default: current branch), `--machine <name>`
 (default `standardLinux32gb`), `--idle-timeout <dur>` (default `30m`),
-`--retention-period <dur>` (default `1d`), `--poll-interval <seconds>`
+`--retention-period <dur>` (default `24h`; Go-style duration, `h`/`m`/`s`
+only — no `d` — max `720h`), `--poll-interval <seconds>`
 (default `10`), `--poll-timeout <seconds>` (default `300`), `--dry-run`.
 
 Exit codes: `0` resolved (reused or created, or dry-run report printed),
@@ -160,8 +162,9 @@ the same SSH config `codespace-sync.sh` generates at
 
 ```bash
 host="$(awk '/^Host /{print $2; exit}' ./.tmp/codespace-ssh-config)"
+# Remote path is /workspaces/<repo-name> (GitHub Codespaces' checkout root).
 rsync -az -e "ssh -F ./.tmp/codespace-ssh-config" \
-  "${host}:/opt/ros/overlay_ws/log/latest_test/" ./log/latest_test/
+  "${host}:/workspaces/Dr.QP/log/latest_test/" ./log/latest_test/
 ```
 
 `./.tmp/codespace-ssh-config` only exists after `codespace-sync.sh` has
