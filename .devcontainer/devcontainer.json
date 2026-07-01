@@ -23,10 +23,14 @@
     "UV_PROJECT_ENVIRONMENT": "/uv/venvs/${localWorkspaceFolderBasename}/"
   },
 
-  "forwardPorts": ["14500-14599"],
+  "forwardPorts": ["14500-14599", "8811"],
   "portsAttributes": {
     "14500-14599": {
       "label": "Xpra HTML5",
+      "onAutoForward": "silent"
+    },
+    "8811": {
+      "label": "MCP Gateway SSE",
       "onAutoForward": "silent"
     }
   },
