@@ -3,8 +3,8 @@ set -euo pipefail
 
 # Bootstrap a Codex Cloud host so repository agents can use GitHub CLI.
 #
-# This script is intentionally host-focused. ROS build/test/lint commands still
-# belong inside `scripts/with-ros-env.sh`.
+# Codex Cloud tasks have no ROS environment, so this script does not set up
+# or run ROS build/test/lint commands.
 
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 cd "$REPO_ROOT"
@@ -74,10 +74,6 @@ main() {
     verify_github_auth
 
     log "Codex Cloud environment is ready"
-    cat <<'MSG'
-Run ROS commands through the repository wrapper, for example:
-  scripts/with-ros-env.sh ros2 --help
-MSG
 }
 
 main "$@"

@@ -12,11 +12,8 @@ script for this repository. It prepares the host-side tools that agents need:
 - checks whether `gh` can authenticate through an existing login, `GH_TOKEN`, or
   `GITHUB_TOKEN`.
 
-Run ROS build, test, lint, and launch commands through the repository wrapper:
-
-```bash
-scripts/with-ros-env.sh <ros command>
-```
+Codex Cloud tasks have no ROS environment, so this script does not set up or
+run ROS build/test/lint/launch commands.
 
 Keep GitHub credentials in Codex Cloud environment secrets instead of committing
 them. Prefer `GH_TOKEN` for GitHub CLI automation. If no token is present, the
