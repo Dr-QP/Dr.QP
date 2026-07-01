@@ -191,10 +191,20 @@ leaves `./.tmp/codespace-name` and `./.tmp/codespace-ssh-config` in place.
 `--delete` fully deletes it (`gh codespace delete --force`) and removes
 both of those `.tmp` files.
 
-Exit codes: `0` stopped or deleted successfully, `2` usage error/`gh`
-missing/plain auth failure/no Codespace name recorded, `3` under-scoped
-token **or** the `gh codespace stop`/`delete` command itself failed —
-check the printed `ERROR` message to tell which one occurred.
+Flags: `--delete`, `--poll-interval <seconds>` (default `10`),
+`--poll-timeout <seconds>` (default `300`). Like `codespace-ensure.sh`,
+this script **waits** for the terminal state before returning —
+`gh codespace stop` returns while the Codespace is still `ShuttingDown`,
+so the script polls until it settles at `Shutdown` (or, for `--delete`,
+until it's gone from `gh codespace list`). Don't hand-roll this poll loop
+yourself; use these flags to tune it.
+
+Exit codes: `0` stopped (reached `Shutdown`) or deleted (gone) successfully,
+`2` usage error/`gh` missing/plain auth failure/no Codespace name recorded,
+`3` under-scoped token **or** the `gh codespace stop`/`delete` command
+itself failed — check the printed `ERROR` message to tell which one
+occurred, `5` timed out waiting for the terminal state (the stop/delete
+was accepted; only the wait timed out — re-check with `gh codespace list`).
 
 **Default policy:** stop (not delete) at the end of a session. Only pass
 `--delete` when the user explicitly asks for full teardown, or when a
