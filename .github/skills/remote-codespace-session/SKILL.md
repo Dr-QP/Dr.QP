@@ -120,13 +120,16 @@ No flags besides `-h`/`--help`. The script picks the sync method for you:
 if the working tree is clean, it pushes the branch and syncs the
 Codespace's checkout via `git fetch` + `git reset --hard` over SSH; if the
 tree is dirty (uncommitted or untracked changes), it rsyncs the working
-tree directly over SSH (respecting `.gitignore`, excluding `.git`). Call
+tree directly over SSH, excluding `.git` and everything git itself
+considers ignored (all `.gitignore` files in the tree, including nested
+ones and `!`-negated re-includes — not just the root `.gitignore`). Call
 it before every remote build/test — it figures out the right method
 itself.
 
 Exit codes: `0` synced (either path), `2` usage error/missing Codespace
-name/SSH config generation or parsing failure, `3` git push failed, `4`
-rsync failed, `5` remote git fetch/checkout/reset over SSH failed.
+name/SSH config generation or parsing failure, `3` under-scoped token or
+git push failed, `4` rsync failed, `5` remote git fetch/checkout/reset
+over SSH failed.
 
 ## Workflow 4: Run Build/Test Remotely
 

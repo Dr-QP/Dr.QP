@@ -21,12 +21,13 @@ Behavior:
   the current branch and syncs the codespace's checkout via 'git fetch' +
   'git reset --hard' over SSH.
   If the working tree is dirty, rsyncs the working tree directly to the
-  codespace over SSH (respecting .gitignore, excluding .git).
+  codespace over SSH, excluding .git and everything git considers ignored
+  (all .gitignore files in the tree, honoring '!' negations).
 
 Exit codes:
   0  Synced (either path)
   2  Usage error, missing codespace name, or SSH config generation/parsing failure
-  3  Git push failed (diverged or other push error)
+  3  Under-scoped token, or git push failed (diverged or other push error)
   4  rsync failed
   5  Remote git fetch/checkout/reset over SSH failed
 
@@ -72,9 +73,18 @@ if [[ -n "$(git status --porcelain)" ]]; then
   fi
 
   repo_root="$(git rev-parse --show-toplevel)"
+  exclude_file="$(sync_exclude_file)"
+
+  # Ask git for its fully-resolved ignore list rather than feeding rsync the
+  # root .gitignore directly: rsync's --exclude-from can't see the repo's
+  # nested .gitignore files, and it has no concept of gitignore's '!'
+  # negation, so files re-included by a negation line (e.g. .vscode/mcp.json)
+  # would otherwise be silently dropped from every sync.
+  git -C "${repo_root}" ls-files --others --ignored --exclude-standard \
+    | sed 's|^|/|' > "${exclude_file}"
 
   if ! rsync_output="$(rsync -az --delete -e "ssh -F ${ssh_cfg}" \
-    --exclude-from="${repo_root}/.gitignore" --exclude '.git' \
+    --exclude-from="${exclude_file}" --exclude '.git' \
     "${repo_root}/" "${host}:$(codespace_workspace_dir)/" 2>&1)"; then
     print_error "rsync to codespace failed:"
     printf '%s\n' "${rsync_output}" >&2

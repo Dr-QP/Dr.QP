@@ -59,6 +59,9 @@ repo_name() {
 }
 
 branch_slug() {
+  # Truncated to 40 chars with no collision handling: two branches whose
+  # sanitized names share the same 40-char prefix map to the same
+  # Codespace display name, and codespace-ensure.sh will silently reuse it.
   local branch_name="$1"
   printf '%s' "${branch_name}" \
     | tr '[:upper:]' '[:lower:]' \
@@ -92,6 +95,10 @@ codespace_name_file() {
 
 ssh_config_file() {
   printf '%s/codespace-ssh-config' "$(repo_root_tmp_dir)"
+}
+
+sync_exclude_file() {
+  printf '%s/codespace-sync-exclude' "$(repo_root_tmp_dir)"
 }
 
 write_codespace_name() {
