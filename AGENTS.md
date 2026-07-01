@@ -4,6 +4,8 @@ NEVER use "$TMPDIR" env variable.
 ALWAYS use "./.tmp" (relative to the repo root) for temporary files; create it if it does not exist.
 NEVER use GitHub API or GitHub MCP tools to update branch refs or push branch contents. Use local git branch workflows instead; if push authentication is unavailable, stop and report the blocker rather than updating the branch remotely via API.
 
+If `gh` is not authenticated in a devcontainer in VSCode try the [gh-auth](/.github/skills/gh-auth/) skill instead of prompting the user for a token first.
+
 ## Best Practices for Agents
 
 0. NEVER change git config on local or global level unless explicitly instructed. NEVER switch/change remote.
@@ -18,9 +20,8 @@ NEVER use GitHub API or GitHub MCP tools to update branch refs or push branch co
 9. **Enable coverage** with `--mixin coverage-pytest` when testing
 10. **Re-run failed tests** with `--packages-select-test-failures`
 11. **When available in VS Code, use `vscode/askQuestions`** for all yes/no and multiple-choice user questions
-12. **For Python ROS tests, initialize `rclpy` once per test class**. Use `setUpClass()` with `cls.addClassCleanup(rclpy.try_shutdown)` for `unittest` classes, or the pytest equivalent class-scoped setup/teardown. Keep node, client, subscription, and action cleanup at the test level with `self.addCleanup(...)` or fixture finalizers.
-13. **Do not re-declare, bind, or explicitly forward launch arguments owned by included ROS launch files**. Externally set launch arguments are available to included launch descriptions through the launch context; only use `DeclareLaunchArgument`, `LaunchConfiguration`, or `launch_arguments={...}` entries for arguments owned by the current launch file.
-14. **Codex: run ROS build/test/lint commands with sandbox escalation** (`require_escalated`) because the managed sandbox blocks dependency downloads, ROS domain sockets, Gazebo/launch process behavior, and ROS log writes under `/root/.ros`. Still use `scripts/with-ros-env.sh`, incremental build/test selectors, and explain the escalation reason in the request.
+12. **Do not re-declare, bind, or explicitly forward launch arguments owned by included ROS launch files**. Externally set launch arguments are available to included launch descriptions through the launch context; only use `DeclareLaunchArgument`, `LaunchConfiguration`, or `launch_arguments={...}` entries for arguments owned by the current launch file.
+13. **Codex: run ROS build/test/lint commands with sandbox escalation** (`require_escalated`) because the managed sandbox blocks dependency downloads, ROS domain sockets, Gazebo/launch process behavior, and ROS log writes under `/root/.ros`. Still use `scripts/with-ros-env.sh`, incremental build/test selectors, and explain the escalation reason in the request.
 
 ### When in Doubt
 
@@ -49,12 +50,6 @@ Update `.github` sources; symlinks pick up changes automatically.
 ## Remote Agent Guidelines
 
 When addressing PR review comments, CI failures, CodeQL findings, or coverage gaps, use the [pr-feedback-resolution](/.github/skills/pr-feedback-resolution/) skill.
-
-## Available Skills
-
-Browse [`.github/skills/`](/.github/skills/). See [README](/.github/skills/README.md) for validation.
-
-Key skills: ros2-environment-setup, ros2-workspace-build, ros2-workspace-testing, ros2-dependency-management, code-review-standards, pr-feedback-resolution, create-ros2-package, add-test-file, implement-publisher-subscriber, create-state-machine, generate-pr-description, refine-issue.
 
 ## Code Review Standards
 

@@ -28,6 +28,7 @@ Analyze the full diff and provide a thorough code review focused on:
 - Performance considerations
 - ROS 2 conventions (node lifecycle, topic/service naming, parameter handling)
 - C++/Python style and idioms
+- IGNORE import ordering, that is handled by `ruff` and `clang-format` in CI
 - Test coverage and quality
 
 ## Steps

@@ -1,4 +1,54 @@
 services:
+  mcp-gateway:
+    image: docker/mcp-gateway
+    pull_policy: if_not_present
+    restart: unless-stopped
+    profiles: ['mcp']
+    ports:
+      - '127.0.0.1:8811:8811'
+    environment:
+      DOCKER_SECRETS_ENGINE_SOCKET: ${DOCKER_SECRETS_ENGINE_SOCKET:-/root/.cache/docker-secrets-engine/engine.sock}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${HOST_MCP_DIR:-/tmp/stub-mcp}:${CONTAINER_MCP_DIR:-/tmp/stub-mcp}:ro
+      - ${HOST_SECRETS_SOCKET:-/tmp/stub-secrets-engine.sock}:${DOCKER_SECRETS_ENGINE_SOCKET:-/tmp/stub-secrets-engine.sock}:ro
+    # On a freshly (re)created container, Docker Desktop's per-container DNS proxy can take
+    # a moment to attach. The gateway's image-signature check does an outbound DNS lookup
+    # immediately on startup, and if it loses that race it exits; in-place restarts don't
+    # reliably re-trigger the DNS attach, so `restart: unless-stopped` alone can crash-loop
+    # forever. Wait for DNS to actually work before handing off to the real entrypoint.
+    entrypoint:
+      - sh
+      - -c
+      - |
+        for i in $$(seq 1 30); do
+          nslookup registry-1.docker.io >/dev/null 2>&1 && break
+          echo "mcp-gateway: waiting for network/DNS to be ready ($$i/30)..." >&2
+          sleep 1
+        done
+        exec /docker-mcp gateway run "$$@"
+      - sh
+    command:
+      # Docker Desktop's MCP Toolkit now stores configured servers as a "profile" in
+      # ~/.docker/mcp/mcp-toolkit.db (mirrors `docker mcp gateway run --profile default`).
+      # The legacy --catalog/--config/--registry/--tools-config flags read stale/empty
+      # YAML files and also require absolute paths to resolve under the container's
+      # $HOME/.docker/mcp, which ${CONTAINER_MCP_DIR} (mounted to match HOME=/root) satisfies.
+      - --profile=${MCP_GATEWAY_PROFILE:-default}
+      # docker-desktop secrets provider: requires Docker Desktop on the host.
+      # The mcp profile only activates when ~/.docker/mcp exists, which Docker Desktop manages.
+      - --secrets=docker-desktop
+      - --watch=true
+      - --transport=sse
+      - --port=8811
+      # The gateway's bearer-token auth guards against DNS-rebinding attacks from
+      # browser clients hitting a localhost-bound port. The devcontainer instead reaches
+      # this service over the private compose network by service name (mcp-gateway:8811),
+      # and the host port is already restricted to 127.0.0.1, so that threat model doesn't
+      # apply here. The token is also regenerated per container start, so it can't be
+      # pinned in the git-tracked .mcp.json without breaking on every restart.
+      - --allow-unauthenticated
+
   devcontainer:
     image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
     # Required for Docker in Docker (dind) to allow nested containers for ROS 2 development
@@ -26,6 +76,13 @@ services:
       # Docker mcp setup from host
       - ${HOST_MCP_DIR:-/tmp/stub-mcp}:${CONTAINER_MCP_DIR:-/tmp/stub-mcp}:ro
       - ${HOST_SECRETS_SOCKET:-/tmp/stub-secrets-engine.sock}:${DOCKER_SECRETS_ENGINE_SOCKET:-/tmp/stub-secrets-engine.sock}:ro
+
+      # Dedicated volume for the nested (Docker-in-Docker) engine's storage.
+      # /var/lib/docker must NOT live on the container's own overlay-mounted writable
+      # layer: the inner dockerd's overlay2 snapshotter would then be stacking an
+      # overlay mount on top of an overlay mount, which the kernel rejects with
+      # "invalid argument". A named volume is backed by a real filesystem instead.
+      - drqp-docker-data:/var/lib/docker
     command: ['sleep', 'infinity']
 
     ######################################################################
@@ -41,3 +98,6 @@ services:
     # pid: host
     # user: "1001:1001", # Change to match primary user on the host
     ######################################################################
+
+volumes:
+  drqp-docker-data:

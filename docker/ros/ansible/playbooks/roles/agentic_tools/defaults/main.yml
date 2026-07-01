@@ -1,0 +1,20 @@
+---
+# cc-filter: security layer in front of Claude Code hooks.
+# https://github.com/wissem/cc-filter
+agentic_tools_cc_filter_install: true
+agentic_tools_cc_filter_version: v0.0.6
+agentic_tools_cc_filter_install_path: /usr/local/bin/cc-filter
+agentic_tools_cc_filter_binary_mode: "0755"
+agentic_tools_cc_filter_download_url: >-
+  https://github.com/wissem/cc-filter/releases/download/{{ agentic_tools_cc_filter_version }}/cc-filter-linux-{{ system_arch }}
+
+# SHA-256 checksums of the release binaries, keyed by architecture. Bump
+# alongside agentic_tools_cc_filter_version so a compromised or tag-floated asset is rejected.
+agentic_tools_cc_filter_checksums:
+  amd64: sha256:5c9dbfa6cc24027277661a0fe17fca130fdb5d2bd46ac1474bdaa843c38cf308
+  arm64: sha256:2eeb50a337123b5f897070a3f0604c79fa48a54acdd1f6eb77878cf9ea14d236
+agentic_tools_cc_filter_checksum: "{{ agentic_tools_cc_filter_checksums[system_arch] }}"
+
+# Wire cc-filter into the user's Claude Code hooks (settings.json).
+agentic_tools_cc_filter_configure_hooks: true
+agentic_tools_cc_filter_claude_settings_path: "{{ user_home }}/.claude/settings.json"
