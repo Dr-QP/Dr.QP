@@ -14,7 +14,15 @@ DOCKER_PASS_ENV_FILE="$workspace_dir/.tmp/keyring-session.env"
 DOCKER_PASS_EXTERNAL_ENGINE="${DOCKER_PASS_EXTERNAL_ENGINE:-0}"
 
 list_docker_mcp_secrets() {
-    docker pass ls 2>/dev/null | grep '^docker/mcp/'
+    docker mcp secret ls 2>/dev/null | awk -F '|' '
+        {
+            name = $1
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", name)
+            if (name ~ /^docker\/mcp\//) {
+                print name
+            }
+        }
+    '
 }
 
 stream_live_engine_secrets() {
