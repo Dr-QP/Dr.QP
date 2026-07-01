@@ -106,7 +106,7 @@ if [[ -z "${branch}" ]]; then
   branch="$(current_branch)"
 fi
 
-display_name="codex-$(branch_slug "${branch}")"
+display_name="$(codespace_display_name "${branch}")"
 
 existing_name="$(codespace_lookup_by_display_name "${owner_repo}" "${display_name}")"
 
