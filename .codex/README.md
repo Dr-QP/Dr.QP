@@ -6,29 +6,16 @@ are discoverable in Codex.
 ## Codex Cloud environment setup
 
 Use [`setup-codex-cloud.sh`](setup-codex-cloud.sh) as the Codex Cloud setup
-script for this repository. It prepares the host-side tools that agents need
-before entering the ROS devcontainer:
+script for this repository. It prepares the host-side tools that agents need:
 
-- installs GitHub CLI (`gh`) when it is missing;
-- installs the VS Code Dev Containers CLI (`devcontainer`) when it is missing;
-- starts or verifies the host Docker daemon;
+- installs GitHub CLI (`gh`) when it is missing; and
 - checks whether `gh` can authenticate through an existing login, `GH_TOKEN`, or
-  `GITHUB_TOKEN`; and
-- runs `devcontainer up --workspace-folder /workspace` with the host Docker
-  socket mounted into the container.
+  `GITHUB_TOKEN`.
 
-After setup, run commands inside the container with:
+Run ROS build, test, lint, and launch commands through the repository wrapper:
 
 ```bash
-devcontainer exec --workspace-folder /workspace bash -lc '<command>'
-```
-
-Run ROS build, test, lint, and launch commands through the repository wrapper
-inside that `devcontainer exec` call:
-
-```bash
-devcontainer exec --workspace-folder /workspace bash -lc \
-  'scripts/with-ros-env.sh <ros command>'
+scripts/with-ros-env.sh <ros command>
 ```
 
 Keep GitHub credentials in Codex Cloud environment secrets instead of committing

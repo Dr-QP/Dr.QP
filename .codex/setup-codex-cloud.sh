@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Bootstrap a Codex Cloud host so repository agents can use GitHub CLI and the
-# VS Code Dev Containers CLI before entering the project devcontainer.
+# Bootstrap a Codex Cloud host so repository agents can use GitHub CLI.
 #
 # This script is intentionally host-focused. ROS build/test/lint commands still
-# belong inside the devcontainer via `devcontainer exec` and
-# `scripts/with-ros-env.sh`.
+# belong inside `scripts/with-ros-env.sh`.
 
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 cd "$REPO_ROOT"
@@ -53,47 +51,6 @@ install_github_cli() {
     fi
 }
 
-install_devcontainer_cli() {
-    if have devcontainer; then
-        log "Dev Containers CLI already installed: $(devcontainer --version)"
-        return 0
-    fi
-
-    log "Installing Dev Containers CLI"
-    if have npm; then
-        npm install -g @devcontainers/cli
-    elif have bun; then
-        bun add -g @devcontainers/cli
-    else
-        printf 'error: npm or bun is required to install @devcontainers/cli\n' >&2
-        return 1
-    fi
-}
-
-ensure_docker_running() {
-    if ! have docker; then
-        printf 'error: Docker CLI is not installed on the Codex Cloud host\n' >&2
-        return 1
-    fi
-
-    if docker info >/dev/null 2>&1; then
-        log "Docker daemon is already running"
-        return 0
-    fi
-
-    log "Starting Docker daemon"
-    if have service; then
-        run_sudo service docker start || true
-    fi
-    if ! docker info >/dev/null 2>&1 && have systemctl; then
-        run_sudo systemctl start docker || true
-    fi
-    if ! docker info >/dev/null 2>&1; then
-        printf 'error: Docker daemon is not reachable; start Docker before running devcontainer commands\n' >&2
-        return 1
-    fi
-}
-
 verify_github_auth() {
     if gh auth status >/dev/null 2>&1; then
         log "GitHub CLI is authenticated"
@@ -112,29 +69,14 @@ interactively before tasks that need GitHub API access.
 MSG
 }
 
-bring_up_devcontainer() {
-    log "Bringing up the devcontainer"
-    local extra_args=()
-    if [[ -S /var/run/docker.sock ]]; then
-        extra_args+=(--mount "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock")
-    fi
-    devcontainer up --workspace-folder "$REPO_ROOT" "${extra_args[@]+"${extra_args[@]}"}"
-}
-
 main() {
     install_github_cli
-    install_devcontainer_cli
-    ensure_docker_running
     verify_github_auth
-    bring_up_devcontainer
 
     log "Codex Cloud environment is ready"
     cat <<'MSG'
-Run commands inside the devcontainer with:
-  devcontainer exec --workspace-folder /workspace bash -lc '<command>'
-
 Run ROS commands through the repository wrapper, for example:
-  devcontainer exec --workspace-folder /workspace bash -lc 'scripts/with-ros-env.sh ros2 --help'
+  scripts/with-ros-env.sh ros2 --help
 MSG
 }
 
