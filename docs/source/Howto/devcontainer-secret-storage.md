@@ -76,11 +76,11 @@ re-import.
 
 ## Summary
 
-| Option                           | Secrets at rest in container | Headless start                                | Notes                           |
-| --------------------------------- | ---------------------------- | --------------------------------------------- | -------------------------------- |
-| Empty-password keyring (default) | Yes, unencrypted             | Yes                                           | Relies on host disk encryption   |
-| Password-encrypted keyring       | Yes, encrypted               | Yes, if password is sourced non-interactively | Use host keychain / 1Password    |
-| Ephemeral tmpfs                  | No                            | Yes                                           | Re-import every session          |
+| Option                           | Secrets at rest in container | Headless start                                | Notes                          |
+| -------------------------------- | ---------------------------- | --------------------------------------------- | ------------------------------ |
+| Empty-password keyring (default) | Yes, unencrypted             | Yes                                           | Relies on host disk encryption |
+| Password-encrypted keyring       | Yes, encrypted               | Yes, if password is sourced non-interactively | Use host keychain / 1Password  |
+| Ephemeral tmpfs                  | No                           | Yes                                           | Re-import every session        |
 
 docker/mcp secrets aren't in this table: they're always served from the host's
 `docker-secrets-engine` socket and never persist in the container, regardless
