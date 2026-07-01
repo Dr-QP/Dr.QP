@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Shared helpers for the remote-codespace-session skill scripts.
 # This file is meant to be sourced, not executed directly:
 #   source "$(dirname -- "${BASH_SOURCE[0]}")/__common.sh"
@@ -80,7 +82,7 @@ ssh_config_file() {
 
 write_codespace_name() {
   local name="$1"
-  printf '%s' "${name}" | tr -d '[:space:]' > "$(codespace_name_file)"
+  printf '%s' "${name}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' > "$(codespace_name_file)"
 }
 
 read_codespace_name() {
@@ -90,7 +92,7 @@ read_codespace_name() {
     print_error "No codespace name recorded. Run codespace-ensure.sh first."
     exit 2
   fi
-  tr -d '[:space:]' < "${name_file}"
+  sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' < "${name_file}"
 }
 
 codespace_lookup_by_display_name() {
