@@ -96,6 +96,7 @@ myst_enable_extensions = [
     'html_image',
 ]
 myst_url_schemes = ('http', 'https', 'mailto')
+myst_heading_anchors = 3
 
 
 intersphinx_mapping = {
