@@ -68,7 +68,7 @@ branch_slug() {
 
 codespace_display_name() {
   local branch_name="$1"
-  printf 'codex-%s' "$(branch_slug "${branch_name}")"
+  printf 'agent-%s' "$(branch_slug "${branch_name}")"
 }
 
 # GitHub Codespaces clones the repository into /workspaces/<repo-name> and
