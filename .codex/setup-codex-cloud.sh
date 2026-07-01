@@ -11,9 +11,6 @@ set -euo pipefail
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 cd "$REPO_ROOT"
 
-TMP_DIR="./.tmp/codex-cloud-setup"
-mkdir -p "$TMP_DIR"
-
 log() {
     printf '\n==> %s\n' "$*"
 }
@@ -64,9 +61,9 @@ install_devcontainer_cli() {
 
     log "Installing Dev Containers CLI"
     if have npm; then
-        run_sudo npm install -g @devcontainers/cli
+        npm install -g @devcontainers/cli
     elif have bun; then
-        run_sudo bun add -g @devcontainers/cli
+        bun add -g @devcontainers/cli
     else
         printf 'error: npm or bun is required to install @devcontainers/cli\n' >&2
         return 1
@@ -117,8 +114,11 @@ MSG
 
 bring_up_devcontainer() {
     log "Bringing up the devcontainer"
-    devcontainer up --workspace-folder /workspace \
-        --mount "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock"
+    local extra_args=()
+    if [[ -S /var/run/docker.sock ]]; then
+        extra_args+=(--mount "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock")
+    fi
+    devcontainer up --workspace-folder "$REPO_ROOT" "${extra_args[@]+"${extra_args[@]}"}"
 }
 
 main() {
