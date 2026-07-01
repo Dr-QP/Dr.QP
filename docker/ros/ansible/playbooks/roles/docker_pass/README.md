@@ -6,7 +6,7 @@ This Ansible role installs a working Linux `docker-pass` Docker CLI plugin using
 
 The upstream Docker Pass implementation on Linux uses the freedesktop Secret Service API over D-Bus. It is not backed by the `pass` GPG password store. This role installs the Docker CLI plugin binary, and the launcher also exposes a hidden local secrets-engine mode that serves the resolver API expected by `docker mcp secret ...` inside Linux devcontainers.
 
-This role installs `docker-pass` automatically. The devcontainer startup scripts are responsible for launching a D-Bus session plus `gnome-keyring-daemon` so the official Linux backend is available, then starting the local resolver socket on `~/.cache/docker-secrets-engine/engine.sock`.
+This role installs `docker-pass` automatically. Devcontainer secrets for `docker/mcp` always come from the host's `docker-secrets-engine` socket, mounted directly into the container as `DOCKER_SECRETS_ENGINE_SOCKET`; this plugin binary lets you run `docker pass` against that mounted socket from inside the devcontainer shell.
 
 ## Requirements
 
@@ -47,9 +47,7 @@ See `defaults/main.yml` for default values
 
 `docker pass` on Linux talks to Secret Service, not the `pass` utility. If `docker pass ls` fails with D-Bus or collection errors, the plugin installation is correct but the container is missing a running Secret Service session.
 
-The repository bootstrap imports exported secrets with `docker pass set` only when it is operating without a mounted external secrets engine socket, so the devcontainer still has a local backend when it cannot talk to the host engine directly.
-
-The devcontainer startup script also launches the hidden `internal-engine-serve` mode so `docker mcp secret ls` and other local resolver clients can talk to `~/.cache/docker-secrets-engine/engine.sock` without Docker Desktop running inside the container. When a host engine socket is already mounted and healthy, startup uses that socket directly and skips local secret mirroring.
+`.devcontainer/devcontainer-init.sh` mounts the host's `docker-secrets-engine` socket directly into the container as `DOCKER_SECRETS_ENGINE_SOCKET`; there is no local engine fallback or secret import step, so `docker/mcp` secrets are only available when that host socket is present and healthy.
 
 ## References
 
