@@ -10,6 +10,10 @@
       - lsb-release
       - ca-certificates
       - apt-utils
+      # Pre-installed so GitHub Codespaces (and the remote-codespace-session
+      # skill's `gh codespace ssh`) can start an SSH server in the container.
+      # The devcontainers/features/sshd feature handles configuration.
+      - openssh-server
     state: present
     update_cache: true
     install_recommends: false

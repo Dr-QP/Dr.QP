@@ -3,6 +3,12 @@
   "initializeCommand": ".devcontainer/devcontainer-init.sh",
   "dockerComposeFile": ["docker-compose.yml"],
   "service": "devcontainer",
+  "features": {
+    // Configures the SSH server (openssh-server is pre-installed in the image)
+    // so `gh codespace ssh` can attach — required by the
+    // remote-codespace-session skill and GitHub Codespaces SSH access.
+    "ghcr.io/devcontainers/features/sshd:1": {}
+  },
   "customizations": {
     "vscode": {
       "extensions": [
