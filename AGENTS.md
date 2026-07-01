@@ -20,9 +20,8 @@ If `gh` is not authenticated in a devcontainer in VSCode try the [gh-auth](/.git
 9. **Enable coverage** with `--mixin coverage-pytest` when testing
 10. **Re-run failed tests** with `--packages-select-test-failures`
 11. **When available in VS Code, use `vscode/askQuestions`** for all yes/no and multiple-choice user questions
-12. **For Python ROS tests, initialize `rclpy` once per test class**. Use `setUpClass()` with `cls.addClassCleanup(rclpy.try_shutdown)` for `unittest` classes, or the pytest equivalent class-scoped setup/teardown. Keep node, client, subscription, and action cleanup at the test level with `self.addCleanup(...)` or fixture finalizers.
-13. **Do not re-declare, bind, or explicitly forward launch arguments owned by included ROS launch files**. Externally set launch arguments are available to included launch descriptions through the launch context; only use `DeclareLaunchArgument`, `LaunchConfiguration`, or `launch_arguments={...}` entries for arguments owned by the current launch file.
-14. **Codex: run ROS build/test/lint commands with sandbox escalation** (`require_escalated`) because the managed sandbox blocks dependency downloads, ROS domain sockets, Gazebo/launch process behavior, and ROS log writes under `/root/.ros`. Still use `scripts/with-ros-env.sh`, incremental build/test selectors, and explain the escalation reason in the request.
+12. **Do not re-declare, bind, or explicitly forward launch arguments owned by included ROS launch files**. Externally set launch arguments are available to included launch descriptions through the launch context; only use `DeclareLaunchArgument`, `LaunchConfiguration`, or `launch_arguments={...}` entries for arguments owned by the current launch file.
+13. **Codex: run ROS build/test/lint commands with sandbox escalation** (`require_escalated`) because the managed sandbox blocks dependency downloads, ROS domain sockets, Gazebo/launch process behavior, and ROS log writes under `/root/.ros`. Still use `scripts/with-ros-env.sh`, incremental build/test selectors, and explain the escalation reason in the request.
 
 ### When in Doubt
 
