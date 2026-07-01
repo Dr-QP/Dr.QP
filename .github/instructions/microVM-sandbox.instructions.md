@@ -16,7 +16,7 @@ devcontainer up --workspace-folder /workspace \
   --mount "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock"
 ```
 
-The `devcontainer up` command runs all lifecycle hooks defined in `devcontainer.json`: `postCreateCommand` (directory ownership), `postStartCommand` (Docker check), and `postAttachCommand` (rosdep install, Python venv creation, xpra startup).
+The `devcontainer up` command runs all lifecycle hooks defined in `devcontainer.json`: `postCreateCommand` (directory ownership), `postStartCommand` (keyring setup, firewall, xpra), and `postAttachCommand` (rosdep install, Python venv creation, xpra startup).
 
 ### Running Commands
 
