@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Bring up a GNOME Keyring Secret Service (org.freedesktop.secrets) inside the
-# container. Safe to run standalone to enable the keyring; used to store
-# `gh auth login` tokens.
+# container. Safe to run standalone to enable the keyring, and reused by
+# devcontainer-start-docker-pass.sh.
 #
 # Idempotent: a live session is reused, a saved session is restored, otherwise
 # a fresh dbus + gnome-keyring session is started. The resulting D-Bus session
-# environment is persisted to .tmp/keyring-session.env so other processes can
-# source it and reach the keyring.
+# environment is persisted to .tmp/keyring-session.env so other processes
+# (docker-pass engine, gh, etc.) can source it and reach the keyring.
 #
 # IMPORTANT: login.keyring is the actual secret store. Overwriting it destroys
 # every secret already saved in it (e.g. `gh auth login` tokens), so we must
@@ -17,15 +17,16 @@
 # disk. This is deliberate: it lets the daemon start headless without an
 # interactive unlock prompt. It is acceptable for a single-user devcontainer
 # whose disk is already protected by host-level encryption (FileVault / the
-# Docker Desktop VM). docker/mcp secrets bypass this keyring entirely: the
-# devcontainer and the mcp-gateway sidecar both mount the host's
-# docker-secrets-engine socket directly (see .devcontainer/devcontainer-init.sh),
-# so those secrets never persist inside the container.
+# Docker Desktop VM). The more secure path -- the externally mounted
+# docker-secrets-engine, where secrets never persist inside the container -- is
+# already wired up and preferred when available (DOCKER_PASS_EXTERNAL_ENGINE=1,
+# set by .devcontainer/devcontainer-init.sh).
 #
-# If the threat model changes and at-rest encryption is required for the gh
-# token keyring, switch to `gnome-keyring-daemon --login` (reads a password on
-# stdin) with a STABLE unlock password pulled from the host keychain /
-# 1Password at init time.
+# If the threat model changes and at-rest encryption is required, switch to
+# `gnome-keyring-daemon --login` (reads a password on stdin) with a STABLE
+# unlock password pulled from the host keychain / 1Password at init time. Do NOT
+# reuse DOCKER_PASS_EXPORT_KEY for this: it is regenerated randomly on every
+# devcontainer-init, so it cannot unlock a keyring that survives reloads.
 # See docs/source/Howto/devcontainer-secret-storage.md for the full discussion.
 set -euo pipefail
 
