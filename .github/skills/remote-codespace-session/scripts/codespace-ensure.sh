@@ -162,6 +162,7 @@ elapsed=0
 state="$(codespace_state_by_name "${owner_repo}" "${new_name}")"
 while [[ "${state}" != "Available" ]]; do
   if [[ "${elapsed}" -ge "${poll_timeout}" ]]; then
+    write_codespace_name "${new_name}"
     print_error "Timed out after ${poll_timeout}s waiting for codespace ${new_name} to become Available (last state: ${state}). Check 'gh codespace list' manually."
     exit 5
   fi
