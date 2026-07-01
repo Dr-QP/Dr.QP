@@ -43,7 +43,7 @@ devcontainer without local Docker.
 - GitHub Codespaces clones this repo into `/workspaces/<repo-name>` (e.g.
   `/workspaces/Dr.QP`) and runs the devcontainer from there — it overrides
   the `/opt/ros/overlay_ws` bind mount this repo's `docker-compose.yml` uses
-  for *local* devcontainers. All four scripts operate against that
+  for _local_ devcontainers. All four scripts operate against that
   `/workspaces/<repo-name>` remote path, derived from the repo name via
   `__common.sh`'s `codespace_workspace_dir`.
 
@@ -68,7 +68,7 @@ gh codespace list --json name -q 'length'
 ```
 
 Expect one of two distinct failure modes (see `require_codespace_auth` in
-[__common.sh](scripts/__common.sh) for the exact logic):
+[\_\_common.sh](scripts/__common.sh) for the exact logic):
 
 - **Exit 2** — plain not-authenticated. `gh auth status` will also report
   failure.
@@ -95,7 +95,7 @@ Exit codes: `0` resolved (reused or created, or dry-run report printed),
 `4` `gh codespace create` failed, `5` timed out waiting for a new
 Codespace to reach `Available`.
 
-**Cost guardrail — MUST, not a suggestion:** Before the *first* real
+**Cost guardrail — MUST, not a suggestion:** Before the _first_ real
 (non-dry-run) invocation of `codespace-ensure.sh` in a session where no
 Codespace is already known to exist for this branch, run it with
 `--dry-run` first, show the user the exact machine type / idle-timeout /
