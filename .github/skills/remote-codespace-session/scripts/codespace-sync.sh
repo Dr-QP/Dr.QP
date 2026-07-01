@@ -57,6 +57,7 @@ name="$(read_codespace_name)"
 
 if [[ -n "$(git status --porcelain)" ]]; then
   # Rsync path: working tree has uncommitted and/or untracked changes.
+  require_rsync
   ssh_cfg="$(ssh_config_file)"
 
   if ! gh codespace ssh -c "${name}" --config > "${ssh_cfg}"; then

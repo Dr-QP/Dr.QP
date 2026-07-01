@@ -14,6 +14,9 @@
       # skill's `gh codespace ssh`) can start an SSH server in the container.
       # The devcontainers/features/sshd feature handles configuration.
       - openssh-server
+      # Required on the remote end for the remote-codespace-session skill's
+      # dirty-tree sync path (`rsync -e ssh ...`); rsync must exist on both ends.
+      - rsync
     state: present
     update_cache: true
     install_recommends: false

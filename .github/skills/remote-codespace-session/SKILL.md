@@ -27,6 +27,11 @@ devcontainer without local Docker.
 
 - `gh` CLI installed and authenticated with a token that has both `repo`
   and `codespace` OAuth scopes.
+- `rsync` installed **locally** — required by `codespace-sync.sh`'s
+  dirty-tree path (`rsync -e ssh`), which needs rsync on both ends. It is
+  pre-installed in the codespace image on the remote end; on the local
+  side install it if missing (e.g. `apt-get install -y rsync`). The
+  clean-tree git-push sync path does not need rsync.
 - This skill does **not** use the [gh-auth](../gh-auth/SKILL.md) skill's
   VS Code-credential-helper trick. `gh-auth` borrows a credential from a
   running VS Code Remote IPC host — Codex Tasks (this skill's primary

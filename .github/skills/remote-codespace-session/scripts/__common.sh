@@ -27,6 +27,13 @@ require_gh() {
   fi
 }
 
+require_rsync() {
+  if ! command -v rsync >/dev/null 2>&1; then
+    print_error "'rsync' is required for the dirty-tree sync path but was not found on PATH. Install it locally (e.g. 'apt-get install -y rsync'); it is pre-installed in the codespace image on the remote end."
+    exit 2
+  fi
+}
+
 require_codespace_auth() {
   local err
   if ! err="$(gh codespace list --json name -q 'length' 2>&1 >/dev/null)"; then
