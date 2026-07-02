@@ -47,9 +47,38 @@ jobs:
     timeout-minutes: 15
     environment: claude-review
     steps:
+      # issue_comment (the common "@claude review" trigger) fires with the
+      # default branch as context.sha — it carries no head ref/sha for the
+      # PR being commented on. Resolve the PR's actual head commit here so
+      # the checkout below gives Claude the PR's code, not origin/main.
+      - name: Determine checkout ref
+        id: checkout_ref
+        uses: actions/github-script@v9.0.0
+        with:
+          script: |
+            const { eventName, payload } = context;
+            let ref = context.sha;
+
+            if (payload.pull_request?.head?.sha) {
+              // pull_request, pull_request_review, and pull_request_review_comment
+              // events already carry the full pull_request object.
+              ref = payload.pull_request.head.sha;
+            } else if (eventName === 'issue_comment' && payload.issue?.pull_request) {
+              // issue_comment only gives us the PR number; look up its head sha.
+              const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: payload.issue.number,
+              });
+              ref = pr.head.sha;
+            }
+
+            core.setOutput('ref', ref);
+
       - name: Checkout repository
         uses: actions/checkout@v6.0.3
         with:
+          ref: ${{ steps.checkout_ref.outputs.ref }}
           fetch-depth: 1
           persist-credentials: false
 
