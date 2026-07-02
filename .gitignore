@@ -363,6 +363,7 @@ nodesource_setup.sh
 
 # Superpowers plans
 docs/superpowers/
+.superpowers/
 
 # Super-Linter
 super-linter-output/

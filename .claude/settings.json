@@ -19,7 +19,8 @@
       "Bash(pip show *)",
       "Bash(pip install *)",
       "Bash(python3 -m py_compile *)",
-      "mcp__gateway__*"
+      "mcp__gateway__*",
+      "mcp__github__*"
     ],
     "additionalDirectories": [
       "/tmp",
