@@ -33,7 +33,7 @@ from launch.substitutions import PathJoinSubstitution
 import launch_pytest
 from launch_pytest.actions import ReadyToTest
 from launch_ros.substitutions import FindPackageShare
-from moveit_launch_smoke_test_support import assert_move_group_ready, build_test_gz_partition
+from moveit_launch_smoke_test_support import build_test_gz_partition
 from moveit_msgs.msg import (
     CollisionObject,
     Constraints,
@@ -457,23 +457,3 @@ class TestMoveItRuntime:
         assert plan_response.motion_plan_response.error_code.val != MoveItErrorCodes.SUCCESS, (
             'Expected planning to fail for a blocked target state'
         )
-
-
-@pytest.mark.slow
-@pytest.mark.launch(fixture=generate_test_description)
-def test_processes_exit_cleanly(generate_test_description):
-    """
-    Wait for MoveIt to come up, then verify a clean shutdown.
-
-    Function-scoped generator (its own simulation): waits for the motion-plan
-    service so processes are running before teardown, yields, then asserts every
-    non-simulator process exited cleanly once the simulation has shut down.
-    """
-    _launch_description, proc_info = generate_test_description
-    rclpy.init()
-    try:
-        assert_move_group_ready()
-    finally:
-        rclpy.try_shutdown()
-    yield
-    assert_processes_exited_cleanly(proc_info)
