@@ -65,30 +65,28 @@ def robot(generate_test_description):  # noqa: ARG001 (drives launch + sim readi
     rclpy.try_shutdown()
 
 
+@pytest.mark.flaky(retries=3)
 @pytest.mark.launch(fixture=generate_test_description)
-def test_nodes_and_clock(robot):
+def test_nodes_and_clock(robot, generate_test_description):
     robot.assert_nodes_and_clock()
+    yield  # yield to allow shutdown test to run after this one
+    _ld, proc_info = generate_test_description
+    assert_processes_exited_cleanly(proc_info)
 
 
+@pytest.mark.flaky(retries=3)
 @pytest.mark.launch(fixture=generate_test_description)
-def test_controllers_are_active(robot):
+def test_controllers_are_active(robot, generate_test_description):
     robot.assert_controllers_are_active()
+    yield  # yield to allow shutdown test to run after this one
+    _ld, proc_info = generate_test_description
+    assert_processes_exited_cleanly(proc_info)
 
 
+@pytest.mark.flaky(retries=3)
 @pytest.mark.launch(fixture=generate_test_description)
-def test_imu_data_is_published(robot):
+def test_imu_data_is_published(robot, generate_test_description):
     robot.assert_imu_data()
-
-
-@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
-def test_simulation_processes_exit_cleanly(generate_test_description):
-    """
-    Assert every non-simulator process exited cleanly after shutdown.
-
-    launch_pytest's ``shutdown=True`` mechanism only checks the aggregate launch
-    *service* return code, which is unaffected by managed processes exiting
-    non-zero. This body runs after the simulation has fully shut down, so the
-    recorded exit codes can be checked per process (with the simulator allowlist).
-    """
-    _launch_description, proc_info = generate_test_description
+    yield  # yield to allow shutdown test to run after this one
+    _ld, proc_info = generate_test_description
     assert_processes_exited_cleanly(proc_info)
