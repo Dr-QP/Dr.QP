@@ -15,6 +15,7 @@ dev = [
   "pydantic>=2.0",
   "python-frontmatter>=1.1.0",
   "pytest>=7.0.0",
+  "pytest-retry>=1.7.0",
   "pytest-cov>=7.0.0",
   "pytest-xdist>=3.8.0",
   "validate_agent_files",
@@ -58,7 +59,6 @@ default-groups = ["dev", "docs"]
 [tool.pytest.ini_options]
 markers = [
   "slow: marks tests that exercise long-running or integration-heavy behavior",
-  "flaky: marks tests that retry via pytest-retry to absorb known process-shutdown flakiness",
 ]
 
 [tool.uv.sources]

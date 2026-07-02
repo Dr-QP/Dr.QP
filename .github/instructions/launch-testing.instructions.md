@@ -112,9 +112,7 @@ def test_processes_exit_cleanly(generate_test_description):
     assert_processes_exited_cleanly(generate_test_description[1])
 ```
 
-- Add `<test_depend>pytest-retry</test_depend>` to the package's `package.xml`.
-- `flaky` must be a registered marker in the root `pyproject.toml`
-  `[tool.pytest.ini_options]` `markers` list.
+- Add `pytest-retry` to the package's python dependencies, there is no rosdep key for it.
 - Retrying re-runs the whole test (the launch included), so a genuine
   assertion failure earlier in the test body reproduces identically on every
   retry and still fails the build — retries only rescue the nondeterministic
