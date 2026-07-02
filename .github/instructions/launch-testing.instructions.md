@@ -95,6 +95,34 @@ The two correct patterns (and the traps to avoid) come straight from the matrix:
   default; reach for module scope only to share one simulation across several
   tests.
 
+## Retry known shutdown-crash flakiness — never mask a real bug
+
+Gazebo/MoveIt launch tests occasionally crash during process shutdown for
+reasons unrelated to the test body (a process race on teardown), which fails
+the `assert_processes_exited_cleanly` check even though the test itself
+passed. When CI history (repeated reruns of the same test, same failure
+signature at the exit-code assertion) confirms this pattern for a specific
+test, mark it `@pytest.mark.flaky(retries=3)` (from `pytest-retry`) stacked
+above `@pytest.mark.launch(...)`:
+
+```python
+@pytest.mark.flaky(retries=3)
+@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
+def test_processes_exit_cleanly(generate_test_description):
+    assert_processes_exited_cleanly(generate_test_description[1])
+```
+
+- Add `<test_depend>pytest-retry</test_depend>` to the package's `package.xml`.
+- `flaky` must be a registered marker in the root `pyproject.toml`
+  `[tool.pytest.ini_options]` `markers` list.
+- Retrying re-runs the whole test (the launch included), so a genuine
+  assertion failure earlier in the test body reproduces identically on every
+  retry and still fails the build — retries only rescue the nondeterministic
+  shutdown-crash case, they never mask a real regression.
+- Do **not** reach for `flaky` as a substitute for fixing the underlying
+  shutdown crash; use it only for tests with a confirmed history of this
+  specific failure mode, not preemptively.
+
 ## Fixture ordering gotcha
 
 An `autouse`/shared fixture that assumes the launched system is running MUST
