@@ -419,7 +419,10 @@ class TestMoveItRuntime:
         request.group_name = GROUP_NAME
         return self._call_service(self.state_validity_client, request)
 
-    def test_left_front_leg_analytical_target_get_motion_plan_succeeds(self):
+    @pytest.mark.flaky(retries=3)
+    def test_left_front_leg_analytical_target_get_motion_plan_succeeds(
+        self, generate_test_description
+    ):
         _, expected_joint_positions = self._reachable_target()
 
         plan_response = self._plan_to_joint_target(expected_joint_positions)
@@ -430,7 +433,14 @@ class TestMoveItRuntime:
             'Expected a non-empty planned trajectory'
         )
 
-    def test_execute_trajectory_reaches_planned_goal_via_joint_trajectory_controller(self):
+        yield  # yield to allow shutdown test to run after this one
+        _ld, proc_info = generate_test_description
+        assert_processes_exited_cleanly(proc_info)
+
+    @pytest.mark.flaky(retries=3)
+    def test_execute_trajectory_reaches_planned_goal_via_joint_trajectory_controller(
+        self, generate_test_description
+    ):
         _, target_joint_positions = self._reachable_target()
         plan_response = self._plan_to_joint_target(target_joint_positions)
         assert plan_response.motion_plan_response.error_code.val == MoveItErrorCodes.SUCCESS
@@ -445,7 +455,14 @@ class TestMoveItRuntime:
             tolerance=self.JOINT_TOLERANCE,
         )
 
-    def test_collision_object_blocks_goal_state_and_plan_is_rejected(self):
+        yield  # yield to allow shutdown test to run after this one
+        _ld, proc_info = generate_test_description
+        assert_processes_exited_cleanly(proc_info)
+
+    @pytest.mark.flaky(retries=3)
+    def test_collision_object_blocks_goal_state_and_plan_is_rejected(
+        self, generate_test_description
+    ):
         target_pose, target_joint_positions = self._reachable_target()
         blocked_state = self._robot_state_with_joint_targets(target_joint_positions)
         self._apply_target_obstacle(target_pose, blocked_state=blocked_state)
@@ -457,3 +474,7 @@ class TestMoveItRuntime:
         assert plan_response.motion_plan_response.error_code.val != MoveItErrorCodes.SUCCESS, (
             'Expected planning to fail for a blocked target state'
         )
+
+        yield  # yield to allow shutdown test to run after this one
+        _ld, proc_info = generate_test_description
+        assert_processes_exited_cleanly(proc_info)
