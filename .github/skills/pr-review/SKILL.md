@@ -15,6 +15,7 @@ Use this skill to review a pull request's diff and publish feedback as a GitHub 
 ## Prerequisites
 
 - `gh` must be installed and authenticated
+- When running locally, mcp tools are `mcp__gateway__*` instead of `mcp__github__*`
 - The `mcp__github__pull_request_review_write` and `mcp__github__add_comment_to_pending_review` MCP tools must be available for creating the review and its inline comments
 - REPO (`owner/name`) and PR NUMBER must be known — read them from the workflow context or ask the user if not provided
 
