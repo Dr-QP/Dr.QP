@@ -59,7 +59,7 @@ LEFT_FRONT_JOINTS = [
     'drqp/left_front_femur',
     'drqp/left_front_tibia',
 ]
-TARGET_OBSTACLE_ID = 'issue43_left_front_target_blocker'
+TARGET_OBSTACLE_ID = 'left_front_target_blocker'
 
 
 @launch_pytest.fixture
@@ -85,7 +85,7 @@ def generate_test_description():
 
 @pytest.mark.slow
 @pytest.mark.launch(fixture=generate_test_description)
-class TestMoveItRuntimeIssue43:
+class TestMoveItRuntime:
     READY_TIMEOUT = 90.0
     JOINT_TOLERANCE = 0.08
 
@@ -106,7 +106,7 @@ class TestMoveItRuntimeIssue43:
 
     @pytest.fixture(autouse=True)
     def _node_setup(self, request, generate_test_description):  # noqa: ARG002
-        self.node = rclpy.create_node('test_moveit_runtime_issue43')
+        self.node = rclpy.create_node('test_moveit_runtime')
         request.addfinalizer(self.node.destroy_node)
 
         self.latest_joint_state = None
@@ -419,7 +419,7 @@ class TestMoveItRuntimeIssue43:
         request.group_name = GROUP_NAME
         return self._call_service(self.state_validity_client, request)
 
-    def test_issue43_left_front_leg_analytical_target_get_motion_plan_succeeds(self):
+    def test_left_front_leg_analytical_target_get_motion_plan_succeeds(self):
         _, expected_joint_positions = self._reachable_target()
 
         plan_response = self._plan_to_joint_target(expected_joint_positions)
@@ -430,7 +430,7 @@ class TestMoveItRuntimeIssue43:
             'Expected a non-empty planned trajectory'
         )
 
-    def test_issue43_execute_trajectory_reaches_planned_goal_via_joint_trajectory_controller(self):
+    def test_execute_trajectory_reaches_planned_goal_via_joint_trajectory_controller(self):
         _, target_joint_positions = self._reachable_target()
         plan_response = self._plan_to_joint_target(target_joint_positions)
         assert plan_response.motion_plan_response.error_code.val == MoveItErrorCodes.SUCCESS
@@ -445,7 +445,7 @@ class TestMoveItRuntimeIssue43:
             tolerance=self.JOINT_TOLERANCE,
         )
 
-    def test_issue43_collision_object_blocks_goal_state_and_plan_is_rejected(self):
+    def test_collision_object_blocks_goal_state_and_plan_is_rejected(self):
         target_pose, target_joint_positions = self._reachable_target()
         blocked_state = self._robot_state_with_joint_targets(target_joint_positions)
         self._apply_target_obstacle(target_pose, blocked_state=blocked_state)
