@@ -27,7 +27,10 @@ while true; do
 
   if [ "$attempt" -ge "$max_attempts" ]; then
     echo "colcon test still failing after $attempt attempt(s), exit code $status" >&2
-    python3 -m colcon test-result --all --verbose
+    while IFS= read -r pkg_dir; do
+      python3 -m colcon test-result \
+        --test-result-base "build/$(basename "$pkg_dir")" --all --verbose
+    done < <(find log/latest_test -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
     exit "$status"
   fi
 
