@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 set -euo pipefail
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
@@ -13,21 +12,23 @@ ORIG_PYTEST_ADDOPTS="${PYTEST_ADDOPTS:-}"
 
 while true; do
   if [ "$attempt" -eq 1 ]; then
-    python3 -m colcon test "$@"
+    python3 -m colcon test --return-code-on-test-failure "$@"
   else
-    echo "::group::colcon test retry $attempt/$max_attempts (packages-select-test-failures)"
-    env PYTEST_ADDOPTS="${ORIG_PYTEST_ADDOPTS} --lf" python3 -m colcon test --packages-select-test-failures "$@"
+    echo "::group::colcon test retry $attempt/$max_attempts (packages-select-test-failures, pytest --lf)"
+    PYTEST_ADDOPTS="${ORIG_PYTEST_ADDOPTS:-} --lf" python3 -m colcon test \
+      --return-code-on-test-failure --packages-select-test-failures "$@"
     echo "::endgroup::"
   fi
+  status=$?
 
-  if python3 -m colcon test-result --all; then
+  if [ "$status" -eq 0 ]; then
     exit 0
   fi
 
   if [ "$attempt" -ge "$max_attempts" ]; then
-    echo "colcon test still failing after $attempt attempt(s):" >&2
+    echo "colcon test still failing after $attempt attempt(s), exit code $status" >&2
     python3 -m colcon test-result --all --verbose
-    exit 1
+    exit "$status"
   fi
 
   attempt=$((attempt + 1))
