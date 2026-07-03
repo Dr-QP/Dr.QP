@@ -169,30 +169,44 @@ class TestA116HardwareInterface:
         self.last_feedback = rclpy.time.Time.from_msg(msg.header.stamp)
         # self.node.get_logger().info(f'Feedback received: {self.joint_positions}')
 
-    def test_node_start(self):
+    def test_node_start(self, generate_test_description):
         check_node_running(self.node, 'robot_state_publisher')
         check_node_running(self.node, 'controller_manager')
         check_node_running(self.node, 'battery_state_broadcaster')
         check_node_running(self.node, 'joint_state_broadcaster')
         check_node_running(self.node, 'joint_trajectory_controller')
+        yield
+        self._check_process_exit_codes(generate_test_description)
 
-    def test_joint_states_published(self):
+    def test_joint_states_published(self, generate_test_description):
         check_if_js_published('/joint_states', self.joint_names)
+        yield
+        self._check_process_exit_codes(generate_test_description)
 
-    def test_effort_off(self):
+    def test_effort_off(self, generate_test_description):
         self._effort_test(0)
+        yield
+        self._check_process_exit_codes(generate_test_description)
 
-    def test_effort_reboot(self):
+    def test_effort_reboot(self, generate_test_description):
         self._effort_test(-1)
+        yield
+        self._check_process_exit_codes(generate_test_description)
 
-    def test_effort_infinite(self):
+    def test_effort_infinite(self, generate_test_description):
         self._effort_test(float('inf'))
+        yield
+        self._check_process_exit_codes(generate_test_description)
 
-    def test_effort_negative_infinite(self):
+    def test_effort_negative_infinite(self, generate_test_description):
         self._effort_test(-float('inf'))
+        yield
+        self._check_process_exit_codes(generate_test_description)
 
-    def test_position_control_nan_effort(self):
+    def test_position_control_nan_effort(self, generate_test_description):
         self._effort_test(float('nan'))
+        yield
+        self._check_process_exit_codes(generate_test_description)
 
     def _effort_test(self, effort):
         # Go to the target effort
@@ -215,26 +229,32 @@ class TestA116HardwareInterface:
             position=position, effort=effort, expected_position=expected_position
         )
 
-    def test_position_control_effort_on(self):
+    def test_position_control_effort_on(self, generate_test_description):
         self._check_position_control(position=1, effort=1, expected_position=1)
+        yield
+        self._check_process_exit_codes(generate_test_description)
 
-    def test_position_control_infinite_position(self):
+    def test_position_control_infinite_position(self, generate_test_description):
         self._check_position_control(
             position=float('inf'),
             effort=1,
             expected_position=1.5,
             tolerance=0.5,
         )
+        yield
+        self._check_process_exit_codes(generate_test_description)
 
-    def test_position_control_negative_infinite_position(self):
+    def test_position_control_negative_infinite_position(self, generate_test_description):
         self._check_position_control(
             position=-float('inf'),
             effort=1,
             expected_position=-1.5,
             tolerance=0.5,
         )
+        yield
+        self._check_process_exit_codes(generate_test_description)
 
-    def test_position_control_nan_position(self):
+    def test_position_control_nan_position(self, generate_test_description):
         # Sending NaN will move the servos to the minimum position
         self._check_position_control(
             position=float('nan'),
@@ -242,6 +262,12 @@ class TestA116HardwareInterface:
             expected_position=-1.5,
             tolerance=0.5,
         )
+        yield
+        self._check_process_exit_codes(generate_test_description)
+
+    def _check_process_exit_codes(self, generate_test_description):
+        _launch_description, proc_info = generate_test_description
+        assert_processes_exited_cleanly(proc_info)
 
     def _check_position_control(self, position, effort, expected_position=None, tolerance=0.05):
         target_point = JointTrajectoryPoint()
@@ -294,23 +320,3 @@ class TestA116HardwareInterface:
                 f' got {joint_positions},'
             )
 
-
-@pytest.mark.launch(fixture=generate_test_description)
-def test_processes_exit_cleanly(generate_test_description):
-    """
-    Wait for the controllers to come up, then verify a clean shutdown.
-
-    Function-scoped generator (its own simulation): waits for readiness so the
-    controllers are running before teardown, yields, then asserts every process
-    exited cleanly once the launch service has shut the simulation down.
-    """
-    _launch_description, proc_info = generate_test_description
-    rclpy.init()
-    node = rclpy.create_node('test_a1_16_exit_codes_probe')
-    try:
-        check_controllers_running(node, ['joint_trajectory_controller', 'joint_state_broadcaster'])
-    finally:
-        node.destroy_node()
-        rclpy.try_shutdown()
-    yield
-    assert_processes_exited_cleanly(proc_info)
