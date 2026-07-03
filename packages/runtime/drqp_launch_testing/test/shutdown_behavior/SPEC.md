@@ -23,14 +23,14 @@ actually started (hence the `ready_delay` before `ReadyToTest`).
 
 ## The matrix
 
-| # | Fixture scope | Shutdown pattern                  | Shares the active sim? | Shutdown body sees exit codes? | Verdict                                |
-| - | ------------- | --------------------------------- | ---------------------- | ------------------------------ | -------------------------------------- |
-| 1 | function      | separate `shutdown=True` function | ❌ separate sim        | only of its own throwaway sim  | ✗ don't use for exit checks            |
-| 2 | class         | separate `shutdown=True` function | ❌ separate sim        | only of its own throwaway sim  | ✗ don't use for exit checks            |
-| 3 | class/module  | generator method (yield)          | n/a                    | n/a                            | ✗ **unsupported** (raises `TypeError`) |
-| 4 | module        | separate `shutdown=True` function | ✅ same sim            | ✅ yes                         | ✓ use for multi-test files             |
-| 5 | function      | generator test (yield once)       | ✅ same sim            | ✅ yes                         | ✓ use for single-test files            |
-| 6 | any           | `@pytest.mark.flaky` retry        | n/a                    | n/a                            | ✓ crash-safe; only combo 5 relaunches  |
+| #   | Fixture scope | Shutdown pattern                  | Shares the active sim? | Shutdown body sees exit codes? | Verdict                                |
+| --- | ------------- | --------------------------------- | ---------------------- | ------------------------------ | -------------------------------------- |
+| 1   | function      | separate `shutdown=True` function | ❌ separate sim        | only of its own throwaway sim  | ✗ don't use for exit checks            |
+| 2   | class         | separate `shutdown=True` function | ❌ separate sim        | only of its own throwaway sim  | ✗ don't use for exit checks            |
+| 3   | class/module  | generator method (yield)          | n/a                    | n/a                            | ✗ **unsupported** (raises `TypeError`) |
+| 4   | module        | separate `shutdown=True` function | ✅ same sim            | ✅ yes                         | ✓ use for multi-test files             |
+| 5   | function      | generator test (yield once)       | ✅ same sim            | ✅ yes                         | ✓ use for single-test files            |
+| 6   | any           | `@pytest.mark.flaky` retry        | n/a                    | n/a                            | ✓ crash-safe; only combo 5 relaunches  |
 
 ### Why combo 3 is unsupported
 
@@ -45,8 +45,8 @@ revisit the recommendations.
 
 `launch_pytest`'s `pytest_pyfunc_call` hookwrapper mutates `pyfuncitem.obj` in
 place every time it runs, dispatching on whatever `pyfuncitem.obj` currently
-is. Retried by `pytest-retry`, the second invocation sees the *previous
-attempt's wrapper* (closed over an already-torn-down `event_loop`), and
+is. Retried by `pytest-retry`, the second invocation sees the _previous
+attempt's wrapper_ (closed over an already-torn-down `event_loop`), and
 re-wrapping it crashes with `RuntimeError: Event loop is closed` / `is already
 running`. `drqp_launch_testing.launch_pytest_retry` fixes this by always
 re-wrapping from a cached pristine original, never from `pyfuncitem.obj`.

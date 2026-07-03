@@ -99,11 +99,10 @@ The two correct patterns (and the traps to avoid) come straight from the matrix:
 
 `launch_pytest` and `pytest-retry` do not work together out of the box:
 `launch_pytest` re-wraps the test callable in place on every call, and a
-naive retry re-wraps the *previous attempt's* stale wrapper, crashing with
+naive retry re-wraps the _previous attempt's_ stale wrapper, crashing with
 `RuntimeError: Event loop is closed` / `is already running` instead of
 retrying. `drqp_launch_testing.launch_pytest_retry` fixes this — see
-`packages/runtime/drqp_launch_testing/test/shutdown_behavior/SPEC.md` (combo
-6) for the root cause and the executable proof.
+`packages/runtime/drqp_launch_testing/test/shutdown_behavior/SPEC.md` (combo 6) for the root cause and the executable proof.
 
 **This only rescues real flakiness for combo 5 (function-scoped generator).**
 `pytest-retry` tears down and recreates function/class-scoped fixtures on
