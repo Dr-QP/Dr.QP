@@ -47,6 +47,7 @@ def generate_test_description():
     proc_info = track_process_exit_codes(launch_description)
     return launch_description, proc_info
 
+
 @pytest.mark.flaky(retries=3)
 @pytest.mark.launch(fixture=generate_test_description)
 def test_robot_smoke(robot, generate_test_description):
