@@ -307,4 +307,3 @@ class TestA116HardwareInterface:
 def test_processes_exit_cleanly(generate_test_description):
     _launch_description, proc_info = generate_test_description
     assert_processes_exited_cleanly(proc_info)
-

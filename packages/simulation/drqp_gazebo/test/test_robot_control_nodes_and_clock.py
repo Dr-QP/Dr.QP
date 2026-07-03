@@ -65,7 +65,6 @@ def robot(generate_test_description):  # noqa: ARG001 (drives launch + sim readi
     rclpy.try_shutdown()
 
 
-
 @pytest.mark.launch(fixture=generate_test_description)
 def test_nodes_and_clock(robot, generate_test_description):
     robot.assert_nodes_and_clock()
@@ -74,14 +73,12 @@ def test_nodes_and_clock(robot, generate_test_description):
     assert_processes_exited_cleanly(proc_info)
 
 
-
 @pytest.mark.launch(fixture=generate_test_description)
 def test_controllers_are_active(robot, generate_test_description):
     robot.assert_controllers_are_active()
     yield  # yield to allow shutdown test to run after this one
     _ld, proc_info = generate_test_description
     assert_processes_exited_cleanly(proc_info)
-
 
 
 @pytest.mark.launch(fixture=generate_test_description)

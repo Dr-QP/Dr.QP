@@ -419,7 +419,6 @@ class TestMoveItRuntime:
         request.group_name = GROUP_NAME
         return self._call_service(self.state_validity_client, request)
 
-
     def test_left_front_leg_analytical_target_get_motion_plan_succeeds(
         self, generate_test_description
     ):
@@ -436,7 +435,6 @@ class TestMoveItRuntime:
         yield  # yield to allow shutdown test to run after this one
         _ld, proc_info = generate_test_description
         assert_processes_exited_cleanly(proc_info)
-
 
     def test_execute_trajectory_reaches_planned_goal_via_joint_trajectory_controller(
         self, generate_test_description
@@ -458,7 +456,6 @@ class TestMoveItRuntime:
         yield  # yield to allow shutdown test to run after this one
         _ld, proc_info = generate_test_description
         assert_processes_exited_cleanly(proc_info)
-
 
     def test_collision_object_blocks_goal_state_and_plan_is_rejected(
         self, generate_test_description
