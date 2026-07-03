@@ -1,6 +1,6 @@
 ---
 name: add-test-file
-description: Add unit or integration test file with fixtures, test cases, and build integration for C++ or Python. Use when adding tests for existing source files, following TDD workflow, or need GTest/pytest scaffolding with CMakeLists.txt or setup.py integration.
+description: Add or modify unit or integration test file with fixtures, test cases, and build integration for C++ or Python. Use when adding tests for existing source files, following TDD workflow, or need GTest/pytest scaffolding with CMakeLists.txt or setup.py integration.
 ---
 
 # Add Test File
