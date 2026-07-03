@@ -31,11 +31,10 @@ been torn down.
 from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
 import launch_pytest
 import pytest
-import rclpy
-from robot_control_test_support import create_simulation_launch_description, GazeboRobotControlBase
+from robot_control_test_support import create_simulation_launch_description
 
 
-@launch_pytest.fixture(scope='module')
+@launch_pytest.fixture
 def generate_test_description():
     """
     Launch one simulation for the module and record process exit codes.
@@ -49,41 +48,13 @@ def generate_test_description():
     return launch_description, proc_info
 
 
-@pytest.fixture(scope='module')
-def robot(generate_test_description):  # noqa: ARG001 (drives launch + sim readiness)
-    """
-    Module-scoped harness shared by every test in this file.
-
-    This file has multiple launch tests that must share ONE simulation, so it
-    overrides the function-scoped ``robot`` fixture in conftest.py with a
-    module-scoped one (matrix combo 4).
-    """
-    rclpy.init()
-    harness = GazeboRobotControlBase()
-    harness.setup_node()
-    yield harness
-    rclpy.try_shutdown()
-
-
 @pytest.mark.launch(fixture=generate_test_description)
-def test_nodes_and_clock(robot, generate_test_description):
+def test_robot_smoke(robot, generate_test_description):
     robot.assert_nodes_and_clock()
-    yield  # yield to allow shutdown test to run after this one
-    _ld, proc_info = generate_test_description
-    assert_processes_exited_cleanly(proc_info)
-
-
-@pytest.mark.launch(fixture=generate_test_description)
-def test_controllers_are_active(robot, generate_test_description):
     robot.assert_controllers_are_active()
-    yield  # yield to allow shutdown test to run after this one
-    _ld, proc_info = generate_test_description
-    assert_processes_exited_cleanly(proc_info)
-
-
-@pytest.mark.launch(fixture=generate_test_description)
-def test_imu_data_is_published(robot, generate_test_description):
     robot.assert_imu_data()
+
     yield  # yield to allow shutdown test to run after this one
+
     _ld, proc_info = generate_test_description
     assert_processes_exited_cleanly(proc_info)
