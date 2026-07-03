@@ -66,7 +66,7 @@ def test_retry_does_not_crash(generate_test_description):
     _SEEN['attempts'].append(launch_id)
     assert recorded_exit_codes(proc_info), 'shutdown body must observe a populated proc_info'
     # Fail on the first attempt only, forcing pytest-retry to retry.
-    assert len(_SEEN['attempts']) > 1, f"intentional failure on attempt {len(_SEEN['attempts'])}"
+    assert len(_SEEN['attempts']) > 1, f'intentional failure on attempt {len(_SEEN["attempts"])}'
 
 
 def test_retry_reuses_same_simulation():
