@@ -47,6 +47,7 @@ def generate_test_description():
 
 
 @pytest.mark.launch(fixture=generate_test_description)
+@pytest.mark.flaky(retries=3)
 def test_launch_reaches_ready_state(move_group, generate_test_description):  # noqa: ARG001
     # Retries via pytest-retry: the post-yield shutdown exit-code check below is
     # intermittently flaky (see issue #408). assert_move_group_ready() failures

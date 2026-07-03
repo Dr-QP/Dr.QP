@@ -1,4 +1,4 @@
-# Copyright (c) 2026 Anton Matosov
+# Copyright (c) 2017-2026 Anton Matosov
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,27 +18,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Shared fixtures for the functions-only MoveIt launch tests."""
+"""Enable the launch_pytest/pytest-retry compatibility patch for combo 6."""
 
 from drqp_launch_testing import launch_pytest_retry
 import pytest
-import rclpy
 
 
 def pytest_configure(config: pytest.Config) -> None:
-    """Make @pytest.mark.flaky retry-safe on launch_pytest tests (SPEC.md combo 6)."""
+    """Register the retry-safe launch_pytest hook (see ``launch_pytest_retry``)."""
     launch_pytest_retry.pytest_configure(config)
-
-
-@pytest.fixture
-def move_group(generate_test_description):  # noqa: ARG001 (drives the launch)
-    """
-    Own ``rclpy`` init/shutdown for a launched MoveIt stack.
-
-    Resolves the launch fixture so the stack starts before the test, then yields
-    with ``rclpy`` initialized. Function-scoped (the smoke files each have a
-    single launch test using the combo-5 generator pattern).
-    """
-    rclpy.init()
-    yield
-    rclpy.try_shutdown()

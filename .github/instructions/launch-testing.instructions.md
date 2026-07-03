@@ -97,26 +97,46 @@ The two correct patterns (and the traps to avoid) come straight from the matrix:
 
 ## Retry known shutdown-crash flakiness — never mask a real bug
 
-Gazebo/MoveIt launch tests occasionally crash during process shutdown for
-reasons unrelated to the test body (a process race on teardown), which fails
-the `assert_processes_exited_cleanly` check even though the test itself
-passed. When CI history (repeated reruns of the same test, same failure
-signature at the exit-code assertion) confirms this pattern for a specific
-test, mark it `@pytest.mark.flaky(retries=3)` (from `pytest-retry`) stacked
-above `@pytest.mark.launch(...)`:
+`launch_pytest` and `pytest-retry` do not work together out of the box:
+`launch_pytest` re-wraps the test callable in place on every call, and a
+naive retry re-wraps the *previous attempt's* stale wrapper, crashing with
+`RuntimeError: Event loop is closed` / `is already running` instead of
+retrying. `drqp_launch_testing.launch_pytest_retry` fixes this — see
+`packages/runtime/drqp_launch_testing/test/shutdown_behavior/SPEC.md` (combo
+6) for the root cause and the executable proof.
+
+**This only rescues real flakiness for combo 5 (function-scoped generator).**
+`pytest-retry` tears down and recreates function/class-scoped fixtures on
+retry, but does not re-run a `module`-scoped fixture's setup on retry (a
+`pytest-retry` limitation, verified independently of `launch_pytest`). So for
+combo 4 (module-scoped shared simulation + separate `shutdown=True` test), a
+retry is crash-safe but re-checks the same, already-recorded `proc_info` — it
+can never rescue a genuine nondeterministic shutdown-crash flake there. Do
+not add `flaky` to a combo 4 test expecting it to help; only combo 5 tests
+benefit.
+
+To use it:
+
+1. Add `pytest_plugins = ['drqp_launch_testing.launch_pytest_retry']` to the
+   package's `test/conftest.py` (create one if it doesn't exist).
+2. Add `pytest-retry` to the package's python dependencies — there is no
+   rosdep key for it, it's managed at the workspace level (`pyproject.toml`).
+3. When CI history (repeated reruns of the same combo-5 test, same failure
+   signature at the exit-code assertion) confirms this pattern for a specific
+   test, mark it `@pytest.mark.flaky(retries=3)`:
 
 ```python
+@pytest.mark.launch(fixture=generate_test_description)
 @pytest.mark.flaky(retries=3)
-@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
-def test_processes_exit_cleanly(generate_test_description):
+def test_node_behaviour(consumer, generate_test_description):
+    consumer.do_checks()
+    yield
     assert_processes_exited_cleanly(generate_test_description[1])
 ```
 
-- Add `pytest-retry` to the package's python dependencies, there is no rosdep key for it.
-- Retrying re-runs the whole test (the launch included), so a genuine
-  assertion failure earlier in the test body reproduces identically on every
-  retry and still fails the build — retries only rescue the nondeterministic
-  shutdown-crash case, they never mask a real regression.
+- A genuine assertion failure earlier in the test body reproduces identically
+  on every retry and still fails the build — retries only rescue the
+  nondeterministic shutdown-crash case, they never mask a real regression.
 - Do **not** reach for `flaky` as a substitute for fixing the underlying
   shutdown crash; use it only for tests with a confirmed history of this
   specific failure mode, not preemptively.
