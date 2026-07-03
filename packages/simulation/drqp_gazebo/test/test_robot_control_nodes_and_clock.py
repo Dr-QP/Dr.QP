@@ -65,7 +65,7 @@ def robot(generate_test_description):  # noqa: ARG001 (drives launch + sim readi
     rclpy.try_shutdown()
 
 
-@pytest.mark.flaky(retries=3)
+
 @pytest.mark.launch(fixture=generate_test_description)
 def test_nodes_and_clock(robot, generate_test_description):
     robot.assert_nodes_and_clock()
@@ -74,7 +74,7 @@ def test_nodes_and_clock(robot, generate_test_description):
     assert_processes_exited_cleanly(proc_info)
 
 
-@pytest.mark.flaky(retries=3)
+
 @pytest.mark.launch(fixture=generate_test_description)
 def test_controllers_are_active(robot, generate_test_description):
     robot.assert_controllers_are_active()
@@ -83,7 +83,7 @@ def test_controllers_are_active(robot, generate_test_description):
     assert_processes_exited_cleanly(proc_info)
 
 
-@pytest.mark.flaky(retries=3)
+
 @pytest.mark.launch(fixture=generate_test_description)
 def test_imu_data_is_published(robot, generate_test_description):
     robot.assert_imu_data()

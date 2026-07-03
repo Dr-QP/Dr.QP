@@ -46,7 +46,7 @@ def generate_test_description():
     return launch_description, proc_info
 
 
-@pytest.mark.flaky(retries=3)
+
 @pytest.mark.launch(fixture=generate_test_description)
 def test_launch_reaches_ready_state(move_group, generate_test_description):  # noqa: ARG001
     # Retries via pytest-retry: the post-yield shutdown exit-code check below is
