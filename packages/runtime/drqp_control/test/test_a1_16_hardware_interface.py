@@ -175,37 +175,30 @@ class TestA116HardwareInterface:
         check_node_running(self.node, 'battery_state_broadcaster')
         check_node_running(self.node, 'joint_state_broadcaster')
         check_node_running(self.node, 'joint_trajectory_controller')
-        yield
         self._check_process_exit_codes(generate_test_description)
 
     def test_joint_states_published(self, generate_test_description):
         check_if_js_published('/joint_states', self.joint_names)
-        yield
         self._check_process_exit_codes(generate_test_description)
 
     def test_effort_off(self, generate_test_description):
         self._effort_test(0)
-        yield
         self._check_process_exit_codes(generate_test_description)
 
     def test_effort_reboot(self, generate_test_description):
         self._effort_test(-1)
-        yield
         self._check_process_exit_codes(generate_test_description)
 
     def test_effort_infinite(self, generate_test_description):
         self._effort_test(float('inf'))
-        yield
         self._check_process_exit_codes(generate_test_description)
 
     def test_effort_negative_infinite(self, generate_test_description):
         self._effort_test(-float('inf'))
-        yield
         self._check_process_exit_codes(generate_test_description)
 
     def test_position_control_nan_effort(self, generate_test_description):
         self._effort_test(float('nan'))
-        yield
         self._check_process_exit_codes(generate_test_description)
 
     def _effort_test(self, effort):
@@ -231,7 +224,6 @@ class TestA116HardwareInterface:
 
     def test_position_control_effort_on(self, generate_test_description):
         self._check_position_control(position=1, effort=1, expected_position=1)
-        yield
         self._check_process_exit_codes(generate_test_description)
 
     def test_position_control_infinite_position(self, generate_test_description):
@@ -241,7 +233,6 @@ class TestA116HardwareInterface:
             expected_position=1.5,
             tolerance=0.5,
         )
-        yield
         self._check_process_exit_codes(generate_test_description)
 
     def test_position_control_negative_infinite_position(self, generate_test_description):
@@ -251,7 +242,6 @@ class TestA116HardwareInterface:
             expected_position=-1.5,
             tolerance=0.5,
         )
-        yield
         self._check_process_exit_codes(generate_test_description)
 
     def test_position_control_nan_position(self, generate_test_description):
@@ -262,10 +252,10 @@ class TestA116HardwareInterface:
             expected_position=-1.5,
             tolerance=0.5,
         )
-        yield
         self._check_process_exit_codes(generate_test_description)
 
     def _check_process_exit_codes(self, generate_test_description):
+        yield
         _launch_description, proc_info = generate_test_description
         assert_processes_exited_cleanly(proc_info)
 
