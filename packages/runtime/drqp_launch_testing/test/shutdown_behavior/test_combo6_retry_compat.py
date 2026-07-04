@@ -21,11 +21,18 @@
 """
 Combo 6: ``@pytest.mark.flaky`` retry on a combo-4 (module-scope) shutdown=True test.
 
-Without ``drqp_launch_testing.launch_pytest_retry`` active (this directory's
-``conftest.py`` registers it), retrying a launch_pytest test crashes with
-"RuntimeError: Event loop is closed" / "is already running" instead of
-retrying, because launch_pytest re-wraps the previous attempt's stale wrapper.
-See ``launch_pytest_retry.py`` for the root cause and fix.
+Stock (unpatched) ``launch_pytest`` crashes here: retrying a launch_pytest
+test hits "RuntimeError: Event loop is closed" / "is already running" instead
+of retrying, because its ``pytest_pyfunc_call`` hookwrapper re-wraps whatever
+``pyfuncitem.obj`` currently is -- on a retry that's the *previous attempt's*
+wrapper, closed over an already-torn-down event loop. The vendored
+``launch_pytest`` in ``packages/vendor/launch/launch_pytest`` (forked from
+``anton-matosov/launch.git``, see ``packages/vendor/launch/source-info.yaml``)
+fixes this at the source: it caches the pristine original test callable on
+the item the first time it's seen (``pyfuncitem._launch_pytest_original_obj``)
+and always re-wraps from that cached original, never from ``pyfuncitem.obj``.
+No drqp-side shim or ``test/conftest.py`` registration is required any more --
+this test just proves the vendored fix holds.
 
 This test also documents a second, independent limitation: ``pytest-retry``'s
 retry mechanism forces teardown of function/class-scoped fixtures, but does

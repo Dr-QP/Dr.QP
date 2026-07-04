@@ -82,27 +82,32 @@ The two correct patterns (and the traps to avoid) come straight from the matrix:
       assert_processes_exited_cleanly(generate_test_description[1])
   ```
 
+  A single test driving a `module`-scoped simulation can also use the generator
+  pattern directly instead of a separate `shutdown=True` test (matrix combo 3).
+
 ### Do not
 
 - **Do not** pair a separate `shutdown=True` function with a **function**- or
   **class**-scoped fixture to check exit codes — it launches a _different,
   throwaway_ simulation, so it verifies nothing about the active test (matrix
   combos 1 & 2).
-- **Do not** make a non-function-scoped (class/module) test a generator — the
-  installed launch_pytest/pytest pairing raises `TypeError`
-  (`getfixtureinfo(funcargs=True)`); matrix combo 3.
 - **Do not** default to `scope='module'`/`'class'`. Function scope is the
   default; reach for module scope only to share one simulation across several
   tests.
 
 ## Retry known shutdown-crash flakiness — never mask a real bug
 
-`launch_pytest` and `pytest-retry` do not work together out of the box:
+Stock `launch_pytest` and `pytest-retry` do not work together out of the box:
 `launch_pytest` re-wraps the test callable in place on every call, and a
 naive retry re-wraps the _previous attempt's_ stale wrapper, crashing with
 `RuntimeError: Event loop is closed` / `is already running` instead of
-retrying. `drqp_launch_testing.launch_pytest_retry` fixes this — see
-`packages/runtime/drqp_launch_testing/test/shutdown_behavior/SPEC.md` (combo 6) for the root cause and the executable proof.
+retrying. This is fixed directly in this workspace's vendored `launch_pytest`
+(`packages/vendor/launch/launch_pytest`, forked from `anton-matosov/launch.git`
+— see `packages/vendor/launch/source-info.yaml`), which always re-wraps from a
+cached pristine original callable, never from the mutated `pyfuncitem.obj`. No
+per-package shim or `test/conftest.py` registration is needed — see
+`packages/runtime/drqp_launch_testing/test/shutdown_behavior/SPEC.md` (combo 6)
+for the root cause and the executable proof.
 
 **This only rescues real flakiness for combo 5 (function-scoped generator).**
 `pytest-retry` tears down and recreates function/class-scoped fixtures on
@@ -116,11 +121,9 @@ benefit.
 
 To use it:
 
-1. Add `pytest_plugins = ['drqp_launch_testing.launch_pytest_retry']` to the
-   package's `test/conftest.py` (create one if it doesn't exist).
-2. Add `pytest-retry` to the package's python dependencies — there is no
+1. Add `pytest-retry` to the package's python dependencies — there is no
    rosdep key for it, it's managed at the workspace level (`pyproject.toml`).
-3. When CI history (repeated reruns of the same combo-5 test, same failure
+2. When CI history (repeated reruns of the same combo-5 test, same failure
    signature at the exit-code assertion) confirms this pattern for a specific
    test, mark it `@pytest.mark.flaky(retries=3)`:
 

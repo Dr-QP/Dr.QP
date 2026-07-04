@@ -20,14 +20,8 @@
 
 """Shared fixtures for the functions-only MoveIt launch tests."""
 
-from drqp_launch_testing import launch_pytest_retry
 import pytest
 import rclpy
-
-
-def pytest_configure(config: pytest.Config) -> None:
-    """Make @pytest.mark.flaky retry-safe on launch_pytest tests (SPEC.md combo 6)."""
-    launch_pytest_retry.pytest_configure(config)
 
 
 @pytest.fixture
