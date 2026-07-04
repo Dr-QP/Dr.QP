@@ -27,6 +27,20 @@ import sys
 import yaml
 
 
+verbose = True
+
+
+def run(command):
+    if verbose:
+        print(f'Running command: {" ".join(command)}')
+    result = subprocess.run(command, capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        print(f'Command failed with return code {result.returncode}')
+        print(f'Stdout: {result.stdout}')
+        print(f'Stderr: {result.stderr}')
+    return result
+
+
 def get_vendor_package_source_info(package_path):
     source_info_path = os.path.join(package_path, 'source-info.yaml')
     if not os.path.isfile(source_info_path):
@@ -69,11 +83,8 @@ def update_vendor_package(package_path):
     repo_url = source_info.get('repo')
     branch = source_info.get('branch')
     print(f'Updating package at {package_path} from {repo_url} (branch: {branch})')
-    subtree = subprocess.run(
-        ['git', 'subtree', 'pull', '--prefix', package_path, repo_url, branch, '--squash'],
-        check=True,
-        capture_output=True,
-        text=True,
+    subtree = run(
+        ['git', 'subtree', 'pull', '--prefix', package_path, repo_url, branch, '--squash']
     )
     if subtree.stdout.strip().find('Subtree is already at commit') != -1:
         print(f'Package at {package_path} is already up to date.')
@@ -84,22 +95,12 @@ def update_vendor_package(package_path):
 
 def commit_vendor_package_update(package_path, branch):
     commit_msg = f'Update vendor package {os.path.basename(package_path)} to latest {branch}'
-    subprocess.run(
-        ['git', 'commit', '-am', commit_msg],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    run(['git', 'commit', '-am', commit_msg])
 
 
 def update_source_info_after_subtree(package_path, source_info):
     """After a git subtree pull, update the source-info.yaml with the new revision."""
-    git_show = subprocess.run(
-        ['git', 'show', '--no-patch', '--pretty=%P', 'HEAD'],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    git_show = run(['git', 'show', '--no-patch', '--pretty=%P', 'HEAD'])
     parents = git_show.stdout.strip().split()
     if len(parents) < 2:
         print(f'Unexpected git log format, cannot extract new revision for {package_path}.')
@@ -108,12 +109,7 @@ def update_source_info_after_subtree(package_path, source_info):
     new_rev = None
     # get commit message of the both parents
     for parent in parents:
-        parent_commit_msg = subprocess.run(
-            ['git', 'log', '-1', '--pretty=%B', parent],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
+        parent_commit_msg = run(['git', 'log', '-1', '--pretty=%B', parent])
         # git-subtree-split: <new_rev>
         new_rev_regex = r'git-subtree-split:\s*([0-9a-fA-F]+)'
 
