@@ -26,7 +26,6 @@ import sys
 
 import yaml
 
-
 verbose = False
 
 
