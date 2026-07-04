@@ -14,13 +14,19 @@
 
 """Module for the ThisLaunchFileDir substitution."""
 
-from typing import Any, Dict, Sequence, Text, Tuple, Type
+from typing import Any
+from typing import Dict
+from typing import Sequence
+from typing import Text
+from typing import Tuple
+from typing import Type
 
+
+from .path_join_substitution import PathSubstitution
+from .substitution_failure import SubstitutionFailure
 from ..frontend.expose import expose_substitution
 from ..launch_context import LaunchContext
 from ..some_substitutions_type import SomeSubstitutionsType
-from .path_join_substitution import PathSubstitution
-from .substitution_failure import SubstitutionFailure
 
 
 @expose_substitution('dirname')
@@ -32,9 +38,8 @@ class ThisLaunchFileDir(PathSubstitution):
         super().__init__(path=self)
 
     @classmethod
-    def parse(
-        cls, data: Sequence[SomeSubstitutionsType]
-    ) -> Tuple[Type['ThisLaunchFileDir'], Dict[str, Any]]:
+    def parse(cls, data: Sequence[SomeSubstitutionsType]
+              ) -> Tuple[Type['ThisLaunchFileDir'], Dict[str, Any]]:
         """Parse `ThisLaunchFileDir` substitution."""
         if len(data) != 0:
             raise TypeError("dirname substitution doesn't expect arguments")
@@ -56,6 +61,5 @@ class ThisLaunchFileDir(PathSubstitution):
         """
         if 'current_launch_file_directory' not in context.get_locals_as_dict():
             raise SubstitutionFailure(
-                'ThisLaunchFileDir used outside of a launch file (in a script)'
-            )
+                'ThisLaunchFileDir used outside of a launch file (in a script)')
         return context.locals.current_launch_file_directory

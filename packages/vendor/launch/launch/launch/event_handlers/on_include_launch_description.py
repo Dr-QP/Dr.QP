@@ -14,7 +14,8 @@
 
 """Module for OnIncludeLaunchDescription class."""
 
-from typing import Any, Text
+from typing import Any
+from typing import Text
 
 from ..event_handler import EventHandler
 from ..events import IncludeLaunchDescription
@@ -27,7 +28,6 @@ class OnIncludeLaunchDescription(EventHandler):
     def __init__(self, **kwargs: Any) -> None:
         """Create an OnIncludeLaunchDescription event handler."""
         from ..actions import OpaqueFunction
-
         super().__init__(
             matcher=lambda event: is_a_subclass(event, IncludeLaunchDescription),
             entities=OpaqueFunction(

@@ -14,13 +14,14 @@
 
 """Module for the FrontendLaunchDescriptionSource class."""
 
-from typing import Text, Type
+from typing import Text
+from typing import Type
 
+from .frontend_launch_file_utilities import get_launch_description_from_frontend_launch_file
 from ..frontend import Parser
 from ..launch_description import LaunchDescription
 from ..launch_description_source import LaunchDescriptionSource
 from ..some_substitutions_type import SomeSubstitutionsType
-from .frontend_launch_file_utilities import get_launch_description_from_frontend_launch_file
 
 
 class FrontendLaunchDescriptionSource(LaunchDescriptionSource):
@@ -35,7 +36,7 @@ class FrontendLaunchDescriptionSource(LaunchDescriptionSource):
         launch_file_path: SomeSubstitutionsType,
         *,
         method: str = 'interpreted frontend launch file',
-        parser: Type[Parser] = Parser,
+        parser: Type[Parser] = Parser
     ) -> None:
         """
         Create a FrontendLaunchDescriptionSource.
@@ -48,7 +49,11 @@ class FrontendLaunchDescriptionSource(LaunchDescriptionSource):
             instances which are expanded when :py:meth:`get_launch_description()` is called.
         :param parser: an specific parser implementation
         """
-        super().__init__(None, launch_file_path, method)
+        super().__init__(
+            None,
+            launch_file_path,
+            method
+        )
         self._parser = Parser
 
     def _get_launch_description(self, location: Text) -> LaunchDescription:

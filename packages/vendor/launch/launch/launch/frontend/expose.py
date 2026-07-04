@@ -16,7 +16,12 @@
 
 import functools
 import inspect
-from typing import Any, Dict, Iterable, Optional, Text, TYPE_CHECKING
+from typing import Any
+from typing import Dict
+from typing import Iterable
+from typing import Optional
+from typing import Text
+from typing import TYPE_CHECKING
 
 from ..action import Action
 from ..some_substitutions_type import SomeSubstitutionsType
@@ -39,11 +44,13 @@ def instantiate_action(entity: 'Entity', parser: 'Parser') -> Action:
 
 
 def instantiate_substitution(
-    type_name: Text, args: Optional[Iterable[SomeSubstitutionsType]] = None
+    type_name: Text,
+    args: Optional[Iterable[SomeSubstitutionsType]] = None
 ) -> Substitution:
     """Call the registered substitution parsing method, according to `args`."""
     if type_name not in substitution_parse_methods:
-        raise RuntimeError('Unknown substitution: {}'.format(type_name))
+        raise RuntimeError(
+            'Unknown substitution: {}'.format(type_name))
     args = [] if args is None else args
     subst_type, kwargs = substitution_parse_methods[type_name](args)
     return subst_type(**kwargs)
@@ -90,7 +97,8 @@ def __expose_impl(name: Text, parse_methods_map: dict, exposed_type: Text):
         if name in parse_methods_map and found_parse_method != parse_methods_map[name]:
             raise RuntimeError(
                 'Two {} parsing methods exposed with the same name: [{}].'.format(
-                    exposed_type, name
+                    exposed_type,
+                    name
                 )
             )
         if exposed_type == 'action':
@@ -100,12 +108,10 @@ def __expose_impl(name: Text, parse_methods_map: dict, exposed_type: Text):
                 ret = found_parse_method(entity, parser)
                 entity.assert_entity_completely_parsed()
                 return ret
-
             parse_methods_map[name] = wrapper
         else:
             parse_methods_map[name] = found_parse_method
         return exposed
-
     return expose_impl_decorator
 
 

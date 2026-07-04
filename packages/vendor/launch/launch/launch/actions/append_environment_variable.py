@@ -15,19 +15,26 @@
 """Module for the AppendEnvironmentVariable action."""
 
 import os
-from typing import Any, Dict, List, Tuple, Type, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Tuple
+from typing import Type
+from typing import Union
+
 
 from ..action import Action
-from ..frontend import Entity, expose_action, Parser
+from ..frontend import Entity
+from ..frontend import expose_action
+from ..frontend import Parser
 from ..launch_context import LaunchContext
 from ..some_substitutions_type import SomeSubstitutionsType
 from ..substitution import Substitution
-from ..utilities import normalize_to_list_of_substitutions, perform_substitutions
-from ..utilities.type_utils import (
-    normalize_typed_substitution,
-    NormalizedValueType,
-    perform_typed_substitution,
-)
+from ..utilities import normalize_to_list_of_substitutions
+from ..utilities import perform_substitutions
+from ..utilities.type_utils import normalize_typed_substitution
+from ..utilities.type_utils import NormalizedValueType
+from ..utilities.type_utils import perform_typed_substitution
 
 
 @expose_action('append_env')
@@ -110,11 +117,10 @@ class AppendEnvironmentVariable(Action):
         prepend = perform_typed_substitution(context, self.prepend, bool)
         separator = perform_substitutions(context, self.separator)
         if name in context.environment:
-            context.environment[name] = (
-                context.environment[name] + separator + value
-                if not prepend
+            context.environment[name] = \
+                context.environment[name] + separator + value \
+                if not prepend \
                 else value + separator + context.environment[name]
-            )
         else:
             context.environment[name] = value
         return None

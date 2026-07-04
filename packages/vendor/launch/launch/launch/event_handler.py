@@ -14,7 +14,12 @@
 
 """Module for EventHandler class."""
 
-from typing import Callable, List, Optional, Text, Tuple, TYPE_CHECKING
+from typing import Callable
+from typing import List
+from typing import Optional
+from typing import Text
+from typing import Tuple
+from typing import TYPE_CHECKING
 
 from .event import Event
 from .launch_description_entity import LaunchDescriptionEntity
@@ -80,9 +85,9 @@ class BaseEventHandler:
                 type(self).__name__,
                 self.matcher_description,
                 self.handler_description,
-                self.handle_once,
+                self.handle_once
             ),
-            [],
+            []
         )
 
     def handle(self, event: Event, context: 'LaunchContext') -> Optional[SomeEntitiesType]:
@@ -104,7 +109,7 @@ class EventHandler(BaseEventHandler):
         *,
         matcher: Callable[[Event], bool],
         entities: Optional[SomeEntitiesType] = None,
-        handle_once: bool = False,
+        handle_once: bool = False
     ) -> None:
         """
         Create an EventHandler.
