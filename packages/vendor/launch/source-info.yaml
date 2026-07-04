@@ -1,3 +1,10 @@
 branch: ivanpauno/kill-dangling-subprocesses
 repo: https://github.com/anton-matosov/launch.git
 rev: 4b232db8a0a32a90fec112797293f6de3ffbfab8
+keep:
+ - launch
+ - launch_pytest
+ - .gitignore
+ - CONTRIBUTING.md
+ - LICENSE.md
+ - README.md
