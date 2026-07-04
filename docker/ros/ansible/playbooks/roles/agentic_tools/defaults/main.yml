@@ -1,7 +1,7 @@
 ---
 # cc-filter: security layer in front of Claude Code hooks.
 # https://github.com/wissem/cc-filter
-agentic_tools_cc_filter_install: true
+agentic_tools_cc_filter_install: false
 agentic_tools_cc_filter_version: v0.0.6
 agentic_tools_cc_filter_install_path: /usr/local/bin/cc-filter
 agentic_tools_cc_filter_binary_mode: "0755"

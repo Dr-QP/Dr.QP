@@ -172,27 +172,6 @@ jobs:
               return true;
             };
 
-            const claudeReviewCommentMarkers = ['## Code Review', '## Automated Review'];
-
-            const isClaudeReviewComment = (comment) => {
-              const body = comment?.body ?? '';
-              return (
-                claudeLogins.has(comment?.user?.login) &&
-                claudeReviewCommentMarkers.some((marker) => body.includes(marker))
-              );
-            };
-
-            const passIfClaudeCommented = (comment) => {
-              if (!isClaudeReviewComment(comment)) {
-                return false;
-              }
-
-              core.info(
-                `Found Claude review comment by ${comment.user.login} (id ${comment.id}) created at ${comment.created_at}, treating as an approving review since Claude does not always submit a formal PR review when it has no inline findings.`
-              );
-              return true;
-            };
-
             const latestMatchingReview = (reviews, predicate) => {
               return [...reviews].reverse().find(predicate);
             };
@@ -210,18 +189,6 @@ jobs:
             const listReactions = async () => {
               return github.paginate(
                 github.rest.reactions.listForIssue,
-                {
-                  owner: pullRequest.owner,
-                  repo: pullRequest.repo,
-                  issue_number: pullRequest.pull_number,
-                  per_page: 100,
-                }
-              );
-            };
-
-            const listComments = async () => {
-              return github.paginate(
-                github.rest.issues.listComments,
                 {
                   owner: pullRequest.owner,
                   repo: pullRequest.repo,
@@ -284,20 +251,12 @@ jobs:
                 return;
               }
 
-              const comments = await listComments();
-              core.info(`Attempt ${attempt}: observed PR comments: ${comments.length} total`);
-
-              const claudeComment = comments.find(isClaudeReviewComment);
-              if (passIfClaudeCommented(claudeComment)) {
-                return;
-              }
-
               attempt += 1;
               await sleep(30 * 1000);
             }
 
             core.setFailed(
-              `No AI review found for this PR. Expected a review from Copilot (copilot-pull-request-reviewer[bot]), Codex (chatgpt-codex-connector[bot] review or +1 reaction), or Claude (claude[bot] review or issue comment).`
+              `No AI review found for this PR. Expected a review from Copilot (copilot-pull-request-reviewer[bot]), Codex (chatgpt-codex-connector[bot] review or +1 reaction), or Claude (claude[bot]).`
             );
 
       - name: Log debug stats

@@ -3,6 +3,13 @@ set -euo pipefail
 
 script_dir=$(dirname "${BASH_SOURCE[0]}")
 
+# GitHub Codespaces runs initializeCommand via `/bin/sh -c` with no HOME in the
+# environment. The host MCP/secrets integration below is a local Docker Desktop
+# convenience keyed off $HOME; under `set -u` an unbound HOME aborts the whole
+# init (and thus the container build). Default it to empty so those host-path
+# `-d`/`-S` probes simply fall through to their stub branches in Codespaces.
+: "${HOME:=}"
+
 if [[ -f "$script_dir/local.env" ]]; then
     cp -f "$script_dir/local.env" "$script_dir/.env"
 else
