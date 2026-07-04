@@ -84,7 +84,7 @@ jobs:
 
         # Automated review when a PR is opened/reopened: always run the pr-review skill.
       - name: Claude PR Review
-        if: ${{ github.event_name == 'pull_request' }}
+        if: github.event_name == 'pull_request' || (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude review'))
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
