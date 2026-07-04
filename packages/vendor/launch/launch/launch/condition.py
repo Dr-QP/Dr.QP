@@ -14,7 +14,9 @@
 
 """Module for Condition class."""
 
-from typing import Callable, Optional, Text
+from typing import Callable
+from typing import Optional
+from typing import Text
 
 from .launch_context import LaunchContext
 

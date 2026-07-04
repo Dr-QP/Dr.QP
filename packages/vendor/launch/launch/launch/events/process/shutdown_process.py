@@ -14,7 +14,8 @@
 
 """Module for ShutdownProcess event."""
 
-from typing import Callable, TYPE_CHECKING
+from typing import Callable
+from typing import TYPE_CHECKING
 
 from .process_targeted_event import ProcessTargetedEvent
 

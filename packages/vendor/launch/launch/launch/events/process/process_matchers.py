@@ -14,7 +14,9 @@
 
 """Module for standard "process_matchers", which are used with ProcessTargetedEvents."""
 
-from typing import Callable, Text, TYPE_CHECKING
+from typing import Callable
+from typing import Text
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ...actions import ExecuteProcess  # noqa: F401
@@ -22,7 +24,6 @@ if TYPE_CHECKING:
 
 def matches_pid(pid: int) -> Callable[['ExecuteProcess'], bool]:
     """Return a matcher which matches based on the pid of the process."""
-
     def matcher(action: 'ExecuteProcess') -> bool:
         if action.process_details is None:
             # This can happen if the process in the action has not been started.
@@ -34,7 +35,6 @@ def matches_pid(pid: int) -> Callable[['ExecuteProcess'], bool]:
 
 def matches_name(name: Text) -> Callable[['ExecuteProcess'], bool]:
     """Return a matcher which matches based on the name of the ExecuteProcess action."""
-
     def matcher(action: 'ExecuteProcess') -> bool:
         if action.process_details is None:
             # This can happen if the process in the action has not been started.
@@ -52,7 +52,6 @@ def matches_executable(executable: Text) -> Callable[['ExecuteProcess'], bool]:
     str.endswith().
     So, for example, 'ls' would match either 'ls .' or '/usr/bin/ls .'.
     """
-
     def matcher(action: 'ExecuteProcess') -> bool:
         if action.process_details is None:
             # This can happen if the process in the action has not been started.

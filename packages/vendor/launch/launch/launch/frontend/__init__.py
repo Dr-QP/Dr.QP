@@ -19,6 +19,7 @@ from .entity import Entity
 from .expose import expose_action, expose_substitution
 from .parser import InvalidFrontendLaunchFileError, Parser
 
+
 __all__ = [
     'Entity',
     'InvalidFrontendLaunchFileError',
