@@ -19,16 +19,16 @@
 # THE SOFTWARE.
 
 """
-Combo 3: non-function-scoped generator launch test (post-shutdown on a method).
+Combo 3: non-function-scoped (module-scoped) generator launch test.
 
-Attempting to do post-shutdown work from a non-function-scoped generator test
-(the natural way to add a shutdown phase to a class/module test) is UNSUPPORTED
-with the installed launch_pytest + pytest combination: launch_pytest calls
-``FixtureManager.getfixtureinfo(funcargs=True)``, a keyword the installed pytest
-no longer accepts, raising ``TypeError`` for the auto-generated shutdown item.
-
-This module is xfail(strict=True): if a future launch_pytest/pytest pairing fixes
-this, the test will XPASS and prompt us to revisit the recommended patterns.
+Post-shutdown work from a non-function-scoped generator test used to be
+unsupported: launch_pytest called ``FixtureManager.getfixtureinfo(funcargs=True)``
+for the auto-generated shutdown item, a keyword the installed pytest no longer
+accepts, raising ``TypeError``. The vendored ``launch_pytest``
+(``packages/vendor/launch/launch_pytest``, see ``source-info.yaml``) drops that
+stale ``funcargs`` kwarg, so this combo is now fully supported: the generator
+yields once for the active phase and resumes for the shutdown phase, both
+sharing the one module-scoped simulation.
 """
 
 import launch_pytest
@@ -41,11 +41,6 @@ def generate_test_description():
     return make_probe_launch()
 
 
-@pytest.mark.xfail(
-    reason='launch_pytest calls getfixtureinfo(funcargs=True), unsupported by installed pytest',
-    strict=True,
-    raises=TypeError,
-)
 @pytest.mark.launch(fixture=generate_test_description)
 def test_generator_post_shutdown(generate_test_description):
     _ld, proc_info, _launch_id = generate_test_description
