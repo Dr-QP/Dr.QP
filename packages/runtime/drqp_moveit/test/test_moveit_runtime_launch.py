@@ -149,8 +149,6 @@ class TestMoveItRuntime:
         )
         request.addfinalizer(self.follow_joint_trajectory_client.destroy)
 
-        request.addfinalizer(self._clear_obstacles)
-
         self._wait_for_runtime_ready()
 
     def _joint_state_callback(self, msg: JointState) -> None:
@@ -393,25 +391,6 @@ class TestMoveItRuntime:
                 timeout_sec=5.0,
                 error_message='Obstacle did not invalidate the target state in time',
             )
-
-    def _remove_obstacle(self, obstacle_id: str) -> None:
-        collision_object = CollisionObject()
-        collision_object.header.frame_id = BASE_FRAME
-        collision_object.id = obstacle_id
-        collision_object.operation = CollisionObject.REMOVE
-
-        planning_scene = PlanningScene(is_diff=True)
-        planning_scene.world.collision_objects = [collision_object]
-
-        request = ApplyPlanningScene.Request()
-        request.scene = planning_scene
-        response = self._call_service(self.apply_planning_scene_client, request)
-        assert response.success, f'Failed to remove obstacle {obstacle_id}'
-
-    def _clear_obstacles(self) -> None:
-        for obstacle_id in list(self._active_obstacle_ids):
-            self._remove_obstacle(obstacle_id)
-            self._active_obstacle_ids.remove(obstacle_id)
 
     def _state_validity(self, robot_state: RobotState):
         request = GetStateValidity.Request()
