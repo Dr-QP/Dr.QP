@@ -34,6 +34,10 @@ def run(command):
     if verbose:
         print(f'Running command: {" ".join(command)}')
     result = subprocess.run(command, capture_output=True, text=True, check=True)
+    if verbose:
+        print(f'Command output: {result.stdout}')
+        if result.stderr:
+            print(f'Command error output: {result.stderr}')
     return result
 
 
