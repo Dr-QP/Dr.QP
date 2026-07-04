@@ -27,7 +27,7 @@ import sys
 import yaml
 
 
-verbose = True
+verbose = False
 
 
 def run(command):
