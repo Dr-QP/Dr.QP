@@ -5,7 +5,7 @@ set -uo pipefail
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 root_dir=$(dirname "$script_dir")
-cd "$root_dir"
+cd "$root_dir" || exit
 
 max_attempts="${COLCON_TEST_MAX_ATTEMPTS:-3}"
 attempt=1
