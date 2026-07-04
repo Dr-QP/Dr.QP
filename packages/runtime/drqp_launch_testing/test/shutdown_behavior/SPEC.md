@@ -23,22 +23,24 @@ actually started (hence the `ready_delay` before `ReadyToTest`).
 
 ## The matrix
 
-| #   | Fixture scope | Shutdown pattern                  | Shares the active sim? | Shutdown body sees exit codes? | Verdict                                |
-| --- | ------------- | --------------------------------- | ---------------------- | ------------------------------ | -------------------------------------- |
-| 1   | function      | separate `shutdown=True` function | ❌ separate sim        | only of its own throwaway sim  | ✗ don't use for exit checks            |
-| 2   | class         | separate `shutdown=True` function | ❌ separate sim        | only of its own throwaway sim  | ✗ don't use for exit checks            |
-| 3   | class/module  | generator method (yield)          | n/a                    | n/a                            | ✗ **unsupported** (raises `TypeError`) |
-| 4   | module        | separate `shutdown=True` function | ✅ same sim            | ✅ yes                         | ✓ use for multi-test files             |
-| 5   | function      | generator test (yield once)       | ✅ same sim            | ✅ yes                         | ✓ use for single-test files            |
+| #   | Fixture scope | Shutdown pattern                  | Shares the active sim? | Shutdown body sees exit codes? | Verdict                                      |
+| --- | ------------- | --------------------------------- | ---------------------- | ------------------------------ | --------------------------------------------- |
+| 1   | function      | separate `shutdown=True` function | ❌ separate sim        | only of its own throwaway sim  | ✗ don't use for exit checks                  |
+| 2   | class         | separate `shutdown=True` function | ❌ separate sim        | only of its own throwaway sim  | ✗ don't use for exit checks                  |
+| 3   | module        | generator test (yield once)       | ✅ same sim            | ✅ yes                         | ✓ use for multi-test files (generator style) |
+| 4   | module        | separate `shutdown=True` function | ✅ same sim            | ✅ yes                         | ✓ use for multi-test files                   |
+| 5   | function      | generator test (yield once)       | ✅ same sim            | ✅ yes                         | ✓ use for single-test files                  |
 
-### Why combo 3 is unsupported
+### Why combo 3 now works
 
 A non-function-scoped generator launch test makes `launch_pytest` build a
-separate shutdown item via
-`FixtureManager.getfixtureinfo(..., funcargs=True)`. The installed pytest removed
-the `funcargs` keyword, so this raises `TypeError`. The combo 3 test is
-`xfail(strict=True)`: if a future pairing fixes it, the test XPASSes and we
-revisit the recommendations.
+separate shutdown item via `FixtureManager.getfixtureinfo(...)`. Stock
+`launch_pytest` passed a stale `funcargs=True` keyword there that the installed
+pytest no longer accepts, raising `TypeError`. The vendored `launch_pytest`
+(`packages/vendor/launch/launch_pytest`, see `source-info.yaml`) drops that
+keyword, so combo 3 is fully supported now: the generator yields once for the
+active phase and resumes for the shutdown phase against the same module-scoped
+simulation.
 
 ## Recommended patterns (consequences)
 
@@ -47,7 +49,10 @@ revisit the recommendations.
   after the `yield`.
 - **A file whose several launch tests must share one simulation** → combo 4:
   a `module`-scoped launch fixture, plain test functions, and one separate
-  `shutdown=True` test that asserts on `proc_info`.
+  `shutdown=True` test that asserts on `proc_info`. Combo 3 (a `module`-scoped
+  generator test) is an equally valid alternative when there's only one test
+  driving the shared simulation and you'd rather keep the shutdown assertions
+  inline with a `yield` than as a separate function.
 - **Never** rely on a separate `shutdown=True` function at function or class
   scope to verify the active test's processes (combos 1 & 2) — it runs against a
   different, throwaway simulation.
