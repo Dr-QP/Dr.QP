@@ -92,6 +92,7 @@ def update_vendor_package(package_path):
     )
     if subtree.stdout.strip().find('Subtree is already at commit') != -1:
         print(f'Package at {package_path} is already up to date.')
+        return
 
     update_source_info_after_subtree(package_path, source_info)
     commit_vendor_package_update(package_path, branch)
