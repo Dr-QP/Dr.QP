@@ -5,4 +5,4 @@
 #   name  - apt package name (used for idempotency check and apt-mark hold)
 #   url   - direct URL to the .deb file
 #   arch  - (optional) restrict to this system_arch; omit to apply on all arches
-ros_patches_packages: {}
+ros_patches_packages: []
