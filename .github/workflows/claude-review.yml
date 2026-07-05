@@ -48,7 +48,7 @@ jobs:
       issues: write
       id-token: write
       actions: read # Required for Claude to read CI results on PRs
-    timeout-minutes: 15
+    timeout-minutes: 30
     environment: claude-review
     steps:
       # issue_comment (the common "@claude review" trigger) fires with the
