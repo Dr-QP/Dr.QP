@@ -1,11 +1,14 @@
 {
   "permissions": {
     "allow": [
+      "Agent",
+      "ToolSearch",
+      "Skill",
+      "WebSearch",
       "Read(//opt/ros/**)",
       "Read(//root/**)",
       "Edit(//opt/ros/overlay_ws/**)",
       "Edit(//tmp/**)",
-      "WebSearch",
       "WebFetch(domain:docs.docker.com)",
       "WebFetch(domain:api.github.com)",
       "WebFetch(domain:github.com)",
@@ -15,7 +18,6 @@
       "Bash(.github/skills/*/scripts/*)",
       "Bash(gh)",
       "Bash(gh *)",
-      "Skill",
       "Bash(pip show *)",
       "Bash(pip install *)",
       "Bash(python3 -m py_compile *)",

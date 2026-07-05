@@ -25,7 +25,6 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-  CLAUDE_PR_REVIEW_ARGS: "Skill,Agent(general-purpose),ToolSearch,mcp__github__add_comment_to_pending_review,mcp__github__pull_request_review_write,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr status:*),Bash(gh api repos/*/pulls/*/reviews:*),Bash(gh api repos/*/pulls/*/reviews/*:*),Bash(gh api repos/*/pulls/*/comments:*),Bash(git *),Bash(gh auth status:*)"
 
 jobs:
   review:
@@ -98,6 +97,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          settings: .claude/settings.json
           # Trigger when specific user is assigned to an issue
           assignee_trigger: 'claude-bot'
           show_full_output: true
@@ -107,24 +107,34 @@ jobs:
 
             Use the pr-review skill to review this pull request
 
-          claude_args: >-
-            --allowedTools '${{ env.CLAUDE_PR_REVIEW_ARGS }}'
-
+      - name: Attach review output file
+        if: steps.claude_pr_review.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-pr-review-output
+          path: ${{ steps.claude_pr_review.outputs.execution_file }}
 
       # Comment/mention-driven requests (issue_comment, pull_request_review_comment,
       # pull_request_review, issues): no fixed prompt, so Claude responds to whatever
       # was actually asked in the comment. It can invoke the pr-review skill itself
       # if the request is a review.
-      - name: Claude Code Respond
+      - name: Claude Comment Responder
+        id: claude_comment_responder
         if: steps.claude_pr_review.outcome == 'skipped'
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          settings: .claude/settings.json
           # Trigger when specific user is assigned to an issue
           assignee_trigger: 'claude-bot'
           show_full_output: true
-          claude_args: >-
-            --allowedTools '${{ env.CLAUDE_PR_REVIEW_ARGS }},Bash(gh api repos/*/issues/comments/*:*)'
+
+      - name: Attach comment responder output file
+        if: steps.claude_comment_responder.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-comment-responder-output
+          path: ${{ steps.claude_comment_responder.outputs.execution_file }}
 
       - name: Log debug stats
         if: ${{ always() }}
