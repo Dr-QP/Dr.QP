@@ -16,7 +16,7 @@ Use this skill to review a pull request's diff and publish feedback as a GitHub 
 
 - `gh` must be installed and authenticated
 - When running locally, mcp tools are `mcp__gateway__*` instead of `mcp__github__*`
-- The `mcp__github__pull_request_review_write` and `mcp__github__add_comment_to_pending_review` MCP tools are the primary way to create the review and its inline comments. If they are not available in the session (check with ToolSearch first), fall back to the equivalent `gh api` calls — see Fallback below.
+- The `mcp__github__pull_request_review_write` and `mcp__github__add_comment_to_pending_review` MCP tools are the primary way to create the review and its inline comments. Check with ToolSearch first; if they are not available in the session, fall back to the bundled scripts in `scripts/` — see Fallback below. **Never construct the `gh api` calls by hand** (ad-hoc `jq`/heredoc JSON assembly for review payloads routinely trips Claude Code's Bash safety checks — "brace with quote character", "shell syntax that cannot be statically analyzed", etc. — burning many turns for no result); the scripts exist precisely so no review-posting command is composed live.
 - REPO (`owner/name`) and PR NUMBER must be known — read them from the workflow context or ask the user if not provided
 
 ## Review Focus
@@ -61,13 +61,20 @@ Flag only significant bugs; ignore nitpicks and likely false positives. Do not f
    - In Claude Code, issue four `Agent` tool calls in a single message (`subagent_type: general-purpose`, `model: sonnet` for the compliance pair, `model: opus` for the correctness pair). In environments without sub-agent spawning, perform the four passes sequentially in this session, each one starting fresh from the diff with no memory of the prior passes, to preserve independence.
 4. **Merge and deduplicate.** Collect the candidate findings from all four passes. Collapse candidates that name the same file/line and describe the same underlying issue into one.
 5. **Validate each candidate independently, in parallel** — for every surviving candidate, run one validation pass that sees only that single candidate plus the diff/description (not the other candidates, not which pass raised it), and must confirm with high confidence that it is a real, worth-flagging issue. Drop any candidate the validator cannot confirm with high confidence. Use the same Claude-Code-vs-sequential-fallback approach as Step 3.
-6. Create a pending review with `mcp__github__pull_request_review_write` (`method: "create"`, no `event`). Fallback: `gh api repos/<owner>/<repo>/pulls/<PR_NUMBER>/reviews -f commit_id="$(gh pr view <PR_NUMBER> --json headRefOid -q .headRefOid)"` (omitting `-f event` keeps it pending).
-7. For every validated finding, attach it as an inline comment on the exact file/line with `mcp__github__add_comment_to_pending_review` — this is the only place finding text goes; never describe a finding's location in prose. Fallback: look up the pending review's id (`gh api repos/<owner>/<repo>/pulls/<PR_NUMBER>/reviews --jq '.[] | select(.state=="PENDING") | .id'`), then `gh api repos/<owner>/<repo>/pulls/<PR_NUMBER>/comments -f body="<finding>" -f path="<file>" -F line=<n> -f side=RIGHT -F pull_request_review_id=<id>` (repeat per finding).
-8. Submit the review with `mcp__github__pull_request_review_write` (`method: "submit_pending"`), setting `event` to `COMMENT`, `REQUEST_CHANGES`, or `APPROVE` based on severity, and `body` limited to a short overall summary (no per-finding detail — that lives in the inline comments). Fallback: `gh api repos/<owner>/<repo>/pulls/<PR_NUMBER>/reviews/<id>/events -f event=<COMMENT|REQUEST_CHANGES|APPROVE> -f body="<summary>"`.
+6. Create a pending review with `mcp__github__pull_request_review_write` (`method: "create"`, no `event`). Fallback: `scripts/create-review.sh --pr <PR_NUMBER>` — prints `REVIEW_ID=` and `COMMIT_ID=`.
+7. For every validated finding, attach it as an inline comment on the exact file/line with `mcp__github__add_comment_to_pending_review` — this is the only place finding text goes; never describe a finding's location in prose. Fallback: write the finding text to a plain file with the Write tool, then `scripts/add-inline-comment.sh --pr <PR_NUMBER> --commit <COMMIT_ID> --path <file> --line <n> --side RIGHT --body-file <path>` (repeat per finding).
+8. Submit the review with `mcp__github__pull_request_review_write` (`method: "submit_pending"`), setting `event` to `COMMENT`, `REQUEST_CHANGES`, or `APPROVE` based on severity, and `body` limited to a short overall summary (no per-finding detail — that lives in the inline comments). Fallback: write the summary to a plain file with the Write tool, then `scripts/submit-review.sh --pr <PR_NUMBER> --review-id <REVIEW_ID> --event <COMMENT|REQUEST_CHANGES|APPROVE> --body-file <path>`.
 
-## Fallback: gh api equivalents
+## Fallback: bundled scripts
 
-Use these only when the MCP tools above are confirmed unavailable in the session — they require the `Bash(gh api repos/*/pulls/*/reviews:*)`, `Bash(gh api repos/*/pulls/*/reviews/*:*)`, and `Bash(gh api repos/*/pulls/*/comments:*)` entries already present in the workflow's `allowedTools`. If a pending review must be discarded instead of submitted (e.g. every candidate failed Step 5 validation after Step 6 already created one), delete it rather than leaving it dangling: `gh api repos/<owner>/<repo>/pulls/<PR_NUMBER>/reviews/<id> -X DELETE`.
+Use `scripts/*.sh` only when the MCP tools above are confirmed unavailable in the session (check with ToolSearch first). They wrap every `gh api` call needed to drive a PR review, so no review-posting command is ever assembled live in a `Bash` call:
+
+- `scripts/create-review.sh --pr <PR_NUMBER> [--repo <owner/name>]`
+- `scripts/add-inline-comment.sh --pr <PR_NUMBER> --commit <sha> --path <file> --line <n> [--side RIGHT|LEFT] --body-file <path>`
+- `scripts/submit-review.sh --pr <PR_NUMBER> --review-id <id> --event <COMMENT|REQUEST_CHANGES|APPROVE> --body-file <path>`
+- `scripts/discard-review.sh --pr <PR_NUMBER> --review-id <id>` — deletes a pending review instead of submitting it (e.g. every candidate failed Step 5 validation after Step 6 already created one)
+
+Run any script with `-h` for full usage. All text bodies (finding text, the review summary) must be written to a plain file with the Write tool first and passed as `--body-file <path>` — never inline the text into the shell command. `--repo` defaults to the current repo via `gh repo view` if omitted. These scripts are already covered by the `Bash(.github/skills/*/scripts/*)` permission; do not fall further back to typing `gh api` calls by hand.
 
 ## Constraints
 
