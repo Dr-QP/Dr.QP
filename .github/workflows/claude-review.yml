@@ -97,6 +97,10 @@ jobs:
 
             Use the pr-review skill to review this pull request
 
+          claude_args: >-
+            --allowedTools
+            "Skill,mcp__github__add_comment_to_pending_review,mcp__github__pull_request_review_write,Bash(gh pr diff:*),Bash(gh pr view:*)"
+
       # Comment/mention-driven requests (issue_comment, pull_request_review_comment,
       # pull_request_review, issues): no fixed prompt, so Claude responds to whatever
       # was actually asked in the comment. It can invoke the pr-review skill itself
