@@ -85,6 +85,10 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
+      - name: Add workspace to safe directories
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
         # Automated review when a PR is opened/reopened: always run the pr-review skill.
       - name: Claude PR Review
         id: claude_pr_review
