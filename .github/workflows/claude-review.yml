@@ -100,7 +100,7 @@ jobs:
             Use the pr-review skill to review this pull request
 
           claude_args: >-
-            --allowedTools ${{ env.CLAUDE_PR_REVIEW_ARGS }}
+            --allowedTools '${{ env.CLAUDE_PR_REVIEW_ARGS }}'
 
 
       # Comment/mention-driven requests (issue_comment, pull_request_review_comment,
@@ -116,7 +116,7 @@ jobs:
           assignee_trigger: 'claude-bot'
           show_full_output: true
           claude_args: >-
-            --allowedTools "${{ env.CLAUDE_PR_REVIEW_ARGS }},Bash(gh api repos/*/issues/comments/*:*)"
+            --allowedTools '${{ env.CLAUDE_PR_REVIEW_ARGS }},Bash(gh api repos/*/issues/comments/*:*)'
 
       - name: Log debug stats
         if: ${{ always() }}
