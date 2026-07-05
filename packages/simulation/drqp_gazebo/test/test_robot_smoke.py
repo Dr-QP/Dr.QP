@@ -21,11 +21,10 @@
 """
 Verify simulation nodes are running, the clock is bridged, and processes exit cleanly.
 
-Structured as a functions-only launch_pytest module: a module-scoped launch
-fixture starts one simulation shared by every test, a module-scoped ``robot``
-fixture exposes a single ``GazeboRobotControlBase`` harness instance, and a final
-``shutdown=True`` test verifies per-process exit codes once the simulation has
-been torn down.
+Structured as a functions-only launch_pytest module: a function-scoped launch
+fixture starts the simulation for a single test, the ``robot`` fixture exposes a
+``GazeboRobotControlBase`` harness instance, and the test itself yields partway
+through to verify per-process exit codes once the simulation has been torn down.
 """
 
 from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
@@ -37,10 +36,10 @@ from robot_control_test_support import create_simulation_launch_description
 @launch_pytest.fixture
 def generate_test_description():
     """
-    Launch one simulation for the module and record process exit codes.
+    Launch the simulation for this test and record process exit codes.
 
     Returns the launch description together with a ``ProcInfoHandler`` so the
-    final shutdown test can assert that every non-simulator process exited
+    test can assert, after the yield, that every non-simulator process exited
     cleanly.
     """
     launch_description = create_simulation_launch_description()
