@@ -16,7 +16,7 @@ Use this skill to review a pull request's diff and publish feedback as a GitHub 
 
 - `gh` must be installed and authenticated
 - When running locally, mcp tools are `mcp__gateway__*` instead of `mcp__github__*`
-- The `mcp__github__pull_request_review_write` and `mcp__github__add_comment_to_pending_review` MCP tools must be available for creating the review and its inline comments
+- The `mcp__github__pull_request_review_write` and `mcp__github__add_comment_to_pending_review` MCP tools are the primary way to create the review and its inline comments. If they are not available in the session (check with ToolSearch first), fall back to the equivalent `gh api` calls — see Fallback below.
 - REPO (`owner/name`) and PR NUMBER must be known — read them from the workflow context or ask the user if not provided
 
 ## Review Focus
@@ -48,9 +48,13 @@ Two independent concerns feed two different pass types (see Steps below) so they
    - In Claude Code, issue four `Agent` tool calls (`subagent_type: general-purpose`) in a single message. In environments without sub-agent spawning, perform the four passes sequentially in this session, each one starting fresh from the diff with no memory of the prior passes, to preserve independence.
 4. **Merge and deduplicate.** Collect the candidate findings from all four passes. Collapse candidates that name the same file/line and describe the same underlying issue into one.
 5. **Validate each candidate independently, in parallel** — for every surviving candidate, run one validation pass that sees only that single candidate plus the diff/description (not the other candidates, not which pass raised it), and must confirm with high confidence that it is a real, worth-flagging issue. Drop any candidate the validator cannot confirm with high confidence. Use the same Claude-Code-vs-sequential-fallback approach as Step 3.
-6. Create a pending review with `mcp__github__pull_request_review_write` (`method: "create"`, no `event`).
-7. For every validated finding, attach it as an inline comment on the exact file/line with `mcp__github__add_comment_to_pending_review` — this is the only place finding text goes; never describe a finding's location in prose.
-8. Submit the review with `mcp__github__pull_request_review_write` (`method: "submit_pending"`), setting `event` to `COMMENT`, `REQUEST_CHANGES`, or `APPROVE` based on severity, and `body` limited to a short overall summary (no per-finding detail — that lives in the inline comments).
+6. Create a pending review with `mcp__github__pull_request_review_write` (`method: "create"`, no `event`). Fallback: `gh api repos/<owner>/<repo>/pulls/<PR_NUMBER>/reviews -f commit_id="$(gh pr view <PR_NUMBER> --json headRefOid -q .headRefOid)"` (omitting `-f event` keeps it pending).
+7. For every validated finding, attach it as an inline comment on the exact file/line with `mcp__github__add_comment_to_pending_review` — this is the only place finding text goes; never describe a finding's location in prose. Fallback: look up the pending review's id (`gh api repos/<owner>/<repo>/pulls/<PR_NUMBER>/reviews --jq '.[] | select(.state=="PENDING") | .id'`), then `gh api repos/<owner>/<repo>/pulls/<PR_NUMBER>/comments -f body="<finding>" -f path="<file>" -F line=<n> -f side=RIGHT -F pull_request_review_id=<id>` (repeat per finding).
+8. Submit the review with `mcp__github__pull_request_review_write` (`method: "submit_pending"`), setting `event` to `COMMENT`, `REQUEST_CHANGES`, or `APPROVE` based on severity, and `body` limited to a short overall summary (no per-finding detail — that lives in the inline comments). Fallback: `gh api repos/<owner>/<repo>/pulls/<PR_NUMBER>/reviews/<id>/events -f event=<COMMENT|REQUEST_CHANGES|APPROVE> -f body="<summary>"`.
+
+## Fallback: gh api equivalents
+
+Use these only when the MCP tools above are confirmed unavailable in the session — they require the `Bash(gh api repos/*/pulls/*/reviews:*)`, `Bash(gh api repos/*/pulls/*/reviews/*:*)`, and `Bash(gh api repos/*/pulls/*/comments:*)` entries already present in the workflow's `allowedTools`. If a pending review must be discarded instead of submitted (e.g. every candidate failed Step 5 validation after Step 6 already created one), delete it rather than leaving it dangling: `gh api repos/<owner>/<repo>/pulls/<PR_NUMBER>/reviews/<id> -X DELETE`.
 
 ## Constraints
 
