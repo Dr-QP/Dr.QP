@@ -97,6 +97,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           settings: .claude/settings.json
           # Trigger when specific user is assigned to an issue
           assignee_trigger: 'claude-bot'
@@ -106,8 +107,6 @@ jobs:
             PR NUMBER: ${{ steps.checkout_ref.outputs.prNumber }}
 
             Use the pr-review skill to review this pull request
-        env:
-          OVERRIDE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Attach review output file
         if: steps.claude_pr_review.outcome == 'success'
@@ -126,12 +125,11 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           settings: .claude/settings.json
           # Trigger when specific user is assigned to an issue
           assignee_trigger: 'claude-bot'
           show_full_output: true
-        env:
-          OVERRIDE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Attach comment responder output file
         if: steps.claude_comment_responder.outcome == 'success'
