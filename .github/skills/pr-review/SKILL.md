@@ -21,29 +21,41 @@ Use this skill to review a pull request's diff and publish feedback as a GitHub 
 
 ## Review Focus
 
-Analyze the full diff and provide a thorough code review focused on:
+Two independent concerns feed two different pass types (see Steps below) so they can be reviewed without one blind spot masking the other.
 
-- Code quality, correctness, and best practices
+**Compliance focus** (repo-convention adherence):
+
+- ROS 2 conventions (node lifecycle, topic/service naming, parameter handling)
+- C++/Python style and idioms
+- Any rule in the `.github/instructions/*.instructions.md` files applicable to the changed files (see Step 2)
+- IGNORE import ordering, that is handled by `ruff` and `clang-format` in CI
+
+**Correctness focus** (bug-hunting):
+
 - Potential bugs or edge cases
 - Security implications
 - Performance considerations
-- ROS 2 conventions (node lifecycle, topic/service naming, parameter handling)
-- C++/Python style and idioms
-- IGNORE import ordering, that is handled by `ruff` and `clang-format` in CI
 - Test coverage and quality
+- Flag only significant, high-confidence issues; ignore nitpicks, style, and anything not certain to be real
 
 ## Steps
 
-1. Fetch the diff: `gh pr diff <PR_NUMBER>`
-2. Fetch the PR description for context: `gh pr view <PR_NUMBER>`
-3. Analyze the changes against the review focus areas above.
-4. Create a pending review with `mcp__github__pull_request_review_write` (`method: "create"`, no `event`).
-5. For every finding, attach it as an inline comment on the exact file/line with `mcp__github__add_comment_to_pending_review` — this is the only place finding text goes; never describe a finding's location in prose.
-6. Submit the review with `mcp__github__pull_request_review_write` (`method: "submit_pending"`), setting `event` to `COMMENT`, `REQUEST_CHANGES`, or `APPROVE` based on severity, and `body` limited to a short overall summary (no per-finding detail — that lives in the inline comments).
+1. **Gate.** Run `gh pr view <PR_NUMBER>`. If the PR is a draft, already closed/merged, or trivial (docs-only, version bump, generated-file-only diff), stop here and say so instead of proceeding — do not fetch the diff or spawn any review passes.
+2. **Gather context.** Fetch the diff (`gh pr diff <PR_NUMBER>`) and reuse the PR description from Step 1. From the changed-file list, determine which `.github/instructions/*.instructions.md` files apply, by matching each file's `applyTo` frontmatter glob against the changed paths (`engineering.instructions.md`'s `**` always applies).
+3. **Run four independent initial-review passes in parallel** — each pass sees only the diff, the description, and its own focus list; none sees another pass's output:
+   - 2x **compliance pass** — audit the diff against the Compliance focus list and the instruction files found in Step 2.
+   - 2x **correctness pass** — audit the diff against the Correctness focus list.
+   - In Claude Code, issue four `Agent` tool calls (`subagent_type: general-purpose`) in a single message. In environments without sub-agent spawning, perform the four passes sequentially in this session, each one starting fresh from the diff with no memory of the prior passes, to preserve independence.
+4. **Merge and deduplicate.** Collect the candidate findings from all four passes. Collapse candidates that name the same file/line and describe the same underlying issue into one.
+5. **Validate each candidate independently, in parallel** — for every surviving candidate, run one validation pass that sees only that single candidate plus the diff/description (not the other candidates, not which pass raised it), and must confirm with high confidence that it is a real, worth-flagging issue. Drop any candidate the validator cannot confirm with high confidence. Use the same Claude-Code-vs-sequential-fallback approach as Step 3.
+6. Create a pending review with `mcp__github__pull_request_review_write` (`method: "create"`, no `event`).
+7. For every validated finding, attach it as an inline comment on the exact file/line with `mcp__github__add_comment_to_pending_review` — this is the only place finding text goes; never describe a finding's location in prose.
+8. Submit the review with `mcp__github__pull_request_review_write` (`method: "submit_pending"`), setting `event` to `COMMENT`, `REQUEST_CHANGES`, or `APPROVE` based on severity, and `body` limited to a short overall summary (no per-finding detail — that lives in the inline comments).
 
 ## Constraints
 
-- **Never post a standalone top-level PR comment** (`gh pr comment`, `mcp__github__add_issue_comment`, etc.) for review findings. All feedback must go through the pull request review flow (steps 4–6) so it renders as a proper review with threaded, resolvable inline comments.
+- **Never post a standalone top-level PR comment** (`gh pr comment`, `mcp__github__add_issue_comment`, etc.) for review findings. All feedback must go through the pull request review flow (steps 6–8) so it renders as a proper review with threaded, resolvable inline comments.
 - **Never write location references like "in `file.py` (line 42)" or "around line 10" in the review body or in chat.** Every finding tied to a specific file/line must be an actual inline comment on that file/line via `mcp__github__add_comment_to_pending_review`, not prose pointing at a location.
 - Do not submit review text as plain chat/assistant messages.
 - Keep each inline comment specific and actionable, scoped to the line(s) it annotates.
+- Only findings that survived Step 5 validation may be posted — never publish an unvalidated candidate.
