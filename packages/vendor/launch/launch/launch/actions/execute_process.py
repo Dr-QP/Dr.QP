@@ -15,15 +15,27 @@
 """Module for the ExecuteProcess action."""
 
 import shlex
-from typing import Any, Dict, Iterable, List, Optional, Text, Tuple, Type, Union
+from typing import Any
+from typing import Dict
+from typing import Iterable
+from typing import List
+from typing import Optional
+from typing import Text
+from typing import Tuple
+from typing import Type
+from typing import Union
 
-from ..descriptions import Executable
-from ..frontend import Entity, expose_action, Parser
-from ..some_substitutions_type import SomeSubstitutionsType
-from ..substitution import Substitution
-from ..substitutions import TextSubstitution
+
 from .execute_local import ExecuteLocal
 from .shutdown_action import Shutdown
+from ..descriptions import Executable
+from ..frontend import Entity
+from ..frontend import expose_action
+from ..frontend import Parser
+from ..some_substitutions_type import SomeSubstitutionsType
+
+from ..substitution import Substitution
+from ..substitutions import TextSubstitution
 
 
 @expose_action('executable')
@@ -125,7 +137,7 @@ class ExecuteProcess(ExecuteLocal):
         cwd: Optional[SomeSubstitutionsType] = None,
         env: Optional[Dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None,
         additional_env: Optional[Dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None,
-        **kwargs: Any,
+        **kwargs: Any
     ) -> None:
         """
         Construct an ExecuteProcess action.
@@ -228,13 +240,16 @@ class ExecuteProcess(ExecuteLocal):
         :param: respawn_max_retries number of times to respawn the process if respawn is 'True'.
                 A negative value will respawn an infinite number of times (default behavior).
         """
-        executable = Executable(
-            cmd=cmd, prefix=prefix, name=name, cwd=cwd, env=env, additional_env=additional_env
-        )
+        executable = Executable(cmd=cmd, prefix=prefix, name=name, cwd=cwd, env=env,
+                                additional_env=additional_env)
         super().__init__(process_description=executable, **kwargs)
 
     @classmethod
-    def _parse_cmdline(cls, cmd: Text, parser: Parser) -> List[SomeSubstitutionsType]:
+    def _parse_cmdline(
+        cls,
+        cmd: Text,
+        parser: Parser
+    ) -> List[SomeSubstitutionsType]:
         """
         Parse text apt for command line execution.
 
@@ -250,7 +265,6 @@ class ExecuteProcess(ExecuteLocal):
             nonlocal arg
             result_args.append(arg)
             arg = []
-
         for sub in parser.parse_substitution(cmd):
             if isinstance(sub, TextSubstitution):
                 tokens = shlex.split(sub.text)
@@ -293,7 +307,10 @@ class ExecuteProcess(ExecuteLocal):
 
     @classmethod
     def parse(
-        cls, entity: Entity, parser: Parser, ignore: Optional[List[str]] = None
+        cls,
+        entity: Entity,
+        parser: Parser,
+        ignore: Optional[List[str]] = None
     ) -> Tuple[Type['ExecuteProcess'], Dict[str, Any]]:
         """
         Return the `ExecuteProcess` action and kwargs for constructing it.
@@ -327,8 +344,7 @@ class ExecuteProcess(ExecuteLocal):
                 else:
                     raise ValueError(
                         'Attribute on_exit of Entity node expected to be shutdown but got `{}`'
-                        'Other on_exit actions not yet supported'.format(on_exit)
-                    )
+                        'Other on_exit actions not yet supported'.format(on_exit))
 
         if 'prefix' not in ignore:
             prefix = entity.get_attr('launch-prefix', optional=True)
@@ -346,9 +362,8 @@ class ExecuteProcess(ExecuteLocal):
                 kwargs['respawn'] = parser.parse_substitution(respawn)
 
         if 'respawn_max_retries' not in ignore:
-            respawn_max_retries = entity.get_attr(
-                'respawn_max_retries', data_type=int, optional=True
-            )
+            respawn_max_retries = entity.get_attr('respawn_max_retries', data_type=int,
+                                                  optional=True)
             if respawn_max_retries is not None:
                 kwargs['respawn_max_retries'] = respawn_max_retries
 
@@ -394,15 +409,13 @@ class ExecuteProcess(ExecuteLocal):
 
         if 'additional_env' not in ignore:
             # Conditions won't be allowed in the `env` tag.
-            # If that feature is needed, `set_enviroment_variable` and
-            # `unset_enviroment_variable` actions should be used.
+            # If that feature is needed, `set_environment_variable` and
+            # `unset_environment_variable` actions should be used.
             env = entity.get_attr('env', data_type=List[Entity], optional=True)
             if env is not None:
                 kwargs['additional_env'] = {
-                    tuple(parser.parse_substitution(e.get_attr('name'))): parser.parse_substitution(
-                        e.get_attr('value')
-                    )
-                    for e in env
+                    tuple(parser.parse_substitution(e.get_attr('name'))):
+                    parser.parse_substitution(e.get_attr('value')) for e in env
                 }
                 for e in env:
                     e.assert_entity_completely_parsed()
@@ -430,9 +443,8 @@ class ExecuteProcess(ExecuteLocal):
         return self.process_description.cwd
 
     @property
-    def env(
-        self,
-    ) -> Union[Dict[str, str], List[Tuple[List[Substitution], List[Substitution]]], None]:
+    def env(self) -> Union[Dict[str, str],
+                           List[Tuple[List[Substitution], List[Substitution]]], None]:
         """Getter for env."""
         if self.process_description.final_env is not None:
             return self.process_description.final_env
