@@ -38,6 +38,13 @@ Two independent concerns feed two different pass types (see Steps below) so they
 - Test coverage and quality
 - Flag only significant, high-confidence issues; ignore nitpicks, style, and anything not certain to be real
 
+Do NOT flag:
+  - Code style or quality concerns
+  - Potential issues that depend on specific inputs or state
+  - Subjective suggestions or improvements
+
+Flag only significant bugs; ignore nitpicks and likely false positives. Do not flag issues that you cannot validate without looking at context outside of the git diff.
+
 ## Steps
 
 1. **Gate.** Run `gh pr view <PR_NUMBER>`. If the PR is a draft, already closed/merged, or trivial (docs-only, version bump, generated-file-only diff), stop here and say so instead of proceeding — do not fetch the diff or spawn any review passes.
