@@ -111,7 +111,7 @@ jobs:
             Use the pr-review skill to review this pull request
 
       - name: Attach review output file
-        if: steps.claude_pr_review.outcome == 'success'
+        if: steps.claude_pr_review.outputs.execution_file != ''
         uses: actions/upload-artifact@v4
         with:
           name: claude-pr-review-output
@@ -134,7 +134,7 @@ jobs:
           show_full_output: true
 
       - name: Attach comment responder output file
-        if: steps.claude_comment_responder.outcome == 'success'
+        if: steps.claude_comment_responder.outputs.execution_file != ''
         uses: actions/upload-artifact@v4
         with:
           name: claude-comment-responder-output
