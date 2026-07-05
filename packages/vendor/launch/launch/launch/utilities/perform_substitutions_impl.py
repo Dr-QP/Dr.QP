@@ -14,7 +14,8 @@
 
 """Module for the perform_substitutions() utility function."""
 
-from typing import List, Text
+from typing import List
+from typing import Text
 
 from ..launch_context import LaunchContext
 from ..substitution import Substitution

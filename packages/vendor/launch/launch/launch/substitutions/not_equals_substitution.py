@@ -14,11 +14,15 @@
 
 """Module for the NotEqualsSubstitution substitution."""
 
-from typing import Any, Iterable, Optional, Text, Union
+from typing import Any
+from typing import Iterable
+from typing import Optional
+from typing import Text
+from typing import Union
 
+from .equals_substitution import EqualsSubstitution
 from ..frontend import expose_substitution
 from ..launch_context import LaunchContext
-from .equals_substitution import EqualsSubstitution
 
 
 @expose_substitution('not-equals')
@@ -30,7 +34,9 @@ class NotEqualsSubstitution(EqualsSubstitution):
     """
 
     def __init__(
-        self, left: Optional[Union[Any, Iterable[Any]]], right: Optional[Union[Any, Iterable[Any]]]
+        self,
+        left: Optional[Union[Any, Iterable[Any]]],
+        right: Optional[Union[Any, Iterable[Any]]]
     ) -> None:
         """Create a NotEqualsSubstitution substitution."""
         super().__init__(left, right)

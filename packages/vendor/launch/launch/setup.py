@@ -1,14 +1,16 @@
-from setuptools import find_packages, setup
+from setuptools import find_packages
+from setuptools import setup
 
 package_name = 'launch'
 
 setup(
     name=package_name,
-    version='3.9.6',
+    version='3.10.0',
     packages=find_packages(exclude=['test']),
     data_files=[
         ('share/' + package_name, ['package.xml']),
-        ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
+        ('share/ament_index/resource_index/packages',
+            ['resource/' + package_name]),
         ('share/launch/frontend', ['share/launch/frontend/grammar.lark']),
     ],
     package_data={'': ['py.typed']},
@@ -29,8 +31,7 @@ setup(
     description='Launch processes specified in launch files.',
     long_description=(
         'This package provides the ability to run multiple '
-        'processes and react on individual processes exiting.'
-    ),
+        'processes and react on individual processes exiting.'),
     license='Apache License, Version 2.0',
     extras_require={
         'test': [

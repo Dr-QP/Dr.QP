@@ -14,7 +14,8 @@
 
 """Module for the Substitution class."""
 
-from typing import Text, TYPE_CHECKING
+from typing import Text
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .launch_context import LaunchContext  # noqa: F401

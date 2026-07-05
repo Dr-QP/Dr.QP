@@ -14,7 +14,11 @@
 
 """Module for RunningProcessEvent event."""
 
-from typing import Dict, List, Optional, Text, TYPE_CHECKING
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Text
+from typing import TYPE_CHECKING
 
 from ...event import Event
 
@@ -35,7 +39,7 @@ class RunningProcessEvent(Event):
         cmd: List[Text],
         cwd: Optional[Text],
         env: Optional[Dict[Text, Text]],
-        pid: int,
+        pid: int
     ) -> None:
         """
         Create a RunningProcessEvent.

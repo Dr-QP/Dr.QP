@@ -14,14 +14,17 @@
 
 """Module for LaunchConfigurationEquals class."""
 
-from typing import List, Optional, Text
+from typing import List
+from typing import Optional
+from typing import Text
 import warnings
 
 from ..condition import Condition
 from ..launch_context import LaunchContext
 from ..some_substitutions_type import SomeSubstitutionsType
 from ..substitution import Substitution
-from ..utilities import normalize_to_list_of_substitutions, perform_substitutions
+from ..utilities import normalize_to_list_of_substitutions
+from ..utilities import perform_substitutions
 
 
 class LaunchConfigurationEquals(Condition):
@@ -43,16 +46,18 @@ class LaunchConfigurationEquals(Condition):
     """
 
     def __init__(
-        self, launch_configuration_name: Text, expected_value: Optional[SomeSubstitutionsType]
+        self,
+        launch_configuration_name: Text,
+        expected_value: Optional[SomeSubstitutionsType]
     ) -> None:
         warnings.warn(
             "The 'LaunchConfigurationEquals' and 'LaunchConfigurationNotEquals' Conditions are "
             " deprecated. Use the 'EqualsSubstitution' and 'NotEqualsSubstitution' substitutions "
             'instead! E.g.:\n'
             '  IfCondition(\n  '
-            '\tEqualsSubstitution(LaunchConfiguration(\'some_launch_arg\'), "some_equality_check")'
+            "\tEqualsSubstitution(LaunchConfiguration('some_launch_arg'), \"some_equality_check\")"
             '\n  )',
-            UserWarning,
+            UserWarning
         )
 
         self.__launch_configuration_name = launch_configuration_name
