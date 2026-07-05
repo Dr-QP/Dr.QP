@@ -25,6 +25,7 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  CLAUDE_PR_REVIEW_ARGS: "Skill,Agent(general-purpose),ToolSearch,mcp__github__add_comment_to_pending_review,mcp__github__pull_request_review_write,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh api repos/*/pulls/*/reviews:*),Bash(gh api repos/*/pulls/*/reviews/*:*),Bash(gh api repos/*/pulls/*/comments:*)"
 
 jobs:
   review:
@@ -84,7 +85,7 @@ jobs:
 
         # Automated review when a PR is opened/reopened: always run the pr-review skill.
       - name: Claude PR Review
-        if: github.event_name == 'pull_request' || (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude review'))
+        if: github.event_name == 'pull_request' || contains(github.event.comment.body, '@claude review')
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -98,8 +99,8 @@ jobs:
             Use the pr-review skill to review this pull request
 
           claude_args: >-
-            --allowedTools
-            "Skill,mcp__github__add_comment_to_pending_review,mcp__github__pull_request_review_write,Bash(gh pr diff:*),Bash(gh pr view:*)"
+            --allowedTools ${{ env.CLAUDE_PR_REVIEW_ARGS }}
+
 
       # Comment/mention-driven requests (issue_comment, pull_request_review_comment,
       # pull_request_review, issues): no fixed prompt, so Claude responds to whatever
@@ -113,6 +114,8 @@ jobs:
           # Trigger when specific user is assigned to an issue
           assignee_trigger: 'claude-bot'
           show_full_output: true
+          claude_args: >-
+            --allowedTools "${{ env.CLAUDE_PR_REVIEW_ARGS }},Bash(gh api repos/*/issues/comments/*:*)"
 
       - name: Log debug stats
         if: ${{ always() }}
