@@ -106,6 +106,8 @@ jobs:
             PR NUMBER: ${{ steps.checkout_ref.outputs.prNumber }}
 
             Use the pr-review skill to review this pull request
+        env:
+          OVERRIDE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Attach review output file
         if: steps.claude_pr_review.outcome == 'success'
@@ -128,6 +130,8 @@ jobs:
           # Trigger when specific user is assigned to an issue
           assignee_trigger: 'claude-bot'
           show_full_output: true
+        env:
+          OVERRIDE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Attach comment responder output file
         if: steps.claude_comment_responder.outcome == 'success'
