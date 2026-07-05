@@ -25,7 +25,7 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-  CLAUDE_PR_REVIEW_ARGS: "Skill,Agent(general-purpose),ToolSearch,mcp__github__add_comment_to_pending_review,mcp__github__pull_request_review_write,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh api repos/*/pulls/*/reviews:*),Bash(gh api repos/*/pulls/*/reviews/*:*),Bash(gh api repos/*/pulls/*/comments:*)"
+  CLAUDE_PR_REVIEW_ARGS: "Skill,Agent(general-purpose),ToolSearch,mcp__github__add_comment_to_pending_review,mcp__github__pull_request_review_write,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh api repos/*/pulls/*/reviews:*),Bash(gh api repos/*/pulls/*/reviews/*:*),Bash(gh api repos/*/pulls/*/comments:*),Bash(git *),Bash(gh auth status:*)"
 
 jobs:
   review:
