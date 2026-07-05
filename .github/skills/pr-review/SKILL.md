@@ -45,9 +45,10 @@ Two independent concerns feed two different pass types (see Steps below) so they
 - It's a clear, unambiguous compliance violation where you can quote the exact rule being broken
 
 Do NOT flag:
-  - Code style or quality concerns
-  - Potential issues that depend on specific inputs or state
-  - Subjective suggestions or improvements
+
+- Code style or quality concerns
+- Potential issues that depend on specific inputs or state
+- Subjective suggestions or improvements
 
 Flag only significant bugs; ignore nitpicks and likely false positives. Do not flag issues that you cannot validate without looking at context outside of the git diff.
 
