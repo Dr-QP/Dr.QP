@@ -27,7 +27,7 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-
+  CLAUDE_PR_REVIEW_ARGS: 'mcp__github__stub,mcp__github_comment__,mcp__github_inline_comment__,mcp__github_ci__'
 jobs:
   review:
     if: |
@@ -101,6 +101,9 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           settings: .claude/settings.json
+          claude_args: >-
+            --allowedTools '${{ env.CLAUDE_PR_REVIEW_ARGS }}' # Needed to start MCPs
+
           # Trigger when specific user is assigned to an issue
           assignee_trigger: 'claude-bot'
           show_full_output: true
@@ -132,6 +135,8 @@ jobs:
           # Trigger when specific user is assigned to an issue
           assignee_trigger: 'claude-bot'
           show_full_output: true
+          claude_args: >-
+            --allowedTools '${{ env.CLAUDE_PR_REVIEW_ARGS }}' # Needed to start MCPs
 
       - name: Attach comment responder output file
         if: steps.claude_comment_responder.outputs.execution_file != ''
