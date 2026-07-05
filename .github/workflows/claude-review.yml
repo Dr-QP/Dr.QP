@@ -25,7 +25,7 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-  CLAUDE_PR_REVIEW_ARGS: "Skill,Agent(general-purpose),ToolSearch,mcp__github__add_comment_to_pending_review,mcp__github__pull_request_review_write,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh api repos/*/pulls/*/reviews:*),Bash(gh api repos/*/pulls/*/reviews/*:*),Bash(gh api repos/*/pulls/*/comments:*),Bash(git *),Bash(gh auth status:*)"
+  CLAUDE_PR_REVIEW_ARGS: "Skill,Agent(general-purpose),ToolSearch,mcp__github__add_comment_to_pending_review,mcp__github__pull_request_review_write,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr status:*),Bash(gh api repos/*/pulls/*/reviews:*),Bash(gh api repos/*/pulls/*/reviews/*:*),Bash(gh api repos/*/pulls/*/comments:*),Bash(git *),Bash(gh auth status:*)"
 
 jobs:
   review:
@@ -61,6 +61,7 @@ jobs:
           script: |
             const { eventName, payload } = context;
             let ref = context.sha;
+            let prNumber = payload.pull_request?.number ?? payload.issue?.number ?? '';
 
             if (payload.pull_request?.head?.sha) {
               // pull_request, pull_request_review, and pull_request_review_comment
@@ -77,6 +78,7 @@ jobs:
             }
 
             core.setOutput('ref', ref);
+            core.setOutput('prNumber', prNumber);
 
       - name: Checkout repository
         uses: actions/checkout@v6.0.3
@@ -101,7 +103,7 @@ jobs:
           show_full_output: true
           prompt: |
             REPO: ${{ github.repository }}
-            PR NUMBER: ${{ github.event.pull_request.number }}
+            PR NUMBER: ${{ steps.checkout_ref.outputs.prNumber }}
 
             Use the pr-review skill to review this pull request
 
