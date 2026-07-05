@@ -27,11 +27,6 @@
       "/opt/ros/overlay_ws"
     ]
   },
-  "allowedMcpServers": [
-    {
-      "serverName": "gateway"
-    }
-  ],
   "hooks": {
     "SessionStart": [
       {
