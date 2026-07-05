@@ -23,20 +23,26 @@ Use this skill to review a pull request's diff and publish feedback as a GitHub 
 
 Two independent concerns feed two different pass types (see Steps below) so they can be reviewed without one blind spot masking the other.
 
-**Compliance focus** (repo-convention adherence):
+**Compliance focus** (repo-convention adherence) — runs on **Sonnet**:
 
 - ROS 2 conventions (node lifecycle, topic/service naming, parameter handling)
 - C++/Python style and idioms
-- Any rule in the `.github/instructions/*.instructions.md` files applicable to the changed files (see Step 2)
+- Any rule in the `.github/instructions/*.instructions.md` files applicable to the changed files (see Step 2), and any repo `CLAUDE.md`/`AGENTS.md` file that shares a path with the changed file or its parents
 - IGNORE import ordering, that is handled by `ruff` and `clang-format` in CI
+- Only flag a violation if you can quote the exact rule text being broken
 
-**Correctness focus** (bug-hunting):
+**Correctness focus** (bug-hunting) — runs on **Opus**:
 
-- Potential bugs or edge cases
-- Security implications
-- Performance considerations
+- Scan only the diff itself, without pulling in extra context beyond the diff and the PR title/description — do not flag anything you cannot validate from the diff alone
+- Potential bugs, incorrect logic, and security implications introduced by the changed code
 - Test coverage and quality
-- Flag only significant, high-confidence issues; ignore nitpicks, style, and anything not certain to be real
+- Flag only significant, high-confidence issues; ignore nitpicks and likely false positives
+
+**CRITICAL: we only want HIGH SIGNAL issues.** Flag an issue only when at least one of these holds:
+
+- The code will fail to compile or parse (syntax errors, type errors, missing imports, unresolved references)
+- The code will definitely produce wrong results regardless of inputs (clear, unambiguous logic errors)
+- It's a clear, unambiguous compliance violation where you can quote the exact rule being broken
 
 Do NOT flag:
   - Code style or quality concerns
@@ -49,10 +55,10 @@ Flag only significant bugs; ignore nitpicks and likely false positives. Do not f
 
 1. **Gate.** Run `gh pr view <PR_NUMBER>`. If the PR is a draft, already closed/merged, or trivial (docs-only, version bump, generated-file-only diff), stop here and say so instead of proceeding — do not fetch the diff or spawn any review passes.
 2. **Gather context.** Fetch the diff (`gh pr diff <PR_NUMBER>`) and reuse the PR description from Step 1. From the changed-file list, determine which `.github/instructions/*.instructions.md` files apply, by matching each file's `applyTo` frontmatter glob against the changed paths (`engineering.instructions.md`'s `**` always applies).
-3. **Run four independent initial-review passes in parallel** — each pass sees only the diff, the description, and its own focus list; none sees another pass's output:
-   - 2x **compliance pass** — audit the diff against the Compliance focus list and the instruction files found in Step 2.
-   - 2x **correctness pass** — audit the diff against the Correctness focus list.
-   - In Claude Code, issue four `Agent` tool calls (`subagent_type: general-purpose`) in a single message. In environments without sub-agent spawning, perform the four passes sequentially in this session, each one starting fresh from the diff with no memory of the prior passes, to preserve independence.
+3. **Run four independent initial-review passes in parallel** — each pass sees only the diff, the PR title, the PR description, and its own focus list; none sees another pass's output. Each pass returns a list of issues, where each issue has a description and the reason it was flagged (e.g. "CLAUDE.md adherence", "bug"):
+   - 2x **compliance pass** (Sonnet) — audit the diff against the Compliance focus list and the instruction files found in Step 2.
+   - 2x **correctness pass** (Opus) — audit the diff against the Correctness focus list, one pass scanning for obvious bugs and the other for security/logic issues introduced by the changed code.
+   - In Claude Code, issue four `Agent` tool calls in a single message (`subagent_type: general-purpose`, `model: sonnet` for the compliance pair, `model: opus` for the correctness pair). In environments without sub-agent spawning, perform the four passes sequentially in this session, each one starting fresh from the diff with no memory of the prior passes, to preserve independence.
 4. **Merge and deduplicate.** Collect the candidate findings from all four passes. Collapse candidates that name the same file/line and describe the same underlying issue into one.
 5. **Validate each candidate independently, in parallel** — for every surviving candidate, run one validation pass that sees only that single candidate plus the diff/description (not the other candidates, not which pass raised it), and must confirm with high confidence that it is a real, worth-flagging issue. Drop any candidate the validator cannot confirm with high confidence. Use the same Claude-Code-vs-sequential-fallback approach as Step 3.
 6. Create a pending review with `mcp__github__pull_request_review_write` (`method: "create"`, no `event`). Fallback: `gh api repos/<owner>/<repo>/pulls/<PR_NUMBER>/reviews -f commit_id="$(gh pr view <PR_NUMBER> --json headRefOid -q .headRefOid)"` (omitting `-f event` keeps it pending).
