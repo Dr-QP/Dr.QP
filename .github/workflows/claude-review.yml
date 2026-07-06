@@ -81,8 +81,8 @@ jobs:
             core.setOutput('ref', ref);
             core.setOutput('prNumber', prNumber);
 
-      # Only expose a write-scoped github_token to the Claude actions below
-      # when the PR itself touches this workflow file.
+      # Used to scope a write-scoped github_token to the Claude Responder step
+      # below, only when the PR itself touches this workflow file.
       - name: Check if workflow file changed
         id: workflow_changed
         uses: actions/github-script@v9.0.0
