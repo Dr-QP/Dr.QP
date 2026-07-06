@@ -34,3 +34,51 @@
     name: gh
     state: present
     install_recommends: false
+
+# Wraps the real gh (above) with a transparent auth shim that injects GH_TOKEN
+# from the host's VS Code git credential helper — see docker/ros/bin/gh. Baking
+# it into /usr/local/bin (ahead of /usr/bin on the default PATH) makes it the
+# default everywhere; a live-mounted devcontainer workspace supersedes it via
+# the PATH prepends below.
+- name: Bake default gh wrapper into the image
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../bin/gh"
+    dest: /usr/local/bin/gh
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Ensure devcontainer gh wrapper is on bash PATH ahead of the baked-in default
+  ansible.builtin.blockinfile:
+    path: "{{ user_home }}/.bashrc"
+    create: true
+    mode: "0644"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: github_cli_wrapper"
+    block: |
+      ws="${DEV_WORKSPACE_FOLDER:-${GITHUB_WORKSPACE:-/opt/ros/overlay_ws}}"
+      if [ -d "$ws/docker/ros/bin" ]; then
+        case ":$PATH:" in
+          *":$ws/docker/ros/bin:"*) ;;
+          *) export PATH="$ws/docker/ros/bin:$PATH" ;;
+        esac
+      fi
+
+- name: Ensure fish config directory exists
+  ansible.builtin.file:
+    path: "{{ user_home }}/.config/fish"
+    state: directory
+    mode: "0755"
+
+- name: Ensure devcontainer gh wrapper is on fish PATH ahead of the baked-in default
+  ansible.builtin.blockinfile:
+    path: "{{ user_home }}/.config/fish/config.fish"
+    create: true
+    mode: "0644"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: github_cli_wrapper"
+    block: |
+      set -l ws (if set -q DEV_WORKSPACE_FOLDER; echo $DEV_WORKSPACE_FOLDER; else if set -q GITHUB_WORKSPACE; echo $GITHUB_WORKSPACE; else; echo /opt/ros/overlay_ws; end)
+      if test -d "$ws/docker/ros/bin"
+          if not contains "$ws/docker/ros/bin" $PATH
+              set -gx PATH "$ws/docker/ros/bin" $PATH
+          end
+      end

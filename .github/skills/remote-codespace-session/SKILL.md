@@ -32,14 +32,14 @@ devcontainer without local Docker.
   pre-installed in the codespace image on the remote end; on the local
   side install it if missing (e.g. `apt-get install -y rsync`). The
   clean-tree git-push sync path does not need rsync.
-- This skill does **not** use the [gh-auth](../gh-auth/SKILL.md) skill's
-  VS Code-credential-helper trick. `gh-auth` borrows a credential from a
+- This skill does **not** rely on the `docker/ros/bin/gh` wrapper's
+  VS Code-credential-helper trick. That wrapper borrows a credential from a
   running VS Code Remote IPC host — Codex Tasks (this skill's primary
-  target environment) is headless and has no such host to borrow from. The
-  intended auth path here is a PAT/fine-grained token supplied via a
+  target environment) is headless and has no such host to borrow from, so
+  the wrapper silently finds nothing and falls through. The intended auth
+  path here is a PAT/fine-grained token supplied via a
   `GH_TOKEN`/`GITHUB_TOKEN` environment secret configured in the Codex
-  Tasks environment, not `gh auth login` and not `gh-auth`. Don't wire
-  `gh-auth` into this skill.
+  Tasks environment, not `gh auth login`.
 - GitHub Codespaces clones this repo into `/workspaces/<repo-name>` (e.g.
   `/workspaces/Dr.QP`) and runs the devcontainer from there — it overrides
   the `/opt/ros/overlay_ws` bind mount this repo's `docker-compose.yml` uses
