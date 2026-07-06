@@ -108,8 +108,7 @@
   "postAttachCommand": {
     "git config": "git config --global gpg.ssh.program ssh-keygen",
     "python-venv": "./scripts/uv-sync.sh",
-    "rosdep": "./scripts/ros-dep.sh",
-    // "agents-auth": "./scripts/swap-agents-auth.sh"
+    "rosdep": "./scripts/ros-dep.sh"
   },
   "postStartCommand": "./scripts/devcontainer-postStartCommand.sh"
 }
