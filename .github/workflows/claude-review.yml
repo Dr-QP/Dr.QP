@@ -81,6 +81,21 @@ jobs:
             core.setOutput('ref', ref);
             core.setOutput('prNumber', prNumber);
 
+            // Only expose a write-scoped github_token to the Claude actions
+            // below when the PR itself touches this workflow file.
+            let workflowChanged = false;
+            if (prNumber) {
+              const files = await github.paginate(github.rest.pulls.listFiles, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+              });
+              workflowChanged = files.some(
+                (f) => f.filename === '.github/workflows/claude-review.yml'
+              );
+            }
+            core.setOutput('workflowChanged', workflowChanged);
+
       - name: Checkout repository
         uses: actions/checkout@v6.0.3
         with:
@@ -93,13 +108,15 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
         # Automated review when a PR is opened/reopened: always run the pr-review skill.
+        # github_token is only passed when the PR modifies this workflow file itself,
+        # to limit exposure of a write-scoped token to Claude in the common case.
       - name: Claude PR Review
         id: claude_pr_review
         if: github.event_name == 'pull_request' || contains(github.event.comment.body, '@claude review')
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ steps.checkout_ref.outputs.workflowChanged == 'true' && secrets.GITHUB_TOKEN || '' }}
           settings: .claude/settings.json
           # --allowedTools is needed to start the MCP servers
           claude_args: --allowedTools '${{ env.CLAUDE_PR_REVIEW_ARGS }}'
@@ -129,7 +146,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ steps.checkout_ref.outputs.workflowChanged == 'true' && secrets.GITHUB_TOKEN || '' }}
           settings: .claude/settings.json
           # Trigger when specific user is assigned to an issue
           assignee_trigger: 'claude-bot'
