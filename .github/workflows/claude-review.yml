@@ -159,8 +159,10 @@ jobs:
           prompt: ${{ steps.agent_prompt.outputs.prompt }}
           # Automation mode (non-empty prompt, used for the fixed pr-review prompt)
           # suppresses the action's tracking/progress comment by default. track_progress
-          # forces it back on
-          track_progress: true
+          # forces it back on, but the action only allows it for pull_request actions
+          # opened/reopened/synchronize/ready_for_review — e.g. our own "assigned"
+          # trigger errors out if track_progress is unconditionally true.
+          track_progress: ${{ github.event_name != 'pull_request' || contains(fromJson('["opened", "reopened", "synchronize", "ready_for_review"]'), github.event.action) }}
 
       - name: Attach responder output file
         if: steps.claude_responder.outputs.execution_file != ''
