@@ -27,9 +27,9 @@ Use this skill to review a pull request's diff and publish feedback as a GitHub 
   - `file_comments`: every validated inline finding, using `path`, `line`, `side`, and `body`
 
   This still creates a proper pull request review with inline comments, not a standalone PR comment.
+
 - If GitHub rejects `REQUEST_CHANGES` because the authenticated account owns the PR, retry with `COMMENT` and state in the review body that GitHub would not allow that account to request changes on its own pull request.
 - If those review tools are unavailable or uncertain, use the single-call fallback flow described after Step 8. **Never construct `gh api` review-posting calls by hand**.
-
 
 ## Review Focus
 
