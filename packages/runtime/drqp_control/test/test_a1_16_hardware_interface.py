@@ -275,6 +275,7 @@ class TestA116HardwareInterface:
         # the converged one -- keep sampling until it matches or we time out.
         result_time = self.node.get_clock().now() + rclpy.time.Duration(seconds=0.05)
         timeout = result_time + rclpy.time.Duration(seconds=3)
+        joint_positions = None
         while True:
             rclpy.spin_once(self.node, timeout_sec=0.1)
             if self.last_feedback > result_time:
