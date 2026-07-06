@@ -76,7 +76,12 @@
     mode: "0644"
     marker: "# {mark} ANSIBLE MANAGED BLOCK: github_cli_wrapper"
     block: |
-      set -l ws (if set -q DEV_WORKSPACE_FOLDER; echo $DEV_WORKSPACE_FOLDER; else if set -q GITHUB_WORKSPACE; echo $GITHUB_WORKSPACE; else; echo /opt/ros/overlay_ws; end)
+      set -l ws /opt/ros/overlay_ws
+      if set -q DEV_WORKSPACE_FOLDER
+          set ws $DEV_WORKSPACE_FOLDER
+      else if set -q GITHUB_WORKSPACE
+          set ws $GITHUB_WORKSPACE
+      end
       if test -d "$ws/docker/ros/bin"
           if not contains "$ws/docker/ros/bin" $PATH
               set -gx PATH "$ws/docker/ros/bin" $PATH
