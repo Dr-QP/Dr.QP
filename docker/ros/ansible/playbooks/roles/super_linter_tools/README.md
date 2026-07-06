@@ -3,7 +3,7 @@
 Installs the linter toolchain used by this repository's local super-linter wrapper:
 
 - prettier (Node/Bun global package)
-- shellcheck
+- shellcheck (from distro apt; not version-pinned in this role)
 - hadolint
 - actionlint
 - zizmor

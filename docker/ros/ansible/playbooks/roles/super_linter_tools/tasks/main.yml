@@ -12,6 +12,15 @@
     install_recommends: false
     update_cache: true
 
+- name: Check installed prettier version
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/prettier
+      - --version
+  register: super_linter_tools_prettier_installed
+  changed_when: false
+  failed_when: false
+
 - name: Install prettier globally with Bun
   ansible.builtin.command:
     argv:
@@ -19,9 +28,23 @@
       - add
       - --global
       - "prettier@{{ super_linter_tools_prettier_version }}"
-    creates: /usr/local/bin/prettier
+  register: super_linter_tools_prettier_install
+  changed_when: super_linter_tools_prettier_install.rc == 0
   environment:
     BUN_INSTALL: /usr/local
+  when:
+    - super_linter_tools_prettier_installed.rc != 0
+      or (super_linter_tools_prettier_installed.stdout | trim)
+      != super_linter_tools_prettier_version
+
+- name: Check installed zizmor version
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/zizmor
+      - --version
+  register: super_linter_tools_zizmor_installed
+  changed_when: false
+  failed_when: false
 
 - name: Install zizmor with uv
   ansible.builtin.command:
@@ -32,7 +55,13 @@
       - "zizmor=={{ super_linter_tools_zizmor_version }}"
       - --python
       - /usr/bin/python3
-    creates: /root/.local/bin/zizmor
+  register: super_linter_tools_zizmor_install
+  changed_when: super_linter_tools_zizmor_install.rc == 0
+  when:
+    - super_linter_tools_zizmor_installed.rc != 0
+      or (super_linter_tools_zizmor_installed.stdout | default('')
+      | regex_search('([0-9]+\.)+[0-9]+'))
+      != super_linter_tools_zizmor_version
 
 - name: Expose zizmor on /usr/local/bin
   ansible.builtin.file:
@@ -52,8 +81,8 @@
     super_linter_tools_actionlint_asset: "{{ super_linter_tools_actionlint_assets[system_arch] }}"
     super_linter_tools_gitleaks_asset: "{{ super_linter_tools_gitleaks_assets[system_arch] }}"
     super_linter_tools_hadolint_assets:
-      amd64: hadolint-linux-x86_64
-      arm64: hadolint-linux-arm64
+      amd64: hadolint-Linux-x86_64
+      arm64: hadolint-Linux-arm64
     super_linter_tools_actionlint_assets:
       amd64: "actionlint_{{ super_linter_tools_actionlint_version }}_linux_amd64.tar.gz"
       arm64: "actionlint_{{ super_linter_tools_actionlint_version }}_linux_arm64.tar.gz"
@@ -65,6 +94,7 @@
   ansible.builtin.get_url:
     url: "https://github.com/hadolint/hadolint/releases/download/{{ super_linter_tools_hadolint_version }}/{{ super_linter_tools_hadolint_asset }}"
     dest: /usr/local/bin/hadolint
+    checksum: "{{ super_linter_tools_hadolint_checksum }}"
     owner: root
     group: root
     mode: "0755"
@@ -73,6 +103,7 @@
   ansible.builtin.get_url:
     url: "https://github.com/rhysd/actionlint/releases/download/v{{ super_linter_tools_actionlint_version }}/{{ super_linter_tools_actionlint_asset }}"
     dest: "{{ super_linter_tools_temp_dir.path }}/actionlint.tar.gz"
+    checksum: "{{ super_linter_tools_actionlint_checksum }}"
     mode: "0644"
 
 - name: Install actionlint binary
@@ -90,6 +121,7 @@
   ansible.builtin.get_url:
     url: "https://github.com/gitleaks/gitleaks/releases/download/v{{ super_linter_tools_gitleaks_version }}/{{ super_linter_tools_gitleaks_asset }}"
     dest: "{{ super_linter_tools_temp_dir.path }}/gitleaks.tar.gz"
+    checksum: "{{ super_linter_tools_gitleaks_checksum }}"
     mode: "0644"
 
 - name: Install gitleaks binary

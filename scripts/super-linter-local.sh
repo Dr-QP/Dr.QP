@@ -100,15 +100,17 @@ collect_target_files()
   : > "$files_list"
 
   if [[ "$validate_all_codebase" == true ]]; then
-    git -C "$root_dir" ls-files >> "$files_list"
+    git -C "$root_dir" ls-files > "$files_list"
   else
-    if git -C "$root_dir" show-ref --verify --quiet "refs/remotes/origin/$default_branch"; then
-      git -C "$root_dir" diff --name-only "origin/$default_branch"...HEAD >> "$files_list"
-    fi
+    {
+      if git -C "$root_dir" show-ref --verify --quiet "refs/remotes/origin/$default_branch"; then
+        git -C "$root_dir" diff --name-only "origin/$default_branch"...HEAD
+      fi
 
-    git -C "$root_dir" diff --name-only >> "$files_list"
-    git -C "$root_dir" diff --name-only --cached >> "$files_list"
-    git -C "$root_dir" ls-files --others --exclude-standard >> "$files_list"
+      git -C "$root_dir" diff --name-only
+      git -C "$root_dir" diff --name-only --cached
+      git -C "$root_dir" ls-files --others --exclude-standard
+    } > "$files_list"
   fi
 
   sort -u "$files_list" -o "$files_list"
@@ -186,7 +188,24 @@ run_native_super_linter()
 {
   local status=0
   local prettier_log_level
-  prettier_log_level=$(tr '[:upper:]' '[:lower:]' <<<"$log_level")
+
+  case "$log_level" in
+    INFO)
+      prettier_log_level=log
+      ;;
+    WARN|WARNING)
+      prettier_log_level=warn
+      ;;
+    ERROR)
+      prettier_log_level=error
+      ;;
+    DEBUG)
+      prettier_log_level=debug
+      ;;
+    *)
+      prettier_log_level=$(tr '[:upper:]' '[:lower:]' <<<"$log_level")
+      ;;
+  esac
 
   collect_target_files
   classify_files
@@ -230,7 +249,7 @@ run_native_super_linter()
     echo "Skipping workflow checks: no workflow files."
   fi
 
-  run_in_root gitleaks git --source . --no-banner || status=$?
+  run_in_root gitleaks detect --source . --no-banner || status=$?
   return "$status"
 }
 
