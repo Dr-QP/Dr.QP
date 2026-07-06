@@ -84,4 +84,4 @@ payload="$(jq -n \
   --slurpfile comments_arr "${comments_file}" \
   '{commit_id: $commit_id, event: $event, body: $body, comments: $comments_arr[0]}')"
 
-printf '%s' "${payload}" | gh api "repos/${repo}/pulls/${pr_number}/reviews" --input -
+printf '%s' "${payload}" | gh api "repos/${repo}/pulls/${pr_number}/reviews" --method POST --input -
