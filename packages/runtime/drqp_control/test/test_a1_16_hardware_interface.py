@@ -74,14 +74,6 @@ neutral_position = 0.1
 class TestA116HardwareInterface:
     """Test the pose_setter node."""
 
-    @classmethod
-    def setup_class(cls):
-        rclpy.init()
-
-    @classmethod
-    def teardown_class(cls):
-        rclpy.try_shutdown()
-
     # Node, action client and subscription are created once for the whole class and shared
     # across tests (class scope mirrors the module-scoped launch above). Recreating them per
     # test method raced the persistent joint_trajectory_controller action server: rapid
@@ -113,6 +105,9 @@ class TestA116HardwareInterface:
     @pytest.fixture(scope='class', autouse=True)
     def _class_setup(self, request, generate_test_description):  # noqa: ARG002
         cls = request.cls
+        rclpy.init()
+        request.addfinalizer(rclpy.try_shutdown)
+
         cls.node = rclpy.create_node('test_servo_driver_' + cls.__name__)
         request.addfinalizer(cls.node.destroy_node)
 
@@ -280,8 +275,6 @@ class TestA116HardwareInterface:
         # the converged one -- keep sampling until it matches or we time out.
         result_time = self.node.get_clock().now() + rclpy.time.Duration(seconds=0.05)
         timeout = result_time + rclpy.time.Duration(seconds=3)
-        joint_positions = self.joint_positions
-
         while True:
             rclpy.spin_once(self.node, timeout_sec=0.1)
             if self.last_feedback > result_time:
