@@ -29,8 +29,7 @@ require_body_file() {
   fi
 }
 
-# Prints "<owner>/<name>" for the current repo. Override by exporting
-# PR_REVIEW_REPO or passing --repo to the calling script.
+# Prints "<owner>/<name>" for the current repo
 resolve_repo() {
   gh repo view --json nameWithOwner -q .nameWithOwner
 }
