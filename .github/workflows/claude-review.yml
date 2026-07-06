@@ -101,9 +101,8 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           settings: .claude/settings.json
-          claude_args: >-
-            --allowedTools '${{ env.CLAUDE_PR_REVIEW_ARGS }}' # Needed to start MCPs
-
+          # --allowedTools is needed to start the MCP servers
+          claude_args: --allowedTools '${{ env.CLAUDE_PR_REVIEW_ARGS }}'
           # Trigger when specific user is assigned to an issue
           assignee_trigger: 'claude-bot'
           show_full_output: true
@@ -135,8 +134,8 @@ jobs:
           # Trigger when specific user is assigned to an issue
           assignee_trigger: 'claude-bot'
           show_full_output: true
-          claude_args: >-
-            --allowedTools '${{ env.CLAUDE_PR_REVIEW_ARGS }}' # Needed to start MCPs
+          # --allowedTools is needed to start the MCP servers
+          claude_args: --allowedTools '${{ env.CLAUDE_PR_REVIEW_ARGS }}'
 
       - name: Attach comment responder output file
         if: steps.claude_comment_responder.outputs.execution_file != ''

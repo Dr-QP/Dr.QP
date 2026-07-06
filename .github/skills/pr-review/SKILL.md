@@ -16,7 +16,12 @@ Use this skill to review a pull request's diff and publish feedback as a GitHub 
 
 - `gh` must be installed and authenticated
 - When running locally, mcp tools are `mcp__gateway__*` instead of `mcp__github__*`
-- The `mcp__github__pull_request_review_write` and `mcp__github__add_comment_to_pending_review` MCP tools are the primary way to create the review and its inline comments. Check with ToolSearch first; if they are not available in the session, use the single fallback flow described after Step 8 instead. **Never construct `gh api` review-posting calls by hand** (ad-hoc `jq`/heredoc JSON assembly routinely trips Claude Code's Bash safety checks — "brace with quote character", "shell syntax that cannot be statically analyzed", etc. — burning many turns for no result).
+- The review is created, annotated, and submitted with three separate GitHub MCP tools:
+  - `mcp__github__create_pending_pull_request_review` — open a pending review
+  - `mcp__github__add_comment_to_pending_review` — attach each inline comment to the pending review
+  - `mcp__github__submit_pending_pull_request_review` — submit the pending review with an `event`
+
+  Check with ToolSearch first; if they are not available in the session, use the single fallback flow described after Step 8 instead. **Never construct `gh api` review-posting calls by hand**.
 - REPO (`owner/name`) and PR NUMBER must be known — read them from the workflow context or ask the user if not provided
 
 ## Review Focus
@@ -63,9 +68,9 @@ Flag only significant bugs; ignore nitpicks and likely false positives. Do not f
    - **Block until every pass reports back or hard-times-out — see "Waiting on parallel passes" below.** Do not proceed to Step 4 with a pass still outstanding.
 4. **Merge and deduplicate.** Collect the candidate findings from all passes that completed (see fallback below if any didn't). Collapse candidates that name the same file/line and describe the same underlying issue into one.
 5. **Validate each candidate independently, in parallel** — for every surviving candidate, run one validation pass that sees only that single candidate plus the diff/description (not the other candidates, not which pass raised it), and must confirm with high confidence that it is a real, worth-flagging issue. Drop any candidate the validator cannot confirm with high confidence. Use the same Claude-Code-vs-sequential-fallback approach as Step 3, and the same blocking policy in "Waiting on parallel passes" below (cap: one `TaskOutput` call, up to 5 minutes per candidate; a validator that doesn't return in time counts as "cannot confirm" — drop the candidate).
-6. Create a pending review with `mcp__github__pull_request_review_write` (`method: "create"`, no `event`).
+6. Create a pending review with `mcp__github__create_pending_pull_request_review` (no `event`).
 7. For every validated finding, attach it as an inline comment on the exact file/line with `mcp__github__add_comment_to_pending_review` — this is the only place finding text goes; never describe a finding's location in prose.
-8. Submit the review with `mcp__github__pull_request_review_write` (`method: "submit_pending"`), setting `event` to `COMMENT`, `REQUEST_CHANGES`, or `APPROVE` based on severity, and `body` limited to a short overall summary (no per-finding detail — that lives in the inline comments).
+8. Submit the review with `mcp__github__submit_pending_pull_request_review`, setting `event` to `COMMENT`, `REQUEST_CHANGES`, or `APPROVE` based on severity, and `body` limited to a short overall summary (no per-finding detail — that lives in the inline comments).
 
 ### Waiting on parallel passes
 
