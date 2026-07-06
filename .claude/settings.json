@@ -9,6 +9,7 @@
       "Read(//root/**)",
       "Edit(//opt/ros/overlay_ws/**)",
       "Edit(//tmp/**)",
+      "Edit(**/.tmp)",
       "Edit(**/.tmp/**)",
       "WebFetch(domain:docs.docker.com)",
       "WebFetch(domain:api.github.com)",
@@ -19,6 +20,7 @@
       "Bash(.github/skills/*/scripts/*)",
       "Bash(gh)",
       "Bash(gh *)",
+      "Bash(mkdir *)",
       "Bash(pip show *)",
       "Bash(pip install *)",
       "Bash(python3 -m py_compile *)",
@@ -28,7 +30,8 @@
     ],
     "additionalDirectories": [
       "/tmp",
-      "/opt/ros/overlay_ws"
+      "/opt/ros/overlay_ws",
+      "/__w"
     ]
   },
   "hooks": {
