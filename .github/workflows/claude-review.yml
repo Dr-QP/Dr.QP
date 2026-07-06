@@ -81,8 +81,15 @@ jobs:
             core.setOutput('ref', ref);
             core.setOutput('prNumber', prNumber);
 
-            // Only expose a write-scoped github_token to the Claude actions
-            // below when the PR itself touches this workflow file.
+      # Only expose a write-scoped github_token to the Claude actions below
+      # when the PR itself touches this workflow file.
+      - name: Check if workflow file changed
+        id: workflow_changed
+        uses: actions/github-script@v9.0.0
+        with:
+          script: |
+            const prNumber = '${{ steps.checkout_ref.outputs.prNumber }}';
+
             let workflowChanged = false;
             if (prNumber) {
               const files = await github.paginate(github.rest.pulls.listFiles, {
@@ -96,10 +103,18 @@ jobs:
             }
             core.setOutput('workflowChanged', workflowChanged);
 
-            // Automated review when a PR is opened/reopened, or when a comment
-            // explicitly asks for "@claude review": run the pr-review skill with
-            // a fixed prompt. Otherwise leave the prompt empty so Claude responds
-            // to whatever was actually asked in the triggering comment/mention.
+      # Automated review when a PR is opened/reopened, or when a comment
+      # explicitly asks for "@claude review": run the pr-review skill with
+      # a fixed prompt. Otherwise leave the prompt empty so Claude responds
+      # to whatever was actually asked in the triggering comment/mention.
+      - name: Determine agent prompt
+        id: agent_prompt
+        uses: actions/github-script@v9.0.0
+        with:
+          script: |
+            const { eventName, payload } = context;
+            const prNumber = '${{ steps.checkout_ref.outputs.prNumber }}';
+
             const isPrReview =
               eventName === 'pull_request' ||
               Boolean(payload.comment?.body?.includes('@claude review'));
@@ -125,26 +140,19 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-        # Automated review when a PR is opened/reopened, or a comment asks for
-        # "@claude review": the checkout_ref step above pre-computes a fixed
-        # pr-review prompt for that case. Otherwise prompt is empty, so Claude
-        # responds to whatever was actually asked in the triggering comment/mention
-        # (and can invoke the pr-review skill itself if the request is a review).
-        # github_token is only passed when the PR modifies this workflow file itself,
-        # to limit exposure of a write-scoped token to Claude in the common case.
       - name: Claude Responder
         id: claude_responder
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          github_token: ${{ steps.checkout_ref.outputs.workflowChanged == 'true' && secrets.GITHUB_TOKEN || '' }}
+          github_token: ${{ steps.workflow_changed.outputs.workflowChanged == 'true' && secrets.GITHUB_TOKEN || '' }}
           settings: .claude/settings.json
           # --allowedTools is needed to start the MCP servers
           claude_args: --allowedTools '${{ env.CLAUDE_PR_REVIEW_ARGS }}'
           # Trigger when specific user is assigned to an issue
           assignee_trigger: 'claude-bot'
           show_full_output: true
-          prompt: ${{ steps.checkout_ref.outputs.prompt }}
+          prompt: ${{ steps.agent_prompt.outputs.prompt }}
 
       - name: Attach responder output file
         if: steps.claude_responder.outputs.execution_file != ''
