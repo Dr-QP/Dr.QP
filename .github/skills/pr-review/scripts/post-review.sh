@@ -18,7 +18,7 @@ Create and submit a GitHub PR review with all inline comments in a
 single atomic call -- no pending-review/add-comment/submit dance.
 
 Usage:
-  post-review.sh --pr <PR_NUMBER> --event <COMMENT|REQUEST_CHANGES|APPROVE> \
+  post-review.sh --pr <PR_NUMBER> --event <COMMENT|APPROVE> \
     --summary-file <path> [--comments-file <path>] [--repo <owner/name>]
 
 --summary-file must be a plain file (write it with the Write tool
@@ -59,8 +59,8 @@ require_arg "--summary-file" "${summary_file}"
 require_body_file "${summary_file}"
 
 case "${event}" in
-  COMMENT|REQUEST_CHANGES|APPROVE) ;;
-  *) print_error "Invalid --event: ${event} (expected COMMENT, REQUEST_CHANGES, or APPROVE)"; exit 2 ;;
+  COMMENT|APPROVE) ;;
+  *) print_error "Invalid --event: ${event} (expected COMMENT or APPROVE)"; exit 2 ;;
 esac
 
 require_gh
