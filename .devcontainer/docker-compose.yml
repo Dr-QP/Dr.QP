@@ -75,6 +75,19 @@ services:
       - ${HOST_MCP_DIR:-/tmp/stub-mcp}:${CONTAINER_MCP_DIR:-/tmp/stub-mcp}:ro
       - ${HOST_SECRETS_SOCKET:-/tmp/stub-secrets-engine.sock}:${DOCKER_SECRETS_ENGINE_SOCKET:-/tmp/stub-secrets-engine.sock}:ro
 
+      # Agent auth/config state, shared across all devcontainer instances (worktrees,
+      # Codespaces, etc). Declared with an explicit top-level `name:` below so Compose
+      # uses the literal volume name instead of prefixing it with the per-project name,
+      # which would otherwise isolate each devcontainer instance's auth state.
+      #
+      # ~/.claude.json is a single file, not a directory, and Docker named volumes are
+      # always directory-backed (mounting one straight at a file path materializes an
+      # empty directory there instead, breaking Claude Code's read/write of that file).
+      # It's persisted as a plain file inside the drqp-claude volume instead, with
+      # scripts/devcontainer-postCreateCommand.sh symlinking ~/.claude.json to it.
+      - drqp-claude:/root/.claude
+      - drqp-codex:/root/.codex
+
     command: ['sleep', 'infinity']
 
     ######################################################################
@@ -90,3 +103,12 @@ services:
     # pid: host
     # user: "1001:1001", # Change to match primary user on the host
     ######################################################################
+
+volumes:
+  # `name:` pins the literal Docker volume name so it's shared across every
+  # devcontainer instance (worktrees, Codespaces, etc), instead of Compose's
+  # default per-project name prefix isolating each instance's auth state.
+  drqp-claude:
+    name: drqp-claude
+  drqp-codex:
+    name: drqp-codex
