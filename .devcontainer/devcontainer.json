@@ -24,7 +24,6 @@
     "DISPLAY": ":100",
     "DOCKER_HOST": "unix:///var/run/docker.sock",
     "DEVCONTAINER_ID": "${devcontainerId}",
-    "DEV_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
 
     "UV_CACHE_DIR": "/uv/cache",
     "UV_PYTHON_INSTALL_DIR": "/uv/python",
