@@ -57,6 +57,11 @@ Do NOT flag:
 
 Flag only significant bugs; ignore nitpicks and likely false positives. Do not flag issues that you cannot validate without looking at context outside of the git diff.
 
+**Severity tiers** (carried through Steps 3–8 on every candidate/validated finding):
+
+- **Blocking (critical/P1)** — anything from a **correctness pass**: compile/parse failures, definite-wrong-result logic bugs, security implications.
+- **Non-blocking** — anything from a **compliance pass**: repo-convention/style violations, even though they're quoted-rule-confirmed.
+
 ## Steps
 
 1. **Gate.** Run `gh pr view <PR_NUMBER>`. If the PR is a draft, already closed/merged, or trivial (docs-only, version bump, generated-file-only diff), stop here and say so instead of proceeding — do not fetch the diff or spawn any review passes.
@@ -66,11 +71,16 @@ Flag only significant bugs; ignore nitpicks and likely false positives. Do not f
    - 2x **correctness pass** (Opus) — audit the diff against the Correctness focus list, one pass scanning for obvious bugs and the other for security/logic issues introduced by the changed code.
    - In Claude Code, issue four `Agent` tool calls in a single message (`subagent_type: general-purpose`, `model: sonnet` for the compliance pair, `model: opus` for the correctness pair). In environments without sub-agent spawning, perform the four passes sequentially in this session, each one starting fresh from the diff with no memory of the prior passes, to preserve independence.
    - **Block until every pass reports back or hard-times-out — see "Waiting on parallel passes" below.** Do not proceed to Step 4 with a pass still outstanding.
-4. **Merge and deduplicate.** Collect the candidate findings from all passes that completed (see fallback below if any didn't). Collapse candidates that name the same file/line and describe the same underlying issue into one.
-5. **Validate each candidate independently, in parallel** — for every surviving candidate, run one validation pass that sees only that single candidate plus the diff/description (not the other candidates, not which pass raised it), and must confirm with high confidence that it is a real, worth-flagging issue. Drop any candidate the validator cannot confirm with high confidence. Use the same Claude-Code-vs-sequential-fallback approach as Step 3, and the same blocking policy in "Waiting on parallel passes" below (cap: one `TaskOutput` call, up to 5 minutes per candidate; a validator that doesn't return in time counts as "cannot confirm" — drop the candidate).
+4. **Merge and deduplicate.** Collect the candidate findings from all passes that completed (see fallback below if any didn't). Collapse candidates that name the same file/line and describe the same underlying issue into one, keeping the **blocking** tier if either collapsed candidate was blocking.
+5. **Validate each candidate independently, in parallel** — for every surviving candidate, run one validation pass that sees only that single candidate plus the diff/description (not the other candidates, not which pass raised it), and must confirm with high confidence that it is a real, worth-flagging issue. Drop any candidate the validator cannot confirm with high confidence. Preserve each surviving candidate's severity tier from Step 4 unchanged — validation confirms or drops a finding, it never changes its tier. Use the same Claude-Code-vs-sequential-fallback approach as Step 3, and the same blocking policy in "Waiting on parallel passes" below (cap: one `TaskOutput` call, up to 5 minutes per candidate; a validator that doesn't return in time counts as "cannot confirm" — drop the candidate).
 6. Create a pending review with `mcp__github__create_pending_pull_request_review` (no `event`).
 7. For every validated finding, attach it as an inline comment on the exact file/line with `mcp__github__add_comment_to_pending_review` — this is the only place finding text goes; never describe a finding's location in prose.
-8. Submit the review with `mcp__github__submit_pending_pull_request_review`, setting `event` to `COMMENT`, `REQUEST_CHANGES`, or `APPROVE` based on severity, and `body` limited to a short overall summary (no per-finding detail — that lives in the inline comments).
+8. Submit the review with `mcp__github__submit_pending_pull_request_review`, choosing `event` from the validated findings that survived Step 5:
+   - **No validated findings at all → `APPROVE`.** A clean pass must be approved, not left as a silent `COMMENT`.
+   - **At least one `blocking` (critical/P1) finding → `REQUEST_CHANGES`.**
+   - **Only non-blocking findings, none blocking → `COMMENT`.**
+
+   `body` is limited to a short overall summary (no per-finding detail — that lives in the inline comments); for an `APPROVE` with zero findings, state plainly that no issues were found.
 
 ### Waiting on parallel passes
 
@@ -91,7 +101,7 @@ Write two plain files with the Write tool (never assemble this JSON live in a `B
 - a summary file containing only the short overall review body (no per-finding detail)
 - a comments file containing a JSON array of every validated finding: `[{"path": "file.py", "line": 42, "side": "RIGHT", "body": "finding text"}, ...]` (use `[]` or omit the file entirely if no findings survived Step 5)
 
-Then run `scripts/post-review.sh --pr <PR_NUMBER> --event <COMMENT|REQUEST_CHANGES|APPROVE> --summary-file <path> --comments-file <path>` (run with `-h` for full usage; `--repo` defaults to the current repo via `gh repo view`). This single call replaces Steps 6–8 entirely. It is already covered by the `Bash(.github/skills/*/scripts/*)` permission; do not fall further back to typing `gh api` calls by hand.
+Then run `scripts/post-review.sh --pr <PR_NUMBER> --event <COMMENT|REQUEST_CHANGES|APPROVE> --summary-file <path> --comments-file <path>` (run with `-h` for full usage; `--repo` defaults to the current repo via `gh repo view`). This single call replaces Steps 6–8 entirely, including the `event` decision rule from Step 8 (`APPROVE` when `[]`/no findings, `REQUEST_CHANGES` when any surviving finding is blocking, `COMMENT` otherwise). It is already covered by the `Bash(.github/skills/*/scripts/*)` permission; do not fall further back to typing `gh api` calls by hand.
 
 ## Constraints
 
