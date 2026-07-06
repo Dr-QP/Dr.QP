@@ -1,0 +1,123 @@
+---
+- name: Fail when architecture is unsupported
+  ansible.builtin.fail:
+    msg: "Unsupported architecture '{{ system_arch }}' for super linter tools"
+  when: system_arch not in ["amd64", "arm64"]
+
+- name: Install apt-provided super-linter tools
+  ansible.builtin.apt:
+    name:
+      - shellcheck
+    state: present
+    install_recommends: false
+    update_cache: true
+
+- name: Check installed prettier version
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/prettier
+      - --version
+  register: super_linter_tools_prettier_installed
+  changed_when: false
+  failed_when: false
+
+- name: Install prettier globally with Bun
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/bun
+      - add
+      - --global
+      - "prettier@{{ super_linter_tools_prettier_version }}"
+  register: super_linter_tools_prettier_install
+  changed_when: super_linter_tools_prettier_install.rc == 0
+  environment:
+    BUN_INSTALL: /usr/local
+  when:
+    - super_linter_tools_prettier_installed.rc != 0 or (super_linter_tools_prettier_installed.stdout | trim) != super_linter_tools_prettier_version
+
+- name: Check installed zizmor version
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/zizmor
+      - --version
+  register: super_linter_tools_zizmor_installed
+  changed_when: false
+  failed_when: false
+
+- name: Install zizmor with uv
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/uv
+      - tool
+      - install
+      - "zizmor=={{ super_linter_tools_zizmor_version }}"
+      - --python
+      - /usr/bin/python3
+  register: super_linter_tools_zizmor_install
+  changed_when: super_linter_tools_zizmor_install.rc == 0
+  when:
+    - super_linter_tools_zizmor_installed.rc != 0 or (super_linter_tools_zizmor_installed.stdout | default('') | regex_search('([0-9]+\.)+[0-9]+')) !=
+      super_linter_tools_zizmor_version
+
+- name: Expose zizmor on /usr/local/bin
+  ansible.builtin.file:
+    src: /root/.local/bin/zizmor
+    dest: /usr/local/bin/zizmor
+    state: link
+    force: true
+
+- name: Create temporary directory for linter downloads
+  ansible.builtin.tempfile:
+    state: directory
+  register: super_linter_tools_temp_dir
+
+- name: Download hadolint binary
+  ansible.builtin.get_url:
+    url: "https://github.com/hadolint/hadolint/releases/download/{{ super_linter_tools_hadolint_version }}/{{ super_linter_tools_hadolint_asset }}"
+    dest: /usr/local/bin/hadolint
+    checksum: "{{ super_linter_tools_hadolint_checksum }}"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Download actionlint archive
+  ansible.builtin.get_url:
+    url: "https://github.com/rhysd/actionlint/releases/download/v{{ super_linter_tools_actionlint_version }}/{{ super_linter_tools_actionlint_asset }}"
+    dest: "{{ super_linter_tools_temp_dir.path }}/actionlint.tar.gz"
+    checksum: "{{ super_linter_tools_actionlint_checksum }}"
+    mode: "0644"
+
+- name: Install actionlint binary
+  ansible.builtin.unarchive:
+    src: "{{ super_linter_tools_temp_dir.path }}/actionlint.tar.gz"
+    dest: /usr/local/bin
+    remote_src: true
+    include:
+      - actionlint
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Download gitleaks archive
+  ansible.builtin.get_url:
+    url: "https://github.com/gitleaks/gitleaks/releases/download/v{{ super_linter_tools_gitleaks_version }}/{{ super_linter_tools_gitleaks_asset }}"
+    dest: "{{ super_linter_tools_temp_dir.path }}/gitleaks.tar.gz"
+    checksum: "{{ super_linter_tools_gitleaks_checksum }}"
+    mode: "0644"
+
+- name: Install gitleaks binary
+  ansible.builtin.unarchive:
+    src: "{{ super_linter_tools_temp_dir.path }}/gitleaks.tar.gz"
+    dest: /usr/local/bin
+    remote_src: true
+    include:
+      - gitleaks
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Clean up temporary directory
+  ansible.builtin.file:
+    path: "{{ super_linter_tools_temp_dir.path }}"
+    state: absent
+  when: super_linter_tools_temp_dir.path is defined
