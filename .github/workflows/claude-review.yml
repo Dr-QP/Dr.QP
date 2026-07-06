@@ -86,9 +86,11 @@ jobs:
       - name: Check if workflow file changed
         id: workflow_changed
         uses: actions/github-script@v9.0.0
+        env:
+          PR_NUMBER: ${{ steps.checkout_ref.outputs.prNumber }}
         with:
           script: |
-            const prNumber = '${{ steps.checkout_ref.outputs.prNumber }}';
+            const prNumber = process.env.PR_NUMBER;
 
             let workflowChanged = false;
             if (prNumber) {
@@ -110,10 +112,12 @@ jobs:
       - name: Determine agent prompt
         id: agent_prompt
         uses: actions/github-script@v9.0.0
+        env:
+          PR_NUMBER: ${{ steps.checkout_ref.outputs.prNumber }}
         with:
           script: |
             const { eventName, payload } = context;
-            const prNumber = '${{ steps.checkout_ref.outputs.prNumber }}';
+            const prNumber = process.env.PR_NUMBER;
 
             const isPrReview =
               eventName === 'pull_request' ||
