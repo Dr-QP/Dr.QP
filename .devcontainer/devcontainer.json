@@ -86,6 +86,16 @@
       "source": "drqp-uv",
       "target": "/uv",
       "type": "volume"
+    },
+    {
+      "source": "drqp-claude",
+      "target": "/root/.claude",
+      "type": "volume"
+    },
+    {
+      "source": "drqp-codex",
+      "target": "/root/.codex",
+      "type": "volume"
     }
   ],
   // Keep the developer `.venv` bootstrap separate from the ROS runtime environment.
@@ -94,7 +104,7 @@
     "git config": "git config --global gpg.ssh.program ssh-keygen",
     "python-venv": "./scripts/uv-sync.sh",
     "rosdep": "./scripts/ros-dep.sh",
-    "agents-auth": "./scripts/swap-agents-auth.sh"
+    // "agents-auth": "./scripts/swap-agents-auth.sh"
   },
   "postStartCommand": "./scripts/devcontainer-postStartCommand.sh"
 }
