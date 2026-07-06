@@ -89,7 +89,7 @@
     }
   ],
   // Keep the developer `.venv` bootstrap separate from the ROS runtime environment.
-  "postCreateCommand": "sudo chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /uv; touch /opt/ros/overlay_ws/.codex/auth.json; mkdir -p /root/.codex; ln -s /opt/ros/overlay_ws/.codex/auth.json /root/.codex/auth.json; touch /opt/ros/overlay_ws/.claude/.credentials.json; mkdir -p /root/.claude; ln -s /opt/ros/overlay_ws/.claude/.credentials.json /root/.claude/.credentials.json",
+  "postCreateCommand": "sudo chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /uv",
   "postAttachCommand": {
     "git config": "git config --global gpg.ssh.program ssh-keygen",
     "python-venv": "./scripts/uv-sync.sh",
