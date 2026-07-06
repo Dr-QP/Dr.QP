@@ -22,6 +22,7 @@ Use this skill to review a pull request's diff and publish feedback as a GitHub 
   - `mcp__github__submit_pending_pull_request_review` — submit the pending review with an `event`
 
   Check with ToolSearch first; if they are not available in the session, use the single fallback flow described after Step 8 instead. **Never construct `gh api` review-posting calls by hand**.
+
 - REPO (`owner/name`) and PR NUMBER must be known — read them from the workflow context or ask the user if not provided
 
 ## Review Focus
