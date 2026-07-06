@@ -16,7 +16,7 @@ require_arg() {
 
 require_gh() {
   command -v gh >/dev/null 2>&1 || { print_error "gh CLI not found on PATH."; exit 2; }
-  gh auth status >/dev/null 2>&1 || { print_error "gh is not authenticated. Try the gh-auth skill."; exit 2; }
+  gh auth status >/dev/null 2>&1 || { print_error "gh is not authenticated."; exit 2; }
 }
 
 require_body_file() {
