@@ -33,9 +33,7 @@
   environment:
     BUN_INSTALL: /usr/local
   when:
-    - super_linter_tools_prettier_installed.rc != 0
-      or (super_linter_tools_prettier_installed.stdout | trim)
-      != super_linter_tools_prettier_version
+    - super_linter_tools_prettier_installed.rc != 0 or (super_linter_tools_prettier_installed.stdout | trim) != super_linter_tools_prettier_version
 
 - name: Check installed zizmor version
   ansible.builtin.command:
@@ -58,10 +56,8 @@
   register: super_linter_tools_zizmor_install
   changed_when: super_linter_tools_zizmor_install.rc == 0
   when:
-    - super_linter_tools_zizmor_installed.rc != 0
-      or (super_linter_tools_zizmor_installed.stdout | default('')
-      | regex_search('([0-9]+\.)+[0-9]+'))
-      != super_linter_tools_zizmor_version
+    - super_linter_tools_zizmor_installed.rc != 0 or (super_linter_tools_zizmor_installed.stdout | default('') | regex_search('([0-9]+\.)+[0-9]+')) !=
+      super_linter_tools_zizmor_version
 
 - name: Expose zizmor on /usr/local/bin
   ansible.builtin.file:
