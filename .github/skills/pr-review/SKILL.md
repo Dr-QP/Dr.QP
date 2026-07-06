@@ -71,6 +71,7 @@ Flag only significant bugs; ignore nitpicks and likely false positives. Do not f
 If the MCP tools above are confirmed unavailable (check with ToolSearch first), post the whole review — summary, event, and every inline comment — in one atomic `gh api` call instead of the create/comment/submit dance: GitHub's `POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews` endpoint accepts a `comments[]` array alongside `event` and `body`, so there is no pending-review state to manage or discard.
 
 Write two plain files with the Write tool (never assemble this JSON live in a `Bash` call — that's what trips the safety checks):
+
 - a summary file containing only the short overall review body (no per-finding detail)
 - a comments file containing a JSON array of every validated finding: `[{"path": "file.py", "line": 42, "side": "RIGHT", "body": "finding text"}, ...]` (use `[]` or omit the file entirely if no findings survived Step 5)
 
