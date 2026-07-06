@@ -22,6 +22,7 @@
       "Bash(pip show *)",
       "Bash(pip install *)",
       "Bash(python3 -m py_compile *)",
+      "Bash(python3 -c *)",
       "mcp__gateway__*",
       "mcp__github__*"
     ],
