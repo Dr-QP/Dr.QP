@@ -157,6 +157,10 @@ jobs:
           assignee_trigger: 'claude-bot'
           show_full_output: true
           prompt: ${{ steps.agent_prompt.outputs.prompt }}
+          # Automation mode (non-empty prompt, used for the fixed pr-review prompt)
+          # suppresses the action's tracking/progress comment by default. track_progress
+          # forces it back on
+          track_progress: true
 
       - name: Attach responder output file
         if: steps.claude_responder.outputs.execution_file != ''
