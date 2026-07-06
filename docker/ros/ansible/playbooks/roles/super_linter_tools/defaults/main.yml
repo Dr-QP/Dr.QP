@@ -10,14 +10,26 @@ super_linter_tools_gitleaks_version: "8.24.3"
 super_linter_tools_hadolint_checksums:
   amd64: "sha256:56de6d5e5ec427e17b74fa48d51271c7fc0d61244bf5c90e828aab8362d55010"
   arm64: "sha256:5798551bf19f33951881f15eb238f90aef023f11e7ec7e9f4c37961cb87c5df6"
+super_linter_tools_hadolint_assets:
+  amd64: hadolint-Linux-x86_64
+  arm64: hadolint-Linux-arm64
+super_linter_tools_hadolint_asset: "{{ super_linter_tools_hadolint_assets[system_arch] }}"
 super_linter_tools_hadolint_checksum: "{{ super_linter_tools_hadolint_checksums[system_arch] }}"
 
 super_linter_tools_actionlint_checksums:
   amd64: "sha256:023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757"
   arm64: "sha256:401942f9c24ed71e4fe71b76c7d638f66d8633575c4016efd2977ce7c28317d0"
+super_linter_tools_actionlint_assets:
+  amd64: "actionlint_{{ super_linter_tools_actionlint_version }}_linux_amd64.tar.gz"
+  arm64: "actionlint_{{ super_linter_tools_actionlint_version }}_linux_arm64.tar.gz"
+super_linter_tools_actionlint_asset: "{{ super_linter_tools_actionlint_assets[system_arch] }}"
 super_linter_tools_actionlint_checksum: "{{ super_linter_tools_actionlint_checksums[system_arch] }}"
 
 super_linter_tools_gitleaks_checksums:
   amd64: "sha256:9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c"
   arm64: "sha256:5f2edbe1f49f7b920f9e06e90759947d3c5dfc16f752fb93aaafc17e9d14cf07"
+super_linter_tools_gitleaks_assets:
+  amd64: "gitleaks_{{ super_linter_tools_gitleaks_version }}_linux_x64.tar.gz"
+  arm64: "gitleaks_{{ super_linter_tools_gitleaks_version }}_linux_arm64.tar.gz"
+super_linter_tools_gitleaks_asset: "{{ super_linter_tools_gitleaks_assets[system_arch] }}"
 super_linter_tools_gitleaks_checksum: "{{ super_linter_tools_gitleaks_checksums[system_arch] }}"

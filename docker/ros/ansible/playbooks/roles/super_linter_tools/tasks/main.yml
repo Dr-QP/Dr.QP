@@ -71,21 +71,6 @@
     state: directory
   register: super_linter_tools_temp_dir
 
-- name: Set architecture-specific linter assets
-  ansible.builtin.set_fact:
-    super_linter_tools_hadolint_asset: "{{ super_linter_tools_hadolint_assets[system_arch] }}"
-    super_linter_tools_actionlint_asset: "{{ super_linter_tools_actionlint_assets[system_arch] }}"
-    super_linter_tools_gitleaks_asset: "{{ super_linter_tools_gitleaks_assets[system_arch] }}"
-    super_linter_tools_hadolint_assets:
-      amd64: hadolint-Linux-x86_64
-      arm64: hadolint-Linux-arm64
-    super_linter_tools_actionlint_assets:
-      amd64: "actionlint_{{ super_linter_tools_actionlint_version }}_linux_amd64.tar.gz"
-      arm64: "actionlint_{{ super_linter_tools_actionlint_version }}_linux_arm64.tar.gz"
-    super_linter_tools_gitleaks_assets:
-      amd64: "gitleaks_{{ super_linter_tools_gitleaks_version }}_linux_x64.tar.gz"
-      arm64: "gitleaks_{{ super_linter_tools_gitleaks_version }}_linux_arm64.tar.gz"
-
 - name: Download hadolint binary
   ansible.builtin.get_url:
     url: "https://github.com/hadolint/hadolint/releases/download/{{ super_linter_tools_hadolint_version }}/{{ super_linter_tools_hadolint_asset }}"
