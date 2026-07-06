@@ -93,6 +93,11 @@
       "type": "volume"
     },
     {
+      "source": "drqp-claude-json",
+      "target": "/root/.claude.json",
+      "type": "volume"
+    },
+    {
       "source": "drqp-codex",
       "target": "/root/.codex",
       "type": "volume"
