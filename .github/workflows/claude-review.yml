@@ -96,6 +96,24 @@ jobs:
             }
             core.setOutput('workflowChanged', workflowChanged);
 
+            // Automated review when a PR is opened/reopened, or when a comment
+            // explicitly asks for "@claude review": run the pr-review skill with
+            // a fixed prompt. Otherwise leave the prompt empty so Claude responds
+            // to whatever was actually asked in the triggering comment/mention.
+            const isPrReview =
+              eventName === 'pull_request' ||
+              Boolean(payload.comment?.body?.includes('@claude review'));
+
+            const prompt = isPrReview
+              ? [
+                  `REPO: ${context.repo.owner}/${context.repo.repo}`,
+                  `PR NUMBER: ${prNumber}`,
+                  '',
+                  'Use the pr-review skill to review this pull request',
+                ].join('\n')
+              : '';
+            core.setOutput('prompt', prompt);
+
       - name: Checkout repository
         uses: actions/checkout@v6.0.3
         with:
@@ -107,12 +125,15 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-        # Automated review when a PR is opened/reopened: always run the pr-review skill.
+        # Automated review when a PR is opened/reopened, or a comment asks for
+        # "@claude review": the checkout_ref step above pre-computes a fixed
+        # pr-review prompt for that case. Otherwise prompt is empty, so Claude
+        # responds to whatever was actually asked in the triggering comment/mention
+        # (and can invoke the pr-review skill itself if the request is a review).
         # github_token is only passed when the PR modifies this workflow file itself,
         # to limit exposure of a write-scoped token to Claude in the common case.
-      - name: Claude PR Review
-        id: claude_pr_review
-        if: github.event_name == 'pull_request' || contains(github.event.comment.body, '@claude review')
+      - name: Claude Responder
+        id: claude_responder
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -123,43 +144,14 @@ jobs:
           # Trigger when specific user is assigned to an issue
           assignee_trigger: 'claude-bot'
           show_full_output: true
-          prompt: |
-            REPO: ${{ github.repository }}
-            PR NUMBER: ${{ steps.checkout_ref.outputs.prNumber }}
+          prompt: ${{ steps.checkout_ref.outputs.prompt }}
 
-            Use the pr-review skill to review this pull request
-
-      - name: Attach review output file
-        if: steps.claude_pr_review.outputs.execution_file != ''
+      - name: Attach responder output file
+        if: steps.claude_responder.outputs.execution_file != ''
         uses: actions/upload-artifact@v4
         with:
-          name: claude-pr-review-output
-          path: ${{ steps.claude_pr_review.outputs.execution_file }}
-
-      # Comment/mention-driven requests (issue_comment, pull_request_review_comment,
-      # pull_request_review, issues): no fixed prompt, so Claude responds to whatever
-      # was actually asked in the comment. It can invoke the pr-review skill itself
-      # if the request is a review.
-      - name: Claude Comment Responder
-        id: claude_comment_responder
-        if: steps.claude_pr_review.outcome == 'skipped'
-        uses: anthropics/claude-code-action@v1
-        with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          github_token: ${{ steps.checkout_ref.outputs.workflowChanged == 'true' && secrets.GITHUB_TOKEN || '' }}
-          settings: .claude/settings.json
-          # Trigger when specific user is assigned to an issue
-          assignee_trigger: 'claude-bot'
-          show_full_output: true
-          # --allowedTools is needed to start the MCP servers
-          claude_args: --allowedTools '${{ env.CLAUDE_PR_REVIEW_ARGS }}'
-
-      - name: Attach comment responder output file
-        if: steps.claude_comment_responder.outputs.execution_file != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: claude-comment-responder-output
-          path: ${{ steps.claude_comment_responder.outputs.execution_file }}
+          name: claude-responder-output
+          path: ${{ steps.claude_responder.outputs.execution_file }}
 
       - name: Log debug stats
         if: ${{ always() }}
