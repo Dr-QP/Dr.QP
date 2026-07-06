@@ -1,0 +1,110 @@
+---
+- name: Fail when architecture is unsupported
+  ansible.builtin.fail:
+    msg: "Unsupported architecture '{{ system_arch }}' for super linter tools"
+  when: system_arch not in ["amd64", "arm64"]
+
+- name: Install apt-provided super-linter tools
+  ansible.builtin.apt:
+    name:
+      - shellcheck
+    state: present
+    install_recommends: false
+    update_cache: true
+
+- name: Install prettier globally with Bun
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/bun
+      - add
+      - --global
+      - "prettier@{{ super_linter_tools_prettier_version }}"
+    creates: /usr/local/bin/prettier
+  environment:
+    BUN_INSTALL: /usr/local
+
+- name: Install zizmor with uv
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/uv
+      - tool
+      - install
+      - "zizmor=={{ super_linter_tools_zizmor_version }}"
+      - --python
+      - /usr/bin/python3
+    creates: /root/.local/bin/zizmor
+
+- name: Expose zizmor on /usr/local/bin
+  ansible.builtin.file:
+    src: /root/.local/bin/zizmor
+    dest: /usr/local/bin/zizmor
+    state: link
+    force: true
+
+- name: Create temporary directory for linter downloads
+  ansible.builtin.tempfile:
+    state: directory
+  register: super_linter_tools_temp_dir
+
+- name: Set architecture-specific linter assets
+  ansible.builtin.set_fact:
+    super_linter_tools_hadolint_asset: "{{ super_linter_tools_hadolint_assets[system_arch] }}"
+    super_linter_tools_actionlint_asset: "{{ super_linter_tools_actionlint_assets[system_arch] }}"
+    super_linter_tools_gitleaks_asset: "{{ super_linter_tools_gitleaks_assets[system_arch] }}"
+    super_linter_tools_hadolint_assets:
+      amd64: hadolint-linux-x86_64
+      arm64: hadolint-linux-arm64
+    super_linter_tools_actionlint_assets:
+      amd64: "actionlint_{{ super_linter_tools_actionlint_version }}_linux_amd64.tar.gz"
+      arm64: "actionlint_{{ super_linter_tools_actionlint_version }}_linux_arm64.tar.gz"
+    super_linter_tools_gitleaks_assets:
+      amd64: "gitleaks_{{ super_linter_tools_gitleaks_version }}_linux_x64.tar.gz"
+      arm64: "gitleaks_{{ super_linter_tools_gitleaks_version }}_linux_arm64.tar.gz"
+
+- name: Download hadolint binary
+  ansible.builtin.get_url:
+    url: "https://github.com/hadolint/hadolint/releases/download/{{ super_linter_tools_hadolint_version }}/{{ super_linter_tools_hadolint_asset }}"
+    dest: /usr/local/bin/hadolint
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Download actionlint archive
+  ansible.builtin.get_url:
+    url: "https://github.com/rhysd/actionlint/releases/download/v{{ super_linter_tools_actionlint_version }}/{{ super_linter_tools_actionlint_asset }}"
+    dest: "{{ super_linter_tools_temp_dir.path }}/actionlint.tar.gz"
+    mode: "0644"
+
+- name: Install actionlint binary
+  ansible.builtin.unarchive:
+    src: "{{ super_linter_tools_temp_dir.path }}/actionlint.tar.gz"
+    dest: /usr/local/bin
+    remote_src: true
+    include:
+      - actionlint
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Download gitleaks archive
+  ansible.builtin.get_url:
+    url: "https://github.com/gitleaks/gitleaks/releases/download/v{{ super_linter_tools_gitleaks_version }}/{{ super_linter_tools_gitleaks_asset }}"
+    dest: "{{ super_linter_tools_temp_dir.path }}/gitleaks.tar.gz"
+    mode: "0644"
+
+- name: Install gitleaks binary
+  ansible.builtin.unarchive:
+    src: "{{ super_linter_tools_temp_dir.path }}/gitleaks.tar.gz"
+    dest: /usr/local/bin
+    remote_src: true
+    include:
+      - gitleaks
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Clean up temporary directory
+  ansible.builtin.file:
+    path: "{{ super_linter_tools_temp_dir.path }}"
+    state: absent
+  when: super_linter_tools_temp_dir.path is defined
