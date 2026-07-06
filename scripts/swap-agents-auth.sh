@@ -6,8 +6,10 @@ script_dir=$(dirname "$0")
 source "$script_dir/__utils.sh"
 
 function capture_auth() {
-  local source="$1"
-  local target="$2"
+  local source
+  local target
+  source=$(realpath -m "$1")
+  target=$(realpath -m "$2")
   if [ -f "$source" ] && [ ! -L "$source" ] ; then
       mv -f "$source" "$target"
       ln -s "$target" "$source"
