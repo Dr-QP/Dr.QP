@@ -160,6 +160,10 @@ class GazeboRobotControlBase:
     GZ_COMMAND_TIMEOUT = 10.0
     MOVEMENT_DURATION = 5.0
     POSE_SETTLE_DURATION = 1.0
+    # Sim seconds to run a stride before reversing it, with no settle time in
+    # between -- reproduces a quick full-throttle direction flip mid-gait rather
+    # than a reversal after the walker has already reached steady state.
+    DIRECTION_REVERSAL_PULSE_DURATION = 1.0
     BALANCE_SETTLE_DURATION = 3.0
     BALANCED_BODY_TILT_TOLERANCE = 0.10
     # Sim seconds to let a robot motion run before checking its effect on the board.
@@ -1012,6 +1016,144 @@ class GazeboRobotControlBase:
 
         assert abs(delta_yaw) > self.MIN_ROTATION_DELTA, (
             f'Robot did not rotate significantly: |delta_yaw|={abs(delta_yaw):.3f}'
+        )
+
+    def assert_direction_reversal_from_forward_to_backward(self) -> None:
+        """
+        Verify a full-throttle stride reversal does not permanently freeze MoveIt IK.
+
+        Regression test: ``HexapodBrain.loop()`` rolls back walker state on every IK
+        failure, so a foot target that fails once from the seeded pose keeps
+        failing identically on every later tick. A sudden full-throttle direction
+        reversal (forward stride flipped straight to backward, with no settle time
+        in between) can push a foot target outside what MoveIt IK can solve from
+        that seed, producing a lasting "MoveItPy IK failed" freeze instead of a
+        transient blip.
+        """
+        self._arm_robot()
+        start_pose = self._wait_for_pose_sample(settle_sim_time_sec=self.POSE_SETTLE_DURATION)
+        start_pos = start_pose.position
+        start_yaw = self._yaw_from_pose(start_pose)
+        start_sim_time_ns = self._current_sim_time_ns()
+        if start_sim_time_ns is None:
+            raise RuntimeError('Simulation clock is unavailable before movement command')
+
+        # Kick off a full-throttle forward stride, then reverse to full-throttle
+        # backward almost immediately -- no settle time in between -- matching the
+        # reported repro exactly.
+        self._publish_movement_command(stride_x=1.0)
+        self._wait_for_sim_time_since(start_sim_time_ns, self.DIRECTION_REVERSAL_PULSE_DURATION)
+        self._publish_movement_command(stride_x=-1.0)
+
+        start_pose_stamp_ns = self.robot_pose_stamp_ns
+        self._wait_for_sim_time_since(
+            start_sim_time_ns,
+            self.DIRECTION_REVERSAL_PULSE_DURATION + self.MOVEMENT_DURATION,
+        )
+        self._wait_for_new_pose(start_pose_stamp_ns)
+
+        if self.robot_pose is None:
+            raise RuntimeError('Pose became unavailable after movement command')
+        end_pose = deepcopy(self.robot_pose)
+        end_pos = end_pose.position
+
+        delta_x = end_pos.x - start_pos.x
+        delta_y = end_pos.y - start_pos.y
+        forward_delta = math.cos(start_yaw) * delta_x + math.sin(start_yaw) * delta_y
+
+        self.node.get_logger().info(
+            'Direction reversal delta '
+            f'(forward {self.DIRECTION_REVERSAL_PULSE_DURATION}s then backward): '
+            f'forward_delta={forward_delta:.3f}m'
+        )
+
+        assert forward_delta < -self.MIN_LINEAR_MOVEMENT_DELTA, (
+            'Robot did not move backward after reversing from a brief full-throttle '
+            'forward stride to full-throttle backward stride (possible MoveIt IK '
+            f'freeze after direction reversal): forward_delta={forward_delta:.3f}m '
+            f'(expected < {-self.MIN_LINEAR_MOVEMENT_DELTA}m)'
+        )
+
+    def assert_balance_mode_full_stride_movement_in_any_direction(self) -> None:
+        """
+        Verify balance mode plus a full-throttle stride does not freeze MoveIt IK.
+
+        Regression test: enabling balance mode adds an IMU tilt correction to the
+        commanded body rotation before foot targets are computed; combined with a
+        full-throttle stride this can push a foot target outside what MoveIt IK can
+        solve, and (per ``assert_direction_reversal_from_forward_to_backward``) the
+        resulting failure persists on every later tick instead of recovering.
+        """
+        self._arm_robot()
+        self._set_balance_mode(True)
+
+        try:
+            forward_delta, _, _ = self._run_movement_and_measure(stride_x=1.0)
+            backward_delta, _, _ = self._run_movement_and_measure(stride_x=-1.0)
+            _, left_delta, _ = self._run_movement_and_measure(stride_y=1.0)
+            _, right_delta, _ = self._run_movement_and_measure(stride_y=-1.0)
+        except RuntimeError as error:
+            raise RuntimeError('Balance mode full-stride movement failed') from error
+        finally:
+            self._set_balance_mode(False)
+
+        assert forward_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
+            'Robot did not move forward with balance mode enabled at full-throttle '
+            f'stride (possible MoveIt IK freeze): forward_delta={forward_delta:.3f}m'
+        )
+        assert backward_delta < -self.MIN_LINEAR_MOVEMENT_DELTA, (
+            'Robot did not move backward with balance mode enabled at full-throttle '
+            f'stride (possible MoveIt IK freeze): backward_delta={backward_delta:.3f}m'
+        )
+        assert left_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
+            'Robot did not strafe left with balance mode enabled at full-throttle '
+            f'stride (possible MoveIt IK freeze): left_delta={left_delta:.3f}m'
+        )
+        assert right_delta < -self.MIN_LINEAR_MOVEMENT_DELTA, (
+            'Robot did not strafe right with balance mode enabled at full-throttle '
+            f'stride (possible MoveIt IK freeze): right_delta={right_delta:.3f}m'
+        )
+
+    def assert_balance_mode_diagonal_stride_movement(
+        self,
+        stride_x: float,
+        stride_y: float,
+    ) -> None:
+        """
+        Verify balance mode plus a diagonal full-throttle stride does not freeze MoveIt IK.
+
+        Regression test for a specific reported repro: ``stride_x=0.66,
+        stride_y=-0.77`` with balance mode enabled makes MoveItPy IK fail on
+        nearly every tick, so the robot stops making progress while the command
+        is held (``HexapodBrain.loop()`` rolls back walker state and skips
+        publishing a trajectory on every failed solve). Unlike a pure fore-aft or
+        pure lateral stride, a diagonal stride combined with the IMU balance tilt
+        correction pushes foot targets toward the edge of the reachable workspace.
+        """
+        self._arm_robot()
+        self._set_balance_mode(True)
+
+        try:
+            forward_delta, left_delta, _ = self._run_movement_and_measure(
+                stride_x=stride_x, stride_y=stride_y
+            )
+        except RuntimeError as error:
+            raise RuntimeError('Balance mode diagonal stride movement failed') from error
+        finally:
+            self._set_balance_mode(False)
+
+        diagonal_delta = math.hypot(forward_delta, left_delta)
+        self.node.get_logger().info(
+            f'Balance mode diagonal stride delta (stride_x={stride_x}, stride_y={stride_y}): '
+            f'forward_delta={forward_delta:.3f}m, left_delta={left_delta:.3f}m, '
+            f'magnitude={diagonal_delta:.3f}m'
+        )
+        assert diagonal_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
+            'Robot did not move with balance mode enabled at a diagonal '
+            f'full-throttle stride (possible MoveIt IK freeze): '
+            f'stride=({stride_x}, {stride_y}), forward_delta={forward_delta:.3f}m, '
+            f'left_delta={left_delta:.3f}m '
+            f'(expected magnitude > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
         )
 
     def assert_disarmed_posture(self) -> None:
