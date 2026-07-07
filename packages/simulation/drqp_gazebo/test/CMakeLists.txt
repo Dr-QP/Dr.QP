@@ -5,7 +5,7 @@ include(../../../cmake/RosIsolatedLaunchTest.cmake)
 
 set(drqp_gazebo_smoke_launch_tests
   test_robot_control_spawn.py
-  test_robot_control_nodes_and_clock.py
+  test_robot_smoke.py
   test_balance_board_world.py
 )
 

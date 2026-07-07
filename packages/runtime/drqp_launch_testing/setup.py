@@ -11,7 +11,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
     ],
     install_requires=['setuptools'],
-    extras_require={'test': ['pytest']},
+    extras_require={'test': ['pytest', 'pytest-retry']},
     zip_safe=True,
     maintainer='Anton Matosov',
     maintainer_email='anton.matosov@gmail.com',

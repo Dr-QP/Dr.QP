@@ -43,8 +43,7 @@ def robot(generate_test_description):  # noqa: ARG001 (drives launch + sim readi
 
     Function-scoped by default: single-test files launch one simulation for their
     one test. Files that must share a simulation across several tests override
-    this with a ``scope='module'`` ``robot`` fixture (see
-    test_robot_control_nodes_and_clock.py). Owns ``rclpy`` init/shutdown and waits
+    this with a ``scope='module'`` ``robot`` fixture. Owns ``rclpy`` init/shutdown and waits
     for simulation readiness before yielding the harness.
     """
     rclpy.init()

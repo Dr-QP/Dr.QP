@@ -42,7 +42,7 @@ import rclpy.time
 from trajectory_msgs.msg import JointTrajectoryPoint
 
 
-@launch_pytest.fixture
+@launch_pytest.fixture(scope='module')
 def generate_test_description():
     drqp_controllers_launch_file = PathJoinSubstitution(
         [
@@ -74,61 +74,65 @@ neutral_position = 0.1
 class TestA116HardwareInterface:
     """Test the pose_setter node."""
 
-    @classmethod
-    def setup_class(cls):
+    # Node, action client and subscription are created once for the whole class and shared
+    # across tests (class scope mirrors the module-scoped launch above). Recreating them per
+    # test method raced the persistent joint_trajectory_controller action server: rapid
+    # create/destroy churn of the ActionClient caused response sequence numbers to collide,
+    # so goal/result responses were dropped ("Ignoring unexpected ... response" warnings),
+    # silently losing the homing-to-neutral goal and leaking position state between tests.
+    joint_names = [
+        'drqp/left_front_coxa',
+        'drqp/left_front_femur',
+        'drqp/left_front_tibia',
+        'drqp/right_front_coxa',
+        'drqp/right_front_femur',
+        'drqp/right_front_tibia',
+        'drqp/left_middle_coxa',
+        'drqp/left_middle_femur',
+        'drqp/left_middle_tibia',
+        'drqp/right_middle_coxa',
+        'drqp/right_middle_femur',
+        'drqp/right_middle_tibia',
+        'drqp/left_back_coxa',
+        'drqp/left_back_femur',
+        'drqp/left_back_tibia',
+        'drqp/right_back_coxa',
+        'drqp/right_back_femur',
+        'drqp/right_back_tibia',
+    ]
+    non_joint_interface_names = ['battery_state']
+
+    @pytest.fixture(scope='class', autouse=True)
+    def _class_setup(self, request, generate_test_description):  # noqa: ARG002
+        cls = request.cls
         rclpy.init()
+        request.addfinalizer(rclpy.try_shutdown)
 
-    @classmethod
-    def teardown_class(cls):
-        rclpy.try_shutdown()
+        cls.node = rclpy.create_node('test_servo_driver_' + cls.__name__)
+        request.addfinalizer(cls.node.destroy_node)
 
-    @pytest.fixture(autouse=True)
-    def _node_setup(self, request, generate_test_description):  # noqa: ARG002
-        self.node = rclpy.create_node(
-            'test_servo_driver_' + type(self).__name__ + '_' + request.node.name
+        check_controllers_running(
+            cls.node, ['joint_trajectory_controller', 'joint_state_broadcaster']
         )
-        request.addfinalizer(self.node.destroy_node)
 
-        self._wait_for_controller(self.node)
-
-        self.trajectory_client = ActionClient(
-            self.node,
+        cls.trajectory_client = ActionClient(
+            cls.node,
             FollowJointTrajectory,
             '/joint_trajectory_controller/follow_joint_trajectory',
         )
-        request.addfinalizer(self.trajectory_client.destroy)
+        request.addfinalizer(cls.trajectory_client.destroy)
+        assert cls.trajectory_client.wait_for_server(timeout_sec=10.0)
 
-        assert self.trajectory_client.wait_for_server(timeout_sec=10.0)
-
-        self.dynamic_joint_states_sub = self.node.create_subscription(
+        dynamic_joint_states_sub = cls.node.create_subscription(
             DynamicJointState,
             '/dynamic_joint_states',
-            self.dynamic_joint_states_callback,
+            cls.dynamic_joint_states_callback,
             10,
         )
-        request.addfinalizer(self.dynamic_joint_states_sub.destroy)
+        request.addfinalizer(dynamic_joint_states_sub.destroy)
 
-        self.joint_names = [
-            'drqp/left_front_coxa',
-            'drqp/left_front_femur',
-            'drqp/left_front_tibia',
-            'drqp/right_front_coxa',
-            'drqp/right_front_femur',
-            'drqp/right_front_tibia',
-            'drqp/left_middle_coxa',
-            'drqp/left_middle_femur',
-            'drqp/left_middle_tibia',
-            'drqp/right_middle_coxa',
-            'drqp/right_middle_femur',
-            'drqp/right_middle_tibia',
-            'drqp/left_back_coxa',
-            'drqp/left_back_femur',
-            'drqp/left_back_tibia',
-            'drqp/right_back_coxa',
-            'drqp/right_back_femur',
-            'drqp/right_back_tibia',
-        ]
-        self.non_joint_interface_names = ['battery_state']
+    @pytest.fixture(autouse=True)
+    def _reset_state(self, request):
         self._reset_feedback()
         request.addfinalizer(self._reset_feedback)
 
@@ -139,35 +143,32 @@ class TestA116HardwareInterface:
             expected_position=neutral_position,
         )
 
-    def _wait_for_controller(self, node):
-        needed_controllers = ['joint_trajectory_controller', 'joint_state_broadcaster']
-        check_controllers_running(node, needed_controllers)
+    @classmethod
+    def _reset_feedback(cls):
+        cls.joint_positions = [default_interface_value] * len(cls.joint_names)
+        cls.joint_efforts = [default_interface_value] * len(cls.joint_names)
+        cls.last_feedback = rclpy.time.Time(clock_type=rclpy.time.ClockType.ROS_TIME)
 
-    def _reset_feedback(self):
-        self.joint_positions = [default_interface_value] * len(self.joint_names)
-        self.joint_efforts = [default_interface_value] * len(self.joint_names)
-        self.last_feedback = rclpy.time.Time(clock_type=rclpy.time.ClockType.ROS_TIME)
-
-    def dynamic_joint_states_callback(self, msg: DynamicJointState):
-        joint_positions = [default_interface_value] * len(self.joint_names)
-        joint_efforts = [default_interface_value] * len(self.joint_names)
+    @classmethod
+    def dynamic_joint_states_callback(cls, msg: DynamicJointState):
+        joint_positions = [default_interface_value] * len(cls.joint_names)
+        joint_efforts = [default_interface_value] * len(cls.joint_names)
 
         interface_values = list[InterfaceValue](msg.interface_values)
         for name, values in zip(msg.joint_names, interface_values):
-            if name in self.non_joint_interface_names:
+            if name in cls.non_joint_interface_names:
                 continue
 
-            joint_index = self.joint_names.index(name)
+            joint_index = cls.joint_names.index(name)
             for interface_name, value in zip(values.interface_names, values.values):
                 if interface_name == 'position':
                     joint_positions[joint_index] = value
                 elif interface_name == 'effort':
                     joint_efforts[joint_index] = value
 
-        self.joint_positions = joint_positions
-        self.joint_efforts = joint_efforts
-        self.last_feedback = rclpy.time.Time.from_msg(msg.header.stamp)
-        # self.node.get_logger().info(f'Feedback received: {self.joint_positions}')
+        cls.joint_positions = joint_positions
+        cls.joint_efforts = joint_efforts
+        cls.last_feedback = rclpy.time.Time.from_msg(msg.header.stamp)
 
     def test_node_start(self):
         check_node_running(self.node, 'robot_state_publisher')
@@ -267,50 +268,36 @@ class TestA116HardwareInterface:
         assert result is not None
         assert result.error_code == FollowJointTrajectory.Result.SUCCESSFUL
 
-        # Wait for the feedback to be updated
+        # Wait for the feedback to be updated and converge to the expected position.
+        # The action result is reported as soon as the controller's trajectory duration
+        # elapses, which can be a moment before /dynamic_joint_states reflects the final,
+        # settled position, so the first fresh sample after result_time is not necessarily
+        # the converged one -- keep sampling until it matches or we time out.
         result_time = self.node.get_clock().now() + rclpy.time.Duration(seconds=0.05)
         timeout = result_time + rclpy.time.Duration(seconds=3)
-
+        joint_positions = None
         while True:
             rclpy.spin_once(self.node, timeout_sec=0.1)
             if self.last_feedback > result_time:
                 joint_positions = self.joint_positions
-                break
-            assert self.node.get_clock().now() < timeout
-
-        assert np.all(np.isfinite(joint_positions)), (
-            f'Actual positions are not finite: {joint_positions}'
-        )
-
-        # # TODO(anton-matosov): Use dynamic_joint_state to check the actual position
-        if expected_position is not None:
-            assert np.allclose(
-                np.array(joint_positions),
-                np.array([expected_position] * len(self.joint_names)),
-                atol=tolerance,
-            ), (
+                if expected_position is None or np.allclose(
+                    np.array(joint_positions),
+                    np.array([expected_position] * len(self.joint_names)),
+                    atol=tolerance,
+                ):
+                    break
+            assert self.node.get_clock().now() < timeout, (
                 f'Requested position {position} with effort {effort},'
                 f' Expected position {expected_position},'
                 f' got {joint_positions},'
             )
 
+        assert np.all(np.isfinite(joint_positions)), (
+            f'Actual positions are not finite: {joint_positions}'
+        )
 
-@pytest.mark.launch(fixture=generate_test_description)
+
+@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
 def test_processes_exit_cleanly(generate_test_description):
-    """
-    Wait for the controllers to come up, then verify a clean shutdown.
-
-    Function-scoped generator (its own simulation): waits for readiness so the
-    controllers are running before teardown, yields, then asserts every process
-    exited cleanly once the launch service has shut the simulation down.
-    """
     _launch_description, proc_info = generate_test_description
-    rclpy.init()
-    node = rclpy.create_node('test_a1_16_exit_codes_probe')
-    try:
-        check_controllers_running(node, ['joint_trajectory_controller', 'joint_state_broadcaster'])
-    finally:
-        node.destroy_node()
-        rclpy.try_shutdown()
-    yield
     assert_processes_exited_cleanly(proc_info)

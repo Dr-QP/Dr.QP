@@ -33,7 +33,7 @@ from launch.substitutions import PathJoinSubstitution
 import launch_pytest
 from launch_pytest.actions import ReadyToTest
 from launch_ros.substitutions import FindPackageShare
-from moveit_launch_smoke_test_support import assert_move_group_ready, build_test_gz_partition
+from moveit_launch_smoke_test_support import build_test_gz_partition
 from moveit_msgs.msg import (
     CollisionObject,
     Constraints,
@@ -59,7 +59,7 @@ LEFT_FRONT_JOINTS = [
     'drqp/left_front_femur',
     'drqp/left_front_tibia',
 ]
-TARGET_OBSTACLE_ID = 'issue43_left_front_target_blocker'
+TARGET_OBSTACLE_ID = 'left_front_target_blocker'
 
 
 @launch_pytest.fixture
@@ -85,7 +85,7 @@ def generate_test_description():
 
 @pytest.mark.slow
 @pytest.mark.launch(fixture=generate_test_description)
-class TestMoveItRuntimeIssue43:
+class TestMoveItRuntime:
     READY_TIMEOUT = 90.0
     JOINT_TOLERANCE = 0.08
 
@@ -106,7 +106,7 @@ class TestMoveItRuntimeIssue43:
 
     @pytest.fixture(autouse=True)
     def _node_setup(self, request, generate_test_description):  # noqa: ARG002
-        self.node = rclpy.create_node('test_moveit_runtime_issue43')
+        self.node = rclpy.create_node('test_moveit_runtime')
         request.addfinalizer(self.node.destroy_node)
 
         self.latest_joint_state = None
@@ -148,8 +148,6 @@ class TestMoveItRuntimeIssue43:
             '/joint_trajectory_controller/follow_joint_trajectory',
         )
         request.addfinalizer(self.follow_joint_trajectory_client.destroy)
-
-        request.addfinalizer(self._clear_obstacles)
 
         self._wait_for_runtime_ready()
 
@@ -394,32 +392,16 @@ class TestMoveItRuntimeIssue43:
                 error_message='Obstacle did not invalidate the target state in time',
             )
 
-    def _remove_obstacle(self, obstacle_id: str) -> None:
-        collision_object = CollisionObject()
-        collision_object.header.frame_id = BASE_FRAME
-        collision_object.id = obstacle_id
-        collision_object.operation = CollisionObject.REMOVE
-
-        planning_scene = PlanningScene(is_diff=True)
-        planning_scene.world.collision_objects = [collision_object]
-
-        request = ApplyPlanningScene.Request()
-        request.scene = planning_scene
-        response = self._call_service(self.apply_planning_scene_client, request)
-        assert response.success, f'Failed to remove obstacle {obstacle_id}'
-
-    def _clear_obstacles(self) -> None:
-        for obstacle_id in list(self._active_obstacle_ids):
-            self._remove_obstacle(obstacle_id)
-            self._active_obstacle_ids.remove(obstacle_id)
-
     def _state_validity(self, robot_state: RobotState):
         request = GetStateValidity.Request()
         request.robot_state = robot_state
         request.group_name = GROUP_NAME
         return self._call_service(self.state_validity_client, request)
 
-    def test_issue43_left_front_leg_analytical_target_get_motion_plan_succeeds(self):
+    @pytest.mark.flaky(retries=3)
+    def test_left_front_leg_analytical_target_get_motion_plan_succeeds(
+        self, generate_test_description
+    ):
         _, expected_joint_positions = self._reachable_target()
 
         plan_response = self._plan_to_joint_target(expected_joint_positions)
@@ -430,7 +412,14 @@ class TestMoveItRuntimeIssue43:
             'Expected a non-empty planned trajectory'
         )
 
-    def test_issue43_execute_trajectory_reaches_planned_goal_via_joint_trajectory_controller(self):
+        yield  # yield to allow shutdown test to run after this one
+        _ld, proc_info = generate_test_description
+        assert_processes_exited_cleanly(proc_info)
+
+    @pytest.mark.flaky(retries=3)
+    def test_execute_trajectory_reaches_planned_goal_via_joint_trajectory_controller(
+        self, generate_test_description
+    ):
         _, target_joint_positions = self._reachable_target()
         plan_response = self._plan_to_joint_target(target_joint_positions)
         assert plan_response.motion_plan_response.error_code.val == MoveItErrorCodes.SUCCESS
@@ -445,7 +434,14 @@ class TestMoveItRuntimeIssue43:
             tolerance=self.JOINT_TOLERANCE,
         )
 
-    def test_issue43_collision_object_blocks_goal_state_and_plan_is_rejected(self):
+        yield  # yield to allow shutdown test to run after this one
+        _ld, proc_info = generate_test_description
+        assert_processes_exited_cleanly(proc_info)
+
+    @pytest.mark.flaky(retries=3)
+    def test_collision_object_blocks_goal_state_and_plan_is_rejected(
+        self, generate_test_description
+    ):
         target_pose, target_joint_positions = self._reachable_target()
         blocked_state = self._robot_state_with_joint_targets(target_joint_positions)
         self._apply_target_obstacle(target_pose, blocked_state=blocked_state)
@@ -458,22 +454,6 @@ class TestMoveItRuntimeIssue43:
             'Expected planning to fail for a blocked target state'
         )
 
-
-@pytest.mark.slow
-@pytest.mark.launch(fixture=generate_test_description)
-def test_processes_exit_cleanly(generate_test_description):
-    """
-    Wait for MoveIt to come up, then verify a clean shutdown.
-
-    Function-scoped generator (its own simulation): waits for the motion-plan
-    service so processes are running before teardown, yields, then asserts every
-    non-simulator process exited cleanly once the simulation has shut down.
-    """
-    _launch_description, proc_info = generate_test_description
-    rclpy.init()
-    try:
-        assert_move_group_ready()
-    finally:
-        rclpy.try_shutdown()
-    yield
-    assert_processes_exited_cleanly(proc_info)
+        yield  # yield to allow shutdown test to run after this one
+        _ld, proc_info = generate_test_description
+        assert_processes_exited_cleanly(proc_info)

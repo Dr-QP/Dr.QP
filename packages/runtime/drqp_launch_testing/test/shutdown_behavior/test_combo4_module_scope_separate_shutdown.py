@@ -23,8 +23,7 @@ Combo 4: module-scoped fixture + separate module-level ``shutdown=True`` test.
 
 Result: the active test(s) and the shutdown test share ONE simulation, and the
 shutdown body observes the fully-populated exit codes. This is the correct
-pattern when several test functions must share a single simulation (e.g.
-test_robot_control_nodes_and_clock).
+pattern when several test functions must share a single simulation.
 """
 
 import launch_pytest

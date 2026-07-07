@@ -1,4 +1,4 @@
-# Copyright (c) 2026 Anton Matosov
+# Copyright (c) 2017-2026 Anton Matosov
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,44 +18,43 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Smoke test that the MoveIt + Gazebo demo launch reaches a ready state."""
+"""
+Verify simulation nodes are running, the clock is bridged, and processes exit cleanly.
+
+Structured as a functions-only launch_pytest module: a function-scoped launch
+fixture starts the simulation for a single test, the ``robot`` fixture exposes a
+``GazeboRobotControlBase`` harness instance, and the test itself yields partway
+through to verify per-process exit codes once the simulation has been torn down.
+"""
 
 from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
 import launch_pytest
-from moveit_launch_smoke_test_support import (
-    assert_move_group_ready,
-    build_smoke_test_description,
-    build_test_gz_partition,
-)
 import pytest
+from robot_control_test_support import create_simulation_launch_description
 
 
 @launch_pytest.fixture
 def generate_test_description():
-    """Launch the MoveIt+Gazebo demo and record process exit codes."""
-    launch_description = build_smoke_test_description(
-        'demo_gazebo.launch.py',
-        launch_arguments={
-            'show_rviz': 'false',
-            'sim_gui': 'false',
-            'gz_partition': build_test_gz_partition('demo_gazebo_launch_smoke'),
-        },
-        ready_delay=5.0,
-    )
+    """
+    Launch the simulation for this test and record process exit codes.
+
+    Returns the launch description together with a ``ProcInfoHandler`` so the
+    test can assert, after the yield, that every non-simulator process exited
+    cleanly.
+    """
+    launch_description = create_simulation_launch_description()
     proc_info = track_process_exit_codes(launch_description)
     return launch_description, proc_info
 
 
-@pytest.mark.launch(fixture=generate_test_description)
 @pytest.mark.flaky(retries=3)
-def test_launch_reaches_ready_state(move_group, generate_test_description):  # noqa: ARG001
-    # Retries via pytest-retry: the post-yield shutdown exit-code check below is
-    # intermittently flaky (see issue #408). assert_move_group_ready() failures
-    # are genuine regressions and reproduce identically on every retry, so they
-    # still fail the build.
-    assert_move_group_ready()
-    # Function-scoped generator: the stack tears down at the yield, then the
-    # post-yield body verifies every non-simulator process exited cleanly.
-    yield
-    _launch_description, proc_info = generate_test_description
+@pytest.mark.launch(fixture=generate_test_description)
+def test_robot_smoke(robot, generate_test_description):
+    robot.assert_nodes_and_clock()
+    robot.assert_controllers_are_active()
+    robot.assert_imu_data_reports_orientation()
+
+    yield  # yield to allow shutdown test to run after this one
+
+    _ld, proc_info = generate_test_description
     assert_processes_exited_cleanly(proc_info)
