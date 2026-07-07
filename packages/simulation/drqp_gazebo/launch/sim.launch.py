@@ -41,7 +41,6 @@ from launch.substitutions import (
     IfElseSubstitution,
     LaunchConfiguration,
     PathJoinSubstitution,
-    PythonExpression,
     TextSubstitution,
 )
 from launch_ros.actions import Node, SetParameter
@@ -323,19 +322,6 @@ def generate_launch_description():
         }.items(),
     )
 
-    balance_challenge_disturbance = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [
-                    FindPackageShare('drqp_gazebo'),
-                    'launch',
-                    'balance_challenge_disturbance.launch.py',
-                ]
-            )
-        ),
-        condition=IfCondition(PythonExpression(["'balance_challenge' in '", world_sdf, "'"])),
-    )
-
     return LaunchDescription(
         [make_launch_instance_guard('drqp_gazebo_sim')]
         + declared_arguments
@@ -351,7 +337,6 @@ def generate_launch_description():
                     gz_spawn_entity,
                     follow_camera_command,
                     keyboard_control,
-                    balance_challenge_disturbance,
                 ],
             ),
         ]
