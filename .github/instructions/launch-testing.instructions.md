@@ -121,8 +121,16 @@ benefit.
 
 To use it:
 
-1. Add `pytest-retry` to the package's python dependencies — there is no
-   rosdep key for it, it's managed at the workspace level (`pyproject.toml`).
+1. There is no rosdep key for `pytest-retry`; it's declared once, in
+   `drqp_launch_testing`'s `setup.py` (`extras_require={'test': ['pytest-retry']}`)
+   — do not re-add it to `pyproject.toml`/`uv.lock`. Any package with
+   `<test_depend>drqp_launch_testing</test_depend>` picks it up transitively:
+   CI's `scripts/ros-dep.sh` runs
+   `docker/ros/deploy/install-overlay-python-requirements.py` after
+   `colcon build`, which flattens every generated `requires.txt` (including
+   extras sections) across the workspace into one `pip install`, so
+   `pytest-retry` ends up installed workspace-wide, not just for
+   `drqp_launch_testing` itself.
 2. When CI history (repeated reruns of the same combo-5 test, same failure
    signature at the exit-code assertion) confirms this pattern for a specific
    test, mark it `@pytest.mark.flaky(retries=3)`:

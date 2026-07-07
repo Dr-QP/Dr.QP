@@ -150,4 +150,4 @@ if __name__ == '__main__':
             try:
                 update_vendor_package(package_path)
             except subprocess.CalledProcessError as e:
-                print(f'Error updating package at {package_path}: {e.stderr}')
+                print(f'Error updating package at {package_path}: {e.output}')
