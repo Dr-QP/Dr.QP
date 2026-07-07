@@ -18,6 +18,8 @@ on:
     types:
       - opened
       - reopened
+      - assigned
+      - ready_for_review
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number}}-${{ github.event.comment.id || github.event.review.id }}
@@ -25,7 +27,7 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-
+  CLAUDE_PR_REVIEW_ARGS: 'mcp__github__stub,mcp__github_comment__,mcp__github_inline_comment__,mcp__github_ci__'
 jobs:
   review:
     if: |
@@ -37,50 +39,134 @@ jobs:
         (github.event_name == 'pull_request')
       )
     name: Claude Responder
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    container:
+      image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
     permissions:
       contents: write
       pull-requests: write
       issues: write
       id-token: write
       actions: read # Required for Claude to read CI results on PRs
-    timeout-minutes: 15
+    timeout-minutes: 30
     environment: claude-review
     steps:
+      # issue_comment (the common "@claude review" trigger) fires with the
+      # default branch as context.sha — it carries no head ref/sha for the
+      # PR being commented on. Resolve the PR's actual head commit here so
+      # the checkout below gives Claude the PR's code, not origin/main.
+      - name: Determine checkout ref
+        id: checkout_ref
+        uses: actions/github-script@v9.0.0
+        with:
+          script: |
+            const { eventName, payload } = context;
+            let ref = context.sha;
+            let prNumber = payload.pull_request?.number ?? payload.issue?.number ?? '';
+
+            if (payload.pull_request?.head?.sha) {
+              // pull_request, pull_request_review, and pull_request_review_comment
+              // events already carry the full pull_request object.
+              ref = payload.pull_request.head.sha;
+            } else if (eventName === 'issue_comment' && payload.issue?.pull_request) {
+              // issue_comment only gives us the PR number; look up its head sha.
+              const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: payload.issue.number,
+              });
+              ref = pr.head.sha;
+            }
+
+            core.setOutput('ref', ref);
+            core.setOutput('prNumber', prNumber);
+
+      # Used to scope a write-scoped github_token to the Claude Responder step
+      # below, only when the PR itself touches this workflow file.
+      - name: Check if workflow file changed
+        id: workflow_changed
+        uses: actions/github-script@v9.0.0
+        env:
+          PR_NUMBER: ${{ steps.checkout_ref.outputs.prNumber }}
+        with:
+          script: |
+            const prNumber = process.env.PR_NUMBER;
+
+            let workflowChanged = false;
+            if (prNumber) {
+              const files = await github.paginate(github.rest.pulls.listFiles, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+              });
+              workflowChanged = files.some(
+                (f) => f.filename === '.github/workflows/claude-review.yml'
+              );
+            }
+            core.setOutput('workflowChanged', workflowChanged);
+
+      # Automated review when a PR is opened/reopened, or when a comment
+      # explicitly asks for "@claude review": run the pr-review skill with
+      # a fixed prompt. Otherwise leave the prompt empty so Claude responds
+      # to whatever was actually asked in the triggering comment/mention.
+      - name: Determine agent prompt
+        id: agent_prompt
+        uses: actions/github-script@v9.0.0
+        env:
+          PR_NUMBER: ${{ steps.checkout_ref.outputs.prNumber }}
+        with:
+          script: |
+            const { eventName, payload } = context;
+            const prNumber = process.env.PR_NUMBER;
+
+            const isPrReview =
+              eventName === 'pull_request' ||
+              Boolean(payload.comment?.body?.includes('@claude review'));
+
+            const prompt = isPrReview
+              ? [
+                  `REPO: ${context.repo.owner}/${context.repo.repo}`,
+                  `PR NUMBER: ${prNumber}`,
+                  '',
+                  'Use the pr-review skill to review this pull request',
+                ].join('\n')
+              : '';
+            core.setOutput('prompt', prompt);
+
       - name: Checkout repository
         uses: actions/checkout@v6.0.3
         with:
+          ref: ${{ steps.checkout_ref.outputs.ref }}
           fetch-depth: 1
           persist-credentials: false
 
-        # Automated review when a PR is opened/reopened: always run the pr-review skill.
-      - name: Claude PR Review
-        if: ${{ github.event_name == 'pull_request' }}
+      - name: Add workspace to safe directories
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Claude Responder
+        id: claude_responder
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ steps.workflow_changed.outputs.workflowChanged == 'true' && secrets.GITHUB_TOKEN || '' }}
+          settings: .claude/settings.json
+          # --allowedTools is needed to start the MCP servers
+          claude_args: --allowedTools '${{ env.CLAUDE_PR_REVIEW_ARGS }}'
           # Trigger when specific user is assigned to an issue
           assignee_trigger: 'claude-bot'
-          prompt: |
-            REPO: ${{ github.repository }}
-            PR NUMBER: ${{ github.event.pull_request.number }}
+          show_full_output: true
+          prompt: ${{ steps.agent_prompt.outputs.prompt }}
+          # Do NOT set track_progress for code reviews, it breaks agent's instructions to submit review,
+          # it ends up posting it as a comment.
+          # track_progress: true
 
-            Use the pr-review skill to review this pull request.
-          claude_args: >-
-            --allowedTools
-            "Skill,mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
-
-      # Comment/mention-driven requests (issue_comment, pull_request_review_comment,
-      # pull_request_review, issues): no fixed prompt, so Claude responds to whatever
-      # was actually asked in the comment. It can invoke the pr-review skill itself
-      # if the request is a review.
-      - name: Claude Code Respond
-        if: ${{ github.event_name != 'pull_request' }}
-        uses: anthropics/claude-code-action@v1
+      - name: Attach responder output file
+        if: steps.claude_responder.outputs.execution_file != ''
+        uses: actions/upload-artifact@v4
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          # Trigger when specific user is assigned to an issue
-          assignee_trigger: 'claude-bot'
+          name: claude-responder-output
+          path: ${{ steps.claude_responder.outputs.execution_file }}
 
       - name: Log debug stats
         if: ${{ always() }}

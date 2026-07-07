@@ -5,7 +5,6 @@ log/
 lcov/
 
 build.vscode/
-bin/
 *.iml
 *.log
 .idea/dictionaries
@@ -212,7 +211,6 @@ cython_debug/
 devel/
 logs/
 build/
-bin/
 lib/
 msg_gen/
 srv_gen/
@@ -363,6 +361,7 @@ nodesource_setup.sh
 
 # Superpowers plans
 docs/superpowers/
+.superpowers/
 
 # Super-Linter
 super-linter-output/

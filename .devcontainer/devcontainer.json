@@ -3,6 +3,13 @@
   "initializeCommand": ".devcontainer/devcontainer-init.sh",
   "dockerComposeFile": ["docker-compose.yml"],
   "service": "devcontainer",
+  "features": {
+    // Configures the SSH server (openssh-server is pre-installed in the image)
+    // so `gh codespace ssh` can attach — required by the
+    // remote-codespace-session skill and GitHub Codespaces SSH access.
+    "ghcr.io/devcontainers/features/sshd:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:4.0.0": {}
+  },
   "customizations": {
     "vscode": {
       "extensions": [
@@ -17,16 +24,21 @@
     "DISPLAY": ":100",
     "DOCKER_HOST": "unix:///var/run/docker.sock",
     "DEVCONTAINER_ID": "${devcontainerId}",
+    "DEV_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
 
     "UV_CACHE_DIR": "/uv/cache",
     "UV_PYTHON_INSTALL_DIR": "/uv/python",
     "UV_PROJECT_ENVIRONMENT": "/uv/venvs/${localWorkspaceFolderBasename}/"
   },
 
-  "forwardPorts": ["14500-14599"],
+  "forwardPorts": ["14500-14599", "8811"],
   "portsAttributes": {
     "14500-14599": {
       "label": "Xpra HTML5",
+      "onAutoForward": "silent"
+    },
+    "8811": {
+      "label": "MCP Gateway SSE",
       "onAutoForward": "silent"
     }
   },
@@ -76,9 +88,12 @@
       "target": "/uv",
       "type": "volume"
     }
+    // drqp-claude, drqp-claude-json, drqp-codex are mounted via docker-compose.yml
+    // (top-level `volumes:` with explicit `name:`) so they're shared across every
+    // devcontainer instance instead of being isolated per compose project.
   ],
   // Keep the developer `.venv` bootstrap separate from the ROS runtime environment.
-  "postCreateCommand": "sudo chown -R root:root /opt/ros/overlay_ws/.ansible /opt/ros/overlay_ws/.vscode /opt/ros/overlay_ws/.cache /opt/ros/overlay_ws/build /opt/ros/overlay_ws/install /opt/ros/overlay_ws/lcov /opt/ros/overlay_ws/log /opt/ros/overlay_ws/docs/_build /opt/ros/overlay_ws/.micromamba /uv",
+  "postCreateCommand": "./scripts/devcontainer-postCreateCommand.sh",
   "postAttachCommand": {
     "git config": "git config --global gpg.ssh.program ssh-keygen",
     "python-venv": "./scripts/uv-sync.sh",

@@ -6,9 +6,6 @@ if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
   exit 0
 fi
 
-# Start Docker daemon if not running
-"$CLAUDE_PROJECT_DIR/scripts/devcontainer-start-docker.sh"
-
 export PATH="$HOME/.bun/bin:$PATH"
 
 # Install Bun if not available

@@ -8,9 +8,13 @@ threat model demands it.
 
 The devcontainer keeps two kinds of secrets:
 
-- **docker/mcp secrets** — used by the `docker-pass` secrets engine. Depending on
-  configuration, these live either in a GNOME Keyring inside the container or in
-  an externally mounted secrets engine on the host (see below).
+- **docker/mcp secrets** — always served from the host's `docker-secrets-engine`
+  socket, with no in-container fallback or import step. `.devcontainer/devcontainer-init.sh`
+  detects the socket and mounts it directly into both the `devcontainer` and
+  `mcp-gateway` services as `DOCKER_SECRETS_ENGINE_SOCKET`; if the socket isn't
+  present, a non-functional stub is mounted instead and docker/mcp secrets are
+  simply unavailable until the host engine is running. Either way, these
+  secrets never persist inside the container.
 - **`gh auth login` tokens** — GitHub CLI credentials, stored in the GNOME
   Keyring inside the container.
 
@@ -48,26 +52,12 @@ For a single-user devcontainer this is an acceptable tradeoff: any in-container
 encryption password would have to live nearby anyway, so encrypting the keyring
 file in place adds little real protection while adding startup complexity.
 
-## Options
+## Options for hardening the `gh` token keyring (not currently enabled)
 
-### 1. External mounted secrets engine (preferred, already implemented)
+These only apply to the in-container keyring above; docker/mcp secrets already
+never persist in the container (see [What is stored, and where](#what-is-stored-and-where)).
 
-When the host runs the `docker-secrets-engine` and mounts its socket,
-`.devcontainer/devcontainer-init.sh` detects it and sets
-`DOCKER_PASS_EXTERNAL_ENGINE=1`. In that mode the host engine is the source of
-truth and **docker/mcp secrets never persist inside the container** — the
-strongest real-world option.
-
-To use it, run the `docker-secrets-engine` on the host so its socket exists at
-the expected path (e.g. `~/Library/Caches/docker-secrets-engine/engine.sock` on
-macOS). `devcontainer-init.sh` flips `DOCKER_PASS_EXTERNAL_ENGINE=1`
-automatically when the socket is present; otherwise it falls back to the
-in-container keyring and an encrypted one-shot secret import.
-
-Note: this covers docker/mcp secrets only. `gh` tokens still land in the
-in-container keyring.
-
-### 2. Password-encrypted keyring (hardening path, not currently enabled)
+### Password-encrypted keyring
 
 If at-rest encryption inside the container becomes a requirement, switch from the
 hand-written empty-password keyring to `gnome-keyring-daemon --login`, which
@@ -78,11 +68,7 @@ The encryption is only as strong as wherever the unlock password lives. The
 recommended source is the **host keychain / 1Password**, fetched at init time and
 never written to a repo-local file.
 
-> **Do not** reuse `DOCKER_PASS_EXPORT_KEY` as the unlock password. It is
-> regenerated randomly on every `devcontainer-init`, so it cannot unlock a
-> keyring that persists across reloads.
-
-### 3. Ephemeral tmpfs keyring (not currently enabled)
+### Ephemeral tmpfs keyring
 
 Place the keyring on tmpfs so nothing touches disk, and re-import secrets each
 session. This removes the at-rest file entirely at the cost of a per-session
@@ -90,9 +76,12 @@ re-import.
 
 ## Summary
 
-| Option                           | Secrets at rest in container | Headless start                                | Notes                              |
-| -------------------------------- | ---------------------------- | --------------------------------------------- | ---------------------------------- |
-| Empty-password keyring (default) | Yes, unencrypted             | Yes                                           | Relies on host disk encryption     |
-| External mounted engine          | No (docker secrets)          | Yes                                           | Preferred; `gh` tokens still local |
-| Password-encrypted keyring       | Yes, encrypted               | Yes, if password is sourced non-interactively | Use host keychain / 1Password      |
-| Ephemeral tmpfs                  | No                           | Yes                                           | Re-import every session            |
+| Option                           | Secrets at rest in container | Headless start                                | Notes                          |
+| -------------------------------- | ---------------------------- | --------------------------------------------- | ------------------------------ |
+| Empty-password keyring (default) | Yes, unencrypted             | Yes                                           | Relies on host disk encryption |
+| Password-encrypted keyring       | Yes, encrypted               | Yes, if password is sourced non-interactively | Use host keychain / 1Password  |
+| Ephemeral tmpfs                  | No                           | Yes                                           | Re-import every session        |
+
+docker/mcp secrets aren't in this table: they're always served from the host's
+`docker-secrets-engine` socket and never persist in the container, regardless
+of which keyring option above is active.

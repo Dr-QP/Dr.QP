@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Transparent gh wrapper: injects GH_TOKEN from the host's git credential helper,
+# then delegates to the real gh. Silent by default; set VERBOSE_GH=1 to see what it did.
+set -euo pipefail
+
+real_gh=/usr/bin/gh
+
+if [[ ! -x "$real_gh" ]]; then
+  echo "gh-wrapper: real gh not found at $real_gh" >&2
+  exit 127
+fi
+
+log() {
+  if [[ -n "${VERBOSE_GH:-}" ]]; then
+    echo "gh-wrapper: $*" >&2
+  fi
+}
+
+# Re-entrancy guard: the wrapper can legitimately be on PATH twice (a live
+# workspace copy ahead of the image-baked default at /usr/local/bin/gh). Only
+# the first invocation in a process tree should do any work.
+if [[ -n "${GH_WRAPPER_ACTIVE:-}" ]]; then
+  log "already active in this process tree, delegating immediately"
+  exec "$real_gh" "$@"
+fi
+export GH_WRAPPER_ACTIVE=1
+
+if [[ -n "${GH_TOKEN:-}" || -n "${GITHUB_TOKEN:-}" ]]; then
+  log "GH_TOKEN/GITHUB_TOKEN already set, leaving as-is"
+elif helper=$(git config --get credential.helper 2>/dev/null) && [[ -n "$helper" ]]; then
+  log "credential.helper configured, attempting git credential fill"
+  token=$(printf 'protocol=https\nhost=github.com\n\n' | timeout 2 git credential fill 2>/dev/null | grep '^password=' | cut -d= -f2- || true)
+  if [[ -n "$token" ]]; then
+    log "derived GH_TOKEN from host credential helper"
+    export GH_TOKEN="$token"
+  else
+    log "credential fill returned nothing usable"
+  fi
+else
+  log "no credential.helper configured, skipping extraction"
+fi
+
+exec "$real_gh" "$@"

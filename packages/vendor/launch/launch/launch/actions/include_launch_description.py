@@ -15,20 +15,32 @@
 """Module for the IncludeLaunchDescription action."""
 
 import os
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Text, Tuple, Type, Union
+from typing import Any
+from typing import Dict
+from typing import Iterable
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Text
+from typing import Tuple
+from typing import Type
+from typing import Union
 
 import launch.logging
 
+from .opaque_function import OpaqueFunction
+from .set_launch_configuration import SetLaunchConfiguration
 from ..action import Action
-from ..frontend import Entity, expose_action, Parser
+from ..frontend import Entity
+from ..frontend import expose_action
+from ..frontend import Parser
 from ..launch_context import LaunchContext
 from ..launch_description_entity import LaunchDescriptionEntity
 from ..launch_description_source import LaunchDescriptionSource
 from ..launch_description_sources import AnyLaunchDescriptionSource
 from ..some_substitutions_type import SomeSubstitutionsType
-from ..utilities import normalize_to_list_of_substitutions, perform_substitutions
-from .opaque_function import OpaqueFunction
-from .set_launch_configuration import SetLaunchConfiguration
+from ..utilities import normalize_to_list_of_substitutions
+from ..utilities import perform_substitutions
 
 
 @expose_action('include')
@@ -117,7 +129,7 @@ class IncludeLaunchDescription(Action):
         launch_arguments: Optional[
             Iterable[Tuple[SomeSubstitutionsType, SomeSubstitutionsType]]
         ] = None,
-        **kwargs: Any,
+        **kwargs: Any
     ) -> None:
         """Create an IncludeLaunchDescription action."""
         super().__init__(**kwargs)
@@ -128,9 +140,8 @@ class IncludeLaunchDescription(Action):
         self.__logger = launch.logging.get_logger(__name__)
 
     @classmethod
-    def parse(
-        cls, entity: Entity, parser: Parser
-    ) -> Tuple[Type['IncludeLaunchDescription'], Dict[str, Any]]:
+    def parse(cls, entity: Entity, parser: Parser
+              ) -> Tuple[Type['IncludeLaunchDescription'], Dict[str, Any]]:
         """Return `IncludeLaunchDescription` action and kwargs for constructing it."""
         _, kwargs = super().parse(entity, parser)
         file_path = parser.parse_substitution(entity.get_attr('file'))
@@ -146,7 +157,7 @@ class IncludeLaunchDescription(Action):
             kwargs['launch_arguments'] = [
                 (
                     parser.parse_substitution(e.get_attr('name')),
-                    parser.parse_substitution(e.get_attr('value')),
+                    parser.parse_substitution(e.get_attr('value'))
                 )
                 for e in args
             ]
@@ -197,9 +208,8 @@ class IncludeLaunchDescription(Action):
             )
         return None
 
-    def execute(
-        self, context: LaunchContext
-    ) -> List[Union[SetLaunchConfiguration, LaunchDescriptionEntity]]:
+    def execute(self, context: LaunchContext) -> List[Union[SetLaunchConfiguration,
+                                                            LaunchDescriptionEntity]]:
         """Execute the action."""
         launch_description = self.__launch_description_source.get_launch_description(context)
         self._set_launch_file_location_locals(context)
@@ -212,8 +222,7 @@ class IncludeLaunchDescription(Action):
         ]
         try:
             declared_launch_arguments = (
-                launch_description.get_launch_arguments_with_include_launch_description_actions()
-            )
+                launch_description.get_launch_arguments_with_include_launch_description_actions())
         except Exception as exc:
             if hasattr(exc, 'add_note'):
                 exc.add_note(f'while executing {self.describe()}')  # type: ignore
@@ -230,9 +239,8 @@ class IncludeLaunchDescription(Action):
             if argument.name not in argument_names:
                 raise RuntimeError(
                     "Included launch description missing required argument '{}' "
-                    "(description: '{}'), given: [{}]".format(
-                        argument.name, argument.description, ', '.join(argument_names)
-                    )
+                    "(description: '{}'), given: [{}]"
+                    .format(argument.name, argument.description, ', '.join(argument_names))
                 )
 
         # Create actions to set the launch arguments into the launch configurations.
@@ -253,16 +261,12 @@ class IncludeLaunchDescription(Action):
         context_locals = context.get_locals_as_dict()
         self.__previous_launch_file_path = context_locals.get('current_launch_file_path', None)
         self.__previous_launch_file_dir = context_locals.get('current_launch_file_directory', None)
-        context.extend_locals(
-            {
-                'current_launch_file_path': self._get_launch_file(),
-            }
-        )
-        context.extend_locals(
-            {
-                'current_launch_file_directory': self._get_launch_file_directory(),
-            }
-        )
+        context.extend_locals({
+            'current_launch_file_path': self._get_launch_file(),
+        })
+        context.extend_locals({
+            'current_launch_file_directory': self._get_launch_file_directory(),
+        })
 
     def _restore_launch_file_location_locals(self, context: LaunchContext) -> None:
         # We want to keep the state of the context locals even after the include, since included

@@ -82,15 +82,15 @@ The two correct patterns (and the traps to avoid) come straight from the matrix:
       assert_processes_exited_cleanly(generate_test_description[1])
   ```
 
+  A single test driving a `module`-scoped simulation can also use the generator
+  pattern directly instead of a separate `shutdown=True` test (matrix combo 3).
+
 ### Do not
 
 - **Do not** pair a separate `shutdown=True` function with a **function**- or
   **class**-scoped fixture to check exit codes — it launches a _different,
   throwaway_ simulation, so it verifies nothing about the active test (matrix
   combos 1 & 2).
-- **Do not** make a non-function-scoped (class/module) test a generator — the
-  installed launch_pytest/pytest pairing raises `TypeError`
-  (`getfixtureinfo(funcargs=True)`); matrix combo 3.
 - **Do not** default to `scope='module'`/`'class'`. Function scope is the
   default; reach for module scope only to share one simulation across several
   tests.

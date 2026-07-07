@@ -73,6 +73,7 @@ jobs:
             ]);
             const claudeLogins = new Set([
               'claude[bot]',
+              'github-actions[bot]',
             ]);
             const acceptedReviewStates = new Set([
               'approved',
@@ -256,7 +257,7 @@ jobs:
             }
 
             core.setFailed(
-              `No AI review found for this PR. Expected a review from Copilot (copilot-pull-request-reviewer[bot]), Codex (chatgpt-codex-connector[bot] review or +1 reaction), or Claude (claude[bot]).`
+              `No AI review found for this PR. Expected a review from Copilot (copilot-pull-request-reviewer[bot]), Codex (chatgpt-codex-connector[bot] review or +1 reaction), or Claude (claude[bot] or github-actions[bot]).`
             );
 
       - name: Log debug stats
