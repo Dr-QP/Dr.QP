@@ -297,6 +297,9 @@ class MoveItPyLocomotionKinematics:
         robot_state = self._robot_state_cls(self._robot_model)
         latest_positions = dict(zip(latest_joint_state.name, latest_joint_state.position))
 
+        robot_state.set_to_default_values()
+
+        seed_positions = {}
         for leg in self._hexapod.legs:
             joint_names = self.controller_joint_names(leg)
             missing_names = [
@@ -307,8 +310,10 @@ class MoveItPyLocomotionKinematics:
                     f'Current joint state is missing joint targets: {", ".join(missing_names)}'
                 )
 
-        robot_state.set_to_default_values()
+            for joint_name in joint_names:
+                seed_positions[joint_name] = latest_positions[joint_name]
 
+        robot_state.joint_positions = seed_positions
         robot_state.update()
         return robot_state
 
