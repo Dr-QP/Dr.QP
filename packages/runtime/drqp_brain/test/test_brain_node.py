@@ -106,7 +106,7 @@ def make_imu_msg_from_base_tilt(
     )
 
 
-def test_process_imu_compensates_static_mount_rotation(rclpy_context):  # noqa: ARG001 (needs rclpy)
+def test_process_imu_compensates_mount_rotation(rclpy_context):  # noqa: ARG001 (needs rclpy)
     """Recover body attitude by de-rotating the fixed IMU sensor mount."""
     brain = HexapodBrain()
     try:
@@ -186,6 +186,11 @@ def test_loop_uses_imu_balance_correction(rclpy_context):  # noqa: ARG001 (needs
     with mock.patch('drqp_brain.brain_node.JointTrajectoryBuilder') as trajectory_builder_cls:
         brain = HexapodBrain()
         try:
+            # Neutralize the tuning parameters so this test only exercises the
+            # target-relative tilt error computation, not the gain/clamp math
+            # covered separately in test_balance_controller.py.
+            brain.imu_balance_gain = 1.0
+            brain.imu_balance_max_tilt_rad = 1.0
             brain.walker.next_step_targets = mock.Mock(return_value=[])
             brain._ik_ready = mock.Mock(return_value=False)
             brain.current_movement.stride_direction = Vector3(x=0.0, y=0.0, z=0.0)

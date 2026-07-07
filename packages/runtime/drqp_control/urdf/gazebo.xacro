@@ -22,6 +22,13 @@
         <update_rate>30</update_rate>
         <topic>/model/${robot_name}/imu/data</topic>
         <imu>
+          <!-- Without this, gz-sim reports orientation relative to imu_link's pose
+               at spawn (which already includes the fixed sensor mount rotation)
+               instead of absolute world orientation, breaking body_tilt_from_imu()'s
+               "imu_in_world = body_in_world * mount" assumption (Issue #356). -->
+          <orientation_reference_frame>
+            <localization>ENU</localization>
+          </orientation_reference_frame>
           <angular_velocity>
             <x><noise type="gaussian"><mean>0</mean><stddev>2e-4</stddev></noise></x>
             <y><noise type="gaussian"><mean>0</mean><stddev>2e-4</stddev></noise></y>
