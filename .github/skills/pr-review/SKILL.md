@@ -22,13 +22,12 @@ Use this skill to review a pull request's diff and publish feedback as a GitHub 
   - `submit_pending_pull_request_review` — submit the pending review with an `event`
 - Codex-specific option: if the GitHub connector is available use
   `mcp__codex_apps__github._add_review_to_pr`, use that tool to submit the review in one call with:
-  - `action`: `APPROVE`, `COMMENT`, or `REQUEST_CHANGES`
+  - `action`: `APPROVE` or `COMMENT`
   - `review`: the short overall summary body
   - `file_comments`: every validated inline finding, using `path`, `line`, `side`, and `body`
 
   This still creates a proper pull request review with inline comments, not a standalone PR comment.
 
-- If GitHub rejects `REQUEST_CHANGES` because the authenticated account owns the PR, retry with `COMMENT` and state in the review body that GitHub would not allow that account to request changes on its own pull request.
 - If those review tools are unavailable or uncertain, use the single-call fallback flow described after Step 8. **Never construct `gh api` review-posting calls by hand**.
 
 ## Review Focus
@@ -86,15 +85,12 @@ Flag only significant bugs; ignore nitpicks and likely false positives. Do not f
 7. For every validated finding, attach it as an inline comment on the exact file/line with `add_comment_to_pending_review` — this is the only place finding text goes; never describe a finding's location in prose.
 8. Submit the review with `submit_pending_pull_request_review`, choosing `event` from the validated findings that survived Step 5:
    - **No validated findings at all → `APPROVE`.** A clean pass must be approved, not left as a silent `COMMENT`.
-   - **At least one `blocking` (critical/P1) finding → `REQUEST_CHANGES`.**
-   - **Only non-blocking findings, none blocking → `COMMENT`.**
+   - **One or more validated findings, of any severity tier → `COMMENT`.** Never use `REQUEST_CHANGES`, even for blocking (critical/P1) findings — the severity tier still controls dedup priority in Step 4 and can be called out in the inline comment text, but it never changes the review event.
 
    `body` is limited to a short overall summary (no per-finding detail — that lives in the inline comments); for an `APPROVE` with zero findings, state plainly that no issues were found.
 
    Codex: if using `mcp__codex_apps__github._add_review_to_pr` instead of Steps 6-8, pass the same event as `action`,
-   the summary as `review`, and all validated inline findings as `file_comments`. If `REQUEST_CHANGES` fails because
-   GitHub disallows requesting changes on the authenticated user's own PR, retry the same inline review with
-   `action: "COMMENT"` and include a brief note in `review` explaining the event downgrade.
+   the summary as `review`, and all validated inline findings as `file_comments`.
 
 ### Waiting on Parallel Passes
 
@@ -118,7 +114,7 @@ Write two plain files under `./.tmp` (never assemble this JSON live in a shell c
 - a summary file containing only the short overall review body (no per-finding detail)
 - a comments file containing a JSON array of every validated finding: `[{"path": "file.py", "line": 42, "side": "RIGHT", "body": "finding text"}, ...]` (use `[]` or omit the file entirely if no findings survived Step 5)
 
-Then run `scripts/post-review.sh --pr <PR_NUMBER> --event <COMMENT|REQUEST_CHANGES|APPROVE> --summary-file <path> --comments-file <path>` (run with `-h` for full usage; `--repo` defaults to the current repo via `gh repo view`). This single call replaces Steps 6–8 entirely, including the `event` decision rule from Step 8 (`APPROVE` when `[]`/no findings, `REQUEST_CHANGES` when any surviving finding is blocking, `COMMENT` otherwise). Do not fall further back to typing `gh api` calls by hand.
+Then run `scripts/post-review.sh --pr <PR_NUMBER> --event <COMMENT|APPROVE> --summary-file <path> --comments-file <path>` (run with `-h` for full usage; `--repo` defaults to the current repo via `gh repo view`). This single call replaces Steps 6–8 entirely, including the `event` decision rule from Step 8 (`APPROVE` when `[]`/no findings, `COMMENT` otherwise — never `REQUEST_CHANGES`). Do not fall further back to typing `gh api` calls by hand.
 
 ## Constraints
 

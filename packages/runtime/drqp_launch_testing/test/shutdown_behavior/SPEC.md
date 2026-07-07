@@ -30,6 +30,7 @@ actually started (hence the `ready_delay` before `ReadyToTest`).
 | 3   | module        | generator test (yield once)       | ✅ same sim            | ✅ yes                         | ✓ use for multi-test files (generator style) |
 | 4   | module        | separate `shutdown=True` function | ✅ same sim            | ✅ yes                         | ✓ use for multi-test files                   |
 | 5   | function      | generator test (yield once)       | ✅ same sim            | ✅ yes                         | ✓ use for single-test files                  |
+| 6   | any           | `@pytest.mark.flaky` retry        | n/a                    | n/a                            | ✓ crash-safe; only combo 5 relaunches        |
 
 ### Why combo 3 now works
 
@@ -41,6 +42,32 @@ pytest no longer accepts, raising `TypeError`. The vendored `launch_pytest`
 keyword, so combo 3 is fully supported now: the generator yields once for the
 active phase and resumes for the shutdown phase against the same module-scoped
 simulation.
+
+### Why combo 6 is "crash-safe" but not "relaunch-safe" for combos 1/2/4
+
+Stock `launch_pytest`'s `pytest_pyfunc_call` hookwrapper mutates `pyfuncitem.obj`
+in place every time it runs, dispatching on whatever `pyfuncitem.obj` currently
+is. Retried by `pytest-retry`, the second invocation sees the _previous
+attempt's wrapper_ (closed over an already-torn-down `event_loop`), and
+re-wrapping it crashes with `RuntimeError: Event loop is closed` / `is already
+running`. This is fixed directly in the vendored `launch_pytest`
+(`packages/vendor/launch/launch_pytest`, forked from `anton-matosov/launch.git`
+— see `source-info.yaml`), which caches the pristine original test callable on
+the item the first time it's seen and always re-wraps from that cached
+original, never from `pyfuncitem.obj`. No workspace-side shim is needed.
+
+Separately (and independent of that fix): `pytest-retry` tears down and
+recreates function/class-scoped fixtures on retry, but does **not** re-run a
+`module`-scoped fixture's setup on retry (verified with a bare, non-launch
+module fixture — a `pytest-retry` limitation, not a `launch_pytest` one). So
+after the patch:
+
+- Combo 5 (function-scoped generator): retry genuinely relaunches. Useful for
+  rescuing a real nondeterministic shutdown-crash flake.
+- Combos 1, 2, 4 (module/class-scoped shared fixture): retry is crash-safe but
+  reuses the same, already-recorded simulation — it re-checks identical data
+  and can never rescue a real flake. `@pytest.mark.flaky` there is harmless but
+  pointless; don't add it expecting it to help.
 
 ## Recommended patterns (consequences)
 

@@ -95,6 +95,62 @@ The two correct patterns (and the traps to avoid) come straight from the matrix:
   default; reach for module scope only to share one simulation across several
   tests.
 
+## Retry known shutdown-crash flakiness — never mask a real bug
+
+Stock `launch_pytest` and `pytest-retry` do not work together out of the box:
+`launch_pytest` re-wraps the test callable in place on every call, and a
+naive retry re-wraps the _previous attempt's_ stale wrapper, crashing with
+`RuntimeError: Event loop is closed` / `is already running` instead of
+retrying. This is fixed directly in this workspace's vendored `launch_pytest`
+(`packages/vendor/launch/launch_pytest`, forked from `anton-matosov/launch.git`
+— see `packages/vendor/launch/source-info.yaml`), which always re-wraps from a
+cached pristine original callable, never from the mutated `pyfuncitem.obj`. No
+per-package shim or `test/conftest.py` registration is needed — see
+`packages/runtime/drqp_launch_testing/test/shutdown_behavior/SPEC.md` (combo 6)
+for the root cause and the executable proof.
+
+**This only rescues real flakiness for combo 5 (function-scoped generator).**
+`pytest-retry` tears down and recreates function/class-scoped fixtures on
+retry, but does not re-run a `module`-scoped fixture's setup on retry (a
+`pytest-retry` limitation, verified independently of `launch_pytest`). So for
+combo 4 (module-scoped shared simulation + separate `shutdown=True` test), a
+retry is crash-safe but re-checks the same, already-recorded `proc_info` — it
+can never rescue a genuine nondeterministic shutdown-crash flake there. Do
+not add `flaky` to a combo 4 test expecting it to help; only combo 5 tests
+benefit.
+
+To use it:
+
+1. There is no rosdep key for `pytest-retry`; it's declared once, in
+   `drqp_launch_testing`'s `setup.py` (`extras_require={'test': ['pytest-retry']}`)
+   — do not re-add it to `pyproject.toml`/`uv.lock`. Any package with
+   `<test_depend>drqp_launch_testing</test_depend>` picks it up transitively:
+   CI's `scripts/ros-dep.sh` runs
+   `docker/ros/deploy/install-overlay-python-requirements.py` after
+   `colcon build`, which flattens every generated `requires.txt` (including
+   extras sections) across the workspace into one `pip install`, so
+   `pytest-retry` ends up installed workspace-wide, not just for
+   `drqp_launch_testing` itself.
+2. When CI history (repeated reruns of the same combo-5 test, same failure
+   signature at the exit-code assertion) confirms this pattern for a specific
+   test, mark it `@pytest.mark.flaky(retries=3)`:
+
+```python
+@pytest.mark.launch(fixture=generate_test_description)
+@pytest.mark.flaky(retries=3)
+def test_node_behaviour(consumer, generate_test_description):
+    consumer.do_checks()
+    yield
+    assert_processes_exited_cleanly(generate_test_description[1])
+```
+
+- A genuine assertion failure earlier in the test body reproduces identically
+  on every retry and still fails the build — retries only rescue the
+  nondeterministic shutdown-crash case, they never mask a real regression.
+- Do **not** reach for `flaky` as a substitute for fixing the underlying
+  shutdown crash; use it only for tests with a confirmed history of this
+  specific failure mode, not preemptively.
+
 ## Fixture ordering gotcha
 
 An `autouse`/shared fixture that assumes the launched system is running MUST

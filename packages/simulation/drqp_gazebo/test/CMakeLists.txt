@@ -5,7 +5,7 @@ include(../../../cmake/RosIsolatedLaunchTest.cmake)
 
 set(drqp_gazebo_launch_tests
   test_robot_control_spawn.py
-  test_robot_control_nodes_and_clock.py
+  test_robot_smoke.py
   test_robot_control_movement_backward.py
   test_robot_control_movement_forward.py
   test_robot_control_movement_forward_sustained.py
