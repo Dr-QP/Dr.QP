@@ -47,6 +47,7 @@ from launch_ros.substitutions import FindPackageShare
 from launch_testing_ros import WaitForTopics
 from nav_msgs.msg import Odometry
 import pytest
+from rcl_interfaces.msg import Log
 import rclpy
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 from rosgraph_msgs.msg import Clock
@@ -158,6 +159,10 @@ class GazeboRobotControlBase:
     CONTROLLER_TIMEOUT = 60.0
     SIM_TIME_TIMEOUT = 60.0
     GZ_COMMAND_TIMEOUT = 10.0
+    # Non-blocking spin_once() calls per _spin_until() poll cycle, to drain a
+    # burst of ready callbacks (see _spin_until docstring) instead of
+    # processing at most one per cycle.
+    SPIN_DRAIN_ITERATIONS = 50
     MOVEMENT_DURATION = 5.0
     POSE_SETTLE_DURATION = 1.0
     # Sim seconds to run a stride before reversing it, with no settle time in
@@ -191,6 +196,12 @@ class GazeboRobotControlBase:
     # borderline flaky failures (e.g. -0.00996m vs a -0.01m threshold).
     MIN_LINEAR_MOVEMENT_DELTA = 0.008
     MIN_ROTATION_DELTA = 0.08
+    # A healthy full-throttle stride covers roughly 0.5-0.6m over MOVEMENT_DURATION
+    # (see the single-axis forward/backward/left/right assertions). Repeated MoveIt
+    # IK failures during a held diagonal stride were observed to cut that to
+    # ~0.10-0.115m, so this threshold sits well above the degraded distance and
+    # well below the healthy one.
+    MIN_DIAGONAL_STRIDE_MOVEMENT_DELTA = 0.25
 
     @classmethod
     def setup_class(cls) -> None:
@@ -221,6 +232,7 @@ class GazeboRobotControlBase:
         self.robot_pose_stamp_ns = None
         self.current_imu_message = None
         self.current_imu_stamp_ns = None
+        self.ik_failure_messages: list[str] = []
 
         qos_profile = QoSProfile(depth=1)
         qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
@@ -240,6 +252,7 @@ class GazeboRobotControlBase:
         )
         self.clock_sub = self.node.create_subscription(Clock, '/clock', self._clock_callback, 10)
         self.imu_sub = self.node.create_subscription(Imu, '/imu/data', self._imu_callback, 10)
+        self.rosout_sub = self.node.create_subscription(Log, '/rosout', self._rosout_callback, 50)
 
         self.event_pub = self.node.create_publisher(std_msgs.msg.String, '/robot_event', 10)
         self.movement_pub = self.node.create_publisher(
@@ -284,6 +297,10 @@ class GazeboRobotControlBase:
         self.current_imu_message = msg
         self.current_imu_stamp_ns = self._time_msg_to_nanoseconds(msg.header.stamp)
 
+    def _rosout_callback(self, msg: Log) -> None:
+        if msg.name == 'drqp_brain' and ('IK failed' in msg.msg or 'IK rejected' in msg.msg):
+            self.ik_failure_messages.append(msg.msg)
+
     @staticmethod
     def _time_msg_to_nanoseconds(msg: builtin_interfaces.msg.Time) -> int:
         return (msg.sec * 1_000_000_000) + msg.nanosec
@@ -307,7 +324,14 @@ class GazeboRobotControlBase:
         """Spin the node until a condition is met or timeout occurs."""
         start_time = time.monotonic()
         while time.monotonic() - start_time < timeout_sec:
-            rclpy.spin_once(self.node, timeout_sec=0.1)
+            # spin_once() dispatches at most one ready callback per call. A
+            # single call per poll cycle lets a bursty high-frequency topic
+            # (e.g. /clock) starve a rare one (e.g. /rosout warnings) out of
+            # the finite number of poll cycles in a bounded wait, even though
+            # the message was genuinely published. Drain everything currently
+            # ready before sleeping.
+            for _ in range(self.SPIN_DRAIN_ITERATIONS):
+                rclpy.spin_once(self.node, timeout_sec=0.0)
             if condition_fn():
                 return True
             time.sleep(0.1)
@@ -1132,6 +1156,7 @@ class GazeboRobotControlBase:
         """
         self._arm_robot()
         self._set_balance_mode(True)
+        ik_failures_before = len(self.ik_failure_messages)
 
         try:
             forward_delta, left_delta, _ = self._run_movement_and_measure(
@@ -1142,18 +1167,37 @@ class GazeboRobotControlBase:
         finally:
             self._set_balance_mode(False)
 
+        new_ik_failures = self.ik_failure_messages[ik_failures_before:]
         diagonal_delta = math.hypot(forward_delta, left_delta)
         self.node.get_logger().info(
             f'Balance mode diagonal stride delta (stride_x={stride_x}, stride_y={stride_y}): '
             f'forward_delta={forward_delta:.3f}m, left_delta={left_delta:.3f}m, '
-            f'magnitude={diagonal_delta:.3f}m'
+            f'magnitude={diagonal_delta:.3f}m, ik_failures_observed={len(new_ik_failures)}'
         )
-        assert diagonal_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
-            'Robot did not move with balance mode enabled at a diagonal '
-            f'full-throttle stride (possible MoveIt IK freeze): '
-            f'stride=({stride_x}, {stride_y}), forward_delta={forward_delta:.3f}m, '
-            f'left_delta={left_delta:.3f}m '
-            f'(expected magnitude > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
+        assert not new_ik_failures, (
+            'MoveIt IK failed while holding a diagonal full-throttle stride with '
+            f'balance mode enabled (stride=({stride_x}, {stride_y})): '
+            f'{len(new_ik_failures)} failure(s), first: {new_ik_failures[0]!r}'
+        )
+        assert diagonal_delta > self.MIN_DIAGONAL_STRIDE_MOVEMENT_DELTA, (
+            'Robot did not move enough with balance mode enabled at a diagonal '
+            f'full-throttle stride: stride=({stride_x}, {stride_y}), '
+            f'forward_delta={forward_delta:.3f}m, left_delta={left_delta:.3f}m, '
+            f'magnitude={diagonal_delta:.3f}m '
+            f'(expected > {self.MIN_DIAGONAL_STRIDE_MOVEMENT_DELTA}m)'
+        )
+
+    def assert_no_moveit_ik_failures(self) -> None:
+        """
+        Assert drqp_brain logged no "MoveIt IK failed"/"IK rejected" warnings.
+
+        Wired into the ``robot`` fixture teardown (see ``conftest.py``) so every
+        simulation test catches this class of failure automatically, not just the
+        tests in ``test_imu_balance_motion.py`` written specifically to provoke it.
+        """
+        assert not self.ik_failure_messages, (
+            f'MoveIt IK failed {len(self.ik_failure_messages)} time(s) during this '
+            f'test: first: {self.ik_failure_messages[0]!r}'
         )
 
     def assert_disarmed_posture(self) -> None:
