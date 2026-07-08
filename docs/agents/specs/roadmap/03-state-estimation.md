@@ -30,7 +30,7 @@ publishing `/odometry/filtered` and TF `odom → drqp/base_link` in sim and on h
 ## Algorithm (leg_odometry)
 
 Per `/joint_states` sample: FK via `drqp_kinematics` for stance feet; remove commanded body sway
-by expressing foot positions in the *neutral body frame* (undo `hexapod.body_transform` — requires
+by expressing foot positions in the _neutral body frame_ (undo `hexapod.body_transform` — requires
 brain to publish it or recompute from `MovementCommand`; simplest: include body transform in
 `GaitPhase` as `geometry_msgs/Transform body_transform`). Rigid 2D least-squares (x, y, yaw) of
 stance-foot displacement between samples ⇒ body twist; integrate for pose. Feet entering/leaving

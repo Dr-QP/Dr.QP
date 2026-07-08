@@ -20,17 +20,17 @@ slugs); read the guide for rationale, use the spec for execution.
 
 ## Specs
 
-| id | file | depends_on |
-|----|------|------------|
-| RM-01 | [01-baseline.md](01-baseline.md) | — |
-| RM-02 | [02-velocity-interface.md](02-velocity-interface.md) | RM-01 |
-| RM-03 | [03-state-estimation.md](03-state-estimation.md) | RM-02 |
-| RM-04 | [04-camera.md](04-camera.md) | RM-01 |
-| RM-05 | [05-localization-mapping.md](05-localization-mapping.md) | RM-03, RM-04 |
-| RM-06 | [06-navigation.md](06-navigation.md) | RM-05 |
-| RM-07 | [07-interaction.md](07-interaction.md) | RM-04 (nav tools need RM-06) |
-| RM-08 | [08-feet-terrain.md](08-feet-terrain.md) | RM-02 |
-| RM-09 | [09-rl-locomotion.md](09-rl-locomotion.md) | RM-02 (obs upgrades: RM-08) |
+| id    | file                                                     | depends_on                   |
+| ----- | -------------------------------------------------------- | ---------------------------- |
+| RM-01 | [01-baseline.md](01-baseline.md)                         | —                            |
+| RM-02 | [02-velocity-interface.md](02-velocity-interface.md)     | RM-01                        |
+| RM-03 | [03-state-estimation.md](03-state-estimation.md)         | RM-02                        |
+| RM-04 | [04-camera.md](04-camera.md)                             | RM-01                        |
+| RM-05 | [05-localization-mapping.md](05-localization-mapping.md) | RM-03, RM-04                 |
+| RM-06 | [06-navigation.md](06-navigation.md)                     | RM-05                        |
+| RM-07 | [07-interaction.md](07-interaction.md)                   | RM-04 (nav tools need RM-06) |
+| RM-08 | [08-feet-terrain.md](08-feet-terrain.md)                 | RM-02                        |
+| RM-09 | [09-rl-locomotion.md](09-rl-locomotion.md)               | RM-02 (obs upgrades: RM-08)  |
 
 Parallelizable branches: {RM-02→03→05→06}, {RM-04}, {RM-07 voice/LLM core}, {RM-08}, {RM-09 sim
 work}.

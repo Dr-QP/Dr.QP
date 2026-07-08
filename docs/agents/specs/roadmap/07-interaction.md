@@ -2,8 +2,15 @@
 id: RM-07
 title: Voice, LLM agent brain, and pet behavior engine
 status: proposed
-depends_on: [RM-04]   # conversation/nav tools additionally need RM-06
-packages: [drqp_robot_mcp, drqp_interfaces, "NEW: drqp_audio", "NEW: drqp_agent", "NEW: drqp_behavior"]
+depends_on: [RM-04] # conversation/nav tools additionally need RM-06
+packages:
+  [
+    drqp_robot_mcp,
+    drqp_interfaces,
+    'NEW: drqp_audio',
+    'NEW: drqp_agent',
+    'NEW: drqp_behavior',
+  ]
 ---
 
 # RM-07 — Interaction

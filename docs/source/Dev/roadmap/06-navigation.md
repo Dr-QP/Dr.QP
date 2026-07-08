@@ -18,7 +18,7 @@ configuration honest to a small hexapod:
 - **Costmaps**:
   - Global: static floor-plan/tag map (Phase 5) + inflation.
   - Local: this is the thin spot — with no depth sensor, start with the static map + generous
-    inflation and *slow speeds*. Add sensing incrementally (below).
+    inflation and _slow speeds_. Add sensing incrementally (below).
 - **Recoveries**: back up, rotate in place (both natural for a hexapod), and a custom "raise
   body & re-settle" behavior for leg snags.
 
@@ -35,7 +35,7 @@ configuration honest to a small hexapod:
 
 ## Behavior layer
 
-Nav2's behavior trees orchestrate a single navigation run. Above them sits the *pet* logic
+Nav2's behavior trees orchestrate a single navigation run. Above them sits the _pet_ logic
 (Phase 7), which decides **where** to go. This phase ships:
 
 - `NavigateToPose` + `NavigateThroughPoses` actions configured and tested.

@@ -21,7 +21,7 @@ liftoff and touchdown, eliminating touchdown impact and liftoff scuffing.
   rate; `dx/dt` is discontinuous at both swing boundaries (instant reversal between stance and
   swing speeds).
 - Phase wraparound uses `leg_phase %= 1.000001` (F13).
-- Stance is linear `+½ → −½` — this is *correct* (constant body velocity) and must not change.
+- Stance is linear `+½ → −½` — this is _correct_ (constant body velocity) and must not change.
 
 ## Target design
 
@@ -42,7 +42,7 @@ Notes:
 
 - Keep the generator parametric (unit step scaled downstream) — the offline stride-limit sweep
   and the walk controller both rely on that contract.
-- Zero *foot* velocity at the boundaries in the gait-offset frame means the touchdown velocity
+- Zero _foot_ velocity at the boundaries in the gait-offset frame means the touchdown velocity
   mismatch with stance is bounded by the stance speed itself (previously stance + peak swing
   speed); full ground-speed matching is a later refinement on top of twist steering (spec 06),
   not this spec.

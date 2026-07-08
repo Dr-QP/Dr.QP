@@ -1,6 +1,6 @@
 # Phase 7 — Communication, LLM brain, and pet personality
 
-This is where Dr.QP stops being a platform and starts being a *pet*. The phase has three layers
+This is where Dr.QP stops being a platform and starts being a _pet_. The phase has three layers
 that can be built mostly independently: **voice I/O**, an **LLM agent brain**, and a **behavior
 engine** that keeps the robot alive-feeling even when nobody is talking to it.
 
@@ -27,8 +27,8 @@ surface just needs to grow (navigation, camera, speech).
 - **ASR**: whisper.cpp `small`-class on the home server, or a cloud STT — behind one ROS
   service/action so backends swap freely.
 - **TTS**: Piper on the Pi or server (low latency, pleasant voices, fully local). The pet also
-  needs *non-verbal* audio — chirps and trills are more pet-like than sentences, and cheaper.
-- **LLM brain**: an agent loop (Claude API) with the MCP tool surface. It is *not* in the safety
+  needs _non-verbal_ audio — chirps and trills are more pet-like than sentences, and cheaper.
+- **LLM brain**: an agent loop (Claude API) with the MCP tool surface. It is _not_ in the safety
   path: every tool it calls goes through the same validated command topics with the same state
   machine, watchdogs, and kill switch. The LLM can suggest; the robot's reflexes decide.
 - **Grounding**: system prompt includes the semantic map (rooms, dock), robot state, battery, and
@@ -45,12 +45,12 @@ runs the day-to-day:
   trajectory like the existing init sequence), nap when battery is low, wander occasionally.
 - **Reactive behaviors**: turn toward loud sounds (mic array direction-of-arrival), greet a
   detected person (camera person detection — a tiny model on the Pi/accelerator), flinch on IMU
-  disturbance (being picked up → go limp / `torque_off` for safety — *pick-up detection is a
-  safety feature*).
+  disturbance (being picked up → go limp / `torque_off` for safety — _pick-up detection is a
+  safety feature_).
 - **Emotes as a first-class command**: `emote(happy | curious | sleepy | alert)` maps to body
   poses, gait flourishes, sounds, and (future) LED eyes. Exposed as an MCP tool so both the
   behavior engine and the LLM share the same vocabulary.
-- The LLM is invoked for *conversation and decisions*, on wake word or on behavior-engine
+- The LLM is invoked for _conversation and decisions_, on wake word or on behavior-engine
   escalation ("unknown person at door"), and its outputs are behavior-engine goals.
 
 ## Milestones

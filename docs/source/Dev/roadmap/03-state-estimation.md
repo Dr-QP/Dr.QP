@@ -3,7 +3,7 @@
 A robot that navigates needs a continuous answer to "how have I moved since I started?" — the
 `odom → base_link` transform. Wheeled robots get it from encoders; Dr.QP gets it from its legs.
 This phase builds **leg (kinematic) odometry**, fuses it with the IMU, and publishes the standard
-TF and `/odom` topic *from the robot itself* (today's `/odom` exists only in sim, as Gazebo ground
+TF and `/odom` topic _from the robot itself_ (today's `/odom` exists only in sim, as Gazebo ground
 truth).
 
 ## How leg odometry works on a hexapod
@@ -12,7 +12,7 @@ At every control tick the robot knows, from forward kinematics of `/joint_states
 is relative to the body. Feet that are **in stance** (on the ground) are stationary in the world,
 so if the stance feet moved backwards 6 mm relative to the body, the body moved forwards 6 mm in
 the world. Averaging over all stance feet (least-squares rigid transform) gives body translation
-*and* yaw per tick.
+_and_ yaw per tick.
 
 Until feet sensors exist (Phase 8), stance detection comes from the gait generator itself — the
 `ParametricGaitGenerator` knows exactly which legs are in stance at the current phase. That is an
@@ -37,11 +37,11 @@ gait phase (which legs are stance) ───────────┘         
    fuse `/odom_legs` (x, y, yaw velocities) + `/imu/data` (orientation, yaw rate). It owns the
    `odom → base_link` TF.
 3. **Frame contract**: `odom → drqp/base_link` from the EKF; `map → odom` reserved for Phase 5.
-   The Gazebo ground-truth odometry moves to `/odom_ground_truth` — it becomes the *evaluation*
+   The Gazebo ground-truth odometry moves to `/odom_ground_truth` — it becomes the _evaluation_
    signal, never a runtime input.
 4. **Body-pose subtlety**: the brain deliberately shifts the body relative to the feet (body
-   translation/rotation commands, balance mode). Leg odometry must measure *locomotion*, not body
-   sway — compute foot motion in the *neutral body frame* by removing the commanded
+   translation/rotation commands, balance mode). Leg odometry must measure _locomotion_, not body
+   sway — compute foot motion in the _neutral body frame_ by removing the commanded
    `body_transform` (the hexapod model already tracks it).
 
 ## Milestones
@@ -57,7 +57,7 @@ gait phase (which legs are stance) ───────────┘         
 ## Risks and notes
 
 - **Slip on smooth floors** is the dominant error source; that is expected. SLAM (Phase 5)
-  corrects drift globally — odometry only needs to be *locally* smooth and roughly scaled.
+  corrects drift globally — odometry only needs to be _locally_ smooth and roughly scaled.
 - The BNO055 provides fused orientation onboard; trust its yaw only relatively (magnetometer
   indoors is unreliable) — configure the EKF for `differential` yaw from IMU.
 - Covariance tuning is where this phase's real time goes. Budget for it.

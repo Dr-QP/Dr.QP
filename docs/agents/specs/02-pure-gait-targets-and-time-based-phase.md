@@ -80,7 +80,7 @@ def loop(self):
 
 ### Speed calibration
 
-Preserving *observed* robot speed is required: today's code advances 2 phase steps per tick, so
+Preserving _observed_ robot speed is required: today's code advances 2 phase steps per tick, so
 when the double-advance is removed, halve the effective cycle time to compensate. Concretely:
 current `phase_steps_per_cycle = [20, 25, 40]` at 8 fps with double-advance ⇒ observed cycle
 times `[1.25, 1.5625, 2.5]` s. Set `cycle_time_sec = {tripod: 1.25, ripple: 1.5625, wave: 2.5}`

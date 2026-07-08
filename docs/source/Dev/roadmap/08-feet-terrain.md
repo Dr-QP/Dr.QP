@@ -1,6 +1,6 @@
 # Phase 8 — Feet sensors and terrain adaptation
 
-Everything until now assumed flat floors and trusted the gait plan ("leg 3 *should* be in stance
+Everything until now assumed flat floors and trusted the gait plan ("leg 3 _should_ be in stance
 now"). Real homes have rugs, thresholds, toys, and socks. Ground-truth **foot contact** upgrades
 balance, odometry, and locomotion — and it is the single most valuable observation for the RL
 phase.
@@ -12,8 +12,8 @@ phase.
    `feet_contact` ROS node publishing per-leg booleans + raw force). Simple, robust, cheap.
 2. **Later — servo-side proprioception.** The planned upgrade to Dynamixel **XC430-T240BB-T**
    class servos brings current/load feedback per joint. Joint load + kinematics = contact force
-   *estimation* without foot electronics, plus torque telemetry the A1-16 bus simply does not
-   offer. The software contract below is designed so this swap changes the *source*, not the
+   _estimation_ without foot electronics, plus torque telemetry the A1-16 bus simply does not
+   offer. The software contract below is designed so this swap changes the _source_, not the
    consumers.
 
 **Contract**: a `FootContacts` message (per leg: `in_contact`, `force_estimate`, `confidence`)
@@ -22,7 +22,7 @@ so every consumer is developed and CI-tested in Gazebo before any soldering.
 
 ## What contact data unlocks (consumers, in order)
 
-1. **Leg odometry v2 (Phase 3 upgrade)**: use *measured* stance instead of gait-phase-assumed
+1. **Leg odometry v2 (Phase 3 upgrade)**: use _measured_ stance instead of gait-phase-assumed
    stance; ignore slipping feet (contact + unexpected motion). Expect a large drift improvement
    on rugs.
 2. **Touchdown adaptation**: end swing when contact fires, not when the spline ends. This single

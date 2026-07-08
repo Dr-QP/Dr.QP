@@ -2,8 +2,14 @@
 id: RM-09
 title: Reinforcement-learned locomotion
 status: proposed
-depends_on: [RM-02]   # observation upgrades from RM-08; policy rate gated by RM-01 bus benchmark
-packages: [drqp_control, drqp_gazebo, "NEW: drqp_rl (training, non-colcon ok)", "NEW: drqp_rl_runtime"]
+depends_on: [RM-02] # observation upgrades from RM-08; policy rate gated by RM-01 bus benchmark
+packages:
+  [
+    drqp_control,
+    drqp_gazebo,
+    'NEW: drqp_rl (training, non-colcon ok)',
+    'NEW: drqp_rl_runtime',
+  ]
 ---
 
 # RM-09 — RL locomotion

@@ -21,7 +21,7 @@ construction and no angle is offset twice or zero times.
   - **subtracted** when converting solved controller positions → model angles
     (`HexapodBrain.apply_joint_targets` in `brain_node.py`).
 - IK results (MoveIt or, post-spec-04, the analytic backend's output helper) are published
-  *without* the offsets, while `add_point_from_hexapod` applies them — two conventions coexist
+  _without_ the offsets, while `add_point_from_hexapod` applies them — two conventions coexist
   in the same message stream depending on which code path built the trajectory point. It works
   because each path is internally consistent, but it is a trap for the next contributor (F26).
 - The offsets encode where the model's zero pose sits relative to the URDF/servo zero — i.e.
@@ -57,7 +57,7 @@ command stream — that is the primary acceptance test.
 ## Out of scope
 
 - Per-servo trim calibration (a real future feature — belongs in `drqp_a1_16_driver` or
-  ros2_control offsets; note it in the docstring as explicitly *not* this mechanism).
+  ros2_control offsets; note it in the docstring as explicitly _not_ this mechanism).
 - Radians-native model internals beyond the boundary conversion (rest of F10).
 
 ## Test plan (write first)
