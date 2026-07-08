@@ -143,6 +143,27 @@ class MoveItPyLocomotionKinematics:
                 MOVEIT_IK_TIMEOUT_SEC,
             )
             if not solved:
+                # The warm seed (this leg's actual current joint state) can
+                # occasionally be a worse starting point for the numerical IK
+                # solver than the neutral home pose for an extreme target -- e.g.
+                # a diagonal stride combined with the IMU balance tilt correction
+                # can push a foot target well outside this leg's everyday range
+                # while the leg happens to be mid-swing. Retry once from the SRDF
+                # home pose for just this leg, without disturbing any other leg's
+                # already-solved joint state, so one bad seed does not turn into
+                # a lasting failure that repeats identically every tick.
+                robot_state.joint_positions = dict.fromkeys(
+                    self.controller_joint_names(leg), 0.0
+                )
+                robot_state.update()
+                solved = robot_state.set_from_ik(
+                    group_name,
+                    pose,
+                    tip_name,
+                    MOVEIT_IK_TIMEOUT_SEC,
+                )
+
+            if not solved:
                 return LocomotionKinematicsResult(
                     joint_targets={},
                     robot_state=robot_state,

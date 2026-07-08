@@ -32,6 +32,7 @@ from control_msgs.action import FollowJointTrajectory
 from drqp_brain.balance_controller import (
     apply_imu_balance,
     body_tilt_from_imu,
+    imu_balance_stride_scale,
 )
 from drqp_brain.instance_guard import InstanceAlreadyRunningError, InstanceGuard
 from drqp_brain.joint_trajectory_builder import (
@@ -337,9 +338,17 @@ class HexapodBrain(rclpy.node.Node):
                 self.current_movement.body_rotation.z,
             ]
         )
+        imu_body_tilt = self.get_imu_body_tilt()
+        stride_scale = imu_balance_stride_scale(
+            imu_body_tilt,
+            target_body_tilt=self.target_body_tilt,
+            gain=self.imu_balance_gain,
+            max_tilt_rad=self.imu_balance_max_tilt_rad,
+        )
+        stride_direction = stride_direction * stride_scale
         body_rotation = apply_imu_balance(
             body_rotation,
-            self.get_imu_body_tilt(),
+            imu_body_tilt,
             target_body_tilt=self.target_body_tilt,
             gain=self.imu_balance_gain,
             max_tilt_rad=self.imu_balance_max_tilt_rad,

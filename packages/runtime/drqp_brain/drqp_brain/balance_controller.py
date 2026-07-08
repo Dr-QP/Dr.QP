@@ -57,6 +57,43 @@ def body_tilt_from_imu(orientation) -> Point3D:
     return Point3D([roll, pitch, 0.0])
 
 
+def imu_balance_stride_scale(
+    measured_body_tilt: Point3D | None,
+    *,
+    target_body_tilt: Point3D | None = None,
+    gain: float = 1.0,
+    max_tilt_rad: float = np.pi / 4.0,
+    floor: float = 0.3,
+) -> float:
+    """
+    Return a stride-scaling factor in ``(0, 1]`` reflecting IMU balance saturation.
+
+    ``apply_imu_balance()`` silently clips the requested roll/pitch correction
+    (``tilt_error * gain``) to ``max_tilt_rad``. When the raw, unclipped
+    correction exceeds that bound, the body is more tilted than the corrector
+    can fully compensate for; continuing to command a full-throttle stride in
+    that situation pushes foot targets past what MoveIt IK can solve (e.g. a
+    diagonal stride combined with a saturating tilt correction). Scale the
+    stride down as saturation grows so the walker backs off automatically
+    instead of repeatedly failing IK on the same unreachable target.
+    """
+    if measured_body_tilt is None or max_tilt_rad <= 0.0:
+        return 1.0
+
+    tilt_error = measured_body_tilt
+    if target_body_tilt is not None:
+        tilt_error = measured_body_tilt - target_body_tilt
+
+    raw_correction = np.abs(tilt_error.numpy()[:2] * gain)
+    saturation = float(np.max(raw_correction)) / max_tilt_rad
+    if saturation <= 1.0:
+        return 1.0
+
+    # Ramp linearly from 1.0 at the saturation boundary down to `floor` once
+    # the raw correction reaches double the clamp, rather than stopping dead.
+    return float(np.clip(1.0 - (saturation - 1.0), floor, 1.0))
+
+
 def apply_imu_balance(
     body_rotation: Point3D,
     measured_body_tilt: Point3D | None,

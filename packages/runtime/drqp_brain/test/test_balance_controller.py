@@ -24,6 +24,7 @@ from drqp_brain.balance_controller import (
     apply_imu_balance,
     BASE_CENTER_TO_IMU_ROTATION,
     body_tilt_from_imu,
+    imu_balance_stride_scale,
 )
 from drqp_kinematics.geometry import Point3D
 from geometry_msgs.msg import Quaternion
@@ -108,6 +109,64 @@ def test_apply_imu_balance_clamps_applied_correction_after_gain_issue356():
     expected_rotation = R.from_euler('xyz', [-0.25, 0.25, 0.0], degrees=False)
 
     assert balanced_rotation.as_matrix() == pytest.approx(expected_rotation.as_matrix(), abs=1e-7)
+
+
+def test_imu_balance_stride_scale_is_full_when_no_measured_tilt():
+    assert imu_balance_stride_scale(None) == pytest.approx(1.0)
+
+
+def test_imu_balance_stride_scale_is_full_within_bounds():
+    scale = imu_balance_stride_scale(
+        Point3D([0.2, -0.2, 0.0]),
+        gain=1.0,
+        max_tilt_rad=0.25,
+    )
+
+    assert scale == pytest.approx(1.0)
+
+
+def test_imu_balance_stride_scale_is_full_at_the_saturation_boundary():
+    scale = imu_balance_stride_scale(
+        Point3D([0.25, 0.0, 0.0]),
+        gain=1.0,
+        max_tilt_rad=0.25,
+    )
+
+    assert scale == pytest.approx(1.0)
+
+
+def test_imu_balance_stride_scale_ramps_down_partway_through_saturation():
+    scale = imu_balance_stride_scale(
+        Point3D([0.375, 0.0, 0.0]),
+        gain=1.0,
+        max_tilt_rad=0.25,
+    )
+
+    assert scale == pytest.approx(0.5)
+
+
+def test_imu_balance_stride_scale_clamps_to_floor_when_deeply_saturated():
+    scale = imu_balance_stride_scale(
+        Point3D([0.5, 0.0, 0.0]),
+        gain=1.0,
+        max_tilt_rad=0.25,
+        floor=0.3,
+    )
+
+    assert scale == pytest.approx(0.3)
+
+
+def test_imu_balance_stride_scale_uses_correction_relative_to_target_tilt():
+    # Measured tilt matches the captured target, so the error (and correction) is
+    # zero even though the absolute measured tilt is well past max_tilt_rad.
+    scale = imu_balance_stride_scale(
+        Point3D([0.5, 0.0, 0.0]),
+        target_body_tilt=Point3D([0.5, 0.0, 0.0]),
+        gain=1.0,
+        max_tilt_rad=0.25,
+    )
+
+    assert scale == pytest.approx(1.0)
 
 
 def test_apply_imu_balance_holds_captured_target_orientation_issue356():
