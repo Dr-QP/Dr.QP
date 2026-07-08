@@ -57,7 +57,7 @@ command stream — that is the primary acceptance test.
 ## Out of scope
 
 - Per-servo trim calibration (a real future feature — belongs in `drqp_a1_16_driver` or
-  ros2_control offsets; note it in the docstring as explicitly _not_ this mechanism).
+  ros2*control offsets; note it in the docstring as explicitly \_not* this mechanism).
 - Radians-native model internals beyond the boundary conversion (rest of F10).
 
 ## Test plan (write first)

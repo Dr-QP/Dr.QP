@@ -331,7 +331,7 @@ _Files: `drqp_brain/brain_node.py`, `drqp_brain/joint_trajectory_builder.py`_
 - {bdg-warning}`F26` **Servo calibration constants live in the wrong layer.**
   `kFemurOffsetAngle = −13.11°`, `kTibiaOffsetAngle = −32.9°` are applied inside the trajectory
   builder and inverted in `apply_joint_targets`. These are mechanical zero offsets — they belong
-  in the URDF joint origins or ros2_control offsets, so that _one_ convention exists and MoveIt,
+  in the URDF joint origins or ros2*control offsets, so that \_one* convention exists and MoveIt,
   Gazebo, RViz, and the servos all agree by construction. (The fact that MoveIt IK results skip
   the offsets while `add_point_from_hexapod` applies them is a trap waiting for the next
   contributor.)
