@@ -26,7 +26,7 @@ same topic names, correct TF, and a stored calibration.
 
 Add a camera sensor to `gazebo.xacro` on the same link (gz-sim `camera` sensor), bridge
 `image` and `camera_info` in `drqp_gazebo_bridge.yml`, matching hardware topic names
-(`/camera/image_raw`, `/camera/camera_info`). The sim camera uses the *ideal* pinhole intrinsics
+(`/camera/image_raw`, `/camera/camera_info`). The sim camera uses the _ideal_ pinhole intrinsics
 from the SDF — good enough for developing every downstream consumer before hardware exists.
 
 ## Calibration

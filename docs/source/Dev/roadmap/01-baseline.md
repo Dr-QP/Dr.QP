@@ -31,12 +31,12 @@ Key facts, verified in code:
   (m/s, rad/s) yet.
 - **Gaits**: tripod, ripple, wave — generated parametrically per leg phase, with directional
   stride limits loaded from `drqp_brain/config/stride_limits.yaml`.
-- **IK**: `MoveItPyLocomotionKinematics` runs MoveItPy *in-process* for IK and whole-robot state
+- **IK**: `MoveItPyLocomotionKinematics` runs MoveItPy _in-process_ for IK and whole-robot state
   validation (collision-aware). Seeded from live `/joint_states`.
 - **Balance**: `/imu/data` (BNO055 on hardware, gz-sim IMU plugin in simulation) feeds a balance
   controller that scales stride and counter-rotates the body; toggled via `/robot/balance_mode`.
 - **Lifecycle**: a `python-statemachine` graph (`torque_off → initializing → torque_on →
-  finalizing → finalized`, plus `servos_rebooting`) driven by `/robot_event`, with scripted
+finalizing → finalized`, plus `servos_rebooting`) driven by `/robot_event`, with scripted
   init/finalize trajectories.
 - **Simulation**: `drqp_gazebo` spawns the URDF in gz-sim, bridges `/clock`, `/odom`
   (ground-truth model odometry), and `/imu/data`; the launch-test suite covers spawn, postures,
@@ -44,19 +44,19 @@ Key facts, verified in code:
 - **Agent access**: `drqp_robot_mcp` already exposes `simulation.*` and `robot.*` MCP tools
   (boot, move, walk_for_duration, recordings) — an important seed for the later LLM phase.
 
-## What is *not* there yet
+## What is _not_ there yet
 
 These gaps define the roadmap:
 
-| Gap | Blocks |
-|-----|--------|
-| No `geometry_msgs/Twist` interface; commands are normalized, not metric | Nav2, standard teleop, RL action bridging |
-| No odometry from the robot itself (`/odom` in sim is Gazebo ground truth) | SLAM, navigation, drift-aware balance |
-| No `odom → base_link` TF; TF tree is `robot_state_publisher` only | Everything nav |
-| Camera is an empty URDF link — no driver, no sim sensor, no bridge | Vision, SLAM, person detection |
-| No microphone/speaker hardware or audio stack | Voice interaction |
-| No feet contact sensing (and A1-16 servos expose no torque feedback) | Terrain adaptation, contact-aware RL |
-| 8 Hz brain loop and MoveItPy-in-the-loop IK | High-rate RL policies (they will bypass this path) |
+| Gap                                                                       | Blocks                                             |
+| ------------------------------------------------------------------------- | -------------------------------------------------- |
+| No `geometry_msgs/Twist` interface; commands are normalized, not metric   | Nav2, standard teleop, RL action bridging          |
+| No odometry from the robot itself (`/odom` in sim is Gazebo ground truth) | SLAM, navigation, drift-aware balance              |
+| No `odom → base_link` TF; TF tree is `robot_state_publisher` only         | Everything nav                                     |
+| Camera is an empty URDF link — no driver, no sim sensor, no bridge        | Vision, SLAM, person detection                     |
+| No microphone/speaker hardware or audio stack                             | Voice interaction                                  |
+| No feet contact sensing (and A1-16 servos expose no torque feedback)      | Terrain adaptation, contact-aware RL               |
+| 8 Hz brain loop and MoveItPy-in-the-loop IK                               | High-rate RL policies (they will bypass this path) |
 
 ## Hardening tasks worth doing now
 

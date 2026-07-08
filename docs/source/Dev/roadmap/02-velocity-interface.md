@@ -7,12 +7,12 @@ Nav2, teleop tools, and future RL policies can all drive.
 
 ## Goal
 
-Accept `geometry_msgs/Twist` on `/cmd_vel` and walk at *that actual metric velocity* (within
+Accept `geometry_msgs/Twist` on `/cmd_vel` and walk at _that actual metric velocity_ (within
 tolerance), while keeping the existing joystick/semantic layer fully working.
 
 ## Why this must come before navigation
 
-Nav2's controllers emit `cmd_vel` and *assume the base executes it*: local planning, obstacle
+Nav2's controllers emit `cmd_vel` and _assume the base executes it_: local planning, obstacle
 avoidance timing, and goal checking all rely on commanded ≈ executed velocity. A hexapod gait has
 a well-defined body velocity — stride length × step frequency for the active gait — so the mapping
 is derivable, then verifiable against ground truth in Gazebo.

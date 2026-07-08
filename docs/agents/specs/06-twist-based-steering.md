@@ -67,7 +67,7 @@ z: unchanged — swing height added exactly as today
 - For a proposed twist, compute each leg's extreme positions `foot_i(±½)` and check
   reachability with `LegModel.solve_ik` (spec 03) — plus the certified polar table as a cheap
   precheck if kept.
-- If any leg is unreachable, scale the *twist* by a single factor `k ∈ (0, 1]` (binary search
+- If any leg is unreachable, scale the _twist_ by a single factor `k ∈ (0, 1]` (binary search
   or closed-form against the workspace boundary) so all legs fit. This replaces
   `DirectionalStrideLimits.clamp_direction` L1 logic and covers combined stride+rotation and
   body-pose offsets exactly (F22 for the runtime path).
@@ -100,14 +100,14 @@ Integrate the committed twist per tick and publish `nav_msgs/Odometry` (open-loo
   (within tolerance) for the same `step_length` — regression against golden traces.
 - **Pure rotation equivalence**: `Δp = 0` reproduces today's turn-in-place arcs at the derived
   `ω_max` default.
-- **Composition exactness**: for combined `v, ω`, each stance foot stays fixed in the *world*
+- **Composition exactness**: for combined `v, ω`, each stance foot stays fixed in the _world_
   frame implied by the twist: `R_z(−s·Δθ)·(foot_i(s) − s·Δp) = r_i` for all sampled `s`.
 - **Isotropy**: command magnitude → stride magnitude is independent of direction (sweep 16
   directions, Euclidean).
 - **Saturation scalar**: an excessive twist is scaled so every leg's extreme targets solve with
   `reachable=True`; scaling preserves direction (`v`, `ω` scaled together).
 - **Angular-distance regression**: keep/extend the existing combined stride+rotation
-  quantitative test (issue #397 lineage) — it should get *stronger* guarantees under the twist
+  quantitative test (issue #397 lineage) — it should get _stronger_ guarantees under the twist
   formulation.
 - Launch test: combined stride+rotation walking in Gazebo with no clamp warnings at default
   command magnitudes.

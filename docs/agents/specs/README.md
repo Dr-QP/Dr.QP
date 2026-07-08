@@ -16,16 +16,16 @@ Finding IDs (`F1`…`F28`) referenced throughout are defined in the
 Specs are numbered in implementation order. Later specs assume earlier ones have landed unless
 the dependency table says otherwise.
 
-| Spec | Title | Fixes | Depends on |
-| --- | --- | --- | --- |
-| [01](01-clamp-moveit-ik-timeout.md) | Clamp MoveIt IK timeout | F1 | — |
-| [02](02-pure-gait-targets-and-time-based-phase.md) | Pure gait targets & time-based phase | F2, F15, F27, F28 | — |
-| [03](03-analytic-leg-ik-joint-limits-and-workspace.md) | Analytic leg IK: joint limits & workspace clamping | F8, F9, F10, F11, F23 | — |
-| [04](04-analytic-runtime-solver-with-moveit-oracle.md) | Analytic runtime solver, MoveIt as oracle | F3, F4, F5 | 02, 03 |
-| [05](05-cycloid-swing-profile.md) | Cycloid swing profile | F6, F13 | 02 (soft) |
-| [06](06-twist-based-steering.md) | Twist-based steering | F7, F16, F22 (partial) | 02, 03, 04 |
-| [07](07-single-source-servo-zero-offsets.md) | Single source for servo zero offsets | F26, F10 (partial) | 04 |
-| [08](08-raise-control-loop-rate.md) | Raise control loop rate | F25 | 02, 04 |
+| Spec                                                   | Title                                              | Fixes                  | Depends on |
+| ------------------------------------------------------ | -------------------------------------------------- | ---------------------- | ---------- |
+| [01](01-clamp-moveit-ik-timeout.md)                    | Clamp MoveIt IK timeout                            | F1                     | —          |
+| [02](02-pure-gait-targets-and-time-based-phase.md)     | Pure gait targets & time-based phase               | F2, F15, F27, F28      | —          |
+| [03](03-analytic-leg-ik-joint-limits-and-workspace.md) | Analytic leg IK: joint limits & workspace clamping | F8, F9, F10, F11, F23  | —          |
+| [04](04-analytic-runtime-solver-with-moveit-oracle.md) | Analytic runtime solver, MoveIt as oracle          | F3, F4, F5             | 02, 03     |
+| [05](05-cycloid-swing-profile.md)                      | Cycloid swing profile                              | F6, F13                | 02 (soft)  |
+| [06](06-twist-based-steering.md)                       | Twist-based steering                               | F7, F16, F22 (partial) | 02, 03, 04 |
+| [07](07-single-source-servo-zero-offsets.md)           | Single source for servo zero offsets               | F26, F10 (partial)     | 04         |
+| [08](08-raise-control-loop-rate.md)                    | Raise control loop rate                            | F25                    | 02, 04     |
 
 Dependency sketch:
 
@@ -51,7 +51,7 @@ Dependency sketch:
   moveit_py C++ crashes.
 - **Behavior preservation**: unless a spec explicitly says otherwise, observable walking
   behavior (gait cycle time, stride reach, topics, message types) must not change. Where a spec
-  intentionally changes behavior, it says so under *Behavior changes* and lists the tunables to
+  intentionally changes behavior, it says so under _Behavior changes_ and lists the tunables to
   re-tune.
 - **Docs**: when a spec lands, update the maturity/finding status in
   `docs/source/Dev/ik-locomotion-analysis.md` (mark the finding fixed with the PR number) and

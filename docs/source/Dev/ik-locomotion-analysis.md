@@ -20,7 +20,7 @@ test culture around all of it. The foundations are worth keeping.
 :::{important}
 **The central architectural tension:** a 3-DOF hexapod leg has a textbook closed-form IK — and
 the repo already implements it correctly in `drqp_kinematics` — yet the runtime control loop
-solves each leg with MoveIt's *numeric, iterative* KDL solver through in-process MoveItPy. That
+solves each leg with MoveIt's _numeric, iterative_ KDL solver through in-process MoveItPy. That
 choice buys collision/bounds validation but pays for it with a slow (8 Hz), failure-prone,
 binary-outcome hot path that has shaped much of the surrounding code: the 2-point lookahead
 workaround, tick-level rollback, dedupe keys, retry-from-home seeding, and the offline
@@ -74,22 +74,22 @@ JointTrajectoryBuilder → /joint_trajectory_controller  (2-point window)
 ros2_control → A1-16 servos / Gazebo        shadow FK: apply_joint_targets()
 ```
 
-| Layer | Where | Maturity |
-|---|---|---|
-| Analytic FK/IK model | `drqp_kinematics/models.py`, `geometry/` | {bdg-success}`solid` correct closed form; unused at runtime |
-| Runtime IK + validation | `drqp_brain/locomotion_kinematics.py`, `drqp_moveit/config` | {bdg-warning}`strained` wrong tool for the loop |
-| Gait generation | `drqp_brain/parametric_gait_generator.py` | {bdg-success}`solid` standard phase-offset scheme |
-| Steering / composition | `drqp_brain/walk_controller.py` | {bdg-warning}`heuristic` position mixing, unit mismatch |
-| Balance | `drqp_brain/balance_controller.py` | {bdg-warning}`early` P-only attitude, no contact |
-| Stride limits | `stride_limits.py`, `generate_stride_limits.py` | {bdg-success}`ahead of peers` translation-only today |
-| Execution | `joint_trajectory_builder.py`, `brain_node.py` | {bdg-warning}`low rate` 8 Hz, magic offsets |
+| Layer                   | Where                                                       | Maturity                                                    |
+| ----------------------- | ----------------------------------------------------------- | ----------------------------------------------------------- |
+| Analytic FK/IK model    | `drqp_kinematics/models.py`, `geometry/`                    | {bdg-success}`solid` correct closed form; unused at runtime |
+| Runtime IK + validation | `drqp_brain/locomotion_kinematics.py`, `drqp_moveit/config` | {bdg-warning}`strained` wrong tool for the loop             |
+| Gait generation         | `drqp_brain/parametric_gait_generator.py`                   | {bdg-success}`solid` standard phase-offset scheme           |
+| Steering / composition  | `drqp_brain/walk_controller.py`                             | {bdg-warning}`heuristic` position mixing, unit mismatch     |
+| Balance                 | `drqp_brain/balance_controller.py`                          | {bdg-warning}`early` P-only attitude, no contact            |
+| Stride limits           | `stride_limits.py`, `generate_stride_limits.py`             | {bdg-success}`ahead of peers` translation-only today        |
+| Execution               | `joint_trajectory_builder.py`, `brain_node.py`              | {bdg-warning}`low rate` 8 Hz, magic offsets                 |
 
 The kinematics theory behind the analytic layer is covered in the
 [kinematics model notebooks](kinematics-model.md).
 
 ## Analytic kinematics layer
 
-*Package: `drqp_kinematics`*
+_Package: `drqp_kinematics`_
 
 `LegModel.inverse_kinematics()` is the standard closed form for a yaw–pitch–pitch leg: coxa
 angle from `atan2(y, x)`, then a two-link planar solve by law of cosines in the (radial,
@@ -121,13 +121,13 @@ What holds this layer back from being the runtime solver:
 and workspace clamping is the norm, even on research platforms; numeric IK is reserved for
 ≥6-DOF arms or when orientation constraints make the closed form intractable. The usual pattern:
 solve analytically, clamp the target to the reachable annulus (a sphere-shell intersection per
-leg) *before* solving, and treat "clamped" as a soft signal for the gait layer rather than a
+leg) _before_ solving, and treat "clamped" as a soft signal for the gait layer rather than a
 failure.
 :::
 
 ## Runtime IK (MoveItPy)
 
-*Files: `drqp_brain/locomotion_kinematics.py`, `drqp_moveit/config/`*
+_Files: `drqp_brain/locomotion_kinematics.py`, `drqp_moveit/config/`_
 
 The runtime path builds an in-process MoveItPy from the node's own parameters, seeds a
 `RobotState` from measured `/joint_states` (a hard-won correctness lesson — the cold-seed
@@ -161,7 +161,7 @@ The engineering around the solver is careful. The solver choice is the problem.
 :::{tip}
 **Recommended target architecture: analytic first, MoveIt as oracle.** Promote
 `drqp_kinematics` to the runtime solver: add joint-limit checking and target clamping, return
-per-leg *(angles, clamped, margin)*. Keep `MoveItPyLocomotionKinematics` for
+per-leg _(angles, clamped, margin)_. Keep `MoveItPyLocomotionKinematics` for
 `generate_stride_limits`, launch tests, and an optional validation mode asserting both solvers
 agree within tolerance across the gait envelope (an excellent regression test for both). If you
 prefer to stay inside MoveIt abstractions, the equivalent move is writing an analytic
@@ -171,7 +171,7 @@ Python/numpy is simpler and faster.
 
 ## Gait generation
 
-*File: `drqp_brain/parametric_gait_generator.py`*
+_File: `drqp_brain/parametric_gait_generator.py`_
 
 The generator is the classic phase-offset scheme: each gait is a table of per-leg swing start
 phases plus a swing duration (duty factor = 1 − swing duration). The tables are correct —
@@ -181,7 +181,7 @@ possible. See also the [gait generation notebook](../notebooks/3_generating_gait
 
 - {bdg-warning}`F6` **Touchdown at maximum descent velocity.** Swing height is
   $z = \sin(\pi t)$, whose derivative at $t = 1$ is $-\pi$ — the foot hits the ground at its
-  *peak* vertical speed, and swing x is linear so the horizontal velocity is discontinuous at
+  _peak_ vertical speed, and swing x is linear so the horizontal velocity is discontinuous at
   both liftoff and touchdown (the foot must instantly reverse from forward swing speed to stance
   speed). In simulation this shows up as impact bounce and foot slip; on hardware it is servo
   stress and position error precisely at the moment the leg takes load. Standard fix: a profile
@@ -205,7 +205,7 @@ possible. See also the [gait generation notebook](../notebooks/3_generating_gait
 
 ## Steering & stride composition
 
-*File: `drqp_brain/walk_controller.py`*
+_File: `drqp_brain/walk_controller.py`_
 
 Translation is handled by rotating a nominal x-stride into the commanded direction — fine.
 Rotation reuses the gait phase as a turn parameter and rotates each neutral foot position about
@@ -213,7 +213,7 @@ body-z — also fine in isolation. The problems are in how the two combine and i
 
 - {bdg-warning}`F7` **Weighted position mixing distorts both commands.**
   `foot_target = stride·w_s + rotation·w_r` with weights normalized to sum to 1 means commanding
-  any rotation proportionally *reduces* translation (and vice versa), and the two inputs live in
+  any rotation proportionally _reduces_ translation (and vice versa), and the two inputs live in
   different units (stride ratio vs. rotation fraction of 45°/step). The result walks, but the
   mapping from joystick to body motion is nonlinear and speed-dependent, and stride-limit
   clamping (computed for pure translation) no longer bounds the combined motion — the exact gap
@@ -239,7 +239,7 @@ $\xi = (v_x, v_y, \omega_z)$. For each leg with neutral foot position $r_i$, the
 of the foot relative to the body during stance is $u_i = -(v + \omega \times r_i)$; the stride
 vector is $u_i$ integrated over stance time, and swing retraces it through the swing profile.
 This single formula replaces the direction transform, the rotation transform, and the mixing
-weights; translation and rotation compose exactly; each leg gets a *different, correct* stride
+weights; translation and rotation compose exactly; each leg gets a _different, correct_ stride
 (outer legs sweep farther in a turn, which the current shared-phase rotation approximates); and
 reachability can be enforced per leg by scaling $\xi$ — one scalar — until every stride fits its
 workspace. It also gives you dead-reckoned odometry for free (integrate the same twist).
@@ -248,7 +248,7 @@ OpenSHC, Free Gait descendants, and every modern quadruped controller steer this
 
 ## IMU balance
 
-*Files: `drqp_brain/balance_controller.py`, `drqp_brain/brain_node.py`*
+_Files: `drqp_brain/balance_controller.py`, `drqp_brain/brain_node.py`_
 
 The current design: recover body orientation from the Gazebo IMU through the fixed mount
 rotation, capture a target tilt when balance mode engages, apply a clipped proportional
@@ -289,7 +289,7 @@ at speeds hexapods rarely reach. Skipping (2) and (3) to tune (1) harder is the 
 
 ## Stride-limit calibration
 
-*Files: `drqp_brain/stride_limits.py`, `drqp_brain/generate_stride_limits.py`*
+_Files: `drqp_brain/stride_limits.py`, `drqp_brain/generate_stride_limits.py`_
 
 Precomputing a per-gait polar table of maximum safe step lengths by binary-searching full IK
 sweeps with a joint margin — this is a reachability map, and having it at all puts this codebase
@@ -311,11 +311,11 @@ clean. Gaps, all known or knowable:
 
 ## Control loop & execution
 
-*Files: `drqp_brain/brain_node.py`, `drqp_brain/joint_trajectory_builder.py`*
+_Files: `drqp_brain/brain_node.py`, `drqp_brain/joint_trajectory_builder.py`_
 
 - {bdg-warning}`F2` **The lookahead window double-advances the gait.** Each tick calls
   `next_step_targets` once for "now" and once more to fill the 2-point trajectory window — both
-  calls mutate `current_phase`. Every successful tick therefore advances the gait by *two* phase
+  calls mutate `current_phase`. Every successful tick therefore advances the gait by _two_ phase
   steps while ticks arrive at 1× fps, and the second trajectory point is usually preempted by
   the next publish. Consequences: actual cycle time is half what `phase_steps_per_cycle`
   implies, and walking speed silently changes if `walking_trajectory_points` changes. The fix
@@ -331,7 +331,7 @@ clean. Gaps, all known or knowable:
 - {bdg-warning}`F26` **Servo calibration constants live in the wrong layer.**
   `kFemurOffsetAngle = −13.11°`, `kTibiaOffsetAngle = −32.9°` are applied inside the trajectory
   builder and inverted in `apply_joint_targets`. These are mechanical zero offsets — they belong
-  in the URDF joint origins or ros2_control offsets, so that *one* convention exists and MoveIt,
+  in the URDF joint origins or ros2_control offsets, so that _one_ convention exists and MoveIt,
   Gazebo, RViz, and the servos all agree by construction. (The fact that MoveIt IK results skip
   the offsets while `add_point_from_hexapod` applies them is a trap waiting for the next
   contributor.)
@@ -357,7 +357,7 @@ graceful-degradation primitive. Numeric IK and full planners stay offline.
 ### Steering & gait
 
 **Twist-based stride computation** is the backbone. On top of it: duty factor and stride
-frequency as functions of commanded speed (constant swing *time*, variable stance time); gait
+frequency as functions of commanded speed (constant swing _time_, variable stance time); gait
 selection by speed/terrain (wave → ripple → tripod as speed rises); phase-remapped gait
 transitions; a start/stop sequencer. **CPG-based generators** (coupled oscillators) are the main
 alternative school — they buy smooth transitions and biological plausibility but make precise
@@ -453,43 +453,42 @@ Each item is independently shippable.
 
 ## Findings index
 
-| ID | Severity | Finding | Where |
-|---|---|---|---|
-| F1 | {bdg-danger}`critical` | 2.0 s per-call IK timeout vs 125 ms loop budget | `locomotion_kinematics.py:34,143` |
-| F2 | {bdg-warning}`high` | Lookahead window mutates phase → gait runs at 2× configured rate; speed coupled to `walking_trajectory_points` | `brain_node.py:417–437` |
-| F3 | {bdg-warning}`high` | Numeric iterative IK for closed-form 3-DOF chains in the hot loop; branch nondeterminism | `locomotion_kinematics.py`, `kinematics.yaml` |
-| F4 | {bdg-warning}`high` | All-or-nothing tick rollback on any IK failure → robot freezes instead of degrading | `brain_node.py:380–395, 504–522` |
-| F5 | {bdg-warning}`medium` | Bounds + self-collision validation on every tick (planning-time work at runtime) | `locomotion_kinematics.py:403–489` |
-| F6 | {bdg-warning}`medium` | Swing profile lands at max descent rate; horizontal velocity discontinuous at both ends | `parametric_gait_generator.py:119–129` |
-| F7 | {bdg-warning}`high` | Stride/rotation combined by normalized position averaging — unit mismatch, mutual attenuation, uncertified combined envelope | `walk_controller.py:175–181` |
-| F8 | {bdg-secondary}`low` | Analytic IK solvability flag ignored by callers | `walk_controller.py:224–226`, `models.py:255` |
-| F9 | {bdg-warning}`medium` | Analytic IK has no joint-limit awareness (blocks its promotion to runtime solver) | `models.py:265–311` |
-| F10 | {bdg-secondary}`low` | Degrees/radians/servo-offset conversions at every layer boundary | `models.py`, `joint_trajectory_builder.py`, `brain_node.py` |
-| F11 | {bdg-secondary}`low` | FK allocates transform chains + label strings per call in the control path | `models.py:219–252` |
-| F12 | {bdg-warning}`medium` | Tripod duty exactly 0.5 — zero double-support margin | `parametric_gait_generator.py:97–107` |
-| F13 | {bdg-secondary}`low` | `leg_phase %= 1.000001` epsilon hack | `parametric_gait_generator.py:115` |
-| F14 | {bdg-secondary}`low` | Gait switching discontinuous (no phase remap/transition) | `walk_controller.py:53–55` |
-| F15 | {bdg-warning}`medium` | Per-tick 0.3 exponential smoothing — time constant welded to fps | `walk_controller.py:117–121` |
-| F16 | {bdg-warning}`medium` | L1 norms for stride magnitude → diagonal anisotropy | `walk_controller.py:108–129`, `stride_limits.py:123` |
-| F17 | {bdg-warning}`medium` | Stop snaps all feet to neutral in one tick; start resets phase blindly | `walk_controller.py:138–143, 183` |
-| F18 | {bdg-warning}`medium` | Balance is P-only, unfiltered, un-slewed, at 8 Hz — oscillation risk on hardware | `balance_controller.py:97–121`, `brain_node.py:97` |
-| F19 | {bdg-warning}`medium` | Attitude-only correction; no support-polygon/contact awareness | `balance_controller.py` |
-| F20 | {bdg-secondary}`low` | Backoff ramp comment ("double the clamp") disagrees with math (1.7×) | `balance_controller.py:92–94` |
-| F21 | {bdg-secondary}`low` | No fusion fallback when an IMU backend lacks on-chip orientation | `imu_node.py` |
-| F22 | {bdg-warning}`medium` | Stride limits certify translation only — rotation/body-pose/balance offsets uncovered | `generate_stride_limits.py:184–189` |
-| F23 | {bdg-secondary}`low` | Joint limits hand-duplicated from URDF | `generate_stride_limits.py:48–52` |
-| F24 | {bdg-secondary}`low` | Stride-limit YAML regeneration not CI-enforced | — |
-| F25 | {bdg-warning}`medium` | 8 Hz control loop caps steering latency and balance bandwidth | `brain_node.py:93` |
-| F26 | {bdg-warning}`medium` | Servo zero offsets applied/inverted in trajectory layer instead of URDF/ros2_control | `joint_trajectory_builder.py:35–36`, `brain_node.py:493–501` |
-| F27 | {bdg-secondary}`low` | Dead `phase_steps_per_cycle` constructor argument (fps/2.5), overwritten every tick | `brain_node.py:227` |
-| F28 | {bdg-secondary}`low` | Rounded-float dedupe key compensating for stateful target generation | `brain_node.py:456–476` |
+| ID  | Severity               | Finding                                                                                                                      | Where                                                        |
+| --- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| F1  | {bdg-danger}`critical` | 2.0 s per-call IK timeout vs 125 ms loop budget                                                                              | `locomotion_kinematics.py:34,143`                            |
+| F2  | {bdg-warning}`high`    | Lookahead window mutates phase → gait runs at 2× configured rate; speed coupled to `walking_trajectory_points`               | `brain_node.py:417–437`                                      |
+| F3  | {bdg-warning}`high`    | Numeric iterative IK for closed-form 3-DOF chains in the hot loop; branch nondeterminism                                     | `locomotion_kinematics.py`, `kinematics.yaml`                |
+| F4  | {bdg-warning}`high`    | All-or-nothing tick rollback on any IK failure → robot freezes instead of degrading                                          | `brain_node.py:380–395, 504–522`                             |
+| F5  | {bdg-warning}`medium`  | Bounds + self-collision validation on every tick (planning-time work at runtime)                                             | `locomotion_kinematics.py:403–489`                           |
+| F6  | {bdg-warning}`medium`  | Swing profile lands at max descent rate; horizontal velocity discontinuous at both ends                                      | `parametric_gait_generator.py:119–129`                       |
+| F7  | {bdg-warning}`high`    | Stride/rotation combined by normalized position averaging — unit mismatch, mutual attenuation, uncertified combined envelope | `walk_controller.py:175–181`                                 |
+| F8  | {bdg-secondary}`low`   | Analytic IK solvability flag ignored by callers                                                                              | `walk_controller.py:224–226`, `models.py:255`                |
+| F9  | {bdg-warning}`medium`  | Analytic IK has no joint-limit awareness (blocks its promotion to runtime solver)                                            | `models.py:265–311`                                          |
+| F10 | {bdg-secondary}`low`   | Degrees/radians/servo-offset conversions at every layer boundary                                                             | `models.py`, `joint_trajectory_builder.py`, `brain_node.py`  |
+| F11 | {bdg-secondary}`low`   | FK allocates transform chains + label strings per call in the control path                                                   | `models.py:219–252`                                          |
+| F12 | {bdg-warning}`medium`  | Tripod duty exactly 0.5 — zero double-support margin                                                                         | `parametric_gait_generator.py:97–107`                        |
+| F13 | {bdg-secondary}`low`   | `leg_phase %= 1.000001` epsilon hack                                                                                         | `parametric_gait_generator.py:115`                           |
+| F14 | {bdg-secondary}`low`   | Gait switching discontinuous (no phase remap/transition)                                                                     | `walk_controller.py:53–55`                                   |
+| F15 | {bdg-warning}`medium`  | Per-tick 0.3 exponential smoothing — time constant welded to fps                                                             | `walk_controller.py:117–121`                                 |
+| F16 | {bdg-warning}`medium`  | L1 norms for stride magnitude → diagonal anisotropy                                                                          | `walk_controller.py:108–129`, `stride_limits.py:123`         |
+| F17 | {bdg-warning}`medium`  | Stop snaps all feet to neutral in one tick; start resets phase blindly                                                       | `walk_controller.py:138–143, 183`                            |
+| F18 | {bdg-warning}`medium`  | Balance is P-only, unfiltered, un-slewed, at 8 Hz — oscillation risk on hardware                                             | `balance_controller.py:97–121`, `brain_node.py:97`           |
+| F19 | {bdg-warning}`medium`  | Attitude-only correction; no support-polygon/contact awareness                                                               | `balance_controller.py`                                      |
+| F20 | {bdg-secondary}`low`   | Backoff ramp comment ("double the clamp") disagrees with math (1.7×)                                                         | `balance_controller.py:92–94`                                |
+| F21 | {bdg-secondary}`low`   | No fusion fallback when an IMU backend lacks on-chip orientation                                                             | `imu_node.py`                                                |
+| F22 | {bdg-warning}`medium`  | Stride limits certify translation only — rotation/body-pose/balance offsets uncovered                                        | `generate_stride_limits.py:184–189`                          |
+| F23 | {bdg-secondary}`low`   | Joint limits hand-duplicated from URDF                                                                                       | `generate_stride_limits.py:48–52`                            |
+| F24 | {bdg-secondary}`low`   | Stride-limit YAML regeneration not CI-enforced                                                                               | —                                                            |
+| F25 | {bdg-warning}`medium`  | 8 Hz control loop caps steering latency and balance bandwidth                                                                | `brain_node.py:93`                                           |
+| F26 | {bdg-warning}`medium`  | Servo zero offsets applied/inverted in trajectory layer instead of URDF/ros2_control                                         | `joint_trajectory_builder.py:35–36`, `brain_node.py:493–501` |
+| F27 | {bdg-secondary}`low`   | Dead `phase_steps_per_cycle` constructor argument (fps/2.5), overwritten every tick                                          | `brain_node.py:227`                                          |
+| F28 | {bdg-secondary}`low`   | Rounded-float dedupe key compensating for stateful target generation                                                         | `brain_node.py:456–476`                                      |
 
 ## Suggested reading
 
 - **OpenSHC / Syropod High-level Controller** (CSIRO) — the closest open-source reference for
   everything in the practice primer: twist steering, Bézier swings, gait sequencing, admittance,
-  pose control. Its paper ("OpenSHC: A Versatile Multilegged Robot Controller", IEEE Access
-  2020) doubles as a design document.
+  pose control. Its paper ("OpenSHC: A Versatile Multilegged Robot Controller", IEEE Access 2020) doubles as a design document.
 - **Siciliano & Khatib (eds.), Springer Handbook of Robotics** — chapter on legged robots for
   stability margins and gait theory.
 - **Raibert, Legged Robots That Balance** — the foot-placement heuristic and the mindset of

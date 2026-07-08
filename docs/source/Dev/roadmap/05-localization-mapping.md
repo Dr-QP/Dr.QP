@@ -6,7 +6,7 @@ and an **ambitious track** — the pet should start navigating with the simple o
 
 ## The constraint that shapes everything
 
-Dr.QP has a *single fixed monocular camera* and a Raspberry Pi. Classic dense visual SLAM
+Dr.QP has a _single fixed monocular camera_ and a Raspberry Pi. Classic dense visual SLAM
 (RTAB-Map with RGB-D, stereo VIO) is off the table onboard. Monocular SLAM has unobservable scale
 and struggles with a bouncing, low viewpoint. So:
 
@@ -25,7 +25,7 @@ charging dock). Then:
 3. The "map" is a hand-made YAML of tag poses + a floor plan occupancy grid (drawn once, or traced
    from a phone LiDAR scan) for Nav2.
 
-This gives *reliable, restartable* global localization in a real home for a weekend of work, and
+This gives _reliable, restartable_ global localization in a real home for a weekend of work, and
 it never fights fur-kicked rugs or lighting changes. The charging dock gets a tag by definition —
 docking becomes trivial later.
 
@@ -47,7 +47,7 @@ Once the pragmatic track works, upgrade the same interfaces:
 ## Map lifecycle for a home pet
 
 - Maps persist across reboots (`map_server` YAML + image for the grid; tag YAML for anchors).
-- Rooms get *names* ("kitchen", "dock") in a semantic YAML — Phase 7's LLM will ground
+- Rooms get _names_ ("kitchen", "dock") in a semantic YAML — Phase 7's LLM will ground
   "go to the kitchen" through it.
 - Re-mapping is an explicit maintenance action, not a background process, until the ambitious
   track is trusted.

@@ -3,8 +3,8 @@
 Dr.QP today is a hexapod that walks nicely under joystick control: three parametric gaits,
 MoveIt-validated IK, IMU-assisted balancing, a Gazebo simulation with a solid launch-test suite.
 The ultimate goal is much bigger: **an autonomous AI home pet** that navigates the home on its own,
-sees with a front-facing camera, communicates with people, and eventually *learns its own
-locomotion* with reinforcement learning to exploit its servos and geometry to the fullest.
+sees with a front-facing camera, communicates with people, and eventually _learns its own
+locomotion_ with reinforcement learning to exploit its servos and geometry to the fullest.
 
 This section is the map between those two points. It is written for humans; each phase also has a
 matching AI-agent spec in
@@ -23,17 +23,17 @@ that turns the same content into precise, testable work items.
 
 ## Phase overview
 
-| # | Phase | Unlocks | Depends on |
-|---|-------|---------|------------|
-| 1 | {doc}`01-baseline` | Shared understanding, hardening targets | — |
-| 2 | {doc}`02-velocity-interface` | Standard `cmd_vel` control, metric motion | 1 |
-| 3 | {doc}`03-state-estimation` | `odom → base_link` TF, fused pose | 2 |
-| 4 | {doc}`04-camera` | Images on robot and in sim | 1 |
-| 5 | {doc}`05-localization-mapping` | "Where am I?" in the home | 3, 4 |
-| 6 | {doc}`06-navigation` | "Go to the kitchen" | 5 |
-| 7 | {doc}`07-interaction` | Voice, LLM brain, pet personality | 4 (partially parallel) |
-| 8 | {doc}`08-feet-terrain` | Ground truth contact, rough terrain | 2 |
-| 9 | {doc}`09-rl-locomotion` | Learned gaits, full hardware potential | 2, 8 (sim work parallel) |
+| #   | Phase                          | Unlocks                                   | Depends on               |
+| --- | ------------------------------ | ----------------------------------------- | ------------------------ |
+| 1   | {doc}`01-baseline`             | Shared understanding, hardening targets   | —                        |
+| 2   | {doc}`02-velocity-interface`   | Standard `cmd_vel` control, metric motion | 1                        |
+| 3   | {doc}`03-state-estimation`     | `odom → base_link` TF, fused pose         | 2                        |
+| 4   | {doc}`04-camera`               | Images on robot and in sim                | 1                        |
+| 5   | {doc}`05-localization-mapping` | "Where am I?" in the home                 | 3, 4                     |
+| 6   | {doc}`06-navigation`           | "Go to the kitchen"                       | 5                        |
+| 7   | {doc}`07-interaction`          | Voice, LLM brain, pet personality         | 4 (partially parallel)   |
+| 8   | {doc}`08-feet-terrain`         | Ground truth contact, rough terrain       | 2                        |
+| 9   | {doc}`09-rl-locomotion`        | Learned gaits, full hardware potential    | 2, 8 (sim work parallel) |
 
 Dependency sketch — phases on separate branches can run in parallel:
 
@@ -52,13 +52,13 @@ Dependency sketch — phases on separate branches can run in parallel:
 1. **Standard interfaces first.** Nav2, SLAM packages, teleop tools, and simulators all speak
    `geometry_msgs/Twist`, `nav_msgs/Odometry`, `sensor_msgs/Image`, and TF. The earlier Dr.QP
    speaks them natively, the more of the ROS ecosystem plugs in for free. The custom
-   `MovementCommand` stays as the *semantic* layer (body pose, gait choice) on top.
+   `MovementCommand` stays as the _semantic_ layer (body pose, gait choice) on top.
 2. **Simulation is the contract.** Every phase lands with Gazebo coverage and `launch_pytest`
    tests, exactly like the existing `drqp_gazebo` suite. Hardware bring-up follows sim, never
    precedes it.
 3. **The Pi is small; the home is networked.** A Raspberry Pi cannot run visual SLAM, an LLM, ASR,
    and gait IK at once. The architecture explicitly allows heavy perception/AI nodes to run on a
-   home server over Wi-Fi (DDS makes this transparent), while everything needed for *safety* —
+   home server over Wi-Fi (DDS makes this transparent), while everything needed for _safety_ —
    servo control, balance, fall protection, kill switch — stays on the robot.
 4. **Each phase is useful on its own.** No phase requires a later one to justify itself: metric
    velocity control improves teleop, state estimation improves balance, the camera enables
@@ -66,16 +66,16 @@ Dependency sketch — phases on separate branches can run in parallel:
 
 ## Where the code lives today
 
-| Layer | Package(s) |
-|-------|------------|
-| Serial + servo protocol | `drqp_serial`, `drqp_a1_16_driver` |
-| Hardware interface, URDF, controllers | `drqp_control` (ros2_control + `joint_trajectory_controller`) |
-| Kinematics models | `drqp_kinematics`, `drqp_moveit` |
-| Gaits, IK orchestration, state machine, IMU | `drqp_brain` |
-| Input | `drqp_joy` (SDL3 game controller), `drqp_keyboard_control` |
-| Messages | `drqp_interfaces` (`MovementCommand`, `RobotCommand`, `HapticEffect`) |
-| Simulation + tests | `drqp_gazebo` |
-| Agent tooling | `drqp_robot_mcp` (FastMCP server driving sim and robot) |
+| Layer                                       | Package(s)                                                            |
+| ------------------------------------------- | --------------------------------------------------------------------- |
+| Serial + servo protocol                     | `drqp_serial`, `drqp_a1_16_driver`                                    |
+| Hardware interface, URDF, controllers       | `drqp_control` (ros2_control + `joint_trajectory_controller`)         |
+| Kinematics models                           | `drqp_kinematics`, `drqp_moveit`                                      |
+| Gaits, IK orchestration, state machine, IMU | `drqp_brain`                                                          |
+| Input                                       | `drqp_joy` (SDL3 game controller), `drqp_keyboard_control`            |
+| Messages                                    | `drqp_interfaces` (`MovementCommand`, `RobotCommand`, `HapticEffect`) |
+| Simulation + tests                          | `drqp_gazebo`                                                         |
+| Agent tooling                               | `drqp_robot_mcp` (FastMCP server driving sim and robot)               |
 
 ```{toctree}
 :maxdepth: 1

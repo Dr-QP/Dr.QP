@@ -3,7 +3,7 @@ id: RM-05
 title: Home localization and mapping (AprilTag anchors first)
 status: proposed
 depends_on: [RM-03, RM-04]
-packages: [drqp_gazebo, "NEW: drqp_localization"]
+packages: [drqp_gazebo, 'NEW: drqp_localization']
 ---
 
 # RM-05 — Localization and mapping

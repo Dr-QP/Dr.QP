@@ -3,7 +3,7 @@ id: RM-06
 title: Autonomous navigation (Nav2)
 status: proposed
 depends_on: [RM-05]
-packages: [drqp_gazebo, drqp_robot_mcp, "NEW: drqp_navigation"]
+packages: [drqp_gazebo, drqp_robot_mcp, 'NEW: drqp_navigation']
 ---
 
 # RM-06 — Navigation
