@@ -152,9 +152,7 @@ class MoveItPyLocomotionKinematics:
                 # home pose for just this leg, without disturbing any other leg's
                 # already-solved joint state, so one bad seed does not turn into
                 # a lasting failure that repeats identically every tick.
-                robot_state.joint_positions = dict.fromkeys(
-                    self.controller_joint_names(leg), 0.0
-                )
+                robot_state.joint_positions = dict.fromkeys(self.controller_joint_names(leg), 0.0)
                 robot_state.update()
                 solved = robot_state.set_from_ik(
                     group_name,

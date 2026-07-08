@@ -399,9 +399,7 @@ def test_moveit_py_solver_retries_failed_ik_from_home_pose_for_that_leg_only(hex
 
         def set_from_ik(self, group_name, pose, tip_name, timeout):
             self._attempts += 1
-            self.ik_calls.append(
-                (group_name, pose, tip_name, timeout, dict(self.joint_positions))
-            )
+            self.ik_calls.append((group_name, pose, tip_name, timeout, dict(self.joint_positions)))
             if self._attempts == 1:
                 return False
             self.group_positions[group_name] = [0.1, 0.2, 0.3]
@@ -429,9 +427,7 @@ def test_moveit_py_solver_retries_failed_ik_from_home_pose_for_that_leg_only(hex
     first_attempt_seed = robot_state.ik_calls[0][4]
     second_attempt_seed = robot_state.ik_calls[1][4]
     for joint_name in leg_joint_names:
-        assert first_attempt_seed[joint_name] == pytest.approx(
-            joint_name_to_position[joint_name]
-        )
+        assert first_attempt_seed[joint_name] == pytest.approx(joint_name_to_position[joint_name])
         assert second_attempt_seed[joint_name] == pytest.approx(0.0)
 
 
