@@ -90,23 +90,19 @@ class TestWalkController:
         for at_rest, after_step in zip(feet_at_rest, feet_at_zero_step):
             assert at_rest == after_step
 
-        walker.next_step(stride_direction=Point3D([1, 0, 0]), rotation_direction=0.0)
-        assert walker.current_direction == Point3D([0.3, 0, 0]), 'Direction is ramping up 1'
-
-        walker.next_step(stride_direction=Point3D([1, 0, 0]), rotation_direction=0.0)
-        assert walker.current_direction == Point3D([0.51, 0, 0]), 'Direction is ramping up 2'
-
-        walker.next_step(stride_direction=Point3D([1, 0, 0]), rotation_direction=0.0)
-        assert walker.current_direction == Point3D([0.657, 0, 0]), 'Direction is ramping up 3'
-
-        walker.next_step(stride_direction=Point3D([0, 0, 0]), rotation_direction=0.0)
-        assert walker.current_direction == Point3D([0.4599, 0, 0]), 'Direction is ramping down 1'
-
-        walker.next_step(stride_direction=Point3D([0, 0, 0]), rotation_direction=0.0)
-        assert walker.current_direction == Point3D([0.3219, 0, 0]), 'Direction is ramping down 2'
-
-        walker.next_step(stride_direction=Point3D([0, 0, 0]), rotation_direction=0.0)
-        assert walker.current_direction == Point3D([0.2253, 0, 0]), 'Direction is ramping down 3'
+        # Each entry drives one step with the given stride_direction and pins the
+        # resulting current_direction as it ramps up towards, then down from, [1, 0, 0].
+        ramping_steps = [
+            (Point3D([1, 0, 0]), Point3D([0.3, 0, 0]), 'Direction is ramping up 1'),
+            (Point3D([1, 0, 0]), Point3D([0.51, 0, 0]), 'Direction is ramping up 2'),
+            (Point3D([1, 0, 0]), Point3D([0.657, 0, 0]), 'Direction is ramping up 3'),
+            (Point3D([0, 0, 0]), Point3D([0.4599, 0, 0]), 'Direction is ramping down 1'),
+            (Point3D([0, 0, 0]), Point3D([0.3219, 0, 0]), 'Direction is ramping down 2'),
+            (Point3D([0, 0, 0]), Point3D([0.2253, 0, 0]), 'Direction is ramping down 3'),
+        ]
+        for stride_direction, expected_direction, message in ramping_steps:
+            walker.next_step(stride_direction=stride_direction, rotation_direction=0.0)
+            assert walker.current_direction == expected_direction, message
 
         for _ in range(10):
             walker.next_step(stride_direction=Point3D([0, 0, 0]), rotation_direction=0.0)
@@ -169,35 +165,23 @@ class TestWalkController:
         for at_rest, after_step in zip(feet_at_rest, feet_at_zero_step):
             assert at_rest == after_step
 
-        walker.next_step(stride_direction=Point3D([0, 0, 0]), rotation_direction=1.0)
-        assert walker.current_rotation_direction == pytest.approx(0.3, rel=1e-3), (
-            'Rotation ratio is ramping up 1'
-        )
-
-        walker.next_step(stride_direction=Point3D([0, 0, 0]), rotation_direction=1.0)
-        assert walker.current_rotation_direction == pytest.approx(0.51, rel=1e-3), (
-            'Rotation ratio is ramping up 2'
-        )
-
-        walker.next_step(stride_direction=Point3D([0, 0, 0]), rotation_direction=1.0)
-        assert walker.current_rotation_direction == pytest.approx(0.657, rel=1e-3), (
-            'Rotation ratio is ramping up 3'
-        )
-
-        walker.next_step(stride_direction=Point3D([0, 0, 0]), rotation_direction=0.0)
-        assert walker.current_rotation_direction == pytest.approx(0.4599, rel=1e-3), (
-            'Rotation ratio is ramping down 1'
-        )
-
-        walker.next_step(stride_direction=Point3D([0, 0, 0]), rotation_direction=0.0)
-        assert walker.current_rotation_direction == pytest.approx(0.3219, rel=1e-3), (
-            'Rotation ratio is ramping down 2'
-        )
-
-        walker.next_step(stride_direction=Point3D([0, 0, 0]), rotation_direction=0.0)
-        assert walker.current_rotation_direction == pytest.approx(0.2253, rel=1e-3), (
-            'Rotation ratio is ramping down 3'
-        )
+        # Each entry drives one step with the given rotation_direction and pins the
+        # resulting current_rotation_direction as it ramps up towards, then down from, 1.0.
+        ramping_steps = [
+            (1.0, 0.3, 'Rotation ratio is ramping up 1'),
+            (1.0, 0.51, 'Rotation ratio is ramping up 2'),
+            (1.0, 0.657, 'Rotation ratio is ramping up 3'),
+            (0.0, 0.4599, 'Rotation ratio is ramping down 1'),
+            (0.0, 0.3219, 'Rotation ratio is ramping down 2'),
+            (0.0, 0.2253, 'Rotation ratio is ramping down 3'),
+        ]
+        for rotation_direction, expected_rotation, message in ramping_steps:
+            walker.next_step(
+                stride_direction=Point3D([0, 0, 0]), rotation_direction=rotation_direction
+            )
+            assert walker.current_rotation_direction == pytest.approx(
+                expected_rotation, rel=1e-3
+            ), message
 
         for _ in range(10):
             walker.next_step(stride_direction=Point3D([0, 0, 0]), rotation_direction=0.0)
