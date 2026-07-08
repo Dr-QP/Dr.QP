@@ -20,10 +20,11 @@ contact with sloped terrain.
 
 ## Control idea
 
-The balancing loop uses the orientation reported on `/imu/data` directly as the
-robot body attitude. IMU publishers are responsible for any sensor-to-body
-conversion before publishing, so `drqp_brain` no longer compensates for IMU
-mount rotation or looks up an IMU-to-base transform.
+The balancing loop derives body attitude from the orientation reported on
+`/imu/data`. The IMU chip is mounted on the body at a fixed, known rotation
+(the `base_center_to_imu` joint in `body.urdf.xacro`), so `body_tilt_from_imu`
+de-rotates that fixed mount rotation from the reported orientation to recover
+body roll/pitch, instead of looking up an IMU-to-base transform at runtime.
 
 The robot model already applies body rotation through the inverse-kinematics
 body transform, so balancing is implemented as a small correction added to the
@@ -50,9 +51,11 @@ target.
 
 ## Extracting body tilt
 
-`body_tilt_from_imu` extracts roll and pitch directly from the `/imu/data`
-orientation, since that orientation is already expressed in the robot body
-frame. Yaw is dropped because balancing only corrects roll and pitch.
+`body_tilt_from_imu` recovers roll and pitch from the raw `/imu/data`
+orientation by de-rotating the fixed IMU mount rotation
+(`BASE_CENTER_TO_IMU_ROTATION`): since the IMU is rigidly mounted on the body,
+its reported orientation is `imu = body * mount`, so `body = imu * mount.inv()`.
+Yaw is dropped because balancing only corrects roll and pitch.
 
 `body_tilt_from_imu` only reads the `x`, `y`, `z`, `w` fields of the
 orientation, so this notebook uses a plain stand-in for
@@ -62,7 +65,7 @@ this environment does not have ROS installed:
 ```{code-cell} ipython3
 from dataclasses import dataclass
 
-from drqp_brain.balance_controller import body_tilt_from_imu
+from drqp_brain.balance_controller import BASE_CENTER_TO_IMU_ROTATION, body_tilt_from_imu
 from scipy.spatial.transform import Rotation as R
 
 
@@ -75,7 +78,8 @@ class Quaternion:
 
 
 body_in_world = R.from_euler('xyz', [0.10, -0.06, 0.25], degrees=False)
-qx, qy, qz, qw = body_in_world.as_quat()
+imu_in_world = body_in_world * BASE_CENTER_TO_IMU_ROTATION
+qx, qy, qz, qw = imu_in_world.as_quat()
 
 body_tilt_from_imu(Quaternion(x=qx, y=qy, z=qz, w=qw))
 ```

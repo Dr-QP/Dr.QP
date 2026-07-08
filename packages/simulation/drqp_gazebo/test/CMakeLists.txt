@@ -13,6 +13,7 @@ set(drqp_gazebo_full_launch_tests
   test_robot_control_balance_mode.py
   test_balance_board_armed.py
   test_balance_board_motion_response.py
+  test_imu_balance_motion.py
   test_robot_control_movement_backward.py
   test_robot_control_movement_forward.py
   test_robot_control_movement_forward_sustained.py

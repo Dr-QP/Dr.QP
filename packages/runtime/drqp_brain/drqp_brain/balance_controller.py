@@ -21,6 +21,7 @@
 # THE SOFTWARE.
 
 from drqp_kinematics.geometry import Point3D
+from geometry_msgs.msg import Quaternion
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
@@ -37,7 +38,7 @@ from scipy.spatial.transform import Rotation as R
 BASE_CENTER_TO_IMU_ROTATION = R.from_euler('xyz', [np.pi, 0.0, np.pi / 2.0])
 
 
-def body_tilt_from_imu(orientation) -> Point3D:
+def body_tilt_from_imu(orientation: Quaternion) -> Point3D:
     """
     Return body roll and pitch in radians from a raw IMU quaternion.
 
