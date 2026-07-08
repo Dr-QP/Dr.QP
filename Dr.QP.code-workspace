@@ -159,6 +159,21 @@
           // "FASTDDS_BUILTIN_TRANSPORTS": "UDPv4"
         },
         "python": "/usr/bin/python3",
+      },
+      {
+        "name": "pytest",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "pytest",
+        "args": [
+          // source ./scripts/setup.bash in the debug shell once it opens
+          "${workspaceFolder}/packages/simulation/drqp_gazebo/test/test_robot_control_balance_mode.py"
+        ],
+        "console": "integratedTerminal",
+        "python": "/usr/bin/python3",
+        "env": {
+          "DRQP_GAZEBO_TEST_MODE": "all"
+        },
       }
     ]
   },

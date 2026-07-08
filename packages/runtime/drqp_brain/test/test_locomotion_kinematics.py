@@ -140,6 +140,15 @@ class FakeMoveItRobotState:
         self.group_positions = {}
         self.ik_calls = []
         self.update_count = 0
+        self._joint_positions = {}
+
+    @property
+    def joint_positions(self):
+        return dict(self._joint_positions)
+
+    @joint_positions.setter
+    def joint_positions(self, positions):
+        self._joint_positions.update(positions)
 
     def set_joint_group_positions(self, group_name, positions):
         self.group_positions[group_name] = list(positions)
@@ -320,6 +329,106 @@ def test_moveit_py_solver_uses_in_process_robot_state_ik(hexapod):
     }
     assert result.backend_name == 'moveit_py'
     assert result.validated
+
+
+def test_moveit_py_solver_seeds_robot_state_from_latest_joint_state(hexapod):
+    """
+    IK solves must warm-start from the robot's actual pose, not the SRDF default.
+
+    Regression test: cold-seeding every solve from the default pose (instead of
+    latest_joint_state) makes IK convergence near the workspace boundary depend only
+    on the target and not on continuity with the previous solution. Combined with
+    brain_node's rollback-on-failure, that turns a single failed solve near the
+    boundary (e.g. full-throttle backward walking with IMU balance correction) into
+    a persistent IK "freeze", since every retry is cold-seeded identically.
+    """
+    node = _node_with_moveit_params()
+    created_robot_states = []
+
+    class CapturingRobotState(FakeMoveItRobotState):
+        """Capture created fake robot states."""
+
+        def __init__(self, robot_model):
+            super().__init__(robot_model)
+            created_robot_states.append(self)
+
+    helper = MoveItPyLocomotionKinematics(
+        node=node,
+        hexapod=hexapod,
+        is_shutting_down=lambda: False,
+        moveit_py_factory=lambda **kwargs: FakeMoveItPy(**kwargs),
+        robot_state_cls=CapturingRobotState,
+    )
+    joint_names = _all_joint_names(hexapod)
+    non_default_positions = [0.05 * (index + 1) for index in range(len(joint_names))]
+    latest_joint_state = JointState(name=joint_names, position=non_default_positions)
+    leg = next(iter(hexapod.legs))
+    joint_name_to_position = dict(zip(joint_names, non_default_positions))
+
+    result = helper.solve([(leg, leg.tibia_end.copy())], latest_joint_state)
+
+    assert result.succeeded
+    seeded_positions = created_robot_states[0].joint_positions
+    for joint_name in MoveItPyLocomotionKinematics.controller_joint_names(leg):
+        assert seeded_positions[joint_name] == pytest.approx(joint_name_to_position[joint_name])
+
+
+def test_moveit_py_solver_retries_failed_ik_from_home_pose_for_that_leg_only(hexapod):
+    """
+    A failed IK solve retries once from the SRDF home pose for that leg only.
+
+    Regression test: warm-seeding from the leg's actual current joint state (see
+    test_moveit_py_solver_seeds_robot_state_from_latest_joint_state) can
+    occasionally be a worse starting point for the numerical solver than the
+    neutral home pose for an extreme target (e.g. a diagonal stride combined
+    with IMU balance tilt correction). Without a fallback, that single bad seed
+    repeats identically forever because brain_node rolls back walker state on
+    every failure. The retry must reseed only the failing leg's joints, leaving
+    any other already-solved leg's joint_positions untouched.
+    """
+    node = _node_with_moveit_params()
+    created_robot_states = []
+
+    class RetryRescueRobotState(FakeMoveItRobotState):
+        """Fake robot state whose first IK attempt fails, second succeeds."""
+
+        def __init__(self, robot_model):
+            super().__init__(robot_model)
+            created_robot_states.append(self)
+            self._attempts = 0
+
+        def set_from_ik(self, group_name, pose, tip_name, timeout):
+            self._attempts += 1
+            self.ik_calls.append((group_name, pose, tip_name, timeout, dict(self.joint_positions)))
+            if self._attempts == 1:
+                return False
+            self.group_positions[group_name] = [0.1, 0.2, 0.3]
+            return True
+
+    helper = MoveItPyLocomotionKinematics(
+        node=node,
+        hexapod=hexapod,
+        is_shutting_down=lambda: False,
+        moveit_py_factory=lambda **kwargs: FakeMoveItPy(**kwargs),
+        robot_state_cls=RetryRescueRobotState,
+    )
+    joint_names = _all_joint_names(hexapod)
+    non_default_positions = [0.05 * (index + 1) for index in range(len(joint_names))]
+    latest_joint_state = JointState(name=joint_names, position=non_default_positions)
+    leg = next(iter(hexapod.legs))
+    leg_joint_names = MoveItPyLocomotionKinematics.controller_joint_names(leg)
+    joint_name_to_position = dict(zip(joint_names, non_default_positions))
+
+    result = helper.solve([(leg, leg.tibia_end.copy())], latest_joint_state)
+
+    assert result.succeeded
+    robot_state = created_robot_states[0]
+    assert len(robot_state.ik_calls) == 2
+    first_attempt_seed = robot_state.ik_calls[0][4]
+    second_attempt_seed = robot_state.ik_calls[1][4]
+    for joint_name in leg_joint_names:
+        assert first_attempt_seed[joint_name] == pytest.approx(joint_name_to_position[joint_name])
+        assert second_attempt_seed[joint_name] == pytest.approx(0.0)
 
 
 def test_moveit_py_solver_transforms_base_frame_target_to_model_frame(hexapod):

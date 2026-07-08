@@ -6,7 +6,7 @@ find_package(gz_msgs_vendor REQUIRED)
 find_package(gz_transport_vendor REQUIRED)
 
 install(
-  DIRECTORY config launch
+  DIRECTORY config launch worlds
   DESTINATION share/${PROJECT_NAME}
 )
 

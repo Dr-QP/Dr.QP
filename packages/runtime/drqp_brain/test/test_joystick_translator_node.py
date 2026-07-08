@@ -26,6 +26,7 @@ from drqp_brain.haptics import (
     LEFT_RUMBLE_CHANNEL_ID,
     RIGHT_RUMBLE_CHANNEL_ID,
 )
+from drqp_brain.joystick_button import ButtonIndex
 from drqp_brain.joystick_translator_node import JoystickTranslatorNode
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 import pytest
@@ -42,6 +43,7 @@ class _TranslatorHarness:
     test_node: 'rclpy.node.Node'
     movement_commands: list = field(default_factory=list)
     robot_events: list = field(default_factory=list)
+    balance_mode_messages: list = field(default_factory=list)
     joy_feedback_messages: list = field(default_factory=list)
 
 
@@ -62,6 +64,12 @@ def translator(rclpy_context):  # noqa: ARG001 (needs rclpy)
         std_msgs.msg.String,
         '/robot_event',
         lambda msg: harness.robot_events.append(msg),
+        10,
+    )
+    test_node.create_subscription(
+        std_msgs.msg.Bool,
+        '/robot/balance_mode',
+        lambda msg: harness.balance_mode_messages.append(msg),
         10,
     )
     test_node.create_subscription(
@@ -243,3 +251,36 @@ def test_control_mode_haptic_feedback_uses_working_rumble_channel(translator):
         assert feedback.type == sensor_msgs.msg.JoyFeedback.TYPE_RUMBLE
         assert feedback.id == RIGHT_RUMBLE_CHANNEL_ID
         assert feedback.intensity > 0.0
+
+
+def test_r1_toggles_balance_mode_independently_of_walking_issue356(translator):
+    """Issue 356: R1 should toggle a dedicated balance mode without replacing walking input."""
+    balance_mode_pub = getattr(translator.node, 'balance_mode_pub', None)
+    if balance_mode_pub is not None:
+        for _ in range(10):
+            if balance_mode_pub.get_subscription_count() > 0:
+                break
+            rclpy.spin_once(translator.node, timeout_sec=0.02)
+            rclpy.spin_once(translator.test_node, timeout_sec=0.02)
+
+    pressed = sensor_msgs.msg.Joy()
+    pressed.axes = [0.4, -0.3, 0.2, 0.0, 0.0, 0.0]
+    pressed.buttons = [0] * 21
+    pressed.buttons[ButtonIndex.R1.value] = 1
+
+    released = sensor_msgs.msg.Joy()
+    released.axes = list(pressed.axes)
+    released.buttons = [0] * 21
+
+    translator.node._joy_callback(pressed)
+    translator.node._joy_callback(released)
+    translator.node._joy_callback(pressed)
+
+    for _ in range(10):
+        rclpy.spin_once(translator.node, timeout_sec=0.02)
+        rclpy.spin_once(translator.test_node, timeout_sec=0.02)
+        if len(translator.balance_mode_messages) >= 2 and translator.movement_commands:
+            break
+
+    assert len(translator.movement_commands) > 0, 'Walking command should still be published'
+    assert [msg.data for msg in translator.balance_mode_messages[-2:]] == [True, False]

@@ -52,7 +52,7 @@ def generate_test_description():
 def test_robot_smoke(robot, generate_test_description):
     robot.assert_nodes_and_clock()
     robot.assert_controllers_are_active()
-    robot.assert_imu_data()
+    robot.assert_imu_data_reports_orientation()
 
     yield  # yield to allow shutdown test to run after this one
 

@@ -36,6 +36,7 @@ KEYBOARD_HELP_LINES = [
     'Hold multiple movement keys together',
     'Tab: cycle mode',
     '1/2/3: select Tripod/Ripple/Wave',
+    'B: toggle balance mode',
     '+/-: adjust keyboard sensitivity',
     'Space or Esc: kill switch',
     'Delete: reboot servos',
@@ -163,6 +164,14 @@ class PygameKeyboardControlApp:
                 lambda: self.stay_on_top,
             )
         )
+        self.checkboxes.append(
+            CheckboxControl(
+                'Balance Mode',
+                RectSpec(440.0, 146.0, 130.0, 28.0),
+                self.node._toggle_balance_mode,
+                lambda: self.node.balance_mode_enabled,
+            )
+        )
 
     def _toggle_help(self):
         self.show_help = not self.show_help
@@ -253,6 +262,7 @@ class PygameKeyboardControlApp:
             pygame.K_a: 'a',
             pygame.K_s: 's',
             pygame.K_d: 'd',
+            pygame.K_b: 'b',
             pygame.K_UP: 'up',
             pygame.K_DOWN: 'down',
             pygame.K_LEFT: 'left',

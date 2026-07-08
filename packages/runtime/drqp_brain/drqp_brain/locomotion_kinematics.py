@@ -143,6 +143,25 @@ class MoveItPyLocomotionKinematics:
                 MOVEIT_IK_TIMEOUT_SEC,
             )
             if not solved:
+                # The warm seed (this leg's actual current joint state) can
+                # occasionally be a worse starting point for the numerical IK
+                # solver than the neutral home pose for an extreme target -- e.g.
+                # a diagonal stride combined with the IMU balance tilt correction
+                # can push a foot target well outside this leg's everyday range
+                # while the leg happens to be mid-swing. Retry once from the SRDF
+                # home pose for just this leg, without disturbing any other leg's
+                # already-solved joint state, so one bad seed does not turn into
+                # a lasting failure that repeats identically every tick.
+                robot_state.joint_positions = dict.fromkeys(self.controller_joint_names(leg), 0.0)
+                robot_state.update()
+                solved = robot_state.set_from_ik(
+                    group_name,
+                    pose,
+                    tip_name,
+                    MOVEIT_IK_TIMEOUT_SEC,
+                )
+
+            if not solved:
                 return LocomotionKinematicsResult(
                     joint_targets={},
                     robot_state=robot_state,
@@ -297,6 +316,9 @@ class MoveItPyLocomotionKinematics:
         robot_state = self._robot_state_cls(self._robot_model)
         latest_positions = dict(zip(latest_joint_state.name, latest_joint_state.position))
 
+        robot_state.set_to_default_values()
+
+        seed_positions = {}
         for leg in self._hexapod.legs:
             joint_names = self.controller_joint_names(leg)
             missing_names = [
@@ -307,8 +329,10 @@ class MoveItPyLocomotionKinematics:
                     f'Current joint state is missing joint targets: {", ".join(missing_names)}'
                 )
 
-        robot_state.set_to_default_values()
+            for joint_name in joint_names:
+                seed_positions[joint_name] = latest_positions[joint_name]
 
+        robot_state.joint_positions = seed_positions
         robot_state.update()
         return robot_state
 

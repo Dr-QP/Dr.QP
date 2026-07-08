@@ -29,6 +29,7 @@ from geometry_msgs.msg import Vector3
 import rclpy
 from rclpy.executors import ExternalShutdownException
 import rclpy.node
+from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 import rclpy.utilities
 import std_msgs.msg
 
@@ -258,6 +259,13 @@ class KeyboardControlNode(rclpy.node.Node):
             '/robot_event',
             qos_profile=10,
         )
+        latched_qos = QoSProfile(depth=1)
+        latched_qos.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
+        self.balance_mode_pub = self.create_publisher(
+            std_msgs.msg.Bool, '/robot/balance_mode', qos_profile=latched_qos
+        )
+        self.balance_mode_enabled = False
+        self.balance_mode_pub.publish(std_msgs.msg.Bool(data=self.balance_mode_enabled))
         self._publish_timer = self.create_timer(1.0 / publish_rate_hz, self._publish_command)
         self.get_logger().info('GUI keyboard control node initialized')
 
@@ -267,7 +275,15 @@ class KeyboardControlNode(rclpy.node.Node):
         if normalized_key in EVENT_KEYS:
             self._publish_event(EVENT_KEYS[normalized_key])
             return True
+        if normalized_key == 'b':
+            self._toggle_balance_mode()
+            return True
         return self.state.key_down(normalized_key)
+
+    def _toggle_balance_mode(self):
+        """Toggle dedicated balance mode without affecting walking input."""
+        self.balance_mode_enabled = not self.balance_mode_enabled
+        self.balance_mode_pub.publish(std_msgs.msg.Bool(data=self.balance_mode_enabled))
 
     def handle_key_up(self, key: str) -> bool:
         """Handle a normalized key release from the GUI."""

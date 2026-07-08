@@ -45,9 +45,14 @@ def robot(generate_test_description):  # noqa: ARG001 (drives launch + sim readi
     one test. Files that must share a simulation across several tests override
     this with a ``scope='module'`` ``robot`` fixture. Owns ``rclpy`` init/shutdown and waits
     for simulation readiness before yielding the harness.
+
+    Asserts no "MoveIt IK failed"/"IK rejected" warnings were logged by drqp_brain
+    during the test, so every simulation test catches this failure mode
+    automatically rather than only the tests written specifically to provoke it.
     """
     rclpy.init()
     harness = GazeboRobotControlBase()
     harness.setup_node()
     yield harness
+    harness.assert_no_moveit_ik_failures()
     rclpy.try_shutdown()
