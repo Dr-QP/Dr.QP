@@ -37,8 +37,9 @@ from dataclasses import dataclass
 
 from drqp_brain.joystick_input_handler import all_control_modes, ControlMode
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
-from drqp_keyboard_control.layout import clamp, clamp_vector
 from geometry_msgs.msg import Vector3
+
+from drqp_keyboard_control.layout import clamp, clamp_vector
 
 LEFT_STICK_KEYS = frozenset({'w', 'a', 's', 'd'})
 RIGHT_STICK_KEYS = frozenset({'up', 'down', 'left', 'right'})

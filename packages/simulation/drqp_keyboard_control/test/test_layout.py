@@ -127,6 +127,7 @@ def test_align_center_and_end_position_cross_axis():
 
 def test_justify_center_and_end_distribute_leftover_main_axis():
     """Justify should place fixed-size children within leftover space."""
+
     def children():
         return [Box(key='a', width=60.0, height=10.0)]
 
