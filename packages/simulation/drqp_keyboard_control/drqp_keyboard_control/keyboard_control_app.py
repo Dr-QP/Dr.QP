@@ -52,7 +52,7 @@ class PygameKeyboardControlApp:
         pygame.font.init()
         pygame.display.set_caption('Dr.QP Keyboard Control')
         self.screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
-        self.window_id = self._display_window_id()
+        self.window_id = None
         self.clock = pygame.time.Clock()
         self.key_map = build_key_map(pygame)
         self.renderer = PygameRenderer(pygame, self.screen)
@@ -113,6 +113,8 @@ class PygameKeyboardControlApp:
         self._apply_stay_on_top(self.stay_on_top)
 
     def _apply_stay_on_top(self, enabled: bool) -> bool:
+        if self.window_id is None:
+            self.window_id = self._display_window_id()
         return set_sdl_window_always_on_top(self.window_id, enabled)
 
     def _request_shutdown(self):

@@ -138,6 +138,21 @@ def test_stay_on_top_toggle_updates_state_and_applies_best_effort(app):
     assert requested_states == [True, False]
 
 
+def test_stay_on_top_looks_up_window_id_lazily(app):
+    """Window-id discovery should be deferred until topmost support is used."""
+    app.window_id = None
+    app._display_window_id = lambda: 42
+    requested = []
+    app._apply_stay_on_top = (
+        lambda enabled: requested.append(enabled) or setattr(app, 'window_id', 42) or True
+    )
+
+    find_control(app, 'stay_on_top').action()
+
+    assert app.window_id == 42
+    assert requested == [True]
+
+
 def test_display_window_id_uses_wm_info_window_handle(app):
     """Window-id discovery should prefer SDL's display window identifier."""
     app.pygame.display.get_wm_info = lambda: {'window': 99}
