@@ -134,3 +134,10 @@ def test_stay_on_top_toggle_updates_state_and_applies_best_effort(app):
     checkbox.action()
     assert app.stay_on_top is False
     assert requested_states == [True, False]
+
+
+def test_display_window_id_uses_wm_info_window_handle(app):
+    """Window-id discovery should use the stable WM info handle when present."""
+    app.pygame.display.get_wm_info = lambda: {'window': 42}
+
+    assert app._display_window_id() == 42
