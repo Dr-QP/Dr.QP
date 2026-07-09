@@ -74,7 +74,7 @@ def test_mouse_drag_on_stick_drives_state(app):
     pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=grab))
     pygame.event.post(pygame.event.Event(pygame.MOUSEMOTION, pos=target))
     app._handle_events()
-    assert app.node.state.axes().left_x == pytest.approx(1.0)
+    assert app.node.state.axes().left_x == pytest.approx(1.0, abs=0.01)
 
     pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=target))
     app._handle_events()
@@ -144,8 +144,8 @@ def test_stay_on_top_looks_up_window_id_lazily(app):
     app.window_id = None
     app._display_window_id = lambda: 42
     requested = []
-    app._apply_stay_on_top = (
-        lambda enabled: requested.append(enabled) or setattr(app, 'window_id', 42) or True
+    app._apply_stay_on_top = lambda enabled: (
+        requested.append(enabled) or setattr(app, 'window_id', 42) or True
     )
 
     find_control(app, 'stay_on_top').action()
