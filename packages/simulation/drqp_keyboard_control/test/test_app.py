@@ -144,8 +144,8 @@ def test_stay_on_top_looks_up_window_id_lazily(app):
     app.window_id = None
     app._display_window_id = lambda: 42
     requested = []
-    app._apply_stay_on_top = (
-        lambda enabled: requested.append(enabled) or setattr(app, 'window_id', 42) or True
+    app._apply_stay_on_top = lambda enabled: (
+        requested.append(enabled) or setattr(app, 'window_id', 42) or True
     )
 
     find_control(app, 'stay_on_top').action()
