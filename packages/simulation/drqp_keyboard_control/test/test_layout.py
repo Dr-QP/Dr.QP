@@ -179,7 +179,7 @@ def test_container_measures_intrinsic_size_from_children():
 
 
 def test_rect_contains_and_center():
-    """RectSpec should expose hit testing and center math."""
+    """The rect helper should expose hit testing and center math."""
     rect = RectSpec(10.0, 20.0, 100.0, 50.0)
 
     assert rect.contains((10.0, 20.0)) is True
