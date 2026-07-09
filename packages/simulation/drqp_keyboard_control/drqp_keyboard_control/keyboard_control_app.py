@@ -48,7 +48,8 @@ class PygameKeyboardControlApp:
         self.show_help = False
         self.stay_on_top = False
 
-        pygame.init()
+        pygame.display.init()
+        pygame.font.init()
         pygame.display.set_caption('Dr.QP Keyboard Control')
         self.screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
         self.window_id = self._display_window_id()
