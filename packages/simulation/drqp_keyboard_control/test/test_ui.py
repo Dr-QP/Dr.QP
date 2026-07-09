@@ -77,7 +77,7 @@ def test_layout_produces_no_overlapping_widgets(node, size):
 
     interactive = [c for c in controls if not isinstance(c, LabelControl)]
     for index, first in enumerate(interactive):
-        for second in interactive[index + 1:]:
+        for second in interactive[index + 1 :]:
             assert not rects_intersect(first.rect, second.rect), (
                 f'{first.layout_key} overlaps {second.layout_key} at {size}'
             )
