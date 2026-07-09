@@ -125,45 +125,31 @@ def test_render_smoke_headless(app):
 
 
 def test_stay_on_top_toggle_updates_state_and_applies_best_effort(app):
-    """Stay-on-top checkbox should queue and then apply the platform change."""
+    """Stay-on-top checkbox should reflect clicks even if the platform call fails."""
     requested_states = []
     app._apply_stay_on_top = lambda enabled: requested_states.append(enabled) and False
 
     checkbox = find_control(app, 'stay_on_top')
     checkbox.action()
     assert app.stay_on_top is True
-    assert requested_states == []
-
-    app._flush_stay_on_top()
     assert requested_states == [True]
 
     checkbox.action()
     assert app.stay_on_top is False
-    assert requested_states == [True]
-
-    app._flush_stay_on_top()
     assert requested_states == [True, False]
 
 
 def test_stay_on_top_looks_up_window_id_lazily(app):
-    """Window-id discovery should be deferred until the queued toggle is flushed."""
+    """Window-id discovery should be deferred until topmost support is used."""
     app.window_id = None
     app._display_window_id = lambda: 42
     requested = []
-
-    def apply(enabled):
-        requested.append(enabled)
-        app.window_id = 42
-        return True
-
-    app._apply_stay_on_top = apply
+    app._apply_stay_on_top = (
+        lambda enabled: requested.append(enabled) or setattr(app, 'window_id', 42) or True
+    )
 
     find_control(app, 'stay_on_top').action()
 
-    assert app.window_id is None
-    assert requested == []
-
-    app._flush_stay_on_top()
     assert app.window_id == 42
     assert requested == [True]
 
