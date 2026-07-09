@@ -108,6 +108,10 @@ def sdl_library_candidates() -> list[str]:
 
     unique_candidates = []
     for candidate in candidates:
-        if candidate and _is_core_sdl_library_name(candidate) and candidate not in unique_candidates:
+        if (
+            candidate
+            and _is_core_sdl_library_name(candidate)
+            and candidate not in unique_candidates
+        ):
             unique_candidates.append(candidate)
     return unique_candidates
