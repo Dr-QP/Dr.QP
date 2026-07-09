@@ -26,6 +26,14 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
+def _is_core_sdl_library_name(name: str) -> bool:
+    """Return whether a library filename points to the core SDL binary."""
+    stem = Path(name).name.lower()
+    if 'sdl2_ttf' in stem or 'sdl2_image' in stem or 'sdl2_mixer' in stem:
+        return False
+    return 'sdl2' in stem
+
+
 def set_sdl_window_always_on_top(window_id: int | None, enabled: bool) -> bool:
     """Set the Pygame SDL window topmost flag when SDL exposes the API."""
     if window_id is None:
@@ -90,12 +98,16 @@ def sdl_library_candidates() -> list[str]:
             if not search_dir.is_dir():
                 continue
             for pattern in patterns:
-                candidates.extend(str(path) for path in search_dir.glob(pattern))
+                candidates.extend(
+                    str(path)
+                    for path in search_dir.glob(pattern)
+                    if _is_core_sdl_library_name(str(path))
+                )
     except (ImportError, OSError):
         logger.debug('Unable to inspect pygame-bundled SDL libraries', exc_info=True)
 
     unique_candidates = []
     for candidate in candidates:
-        if candidate and candidate not in unique_candidates:
+        if candidate and _is_core_sdl_library_name(candidate) and candidate not in unique_candidates:
             unique_candidates.append(candidate)
     return unique_candidates

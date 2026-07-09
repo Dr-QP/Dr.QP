@@ -47,6 +47,7 @@ class PygameKeyboardControlApp:
         self.running = True
         self.show_help = False
         self.stay_on_top = False
+        self._pending_stay_on_top: bool | None = None
 
         pygame.display.init()
         pygame.font.init()
@@ -71,6 +72,7 @@ class PygameKeyboardControlApp:
         """Run the GUI and ROS event loops."""
         while self.running and rclpy.ok():
             self._handle_events()
+            self._flush_stay_on_top()
             rclpy.spin_once(self.node, timeout_sec=0.0)
             self._render()
             self.clock.tick(self.frame_rate_hz)
@@ -110,7 +112,15 @@ class PygameKeyboardControlApp:
 
     def _toggle_stay_on_top(self):
         self.stay_on_top = not self.stay_on_top
-        self._apply_stay_on_top(self.stay_on_top)
+        self._pending_stay_on_top = self.stay_on_top
+
+    def _flush_stay_on_top(self):
+        if self._pending_stay_on_top is None:
+            return
+
+        enabled = self._pending_stay_on_top
+        self._pending_stay_on_top = None
+        self._apply_stay_on_top(enabled)
 
     def _apply_stay_on_top(self, enabled: bool) -> bool:
         if self.window_id is None:
