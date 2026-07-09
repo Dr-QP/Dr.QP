@@ -58,7 +58,6 @@ GAIT_LABELS = ['Tripod', 'Ripple', 'Wave']
 
 BUTTON_SIZE = (136.0, 38.0)
 ACTION_BUTTON_SIZE = (118.0, 42.0)
-CHECKBOX_SIZE = (150.0, 28.0)
 TRIGGER_COLUMN_WIDTH = 90.0
 STATUS_BAR_SIZE = (260.0, 20.0)
 
@@ -181,7 +180,7 @@ def build_controls(
 def build_layout() -> Column:
     """Describe the whole window as a layout tree keyed by widget."""
     button_width, button_height = BUTTON_SIZE
-    checkbox_width, checkbox_height = CHECKBOX_SIZE
+    checkbox_width, checkbox_height = BUTTON_SIZE
     action_width, action_height = ACTION_BUTTON_SIZE
 
     spacing = 14.0
