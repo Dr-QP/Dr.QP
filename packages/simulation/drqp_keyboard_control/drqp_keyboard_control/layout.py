@@ -182,18 +182,32 @@ class _Container(Box):
     def _resolve_main_sizes(self, main_extent: float) -> list[float]:
         fixed_sizes = [child.measure()[self.main_axis] for child in self.children]
         total_spacing = self.spacing * max(0, len(self.children) - 1)
-        total_flex = sum(child.flex for child in self.children)
+        flex_children = [
+            child
+            for child in self.children
+            if child.flex and self._explicit_main_axis_size(child) is None
+        ]
+        total_flex = sum(child.flex for child in flex_children)
         leftover = main_extent - total_spacing
-        leftover -= sum(size for child, size in zip(self.children, fixed_sizes) if not child.flex)
+        leftover -= sum(
+            size
+            for child, size in zip(self.children, fixed_sizes)
+            if not child.flex or self._explicit_main_axis_size(child) is not None
+        )
         leftover = max(0.0, leftover)
 
         sizes = []
         for child, fixed_size in zip(self.children, fixed_sizes):
-            if child.flex and total_flex:
+            if self._explicit_main_axis_size(child) is not None:
+                sizes.append(fixed_size)
+            elif child.flex and total_flex:
                 sizes.append(leftover * child.flex / total_flex)
             else:
                 sizes.append(fixed_size)
         return sizes
+
+    def _explicit_main_axis_size(self, child: Box) -> float | None:
+        return child.width if self.main_axis == 0 else child.height
 
     def _justify_offset(self, leftover: float) -> float:
         leftover = max(0.0, leftover)

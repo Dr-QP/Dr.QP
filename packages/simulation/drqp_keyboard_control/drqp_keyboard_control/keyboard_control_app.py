@@ -100,6 +100,10 @@ class PygameKeyboardControlApp:
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 self.router.release()
             elif event.type == pygame.VIDEORESIZE:
+                self.screen = pygame.display.set_mode(
+                    (event.w, event.h), pygame.RESIZABLE
+                )
+                self.renderer.screen = self.screen
                 apply_layout(self.controls, event.w, event.h)
 
     def _render(self):

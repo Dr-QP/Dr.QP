@@ -84,6 +84,23 @@ def test_flex_children_share_leftover_space_by_weight():
     assert rects['three'].x == pytest.approx(220.0)
 
 
+def test_explicit_main_axis_size_beats_flex():
+    """Explicit size on the main axis should override flex sizing."""
+    root = Row(
+        children=[
+            Box(key='fixed_flex', width=120.0, height=10.0, flex=1.0),
+            Box(key='flex_only', flex=1.0),
+        ],
+        spacing=10.0,
+    )
+
+    rects = solve(root, 410.0, 50.0)
+
+    assert rects['fixed_flex'].width == pytest.approx(120.0)
+    assert rects['flex_only'].width == pytest.approx(280.0)
+    assert rects['flex_only'].x == pytest.approx(130.0)
+
+
 def test_flex_column_fills_viewport_height():
     """A flex child in a column should absorb all remaining height."""
     root = Column(

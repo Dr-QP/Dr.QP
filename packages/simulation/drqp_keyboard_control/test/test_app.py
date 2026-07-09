@@ -95,14 +95,18 @@ def test_button_click_fires_action(app):
 
 
 def test_window_resize_relayouts_widgets(app):
-    """A resize event should re-solve the layout for the new size."""
+    """A resize event should resize the display and re-solve the layout."""
     pygame = app.pygame
     stick = find_control(app, 'right_stick')
     old_rect = stick.rect
+    old_screen = app.screen
 
     pygame.event.post(pygame.event.Event(pygame.VIDEORESIZE, w=1600, h=1000))
     app._handle_events()
 
+    assert app.screen.get_size() == (1600, 1000)
+    assert app.renderer.screen is app.screen
+    assert old_screen.get_size() == (1600, 1000)
     assert stick.rect != old_rect
 
 
