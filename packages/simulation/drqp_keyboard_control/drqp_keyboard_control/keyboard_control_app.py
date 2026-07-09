@@ -20,13 +20,12 @@
 
 """Composition root wiring the Pygame window, widgets, router, and renderer."""
 
-import rclpy
-
 from drqp_keyboard_control.gui_controls import PointerRouter
 from drqp_keyboard_control.keymap import build_key_map
 from drqp_keyboard_control.renderer import PygameRenderer
 from drqp_keyboard_control.sdl_window import set_sdl_window_always_on_top
 from drqp_keyboard_control.ui import apply_layout, build_controls, KEYBOARD_HELP_LINES
+import rclpy
 
 
 class PygameKeyboardControlApp:

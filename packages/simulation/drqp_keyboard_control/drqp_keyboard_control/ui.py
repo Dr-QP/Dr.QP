@@ -30,7 +30,6 @@ position on screen comes from the layout engine — no hardcoded coordinates.
 from typing import Callable
 
 from drqp_brain.joystick_input_handler import all_control_modes
-
 from drqp_keyboard_control.gui_controls import (
     ButtonControl,
     CheckboxControl,

@@ -25,14 +25,13 @@
 import argparse
 
 from drqp_interfaces.msg import MovementCommand
+from drqp_keyboard_control.control_state import GuiControlState
 import rclpy
 from rclpy.executors import ExternalShutdownException
 import rclpy.node
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 import rclpy.utilities
 import std_msgs.msg
-
-from drqp_keyboard_control.control_state import GuiControlState
 
 EVENT_KEYS = {
     'space': 'kill_switch_pressed',

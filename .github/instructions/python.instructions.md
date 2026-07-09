@@ -22,6 +22,11 @@ For general engineering principles, code quality standards, and best practices, 
 ### Code Style and Formatting
 
 - Follow the **PEP 8** style guide for Python
+- Add ROS and workspace packages to Ruff's `lint.isort.known-third-party`
+  configuration when that classification aligns its import order with
+  `ament_flake8`. Use a targeted `# noqa: <rule>` only for a formatter-required
+  incompatibility such as `E203` on a slice; do not disable rules for a whole
+  file or package.
 - Maintain proper indentation (use 4 spaces for each level of indentation)
 - Ensure lines do not exceed 79 characters
 - Place function and class docstrings immediately after the `def` or `class` keyword
