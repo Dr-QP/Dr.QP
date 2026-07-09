@@ -121,9 +121,8 @@ class PygameKeyboardControlApp:
 
     def _display_window_id(self) -> int | None:
         try:
-            window_id = self.pygame.display.get_wm_info().get('window')
-            if window_id is None:
-                return None
-            return int(window_id)
-        except (AttributeError, TypeError, ValueError):
+            from pygame._sdl2.video import Window
+
+            return int(Window.from_display_module().id)
+        except (AttributeError, ImportError, TypeError, ValueError):
             return None

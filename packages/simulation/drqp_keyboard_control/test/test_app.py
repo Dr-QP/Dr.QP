@@ -21,7 +21,9 @@
 """App-level tests running Pygame headless through the SDL dummy driver."""
 
 import os
-from unittest.mock import Mock
+import sys
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 from drqp_keyboard_control.control_state import GuiControlState
 import pytest
@@ -137,7 +139,13 @@ def test_stay_on_top_toggle_updates_state_and_applies_best_effort(app):
 
 
 def test_display_window_id_uses_wm_info_window_handle(app):
-    """Window-id discovery should use the stable WM info handle when present."""
-    app.pygame.display.get_wm_info = lambda: {'window': 42}
+    """Window-id discovery should prefer SDL's display window identifier."""
+    app.pygame.display.get_wm_info = lambda: {'window': 99}
+    fake_window_type = type(
+        'FakeWindowType',
+        (),
+        {'from_display_module': staticmethod(lambda: type('FakeWindow', (), {'id': 42})())},
+    )
 
-    assert app._display_window_id() == 42
+    with patch.dict(sys.modules, {'pygame._sdl2.video': SimpleNamespace(Window=fake_window_type)}):
+        assert app._display_window_id() == 42
