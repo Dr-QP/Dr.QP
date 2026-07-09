@@ -184,16 +184,18 @@ def build_layout() -> Column:
     checkbox_width, checkbox_height = CHECKBOX_SIZE
     action_width, action_height = ACTION_BUTTON_SIZE
 
+    spacing = 14.0
+
     def button_row(keys: list[str]) -> Row:
         return Row(
             children=[Box(key=key, width=button_width, height=button_height) for key in keys],
-            spacing=14.0,
+            spacing=spacing,
             justify=Justify.center,
         )
 
     return Column(
         padding=16.0,
-        spacing=12.0,
+        spacing=spacing,
         children=[
             button_row([f'mode.{mode.name}' for mode in all_control_modes]),
             button_row([f'gait.{index}' for index in range(len(GAIT_LABELS))]),
@@ -203,13 +205,13 @@ def build_layout() -> Column:
                     Box(key='stay_on_top', width=checkbox_width, height=checkbox_height),
                     Box(key='balance', width=checkbox_width, height=checkbox_height),
                 ],
-                spacing=20.0,
+                spacing=spacing,
                 justify=Justify.center,
                 align=Align.center,
             ),
             Row(
                 flex=1.0,
-                spacing=24.0,
+                spacing=spacing,
                 children=[
                     Box(key='left_trigger', width=TRIGGER_COLUMN_WIDTH),
                     Box(key='left_stick', flex=1.0),
@@ -226,7 +228,7 @@ def build_layout() -> Column:
                     )
                     for event in ('kill_switch_pressed', 'finalize', 'reboot_servos')
                 ],
-                spacing=12.0,
+                spacing=spacing,
                 justify=Justify.center,
             ),
             Row(
