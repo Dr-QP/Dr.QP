@@ -4,6 +4,7 @@ find_package(catch_ros2 REQUIRED)
 add_executable(drqp_serial_tests
   TestSerialPort.cpp
   TestSerialRecordingProxy.cpp
+  TestSerialTransferConfig.cpp
 )
 drqp_test_enable_coverage(drqp_serial_tests)
 
