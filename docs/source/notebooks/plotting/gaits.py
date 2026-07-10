@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 
-from drqp_kinematics.geometry import AffineTransform, Point3D
+from drqp_kinematics.geometry import Point3D
 from drqp_kinematics.models import HexapodLeg
 from IPython.display import display
 import numpy as np
@@ -224,16 +224,11 @@ class GaitsVisualizer:
         # Generate data points
         for phase in phases:
             for leg in self.all_legs:
-                offset = _gait_generator.get_offsets_at_phase_for_leg(leg, phase, **gen_args)
-                leg_tip = _leg_centers[leg]
-                if _rotation_gaits:
-                    # TODO(anton-matosov): Why does visualization code need to know about rotations?
-                    rotation_transform = AffineTransform.from_rotvec(
-                        [0, 0, offset.x], degrees=True
-                    )
-                    leg_tip = rotation_transform.apply_point(leg_tip) + Point3D([0, 0, offset.z])
-                else:
-                    leg_tip = leg_tip + offset
+                # The generator returns a ready-to-use world-frame tip for every gait type,
+                # so the visualiser stays agnostic to translation vs. rotation semantics.
+                leg_tip = _gait_generator.get_world_tip_at_phase_for_leg(
+                    leg, phase, _leg_centers[leg], rotation=_rotation_gaits
+                )
 
                 x_values[leg].append(leg_tip.x)
                 y_values[leg].append(leg_tip.y)

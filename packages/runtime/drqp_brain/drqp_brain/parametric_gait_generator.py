@@ -20,7 +20,7 @@
 
 from enum import auto, Enum
 
-from drqp_kinematics.geometry import Point3D
+from drqp_kinematics.geometry import AffineTransform, Point3D
 from drqp_kinematics.models import HexapodLeg
 import numpy as np
 
@@ -137,3 +137,26 @@ class ParametricGaitGenerator:
             label,
         )
         # Parametric function - END
+
+    def get_world_tip_at_phase_for_leg(
+        self,
+        leg: HexapodLeg,
+        phase: float,
+        leg_center: Point3D,
+        rotation: bool = False,
+    ) -> Point3D:
+        """
+        Return the world-frame leg-tip position for a leg at a given phase.
+
+        For a translation gait the parametric offset is a Cartesian displacement that is
+        simply added to the leg centre. For a rotation gait ``offset.x`` is instead an
+        angle in degrees about the body Z axis: the leg centre is rotated by that angle
+        and lifted by ``offset.z``. Owning this gait-type-dependent transform here keeps
+        rotation semantics out of visualisation/consumer code, which can treat every gait
+        uniformly as producing a ready-to-use world-frame point.
+        """
+        offset = self.get_offsets_at_phase_for_leg(leg, phase)
+        if rotation:
+            rotation_transform = AffineTransform.from_rotvec([0, 0, offset.x], degrees=True)
+            return rotation_transform.apply_point(leg_center) + Point3D([0, 0, offset.z])
+        return leg_center + offset
