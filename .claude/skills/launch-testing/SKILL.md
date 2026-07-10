@@ -1,6 +1,6 @@
 ---
 name: launch-testing
-description: "Write launch_pytest integration tests with per-process exit-code verification via drqp_launch_testing. Use when writing, reviewing, or debugging ROS 2 launch tests, choosing fixture scope vs shutdown pattern, or handling shutdown-crash flakiness with pytest-retry. Keywords: launch test, launch_pytest, generate_test_description, shutdown=True, exit codes, flaky, drqp_launch_testing."
+description: 'Write launch_pytest integration tests with per-process exit-code verification via drqp_launch_testing. Use when writing, reviewing, or debugging ROS 2 launch tests, choosing fixture scope vs shutdown pattern, or handling shutdown-crash flakiness with pytest-retry. Keywords: launch test, launch_pytest, generate_test_description, shutdown=True, exit codes, flaky, drqp_launch_testing.'
 ---
 
 # Launch Test Conventions (launch_pytest)

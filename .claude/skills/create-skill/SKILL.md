@@ -1,6 +1,6 @@
 ---
 name: create-skill
-description: "Create or update Agent Skills (SKILL.md) with effective trigger descriptions, bundled scripts and resources, and validation. Use when creating a new skill, editing files in .claude/skills/, writing or reviewing SKILL.md frontmatter, or debugging why a skill is not being discovered. Keywords: skill, SKILL.md, slash command, description, allowed-tools, bundled resources."
+description: 'Create or update Agent Skills (SKILL.md) with effective trigger descriptions, bundled scripts and resources, and validation. Use when creating a new skill, editing files in .claude/skills/, writing or reviewing SKILL.md frontmatter, or debugging why a skill is not being discovered. Keywords: skill, SKILL.md, slash command, description, allowed-tools, bundled resources.'
 ---
 
 # Create Agent Skill
@@ -42,12 +42,12 @@ license: Complete terms in LICENSE.txt
 ---
 ```
 
-| Field           | Required | Constraints                                                                                 |
-| --------------- | -------- | ------------------------------------------------------------------------------------------- |
-| `name`          | Yes      | Unique identifier, lowercase, hyphens for spaces, usually matches the skill directory name  |
-| `description`   | Yes      | Describe what the skill does and when Claude should use it                                  |
-| `license`       | No       | Describe the license that applies to the skill                                              |
-| `allowed-tools` | No       | Optional tool pre-approval list for skills that need to run tools such as `Bash`            |
+| Field           | Required | Constraints                                                                                |
+| --------------- | -------- | ------------------------------------------------------------------------------------------ |
+| `name`          | Yes      | Unique identifier, lowercase, hyphens for spaces, usually matches the skill directory name |
+| `description`   | Yes      | Describe what the skill does and when Claude should use it                                 |
+| `license`       | No       | Describe the license that applies to the skill                                             |
+| `allowed-tools` | No       | Optional tool pre-approval list for skills that need to run tools such as `Bash`           |
 
 Important points:
 
