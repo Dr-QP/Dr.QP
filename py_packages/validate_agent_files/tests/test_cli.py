@@ -20,10 +20,10 @@ def test_parse_arguments_defaults_to_all_kinds() -> None:
 
 def test_parse_arguments_supports_skills_filter() -> None:
     """The canonical parser should allow skills-only validation."""
-    parsed = parse_arguments(['--kind', 'skills', '.github/skills'])
+    parsed = parse_arguments(['--kind', 'skills', '.claude/skills'])
 
     assert parsed.kind == 'skills'
-    assert parsed.path == '.github/skills'
+    assert parsed.path == '.claude/skills'
 
 
 def test_parse_arguments_rejects_xml_output() -> None:

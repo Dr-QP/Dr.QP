@@ -1,7 +1,14 @@
 # Codex Customizations
 
-This directory mirrors the repository's GitHub Copilot customizations so they
-are discoverable in Codex.
+This directory adapts the repository's Claude-native AI tooling (canonical
+source in `.claude/`) so it is discoverable in Codex:
+
+- `agents/` — trampoline files that delegate to `.claude/agents/*.agent.md`
+- `skills/` — symlink to `../.claude/skills/`
+- `instructions/` — symlink to `../.claude/instructions/`
+
+Edit the `.claude/` sources, not this directory. When adding or renaming an
+agent, add or update the matching trampoline in `agents/`.
 
 ## Codex Cloud environment setup
 

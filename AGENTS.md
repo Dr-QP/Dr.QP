@@ -24,36 +24,36 @@ NEVER use GitHub API or GitHub MCP tools to update branch refs or push branch co
 
 ### When in Doubt
 
-Consult the **[Principal Engineer](/.github/agents/principal-engineer.agent.md)** agent for architecture, design decisions, and implementation strategies.
+Consult the **[Principal Engineer](/.claude/agents/principal-engineer.agent.md)** agent for architecture, design decisions, and implementation strategies.
 
 ## Catalog Locations
 
-- **Claude**: `.claude/agents/`, `.claude/commands/`, `.claude/instructions/` (symlinks to `.github/`)
-- **Cursor**: `.cursor/agents/`, `.cursor/skills/`, `.cursor/rules/` (symlinks to `.github/`)
-- **Codex**: `.codex/agents/`, `.codex/skills/`, `.codex/instructions/` (symlinks to `.github/`)
+- **Claude** (canonical source of truth): `.claude/agents/`, `.claude/skills/`, `.claude/instructions/`
+- **Codex**: `.codex/agents/` (trampolines to `.claude/agents/`), `.codex/skills/`, `.codex/instructions/` (symlinks to `.claude/`)
+- **Cursor**: `.cursor/agents/`, `.cursor/skills/`, `.cursor/rules/` (symlinks to `.claude/`)
 
-Update `.github` sources; symlinks pick up changes automatically.
+Update `.claude` sources; symlinks pick up changes automatically. When adding or renaming an agent, also update its `.codex/agents/` trampoline.
 
 ## Available Agents
 
 ### Development
 
-- **[Principal Engineer](/.github/agents/principal-engineer.agent.md)** - Senior guidance, architecture, pragmatic implementation
+- **[Principal Engineer](/.claude/agents/principal-engineer.agent.md)** - Senior guidance, architecture, pragmatic implementation
 
 ### Testing & Quality
 
-- **[TDD Red](/.github/agents/tdd-red.agent.md)** - Write failing tests before implementation
-- **[TDD Green](/.github/agents/tdd-green.agent.md)** - Implement minimal code to satisfy requirements
-- **[TDD Refactor](/.github/agents/tdd-refactor.agent.md)** - Improve code quality while maintaining tests
+- **[TDD Red](/.claude/agents/tdd-red.agent.md)** - Write failing tests before implementation
+- **[TDD Green](/.claude/agents/tdd-green.agent.md)** - Implement minimal code to satisfy requirements
+- **[TDD Refactor](/.claude/agents/tdd-refactor.agent.md)** - Improve code quality while maintaining tests
 
 ## Remote Agent Guidelines
 
-When addressing PR review comments, CI failures, CodeQL findings, or coverage gaps, use the [pr-feedback-resolution](/.github/skills/pr-feedback-resolution/) skill.
+When addressing PR review comments, CI failures, CodeQL findings, or coverage gaps, use the [pr-feedback-resolution](/.claude/skills/pr-feedback-resolution/) skill.
 
 ## Code Review Standards
 
-[code-review-standards](/.github/skills/code-review-standards/)
+[code-review-standards](/.claude/skills/code-review-standards/)
 
 ## Cursor Cloud Sessions
 
-**Load the microVM-sandbox instructions** — Read and follow [microVM-sandbox](/.github/instructions/microVM-sandbox.instructions.md) before running any build, test, or lint command.
+**Load the microVM-sandbox instructions** — Read and follow [microVM-sandbox](/.claude/instructions/microVM-sandbox.instructions.md) before running any build, test, or lint command.
