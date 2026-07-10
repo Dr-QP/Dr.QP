@@ -38,7 +38,7 @@ surface just needs to grow (navigation, camera, speech).
 ## The behavior engine (what makes it a pet)
 
 An LLM in the loop for every wag would be slow, expensive, and lifeless between requests. A local
-behavior layer — the repo already has `python-statemachine` and a `create-state-machine` skill —
+behavior layer — the repo already has `python-statemachine` and a `create-state-machine-python` skill —
 runs the day-to-day:
 
 - **Idle behaviors**: settle, look around (body pose, not walking), stretch (a scripted

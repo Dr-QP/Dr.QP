@@ -59,7 +59,7 @@ is the union for the full spec:
 
 ## Track C — Behavior engine (`drqp_behavior`)
 
-- `python-statemachine`-based (see `create-state-machine` skill) node above the robot state
+- `python-statemachine`-based (see `create-state-machine-python` skill) node above the robot state
   machine. States: `idle`, `observing`, `interacting`, `resting`, `alarmed`.
 - Behaviors: idle sway/look-around via body-pose `MovementCommand` (no walking), stretch
   (scripted trajectory like init sequence), low-battery → rest/dock-seek (dock nav needs RM-06),
