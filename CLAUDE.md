@@ -6,11 +6,11 @@
 
 Claude Code is the primary coding assistant for this repository, with Codex as secondary. The canonical source of truth for all AI tooling lives in `.claude/`; other assistants consume it via trampolines and symlinks:
 
-| Artifact     | Source of truth         | Codex location                    | Cursor location               |
-| ------------ | ----------------------- | --------------------------------- | ----------------------------- |
-| Agents       | `.claude/agents/`       | `.codex/agents/` (trampolines)    | `.cursor/agents/` → symlink   |
-| Skills       | `.claude/skills/`       | `.codex/skills/` → symlink        | `.cursor/skills/` → symlink   |
-| Instructions | `.claude/instructions/` | `.codex/instructions/` → symlink  | `.cursor/rules/` → symlink    |
+| Artifact     | Source of truth         | Codex location                   | Cursor location             |
+| ------------ | ----------------------- | -------------------------------- | --------------------------- |
+| Agents       | `.claude/agents/`       | `.codex/agents/` (trampolines)   | `.cursor/agents/` → symlink |
+| Skills       | `.claude/skills/`       | `.codex/skills/` → symlink       | `.cursor/skills/` → symlink |
+| Instructions | `.claude/instructions/` | `.codex/instructions/` → symlink | `.cursor/rules/` → symlink  |
 
 **Always edit the `.claude/` source files.** The symlinks pick up changes automatically; when adding or renaming an agent, also update its `.codex/agents/` trampoline.
 

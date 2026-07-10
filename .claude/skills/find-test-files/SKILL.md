@@ -143,10 +143,11 @@ To find all tests across technologies:
 
 ```markdown
 Search for test files using multiple patterns:
-1. Python: test_*.py, *_test.py
-2. C++: *_test.cpp, *_test.cc, test_*.cpp, Test*.cpp
-3. TypeScript/JavaScript: *.test.ts, *.spec.ts
-4. ROS 2: test/**/*.{cpp,py}
+
+1. Python: test\__.py, _\_test.py
+2. C++: _\_test.cpp, __test.cc, test__.cpp, Test_.cpp
+3. TypeScript/JavaScript: _.test.ts, _.spec.ts
+4. ROS 2: test/\*_/_.{cpp,py}
 
 Combine results and remove duplicates.
 ```
@@ -178,11 +179,13 @@ Combine results and remove duplicates.
 **User request:** "Show me all existing tests for the serial driver"
 
 **Agent action:**
+
 ```
 #search path:"packages/runtime/drqp_serial/test/**"
 ```
 
 **Response format:**
+
 ```
 Found 3 test files for drqp_serial:
 1. packages/runtime/drqp_serial/test/test_serial_connection.cpp
@@ -195,12 +198,14 @@ Found 3 test files for drqp_serial:
 **User request:** "List all Python test files to check coverage"
 
 **Agent action:**
+
 ```
 #search pattern:"test_*.py" type:file
 #search pattern:"*_test.py" type:file
 ```
 
 **Response format:**
+
 ```
 Python test files found (15 total):
 Runtime packages:
@@ -216,11 +221,13 @@ Simulation packages:
 **User request:** "Find all tests that reference the old ConnectionManager class"
 
 **Agent action:**
+
 ```
 #search content:"ConnectionManager" AND pattern:"*test*.{py,cpp}"
 ```
 
 **Response format:**
+
 ```
 Tests referencing ConnectionManager (4 files):
 1. test/test_serial_connection.cpp:15 - TEST(ConnectionManager, InitTest)
@@ -231,13 +238,13 @@ Tests referencing ConnectionManager (4 files):
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| No tests found | Check if test directory exists; verify naming conventions match project standards |
-| Too many false positives | Add content-based filtering (search for `TEST(`, `def test_`, etc.) |
-| Missing nested tests | Use recursive patterns: `test/**/*.py`, `**/test/*.cpp` |
-| Tests in non-standard locations | Search by content markers instead of filename patterns |
-| Performance issues with large codebases | Narrow search to specific directories or packages |
+| Issue                                   | Solution                                                                          |
+| --------------------------------------- | --------------------------------------------------------------------------------- |
+| No tests found                          | Check if test directory exists; verify naming conventions match project standards |
+| Too many false positives                | Add content-based filtering (search for `TEST(`, `def test_`, etc.)               |
+| Missing nested tests                    | Use recursive patterns: `test/**/*.py`, `**/test/*.cpp`                           |
+| Tests in non-standard locations         | Search by content markers instead of filename patterns                            |
+| Performance issues with large codebases | Narrow search to specific directories or packages                                 |
 
 ## Common Patterns
 

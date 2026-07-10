@@ -162,7 +162,7 @@ When creating or renaming an agent, add or update the matching trampoline. Keep 
 
 ## Common Mistakes to Avoid
 
-- ❌ Missing `description`, or a description that says *what* but not *when* — the agent will never be selected automatically
+- ❌ Missing `description`, or a description that says _what_ but not _when_ — the agent will never be selected automatically
 - ❌ Granting all tools to a read-only reviewer agent
 - ❌ Referencing tools that don't exist in Claude Code (tool aliases from other assistants)
 - ❌ Assuming the sub-agent can see the parent conversation — it can't; pass context explicitly

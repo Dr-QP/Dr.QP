@@ -20,10 +20,10 @@ Key characteristics:
 
 ## Directory Structure
 
-| Location                        | Scope                | Notes                                          |
-| ------------------------------- | -------------------- | ---------------------------------------------- |
-| `.claude/skills/<skill-name>/`  | Project/repository   | Canonical location in this repository          |
-| `~/.claude/skills/<skill-name>/`| Personal (user-wide) | For personal skills not tied to the repository |
+| Location                         | Scope                | Notes                                          |
+| -------------------------------- | -------------------- | ---------------------------------------------- |
+| `.claude/skills/<skill-name>/`   | Project/repository   | Canonical location in this repository          |
+| `~/.claude/skills/<skill-name>/` | Personal (user-wide) | For personal skills not tied to the repository |
 
 Each skill **must** have its own subdirectory containing at minimum a `SKILL.md` file.
 
@@ -42,12 +42,12 @@ license: Complete terms in LICENSE.txt
 ---
 ```
 
-| Field           | Required | Constraints                                                                                 |
-| --------------- | -------- | ------------------------------------------------------------------------------------------- |
-| `name`          | Yes      | Unique identifier, lowercase, hyphens for spaces, usually matches the skill directory name  |
-| `description`   | Yes      | Describe what the skill does and when Claude should use it                                  |
-| `license`       | No       | Describe the license that applies to the skill                                              |
-| `allowed-tools` | No       | Optional tool pre-approval list for skills that need to run tools such as `Bash`            |
+| Field           | Required | Constraints                                                                                |
+| --------------- | -------- | ------------------------------------------------------------------------------------------ |
+| `name`          | Yes      | Unique identifier, lowercase, hyphens for spaces, usually matches the skill directory name |
+| `description`   | Yes      | Describe what the skill does and when Claude should use it                                 |
+| `license`       | No       | Describe the license that applies to the skill                                             |
+| `allowed-tools` | No       | Optional tool pre-approval list for skills that need to run tools such as `Bash`           |
 
 Important points:
 
