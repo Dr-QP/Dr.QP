@@ -286,15 +286,46 @@ The following 2 chapters will cover the math behind solving inverse kinematics f
 
 This diagram should give you an idea of what we are trying to solve:
 
-![Inverse Kinematics Diagram](https://github.com/user-attachments/assets/e6447032-cd1a-4f5b-b756-689c733b8389)
-
-`TODO: Update diagram with the one from Dr.QP leg and names of angles and planes matching this notebook`
-
 ```{code-cell} ipython3
 # Custom lengths for the IK examples
 coxa_len = 5
 femur_len = 10
 tibia_len = 14
+```
+
+The schematic below is generated from Dr.QP's own forward kinematics, so it always
+matches the leg geometry and naming used in this notebook. It shows the three links
+(coxa, femur, tibia) from the body mount to the foot, together with the joint angles
+`alpha` (coxa), `beta` (femur) and `gamma` (tibia). The coxa angle `alpha` rotates the
+leg in the `XY` plane (top view); the `beta` and `gamma` angles bend the leg within the
+`X'Z` leg plane (side view), where `X'` is the forward axis of the leg after the coxa
+rotation. The following two chapters solve for these angles in those two planes.
+
+```{code-cell} ipython3
+:tags: [remove-input]
+
+import numpy as np
+
+# Bent pose (alpha kept at 0 so the leg stays in the X'Z drawing plane) purely to make
+# the beta/gamma joint angles readable in the diagram. Each joint is labelled with the
+# angle name used in the IK equations below.
+_ik_alpha, _ik_beta, _ik_gamma = np.radians(0), np.radians(-35), np.radians(-110)
+_ik_start = Point(0, 2)
+_ik_body = _ik_start + Point(3, 0, r'$\alpha$')
+_ik_coxa = _ik_body + Point(coxa_len, 0, r'$\beta$').rotate(_ik_alpha)
+_ik_femur = _ik_coxa + Point(femur_len, 0, r'$\gamma$').rotate(_ik_beta)
+_ik_tibia = _ik_femur + Point(tibia_len, 0, 'Foot').rotate(_ik_gamma)
+ik_diagram_model = (
+    Line(_ik_start, _ik_body, 'Body'),
+    Line(_ik_body, _ik_coxa, 'Coxa'),
+    Line(_ik_coxa, _ik_femur, 'Femur'),
+    Line(_ik_femur, _ik_tibia, 'Tibia'),
+)
+_ = plot_leg_with_points(
+    ik_diagram_model,
+    "Dr.QP leg: coxa/femur/tibia links with the alpha, beta, gamma joint angles (X'Z plane)",
+)
+display_and_close(plt.gcf())
 ```
 
 ### Coxa Inverse Kinematics
