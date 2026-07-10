@@ -43,9 +43,13 @@ struct Record
   Packet request;
   Packet response;
 
+  // Number of request bytes already verified by SerialPlayer::writeBytes. Advancing this
+  // offset avoids erasing from the front of request.bytes (an O(n) shift) on every write.
+  size_t writeOffset = 0;
+
   bool isEmpty() const
   {
-    return request.bytes.empty() && response.bytes.empty();
+    return writeOffset >= request.bytes.size() && response.bytes.empty();
   }
 };
 

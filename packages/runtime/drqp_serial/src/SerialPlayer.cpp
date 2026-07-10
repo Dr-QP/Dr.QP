@@ -56,20 +56,19 @@ size_t SerialPlayer::writeBytes(const void* buffer, size_t size)
 
   Record& record = currentRecord();
 
-  if (size > record.request.bytes.size()) {
+  const size_t remaining = record.request.bytes.size() - record.writeOffset;
+  if (size > remaining) {
     // If requested write is larger than was recorded, its a fail
-    assertEqual(size, record.request.bytes.size(), 0);
+    assertEqual(size, remaining, 0);
   }
 
   for (size_t i = 0; i < size; ++i) {
     // Compare what was written now with recording
-    assertEqual(record.request.bytes[i], data[i], i);
+    assertEqual(record.request.bytes[record.writeOffset + i], data[i], i);
   }
 
-  // Remove verified recording
-  // TODO(anton-matosov): Consider keeping a lastWritePosition instead of erasing.
-  //  Or use range and update it every write
-  record.request.bytes.erase(record.request.bytes.begin(), record.request.bytes.begin() + size);
+  // Advance past the verified bytes instead of erasing them from the front (O(n) shift).
+  record.writeOffset += size;
 
   return size;
 }
