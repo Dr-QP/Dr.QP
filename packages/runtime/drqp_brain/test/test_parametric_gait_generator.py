@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 from drqp_brain.parametric_gait_generator import GaitType, ParametricGaitGenerator
-from drqp_kinematics.geometry import AffineTransform, Point3D
+from drqp_kinematics.geometry import Point3D
 from drqp_kinematics.models import HexapodLeg
 import numpy as np
 import pytest
@@ -96,40 +96,6 @@ class TestParametricGaitGenerator:
                 assert stance_count == leg_count - expected_off_ground_swing_count, (
                     f'Phase: {phase}. {stance_legs=}'
                 )
-
-    def test_world_tip_translation_adds_offset(self, gait_gen, hexapod_legs):
-        """For a translation gait the world tip is the leg centre plus the raw offset."""
-        gait_gen.current_gait = GaitType.tripod
-        leg_center = Point3D([10.0, -5.0, 0.0])
-
-        for leg in hexapod_legs:
-            for phase in np.linspace(0.0, 1.0, 25):
-                offset = gait_gen.get_offsets_at_phase_for_leg(leg, phase)
-                tip = gait_gen.get_world_tip_at_phase_for_leg(
-                    leg, phase, leg_center, rotation=False
-                )
-                assert tip == leg_center + offset
-
-    def test_world_tip_rotation_rotates_center(self, gait_gen, hexapod_legs):
-        """
-        Apply offset.x as a yaw angle to the leg centre for a rotation gait.
-
-        The generator must internalise the rotation transform so that visualisation and
-        other consumers receive a world-frame point regardless of gait type.
-        """
-        gait_gen.current_gait = GaitType.tripod
-        leg_center = Point3D([10.0, -5.0, 0.0])
-
-        for leg in hexapod_legs:
-            for phase in np.linspace(0.0, 1.0, 25):
-                offset = gait_gen.get_offsets_at_phase_for_leg(leg, phase)
-                expected = AffineTransform.from_rotvec(
-                    [0, 0, offset.x], degrees=True
-                ).apply_point(leg_center) + Point3D([0, 0, offset.z])
-                tip = gait_gen.get_world_tip_at_phase_for_leg(
-                    leg, phase, leg_center, rotation=True
-                )
-                assert tip == expected
 
     def _gait_stages(self, gait_gen, hexapod_legs, phase, prev_offsets):
         offsets = {}

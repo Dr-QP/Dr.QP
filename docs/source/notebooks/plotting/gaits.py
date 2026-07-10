@@ -196,7 +196,6 @@ class GaitsVisualizer:
         _ax=None,
         _plot_lines=None,
         _step_length=50,
-        _rotation_gaits=False,
         **gen_args,
     ):
         """Visualize the gait sequence as a continuous function in 3D plot."""
@@ -224,11 +223,8 @@ class GaitsVisualizer:
         # Generate data points
         for phase in phases:
             for leg in self.all_legs:
-                # The generator returns a ready-to-use world-frame tip for every gait type,
-                # so the visualiser stays agnostic to translation vs. rotation semantics.
-                leg_tip = _gait_generator.get_world_tip_at_phase_for_leg(
-                    leg, phase, _leg_centers[leg], rotation=_rotation_gaits
-                )
+                offset = _gait_generator.get_offsets_at_phase_for_leg(leg, phase, **gen_args)
+                leg_tip = _leg_centers[leg] + offset
 
                 x_values[leg].append(leg_tip.x)
                 y_values[leg].append(leg_tip.y)
