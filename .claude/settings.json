@@ -17,7 +17,7 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(git)",
       "Bash(git *)",
-      "Bash(.github/skills/*/scripts/*)",
+      "Bash(.claude/skills/*/scripts/*)",
       "Bash(gh)",
       "Bash(gh *)",
       "Bash(mkdir *)",

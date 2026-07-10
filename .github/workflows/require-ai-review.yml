@@ -65,9 +65,6 @@ jobs:
               repo: context.repo.repo,
               pull_number: pr.number,
             };
-            const copilotReviewerLogins = new Set([
-              'copilot-pull-request-reviewer[bot]',
-            ]);
             const codexLogins = new Set([
               'chatgpt-codex-connector[bot]',
             ]);
@@ -83,15 +80,6 @@ jobs:
 
             const reviewLogin = (review) => review?.user?.login;
             const reviewState = (review) => review?.state?.toLowerCase();
-
-            const isCopilotReview = (review) => {
-              const login = review?.user?.login;
-              const state = review?.state?.toLowerCase();
-              return (
-                copilotReviewerLogins.has(login) &&
-                acceptedReviewStates.has(state)
-              );
-            };
 
             const isCodexApprovalReaction = (reaction) => {
               return (
@@ -134,18 +122,6 @@ jobs:
               const sourcePhrase = source ? ` ${source}` : '';
               core.info(
                 `Found accepted Codex review by ${review.user.login}${sourcePhrase} for ${review.commit_id} with state ${review.state}.`
-              );
-              return true;
-            };
-
-            const passIfCopilotReviewed = (review, source) => {
-              if (!isCopilotReview(review)) {
-                return false;
-              }
-
-              const sourcePhrase = source ? ` ${source}` : '';
-              core.info(
-                `Found accepted Copilot review by ${review.user.login}${sourcePhrase} for ${review.commit_id} with state ${review.state}.`
               );
               return true;
             };
@@ -204,10 +180,6 @@ jobs:
               return;
             }
 
-            if (passIfCopilotReviewed(eventReview, 'from event payload')) {
-              return;
-            }
-
             if (passIfClaudeReviewed(eventReview, 'from event payload')) {
               return;
             }
@@ -225,14 +197,6 @@ jobs:
                 isCodexReview
               );
               if (passIfCodexReviewed(codexFeedbackReview, '')) {
-                return;
-              }
-
-              const matchingReview = latestMatchingReview(
-                reviews,
-                isCopilotReview
-              );
-              if (passIfCopilotReviewed(matchingReview, '')) {
                 return;
               }
 
@@ -257,7 +221,7 @@ jobs:
             }
 
             core.setFailed(
-              `No AI review found for this PR. Expected a review from Copilot (copilot-pull-request-reviewer[bot]), Codex (chatgpt-codex-connector[bot] review or +1 reaction), or Claude (claude[bot] or github-actions[bot]).`
+              `No AI review found for this PR. Expected a review from Claude (claude[bot] or github-actions[bot]) or Codex (chatgpt-codex-connector[bot] review or +1 reaction).`
             );
 
       - name: Log debug stats

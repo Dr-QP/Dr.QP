@@ -1,28 +1,30 @@
 # Claude Code Customizations
 
-This directory provides Claude Code access to the shared AI tooling defined in `.github/`. The canonical source of truth is always in `.github/` — both GitHub Copilot and Claude Code consume from there.
+This directory is the **canonical source of truth** for the repository's AI tooling. Claude Code is the primary coding assistant; Codex (secondary) and Cursor consume these files via trampolines and symlinks in `.codex/` and `.cursor/`.
 
 ## Structure
 
 ```text
 .claude/
-├── agents/       # Trampoline subagent files → .github/agents/
-├── skills/       # Symlink → ../.github/skills/ (skills and slash commands)
+├── agents/       # Subagent specs (*.agent.md, Claude Code frontmatter)
+├── skills/       # Skills and slash commands (<name>/SKILL.md)
+├── instructions/ # Detailed guidelines referenced from CLAUDE.md
+├── agent-ideas/  # Draft agent specs not yet promoted to agents/
 ├── hooks/        # Claude Code session hooks
 └── settings.json # Claude Code permissions and plugin settings
 ```
 
 ## How it works
 
-**Skills** (`.claude/skills/`): A directory symlink pointing to `../.github/skills/`. Claude Code discovers each `<name>/SKILL.md` as a `/name` slash command and can also invoke skills automatically based on their `description`. All bundled scripts and reference files inside each skill directory are available to Claude Code. The SKILL.md format is shared between Copilot and Claude Code (both implement the [Agent Skills](https://agentskills.io) open standard).
+**Skills** (`.claude/skills/`): Claude Code discovers each `<name>/SKILL.md` as a `/name` slash command and can also invoke skills automatically based on their `description`. All bundled scripts and reference files inside each skill directory are available to Claude Code. The SKILL.md format implements the [Agent Skills](https://agentskills.io) open standard, so Codex and Cursor consume the same skills through the `.codex/skills/` and `.cursor/skills/` symlinks.
 
-**Agents** (`.claude/agents/*.md`): Trampoline files — minimal wrappers with Claude Code-compatible frontmatter (name, description, tool list) that delegate to the corresponding `.github/agents/*.agent.md` for the full instructions. Trampolines are needed because Copilot agent frontmatter uses incompatible model names (`GPT-5.4`) and tool aliases (`context7/*`, `findTestFiles`, etc.).
+**Agents** (`.claude/agents/*.agent.md`): Full subagent definitions with Claude Code frontmatter (`name`, `description`, `tools`, optional `model`). Codex uses minimal trampoline files in `.codex/agents/` that delegate to these specs; Cursor reads them via the `.cursor/agents/` symlink.
 
-**Instructions**: Referenced directly in `CLAUDE.md` by file path. No duplication — edit `.github/instructions/` to update both systems.
+**Instructions** (`.claude/instructions/`): Referenced directly in `CLAUDE.md` by file path. Codex and Cursor see them through the `.codex/instructions/` and `.cursor/rules/` symlinks.
 
 ## Editing guidance
 
-- To add or change a **skill**: edit `.github/skills/<name>/SKILL.md`. The symlink means Claude Code picks it up immediately (no restart needed if the `skills/` directory already exists).
-- To add a **new skill**: create `.github/skills/<new-name>/SKILL.md`. The symlink covers it automatically.
-- To add or change an **agent**: edit `.github/agents/*.agent.md`; update the corresponding `.claude/agents/*.md` trampoline only if the name, description, or tool list changes.
-- To add or change **instructions**: edit `.github/instructions/*.instructions.md` and add a reference line to `CLAUDE.md` if the file is new.
+- To add or change a **skill**: edit `.claude/skills/<name>/SKILL.md`. See [agent-skills.instructions.md](instructions/agent-skills.instructions.md).
+- To add or change an **agent**: edit `.claude/agents/*.agent.md` and keep the matching `.codex/agents/*.md` trampoline's `name`/`description` in sync. See [agents.instructions.md](instructions/agents.instructions.md).
+- To add or change **instructions**: edit `.claude/instructions/*.instructions.md` and add a reference line to `CLAUDE.md` if the file is new.
+- Never edit through the `.codex/` or `.cursor/` symlinks — treat those directories as read-only adapters.

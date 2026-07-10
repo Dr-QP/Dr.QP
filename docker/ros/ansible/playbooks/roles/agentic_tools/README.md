@@ -3,7 +3,7 @@
 Installs the agentic CLI tooling used in the workspace and the security layer
 that guards it:
 
-- **Bun-managed globals**: `@modelcontextprotocol/inspector`, `@github/copilot`,
+- **Bun-managed globals**: `@modelcontextprotocol/inspector`
   and `@anthropic-ai/claude-code`.
 - **[cc-filter](https://github.com/wissem/cc-filter)**: a hard security layer in
   front of Claude Code hooks. It blocks sensitive file access, blocks risky
