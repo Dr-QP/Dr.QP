@@ -288,8 +288,6 @@ This diagram should give you an idea of what we are trying to solve:
 
 ![Inverse Kinematics Diagram](https://github.com/user-attachments/assets/e6447032-cd1a-4f5b-b756-689c733b8389)
 
-`TODO: Update diagram with the one from Dr.QP leg and names of angles and planes matching this notebook`
-
 ```{code-cell} ipython3
 # Custom lengths for the IK examples
 coxa_len = 5
