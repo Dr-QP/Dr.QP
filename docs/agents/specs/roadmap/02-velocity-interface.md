@@ -18,9 +18,15 @@ joystick teleop unchanged; commands arbitrated joystick > autonomy.
 - Subscribe `/cmd_vel` (`geometry_msgs/Twist`): use `linear.x`, `linear.y`, `angular.z`;
   ignore others. Watchdog: no message for 0.5 s ⇒ ramp to stop.
 - Keep `/robot/movement_command` (`MovementCommand`) for semantic control (gait selection, body
-  pose). Both feed the walk controller through one arbitration point.
+  pose). Both feed the walk controller through one arbitration point **in the brain**, and that
+  arbiter — not the mux — is what enforces "joystick > autonomy": the joystick stays on its
+  semantic path outside `twist_mux`, so the mux cannot see it. Arbitration rule: joystick is
+  *active* while a non-neutral `MovementCommand` arrived within a freshness window (0.5 s,
+  matching the watchdog); while active, `/cmd_vel` motion input is ignored; when the joystick
+  goes stale or neutral, `/cmd_vel` resumes. Document the rule next to the arbiter.
 - Add `twist_mux` (ros package) in bringup: inputs `/cmd_vel_teleop` (future), `/cmd_vel_nav`;
-  output `/cmd_vel`. Initially joystick stays on its semantic path; mux priorities documented.
+  output `/cmd_vel`. The mux arbitrates only among `cmd_vel` sources (nav vs future
+  twist-teleop); mux priorities documented.
 
 ## Design
 
@@ -41,6 +47,9 @@ joystick teleop unchanged; commands arbitrated joystick > autonomy.
 ## Acceptance criteria
 
 - [ ] Unit tests: mapper saturation, watchdog timing, zero handling.
+- [ ] Simultaneous-input arbitration test: joystick activity while `/cmd_vel` streams ⇒
+      joystick wins within one control cycle; joystick released/neutral ⇒ `/cmd_vel` resumes
+      after the freshness window (node-level or launch test).
 - [ ] Launch test (`drqp_gazebo/test/`): publish 0.1 m/s forward 10 s ⇒ ground-truth
       displacement 1.0 m ± 20 %; analogous lateral, yaw (±20 %), combined.
 - [ ] `teleop_twist_keyboard` drives the sim robot with no custom code.

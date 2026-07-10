@@ -46,8 +46,11 @@ Notes:
   mismatch with stance is bounded by the stance speed itself (previously stance + peak swing
   speed); full ground-speed matching is a later refinement on top of twist steering (spec 06),
   not this spec.
-- Replace `leg_phase %= 1.000001` with `math.fmod(leg_phase, 1.0)` and an explicit half-open
-  `[0, 1)` convention comment (F13).
+- Replace `leg_phase %= 1.000001` with `leg_phase % 1.0` and an explicit half-open `[0, 1)`
+  convention comment (F13). Do **not** use `math.fmod`: `leg_phase = phase - swing_start_offset`
+  is routinely negative, and Python's `%` wraps negatives into `[0, 1)` (`-0.5 % 1.0 == 0.5`)
+  while `fmod` keeps the sign (`math.fmod(-0.5, 1.0) == -0.5`), which would incorrectly place
+  several legs at the start of swing.
 - The swing/stance split and the per-gait phase-offset tables do not change.
 
 ## Behavior changes
@@ -74,7 +77,8 @@ Extend `test_parametric_gait_generator.py`:
   linear values).
 - Continuity across the swing↔stance boundary: position difference between last swing sample
   and first stance sample → 0 as sampling density grows.
-- Wraparound: phases 0.0, 1.0, 1.0 + ε map consistently under the new `fmod` convention.
+- Wraparound: phases 0.0, 1.0, 1.0 + ε, and negative leg phases (e.g. −0.5 → 0.5) map
+  consistently under the `% 1.0` convention.
 - Update any golden traces in `test_walk_controller.py` that encode sine-profile z values.
 
 ## Verification
@@ -92,6 +96,6 @@ exposes contact forces, compare peak touchdown force before/after).
 
 - [ ] Cycloid x/z with test-enforced zero boundary velocities and preserved endpoints/apex.
 - [ ] Stance math untouched (regression-pinned).
-- [ ] `fmod`-based wraparound; epsilon hack removed.
+- [ ] `% 1.0`-based wraparound (negative-safe); epsilon hack removed.
 - [ ] `stride_limits.yaml` regenerated and committed.
 - [ ] All `drqp_brain` tests pass.

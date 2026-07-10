@@ -57,6 +57,13 @@ class WalkController:
   old parameter name.
 - Smoothing parameter becomes `steering_tau_sec` (choose the value that reproduces today's
   effective response at 8 Hz with alpha 0.3: `tau = -dt / ln(1 - 0.3) ≈ 0.35 s`).
+- **Stopped-state phase (explicit)**: when the smoothed steering is zero — magnitude below a
+  small epsilon (e.g. 1e-3 of full scale), then snapped to exactly zero so the exponential decay
+  terminates — `advance` does **not** advance the phase. Phase advancement is therefore *not*
+  unconditional: the gait halts while stationary, the dedupe inputs stop changing, and nothing
+  is published — this is what satisfies spec 08's "stationary ticks publish nothing"
+  requirement (unconditional advancement would change the dedupe key every tick and publish
+  forever). Phase resumes from the frozen value when steering becomes non-zero.
 
 ### Brain loop
 
@@ -80,7 +87,7 @@ def loop(self):
 
 ### Speed calibration
 
-Preserving _observed_ robot speed is required: today's code advances 2 phase steps per tick, so
+Preserving *observed* robot speed is required: today's code advances 2 phase steps per tick, so
 when the double-advance is removed, halve the effective cycle time to compensate. Concretely:
 current `phase_steps_per_cycle = [20, 25, 40]` at 8 fps with double-advance ⇒ observed cycle
 times `[1.25, 1.5625, 2.5]` s. Set `cycle_time_sec = {tripod: 1.25, ripple: 1.5625, wave: 2.5}`
@@ -96,9 +103,13 @@ and assert them in tests.
 
 - `targets_at` purity: calling twice with the same arguments returns equal targets and leaves
   all walker attributes untouched (compare `__dict__` snapshots).
-- Phase advance: after `advance(dt)`, `current_phase` increased by exactly `dt / cycle_time`;
-  loop-level test with a fake clock asserting one phase step per tick regardless of
-  `walking_trajectory_points` ∈ {1, 2, 4}.
+- Phase advance: after `advance(dt)` with non-zero steering, `current_phase` increased by
+  exactly `dt / cycle_time`; loop-level test with a fake clock asserting one phase step per tick
+  regardless of `walking_trajectory_points` ∈ {1, 2, 4}.
+- Stopped state: with neutral commands, once smoothed steering decays below epsilon, repeated
+  `advance` calls leave `current_phase` unchanged and the brain publishes nothing (dedupe
+  holds — this is the unit-level counterpart of spec 08's idle-behavior test); resuming motion
+  continues from the frozen phase.
 - Observed cycle time: walking at full stride for one simulated cycle returns each foot to its
   starting offset after `cycle_time_sec` (per gait) — this is the regression test for the
   speed-calibration table above.
@@ -121,7 +132,9 @@ steps over 10 s), no visible speed change versus the previous build.
 ## Acceptance criteria
 
 - [ ] `targets_at` is pure; `advance` is the only mutator; snapshot/restore deleted.
-- [ ] Phase advances once per tick by measured `dt`; window evaluation has no side effects.
+- [ ] Phase advances once per tick by measured `dt` while moving; frozen while stationary
+      (stopped-state behavior test-enforced, no publications while stationary).
+- [ ] Window evaluation has no side effects.
 - [ ] Walking speed is independent of `walking_trajectory_points` (test-enforced).
 - [ ] Observed per-gait cycle times match the calibration table (test-enforced).
 - [ ] Steering smoothing expressed as `steering_tau_sec`; response equivalent at 8 Hz.

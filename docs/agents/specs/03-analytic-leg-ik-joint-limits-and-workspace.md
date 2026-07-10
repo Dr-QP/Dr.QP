@@ -91,9 +91,17 @@ Given the localized target (after `to_local`), clamp before solving:
 
 ## Test plan (write first)
 
-- **FK∘IK round-trip property test**: for a grid (or hypothesis-style sampling) of joint
-  angles inside limits, `solve_ik(fk(angles)).angles_rad ≈ angles` within 1e-9 rad and
-  `reachable and within_limits`.
+- **FK∘IK round-trip property test (target space)**: for a grid (or hypothesis-style sampling)
+  of foot targets generated via `fk` from in-limit joint angles,
+  `fk(solve_ik(target).angles_rad) ≈ target` within tolerance and
+  `reachable and within_limits`. This is the property that holds unconditionally with a
+  single-branch solver.
+- **Angle round-trip, branch-restricted**: `solve_ik(fk(angles)).angles_rad ≈ angles` within
+  1e-9 rad only for angle samples on the solver's own elbow branch. Sampling all in-limit
+  angles would fail: the solver keeps one femur/tibia branch, so an off-branch sample
+  legitimately maps to its mirrored solution (verified: (10°, 20°, −30°) solves back as
+  ≈ (10°, −19.19°, +30°)). Encode the branch predicate next to the test and restrict the
+  sampling with it.
 - **Clamp behavior**: targets outside the annulus (too far / too close / below coxa yaw range)
   return `reachable=False`, finite angles within limits, and `fk(angles) == clamped_target`
   with `clamped_target` on the workspace boundary (distance check).
@@ -124,6 +132,7 @@ path).
 - [ ] Radians-native `solve_ik`; degrees API preserved as wrapper.
 - [ ] Joint limits parsed from the URDF in one place; `JOINT_LIMITS_DEGREES` deleted.
 - [ ] Workspace clamping returns boundary solutions for unreachable targets.
-- [ ] FK∘IK round-trip property test in place and passing.
+- [ ] Target-space `fk(solve_ik(target))` round-trip and branch-restricted angle round-trip
+      property tests in place and passing.
 - [ ] `stride_limits.yaml` regeneration is byte-identical.
 - [ ] All `drqp_kinematics` and `drqp_brain` tests pass.

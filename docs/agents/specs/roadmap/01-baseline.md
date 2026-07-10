@@ -28,11 +28,14 @@ limits that later specs depend on, and finish battery telemetry.
      reads per cycle across all 18 servos; report achievable Hz for read-set sizes
      {pos-only, pos+temp+volt}.
    - Record results in docs; this number gates RM-09 policy rate and RM-03 odometry quality.
-3. **Battery telemetry**
-   - `ros2_control.urdf.xacro` already declares a `battery_state` sensor; finish plumbing in
-     `a1_16_hardware_interface.cpp` (A1-16 reports voltage) → publish `sensor_msgs/BatteryState`
-     on `/battery_state` via a broadcaster.
+3. **Battery telemetry — close the remaining gaps** (the hardware path already exists:
+   `a1_16_hardware_interface.cpp` reads voltage into the `battery_state/voltage` state
+   interface, `ros2_control.urdf.xacro` declares the `battery_state` sensor,
+   `ros2_controller.launch.py` spawns `battery_state_broadcaster`, and the hardware interface
+   has test coverage)
    - Sim: publish a static/plausible battery state so consumers are testable.
+   - Add any missing end-to-end validation: launch test asserting `/battery_state` appears on
+     bringup (sim and hardware paths).
 4. **Resource baseline**
    - Capture CPU/mem of full bringup on Pi (script + one-time doc table). Later specs budget
      against it.

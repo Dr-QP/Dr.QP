@@ -59,8 +59,12 @@ reducing steering latency and unlocking the balance-bandwidth headroom needed by
 - **Rate invariance**: run the walker (sim-time unit test with fake clock) at 8, 25, and 50 Hz
   with identical command streams; assert per-gait cycle times and per-foot path geometry match
   within tolerance (the spec 02 cycle-time tests parameterized by rate).
-- **Budget**: unit-level timing test — full tick (targets + solve + trajectory build) at 25 Hz
-  budget < 40 ms with ≥ 4× margin on the dev container; log actuals.
+- **Budget**: wall-clock timing is environment-sensitive and does not belong in ordinary unit
+  CI (deterministic-test guidance). Implement it as a benchmark/diagnostic — a dedicated
+  performance test behind a pytest marker (e.g. `performance`) excluded from the default run,
+  or a script — measuring a full tick (targets + solve + trajectory build) against a generously
+  bounded 40 ms budget, logging actuals. The authoritative acceptance signal is the runtime
+  tick-duration instrumentation asserted in the launch test below, not this benchmark.
 - **Launch test**: bringup at 25 Hz in Gazebo — walking all gaits, no JTC goal rejections, no
   missed-deadline warnings, tick-duration diagnostic max < period.
 - **Idle behavior**: stationary robot publishes no trajectories (dedupe holds at high rate).

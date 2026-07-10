@@ -39,12 +39,16 @@ RM-02 `cmd_vel` path, preemptable by joystick and kill switch.
 - [ ] Safety: goals rejected unless `/robot_state == torque_on`; kill switch mid-nav ⇒ trajectory
       stops, state machine handles as today (test).
 - [ ] `robot.go_to("kitchen")` via MCP succeeds in sim.
-- [ ] Hardware: ≥ 20-run success-rate measurement documented (target ≥ 80 % first pass).
+- [ ] Hardware (gated on a live obstacle layer in the local costmap — see Constraints):
+      ≥ 20-run success-rate measurement documented (target ≥ 80 % first pass).
 
 ## Constraints
 
-- Local costmap starts with static map + inflation only; obstacle layers (mono floor-plane
-  detection, ToF sensor) are separate follow-up specs — leave plugin slots configured.
+- Local costmap starts with static map + inflation only — **simulation-only**: a static-map
+  robot cannot react to people, pets, or moved furniture, so hardware navigation in the home
+  requires a live obstacle source in the local costmap. Obstacle layers (mono floor-plane
+  detection, ToF sensor) are separate follow-up specs — leave plugin slots configured; the
+  hardware acceptance milestone below is gated on one of them landing.
 - No Dr.QP-specific forks of Nav2; configuration and thin plugins only.
 - Nav2 stack may run off-board; only `twist_mux` + brain are safety-local. Stale `/cmd_vel_nav`
   handled by RM-02 watchdog.

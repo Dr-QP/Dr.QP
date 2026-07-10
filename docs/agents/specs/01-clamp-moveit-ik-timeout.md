@@ -24,7 +24,10 @@ Python constant.
 
 ## Target behavior
 
-- The per-call timeout is ≤ 0.02 s.
+- The per-call timeout is derived from the loop budget, not hand-picked: with up to
+  6 legs × 2 window points × 2 attempts = 24 calls per tick, the budget inequality
+  `24 × timeout ≤ 0.5 / fps` gives `timeout ≤ ~2.6 ms` at 8 Hz. (A hand-picked 20 ms would
+  allow a 480 ms worst case — far over the 62.5 ms half-period budget.)
 - Worst-case IK time per tick (all legs, all window points, all retries) fits within half the
   loop period, leaving budget for validation and publication.
 - On timeout the existing failure path (warning + skip tick) is taken — no behavior change other
@@ -32,11 +35,18 @@ Python constant.
 
 ## Implementation notes
 
-1. Change `MOVEIT_IK_TIMEOUT_SEC` to `0.02`.
-2. Add a derived assertion or comment tying the constant to the loop budget:
+1. Define `MOVEIT_IK_TIMEOUT_SEC` as a derived expression, not a literal:
+   `MOVEIT_IK_TIMEOUT_SEC = (0.5 / fps) / (legs × window_points × attempts)` using the same
+   constants the loop uses (≈ 2.6 ms at 8 Hz, 6 legs, 2 points, 2 attempts).
+2. Add a derived assertion tying the constant to the loop budget:
    `6 legs × 2 points × 2 attempts × timeout ≤ 0.5 / fps`. Prefer a module-level constant
    expression over prose so a future `fps` change trips it.
-3. Confirm `kinematics.yaml` values (`timeout: 0.05`, `attempts: 3`) still make sense as the
+3. If ~2.6 ms proves too short for KDL to converge reliably at default stride (validate via the
+   Gazebo launch test below), do **not** raise the timeout — reduce the worst-case call count
+   instead and re-derive: e.g. drop the home-seed retry for the second window point (it is
+   phase-adjacent to the first, so the previous solution is already a good seed), giving
+   18 calls ≈ 3.5 ms each.
+4. Confirm `kinematics.yaml` values (`timeout: 0.05`, `attempts: 3`) still make sense as the
    MoveIt-side defaults for non-loop users (RViz, launch tests); do not change them in this
    spec.
 
@@ -71,7 +81,8 @@ no `MoveItPy IK failed` warnings appear during straight-line tripod walking.
 
 ## Acceptance criteria
 
-- [ ] `MOVEIT_IK_TIMEOUT_SEC ≤ 0.02`.
+- [ ] `MOVEIT_IK_TIMEOUT_SEC` is derived from the loop budget; worst-case total IK time per
+      tick (all calls) ≤ half the loop period.
 - [ ] Budget inequality encoded in a test.
 - [ ] All existing `drqp_brain` unit and launch tests pass.
 - [ ] Straight/diagonal walking in Gazebo shows no IK-failure warnings at default stride.

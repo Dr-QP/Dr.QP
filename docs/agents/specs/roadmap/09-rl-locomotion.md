@@ -23,7 +23,11 @@ the same `/cmd_vel` interface, with a hard safety supervisor.
 ## Platform constraints (fixed inputs to design)
 
 - A1-16 servos: **position control only**; policy action = 18 joint position targets tracked by
-  servo-internal PD. No torque interface. Servo temperature IS readable — monitor it.
+  servo-internal PD. No torque interface. Servo temperature IS readable at the register level,
+  but ros2_control does not currently expose it — exposing per-servo temperature (state
+  interfaces in `a1_16_hardware_interface.cpp` + a broadcaster/diagnostics publisher, e.g.
+  `/servo_temps`) is a deliverable of stage 4 and a prerequisite for the stage 5 temperature
+  trip.
 - Policy rate 25–50 Hz gated by RM-01 bus benchmark; brain's 8 Hz MoveItPy path is bypassed
   entirely by the runtime.
 - Observations v1: joint positions (read-back), IMU orientation (gravity vector) + angular
@@ -47,10 +51,17 @@ the same `/cmd_vel` interface, with a hard safety supervisor.
    `/cmd_vel`, `/imu/data`, `/joint_states` (+ `/feet/contacts` when available), publishes joint
    targets (dedicated high-rate controller chain — direct `forward_position_controller` or
    trajectory points at policy rate; decide against bus benchmark). Mode switch: parameter +
-   `/robot_event` integration; transitions only through a neutral stance.
-5. **Safety supervisor** (inside runtime): trip conditions — tilt > limit, joint target jump >
-   limit, obs staleness, servo temp > limit, watchdog. Trip ⇒ freeze to neutral stance /
-   handover to parametric stack / `torque_off` per severity. Non-bypassable.
+   `/robot_event` integration; transitions only through a neutral stance. Also delivers the
+   servo-temperature exposure (hardware-interface state interfaces + `/servo_temps`
+   broadcaster/diagnostics) required by the stage 5 supervisor.
+5. **Safety supervisor** (separate node in its own process — NOT inside the policy runtime,
+   otherwise a policy-process crash kills the supervisor with it): subscribes `/imu/data`,
+   `/joint_states`, the policy's published joint targets, and `/servo_temps` (stage 4). Trip
+   conditions — tilt > limit, joint target jump > limit, obs staleness, servo temp > limit,
+   policy-process heartbeat/watchdog timeout (this is what catches a crashed or hung policy
+   node). Trip ⇒ freeze to neutral stance / handover to parametric stack / `torque_off` per
+   severity. Non-bypassable: the policy has no path to the actuators that the supervisor does
+   not monitor and cannot override.
 6. **Hardware rollout**: tethered/harnessed → free walking on hard floor → surfaces matrix;
    benchmark vs parametric (velocity tracking error, disturbance recovery, threshold crossing).
 
@@ -61,12 +72,14 @@ the same `/cmd_vel` interface, with a hard safety supervisor.
 - [ ] Gazebo gate: existing movement + balance-board launch tests pass in `learned` mode.
 - [ ] Mode-switch launch test: parametric ↔ learned during `torque_on` via neutral stance, no
       fall (IMU tilt bounded).
-- [ ] Supervisor unit/launch tests: each trip condition fires and degrades as specified.
+- [ ] Supervisor unit/launch tests: each trip condition fires and degrades as specified,
+      including a killed/hung policy process (supervisor survives and trips the watchdog).
 - [ ] Hardware benchmark table committed (learned vs parametric).
 
 ## Constraints
 
 - Training code may live outside colcon (`drqp_rl/` with own `pyproject.toml`), but conversion
   and runtime are CI-covered.
-- No RL code in the safety path except the supervisor (which is deterministic, not learned).
+- No RL code in the safety path; the supervisor is deterministic (not learned) and runs
+  isolated in its own process.
 - Gazebo remains validation-only; never train in it.

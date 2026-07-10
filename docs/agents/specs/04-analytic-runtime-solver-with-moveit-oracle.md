@@ -1,7 +1,8 @@
 # Spec 04: Analytic runtime solver, MoveIt as oracle
 
 - **Status**: proposed
-- **Fixes**: F3 (high), F4 (high), F5
+- **Fixes**: F3 (high), F4 (high), F5 (partial — full removal of per-tick validation is gated
+  on spec 06)
 - **Depends on**: 02 (pure targets), 03 (limit-aware analytic IK)
 - **Packages**: `drqp_brain`
 - **Size**: L — the core of the migration
@@ -11,7 +12,8 @@
 Solve walking IK in the control loop with the analytic solver from spec 03: deterministic,
 microsecond-fast, with per-leg graceful clamping instead of all-or-nothing tick rollback.
 Demote MoveItPy to what it is good at: offline stride-limit calibration, launch-test
-validation, and a solver-agreement oracle.
+validation, a solver-agreement oracle, and — until spec 06 covers the combined command
+envelope — the per-tick self-collision safety check.
 
 ## Current behavior
 
@@ -66,18 +68,26 @@ class AnalyticLocomotionKinematics:
 
 - Replace tick rollback with per-leg degradation: clamped legs track their boundary pose; the
   tick still publishes. Log (throttled) a warning listing clamped legs.
-- The only hard failures left: non-finite results (assert — should be impossible) and missing
-  joint names. These skip publication, as today, but with the pure targets from spec 02 there
-  is no state to roll back.
+- The hard failures left: self-collision validation failure (the safety net for the
+  not-yet-certified combined envelope — see below), non-finite results (assert — should be
+  impossible) and missing joint names. These skip publication, as today, but with the pure
+  targets from spec 02 there is no state to roll back.
 - Emit a `/robot_event` (or diagnostics) signal when clamping persists > N ticks, as the hook
   for future twist-scaling (spec 06 consumes this properly).
 
 ### MoveIt as oracle (F5)
 
 - `MoveItPyLocomotionKinematics` stays for: `generate_stride_limits`, launch tests, and a new
-  **agreement test** (below). Runtime self-collision/bounds validation is dropped from the hot
-  path — the walking envelope is certified by `stride_limits.yaml`, and joint limits are now
-  enforced analytically per solve.
+  **agreement test** (below).
+- Runtime bounds validation is subsumed immediately: joint limits are enforced analytically per
+  solve.
+- Runtime **self-collision validation stays in the hot path for now**: the analytic backend
+  solves the legs, then validates the assembled 18-joint state with the existing planning-scene
+  check before publication. `stride_limits.yaml` certifies **translation-only** strides;
+  combined rotation, body pose, and IMU-balance offsets remain uncovered until spec 06's
+  twist-level reachability scaling covers the combined envelope. Dropping the per-tick
+  collision check is deferred to spec 06 (or to an extended offline certification of the
+  combined envelope, whichever lands first) — do not remove it in this spec.
 - Keep the class and its tests intact; do not delete any MoveIt config.
 
 ## Behavior changes
@@ -132,6 +142,8 @@ and confirm parity.
 - [ ] Oracle agreement test across the certified envelope passes (≤ 1e-3 rad).
 - [ ] Per-leg clamping replaces tick rollback; robot degrades instead of freezing
       (launch-test demonstrated with an intentionally excessive stride command).
-- [ ] Hot path performs no per-tick MoveIt calls with the analytic backend.
+- [ ] Hot path performs no per-tick MoveIt IK solves with the analytic backend; the
+      planning-scene self-collision validation remains in place (its removal is gated on
+      spec 06).
 - [ ] `generate_stride_limits` output unchanged (still MoveIt-based, byte-identical YAML).
 - [ ] All unit + launch tests pass for both backends.

@@ -29,8 +29,13 @@ construction and no angle is offset twice or zero times.
 
 ## Target design
 
-Decision to make first (spike, ~1 hour): confirm the offsets are pure assembly geometry by
-checking the URDF link frames vs. the `LegModel` conventions. Then:
+**Spike first — this is a decision gate (~1 hour)**: confirm the offsets are pure assembly
+geometry by checking the URDF link frames vs. the `LegModel` conventions. Everything below,
+including the acceptance criteria placing the constants in `drqp_kinematics`, is written
+assuming the spike **confirms** that hypothesis; record the spike's conclusion (with the frame
+comparison evidence) in the PR before implementing. If the spike disproves it — the URDF, not
+the model, turns out to be the wrong-zero party — stop, invert step 4 below, and revise this
+spec (including its acceptance criteria) before proceeding. Assuming confirmation:
 
 1. **Model speaks URDF convention at its boundary.** The conversion (model zero ↔ URDF zero)
    moves into `drqp_kinematics` as named constants/functions next to `LegModel`
@@ -86,6 +91,8 @@ stand first.
 
 ## Acceptance criteria
 
+- [ ] Spike conclusion (offsets are assembly geometry) documented before implementation; spec
+      revised first if disproven.
 - [ ] Offset constants exist in exactly one module (`drqp_kinematics`), with geometric
       derivation documented.
 - [ ] `JointTrajectoryBuilder` and `apply_joint_targets` are convention-free / use the shared

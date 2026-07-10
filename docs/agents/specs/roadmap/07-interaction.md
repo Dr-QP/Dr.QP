@@ -2,7 +2,7 @@
 id: RM-07
 title: Voice, LLM agent brain, and pet behavior engine
 status: proposed
-depends_on: [RM-04] # conversation/nav tools additionally need RM-06
+depends_on: [RM-01, RM-04, RM-05, RM-06] # union — tracks land independently, see "Per-track dependencies"
 packages:
   [
     drqp_robot_mcp,
@@ -20,6 +20,17 @@ packages:
 Wake-word voice interaction with an LLM agent grounded in robot state and MCP tools, plus a local
 behavior engine providing idle/reactive pet behaviors and safety reflexes. Three independently
 landable tracks.
+
+## Per-track dependencies
+
+The tracks land independently, so each has its own dependency set; the frontmatter `depends_on`
+is the union for the full spec:
+
+- **Track A (audio)**: no roadmap dependencies — hardware bring-up and local nodes only.
+- **Track B (agent)**: RM-04 (`robot.camera.snapshot`, `robot.snapshot_describe`), RM-05
+  (`where_am_i` grounding), RM-06 (`robot.go_to`).
+- **Track C (behavior)**: RM-01 (`/battery_state` for the low-battery behavior); RM-06 only for
+  the optional dock-seek behavior.
 
 ## Track A — Audio I/O (`drqp_audio`)
 
@@ -54,12 +65,17 @@ landable tracks.
   (scripted trajectory like init sequence), low-battery → rest/dock-seek (dock nav needs RM-06),
   sound-direction orient (mic array DOA, optional), person greeting (lightweight person detector
   on `/camera/image_raw`, ≤ 2 Hz).
-- **Pick-up reflex (safety)**: IMU free-fall/lift signature ⇒ publish `kill_switch_pressed` or a
-  new `picked_up` event → torque-safe behavior; must work without Tracks A/B.
+- **Pick-up reflex (safety)**: IMU free-fall/lift signature ⇒ publish a NEW dedicated
+  `picked_up` emergency-stop event → torque-safe behavior; must work without Tracks A/B. It
+  must **not** publish `kill_switch_pressed`: that event is a toggle
+  (`turn_off | initialize` in `robot_state_machine.py`), so fired from `torque_off` it *starts*
+  initialization — a pickup reflex reusing it could energize a held robot. The new event must
+  be idempotent and only ever de-energize (no-op in already-safe states).
 - `robot.emote(name)`: mapping table emotion → {body pose sequence, sound, gait flourish};
   exposed as MCP tool and internal API.
 - Acceptance: sim launch tests — idle behaviors emit only body-pose commands (no stride);
-  pick-up reflex fires on injected IMU profile; emote executes and returns to neutral.
+  pick-up reflex fires on injected IMU profile and is a no-op when the robot is already
+  de-energized (never energizes); emote executes and returns to neutral.
 
 ## Constraints
 

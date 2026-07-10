@@ -2,7 +2,7 @@
 id: RM-08
 title: Foot contact sensing and terrain adaptation
 status: proposed
-depends_on: [RM-02]
+depends_on: [RM-02, RM-03] # RM-03: leg-odometry-v2 consumer + drift benchmark; contact-source delivery itself needs only RM-02
 packages: [drqp_interfaces, drqp_brain, drqp_control, drqp_gazebo]
 ---
 
@@ -30,8 +30,10 @@ changes.
 
 ## Consumers
 
-1. **Leg odometry v2** (`drqp_brain`): parameter `stance_source: gait_phase | contacts`;
-   contacts mode excludes non-contact feet and slip-flagged feet.
+1. **Leg odometry v2** (`drqp_brain`, extends RM-03's leg odometry — this consumer and the
+   drift benchmark below are what pull in the RM-03 dependency): parameter
+   `stance_source: gait_phase | contacts`; contacts mode excludes non-contact feet and
+   slip-flagged feet.
 2. **Touchdown adaptation** (`WalkController`): parameter-gated; end swing early on contact,
    extend search (lower foot up to `max_probe_depth`) when contact missing at expected touchdown.
 3. **Stability supervisor** (`drqp_brain`): stance polygon + IMU tilt margin → below threshold ⇒
