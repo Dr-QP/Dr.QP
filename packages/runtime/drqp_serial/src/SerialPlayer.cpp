@@ -75,7 +75,8 @@ size_t SerialPlayer::writeBytes(const void* buffer, size_t size)
 
 bool SerialPlayer::available()
 {
-  return currentRecord().response.bytes.size() > 0;
+  const Record& record = currentRecord();
+  return record.readOffset < record.response.bytes.size();
 }
 
 size_t SerialPlayer::readBytes(void* buffer, size_t size)
@@ -84,11 +85,13 @@ size_t SerialPlayer::readBytes(void* buffer, size_t size)
   uint8_t* data = static_cast<uint8_t*>(buffer);
 
   Record& record = currentRecord();
-  const size_t availableSize = std::min(size, record.response.bytes.size());
+  const size_t remaining = record.response.bytes.size() - record.readOffset;
+  const size_t availableSize = std::min(size, remaining);
 
-  std::copy_n(record.response.bytes.begin(), availableSize, data);
-  record.response.bytes.erase(
-    record.response.bytes.begin(), record.response.bytes.begin() + availableSize);
+  // Copy from the current read position and advance past it instead of erasing from the
+  // front (mirrors the write path's offset tracking).
+  std::copy_n(record.response.bytes.begin() + record.readOffset, availableSize, data);
+  record.readOffset += availableSize;
 
   return availableSize;
 }

@@ -47,9 +47,13 @@ struct Record
   // offset avoids erasing from the front of request.bytes (an O(n) shift) on every write.
   size_t writeOffset = 0;
 
+  // Number of response bytes already consumed by SerialPlayer::readBytes. Advancing this
+  // offset avoids erasing from the front of response.bytes on every read.
+  size_t readOffset = 0;
+
   bool isEmpty() const
   {
-    return writeOffset >= request.bytes.size() && response.bytes.empty();
+    return writeOffset >= request.bytes.size() && readOffset >= response.bytes.size();
   }
 };
 
