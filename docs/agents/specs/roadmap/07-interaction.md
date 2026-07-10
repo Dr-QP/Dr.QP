@@ -68,7 +68,7 @@ is the union for the full spec:
 - **Pick-up reflex (safety)**: IMU free-fall/lift signature ⇒ publish a NEW dedicated
   `picked_up` emergency-stop event → torque-safe behavior; must work without Tracks A/B. It
   must **not** publish `kill_switch_pressed`: that event is a toggle
-  (`turn_off | initialize` in `robot_state_machine.py`), so fired from `torque_off` it *starts*
+  (`turn_off | initialize` in `robot_state_machine.py`), so fired from `torque_off` it _starts_
   initialization — a pickup reflex reusing it could energize a held robot. The new event must
   be idempotent and only ever de-energize (no-op in already-safe states).
 - `robot.emote(name)`: mapping table emotion → {body pose sequence, sound, gait flourish};

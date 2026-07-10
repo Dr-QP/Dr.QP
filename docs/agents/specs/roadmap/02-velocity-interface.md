@@ -21,7 +21,7 @@ joystick teleop unchanged; commands arbitrated joystick > autonomy.
   pose). Both feed the walk controller through one arbitration point **in the brain**, and that
   arbiter — not the mux — is what enforces "joystick > autonomy": the joystick stays on its
   semantic path outside `twist_mux`, so the mux cannot see it. Arbitration rule: joystick is
-  *active* while a non-neutral `MovementCommand` arrived within a freshness window (0.5 s,
+  _active_ while a non-neutral `MovementCommand` arrived within a freshness window (0.5 s,
   matching the watchdog); while active, `/cmd_vel` motion input is ignored; when the joystick
   goes stale or neutral, `/cmd_vel` resumes. Document the rule next to the arbiter.
 - Add `twist_mux` (ros package) in bringup: inputs `/cmd_vel_teleop` (future), `/cmd_vel_nav`;

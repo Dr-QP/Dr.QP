@@ -17,3 +17,32 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+
+"""Translation of Pygame key codes into the normalized key names of the model."""
+
+
+def build_key_map(pygame) -> dict[int, str]:
+    """Map Pygame key codes to the normalized key names GuiControlState expects."""
+    return {
+        pygame.K_w: 'w',
+        pygame.K_a: 'a',
+        pygame.K_s: 's',
+        pygame.K_d: 'd',
+        pygame.K_b: 'b',
+        pygame.K_UP: 'up',
+        pygame.K_DOWN: 'down',
+        pygame.K_LEFT: 'left',
+        pygame.K_RIGHT: 'right',
+        pygame.K_TAB: 'tab',
+        pygame.K_1: '1',
+        pygame.K_2: '2',
+        pygame.K_3: '3',
+        pygame.K_PLUS: '+',
+        pygame.K_EQUALS: '=',
+        pygame.K_MINUS: '-',
+        pygame.K_UNDERSCORE: '_',
+        pygame.K_SPACE: 'space',
+        pygame.K_ESCAPE: 'esc',
+        pygame.K_DELETE: 'delete',
+        pygame.K_BACKSPACE: 'backspace',
+    }

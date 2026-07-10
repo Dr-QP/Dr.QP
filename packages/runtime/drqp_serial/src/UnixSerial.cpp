@@ -19,7 +19,6 @@
 // THE SOFTWARE.
 
 #include "drqp_serial/UnixSerial.h"
-#include "AsioCommon.h"
 
 #include <vector>
 
@@ -27,6 +26,9 @@
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
 #include <boost/thread.hpp>
+
+#include "drqp_serial/SerialTransferConfig.h"
+#include "AsioCommon.h"
 
 struct UnixSerial::Impl
 {
@@ -86,11 +88,12 @@ void UnixSerial::begin(const uint32_t baudRate, const uint8_t transferConfig)
   impl_->serial_.set_option(serial_port_base::baud_rate(baudRate));
   impl_->serial_.set_option(serial_port_base::flow_control(serial_port_base::flow_control::none));
 
-  // TODO(anton-matosov): Implement parsing of the options or migrate to explicit options from ext
-  // SERIAL_8N1
-  impl_->serial_.set_option(serial_port_base::character_size(8));                            // 8
-  impl_->serial_.set_option(serial_port_base::parity(serial_port_base::parity::none));       // N
-  impl_->serial_.set_option(serial_port_base::stop_bits(serial_port_base::stop_bits::one));  // 1
+  // Decode the Arduino-style transferConfig bitmask (e.g. SERIAL_8N1, SERIAL_8E1)
+  // into Boost ASIO framing options and apply them.
+  const SerialTransferConfig config = decodeSerialTransferConfig(transferConfig);
+  impl_->serial_.set_option(config.characterSize);
+  impl_->serial_.set_option(config.parity);
+  impl_->serial_.set_option(config.stopBits);
 }
 
 size_t UnixSerial::writeBytes(const void* buffer, size_t size)

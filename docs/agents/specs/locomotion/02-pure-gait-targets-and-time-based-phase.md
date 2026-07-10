@@ -59,7 +59,7 @@ class WalkController:
   effective response at 8 Hz with alpha 0.3: `tau = -dt / ln(1 - 0.3) ≈ 0.35 s`).
 - **Stopped-state phase (explicit)**: when the smoothed steering is zero — magnitude below a
   small epsilon (e.g. 1e-3 of full scale), then snapped to exactly zero so the exponential decay
-  terminates — `advance` does **not** advance the phase. Phase advancement is therefore *not*
+  terminates — `advance` does **not** advance the phase. Phase advancement is therefore _not_
   unconditional: the gait halts while stationary, the dedupe inputs stop changing, and nothing
   is published — this is what satisfies spec 08's "stationary ticks publish nothing"
   requirement (unconditional advancement would change the dedupe key every tick and publish
@@ -87,7 +87,7 @@ def loop(self):
 
 ### Speed calibration
 
-Preserving *observed* robot speed is required: today's code advances 2 phase steps per tick, so
+Preserving _observed_ robot speed is required: today's code advances 2 phase steps per tick, so
 when the double-advance is removed, halve the effective cycle time to compensate. Concretely:
 current `phase_steps_per_cycle = [20, 25, 40]` at 8 fps with double-advance ⇒ observed cycle
 times `[1.25, 1.5625, 2.5]` s. Set `cycle_time_sec = {tripod: 1.25, ripple: 1.5625, wave: 2.5}`
