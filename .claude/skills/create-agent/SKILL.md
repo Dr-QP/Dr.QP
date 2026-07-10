@@ -1,6 +1,6 @@
 ---
 name: create-agent
-description: "Create or update Claude Code custom agent files (.agent.md) with proper frontmatter, tool selection, orchestration patterns, and Codex trampolines. Use when creating a new subagent, editing files in .claude/agents/, wiring sub-agent orchestration, or syncing .codex/agents/ trampolines. Keywords: agent, subagent, .agent.md, frontmatter, trampoline, orchestration."
+description: 'Create or update Claude Code custom agent files (.agent.md) with proper frontmatter, tool selection, orchestration patterns, and Codex trampolines. Use when creating a new subagent, editing files in .claude/agents/, wiring sub-agent orchestration, or syncing .codex/agents/ trampolines. Keywords: agent, subagent, .agent.md, frontmatter, trampoline, orchestration.'
 ---
 
 # Create Custom Agent
