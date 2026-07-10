@@ -3,7 +3,8 @@ id: RM-11
 title: Autonomous docking and self-charging
 status: proposed
 depends_on: [RM-01, RM-05, RM-06] # RM-01 battery telemetry, RM-05 dock pose + tag detector, RM-06 nav
-packages: [drqp_robot_mcp, drqp_interfaces, drqp_navigation, 'NEW: drqp_docking']
+packages:
+  [drqp_robot_mcp, drqp_interfaces, drqp_navigation, 'NEW: drqp_docking']
 ---
 
 # RM-11 — Docking and charging

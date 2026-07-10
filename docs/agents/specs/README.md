@@ -23,9 +23,9 @@ and one program de-risks the others. Read this before starting cross-program wor
 The autonomy roadmap (RM-\*) was written against **today's** walking stack (8 Hz MoveItPy loop,
 position-mixed steering). The locomotion migration replaces exactly that stack. Where they meet:
 
-- **Metric velocity (RM-02 ⇄ locomotion 06).** RM-02 proposes fitting an *empirical*
+- **Metric velocity (RM-02 ⇄ locomotion 06).** RM-02 proposes fitting an _empirical_
   `v_body = f(stride_length, phase_rate)` model from sim ground truth. Locomotion spec 06 makes
-  velocity metric *by construction* — the commanded twist `ξ = (v_x, v_y, ω_z)` **is** the body
+  velocity metric _by construction_ — the commanded twist `ξ = (v_x, v_y, ω_z)` **is** the body
   velocity via the SE(2) exponential foot-target map. **If spec 06 lands first, RM-02 collapses to
   a thin `Twist → ξ` adapter plus `twist_mux`/watchdog/arbitration** and the empirical fit becomes
   a validation cross-check rather than the mechanism. RM-02 says as much in its updated "Design"
@@ -47,7 +47,7 @@ todo-remediation items have no such coupling and can proceed immediately.
 ### Stance detection has three sources: keep them one interface
 
 `leg_in_stance` appears in locomotion spec 02 (gait-phase truth), RM-03's `GaitPhase` message, and
-RM-08's `FootContacts` (sensed). These are a *source hierarchy* for one concept, not three
+RM-08's `FootContacts` (sensed). These are a _source hierarchy_ for one concept, not three
 independent features: gait-phase stance is the default, sensed contact overrides it when
 available (RM-08's `stance_source` parameter). Consumers must never hardcode a source.
 

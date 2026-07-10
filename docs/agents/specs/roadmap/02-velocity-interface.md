@@ -34,7 +34,7 @@ This spec has **two implementations depending on whether locomotion spec 06 (twi
 landed** — they are not both built:
 
 - **If locomotion 06 is in** (recommended path): velocity is already metric by construction. The
-  commanded body twist `ξ = (v_x, v_y, ω_z)` *is* the walk controller's input, so this spec
+  commanded body twist `ξ = (v_x, v_y, ω_z)` _is_ the walk controller's input, so this spec
   reduces to a thin `Twist → ξ` adapter plus `twist_mux`, the watchdog, and the joystick/autonomy
   arbiter below. **Skip the empirical velocity-model fit and `velocity_mapper.py`.** Keep the
   ground-truth displacement test as an acceptance cross-check on spec 06's metric claim.
