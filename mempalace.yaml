@@ -1,0 +1,35 @@
+wing: overlay_ws
+rooms:
+- name: docker
+  description: Files from docker/
+  keywords:
+  - docker
+  - docker
+- name: documentation
+  description: Files from docs/
+  keywords:
+  - documentation
+  - docs
+- name: hardware
+  description: Files from hardware/
+  keywords:
+  - hardware
+  - hardware
+- name: packages
+  description: Files from packages/
+  keywords:
+  - packages
+  - packages
+- name: py_packages
+  description: Files from py_packages/
+  keywords:
+  - py_packages
+  - py_packages
+- name: scripts
+  description: Files from scripts/
+  keywords:
+  - scripts
+  - scripts
+- name: general
+  description: Files that don't fit other rooms
+  keywords: []
