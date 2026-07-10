@@ -17,3 +17,30 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+
+from drqp_keyboard_control.sdl_window import (
+    _is_core_sdl_library_name,
+    sdl_library_candidates,
+    set_sdl_window_always_on_top,
+)
+
+
+def test_set_sdl_window_always_on_top_fails_without_window_id():
+    """The platform topmost helper should safely no-op when unavailable."""
+    assert set_sdl_window_always_on_top(None, True) is False
+
+
+def test_sdl_library_candidates_are_unique():
+    """SDL lookup should return a deduplicated best-effort candidate list."""
+    candidates = sdl_library_candidates()
+
+    assert candidates == list(dict.fromkeys(candidates))
+    assert all(candidates)
+
+
+def test_core_sdl_library_filter_rejects_satellite_libraries():
+    """Stay-on-top must bind the core SDL binary, not SDL satellite libs."""
+    assert _is_core_sdl_library_name('libSDL2-2-abcdef.so.0') is True
+    assert _is_core_sdl_library_name('libSDL2_ttf-2-abcdef.so.0') is False
+    assert _is_core_sdl_library_name('libSDL2_image-2-abcdef.so.0') is False
+    assert _is_core_sdl_library_name('libSDL2_mixer-2-abcdef.so.0') is False

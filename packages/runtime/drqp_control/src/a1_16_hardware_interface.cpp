@@ -72,49 +72,58 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
     return status;
   }
 
-  for (const hardware_interface::ComponentInfo& joint : info_.joints) {
-    for (const auto& commandInterface : joint.command_interfaces) {
-      if (commandInterface.name == hardware_interface::HW_IF_POSITION) {
-        uint8_t servoId = std::stoi(get_param(commandInterface.parameters, "servo_id"));
-        robotConfig_.addServo(
-          RobotConfig::ServoJointParams{
-            .joint_name = joint.name,
-            .servo_id = servoId,
-            .inverted = get_bool_param(commandInterface.parameters, "inverted"),
-            .offset_radians = std::stod(get_param(commandInterface.parameters, "offset_rads")),
-            .max_torque = std::stod(get_param(commandInterface.parameters, "max_torque")),
-            .min_angle_radians = std::stod(get_param(commandInterface.parameters, "min")),
-            .max_angle_radians = std::stod(get_param(commandInterface.parameters, "max")),
-            .initial_position_radians =
-              std::stod(get_param(commandInterface.parameters, "initial_position_rads")),
-          });
+  // Parsing of the parameters may throw (e.g. a mandatory <param> is missing). Per the ros2_control
+  // lifecycle convention on_init must report failure by returning CallbackReturn::ERROR rather than
+  // letting the exception escape, so the whole parsing body is guarded.
+  try {
+    for (const hardware_interface::ComponentInfo& joint : info_.joints) {
+      for (const auto& commandInterface : joint.command_interfaces) {
+        if (commandInterface.name == hardware_interface::HW_IF_POSITION) {
+          uint8_t servoId = std::stoi(get_param(commandInterface.parameters, "servo_id"));
+          robotConfig_.addServo(
+            RobotConfig::ServoJointParams{
+              .joint_name = joint.name,
+              .servo_id = servoId,
+              .inverted = get_bool_param(commandInterface.parameters, "inverted"),
+              .offset_radians = std::stod(get_param(commandInterface.parameters, "offset_rads")),
+              .max_torque = std::stod(get_param(commandInterface.parameters, "max_torque")),
+              .min_angle_radians = std::stod(get_param(commandInterface.parameters, "min")),
+              .max_angle_radians = std::stod(get_param(commandInterface.parameters, "max")),
+              .initial_position_radians =
+                std::stod(get_param(commandInterface.parameters, "initial_position_rads")),
+            });
+        }
       }
     }
-  }
 
-  auto deviceAddress = get_param(info.hardware_parameters, "device_address");
-  RCLCPP_INFO(get_logger(), "Connecting to %s", deviceAddress.c_str());
-  if (deviceAddress == "mock_servo") {
-    useMockServo_ = true;
-  } else {
-    useMockServo_ = false;
-    servoSerial_ = makeSerialForDevice(deviceAddress);
-    servoSerial_->begin(std::stoi(get_param(info.hardware_parameters, "baud_rate")));
-  }
+    auto deviceAddress = get_param(info.hardware_parameters, "device_address");
+    RCLCPP_INFO(get_logger(), "Connecting to %s", deviceAddress.c_str());
+    if (deviceAddress == "mock_servo") {
+      useMockServo_ = true;
+    } else {
+      useMockServo_ = false;
+      servoSerial_ = makeSerialForDevice(deviceAddress);
+      servoSerial_->begin(std::stoi(get_param(info.hardware_parameters, "baud_rate")));
+    }
 
-  for (const hardware_interface::ComponentInfo& sensor : info_.sensors) {
-    for (const auto& stateInterface : sensor.state_interfaces) {
-      if (stateInterface.name == "voltage") {
-        batteryParams_.sourceServoId = std::stoi(get_param(stateInterface.parameters, "servo_id"));
-        batteryParams_.min = std::stod(stateInterface.min);
-        batteryParams_.max = std::stod(stateInterface.max);
-        RCLCPP_INFO(
-          get_logger(),
-          "Battery voltage source servo id: %i. Voltage min: %f, max: %f, initial: %s",
-          batteryParams_.sourceServoId, batteryParams_.min, batteryParams_.max,
-          stateInterface.initial_value.c_str());
+    for (const hardware_interface::ComponentInfo& sensor : info_.sensors) {
+      for (const auto& stateInterface : sensor.state_interfaces) {
+        if (stateInterface.name == "voltage") {
+          batteryParams_.sourceServoId =
+            std::stoi(get_param(stateInterface.parameters, "servo_id"));
+          batteryParams_.min = std::stod(stateInterface.min);
+          batteryParams_.max = std::stod(stateInterface.max);
+          RCLCPP_INFO(
+            get_logger(),
+            "Battery voltage source servo id: %i. Voltage min: %f, max: %f, initial: %s",
+            batteryParams_.sourceServoId, batteryParams_.min, batteryParams_.max,
+            stateInterface.initial_value.c_str());
+        }
       }
     }
+  } catch (const std::exception& e) {
+    RCLCPP_ERROR(get_logger(), "Failed to initialize hardware interface: %s", e.what());
+    return hardware_interface::CallbackReturn::ERROR;
   }
 
   return hardware_interface::CallbackReturn::SUCCESS;
