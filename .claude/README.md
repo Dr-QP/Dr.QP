@@ -8,7 +8,6 @@ This directory is the **canonical source of truth** for the repository's AI tool
 .claude/
 ├── agents/       # Subagent specs (*.agent.md, Claude Code frontmatter)
 ├── skills/       # Skills and slash commands (<name>/SKILL.md)
-├── instructions/ # Detailed guidelines referenced from CLAUDE.md
 ├── agent-ideas/  # Draft agent specs not yet promoted to agents/
 ├── hooks/        # Claude Code session hooks
 └── settings.json # Claude Code permissions and plugin settings
@@ -20,11 +19,10 @@ This directory is the **canonical source of truth** for the repository's AI tool
 
 **Agents** (`.claude/agents/*.agent.md`): Full subagent definitions with Claude Code frontmatter (`name`, `description`, `tools`, optional `model`). Codex uses minimal trampoline files in `.codex/agents/` that delegate to these specs; Cursor reads them via the `.cursor/agents/` symlink.
 
-**Instructions** (`.claude/instructions/`): Referenced directly in `CLAUDE.md` by file path. Codex and Cursor see them through the `.codex/instructions/` and `.cursor/rules/` symlinks.
+**Always-on conventions** live in the repository `AGENTS.md` (Coding Conventions section) and `CLAUDE.md`; detailed task-scoped playbooks are skills.
 
 ## Editing guidance
 
-- To add or change a **skill**: edit `.claude/skills/<name>/SKILL.md`. See [agent-skills.instructions.md](instructions/agent-skills.instructions.md).
-- To add or change an **agent**: edit `.claude/agents/*.agent.md` and keep the matching `.codex/agents/*.md` trampoline's `name`/`description` in sync. See [agents.instructions.md](instructions/agents.instructions.md).
-- To add or change **instructions**: edit `.claude/instructions/*.instructions.md` and add a reference line to `CLAUDE.md` if the file is new.
+- To add or change a **skill**: edit `.claude/skills/<name>/SKILL.md`. See the [create-skill](skills/create-skill/SKILL.md) skill.
+- To add or change an **agent**: edit `.claude/agents/*.agent.md` and keep the matching `.codex/agents/*.md` trampoline's `name`/`description` in sync. See the [create-agent](skills/create-agent/SKILL.md) skill.
 - Never edit through the `.codex/` or `.cursor/` symlinks — treat those directories as read-only adapters.

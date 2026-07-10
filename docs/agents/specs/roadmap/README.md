@@ -16,7 +16,7 @@ execution.
 - Each spec has YAML frontmatter: `id`, `title`, `status` (`proposed | in-progress | done`),
   `depends_on` (spec ids), `packages` (existing packages likely touched; `NEW:` prefix = create).
 - Acceptance criteria are testable; prefer `launch_pytest` tests under the owning package's
-  `test/` dir, following `.github/instructions/launch-testing.instructions.md`.
+  `test/` dir, following the `launch-testing` skill (`.claude/skills/launch-testing/`).
 - Build/test via `scripts/with-ros-env.sh colcon build --packages-up-to <pkg>` and
   `colcon test --packages-select <pkg>`; see `AGENTS.md`.
 - Simulation-first: every capability lands in `drqp_gazebo` (worlds/bridge/tests) before hardware.

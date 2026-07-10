@@ -5,7 +5,6 @@ source in `.claude/`) so it is discoverable in Codex:
 
 - `agents/` — trampoline files that delegate to `.claude/agents/*.agent.md`
 - `skills/` — symlink to `../.claude/skills/`
-- `instructions/` — symlink to `../.claude/instructions/`
 
 Edit the `.claude/` sources, not this directory. When adding or renaming an
 agent, add or update the matching trampoline in `agents/`.

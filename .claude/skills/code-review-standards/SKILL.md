@@ -5,7 +5,7 @@ description: Apply code review standards and write high-quality pull request des
 
 # Code Review Standards
 
-Write high-quality pull request descriptions and conduct effective code reviews using established best practices. Use [shared engineering guidelines](../../instructions/engineering.instructions.md) as the source of truth for generic code quality, testing, error handling, and clean-code expectations.
+Write high-quality pull request descriptions and conduct effective code reviews using established best practices. Use the Coding Conventions section of the repository [AGENTS.md](../../../AGENTS.md) as the source of truth for project-specific style, testing, and error-handling expectations.
 
 ## When to Use This Skill
 
@@ -233,5 +233,5 @@ Relates to #45
 
 ## References
 
-- [Shared engineering guidelines](../../instructions/engineering.instructions.md)
+- [Coding Conventions in AGENTS.md](../../../AGENTS.md)
 - [Generate pull request description](../generate-pr-description/)

@@ -461,5 +461,5 @@ Maintain an internal execution log documenting:
 - [Code Review Standards](../code-review-standards/) - PR description and review practices
 - [Extract GitHub Actions Logs](../extract-github-actions-logs/) - Fetch CI job logs and download colcon log/test-report artifacts
 - [Get CodeQL Data](../get-codeql-data/) - Fetch PR, branch, or repository CodeQL alerts with `gh api`
-- [Shared Engineering Guidelines](../../instructions/engineering.instructions.md) - Clean Code, SOLID, TDD
+- [Coding Conventions in AGENTS.md](../../../AGENTS.md) - project style, testing, and error-handling rules
 - [Principal Engineer](../../agents/principal-engineer.agent.md) - Primary implementation agent with TDD orchestration

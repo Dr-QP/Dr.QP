@@ -37,7 +37,6 @@ jobs:
         with:
           extra-filter: |
             - .claude/agents/**
-            - .claude/instructions/**
             - .claude/skills/**
             - .github/workflows/validate-agent-files.yml
             - .github/actions/log-debug-stats/**

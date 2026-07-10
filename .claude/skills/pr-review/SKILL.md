@@ -38,7 +38,7 @@ Two independent concerns feed two different pass types (see Steps below) so they
 
 - ROS 2 conventions (node lifecycle, topic/service naming, parameter handling)
 - C++/Python style and idioms
-- Any rule in the `.claude/instructions/*.instructions.md` files applicable to the changed files (see Step 2), and any repo `CLAUDE.md`/`AGENTS.md` file that shares a path with the changed file or its parents
+- Any rule in the Coding Conventions section of the repository `AGENTS.md`, any skill applicable to the changed files (see Step 2), and any repo `CLAUDE.md`/`AGENTS.md` file that shares a path with the changed file or its parents
 - IGNORE import ordering, that is handled by `ruff` and `clang-format` in CI
 - Only flag a violation if you can quote the exact rule text being broken
 
@@ -71,9 +71,9 @@ Flag only significant bugs; ignore nitpicks and likely false positives. Do not f
 ## Steps
 
 1. **Gate.** Run `gh pr view <PR_NUMBER>`. If the PR is a draft, already closed/merged, or trivial (docs-only, version bump, generated-file-only diff), stop here and say so instead of proceeding — do not fetch the diff or spawn any review passes.
-2. **Gather context.** Fetch the diff (`gh pr diff <PR_NUMBER>`) and reuse the PR description from Step 1. From the changed-file list, determine which `.claude/instructions/*.instructions.md` files apply, by matching each file's `applyTo` frontmatter glob against the changed paths (`engineering.instructions.md`'s `**` always applies).
+2. **Gather context.** Fetch the diff (`gh pr diff <PR_NUMBER>`) and reuse the PR description from Step 1. From the changed-file list, determine which convention sources apply: the Coding Conventions section of `AGENTS.md` always applies; add `.claude/skills/launch-testing/SKILL.md` when the diff touches `launch_pytest` tests (`**/test/**/*.py`), `.claude/skills/create-agent/SKILL.md` for `*.agent.md` changes, and `.claude/skills/create-skill/SKILL.md` for `SKILL.md` changes.
 3. **Run four independent initial-review passes in parallel when the environment supports it** — each pass sees only the diff, the PR title, the PR description, and its own focus list; none sees another pass's output. Each pass returns a list of issues, where each issue has a description and the reason it was flagged (for example, "AGENTS.md adherence", "bug", or "security"):
-   - 2x **compliance pass** — audit the diff against the Compliance focus list and the instruction files found in Step 2.
+   - 2x **compliance pass** — audit the diff against the Compliance focus list and the convention sources found in Step 2.
    - 2x **correctness pass** — audit the diff against the Correctness focus list, one pass scanning for obvious bugs and the other for security/logic issues introduced by the changed code.
    - Codex: use available multi-agent/sub-agent tools when present; otherwise perform the four passes sequentially in this session, restarting the review lens from the diff for each pass.
    - Claude Code: issue four `Agent` tool calls in a single message (`subagent_type: general-purpose`; use a fast model for compliance and the strongest available model for correctness).

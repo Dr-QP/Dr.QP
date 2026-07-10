@@ -7,7 +7,7 @@ description: "Spin up, sync, and drive a GitHub Codespace as a remote build/test
 
 Codex Tasks and similar sandboxes have no Docker daemon, so the
 `devcontainer exec` workflow documented in
-[microVM-sandbox.instructions.md](../../instructions/microVM-sandbox.instructions.md)
+the [microvm-sandbox](../microvm-sandbox/) skill
 cannot run there. This repo's `.devcontainer/devcontainer.json` +
 `docker-compose.yml` define an environment that GitHub Codespaces can run
 identically in the cloud. This skill's four scripts create/reuse a

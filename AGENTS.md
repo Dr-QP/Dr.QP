@@ -26,11 +26,42 @@ NEVER use GitHub API or GitHub MCP tools to update branch refs or push branch co
 
 Consult the **[Principal Engineer](/.claude/agents/principal-engineer.agent.md)** agent for architecture, design decisions, and implementation strategies.
 
+## Coding Conventions
+
+### Python
+
+- Follow **PEP 8**: 4 spaces per indentation level, lines ≤ 79 characters, descriptive names
+- Use type hints (PEP 484, `typing` module) and PEP 257 docstrings placed immediately after `def`/`class`
+- Add ROS and workspace packages to Ruff's `lint.isort.known-third-party` configuration when that classification aligns its import order with `ament_flake8`. Use a targeted `# noqa: <rule>` only for a formatter-required incompatibility such as `E203` on a slice; do not disable rules for a whole file or package
+- **Exception handling**: never write empty handlers (`except ...: pass`). Handle expected exceptions explicitly by at least one of: logging context, returning a safe fallback value, re-raising with context, or raising `SystemExit` for CLI interruption paths (`raise SystemExit(130)` for user interrupts). If an exception must be intentionally ignored, document the reason in a comment and keep the ignored scope minimal. Prefer specific exception types over broad `except Exception`
+
+### Python Testing
+
+- **Always use `pytest`** — never `unittest`
+- For ROS 2 launch or node integration tests use `launch_pytest`: decorate `generate_test_description` with `@launch_pytest.fixture` and tests with `@pytest.mark.launch(fixture=generate_test_description)` — full rules in the [launch-testing](/.claude/skills/launch-testing/) skill
+- Prefer multiple smaller, focused test files over large monolithic ones
+
+### Local Scripts, Docs, and Notebooks (`scripts/`, `docs/`)
+
+- Use the `.venv` virtual environment for executing scripts locally; define workspace dependencies in `pyproject.toml` and sync `.venv` with `uv`. Avoid global package installations
+- Ensure code snippets in documentation are executable and tested
+
+### C++
+
+- Follow the C++ Core Guidelines with modern C++ (C++17 or later): RAII for resource management, value semantics by default, smart pointers instead of raw pointers, standard library containers and algorithms
+- Make ownership explicit in API design; focus on correctness first, then optimize with evidence
+
+### ROS 2
+
+- Follow ROS 2 naming conventions for packages, nodes, topics, services, and actions
+- Document package dependencies in `package.xml`, and parameter defaults and constraints
+- Include launch files for complex multi-node systems and integration tests for node interactions
+
 ## Catalog Locations
 
-- **Claude** (canonical source of truth): `.claude/agents/`, `.claude/skills/`, `.claude/instructions/`
-- **Codex**: `.codex/agents/` (trampolines to `.claude/agents/`), `.codex/skills/`, `.codex/instructions/` (symlinks to `.claude/`)
-- **Cursor**: `.cursor/agents/`, `.cursor/skills/`, `.cursor/rules/` (symlinks to `.claude/`)
+- **Claude** (canonical source of truth): `.claude/agents/`, `.claude/skills/`
+- **Codex**: `.codex/agents/` (trampolines to `.claude/agents/`), `.codex/skills/` (symlink to `.claude/skills/`)
+- **Cursor**: `.cursor/agents/`, `.cursor/skills/` (symlinks to `.claude/`)
 
 Update `.claude` sources; symlinks pick up changes automatically. When adding or renaming an agent, also update its `.codex/agents/` trampoline.
 
@@ -56,4 +87,4 @@ When addressing PR review comments, CI failures, CodeQL findings, or coverage ga
 
 ## Cursor Cloud Sessions
 
-**Load the microVM-sandbox instructions** — Read and follow [microVM-sandbox](/.claude/instructions/microVM-sandbox.instructions.md) before running any build, test, or lint command.
+**Load the [microvm-sandbox](/.claude/skills/microvm-sandbox/) skill** — Read and follow it before running any build, test, or lint command.

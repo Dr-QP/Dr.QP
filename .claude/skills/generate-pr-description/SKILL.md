@@ -5,7 +5,7 @@ description: Generate comprehensive pull request description following code-revi
 
 # Generate Pull Request Description
 
-Generate a comprehensive PR description by analyzing the change set and filling the repository template at [../../../.github/pull_request_template.md](../../../.github/pull_request_template.md). Use [code-review-standards](../code-review-standards/) for wording and review conventions, and use [engineering guidelines](../../instructions/engineering.instructions.md) only for shared quality expectations rather than repeating them here.
+Generate a comprehensive PR description by analyzing the change set and filling the repository template at [../../../.github/pull_request_template.md](../../../.github/pull_request_template.md). Use [code-review-standards](../code-review-standards/) for wording and review conventions, and use the Coding Conventions section of the repository [AGENTS.md](../../../AGENTS.md) only for shared quality expectations rather than repeating them here.
 
 ## When to Use This Skill
 
@@ -91,4 +91,4 @@ Ensure completeness, technical accuracy, valid links, and that testing matches a
 
 - [Pull request template](../../../.github/pull_request_template.md)
 - [code-review-standards](../code-review-standards/)
-- [Engineering guidelines](../../instructions/engineering.instructions.md)
+- [Coding Conventions in AGENTS.md](../../../AGENTS.md)
