@@ -11,6 +11,15 @@ Audit date: 2026-06-17. 38 raw TODO/FIXME/XXX annotations found across the codeb
 | T2 — address when ready | 3     | Medium impact, schedule within quarter |
 | T3 — housekeeping       | 4     | Low effort, opportunistic              |
 
+## Interaction with the locomotion migration
+
+Two items touch code the [locomotion migration](../locomotion/README.md) rewrites: **T1-A**
+(rotation assertion in `test_walk_controller.py`) and **T2-C** (rotation branch in the gait
+plotter). Locomotion specs 02 and 06 rework the walk-controller API and delete the per-leg
+rotation transform entirely. Land T1-A/T2-C **before** that migration (quick wins on the current
+code), or fold their intent into specs 02/06 — do not do both. Everything else here is
+independent of the migration.
+
 ## Effort unit
 
 Estimates use **agent turns** — one agent turn is one focused agent session (research → implement → verify) operating without human intervention. A simple file edit is 1 turn; a full TDD Red/Green/Refactor cycle across multiple files is ~5–8 turns.

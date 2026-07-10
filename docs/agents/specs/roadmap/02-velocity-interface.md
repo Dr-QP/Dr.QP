@@ -28,7 +28,23 @@ joystick teleop unchanged; commands arbitrated joystick > autonomy.
   output `/cmd_vel`. The mux arbitrates only among `cmd_vel` sources (nav vs future
   twist-teleop); mux priorities documented.
 
-## Design
+## Relationship to the locomotion migration (read first)
+
+This spec has **two implementations depending on whether locomotion spec 06 (twist steering) has
+landed** — they are not both built:
+
+- **If locomotion 06 is in** (recommended path): velocity is already metric by construction. The
+  commanded body twist `ξ = (v_x, v_y, ω_z)` *is* the walk controller's input, so this spec
+  reduces to a thin `Twist → ξ` adapter plus `twist_mux`, the watchdog, and the joystick/autonomy
+  arbiter below. **Skip the empirical velocity-model fit and `velocity_mapper.py`.** Keep the
+  ground-truth displacement test as an acceptance cross-check on spec 06's metric claim.
+- **If locomotion 06 is not yet in** (interim path): build the empirical mapper in the "Design"
+  section below so `cmd_vel` works on today's position-mixed steering, and treat it as throwaway
+  scaffolding retired when spec 06 lands.
+
+See [Program relationships](../README.md#program-relationships).
+
+## Design (interim path — only if locomotion 06 has not landed)
 
 1. **Velocity model**: per gait, fit `v_body = f(stride_length, phase_rate)` using sim
    ground-truth `/odom` (bridge exists) driven via `robot.walk_for_duration` MCP tool or a launch

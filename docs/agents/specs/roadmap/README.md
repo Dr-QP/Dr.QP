@@ -2,7 +2,14 @@
 
 Machine-oriented work specifications for evolving Dr.QP from a joystick-controlled hexapod into an
 autonomous AI home pet. Human-narrative counterparts live in `docs/source/Dev/roadmap/` (same
-slugs); read the guide for rationale, use the spec for execution.
+slugs; RM-10/RM-11 human guides are TODO); read the guide for rationale, use the spec for
+execution.
+
+> **Foundation:** this roadmap was written against today's walking stack, which the
+> [locomotion migration](../locomotion/README.md) replaces. Read
+> [Program relationships](../README.md#program-relationships) before RM-02/03/08/09 — the
+> migration changes the velocity mapping (RM-02), the loop rate, and the IK hot path those phases
+> assume.
 
 ## Conventions
 
@@ -31,9 +38,12 @@ slugs); read the guide for rationale, use the spec for execution.
 | RM-07 | [07-interaction.md](07-interaction.md)                   | RM-04 (nav tools need RM-06) |
 | RM-08 | [08-feet-terrain.md](08-feet-terrain.md)                 | RM-02                        |
 | RM-09 | [09-rl-locomotion.md](09-rl-locomotion.md)               | RM-02 (obs upgrades: RM-08)  |
+| RM-10 | [10-obstacle-perception.md](10-obstacle-perception.md)   | RM-04, RM-06                 |
+| RM-11 | [11-docking-charging.md](11-docking-charging.md)         | RM-01, RM-05, RM-06          |
 
-Parallelizable branches: {RM-02→03→05→06}, {RM-04}, {RM-07 voice/LLM core}, {RM-08}, {RM-09 sim
-work}.
+Parallelizable branches: {RM-02→03→05→06→(10, 11)}, {RM-04}, {RM-07 voice/LLM core}, {RM-08},
+{RM-09 sim work}. RM-10 (live obstacle source) unblocks RM-06's **hardware** navigation milestone;
+RM-11 (self-charging) closes the unattended-autonomy loop and is the capstone of the nav branch.
 
 ## Current-architecture anchors (verified 2026-07)
 

@@ -17,7 +17,9 @@ publishing `/odometry/filtered` and TF `odom → drqp/base_link` in sim and on h
 
 - NEW msg `drqp_interfaces/GaitPhase`: `float32 phase`, `string gait_type`,
   `bool[6] leg_in_stance` (leg order documented; match `HexapodModel.legs`). Published by walk
-  controller each tick on `/gait/phase`.
+  controller each tick on `/gait/phase`. `leg_in_stance` here is the **gait-phase** stance source;
+  RM-08 adds a **sensed** source (`FootContacts`) selectable via `stance_source`. Keep them one
+  interface — see [Program relationships](../README.md#stance-detection-has-three-sources-keep-them-one-interface).
 - NEW node `leg_odometry` (`drqp_brain`): subscribes `/joint_states`, `/gait/phase`; publishes
   `nav_msgs/Odometry` on `/odom_legs` (frame `odom`, child `drqp/base_link`, twist + integrated
   pose, covariances: xy/yaw moderate, z/roll/pitch large).

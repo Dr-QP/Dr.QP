@@ -28,8 +28,9 @@ the same `/cmd_vel` interface, with a hard safety supervisor.
   interfaces in `a1_16_hardware_interface.cpp` + a broadcaster/diagnostics publisher, e.g.
   `/servo_temps`) is a deliverable of stage 4 and a prerequisite for the stage 5 temperature
   trip.
-- Policy rate 25–50 Hz gated by RM-01 bus benchmark; brain's 8 Hz MoveItPy path is bypassed
-  entirely by the runtime.
+- Policy rate 25–50 Hz gated by RM-01 bus benchmark; the parametric brain (whichever loop rate
+  and solver it runs — 8 Hz MoveItPy today, analytic `control_rate_hz` after the locomotion
+  migration) is bypassed entirely by the RL runtime, which drives the controllers directly.
 - Observations v1: joint positions (read-back), IMU orientation (gravity vector) + angular
   velocity, previous action, commanded `(vx, vy, wz)`. Joint velocities: filtered numeric
   derivative (randomize filter in training). v2 (RM-08): foot contact booleans.

@@ -1,59 +1,70 @@
-# Locomotion migration specs
+# Dr.QP agent specs
 
-Implementation-ready specifications for migrating the Dr.QP locomotion stack in the direction
-recommended by the [IK & locomotion analysis](../../source/Dev/ik-locomotion-analysis.md):
+Implementation-ready, machine-oriented specifications for evolving Dr.QP. Each spec is sized to
+be independently shippable (one spec ≈ one PR) and lists the tests to write first. Human-narrative
+counterparts, where they exist, live under `docs/source/Dev/`.
 
-> Make the analytic solver the primary runtime IK with explicit joint-limit and workspace
-> clamping, keep MoveIt as an offline/CI validation oracle, reformulate steering as a body
-> twist, and reinvest the freed CPU budget in loop rate, swing-profile quality, and
-> contact-aware balance.
+The specs are grouped into three **programs**. They are independent bodies of work but not
+unrelated — see [Program relationships](#program-relationships).
 
-Finding IDs (`F1`…`F28`) referenced throughout are defined in the
-[findings index](../../source/Dev/ik-locomotion-analysis.md#findings-index) of that page.
+| Program                                           | What it does                                                               | Source of rationale                                                       |
+| ------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [`locomotion/`](locomotion/README.md)             | Foundation refactor: analytic-IK hot path, twist steering, time-based gait | [`ik-locomotion-analysis.md`](../../source/Dev/ik-locomotion-analysis.md) |
+| [`roadmap/`](roadmap/README.md)                   | Autonomy roadmap: joystick hexapod → autonomous AI home pet                | [`roadmap/index.md`](../../source/Dev/roadmap/index.md)                   |
+| [`todo-remediation/`](todo-remediation/README.md) | Code-TODO cleanup from a repo-wide audit                                   | (audit-derived, self-contained)                                           |
 
-## Implementation order
+## Program relationships
 
-Specs are numbered in implementation order. Later specs assume earlier ones have landed unless
-the dependency table says otherwise.
+The three programs can be worked in parallel by different agents, but they touch overlapping code
+and one program de-risks the others. Read this before starting cross-program work.
 
-| Spec                                                   | Title                                              | Fixes                  | Depends on |
-| ------------------------------------------------------ | -------------------------------------------------- | ---------------------- | ---------- |
-| [01](01-clamp-moveit-ik-timeout.md)                    | Clamp MoveIt IK timeout                            | F1                     | —          |
-| [02](02-pure-gait-targets-and-time-based-phase.md)     | Pure gait targets & time-based phase               | F2, F15, F27, F28      | —          |
-| [03](03-analytic-leg-ik-joint-limits-and-workspace.md) | Analytic leg IK: joint limits & workspace clamping | F8, F9, F10, F11, F23  | —          |
-| [04](04-analytic-runtime-solver-with-moveit-oracle.md) | Analytic runtime solver, MoveIt as oracle          | F3, F4, F5             | 02, 03     |
-| [05](05-cycloid-swing-profile.md)                      | Cycloid swing profile                              | F6, F13                | 02 (soft)  |
-| [06](06-twist-based-steering.md)                       | Twist-based steering                               | F7, F16, F22 (partial) | 02, 03, 04 |
-| [07](07-single-source-servo-zero-offsets.md)           | Single source for servo zero offsets               | F26, F10 (partial)     | 04         |
-| [08](08-raise-control-loop-rate.md)                    | Raise control loop rate                            | F25                    | 02, 04     |
+### Locomotion migration is the substrate the roadmap assumes
 
-Dependency sketch:
+The autonomy roadmap (RM-\*) was written against **today's** walking stack (8 Hz MoveItPy loop,
+position-mixed steering). The locomotion migration replaces exactly that stack. Where they meet:
 
-```text
-01 ──────────────────────────────► (independent hotfix, land first)
+- **Metric velocity (RM-02 ⇄ locomotion 06).** RM-02 proposes fitting an *empirical*
+  `v_body = f(stride_length, phase_rate)` model from sim ground truth. Locomotion spec 06 makes
+  velocity metric *by construction* — the commanded twist `ξ = (v_x, v_y, ω_z)` **is** the body
+  velocity via the SE(2) exponential foot-target map. **If spec 06 lands first, RM-02 collapses to
+  a thin `Twist → ξ` adapter plus `twist_mux`/watchdog/arbitration** and the empirical fit becomes
+  a validation cross-check rather than the mechanism. RM-02 says as much in its updated "Design"
+  note; do not build the empirical mapper if spec 06 is already in.
+- **Loop rate (RM-02 "8 Hz" ⇄ locomotion 08).** Several roadmap phases assume `fps = 8`.
+  Locomotion spec 08 turns that into a `control_rate_hz` parameter (default 25). Anything reading a
+  hardcoded 8 Hz should read the parameter once spec 08 lands.
+- **Analytic hot path (RM-08/RM-09 ⇄ locomotion 04).** RM-08 touchdown adaptation and RM-09's
+  runtime both assume the MoveItPy per-tick solve is gone. That removal is locomotion spec 04.
+- **Stance/odometry (RM-03/RM-08 ⇄ locomotion 02/06).** RM-03 leg odometry and its `GaitPhase`
+  message consume the phase/stance state that locomotion spec 02 makes explicit and side-effect
+  free; RM-06's twist odometry option (spec 06) is the open-loop counterpart RM-03's EKF fuses.
 
-02 ─┬─► 04 ─┬─► 06
-03 ─┘       ├─► 07
-05 (after 02, parallel with 03/04)
-            └─► 08 (also needs 02)
-```
+**Recommended global order:** land the locomotion foundation (at least specs 01–04, ideally
+through 06/08) before or alongside RM-02, so the roadmap builds on the analytic twist stack rather
+than the stack it is about to replace. RM-01 (baseline/hardening), RM-04 (camera), and the
+todo-remediation items have no such coupling and can proceed immediately.
 
-## Conventions for implementing agents
+### Stance detection has three sources: keep them one interface
 
-- **Workflow**: follow the TDD cycle (`TDD Red` → `TDD Green` → `TDD Refactor` agents, or the
-  equivalent manual discipline). Every spec lists the tests to write first.
-- **Build/test**: always through `scripts/with-ros-env.sh`, e.g.
-  `scripts/with-ros-env.sh colcon build --symlink-install --packages-up-to drqp_brain` and
-  `scripts/with-ros-env.sh colcon test --packages-select drqp_brain drqp_kinematics`.
-- **Launch-test validation**: changes touching MoveIt, IK seeding, or trajectory publication
-  must be validated against the real Gazebo launch tests
-  (`test_bringup_launch.py`, `test_brain_moveit_ik.py`) — unit-test fakes do not catch
-  moveit_py C++ crashes.
-- **Behavior preservation**: unless a spec explicitly says otherwise, observable walking
-  behavior (gait cycle time, stride reach, topics, message types) must not change. Where a spec
-  intentionally changes behavior, it says so under _Behavior changes_ and lists the tunables to
-  re-tune.
-- **Docs**: when a spec lands, update the maturity/finding status in
-  `docs/source/Dev/ik-locomotion-analysis.md` (mark the finding fixed with the PR number) and
-  regenerate `stride_limits.yaml` if leg geometry, IK, or gait math changed.
-- **One spec per PR.** Keep diffs reviewable; specs are sized to be independently shippable.
+`leg_in_stance` appears in locomotion spec 02 (gait-phase truth), RM-03's `GaitPhase` message, and
+RM-08's `FootContacts` (sensed). These are a *source hierarchy* for one concept, not three
+independent features: gait-phase stance is the default, sensed contact overrides it when
+available (RM-08's `stance_source` parameter). Consumers must never hardcode a source.
+
+## Conventions (all programs)
+
+- **Workflow:** TDD (`TDD Red` → `TDD Green` → `TDD Refactor`, or the manual equivalent). Every
+  spec lists the tests to write first.
+- **Build/test:** always through `scripts/with-ros-env.sh`, e.g.
+  `scripts/with-ros-env.sh colcon build --symlink-install --packages-up-to <pkg>` and
+  `colcon test --packages-select <pkg>`. See [`AGENTS.md`](../../../AGENTS.md).
+- **Simulation-first:** every capability lands in `drqp_gazebo` (worlds/bridge/`launch_pytest`
+  tests) before hardware; MoveIt/IK/trajectory changes are validated on the real Gazebo launch
+  stack — unit fakes do not catch moveit_py binding crashes.
+- **Safety path stays local and untouched:** `/robot_event`, `/robot_state`, joint trajectories,
+  and the kill switch keep their current semantics; heavy perception/LLM nodes never sit in the
+  safety path.
+- **One spec per PR.** Keep diffs reviewable.
+
+Each program's own README carries its ordering table, per-program conventions, and (for the
+locomotion program) the finding-ID map into the analysis document.
