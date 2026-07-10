@@ -92,8 +92,16 @@ if(BUILD_TESTING)
   find_package(ament_cmake_pytest REQUIRED)
   ament_add_pytest_test(test_urdf test/test_urdf.py)
 
-  #TODO: Add gmock tests for hardware interface from
-  # https://github.com/ros-controls/ros2_control/blob/jazzy/hardware_interface/CMakeLists.txt
+  # Isolated gmock unit tests for the A1-16 hardware interface. These drive the
+  # lifecycle callbacks directly against the built-in mock servo, so they run
+  # without a controller manager or a real serial port.
+  find_package(ament_cmake_gmock REQUIRED)
+  ament_add_gmock(test_a1_16_hardware_interface_unit
+    test/test_a1_16_hardware_interface_unit.cpp)
+  target_link_libraries(test_a1_16_hardware_interface_unit drqp_ros2_control)
+  ament_target_dependencies(test_a1_16_hardware_interface_unit
+    ${${PROJECT_NAME}_BUILD_DEPENDS})
+  drqp_test_enable_coverage(test_a1_16_hardware_interface_unit)
 
 endif()
 

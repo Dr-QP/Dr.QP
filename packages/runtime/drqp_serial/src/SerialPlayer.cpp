@@ -56,27 +56,27 @@ size_t SerialPlayer::writeBytes(const void* buffer, size_t size)
 
   Record& record = currentRecord();
 
-  if (size > record.request.bytes.size()) {
+  const size_t remaining = record.request.bytes.size() - record.writeOffset;
+  if (size > remaining) {
     // If requested write is larger than was recorded, its a fail
-    assertEqual(size, record.request.bytes.size(), 0);
+    assertEqual(size, remaining, 0);
   }
 
   for (size_t i = 0; i < size; ++i) {
     // Compare what was written now with recording
-    assertEqual(record.request.bytes[i], data[i], i);
+    assertEqual(record.request.bytes[record.writeOffset + i], data[i], i);
   }
 
-  // Remove verified recording
-  // TODO(anton-matosov): Consider keeping a lastWritePosition instead of erasing.
-  //  Or use range and update it every write
-  record.request.bytes.erase(record.request.bytes.begin(), record.request.bytes.begin() + size);
+  // Advance past the verified bytes instead of erasing them from the front (O(n) shift).
+  record.writeOffset += size;
 
   return size;
 }
 
 bool SerialPlayer::available()
 {
-  return currentRecord().response.bytes.size() > 0;
+  const Record& record = currentRecord();
+  return record.readOffset < record.response.bytes.size();
 }
 
 size_t SerialPlayer::readBytes(void* buffer, size_t size)
@@ -85,11 +85,13 @@ size_t SerialPlayer::readBytes(void* buffer, size_t size)
   uint8_t* data = static_cast<uint8_t*>(buffer);
 
   Record& record = currentRecord();
-  const size_t availableSize = std::min(size, record.response.bytes.size());
+  const size_t remaining = record.response.bytes.size() - record.readOffset;
+  const size_t availableSize = std::min(size, remaining);
 
-  std::copy_n(record.response.bytes.begin(), availableSize, data);
-  record.response.bytes.erase(
-    record.response.bytes.begin(), record.response.bytes.begin() + availableSize);
+  // Copy from the current read position and advance past it instead of erasing from the
+  // front (mirrors the write path's offset tracking).
+  std::copy_n(record.response.bytes.begin() + record.readOffset, availableSize, data);
+  record.readOffset += availableSize;
 
   return availableSize;
 }
