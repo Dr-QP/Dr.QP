@@ -68,26 +68,3 @@ Update `.claude` sources; symlinks pick up changes automatically. When adding or
 
 **Always edit the `AGENTS.md`, not just `CLAUDE.md` to cover all agents.
 
-## Available Agents
-
-### Development
-
-- **[Principal Engineer](/.claude/agents/principal-engineer.agent.md)** - Senior guidance, architecture, pragmatic implementation
-
-### Testing & Quality
-
-- **[TDD Red](/.claude/agents/tdd-red.agent.md)** - Write failing tests before implementation
-- **[TDD Green](/.claude/agents/tdd-green.agent.md)** - Implement minimal code to satisfy requirements
-- **[TDD Refactor](/.claude/agents/tdd-refactor.agent.md)** - Improve code quality while maintaining tests
-
-## Remote Agent Guidelines
-
-When addressing PR review comments, CI failures, CodeQL findings, or coverage gaps, use the [pr-feedback-resolution](/.claude/skills/pr-feedback-resolution/) skill.
-
-## Code Review Standards
-
-[code-review-standards](/.claude/skills/code-review-standards/)
-
-## Cursor Cloud Sessions
-
-**Load the [microvm-sandbox](/.claude/skills/microvm-sandbox/) skill** — Read and follow it before running any build, test, or lint command.
