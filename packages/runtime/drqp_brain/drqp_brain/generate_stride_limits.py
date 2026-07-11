@@ -26,7 +26,7 @@ import sys
 from ament_index_python.packages import get_package_share_path
 from drqp_brain.locomotion_kinematics import MoveItPyLocomotionKinematics
 from drqp_brain.parametric_gait_generator import GaitType
-from drqp_brain.walk_controller import WalkController
+from drqp_brain.walk_controller import SteeringState, WalkController
 from drqp_kinematics.geometry import Point3D
 from drqp_kinematics.models import HexapodModel
 import numpy as np
@@ -176,16 +176,10 @@ def make_moveit_step_length_checker(
             step_height=0.01,
             rotation_speed_degrees=45,
             gait=gait,
-            phase_steps_per_cycle=phase_samples,
         )
         for phase_index in range(phase_samples):
             phase = phase_index / phase_samples
-            walker.current_direction = direction.copy()
-            targets = walker.next_step_targets(
-                stride_direction=direction,
-                rotation_direction=0.0,
-                phase_override=phase,
-            )
+            targets = walker.targets_at(phase, SteeringState(direction, 0.0))
             result = helper.solve(targets, latest_joint_state)
             if not result.succeeded:
                 return False

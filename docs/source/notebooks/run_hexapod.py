@@ -60,7 +60,9 @@ def main():
 
     fig, ax, plot_data = plot_hexapod(hexapod, feet_trails_frames=30)
 
-    def process_frame(delta_time=0.001):
+    delta_time = 0.001  # seconds per frame
+
+    def process_frame():
         update_hexapod_plot(hexapod, plot_data)
 
         plt.show(block=False)
@@ -68,12 +70,14 @@ def main():
 
     while plt.get_fignums():  # window(s) open
         inputs = ps5_controller.get_controls()
-        walker.next_step(
+        walker.advance(
+            dt=delta_time,
             stride_direction=inputs.direction,
             rotation_direction=inputs.rotation_speed,
         )
+        walker.apply_feet_targets(walker.targets_at(walker.current_phase, walker.steering))
 
-        process_frame(0.001)
+        process_frame()
 
 
 if __name__ == '__main__':

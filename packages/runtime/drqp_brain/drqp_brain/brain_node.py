@@ -108,7 +108,13 @@ class HexapodBrain(rclpy.node.Node):
 
         self.gait_index = 0
         self.gaits = [GaitType.tripod, GaitType.ripple, GaitType.wave]
-        self.phase_steps_per_cycle = [20, 25, 40]  # per gait
+        # These preserve the observed speed of the old double-advance loop at
+        # 8 Hz. They are deliberately time-based rather than frame-based.
+        self.cycle_time_sec = {
+            GaitType.tripod: 1.25,
+            GaitType.ripple: 1.5625,
+            GaitType.wave: 2.5,
+        }
 
         # Store current movement command state with defaults
         self.current_movement = MovementCommand()
@@ -153,7 +159,8 @@ class HexapodBrain(rclpy.node.Node):
             qos_profile=10,
         )
         self.__trajectory_client = None
-        self._last_published_foot_targets = None
+        self._last_published_motion_state = None
+        self._last_loop_time = None
         self._joint_state_warning_logged = False
         self.walking_trajectory_points = WALKING_TRAJECTORY_POINTS
         self.latest_joint_state = None
@@ -166,6 +173,7 @@ class HexapodBrain(rclpy.node.Node):
         )
 
         self.setup_hexapod()
+        self._last_published_motion_state = self._motion_state_key(self.hexapod.body_transform)
         self.kinematics = MoveItPyLocomotionKinematics(
             node=self,
             hexapod=self.hexapod,
@@ -226,7 +234,7 @@ class HexapodBrain(rclpy.node.Node):
             step_height=step_height,
             rotation_speed_degrees=45,
             gait=self.gaits[self.gait_index],
-            phase_steps_per_cycle=self.fps / 2.5,
+            cycle_time_sec=self.cycle_time_sec[self.gaits[self.gait_index]],
             stride_limits=self._load_stride_limits(),
         )
 
@@ -314,8 +322,8 @@ class HexapodBrain(rclpy.node.Node):
             return
 
         self.walker.current_gait = self.gaits[self.gait_index]
-        self.walker.phase_step = 1 / self.phase_steps_per_cycle[self.gait_index]
-        previous_state = self._snapshot_motion_state()
+        self.walker.cycle_time_sec = self.cycle_time_sec[self.walker.current_gait]
+        dt = self._next_loop_dt()
 
         stride_direction = Point3D(
             [
@@ -356,38 +364,35 @@ class HexapodBrain(rclpy.node.Node):
             max_tilt_rad=self.imu_balance_max_tilt_rad,
         )
 
-        feet_targets = self.walker.next_step_targets(
+        body_transform = self.walker.body_transform(
+            body_translation / self.fps,
+            body_rotation,
+        )
+        self.walker.advance(
+            dt,
             stride_direction=stride_direction,
             rotation_direction=self.current_movement.rotation_speed,
-            body_direction=body_translation / 8.0,
-            body_rotation=body_rotation,
         )
+        self.hexapod.body_transform = body_transform
 
         if not self._ik_ready():
-            self._restore_motion_state(previous_state)
             return
 
         feet_target_window = self._build_walking_feet_target_window(
-            first_feet_targets=feet_targets,
-            stride_direction=stride_direction,
-            rotation_direction=self.current_movement.rotation_speed,
-            body_translation=body_translation,
+            body_translation=body_translation / self.fps,
             body_rotation=body_rotation,
         )
-        foot_targets_key = self._foot_targets_window_key(feet_target_window)
-        if foot_targets_key == self._last_published_foot_targets:
-            self._restore_motion_state(previous_state)
+        motion_state_key = self._motion_state_key(body_transform)
+        if motion_state_key == self._last_published_motion_state:
             return
 
         try:
             trajectory_targets = self._solve_walking_trajectory_targets(feet_target_window)
         except RuntimeError as exc:
-            self._restore_motion_state(previous_state)
             self.get_logger().error(str(exc))
             return
 
         if trajectory_targets is None:
-            self._restore_motion_state(previous_state)
             self.get_logger().warning(
                 'MoveIt IK rejected the current foot targets; skipping trajectory publish'
             )
@@ -403,7 +408,7 @@ class HexapodBrain(rclpy.node.Node):
                 reach_in_seconds_from_start=point_index / self.fps,
             )
         trajectory.publish(self.joint_trajectory_pub)
-        self._last_published_foot_targets = foot_targets_key
+        self._last_published_motion_state = motion_state_key
 
     def process_joint_state(self, msg: JointState):
         self.latest_joint_state = msg
@@ -418,25 +423,19 @@ class HexapodBrain(rclpy.node.Node):
 
     def _build_walking_feet_target_window(
         self,
-        first_feet_targets,
-        stride_direction: Point3D,
-        rotation_direction: float,
         body_translation: Point3D,
         body_rotation: Point3D,
     ):
-        feet_target_window = [first_feet_targets]
-        for point_index in range(max(1, self.walking_trajectory_points)):
-            if point_index > 0:
-                feet_target_window.append(
-                    self.walker.next_step_targets(
-                        stride_direction=stride_direction,
-                        rotation_direction=rotation_direction,
-                        body_direction=body_translation / 8.0,
-                        body_rotation=body_rotation,
-                    )
-                )
-
-        return feet_target_window
+        phase_increment = 1.0 / (self.fps * self.walker.cycle_time_sec)
+        return [
+            self.walker.targets_at(
+                self.walker.current_phase + point_index * phase_increment,
+                self.walker.steering,
+                body_direction=body_translation,
+                body_rotation=body_rotation,
+            )
+            for point_index in range(max(1, self.walking_trajectory_points))
+        ]
 
     def _solve_walking_trajectory_targets(self, feet_target_window):
         trajectory_targets = []
@@ -455,27 +454,32 @@ class HexapodBrain(rclpy.node.Node):
     def _extract_leg_joint_targets(self, leg, robot_state):
         return self.kinematics.extract_leg_joint_targets(leg, robot_state)
 
-    def _foot_targets_key(self, legs_and_targets):
-        return tuple(
-            (
-                leg.label.name,
-                round(float(foot_target.x), 6),
-                round(float(foot_target.y), 6),
-                round(float(foot_target.z), 6),
-            )
-            for leg, foot_target in legs_and_targets
+    def _motion_state_key(
+        self, body_transform: AffineTransform
+    ) -> tuple[str, float, float, float, float, float, tuple[float, ...], int]:
+        """Return the committed gait inputs that make a publish necessary."""
+        direction = self.walker.steering.direction
+        return (
+            self.walker.current_gait.name,
+            round(self.walker.current_phase, 9),
+            round(float(direction.x), 9),
+            round(float(direction.y), 9),
+            round(float(direction.z), 9),
+            round(self.walker.steering.rotation_direction, 9),
+            tuple(round(float(value), 9) for row in body_transform.matrix for value in row),
+            self.walking_trajectory_points,
         )
 
-    def _foot_targets_window_key(self, foot_target_sets):
-        body_transform_key = tuple(
-            round(float(value), 6) for row in self.hexapod.body_transform.matrix for value in row
-        )
-        return (
-            body_transform_key,
-            tuple(
-                self._foot_targets_key(legs_and_targets) for legs_and_targets in foot_target_sets
-            ),
-        )
+    def _next_loop_dt(self) -> float:
+        """Measure and bound the elapsed time between control-loop ticks."""
+        now = self.get_clock().now()
+        if self._last_loop_time is None:
+            dt = 1.0 / self.fps
+        else:
+            dt = (now - self._last_loop_time).nanoseconds / 1_000_000_000.0
+            dt = float(np.clip(dt, 0.0, 2.0 / self.fps))
+        self._last_loop_time = now
+        return dt
 
     def _ik_ready(self) -> bool:
         if self._is_shutting_down:
@@ -502,26 +506,6 @@ class HexapodBrain(rclpy.node.Node):
                 float(np.degrees(femur)) - kFemurOffsetAngle,
                 float(np.degrees(tibia)) - kTibiaOffsetAngle,
             )
-
-    def _snapshot_motion_state(self):
-        return {
-            'current_direction': self.walker.current_direction.copy(),
-            'current_rotation_direction': self.walker.current_rotation_direction,
-            'current_phase': self.walker.current_phase,
-            'body_transform': AffineTransform(self.hexapod.body_transform.matrix.copy()),
-            'leg_angles': {
-                leg.label: (leg.coxa_angle, leg.femur_angle, leg.tibia_angle)
-                for leg in self.hexapod.legs
-            },
-        }
-
-    def _restore_motion_state(self, previous_state):
-        self.walker.current_direction = previous_state['current_direction']
-        self.walker.current_rotation_direction = previous_state['current_rotation_direction']
-        self.walker.current_phase = previous_state['current_phase']
-        self.hexapod.body_transform = previous_state['body_transform']
-        for leg in self.hexapod.legs:
-            leg.forward_kinematics(*previous_state['leg_angles'][leg.label])
 
     def initialization_sequence(self):
         trajectory = JointTrajectoryBuilder(self.hexapod)
@@ -629,7 +613,8 @@ class HexapodBrain(rclpy.node.Node):
             # Timer teardown is best-effort; the node may already be destroying it.
             pass
         self.walker.reset()
-        self._last_published_foot_targets = None
+        self._last_loop_time = None
+        self._last_published_motion_state = self._motion_state_key(self.hexapod.body_transform)
 
     def _track_future(self, future):
         self._pending_futures.add(future)
