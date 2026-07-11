@@ -32,8 +32,8 @@ removing caller-facing routing text, and collapsing internal repetition. Shorter
   change). The "TDD Phase Orchestration" bullets restate each sub-agent's frontmatter
   description (which the orchestrator already sees in its agent list).
 - **AC11 — dead routing text.** "When to Use This Agent / AUTOMATICALLY TRIGGER THIS AGENT
-  FOR" (l.11–23) addresses the *caller*, but delegation is decided from the frontmatter
-  `description` alone — the body is only read *after* selection, making the section pure
+  FOR" (l.11–23) addresses the _caller_, but delegation is decided from the frontmatter
+  `description` alone — the body is only read _after_ selection, making the section pure
   overhead in every run. The `description` itself is 263 chars, over the repo's own 50–250
   guideline (`create-agent` SKILL).
 - Also caller-facing-in-the-wrong-place: "**MUST** offer to create GitHub Issues" for tech
@@ -44,11 +44,11 @@ removing caller-facing routing text, and collapsing internal repetition. Shorter
 
 1. **Delete** "When to Use This Agent" (l.11–23). Fold any trigger worth keeping into the
    frontmatter `description`, and trim that description to ≤250 chars.
-2. **Replace** the PR sections with two short paragraphs that *invoke* the skills: reviews →
+2. **Replace** the PR sections with two short paragraphs that _invoke_ the skills: reviews →
    `pr-review` + `code-review-standards`; descriptions/creation → `generate-pr-description` +
    `open-pr`. Keep only the judgment additions a principal brings that the skills lack (e.g.
    "code is the source of truth over commit messages" if it is absent from the skills — if it
-   is worth keeping, move it *into* `code-review-standards` and reference it).
+   is worth keeping, move it _into_ `code-review-standards` and reference it).
 3. **Merge** "Planning Workflow" and "Complex Task Planning" into one section. In the TDD
    orchestration list keep phase order, context-passing, and verify-between-phases; drop the
    restated sub-agent descriptions.

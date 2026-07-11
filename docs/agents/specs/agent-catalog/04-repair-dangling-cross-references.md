@@ -30,7 +30,7 @@ agent down a path that cannot be followed.
   in Claude Code (whose equivalent is `AskUserQuestion`) — precisely the mistake the
   `create-agent` SKILL warns against ("Referencing tools that don't exist in Claude Code —
   tool aliases from other assistants"). Since `AGENTS.md` is the shared instruction file for
-  *all* assistants, tool-specific names need per-assistant qualification or neutral wording.
+  _all_ assistants, tool-specific names need per-assistant qualification or neutral wording.
 - **AC14 — `docs/agents/specs/README.md`** programs table links
   `todo-remediation/README.md`; the directory does not exist (only `locomotion/` and
   `roadmap/` do). Agents told to pick up todo-remediation work have nothing to read.

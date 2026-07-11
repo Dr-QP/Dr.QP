@@ -126,14 +126,14 @@ Use when preparing to run tests with coverage analysis.
 
 ## Troubleshooting
 
-| Issue                          | Cause                                 | Solution                                                             |
-| ------------------------------ | ------------------------------------- | -------------------------------------------------------------------- |
+| Issue                          | Cause                                 | Solution                                                                                                      |
+| ------------------------------ | ------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | "Command 'colcon' not found"   | Environment not sourced               | Re-run via `scripts/with-ros-env.sh`; if that also fails, see [Escalation](#escalation-no-ros-2-on-this-host) |
-| Compilation errors in C++ code | Missing dependencies or code errors   | Check `log/latest_build/` for details                                |
-| "Package not found" error      | Package doesn't exist or wrong name   | Verify package name in `packages/runtime/` or `packages/simulation/` |
-| Build takes very long          | Full workspace build or large package | Use `--packages-select` or `--packages-up-to` for incremental builds |
-| "Permission denied" errors     | Cannot write to install directory     | Check workspace permissions with `ls -la install/`                   |
-| Linker errors after changes    | Stale build artifacts                 | Run cleanup: `./scripts/clean.fish` then rebuild                     |
+| Compilation errors in C++ code | Missing dependencies or code errors   | Check `log/latest_build/` for details                                                                         |
+| "Package not found" error      | Package doesn't exist or wrong name   | Verify package name in `packages/runtime/` or `packages/simulation/`                                          |
+| Build takes very long          | Full workspace build or large package | Use `--packages-select` or `--packages-up-to` for incremental builds                                          |
+| "Permission denied" errors     | Cannot write to install directory     | Check workspace permissions with `ls -la install/`                                                            |
+| Linker errors after changes    | Stale build artifacts                 | Run cleanup: `./scripts/clean.fish` then rebuild                                                              |
 
 ### Escalation: No ROS 2 on This Host
 

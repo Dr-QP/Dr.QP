@@ -10,7 +10,7 @@
 
 ## Objective
 
-Rewrite the three TDD sub-agents so they describe *this* workspace's stack and *actual*
+Rewrite the three TDD sub-agents so they describe _this_ workspace's stack and _actual_
 sub-agent execution semantics: pytest/GTest under colcon, spec-or-issue-driven requirements,
 autonomous operation reporting back to the orchestrator, and no outward-facing GitHub writes.
 
@@ -29,7 +29,7 @@ The three files are recognizably a C#/.NET template dropped into a ROS 2 Python/
   ruff + `ament_flake8`, C++ Core Guidelines. Since sub-agents also load `CLAUDE.md`/`AGENTS.md`,
   every TDD run starts with two authoritative instruction sets in direct conflict.
 - **AC2 — no runnable workflow.** None of the three mention `scripts/with-ros-env.sh`, `colcon
-  build/test`, `launch_pytest`, or the scaffolding skills (`add-test-file-python`,
+build/test`, `launch_pytest`, or the scaffolding skills (`add-test-file-python`,
   `add-test-file-cpp`, `launch-testing`, `ros2-workspace-testing`). "Verify the test fails —
   run the test" is unactionable as written: the agent must rediscover the build system from
   scratch on every invocation, or worse, follow the C# guidance.
@@ -47,8 +47,8 @@ The three files are recognizably a C#/.NET template dropped into a ROS 2 Python/
   → TDD Refactor … Every spec lists the tests to write first") — yet no agent knows specs exist.
 - **AC5 — inverted caution.** TDD Green: "Update issue with implementation progress"; TDD
   Refactor: "Comment on final implementation and **close issue** if complete." Leaf sub-agents
-  performing ungated outward-facing GitHub writes, while AC3 forbids them ungated *local file
-  edits*.
+  performing ungated outward-facing GitHub writes, while AC3 forbids them ungated _local file
+  edits_.
 - **AC12 — tool over-grant.** All three carry `Agent` in `tools:` despite being terminal
   workers; `create-agent` prescribes least privilege and warns against over-orchestration.
 
@@ -58,7 +58,7 @@ Rewrite each agent (keep them short — every line is paid for per invocation):
 
 1. **Requirements source (Red).** Accept, in priority order: (a) a spec file path passed in the
    orchestrator prompt (the `docs/agents/specs/` programs — use its "Test plan (write first)"
-   section verbatim), (b) an explicit issue number passed in the prompt, (c) *fallback only*:
+   section verbatim), (b) an explicit issue number passed in the prompt, (c) _fallback only_:
    the branch-name heuristic, with the instruction to verify the fetched issue's title/body
    actually matches the task before trusting it.
 2. **Stack sections.** Replace the C# sections with pointers, not prose: Python tests →

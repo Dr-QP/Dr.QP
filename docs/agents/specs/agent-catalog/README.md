@@ -52,7 +52,7 @@ IDs `AC1`…`AC14` are referenced by the specs below. Severity: **C** = contradi
   automated equality check (`validate_agent_files` only scans `.claude`), so description
   edits silently drift out of sync.
 - **AC11 (I)** — Principal Engineer's "When to Use This Agent / AUTOMATICALLY TRIGGER"
-  section addresses the *caller*, but delegation decisions read only the frontmatter
+  section addresses the _caller_, but delegation decisions read only the frontmatter
   `description` — the section is dead weight in every run. Its description is also 263 chars,
   over the repo's own 50–250 guideline.
 - **AC12 (I)** — The three TDD leaf agents carry the `Agent` tool. They are terminal workers

@@ -87,7 +87,6 @@ to check later.
    by a failed check is a state change to investigate, not a reason to stop.
 
 3. Classify every completed non-success check before changing code:
-
    - A GitHub Actions failure: use
      [extract-github-actions-logs](../extract-github-actions-logs/SKILL.md)
      to collect the failing job log and artifacts, then use
@@ -175,6 +174,7 @@ when an issue comment contains `@claude review`.
    ```bash
    gh run watch <run-id> --exit-status
    ```
+
 3. If no review is in progress and no trigger has been posted for that head
    SHA, post exactly this comment:
 
@@ -190,8 +190,9 @@ when an issue comment contains `@claude review`.
    gh run list --workflow=claude-review.yml --event issue_comment \
      --json databaseId,status,createdAt,url --limit 1
    ```
+
 4. Wait for the `Claude Responder` workflow to complete — via `gh run watch
-   <run-id> --exit-status` on the run captured above, or by repeating the
+<run-id> --exit-status` on the run captured above, or by repeating the
    `gh run list --workflow=claude-review.yml` query until its `status`
    reaches `completed` — then refresh both `gh pr checks` and PR reviews. Do
    not treat workflow start, a plain comment, or a pending review as

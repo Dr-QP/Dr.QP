@@ -7,12 +7,12 @@ counterparts, where they exist, live under `docs/source/Dev/`.
 The specs are grouped into the number of **programs**. They are independent bodies of work but not
 unrelated — see [Program relationships](#program-relationships).
 
-| Program                                           | What it does                                                               | Source of rationale                                                       |
-| ------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| [`locomotion/`](locomotion/README.md)             | Foundation refactor: analytic-IK hot path, twist steering, time-based gait | [`ik-locomotion-analysis.md`](../../source/Dev/ik-locomotion-analysis.md) |
-| [`roadmap/`](roadmap/README.md)                   | Autonomy roadmap: joystick hexapod → autonomous AI home pet                | [`roadmap/index.md`](../../source/Dev/roadmap/index.md)                   |
-| [`todo-remediation/`](todo-remediation/README.md) | Code-TODO cleanup from a repo-wide audit                                   | (audit-derived, self-contained)                                           |
-| [`agent-catalog/`](agent-catalog/README.md)       | Fix contradictions/redundancy in agent instruction files                   | (review-derived, findings index in program README)                        |
+| Program                                               | What it does                                                               | Source of rationale                                                       |
+| ----------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [`locomotion/`](locomotion/README.md)                 | Foundation refactor: analytic-IK hot path, twist steering, time-based gait | [`ik-locomotion-analysis.md`](../../source/Dev/ik-locomotion-analysis.md) |
+| [`roadmap/`](roadmap/README.md)                       | Autonomy roadmap: joystick hexapod → autonomous AI home pet                | [`roadmap/index.md`](../../source/Dev/roadmap/index.md)                   |
+| [`todo-remediation/`](todo-remediation/README.md)     | Code-TODO cleanup from a repo-wide audit                                   | (audit-derived, self-contained)                                           |
+| [`agent-catalog/`](agent-catalog/README.md)           | Fix contradictions/redundancy in agent instruction files                   | (review-derived, findings index in program README)                        |
 | [`formatting-linting/`](formatting-linting/Readme.md) | Unify formatter ownership, local/editor workflows, CI, and ROS lint gates  | (repository tooling audit, self-contained)                                |
 
 ## Program relationships
