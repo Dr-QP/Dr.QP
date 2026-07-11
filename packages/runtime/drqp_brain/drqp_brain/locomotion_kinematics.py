@@ -31,7 +31,20 @@ from rclpy.exceptions import NotInitializedException
 from scipy.spatial.transform import Rotation
 from sensor_msgs.msg import JointState
 
-MOVEIT_IK_TIMEOUT_SEC = 2.0
+LOCOMOTION_FPS = 8
+WALKING_TRAJECTORY_POINTS = 2
+LOCOMOTION_LEG_COUNT = 6
+MOVEIT_IK_ATTEMPTS_PER_TARGET = 2
+MOVEIT_IK_CALLS_PER_TICK = (
+    LOCOMOTION_LEG_COUNT
+    * WALKING_TRAJECTORY_POINTS
+    * MOVEIT_IK_ATTEMPTS_PER_TARGET
+)
+MOVEIT_IK_TIMEOUT_SEC = (0.5 / LOCOMOTION_FPS) / MOVEIT_IK_CALLS_PER_TICK
+assert (
+    MOVEIT_IK_CALLS_PER_TICK * MOVEIT_IK_TIMEOUT_SEC
+    <= 0.5 / LOCOMOTION_FPS
+)
 BASE_FRAME = 'drqp/base_center_link'
 
 RCLPY_SHUTDOWN_ERRORS = (InvalidHandle, NotInitializedException, RCLError, RuntimeError)

@@ -41,8 +41,10 @@ from drqp_brain.joint_trajectory_builder import (
     kTibiaOffsetAngle,
 )
 from drqp_brain.locomotion_kinematics import (
+    LOCOMOTION_FPS,
     MoveItPyLocomotionKinematics,
     RCLPY_SHUTDOWN_ERRORS,
+    WALKING_TRAJECTORY_POINTS,
 )
 from drqp_brain.stride_limits import DirectionalStrideLimits
 from drqp_brain.walk_controller import GaitType, WalkController
@@ -90,7 +92,7 @@ class HexapodBrain(rclpy.node.Node):
         self._pending_futures = set()
 
         # MoveItPy is kept in-process for walking kinematics and whole-state validation.
-        self.fps = 8
+        self.fps = LOCOMOTION_FPS
         self.loop_callback_group = MutuallyExclusiveCallbackGroup()
         self.state_callback_group = ReentrantCallbackGroup()
         self.declare_parameter('enable_imu_balance', True)
@@ -153,7 +155,7 @@ class HexapodBrain(rclpy.node.Node):
         self.__trajectory_client = None
         self._last_published_foot_targets = None
         self._joint_state_warning_logged = False
-        self.walking_trajectory_points = 2
+        self.walking_trajectory_points = WALKING_TRAJECTORY_POINTS
         self.latest_joint_state = None
         self.joint_state_sub = self.create_subscription(
             JointState,
