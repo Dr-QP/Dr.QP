@@ -32,6 +32,7 @@ Consult the **[Principal Engineer](/.claude/agents/principal-engineer.agent.md)*
 
 - Follow **PEP 8**: 4 spaces per indentation level, lines ≤ 79 characters, descriptive names
 - Use type hints (PEP 484, `typing` module) and PEP 257 docstrings placed immediately after `def`/`class`
+- Lint with `ament_flake8`, not pure `flake8` — run the package's `test_flake8.py` (e.g. `colcon test --packages-select <pkg> --ctest-args -R flake8`, or `python3 -m pytest <pkg>/test/test_flake8.py`). Pure `flake8` uses different defaults (79-char limit, stock isort grouping) and reports false positives that do not fail CI
 - Add ROS and workspace packages to Ruff's `lint.isort.known-third-party` configuration when that classification aligns its import order with `ament_flake8`. Use a targeted `# noqa: <rule>` only for a formatter-required incompatibility such as `E203` on a slice; do not disable rules for a whole file or package
 - **Exception handling**: never write empty handlers (`except ...: pass`). Handle expected exceptions explicitly by at least one of: logging context, returning a safe fallback value, re-raising with context, or raising `SystemExit` for CLI interruption paths (`raise SystemExit(130)` for user interrupts). If an exception must be intentionally ignored, document the reason in a comment and keep the ignored scope minimal. Prefer specific exception types over broad `except Exception`
 
