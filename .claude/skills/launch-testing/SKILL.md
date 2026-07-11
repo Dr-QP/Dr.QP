@@ -1,13 +1,14 @@
 ---
-description: 'Conventions for launch_pytest integration tests (process startup + per-process exit-code verification)'
-applyTo: '**/test/**/*.py'
+name: launch-testing
+description: 'Write launch_pytest integration tests with per-process exit-code verification via drqp_launch_testing. Use when writing, reviewing, or debugging ROS 2 launch tests, choosing fixture scope vs shutdown pattern, or handling shutdown-crash flakiness with pytest-retry. Keywords: launch test, launch_pytest, generate_test_description, shutdown=True, exit codes, flaky, drqp_launch_testing.'
 ---
 
 # Launch Test Conventions (launch_pytest)
 
-For Python style see [python.instructions.md](./python.instructions.md). These
-rules apply to `launch_pytest` tests that start ROS 2 processes via a
-`LaunchDescription`. They are derived from an executable behavior matrix:
+For Python style see the Coding Conventions section in the repository
+[AGENTS.md](../../../AGENTS.md). These rules apply to `launch_pytest` tests
+that start ROS 2 processes via a `LaunchDescription`. They are derived from an
+executable behavior matrix:
 `packages/runtime/drqp_launch_testing/test/shutdown_behavior/` (see its
 `SPEC.md`).
 
@@ -160,3 +161,9 @@ parameter pytest may run setup before any process launches and discovery times
 out. A `ready_delay` (`TimerAction` before `ReadyToTest`) is also required so
 processes are up before tests — and so the shutdown body observes populated exit
 codes.
+
+## Related Resources
+
+- [add-test-file](../add-test-file/) — test file scaffolding and build integration
+- [ros2-workspace-testing](../ros2-workspace-testing/) — running tests with colcon
+- `packages/runtime/drqp_launch_testing/test/shutdown_behavior/SPEC.md` — the executable behavior matrix these rules derive from

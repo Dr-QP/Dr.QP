@@ -1,9 +1,9 @@
 ---
-description: 'Guidelines for working in sandbox microVM'
-applyTo: '**/*'
+name: microvm-sandbox
+description: 'Run build, test, and lint commands through the devcontainer in cloud microVM sandboxes where ROS 2 is not natively installed. Use in Cursor cloud sessions or similar sandbox VMs, when running devcontainer up/exec, or when colcon builds need the containerized ROS environment. Keywords: devcontainer, microVM, sandbox, cloud VM, devcontainer exec, ros-dep.sh, cursor cloud.'
 ---
 
-# microVM sandbox workflows
+# microVM Sandbox Workflows
 
 ## Development Container
 
@@ -18,7 +18,7 @@ devcontainer up --workspace-folder /workspace \
 
 The `devcontainer up` command runs all lifecycle hooks defined in `devcontainer.json`: `postCreateCommand` (directory ownership), `postStartCommand` (keyring setup, firewall, xpra), and `postAttachCommand` (rosdep install, Python venv creation, xpra startup).
 
-### Running Commands
+## Running Commands
 
 Use `devcontainer exec` to run commands inside the container:
 
@@ -36,7 +36,7 @@ devcontainer exec --workspace-folder /workspace bash -lc "
 
 For test runs that need generated workspace Python dependencies (for example `python-statemachine`), run `./scripts/ros-dep.sh` **after a successful `colcon build`** before `source scripts/setup.bash` and `colcon test`. The helper scans `build/` and `install/` for generated `requires.txt` files and installs them into the container's system interpreter with `pip --break-system-packages`. Inside the devcontainer these directories exist as Docker volume mount points, but they may be empty until the first build — that should no-op cleanly. Build, test, and lint commands should mirror those used in the repository CI workflows (see `.github/workflows/ci.yml`).
 
-### Gotchas
+## Gotchas
 
 - The colcon mixin config lives at `/root/.colcon/` inside the image and is pre-configured.
 - `--symlink-install` is required for Python coverage collection and hot-reloading.
@@ -44,3 +44,8 @@ For test runs that need generated workspace Python dependencies (for example `py
 - The `drqp_gazebo` simulation tests run headless and take ~20 seconds.
 - Generated workspace Python requirements are installed into the container's system interpreter by `./scripts/ros-dep.sh`; the developer `.venv` remains separate for local tooling.
 - The cloud VM's host Docker daemon must be running before `devcontainer up`.
+
+## Related Resources
+
+- [remote-codespace-session](../remote-codespace-session/) — when no Docker daemon is available at all (e.g. Codex Tasks), use a GitHub Codespace instead
+- [ros2-workspace-build](../ros2-workspace-build/) / [ros2-workspace-testing](../ros2-workspace-testing/) — colcon build/test workflows to run inside the container

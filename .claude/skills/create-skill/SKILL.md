@@ -1,15 +1,15 @@
 ---
-description: 'Guidelines for creating high-quality Agent Skills for Claude Code'
-applyTo: '**/.claude/skills/**/SKILL.md,**/.agents/skills/**/SKILL.md'
+name: create-skill
+description: 'Create or update Agent Skills (SKILL.md) with effective trigger descriptions, bundled scripts and resources, and validation. Use when creating a new skill, editing files in .claude/skills/, writing or reviewing SKILL.md frontmatter, or debugging why a skill is not being discovered. Keywords: skill, SKILL.md, slash command, description, allowed-tools, bundled resources.'
 ---
 
-# Agent Skills File Guidelines
+# Create Agent Skill
 
 Instructions for creating effective and portable Agent Skills that enhance Claude Code with specialized capabilities, workflows, and bundled resources.
 
 ## What Are Agent Skills?
 
-Agent skills are folders of instructions, scripts, and resources that Claude loads when relevant to improve performance on specialized tasks. Unlike always-on instructions (CLAUDE.md and the files it references), skills are meant for task-specific workflows that should only be loaded when needed.
+Agent skills are folders of instructions, scripts, and resources that Claude loads when relevant to improve performance on specialized tasks. Unlike always-on instructions (CLAUDE.md/AGENTS.md and the files they reference), skills are meant for task-specific workflows that should only be loaded when needed.
 
 Key characteristics:
 
@@ -134,6 +134,8 @@ No fixed folder taxonomy is required. These subfolders are useful conventions wh
 
 Use relative paths when referring to skill resources from `SKILL.md`.
 
+<!-- validate_skills: ignore-cross-reference-start -->
+
 ```markdown
 ## Available Scripts
 
@@ -143,6 +145,8 @@ See the [workflow guide](./references/workflow-guide.md) for the full procedure.
 
 Use the [scaffold](./templates/scaffold.py) as a starting point.
 ```
+
+<!-- validate_skills: ignore-cross-reference-end -->
 
 ## Running Scripts Safely
 
@@ -248,7 +252,7 @@ Scripts enable evolution: even simple operations benefit from being implemented 
 
 ## Skills Versus Always-On Instructions
 
-Use CLAUDE.md and the `.claude/instructions/` files for simple guidance that applies to almost every task, such as repository coding standards or broad workflow expectations.
+Use CLAUDE.md and AGENTS.md for simple guidance that applies to almost every task, such as repository coding standards or broad workflow expectations.
 
 Use skills for detailed, reusable task playbooks that should only enter context when they are relevant.
 
@@ -294,6 +298,8 @@ Before publishing a skill:
 
 When executing multi-step workflows, create a TODO list where each step references the relevant documentation:
 
+<!-- validate_skills: ignore-cross-reference-start -->
+
 ```markdown
 ## TODO
 
@@ -304,6 +310,8 @@ When executing multi-step workflows, create a TODO list where each step referenc
 - [ ] Step 5: Deploy to production - see [workflow-deployment.md](./references/workflow-deployment.md#production)
 ```
 
+<!-- validate_skills: ignore-cross-reference-end -->
+
 This ensures traceability and allows resuming workflows if interrupted.
 
 ## Related Resources
@@ -311,3 +319,4 @@ This ensures traceability and allows resuming workflows if interrupted.
 - [Claude Code skills documentation](https://code.claude.com/docs/en/skills)
 - [Agent Skills open standard](https://agentskills.io)
 - [Anthropic skills collection](https://github.com/anthropics/skills)
+- [create-agent](../create-agent/) — for creating custom agents

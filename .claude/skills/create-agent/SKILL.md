@@ -1,9 +1,9 @@
 ---
-description: 'Guidelines for creating custom agent files for Claude Code'
-applyTo: '**/*.agent.md'
+name: create-agent
+description: 'Create or update Claude Code custom agent files (.agent.md) with proper frontmatter, tool selection, orchestration patterns, and Codex trampolines. Use when creating a new subagent, editing files in .claude/agents/, wiring sub-agent orchestration, or syncing .codex/agents/ trampolines. Keywords: agent, subagent, .agent.md, frontmatter, trampoline, orchestration.'
 ---
 
-# Custom Agent File Guidelines
+# Create Custom Agent
 
 Instructions for creating effective and maintainable custom agents (subagents) that provide specialized expertise for specific development tasks in Claude Code.
 
@@ -181,5 +181,5 @@ When creating or renaming an agent, add or update the matching trampoline. Keep 
 ## Additional Resources
 
 - [Claude Code subagents documentation](https://code.claude.com/docs/en/sub-agents)
-- [Agent Skills guidelines](./agent-skills.instructions.md) — for creating skills
+- [create-skill](../create-skill/) — for creating skills
 - Existing agents in `.claude/agents/` — use as reference implementations

@@ -84,5 +84,5 @@ after the patch:
   scope to verify the active test's processes (combos 1 & 2) — it runs against a
   different, throwaway simulation.
 
-See `.claude/instructions/launch-testing.instructions.md` for the project rules
+See `.claude/skills/launch-testing/SKILL.md` for the project rules
 derived from this matrix.

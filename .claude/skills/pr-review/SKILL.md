@@ -1,6 +1,6 @@
 ---
 name: pr-review
-description: 'Perform a thorough automated code review of a GitHub pull request in this ROS 2 robotics workspace, publishing feedback as a single GitHub pull request review with inline comments (never a standalone top-level comment). Use when asked to review a pull request, or when a PR is opened/reopened and an automated review is required. Keywords: PR review, code review, pull request review, automated review.'
+description: 'Perform a thorough automated code review of a GitHub pull request in this ROS 2 robotics workspace, publishing feedback as a single GitHub pull request review with inline comments (a standalone comment only as fallback when inline posting fails). Use when asked to review a pull request, or when a PR is opened/reopened and an automated review is required. Keywords: PR review, code review, pull request review, automated review.'
 ---
 
 # PR Review
@@ -38,7 +38,7 @@ Two independent concerns feed two different pass types (see Steps below) so they
 
 - ROS 2 conventions (node lifecycle, topic/service naming, parameter handling)
 - C++/Python style and idioms
-- Any rule in the `.claude/instructions/*.instructions.md` files applicable to the changed files (see Step 2), and any repo `CLAUDE.md`/`AGENTS.md` file that shares a path with the changed file or its parents
+- Any rule in the Coding Conventions section of the repository `AGENTS.md`, any skill applicable to the changed files (see Step 2), and any repo `CLAUDE.md`/`AGENTS.md` file that shares a path with the changed file or its parents
 - IGNORE import ordering, that is handled by `ruff` and `clang-format` in CI
 - Only flag a violation if you can quote the exact rule text being broken
 
@@ -71,9 +71,9 @@ Flag only significant bugs; ignore nitpicks and likely false positives. Do not f
 ## Steps
 
 1. **Gate.** Run `gh pr view <PR_NUMBER>`. If the PR is a draft, already closed/merged, or trivial (docs-only, version bump, generated-file-only diff), stop here and say so instead of proceeding — do not fetch the diff or spawn any review passes.
-2. **Gather context.** Fetch the diff (`gh pr diff <PR_NUMBER>`) and reuse the PR description from Step 1. From the changed-file list, determine which `.claude/instructions/*.instructions.md` files apply, by matching each file's `applyTo` frontmatter glob against the changed paths (`engineering.instructions.md`'s `**` always applies).
+2. **Gather context.** Fetch the diff (`gh pr diff <PR_NUMBER>`) and reuse the PR description from Step 1. From the changed-file list, determine which convention sources apply: the Coding Conventions section of `AGENTS.md` always applies; add `.claude/skills/launch-testing/SKILL.md` when the diff touches `launch_pytest` tests (`**/test/**/*.py`), `.claude/skills/create-agent/SKILL.md` for `*.agent.md` changes, and `.claude/skills/create-skill/SKILL.md` for `SKILL.md` changes.
 3. **Run four independent initial-review passes in parallel when the environment supports it** — each pass sees only the diff, the PR title, the PR description, and its own focus list; none sees another pass's output. Each pass returns a list of issues, where each issue has a description and the reason it was flagged (for example, "AGENTS.md adherence", "bug", or "security"):
-   - 2x **compliance pass** — audit the diff against the Compliance focus list and the instruction files found in Step 2.
+   - 2x **compliance pass** — audit the diff against the Compliance focus list and the convention sources found in Step 2.
    - 2x **correctness pass** — audit the diff against the Correctness focus list, one pass scanning for obvious bugs and the other for security/logic issues introduced by the changed code.
    - Codex: use available multi-agent/sub-agent tools when present; otherwise perform the four passes sequentially in this session, restarting the review lens from the diff for each pass.
    - Claude Code: issue four `Agent` tool calls in a single message (`subagent_type: general-purpose`; use a fast model for compliance and the strongest available model for correctness).
@@ -81,9 +81,9 @@ Flag only significant bugs; ignore nitpicks and likely false positives. Do not f
 4. **Merge and deduplicate.** Collect the candidate findings from all passes that completed (see fallback below if any didn't). Collapse candidates that name the same file/line and describe the same underlying issue into one, keeping the **blocking** tier if either collapsed candidate was blocking.
 5. **Validate each candidate independently, in parallel when supported** — for every surviving candidate, run one validation pass that sees only that single candidate plus the diff/description (not the other candidates, not which pass raised it), and must confirm with high confidence that it is a real, worth-flagging issue. Drop any candidate the validator cannot confirm with high confidence. Preserve each surviving candidate's severity tier from Step 4 unchanged — validation confirms or drops a finding, it never changes its tier. Use the same runner-specific parallel-vs-sequential approach as Step 3, and the same blocking policy in "Waiting on parallel passes" below (cap: one blocking wait, up to 5 minutes per candidate; a validator that doesn't return in time counts as "cannot confirm" — drop the candidate).
 6. Create a pending review with `create_pending_pull_request_review`.
-7. For every validated finding, attach it as an inline comment on the exact file/line with `add_comment_to_pending_review` — this is the only place finding text goes; never describe a finding's location in prose.
+7. For every validated finding, attach it as an inline comment on the exact file/line with `add_comment_to_pending_review` — this is the only place finding text goes; never describe a finding's location in prose. If attaching a specific finding fails (most commonly because its file/line is outside the PR diff — GitHub only accepts inline review comments on diff lines), do not drop the finding and do not let it block the review: continue with the remaining inline comments, and after submitting the review in Step 8 post that finding as a normal PR comment (`gh pr comment` or `add_issue_comment`) stating the file/line in prose and noting it could not be attached inline. This is the sole permitted use of a standalone PR comment.
 8. Submit the review with `submit_pending_pull_request_review`, choosing `event` from the validated findings that survived Step 5:
-   - **No validated findings at all → `APPROVE`.** A clean pass must be approved, not left as a silent `COMMENT`.
+   - **No validated findings at all → `APPROVE`.** A clean pass must be approved, not left as a silent `COMMENT`. A finding that fell back to a normal PR comment in Step 7 still counts as a finding → `COMMENT`.
    - **One or more validated findings, of any severity tier → `COMMENT`.** Never use `REQUEST_CHANGES`, even for blocking (critical/P1) findings — the severity tier still controls dedup priority in Step 4 and can be called out in the inline comment text, but it never changes the review event.
 
    `body` is limited to a short overall summary (no per-finding detail — that lives in the inline comments); for an `APPROVE` with zero findings, state plainly that no issues were found.
@@ -116,10 +116,12 @@ Write two plain files under `./.tmp` (never assemble this JSON live in a shell c
 
 Then run `scripts/post-review.sh --pr <PR_NUMBER> --event <COMMENT|APPROVE> --summary-file <path> --comments-file <path>` (run with `-h` for full usage; `--repo` defaults to the current repo via `gh repo view`). This single call replaces Steps 6–8 entirely, including the `event` decision rule from Step 8 (`APPROVE` when `[]`/no findings, `COMMENT` otherwise — never `REQUEST_CHANGES`). Do not fall further back to typing `gh api` calls by hand.
 
+If the call is rejected because one of the `comments[]` entries cannot be placed inline (e.g., its file/line is outside the PR diff), remove that entry from the comments file, re-run the script, then post the removed finding as a normal PR comment (`gh pr comment`) stating the file/line in prose — same fallback as Step 7.
+
 ## Constraints
 
-- **Never post a standalone top-level PR comment** (`gh pr comment`, `add_issue_comment`, etc.) for review findings. All feedback must go through the pull request review flow (steps 6–8) so it renders as a proper review with threaded, resolvable inline comments.
-- **Never write location references like "in `file.py` (line 42)" or "around line 10" in the review body or in chat.** Every finding tied to a specific file/line must be an actual inline comment on that file/line via `add_comment_to_pending_review`, not prose pointing at a location.
+- **Never post a standalone top-level PR comment** (`gh pr comment`, `add_issue_comment`, etc.) for review findings. All feedback must go through the pull request review flow (steps 6–8) so it renders as a proper review with threaded, resolvable inline comments. **Sole exception:** a validated finding whose inline attachment was attempted and rejected (Step 7 fallback) is posted as a normal PR comment so it is not silently lost.
+- **Never write location references like "in `file.py` (line 42)" or "around line 10" in the review body or in chat.** Every finding tied to a specific file/line must be an actual inline comment on that file/line via `add_comment_to_pending_review`, not prose pointing at a location. The Step 7 fallback comment is the sole exception — there, an explicit file/line reference in prose is required precisely because the inline placement failed.
 - Do not submit review text as plain chat/assistant messages.
 - Keep each inline comment specific and actionable, scoped to the line(s) it annotates.
 - Only findings that survived Step 5 validation may be posted — never publish an unvalidated candidate.

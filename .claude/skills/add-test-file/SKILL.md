@@ -73,7 +73,7 @@ Write launch tests as **plain functions** (not test classes), share a node/harne
 and **verify per-process exit codes** with `drqp_launch_testing` (`<test_depend>drqp_launch_testing</test_depend>`).
 Never ship a no-op `shutdown=True` test: that mechanism only checks the aggregate launch _service_ return code,
 not that processes exited 0. Full rules + an executable behavior matrix: see
-[launch-testing.instructions.md](../../instructions/launch-testing.instructions.md) and
+the [launch-testing](../launch-testing/) skill and
 `packages/runtime/drqp_launch_testing/test/shutdown_behavior/SPEC.md`.
 
 Choose the pattern by test count:
@@ -147,4 +147,4 @@ C++: `ament_lint_auto`, `drqp_lint_common`, `ament_cmake_gmock`, `ament_cmake_py
 
 - [find-test-files](../find-test-files/)
 - [ros2-workspace-testing](../ros2-workspace-testing/)
-- [Engineering guidelines](../../instructions/engineering.instructions.md)
+- [launch-testing](../launch-testing/)
