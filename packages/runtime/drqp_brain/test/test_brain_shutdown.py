@@ -84,8 +84,32 @@ def test_destroy_node_stops_walk_controller_before_destroying_ros_entities():
 
         brain.loop_timer.cancel.assert_called_once_with()
         brain.walker.reset.assert_called_once_with()
-        assert brain._last_published_motion_state == brain._motion_state_key(
-            brain.hexapod.body_transform
+        assert brain._last_published_motion_state == (
+            'tripod',
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            (
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+            ),
+            2,
         )
         destroy_super.assert_called_once_with()
     finally:

@@ -196,7 +196,7 @@ class WalkController:
             transform = AffineTransform.from_rotvec(body_rotation.numpy()) @ transform
         return transform
 
-    def apply_feet_targets(self, legs_and_targets):
+    def apply_feet_targets(self, legs_and_targets: list[tuple[object, Point3D]]) -> None:
         """Apply targets through the legacy visual/notebook kinematics path."""
         for leg, foot_target in legs_and_targets:
             leg.move_to(foot_target)
