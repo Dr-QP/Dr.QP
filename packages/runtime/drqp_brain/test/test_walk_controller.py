@@ -45,9 +45,7 @@ def walker(hexapod):
 
 
 def _target_values(targets):
-    return [
-        (float(target.x), float(target.y), float(target.z)) for _, target in targets
-    ]
+    return [(float(target.x), float(target.y), float(target.z)) for _, target in targets]
 
 
 def test_targets_at_is_pure(walker, hexapod):
