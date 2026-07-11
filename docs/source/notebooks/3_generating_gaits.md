@@ -403,7 +403,7 @@ jupyter_utils.display_file(
 ```
 
 ```{code-cell} ipython3
-from drqp_brain.walk_controller import WalkController
+from drqp_brain.walk_controller import SteeringState, WalkController
 from drqp_kinematics.models import HexapodModel
 import numpy as np
 from plotting import animate_plot, is_sphinx_build
@@ -471,12 +471,12 @@ def animate_hexapod_walk(
             [0, 0, direction_degrees], degrees=True
         ).apply_point(stride_direction)
 
-        walk_controller.next_step(
-            phase_override=phase,
-            stride_direction=stride_direction * walk_speed,
-            rotation_direction=rotation_direction,
+        targets = walk_controller.targets_at(
+            phase,
+            SteeringState(stride_direction * walk_speed, rotation_direction),
             verbose=False,
         )
+        walk_controller.apply_feet_targets(targets)
         update_hexapod_plot(hexapod, plot_data)
         fig.canvas.draw_idle()
         last_frame = frame
