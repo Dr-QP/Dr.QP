@@ -51,15 +51,10 @@ def _all_joint_names(hexapod):
 
 def test_moveit_ik_timeout_fits_within_half_loop_period():
     """Bound all IK calls in one trajectory window to half the loop period."""
-    expected_calls_per_tick = (
-        6 * WALKING_TRAJECTORY_POINTS * MOVEIT_IK_ATTEMPTS_PER_TARGET
-    )
+    expected_calls_per_tick = 6 * WALKING_TRAJECTORY_POINTS * MOVEIT_IK_ATTEMPTS_PER_TARGET
 
     assert MOVEIT_IK_CALLS_PER_TICK == expected_calls_per_tick
-    assert (
-        MOVEIT_IK_CALLS_PER_TICK * MOVEIT_IK_TIMEOUT_SEC
-        <= 0.5 / LOCOMOTION_FPS
-    )
+    assert MOVEIT_IK_CALLS_PER_TICK * MOVEIT_IK_TIMEOUT_SEC <= 0.5 / LOCOMOTION_FPS
 
 
 class FakeJointModelGroup:
