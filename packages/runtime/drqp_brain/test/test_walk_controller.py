@@ -109,9 +109,7 @@ def test_smoothing_is_time_constant_based(hexapod):
 
 def test_ramp_down_snaps_to_rest_and_returns_feet(walker):
     """Commanding zero decays steering to exactly rest and settles feet back."""
-    rest_targets = _target_values(
-        [(leg, tip) for leg, tip in walker.leg_tips_on_ground]
-    )
+    rest_targets = _target_values([(leg, tip) for leg, tip in walker.leg_tips_on_ground])
 
     for _ in range(5):
         walker.advance(0.125, Point3D([1, 0, 0]), 1.0)
