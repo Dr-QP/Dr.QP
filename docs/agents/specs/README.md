@@ -4,18 +4,19 @@ Implementation-ready, machine-oriented specifications for evolving Dr.QP. Each s
 be independently shippable (one spec ≈ one PR) and lists the tests to write first. Human-narrative
 counterparts, where they exist, live under `docs/source/Dev/`.
 
-The specs are grouped into three **programs**. They are independent bodies of work but not
+The specs are grouped into four **programs**. They are independent bodies of work but not
 unrelated — see [Program relationships](#program-relationships).
 
-| Program                                           | What it does                                                               | Source of rationale                                                       |
-| ------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| [`locomotion/`](locomotion/README.md)             | Foundation refactor: analytic-IK hot path, twist steering, time-based gait | [`ik-locomotion-analysis.md`](../../source/Dev/ik-locomotion-analysis.md) |
-| [`roadmap/`](roadmap/README.md)                   | Autonomy roadmap: joystick hexapod → autonomous AI home pet                | [`roadmap/index.md`](../../source/Dev/roadmap/index.md)                   |
-| [`todo-remediation/`](todo-remediation/README.md) | Code-TODO cleanup from a repo-wide audit                                   | (audit-derived, self-contained)                                           |
+| Program                                               | What it does                                                               | Source of rationale                                                       |
+| ----------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [`locomotion/`](locomotion/README.md)                 | Foundation refactor: analytic-IK hot path, twist steering, time-based gait | [`ik-locomotion-analysis.md`](../../source/Dev/ik-locomotion-analysis.md) |
+| [`roadmap/`](roadmap/README.md)                       | Autonomy roadmap: joystick hexapod → autonomous AI home pet                | [`roadmap/index.md`](../../source/Dev/roadmap/index.md)                   |
+| [`todo-remediation/`](todo-remediation/README.md)     | Code-TODO cleanup from a repo-wide audit                                   | (audit-derived, self-contained)                                           |
+| [`formatting-linting/`](formatting-linting/Readme.md) | Unify formatter ownership, local/editor workflows, CI, and ROS lint gates  | (repository tooling audit, self-contained)                                |
 
 ## Program relationships
 
-The three programs can be worked in parallel by different agents, but they touch overlapping code
+The four programs can be worked in parallel by different agents, but they touch overlapping code
 and one program de-risks the others. Read this before starting cross-program work.
 
 ### Locomotion migration is the substrate the roadmap assumes
