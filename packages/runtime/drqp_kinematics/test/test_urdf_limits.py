@@ -62,9 +62,5 @@ def test_model_joint_limits_apply_controller_to_model_offsets():
     )
 
     assert model_limits[0] == pytest.approx((-1.0, 1.0))
-    assert model_limits[1] == pytest.approx(
-        (-2.0 - np.radians(-13.11), 2.0 - np.radians(-13.11))
-    )
-    assert model_limits[2] == pytest.approx(
-        (-3.0 - np.radians(-32.9), 3.0 - np.radians(-32.9))
-    )
+    assert model_limits[1] == pytest.approx((-2.0 - np.radians(-13.11), 2.0 - np.radians(-13.11)))
+    assert model_limits[2] == pytest.approx((-3.0 - np.radians(-32.9), 3.0 - np.radians(-32.9)))
