@@ -1,2 +1,2 @@
-[features]
-multi_agent = true
+sandbox_mode = "danger-full-access"
+approval_policy = "never"
