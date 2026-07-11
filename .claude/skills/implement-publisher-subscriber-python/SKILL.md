@@ -1,24 +1,26 @@
 ---
-name: implement-publisher-subscriber
-description: Create ROS 2 publisher and subscriber nodes with proper initialization, message handling, and QoS configuration. Use when implementing topic-based communication, creating pub/sub pairs, configuring QoS profiles, or building publisher/subscriber nodes in C++ or Python.
+name: implement-publisher-subscriber-python
+description: 'Create ROS 2 Python publisher and subscriber nodes with rclpy initialization, message handling, and QoS configuration. Use when implementing topic-based communication in Python, creating rclpy pub/sub pairs, configuring QoS profiles, or building Python publisher/subscriber nodes. Keywords: rclpy, create_publisher, create_subscription, QoSProfile, Python pub/sub.'
 ---
 
-# Implement Publisher-Subscriber Pattern
+# Implement Python Publisher-Subscriber Pattern
 
-Generate ROS 2 publisher and subscriber nodes with proper initialization, message handling, QoS configuration, and project conventions.
+Generate ROS 2 Python publisher and subscriber nodes with proper rclpy initialization, message handling, QoS configuration, and project conventions.
+
+For C++ nodes, use [implement-publisher-subscriber-cpp](../implement-publisher-subscriber-cpp/) instead.
 
 ## When to Use This Skill
 
-- Implementing ROS 2 communication between nodes
-- Creating publisher/subscriber pairs for a message type
+- Implementing ROS 2 communication between Python nodes
+- Creating rclpy publisher/subscriber pairs for a message type
 - Need QoS configuration for reliable or best-effort communication
-- Setting up topic-based communication patterns
+- Setting up topic-based communication patterns in Python
 
 ## Prerequisites
 
 - Message type defined (built-in or custom)
 - Topic name determined
-- Package exists or will be created
+- Python package exists or will be created
 - Understand QoS requirements
 
 ## Inputs
@@ -27,7 +29,6 @@ Generate ROS 2 publisher and subscriber nodes with proper initialization, messag
 - **Topic Name**: e.g., `/my_topic`, `/robot/state`
 - **Package Name**: Target package (detect or ask)
 - **Node Type**: `publisher`, `subscriber`, or `both`
-- **Language**: `cpp` or `python`
 - **QoS Profile**: `default`, `reliable`, `best_effort`, `sensor_data`, `services`, `parameters`, `system_default`
 - **Publish Rate** (for publisher): Hz (default: 10.0)
 
@@ -39,15 +40,15 @@ Parse message type (package, message). Validate topic name. Determine if message
 
 ### Step 2: Determine Package and Location
 
-C++: `src/<node_name>_node.cpp`. Python: `<package>/<node_name>_node.py`. If package missing, suggest create-ros2-package first.
+`<package>/<node_name>_node.py`. If package missing, suggest [create-ros2-package-python](../create-ros2-package-python/) first.
 
 ### Step 3: Generate Publisher Node
 
-C++: rclcpp Node, QoS profile, `create_publisher`, timer with `publish_message`. Python: rclpy Node, QoSProfile, `create_publisher`, `create_timer`. Include copyright, TODO for message population.
+rclpy Node, QoSProfile, `create_publisher`, `create_timer`. Include copyright, TODO for message population.
 
 ### Step 4: Generate Subscriber Node
 
-C++: `create_subscription` with callback. Python: `create_subscription` with callback. Same QoS as publisher.
+`create_subscription` with callback. Same QoS as publisher.
 
 ### Step 5: Map QoS Profile
 
@@ -60,11 +61,11 @@ C++: `create_subscription` with callback. Python: `create_subscription` with cal
 
 ### Step 6: Update Build Configuration
 
-C++: Add `add_executable`, `ament_target_dependencies`, `install`. Python: Add to `entry_points['console_scripts']`.
+Add to `entry_points['console_scripts']` in setup.py.
 
 ### Step 7: Update package.xml
 
-Add `rclcpp`/`rclpy` and message package dependency.
+Add `rclpy` and message package dependency.
 
 ### Step 8: Launch File (Optional)
 
@@ -82,6 +83,7 @@ Create `launch/<nodes>_launch.py` with Node actions for publisher and subscriber
 
 ## Related Resources
 
-- [ROS 2 Writing Publisher/Subscriber](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Cpp-Publisher-And-Subscriber.html)
+- [ROS 2 Writing Publisher/Subscriber (Python)](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Py-Publisher-And-Subscriber.html)
 - [ROS 2 QoS](https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Quality-of-Service-Settings.html)
-- [create-ros2-package](../create-ros2-package/)
+- [implement-publisher-subscriber-cpp](../implement-publisher-subscriber-cpp/)
+- [create-ros2-package-python](../create-ros2-package-python/)

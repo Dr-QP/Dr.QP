@@ -164,6 +164,6 @@ codes.
 
 ## Related Resources
 
-- [add-test-file](../add-test-file/) — test file scaffolding and build integration
+- [add-test-file-python](../add-test-file-python/) — test file scaffolding and build integration
 - [ros2-workspace-testing](../ros2-workspace-testing/) — running tests with colcon
 - `packages/runtime/drqp_launch_testing/test/shutdown_behavior/SPEC.md` — the executable behavior matrix these rules derive from
