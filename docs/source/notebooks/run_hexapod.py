@@ -68,9 +68,13 @@ def main():
 
     while plt.get_fignums():  # window(s) open
         inputs = ps5_controller.get_controls()
-        walker.next_step(
+        walker.advance(
+            dt=delta_time,
             stride_direction=inputs.direction,
             rotation_direction=inputs.rotation_speed,
+        )
+        walker.apply_feet_targets(
+            walker.targets_at(walker.current_phase, walker.steering)
         )
 
         process_frame(0.001)

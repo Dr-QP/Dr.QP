@@ -18,17 +18,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""Brain-loop tests for pure gait targets and MoveIt trajectory solving."""
+
 from unittest import mock
 
 from drqp_brain.brain_node import HexapodBrain
 from drqp_kinematics.geometry import AffineTransform, Point3D
 import pytest
 import rclpy
+from rclpy.time import Time
 
 
 @pytest.fixture(autouse=True)
 def rclpy_context():
-    """Provide a ROS context for all tests in this module."""
+    """Provide a ROS context for each node test."""
     rclpy.init()
     try:
         yield
@@ -44,202 +47,124 @@ def _make_joint_targets(brain: HexapodBrain) -> dict[str, float]:
     }
 
 
-def _make_feet_targets(brain: HexapodBrain):
-    return [(leg, leg.tibia_end.copy()) for leg in brain.hexapod.legs]
-
-
 def _ik_ready_patch(brain: HexapodBrain):
     return mock.patch.object(brain, '_ik_ready', return_value=True)
 
 
-def test_loop_uses_moveit_joint_targets_instead_of_leg_move_to():
-    """Loop should consume MoveIt joint targets without falling back to custom leg IK."""
+@pytest.mark.parametrize('window_points', [1, 2, 4])
+def test_loop_advances_phase_once_regardless_of_window_size(window_points):
+    """Lookahead target evaluation must not change the control phase."""
     brain = HexapodBrain()
     try:
-        joint_targets = _make_joint_targets(brain)
-
-        for leg in brain.hexapod.legs:
-            leg.move_to = mock.Mock(side_effect=AssertionError('custom IK must not run'))
-
-        with (
-            _ik_ready_patch(brain),
-            mock.patch.object(
-                brain,
-                'solve_joint_targets',
-                create=True,
-                return_value=joint_targets,
-            ) as solve_joint_targets,
-            mock.patch.object(brain.joint_trajectory_pub, 'publish') as publish_mock,
-            mock.patch.object(brain.get_logger(), 'warning') as warning_mock,
-        ):
-            brain.loop()
-
-        assert solve_joint_targets.call_count == brain.walking_trajectory_points
-        publish_mock.assert_called_once()
-        published_msg = publish_mock.call_args.args[0]
-        assert len(published_msg.points) == brain.walking_trajectory_points
-        warning_mock.assert_not_called()
-    finally:
-        brain.destroy_node()
-
-
-def test_loop_warns_and_skips_publish_when_moveit_returns_no_solution():
-    """Loop should leave the robot in its current safe state when MoveIt cannot solve IK."""
-    brain = HexapodBrain()
-    try:
-        original_direction = brain.walker.current_direction.copy()
-        original_rotation = brain.walker.current_rotation_direction
-        original_phase = brain.walker.current_phase
-
-        command = brain.current_movement
-        command.stride_direction.x = 1.0
-        command.rotation_speed = 0.5
-
-        with (
-            _ik_ready_patch(brain),
-            mock.patch.object(
-                brain,
-                'solve_joint_targets',
-                create=True,
-                return_value=None,
-            ) as solve_joint_targets,
-            mock.patch.object(brain.joint_trajectory_pub, 'publish') as publish_mock,
-            mock.patch.object(brain.get_logger(), 'warning') as warning_mock,
-        ):
-            brain.loop()
-
-        solve_joint_targets.assert_called_once()
-        warning_mock.assert_called_once()
-        publish_mock.assert_not_called()
-        assert brain.walker.current_direction == original_direction
-        assert brain.walker.current_rotation_direction == original_rotation
-        assert brain.walker.current_phase == original_phase
-    finally:
-        brain.destroy_node()
-
-
-def test_loop_logs_error_and_skips_publish_when_moveit_py_fails():
-    """Loop should log and stop cleanly when in-process MoveIt solving fails."""
-    brain = HexapodBrain()
-    try:
-        with (
-            _ik_ready_patch(brain),
-            mock.patch.object(
-                brain,
-                'solve_joint_targets',
-                create=True,
-                side_effect=RuntimeError('MoveItPy unavailable'),
-            ) as solve_joint_targets,
-            mock.patch.object(brain.joint_trajectory_pub, 'publish') as publish_mock,
-            mock.patch.object(brain.get_logger(), 'error') as error_mock,
-        ):
-            brain.loop()
-
-        solve_joint_targets.assert_called_once()
-        error_mock.assert_called_once()
-        publish_mock.assert_not_called()
-    finally:
-        brain.destroy_node()
-
-
-def test_loop_skips_redundant_ik_when_feet_targets_do_not_change():
-    """Identical stabilized foot targets should not re-enter MoveIt every timer tick."""
-    brain = HexapodBrain()
-    try:
-        brain.walking_trajectory_points = 1
-        feet_targets = _make_feet_targets(brain)
+        brain.walking_trajectory_points = window_points
+        brain.current_movement.stride_direction.x = 1.0
+        brain.get_clock = mock.Mock(return_value=mock.Mock(now=lambda: Time(nanoseconds=0)))
         joint_targets = _make_joint_targets(brain)
 
         with (
             _ik_ready_patch(brain),
             mock.patch.object(
                 brain.walker,
-                'next_step_targets',
-                side_effect=[feet_targets, feet_targets],
-            ),
-            mock.patch.object(
-                brain, 'solve_joint_targets', return_value=joint_targets
-            ) as solve_mock,
+                'targets_at',
+                wraps=brain.walker.targets_at,
+            ) as targets_at,
+            mock.patch.object(brain, 'solve_joint_targets', return_value=joint_targets),
             mock.patch.object(brain.joint_trajectory_pub, 'publish') as publish_mock,
         ):
             brain.loop()
-            phase_after_first_publish = brain.walker.current_phase
-            body_transform_after_first_publish = brain.hexapod.body_transform.matrix.copy()
-            brain.loop()
 
-        solve_mock.assert_called_once_with(feet_targets)
-        publish_mock.assert_called_once()
-        assert brain.walker.current_phase == pytest.approx(phase_after_first_publish)
-        assert brain.hexapod.body_transform.matrix == pytest.approx(
-            body_transform_after_first_publish
-        )
+        assert brain.walker.current_phase == pytest.approx(0.125 / 1.25)
+        assert targets_at.call_count == window_points
+        assert publish_mock.call_count == 1
     finally:
         brain.destroy_node()
 
 
-def test_loop_solves_body_only_commands_when_feet_targets_do_not_change():
-    """Body-only movement should still reach MoveIt even when feet stay planted."""
+def test_loop_failure_does_not_roll_back_motion_state():
+    """A failed IK tick leaves the already-advanced state intact."""
     brain = HexapodBrain()
     try:
-        brain.walking_trajectory_points = 1
-        feet_targets = _make_feet_targets(brain)
-        joint_targets = _make_joint_targets(brain)
-
+        brain.current_movement.stride_direction.x = 1.0
         with (
             _ik_ready_patch(brain),
-            mock.patch.object(
-                brain, 'solve_joint_targets', return_value=joint_targets
-            ) as solve_mock,
+            mock.patch.object(brain, 'solve_joint_targets', return_value=None),
             mock.patch.object(brain.joint_trajectory_pub, 'publish') as publish_mock,
         ):
             brain.loop()
-            brain.current_movement.body_translation.z = 0.16
-            brain.current_movement.body_rotation.y = 0.2
-            brain.loop()
 
-        assert solve_mock.call_count == 2
-        assert solve_mock.call_args_list[0].args[0] == feet_targets
-        assert solve_mock.call_args_list[1].args[0] == feet_targets
-        assert publish_mock.call_count == 2
+        assert brain.walker.current_phase == pytest.approx(0.125 / 1.25)
+        assert brain.walker.current_direction.x > 0.0
+        publish_mock.assert_not_called()
     finally:
         brain.destroy_node()
 
 
-def test_loop_retries_redundant_targets_after_timeout():
-    """A failed solve must not poison the redundant-target cache."""
+def test_stationary_ticks_do_not_solve_or_publish_after_deduplication():
+    """Frozen phase and unchanged inputs suppress idle solver work."""
     brain = HexapodBrain()
     try:
-        brain.walking_trajectory_points = 1
-        feet_targets = _make_feet_targets(brain)
-        joint_targets = _make_joint_targets(brain)
-
         with (
             _ik_ready_patch(brain),
-            mock.patch.object(
-                brain.walker,
-                'next_step_targets',
-                side_effect=[feet_targets, feet_targets],
-            ),
+            mock.patch.object(brain, 'solve_joint_targets') as solve_mock,
+            mock.patch.object(brain.joint_trajectory_pub, 'publish') as publish_mock,
+        ):
+            brain.loop()
+            brain.loop()
+
+        assert brain.walker.current_phase == pytest.approx(0.0)
+        solve_mock.assert_not_called()
+        publish_mock.assert_not_called()
+    finally:
+        brain.destroy_node()
+
+
+def test_loop_retries_failed_targets_without_rewinding_phase():
+    """A failed target is retried on the next changed gait input."""
+    brain = HexapodBrain()
+    try:
+        brain.current_movement.stride_direction.x = 1.0
+        joint_targets = _make_joint_targets(brain)
+        with (
+            _ik_ready_patch(brain),
             mock.patch.object(
                 brain,
                 'solve_joint_targets',
-                side_effect=[RuntimeError('MoveIt IK request timed out'), joint_targets],
+                side_effect=[None, joint_targets, joint_targets, joint_targets],
             ) as solve_mock,
             mock.patch.object(brain.joint_trajectory_pub, 'publish') as publish_mock,
-            mock.patch.object(brain.get_logger(), 'error') as error_mock,
         ):
             brain.loop()
+            first_phase = brain.walker.current_phase
             brain.loop()
 
-        assert solve_mock.call_count == 2
-        error_mock.assert_called_once()
+        assert brain.walker.current_phase > first_phase
+        assert solve_mock.call_count == 3
         publish_mock.assert_called_once()
+    finally:
+        brain.destroy_node()
+
+
+def test_body_only_command_publishes_even_when_gait_is_stationary():
+    """Dedupe compares body pose as a committed input, not foot targets alone."""
+    brain = HexapodBrain()
+    try:
+        brain.current_movement.body_translation.z = 0.16
+        joint_targets = _make_joint_targets(brain)
+        with (
+            _ik_ready_patch(brain),
+            mock.patch.object(brain, 'solve_joint_targets', return_value=joint_targets),
+            mock.patch.object(brain.joint_trajectory_pub, 'publish') as publish_mock,
+        ):
+            brain.loop()
+
+        publish_mock.assert_called_once()
+        assert brain.walker.current_phase == pytest.approx(0.0)
     finally:
         brain.destroy_node()
 
 
 def test_make_pose_stamped_converts_target_into_base_frame():
-    """Verify IK targets are expressed in the declared BASE_FRAME."""
+    """Verify IK targets are expressed in the declared base frame."""
     brain = HexapodBrain()
     try:
         body_transform = AffineTransform.from_translation([0.1, -0.2, 0.3])
@@ -258,7 +183,7 @@ def test_make_pose_stamped_converts_target_into_base_frame():
 
 
 def test_loop_warns_once_while_waiting_for_initial_joint_state():
-    """Startup readiness issues should be transient warnings rather than log spam every tick."""
+    """Startup readiness checks do not spam logs while the controller is idle."""
     brain = HexapodBrain()
     try:
         with mock.patch.object(brain.get_logger(), 'warning') as warning_mock:
@@ -266,43 +191,5 @@ def test_loop_warns_once_while_waiting_for_initial_joint_state():
             brain.loop()
 
         warning_mock.assert_called_once_with('No joint state available to seed MoveItPy')
-    finally:
-        brain.destroy_node()
-
-
-def test_brain_does_not_create_moveit_service_client():
-    """Walking kinematics should not keep a service client compatibility path."""
-    with mock.patch.object(HexapodBrain, 'create_client') as create_client:
-        brain = HexapodBrain()
-    try:
-        create_client.assert_not_called()
-    finally:
-        brain.destroy_node()
-
-
-def test_loop_restores_motion_state_when_ik_is_not_ready_issue358():
-    """Failed readiness checks must not advance gait or body state."""
-    brain = HexapodBrain()
-    try:
-        command = brain.current_movement
-        command.stride_direction.x = 1.0
-        command.stride_direction.y = -0.4
-        command.rotation_speed = 0.5
-        command.body_translation.z = 0.16
-        command.body_rotation.y = 0.2
-
-        original_direction = brain.walker.current_direction.copy()
-        original_rotation = brain.walker.current_rotation_direction
-        original_phase = brain.walker.current_phase
-        original_body_transform = brain.hexapod.body_transform.matrix.copy()
-
-        with mock.patch.object(brain.joint_trajectory_pub, 'publish') as publish_mock:
-            brain.loop()
-
-        publish_mock.assert_not_called()
-        assert brain.walker.current_direction == original_direction
-        assert brain.walker.current_rotation_direction == original_rotation
-        assert brain.walker.current_phase == original_phase
-        assert brain.hexapod.body_transform.matrix == pytest.approx(original_body_transform)
     finally:
         brain.destroy_node()

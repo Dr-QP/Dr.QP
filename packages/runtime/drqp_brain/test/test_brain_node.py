@@ -191,7 +191,7 @@ def test_loop_uses_imu_balance_correction(rclpy_context):  # noqa: ARG001 (needs
             # covered separately in test_balance_controller.py.
             brain.imu_balance_gain = 1.0
             brain.imu_balance_max_tilt_rad = 1.0
-            brain.walker.next_step_targets = mock.Mock(return_value=[])
+            brain.walker.targets_at = mock.Mock(return_value=[])
             brain._ik_ready = mock.Mock(return_value=False)
             brain.current_movement.stride_direction = Vector3(x=0.0, y=0.0, z=0.0)
             brain.current_movement.rotation_speed = 0.0
@@ -204,11 +204,10 @@ def test_loop_uses_imu_balance_correction(rclpy_context):  # noqa: ARG001 (needs
 
             brain.loop()
 
-            body_rotation = brain.walker.next_step_targets.call_args.kwargs['body_rotation']
             expected_rotation = R.from_euler(
                 'xyz', [-0.12, 0.08, 0.0], degrees=False
             ) * R.from_rotvec([0.0, 0.0, 0.4])
-            assert R.from_rotvec(body_rotation.numpy()).as_matrix() == pytest.approx(
+            assert brain.hexapod.body_transform.rotation == pytest.approx(
                 expected_rotation.as_matrix()
             )
             trajectory_builder_cls.assert_not_called()

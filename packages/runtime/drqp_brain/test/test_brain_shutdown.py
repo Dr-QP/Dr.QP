@@ -77,14 +77,16 @@ def test_destroy_node_stops_walk_controller_before_destroying_ros_entities():
     try:
         brain.loop_timer.cancel = mock.Mock()
         brain.walker.reset = mock.Mock()
-        brain._last_published_foot_targets = ('left_front_leg', 0.0, 0.0, 0.0)
+        brain._last_published_motion_state = ('tripod', 0.0)
 
         with mock.patch('rclpy.node.Node.destroy_node', return_value=True) as destroy_super:
             brain.destroy_node()
 
         brain.loop_timer.cancel.assert_called_once_with()
         brain.walker.reset.assert_called_once_with()
-        assert brain._last_published_foot_targets is None
+        assert brain._last_published_motion_state == brain._motion_state_key(
+            brain.hexapod.body_transform
+        )
         destroy_super.assert_called_once_with()
     finally:
         if rclpy.ok():
