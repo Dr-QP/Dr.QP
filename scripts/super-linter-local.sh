@@ -4,6 +4,7 @@ set -euo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 root_dir=$(cd "$script_dir/.." && pwd)
+logs_dir="$root_dir/logs"
 
 image="${SUPER_LINTER_IMAGE:-ghcr.io/super-linter/super-linter:v8.5.0}"
 validate_all_codebase="${VALIDATE_ALL_CODEBASE:-false}"
@@ -26,6 +27,8 @@ Environment:
   SUPER_LINTER_IMAGE     Container image to run.
   VALIDATE_ALL_CODEBASE  true or false. Defaults to false.
   LOG_LEVEL              Super-Linter log level. Defaults to INFO.
+
+The generated Super-Linter report is written to logs/super-linter-output.md.
 EOF
 }
 
@@ -72,7 +75,7 @@ else
   exit 1
 fi
 
-mkdir -p "$root_dir/.tmp"
+mkdir -p "$root_dir/.tmp" "$logs_dir"
 
 default_branch=$(git -C "$root_dir" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || true)
 default_branch="${default_branch#origin/}"
@@ -81,7 +84,10 @@ if [[ -z "$default_branch" ]]; then
 fi
 
 git_common_dir=$(git -C "$root_dir" rev-parse --path-format=absolute --git-common-dir)
-mounts=(-v "$root_dir:/tmp/lint")
+mounts=(
+  -v "$root_dir:/tmp/lint"
+  -v "$logs_dir:/tmp/lint/super-linter-output"
+)
 if [[ "$git_common_dir" != "$root_dir/.git" ]]; then
   mounts+=(-v "$git_common_dir:$git_common_dir")
 fi
