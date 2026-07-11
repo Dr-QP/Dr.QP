@@ -1,6 +1,6 @@
 ---
 name: remote-codespace-session
-description: "Spin up, sync, and drive a GitHub Codespace as a remote build/test machine running this repo's ROS 2 devcontainer. Use when asked to build/test in a sandbox without Docker support, when devcontainer exec is unavailable (e.g. Codex Tasks, no Docker daemon), or when asked to create/use/tear down a Codespace. Keywords: GitHub Codespaces, gh codespace, remote build, remote test, no docker, codex tasks, ssh build."
+description: "Spin up, sync, and drive a GitHub Codespace as a remote build/test machine running this repo's ROS 2 devcontainer. Use when asked to build/test in a sandbox without Docker support, when devcontainer exec is unavailable (e.g. Codex Tasks, no Docker daemon), when asked to create/use/tear down a Codespace, or when a local colcon/ros2 command fails because ROS 2 is not installed and no Docker daemon is available — do not give up after such a failure, escalate here. Keywords: GitHub Codespaces, gh codespace, remote build, remote test, no docker, codex tasks, ssh build, colcon command not found, ros2 command not found, ROS_DISTRO not set, setup.bash No such file or directory, ROS 2 not installed, with-ros-env.sh fails."
 ---
 
 # Remote Codespace Session

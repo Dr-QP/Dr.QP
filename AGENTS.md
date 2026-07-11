@@ -10,7 +10,7 @@ NEVER use GitHub API or GitHub MCP tools to update branch refs or push branch co
 1. **Always use scripts/with-ros-env.sh** to run ROS commands like `colcon build` or `colcon test`
 2. **Use incremental builds** (`--packages-up-to <pkg>`) during development
 3. **Test specific packages** (`--packages-select <pkg>`) for rapid iteration
-4. **Use devcontainer** when running as remote agent (see [Cursor Cloud Sessions](#cursor-cloud-sessions) below)
+4. **Escalate to a containerized environment when local ROS 2 is missing — never give up after a local failure.** If `colcon`/`ros2` is not found, or `scripts/with-ros-env.sh` fails because `/opt/ros/$ROS_DISTRO/setup.bash` does not exist, the host has no ROS 2 and retrying locally cannot succeed. Escalate in this order: (a) Docker daemon available (e.g. Cursor cloud sessions) → use the [microvm-sandbox](/.claude/skills/microvm-sandbox/SKILL.md) skill to run the command through `devcontainer exec`; (b) no Docker daemon (e.g. Codex Tasks) → use the [remote-codespace-session](/.claude/skills/remote-codespace-session/SKILL.md) skill to run it on a GitHub Codespace over SSH. Only report a blocker if both escalation paths are unavailable (e.g. no `gh` auth)
 5. **Only run full builds/tests** when explicitly requested
 6. **Collect test output** from `log/latest_test/<package_name>/stdout_stderr.log` or `streams.log` (timestamped) in same folder.
 7. **Check build logs** in `log/latest_build/` if builds fail

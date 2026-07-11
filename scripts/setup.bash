@@ -9,6 +9,17 @@ if [[ -o nounset ]]; then
   set +u
 fi
 
+if [[ -z "${ROS_DISTRO:-}" || ! -f "/opt/ros/${ROS_DISTRO:-}/setup.bash" ]]; then
+  {
+    echo "ERROR: ROS 2 is not installed on this host (ROS_DISTRO='${ROS_DISTRO:-}', /opt/ros/${ROS_DISTRO:-<unset>}/setup.bash missing)."
+    echo "Do NOT give up and do NOT retry this command locally — it cannot succeed here."
+    echo "Escalate to a containerized ROS 2 environment instead:"
+    echo "  - Docker daemon available: use the 'microvm-sandbox' skill (devcontainer exec)."
+    echo "  - No Docker daemon (e.g. Codex Tasks): use the 'remote-codespace-session' skill (GitHub Codespace over SSH)."
+  } >&2
+  return 1 2>/dev/null || exit 1
+fi
+
 # shellcheck disable=SC1090
 source "/opt/ros/$ROS_DISTRO/setup.bash"
 

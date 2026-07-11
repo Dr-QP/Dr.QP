@@ -318,6 +318,14 @@ Clean up environment and start fresh.
 | Conflicting Python versions | Multiple Python environments active      | Deactivate venv: `deactivate`, then verify `python3 --version`                                             |
 | Build uses wrong compiler   | Environment variables not set            | Export: `export CC=clang && export CXX=clang++`                                                            |
 | IDE can't find includes     | Compile commands missing                 | Build with `CMAKE_EXPORT_COMPILE_COMMANDS=1` enabled                                                       |
+| ROS 2 not installed at all  | Host has no `/opt/ros/<distro>`          | Not fixable locally — see [Escalation](#escalation-no-ros-2-on-this-host)                                  |
+
+### Escalation: No ROS 2 on This Host
+
+If `scripts/with-ros-env.sh` or `source scripts/setup.bash` fails because `/opt/ros/$ROS_DISTRO/setup.bash` does not exist (or `ROS_DISTRO` is unset), ROS 2 is not installed on this host and no amount of local environment setup can fix it. **Do not give up** — escalate to a containerized environment:
+
+- **Docker daemon available** (e.g. Cursor cloud sessions) → use the [microvm-sandbox](../microvm-sandbox/SKILL.md) skill to run commands through `devcontainer exec`
+- **No Docker daemon** (e.g. Codex Tasks) → use the [remote-codespace-session](../remote-codespace-session/SKILL.md) skill to run them on a GitHub Codespace over SSH
 
 ## References
 

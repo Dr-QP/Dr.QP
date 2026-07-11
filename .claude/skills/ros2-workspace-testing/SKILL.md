@@ -238,6 +238,14 @@ Use the `PYTEST_ADDOPTS` environment variable rather than `colcon test --pytest-
 | Tests timeout or hang                      | Test blocking on I/O or infinite loop            | Check test logs in `log/latest_test/`                                                  |
 | `drqp_gazebo` launch tests are skipped     | Default smoke-only mode is active                | Re-run with `DRQP_TEST_MODE=slow` to include the full Gazebo suite                     |
 | No output from passing launch_pytest tests | pytest captures stdout, shows it only on failure | Set `PYTEST_ADDOPTS=-rA` (not `--pytest-args`, which colcon can't pass to ctest tests) |
+| "Command 'colcon' not found" or `with-ros-env.sh` fails | ROS 2 not installed on this host | See [Escalation](#escalation-no-ros-2-on-this-host) — do not give up |
+
+### Escalation: No ROS 2 on This Host
+
+If `scripts/with-ros-env.sh` itself fails (e.g. `/opt/ros/$ROS_DISTRO/setup.bash: No such file or directory`, or `ROS_DISTRO` unset), ROS 2 is not installed on this host and no local retry can succeed. **Do not give up** — run the same colcon command in a containerized environment:
+
+- **Docker daemon available** (e.g. Cursor cloud sessions) → use the [microvm-sandbox](../microvm-sandbox/SKILL.md) skill: `devcontainer exec --workspace-folder /workspace bash -lc "scripts/with-ros-env.sh <colcon command>"`
+- **No Docker daemon** (e.g. Codex Tasks) → use the [remote-codespace-session](../remote-codespace-session/SKILL.md) skill: run the command via `codespace-exec.sh` on a GitHub Codespace, then retrieve `log/latest_test/` with the reverse-rsync workflow documented there
 
 ## References
 

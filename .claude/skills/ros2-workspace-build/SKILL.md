@@ -128,12 +128,19 @@ Use when preparing to run tests with coverage analysis.
 
 | Issue                          | Cause                                 | Solution                                                             |
 | ------------------------------ | ------------------------------------- | -------------------------------------------------------------------- |
-| "Command 'colcon' not found"   | Environment not sourced               | Re-run the command via `scripts/with-ros-env.sh`                     |
+| "Command 'colcon' not found"   | Environment not sourced               | Re-run via `scripts/with-ros-env.sh`; if that also fails, see [Escalation](#escalation-no-ros-2-on-this-host) |
 | Compilation errors in C++ code | Missing dependencies or code errors   | Check `log/latest_build/` for details                                |
 | "Package not found" error      | Package doesn't exist or wrong name   | Verify package name in `packages/runtime/` or `packages/simulation/` |
 | Build takes very long          | Full workspace build or large package | Use `--packages-select` or `--packages-up-to` for incremental builds |
 | "Permission denied" errors     | Cannot write to install directory     | Check workspace permissions with `ls -la install/`                   |
 | Linker errors after changes    | Stale build artifacts                 | Run cleanup: `./scripts/clean.fish` then rebuild                     |
+
+### Escalation: No ROS 2 on This Host
+
+If `scripts/with-ros-env.sh` itself fails (e.g. `/opt/ros/$ROS_DISTRO/setup.bash: No such file or directory`, or `ROS_DISTRO` unset), ROS 2 is not installed on this host and no local retry can succeed. **Do not give up** — run the same colcon command in a containerized environment:
+
+- **Docker daemon available** (e.g. Cursor cloud sessions) → use the [microvm-sandbox](../microvm-sandbox/SKILL.md) skill: `devcontainer exec --workspace-folder /workspace bash -lc "scripts/with-ros-env.sh <colcon command>"`
+- **No Docker daemon** (e.g. Codex Tasks) → use the [remote-codespace-session](../remote-codespace-session/SKILL.md) skill: run the command via `codespace-exec.sh` on a GitHub Codespace
 
 ## Build Output Locations
 
