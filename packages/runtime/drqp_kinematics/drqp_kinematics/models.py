@@ -324,9 +324,7 @@ class LegModel:
         yaw_within_limits = self._angle_within_limit(0, target_yaw)
         reachable = annulus_reachable and yaw_within_limits
         solved_angles = (
-            self._clamp_angles_to_limits(unconstrained_angles)
-            if clamp
-            else unconstrained_angles
+            self._clamp_angles_to_limits(unconstrained_angles) if clamp else unconstrained_angles
         )
 
         if reachable and within_limits:
@@ -378,8 +376,7 @@ class LegModel:
 
     def _angles_within_limits(self, angles_rad: tuple[float, float, float]) -> bool:
         return all(
-            self._angle_within_limit(index, angle)
-            for index, angle in enumerate(angles_rad)
+            self._angle_within_limit(index, angle) for index, angle in enumerate(angles_rad)
         )
 
     def _clamp_angles_to_limits(
