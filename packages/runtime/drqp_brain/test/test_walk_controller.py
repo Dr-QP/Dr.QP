@@ -45,9 +45,7 @@ def walker(hexapod):
 
 
 def _target_values(targets):
-    return [
-        (float(target.x), float(target.y), float(target.z)) for _, target in targets
-    ]
+    return [(float(target.x), float(target.y), float(target.z)) for _, target in targets]
 
 
 def test_targets_at_is_pure(walker, hexapod):
@@ -107,6 +105,27 @@ def test_smoothing_is_time_constant_based(hexapod):
     assert split.current_rotation_direction == pytest.approx(combined.current_rotation_direction)
     assert combined.current_direction.x == pytest.approx(target.x * expected_alpha)
     assert combined.current_rotation_direction == pytest.approx(0.6 * expected_alpha)
+
+
+def test_ramp_down_snaps_to_rest_and_returns_feet(walker):
+    """Commanding zero decays steering to exactly rest and settles feet back."""
+    rest_targets = _target_values([(leg, tip) for leg, tip in walker.leg_tips_on_ground])
+
+    for _ in range(5):
+        walker.advance(0.125, Point3D([1, 0, 0]), 1.0)
+    assert walker.current_direction.x > WalkController._NO_MOTION_EPSILON
+    assert walker.current_rotation_direction > WalkController._NO_MOTION_EPSILON
+
+    for _ in range(60):
+        walker.advance(0.125, Point3D([0, 0, 0]), 0.0)
+
+    # Below the epsilon the smoothed command must snap to an exact rest state,
+    # not merely a small residual that keeps the feet drifting.
+    assert walker.current_direction == Point3D([0, 0, 0])
+    assert walker.current_rotation_direction == 0.0
+
+    settled = walker.targets_at(walker.current_phase, walker.steering)
+    assert _target_values(settled) == pytest.approx(rest_targets)
 
 
 @pytest.mark.parametrize(

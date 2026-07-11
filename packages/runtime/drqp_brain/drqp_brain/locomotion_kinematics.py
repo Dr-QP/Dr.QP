@@ -36,15 +36,19 @@ WALKING_TRAJECTORY_POINTS = 2
 LOCOMOTION_LEG_COUNT = 6
 MOVEIT_IK_ATTEMPTS_PER_TARGET = 2
 MOVEIT_IK_CALLS_PER_TICK = (
-    LOCOMOTION_LEG_COUNT
-    * WALKING_TRAJECTORY_POINTS
-    * MOVEIT_IK_ATTEMPTS_PER_TARGET
+    LOCOMOTION_LEG_COUNT * WALKING_TRAJECTORY_POINTS * MOVEIT_IK_ATTEMPTS_PER_TARGET
 )
+# All IK calls in one trajectory window must fit within half the loop period, so
+# the per-call timeout is the half-period budget divided evenly across the calls.
 MOVEIT_IK_TIMEOUT_SEC = (0.5 / LOCOMOTION_FPS) / MOVEIT_IK_CALLS_PER_TICK
-assert (
-    MOVEIT_IK_CALLS_PER_TICK * MOVEIT_IK_TIMEOUT_SEC
-    <= 0.5 / LOCOMOTION_FPS
-)
+# Independent floor on the per-call solver time. The line above guarantees the
+# budget inequality by construction (it is a tautology), so instead guard the
+# thing that actually breaks when fps, leg count, trajectory points, or attempts
+# grow: the derived per-call timeout collapsing below what the IK solver needs to
+# converge. Tripping this assert means the control-loop budget can no longer
+# afford the configured number of IK calls at a viable timeout.
+MIN_VIABLE_IK_TIMEOUT_SEC = 0.001
+assert MOVEIT_IK_TIMEOUT_SEC >= MIN_VIABLE_IK_TIMEOUT_SEC
 BASE_FRAME = 'drqp/base_center_link'
 
 RCLPY_SHUTDOWN_ERRORS = (InvalidHandle, NotInitializedException, RCLError, RuntimeError)

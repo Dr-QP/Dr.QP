@@ -49,7 +49,7 @@ from drqp_brain.locomotion_kinematics import (
 from drqp_brain.stride_limits import DirectionalStrideLimits
 from drqp_brain.walk_controller import GaitType, WalkController
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
-from drqp_kinematics.geometry import Point3D
+from drqp_kinematics.geometry import AffineTransform, Point3D
 from drqp_kinematics.models import HexapodModel
 import numpy as np
 import rclpy
@@ -454,7 +454,9 @@ class HexapodBrain(rclpy.node.Node):
     def _extract_leg_joint_targets(self, leg, robot_state):
         return self.kinematics.extract_leg_joint_targets(leg, robot_state)
 
-    def _motion_state_key(self, body_transform):
+    def _motion_state_key(
+        self, body_transform: AffineTransform
+    ) -> tuple[str, float, float, float, float, float, tuple[float, ...], int]:
         """Return the committed gait inputs that make a publish necessary."""
         direction = self.walker.steering.direction
         return (
