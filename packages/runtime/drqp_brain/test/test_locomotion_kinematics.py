@@ -20,7 +20,15 @@
 
 from unittest.mock import Mock
 
-from drqp_brain.locomotion_kinematics import MoveItPyLocomotionKinematics
+from drqp_brain.locomotion_kinematics import (
+    LOCOMOTION_FPS,
+    MIN_VIABLE_IK_TIMEOUT_SEC,
+    MOVEIT_IK_ATTEMPTS_PER_TARGET,
+    MOVEIT_IK_CALLS_PER_TICK,
+    MOVEIT_IK_TIMEOUT_SEC,
+    MoveItPyLocomotionKinematics,
+    WALKING_TRAJECTORY_POINTS,
+)
 from drqp_kinematics.models import HexapodModel
 import numpy as np
 import pytest
@@ -40,6 +48,20 @@ def _all_joint_names(hexapod):
         for leg in hexapod.legs
         for joint_name in ('coxa', 'femur', 'tibia')
     ]
+
+
+def test_moveit_ik_timeout_fits_within_half_loop_period():
+    """Bound all IK calls in one trajectory window to half the loop period."""
+    expected_calls_per_tick = 6 * WALKING_TRAJECTORY_POINTS * MOVEIT_IK_ATTEMPTS_PER_TARGET
+
+    assert MOVEIT_IK_CALLS_PER_TICK == expected_calls_per_tick
+    # The per-call timeout is derived as budget / calls, so the budget inequality
+    # holds by construction. Assert instead that the derived timeout still leaves
+    # each IK call a viable solver time and that all calls consume the whole
+    # half-period budget (i.e. the timeout was derived from that budget, not a
+    # smaller literal).
+    assert MOVEIT_IK_TIMEOUT_SEC >= MIN_VIABLE_IK_TIMEOUT_SEC
+    assert MOVEIT_IK_CALLS_PER_TICK * MOVEIT_IK_TIMEOUT_SEC == pytest.approx(0.5 / LOCOMOTION_FPS)
 
 
 class FakeJointModelGroup:
@@ -322,6 +344,7 @@ def test_moveit_py_solver_uses_in_process_robot_state_ik(hexapod):
     robot_state = created_robot_states[0]
     assert robot_state.ik_calls[0][0] == f'{leg.label.name}_leg'
     assert robot_state.ik_calls[0][2] == f'drqp/{leg.label.name}_foot_link'
+    assert robot_state.ik_calls[0][3] == pytest.approx(MOVEIT_IK_TIMEOUT_SEC)
     assert result.joint_targets == {
         f'drqp/{leg.label.name}_coxa': pytest.approx(0.1),
         f'drqp/{leg.label.name}_femur': pytest.approx(0.2),
