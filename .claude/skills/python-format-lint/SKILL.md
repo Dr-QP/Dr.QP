@@ -73,19 +73,19 @@ do not fail CI.
 
 ## Scripts
 
-| Script | Purpose |
-| ------ | ------- |
-| [python-reformat.sh](../../../scripts/python-reformat.sh) | ruff format + `ruff check --fix` + isort across packages, scripts, notebooks, Ansible |
-| [python-lint-check.sh](../../../scripts/python-lint-check.sh) | Run `ament_flake8` (the CI gate) over given paths, or all of `./packages` by default |
+| Script                                                        | Purpose                                                                               |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| [python-reformat.sh](../../../scripts/python-reformat.sh)     | ruff format + `ruff check --fix` + isort across packages, scripts, notebooks, Ansible |
+| [python-lint-check.sh](../../../scripts/python-lint-check.sh) | Run `ament_flake8` (the CI gate) over given paths, or all of `./packages` by default  |
 
 ## Troubleshooting
 
-| Symptom | Cause | Fix |
-| ------- | ----- | --- |
-| `flake8` locally flags `E501` at 79 chars but CI is green | You ran stock `flake8`, not `ament_flake8` | Use `scripts/python-lint-check.sh`; the repo limit is 99 |
-| `I201 Missing newline between import groups` | ruff's isort grouping disagrees with `ament_flake8` | Add the package to `known-third-party` in [ruff.toml](../../../ruff.toml), then re-run `python-reformat.sh` |
-| `ament_flake8: command not found` | ROS environment not sourced | The check script wraps it in `with-ros-env.sh`; run the script rather than the bare command |
-| ruff reports nothing but CI `test_flake8` fails | ruff and `ament_flake8` rule sets differ | Always verify with step 2 before assuming clean |
+| Symptom                                                   | Cause                                               | Fix                                                                                                         |
+| --------------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `flake8` locally flags `E501` at 79 chars but CI is green | You ran stock `flake8`, not `ament_flake8`          | Use `scripts/python-lint-check.sh`; the repo limit is 99                                                    |
+| `I201 Missing newline between import groups`              | ruff's isort grouping disagrees with `ament_flake8` | Add the package to `known-third-party` in [ruff.toml](../../../ruff.toml), then re-run `python-reformat.sh` |
+| `ament_flake8: command not found`                         | ROS environment not sourced                         | The check script wraps it in `with-ros-env.sh`; run the script rather than the bare command                 |
+| ruff reports nothing but CI `test_flake8` fails           | ruff and `ament_flake8` rule sets differ            | Always verify with step 2 before assuming clean                                                             |
 
 ## References
 

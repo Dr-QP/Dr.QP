@@ -66,7 +66,7 @@ Consult the **[Principal Engineer](/.claude/agents/principal-engineer.agent.md)*
 
 Update `.claude` sources; symlinks pick up changes automatically. When adding or renaming an agent, also update its `.codex/agents/` trampoline.
 
-**Always edit the `AGENTS.md`, not just `CLAUDE.md` to cover all agents.
+\*\*Always edit the `AGENTS.md`, not just `CLAUDE.md` to cover all agents.
 
 ## Available Agents
 
