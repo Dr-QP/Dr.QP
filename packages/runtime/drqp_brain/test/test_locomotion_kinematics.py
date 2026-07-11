@@ -61,9 +61,7 @@ def test_moveit_ik_timeout_fits_within_half_loop_period():
     # half-period budget (i.e. the timeout was derived from that budget, not a
     # smaller literal).
     assert MOVEIT_IK_TIMEOUT_SEC >= MIN_VIABLE_IK_TIMEOUT_SEC
-    assert MOVEIT_IK_CALLS_PER_TICK * MOVEIT_IK_TIMEOUT_SEC == pytest.approx(
-        0.5 / LOCOMOTION_FPS
-    )
+    assert MOVEIT_IK_CALLS_PER_TICK * MOVEIT_IK_TIMEOUT_SEC == pytest.approx(0.5 / LOCOMOTION_FPS)
 
 
 class FakeJointModelGroup:
