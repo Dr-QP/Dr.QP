@@ -287,7 +287,8 @@ def main(argv=None):
     finally:
         # The checker closes over MoveItPy. Release it while rclpy is still
         # initialized so the MoveIt C++ bindings tear down safely.
-        is_safe = None # noqa: F841 - release MoveItPyLocomotionKinematics
+        # codeql[py/unused-local-variable]
+        is_safe = None
         rclpy.try_shutdown()
 
 
