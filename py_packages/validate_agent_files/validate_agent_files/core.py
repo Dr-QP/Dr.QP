@@ -20,12 +20,12 @@ from .loaders import (
 from .types import ValidationIssue, ValidationLevel, ValidationResult
 from .validators.agents import build_known_agent_targets, validate_agent_frontmatter
 from .validators.cross_reference import CrossReferenceValidator
-from .validators.trampolines import validate_trampolines
 from .validators.prompts import (
     validate_prompt_body,
     validate_prompt_frontmatter,
     validate_prompt_references,
 )
+from .validators.trampolines import validate_trampolines
 from .validators.uniqueness import UniquenessValidator
 
 

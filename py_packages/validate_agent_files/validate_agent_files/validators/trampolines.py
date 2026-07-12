@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-"""Cross-catalog validation for Codex agent trampolines.
+"""
+Cross-catalog validation for Codex agent trampolines.
 
 Canonical agents live in ``.claude/agents/<stem>.agent.md``. Each one must have
 a matching Codex trampoline at ``.codex/agents/<stem>.md`` whose ``name`` and
@@ -46,7 +47,8 @@ def validate_trampolines(
     agent_files: List[str],
     agent_documents: Dict[str, dict],
 ) -> Tuple[Dict[str, List[ValidationIssue]], List[ValidationResult]]:
-    """Validate Codex trampolines against their canonical ``.claude`` agents.
+    """
+    Validate Codex trampolines against their canonical ``.claude`` agents.
 
     Returns a mapping of canonical agent path to trampoline issues, plus a list
     of standalone results for orphan trampolines (Codex files without a
