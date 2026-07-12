@@ -19,7 +19,7 @@ Configure language-scoped ownership in `Dr.QP.code-workspace`:
 | C/C++                       | clangd/clang-format, using root `.clang-format` and container toolchain          |
 | Markdown                    | project Prettier; markdownlint diagnostics only if spec 02 adds a pinned CI gate |
 | JSON/JSONC and generic YAML | project Prettier                                                                 |
-| Ansible                     | Red Hat Ansible plus `.venv/bin/ansible-lint`; never generic Prettier            |
+| Ansible                     | Red Hat Ansible diagnostics; Super-Linter owns `ansible-lint`; never generic Prettier |
 | Bash                        | shell language tooling plus ShellCheck diagnostics if an extension is adopted    |
 | Dockerfile                  | Docker extension plus Hadolint diagnostics if an extension is adopted            |
 | XML                         | Red Hat XML diagnostics; ament xmllint remains the package gate                  |
@@ -51,8 +51,8 @@ generated log. They must not duplicate tool arguments maintained by the scripts.
   expectations.
 - Add a short ownership table to `AGENTS.md`; keep it policy-level.
 - Create one cross-language formatting/linting skill covering command selection, ownership, and
-  failure routing. Link to focused references for Python/ament, C++/ament, Ansible, and
-  Super-Linter rather than growing one giant troubleshooting file.
+  failure routing. Link to focused references for Python/ament, C++/ament, and Super-Linter's
+  Ansible workflow rather than growing one giant troubleshooting file.
 - Reconcile the existing Python skill with the new entry points. It should keep the valuable Ruff
   versus ament_flake8 explanation but stop teaching deprecated script names.
 - State that editor success is fast feedback, not proof of full ament compliance.

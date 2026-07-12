@@ -20,11 +20,12 @@ scripts/lint.sh --fast [--all | --changed [--base REF] | --staged | PATH ...]
 scripts/lint.sh --all
 ```
 
-- `format.sh` dispatches each tracked file to exactly one formatter: Ruff, clang-format,
-  ansible-lint, or Prettier.
+- `format.sh` dispatches each tracked non-Ansible file to exactly one formatter: Ruff,
+  clang-format, or Prettier. Super-Linter is the sole owner of Ansible formatting through
+  `ansible-lint --fix`.
 - `lint.sh --fast` runs deterministic file-level checks that do not require a build: Ruff,
-  ansible-lint, clang-format check, Prettier check, and the configured shell/Docker/workflow
-  checkers.
+  clang-format check, Prettier check, and the configured shell/Docker/workflow checkers.
+  Super-Linter runs the Ansible `ansible-lint` check.
 - `lint.sh --all` additionally runs the ROS/ament lint gates through `scripts/with-ros-env.sh`.
 - `--check` and all lint modes are read-only and fail if a formatter would change a file.
 - `--changed` computes the union of branch changes from the merge base, staged changes, unstaged
@@ -65,12 +66,12 @@ choice, but names must reveal ownership, for example:
 ```text
 scripts/quality/format-python.sh
 scripts/quality/format-cpp.sh
-scripts/quality/format-ansible.sh
 scripts/quality/format-prettier.sh
 ```
 
 Keep `python-reformat.sh` and `super-linter-local.sh` as deprecated forwarding wrappers for at
-least one migration cycle. Remove `ansible-lint --fix` from the Python helper.
+least one migration cycle. Do not reintroduce `ansible-lint --fix` into the Python helper;
+Super-Linter's `FIX_ANSIBLE` setting is the sole Ansible formatter entry point.
 
 Update Ruff configuration so import sorting is part of the normal lint/fix selection. Ruff should
 need one formatting pass and one lint/fix pass, not a separate isort invocation.
@@ -99,6 +100,7 @@ need one formatting pass and one lint/fix pass, not a separate isort invocation.
 - [ ] `lint.sh --fast --all` is read-only and reports the owning tool for failures.
 - [ ] Changed/staged modes avoid scanning or rewriting unrelated owned files.
 - [ ] Notebook-aware changed formatting preserves Jupytext synchronization and Ruff cell fixes.
-- [ ] Python formatting no longer runs ansible-lint.
+- [ ] Ansible formatting and checking run only through Super-Linter, never through the Python
+      formatter.
 - [ ] Ruff import sorting no longer needs a third pass.
 - [ ] Existing entry points remain as temporary forwarding wrappers.

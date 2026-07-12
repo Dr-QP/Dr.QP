@@ -7,17 +7,17 @@
 ## Objective
 
 Make CI and pre-commit call the shared repository contract with deliberately pinned tool versions.
-Keep CI formatter commits, while removing competing Super-Linter formatter ownership and parallel
-formatter patches.
+Keep CI formatter commits, while removing parallel formatter patches and retaining Super-Linter as
+the sole owner of Ansible formatting and checks.
 
 ## Version sources
 
 | Tool                           | Version source                                                         |
 | ------------------------------ | ---------------------------------------------------------------------- |
-| Ruff, ansible-lint, pre-commit | `pyproject.toml` plus `uv.lock`                                        |
+| Ruff, pre-commit               | `pyproject.toml` plus `uv.lock`                                        |
 | Prettier                       | repository `package.json` plus a committed lockfile                    |
 | clang-format/ament tools       | pinned development container/ROS image, with an asserted major version |
-| Super-Linter-hosted checks     | one Super-Linter release used by both action and local wrapper         |
+| Super-Linter-hosted checks, including ansible-lint | one Super-Linter release used by both action and local wrapper |
 
 Do not retain an independent `ruff-pre-commit` version. Local pre-commit hooks should call the
 shared scripts and use the uv environment installed by the documented bootstrap. Configure the
@@ -35,12 +35,14 @@ Prettier VS Code extension to use the project binary where supported.
 
 - Use two staged-file dispatcher hooks in order: `format staged files`, then `lint staged files`.
   Pass filenames through; do not use `pass_filenames: false` for ordinary formatter/linter hooks.
-- The format dispatcher runs every applicable formatter: notebook Jupytext/Ruff first, ordinary
-  Ruff, clang-format, ansible-lint fix, then Prettier. It never scans unrelated file classes.
+- The format dispatcher runs every applicable native formatter: notebook Jupytext/Ruff first,
+  ordinary Ruff, clang-format, then Prettier. It never scans unrelated file classes. Super-Linter
+  owns Ansible formatting through `ansible-lint --fix`.
 - The fast lint dispatcher runs every correctly file-scoped check currently enforced in CI,
-  including Ruff, ament_flake8 on selected Python, ansible-lint, clang-format check, relevant
-  ament file linters, Prettier check, ShellCheck, Hadolint, actionlint, zizmor, gitleaks, and agent
-  file validation. Tools with no selected inputs do not start.
+  including Ruff, ament_flake8 on selected Python, clang-format check, relevant ament file
+  linters, Prettier check, ShellCheck, Hadolint, actionlint, zizmor, gitleaks, and agent file
+  validation. Super-Linter owns the Ansible `ansible-lint` check. Tools with no selected inputs do
+  not start.
 - Prefer native/project binaries for hooks. Do not start the Super-Linter container on every
   commit; Super-Linter remains the CI aggregation/reproduction surface for the same underlying
   heterogeneous checks.
@@ -82,9 +84,10 @@ Recursive-commit detection uses one commit message. If the PR comes from a fork,
 patch as an artifact and fail with the exact changed-only local command; never attempt a remote
 branch update.
 
-Super-Linter remains useful for ShellCheck, Hadolint, actionlint, zizmor, and gitleaks. Its
-formatting and fix flags must be disabled because the serial native writer owns all formatting.
-The local Super-Linter wrapper remains a supported exact reproduction path for those checks.
+Super-Linter remains useful for ansible-lint, ShellCheck, Hadolint, actionlint, zizmor, and
+gitleaks. Keep `VALIDATE_ANSIBLE` and `FIX_ANSIBLE` enabled as its sole formatter exception;
+disable any other formatter/fix flags once the serial native writer owns those file classes. The
+local Super-Linter wrapper remains a supported exact reproduction path for those checks.
 
 After a formatter commit, the existing recursive run executes the normal check-only fast lint and
 ROS package gates against the formatted revision. This preserves the current write-in-CI workflow
@@ -116,7 +119,8 @@ list with the ownership/config inventory.
 
 ## Acceptance criteria
 
-- [ ] No formatter is run by both Super-Linter and a native formatting job.
+- [ ] Ansible formatting and checking run only through Super-Linter; no other formatter is run by
+      both Super-Linter and a native formatting job.
 - [ ] Pre-commit does not run a whole-tree formatter for an ordinary staged file.
 - [ ] Devcontainer setup installs performant staged-file and affected-package hooks.
 - [ ] Every current formatter and linter runs at the cheapest hook stage where its result is valid.
