@@ -32,6 +32,8 @@ The PR body content **MUST** be generated using the
 The open-pr skill is responsible for:
 
 - optional issue linking in title/body when issue context exists
+- delegating mandatory formatting and validation to the `local-reformat` skill
+- delegating staging and commit creation to the `git-commit` skill
 - delegating branch sync with `origin/main` to the `update-branch` skill
 - remote branch verification
 - GitHub PR creation through MCP
@@ -69,7 +71,29 @@ Context signals for PR type:
 - Documentation signals: updated README, added comments, wrote guides
 - Test signals: added test coverage, modified test cases
 
-### 2. Git Changes Review
+### 2. Mandatory Local Reformat
+
+**CRITICAL:** Before reviewing, committing, or creating a PR, the AI agent
+**MUST** invoke and follow the `local-reformat` skill.
+
+Run every formatter and validation required by that skill. Do not substitute a
+partial set of formatters or bypass failures. If `local-reformat` cannot
+complete successfully, stop PR creation and report the actionable failure to
+the user.
+
+### 3. Mandatory Commit Creation
+
+**CRITICAL:** After `local-reformat` completes successfully, the AI agent
+**MUST** invoke and follow the `git-commit` skill before
+drafting or creating a PR.
+
+Use that skill to review the intended changes, stage only the changes in scope
+for the PR, generate an appropriate conventional commit message, and create
+the commit. Do not reimplement its commit-message or staging workflow inline.
+If the changes cannot be committed, stop PR creation and report the blocker to
+the user.
+
+### 4. Git Changes Review
 
 **CRITICAL:** Before drafting the PR, the AI agent **MUST** review actual git changes:
 
@@ -80,7 +104,7 @@ Context signals for PR type:
 Use `--base-ref <ref>` or `--range <range>` when the comparison base is not `origin/main`.
 This script ensures the PR description accurately reflects the actual code changes.
 
-### 3. Optional Issue Linking
+### 5. Optional Issue Linking
 
 Issue linking is recommended but not required.
 
@@ -105,7 +129,7 @@ Issue linking is recommended but not required.
 - Continue PR creation without issue linking
 - Use a concise title without issue prefix
 
-### 4. PR Draft Construction
+### 6. PR Draft Construction
 
 Generate the PR description by following the
 [generate-pr-description](../generate-pr-description/) skill.
@@ -116,7 +140,7 @@ Use the generated output as the PR body, and use one of these title formats:
 - If issue is not available: `Brief description`
 - Keep the title description concise and outcome-focused
 
-### 5. Proceed Without Confirmation
+### 7. Proceed Without Confirmation
 
 Do **not** pause to ask the user to approve the draft. Once the title and body
 are generated, continue directly to branch sync, remote verification, and PR
@@ -128,7 +152,7 @@ creation.
   failed PR creation) — these require user input to resolve
 - After the PR is created, report the resulting PR URL/number
 
-### 6. Branch Sync with `origin/main`
+### 8. Branch Sync with `origin/main`
 
 **CRITICAL:** Before pushing or creating a PR, sync the current branch using the
 `.claude/skills/update-branch/` workflow.
@@ -139,7 +163,7 @@ merge logic inline.
 If `update-branch` reports unresolved conflicts or requires user input, stop PR creation and
 ask the user to resolve or confirm conflict decisions first.
 
-### 7. Remote Branch Verification
+### 9. Remote Branch Verification
 
 **CRITICAL:** Before creating the PR, verify the current branch exists on the remote repository.
 
@@ -163,7 +187,7 @@ Use `--remote <name>` or `--branch <name>` when the default remote or branch sho
 
 If the script exits non-zero, display its actionable error output and abort PR creation.
 
-### 8. GitHub PR Creation (MCP)
+### 10. GitHub PR Creation (MCP)
 
 Once the branch is on remote, create the PR using `github/create_pull_request`.
 
@@ -192,7 +216,7 @@ Use the tool with these fields:
 - Set `draft: true` if the user wants to create a draft PR
 - Set `base: <branch>` if targeting a different base branch
 
-### 9. Error Handling
+### 11. Error Handling
 
 Handle common error scenarios gracefully:
 
