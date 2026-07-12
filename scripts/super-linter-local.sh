@@ -88,27 +88,18 @@ if [[ "$git_common_dir" != "$root_dir/.git" ]]; then
   mounts+=(-v "$git_common_dir:$git_common_dir")
 fi
 
-run_super_linter()
-{
-  local name="$1"
+env_file="$root_dir/.tmp/super-linter.env"
+"$script_dir/super-linter-env.sh" --enable_all_checks --autofix > "$env_file"
 
-  local env_file="$root_dir/.tmp/super-linter-${name}.env"
-  local env_file_gen_args=$([[ "$name" == "autofix" ]] && printf '%s' --autofix)
-  "$script_dir/super-linter-env.sh" ${env_file_gen_args} > "$env_file"
+"$runtime" run --rm \
+  -e RUN_LOCAL=true \
+  -e DEFAULT_BRANCH="$default_branch" \
+  -e VALIDATE_ALL_CODEBASE="$validate_all_codebase" \
+  -e LOG_LEVEL="$log_level" \
+  -e SAVE_SUPER_LINTER_OUTPUT=true \
+  -e SUPER_LINTER_OUTPUT_DIRECTORY_NAME="log" \
+  --env-file "$env_file" \
+  "${mounts[@]}" \
+  --platform linux/amd64 \
+  "$image"
 
-  echo "Running Super-Linter $name pass..."
-  "$runtime" run --rm \
-    -e RUN_LOCAL=true \
-    -e DEFAULT_BRANCH="$default_branch" \
-    -e VALIDATE_ALL_CODEBASE="$validate_all_codebase" \
-    -e LOG_LEVEL="$log_level" \
-    -e SAVE_SUPER_LINTER_OUTPUT=true \
-    -e SUPER_LINTER_OUTPUT_DIRECTORY_NAME="log" \
-    --env-file "$env_file" \
-    "${mounts[@]}" \
-    --platform linux/amd64 \
-    "$image"
-}
-
-run_super_linter "autofix"
-run_super_linter "check"

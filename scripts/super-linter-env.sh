@@ -3,6 +3,7 @@
 set -euo pipefail
 
 autofix="${SUPER_LINTER_AUTOFIX:-false}"
+enable_all_checks=false
 
 usage()
 {
@@ -12,7 +13,8 @@ Usage: scripts/super-linter-env.sh [--autofix]
 Generate env file for Super-Linter autofix pass and check pass
 
 Options:
-  --autofix          Run autofixes.
+  --autofix            Run autofixes.
+  --enable_all_checks  Enable all checks, including those that don't support autofix.
 EOF
 }
 
@@ -20,6 +22,10 @@ while (($#)); do
   case "$1" in
     --autofix)
       autofix=true
+      shift
+      ;;
+    --enable_all_checks)
+      enable_all_checks=true
       shift
       ;;
     -h|--help)
@@ -36,7 +42,7 @@ done
 
 echo FILTER_REGEX_EXCLUDE='(^|/)(build|install|log|\.venv|packages/vendor|packages/runtime/drqp_rapidjson/include|\.git)/'
 
-if [[ "$autofix" == "false" ]]; then
+if [[ "$autofix" == "false" || "$enable_all_checks" == "true" ]]; then
   # Check only flags for linters that don't support autofix.
   echo VALIDATE_BASH=true
   echo VALIDATE_DOCKERFILE_HADOLINT=true
