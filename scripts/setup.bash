@@ -17,6 +17,7 @@ if [[ -z "${ROS_DISTRO:-}" || ! -f "/opt/ros/${ROS_DISTRO:-}/setup.bash" ]]; the
     echo "  - Docker daemon available: use the 'microvm-sandbox' skill (devcontainer exec)."
     echo "  - No Docker daemon (e.g. Codex Tasks): use the 'remote-codespace-session' skill (GitHub Codespace over SSH)."
   } >&2
+  # shellcheck disable=SC2317  # exit is reachable when the script is run directly, not sourced
   return 1 2>/dev/null || exit 1
 fi
 
