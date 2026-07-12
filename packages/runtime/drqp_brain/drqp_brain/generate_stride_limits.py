@@ -266,7 +266,7 @@ def parse_args(argv):
 
 def main(argv=None):
     args = parse_args(sys.argv[1:] if argv is None else argv)
-    is_safe = None
+    is_safe = None # codeql[py/unused-local-variable] - it IS used, codeql trips over last assignment
     rclpy.init()
     try:
         is_safe = make_moveit_step_length_checker(
@@ -287,8 +287,7 @@ def main(argv=None):
     finally:
         # The checker closes over MoveItPy. Release it while rclpy is still
         # initialized so the MoveIt C++ bindings tear down safely.
-        # codeql[py/unused-local-variable]
-        is_safe = None
+        is_safe = None # codeql[py/unused-local-variable]
         rclpy.try_shutdown()
 
 
