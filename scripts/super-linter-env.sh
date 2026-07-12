@@ -60,3 +60,4 @@ echo FIX_GITHUB_ACTIONS_ZIZMOR=${autofix}
 echo FIX_CLANG_FORMAT=${autofix}
 echo FIX_ANSIBLE=${autofix}
 
+echo SAVE_SUPER_LINTER_SUMMARY=true
