@@ -3,7 +3,7 @@ name: pr-review
 description: 'Perform a thorough automated code review of a GitHub pull request in this ROS 2 robotics workspace, publishing feedback as a single GitHub pull request review with inline comments (a standalone comment only as fallback when inline posting fails). Use when asked to review a pull request, or when a PR is opened/reopened and an automated review is required. Keywords: PR review, code review, pull request review, automated review.'
 ---
 
-# PR Review
+# Review PR
 
 Use this skill to review a pull request's diff and publish feedback as a GitHub **pull request review** — not a plain issue/PR comment. The workflow is agent-agnostic: Claude Code, Codex, and other assistants should follow the same review policy while adapting tool names to the environment they are running in.
 

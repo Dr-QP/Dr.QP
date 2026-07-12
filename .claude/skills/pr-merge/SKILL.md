@@ -1,20 +1,21 @@
 ---
-name: pr-merge-readiness
-description: 'Monitor an open GitHub pull request until it is merge-ready: wait for CI and AI review, remediate actionable failures and review feedback, and verify merge blockers are clear. Use when a PR has just opened or needs to be made fully mergeable. Keywords: monitor PR, merge-ready, mergeable, wait for CI, CI failures, AI review, Claude Responder.'
+name: pr-merge
+description: 'Merge an open GitHub pull request: leave existing auto-merge unchanged, otherwise enable automatic squash merge early, monitor CI and AI review, remediate failures and feedback, then squash merge explicitly if auto-merge is unavailable. Use when a PR needs to be merged or shepherded through CI and review to merge. Keywords: merge PR, auto-merge, squash merge, monitor PR, merge-ready, wait for CI, CI failures, AI review, Claude Responder.'
 license: MIT
 ---
 
-# PR Merge Readiness
+# Merge PR
 
-Drive one open pull request through the complete CI-and-review cycle until it
-has no actionable merge blockers. This is a persistent workflow: wait for the
-relevant GitHub state to change, then act on the new state. Do not stop merely
-because a check is pending or an automated reviewer has not responded yet.
+Drive one open pull request through the complete CI-and-review cycle and merge
+it. At the start, leave any existing auto-merge unchanged; otherwise enable
+automatic squash merge. If auto-merge is unavailable, merge explicitly after
+all requirements pass. This is a persistent workflow: wait for the relevant
+GitHub state to change, then act on the new state.
 
 ## When to Use This Skill
 
-- A pull request has just been opened and must be monitored to merge readiness.
-- Someone asks to make, keep, babysit, or shepherd a PR fully mergeable.
+- A pull request has just been opened and must be merged after CI and review.
+- Someone asks to merge, babysit, or shepherd a PR through CI and review.
 - CI is still running, an automated AI review is pending, or review feedback
   must be addressed before merging.
 
@@ -35,20 +36,83 @@ asks to change that state.
   gh auth status
   ```
 
+- Work from an isolated worktree. If the caller did not provide one, create
+  one under `./.tmp/` after resolving the PR number and head branch:
+
+  ```bash
+  mkdir -p ./.tmp
+  git fetch origin <head-branch>
+  git worktree add --detach ./.tmp/pr-merge-<pr> origin/<head-branch>
+  git -C ./.tmp/pr-merge-<pr> switch -c pr-merge-worktree/<pr>
+  ```
+
+  Run all local inspection, tests, commits, and pushes from that worktree.
+  Push its `HEAD` only to the resolved PR head branch; never push its private
+  `pr-merge-worktree/<pr>` name. Preserve the caller's worktree and unrelated
+  local branches. After a confirmed merge, remove only the clean worktree and
+  private branch that this skill created; otherwise leave them in place and
+  report their path and state.
+
 - Record the initial head SHA, CI check names and URLs, AI-review state, and
   unresolved review threads. Keep this state in the conversation; do not post
   progress comments to the PR.
 - Work only on the PR head branch. Preserve unrelated local changes, never
-  force-push, and never merge the PR or update its base branch unless the user
-  explicitly requests it.
+  force-push, and never update its base branch unless the user explicitly
+  requests it. This skill's merge workflow authorizes enabling auto-merge and,
+  when needed, performing the final squash merge.
 - A remediation requested by this skill is authorized by the user request to
   make the PR mergeable. Still stop for a genuinely ambiguous review request
   and ask for clarification in that review thread.
 
+## Reformat Workflow Synchronization
+
+`reformat.yml` can push a formatting commit to the PR branch as its job
+finishes. Treat its completion as a possible head change, not as proof that
+the checks and reviews already observed apply to the final branch state.
+
+Track every `reformat.yml` run for the current PR head. After such a run
+reaches `completed`, immediately refresh the PR head and fast-forward the
+isolated worktree:
+
+```bash
+gh run list --workflow=reformat.yml --branch <head-branch> \
+  --json databaseId,status,conclusion,headSha,updatedAt,url --limit 20
+gh pr view <pr> --json headRefName,headRefOid
+git -C <worktree> fetch origin <head-branch>
+git -C <worktree> merge --ff-only origin/<head-branch>
+```
+
+The fetch plus fast-forward merge is the required local pull of any formatter
+commit. If the PR head SHA changed, record the new SHA and restart the
+monitoring loop from step 1: CI, AI review, feedback, and merge state must all
+be re-evaluated for that new head. If the fast-forward fails, do not create an
+automatic merge; report the local divergence and resolve it only through the
+normal focused-remediation workflow.
+
+## Configure Merge Once
+
+Immediately after resolving the PR and confirming it is open and not a draft,
+inspect its automatic merge request:
+
+```bash
+gh pr view <pr> --json autoMergeRequest
+```
+
+If `autoMergeRequest` is non-null, leave it unchanged and continue monitoring.
+Otherwise, enable automatic squash merge before waiting for CI or review:
+
+```bash
+gh pr merge <pr> --auto --squash
+```
+
+If GitHub reports auto-merge is unavailable or disabled for the repository,
+continue the monitoring loop and use the explicit final squash merge below.
+Treat any other error as a concrete blocker to investigate or report.
+
 ## Completion Criteria
 
-Treat the PR as merge-ready only when all of these are true for its current
-head branch:
+Treat the PR as complete only when all of these are true for its current head
+branch:
 
 - It is open and not a draft.
 - Every reported CI check has completed successfully. Report external checks
@@ -58,8 +122,9 @@ head branch:
   review exists for the PR's current review cycle.
 - The review agent has finished; all of its actionable, unresolved feedback is
   fixed, replied to, and resolved using the feedback-resolution workflow.
-- `gh pr view` reports no remaining merge blocker (for example, a conflict,
-  missing required approval, or blocked merge state).
+- `gh pr view` reports no remaining merge blocker (for example, a conflict or
+  missing required approval) before the merge is attempted.
+- GitHub reports the PR as merged.
 
 ## Monitoring Loop
 
@@ -85,6 +150,10 @@ to check later.
    If the execution environment limits a long-running command, run bounded
    waits and immediately continue the loop. A `--watch` non-zero exit caused
    by a failed check is a state change to investigate, not a reason to stop.
+   When a `reformat.yml` run associated with the observed head has completed,
+   perform **Reformat Workflow Synchronization** before classifying checks. If
+   it pushed a formatter commit, restart at step 1 and do not act on the stale
+   checks or reviews.
 
 3. Classify every completed non-success check before changing code:
    - A GitHub Actions failure: use
@@ -114,7 +183,25 @@ to check later.
    piecemeal. Its resolved-thread filtering and confidence rules are mandatory.
 
 6. If feedback leads to a push, restart at step 1. If no actionable feedback
-   remains, refresh checks and merge state once more before completing.
+   remains, refresh checks and merge state once more. Perform **Reformat
+   Workflow Synchronization** after that final refresh as well. If it changes
+   the head SHA, restart at step 1. Otherwise, if auto-merge was set, wait for
+   GitHub to merge the PR; if it was not, perform the explicit final squash
+   merge.
+
+## Explicit Final Squash Merge
+
+Use this section only when the initial auto-merge check was empty and the early
+`--auto --squash` request was unavailable. After every pre-merge completion
+criterion has been evidenced for the current head SHA, merge the PR explicitly:
+
+```bash
+gh pr merge <pr> --squash
+```
+
+Refresh the PR afterwards and confirm that its state is `MERGED`. If GitHub
+rejects the merge because the state changed, return to the monitoring loop;
+otherwise report the concrete error as a blocker.
 
 ## AI Review Recovery
 
@@ -207,10 +294,10 @@ when an issue comment contains `@claude review`.
 
 ## Final Report
 
-Report the PR URL and current head SHA, the final check status, the AI-review
+Report the PR URL, merged SHA, merge method, final check status, AI-review
 outcome, feedback resolved, local verification run, and any remaining external
-or policy blocker. Say the PR is merge-ready only after all completion criteria
-are evidenced.
+or policy blocker. Say the PR was merged only after its merged state is
+evidenced.
 
 ## Related Skills
 
