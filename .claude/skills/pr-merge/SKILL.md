@@ -4,7 +4,7 @@ description: 'Merge an open GitHub pull request: enable automatic squash merge a
 license: MIT
 ---
 
-# PR Merge
+# Merge PR
 
 Drive one open pull request through the complete CI-and-review cycle and merge
 it using squash merge. Enable automatic squash merge as soon as it is
