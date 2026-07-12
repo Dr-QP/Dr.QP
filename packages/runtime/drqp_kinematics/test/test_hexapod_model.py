@@ -37,6 +37,15 @@ def test_hexapod_has_six_legs(model):
     assert len(list(model.legs)) == 6
 
 
+def test_hexapod_installs_joint_limits_on_every_leg():
+    """Per-joint limits are threaded into each constituent leg model."""
+    joint_limits_rad = ((-1.0, 1.0), (-2.0, 2.0), (-3.0, 3.0))
+
+    limited_model = HexapodModel(joint_limits_rad=joint_limits_rad)
+
+    assert all(leg.joint_limits_rad == joint_limits_rad for leg in limited_model.legs)
+
+
 def test_hexapod_named_legs_covers_all_six(model):
     """Assert that all six HexapodLeg enum values are present in named_legs."""
     expected = {

@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from dataclasses import dataclass
 import enum
 
 from drqp_kinematics.geometry import AffineTransform, Line3D, Point3D
@@ -31,6 +32,17 @@ class HexapodLeg(enum.Enum):
     right_front = enum.auto()
     right_middle = enum.auto()
     right_back = enum.auto()
+
+
+@dataclass(frozen=True)
+class LegIKSolution:
+    """Result of a radians-native analytic inverse-kinematics solve."""
+
+    angles_rad: tuple[float, float, float]
+    reachable: bool
+    within_limits: bool
+    clamped_target: Point3D
+    limit_margin_rad: float
 
 
 def safe_arccos(num):
@@ -52,6 +64,7 @@ class HexapodModel:
         tibia_len=100.0,
         body_transform=AffineTransform.identity(),
         leg_rotation=[0, 0, 45],
+        joint_limits_rad: tuple[tuple[float, float], ...] | None = None,
     ):
         leg_rotation = np.array(leg_rotation)
 
@@ -62,6 +75,7 @@ class HexapodModel:
             label=HexapodLeg.left_front,
             rotation=leg_rotation,
             location_on_body=[front_offset, side_offset, 0.0],
+            joint_limits_rad=joint_limits_rad,
         )
         self.left_middle = LegModel(
             coxa_len,
@@ -70,6 +84,7 @@ class HexapodModel:
             label=HexapodLeg.left_middle,
             rotation=leg_rotation * 2,
             location_on_body=[0.0, middle_offset, 0.0],
+            joint_limits_rad=joint_limits_rad,
         )
         self.left_back = LegModel(
             coxa_len,
@@ -78,6 +93,7 @@ class HexapodModel:
             label=HexapodLeg.left_back,
             rotation=leg_rotation * 3,
             location_on_body=[-front_offset, side_offset, 0.0],
+            joint_limits_rad=joint_limits_rad,
         )
         self.right_front = LegModel(
             coxa_len,
@@ -86,6 +102,7 @@ class HexapodModel:
             label=HexapodLeg.right_front,
             rotation=leg_rotation * -1,
             location_on_body=[front_offset, -side_offset, 0.0],
+            joint_limits_rad=joint_limits_rad,
         )
         self.right_middle = LegModel(
             coxa_len,
@@ -94,6 +111,7 @@ class HexapodModel:
             label=HexapodLeg.right_middle,
             rotation=leg_rotation * -2,
             location_on_body=[0.0, -middle_offset, 0.0],
+            joint_limits_rad=joint_limits_rad,
         )
         self.right_back = LegModel(
             coxa_len,
@@ -102,6 +120,7 @@ class HexapodModel:
             label=HexapodLeg.right_back,
             rotation=leg_rotation * -3,
             location_on_body=[-front_offset, -side_offset, 0.0],
+            joint_limits_rad=joint_limits_rad,
         )
         self.__named_legs = {
             leg.label: leg
@@ -144,7 +163,7 @@ class HexapodModel:
 
 
 class LegModel:
-    """A leg model class."""
+    """A leg model with the physical positive-tibia-angle analytic IK branch."""
 
     def __init__(
         self,
@@ -155,6 +174,7 @@ class LegModel:
         location_on_body=[0, 0, 0],
         rotation=[0, 0, 0],
         body_transform=AffineTransform.identity(),
+        joint_limits_rad: tuple[tuple[float, float], ...] | None = None,
     ):
         self.coxa_length = coxa_length
         self.femur_length = femur_length
@@ -162,6 +182,7 @@ class LegModel:
         self.label = label
         self.location_on_body = location_on_body
         self.rotation = rotation
+        self.joint_limits_rad = joint_limits_rad
         self._body_transform = body_transform
         self.update_base_transforms()
         self.forward_kinematics(0, 0, 0)
@@ -252,6 +273,131 @@ class LegModel:
 
     # Leg Forward kinematics - END
 
+    def fk_foot_position(self, angles_rad: tuple[float, float, float]) -> np.ndarray:
+        """Return the foot position without constructing visualization geometry."""
+        coxa_angle, femur_angle, tibia_angle = angles_rad
+        radial_distance = (
+            self.coxa_length
+            + self.femur_length * np.cos(femur_angle)
+            + self.tibia_length * np.cos(femur_angle + tibia_angle)
+        )
+        local_foot_position = np.array(
+            [
+                radial_distance * np.cos(coxa_angle),
+                radial_distance * np.sin(coxa_angle),
+                -(
+                    self.femur_length * np.sin(femur_angle)
+                    + self.tibia_length * np.sin(femur_angle + tibia_angle)
+                ),
+            ]
+        )
+        return self.body_joint.apply_nd(local_foot_position)
+
+    def solve_ik(self, foot_target: Point3D, *, clamp: bool = True) -> LegIKSolution:
+        """Solve analytic IK in radians, clamping to workspace and joint limits."""
+        localized_target = self.to_local(foot_target)
+        target_yaw = float(np.arctan2(localized_target.y, localized_target.x))
+        radial_distance = float(np.hypot(localized_target.x, localized_target.y))
+        planar_x = radial_distance - self.coxa_length
+        planar_down = -float(localized_target.z)
+        target_span = float(np.hypot(planar_x, planar_down))
+        minimum_span = abs(self.femur_length - self.tibia_length)
+        maximum_span = self.femur_length + self.tibia_length
+        annulus_reachable = minimum_span <= target_span <= maximum_span
+
+        solved_span = float(np.clip(target_span, minimum_span, maximum_span))
+        if target_span > 0.0:
+            planar_scale = solved_span / target_span
+            solved_planar_x = planar_x * planar_scale
+            solved_planar_down = planar_down * planar_scale
+        else:
+            solved_planar_x = solved_span
+            solved_planar_down = 0.0
+
+        femur_angle, tibia_angle = self._solve_planar_ik(
+            solved_planar_x,
+            solved_planar_down,
+            solved_span,
+        )
+        unconstrained_angles = (target_yaw, femur_angle, tibia_angle)
+        within_limits = self._angles_within_limits(unconstrained_angles)
+        yaw_within_limits = self._angle_within_limit(0, target_yaw)
+        reachable = annulus_reachable and yaw_within_limits
+        solved_angles = (
+            self._clamp_angles_to_limits(unconstrained_angles) if clamp else unconstrained_angles
+        )
+
+        if reachable and within_limits:
+            clamped_target = foot_target.copy()
+        else:
+            clamped_target = Point3D(self.fk_foot_position(solved_angles))
+
+        return LegIKSolution(
+            angles_rad=solved_angles,
+            reachable=reachable,
+            within_limits=within_limits,
+            clamped_target=clamped_target,
+            limit_margin_rad=self._limit_margin(solved_angles),
+        )
+
+    def _solve_planar_ik(
+        self,
+        planar_x: float,
+        planar_down: float,
+        span: float,
+    ) -> tuple[float, float]:
+        if span == 0.0:
+            return 0.0, np.pi
+
+        theta1 = np.arccos(
+            np.clip(
+                (span**2 + self.femur_length**2 - self.tibia_length**2)
+                / (2.0 * span * self.femur_length),
+                -1.0,
+                1.0,
+            )
+        )
+        theta2 = np.arctan2(planar_x, planar_down)
+        phi = np.arccos(
+            np.clip(
+                (self.tibia_length**2 + self.femur_length**2 - span**2)
+                / (2.0 * self.tibia_length * self.femur_length),
+                -1.0,
+                1.0,
+            )
+        )
+        return np.pi / 2.0 - (theta1 + theta2), np.pi - phi
+
+    def _angle_within_limit(self, index: int, angle: float) -> bool:
+        if self.joint_limits_rad is None:
+            return True
+        lower, upper = self.joint_limits_rad[index]
+        return lower <= angle <= upper
+
+    def _angles_within_limits(self, angles_rad: tuple[float, float, float]) -> bool:
+        return all(
+            self._angle_within_limit(index, angle) for index, angle in enumerate(angles_rad)
+        )
+
+    def _clamp_angles_to_limits(
+        self,
+        angles_rad: tuple[float, float, float],
+    ) -> tuple[float, float, float]:
+        if self.joint_limits_rad is None:
+            return angles_rad
+        return tuple(
+            float(np.clip(angle, lower, upper))
+            for angle, (lower, upper) in zip(angles_rad, self.joint_limits_rad)
+        )
+
+    def _limit_margin(self, angles_rad: tuple[float, float, float]) -> float:
+        if self.joint_limits_rad is None:
+            return float('inf')
+        return min(
+            min(angle - lower, upper - angle)
+            for angle, (lower, upper) in zip(angles_rad, self.joint_limits_rad)
+        )
+
     def move_to(self, foot_target: Point3D, verbose=False):
         reached_target, alpha, beta, gamma = self.inverse_kinematics(foot_target, verbose)
         if verbose:
@@ -263,14 +409,12 @@ class LegModel:
         return reached_target
 
     def inverse_kinematics(self, foot_target: Point3D, verbose=False):
-        localized_foot_target = self.to_local(foot_target)
-        alpha, x_tick = self._inverse_kinematics_xy(localized_foot_target)
-        solvable, beta, gamma = self._inverse_kinematics_xz(
-            localized_foot_target.z,
-            x_tick,
-            verbose=verbose,
-        )
-        return solvable, alpha, beta, gamma
+        """Return the legacy degree-based analytic IK tuple for notebook callers."""
+        solution = self.solve_ik(foot_target, clamp=False)
+        alpha, beta, gamma = np.degrees(solution.angles_rad)
+        if verbose:
+            print(f'{alpha=:.4f}\t{beta=:.4f}\t{gamma=:.4f}')
+        return solution.reachable, float(alpha), float(beta), float(gamma)
 
     def to_local(self, point):
         return self.body_joint.inverse.apply_point(point)
