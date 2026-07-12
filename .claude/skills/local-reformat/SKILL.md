@@ -108,8 +108,8 @@ pinned CI image unless the workflow itself is intentionally being updated.
 | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | [python-reformat.sh](../../../scripts/python-reformat.sh)             | Run Ruff format/autofix/import sorting, synchronize notebooks, and fix Ansible.           |
 | [super-linter-local.sh](../../../scripts/super-linter-local.sh)       | Run Super-Linter's clang-format, Prettier, and other autofix/check passes in a container. |
-| [super-linter-autofix.env](../../../.github/super-linter-autofix.env) | Enable clang-format, Prettier, and Zizmor fixes.                                           |
-| [super-linter-checks.env](../../../.github/super-linter-checks.env)   | Enable the matching non-fixing Super-Linter validation set.                                |
+| [super-linter-autofix.env](../../../.github/super-linter-autofix.env) | Enable clang-format, Prettier, and Zizmor fixes.                                          |
+| [super-linter-checks.env](../../../.github/super-linter-checks.env)   | Enable the matching non-fixing Super-Linter validation set.                               |
 
 For Python package linting beyond the reformat workflow, use the
 [python-format-lint](../python-format-lint/SKILL.md) skill to verify
