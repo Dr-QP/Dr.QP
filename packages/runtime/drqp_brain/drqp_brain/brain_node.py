@@ -449,8 +449,7 @@ class HexapodBrain(rclpy.node.Node):
             return None
         if result.clamped_legs:
             self.get_logger().warning(
-                'Analytic IK clamped legs: '
-                f'{", ".join(result.clamped_legs)}',
+                f'Analytic IK clamped legs: {", ".join(result.clamped_legs)}',
                 throttle_duration_sec=5.0,
             )
         return result.joint_targets
@@ -490,9 +489,7 @@ class HexapodBrain(rclpy.node.Node):
         for leg in self.hexapod.legs:
             leg_name = leg.label.name
             if leg_name in clamped_legs:
-                self._clamping_ticks[leg_name] = (
-                    self._clamping_ticks.get(leg_name, 0) + 1
-                )
+                self._clamping_ticks[leg_name] = self._clamping_ticks.get(leg_name, 0) + 1
                 if self._clamping_ticks[leg_name] == CLAMPING_EVENT_TICKS:
                     persistent_legs.append(leg_name)
             else:
@@ -501,8 +498,7 @@ class HexapodBrain(rclpy.node.Node):
         if persistent_legs:
             self.robot_event_pub.publish(
                 std_msgs.msg.String(
-                    data='locomotion_clamping_persistent:'
-                    + ','.join(persistent_legs)
+                    data='locomotion_clamping_persistent:' + ','.join(persistent_legs)
                 )
             )
 
@@ -545,9 +541,7 @@ class HexapodBrain(rclpy.node.Node):
 
         if self.latest_joint_state is None:
             if not self._joint_state_warning_logged:
-                self.get_logger().warning(
-                    'No joint state available from trajectory controller'
-                )
+                self.get_logger().warning('No joint state available from trajectory controller')
                 self._joint_state_warning_logged = True
             return False
 

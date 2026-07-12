@@ -37,9 +37,7 @@ from rclpy.time import Time
 
 def test_analytic_backend_is_default_without_constructing_moveit_solver():
     """Default startup selects analytic IK and only retains scene validation."""
-    with mock.patch(
-        'drqp_brain.brain_node.MoveItPyLocomotionKinematics'
-    ) as moveit_solver_cls:
+    with mock.patch('drqp_brain.brain_node.MoveItPyLocomotionKinematics') as moveit_solver_cls:
         brain = HexapodBrain()
         try:
             assert isinstance(brain.kinematics, AnalyticLocomotionKinematics)
@@ -51,9 +49,7 @@ def test_analytic_backend_is_default_without_constructing_moveit_solver():
 def test_moveit_backend_parameter_keeps_fallback_solver():
     """The moveit parameter value routes solving through the legacy backend."""
     brain = HexapodBrain(
-        parameter_overrides=[
-            rclpy.Parameter('kinematics_backend', value='moveit')
-        ]
+        parameter_overrides=[rclpy.Parameter('kinematics_backend', value='moveit')]
     )
     try:
         assert isinstance(brain.kinematics, MoveItPyLocomotionKinematics)
@@ -246,8 +242,6 @@ def test_loop_warns_once_while_waiting_for_initial_joint_state():
             brain.loop()
             brain.loop()
 
-        warning_mock.assert_called_once_with(
-            'No joint state available from trajectory controller'
-        )
+        warning_mock.assert_called_once_with('No joint state available from trajectory controller')
     finally:
         brain.destroy_node()

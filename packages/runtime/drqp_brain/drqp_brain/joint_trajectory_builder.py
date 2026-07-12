@@ -73,9 +73,7 @@ class JointTrajectoryBuilder:
                 raise KeyError(f'Missing joint target for {controller_joint_name}')
 
             positions.append(float(joint_targets[controller_joint_name]))
-            efforts.append(
-                effort if joint_mask is None or joint_name in joint_mask else 0.0
-            )
+            efforts.append(effort if joint_mask is None or joint_name in joint_mask else 0.0)
             self.joint_names.append(controller_joint_name)
 
         self.add_point(positions, efforts, reach_in_seconds_from_start)

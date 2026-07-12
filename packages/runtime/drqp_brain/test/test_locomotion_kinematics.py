@@ -98,9 +98,7 @@ def _analytic_helper(hexapod, validator=None):
     node = Mock()
     node.get_logger.return_value = Mock()
     node._parameter_overrides = {
-        'robot_description': FakeParameter(
-            _robot_description_with_joint_limits(hexapod)
-        )
+        'robot_description': FakeParameter(_robot_description_with_joint_limits(hexapod))
     }
     return AnalyticLocomotionKinematics(
         node=node,
@@ -132,8 +130,7 @@ def test_analytic_solver_is_deterministic_and_uses_controller_convention(hexapod
     for leg, target in targets:
         expected_angles = model_to_urdf_angles(leg.solve_ik(target).angles_rad)
         assert tuple(
-            first.joint_targets[name]
-            for name in helper.controller_joint_names(leg)
+            first.joint_targets[name] for name in helper.controller_joint_names(leg)
         ) == pytest.approx(expected_angles)
 
 
@@ -151,8 +148,7 @@ def test_analytic_solver_clamps_only_unreachable_leg(hexapod):
     for leg, target in targets[1:]:
         expected_angles = model_to_urdf_angles(leg.solve_ik(target).angles_rad)
         assert tuple(
-            result.joint_targets[name]
-            for name in helper.controller_joint_names(leg)
+            result.joint_targets[name] for name in helper.controller_joint_names(leg)
         ) == pytest.approx(expected_angles)
 
 

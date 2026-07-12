@@ -92,9 +92,7 @@ def test_model_joint_limits_apply_controller_to_model_offsets():
 )
 def test_model_urdf_conversion_round_trip(model_angles):
     """Model and URDF conversions are exact inverses within float precision."""
-    assert urdf_to_model_angles(model_to_urdf_angles(model_angles)) == pytest.approx(
-        model_angles
-    )
+    assert urdf_to_model_angles(model_to_urdf_angles(model_angles)) == pytest.approx(model_angles)
 
 
 def test_servo_offset_literals_are_owned_only_by_kinematics():

@@ -461,10 +461,7 @@ class TestMoveItRuntime:
         model = self._make_hexapod_model()
         model.forward_kinematics(0, -35, 130)
         stride_limits = DirectionalStrideLimits.from_file(
-            Path(__file__).parents[2]
-            / 'drqp_brain'
-            / 'config'
-            / 'stride_limits.yaml'
+            Path(__file__).parents[2] / 'drqp_brain' / 'config' / 'stride_limits.yaml'
         )
 
         for gait in GaitType:
@@ -503,9 +500,7 @@ class TestMoveItRuntime:
                         pose.pose.position.x = float(target.x)
                         pose.pose.position.y = float(target.y)
                         pose.pose.position.z = float(target.z)
-                        orientation = Rotation.from_matrix(
-                            leg.tibia_link.rotation
-                        ).as_quat()
+                        orientation = Rotation.from_matrix(leg.tibia_link.rotation).as_quat()
                         pose.pose.orientation = Quaternion(
                             x=float(orientation[0]),
                             y=float(orientation[1]),

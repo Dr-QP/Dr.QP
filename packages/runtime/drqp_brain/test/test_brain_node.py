@@ -85,9 +85,7 @@ def test_model_pose_sequences_preserve_golden_controller_positions(
             ] == expected_points
             assert all(
                 tuple(point.positions[slice(index, index + 3)]) == expected_point
-                for point, expected_point in zip(
-                    goal.trajectory.points, expected_points
-                )
+                for point, expected_point in zip(goal.trajectory.points, expected_points)
                 for index in range(0, 18, 3)
             )
         finally:

@@ -574,8 +574,7 @@ class MoveItPyStateValidator(MoveItPyLocomotionKinematics):
         ]
         if invalid_names:
             return None, (
-                'RobotState contains non-finite joint targets: '
-                f'{", ".join(invalid_names)}'
+                f'RobotState contains non-finite joint targets: {", ".join(invalid_names)}'
             )
 
         self._ensure_moveit_py()
@@ -628,20 +627,18 @@ class AnalyticLocomotionKinematics:
                 if leg.label.name not in clamped_legs:
                     clamped_legs.append(leg.label.name)
             urdf_angles = model_to_urdf_angles(solution.angles_rad)
-            joint_targets.update(
-                zip(self.controller_joint_names(leg), urdf_angles)
-            )
+            joint_targets.update(zip(self.controller_joint_names(leg), urdf_angles))
 
-        assert all(
-            math.isfinite(position) for position in joint_targets.values()
-        ), 'Analytic IK produced non-finite joint targets'
+        assert all(math.isfinite(position) for position in joint_targets.values()), (
+            'Analytic IK produced non-finite joint targets'
+        )
 
         robot_state = None
         validation_failure = None
         validated = False
         if self._state_validator is not None:
-            robot_state, validation_failure = (
-                self._state_validator.validate_joint_targets(joint_targets)
+            robot_state, validation_failure = self._state_validator.validate_joint_targets(
+                joint_targets
             )
             validated = validation_failure is None
 
@@ -676,9 +673,7 @@ class AnalyticLocomotionKinematics:
         """Build the legacy base-frame pose used by comparison tests."""
         pose = PoseStamped()
         pose.header.frame_id = BASE_FRAME
-        base_frame_target = self._hexapod.body_transform.inverse.apply_point(
-            foot_target
-        )
+        base_frame_target = self._hexapod.body_transform.inverse.apply_point(foot_target)
         pose.pose.position.x = float(base_frame_target.x)
         pose.pose.position.y = float(base_frame_target.y)
         pose.pose.position.z = float(base_frame_target.z)
@@ -692,9 +687,7 @@ class AnalyticLocomotionKinematics:
         return pose
 
     def _robot_description(self) -> str | None:
-        override = getattr(self._node, '_parameter_overrides', {}).get(
-            'robot_description'
-        )
+        override = getattr(self._node, '_parameter_overrides', {}).get('robot_description')
         value = getattr(override, 'value', override)
         if isinstance(value, str):
             return value
@@ -716,7 +709,4 @@ class AnalyticLocomotionKinematics:
     @staticmethod
     def controller_joint_names(leg):
         """Return controller joint names in coxa/femur/tibia order."""
-        return [
-            f'drqp/{leg.label.name}_{joint_name}'
-            for joint_name in ('coxa', 'femur', 'tibia')
-        ]
+        return [f'drqp/{leg.label.name}_{joint_name}' for joint_name in ('coxa', 'femur', 'tibia')]
