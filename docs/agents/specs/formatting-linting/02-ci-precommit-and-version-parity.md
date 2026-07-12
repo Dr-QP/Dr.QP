@@ -6,22 +6,25 @@
 
 ## Objective
 
-Make CI and pre-commit call the shared repository contract with deliberately pinned tool versions.
-Keep CI formatter commits, while removing parallel formatter patches and retaining Super-Linter as
-the sole owner of Ansible formatting and checks.
+Make CI and pre-commit use deliberately pinned, appropriately scoped entry points. Pre-commit runs
+native Ruff hooks for staged Python; CI and full local formatting use the repository scripts. Keep
+CI formatter commits, while removing parallel formatter patches and retaining Super-Linter as the
+sole owner of Ansible formatting and checks.
 
 ## Version sources
 
 | Tool                           | Version source                                                         |
 | ------------------------------ | ---------------------------------------------------------------------- |
-| Ruff, pre-commit               | `pyproject.toml` plus `uv.lock`                                        |
+| Ruff for full local/CI formatting | `pyproject.toml` plus `uv.lock`                                      |
+| Ruff for pre-commit              | pinned `ruff-pre-commit` revision in `.pre-commit-config.yaml`       |
 | Prettier                       | repository `package.json` plus a committed lockfile                    |
 | clang-format/ament tools       | pinned development container/ROS image, with an asserted major version |
 | Super-Linter-hosted checks, including ansible-lint | one Super-Linter release used by both action and local wrapper |
 
-Do not retain an independent `ruff-pre-commit` version. Local pre-commit hooks should call the
-shared scripts and use the uv environment installed by the documented bootstrap. Configure the
-Prettier VS Code extension to use the project binary where supported.
+Pre-commit must not invoke `python-reformat.sh`. It uses the native `ruff-pre-commit` format,
+lint-fix, and import-sort hooks on staged Python files. The repository's uv environment remains
+the full local/CI Ruff entry point. Configure the Prettier VS Code extension to use the project
+binary where supported.
 
 ## Pre-commit behavior
 
@@ -33,11 +36,14 @@ Prettier VS Code extension to use the project binary where supported.
 
   Installation must be idempotent, work in Git worktrees, and must not change Git configuration.
 
-- Use two staged-file dispatcher hooks in order: `format staged files`, then `lint staged files`.
-  Pass filenames through; do not use `pass_filenames: false` for ordinary formatter/linter hooks.
-- The format dispatcher runs every applicable native formatter: notebook Jupytext/Ruff first,
-  ordinary Ruff, clang-format, then Prettier. It never scans unrelated file classes. Super-Linter
-  owns Ansible formatting through `ansible-lint --fix`.
+- Use the native `ruff-pre-commit` format, lint-fix, and import-sort hooks for staged Python files.
+  Do not route Python through a whole-tree formatter or a generic dispatcher. Pass staged filenames
+  through to the Ruff hooks.
+- Keep dedicated hooks for file classes that need extra handling. `notebooks-format` owns notebook
+  Jupytext/Ruff formatting; Super-Linter owns Ansible formatting through `ansible-lint --fix`.
+- The `notebooks-format` pre-commit hook runs `scripts/notebooks-format.sh` directly when a
+  notebook Markdown source changes. `python-reformat.sh` continues to call that script for its
+  full-tree workflow, but is not a pre-commit hook entry point.
 - The fast lint dispatcher runs every correctly file-scoped check currently enforced in CI,
   including Ruff, ament_flake8 on selected Python, clang-format check, relevant ament file
   linters, Prettier check, ShellCheck, Hadolint, actionlint, zizmor, gitleaks, and agent file
@@ -103,12 +109,13 @@ list with the ownership/config inventory.
   and verify the local write command repairs it.
 - Run pre-commit against staged Python, C++, Ansible, and Markdown samples and assert unrelated
   tracked files remain untouched.
-- Run a staged notebook sample and assert only that source and its generated pair change.
+- Run a staged notebook sample through the `notebooks-format` hook and assert only that source and
+  its generated pair change; confirm it does not run the whole Python reformat workflow.
 - Record cold/warm timings for each representative staged-file class and verify unrelated tools
   are not launched.
 - Verify devcontainer bootstrap installs pre-commit and pre-push hooks idempotently in a normal
   checkout and a Git worktree.
-- Assert the Ruff version used by pre-commit equals `.venv/bin/ruff --version`.
+- Assert that the Ruff version used by pre-commit matches the pinned `ruff-pre-commit` revision.
 - Assert the project Prettier version used by the extension/CLI equals the lockfile version.
 - Assert local and CI Super-Linter release declarations match.
 - Exercise path filtering for `ruff.toml`, `.clang-format`, `.prettierrc.yml`, `.prettierignore`,
@@ -124,7 +131,8 @@ list with the ownership/config inventory.
 - [ ] Pre-commit does not run a whole-tree formatter for an ordinary staged file.
 - [ ] Devcontainer setup installs performant staged-file and affected-package hooks.
 - [ ] Every current formatter and linter runs at the cheapest hook stage where its result is valid.
-- [ ] Ruff and Prettier versions have one repository lock source each.
+- [ ] Pre-commit and full local/CI Ruff versions are explicitly pinned at their respective entry
+      points; Prettier has one repository lock source.
 - [ ] Local and CI Super-Linter use the same release.
 - [ ] CI runs one deterministic formatting writer and creates at most one combined formatter
       commit per source revision.

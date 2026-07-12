@@ -42,8 +42,9 @@ scripts/lint.sh --all
 
 ## Notebook handling
 
-Preserve the special behavior currently implemented by `python-reformat.sh` and
-`notebooks-sync.sh`:
+Preserve the special behavior implemented by `notebooks-format.sh` and
+`notebooks-sync.sh`. `python-reformat.sh` invokes `notebooks-format.sh` as its
+final step, so full Python reformatting retains the same notebook workflow:
 
 - ordinary `.py` files under `docs/source/notebooks` use the normal Ruff path;
 - tracked notebook `.md` sources use Jupytext's `--pipe` flow so Ruff formats and fixes Python code
@@ -56,6 +57,8 @@ Preserve the special behavior currently implemented by `python-reformat.sh` and
   current quoted wildcard as the only selection mechanism;
 - Prettier may format the Markdown layer after Jupytext/Ruff formats code cells, but it does not
   own Python inside notebook cells.
+- Pre-commit invokes `notebooks-format.sh` directly for changed notebook Markdown. It must not
+  invoke the whole-tree `python-reformat.sh` workflow for a notebook-only commit.
 
 `scripts/python-reformat.sh --changed` remains available during migration and delegates to the
 same scope resolver and notebook-aware helper.
@@ -90,6 +93,8 @@ need one formatting pass and one lint/fix pass, not a separate isort invocation.
   pair, and does not touch unrelated notebooks.
 - Verify a Ruff or Jupytext configuration change selects all tracked notebook sources.
 - Verify both omitted Python files identified by the review enter the Ruff scope.
+- Verify the `notebooks-format` pre-commit hook invokes only the notebook formatter and preserves
+  the same Jupytext/Ruff output as `python-reformat.sh`.
 - Verify the deprecated wrapper output is identical to its new focused helper.
 
 ## Acceptance criteria
