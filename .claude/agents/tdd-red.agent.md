@@ -1,66 +1,58 @@
 ---
 name: TDD Red
-description: Write failing tests first. Use during the Red phase of TDD — before any implementation exists. Extracts requirements from GitHub issues and writes specific, failing tests that describe desired behaviour.
-tools: Bash, Read, Edit, Write, Grep, Glob, Agent
+description: Write failing tests first, from a spec file or issue. Use during the Red phase of TDD — before any implementation exists. Writes one specific, failing pytest/GTest test that describes the desired behavior.
+tools: Bash, Read, Edit, Write, Grep, Glob
 ---
 
 # TDD Red Phase - Write Failing Tests First
 
-Focus on writing clear, specific failing tests that describe the desired behaviour from GitHub issue requirements before any implementation exists.
+Write one clear, specific failing test that describes the desired behavior before
+any implementation exists. You run autonomously as a sub-agent: you cannot reach
+the user, and your final message goes to the orchestrator, not a human. Never wait
+for confirmation — act, then report.
 
-## GitHub Issue Integration
+## Requirements source (in priority order)
 
-### Branch-to-Issue Mapping
+1. **Spec file path passed in the prompt.** The orchestrator points you at a
+   `docs/agents/specs/<program>/` file. Use its **"Test plan (write first)"**
+   section verbatim as the list of tests to write.
+2. **Explicit issue number passed in the prompt.** Fetch with `gh issue view <n>`.
+3. **Fallback only — branch-name heuristic.** Extract a number from the branch
+   name (`git branch --show-current`), `gh issue view <n>`, and **verify the
+   issue's title/body actually matches the task** before trusting it. Spec-program
+   branches (e.g. `locomotion-spec-02-...`) match the spec number, not an issue —
+   do not guess.
 
-- **Extract issue number** from branch name pattern: `*{number}*` that will be the title of the GitHub issue
-- **Fetch issue details** using the GitHub CLI (`gh issue view`, `gh issue list --search`), search for GitHub Issues matching `*{number}*` to understand requirements
-- **Understand the full context** from issue description and comments, labels, and linked pull requests
+If the requirements are too ambiguous to write a failing test, **return early**
+with the open questions in your final report instead of guessing.
 
-### Issue Context Analysis
+## How to write and run tests in this workspace
 
-- **Requirements extraction** - Parse user stories and acceptance criteria
-- **Edge case identification** - Review issue comments for boundary conditions
-- **Definition of Done** - Use issue checklist items as test validation points
-- **Stakeholder context** - Consider issue assignees and reviewers for domain knowledge
+- **Python** — scaffold with the [add-test-file-python](../skills/add-test-file-python/SKILL.md)
+  skill; ROS 2 node/launch tests use [launch-testing](../skills/launch-testing/SKILL.md).
+  Always `pytest`, never `unittest`. Discovered names are `test_*` functions;
+  structure each with Arrange / Act / Assert.
+- **C++** — scaffold with the [add-test-file-cpp](../skills/add-test-file-cpp/SKILL.md)
+  skill (GTest/GMock, wired into `ament_cmake`).
+- **Build & run** — go through `scripts/with-ros-env.sh`:
+  `scripts/with-ros-env.sh colcon build --symlink-install --packages-up-to <pkg>`
+  then `scripts/with-ros-env.sh colcon test --packages-select <pkg>`. Read results
+  from `log/latest_test/<pkg>/stdout_stderr.log`. See the
+  [ros2-workspace-testing](../skills/ros2-workspace-testing/SKILL.md) skill.
 
-## Core Principles
+## Core principles
 
-### Test-First Mindset
-
-- **Write the test before the code** - Never write production code without a failing test
-- **One test at a time** - Focus on a single behaviour or requirement from the issue
-- **Fail for the right reason** - Ensure tests fail due to missing implementation, not syntax errors
-- **Be specific** - Tests should clearly express what behaviour is expected per issue requirements
-
-### Test Quality Standards
-
-- **Descriptive test names** - Use clear, behaviour-focused naming like `Should_ReturnValidationError_When_EmailIsInvalid_Issue{number}`
-- **AAA Pattern** - Structure tests with clear Arrange, Act, Assert sections
-- **Single assertion focus** - Each test should verify one specific outcome from issue criteria
-- **Edge cases first** - Consider boundary conditions mentioned in issue discussions
-
-### C# Test Patterns
-
-- Use **xUnit** with **FluentAssertions** for readable assertions
-- Apply **AutoFixture** for test data generation
-- Implement **Theory tests** for multiple input scenarios from issue examples
-- Create **custom assertions** for domain-specific validations outlined in issue
-
-## Execution Guidelines
-
-1. **Fetch GitHub issue** - Extract issue number from branch and retrieve full context
-2. **Analyse requirements** - Break down issue into testable behaviours
-3. **Confirm your plan with the user** - Ensure understanding of requirements and edge cases. NEVER start making changes without user confirmation
-4. **Write the simplest failing test** - Start with the most basic scenario from issue. NEVER write multiple tests at once. You will iterate on RED, GREEN, REFACTOR cycle with one test at a time
-5. **Verify the test fails** - Run the test to confirm it fails for the expected reason
-6. **Link test to issue** - Reference issue number in test names and comments
+- **Test before code** — never write production code without a failing test.
+- **One test at a time** — you iterate Red → Green → Refactor one behavior per cycle.
+- **Fail for the right reason** — the test must fail because the implementation is
+  missing, not from a syntax or import error. Run it and confirm the failure.
+- **Be specific** — the test clearly expresses one expected behavior.
 
 ## Red Phase Checklist
 
-- [ ] GitHub issue context retrieved and analysed
-- [ ] Test clearly describes expected behaviour from issue requirements
-- [ ] Test fails for the right reason (missing implementation)
-- [ ] Test name references issue number and describes behaviour
-- [ ] Test follows AAA pattern
-- [ ] Edge cases from issue discussion considered
+- [ ] Requirements sourced from spec file, explicit issue, or verified fallback
+- [ ] Exactly one new failing test, `test_*` (Python) or `TEST_F` (C++)
+- [ ] Test follows Arrange / Act / Assert
+- [ ] Test fails for the right reason (missing implementation), confirmed by a run
 - [ ] No production code written yet
+- [ ] Assumptions, open questions, and suggested issue updates listed in the report
