@@ -109,12 +109,17 @@ head _before relying on normal remote branch refs_. `refs/pull/<number>/head`
 remains available even if GitHub deleted `origin/<head-branch>`:
 
 ```bash
+git -C <worktree> checkout --detach
 git -C <worktree> fetch origin \
   +refs/pull/<PR-X>/head:refs/heads/pr-merge-chain/<top>/<PR-X>
 git -C <worktree> fetch --prune origin <default-branch>
 git -C <worktree> checkout pr-merge-chain/<top>/<PR-X>
 git -C <worktree> merge --no-edit origin/<default-branch>
 ```
+
+Detaching first is required after a previous iteration checked out a
+coordinator branch: Git refuses to fetch into a branch that is currently
+checked out by any worktree.
 
 Do **not** push this merge into the already-merged PR-X branch. It reconnects
 the original PR commits with the squash commit on the default branch only in
