@@ -52,6 +52,7 @@ def generate_launch_description():
     load_joystick = LaunchConfiguration('load_joystick')
     load_controllers = LaunchConfiguration('load_controllers')
     load_imu = LaunchConfiguration('load_imu')
+    kinematics_backend = LaunchConfiguration('kinematics_backend')
     hardware_device_address = LaunchConfiguration('hardware_device_address')
 
     return LaunchDescription(
@@ -85,6 +86,12 @@ def generate_launch_description():
                 name='hardware_device_address',
                 default_value='/dev/ttySC0',
                 description='Hardware device address passed through to MoveIt robot description',
+            ),
+            DeclareLaunchArgument(
+                name='kinematics_backend',
+                default_value='analytic',
+                choices=['analytic', 'moveit'],
+                description='Walking inverse-kinematics backend',
             ),
             GroupAction(
                 [
@@ -135,7 +142,12 @@ def generate_launch_description():
                         executable='drqp_brain',
                         output='screen',
                         parameters=_moveit_params(use_gazebo, hardware_device_address)
-                        + [{'use_sim_time': use_gazebo}],
+                        + [
+                            {
+                                'use_sim_time': use_gazebo,
+                                'kinematics_backend': kinematics_backend,
+                            }
+                        ],
                     ),
                     Node(
                         package='drqp_brain',

@@ -18,18 +18,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from time import perf_counter
 from unittest.mock import Mock
 
 from drqp_brain.locomotion_kinematics import (
+    AnalyticLocomotionKinematics,
     LOCOMOTION_FPS,
     MIN_VIABLE_IK_TIMEOUT_SEC,
     MOVEIT_IK_ATTEMPTS_PER_TARGET,
     MOVEIT_IK_CALLS_PER_TICK,
     MOVEIT_IK_TIMEOUT_SEC,
     MoveItPyLocomotionKinematics,
+    MoveItPyStateValidator,
     WALKING_TRAJECTORY_POINTS,
 )
+from drqp_kinematics.geometry import Point3D
 from drqp_kinematics.models import HexapodModel
+from drqp_kinematics.urdf_limits import model_to_urdf_angles
 import numpy as np
 import pytest
 from sensor_msgs.msg import JointState
@@ -53,7 +58,6 @@ def _all_joint_names(hexapod):
 def test_moveit_ik_timeout_fits_within_half_loop_period():
     """Bound all IK calls in one trajectory window to half the loop period."""
     expected_calls_per_tick = 6 * WALKING_TRAJECTORY_POINTS * MOVEIT_IK_ATTEMPTS_PER_TARGET
-
     assert MOVEIT_IK_CALLS_PER_TICK == expected_calls_per_tick
     # The per-call timeout is derived as budget / calls, so the budget inequality
     # holds by construction. Assert instead that the derived timeout still leaves
@@ -62,6 +66,117 @@ def test_moveit_ik_timeout_fits_within_half_loop_period():
     # smaller literal).
     assert MOVEIT_IK_TIMEOUT_SEC >= MIN_VIABLE_IK_TIMEOUT_SEC
     assert MOVEIT_IK_CALLS_PER_TICK * MOVEIT_IK_TIMEOUT_SEC == pytest.approx(0.5 / LOCOMOTION_FPS)
+
+
+def _robot_description_with_joint_limits(hexapod):
+    joints = []
+    for joint_name in _all_joint_names(hexapod):
+        joints.append(
+            f'<joint name="{joint_name}" type="revolute">'
+            '<limit lower="-2.5" upper="2.5" effort="3" velocity="3"/>'
+            '</joint>'
+        )
+    return f'<robot name="drqp">{"".join(joints)}</robot>'
+
+
+class FakeAnalyticStateValidator:
+    """Capture analytic targets and optionally report a collision failure."""
+
+    def __init__(self, failure_reason=None):
+        self.failure_reason = failure_reason
+        self.joint_targets_seen = []
+
+    def ready(self):
+        return True
+
+    def validate_joint_targets(self, joint_targets):
+        self.joint_targets_seen.append(dict(joint_targets))
+        return object(), self.failure_reason
+
+
+def _analytic_helper(hexapod, validator=None):
+    node = Mock()
+    node.get_logger.return_value = Mock()
+    node._parameter_overrides = {
+        'robot_description': FakeParameter(_robot_description_with_joint_limits(hexapod))
+    }
+    return AnalyticLocomotionKinematics(
+        node=node,
+        hexapod=hexapod,
+        state_validator=validator,
+    )
+
+
+def test_analytic_ready_installs_model_limits_from_urdf(hexapod):
+    """Analytic solving becomes ready after every leg receives URDF limits."""
+    helper = _analytic_helper(hexapod)
+
+    assert helper.ready()
+    assert all(leg.joint_limits_rad is not None for leg in hexapod.legs)
+
+
+def test_analytic_solver_is_deterministic_and_uses_controller_convention(hexapod):
+    """Repeated closed-form solves return identical URDF joint targets."""
+    helper = _analytic_helper(hexapod)
+    targets = [(leg, leg.tibia_end.copy()) for leg in hexapod.legs]
+
+    first = helper.solve(targets, latest_joint_state=None)
+    second = helper.solve(targets, latest_joint_state=JointState())
+
+    assert first.succeeded
+    assert first.joint_targets == second.joint_targets
+    assert first.backend_name == 'analytic'
+    assert first.clamped_legs == ()
+    for leg, target in targets:
+        expected_angles = model_to_urdf_angles(leg.solve_ik(target).angles_rad)
+        assert tuple(
+            first.joint_targets[name] for name in helper.controller_joint_names(leg)
+        ) == pytest.approx(expected_angles)
+
+
+def test_analytic_solver_clamps_only_unreachable_leg(hexapod):
+    """One unreachable target degrades that leg without failing the tick."""
+    helper = _analytic_helper(hexapod)
+    legs = list(hexapod.legs)
+    targets = [(leg, leg.tibia_end.copy()) for leg in legs]
+    targets[0] = (legs[0], Point3D([10.0, 10.0, 10.0]))
+
+    result = helper.solve(targets, latest_joint_state=None)
+
+    assert result.succeeded
+    assert result.clamped_legs == (legs[0].label.name,)
+    for leg, target in targets[1:]:
+        expected_angles = model_to_urdf_angles(leg.solve_ik(target).angles_rad)
+        assert tuple(
+            result.joint_targets[name] for name in helper.controller_joint_names(leg)
+        ) == pytest.approx(expected_angles)
+
+
+def test_analytic_solver_preserves_collision_validation_failure(hexapod):
+    """Planning-scene self-collision remains a hard analytic failure."""
+    validator = FakeAnalyticStateValidator('RobotState is in self-collision')
+    helper = _analytic_helper(hexapod, validator=validator)
+    targets = [(leg, leg.tibia_end.copy()) for leg in hexapod.legs]
+
+    result = helper.solve(targets, latest_joint_state=None)
+
+    assert not result.succeeded
+    assert result.failure_reason == 'RobotState is in self-collision'
+    assert len(validator.joint_targets_seen) == 1
+
+
+def test_analytic_solver_six_legs_two_points_meets_latency_budget(hexapod):
+    """Two complete trajectory points solve within the five-millisecond budget."""
+    helper = _analytic_helper(hexapod)
+    targets = [(leg, leg.tibia_end.copy()) for leg in hexapod.legs] * 2
+    helper.ready()
+
+    started_at = perf_counter()
+    result = helper.solve(targets, latest_joint_state=None)
+    elapsed_seconds = perf_counter() - started_at
+
+    assert result.succeeded
+    assert elapsed_seconds < 0.005
 
 
 class FakeJointModelGroup:
@@ -244,6 +359,35 @@ def _node_with_moveit_params():
         'use_sim_time': FakeParameter(True),
     }
     return node
+
+
+def test_moveit_state_validator_checks_collision_without_running_ik(hexapod):
+    """Analytic validation assembles a RobotState without calling set_from_ik."""
+    node = _node_with_moveit_params()
+    created_robot_states = []
+
+    class CapturingRobotState(FakeMoveItRobotState):
+        """Capture the state assembled by the planning-scene validator."""
+
+        def __init__(self, robot_model):
+            super().__init__(robot_model)
+            created_robot_states.append(self)
+
+    validator = MoveItPyStateValidator(
+        node=node,
+        hexapod=hexapod,
+        is_shutting_down=lambda: False,
+        moveit_py_factory=lambda **kwargs: FakeMoveItPy(**kwargs),
+        robot_state_cls=CapturingRobotState,
+    )
+    joint_targets = dict.fromkeys(_all_joint_names(hexapod), 0.0)
+
+    robot_state, failure_reason = validator.validate_joint_targets(joint_targets)
+
+    assert failure_reason is None
+    assert robot_state is created_robot_states[0]
+    assert robot_state.ik_calls == []
+    assert robot_state.joint_positions == joint_targets
 
 
 def test_moveit_config_reads_overrides_without_prefix_api(hexapod):

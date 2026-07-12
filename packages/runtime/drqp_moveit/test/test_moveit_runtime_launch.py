@@ -19,11 +19,17 @@
 # THE SOFTWARE.
 
 import math
+from pathlib import Path
 
 from control_msgs.action import FollowJointTrajectory
 from controller_manager.test_utils import check_controllers_running, check_node_running
-from drqp_brain.joint_trajectory_builder import kFemurOffsetAngle, kTibiaOffsetAngle
+from drqp_brain.generate_stride_limits import DEFAULT_PHASE_SAMPLES
+from drqp_brain.parametric_gait_generator import GaitType
+from drqp_brain.stride_limits import DirectionalStrideLimits
+from drqp_brain.walk_controller import SteeringState, WalkController
+from drqp_kinematics.geometry import Point3D
 from drqp_kinematics.models import HexapodModel
+from drqp_kinematics.urdf_limits import model_to_urdf_angles
 from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
 from geometry_msgs.msg import PoseStamped, Quaternion
 from launch import LaunchDescription
@@ -42,7 +48,12 @@ from moveit_msgs.msg import (
     PlanningScene,
     RobotState,
 )
-from moveit_msgs.srv import ApplyPlanningScene, GetMotionPlan, GetStateValidity
+from moveit_msgs.srv import (
+    ApplyPlanningScene,
+    GetMotionPlan,
+    GetPositionIK,
+    GetStateValidity,
+)
 import pytest
 import rclpy
 from rclpy.action import ActionClient
@@ -130,6 +141,12 @@ class TestMoveItRuntime:
         )
         request.addfinalizer(self.motion_plan_client.destroy)
 
+        self.compute_ik_client = self.node.create_client(
+            GetPositionIK,
+            '/compute_ik',
+        )
+        request.addfinalizer(self.compute_ik_client.destroy)
+
         self.state_validity_client = self.node.create_client(
             GetStateValidity,
             '/check_state_validity',
@@ -180,6 +197,7 @@ class TestMoveItRuntime:
 
         for client, name in [
             (self.motion_plan_client, '/plan_kinematic_path'),
+            (self.compute_ik_client, '/compute_ik'),
             (self.state_validity_client, '/check_state_validity'),
             (self.apply_planning_scene_client, '/apply_planning_scene'),
         ]:
@@ -256,11 +274,14 @@ class TestMoveItRuntime:
             w=float(quat[3]),
         )
 
-        expected_joints = {
-            LEFT_FRONT_JOINTS[0]: math.radians(analytical_angles_deg[0]),
-            LEFT_FRONT_JOINTS[1]: math.radians(analytical_angles_deg[1] + kFemurOffsetAngle),
-            LEFT_FRONT_JOINTS[2]: math.radians(analytical_angles_deg[2] + kTibiaOffsetAngle),
-        }
+        expected_joints = dict(
+            zip(
+                LEFT_FRONT_JOINTS,
+                model_to_urdf_angles(
+                    tuple(math.radians(angle) for angle in analytical_angles_deg)
+                ),
+            )
+        )
         return target_pose, expected_joints
 
     def _call_service(self, client, request, timeout_sec: float = 30.0):
@@ -297,6 +318,22 @@ class TestMoveItRuntime:
         motion_plan_request.max_velocity_scaling_factor = 0.2
         motion_plan_request.max_acceleration_scaling_factor = 0.2
         return self._call_service(self.motion_plan_client, request)
+
+    def _moveit_ik(self, leg, target_pose: PoseStamped) -> dict[str, float]:
+        request = GetPositionIK.Request()
+        request.ik_request.group_name = f'{leg.label.name}_leg'
+        request.ik_request.robot_state = self._current_robot_state()
+        request.ik_request.pose_stamped = target_pose
+        request.ik_request.avoid_collisions = False
+        request.ik_request.timeout = rclpy.time.Duration(seconds=0.05).to_msg()
+        response = self._call_service(self.compute_ik_client, request)
+        assert response.error_code.val == MoveItErrorCodes.SUCCESS
+        return dict(
+            zip(
+                response.solution.joint_state.name,
+                response.solution.joint_state.position,
+            )
+        )
 
     def _robot_state_with_joint_targets(self, target_positions: dict[str, float]) -> RobotState:
         robot_state = self._current_robot_state()
@@ -413,6 +450,71 @@ class TestMoveItRuntime:
         )
 
         yield  # yield to allow shutdown test to run after this one
+        _ld, proc_info = generate_test_description
+        assert_processes_exited_cleanly(proc_info)
+
+    def test_analytic_ik_agrees_with_moveit_across_certified_envelope(
+        self,
+        generate_test_description,
+    ):
+        """Use MoveIt as the oracle across every certified gait sample."""
+        model = self._make_hexapod_model()
+        model.forward_kinematics(0, -35, 130)
+        stride_limits = DirectionalStrideLimits.from_file(
+            Path(__file__).parents[2] / 'drqp_brain' / 'config' / 'stride_limits.yaml'
+        )
+
+        for gait in GaitType:
+            for direction_index in range(16):
+                angle = direction_index * 2.0 * math.pi / 16
+                direction = Point3D([math.cos(angle), math.sin(angle), 0.0])
+                step_length = stride_limits.max_step_length(gait, direction)
+                walker = WalkController(
+                    model,
+                    step_length=step_length,
+                    step_height=0.01,
+                    rotation_speed_degrees=45,
+                    gait=gait,
+                )
+                steering = SteeringState(direction, 0.0)
+                for phase_index in range(DEFAULT_PHASE_SAMPLES):
+                    targets = walker.targets_at(
+                        phase_index / DEFAULT_PHASE_SAMPLES,
+                        steering,
+                    )
+                    for leg, target in targets:
+                        solution = leg.solve_ik(target, clamp=False)
+                        assert solution.reachable
+                        joint_names = [
+                            f'drqp/{leg.label.name}_{joint_name}'
+                            for joint_name in ('coxa', 'femur', 'tibia')
+                        ]
+                        expected = dict(
+                            zip(
+                                joint_names,
+                                model_to_urdf_angles(solution.angles_rad),
+                            )
+                        )
+                        pose = PoseStamped()
+                        pose.header.frame_id = BASE_FRAME
+                        pose.pose.position.x = float(target.x)
+                        pose.pose.position.y = float(target.y)
+                        pose.pose.position.z = float(target.z)
+                        orientation = Rotation.from_matrix(leg.tibia_link.rotation).as_quat()
+                        pose.pose.orientation = Quaternion(
+                            x=float(orientation[0]),
+                            y=float(orientation[1]),
+                            z=float(orientation[2]),
+                            w=float(orientation[3]),
+                        )
+
+                        self._assert_joint_map_close(
+                            self._moveit_ik(leg, pose),
+                            expected,
+                            tolerance=1e-3,
+                        )
+
+        yield
         _ld, proc_info = generate_test_description
         assert_processes_exited_cleanly(proc_info)
 

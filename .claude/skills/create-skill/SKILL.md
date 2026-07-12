@@ -38,7 +38,6 @@ Codex and Cursor consume the same skills through the `.codex/skills/` and `.curs
 ---
 name: github-actions-failure-debugging
 description: Guide for debugging failing GitHub Actions workflows. Use this when asked to debug failing GitHub Actions workflows.
-license: Complete terms in LICENSE.txt
 ---
 ```
 
@@ -119,7 +118,6 @@ No fixed folder taxonomy is required. These subfolders are useful conventions wh
 ```
 .claude/skills/my-skill/
 ├── SKILL.md
-├── LICENSE.txt
 ├── scripts/
 │   └── helper.py
 ├── references/
@@ -128,7 +126,7 @@ No fixed folder taxonomy is required. These subfolders are useful conventions wh
     └── scaffold.py
 ```
 
-> **LICENSE.txt**: When creating a skill, download the Apache 2.0 license text from https://www.apache.org/licenses/LICENSE-2.0.txt and save as `LICENSE.txt`. Update the copyright year and owner in the appendix section.
+Add a skill-specific license only when the user or repository policy requests one.
 
 ### Referencing Resources in SKILL.md
 

@@ -22,8 +22,14 @@ from dataclasses import dataclass
 import importlib
 import math
 import sys
-from typing import Callable
+from typing import Callable, Protocol
+import xml.etree.ElementTree as ElementTree
 
+from drqp_kinematics.urdf_limits import (
+    model_joint_limits_from_urdf,
+    model_to_urdf_angles,
+    parse_joint_limits,
+)
 from geometry_msgs.msg import Pose, PoseStamped, Quaternion
 import numpy as np
 from rclpy._rclpy_pybind11 import InvalidHandle, RCLError
@@ -33,6 +39,7 @@ from sensor_msgs.msg import JointState
 
 LOCOMOTION_FPS = 8
 WALKING_TRAJECTORY_POINTS = 2
+CLAMPING_EVENT_TICKS = 8
 LOCOMOTION_LEG_COUNT = 6
 MOVEIT_IK_ATTEMPTS_PER_TARGET = 2
 MOVEIT_IK_CALLS_PER_TICK = (
@@ -95,10 +102,32 @@ class LocomotionKinematicsResult:
     error_code: int | None = None
     backend_name: str = 'moveit_py'
     validated: bool = False
+    clamped_legs: tuple[str, ...] = ()
 
     @property
     def succeeded(self) -> bool:
         return self.failure_reason is None
+
+
+class LocomotionKinematics(Protocol):
+    """Backend contract for one complete locomotion-state solve."""
+
+    def ready(self) -> bool:
+        """Return whether the backend can solve and validate targets."""
+        raise NotImplementedError
+
+    def solve(
+        self,
+        legs_and_targets,
+        latest_joint_state: JointState | None,
+    ) -> LocomotionKinematicsResult:
+        """Return controller-convention joint targets for the requested legs."""
+        raise NotImplementedError
+
+    @staticmethod
+    def controller_joint_names(leg):
+        """Return controller joint names in backend output order."""
+        raise NotImplementedError
 
 
 class MoveItPyLocomotionKinematics:
@@ -143,8 +172,13 @@ class MoveItPyLocomotionKinematics:
     def solve(
         self,
         legs_and_targets,
-        latest_joint_state: JointState,
+        latest_joint_state: JointState | None,
     ) -> LocomotionKinematicsResult:
+        if latest_joint_state is None:
+            return LocomotionKinematicsResult(
+                joint_targets={},
+                failure_reason='MoveItPy requires a current joint state seed',
+            )
         self._ensure_moveit_py()
         robot_state = self._seed_robot_state(latest_joint_state)
         joint_targets = {}
@@ -515,4 +549,164 @@ class MoveItPyLocomotionKinematics:
 
     @staticmethod
     def controller_joint_names(leg):
+        return [f'drqp/{leg.label.name}_{joint_name}' for joint_name in ('coxa', 'femur', 'tibia')]
+
+
+class MoveItPyStateValidator(MoveItPyLocomotionKinematics):
+    """Validate analytic joint targets against the MoveIt planning scene."""
+
+    def validate_joint_targets(
+        self,
+        joint_targets: dict[str, float],
+    ) -> tuple[object | None, str | None]:
+        """Return a MoveIt RobotState and any self-collision validation failure."""
+        expected_names = [
+            joint_name
+            for leg in self._hexapod.legs
+            for joint_name in self.controller_joint_names(leg)
+        ]
+        missing_names = [name for name in expected_names if name not in joint_targets]
+        if missing_names:
+            return None, f'RobotState is missing joint targets: {", ".join(missing_names)}'
+
+        invalid_names = [
+            name for name, position in joint_targets.items() if not math.isfinite(position)
+        ]
+        if invalid_names:
+            return None, (
+                f'RobotState contains non-finite joint targets: {", ".join(invalid_names)}'
+            )
+
+        self._ensure_moveit_py()
+        robot_state = self._robot_state_cls(self._robot_model)
+        robot_state.set_to_default_values()
+        robot_state.joint_positions = joint_targets
+        robot_state.update()
+        return robot_state, self._collision_failure(robot_state)
+
+
+class AnalyticLocomotionKinematics:
+    """Closed-form runtime kinematics backed by ``LegModel.solve_ik``."""
+
+    def __init__(self, node, hexapod, state_validator=None):
+        self._node = node
+        self._hexapod = hexapod
+        self._state_validator = state_validator
+        self._limits_installed = all(
+            leg.joint_limits_rad is not None for leg in self._hexapod.legs
+        )
+        self._limits_error_logged = False
+
+    def ready(self) -> bool:
+        """Return whether URDF limits and the collision validator are ready."""
+        if not self._limits_installed:
+            self._limits_installed = self._install_joint_limits()
+        if not self._limits_installed:
+            return False
+        return self._state_validator is None or self._state_validator.ready()
+
+    def solve(
+        self,
+        legs_and_targets,
+        latest_joint_state: JointState | None,
+    ) -> LocomotionKinematicsResult:
+        """Solve each leg independently and report workspace/limit clamping."""
+        del latest_joint_state
+        if not self.ready():
+            return LocomotionKinematicsResult(
+                joint_targets={},
+                failure_reason='Analytic kinematics is waiting for URDF joint limits',
+                backend_name='analytic',
+            )
+
+        joint_targets = {}
+        clamped_legs = []
+        for leg, foot_target in legs_and_targets:
+            solution = leg.solve_ik(foot_target, clamp=True)
+            if not solution.reachable or not solution.within_limits:
+                if leg.label.name not in clamped_legs:
+                    clamped_legs.append(leg.label.name)
+            urdf_angles = model_to_urdf_angles(solution.angles_rad)
+            joint_targets.update(zip(self.controller_joint_names(leg), urdf_angles))
+
+        assert all(math.isfinite(position) for position in joint_targets.values()), (
+            'Analytic IK produced non-finite joint targets'
+        )
+
+        robot_state = None
+        validation_failure = None
+        validated = False
+        if self._state_validator is not None:
+            robot_state, validation_failure = self._state_validator.validate_joint_targets(
+                joint_targets
+            )
+            validated = validation_failure is None
+
+        return LocomotionKinematicsResult(
+            joint_targets={} if validation_failure else joint_targets,
+            robot_state=robot_state,
+            failure_reason=validation_failure,
+            backend_name='analytic',
+            validated=validated,
+            clamped_legs=tuple(clamped_legs),
+        )
+
+    def _install_joint_limits(self) -> bool:
+        robot_description = self._robot_description()
+        if robot_description is None:
+            self._log_limits_error_once('robot_description is unavailable')
+            return False
+
+        try:
+            urdf_limits = parse_joint_limits(robot_description)
+            for leg in self._hexapod.legs:
+                leg.joint_limits_rad = model_joint_limits_from_urdf(
+                    urdf_limits,
+                    tuple(self.controller_joint_names(leg)),
+                )
+        except (ElementTree.ParseError, KeyError, ValueError) as exc:
+            self._log_limits_error_once(str(exc))
+            return False
+        return True
+
+    def make_pose_stamped(self, leg, foot_target):
+        """Build the legacy base-frame pose used by comparison tests."""
+        pose = PoseStamped()
+        pose.header.frame_id = BASE_FRAME
+        base_frame_target = self._hexapod.body_transform.inverse.apply_point(foot_target)
+        pose.pose.position.x = float(base_frame_target.x)
+        pose.pose.position.y = float(base_frame_target.y)
+        pose.pose.position.z = float(base_frame_target.z)
+        orientation = Rotation.from_matrix(leg.tibia_link.rotation).as_quat()
+        pose.pose.orientation = Quaternion(
+            x=float(orientation[0]),
+            y=float(orientation[1]),
+            z=float(orientation[2]),
+            w=float(orientation[3]),
+        )
+        return pose
+
+    def _robot_description(self) -> str | None:
+        override = getattr(self._node, '_parameter_overrides', {}).get('robot_description')
+        value = getattr(override, 'value', override)
+        if isinstance(value, str):
+            return value
+
+        try:
+            value = self._node.get_parameter('robot_description').value
+        except Exception:  # noqa: BLE001 - node doubles and undeclared parameters vary
+            return None
+        return value if isinstance(value, str) else None
+
+    def _log_limits_error_once(self, reason: str) -> None:
+        if self._limits_error_logged:
+            return
+        self._node.get_logger().error(
+            f'Unable to install analytic joint limits from URDF: {reason}'
+        )
+        self._limits_error_logged = True
+
+    @staticmethod
+    def controller_joint_names(leg):
+        """Return controller joint names in coxa/femur/tibia order."""
         return [f'drqp/{leg.label.name}_{joint_name}' for joint_name in ('coxa', 'femur', 'tibia')]
