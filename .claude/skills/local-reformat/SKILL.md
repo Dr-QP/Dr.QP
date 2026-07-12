@@ -86,7 +86,7 @@ The wrapper sets `SUPER_LINTER_OUTPUT_DIRECTORY_NAME=log` and saves only the
 most recent run. Inspect its output before rerunning the wrapper: a new run
 replaces the prior summary and detailed results.
 
-Begin with [log/super-linter-summary.md](../../../log/super-linter-summary.md).
+Begin with `log/super-linter-summary.md`.
 Its validation-result table identifies the failing language/linters. Do not
 treat the summary's embedded diagnostic text as the only source of truth;
 use the corresponding language output below for the complete, structured
