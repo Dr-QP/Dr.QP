@@ -32,9 +32,7 @@ changes.
 - Install and start Docker or Podman before running Super-Linter. The local
   wrapper pulls `ghcr.io/super-linter/super-linter:v8.5.0` unless overridden.
 - The shared clang-format configuration is
-  [.github/linters/.clang-format](../../../.github/linters/.clang-format).
-  Root [.clang-format](../../../.clang-format) is a symlink for ament and
-  editor discovery.
+  [.clang-format](../../../.clang-format).
 
 ## Codex Managed-Sandbox Execution
 
