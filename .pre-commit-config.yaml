@@ -57,5 +57,5 @@ repos:
         name: validate-agent-files
         entry: validate_agent_files --ci .claude
         language: system
-        files: '(\.claude/skills/.*/SKILL\.md|\.claude/agents/.*\.agent\.md|\.claude/prompts/.*\.prompt\.md)$'
+        files: '(\.claude/skills/.*/SKILL\.md|\.claude/agents/.*\.agent\.md|\.codex/agents/.*\.md)$'
         pass_filenames: false

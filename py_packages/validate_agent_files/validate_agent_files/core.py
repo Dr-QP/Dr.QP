@@ -25,6 +25,7 @@ from .validators.prompts import (
     validate_prompt_frontmatter,
     validate_prompt_references,
 )
+from .validators.trampolines import validate_trampolines
 from .validators.uniqueness import UniquenessValidator
 
 
@@ -144,14 +145,19 @@ class CustomizationsValidationEngine:
                 agent_documents[file_path] = frontmatter
 
         known_targets = build_known_agent_targets(agent_documents)
+        trampoline_issues, orphan_results = validate_trampolines(agent_files, agent_documents)
+
         results: List[ValidationResult] = []
         for file_path in agent_files:
             if file_path in parse_errors:
                 results.append(parse_errors[file_path])
                 continue
 
-            results.append(self._validate_agent_file(file_path, known_targets))
+            result = self._validate_agent_file(file_path, known_targets)
+            result.issues.extend(trampoline_issues.get(file_path, []))
+            results.append(result)
 
+        results.extend(orphan_results)
         return results
 
     def _validate_agent_file(self, file_path: str, known_targets: set[str]) -> ValidationResult:

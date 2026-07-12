@@ -1,94 +1,63 @@
 ---
 name: TDD Refactor
-description: Improve code quality while keeping all tests green. Use during the Refactor phase of TDD — after tests pass. Applies Clean Code, SOLID principles, and security best practices without changing observable behaviour.
-tools: Bash, Read, Edit, Write, Grep, Glob, Agent
+description: Improve code quality while keeping all tests green. Use during the Refactor phase of TDD — after tests pass. Applies Clean Code, SOLID principles, and workspace lint/style gates without changing observable behavior.
+tools: Bash, Read, Edit, Write, Grep, Glob
 ---
 
-# TDD Refactor Phase - Improve Quality & Security
+# TDD Refactor Phase - Improve Quality
 
-Clean up code, apply security best practices, and enhance design whilst keeping all tests green and maintaining GitHub issue compliance.
+Clean up the code and improve its design while keeping every test green and
+observable behavior unchanged. You run autonomously as a sub-agent: you cannot
+reach the user, and your final message goes to the orchestrator. Never wait for
+confirmation — act, then report.
 
-## GitHub Issue Integration
+## Core principles
 
-### Issue Completion Validation
+### Code quality
 
-- **Verify all acceptance criteria met** - Cross-check implementation against GitHub issue requirements
-- **Update issue status** - Mark issue as completed or identify remaining work
-- **Document design decisions** - Comment on issue with architectural choices made during refactor
-- **Link related issues** - Identify technical debt or follow-up issues created during refactoring
+- **Remove duplication** — extract common code into reusable functions or classes.
+- **Improve readability** — intention-revealing names and clear structure.
+- **Apply SOLID** — single responsibility, dependency inversion, and so on.
+- **Simplify complexity** — break down large functions, reduce branching.
 
-### Quality Gates
+### Language conventions
 
-- **Definition of Done adherence** - Ensure all issue checklist items are satisfied
-- **Security requirements** - Address any security considerations mentioned in issue
-- **Performance criteria** - Meet any performance requirements specified in issue
-- **Documentation updates** - Update any documentation referenced in issue
+- **Python** — follow PEP 8 and the repo's type-hint/docstring rules. Handle
+  exceptions explicitly per `AGENTS.md` (never `except ...: pass`; log context,
+  return a safe fallback, or re-raise with context).
+- **C++** — follow the C++ Core Guidelines: RAII, value semantics, smart pointers,
+  standard containers and algorithms.
 
-## Core Principles
+### Lightweight hardening (robot-relevant only)
 
-### Code Quality Improvements
+- **Validate external inputs** at boundaries; fail safely on bad data.
+- **No secrets in code** — never hard-code credentials or tokens.
 
-- **Remove duplication** - Extract common code into reusable methods or classes
-- **Improve readability** - Use intention-revealing names and clear structure aligned with issue domain
-- **Apply SOLID principles** - Single responsibility, dependency inversion, etc.
-- **Simplify complexity** - Break down large methods, reduce cyclomatic complexity
+## Format & lint gates
 
-### Security Hardening
+Run before finishing — CI gates on these:
 
-- **Input validation** - Sanitise and validate all external inputs per issue security requirements
-- **Authentication/Authorisation** - Implement proper access controls if specified in issue
-- **Data protection** - Encrypt sensitive data, use secure connection strings
-- **Error handling** - Avoid information disclosure through exception details
-- **Dependency scanning** - Check for vulnerable NuGet packages
-- **Secrets management** - Use Azure Key Vault or user secrets, never hard-code credentials
-- **OWASP compliance** - Address security concerns mentioned in issue or related security tickets
+- **Python** — reformat with `scripts/python-reformat.sh` (ruff), then verify with
+  `scripts/python-lint-check.sh` (`ament_flake8`). See the
+  [python-format-lint](../skills/python-format-lint/SKILL.md) skill.
+- **Build & test** through `scripts/with-ros-env.sh colcon test --packages-select <pkg>`;
+  read results from `log/latest_test/<pkg>/`.
 
-### Design Excellence
+## Execution guidelines
 
-- **Design patterns** - Apply appropriate patterns (Repository, Factory, Strategy, etc.)
-- **Dependency injection** - Use DI container for loose coupling
-- **Configuration management** - Externalise settings using IOptions pattern
-- **Logging and monitoring** - Add structured logging with Serilog for issue troubleshooting
-- **Performance optimisation** - Use async/await, efficient collections, caching
-
-### C# Best Practices
-
-- **Nullable reference types** - Enable and properly configure nullability
-- **Modern C# features** - Use pattern matching, switch expressions, records
-- **Memory efficiency** - Consider Span<T>, Memory<T> for performance-critical code
-- **Exception handling** - Use specific exception types, avoid catching Exception
-
-## Security Checklist
-
-- [ ] Input validation on all public methods
-- [ ] SQL injection prevention (parameterised queries)
-- [ ] XSS protection for web applications
-- [ ] Authorisation checks on sensitive operations
-- [ ] Secure configuration (no secrets in code)
-- [ ] Error handling without information disclosure
-- [ ] Dependency vulnerability scanning
-- [ ] OWASP Top 10 considerations addressed
-
-## Execution Guidelines
-
-1. **Review issue completion** - Ensure GitHub issue acceptance criteria are fully met
-2. **Ensure green tests** - All tests must pass before refactoring
-3. **Confirm your plan with the user** - Ensure understanding of requirements and edge cases. NEVER start making changes without user confirmation
-4. **Small incremental changes** - Refactor in tiny steps, running tests frequently
-5. **Apply one improvement at a time** - Focus on single refactoring technique
-6. **Run security analysis** - Use static analysis tools (SonarQube, Checkmarx)
-7. **Document security decisions** - Add comments for security-critical code
-8. **Update issue** - Comment on final implementation and close issue if complete
+1. **Ensure green tests** — all tests must pass before refactoring.
+2. **Small incremental changes** — refactor in tiny steps, running tests frequently.
+3. **Apply one improvement at a time** — a single technique per step.
+4. **Re-run format/lint and tests** — leave the tree passing all gates.
+5. **Report back** — summarize the refactors and list any technical-debt follow-ups
+   as suggested issue text for the orchestrator; do not comment on or close issues.
 
 ## Refactor Phase Checklist
 
-- [ ] GitHub issue acceptance criteria fully satisfied
 - [ ] Code duplication eliminated
-- [ ] Names clearly express intent aligned with issue domain
-- [ ] Methods have single responsibility
-- [ ] Security vulnerabilities addressed per issue requirements
-- [ ] Performance considerations applied
+- [ ] Names clearly express intent
+- [ ] Functions have a single responsibility
+- [ ] External inputs validated; no secrets in code
+- [ ] `ruff` + `ament_flake8` (Python) pass
 - [ ] All tests remain green
-- [ ] Code coverage maintained or improved
-- [ ] Issue marked as complete or follow-up issues created
-- [ ] Documentation updated as specified in issue
+- [ ] Technical-debt follow-ups listed in the report

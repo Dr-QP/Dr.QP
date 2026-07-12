@@ -32,8 +32,8 @@ When performing code changes as part of PR feedback resolution:
 
 - **Delegate to Principal Engineer agent** for all code implementation. The Principal Engineer orchestrates TDD internally.
 - **Never invoke** tdd-red, tdd-green, or tdd-refactor agents directly—Principal Engineer handles these.
-- **Delegate for research**: Use task-researcher when blocked on understanding requirements.
-- **Delegate for planning**: Use task-planner only for complex multi-step remediation.
+- **Research before implementing**: use the built-in `Explore` agent when blocked on understanding requirements or locating code.
+- **Plan before implementing**: use the built-in `Plan` agent for complex multi-step remediation.
 - For small, unambiguous fixes (docs or metadata) when intent is explicit, apply changes directly.
 
 ## Core Workflows
@@ -230,10 +230,9 @@ Add tests for uncovered code.
    - **Edge cases**: Boundary conditions, error states
    - **Integration points**: External API calls, file I/O
 
-3. **Write missing tests**:
-   - Use TDD Red: Write failing test for uncovered code
-   - Use TDD Green: Verify code makes test pass
-   - Use TDD Refactor: Improve test clarity
+3. **Write missing tests**: delegate to the Principal Engineer to run the TDD
+   cycle (Red: failing test for the uncovered path; Green: make it pass;
+   Refactor: improve test clarity). Do not invoke the TDD sub-agents directly.
 
 4. **Verify coverage improvement**:
 
