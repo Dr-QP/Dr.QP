@@ -95,7 +95,10 @@ fi
 run_super_linter()
 {
   local name="$1"
-  local env_file="$2"
+
+  local env_file="$root_dir/.tmp/super-linter-${name}.env"
+  local env_file_gen_args=$([[ "$name" == "autofix" ]] && printf '%s' --autofix)
+  scripts/super-linter-env.sh ${env_file_gen_args} > "$env_file"
 
   echo "Running Super-Linter $name pass..."
   "$runtime" run --rm \
@@ -103,11 +106,11 @@ run_super_linter()
     -e DEFAULT_BRANCH="$default_branch" \
     -e VALIDATE_ALL_CODEBASE="$validate_all_codebase" \
     -e LOG_LEVEL="$log_level" \
-    --env-file "$root_dir/$env_file" \
+    --env-file "$env_file" \
     "${mounts[@]}" \
     --platform linux/amd64 \
     "$image"
 }
 
-run_super_linter "autofix" ".github/super-linter-autofix.env"
-run_super_linter "check" ".github/super-linter-checks.env"
+run_super_linter "autofix"
+run_super_linter "check"

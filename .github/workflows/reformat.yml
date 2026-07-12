@@ -267,7 +267,7 @@ jobs:
           persist-credentials: false
 
       - name: Load Super-Linter autofix configuration
-        run: grep -vE '^[[:space:]]*(#|$)' .github/super-linter-autofix.env >> "$GITHUB_ENV"
+        run: ./scripts/super-linter-env.sh --autofix >> "$GITHUB_ENV"
 
       - name: Run Super-Linter autofixes
         continue-on-error: true
@@ -306,7 +306,7 @@ jobs:
 
       - name: Load Super-Linter check configuration
         if: steps.patch.outputs.changed != 'true'
-        run: grep -vE '^[[:space:]]*(#|$)' .github/super-linter-checks.env >> "$GITHUB_ENV"
+        run: ./scripts/super-linter-env.sh >> "$GITHUB_ENV"
 
       - name: Run Super-Linter checks
         if: steps.patch.outputs.changed != 'true'
