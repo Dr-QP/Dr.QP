@@ -266,7 +266,7 @@ def parse_args(argv):
 
 def main(argv=None):
     args = parse_args(sys.argv[1:] if argv is None else argv)
-    is_step_length_safe = None
+    is_step_length_safe = None # codeql[py/unused-local-variable]
     rclpy.init()
     try:
         is_step_length_safe = make_moveit_step_length_checker(
