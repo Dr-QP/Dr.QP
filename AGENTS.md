@@ -64,7 +64,7 @@ Consult the **[Principal Engineer](/.claude/agents/principal-engineer.agent.md)*
 - **Codex**: `.codex/agents/` (trampolines to `.claude/agents/`), `.codex/skills/` (symlink to `.claude/skills/`)
 - **Cursor**: `.cursor/agents/`, `.cursor/skills/` (symlinks to `.claude/`)
 
-Update `.claude` sources; symlinks pick up changes automatically. When adding or renaming an agent, also update its `.codex/agents/` trampoline.
+Update `.claude` sources; symlinks pick up changes automatically. When adding or renaming an agent, or editing its description, also update its `.codex/agents/` trampoline to match (CI enforces this via `validate_agent_files`).
 
 \*\*Always edit the `AGENTS.md`, not just `CLAUDE.md` to cover all agents.
 
