@@ -13,10 +13,6 @@ sudo chown -R root:root \
     /opt/ros/overlay_ws/.micromamba \
     /uv
 
-# Install the repository's hooks for this checkout. Re-running this command is
-# safe and ensures both staged-file and pre-push checks are available.
-pre-commit install --install-hooks --hook-type pre-commit --hook-type pre-push
-
 # ~/.claude.json can't be backed directly by a named volume (Docker volumes are always
 # directory-backed, so mounting one at a file path materializes an empty directory
 # there instead of the file Claude Code expects). Persist it as a plain file inside the
