@@ -25,6 +25,9 @@
       "Bash(pip install *)",
       "Bash(python3 -m py_compile *)",
       "Bash(python3 -c *)",
+      "Bash(python3 -m colcon *)",
+      "Bash(python3 -m pytest *)",
+      "Bash(scripts/with-ros-env.sh *)",
       "mcp__gateway__*",
       "mcp__github__*"
     ],
