@@ -74,10 +74,10 @@ do not fail CI.
 
 ## Scripts
 
-| Script                                                        | Purpose                                                                               |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Script                                                        | Purpose                                                                                 |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | [python-reformat.sh](../../../scripts/python-reformat.sh)     | ruff format + `ruff check --fix` + isort across Python packages, scripts, and notebooks |
-| [python-lint-check.sh](../../../scripts/python-lint-check.sh) | Run `ament_flake8` (the CI gate) over given paths, or all of `./packages` by default  |
+| [python-lint-check.sh](../../../scripts/python-lint-check.sh) | Run `ament_flake8` (the CI gate) over given paths, or all of `./packages` by default    |
 
 ## Troubleshooting
 

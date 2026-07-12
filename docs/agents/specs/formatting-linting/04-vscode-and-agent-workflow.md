@@ -13,16 +13,16 @@ policy, and provide concise cross-language instructions for contributors and age
 
 Configure language-scoped ownership in `Dr.QP.code-workspace`:
 
-| Language                    | Default formatter / diagnostics                                                  |
-| --------------------------- | -------------------------------------------------------------------------------- |
-| Python                      | Ruff, using repository `ruff.toml` and workspace binary where supported          |
-| C/C++                       | clangd/clang-format, using root `.clang-format` and container toolchain          |
-| Markdown                    | project Prettier; markdownlint diagnostics only if spec 02 adds a pinned CI gate |
-| JSON/JSONC and generic YAML | project Prettier                                                                 |
+| Language                    | Default formatter / diagnostics                                                       |
+| --------------------------- | ------------------------------------------------------------------------------------- |
+| Python                      | Ruff, using repository `ruff.toml` and workspace binary where supported               |
+| C/C++                       | clangd/clang-format, using root `.clang-format` and container toolchain               |
+| Markdown                    | project Prettier; markdownlint diagnostics only if spec 02 adds a pinned CI gate      |
+| JSON/JSONC and generic YAML | project Prettier                                                                      |
 | Ansible                     | Red Hat Ansible diagnostics; Super-Linter owns `ansible-lint`; never generic Prettier |
-| Bash                        | shell language tooling plus ShellCheck diagnostics if an extension is adopted    |
-| Dockerfile                  | Docker extension plus Hadolint diagnostics if an extension is adopted            |
-| XML                         | Red Hat XML diagnostics; ament xmllint remains the package gate                  |
+| Bash                        | shell language tooling plus ShellCheck diagnostics if an extension is adopted         |
+| Dockerfile                  | Docker extension plus Hadolint diagnostics if an extension is adopted                 |
+| XML                         | Red Hat XML diagnostics; ament xmllint remains the package gate                       |
 
 Choose one of two explicit save policies:
 

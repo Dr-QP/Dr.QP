@@ -9,7 +9,7 @@ This Ansible role installs a comprehensive set of development tools required for
   hosts: all
   become: true
   roles:
-    - { role: dev_tools, tags: ["dev_tools"] }
+    - { role: dev_tools, tags: ['dev_tools'] }
 ```
 
 ## Notes

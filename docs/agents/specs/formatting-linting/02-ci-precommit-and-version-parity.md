@@ -13,13 +13,13 @@ sole owner of Ansible formatting and checks.
 
 ## Version sources
 
-| Tool                           | Version source                                                         |
-| ------------------------------ | ---------------------------------------------------------------------- |
-| Ruff for full local/CI formatting | `pyproject.toml` plus `uv.lock`                                      |
-| Ruff for pre-commit              | pinned `ruff-pre-commit` revision in `.pre-commit-config.yaml`       |
-| Prettier                       | repository `package.json` plus a committed lockfile                    |
-| clang-format/ament tools       | pinned development container/ROS image, with an asserted major version |
-| Super-Linter-hosted checks, including ansible-lint | one Super-Linter release used by both action and local wrapper |
+| Tool                                               | Version source                                                         |
+| -------------------------------------------------- | ---------------------------------------------------------------------- |
+| Ruff for full local/CI formatting                  | `pyproject.toml` plus `uv.lock`                                        |
+| Ruff for pre-commit                                | pinned `ruff-pre-commit` revision in `.pre-commit-config.yaml`         |
+| Prettier                                           | repository `package.json` plus a committed lockfile                    |
+| clang-format/ament tools                           | pinned development container/ROS image, with an asserted major version |
+| Super-Linter-hosted checks, including ansible-lint | one Super-Linter release used by both action and local wrapper         |
 
 Pre-commit must not invoke `python-reformat.sh`. It uses the native `ruff-pre-commit` format,
 lint-fix, and import-sort hooks on staged Python files. The repository's uv environment remains
