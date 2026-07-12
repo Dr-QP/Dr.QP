@@ -1,6 +1,6 @@
 ---
 name: microvm-sandbox
-description: 'Run build, test, and lint commands through the devcontainer in cloud microVM sandboxes where ROS 2 is not natively installed. Use in Cursor cloud sessions or similar sandbox VMs, when running devcontainer up/exec, or when colcon builds need the containerized ROS environment. Keywords: devcontainer, microVM, sandbox, cloud VM, devcontainer exec, ros-dep.sh, cursor cloud.'
+description: 'Run build, test, and lint commands through the devcontainer in cloud microVM sandboxes where ROS 2 is not natively installed. Use in Cursor cloud sessions or similar sandbox VMs, when running devcontainer up/exec, when colcon builds need the containerized ROS environment, or when a local colcon/ros2 command fails because ROS 2 is not installed on the host — do not give up after such a failure, escalate here. Keywords: devcontainer, microVM, sandbox, cloud VM, devcontainer exec, ros-dep.sh, cursor cloud, colcon command not found, ros2 command not found, ROS_DISTRO not set, setup.bash No such file or directory, ROS 2 not installed, with-ros-env.sh fails.'
 ---
 
 # microVM Sandbox Workflows
