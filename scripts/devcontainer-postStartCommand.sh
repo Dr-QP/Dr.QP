@@ -10,3 +10,4 @@ ENABLE_FIREWALL=${ENABLE_FIREWALL:-"false"}
 "$script_dir/../docker/ros/desktop/start-xpra.sh" --background
 "$script_dir/workspace-extensions.sh"
 "$script_dir/devcontainer-start-virtualhere.sh"
+"$script_dir/devcontainer-configure-codex.sh"
