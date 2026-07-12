@@ -4,7 +4,7 @@ set -euo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 root_dir=$(cd "$script_dir/.." && pwd)
-logs_dir="$root_dir/logs"
+logs_dir="$root_dir/log"
 
 image="${SUPER_LINTER_IMAGE:-ghcr.io/super-linter/super-linter:v8.5.0}"
 validate_all_codebase="${VALIDATE_ALL_CODEBASE:-false}"
