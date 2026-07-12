@@ -105,7 +105,7 @@ the chain and surface that evidence. Do not silently skip the PR.
 ### 2. Preserve the Merged PR History Locally
 
 After GitHub confirms PR-X is merged, refresh the local copy of its final PR
-head *before relying on normal remote branch refs*. `refs/pull/<number>/head`
+head _before relying on normal remote branch refs_. `refs/pull/<number>/head`
 remains available even if GitHub deleted `origin/<head-branch>`:
 
 ```bash
@@ -159,14 +159,14 @@ private worktree in place and report its path.
 
 ## Failure Handling
 
-| Situation | Action |
-| --- | --- |
-| Top input is not an open PR | Stop and report its current state. |
-| Chain is not linear | Report the dependency graph; require user-selected order. |
-| A member is draft, closed, or missing | Stop before any merge. |
-| A reconciliation merge conflicts | Abort only that in-progress merge and report the conflict. |
-| Successor push is non-fast-forward | Do not force-push; re-discover the chain after user direction. |
-| A delegated `pr-merge` is blocked | Stop the chain at that PR and return its evidence. |
+| Situation                             | Action                                                         |
+| ------------------------------------- | -------------------------------------------------------------- |
+| Top input is not an open PR           | Stop and report its current state.                             |
+| Chain is not linear                   | Report the dependency graph; require user-selected order.      |
+| A member is draft, closed, or missing | Stop before any merge.                                         |
+| A reconciliation merge conflicts      | Abort only that in-progress merge and report the conflict.     |
+| Successor push is non-fast-forward    | Do not force-push; re-discover the chain after user direction. |
+| A delegated `pr-merge` is blocked     | Stop the chain at that PR and return its evidence.             |
 
 ## Related Skills
 

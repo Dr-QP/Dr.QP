@@ -52,6 +52,7 @@ asks to change that state.
   local branches. After a confirmed merge, remove only the clean worktree and
   private branch that this skill created; otherwise leave them in place and
   report their path and state.
+
 - Record the initial head SHA, CI check names and URLs, AI-review state, and
   unresolved review threads. Keep this state in the conversation; do not post
   progress comments to the PR.

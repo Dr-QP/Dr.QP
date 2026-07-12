@@ -34,6 +34,19 @@ modify files; inspect the resulting diff and keep only intended changes.
 - Install and start Docker or Podman before running Super-Linter. The local
   wrapper pulls `ghcr.io/super-linter/super-linter:v8.5.0` unless overridden.
 
+## Codex Managed-Sandbox Execution
+
+For this workspace, the Super-Linter container is an approved, required local
+validation action. Codex must run `scripts/super-linter-local.sh` with
+`sandbox_permissions: "require_escalated"` so Docker daemon access and the
+repository mount are available. Do not omit this step or substitute a partial
+lint command when opening a pull request.
+
+Run `scripts/with-ros-env.sh scripts/cpp-reformat.sh` with the same elevated
+sandbox permission, because ROS setup and formatter writes are blocked by the
+managed sandbox. Run `scripts/python-reformat.sh` with elevated permission if
+its Ansible component cannot create its standard cache in the sandbox.
+
 ## Full Workflow
 
 1. Format C++ with the same `ament_clang_format` configuration used by CI:
@@ -95,13 +108,13 @@ pinned CI image unless the workflow itself is intentionally being updated.
 
 ## Related Entry Points
 
-| Entry point | CI-equivalent responsibility |
-| --- | --- |
-| [cpp-reformat.sh](../../../scripts/cpp-reformat.sh) | Run `ament_clang_format --reformat` with [.clang-format](../../../.clang-format). |
-| [python-reformat.sh](../../../scripts/python-reformat.sh) | Run Ruff format/autofix/import sorting, synchronize notebooks, and fix Ansible. |
-| [super-linter-local.sh](../../../scripts/super-linter-local.sh) | Run Super-Linter's autofix and check configurations in a local container. |
-| [super-linter-autofix.env](../../../.github/super-linter-autofix.env) | Enable Prettier and Zizmor fixes. |
-| [super-linter-checks.env](../../../.github/super-linter-checks.env) | Enable the non-fixing Super-Linter validation set. |
+| Entry point                                                           | CI-equivalent responsibility                                                      |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [cpp-reformat.sh](../../../scripts/cpp-reformat.sh)                   | Run `ament_clang_format --reformat` with [.clang-format](../../../.clang-format). |
+| [python-reformat.sh](../../../scripts/python-reformat.sh)             | Run Ruff format/autofix/import sorting, synchronize notebooks, and fix Ansible.   |
+| [super-linter-local.sh](../../../scripts/super-linter-local.sh)       | Run Super-Linter's autofix and check configurations in a local container.         |
+| [super-linter-autofix.env](../../../.github/super-linter-autofix.env) | Enable Prettier and Zizmor fixes.                                                 |
+| [super-linter-checks.env](../../../.github/super-linter-checks.env)   | Enable the non-fixing Super-Linter validation set.                                |
 
 For Python package linting beyond the reformat workflow, use the
 [python-format-lint](../python-format-lint/SKILL.md) skill to verify
