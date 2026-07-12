@@ -56,7 +56,8 @@ The script handles:
 
 ### Workflow 2: Handle Script Result
 
-- **Exit 0** (merged): run targeted validation (tests/lint), then push.
+- **Exit 0** (merged): run the mandatory reformat workflow, run targeted
+  validation, then push.
 - **Exit 3** (up to date): nothing to do.
 - **Exit 1** (conflicts): resolve per [Workflow 3](#workflow-3-autonomous-conflict-resolution) below, then commit and push.
 - **Exit 2 / 5**: fix the reported error before retrying.
@@ -104,17 +105,23 @@ Please choose A, B, or provide a custom resolution.
    git commit
    ```
 
-2. Run targeted verification before push:
+2. Invoke and complete the [local-reformat](../local-reformat/SKILL.md)
+   workflow before any targeted verification or push. Run every formatter and
+   validation required by that skill; do not substitute a partial formatter
+   command. If reformat fails, stop and fix or report the failure before
+   continuing.
+
+3. Run targeted verification before push:
    - Build/test packages or modules impacted by conflict files
    - Run lint or static checks where available
 
-3. Confirm merge result:
+4. Confirm merge result:
 
    ```bash
    git log --oneline --decorate -n 5
    ```
 
-4. Push updated branch:
+5. Push updated branch:
    ```bash
    git push origin HEAD
    ```
@@ -138,6 +145,7 @@ Please choose A, B, or provide a custom resolution.
   ```bash
   git grep -n "<<<<<<<\|=======\|>>>>>>>" || true
   ```
+- The mandatory local reformat workflow completed successfully after the merge
 - Relevant validation checks pass
 - Branch is pushed to `origin`
 
