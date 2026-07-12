@@ -29,6 +29,7 @@ from drqp_brain.parametric_gait_generator import GaitType
 from drqp_brain.walk_controller import SteeringState, WalkController
 from drqp_kinematics.geometry import Point3D
 from drqp_kinematics.models import HexapodModel
+from drqp_kinematics.urdf_limits import parse_joint_limits
 import numpy as np
 import rclpy
 from sensor_msgs.msg import JointState
@@ -40,16 +41,6 @@ DEFAULT_MAX_STEP_LENGTH_M = 0.25
 DEFAULT_PHASE_SAMPLES = 32
 DEFAULT_SEARCH_ITERATIONS = 12
 DEFAULT_JOINT_MARGIN_DEGREES = 0.25
-
-# These must match the <limit lower="..." upper="..."/> tags in
-# packages/runtime/drqp_control/urdf/leg.urdf.xacro (radians there, degrees here).
-# NOT drqp_moveit/config/joint_limits.yaml -- that file only overrides
-# velocity/acceleration limits and carries no position-limit data.
-JOINT_LIMITS_DEGREES = {
-    'coxa': (-90.0, 90.0),
-    'femur': (-98.0, 90.0),
-    'tibia': (-80.0, 110.0),
-}
 
 
 class ParameterValue:
@@ -155,10 +146,14 @@ def make_moveit_step_length_checker(
     joint_margin_degrees: float,
 ):
     hexapod = create_hexapod()
+    parameter_node = _make_moveit_parameter_node()
     helper = MoveItPyLocomotionKinematics(
-        node=_make_moveit_parameter_node(),
+        node=parameter_node,
         hexapod=hexapod,
         is_shutting_down=lambda: False,
+    )
+    joint_limits = parse_joint_limits(
+        parameter_node._parameter_overrides['robot_description'].value
     )
     latest_joint_state = JointState(
         name=[
@@ -183,21 +178,29 @@ def make_moveit_step_length_checker(
             result = helper.solve(targets, latest_joint_state)
             if not result.succeeded:
                 return False
-            if not _joint_targets_have_margin(result.joint_targets, joint_margin_degrees):
+            if not _joint_targets_have_margin(
+                result.joint_targets,
+                joint_limits,
+                joint_margin_degrees,
+            ):
                 return False
         return True
 
     return is_safe
 
 
-def _joint_targets_have_margin(joint_targets: dict[str, float], margin_degrees: float) -> bool:
+def _joint_targets_have_margin(
+    joint_targets: dict[str, float],
+    joint_limits: dict[str, tuple[float, float]],
+    margin_degrees: float,
+) -> bool:
     for joint_name, position in joint_targets.items():
-        joint_kind = joint_name.rsplit('_', 1)[1]
-        lower, upper = JOINT_LIMITS_DEGREES[joint_kind]
+        lower, upper = joint_limits[joint_name]
+        lower_degrees, upper_degrees = np.degrees((lower, upper))
         position_degrees = float(np.degrees(position))
-        if position_degrees < lower + margin_degrees:
+        if position_degrees < lower_degrees + margin_degrees:
             return False
-        if position_degrees > upper - margin_degrees:
+        if position_degrees > upper_degrees - margin_degrees:
             return False
     return True
 

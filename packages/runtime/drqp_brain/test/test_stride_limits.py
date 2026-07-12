@@ -21,6 +21,8 @@
 import logging
 
 from drqp_brain.generate_stride_limits import (
+    _joint_targets_have_margin,
+    _make_moveit_parameter_node,
     find_max_step_length,
     generate_stride_limits,
     parse_args,
@@ -28,6 +30,8 @@ from drqp_brain.generate_stride_limits import (
 from drqp_brain.parametric_gait_generator import GaitType
 from drqp_brain.stride_limits import DirectionalStrideLimits, DirectionalStrideSample
 from drqp_kinematics.geometry import Point3D
+from drqp_kinematics.urdf_limits import parse_joint_limits
+import numpy as np
 import pytest
 
 
@@ -178,3 +182,40 @@ def test_generate_stride_limits_emits_all_requested_directions_for_each_gait():
         assert all(
             sample['max_step_length_m'] == pytest.approx(0.125, abs=0.001) for sample in samples
         )
+
+
+def test_stride_generator_parses_all_real_controller_joint_limits():
+    """The generated xacro URDF is the sole source for all 18 joint limits."""
+    node = _make_moveit_parameter_node()
+    joint_limits = parse_joint_limits(node._parameter_overrides['robot_description'].value)
+
+    assert len(joint_limits) == 18
+    for joint_name, (lower_degrees, upper_degrees) in {
+        'coxa': (-90.0, 90.0),
+        'femur': (-98.0, 90.0),
+        'tibia': (-80.0, 110.0),
+    }.items():
+        matching_limits = [
+            limits for name, limits in joint_limits.items() if name.endswith(f'_{joint_name}')
+        ]
+        assert len(matching_limits) == 6
+        assert matching_limits == pytest.approx(
+            [tuple(np.radians((lower_degrees, upper_degrees)))] * 6
+        )
+
+
+def test_stride_generator_checks_margin_against_parsed_controller_limits():
+    """Parsed radian limits preserve the prior margin behavior exactly."""
+    joint_limits = {'drqp/left_front_coxa': (-1.0, 1.0)}
+    margin_degrees = 0.25
+
+    assert _joint_targets_have_margin(
+        {'drqp/left_front_coxa': 0.0},
+        joint_limits,
+        margin_degrees,
+    )
+    assert not _joint_targets_have_margin(
+        {'drqp/left_front_coxa': -1.0 + np.radians(0.1)},
+        joint_limits,
+        margin_degrees,
+    )
