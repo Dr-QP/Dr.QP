@@ -161,7 +161,6 @@ jobs:
           # it ends up posting it as a comment.
           # track_progress: true
 
-
       - name: Attach responder output file
         if: steps.claude_responder.outputs.execution_file != ''
         uses: actions/upload-artifact@v4
