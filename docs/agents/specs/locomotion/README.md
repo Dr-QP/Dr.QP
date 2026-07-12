@@ -20,13 +20,12 @@ Finding IDs (`F1`…`F28`) referenced throughout are defined in the
 
 ## Implementation order
 
-Specs are numbered in implementation order. Specs 01, 02, 03, 04, and 07 have landed and their
+Specs are numbered in implementation order. Specs 01, 02, 03, 04, 05, and 07 have landed and their
 implementation files have been removed. Remaining specs assume those foundations unless the
 dependency table says otherwise.
 
 | Spec                                | Title                   | Fixes                  | Depends on |
 | ----------------------------------- | ----------------------- | ---------------------- | ---------- |
-| [05](05-cycloid-swing-profile.md)   | Cycloid swing profile   | F6, F13                | 02 (soft)  |
 | [06](06-twist-based-steering.md)    | Twist-based steering    | F7, F16, F22 (partial) | 02, 03, 04 |
 | [08](08-raise-control-loop-rate.md) | Raise control loop rate | F25                    | 02, 04     |
 
@@ -37,7 +36,7 @@ Dependency sketch:
 
 02 ─┬─► 04 ─┬─► 06
 03 ─┘       ├─► 07 (landed)
-05 (after 02, parallel with 03/04)
+05 ──────────────────────────────► landed
             └─► 08 (also needs 02)
 ```
 

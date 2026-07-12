@@ -411,7 +411,8 @@ Each item is independently shippable.
 3. **Promote analytic IK** (complete): limit-aware `LegModel` solves the hot loop with per-leg
    clamping; MoveIt remains the selectable fallback, collision validator, calibration tool, and
    agreement oracle. {bdg-success}`F3` {bdg-success}`F4` {bdg-warning}`F5`
-4. **Cycloid/Bézier swing profile** in `get_offsets_at_phase_for_leg`. {bdg-warning}`F6`
+4. **Cycloid swing profile** in `get_offsets_at_phase_for_leg` (complete).
+   {bdg-success}`F6`
 5. **Twist-based steering** in `WalkController`: per-leg stride from $(v, \omega)$, Euclidean
    norms, twist-level stride-limit scaling. {bdg-warning}`F7` {bdg-warning}`F16`
 6. **Keep servo zero offsets single-source** in `drqp_kinematics`; trajectory construction
@@ -458,14 +459,14 @@ Each item is independently shippable.
 | F3  | {bdg-success}`fixed`   | Analytic IK is the default; numeric MoveIt IK remains a selectable fallback and oracle                                                     | `locomotion_kinematics.py`, `brain_node.py`                  |
 | F4  | {bdg-success}`fixed`   | Per-leg workspace/limit clamping publishes degraded motion and reports persistent saturation                                               | `locomotion_kinematics.py`, `brain_node.py`                  |
 | F5  | {bdg-warning}`partial` | Analytic bounds enforcement replaced runtime MoveIt bounds checks; self-collision validation remains until combined-envelope certification | `locomotion_kinematics.py`                                   |
-| F6  | {bdg-warning}`medium`  | Swing profile lands at max descent rate; horizontal velocity discontinuous at both ends                                                    | `parametric_gait_generator.py:119–129`                       |
+| F6  | {bdg-success}`fixed`   | Cycloid swing profile enforces zero x/z velocity at liftoff and touchdown                                                                  | `parametric_gait_generator.py`                               |
 | F7  | {bdg-warning}`high`    | Stride/rotation combined by normalized position averaging — unit mismatch, mutual attenuation, uncertified combined envelope               | `walk_controller.py:175–181`                                 |
 | F8  | {bdg-secondary}`low`   | Analytic IK solvability flag ignored by callers                                                                                            | `walk_controller.py:224–226`, `models.py:255`                |
 | F9  | {bdg-success}`fixed`   | Analytic IK parses URDF limits and clamps each leg in model convention                                                                     | `models.py`, `urdf_limits.py`                                |
 | F10 | {bdg-secondary}`low`   | Degrees/radians/servo-offset conversions at every layer boundary                                                                           | `models.py`, `joint_trajectory_builder.py`, `brain_node.py`  |
 | F11 | {bdg-secondary}`low`   | FK allocates transform chains + label strings per call in the control path                                                                 | `models.py:219–252`                                          |
 | F12 | {bdg-warning}`medium`  | Tripod duty exactly 0.5 — zero double-support margin                                                                                       | `parametric_gait_generator.py:97–107`                        |
-| F13 | {bdg-secondary}`low`   | `leg_phase %= 1.000001` epsilon hack                                                                                                       | `parametric_gait_generator.py:115`                           |
+| F13 | {bdg-success}`fixed`   | Half-open `% 1.0` phase wrapping preserves negative-phase behavior without a cycle-length epsilon                                         | `parametric_gait_generator.py`                               |
 | F14 | {bdg-secondary}`low`   | Gait switching discontinuous (no phase remap/transition)                                                                                   | `walk_controller.py:53–55`                                   |
 | F15 | {bdg-warning}`medium`  | Per-tick 0.3 exponential smoothing — time constant welded to fps                                                                           | `walk_controller.py:117–121`                                 |
 | F16 | {bdg-warning}`medium`  | L1 norms for stride magnitude → diagonal anisotropy                                                                                        | `walk_controller.py:108–129`, `stride_limits.py:123`         |

@@ -266,6 +266,7 @@ def parse_args(argv):
 
 def main(argv=None):
     args = parse_args(sys.argv[1:] if argv is None else argv)
+    is_safe = None
     rclpy.init()
     try:
         is_safe = make_moveit_step_length_checker(
@@ -284,6 +285,9 @@ def main(argv=None):
         with open(output_path, 'w') as file:
             yaml.safe_dump(config, file, sort_keys=False)
     finally:
+        # The checker closes over MoveItPy. Release it while rclpy is still
+        # initialized so the MoveIt C++ bindings tear down safely.
+        is_safe = None
         rclpy.try_shutdown()
 
 
