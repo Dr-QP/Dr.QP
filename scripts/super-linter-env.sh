@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+script_dir=$(dirname "$0")
+source "$script_dir/__utils.sh"
+
 autofix="${SUPER_LINTER_AUTOFIX:-false}"
 enable_all_checks=false
 
@@ -39,6 +42,8 @@ while (($#)); do
       ;;
   esac
 done
+
+echo LINTER_RULES_PATH="$root_dir"
 
 echo FILTER_REGEX_EXCLUDE='(^|/)(build|install|log|\.venv|packages/vendor|packages/runtime/drqp_rapidjson/include|\.git)/'
 
