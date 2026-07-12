@@ -69,8 +69,8 @@ scripts/quality/format-ansible.sh
 scripts/quality/format-prettier.sh
 ```
 
-Keep `python-reformat.sh`, `cpp-reformat.sh`, and `super-linter-local.sh` as deprecated forwarding
-wrappers for at least one migration cycle. Remove `ansible-lint --fix` from the Python helper.
+Keep `python-reformat.sh` and `super-linter-local.sh` as deprecated forwarding wrappers for at
+least one migration cycle. Remove `ansible-lint --fix` from the Python helper.
 
 Update Ruff configuration so import sorting is part of the normal lint/fix selection. Ruff should
 need one formatting pass and one lint/fix pass, not a separate isort invocation.

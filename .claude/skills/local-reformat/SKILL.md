@@ -1,14 +1,15 @@
 ---
 name: local-reformat
-description: 'Run every formatter and Super-Linter validation from the reformat GitHub Actions workflow locally. Use when applying repository-wide format fixes, reproducing reformat.yml, running C++ and Python formatters, or running Super-Linter autofix and checks. Keywords: reformat, formatter, cpp-reformat, python-reformat, Super-Linter, prettier, ament_clang_format.'
+description: 'Run every formatter and Super-Linter validation from the reformat GitHub Actions workflow locally. Use when applying repository-wide format fixes, reproducing reformat.yml, running Python formatting, or running Super-Linter clang-format, Prettier, and validation passes. Keywords: reformat, formatter, python-reformat, Super-Linter, clang-format, prettier.'
 ---
 
 # Run the Reformat Workflow Locally
 
 Run the local entry points that mirror the formatter jobs in
-[reformat.yml](../../../.github/workflows/reformat.yml): C++ formatting,
-Python formatting, then Super-Linter's autofix and check passes. These commands
-modify files; inspect the resulting diff and keep only intended changes.
+[reformat.yml](../../../.github/workflows/reformat.yml): Python formatting,
+then Super-Linter's clang-format, Prettier, and validation passes. These
+commands modify files; inspect the resulting diff and keep only intended
+changes.
 
 ## When to Use This Skill
 
@@ -28,11 +29,12 @@ modify files; inspect the resulting diff and keep only intended changes.
   uv sync --frozen --all-groups --all-extras
   ```
 
-- Run the C++ formatter through `scripts/with-ros-env.sh`. If ROS 2 is missing
-  on the host, follow the workspace escalation procedure instead of retrying
-  locally.
 - Install and start Docker or Podman before running Super-Linter. The local
   wrapper pulls `ghcr.io/super-linter/super-linter:v8.5.0` unless overridden.
+- The shared clang-format configuration is
+  [.github/linters/.clang-format](../../../.github/linters/.clang-format).
+  Root [.clang-format](../../../.clang-format) is a symlink for ament and
+  editor discovery.
 
 ## Codex Managed-Sandbox Execution
 
@@ -42,20 +44,14 @@ validation action. Codex must run `scripts/super-linter-local.sh` with
 repository mount are available. Do not omit this step or substitute a partial
 lint command when opening a pull request.
 
-Run `scripts/with-ros-env.sh scripts/cpp-reformat.sh` with the same elevated
-sandbox permission, because ROS setup and formatter writes are blocked by the
-managed sandbox. Run `scripts/python-reformat.sh` with elevated permission if
-its Ansible component cannot create its standard cache in the sandbox.
+The Super-Linter local wrapper includes clang-format and must run with the same
+elevated sandbox permission. Run `scripts/python-reformat.sh` with elevated
+permission if its Ansible component cannot create its standard cache in the
+sandbox.
 
 ## Full Workflow
 
-1. Format C++ with the same `ament_clang_format` configuration used by CI:
-
-   ```bash
-   scripts/with-ros-env.sh scripts/cpp-reformat.sh
-   ```
-
-2. Format and autofix Python, notebooks, scripts, and Ansible. This runs Ruff
+1. Format and autofix Python, notebooks, scripts, and Ansible. This runs Ruff
    format, Ruff fixes, Ruff import sorting, notebook synchronization, and
    `ansible-lint --fix`:
 
@@ -63,8 +59,8 @@ its Ansible component cannot create its standard cache in the sandbox.
    scripts/python-reformat.sh
    ```
 
-3. Run Super-Linter's autofix pass and its check pass using the exact pinned
-   image and configuration files used by CI:
+2. Run Super-Linter's clang-format and other autofix passes, then its check
+   pass, using the exact pinned image and configuration files used by CI:
 
    ```bash
    scripts/super-linter-local.sh
@@ -74,7 +70,7 @@ its Ansible component cannot create its standard cache in the sandbox.
    check pass when autofixes produce a patch so it can commit that patch; local
    execution instead checks the newly fixed working tree immediately.
 
-4. Inspect and validate the results:
+3. Inspect and validate the results:
 
    ```bash
    git diff --check
@@ -108,13 +104,12 @@ pinned CI image unless the workflow itself is intentionally being updated.
 
 ## Related Entry Points
 
-| Entry point                                                           | CI-equivalent responsibility                                                      |
-| --------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| [cpp-reformat.sh](../../../scripts/cpp-reformat.sh)                   | Run `ament_clang_format --reformat` with [.clang-format](../../../.clang-format). |
-| [python-reformat.sh](../../../scripts/python-reformat.sh)             | Run Ruff format/autofix/import sorting, synchronize notebooks, and fix Ansible.   |
-| [super-linter-local.sh](../../../scripts/super-linter-local.sh)       | Run Super-Linter's autofix and check configurations in a local container.         |
-| [super-linter-autofix.env](../../../.github/super-linter-autofix.env) | Enable Prettier and Zizmor fixes.                                                 |
-| [super-linter-checks.env](../../../.github/super-linter-checks.env)   | Enable the non-fixing Super-Linter validation set.                                |
+| Entry point                                                           | CI-equivalent responsibility                                                              |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [python-reformat.sh](../../../scripts/python-reformat.sh)             | Run Ruff format/autofix/import sorting, synchronize notebooks, and fix Ansible.           |
+| [super-linter-local.sh](../../../scripts/super-linter-local.sh)       | Run Super-Linter's clang-format, Prettier, and other autofix/check passes in a container. |
+| [super-linter-autofix.env](../../../.github/super-linter-autofix.env) | Enable clang-format, Prettier, and Zizmor fixes.                                           |
+| [super-linter-checks.env](../../../.github/super-linter-checks.env)   | Enable the matching non-fixing Super-Linter validation set.                                |
 
 For Python package linting beyond the reformat workflow, use the
 [python-format-lint](../python-format-lint/SKILL.md) skill to verify

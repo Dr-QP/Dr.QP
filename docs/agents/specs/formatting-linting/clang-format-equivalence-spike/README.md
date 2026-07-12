@@ -12,12 +12,12 @@ The original directory-level operations did not produce identical output. After 
 RapidJSON exclusion to both checked-in Super-Linter environments, the repeated comparison
 produced byte-identical `packages/` trees.
 
-| Run | Formatter | clang-format version | Files changed | Result |
-| --- | --- | --- | ---: | --- |
-| Before scope alignment | ament | 20.1.8 | 0 | Passed |
-| Before scope alignment | Super-Linter `v8.5.0` | 21.1.2 | 38 | Reformatted RapidJSON headers |
-| After scope alignment | ament | 20.1.8 | 0 | Passed |
-| After scope alignment | Super-Linter `v8.5.0` | 21.1.2 | 0 | Passed |
+| Run                    | Formatter             | clang-format version | Files changed | Result                        |
+| ---------------------- | --------------------- | -------------------- | ------------: | ----------------------------- |
+| Before scope alignment | ament                 | 20.1.8               |             0 | Passed                        |
+| Before scope alignment | Super-Linter `v8.5.0` | 21.1.2               |            38 | Reformatted RapidJSON headers |
+| After scope alignment  | ament                 | 20.1.8               |             0 | Passed                        |
+| After scope alignment  | Super-Linter `v8.5.0` | 21.1.2               |             0 | Passed                        |
 
 The initial Super-Linter patch contained 17,535 insertions and 12,975 deletions in 38 RapidJSON
 headers. `packages/runtime/drqp_rapidjson/include/AMENT_IGNORE` makes ament skip that tree. The
