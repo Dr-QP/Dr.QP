@@ -1,6 +1,6 @@
 ---
 name: implement-agent-specs
-description: 'Implement numbered, implementation-ready specs from docs/agents/specs one at a time, respecting their dependencies and producing one stacked pull request per spec. Use when asked to implement, continue, or ship a specs program such as locomotion, roadmap, or formatting-linting. Keywords: agent specs, implementation specs, docs/agents/specs, spec program, stacked PR, one spec per PR.'
+description: 'Implement numbered, implementation-ready specs from docs/agents/specs one at a time, respecting their dependencies and producing one stacked pull request per spec. Use when asked to implement a single spec path, continue a spec, or ship a specs program such as locomotion, roadmap, or formatting-linting. Keywords: agent specs, implementation specs, docs/agents/specs, spec path, spec program, stacked PR, one spec per PR.'
 ---
 
 # Implement Agent Specs
@@ -11,19 +11,19 @@ one branch, commit, and pull request.
 
 ## When to Use This Skill
 
-Use this skill when the user provides a spec program name (for example,
-`locomotion`, `roadmap`, or `formatting-linting`) and asks to implement the next
-spec, a numbered range, or the program in order.
-
-Do not use it for an unnumbered design document, a one-off implementation request,
-or a request to edit the specs without implementing them.
+Use this skill when the user provides a numbered spec path or a spec program name
+(for example, `locomotion`, `roadmap`, or `formatting-linting`) and asks to
+implement it, continue the program, implement a numbered range, or ship the
+program in order.
 
 ## Inputs and Selection
 
-Treat the program name as the directory name below `docs/agents/specs/`. Read the
-root specs README, the selected program README, and the candidate spec before
-changing code.
+Accept either a program directory name below `docs/agents/specs/` or a path to one
+numbered spec file. Read the root specs README, the owning program README, and the
+candidate spec before changing code.
 
+- With a single spec path, implement that exact spec after checking its documented
+  dependencies and the program's ordering constraints.
 - With no spec number, select the lowest-numbered spec file still present in the
   program directory.
 - With a requested number or range, process only that selection, in numeric order.
