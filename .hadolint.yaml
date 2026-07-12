@@ -1,1 +1,9 @@
-.github/linters/.hadolint.yaml
+---
+##########################
+## Hadolint config file ##
+##########################
+
+failure-threshold: warning
+
+ignored:
+  - DL3008

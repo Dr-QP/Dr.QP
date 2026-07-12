@@ -1,1 +1,5 @@
-.github/linters/zizmor.yaml
+rules:
+  unpinned-uses:
+    disable: true
+  known-vulnerable-actions:
+    disable: true
