@@ -40,11 +40,12 @@ repos:
 
   - repo: local
     hooks:
-      - id: python-reformat
-        name: python-reformat
-        entry: ./scripts/python-reformat.sh
+      - id: notebooks-format
+        name: notebooks-format
+        entry: ./scripts/notebooks-format.sh
         language: script
         pass_filenames: false
+        files: '(docs/source/notebooks/.*\.md)$'
 
       - id: validate-agent-files
         name: validate-agent-files

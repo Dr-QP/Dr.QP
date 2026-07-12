@@ -42,7 +42,7 @@ scripts/lint.sh --all
 ## Notebook handling
 
 Preserve the special behavior currently implemented by `python-reformat.sh` and
-`sync-notebooks.sh`:
+`notebooks-sync.sh`:
 
 - ordinary `.py` files under `docs/source/notebooks` use the normal Ruff path;
 - tracked notebook `.md` sources use Jupytext's `--pipe` flow so Ruff formats and fixes Python code
