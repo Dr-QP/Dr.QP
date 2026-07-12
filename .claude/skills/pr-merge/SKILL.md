@@ -1,20 +1,22 @@
 ---
-name: pr-merge-readiness
-description: 'Monitor an open GitHub pull request until it is merge-ready: wait for CI and AI review, remediate actionable failures and review feedback, and verify merge blockers are clear. Use when a PR has just opened or needs to be made fully mergeable. Keywords: monitor PR, merge-ready, mergeable, wait for CI, CI failures, AI review, Claude Responder.'
+name: pr-merge
+description: 'Merge an open GitHub pull request: enable automatic squash merge as early as possible, monitor CI and AI review, remediate actionable failures and feedback, then squash merge explicitly if auto-merge is unavailable. Use when a PR needs to be merged or shepherded through CI and review to merge. Keywords: merge PR, auto-merge, squash merge, monitor PR, merge-ready, wait for CI, CI failures, AI review, Claude Responder.'
 license: MIT
 ---
 
-# PR Merge Readiness
+# PR Merge
 
-Drive one open pull request through the complete CI-and-review cycle until it
-has no actionable merge blockers. This is a persistent workflow: wait for the
-relevant GitHub state to change, then act on the new state. Do not stop merely
-because a check is pending or an automated reviewer has not responded yet.
+Drive one open pull request through the complete CI-and-review cycle and merge
+it using squash merge. Enable automatic squash merge as soon as it is
+available; otherwise, wait until all requirements pass and merge explicitly.
+This is a persistent workflow: wait for the relevant GitHub state to change,
+then act on the new state. Do not stop merely because a check is pending or an
+automated reviewer has not responded yet.
 
 ## When to Use This Skill
 
-- A pull request has just been opened and must be monitored to merge readiness.
-- Someone asks to make, keep, babysit, or shepherd a PR fully mergeable.
+- A pull request has just been opened and must be merged after CI and review.
+- Someone asks to merge, babysit, or shepherd a PR through CI and review.
 - CI is still running, an automated AI review is pending, or review feedback
   must be addressed before merging.
 
@@ -39,16 +41,35 @@ asks to change that state.
   unresolved review threads. Keep this state in the conversation; do not post
   progress comments to the PR.
 - Work only on the PR head branch. Preserve unrelated local changes, never
-  force-push, and never merge the PR or update its base branch unless the user
-  explicitly requests it.
+  force-push, and never update its base branch unless the user explicitly
+  requests it. This skill's merge workflow authorizes enabling auto-merge and,
+  when needed, performing the final squash merge.
 - A remediation requested by this skill is authorized by the user request to
   make the PR mergeable. Still stop for a genuinely ambiguous review request
   and ask for clarification in that review thread.
 
+## Start Auto-Squash Merge Early
+
+Immediately after resolving the PR and confirming it is open and not a draft,
+try to enable GitHub's automatic squash merge. Do this before waiting for CI or
+review so GitHub merges as soon as every required condition is satisfied:
+
+```bash
+gh pr merge <pr> --auto --squash
+```
+
+Record whether GitHub enabled auto-merge. If it did, keep monitoring the PR:
+new commits can reset checks or trigger new review work, and the PR is not
+complete until GitHub reports it as merged. If the command reports that
+auto-merge is unavailable or disabled for the repository, record that fact and
+continue the monitoring loop; perform the explicit final squash merge described
+below after all requirements pass. Treat any other error as a concrete blocker
+to investigate or report.
+
 ## Completion Criteria
 
-Treat the PR as merge-ready only when all of these are true for its current
-head branch:
+Treat the PR as complete only when all of these are true for its current head
+branch:
 
 - It is open and not a draft.
 - Every reported CI check has completed successfully. Report external checks
@@ -58,8 +79,10 @@ head branch:
   review exists for the PR's current review cycle.
 - The review agent has finished; all of its actionable, unresolved feedback is
   fixed, replied to, and resolved using the feedback-resolution workflow.
-- `gh pr view` reports no remaining merge blocker (for example, a conflict,
-  missing required approval, or blocked merge state).
+- `gh pr view` reports no remaining merge blocker (for example, a conflict or
+  missing required approval) before the merge is attempted.
+- GitHub reports the PR as merged. When auto-merge is unavailable, this means
+  the explicit squash merge below has completed successfully.
 
 ## Monitoring Loop
 
@@ -114,7 +137,24 @@ to check later.
    piecemeal. Its resolved-thread filtering and confidence rules are mandatory.
 
 6. If feedback leads to a push, restart at step 1. If no actionable feedback
-   remains, refresh checks and merge state once more before completing.
+   remains, refresh checks and merge state once more. If auto-squash merge was
+   enabled, wait for GitHub to merge the PR and confirm its merged state. If
+   auto-merge is unavailable, perform the explicit final squash merge.
+
+## Explicit Final Squash Merge
+
+Use this section only when the early `--auto --squash` request was unavailable
+because the repository does not support or allow auto-merge. After every
+pre-merge completion criterion has been evidenced for the current head SHA,
+merge the PR explicitly:
+
+```bash
+gh pr merge <pr> --squash
+```
+
+Refresh the PR afterwards and confirm that its state is `MERGED`. If GitHub
+rejects the merge because the state changed, return to the monitoring loop;
+otherwise report the concrete error as a blocker.
 
 ## AI Review Recovery
 
@@ -207,10 +247,10 @@ when an issue comment contains `@claude review`.
 
 ## Final Report
 
-Report the PR URL and current head SHA, the final check status, the AI-review
-outcome, feedback resolved, local verification run, and any remaining external
-or policy blocker. Say the PR is merge-ready only after all completion criteria
-are evidenced.
+Report the PR URL, merged SHA, whether auto-squash merge was enabled or the
+explicit squash merge was used, final check status, AI-review outcome, feedback
+resolved, local verification run, and any remaining external or policy blocker.
+Say the PR was merged only after its merged state is evidenced.
 
 ## Related Skills
 
