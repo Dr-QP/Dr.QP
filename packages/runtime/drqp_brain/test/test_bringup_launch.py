@@ -31,6 +31,8 @@ def test_bringup_launch_loads_the_imu_node():
     assert "'move_group.launch.py'" not in launch_source
     assert "executable='drqp_imu'" in launch_source
     assert 'UnlessCondition(use_gazebo)' in launch_source
+    assert "name='kinematics_backend'" in launch_source
+    assert "choices=['analytic', 'moveit']" in launch_source
 
 
 def test_bringup_launch_does_not_configure_brain_imu_transform_path_issue356():

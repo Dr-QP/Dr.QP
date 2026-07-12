@@ -18,15 +18,71 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Brain-loop tests for pure gait targets and MoveIt trajectory solving."""
+"""Brain-loop tests for pure gait targets and selectable kinematics backends."""
 
 from unittest import mock
 
 from drqp_brain.brain_node import HexapodBrain
+from drqp_brain.locomotion_kinematics import (
+    AnalyticLocomotionKinematics,
+    CLAMPING_EVENT_TICKS,
+    LocomotionKinematicsResult,
+    MoveItPyLocomotionKinematics,
+)
 from drqp_kinematics.geometry import AffineTransform, Point3D
 import pytest
 import rclpy
 from rclpy.time import Time
+
+
+def test_analytic_backend_is_default_without_constructing_moveit_solver():
+    """Default startup selects analytic IK and only retains scene validation."""
+    with mock.patch(
+        'drqp_brain.brain_node.MoveItPyLocomotionKinematics'
+    ) as moveit_solver_cls:
+        brain = HexapodBrain()
+        try:
+            assert isinstance(brain.kinematics, AnalyticLocomotionKinematics)
+            moveit_solver_cls.assert_not_called()
+        finally:
+            brain.destroy_node()
+
+
+def test_moveit_backend_parameter_keeps_fallback_solver():
+    """The moveit parameter value routes solving through the legacy backend."""
+    brain = HexapodBrain(
+        parameter_overrides=[
+            rclpy.Parameter('kinematics_backend', value='moveit')
+        ]
+    )
+    try:
+        assert isinstance(brain.kinematics, MoveItPyLocomotionKinematics)
+    finally:
+        brain.destroy_node()
+
+
+def test_persistent_analytic_clamping_emits_robot_event():
+    """Persistent per-leg degradation exposes the future twist-scaling hook."""
+    brain = HexapodBrain()
+    try:
+        clamped_result = LocomotionKinematicsResult(
+            joint_targets=_make_joint_targets(brain),
+            backend_name='analytic',
+            clamped_legs=('left_front',),
+        )
+        brain.kinematics.solve = mock.Mock(return_value=clamped_result)
+        brain.robot_event_pub.publish = mock.Mock()
+
+        for _ in range(CLAMPING_EVENT_TICKS):
+            assert brain._solve_walking_trajectory_targets([[]]) is not None
+
+        brain.robot_event_pub.publish.assert_called_once()
+        assert (
+            brain.robot_event_pub.publish.call_args.args[0].data
+            == 'locomotion_clamping_persistent:left_front'
+        )
+    finally:
+        brain.destroy_node()
 
 
 @pytest.fixture(autouse=True)
@@ -190,6 +246,8 @@ def test_loop_warns_once_while_waiting_for_initial_joint_state():
             brain.loop()
             brain.loop()
 
-        warning_mock.assert_called_once_with('No joint state available to seed MoveItPy')
+        warning_mock.assert_called_once_with(
+            'No joint state available from trajectory controller'
+        )
     finally:
         brain.destroy_node()

@@ -21,13 +21,8 @@
 from unittest.mock import Mock
 
 from control_msgs.action import FollowJointTrajectory
-from drqp_brain.joint_trajectory_builder import (
-    JointTrajectoryBuilder,
-    kFemurOffsetAngle,
-    kTibiaOffsetAngle,
-)
+from drqp_brain.joint_trajectory_builder import JointTrajectoryBuilder
 from drqp_kinematics.models import HexapodModel
-import numpy as np
 import pytest
 import rclpy.time
 import trajectory_msgs.msg
@@ -69,6 +64,30 @@ def trajectory_builder(hexapod):
     return JointTrajectoryBuilder(hexapod)
 
 
+def add_test_point(
+    trajectory_builder,
+    seconds=1.0,
+    effort=1.0,
+    joint_mask=None,
+):
+    """Add deterministic controller-radian targets to a trajectory builder."""
+    joint_targets = {
+        f'drqp/{leg.label.name}_{joint_name}': float(index) / 10.0
+        for index, (leg, joint_name) in enumerate(
+            (leg, joint_name)
+            for leg in trajectory_builder.hexapod.legs
+            for joint_name in ('coxa', 'femur', 'tibia')
+        )
+    }
+    trajectory_builder.add_point_from_joint_targets(
+        joint_targets,
+        reach_in_seconds_from_start=seconds,
+        effort=effort,
+        joint_mask=joint_mask,
+    )
+    return joint_targets
+
+
 class TestJointTrajectoryBuilder:
     """Test the JointTrajectoryBuilder class."""
 
@@ -77,9 +96,9 @@ class TestJointTrajectoryBuilder:
         assert trajectory_builder.hexapod is hexapod
         assert trajectory_builder.points == []
 
-    def test_add_point_from_hexapod(self, trajectory_builder):
-        """Test adding a point from hexapod state."""
-        trajectory_builder.add_point_from_hexapod(1.0, effort=0.8)
+    def test_add_point_from_joint_targets(self, trajectory_builder):
+        """Test adding controller-convention radians without modification."""
+        joint_targets = add_test_point(trajectory_builder, effort=0.8)
 
         assert len(trajectory_builder.points) == 1
         point = trajectory_builder.points[0]
@@ -90,11 +109,14 @@ class TestJointTrajectoryBuilder:
         assert len(point.positions) == 18
         assert len(point.effort) == 18
         assert all(effort == pytest.approx(0.8) for effort in point.effort)
+        assert point.positions.tolist() == pytest.approx(
+            [joint_targets[name] for name in trajectory_builder.joint_names]
+        )
 
-    def test_add_point_from_hexapod_with_joint_mask(self, trajectory_builder):
+    def test_add_point_from_joint_targets_with_joint_mask(self, trajectory_builder):
         """Test adding a point with joint mask."""
         joint_mask = ['coxa', 'femur']
-        trajectory_builder.add_point_from_hexapod(1.0, effort=0.5, joint_mask=joint_mask)
+        add_test_point(trajectory_builder, effort=0.5, joint_mask=joint_mask)
 
         point = trajectory_builder.points[0]
         # Should have effort=0.5 for coxa and femur, 0.0 for tibia
@@ -103,7 +125,7 @@ class TestJointTrajectoryBuilder:
 
     def test_joint_names_generation(self, trajectory_builder):
         """Test that joint names are generated correctly."""
-        trajectory_builder.add_point_from_hexapod(1.0)
+        add_test_point(trajectory_builder)
 
         # Check that joint names follow the expected pattern
         leg_names = [leg.label.name for leg in trajectory_builder.hexapod.legs]
@@ -114,24 +136,6 @@ class TestJointTrajectoryBuilder:
                 expected_names.append(f'drqp/{leg_name}_{joint_type}')
 
         assert trajectory_builder.joint_names == expected_names
-
-    def test_angle_offsets_applied(self, trajectory_builder):
-        """Test that femur and tibia offsets are applied correctly."""
-        # Set known angles for testing
-        trajectory_builder.hexapod.forward_kinematics(0, 10, 20)
-
-        trajectory_builder.add_point_from_hexapod(1.0)
-        point = trajectory_builder.points[0]
-
-        # Check that offsets are applied (every 3rd position for each joint type)
-        for i in range(6):  # 6 legs
-            coxa_pos = point.positions[i * 3]
-            femur_pos = point.positions[i * 3 + 1]
-            tibia_pos = point.positions[i * 3 + 2]
-
-            assert coxa_pos == pytest.approx(np.radians(0.0))
-            assert femur_pos == pytest.approx(np.radians(10.0 + kFemurOffsetAngle))
-            assert tibia_pos == pytest.approx(np.radians(20.0 + kTibiaOffsetAngle))
 
     def test_add_point_direct(self, trajectory_builder):
         """Test adding a point directly with positions and effort."""
@@ -147,8 +151,8 @@ class TestJointTrajectoryBuilder:
         assert point.effort.tolist() == pytest.approx(effort)
         assert point.time_from_start == rclpy.time.Duration(seconds=seconds).to_msg()
 
-    def test_add_point_from_joint_targets(self, trajectory_builder):
-        """Test adding a point from MoveIt joint targets without applying model offsets."""
+    def test_add_point_from_joint_targets_sets_time_and_effort(self, trajectory_builder):
+        """Test controller targets preserve time and effort metadata."""
         joint_targets = {
             f'drqp/{leg.label.name}_{joint_name}': value
             for value, leg in enumerate(trajectory_builder.hexapod.legs, start=1)
@@ -170,7 +174,7 @@ class TestJointTrajectoryBuilder:
 
     def test_publish(self, trajectory_builder, mock_publisher):
         """Test publishing trajectory message."""
-        trajectory_builder.add_point_from_hexapod(1.0)
+        add_test_point(trajectory_builder)
         trajectory_builder.publish(mock_publisher)
 
         mock_publisher.publish.assert_called_once()
@@ -183,7 +187,7 @@ class TestJointTrajectoryBuilder:
     def test_publish_action(self, trajectory_builder, mock_action_client, mock_node):
         """Test publishing trajectory as action goal."""
         result_callback = Mock()
-        trajectory_builder.add_point_from_hexapod(1.0)
+        add_test_point(trajectory_builder)
 
         # Mock the goal handle future
         goal_handle = Mock()
@@ -216,7 +220,7 @@ class TestJointTrajectoryBuilder:
     ):
         """Skip sending a goal when the action server is not ready yet."""
         result_callback = Mock()
-        trajectory_builder.add_point_from_hexapod(1.0)
+        add_test_point(trajectory_builder)
         mock_action_client.wait_for_server.return_value = False
 
         trajectory_builder.publish_action(mock_action_client, mock_node, result_callback)
@@ -232,7 +236,7 @@ class TestJointTrajectoryBuilder:
     def test_publish_action_goal_rejected(self, trajectory_builder, mock_action_client, mock_node):
         """Test handling of rejected action goal."""
         result_callback = Mock()
-        trajectory_builder.add_point_from_hexapod(1.0)
+        add_test_point(trajectory_builder)
 
         # Mock rejected goal
         goal_handle = Mock()
@@ -253,9 +257,9 @@ class TestJointTrajectoryBuilder:
 
     def test_multiple_points(self, trajectory_builder):
         """Test adding multiple trajectory points."""
-        trajectory_builder.add_point_from_hexapod(1.0, effort=0.5)
-        trajectory_builder.add_point_from_hexapod(2.0, effort=0.8)
-        trajectory_builder.add_point_from_hexapod(3.0, effort=1.0)
+        add_test_point(trajectory_builder, 1.0, effort=0.5)
+        add_test_point(trajectory_builder, 2.0, effort=0.8)
+        add_test_point(trajectory_builder, 3.0, effort=1.0)
 
         assert len(trajectory_builder.points) == 3
 

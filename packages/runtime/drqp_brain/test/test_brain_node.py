@@ -43,6 +43,57 @@ from sensor_msgs.msg import Imu
 import std_msgs.msg
 
 
+@pytest.mark.parametrize(
+    ('sequence_name', 'expected_points'),
+    [
+        (
+            'initialization_sequence',
+            [
+                (0.0, -2.0614083795305027, -0.5742133239061344),
+                (0.0, -2.0614083795305027, -0.5742133239061344),
+                (0.0, -2.0614083795305027, -0.5742133239061344),
+                (0.0, -2.0614083795305027, 1.0838494654884787),
+                (0.0, -0.8396779031344719, 1.6947147036864938),
+            ],
+        ),
+        (
+            'finalization_sequence',
+            [
+                (0.0, -2.0614083795305027, -0.5742133239061344),
+                (0.0, -2.0614083795305027, -1.6214108751027323),
+            ],
+        ),
+    ],
+)
+def test_model_pose_sequences_preserve_golden_controller_positions(
+    rclpy_context,  # noqa: ARG001 (needs rclpy)
+    sequence_name,
+    expected_points,
+):
+    """Initialization and finalization retain their exact controller positions."""
+    with mock.patch('drqp_brain.brain_node.ActionClient') as action_client_cls:
+        action_client = action_client_cls.return_value
+        action_client.wait_for_server.return_value = True
+
+        brain = HexapodBrain()
+        try:
+            getattr(brain, sequence_name)()
+            goal = action_client.send_goal_async.call_args.args[0]
+
+            assert [
+                tuple(point.positions[:3]) for point in goal.trajectory.points
+            ] == expected_points
+            assert all(
+                tuple(point.positions[slice(index, index + 3)]) == expected_point
+                for point, expected_point in zip(
+                    goal.trajectory.points, expected_points
+                )
+                for index in range(0, 18, 3)
+            )
+        finally:
+            brain.destroy_node()
+
+
 def test_existing_brain_node_detection_rejects_duplicate_ros_node():
     """Refuse startup when the ROS graph already contains drqp_brain."""
     node = mock.Mock()

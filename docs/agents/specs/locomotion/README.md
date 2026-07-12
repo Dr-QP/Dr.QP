@@ -20,27 +20,23 @@ Finding IDs (`F1`…`F28`) referenced throughout are defined in the
 
 ## Implementation order
 
-Specs are numbered in implementation order. Later specs assume earlier ones have landed unless
-the dependency table says otherwise.
+Specs are numbered in implementation order. Specs 01, 02, 03, 04, and 07 have landed and their
+implementation files have been removed. Remaining specs assume those foundations unless the
+dependency table says otherwise.
 
 | Spec                                                   | Title                                              | Fixes                  | Depends on |
 | ------------------------------------------------------ | -------------------------------------------------- | ---------------------- | ---------- |
-| [01](01-clamp-moveit-ik-timeout.md)                    | Clamp MoveIt IK timeout                            | F1                     | —          |
-| [02](02-pure-gait-targets-and-time-based-phase.md)     | Pure gait targets & time-based phase               | F2, F15, F27, F28      | —          |
-| [03](03-analytic-leg-ik-joint-limits-and-workspace.md) | Analytic leg IK: joint limits & workspace clamping | F8, F9, F10, F11, F23  | —          |
-| [04](04-analytic-runtime-solver-with-moveit-oracle.md) | Analytic runtime solver, MoveIt as oracle          | F3, F4, F5             | 02, 03     |
 | [05](05-cycloid-swing-profile.md)                      | Cycloid swing profile                              | F6, F13                | 02 (soft)  |
 | [06](06-twist-based-steering.md)                       | Twist-based steering                               | F7, F16, F22 (partial) | 02, 03, 04 |
-| [07](07-single-source-servo-zero-offsets.md)           | Single source for servo zero offsets               | F26, F10 (partial)     | 04         |
 | [08](08-raise-control-loop-rate.md)                    | Raise control loop rate                            | F25                    | 02, 04     |
 
 Dependency sketch:
 
 ```text
-01 ──────────────────────────────► (independent hotfix, land first)
+01 ──────────────────────────────► landed
 
 02 ─┬─► 04 ─┬─► 06
-03 ─┘       ├─► 07
+03 ─┘       ├─► 07 (landed)
 05 (after 02, parallel with 03/04)
             └─► 08 (also needs 02)
 ```
