@@ -1,17 +1,16 @@
 ---
 name: pr-merge
-description: 'Merge an open GitHub pull request: enable automatic squash merge as early as possible, monitor CI and AI review, remediate actionable failures and feedback, then squash merge explicitly if auto-merge is unavailable. Use when a PR needs to be merged or shepherded through CI and review to merge. Keywords: merge PR, auto-merge, squash merge, monitor PR, merge-ready, wait for CI, CI failures, AI review, Claude Responder.'
+description: 'Merge an open GitHub pull request: leave existing auto-merge unchanged, otherwise enable automatic squash merge early, monitor CI and AI review, remediate failures and feedback, then squash merge explicitly if auto-merge is unavailable. Use when a PR needs to be merged or shepherded through CI and review to merge. Keywords: merge PR, auto-merge, squash merge, monitor PR, merge-ready, wait for CI, CI failures, AI review, Claude Responder.'
 license: MIT
 ---
 
 # Merge PR
 
 Drive one open pull request through the complete CI-and-review cycle and merge
-it using squash merge. Enable automatic squash merge as soon as it is
-available; otherwise, wait until all requirements pass and merge explicitly.
-This is a persistent workflow: wait for the relevant GitHub state to change,
-then act on the new state. Do not stop merely because a check is pending or an
-automated reviewer has not responded yet.
+it. At the start, leave any existing auto-merge unchanged; otherwise enable
+automatic squash merge. If auto-merge is unavailable, merge explicitly after
+all requirements pass. This is a persistent workflow: wait for the relevant
+GitHub state to change, then act on the new state.
 
 ## When to Use This Skill
 
@@ -48,23 +47,25 @@ asks to change that state.
   make the PR mergeable. Still stop for a genuinely ambiguous review request
   and ask for clarification in that review thread.
 
-## Start Auto-Squash Merge Early
+## Configure Merge Once
 
 Immediately after resolving the PR and confirming it is open and not a draft,
-try to enable GitHub's automatic squash merge. Do this before waiting for CI or
-review so GitHub merges as soon as every required condition is satisfied:
+inspect its automatic merge request:
+
+```bash
+gh pr view <pr> --json autoMergeRequest
+```
+
+If `autoMergeRequest` is non-null, leave it unchanged and continue monitoring.
+Otherwise, enable automatic squash merge before waiting for CI or review:
 
 ```bash
 gh pr merge <pr> --auto --squash
 ```
 
-Record whether GitHub enabled auto-merge. If it did, keep monitoring the PR:
-new commits can reset checks or trigger new review work, and the PR is not
-complete until GitHub reports it as merged. If the command reports that
-auto-merge is unavailable or disabled for the repository, record that fact and
-continue the monitoring loop; perform the explicit final squash merge described
-below after all requirements pass. Treat any other error as a concrete blocker
-to investigate or report.
+If GitHub reports auto-merge is unavailable or disabled for the repository,
+continue the monitoring loop and use the explicit final squash merge below.
+Treat any other error as a concrete blocker to investigate or report.
 
 ## Completion Criteria
 
@@ -81,8 +82,7 @@ branch:
   fixed, replied to, and resolved using the feedback-resolution workflow.
 - `gh pr view` reports no remaining merge blocker (for example, a conflict or
   missing required approval) before the merge is attempted.
-- GitHub reports the PR as merged. When auto-merge is unavailable, this means
-  the explicit squash merge below has completed successfully.
+- GitHub reports the PR as merged.
 
 ## Monitoring Loop
 
@@ -137,16 +137,15 @@ to check later.
    piecemeal. Its resolved-thread filtering and confidence rules are mandatory.
 
 6. If feedback leads to a push, restart at step 1. If no actionable feedback
-   remains, refresh checks and merge state once more. If auto-squash merge was
-   enabled, wait for GitHub to merge the PR and confirm its merged state. If
-   auto-merge is unavailable, perform the explicit final squash merge.
+   remains, refresh checks and merge state once more. If auto-merge was set,
+   wait for GitHub to merge the PR; otherwise, perform the explicit final
+   squash merge.
 
 ## Explicit Final Squash Merge
 
-Use this section only when the early `--auto --squash` request was unavailable
-because the repository does not support or allow auto-merge. After every
-pre-merge completion criterion has been evidenced for the current head SHA,
-merge the PR explicitly:
+Use this section only when the initial auto-merge check was empty and the early
+`--auto --squash` request was unavailable. After every pre-merge completion
+criterion has been evidenced for the current head SHA, merge the PR explicitly:
 
 ```bash
 gh pr merge <pr> --squash
@@ -247,10 +246,10 @@ when an issue comment contains `@claude review`.
 
 ## Final Report
 
-Report the PR URL, merged SHA, whether auto-squash merge was enabled or the
-explicit squash merge was used, final check status, AI-review outcome, feedback
-resolved, local verification run, and any remaining external or policy blocker.
-Say the PR was merged only after its merged state is evidenced.
+Report the PR URL, merged SHA, merge method, final check status, AI-review
+outcome, feedback resolved, local verification run, and any remaining external
+or policy blocker. Say the PR was merged only after its merged state is
+evidenced.
 
 ## Related Skills
 
