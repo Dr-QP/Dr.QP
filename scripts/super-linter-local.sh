@@ -102,6 +102,8 @@ run_super_linter()
     -e DEFAULT_BRANCH="$default_branch" \
     -e VALIDATE_ALL_CODEBASE="$validate_all_codebase" \
     -e LOG_LEVEL="$log_level" \
+    -e SAVE_SUPER_LINTER_OUTPUT=true \
+    -e SUPER_LINTER_OUTPUT_DIRECTORY_NAME="log" \
     --env-file "$env_file" \
     "${mounts[@]}" \
     --platform linux/amd64 \
