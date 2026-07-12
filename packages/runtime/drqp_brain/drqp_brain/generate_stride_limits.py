@@ -266,15 +266,15 @@ def parse_args(argv):
 
 def main(argv=None):
     args = parse_args(sys.argv[1:] if argv is None else argv)
-    is_safe = None # codeql[py/unused-local-variable] - it IS used, codeql trips over last assignment
+    is_step_length_safe = None
     rclpy.init()
     try:
-        is_safe = make_moveit_step_length_checker(
+        is_step_length_safe = make_moveit_step_length_checker(
             phase_samples=args.phase_samples,
             joint_margin_degrees=args.joint_margin_degrees,
         )
         config = generate_stride_limits(
-            is_safe,
+            is_step_length_safe,
             directions_count=args.directions,
             max_step_length_m=args.max_step_length,
             search_iterations=args.search_iterations,
@@ -287,7 +287,7 @@ def main(argv=None):
     finally:
         # The checker closes over MoveItPy. Release it while rclpy is still
         # initialized so the MoveIt C++ bindings tear down safely.
-        is_safe = None # codeql[py/unused-local-variable]
+        is_step_length_safe = None
         rclpy.try_shutdown()
 
 
