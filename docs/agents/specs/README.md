@@ -11,7 +11,6 @@ The specs are grouped into **programs** — independent bodies of work but not u
 | ----------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | [`locomotion/`](locomotion/README.md)                 | Foundation refactor: analytic-IK hot path, twist steering, time-based gait | [`ik-locomotion-analysis.md`](../../source/Dev/ik-locomotion-analysis.md) |
 | [`roadmap/`](roadmap/README.md)                       | Autonomy roadmap: joystick hexapod → autonomous AI home pet                | [`roadmap/index.md`](../../source/Dev/roadmap/index.md)                   |
-| [`agent-catalog/`](agent-catalog/README.md)           | Fix contradictions/redundancy in agent instruction files                   | (review-derived, findings index in program README)                        |
 | [`formatting-linting/`](formatting-linting/README.md) | Unify formatter ownership, local/editor workflows, CI, and ROS lint gates  | (repository tooling audit, self-contained)                                |
 
 ## Program relationships
