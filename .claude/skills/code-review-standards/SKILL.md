@@ -106,6 +106,8 @@ Create a comprehensive pull request description.
 
 Evaluate code changes against the shared engineering standards, then focus your review on findings, evidence, and impact.
 
+**Code is the source of truth.** Base the review on the actual diff — analyze every branch change with git diff, file listings, and code search — not on the commit messages or PR description. Read those with healthy skepticism: flag where they misstate the change, hide side effects, overclaim, or leave modifications undocumented.
+
 ### What To Check
 
 1. Correctness and behavioral regressions
