@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -exuo pipefail
 
 sudo chown -R root:root \
     /opt/ros/overlay_ws/.ansible \
