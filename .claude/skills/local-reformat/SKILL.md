@@ -102,10 +102,10 @@ pinned CI image unless the workflow itself is intentionally being updated.
 
 ## Related Entry Points
 
-| Entry point                                                           | CI-equivalent responsibility                                                              |
-| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| [python-reformat.sh](../../../scripts/python-reformat.sh)       | Run Ruff format/autofix/import sorting and synchronize notebooks.                          |
-| [super-linter-local.sh](../../../scripts/super-linter-local.sh) | Run Super-Linter's Ansible, clang-format, Prettier, and other autofix/check passes.        |
+| Entry point                                                     | CI-equivalent responsibility                                                                |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| [python-reformat.sh](../../../scripts/python-reformat.sh)       | Run Ruff format/autofix/import sorting and synchronize notebooks.                           |
+| [super-linter-local.sh](../../../scripts/super-linter-local.sh) | Run Super-Linter's Ansible, clang-format, Prettier, and other autofix/check passes.         |
 | [super-linter-env.sh](../../../scripts/super-linter-env.sh)     | Generate the shared Ansible, clang-format, Prettier, and validation settings for each pass. |
 
 For Python package linting beyond the reformat workflow, use the
