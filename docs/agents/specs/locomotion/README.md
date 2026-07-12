@@ -21,8 +21,8 @@ Finding IDs (`F1`…`F28`) referenced throughout are defined in the
 ## Implementation order
 
 Specs are numbered in implementation order. Specs 01, 02, 03, 04, 05, and 07 have landed and their
-implementation files have been removed. Remaining specs assume those foundations unless the
-dependency table says otherwise.
+implementation files have been removed. Spec 05 landed in [PR #441](https://github.com/Dr-QP/Dr.QP/pull/441).
+Remaining specs assume those foundations unless the dependency table says otherwise.
 
 | Spec                                | Title                   | Fixes                  | Depends on |
 | ----------------------------------- | ----------------------- | ---------------------- | ---------- |
