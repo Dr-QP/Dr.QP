@@ -98,7 +98,7 @@ run_super_linter()
 
   local env_file="$root_dir/.tmp/super-linter-${name}.env"
   local env_file_gen_args=$([[ "$name" == "autofix" ]] && printf '%s' --autofix)
-  scripts/super-linter-env.sh ${env_file_gen_args} > "$env_file"
+  "$script_dir/super-linter-env.sh" ${env_file_gen_args} > "$env_file"
 
   echo "Running Super-Linter $name pass..."
   "$runtime" run --rm \
