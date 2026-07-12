@@ -58,12 +58,12 @@ echo VALIDATE_CLANG_FORMAT=true
 echo VALIDATE_ANSIBLE=true
 echo ANSIBLE_DIRECTORY=docker/ros/ansible
 
-echo FIX_MARKDOWN_PRETTIER=${autofix}
-echo FIX_YAML_PRETTIER=${autofix}
-echo FIX_JSON_PRETTIER=${autofix}
-echo FIX_JSONC_PRETTIER=${autofix}
-echo FIX_GITHUB_ACTIONS_ZIZMOR=${autofix}
-echo FIX_CLANG_FORMAT=${autofix}
-echo FIX_ANSIBLE=${autofix}
+echo FIX_MARKDOWN_PRETTIER="${autofix}"
+echo FIX_YAML_PRETTIER="${autofix}"
+echo FIX_JSON_PRETTIER="${autofix}"
+echo FIX_JSONC_PRETTIER="${autofix}"
+echo FIX_GITHUB_ACTIONS_ZIZMOR="${autofix}"
+echo FIX_CLANG_FORMAT="${autofix}"
+echo FIX_ANSIBLE="${autofix}"
 
 echo SAVE_SUPER_LINTER_SUMMARY=true
