@@ -102,7 +102,6 @@ jobs:
             - packages/**/*.h
             - packages/**/*.py
             - py_packages/**/*.py
-            - scripts/cpp-reformat.sh
             - scripts/python-reformat.sh
             - .clang-format
             - '**/*.md'
@@ -210,11 +209,6 @@ jobs:
 
       - name: Setup Python venv
         uses: ./.github/actions/setup-python-venv
-
-      - name: Reformat C++
-        run: |
-          source scripts/setup.bash
-          ./scripts/cpp-reformat.sh
 
       - name: Reformat Python
         run: |

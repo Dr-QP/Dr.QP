@@ -46,13 +46,6 @@ repos:
         language: script
         pass_filenames: false
 
-      - id: format-cpp
-        name: format-cpp
-        entry: ./scripts/cpp-reformat.sh
-        language: script
-        types: [c++]
-        pass_filenames: false
-
       - id: validate-agent-files
         name: validate-agent-files
         entry: validate_agent_files --ci .claude
