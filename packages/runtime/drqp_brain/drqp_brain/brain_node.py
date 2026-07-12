@@ -35,14 +35,14 @@ from drqp_brain.balance_controller import (
     imu_balance_stride_scale,
 )
 from drqp_brain.instance_guard import InstanceAlreadyRunningError, InstanceGuard
-from drqp_brain.joint_trajectory_builder import (
-    JointTrajectoryBuilder,
-    kFemurOffsetAngle,
-    kTibiaOffsetAngle,
-)
+from drqp_brain.joint_trajectory_builder import JointTrajectoryBuilder
 from drqp_brain.locomotion_kinematics import (
+    AnalyticLocomotionKinematics,
+    CLAMPING_EVENT_TICKS,
     LOCOMOTION_FPS,
+    LocomotionKinematics,
     MoveItPyLocomotionKinematics,
+    MoveItPyStateValidator,
     RCLPY_SHUTDOWN_ERRORS,
     WALKING_TRAJECTORY_POINTS,
 )
@@ -51,6 +51,10 @@ from drqp_brain.walk_controller import GaitType, WalkController
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 from drqp_kinematics.geometry import AffineTransform, Point3D
 from drqp_kinematics.models import HexapodModel
+from drqp_kinematics.urdf_limits import (
+    model_degrees_to_urdf_angles,
+    urdf_to_model_angles,
+)
 import numpy as np
 import rclpy
 from rclpy._rclpy_pybind11 import InvalidHandle, RCLError
@@ -85,13 +89,14 @@ class HexapodBrain(rclpy.node.Node):
 
     """
 
-    def __init__(self):
-        super().__init__('drqp_brain')
+    def __init__(self, **node_kwargs):
+        super().__init__('drqp_brain', **node_kwargs)
         self._shutdown_lock = threading.Lock()
         self._is_shutting_down = False
         self._pending_futures = set()
 
-        # MoveItPy is kept in-process for walking kinematics and whole-state validation.
+        # Analytic IK is the runtime default. MoveIt remains in-process for
+        # planning-scene validation and as a selectable comparison backend.
         self.fps = LOCOMOTION_FPS
         self.loop_callback_group = MutuallyExclusiveCallbackGroup()
         self.state_callback_group = ReentrantCallbackGroup()
@@ -99,12 +104,19 @@ class HexapodBrain(rclpy.node.Node):
         self.declare_parameter('imu_balance_gain', 2.0)
         self.declare_parameter('imu_balance_max_tilt_rad', 0.15)
         self.declare_parameter('imu_balance_timeout_sec', 1.0)
+        self.declare_parameter('kinematics_backend', 'analytic')
         self.enable_imu_balance = self.get_parameter('enable_imu_balance').value
         self.imu_balance_gain = self.get_parameter('imu_balance_gain').value
         self.imu_balance_max_tilt_rad = self.get_parameter('imu_balance_max_tilt_rad').value
         self.imu_balance_timeout = Duration(
             seconds=self.get_parameter('imu_balance_timeout_sec').value
         )
+        self.kinematics_backend = self.get_parameter('kinematics_backend').value
+        if self.kinematics_backend not in {'analytic', 'moveit'}:
+            raise ValueError(
+                'kinematics_backend must be one of: analytic, moveit; '
+                f'got {self.kinematics_backend!r}'
+            )
 
         self.gait_index = 0
         self.gaits = [GaitType.tripod, GaitType.ripple, GaitType.wave]
@@ -162,6 +174,8 @@ class HexapodBrain(rclpy.node.Node):
         self._last_published_motion_state = None
         self._last_loop_time = None
         self._joint_state_warning_logged = False
+        self._latest_clamped_legs = ()
+        self._clamping_ticks = {}
         self.walking_trajectory_points = WALKING_TRAJECTORY_POINTS
         self.latest_joint_state = None
         self.joint_state_sub = self.create_subscription(
@@ -174,11 +188,24 @@ class HexapodBrain(rclpy.node.Node):
 
         self.setup_hexapod()
         self._last_published_motion_state = self._motion_state_key(self.hexapod.body_transform)
-        self.kinematics = MoveItPyLocomotionKinematics(
-            node=self,
-            hexapod=self.hexapod,
-            is_shutting_down=lambda: self._is_shutting_down,
-        )
+        self.kinematics: LocomotionKinematics
+        if self.kinematics_backend == 'moveit':
+            self.kinematics = MoveItPyLocomotionKinematics(
+                node=self,
+                hexapod=self.hexapod,
+                is_shutting_down=lambda: self._is_shutting_down,
+            )
+        else:
+            state_validator = MoveItPyStateValidator(
+                node=self,
+                hexapod=self.hexapod,
+                is_shutting_down=lambda: self._is_shutting_down,
+            )
+            self.kinematics = AnalyticLocomotionKinematics(
+                node=self,
+                hexapod=self.hexapod,
+                state_validator=state_validator,
+            )
 
         self.loop_timer = self.create_timer(
             1 / self.fps,
@@ -394,7 +421,7 @@ class HexapodBrain(rclpy.node.Node):
 
         if trajectory_targets is None:
             self.get_logger().warning(
-                'MoveIt IK rejected the current foot targets; skipping trajectory publish'
+                'Kinematics rejected the current foot targets; skipping trajectory publish'
             )
             return
 
@@ -416,9 +443,15 @@ class HexapodBrain(rclpy.node.Node):
 
     def solve_joint_targets(self, legs_and_targets):
         result = self.kinematics.solve(legs_and_targets, self.latest_joint_state)
+        self._latest_clamped_legs = result.clamped_legs
         if not result.succeeded:
             self.get_logger().warning(result.failure_reason)
             return None
+        if result.clamped_legs:
+            self.get_logger().warning(
+                f'Analytic IK clamped legs: {", ".join(result.clamped_legs)}',
+                throttle_duration_sec=5.0,
+            )
         return result.joint_targets
 
     def _build_walking_feet_target_window(
@@ -439,14 +472,35 @@ class HexapodBrain(rclpy.node.Node):
 
     def _solve_walking_trajectory_targets(self, feet_target_window):
         trajectory_targets = []
+        clamped_legs = set()
         for feet_targets in feet_target_window:
             joint_targets = self.solve_joint_targets(feet_targets)
             if joint_targets is None:
                 return None
 
+            clamped_legs.update(self._latest_clamped_legs)
             trajectory_targets.append((feet_targets, joint_targets))
 
+        self._update_clamping_status(clamped_legs)
         return trajectory_targets
+
+    def _update_clamping_status(self, clamped_legs: set[str]) -> None:
+        persistent_legs = []
+        for leg in self.hexapod.legs:
+            leg_name = leg.label.name
+            if leg_name in clamped_legs:
+                self._clamping_ticks[leg_name] = self._clamping_ticks.get(leg_name, 0) + 1
+                if self._clamping_ticks[leg_name] == CLAMPING_EVENT_TICKS:
+                    persistent_legs.append(leg_name)
+            else:
+                self._clamping_ticks[leg_name] = 0
+
+        if persistent_legs:
+            self.robot_event_pub.publish(
+                std_msgs.msg.String(
+                    data='locomotion_clamping_persistent:' + ','.join(persistent_legs)
+                )
+            )
 
     def _make_pose_stamped(self, leg, foot_target):
         return self.kinematics.make_pose_stamped(leg, foot_target)
@@ -487,7 +541,7 @@ class HexapodBrain(rclpy.node.Node):
 
         if self.latest_joint_state is None:
             if not self._joint_state_warning_logged:
-                self.get_logger().warning('No joint state available to seed MoveItPy')
+                self.get_logger().warning('No joint state available from trajectory controller')
                 self._joint_state_warning_logged = True
             return False
 
@@ -498,14 +552,26 @@ class HexapodBrain(rclpy.node.Node):
 
     def apply_joint_targets(self, joint_targets: dict[str, float]):
         for leg in self.hexapod.legs:
-            coxa, femur, tibia = (
+            urdf_angles = tuple(
                 joint_targets[joint_name] for joint_name in self._controller_joint_names(leg)
             )
-            leg.forward_kinematics(
-                float(np.degrees(coxa)),
-                float(np.degrees(femur)) - kFemurOffsetAngle,
-                float(np.degrees(tibia)) - kTibiaOffsetAngle,
+            leg.forward_kinematics(*np.degrees(urdf_to_model_angles(urdf_angles)))
+
+    def _model_joint_targets(self) -> dict[str, float]:
+        """Return the current analytic model pose in URDF/controller radians."""
+        joint_targets = {}
+        for leg in self.hexapod.legs:
+            model_angles_deg = (
+                leg.coxa_angle,
+                leg.femur_angle,
+                leg.tibia_angle,
             )
+            for joint_name, angle in zip(
+                self._controller_joint_names(leg),
+                model_degrees_to_urdf_angles(model_angles_deg),
+            ):
+                joint_targets[joint_name] = angle
+        return joint_targets
 
     def initialization_sequence(self):
         trajectory = JointTrajectoryBuilder(self.hexapod)
@@ -513,25 +579,37 @@ class HexapodBrain(rclpy.node.Node):
         # - Turn torque on for femur
         # - Move all femur to -105
         self.hexapod.forward_kinematics(0, -105, 0)
-        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=1.0, joint_mask=['femur'])
+        trajectory.add_point_from_joint_targets(
+            self._model_joint_targets(),
+            reach_in_seconds_from_start=1.0,
+            joint_mask=['femur'],
+        )
 
         # - Turn torque on for tibia
         # - Move all tibia to 0
-        trajectory.add_point_from_hexapod(
-            reach_in_seconds_from_start=1.6, joint_mask=['femur', 'tibia']
+        trajectory.add_point_from_joint_targets(
+            self._model_joint_targets(),
+            reach_in_seconds_from_start=1.6,
+            joint_mask=['femur', 'tibia'],
         )
 
         # - Turn torque on for coxa
         # - Move all coxa to 0
-        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=2.2)
+        trajectory.add_point_from_joint_targets(
+            self._model_joint_targets(), reach_in_seconds_from_start=2.2
+        )
 
         # - Move all tibia to 95
         self.hexapod.forward_kinematics(0, -105, 95)
-        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=2.8)
+        trajectory.add_point_from_joint_targets(
+            self._model_joint_targets(), reach_in_seconds_from_start=2.8
+        )
 
         # Get into default stance for walk controller to take from here
         self.hexapod.forward_kinematics(0, -35, 130)
-        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=3.2)
+        trajectory.add_point_from_joint_targets(
+            self._model_joint_targets(), reach_in_seconds_from_start=3.2
+        )
 
         trajectory.publish_action(
             self.trajectory_client,
@@ -543,10 +621,14 @@ class HexapodBrain(rclpy.node.Node):
         trajectory = JointTrajectoryBuilder(self.hexapod)
 
         self.hexapod.forward_kinematics(0, -105, 0)
-        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=1.0)
+        trajectory.add_point_from_joint_targets(
+            self._model_joint_targets(), reach_in_seconds_from_start=1.0
+        )
 
         self.hexapod.forward_kinematics(0, -105, -60)
-        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=1.5)
+        trajectory.add_point_from_joint_targets(
+            self._model_joint_targets(), reach_in_seconds_from_start=1.5
+        )
 
         trajectory.publish_action(
             self.trajectory_client,
@@ -556,14 +638,20 @@ class HexapodBrain(rclpy.node.Node):
 
     def turn_torque_off(self):
         trajectory = JointTrajectoryBuilder(self.hexapod)
-        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=0.0, effort=0.0)
+        trajectory.add_point_from_joint_targets(
+            self._model_joint_targets(), reach_in_seconds_from_start=0.0, effort=0.0
+        )
         trajectory.publish(self.joint_trajectory_pub)
 
     def reboot_servos(self):
         """Execute servo reboot sequence and publish completion event."""
         trajectory = JointTrajectoryBuilder(self.hexapod)
-        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=0.0, effort=-1.0)
-        trajectory.add_point_from_hexapod(reach_in_seconds_from_start=1.0, effort=0.0)
+        trajectory.add_point_from_joint_targets(
+            self._model_joint_targets(), reach_in_seconds_from_start=0.0, effort=-1.0
+        )
+        trajectory.add_point_from_joint_targets(
+            self._model_joint_targets(), reach_in_seconds_from_start=1.0, effort=0.0
+        )
         trajectory.publish_action(self.trajectory_client, self, self.publish_servos_rebooting_done)
 
     def publish_servos_rebooting_done(self):

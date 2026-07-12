@@ -31,8 +31,10 @@ Key facts, verified in code:
   (m/s, rad/s) yet.
 - **Gaits**: tripod, ripple, wave — generated parametrically per leg phase, with directional
   stride limits loaded from `drqp_brain/config/stride_limits.yaml`.
-- **IK**: `MoveItPyLocomotionKinematics` runs MoveItPy _in-process_ for IK and whole-robot state
-  validation (collision-aware). Seeded from live `/joint_states`.
+- **IK**: `AnalyticLocomotionKinematics` runs closed-form per-leg IK by default, with
+  `MoveItPyLocomotionKinematics` selectable as the fallback. Analytic targets still pass through
+  the in-process MoveIt planning scene for whole-robot self-collision validation. Live
+  `/joint_states` gate controller readiness but do not seed analytic IK.
 - **Balance**: `/imu/data` (BNO055 on hardware, gz-sim IMU plugin in simulation) feeds a balance
   controller that scales stride and counter-rotates the body; toggled via `/robot/balance_mode`.
 - **Lifecycle**: a `python-statemachine` graph (`torque_off → initializing → torque_on →
