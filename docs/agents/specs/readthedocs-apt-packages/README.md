@@ -29,10 +29,10 @@ dependency installation step. The build therefore never attempted to install
 
 ## Issues
 
-| Priority | Issue | Resolution |
-| --- | --- | --- |
-| P0 | `build.commands` silently bypasses `apt_packages` | Replace it with structured `build.jobs`. |
-| P1 | The next hosted build must prove the system dependency phase runs | Confirm the build log contains the APT installation and `ffmpeg -version` succeeds. |
+| Priority | Issue                                                             | Resolution                                                                          |
+| -------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| P0       | `build.commands` silently bypasses `apt_packages`                 | Replace it with structured `build.jobs`.                                            |
+| P1       | The next hosted build must prove the system dependency phase runs | Confirm the build log contains the APT installation and `ffmpeg -version` succeeds. |
 
 ## Resolution
 

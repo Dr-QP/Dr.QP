@@ -13,8 +13,8 @@ build:
   apt_packages:
     - ffmpeg
 
-# Use structured build jobs: unlike build.commands, they retain the
-# system-dependency step above so the docs build can invoke ffmpeg.
+  # Use structured build jobs: unlike build.commands, they retain the
+  # system-dependency step above so the docs build can invoke ffmpeg.
   jobs:
     install:
       - pip install uv
