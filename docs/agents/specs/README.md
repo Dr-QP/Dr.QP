@@ -11,7 +11,6 @@ The specs are grouped into **programs** — independent bodies of work but not u
 | ----------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | [`locomotion/`](locomotion/README.md)                 | Foundation refactor: analytic-IK hot path, twist steering, time-based gait | [`ik-locomotion-analysis.md`](../../source/Dev/ik-locomotion-analysis.md) |
 | [`roadmap/`](roadmap/README.md)                       | Autonomy roadmap: joystick hexapod → autonomous AI home pet                | [`roadmap/index.md`](../../source/Dev/roadmap/index.md)                   |
-| [`todo-remediation/`](todo-remediation/README.md)     | Code-TODO cleanup from a repo-wide audit                                   | (audit-derived, self-contained)                                           |
 | [`agent-catalog/`](agent-catalog/README.md)           | Fix contradictions/redundancy in agent instruction files                   | (review-derived, findings index in program README)                        |
 | [`formatting-linting/`](formatting-linting/README.md) | Unify formatter ownership, local/editor workflows, CI, and ROS lint gates  | (repository tooling audit, self-contained)                                |
 
@@ -43,8 +42,8 @@ position-mixed steering). The locomotion migration replaces exactly that stack. 
 
 **Recommended global order:** land the locomotion foundation (at least specs 01–04, ideally
 through 06/08) before or alongside RM-02, so the roadmap builds on the analytic twist stack rather
-than the stack it is about to replace. RM-01 (baseline/hardening), RM-04 (camera), and the
-todo-remediation items have no such coupling and can proceed immediately.
+than the stack it is about to replace. RM-01 (baseline/hardening) and RM-04 (camera) have no such
+coupling and can proceed immediately.
 
 ### Stance detection has three sources: keep them one interface
 

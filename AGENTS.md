@@ -17,7 +17,7 @@ NEVER use GitHub API or GitHub MCP tools to update branch refs or push branch co
 8. **Use `--symlink-install`** for Python coverage and hot-reload
 9. **Enable coverage** with `--mixin coverage-pytest` when testing
 10. **Re-run failed tests** with `--packages-select-test-failures`
-11. **When available in VS Code, use `vscode/askQuestions`** for all yes/no and multiple-choice user questions
+11. **For yes/no and multiple-choice questions, prefer the assistant's structured-question tool** over free-text (VS Code Copilot: `vscode/askQuestions`; Claude Code: `AskUserQuestion`)
 12. **Do not re-declare, bind, or explicitly forward launch arguments owned by included ROS launch files**. Externally set launch arguments are available to included launch descriptions through the launch context; only use `DeclareLaunchArgument`, `LaunchConfiguration`, or `launch_arguments={...}` entries for arguments owned by the current launch file.
 13. **Codex: run ROS build/test/lint commands with sandbox escalation** (`require_escalated`) because the managed sandbox blocks dependency downloads, ROS domain sockets, Gazebo/launch process behavior, and ROS log writes under `/root/.ros`. Still use `scripts/with-ros-env.sh`, incremental build/test selectors, and explain the escalation reason in the request.
 14. **`@pytest.mark.flaky` on a `@pytest.mark.launch(...)` (`launch_pytest`) test is safe out of the box.** Stock `launch_pytest` re-wraps `pyfuncitem.obj` in place on every call, so a naive retry would re-wrap the previous attempt's stale wrapper and crash with a closed/duplicated `asyncio` event loop instead of retrying — this workspace's vendored `launch_pytest` (`packages/vendor/launch/launch_pytest`, see `source-info.yaml`) fixes that at the source, so no per-package shim or `test/conftest.py` registration is needed. See `drqp_launch_testing/test/shutdown_behavior/SPEC.md` (combo 6) for the root cause and proof. Retry only usefully rescues **function-scoped** launch fixtures (combo 5): `pytest-retry` does not re-run a `module`-scoped fixture's setup on retry, so a combo 4 (module-scoped shared simulation) `shutdown=True` test is crash-safe but not relaunch-safe — don't add `flaky` there expecting it to help.
@@ -66,7 +66,7 @@ Consult the **[Principal Engineer](/.claude/agents/principal-engineer.agent.md)*
 
 Update `.claude` sources; symlinks pick up changes automatically. When adding or renaming an agent, or editing its description, also update its `.codex/agents/` trampoline to match (CI enforces this via `validate_agent_files`).
 
-\*\*Always edit the `AGENTS.md`, not just `CLAUDE.md` to cover all agents.
+\*\*Edit `AGENTS.md`; `CLAUDE.md` only includes it (`@AGENTS.md`), so changes there cover all agents.
 
 ## Spikes
 
