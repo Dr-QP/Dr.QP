@@ -1,6 +1,6 @@
 # Development Tools Role
 
-This Ansible role installs a comprehensive set of development tools required for ROS 2 development, including build tools, version control, Python tools, and required libraries.
+This Ansible role installs a comprehensive set of development tools required for ROS 2 development, including build tools, version control, Python tools, pre-commit, and required libraries.
 
 ## Example Usage
 
