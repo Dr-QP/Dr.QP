@@ -24,11 +24,11 @@ Specs are numbered in implementation order. Specs 01, 02, 03, 04, and 07 have la
 implementation files have been removed. Remaining specs assume those foundations unless the
 dependency table says otherwise.
 
-| Spec                                                   | Title                                              | Fixes                  | Depends on |
-| ------------------------------------------------------ | -------------------------------------------------- | ---------------------- | ---------- |
-| [05](05-cycloid-swing-profile.md)                      | Cycloid swing profile                              | F6, F13                | 02 (soft)  |
-| [06](06-twist-based-steering.md)                       | Twist-based steering                               | F7, F16, F22 (partial) | 02, 03, 04 |
-| [08](08-raise-control-loop-rate.md)                    | Raise control loop rate                            | F25                    | 02, 04     |
+| Spec                                | Title                   | Fixes                  | Depends on |
+| ----------------------------------- | ----------------------- | ---------------------- | ---------- |
+| [05](05-cycloid-swing-profile.md)   | Cycloid swing profile   | F6, F13                | 02 (soft)  |
+| [06](06-twist-based-steering.md)    | Twist-based steering    | F7, F16, F22 (partial) | 02, 03, 04 |
+| [08](08-raise-control-loop-rate.md) | Raise control loop rate | F25                    | 02, 04     |
 
 Dependency sketch:
 
