@@ -70,4 +70,4 @@ Update `.claude` sources; symlinks pick up changes automatically. When adding or
 
 ## Spikes
 
-When doing investigation work aka spikes document your findings in specs under `docs/agents/specs/<spike-topic>` in a structured way, create new subfolder `<spike-topic>` for the subject of investigation. Create `Readme.md` with raw findings, including list of issues with assigned priorities. Create a series of spec files with implementation guidance.
+When doing investigation work aka spikes document your findings in specs under `docs/agents/specs/<spike-topic>` in a structured way, create new subfolder `<spike-topic>` for the subject of investigation. Create `README.md` with raw findings, including list of issues with assigned priorities. Create a series of spec files with implementation guidance.
