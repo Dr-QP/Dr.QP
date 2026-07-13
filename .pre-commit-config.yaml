@@ -44,7 +44,7 @@ repos:
         name: notebooks-format
         entry: ./scripts/notebooks-format.sh
         language: script
-        pass_filenames: false
+        pass_filenames: true
         files: '(docs/source/notebooks/.*\.md)$'
 
       - id: validate-agent-files
