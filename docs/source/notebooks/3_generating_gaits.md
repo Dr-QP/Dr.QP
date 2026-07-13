@@ -433,8 +433,8 @@ command behave differently from an axial one.
 The duration for which one foot is in stance depends on the selected gait:
 
 \begin{equation}
-T_{\mathrm{stance}} =
-T_{\mathrm{cycle}}(1-d_{\mathrm{swing}}),
+T*{\mathrm{stance}} =
+T*{\mathrm{cycle}}(1-d\_{\mathrm{swing}}),
 \end{equation}
 
 where $d_{\mathrm{swing}}$ is the gait's swing fraction. The normalized inputs
@@ -443,9 +443,9 @@ then become a physical body-frame twist:
 \begin{equation}
 \begin{aligned}
 \mathbf{v} & =
-\bar{\mathbf{u}}\frac{L_{\mathrm{step}}}{T_{\mathrm{stance}}}, \\
+\bar{\mathbf{u}}\frac{L*{\mathrm{step}}}{T*{\mathrm{stance}}}, \\
 \omega & =
-\operatorname{clip}(\rho,-1,1)\,\omega_{\max}, \\
+\operatorname{clip}(\rho,-1,1)\,\omega\_{\max}, \\
 \boldsymbol{\xi} & = (v_x,v_y,\omega).
 \end{aligned}
 \end{equation}
@@ -462,8 +462,8 @@ At full linear input, the body travels one configured step length over a
 stance interval:
 
 \begin{equation}
-\Delta\mathbf{p}=\mathbf{v}T_{\mathrm{stance}}
-=\bar{\mathbf{u}}L_{\mathrm{step}}.
+\Delta\mathbf{p}=\mathbf{v}T*{\mathrm{stance}}
+=\bar{\mathbf{u}}L*{\mathrm{step}}.
 \end{equation}
 
 The angular counterpart of $\Delta\mathbf{p}$ is $\Delta\theta$. We define it
@@ -481,9 +481,9 @@ selects what signed fraction of this angle to use. An explicit
 legacy angle-per-stance setting is preserved by
 
 \begin{equation}
-\omega_{\max}=
-\frac{\operatorname{radians}(\texttt{rotation\_speed\_degrees})}
-{T_{\mathrm{stance}}}.
+\omega*{\max}=
+\frac{\operatorname{radians}(\texttt{rotation_speed_degrees})}
+{T*{\mathrm{stance}}}.
 \end{equation}
 
 Consequently, changing gait or cycle time retains the old configured yaw per
@@ -543,7 +543,7 @@ SE(2) exponential
 
 \begin{equation}
 \mathbf{T}(s)=
-\exp\!\left(sT_{\mathrm{stance}}\hat{\boldsymbol{\xi}}\right)
+\exp\!\left(sT\_{\mathrm{stance}}\hat{\boldsymbol{\xi}}\right)
 =
 \begin{bmatrix}
 \mathbf{R}(\theta(s)) & \mathbf{p}(s)\\
@@ -623,8 +623,8 @@ the current body frame. A planted foot must reconstruct to the same world
 point after applying the body pose:
 
 \begin{equation}
-\mathbf{R}(\theta(s))\mathbf{q}_i(s)+\mathbf{p}(s)
-=\mathbf{r}_i.
+\mathbf{R}(\theta(s))\mathbf{q}\_i(s)+\mathbf{p}(s)
+=\mathbf{r}\_i.
 \end{equation}
 
 Solving for the target gives the central equation implemented by
@@ -632,9 +632,9 @@ Solving for the target gives the central equation implemented by
 
 \begin{equation}
 \boxed{
-\mathbf{q}_i(s)=
+\mathbf{q}\_i(s)=
 \mathbf{R}(-\theta(s))
-\left(\mathbf{r}_i-\mathbf{p}(s)\right)
+\left(\mathbf{r}\_i-\mathbf{p}(s)\right)
 }.
 \end{equation}
 
@@ -650,13 +650,13 @@ The important limiting cases fall out of the same equation:
 \begin{array}{lll}
 \omega=0
 &\Longrightarrow&
-\mathbf{q}_i(s)=\mathbf{r}_i-s\Delta\mathbf{p},\\[4pt]
+\mathbf{q}\_i(s)=\mathbf{r}\_i-s\Delta\mathbf{p},\\[4pt]
 \mathbf{v}=\mathbf{0}
 &\Longrightarrow&
-\mathbf{q}_i(s)=\mathbf{R}(-s\Delta\theta)\mathbf{r}_i,\\[4pt]
+\mathbf{q}\_i(s)=\mathbf{R}(-s\Delta\theta)\mathbf{r}\_i,\\[4pt]
 \mathbf{v}=\mathbf{0},\ \omega=0
 &\Longrightarrow&
-\mathbf{q}_i(s)=\mathbf{r}_i.
+\mathbf{q}\_i(s)=\mathbf{r}\_i.
 \end{array}
 \end{equation}
 
@@ -674,7 +674,7 @@ control interval $\Delta t$ and steering time constant $\tau$,
 \alpha=1-e^{-\Delta t/\tau},\qquad
 \boldsymbol{\xi}_{\mathrm{proposed}}=
 (1-\alpha)\boldsymbol{\xi}_{\mathrm{current}}
-+\alpha\boldsymbol{\xi}_{\mathrm{target}}.
++\alpha\boldsymbol{\xi}\_{\mathrm{target}}.
 \end{equation}
 
 This is the exact discrete update of a first-order low-pass filter for a
