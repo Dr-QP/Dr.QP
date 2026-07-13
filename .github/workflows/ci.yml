@@ -332,6 +332,12 @@ jobs:
           username: ${{ env.REGISTRY_USERNAME }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Add workspace to safe directories
+        run: |
+          # This is needed for pre-commit install to work in the devcontainer, otherwise it will fail with "An error has occurred: FatalError: git failed. Is it installed, and are you in a Git repository directory?"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config --global --add safe.directory "/opt/ros/overlay_ws"
+
       - name: Patch devcontainer.json to use image built in this workflow
         env:
           MERGED_IMAGE: ${{ needs.merge-dev-image.outputs.image_pinned }}
