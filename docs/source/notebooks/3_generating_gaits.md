@@ -466,8 +466,17 @@ stance interval:
 =\bar{\mathbf{u}}L_{\mathrm{step}}.
 \end{equation}
 
-Yaw has the same interpretation. The yaw accumulated over one stance is
-$\Delta\theta=\omega T_{\mathrm{stance}}$. An explicit
+The angular counterpart of $\Delta\mathbf{p}$ is $\Delta\theta$. We define it
+as the signed yaw produced by applying the constant angular velocity $\omega$
+for one positive stance-duration interval:
+
+\begin{equation}
+\Delta\theta = \omega T_{\mathrm{stance}}.
+\end{equation}
+
+$\Delta\theta$ is a yaw _scale_ for one complete stride interval, not the
+robot's current or accumulated heading. The gait coordinate introduced below
+selects what signed fraction of this angle to use. An explicit
 `omega_max_rad_sec` is the preferred configuration. If it is absent, the
 legacy angle-per-stance setting is preserved by
 
@@ -502,6 +511,20 @@ as a distance. Instead it uses $sT_{\mathrm{stance}}$ as the signed time at
 which to evaluate the commanded rigid motion. This is why the same unit gait
 profile can drive any step length, gait duty factor, and turn rate.
 
+The relative yaw at coordinate $s$ is therefore
+
+\begin{equation}
+\theta(s) = s\Delta\theta
+=s\omega T_{\mathrm{stance}}.
+\end{equation}
+
+The symbol $\theta(s)$ means the body's heading relative to the middle of the
+stride, where $s=0$ and $\theta(0)=0$. It is not an absolute world heading.
+The two stride endpoints are
+$\theta(-\tfrac12)=-\Delta\theta/2$ and
+$\theta(+\tfrac12)=+\Delta\theta/2$, so they are separated by the full angle
+$\Delta\theta$.
+
 ### Integrating translation and yaw as one SE(2) motion
 
 A body-frame planar twist has the matrix representation
@@ -532,7 +555,6 @@ with
 
 \begin{equation}
 \begin{aligned}
-\theta(s) & = s\Delta\theta,\\
 \mathbf{p}(s) & =
 \mathbf{V}(\theta(s))\,s\Delta\mathbf{p},\\
 \mathbf{V}(\theta) & =
@@ -544,6 +566,10 @@ with
 \end{bmatrix}.
 \end{aligned}
 \end{equation}
+
+In the definition of $\mathbf{V}(\theta)$, bare $\theta$ is the matrix's angle
+argument. The controller evaluates it at the stride-relative angle
+$\theta(s)$ defined above.
 
 This is a stride-relative pose used to construct leg targets, not an
 accumulated global pose or an odometry estimate. The current controller does
