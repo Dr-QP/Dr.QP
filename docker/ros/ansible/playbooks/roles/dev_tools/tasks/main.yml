@@ -58,6 +58,7 @@
       - python3-vcstool
       - python3-venv
       - ros-dev-tools
+      - shellcheck
       - ffmpeg # for rendering notebooks animations
       - htop # for monitoring resource usage in development
     state: present
