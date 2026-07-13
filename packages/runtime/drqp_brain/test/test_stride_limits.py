@@ -25,6 +25,7 @@ from drqp_brain.generate_stride_limits import (
     _make_moveit_parameter_node,
     find_max_step_length,
     generate_stride_limits,
+    main,
     parse_args,
 )
 from drqp_brain.parametric_gait_generator import GaitType
@@ -182,6 +183,38 @@ def test_generate_stride_limits_emits_all_requested_directions_for_each_gait():
         assert all(
             sample['max_step_length_m'] == pytest.approx(0.125, abs=0.001) for sample in samples
         )
+
+
+def test_main_releases_moveit_checker_before_ros_shutdown(monkeypatch):
+    """The MoveIt object must destruct before its rclpy context is shut down."""
+    lifecycle_events = []
+
+    class Checker:
+        """Callable that records when the checker is released."""
+
+        def __call__(self, _gait, _direction, _step_length):
+            return True
+
+        def __del__(self):
+            lifecycle_events.append('checker released')
+
+    monkeypatch.setattr('drqp_brain.generate_stride_limits.rclpy.init', lambda: None)
+    monkeypatch.setattr(
+        'drqp_brain.generate_stride_limits.rclpy.try_shutdown',
+        lambda: lifecycle_events.append('shutdown'),
+    )
+    monkeypatch.setattr(
+        'drqp_brain.generate_stride_limits.make_moveit_step_length_checker',
+        lambda **_kwargs: Checker(),
+    )
+    monkeypatch.setattr(
+        'drqp_brain.generate_stride_limits.generate_stride_limits',
+        lambda _checker, **_kwargs: _limits_data(),
+    )
+
+    main(['--output', '/dev/null'])
+
+    assert lifecycle_events.index('checker released') < lifecycle_events.index('shutdown')
 
 
 def test_stride_generator_parses_all_real_controller_joint_limits():

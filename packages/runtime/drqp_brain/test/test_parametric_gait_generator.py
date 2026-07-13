@@ -65,6 +65,116 @@ class TestParametricGaitGenerator:
 
         self._test_gait(gait_gen, hexapod_legs, 1 / 6, 1, 2)
 
+    def test_swing_profile_preserves_endpoints_and_apex(self, gait_gen):
+        """Swing follows the specified cycloid endpoints and apex."""
+        swing_duration = gait_gen.gaits[GaitType.wave].swing_duration
+        half_step = gait_gen.step_length / 2
+
+        liftoff = self._offset_at_swing_time(gait_gen, 0.0)
+        apex = self._offset_at_swing_time(gait_gen, 0.5)
+        touchdown = self._offset_at_swing_time(gait_gen, 1.0)
+
+        assert liftoff.x == pytest.approx(-half_step)
+        assert touchdown.x == pytest.approx(half_step)
+        assert liftoff.z == pytest.approx(0.0)
+        assert touchdown.z == pytest.approx(0.0)
+        assert apex.z == pytest.approx(gait_gen.step_height)
+        assert swing_duration == pytest.approx(1 / 6)
+
+    def test_swing_profile_has_near_zero_boundary_velocity(self, gait_gen):
+        """Cycloid feet begin and end swing much slower than mid-swing."""
+        first = self._offset_at_swing_time(gait_gen, 0.0)
+        near_first = self._offset_at_swing_time(gait_gen, 0.01)
+        near_last = self._offset_at_swing_time(gait_gen, 0.99)
+        last = self._offset_at_swing_time(gait_gen, 1.0)
+
+        x_mid_before = self._offset_at_swing_time(gait_gen, 0.49)
+        x_mid_after = self._offset_at_swing_time(gait_gen, 0.51)
+        z_peak_before = self._offset_at_swing_time(gait_gen, 0.24)
+        z_peak_after = self._offset_at_swing_time(gait_gen, 0.26)
+
+        boundary_x_speeds = [
+            abs((near_first.x - first.x) / 0.01),
+            abs((last.x - near_last.x) / 0.01),
+        ]
+        boundary_z_speeds = [
+            abs((near_first.z - first.z) / 0.01),
+            abs((last.z - near_last.z) / 0.01),
+        ]
+        mid_x_speed = abs((x_mid_after.x - x_mid_before.x) / 0.02)
+        peak_z_speed = abs((z_peak_after.z - z_peak_before.z) / 0.02)
+
+        assert max(boundary_x_speeds) < mid_x_speed * 0.05
+        assert max(boundary_z_speeds) < peak_z_speed * 0.05
+
+    def test_swing_profile_is_monotonic_and_stance_stays_linear(self, gait_gen):
+        """Cycloid swing moves forward while the stance regression stays linear."""
+        swing_times = np.linspace(0.0, 1.0, 101)
+        swing_offsets = [self._offset_at_swing_time(gait_gen, time) for time in swing_times]
+        assert all(
+            following.x > previous.x
+            for previous, following in zip(swing_offsets, swing_offsets[1:])
+        )
+
+        gait = gait_gen.gaits[GaitType.wave]
+        half_step = gait_gen.step_length / 2
+        for phase in (gait.swing_duration, 0.25, 0.5, 0.75):
+            offset = gait_gen.get_offsets_at_phase_for_leg(HexapodLeg.right_back, phase)
+            expected_x = np.interp(
+                phase,
+                [gait.swing_duration, 1.0],
+                [half_step, -half_step],
+            )
+            assert offset.label == 'stance'
+            assert offset.x == pytest.approx(expected_x)
+            assert offset.z == pytest.approx(0.0)
+
+    def test_swing_and_stance_positions_converge_at_the_boundary(self, gait_gen):
+        """Swing-to-stance position discontinuity approaches zero when sampled."""
+        gait = gait_gen.gaits[GaitType.wave]
+        distances = []
+        for samples in (100, 1_000):
+            last_swing_phase = gait.swing_duration * (1.0 - 1.0 / samples)
+            first_stance_phase = gait.swing_duration
+            last_swing = gait_gen.get_offsets_at_phase_for_leg(
+                HexapodLeg.right_back, last_swing_phase
+            )
+            first_stance = gait_gen.get_offsets_at_phase_for_leg(
+                HexapodLeg.right_back, first_stance_phase
+            )
+            distances.append(abs(first_stance.x - last_swing.x))
+
+        assert distances[1] < distances[0]
+        assert distances[1] < 0.001
+
+    def test_phase_wraparound_uses_a_half_open_unit_interval(self, gait_gen):
+        """Equivalent and negative phases wrap safely into the same gait state."""
+        leg = HexapodLeg.right_back
+        epsilon = 1e-9
+        offsets = [
+            gait_gen.get_offsets_at_phase_for_leg(leg, phase)
+            for phase in (0.0, 1.0, 1.0 + epsilon)
+        ]
+        epsilon_offset = gait_gen.get_offsets_at_phase_for_leg(leg, epsilon)
+        negative_phase = gait_gen.get_offsets_at_phase_for_leg(leg, -0.5)
+        wrapped_phase = gait_gen.get_offsets_at_phase_for_leg(leg, 0.5)
+
+        assert [offset.label for offset in offsets] == ['swing'] * 3
+        assert (offsets[0].x, offsets[0].z) == pytest.approx((offsets[1].x, offsets[1].z))
+        assert (offsets[2].x, offsets[2].z) == pytest.approx((epsilon_offset.x, epsilon_offset.z))
+        assert negative_phase.label == wrapped_phase.label
+        assert (negative_phase.x, negative_phase.z) == pytest.approx(
+            (wrapped_phase.x, wrapped_phase.z)
+        )
+
+    @staticmethod
+    def _offset_at_swing_time(gait_gen, time):
+        gait = gait_gen.gaits[GaitType.wave]
+        return gait_gen.get_offsets_at_phase_for_leg(
+            HexapodLeg.right_back,
+            time * gait.swing_duration,
+        )
+
     def _test_gait(
         self,
         gait_gen,

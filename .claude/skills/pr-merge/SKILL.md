@@ -37,7 +37,8 @@ asks to change that state.
   ```
 
 - Work from an isolated worktree. If the caller did not provide one, create
-  one under `./.tmp/` after resolving the PR number and head branch:
+  one under `./.tmp/` after resolving the PR number and head branch.
+  If current branch matches the PR head branch, use it directly.
 
   ```bash
   mkdir -p ./.tmp
