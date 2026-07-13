@@ -1,11 +1,13 @@
 repos:
-  # Enable in separate PR
-  #- repo: https://github.com/pre-commit/pre-commit-hooks
-  #  rev: v2.3.0
-  #  hooks:
-  #   - id: check-yaml
-  #   - id: end-of-file-fixer
-  #   - id: trailing-whitespace
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+        args: [--fix=lf]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.11.2
@@ -15,18 +17,6 @@ repos:
         args: [--fix]
       - id: ruff # isort
         args: [--fix, --select, I]
-
-  # [jupytext] Error: the git index is outdated.
-  # Please add the paired notebook with:
-  #     git add notebooks/1_getting_started_with_robot_ik.ipynb
-  # - repo: https://github.com/mwouts/jupytext
-  #   rev: v1.17.0
-  #   hooks:
-  #   - id: jupytext
-  #     args: [--sync, notebooks/*.md, notebooks/*.ipynb, --pipe-fmt, py:percent, --pipe, 'ruff format {}', --pipe, 'ruff check --fix --ignore E402,F811 {}', --pipe, 'ruff check --fix --select I {}']
-  #     additional_dependencies:
-  #     - ruff==v0.11.2
-  #     pass_filenames: false
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.24.3
