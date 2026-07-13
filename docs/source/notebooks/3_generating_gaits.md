@@ -570,10 +570,54 @@ SE(2) exponential
 \begin{bmatrix}
 \mathbf{R}(\theta(s)) & \mathbf{p}(s)\\
 \mathbf{0}^\mathsf{T} & 1
+\end{bmatrix}.
+\end{equation}
+
+The block form above is shorthand for an ordinary $3\times3$ matrix.
+$\mathbf{p}(s)$ is the two-coordinate translation column
+
+\begin{equation}
+\mathbf{p}(s)=
+\begin{bmatrix}
+p_x(s)\\
+p_y(s)
 \end{bmatrix},
 \end{equation}
 
-with
+and $\mathbf{0}$ is a two-entry column of zeros. The superscript
+$\mathsf{T}$ means _transpose_, which turns a column into a row:
+
+\begin{equation}
+\mathbf{0}=
+\begin{bmatrix}
+0\\
+0
+\end{bmatrix},
+\qquad
+\mathbf{0}^\mathsf{T}=
+\begin{bmatrix}
+0 & 0
+\end{bmatrix}.
+\end{equation}
+
+Writing out all the blocks makes their roles more visible:
+
+\begin{equation}
+\mathbf{T}(s)=
+\begin{bmatrix}
+\cos\theta(s) & -\sin\theta(s) & p_x(s)\\
+\sin\theta(s) & \cos\theta(s) & p_y(s)\\
+0 & 0 & 1
+\end{bmatrix}.
+\end{equation}
+
+The final row is a bookkeeping trick called _homogeneous coordinates_. A 2D
+point $(x,y)$ is temporarily written as the three-entry column
+$[x,y,1]^\mathsf{T}$. Multiplying it by $\mathbf{T}(s)$ rotates the first two
+coordinates, adds $p_x(s)$ and $p_y(s)$, and leaves the final $1$ unchanged.
+That extra coordinate lets one matrix represent both rotation and translation.
+
+The translation itself is computed from the twist by
 
 \begin{equation}
 \begin{aligned}
