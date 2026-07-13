@@ -13,7 +13,7 @@ def test_parse_arguments_defaults_to_all_kinds() -> None:
     """The canonical parser should validate all customization kinds by default."""
     parsed = parse_arguments([])
 
-    assert parsed.path == '.'
+    assert parsed.paths == ['.']
     assert parsed.kind == 'all'
     assert parsed.format == 'text'
 
@@ -23,7 +23,14 @@ def test_parse_arguments_supports_skills_filter() -> None:
     parsed = parse_arguments(['--kind', 'skills', '.claude/skills'])
 
     assert parsed.kind == 'skills'
-    assert parsed.path == '.claude/skills'
+    assert parsed.paths == ['.claude/skills']
+
+
+def test_parse_arguments_supports_multiple_paths() -> None:
+    """The canonical parser should accept multiple customization paths."""
+    parsed = parse_arguments(['.claude/skills', '.claude/agents'])
+
+    assert parsed.paths == ['.claude/skills', '.claude/agents']
 
 
 def test_parse_arguments_rejects_xml_output() -> None:

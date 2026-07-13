@@ -102,7 +102,6 @@ jobs:
             - packages/**/*.h
             - packages/**/*.py
             - py_packages/**/*.py
-            - scripts/cpp-reformat.sh
             - scripts/python-reformat.sh
             - .clang-format
             - '**/*.md'
@@ -211,15 +210,11 @@ jobs:
       - name: Setup Python venv
         uses: ./.github/actions/setup-python-venv
 
-      - name: Reformat C++
-        run: |
-          source scripts/setup.bash
-          ./scripts/cpp-reformat.sh
-
       - name: Reformat Python
         run: |
           source scripts/setup.bash
           ./scripts/python-reformat.sh
+          ./scripts/notebooks-format.sh
 
       - name: Create formatter patch
         id: patch
@@ -273,7 +268,7 @@ jobs:
           persist-credentials: false
 
       - name: Load Super-Linter autofix configuration
-        run: grep -vE '^[[:space:]]*(#|$)' .github/super-linter-autofix.env >> "$GITHUB_ENV"
+        run: ./scripts/super-linter-env.sh --autofix >> "$GITHUB_ENV"
 
       - name: Run Super-Linter autofixes
         continue-on-error: true
@@ -312,7 +307,7 @@ jobs:
 
       - name: Load Super-Linter check configuration
         if: steps.patch.outputs.changed != 'true'
-        run: grep -vE '^[[:space:]]*(#|$)' .github/super-linter-checks.env >> "$GITHUB_ENV"
+        run: ./scripts/super-linter-env.sh >> "$GITHUB_ENV"
 
       - name: Run Super-Linter checks
         if: steps.patch.outputs.changed != 'true'

@@ -190,7 +190,7 @@ ansible-playbook playbooks/test_ros_dependencies.yml
 - Required Ansible collections:
 
   ```bash
-  ansible-galaxy collection install community.general
+  ansible-galaxy collection install community.general community.docker
   ```
 
 ## Post-Installation Notes

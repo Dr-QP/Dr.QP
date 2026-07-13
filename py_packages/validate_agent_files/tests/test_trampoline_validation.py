@@ -111,6 +111,47 @@ def test_orphan_trampoline_fails(tmp_path: Path, capsys) -> None:
     assert 'ghost' in captured.out
 
 
+def test_individually_supplied_agents_share_one_trampoline_catalog(
+    repo_tmp_path: Path, capsys
+) -> None:
+    """Multiple agent file arguments should be validated as one catalog."""
+    claude_agents, codex_agents = _make_catalog(repo_tmp_path)
+    _write_agent(claude_agents, 'first', 'First Agent', 'The first agent.')
+    _write_agent(claude_agents, 'second', 'Second Agent', 'The second agent.')
+    _write_trampoline(codex_agents, 'first', 'First Agent', 'The first agent.')
+    _write_trampoline(codex_agents, 'second', 'Second Agent', 'The second agent.')
+
+    exit_code = main(
+        [
+            str(claude_agents / 'first.agent.md'),
+            str(claude_agents / 'second.agent.md'),
+            '--kind',
+            'agents',
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0, captured.out
+    assert 'Orphan Codex trampoline' not in captured.out
+
+
+def test_single_agent_file_does_not_report_unselected_trampolines_as_orphans(
+    repo_tmp_path: Path, capsys
+) -> None:
+    """Changed-file validation should ignore unrelated catalog trampolines."""
+    claude_agents, codex_agents = _make_catalog(repo_tmp_path)
+    _write_agent(claude_agents, 'changed', 'Changed Agent', 'The changed agent.')
+    _write_agent(claude_agents, 'other', 'Other Agent', 'Another catalog agent.')
+    _write_trampoline(codex_agents, 'changed', 'Changed Agent', 'The changed agent.')
+    _write_trampoline(codex_agents, 'other', 'Other Agent', 'Another catalog agent.')
+
+    exit_code = main([str(claude_agents / 'changed.agent.md'), '--kind', 'agents'])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0, captured.out
+    assert 'Orphan Codex trampoline' not in captured.out
+
+
 def test_repo_catalog_trampolines_are_in_sync() -> None:
     """The real repo's four agent/trampoline pairs validate without drift."""
     repo_root = Path(__file__).resolve().parents[3]
