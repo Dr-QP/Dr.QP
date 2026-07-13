@@ -391,40 +391,343 @@ animate_hexapod_gait_with_direction(
 
 ## Gradual migration: directional gait to SE(2) twist locomotion
 
-The older controller below is still valuable because it has only one moving
-part at a time: choose a direction, scale a stride, then inspect the resulting
-foot path. Production locomotion adds the same ideas in small, compatible
-steps rather than replacing them with an unrelated abstraction.
+`DirectionalGaitGenerator` is a useful first model: rotate a one-dimensional
+foot offset into the requested direction and add it to every neutral foot
+position. The runtime controller has a subtly different question to answer,
+however. A movement command describes how the _body_ should move while the
+stance feet remain planted in the world. Once translation and yaw happen at
+the same time, rotating and adding foot offsets independently is no longer the
+motion of one rigid body.
 
-1. Start with `DirectionalGaitGenerator`: its normalized direction vector
-   answers _which way should the robot translate?_
-2. Give that direction a physical scale. `WalkController.command_to_twist()`
-   maps a normalized joystick vector to a body-frame linear velocity using the
-   configured stride and stance duration.
-3. Treat turning as an angular velocity (`omega`, radians per second), not a
-   second position target. The legacy `rotation_speed_degrees` setting remains
-   as a compatibility mapping when no explicit `omega_max_rad_sec` is set.
-4. Combine linear and angular velocity into `SteeringState`. This is a planar
-   SE(2) twist `(v_x, v_y, omega)`: a single command that can translate, turn,
-   or do both at once.
-5. Advance the controller with elapsed time, then evaluate
-   `targets_at(phase, steering)`. The controller scales an unsafe _combined_
-   twist before committing it, so the feet follow one coherent motion rather
-   than mixing independently generated translation and rotation targets.
+The old runtime path generated a translation target and a rotation target,
+then took a weighted average of the two. That has three undesirable
+consequences:
 
-For a first experiment, replace a direct `SteeringState` construction with
-`command_to_twist()` as shown below. This preserves the notebook's normalized
-controls while exercising the same units and SE(2) model that the robot uses.
+- translation and rotation, despite having different units, compete for the
+  same weights;
+- adding yaw reduces translation and adding translation reduces yaw; and
+- the resulting target is generally not the inverse of any rigid body pose,
+  so a nominally planted foot drifts in the world.
+
+`WalkController` now starts from one planar body twist and derives every foot
+target from the corresponding SE(2) rigid motion. Translation and rotation are
+therefore _unified_: neither trajectory is generated or blended separately.
+
+### From a normalized command to a physical twist
+
+Let the planar joystick command be
+$\mathbf{u}=(u_x,u_y)^\mathsf{T}$ and let $\rho$ be the normalized turn
+command. `command_to_twist()` first clips the joystick to the Euclidean unit
+disk:
+
+\begin{equation}
+\bar{\mathbf{u}} =
+\frac{\mathbf{u}}{\max(1,\lVert\mathbf{u}\rVert_2)}.
+\end{equation}
+
+Using an L2 norm is important. Every point on the unit circle produces the
+same speed, so forward, lateral, and diagonal commands are isotropic. The
+retired controller used an L1 magnitude, $|u_x|+|u_y|$, which made a diagonal
+command behave differently from an axial one.
+
+The duration for which one foot is in stance depends on the selected gait:
+
+\begin{equation}
+T_{\mathrm{stance}} =
+T_{\mathrm{cycle}}(1-d_{\mathrm{swing}}),
+\end{equation}
+
+where $d_{\mathrm{swing}}$ is the gait's swing fraction. The normalized inputs
+then become a physical body-frame twist:
+
+\begin{equation}
+\begin{aligned}
+\mathbf{v} & =
+\bar{\mathbf{u}}\frac{L_{\mathrm{step}}}{T_{\mathrm{stance}}}, \\
+\omega & =
+\operatorname{clip}(\rho,-1,1)\,\omega_{\max}, \\
+\boldsymbol{\xi} & = (v_x,v_y,\omega).
+\end{aligned}
+\end{equation}
+
+Here $\mathbf{v}$ is expressed in the model's distance units per second and
+$\omega$ in radians per second. The runtime robot model uses metres; the
+notebook model traditionally uses millimetres. The equations work in either
+system as long as the geometry and `step_length` use the same distance unit.
+The input's z component is intentionally ignored: planar twist commands do
+not climb, and vertical motion remains the responsibility of swing height and
+the separately requested body pose.
+
+At full linear input, the body travels one configured step length over a
+stance interval:
+
+\begin{equation}
+\Delta\mathbf{p}=\mathbf{v}T_{\mathrm{stance}}
+=\bar{\mathbf{u}}L_{\mathrm{step}}.
+\end{equation}
+
+Yaw has the same interpretation. The yaw accumulated over one stance is
+$\Delta\theta=\omega T_{\mathrm{stance}}$. An explicit
+`omega_max_rad_sec` is the preferred configuration. If it is absent, the
+legacy angle-per-stance setting is preserved by
+
+\begin{equation}
+\omega_{\max}=
+\frac{\operatorname{radians}(\texttt{rotation\_speed\_degrees})}
+{T_{\mathrm{stance}}}.
+\end{equation}
+
+Consequently, changing gait or cycle time retains the old configured yaw per
+stance while changing the corresponding angular velocity. The ROS parameter
+`rotation_speed_degrees` is deprecated, but remains as this compatibility
+mapping.
+
+`SteeringState` stores the resulting physical values as `linear_velocity` and
+`angular_velocity`. Its older `direction` and `rotation_direction` properties
+are now read-only transition aliases; they no longer mean normalized input.
+
+### The gait offset is a time-like coordinate
+
+Internally, `WalkController` configures `ParametricGaitGenerator` with unit
+step length and unit step height. For each leg it receives two dimensionless
+quantities:
+
+- $s$, the x offset in $[-\tfrac12,+\tfrac12]$; and
+- $h$, the normalized swing height in $[0,1]$.
+
+During swing, the cycloid carries $s$ from $-\tfrac12$ to $+\tfrac12$ while
+raising and lowering $h$. During stance, $s$ moves linearly back from
+$+\tfrac12$ to $-\tfrac12$ and $h=0$. The controller does not interpret $s$
+as a distance. Instead it uses $sT_{\mathrm{stance}}$ as the signed time at
+which to evaluate the commanded rigid motion. This is why the same unit gait
+profile can drive any step length, gait duty factor, and turn rate.
+
+### Integrating translation and yaw as one SE(2) motion
+
+A body-frame planar twist has the matrix representation
+
+\begin{equation}
+\hat{\boldsymbol{\xi}}=
+\begin{bmatrix}
+0 & -\omega & v_x\\
+\omega & 0 & v_y\\
+0 & 0 & 0
+\end{bmatrix}.
+\end{equation}
+
+At stride coordinate $s$, the body pose relative to its pose at $s=0$ is the
+SE(2) exponential
+
+\begin{equation}
+\mathbf{T}(s)=
+\exp\!\left(sT_{\mathrm{stance}}\hat{\boldsymbol{\xi}}\right)
+=
+\begin{bmatrix}
+\mathbf{R}(\theta(s)) & \mathbf{p}(s)\\
+\mathbf{0}^\mathsf{T} & 1
+\end{bmatrix},
+\end{equation}
+
+with
+
+\begin{equation}
+\begin{aligned}
+\theta(s) & = s\Delta\theta,\\
+\mathbf{p}(s) & =
+\mathbf{V}(\theta(s))\,s\Delta\mathbf{p},\\
+\mathbf{V}(\theta) & =
+\begin{bmatrix}
+\dfrac{\sin\theta}{\theta} &
+-\dfrac{1-\cos\theta}{\theta}\\[6pt]
+\dfrac{1-\cos\theta}{\theta} &
+\dfrac{\sin\theta}{\theta}
+\end{bmatrix}.
+\end{aligned}
+\end{equation}
+
+This is a stride-relative pose used to construct leg targets, not an
+accumulated global pose or an odometry estimate. The current controller does
+not integrate the twist across cycles.
+
+The $\mathbf{V}$ matrix is the crucial coupling term. $\mathbf{v}$ is fixed in
+the _rotating body frame_; as yaw changes, the same body-frame velocity points
+in a continuously changing world direction. Its integral is a circular arc,
+not the straight displacement $s\Delta\mathbf{p}$. Using the straight
+displacement would be exact only when $\omega=0$ and only a first-order
+approximation otherwise.
+
+For $\omega\ne0$, the instantaneous centre of rotation in body coordinates is
+
+\begin{equation}
+\mathbf{c}=
+\begin{bmatrix}
+-v_y/\omega\\
+v_x/\omega
+\end{bmatrix}.
+\end{equation}
+
+This gives a geometric reading of a combined command: each foot traces the
+arc imposed by the same centre of rotation, but its radius depends on that
+foot's neutral position. A weighted translation/rotation blend cannot recover
+these leg-specific arcs.
+
+The ratios in $\mathbf{V}$ are indeterminate if evaluated directly at
+$\theta=0$. `_se2_translation()` uses their Taylor expansions for
+$|\theta|<10^{-5}$:
+
+\begin{equation}
+\begin{aligned}
+\frac{\sin\theta}{\theta}
+&=1-\frac{\theta^2}{6}+\frac{\theta^4}{120}+\mathcal{O}(\theta^6),\\
+\frac{1-\cos\theta}{\theta}
+&=\frac{\theta}{2}-\frac{\theta^3}{24}
++\frac{\theta^5}{720}+\mathcal{O}(\theta^7).
+\end{aligned}
+\end{equation}
+
+Besides avoiding division by zero, this prevents cancellation in
+$1-\cos\theta$ for nearly straight motion and makes the transition through
+zero yaw continuous.
+
+### World-grounded feet require the inverse body pose
+
+Let $\mathbf{r}_i$ be leg $i$'s neutral foot position, captured when the
+controller is constructed. Let $\mathbf{q}_i(s)$ be the target expressed in
+the current body frame. A planted foot must reconstruct to the same world
+point after applying the body pose:
+
+\begin{equation}
+\mathbf{R}(\theta(s))\mathbf{q}_i(s)+\mathbf{p}(s)
+=\mathbf{r}_i.
+\end{equation}
+
+Solving for the target gives the central equation implemented by
+`_foot_target_for_stride_offset()`:
+
+\begin{equation}
+\boxed{
+\mathbf{q}_i(s)=
+\mathbf{R}(-\theta(s))
+\left(\mathbf{r}_i-\mathbf{p}(s)\right)
+}.
+\end{equation}
+
+This inverse is also the reason for an apparent sign change from the simple
+directional decorator. The decorator commands where the _foot_ should move;
+the twist commands where the _body_ should move. If the body moves forward
+over a planted foot, the foot necessarily moves backward when observed in the
+body frame.
+
+The important limiting cases fall out of the same equation:
+
+\begin{equation}
+\begin{array}{lll}
+\omega=0
+&\Longrightarrow&
+\mathbf{q}_i(s)=\mathbf{r}_i-s\Delta\mathbf{p},\\[4pt]
+\mathbf{v}=\mathbf{0}
+&\Longrightarrow&
+\mathbf{q}_i(s)=\mathbf{R}(-s\Delta\theta)\mathbf{r}_i,\\[4pt]
+\mathbf{v}=\mathbf{0},\ \omega=0
+&\Longrightarrow&
+\mathbf{q}_i(s)=\mathbf{r}_i.
+\end{array}
+\end{equation}
+
+The horizontal target follows this inverse rigid motion in both swing and
+stance. Swing only adds the independent vertical term
+$hL_{\mathrm{height}}$. When there is no motion, `targets_at()` returns exact
+copies of the neutral feet rather than evaluating a tiny residual path.
+
+### Time-based steering and phase
+
+Raw command changes are filtered before they can reshape the stride. For a
+control interval $\Delta t$ and steering time constant $\tau$,
+
+\begin{equation}
+\alpha=1-e^{-\Delta t/\tau},\qquad
+\boldsymbol{\xi}_{\mathrm{proposed}}=
+(1-\alpha)\boldsymbol{\xi}_{\mathrm{current}}
++\alpha\boldsymbol{\xi}_{\mathrm{target}}.
+\end{equation}
+
+This is the exact discrete update of a first-order low-pass filter for a
+constant target. It depends on elapsed time rather than frame count: splitting
+one interval into smaller controller ticks produces the same result, apart
+from any reachability saturation applied at the intermediate ticks.
+
+`advance()` performs the stateful pipeline in this order:
+
+1. convert normalized input to a target twist;
+2. exponentially smooth all twist components;
+3. saturate the complete proposed twist for reachability;
+4. snap tiny linear or angular residuals to exact zero; and
+5. advance phase by $\Delta t/T_{\mathrm{cycle}}$ only while motion remains.
+
+Freezing phase at rest prevents an exponentially decaying command from making
+the feet drift forever. `targets_at(phase, steering)`, by contrast, is a pure
+query: repeated calls with the same arguments return the same targets and do
+not advance phase or mutate the robot model.
+
+### Reachability saturation preserves the commanded curve
+
+A planar direction-only limit cannot certify a combined twist. Reachability
+depends on the leg, swing height, yaw, body geometry, joint limits, and on
+interior points of the curved path. In particular, robot workspaces can have
+an inner unreachable region or joint-limit cuts even when both stride
+endpoints are valid.
+
+Before committing a proposed twist, `_twist_is_reachable()` samples 49 phases
+over the half-open gait cycle for every leg. It constructs the complete 3D
+target—including swing height—and calls analytic `solve_ik(clamp=False)`. A
+sample is safe only if it is geometrically reachable _and_ within joint
+limits. Checking the full gait also covers the different phase offsets of
+wave, ripple, and tripod gaits.
+
+If the proposal is unsafe, `_saturate_twist()` searches for one scalar
+$k\in[0,1]$ such that
+
+\begin{equation}
+\boldsymbol{\xi}_{\mathrm{safe}}=k\boldsymbol{\xi}_{\mathrm{proposed}}
+=(kv_x,kv_y,k\omega)
+\end{equation}
+
+is reachable. The implementation first verifies that the stationary pose is
+valid, then performs 20 bisection steps along this one-dimensional ray in
+twist space, assuming reachability is monotonic from rest along that ray. It
+returns the largest sampled safe scale; if even the stationary pose is
+invalid, it returns zero motion.
+
+Scaling all three components together matters. It preserves
+$v_y/v_x$, $\omega/\lVert\mathbf{v}\rVert_2$, and the instantaneous centre of
+rotation $\mathbf{c}$. In other words, saturation slows and shortens the
+commanded rigid motion without changing straight travel into a turn or
+changing the radius of a commanded arc. Independently clipping translation
+and yaw would change the path the operator requested.
+
+This runtime check supersedes the retired `stride_limits.yaml` polar table and
+its translation-only clamping. It evaluates the actual combined path against
+the current analytic leg model, so safety no longer relies on a later IK
+failure to reject an overlong stride.
+
+### Target generation and body posing stay separate
+
+The locomotion target is deliberately world-grounded. `targets_at()` accepts
+the historical `body_direction` and `body_rotation` arguments for transition
+compatibility but does not fold them into the gait path. The caller constructs
+the independently requested body pose with `body_transform()` and applies it
+before solving IK. Keeping target evaluation pure makes future trajectory
+samples deterministic and avoids applying body translation or rotation twice.
 
 ### Putting it all together
 
-Now that we have all the pieces in place, we can put them together to create a full walk controller. The controller will take care of the following:
-
-1. Process input command of the walk direction and rotation
-2. Generate a walk trajectory based on the input direction
-3. Generate a turn trajectory based on the input rotation
-4. Combine the two trajectories into a single walk trajectory
-5. Apply the walk trajectory to the robot based on the current robot legs position
+The runtime loop calls `advance()` once with the measured elapsed time, then
+uses the committed phase and saturated `SteeringState` to query targets. The
+notebook animation below focuses on the geometry: it maps normalized controls
+with `command_to_twist()` and evaluates `targets_at()` directly. It therefore
+shows the same units, SE(2) exponential, inverse foot transform, and vertical
+gait profile as runtime, while intentionally bypassing the stateful smoothing,
+phase advancement, and reachability saturation performed by `advance()`.
 
 ```{code-cell} ipython3
 :tags: [remove-cell]
