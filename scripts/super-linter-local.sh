@@ -103,3 +103,4 @@ env_file="$root_dir/.tmp/super-linter.env"
   --platform linux/amd64 \
   "$image"
 
+echo "Super-Linter output saved to $root_dir/log/super-linter-summary.md"
