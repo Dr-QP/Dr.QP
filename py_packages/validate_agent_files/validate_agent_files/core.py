@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, Iterable, List, Optional
 
 import yaml
 
@@ -100,26 +100,50 @@ class CustomizationsValidationEngine:
         self.show_warnings = show_warnings
 
     def validate(self, path: str, kind: str) -> List[ValidationResult]:
+        """Validate one customization path."""
+        return self.validate_paths([path], kind)
+
+    def validate_paths(self, paths: List[str], kind: str) -> List[ValidationResult]:
+        """Validate customization paths as one shared catalog."""
         results: List[ValidationResult] = []
 
         if kind in {'all', 'skills'}:
-            results.extend(self._validate_skills(path))
+            skill_files = self._unique_files(
+                file_path
+                for path in paths
+                for file_path in SkillFileLoader().find_skill_files(path)
+            )
+            results.extend(self._validate_skill_files(skill_files))
         if kind in {'all', 'agents'}:
-            results.extend(self._validate_agents(path))
+            agent_files = self._unique_files(
+                file_path for path in paths for file_path in find_agent_files(path)
+            )
+            results.extend(self._validate_agent_files(agent_files))
         if kind in {'all', 'prompts'}:
-            results.extend(self._validate_prompts(path))
+            prompt_files = self._unique_files(
+                file_path for path in paths for file_path in find_prompt_files(path)
+            )
+            results.extend(self._validate_prompt_files(prompt_files))
 
         return results
 
-    def _validate_skills(self, path: str) -> List[ValidationResult]:
-        loader = SkillFileLoader()
-        skill_files = loader.find_skill_files(path)
+    @staticmethod
+    def _unique_files(file_paths: Iterable[str]) -> List[str]:
+        """Return discovered files once while preserving discovery order."""
+        return list(dict.fromkeys(file_paths))
+
+    def _validate_skill_files(self, skill_files: List[str]) -> List[ValidationResult]:
         all_skills = load_all_skills(skill_files)
         engine = ValidationEngine(show_warnings=self.show_warnings)
         return [engine.validate(skill_path, all_skills=all_skills) for skill_path in skill_files]
 
+    def _validate_skills(self, path: str) -> List[ValidationResult]:
+        return self._validate_skill_files(SkillFileLoader().find_skill_files(path))
+
     def _validate_agents(self, path: str) -> List[ValidationResult]:
-        agent_files = find_agent_files(path)
+        return self._validate_agent_files(find_agent_files(path))
+
+    def _validate_agent_files(self, agent_files: List[str]) -> List[ValidationResult]:
         agent_documents: Dict[str, dict] = {}
         parse_errors: Dict[str, ValidationResult] = {}
 
@@ -186,9 +210,11 @@ class CustomizationsValidationEngine:
         )
         return result
 
-    def _validate_prompts(self, path: str) -> List[ValidationResult]:
-        prompt_files = find_prompt_files(path)
+    def _validate_prompt_files(self, prompt_files: List[str]) -> List[ValidationResult]:
         return [self._validate_prompt_file(file_path) for file_path in prompt_files]
+
+    def _validate_prompts(self, path: str) -> List[ValidationResult]:
+        return self._validate_prompt_files(find_prompt_files(path))
 
     def _validate_prompt_file(self, file_path: str) -> ValidationResult:
         result = ValidationResult(skill_path=file_path, issues=[])
