@@ -13,10 +13,10 @@ def parse_arguments(args: Optional[List[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Validate repository skills, agents, and prompts')
 
     parser.add_argument(
-        'path',
-        nargs='?',
-        default='.',
-        help='Path to the customization root, file, or current directory (default: .)',
+        'paths',
+        nargs='*',
+        default=['.'],
+        help='Customization roots or files to validate (default: current directory)',
     )
     parser.add_argument(
         '--kind',
