@@ -38,6 +38,7 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import ExecutableInPackage
 import pytest
 import rclpy
+from rclpy.parameter import Parameter
 from scipy.spatial.transform import Rotation as R
 from sensor_msgs.msg import Imu
 import std_msgs.msg
@@ -136,6 +137,19 @@ def test_destroy_node_destroys_action_client(rclpy_context):  # noqa: ARG001 (ne
         brain.destroy_node()
 
         action_client.destroy.assert_called_once_with()
+
+
+def test_omega_max_parameter_replaces_legacy_rotation_speed(
+    rclpy_context,  # noqa: ARG001 (needs rclpy)
+):
+    """A supplied metric yaw-rate limit reaches the walk controller unchanged."""
+    brain = HexapodBrain(
+        parameter_overrides=[Parameter('omega_max_rad_sec', Parameter.Type.DOUBLE, 1.75)]
+    )
+    try:
+        assert brain.walker.omega_max_rad_sec == pytest.approx(1.75)
+    finally:
+        brain.destroy_node()
 
 
 def make_imu_msg_from_base_tilt(
