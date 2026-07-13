@@ -13,5 +13,3 @@ all_sources=("$sources_dir" "$notebooks_dir" "$tool_scripts_dir" "$py_packages_d
 $ruff_format "${all_sources[@]}"
 $ruff_lint_fix "${all_sources[@]}"
 $ruff_isort "${all_sources[@]}"
-
-"$root_dir/scripts/notebooks-format.sh"

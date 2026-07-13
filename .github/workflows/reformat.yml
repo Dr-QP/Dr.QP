@@ -214,6 +214,7 @@ jobs:
         run: |
           source scripts/setup.bash
           ./scripts/python-reformat.sh
+          ./scripts/notebooks-format.sh
 
       - name: Create formatter patch
         id: patch
