@@ -397,7 +397,7 @@ foot path. Production locomotion adds the same ideas in small, compatible
 steps rather than replacing them with an unrelated abstraction.
 
 1. Start with `DirectionalGaitGenerator`: its normalized direction vector
-   answers *which way should the robot translate?*
+   answers _which way should the robot translate?_
 2. Give that direction a physical scale. `WalkController.command_to_twist()`
    maps a normalized joystick vector to a body-frame linear velocity using the
    configured stride and stance duration.
@@ -408,7 +408,7 @@ steps rather than replacing them with an unrelated abstraction.
    SE(2) twist `(v_x, v_y, omega)`: a single command that can translate, turn,
    or do both at once.
 5. Advance the controller with elapsed time, then evaluate
-   `targets_at(phase, steering)`. The controller scales an unsafe *combined*
+   `targets_at(phase, steering)`. The controller scales an unsafe _combined_
    twist before committing it, so the feet follow one coherent motion rather
    than mixing independently generated translation and rotation targets.
 
