@@ -902,7 +902,6 @@ dependencies = [
     { name = "lgpio" },
     { name = "numpy" },
     { name = "python-statemachine" },
-    { name = "pyyaml" },
     { name = "scipy" },
 ]
 
@@ -913,7 +912,6 @@ requires-dist = [
     { name = "numpy" },
     { name = "pytest", marker = "extra == 'test'" },
     { name = "python-statemachine", specifier = ">=2.5.0" },
-    { name = "pyyaml" },
     { name = "scipy" },
 ]
 provides-extras = ["test"]
