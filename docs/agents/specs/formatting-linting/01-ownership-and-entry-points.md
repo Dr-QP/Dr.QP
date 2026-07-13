@@ -14,15 +14,15 @@ notebook operations; and remove hardcoded source-scope gaps.
 
 The orchestrator delegates rather than invoking formatter binaries independently:
 
-| File class                              | Focused owner                                                    |
-| --------------------------------------- | ---------------------------------------------------------------- |
+| File class                              | Focused owner                                                     |
+| --------------------------------------- | ----------------------------------------------------------------- |
 | Ordinary Python                         | `python-reformat.sh` / shared Ruff helper                         |
 | Notebook MyST sources and paired output | `notebooks-format.sh` and `notebooks-sync.sh`                     |
 | C/C++                                   | `super-linter-local.sh` with generated clang-format settings      |
 | Ansible                                 | `super-linter-local.sh` with generated ansible-lint settings      |
 | Markdown, YAML, JSON, JSONC             | `super-linter-local.sh` with generated Prettier settings          |
 | Heterogeneous non-fixing checks         | Super-Linter plus focused native hooks where deliberately adopted |
-| ROS package lint                        | `scripts/with-ros-env.sh` and package ament tests                  |
+| ROS package lint                        | `scripts/with-ros-env.sh` and package ament tests                 |
 
 Do not add a native C++ formatter wrapper, a project-local Prettier formatter path, or a native
 ansible-lint autofix path. Those would create a second execution surface for work consolidated

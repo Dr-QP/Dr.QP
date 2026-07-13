@@ -11,16 +11,16 @@ Do not present an extension formatter as CI-equivalent when Super-Linter owns th
 
 ## VS Code ownership
 
-| Language                    | Editor role                                                        | Authoritative repository gate                 |
-| --------------------------- | ------------------------------------------------------------------ | --------------------------------------------- |
-| Python                      | Ruff formatter/diagnostics using repository configuration          | uv-backed Ruff script plus ament package lint |
-| Notebook Markdown/code      | Editing feedback only; use the explicit notebook task              | notebook scripts, then Super-Linter Prettier  |
-| C/C++                       | clangd formatting/diagnostics are fast feedback                     | Super-Linter clang-format plus ament checks   |
-| Markdown, YAML, JSON/JSONC  | Prettier extension is advisory unless parity is proven              | Super-Linter Prettier                         |
-| Ansible                     | Red Hat Ansible and local ansible-lint diagnostics are advisory     | Super-Linter ansible-lint                     |
-| Bash                        | Shell tooling and optional ShellCheck diagnostics                   | pre-commit and Super-Linter ShellCheck        |
-| Dockerfile                  | Docker tooling; Hadolint extension is advisory unless parity-tested | Super-Linter Hadolint                         |
-| XML                         | Red Hat XML diagnostics                                             | ament xmllint                                 |
+| Language                   | Editor role                                                         | Authoritative repository gate                 |
+| -------------------------- | ------------------------------------------------------------------- | --------------------------------------------- |
+| Python                     | Ruff formatter/diagnostics using repository configuration           | uv-backed Ruff script plus ament package lint |
+| Notebook Markdown/code     | Editing feedback only; use the explicit notebook task               | notebook scripts, then Super-Linter Prettier  |
+| C/C++                      | clangd formatting/diagnostics are fast feedback                     | Super-Linter clang-format plus ament checks   |
+| Markdown, YAML, JSON/JSONC | Prettier extension is advisory unless parity is proven              | Super-Linter Prettier                         |
+| Ansible                    | Red Hat Ansible and local ansible-lint diagnostics are advisory     | Super-Linter ansible-lint                     |
+| Bash                       | Shell tooling and optional ShellCheck diagnostics                   | pre-commit and Super-Linter ShellCheck        |
+| Dockerfile                 | Docker tooling; Hadolint extension is advisory unless parity-tested | Super-Linter Hadolint                         |
+| XML                        | Red Hat XML diagnostics                                             | ament xmllint                                 |
 
 Python may use a checked-in default formatter because Ruff is the established native owner.
 For C++, Prettier-owned files, and Ansible, either prove extension output/version parity with the

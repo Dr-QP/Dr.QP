@@ -30,24 +30,24 @@ of Super-Linter, or fold notebook formatting back into `python-reformat.sh`.
 
 ## Remaining specs
 
-| Order | Spec                                                                             | Result                                                               |
-| ----- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| 1     | [01 — Unified orchestration and scope](01-ownership-and-entry-points.md)         | One orchestration contract over the PR #440 owners and complete scope |
+| Order | Spec                                                                              | Result                                                                |
+| ----- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| 1     | [01 — Unified orchestration and scope](01-ownership-and-entry-points.md)          | One orchestration contract over the PR #440 owners and complete scope |
 | 2     | [02 — Serial CI, fast hooks, and versions](02-ci-precommit-and-version-parity.md) | Serial CI output and deliberate fast-hook coverage                    |
-| 3     | [03 — ROS package lint gates](03-ros-package-lint-gates.md)                      | Ament coverage is explicit, reproducible, and non-accidental          |
-| 4     | [04 — VS Code and agent workflow](04-vscode-and-agent-workflow.md)               | Editor feedback and guidance match repository ownership               |
+| 3     | [03 — ROS package lint gates](03-ros-package-lint-gates.md)                       | Ament coverage is explicit, reproducible, and non-accidental          |
+| 4     | [04 — VS Code and agent workflow](04-vscode-and-agent-workflow.md)                | Editor feedback and guidance match repository ownership               |
 
 ## Current execution topology after PR #440
 
-| Concern                                   | Local/script                                                                | Pre-commit                                                    | CI / package gate                                                                |
-| ----------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Ordinary Python                           | `python-reformat.sh`: Ruff format, fix, and explicit import-sort pass        | Three native `ruff-pre-commit` hooks                          | `python-reformat.sh`; package `ament_flake8` where registered                    |
-| Notebook MyST/paired notebooks            | Explicit `notebooks-format.sh` and `notebooks-sync.sh`                       | `notebooks-format.sh` receives changed notebook Markdown      | Explicit `notebooks-format.sh` after ordinary Python formatting                  |
-| C/C++                                     | `super-linter-local.sh`: Super-Linter clang-format autofix/check             | No C++ formatter/check hook                                   | Super-Linter clang-format; additive ament checks where registered                |
-| Ansible                                   | `super-linter-local.sh`: Super-Linter ansible-lint autofix/check             | No Ansible hook                                               | Super-Linter ansible-lint with repository-root offline configuration             |
-| Markdown, YAML, JSON, JSONC               | `super-linter-local.sh`: Super-Linter Prettier autofix/check                 | Generic whitespace/YAML checks only                           | Super-Linter Prettier                                                            |
-| Bash, Dockerfile, workflows, secrets      | `super-linter-local.sh`                                                      | ShellCheck, actionlint, and gitleaks                           | Super-Linter ShellCheck, Hadolint, actionlint, zizmor, and gitleaks              |
-| CMake, XML, copyright, ROS-specific style | No unified repository command                                               | None                                                          | `drqp_lint_common`/ament tests, package by package                               |
+| Concern                                   | Local/script                                                          | Pre-commit                                               | CI / package gate                                                    |
+| ----------------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------- |
+| Ordinary Python                           | `python-reformat.sh`: Ruff format, fix, and explicit import-sort pass | Three native `ruff-pre-commit` hooks                     | `python-reformat.sh`; package `ament_flake8` where registered        |
+| Notebook MyST/paired notebooks            | Explicit `notebooks-format.sh` and `notebooks-sync.sh`                | `notebooks-format.sh` receives changed notebook Markdown | Explicit `notebooks-format.sh` after ordinary Python formatting      |
+| C/C++                                     | `super-linter-local.sh`: Super-Linter clang-format autofix/check      | No C++ formatter/check hook                              | Super-Linter clang-format; additive ament checks where registered    |
+| Ansible                                   | `super-linter-local.sh`: Super-Linter ansible-lint autofix/check      | No Ansible hook                                          | Super-Linter ansible-lint with repository-root offline configuration |
+| Markdown, YAML, JSON, JSONC               | `super-linter-local.sh`: Super-Linter Prettier autofix/check          | Generic whitespace/YAML checks only                      | Super-Linter Prettier                                                |
+| Bash, Dockerfile, workflows, secrets      | `super-linter-local.sh`                                               | ShellCheck, actionlint, and gitleaks                     | Super-Linter ShellCheck, Hadolint, actionlint, zizmor, and gitleaks  |
+| CMake, XML, copyright, ROS-specific style | No unified repository command                                         | None                                                     | `drqp_lint_common`/ament tests, package by package                   |
 
 ## What PR #440 resolves
 
@@ -110,17 +110,17 @@ of Super-Linter, or fold notebook formatting back into `python-reformat.sh`.
 
 ## Target ownership matrix
 
-| Files                                     | Formatting algorithm | Authoritative execution surface          | Additional checks                                                    |
-| ----------------------------------------- | -------------------- | ---------------------------------------- | -------------------------------------------------------------------- |
-| Ordinary Python                           | Ruff                 | uv-backed repository script and CI       | Native staged Ruff; ament_flake8/pep257 for ROS packages             |
-| Notebook code cells and pairs             | Jupytext + Ruff       | Explicit notebook scripts and CI step    | Pair synchronization check                                           |
-| C/C++                                     | clang-format         | Super-Linter local wrapper and action    | cpplint, cppcheck, and build warnings through ament                   |
-| Ansible YAML/Jinja                        | ansible-lint         | Super-Linter local wrapper and action    | Syntax/integration tests where applicable                            |
-| Markdown, generic YAML, JSON, JSONC        | Prettier             | Super-Linter local wrapper and action    | actionlint/zizmor for workflows                                      |
-| Bash                                      | none                 | No autofix owner                         | ShellCheck in pre-commit and Super-Linter                            |
-| Dockerfiles                               | none                 | No autofix owner                         | Hadolint in Super-Linter                                             |
-| CMake/XML/package manifests               | none                 | No general autofix owner                 | ament_lint_cmake/xmllint                                             |
-| GitHub Actions/security                   | Prettier where valid | Super-Linter for formatting              | actionlint, zizmor, gitleaks, actual workflow execution, and CodeQL  |
+| Files                               | Formatting algorithm | Authoritative execution surface       | Additional checks                                                   |
+| ----------------------------------- | -------------------- | ------------------------------------- | ------------------------------------------------------------------- |
+| Ordinary Python                     | Ruff                 | uv-backed repository script and CI    | Native staged Ruff; ament_flake8/pep257 for ROS packages            |
+| Notebook code cells and pairs       | Jupytext + Ruff      | Explicit notebook scripts and CI step | Pair synchronization check                                          |
+| C/C++                               | clang-format         | Super-Linter local wrapper and action | cpplint, cppcheck, and build warnings through ament                 |
+| Ansible YAML/Jinja                  | ansible-lint         | Super-Linter local wrapper and action | Syntax/integration tests where applicable                           |
+| Markdown, generic YAML, JSON, JSONC | Prettier             | Super-Linter local wrapper and action | actionlint/zizmor for workflows                                     |
+| Bash                                | none                 | No autofix owner                      | ShellCheck in pre-commit and Super-Linter                           |
+| Dockerfiles                         | none                 | No autofix owner                      | Hadolint in Super-Linter                                            |
+| CMake/XML/package manifests         | none                 | No general autofix owner              | ament_lint_cmake/xmllint                                            |
+| GitHub Actions/security             | Prettier where valid | Super-Linter for formatting           | actionlint, zizmor, gitleaks, actual workflow execution, and CodeQL |
 
 Multiple additive checkers are expected. A file class must have only one authoritative autofix
 surface; editor extensions and pre-commit normalization hooks are feedback layers, not competing

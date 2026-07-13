@@ -11,14 +11,14 @@ make pre-commit/pre-push coverage deliberate without starting Super-Linter for e
 
 ## Version sources
 
-| Tool/surface                                      | Version source                                                     |
-| ------------------------------------------------- | ------------------------------------------------------------------ |
-| Ruff for full local/CI formatting                 | `pyproject.toml` plus `uv.lock`                                    |
-| Ruff for staged pre-commit formatting             | pinned `ruff-pre-commit` revision                                  |
-| Jupytext and notebook Ruff pipeline               | notebook dependency group plus `uv.lock`                           |
-| clang-format, Prettier, ansible-lint in CI/local  | one pinned Super-Linter image used by action and local wrapper     |
-| ShellCheck/actionlint/gitleaks native hooks        | pinned pre-commit revisions                                        |
-| Ament/ROS lint tools                               | pinned development container/ROS image                             |
+| Tool/surface                                     | Version source                                                 |
+| ------------------------------------------------ | -------------------------------------------------------------- |
+| Ruff for full local/CI formatting                | `pyproject.toml` plus `uv.lock`                                |
+| Ruff for staged pre-commit formatting            | pinned `ruff-pre-commit` revision                              |
+| Jupytext and notebook Ruff pipeline              | notebook dependency group plus `uv.lock`                       |
+| clang-format, Prettier, ansible-lint in CI/local | one pinned Super-Linter image used by action and local wrapper |
+| ShellCheck/actionlint/gitleaks native hooks      | pinned pre-commit revisions                                    |
+| Ament/ROS lint tools                             | pinned development container/ROS image                         |
 
 Separate pins are acceptable only when the surface has a distinct performance role and parity is
 tested or its diagnostics are documented as advisory. Do not add a project-local Prettier or
