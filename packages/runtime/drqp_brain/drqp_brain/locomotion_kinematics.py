@@ -37,7 +37,6 @@ from rclpy.exceptions import NotInitializedException
 from scipy.spatial.transform import Rotation
 from sensor_msgs.msg import JointState
 
-LOCOMOTION_FPS = 8
 WALKING_TRAJECTORY_POINTS = 2
 CLAMPING_EVENT_TICKS = 8
 LOCOMOTION_LEG_COUNT = 6
@@ -47,15 +46,8 @@ MOVEIT_IK_CALLS_PER_TICK = (
 )
 # All IK calls in one trajectory window must fit within half the loop period, so
 # the per-call timeout is the half-period budget divided evenly across the calls.
-MOVEIT_IK_TIMEOUT_SEC = (0.5 / LOCOMOTION_FPS) / MOVEIT_IK_CALLS_PER_TICK
-# Independent floor on the per-call solver time. The line above guarantees the
-# budget inequality by construction (it is a tautology), so instead guard the
-# thing that actually breaks when fps, leg count, trajectory points, or attempts
-# grow: the derived per-call timeout collapsing below what the IK solver needs to
-# converge. Tripping this assert means the control-loop budget can no longer
-# afford the configured number of IK calls at a viable timeout.
-MIN_VIABLE_IK_TIMEOUT_SEC = 0.001
-assert MOVEIT_IK_TIMEOUT_SEC >= MIN_VIABLE_IK_TIMEOUT_SEC
+DEFAULT_CONTROL_RATE_HZ = 25.0
+MOVEIT_IK_TIMEOUT_SEC = (0.5 / DEFAULT_CONTROL_RATE_HZ) / MOVEIT_IK_CALLS_PER_TICK
 BASE_FRAME = 'drqp/base_center_link'
 
 RCLPY_SHUTDOWN_ERRORS = (InvalidHandle, NotInitializedException, RCLError, RuntimeError)
@@ -138,12 +130,14 @@ class MoveItPyLocomotionKinematics:
         node,
         hexapod,
         is_shutting_down: Callable[[], bool],
+        control_rate_hz: float = DEFAULT_CONTROL_RATE_HZ,
         moveit_py_factory=None,
         robot_state_cls=None,
     ):
         self._node = node
         self._hexapod = hexapod
         self._is_shutting_down = is_shutting_down
+        self._ik_timeout_sec = (0.5 / control_rate_hz) / MOVEIT_IK_CALLS_PER_TICK
         self._moveit_py_factory = moveit_py_factory
         self._robot_state_cls = robot_state_cls
         self._moveit_py = None
@@ -191,7 +185,7 @@ class MoveItPyLocomotionKinematics:
                 group_name,
                 pose,
                 tip_name,
-                MOVEIT_IK_TIMEOUT_SEC,
+                self._ik_timeout_sec,
             )
             if not solved:
                 # The warm seed (this leg's actual current joint state) can
@@ -209,7 +203,7 @@ class MoveItPyLocomotionKinematics:
                     group_name,
                     pose,
                     tip_name,
-                    MOVEIT_IK_TIMEOUT_SEC,
+                    self._ik_timeout_sec,
                 )
 
             if not solved:

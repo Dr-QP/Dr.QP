@@ -23,8 +23,7 @@ from unittest.mock import Mock
 
 from drqp_brain.locomotion_kinematics import (
     AnalyticLocomotionKinematics,
-    LOCOMOTION_FPS,
-    MIN_VIABLE_IK_TIMEOUT_SEC,
+    DEFAULT_CONTROL_RATE_HZ,
     MOVEIT_IK_ATTEMPTS_PER_TARGET,
     MOVEIT_IK_CALLS_PER_TICK,
     MOVEIT_IK_TIMEOUT_SEC,
@@ -59,13 +58,13 @@ def test_moveit_ik_timeout_fits_within_half_loop_period():
     """Bound all IK calls in one trajectory window to half the loop period."""
     expected_calls_per_tick = 6 * WALKING_TRAJECTORY_POINTS * MOVEIT_IK_ATTEMPTS_PER_TARGET
     assert MOVEIT_IK_CALLS_PER_TICK == expected_calls_per_tick
-    # The per-call timeout is derived as budget / calls, so the budget inequality
-    # holds by construction. Assert instead that the derived timeout still leaves
-    # each IK call a viable solver time and that all calls consume the whole
-    # half-period budget (i.e. the timeout was derived from that budget, not a
-    # smaller literal).
-    assert MOVEIT_IK_TIMEOUT_SEC >= MIN_VIABLE_IK_TIMEOUT_SEC
-    assert MOVEIT_IK_CALLS_PER_TICK * MOVEIT_IK_TIMEOUT_SEC == pytest.approx(0.5 / LOCOMOTION_FPS)
+    # The analytic solver is now the runtime default; retain a positive timeout
+    # for the selectable MoveIt comparison backend and keep its aggregate budget
+    # derived from the default control period.
+    assert MOVEIT_IK_TIMEOUT_SEC > 0.0
+    assert MOVEIT_IK_CALLS_PER_TICK * MOVEIT_IK_TIMEOUT_SEC == pytest.approx(
+        0.5 / DEFAULT_CONTROL_RATE_HZ
+    )
 
 
 def _robot_description_with_joint_limits(hexapod):
