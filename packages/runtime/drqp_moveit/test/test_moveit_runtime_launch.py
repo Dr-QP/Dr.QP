@@ -19,14 +19,11 @@
 # THE SOFTWARE.
 
 import math
-from pathlib import Path
 
 from control_msgs.action import FollowJointTrajectory
 from controller_manager.test_utils import check_controllers_running, check_node_running
-from drqp_brain.generate_stride_limits import DEFAULT_PHASE_SAMPLES
 from drqp_brain.parametric_gait_generator import GaitType
-from drqp_brain.stride_limits import DirectionalStrideLimits
-from drqp_brain.walk_controller import SteeringState, WalkController
+from drqp_brain.walk_controller import WalkController
 from drqp_kinematics.geometry import Point3D
 from drqp_kinematics.models import HexapodModel
 from drqp_kinematics.urdf_limits import model_to_urdf_angles
@@ -453,33 +450,31 @@ class TestMoveItRuntime:
         _ld, proc_info = generate_test_description
         assert_processes_exited_cleanly(proc_info)
 
-    def test_analytic_ik_agrees_with_moveit_across_certified_envelope(
+    def test_analytic_ik_agrees_with_moveit_across_live_twist_envelope(
         self,
         generate_test_description,
     ):
-        """Use MoveIt as the oracle across every certified gait sample."""
+        """Use live MoveIt calls to verify bounded combined-twist targets."""
         model = self._make_hexapod_model()
         model.forward_kinematics(0, -35, 130)
-        stride_limits = DirectionalStrideLimits.from_file(
-            Path(__file__).parents[2] / 'drqp_brain' / 'config' / 'stride_limits.yaml'
-        )
 
+        directions = tuple(
+            Point3D([math.cos(angle), math.sin(angle), 0.0])
+            for angle in (index * 2.0 * math.pi / 8 for index in range(8))
+        )
         for gait in GaitType:
-            for direction_index in range(16):
-                angle = direction_index * 2.0 * math.pi / 16
-                direction = Point3D([math.cos(angle), math.sin(angle), 0.0])
-                step_length = stride_limits.max_step_length(gait, direction)
+            for direction in directions:
                 walker = WalkController(
                     model,
-                    step_length=step_length,
+                    step_length=0.1,
                     step_height=0.01,
                     rotation_speed_degrees=45,
                     gait=gait,
                 )
-                steering = SteeringState(direction, 0.0)
-                for phase_index in range(DEFAULT_PHASE_SAMPLES):
+                steering = walker.command_to_twist(direction * 0.25, 0.25)
+                for phase_index in range(16):
                     targets = walker.targets_at(
-                        phase_index / DEFAULT_PHASE_SAMPLES,
+                        phase_index / 16,
                         steering,
                     )
                     for leg, target in targets:

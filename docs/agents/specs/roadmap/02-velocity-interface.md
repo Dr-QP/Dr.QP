@@ -53,7 +53,7 @@ See [Program relationships](../README.md#program-relationships).
    `docs/source/notebooks/`.
 2. **Inverse mapping in brain**: new module `drqp_brain/velocity_mapper.py`
    (`Twist → stride_direction, rotation_speed, phase_rate`), saturating to
-   `stride_limits.yaml` and model maxima. Unit-test pure function.
+   model maxima. Unit-test pure function.
 3. **Brain integration**: `/cmd_vel` subscriber in `brain_node.py` (or a small adapter node
    translating Twist → `MovementCommand` + phase-rate extension — prefer adapter node
    `cmd_vel_adapter` to keep brain untouched; extend `MovementCommand` with optional

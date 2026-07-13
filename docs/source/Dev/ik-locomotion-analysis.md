@@ -1,7 +1,7 @@
 # Hexapod IK & locomotion: analysis and development guide
 
 In-depth review of the Dr.QP locomotion stack — analytic kinematics, MoveItPy runtime IK,
-gait generation, steering, IMU balance, stride-limit calibration, and trajectory execution —
+gait generation, steering, IMU balance, full-path reachability, and trajectory execution —
 with industry best practices and a phased improvement roadmap.
 
 :::{note}
@@ -13,9 +13,8 @@ and will drift over time.
 ## Executive summary
 
 The locomotion stack is unusually well-engineered for a hobby-scale hexapod: clean layer
-separation, an offline reachability calibration (`generate_stride_limits`) that most commercial
-hexapod firmwares don't have, whole-state validation with self-collision checking, and a strong
-test culture around all of it. The foundations are worth keeping.
+separation, whole-state validation with self-collision checking, and a strong test culture around
+all of it. The foundations are worth keeping.
 
 :::{important}
 **The central architectural tension:** a 3-DOF hexapod leg has a textbook closed-form IK — and
@@ -23,9 +22,7 @@ the repo already implements it correctly in `drqp_kinematics` — yet the runtim
 solves each leg with MoveIt's _numeric, iterative_ KDL solver through in-process MoveItPy. That
 choice buys collision/bounds validation but pays for it with a slow (8 Hz), failure-prone,
 binary-outcome hot path that has shaped much of the surrounding code: the 2-point lookahead
-workaround, tick-level rollback, dedupe keys, retry-from-home seeding, and the offline
-stride-limit table that exists chiefly to keep the numeric solver away from targets it might
-reject.
+workaround, tick-level rollback, dedupe keys, and retry-from-home seeding.
 
 **Recommendation in one line:** make the analytic solver the primary runtime IK with explicit
 joint-limit and workspace clamping, keep MoveIt as an offline/CI validation oracle, reformulate
@@ -81,7 +78,6 @@ ros2_control → A1-16 servos / Gazebo        shadow FK: apply_joint_targets()
 | Gait generation         | `drqp_brain/parametric_gait_generator.py`                   | {bdg-success}`solid` standard phase-offset scheme            |
 | Steering / composition  | `drqp_brain/walk_controller.py`                             | {bdg-warning}`heuristic` position mixing, unit mismatch      |
 | Balance                 | `drqp_brain/balance_controller.py`                          | {bdg-warning}`early` P-only attitude, no contact             |
-| Stride limits           | `stride_limits.py`, `generate_stride_limits.py`             | {bdg-success}`ahead of peers` translation-only today         |
 | Execution               | `joint_trajectory_builder.py`, `brain_node.py`              | {bdg-warning}`low rate` 8 Hz, magic offsets                  |
 
 The kinematics theory behind the analytic layer is covered in the
@@ -105,9 +101,8 @@ What holds this layer back from being the runtime solver:
   is out of reach — the knowledge just never travels.
 - **No joint-limit awareness.** {bdg-warning}`F9` The closed form returns the one elbow
   configuration it computes, with no check against the URDF limits (−90…90° coxa, −98…90° femur,
-  −80…110° tibia — currently duplicated as a constant in `generate_stride_limits.py`). Limit
-  checking is the one thing MoveIt currently adds that the analytic path must absorb before
-  promotion.
+  −80…110° tibia). Limit checking is the one thing MoveIt currently adds that the analytic path
+  must absorb before promotion.
 - **Degrees at the API surface.** {bdg-secondary}`F10` The model speaks degrees, ROS speaks
   radians, and the servo layer adds its own offset constants. Every boundary is a conversion
   site.
@@ -152,20 +147,18 @@ The engineering around the solver is careful. The solver choice is the problem.
   surface a "stride saturated" signal that the steering layer can respond to (which
   `imu_balance_stride_scale` already does for one specific cause).
 - {bdg-warning}`F5` **Validation is on the wrong side of the loop.** Bounds + self-collision
-  checking of every candidate state is a planning-time activity. At runtime, geometry that was
-  proven safe offline (which is exactly what `stride_limits.yaml` certifies) doesn't need
-  re-proving 8 times a second; what runtime needs is fast clamping. Keep the MoveIt validation
-  as (a) the offline calibration oracle, (b) a CI property test over the gait envelope, and
-  optionally (c) a low-rate async watchdog.
+  checking of every candidate state is a planning-time activity. At runtime, full-path analytic
+  reachability scales unsafe commands before they become foot targets. Keep MoveIt validation as
+  a CI property test over the live gait envelope and, optionally, a low-rate async watchdog.
 
 :::{tip}
 **Implemented architecture: analytic first, MoveIt as oracle.** `drqp_kinematics` is the
 default runtime solver and returns per-leg joint targets with clamping metadata. The selectable
-`moveit` backend remains available for A/B comparison, stride-limit generation, and launch
-tests. A slow oracle test asserts both solvers agree across the certified gait envelope. The
-runtime still assembles the analytic targets into a MoveIt `RobotState` for self-collision
-checking; removing that final hot-path safety net remains gated on certification of combined
-translation, rotation, body-pose, and balance commands. An alternative would be an analytic
+`moveit` backend remains available for A/B comparison and launch tests. A slow oracle test
+recomputes the current live twist envelope against MoveIt services. The runtime still
+assembles the analytic targets into a MoveIt `RobotState` for self-collision checking; removing
+that final hot-path safety net remains gated on validation of combined translation, rotation,
+body-pose, and balance commands. An alternative would be an analytic
 `kinematics::KinematicsBase` plugin (IKFast-style) — but for six identical 3-DOF chains, plain
 Python/numpy is simpler and faster.
 :::
@@ -177,8 +170,8 @@ _File: `drqp_brain/parametric_gait_generator.py`_
 The generator is the classic phase-offset scheme: each gait is a table of per-leg swing start
 phases plus a swing duration (duty factor = 1 − swing duration). The tables are correct —
 tripod ½, ripple ⅓ swing with the proper left/right interleave, wave ⅙ — and the parametric
-form (unit stride scaled downstream) is a good design that made the offline calibration
-possible. See also the [gait generation notebook](../notebooks/3_generating_gaits.md).
+form (unit stride scaled downstream) is a good design for both teaching and runtime scaling. See
+also the [gait generation notebook](../notebooks/3_generating_gaits.md).
 
 - {bdg-warning}`F6` **Touchdown at maximum descent velocity.** Swing height is
   $z = \sin(\pi t)$, whose derivative at $t = 1$ is $-\pi$ — the foot hits the ground at its
@@ -288,27 +281,14 @@ stepping — extend/shorten swing on early/late touchdown; (4) ZMP/dynamic crite
 at speeds hexapods rarely reach. Skipping (2) and (3) to tune (1) harder is the common dead end.
 :::
 
-## Stride-limit calibration
+## Combined-twist reachability
 
-_Files: `drqp_brain/stride_limits.py`, `drqp_brain/generate_stride_limits.py`_
-
-Precomputing a per-gait polar table of maximum safe step lengths by binary-searching full IK
-sweeps with a joint margin — this is a reachability map, and having it at all puts this codebase
-ahead of most hexapod projects. The YAML versioning, validation, and interpolation code are
-clean. Gaps, all known or knowable:
-
-- {bdg-warning}`F22` **The table is translation-only.** Calibration sweeps
-  `rotation_direction=0.0`, so combined stride+rotation (and any body-pose offset, and the IMU
-  balance correction) can exceed certified limits — the runtime then relies on IK failure +
-  rollback as the safety net. Options, in increasing order of elegance: extend the grid with a
-  rotation axis; certify a conservative combined envelope; or — with twist steering — replace
-  the table entirely with an exact per-leg analytic workspace check at runtime, keeping the
-  offline sweep as CI regression.
-- {bdg-secondary}`F23` **Joint limits duplicated by hand.** `JOINT_LIMITS_DEGREES` mirrors the
-  URDF with a comment begging them to stay in sync. Parse them from the already-loaded
-  `robot_description` instead.
-- {bdg-secondary}`F24` **Regeneration is manual.** A CI job that regenerates the table and diffs
-  it against the committed YAML would catch geometry/config drift the moment it happens.
+The former precomputed, translation-only calibration artifact was retired. It could not express
+combined translation and yaw, and a committed result could become stale as geometry or gait math
+changed. `WalkController` now evaluates the complete analytic IK path for a proposed SE(2) twist
+and scales the whole twist by one factor until every sampled target is reachable. The slow MoveIt
+launch test independently recomputes that envelope against the live service, so CI validates the
+current robot model instead of a generated file.
 
 ## Control loop & execution
 
@@ -429,9 +409,8 @@ Each item is independently shippable.
 4. **Balance v2**: filtered tilt, PD control with slewed engagement, then
    static-stability-margin monitoring with body CoM shift for wave/ripple. {bdg-warning}`F18`
    {bdg-warning}`F19`
-5. **Stride limits v2**: derive from analytic workspace at runtime (per-leg, includes rotation
-   and body pose exactly); keep the MoveIt sweep as a CI regression that regenerates and diffs
-   the YAML. {bdg-warning}`F22` {bdg-secondary}`F24`
+5. **Combined-twist reachability**: retain full-path analytic scaling for translation, yaw, and
+   body pose; keep the live MoveIt property test as the CI oracle. {bdg-success}`F22`
 6. **Stance/posture parameters**: named body height / foot radius stance config replacing the
    hard-coded `forward_kinematics(0, −35, 130)` pose and the `body_translation / 8.0` scaling.
 
@@ -475,9 +454,9 @@ Each item is independently shippable.
 | F19 | {bdg-warning}`medium`  | Attitude-only correction; no support-polygon/contact awareness                                                                                            | `balance_controller.py`                                      |
 | F20 | {bdg-secondary}`low`   | Backoff ramp comment ("double the clamp") disagrees with math (1.7×)                                                                                      | `balance_controller.py:92–94`                                |
 | F21 | {bdg-secondary}`low`   | No fusion fallback when an IMU backend lacks on-chip orientation                                                                                          | `imu_node.py`                                                |
-| F22 | {bdg-warning}`partial` | Runtime full-path analytic IK scales combined twists; offline certification remains translation-only ([PR #442](https://github.com/Dr-QP/Dr.QP/pull/442)) | `walk_controller.py`, `generate_stride_limits.py`            |
-| F23 | {bdg-secondary}`low`   | Joint limits hand-duplicated from URDF                                                                                                                    | `generate_stride_limits.py:48–52`                            |
-| F24 | {bdg-secondary}`low`   | Stride-limit YAML regeneration not CI-enforced                                                                                                            | —                                                            |
+| F22 | {bdg-success}`fixed`   | Full-path analytic saturation scales combined SE(2) twists; live MoveIt CI checks the current envelope ([PR #442](https://github.com/Dr-QP/Dr.QP/pull/442)) | `walk_controller.py`, `test_moveit_runtime_launch.py`        |
+| F23 | {bdg-success}`fixed`   | Hand-duplicated generator limits disappeared with the retired calibration artifact                                                                        | —                                                            |
+| F24 | {bdg-success}`fixed`   | No generated artifact is committed; CI validates the live robot model                                                                                    | `test_moveit_runtime_launch.py`                              |
 | F25 | {bdg-warning}`medium`  | 8 Hz control loop caps steering latency and balance bandwidth                                                                                             | `brain_node.py:93`                                           |
 | F26 | {bdg-warning}`medium`  | Servo zero offsets applied/inverted in trajectory layer instead of URDF/ros2_control                                                                      | `joint_trajectory_builder.py:35–36`, `brain_node.py:493–501` |
 | F27 | {bdg-secondary}`low`   | Dead `phase_steps_per_cycle` constructor argument (fps/2.5), overwritten every tick                                                                       | `brain_node.py:227`                                          |

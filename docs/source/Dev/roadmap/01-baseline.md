@@ -29,8 +29,8 @@ Key facts, verified in code:
 - **Semantic command layer**: `MovementCommand` carries normalized (−1…1) stride direction,
   rotation speed, body translation/rotation, and gait name. Nothing in the pipeline is metric
   (m/s, rad/s) yet.
-- **Gaits**: tripod, ripple, wave — generated parametrically per leg phase, with directional
-  stride limits loaded from `drqp_brain/config/stride_limits.yaml`.
+- **Gaits**: tripod, ripple, wave — generated parametrically per leg phase and constrained by
+  full-path analytic reachability checks.
 - **IK**: `AnalyticLocomotionKinematics` runs closed-form per-leg IK by default, with
   `MoveItPyLocomotionKinematics` selectable as the fallback. Analytic targets still pass through
   the in-process MoveIt planning scene for whole-robot self-collision validation. Live

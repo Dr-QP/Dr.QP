@@ -37,7 +37,7 @@ is derivable, then verifiable against ground truth in Gazebo.
    `robot.recording.*` MCP tools are exactly the instrumentation needed.
 2. **Invert the model in the brain.** A new `/cmd_vel` subscriber converts requested
    `(v_x, v_y, ω_z)` into stride direction/length and phase rate, saturating at the robot's
-   measured maximum and respecting `stride_limits.yaml`. Publish the actually-achievable command
+   measured maximum. Publish the actually-achievable command
    back (standard practice: `/cmd_vel` in, best-effort execution).
 3. **Command arbitration.** Joystick and `/cmd_vel` must not fight. A simple priority mux
    (joystick > autonomy, with timeout-based release) is enough; `twist_mux` from the ROS ecosystem

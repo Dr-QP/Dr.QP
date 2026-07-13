@@ -168,7 +168,19 @@ _ = visualizer.visualize_continuous_in_3d(gait_gen, _steps=100)
 anim = animate_hexapod_gait(hexapod, gait_gen, interactive=True, skip=False)
 ```
 
-## Directional Gait Decorator
+## Directional Gait Decorator (learning reference)
+
+The decorator in this section is intentionally kept as the smallest useful
+model of directional walking. It rotates a unit, forward-only gait into the
+direction selected by a learner. That makes it a good place to understand
+phase offsets, coordinate frames, and why every leg needs the same command in
+its own local frame.
+
+It is a teaching and visualization path, not the runtime controller. The
+runtime now uses the SE(2) twist controller in `WalkController`, which keeps
+stance feet world-grounded while combining translation and yaw. Keep this
+simple version when experimenting: it exposes the geometric idea without
+requiring velocities, smoothing, or reachability saturation.
 
 In order to add direction to the generated gait, we can create a decorator class that will take the generated offsets and apply a rotation to them. This way we can control the direction of the movement.
 
@@ -377,6 +389,33 @@ animate_hexapod_gait_with_direction(
 )
 ```
 
+## Gradual migration: directional gait to SE(2) twist locomotion
+
+The older controller below is still valuable because it has only one moving
+part at a time: choose a direction, scale a stride, then inspect the resulting
+foot path. Production locomotion adds the same ideas in small, compatible
+steps rather than replacing them with an unrelated abstraction.
+
+1. Start with `DirectionalGaitGenerator`: its normalized direction vector
+   answers *which way should the robot translate?*
+2. Give that direction a physical scale. `WalkController.command_to_twist()`
+   maps a normalized joystick vector to a body-frame linear velocity using the
+   configured stride and stance duration.
+3. Treat turning as an angular velocity (`omega`, radians per second), not a
+   second position target. The legacy `rotation_speed_degrees` setting remains
+   as a compatibility mapping when no explicit `omega_max_rad_sec` is set.
+4. Combine linear and angular velocity into `SteeringState`. This is a planar
+   SE(2) twist `(v_x, v_y, omega)`: a single command that can translate, turn,
+   or do both at once.
+5. Advance the controller with elapsed time, then evaluate
+   `targets_at(phase, steering)`. The controller scales an unsafe *combined*
+   twist before committing it, so the feet follow one coherent motion rather
+   than mixing independently generated translation and rotation targets.
+
+For a first experiment, replace a direct `SteeringState` construction with
+`command_to_twist()` as shown below. This preserves the notebook's normalized
+controls while exercising the same units and SE(2) model that the robot uses.
+
 ### Putting it all together
 
 Now that we have all the pieces in place, we can put them together to create a full walk controller. The controller will take care of the following:
@@ -403,7 +442,7 @@ jupyter_utils.display_file(
 ```
 
 ```{code-cell} ipython3
-from drqp_brain.walk_controller import SteeringState, WalkController
+from drqp_brain.walk_controller import WalkController
 from drqp_kinematics.models import HexapodModel
 import numpy as np
 from plotting import animate_plot, is_sphinx_build
@@ -471,11 +510,11 @@ def animate_hexapod_walk(
             [0, 0, direction_degrees], degrees=True
         ).apply_point(stride_direction)
 
-        targets = walk_controller.targets_at(
-            phase,
-            SteeringState(stride_direction * walk_speed, rotation_direction),
-            verbose=False,
+        steering = walk_controller.command_to_twist(
+            stride_direction * walk_speed,
+            rotation_direction,
         )
+        targets = walk_controller.targets_at(phase, steering, verbose=False)
         walk_controller.apply_feet_targets(targets)
         update_hexapod_plot(hexapod, plot_data)
         fig.canvas.draw_idle()
