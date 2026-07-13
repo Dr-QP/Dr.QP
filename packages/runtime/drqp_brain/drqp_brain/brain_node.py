@@ -27,7 +27,6 @@ import sys
 import threading
 import traceback
 
-from ament_index_python.packages import get_package_share_path, PackageNotFoundError
 from control_msgs.action import FollowJointTrajectory
 from drqp_brain.balance_controller import (
     apply_imu_balance,
@@ -46,7 +45,6 @@ from drqp_brain.locomotion_kinematics import (
     RCLPY_SHUTDOWN_ERRORS,
     WALKING_TRAJECTORY_POINTS,
 )
-from drqp_brain.stride_limits import DirectionalStrideLimits
 from drqp_brain.walk_controller import GaitType, WalkController
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 from drqp_kinematics.geometry import AffineTransform, Point3D
@@ -105,6 +103,8 @@ class HexapodBrain(rclpy.node.Node):
         self.declare_parameter('imu_balance_max_tilt_rad', 0.15)
         self.declare_parameter('imu_balance_timeout_sec', 1.0)
         self.declare_parameter('kinematics_backend', 'analytic')
+        self.declare_parameter('omega_max_rad_sec', 0.0)
+        self.declare_parameter('rotation_speed_degrees', 45.0)
         self.enable_imu_balance = self.get_parameter('enable_imu_balance').value
         self.imu_balance_gain = self.get_parameter('imu_balance_gain').value
         self.imu_balance_max_tilt_rad = self.get_parameter('imu_balance_max_tilt_rad').value
@@ -112,6 +112,23 @@ class HexapodBrain(rclpy.node.Node):
             seconds=self.get_parameter('imu_balance_timeout_sec').value
         )
         self.kinematics_backend = self.get_parameter('kinematics_backend').value
+        parameter_overrides = getattr(self, '_parameter_overrides', {})
+        omega_max_overridden = 'omega_max_rad_sec' in parameter_overrides
+        rotation_speed_overridden = 'rotation_speed_degrees' in parameter_overrides
+        configured_omega_max = self.get_parameter('omega_max_rad_sec').value
+        if omega_max_overridden:
+            if configured_omega_max < 0.0:
+                raise ValueError('omega_max_rad_sec must be non-negative when configured')
+            self.omega_max_rad_sec = (
+                float(configured_omega_max) if configured_omega_max > 0.0 else None
+            )
+        else:
+            self.omega_max_rad_sec = None
+        self.rotation_speed_degrees = float(self.get_parameter('rotation_speed_degrees').value)
+        if rotation_speed_overridden:
+            self.get_logger().warning(
+                'rotation_speed_degrees is deprecated; configure omega_max_rad_sec instead'
+            )
         if self.kinematics_backend not in {'analytic', 'moveit'}:
             raise ValueError(
                 'kinematics_backend must be one of: analytic, moveit; '
@@ -259,19 +276,11 @@ class HexapodBrain(rclpy.node.Node):
             self.hexapod,
             step_length=step_length,
             step_height=step_height,
-            rotation_speed_degrees=45,
+            rotation_speed_degrees=self.rotation_speed_degrees,
+            omega_max_rad_sec=self.omega_max_rad_sec,
             gait=self.gaits[self.gait_index],
             cycle_time_sec=self.cycle_time_sec[self.gaits[self.gait_index]],
-            stride_limits=self._load_stride_limits(),
         )
-
-    def _load_stride_limits(self):
-        try:
-            config_path = get_package_share_path('drqp_brain') / 'config' / 'stride_limits.yaml'
-            return DirectionalStrideLimits.from_file(config_path)
-        except (FileNotFoundError, KeyError, PackageNotFoundError, ValueError) as exc:
-            self.get_logger().warning(f'Walking stride limits are unavailable: {exc}')
-            return None
 
     def prev_gait(self):
         self.gait_index = (self.gait_index - 1) % len(self.gaits)

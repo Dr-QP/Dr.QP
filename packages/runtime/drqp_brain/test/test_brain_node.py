@@ -20,6 +20,7 @@
 
 """Launch and unit tests for the drqp_brain node."""
 
+import math
 from unittest import mock
 
 from control_msgs.action import FollowJointTrajectory
@@ -38,6 +39,7 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import ExecutableInPackage
 import pytest
 import rclpy
+from rclpy.parameter import Parameter
 from scipy.spatial.transform import Rotation as R
 from sensor_msgs.msg import Imu
 import std_msgs.msg
@@ -136,6 +138,56 @@ def test_destroy_node_destroys_action_client(rclpy_context):  # noqa: ARG001 (ne
         brain.destroy_node()
 
         action_client.destroy.assert_called_once_with()
+
+
+def test_omega_max_parameter_replaces_legacy_rotation_speed(
+    rclpy_context,  # noqa: ARG001 (needs rclpy)
+):
+    """A supplied metric yaw-rate limit reaches the walk controller unchanged."""
+    brain = HexapodBrain(
+        parameter_overrides=[Parameter('omega_max_rad_sec', Parameter.Type.DOUBLE, 1.75)]
+    )
+    try:
+        assert brain.walker.omega_max_rad_sec == pytest.approx(1.75)
+    finally:
+        brain.destroy_node()
+
+
+def test_legacy_rotation_speed_override_warns_with_omega_max_override(
+    rclpy_context,  # noqa: ARG001 (needs rclpy)
+):
+    """Warn whenever the deprecated rotation-speed parameter is configured."""
+    logger = mock.Mock()
+    with mock.patch.object(HexapodBrain, 'get_logger', return_value=logger):
+        brain = HexapodBrain(
+            parameter_overrides=[
+                Parameter('omega_max_rad_sec', Parameter.Type.DOUBLE, 1.75),
+                Parameter('rotation_speed_degrees', Parameter.Type.DOUBLE, 30.0),
+            ]
+        )
+    try:
+        logger.warning.assert_any_call(
+            'rotation_speed_degrees is deprecated; configure omega_max_rad_sec instead'
+        )
+    finally:
+        brain.destroy_node()
+
+
+def test_zero_omega_max_parameter_falls_back_to_legacy_rotation_speed(
+    rclpy_context,  # noqa: ARG001 (needs rclpy)
+):
+    """A zero omega override preserves the legacy yaw rate."""
+    brain = HexapodBrain(
+        parameter_overrides=[Parameter('omega_max_rad_sec', Parameter.Type.DOUBLE, 0.0)]
+    )
+    try:
+        expected_omega_max = (
+            math.radians(brain.rotation_speed_degrees) / brain.walker.stance_duration_sec
+        )
+
+        assert brain.walker.omega_max_rad_sec == pytest.approx(expected_omega_max)
+    finally:
+        brain.destroy_node()
 
 
 def make_imu_msg_from_base_tilt(

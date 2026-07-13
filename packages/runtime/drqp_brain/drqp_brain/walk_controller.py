@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Pure gait-target generation and time-based walking state management."""
+"""Pure SE(2) gait-target generation and time-based walking state management."""
 
 from dataclasses import dataclass
 import math
@@ -30,16 +30,46 @@ import numpy as np
 
 @dataclass(frozen=True)
 class SteeringState:
-    """Smoothed stride and rotation commands used to evaluate a gait phase."""
+    """Smoothed body-frame planar twist used to evaluate a gait phase."""
 
-    direction: Point3D
-    rotation_direction: float
+    linear_velocity: Point3D
+    angular_velocity: float
+
+    @property
+    def direction(self) -> Point3D:
+        """Return the linear twist component for transitional callers."""
+        return self.linear_velocity
+
+    @property
+    def rotation_direction(self) -> float:
+        """Return the angular twist component for transitional callers."""
+        return self.angular_velocity
+
+
+@dataclass(frozen=True)
+class TwistSaturation:
+    """A reachability-limited twist and the scalar used to obtain it."""
+
+    twist: SteeringState
+    scale: float
+
+    @property
+    def linear_velocity(self) -> Point3D:
+        """Expose the saturated linear velocity for concise callers."""
+        return self.twist.linear_velocity
+
+    @property
+    def angular_velocity(self) -> float:
+        """Expose the saturated angular velocity for concise callers."""
+        return self.twist.angular_velocity
 
 
 class WalkController:
-    """Generate foot targets from an explicit gait phase and steering state."""
+    """Generate world-grounded foot targets from a planar body twist."""
 
     _NO_MOTION_EPSILON = 1e-3
+    _PATH_SAMPLES = 49
+    _SATURATION_STEPS = 20
 
     def __init__(
         self,
@@ -49,22 +79,26 @@ class WalkController:
         rotation_speed_degrees=10.0,
         cycle_time_sec=2.5,
         gait=GaitType.wave,
-        stride_limits=None,
         steering_tau_sec=0.35,
+        omega_max_rad_sec=None,
     ):
         if cycle_time_sec <= 0:
             raise ValueError('cycle_time_sec must be positive')
         if steering_tau_sec <= 0:
             raise ValueError('steering_tau_sec must be positive')
+        if omega_max_rad_sec is not None and omega_max_rad_sec <= 0:
+            raise ValueError('omega_max_rad_sec must be positive when set')
 
         self.hexapod = hexapod
         self.leg_tips_on_ground = [(leg, leg.tibia_end.copy()) for leg in hexapod.legs]
-        self.step_length = step_length
-        self.step_height = step_height
-        self.rotation_speed_degrees = rotation_speed_degrees
+        self.step_length = float(step_length)
+        self.step_height = float(step_height)
+        # Retain this value only as a compatibility mapping.  When an explicit
+        # omega limit is not supplied, it gives the historical yaw per stance.
+        self.rotation_speed_degrees = float(rotation_speed_degrees)
+        self._configured_omega_max_rad_sec = omega_max_rad_sec
         self.cycle_time_sec = float(cycle_time_sec)
         self.steering_tau_sec = float(steering_tau_sec)
-        self.stride_limits = stride_limits
         self.gait_gen = ParametricGaitGenerator(step_length=1.0, step_height=1.0, gait=gait)
         self.reset()
 
@@ -78,19 +112,59 @@ class WalkController:
         self.gait_gen.current_gait = gait
 
     @property
+    def stance_duration_sec(self) -> float:
+        """Return the current gait's duration with a foot on the ground."""
+        swing_duration = self.gait_gen.gaits[self.current_gait].swing_duration
+        return self.cycle_time_sec * (1.0 - swing_duration)
+
+    @property
+    def omega_max_rad_sec(self) -> float:
+        """
+        Return the full-scale yaw rate for the current gait.
+
+        The legacy controller rotated a foot by ``rotation_speed_degrees * s``
+        over the stride parameter ``s``.  Setting ``omega_max`` to
+        ``radians(rotation_speed_degrees) / T_stance`` retains that yaw per
+        stance while expressing the command in radians per second.
+        """
+        if self._configured_omega_max_rad_sec is not None:
+            return float(self._configured_omega_max_rad_sec)
+        return math.radians(self.rotation_speed_degrees) / self.stance_duration_sec
+
+    @property
     def current_direction(self) -> Point3D:
-        """Return the current smoothed stride command."""
-        return self.steering.direction
+        """Return the current smoothed linear body velocity."""
+        return self.steering.linear_velocity
 
     @property
     def current_rotation_direction(self) -> float:
-        """Return the current smoothed rotation command."""
-        return self.steering.rotation_direction
+        """Return the current smoothed angular body velocity."""
+        return self.steering.angular_velocity
 
     def reset(self):
         """Return the controller to a stationary initial state."""
         self.steering = SteeringState(Point3D([0, 0, 0]), 0.0)
         self.current_phase = 0.0
+
+    def command_to_twist(
+        self,
+        stride_direction: Point3D,
+        rotation_direction: float,
+    ) -> SteeringState:
+        """Map normalized movement input to a metric planar body twist."""
+        planar_norm = math.hypot(float(stride_direction.x), float(stride_direction.y))
+        planar_scale = 1.0 / planar_norm if planar_norm > 1.0 else 1.0
+        max_linear_speed = self.step_length / self.stance_duration_sec
+        return SteeringState(
+            Point3D(
+                [
+                    float(stride_direction.x) * planar_scale * max_linear_speed,
+                    float(stride_direction.y) * planar_scale * max_linear_speed,
+                    0.0,
+                ]
+            ),
+            float(np.clip(rotation_direction, -1.0, 1.0)) * self.omega_max_rad_sec,
+        )
 
     def advance(
         self,
@@ -98,28 +172,29 @@ class WalkController:
         stride_direction: Point3D,
         rotation_direction: float,
     ) -> None:
-        """Smooth commands and advance phase exactly once for this control tick."""
+        """Smooth, saturate, and commit a command before advancing gait phase."""
         if dt < 0:
             raise ValueError('dt must be non-negative')
 
+        target = self.command_to_twist(stride_direction, rotation_direction)
         alpha = 1.0 - math.exp(-dt / self.steering_tau_sec)
-        direction = self.steering.direction.interpolate(stride_direction, alpha)
-        direction = self._clamp_direction(direction)
-        rotation = float(
-            np.interp(
-                alpha,
-                [0.0, 1.0],
-                [self.steering.rotation_direction, np.clip(rotation_direction, -1.0, 1.0)],
-            )
+        proposed = SteeringState(
+            self.steering.linear_velocity.interpolate(target.linear_velocity, alpha),
+            float(
+                np.interp(
+                    alpha,
+                    [0.0, 1.0],
+                    [self.steering.angular_velocity, target.angular_velocity],
+                )
+            ),
         )
-        rotation = float(np.clip(rotation, -1.0, 1.0))
+        saturated = self._saturate_twist(proposed).twist
+        if self._linear_speed(saturated) < self._NO_MOTION_EPSILON:
+            saturated = SteeringState(Point3D([0, 0, 0]), saturated.angular_velocity)
+        if abs(saturated.angular_velocity) < self._NO_MOTION_EPSILON:
+            saturated = SteeringState(saturated.linear_velocity, 0.0)
 
-        if self._stride_ratio(direction) < self._NO_MOTION_EPSILON:
-            direction = Point3D([0, 0, 0])
-        if abs(rotation) < self._NO_MOTION_EPSILON:
-            rotation = 0.0
-
-        self.steering = SteeringState(direction, rotation)
+        self.steering = saturated
         if self._has_motion(self.steering):
             self.current_phase = (self.current_phase + dt / self.cycle_time_sec) % 1.0
 
@@ -135,44 +210,17 @@ class WalkController:
         # Body pose is deliberately an explicit input even though gait targets are
         # world-grounded. The caller applies body_transform before solving IK.
         del body_direction, body_rotation
-
-        stride_ratio = self._stride_ratio(steering.direction)
-        has_stride = stride_ratio >= self._NO_MOTION_EPSILON
-        has_rotation = abs(steering.rotation_direction) >= self._NO_MOTION_EPSILON
-        direction_transform = self._make_direction_transform(steering.direction)
+        if not self._has_motion(steering):
+            return [(leg, leg_tip.copy()) for leg, leg_tip in self.leg_tips_on_ground]
         result = []
-
         for leg, leg_tip in self.leg_tips_on_ground:
             gait_offsets = self.gait_gen.get_offsets_at_phase_for_leg(leg.label, phase)
-            stride_offsets = Point3D([0, 0, 0])
-            direction_offsets = Point3D([0, 0, 0])
-            stride_target = leg_tip
-            if has_stride:
-                stride_offsets = gait_offsets * Point3D(
-                    [self.step_length * stride_ratio, 0.0, 0.0]
-                )
-                direction_offsets = direction_transform.apply_point(stride_offsets)
-                stride_target = stride_target + direction_offsets
-
-            rotation_target = leg_tip
-            if has_rotation:
-                rotation_degrees = (
-                    self.rotation_speed_degrees * steering.rotation_direction * gait_offsets.x
-                )
-                rotation_transform = AffineTransform.from_rotvec(
-                    [0, 0, rotation_degrees], degrees=True
-                )
-                rotation_target = rotation_transform.apply_point(rotation_target)
-
-            if has_stride or has_rotation:
-                mix_weights = np.array([stride_ratio, abs(steering.rotation_direction)])
-                mix_weights /= mix_weights.sum()
-                stride_weight, rotation_weight = mix_weights
-                foot_target = stride_target * stride_weight + rotation_target * rotation_weight
-                foot_target.z += gait_offsets.z * self.step_height
-            else:
-                foot_target = leg_tip.copy()
-
+            foot_target = self._foot_target_for_stride_offset(
+                leg_tip,
+                float(gait_offsets.x),
+                steering,
+            )
+            foot_target.z += gait_offsets.z * self.step_height
             if verbose:
                 print(f'{leg.label} {phase=}')
                 print(f'{leg_tip=}')
@@ -180,8 +228,93 @@ class WalkController:
                 print(f'{foot_target=}')
                 print()
             result.append((leg, foot_target))
-
         return result
+
+    def _foot_target_for_stride_offset(
+        self,
+        neutral_foot: Point3D,
+        stride_offset: float,
+        steering: SteeringState,
+    ) -> Point3D:
+        """Return a stance-foot target from ``Exp(s * twist * T_stance)``."""
+        delta_theta = steering.angular_velocity * self.stance_duration_sec
+        theta = stride_offset * delta_theta
+        delta_position = np.array(
+            [
+                float(steering.linear_velocity.x) * self.stance_duration_sec,
+                float(steering.linear_velocity.y) * self.stance_duration_sec,
+            ]
+        )
+        position = self._se2_translation(theta, stride_offset * delta_position)
+        cosine = math.cos(theta)
+        sine = math.sin(theta)
+        relative_x = float(neutral_foot.x) - position[0]
+        relative_y = float(neutral_foot.y) - position[1]
+        return Point3D(
+            [
+                cosine * relative_x + sine * relative_y,
+                -sine * relative_x + cosine * relative_y,
+                float(neutral_foot.z),
+            ]
+        )
+
+    @staticmethod
+    def _se2_translation(theta: float, scaled_delta_position: np.ndarray) -> np.ndarray:
+        """Apply the SE(2) V(theta) matrix, stably near zero yaw."""
+        if abs(theta) < 1e-5:
+            sine_over_theta = 1.0 - theta**2 / 6.0 + theta**4 / 120.0
+            one_minus_cosine_over_theta = theta / 2.0 - theta**3 / 24.0 + theta**5 / 720.0
+        else:
+            sine_over_theta = math.sin(theta) / theta
+            one_minus_cosine_over_theta = (1.0 - math.cos(theta)) / theta
+        return np.array(
+            [
+                sine_over_theta * scaled_delta_position[0]
+                - one_minus_cosine_over_theta * scaled_delta_position[1],
+                one_minus_cosine_over_theta * scaled_delta_position[0]
+                + sine_over_theta * scaled_delta_position[1],
+            ]
+        )
+
+    def _saturate_twist(self, proposed: SteeringState) -> TwistSaturation:
+        """Scale the complete twist by one scalar until every target is solvable."""
+        if self._twist_is_reachable(proposed):
+            return TwistSaturation(proposed, 1.0)
+
+        stationary = SteeringState(Point3D([0, 0, 0]), 0.0)
+        if not self._twist_is_reachable(stationary):
+            return TwistSaturation(stationary, 0.0)
+
+        lower, upper = 0.0, 1.0
+        for _ in range(self._SATURATION_STEPS):
+            midpoint = (lower + upper) / 2.0
+            candidate = self._scale_twist(proposed, midpoint)
+            if self._twist_is_reachable(candidate):
+                lower = midpoint
+            else:
+                upper = midpoint
+        return TwistSaturation(self._scale_twist(proposed, lower), lower)
+
+    def _twist_is_reachable(self, steering: SteeringState) -> bool:
+        """Check the full swing and stance path with analytic IK before commitment."""
+        for phase in np.linspace(0.0, 1.0, self._PATH_SAMPLES, endpoint=False):
+            for leg, neutral_foot in self.leg_tips_on_ground:
+                gait_offsets = self.gait_gen.get_offsets_at_phase_for_leg(leg.label, float(phase))
+                target = self._foot_target_for_stride_offset(
+                    neutral_foot,
+                    float(gait_offsets.x),
+                    steering,
+                )
+                target.z += gait_offsets.z * self.step_height
+                solution = leg.solve_ik(target, clamp=False)
+                if not solution.reachable or not solution.within_limits:
+                    return False
+        return True
+
+    @staticmethod
+    def _scale_twist(steering: SteeringState, scale: float) -> SteeringState:
+        """Return a twist with linear and angular components scaled together."""
+        return SteeringState(steering.linear_velocity * scale, steering.angular_velocity * scale)
 
     @staticmethod
     def body_transform(
@@ -201,32 +334,15 @@ class WalkController:
         for leg, foot_target in legs_and_targets:
             leg.move_to(foot_target)
 
-    def _clamp_direction(self, direction: Point3D) -> Point3D:
-        if self.stride_limits is None:
-            return direction
-        return self.stride_limits.clamp_direction(
-            self.current_gait,
-            direction,
-            self.step_length,
-        )
-
     @staticmethod
-    def _stride_ratio(direction: Point3D) -> float:
-        return float(np.clip(abs(direction.x) + abs(direction.y) + abs(direction.z), 0.0, 1.0))
+    def _linear_speed(steering: SteeringState) -> float:
+        return math.hypot(
+            float(steering.linear_velocity.x),
+            float(steering.linear_velocity.y),
+        )
 
     def _has_motion(self, steering: SteeringState) -> bool:
         return (
-            self._stride_ratio(steering.direction) >= self._NO_MOTION_EPSILON
-            or abs(steering.rotation_direction) >= self._NO_MOTION_EPSILON
-        )
-
-    @staticmethod
-    def _make_direction_transform(direction: Point3D) -> AffineTransform:
-        norm_direction = direction.normalized().numpy()
-        return AffineTransform.from_rotmatrix(
-            [
-                [norm_direction[0], -norm_direction[1], 0],
-                [norm_direction[1], norm_direction[0], 0],
-                [0, 0, 1],
-            ]
+            self._linear_speed(steering) >= self._NO_MOTION_EPSILON
+            or abs(steering.angular_velocity) >= self._NO_MOTION_EPSILON
         )

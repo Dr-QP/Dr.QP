@@ -1,13 +1,14 @@
 ---
 name: implement-agent-specs
-description: 'Implement numbered, implementation-ready specs from docs/agents/specs one at a time, respecting their dependencies and producing one stacked pull request per spec. Use when asked to implement a single spec path, continue a spec, or ship a specs program such as locomotion, roadmap, or formatting-linting. Keywords: agent specs, implementation specs, docs/agents/specs, spec path, spec program, stacked PR, one spec per PR.'
+description: 'Implement numbered, implementation-ready specs from docs/agents/specs one at a time, respecting their dependencies and producing one main-targeted pull request per spec while allowing dependent commit stacks. Use when asked to implement a single spec path, continue a spec, or ship a specs program such as locomotion, roadmap, or formatting-linting. Keywords: agent specs, implementation specs, docs/agents/specs, spec path, spec program, stacked commits, draft dependency PR, one spec per PR.'
 ---
 
 # Implement Agent Specs
 
 Implement a selected program under `docs/agents/specs/` as a sequence of small,
-independently reviewable, stacked pull requests. One numbered spec produces exactly
-one branch, commit, and pull request.
+independently reviewable pull requests that all target `main`. Dependent spec
+branches may stack commits so implementation can continue before their prerequisite
+PRs merge. One numbered spec produces exactly one branch, commit, and pull request.
 
 ## When to Use This Skill
 
@@ -51,9 +52,11 @@ same branch concurrently.
 
 Give each implementation agent a separate Git worktree below `./.tmp/` and its
 own branch. Create `./.tmp/` first if necessary. Never use `$TMPDIR`. The agent
-for spec _N+1_ starts only after spec _N_ has committed successfully, and bases its
-branch on spec _N_'s branch. The coordinator verifies the prior commit, stack base,
-and pull-request number before dispatching the next agent.
+for spec _N+1_ starts only after spec _N_ has committed successfully. Base a spec
+with an unmerged dependency on the dependency's branch so it inherits the required
+commits; otherwise, base it on refreshed `origin/main`. The coordinator verifies
+the prior commit, chosen commit base, and pull-request number before dispatching the
+next agent.
 
 The coordinator must not implement production changes, tests, or documentation for
 an assigned spec. It selects work, prepares isolated worktrees, provides each agent
@@ -62,10 +65,11 @@ its spec path and base branch, tracks the resulting PR, and reports status.
 ## Per-Spec Workflow
 
 1. Create a descriptive branch, such as
-   `spec/<program>-<number>-<short-slug>`. Base the first branch on the requested
-   base branch (normally `origin/main`). Base every later branch on the immediately
-   preceding spec branch; do not flatten, squash, or rebase the stack without an
-   explicit request.
+   `spec/<program>-<number>-<short-slug>`. Base a root or independent spec branch on
+   refreshed `origin/main`. When the spec depends on an unmerged predecessor, base
+   its branch on that predecessor's branch and record every inherited predecessor
+   PR. Do not flatten, squash, or rebase inherited commits without an explicit
+   request.
 2. Read the full spec, its dependency specs as needed, the program README, and
    repository `AGENTS.md`. Identify the owning packages, acceptance criteria,
    behavior changes, and the spec's **Test plan (write first)**.
@@ -85,7 +89,8 @@ its spec path and base branch, tracks the resulting PR, and reports status.
 6. Review the staged diff against this spec's stack base, not `origin/main` for a
    later stacked branch. Ensure it contains only the current spec's implementation,
    tests, status update, and deleted spec file. Preserve the inherited commits from
-   predecessor branches unchanged.
+   predecessor branches unchanged. Also review `origin/main...HEAD` to inventory
+   every predecessor PR included in the branch.
 7. Stage only those files and create one conventional commit. Use the
    [`git-commit`](../git-commit/SKILL.md) skill to derive the message from the staged
    diff.
@@ -94,21 +99,35 @@ its spec path and base branch, tracks the resulting PR, and reports status.
    [`generate-pr-description`](../generate-pr-description/SKILL.md) and
    [`open-pr`](../open-pr/SKILL.md) workflows.
 
-## Stacked Pull Requests
+## Main-Targeted Pull Requests
 
-Create the first PR against `main` (or the requested base). Create every subsequent
-PR against the immediately preceding spec branch, so its review diff shows only the
-new spec. Confirm the PR base before creation.
+Create every pull request against `main`, including PRs whose branches inherit
+commits from unmerged predecessor branches. Never set a predecessor spec branch as
+the GitHub PR base. Confirm `baseRefName` is `main` immediately after creation and
+correct it before continuing if necessary.
 
-Each PR title and body must discuss only its own spec. In the body, add one compact
-stack note, for example:
+Create the first/root PR as ready for review. Create every PR that includes an
+unmerged predecessor PR as a draft. Keep it draft until every included predecessor
+has merged and the branch has been reconciled with the updated `origin/main`.
+
+Each PR title and main description must discuss only its own spec. For a draft
+dependent PR, add a dependency section that lists every included predecessor PR in
+merge order and explicitly says they must merge before this PR becomes ready:
 
 ```markdown
-Stacked on: #123, #124
+## Dependencies
+
+This branch includes changes from:
+
+- #123
+- #124
+
+Merge these PRs in order before marking this PR ready for review.
 ```
 
-List every predecessor PR number in stack order. Do not repeat predecessor changes,
-include a combined program summary, or claim that the whole program is complete.
+Confirm the root PR is not a draft and each dependent successor is a draft after
+creation. Do not repeat predecessor changes, include a combined program summary,
+or claim that the whole program is complete.
 
 If the PR number is required to mark a finding resolved, create the PR after the
 code commit, then make a small follow-up commit on the same branch that records the
@@ -117,9 +136,10 @@ per-spec PR and must contain no other work.
 
 ## Completion and Blockers
 
-Report each completed spec with its branch, commit, PR URL, stack base, resolved
-findings, removed spec file, and validation results. Then either move to the next
-explicitly requested spec or stop.
+Report each completed spec with its branch, commit, PR URL, GitHub base (`main`),
+commit stack base, draft state, included predecessor PRs, resolved findings,
+removed spec file, and validation results. Then either move to the next explicitly
+requested spec or stop.
 
 Stop and ask for direction when a required dependency is neither landed nor in the
 requested stack, a test exposes an out-of-scope design decision, the working tree
@@ -133,6 +153,8 @@ implementation or required validation is incomplete.
 - [ ] The description contains what the skill does, when it triggers, and spec/PR keywords.
 - [ ] A request for multiple specs uses one subagent and isolated worktree per spec.
 - [ ] Every implementation uses numeric order, dependency checks, TDD, and focused validation.
-- [ ] Every completed spec is a distinct stacked branch, commit, and PR.
+- [ ] Every completed spec is a distinct branch, commit, and PR targeting `main`.
+- [ ] Dependent branches preserve required predecessor commits without using a predecessor PR base.
+- [ ] The root PR is ready; dependent PRs are drafts that list included predecessor PRs.
 - [ ] The program README marks only actually resolved findings and the completed spec file is deleted.
 - [ ] `validate_agent_files --ci .claude` passes.
