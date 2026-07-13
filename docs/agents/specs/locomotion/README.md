@@ -26,9 +26,9 @@ their implementation files have been removed. Spec 05 landed in
 [PR #442](https://github.com/Dr-QP/Dr.QP/pull/442). Remaining specs assume those foundations
 unless the dependency table says otherwise.
 
-| Spec                                | Title                   | Fixes                  | Depends on |
-| ----------------------------------- | ----------------------- | ---------------------- | ---------- |
-| [08](08-raise-control-loop-rate.md) | Raise control loop rate | F25                    | 02, 04     |
+| Spec                                | Title                   | Fixes | Depends on |
+| ----------------------------------- | ----------------------- | ----- | ---------- |
+| [08](08-raise-control-loop-rate.md) | Raise control loop rate | F25   | 02, 04     |
 
 Dependency sketch:
 
