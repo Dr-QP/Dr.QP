@@ -471,7 +471,7 @@ as the signed yaw produced by applying the constant angular velocity $\omega$
 for one positive stance-duration interval:
 
 \begin{equation}
-\Delta\theta = \omega T_{\mathrm{stance}}.
+\Delta\theta = \omega T\_{\mathrm{stance}}.
 \end{equation}
 
 $\Delta\theta$ is a yaw _scale_ for one complete stride interval, not the
@@ -515,7 +515,7 @@ The relative yaw at coordinate $s$ is therefore
 
 \begin{equation}
 \theta(s) = s\Delta\theta
-=s\omega T_{\mathrm{stance}}.
+=s\omega T\_{\mathrm{stance}}.
 \end{equation}
 
 The symbol $\theta(s)$ means the body's heading relative to the middle of the
