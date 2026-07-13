@@ -1,4 +1,4 @@
-exclude: '(^packages/vendor/|.*/test_data/.*|^packages/runtime/drqp_rapidjson/include/.*)'
+exclude: '(^packages/vendor/|.*/test_data/.*|^packages/runtime/drqp_rapidjson/include/.*|^hardware/overalays/.*)'
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
