@@ -13,4 +13,4 @@ git status
 
 # Install the repository's hooks for this checkout. Re-running this command is
 # safe and ensures both staged-file and pre-push checks are available.
-pre-commit install --install-hooks --hook-type pre-commit --hook-type pre-push
+pre-commit install --install-hooks --hook-type pre-commit --hook-type pre-push || echo "pre-commit install failed. log: $(cat "$HOME/.cache/pre-commit/pre-commit.log")"
