@@ -5,7 +5,7 @@ script_dir=$(dirname "$0")
 source "$script_dir/__utils.sh"
 
 cd "$root_dir"
-echo "$pwd"
+echo "$PWD"
 ls -al ".git"
 ls -al ".git/"
 echo $(command -v git || echo "git not found")
