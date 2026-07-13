@@ -327,8 +327,8 @@ _Files: `drqp_brain/brain_node.py`, `drqp_brain/joint_trajectory_builder.py`_
   target window, phase timing, and trajectory point spacing derive from the validated
   `control_rate_hz` parameter (5–100 Hz). The joint trajectory controller updates at 100 Hz,
   leaving at least a 2× update-rate margin at the default; tick-duration min/mean/max logging and
-  deterministic 8/25/50 Hz rate-invariance coverage guard the control-budget contract. Stacked PR
-  pending.
+  deterministic 8/25/50 Hz rate-invariance coverage guard the control-budget contract
+  ([PR #443](https://github.com/Dr-QP/Dr.QP/pull/443)).
 - {bdg-success}`F26` **Analytic-model and URDF zero conventions have one boundary.**
   `drqp_kinematics` owns the fixed femur- and tibia-bracket conversion between the simplified
   straight-link analytic model and the physical URDF. Model-generated poses cross that boundary
@@ -478,7 +478,7 @@ Each item is independently shippable.
 | F22 | {bdg-warning}`partial` | Runtime full-path analytic IK scales combined twists; offline certification remains translation-only ([PR #442](https://github.com/Dr-QP/Dr.QP/pull/442)) | `walk_controller.py`, `generate_stride_limits.py`            |
 | F23 | {bdg-secondary}`low`   | Joint limits hand-duplicated from URDF                                                                                                                    | `generate_stride_limits.py:48–52`                            |
 | F24 | {bdg-secondary}`low`   | Stride-limit YAML regeneration not CI-enforced                                                                                                            | —                                                            |
-| F25 | {bdg-success}`fixed`   | Configurable 25 Hz default control loop with rate-invariant gait timing and tick-duration instrumentation (stacked PR pending)                            | `brain_node.py`                                              |
+| F25 | {bdg-success}`fixed`   | Configurable 25 Hz default control loop with rate-invariant gait timing and tick-duration instrumentation ([PR #443](https://github.com/Dr-QP/Dr.QP/pull/443)) | `brain_node.py`                                              |
 | F26 | {bdg-warning}`medium`  | Servo zero offsets applied/inverted in trajectory layer instead of URDF/ros2_control                                                                      | `joint_trajectory_builder.py:35–36`, `brain_node.py:493–501` |
 | F27 | {bdg-secondary}`low`   | Dead `phase_steps_per_cycle` constructor argument (fps/2.5), overwritten every tick                                                                       | `brain_node.py:227`                                          |
 | F28 | {bdg-secondary}`low`   | Rounded-float dedupe key compensating for stateful target generation                                                                                      | `brain_node.py:456–476`                                      |

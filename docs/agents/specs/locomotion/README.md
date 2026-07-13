@@ -23,9 +23,9 @@ Finding IDs (`F1`…`F28`) referenced throughout are defined in the
 Specs are numbered in implementation order. Specs 01, 02, 03, 04, 05, 06, and 07 have landed and
 their implementation files have been removed. Spec 05 landed in
 [PR #441](https://github.com/Dr-QP/Dr.QP/pull/441); spec 06 landed in
-[PR #442](https://github.com/Dr-QP/Dr.QP/pull/442). Spec 08 is implemented and awaiting its
-stacked PR; its implementation file has been removed. All specs assume those foundations unless
-the dependency table says otherwise.
+[PR #442](https://github.com/Dr-QP/Dr.QP/pull/442). Spec 08 is implemented in
+[PR #443](https://github.com/Dr-QP/Dr.QP/pull/443); its implementation file has been removed.
+All specs assume those foundations unless the dependency table says otherwise.
 
 All numbered implementation specs are complete.
 
@@ -37,7 +37,7 @@ Dependency sketch:
 02 ─┬─► 04 ─┬─► 06
 03 ─┘       ├─► 07 (landed)
 05 ──────────────────────────────► landed
-            └─► 08 (implemented; stacked PR pending)
+            └─► 08 (implemented; [PR #443])
 ```
 
 ## Conventions for implementing agents
