@@ -379,7 +379,7 @@
       {
         "label": "Dr.QP sync notebooks",
         "type": "shell",
-        "command": "${workspaceFolder}/scripts/sync-notebooks.sh",
+        "command": "${workspaceFolder}/scripts/notebooks-sync.sh",
         "options": {
           "cwd": "${workspaceFolder}"
         },

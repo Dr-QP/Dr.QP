@@ -168,6 +168,18 @@ jobs:
           name: claude-responder-output
           path: ${{ steps.claude_responder.outputs.execution_file }}
 
+      - name: Fail on Claude usage limit
+        if: steps.claude_responder.outputs.execution_file != ''
+        env:
+          EXECUTION_FILE: ${{ steps.claude_responder.outputs.execution_file }}
+        run: |
+          if grep --fixed-strings --quiet \
+            "You've hit your org's monthly spend limit" \
+            "$EXECUTION_FILE"; then
+            echo "::error::Claude hit the organization's monthly spend limit."
+            exit 1
+          fi
+
       - name: Log debug stats
         if: ${{ always() }}
         uses: ./.github/actions/log-debug-stats

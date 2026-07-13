@@ -21,7 +21,23 @@
 
 """Pytest configuration and shared fixtures."""
 
+from pathlib import Path
+import shutil
+from uuid import uuid4
+
 import pytest
+
+
+@pytest.fixture
+def repo_tmp_path():
+    """Create an isolated temporary directory under the repository root."""
+    repo_root = Path(__file__).resolve().parents[3]
+    temp_path = repo_root / '.tmp' / f'pytest-{uuid4().hex}'
+    temp_path.mkdir(parents=True)
+    try:
+        yield temp_path
+    finally:
+        shutil.rmtree(temp_path)
 
 
 @pytest.fixture

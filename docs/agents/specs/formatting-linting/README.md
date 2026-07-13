@@ -1,237 +1,179 @@
-# Formatting and linting tooling review
+# Formatting and linting consolidation
 
-- **Status**: proposed
-- **Reviewed**: 2026-07-11
-- **Scope**: repository configuration, local scripts, pre-commit, VS Code/devcontainer,
-  Super-Linter, and ROS package lint tests
-- **Outcome**: keep language-native formatters and VS Code workflows, but give every file type
-  one formatter owner, one checker contract, and shared repository entry points
+## Re-evaluated direction
 
-## Executive summary
+This spike was re-evaluated against the implementation in
+[PR #440](https://github.com/Dr-QP/Dr.QP/pull/440), `reformat-consolidation-step1`. That branch is
+now the baseline for the remaining work, not an intermediate state to undo.
 
-The repository has capable tools, but the execution surfaces have evolved independently. The
-main problem is not the number of tools; formatting and linting are different jobs and ROS adds
-useful package-level gates. The problem is that ownership, file scope, versions, and invocation
-order differ between local scripts, pre-commit, VS Code, Super-Linter, and `colcon test`.
+PR #440 establishes these ownership decisions:
 
-The target should be:
+1. Ruff owns ordinary Python formatting and lint fixes through `python-reformat.sh` and the native
+   pre-commit hooks.
+2. Notebook formatting and notebook-pair synchronization are explicit operations owned by
+   `notebooks-format.sh` and `notebooks-sync.sh`. `python-reformat.sh` deliberately does not invoke
+   either operation.
+3. Super-Linter is the execution owner for Ansible (`ansible-lint`), C/C++ (`clang-format`), and
+   Markdown/YAML/JSON/JSONC (`Prettier`) autofixes and checks. It also aggregates ShellCheck,
+   Hadolint, actionlint, zizmor, and gitleaks validation.
+4. `super-linter-env.sh` generates the settings used by both GitHub Actions and the local wrapper;
+   checked-in autofix/check env files are no longer configuration authorities.
+5. Pre-commit is a changed-file feedback layer. It runs native Ruff, notebook formatting,
+   ShellCheck, whitespace/merge checks, actionlint, gitleaks, and agent-file validation without
+   starting the Super-Linter container.
+6. Ament lint remains an additive ROS package gate. Ruff and Super-Linter do not replace package
+   lint registration or `ament_flake8` compatibility.
 
-1. Language-native tools own formatting: Ruff, clang-format, ansible-lint, and Prettier.
-2. Repository scripts are the public contract used by humans, agents, pre-commit, and CI.
-3. Super-Linter becomes a check-only host for the remaining heterogeneous checks; it does not
-   compete with native formatter jobs.
-4. Ament lint remains the ROS package integration gate. It verifies rules that Ruff and
-   clang-format do not cover, but every package must actually register its declared linters.
-5. VS Code remains a first-class fast feedback path. Extensions use repository configuration and,
-   where supported, repository-pinned binaries.
-6. CI keeps writing formatting fixes to trusted PR branches, but all formatter owners run serially
-   and produce one deterministic patch and commit.
+The remaining program should consolidate orchestration and close enforcement gaps while preserving
+those owners. In particular, it must not recreate `cpp-reformat.sh`, move Prettier or Ansible out
+of Super-Linter, or fold notebook formatting back into `python-reformat.sh`.
 
-The implementation is split into four independently shippable specs:
+## Remaining specs
 
-| Order | Spec                                                                             | Result                                                        |
-| ----- | -------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| 1     | [01 — Ownership and entry points](01-ownership-and-entry-points.md)              | One formatter/checker matrix and complete file scopes         |
-| 2     | [02 — CI, pre-commit, and version parity](02-ci-precommit-and-version-parity.md) | The same commands and versions on every automation surface    |
-| 3     | [03 — ROS package lint gates](03-ros-package-lint-gates.md)                      | Ament coverage is explicit, reproducible, and non-accidental  |
-| 4     | [04 — VS Code and agent workflow](04-vscode-and-agent-workflow.md)               | Save-time feedback and concise guidance for people and agents |
+| Order | Spec                                                                              | Result                                                                |
+| ----- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| 1     | [01 — Unified orchestration and scope](01-ownership-and-entry-points.md)          | One orchestration contract over the PR #440 owners and complete scope |
+| 2     | [02 — Serial CI, fast hooks, and versions](02-ci-precommit-and-version-parity.md) | Serial CI output and deliberate fast-hook coverage                    |
+| 3     | [03 — ROS package lint gates](03-ros-package-lint-gates.md)                       | Ament coverage is explicit, reproducible, and non-accidental          |
+| 4     | [04 — VS Code and agent workflow](04-vscode-and-agent-workflow.md)                | Editor feedback and guidance match repository ownership               |
 
-## Accepted workflow decisions
+## Current execution topology after PR #440
 
-- CI continues to write and commit formatting fixes for trusted pull-request branches.
-- CI runs formatter owners serially and creates one combined patch/commit, not one patch per
-  formatting system.
-- Devcontainer setup installs pre-commit and pre-push hooks automatically.
-- Commit-time hooks operate on staged filenames and run all valid file-scoped formatters/linters.
-- Slower package-level ROS lint runs at pre-push for affected packages and remains available as an
-  explicit full command.
-- Local and CI entry points support changed-only operation. Full-tree operation remains available
-  for baseline cleanup, configuration migrations, main, and manual validation.
-- Changed notebook sources retain the existing Jupytext synchronization plus Ruff code-cell
-  formatting; changed-only mode must not degrade notebooks to ordinary Markdown formatting.
+| Concern                                   | Local/script                                                          | Pre-commit                                               | CI / package gate                                                    |
+| ----------------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------- |
+| Ordinary Python                           | `python-reformat.sh`: Ruff format, fix, and explicit import-sort pass | Three native `ruff-pre-commit` hooks                     | `python-reformat.sh`; package `ament_flake8` where registered        |
+| Notebook MyST/paired notebooks            | Explicit `notebooks-format.sh` and `notebooks-sync.sh`                | `notebooks-format.sh` receives changed notebook Markdown | Explicit `notebooks-format.sh` after ordinary Python formatting      |
+| C/C++                                     | `super-linter-local.sh`: Super-Linter clang-format autofix/check      | No C++ formatter/check hook                              | Super-Linter clang-format; additive ament checks where registered    |
+| Ansible                                   | `super-linter-local.sh`: Super-Linter ansible-lint autofix/check      | No Ansible hook                                          | Super-Linter ansible-lint with repository-root offline configuration |
+| Markdown, YAML, JSON, JSONC               | `super-linter-local.sh`: Super-Linter Prettier autofix/check          | Generic whitespace/YAML checks only                      | Super-Linter Prettier                                                |
+| Bash, Dockerfile, workflows, secrets      | `super-linter-local.sh`                                               | ShellCheck, actionlint, and gitleaks                     | Super-Linter ShellCheck, Hadolint, actionlint, zizmor, and gitleaks  |
+| CMake, XML, copyright, ROS-specific style | No unified repository command                                         | None                                                     | `drqp_lint_common`/ament tests, package by package                   |
 
-## Current execution topology
+## What PR #440 resolves
 
-| Concern                                   | Local/script                                                                            | Pre-commit                                                                | VS Code                                                                              | CI / package gate                                                    |
-| ----------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| Python format/lint                        | `python-reformat.sh`: Ruff format, Ruff fix, separate Ruff isort; then ansible-lint fix | Three Ruff hooks pinned to 0.11.2, then the whole-repository local script | Ruff extension; formatter selected, format-on-save disabled                          | `python-reformat.sh`; package `ament_flake8` tests where registered  |
-| C/C++ format                              | `cpp-reformat.sh`: `ament_clang_format --reformat packages/`                            | Whole-package script when any staged C++ file matches                     | clangd formatter selected, format-on-save not enabled                                | Same script; ament clang-format in packages using `drqp_lint_common` |
-| Ansible                                   | Coupled to `python-reformat.sh` as `ansible-lint --fix`                                 | Runs indirectly on effectively every commit through the local Python hook | Red Hat Ansible diagnostics use `.venv/bin/ansible-lint`                             | Runs indirectly in the Python reformat job                           |
-| Markdown, generic YAML, JSON/JSONC        | No pinned native local command; `super-linter-local.sh` requires Docker/Podman          | None                                                                      | Prettier and markdownlint extensions recommended, but no language formatter settings | Super-Linter runs Prettier autofix then check                        |
-| Bash, Dockerfile, GitHub Actions, secrets | Super-Linter container                                                                  | actionlint and gitleaks only                                              | Syntax-focused extensions; no complete CI-equivalent task                            | Super-Linter: ShellCheck, Hadolint, actionlint, zizmor, gitleaks     |
-| CMake, XML, copyright, static C++         | ROS/ament commands are available but have no unified repository check script            | None                                                                      | Ament tasks exist for cpplint and lint_cmake                                         | `drqp_lint_common` through `ament_lint_auto`, package by package     |
+- **Resolved: competing C++ entry points.** `cpp-reformat.sh` is removed; Super-Linter owns the
+  clang-format autofix/check path.
+- **Resolved: mixed Python/Ansible formatting.** `python-reformat.sh` is Ruff-only and no longer
+  invokes ansible-lint.
+- **Resolved: implicit notebook work.** Notebook formatting and synchronization have named scripts
+  and CI invokes notebook formatting explicitly.
+- **Resolved: duplicated Super-Linter configuration.** One generator emits autofix and check
+  settings for CI and local execution.
+- **Resolved: missing basic commit hooks.** Standard whitespace, merge-conflict, line-ending, and
+  ShellCheck hooks are enabled, and devcontainer startup installs hook environments.
+- **Resolved: local Super-Linter result discovery.** The wrapper writes the current summary and
+  detailed outputs under `log/`.
+- **Resolved: generated/vendor scope noise for Super-Linter.** Root configuration and exclusions
+  cover build products, virtual environments, vendored sources, and generated runtime headers.
 
-## What is working well
+## Remaining issue register
 
-- `.clang-format`, `ruff.toml`, `.prettierrc.yml`, `.prettierignore`, and the Super-Linter env
-  files are repository-owned configuration rather than hidden CI arguments.
-- Ansible files are excluded from Prettier, avoiding a formatter fight with ansible-lint.
-- `scripts/super-linter-local.sh` deliberately loads the same two env files as CI and handles Git
-  worktrees by mounting the common Git directory.
-- `.editorconfig` establishes LF endings, final newlines, whitespace trimming, and basic indent
-  sizes independently of formatter availability.
-- `drqp_lint_common` gives CMake packages a reusable ROS lint dependency set and injects the root
-  `.clang-format` into the packages that include `ClangFormatConfig.cmake`.
-- The Python agent guidance correctly distinguishes Ruff's formatter/autofixer role from
-  `ament_flake8`'s ROS gate role.
+### P0 — required gates can still disagree or be absent
 
-## Evidence from read-only verification
+1. **ROS lint registration still has holes.** `drqp_gazebo` declares lint-auto dependencies without
+   invoking `ament_lint_auto_find_test_dependencies()`, and `drqp_robot_mcp` declares Python lint
+   dependencies without registering corresponding tests.
+2. **CI still produces two formatter patches.** Ruff/notebook formatting and Super-Linter run in
+   parallel, then their patches are applied and committed separately. Notebook Markdown can be
+   touched by the Jupytext/Ruff pipeline and by Prettier, so ordering is still significant.
+3. **There is no single check/fix contract.** Users must know when to run Python, notebooks,
+   Super-Linter, and ROS package gates separately. Passing one surface does not demonstrate that
+   the others pass.
 
-Commands were run from the repository root without modifying tracked files.
+### P1 — scope, hook, and version drift
 
-| Check                                                         | Result                                                                                            |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `.venv/bin/pre-commit validate-config`                        | Passed                                                                                            |
-| Ruff 0.15.5 `format --check` over all identified Python roots | One omitted file would be reformatted: `docker/ros/deploy/install-overlay-python-requirements.py` |
-| Ruff lint with configured rules                               | Passed                                                                                            |
-| Ruff import check (`--select I`)                              | Failed for the omitted deploy script and `docs/source/conf.py`                                    |
-| ansible-lint 26.3.0 over `docker/ros/ansible`                 | Passed: 56 processed files, no findings                                                           |
-| `ament_clang_format --config .clang-format packages/`         | Passed: no C/C++ divergence                                                                       |
-| `scripts/python-lint-check.sh`                                | Failed: 26 findings across 389 Python files                                                       |
-
-The ament failures are particularly useful evidence of the split contract:
-
-- one 106-character launch description triggers `E501`, although Ruff explicitly ignores E501
-  on the assumption that the formatter handles line wrapping;
-- 25 test helper classes trigger the ament `CNL100` class-newline plugin, which the configured
-  Ruff rules neither report nor fix;
-- `drqp_gazebo` declares `ament_lint_auto` and `drqp_lint_common` but never calls
-  `ament_lint_auto_find_test_dependencies()`;
-- `drqp_robot_mcp` declares `ament_flake8`, `ament_pep257`, and `ament_copyright`, but has no
-  corresponding lint test modules.
-
-Thus a full-tree manual checker can fail while normal package tests do not necessarily register
-the same checks. Declaring a test dependency is not evidence that a test exists.
-
-## Issue register
-
-### P0 — enforcement can disagree or be absent
-
-1. **ROS lint registration has holes.** `drqp_gazebo` does not invoke its declared lint-auto
-   dependency, and `drqp_robot_mcp` does not register its declared Python linters.
-2. **CI has two formatter authorities.** The native reformat job and Super-Linter run in parallel,
-   create independent patches, and later attempt to merge them. A file matched by both systems
-   can produce patch-order or conflict behavior rather than a deterministic pipeline.
-3. **There is no single clean-tree command.** Passing a local formatter, a staged hook, or an
-   editor action does not demonstrate that CI and package linters will pass.
-
-### P1 — scope and version drift
-
-4. **Python scope is hardcoded and incomplete.** `docs/source/conf.py` and
-   `docker/ros/deploy/install-overlay-python-requirements.py` are tracked Python files outside
-   `python-reformat.sh`'s directory list. The staged Ruff hooks can see them, creating different
-   behavior by invocation path.
-5. **Ruff executes redundantly and at two versions.** The locked venv currently resolves Ruff
-   0.15.5; pre-commit pins 0.11.2 and then the local whole-tree script runs Ruff again. Import
-   sorting is a third Ruff pass because `I` is not in the root selected rule set.
-6. **Ansible is hidden inside the Python formatter.** This causes unrelated Python or repository
-   changes to rewrite Ansible files and makes the script name and agent guidance misleading.
-7. **Prettier has no repository-pinned local binary.** CI receives the version bundled in the
-   Super-Linter image while VS Code normally receives the extension's bundled version.
-8. **C/C++ version ownership is implicit.** clang-format comes from the dev image/ROS environment;
-   clangd formatting is configured in VS Code, but the expected tool version is not stated or
-   checked.
-9. **Changed-file path filtering omits configuration triggers.** Changes to files such as
-   `ruff.toml`, `.editorconfig`, or workspace formatter settings are not all explicit reasons to
-   run the format job.
+4. **Python scope remains hardcoded and incomplete.** `docs/source/conf.py` and
+   `docker/ros/deploy/install-overlay-python-requirements.py` are outside the current
+   `python-reformat.sh` roots, while staged Ruff hooks can receive them.
+5. **Ruff still has two pins and three passes.** The uv lock and `ruff-pre-commit` revision differ,
+   and import sorting remains a separate invocation because `I` is not selected in `ruff.toml`.
+6. **Fast hooks do not cover every Super-Linter-owned formatter.** C/C++, Ansible, and Prettier
+   defects can reach CI before the authoritative container-backed pass runs. This is an intentional
+   performance tradeoff today, but it needs a documented local/pre-push contract.
+7. **The installed pre-push hook has no pre-push stages.** Devcontainer setup installs both hook
+   types, but the current pre-commit configuration defines no `stages: [pre-push]` quality gate.
+8. **Editor tool versions are not authoritative.** clangd, the Prettier extension, and local
+   ansible-lint diagnostics may differ from the versions bundled in the pinned Super-Linter image.
+9. **Reformat path filters lag the new files.** The workflow still names removed Super-Linter env
+   files and does not comprehensively inventory the generator, root linter configs, notebook
+   scripts, pre-commit config, and all owned source locations.
 
 ### P2 — feedback and documentation gaps
 
-10. **Recommended extensions do not describe the repository contract.** Python and C++ have
-    selected default formatters, but save-time behavior is off; Prettier has no language-scoped
-    defaults; Ansible has diagnostics but no formatter task; markdownlint is recommended without
-    a corresponding CI markdownlint gate.
-11. **Super-Linter owns unrelated roles.** It is simultaneously a formatter, lint aggregator,
-    security checker, PR summary producer, and local Docker-only workflow. This makes failures
-    harder to reproduce with the underlying tool.
-12. **Human and agent onboarding is incomplete.** `CONTRIBUTING.md` says to follow project style
-    but gives no commands. Only Python has a dedicated agent workflow; C++, Ansible, Prettier,
-    and Super-Linter ownership is undocumented.
-13. **The CI write path is more complex than necessary.** Writing formatter commits is an
-    intentional workflow, but two independent patches, two commit identities, recursive-skip
-    handling, and fork behavior make it harder to reason about. One serial patch can preserve
-    autofix commits without the patch-order ambiguity.
+10. **VS Code exposes tools without an ownership distinction.** Ruff and clangd are useful
+    save-time feedback, while Super-Linter remains authoritative for C++/Prettier/Ansible; the
+    workspace and guidance do not state that difference.
+11. **Super-Linter remains broad and container-backed.** This is now an intentional ownership
+    choice, but failure routing and inexpensive reproduction need concise documentation.
+12. **Human onboarding remains incomplete.** The repository lacks one short sequence for ordinary
+    Python changes, notebook changes, heterogeneous changes, and full ROS verification.
 
 ## Target ownership matrix
 
-| Files                                     | Formatter owner                      | Fast checker                               | Integration/additional checks                                                  |
-| ----------------------------------------- | ------------------------------------ | ------------------------------------------ | ------------------------------------------------------------------------------ |
-| Python, including notebook paired sources | Ruff                                 | Ruff                                       | ament_flake8 and ament_pep257 for ROS packages; notebook sync check            |
-| C/C++                                     | clang-format                         | clang-format check                         | cpplint, cppcheck, and package build warnings through ament                    |
-| Ansible YAML/Jinja                        | ansible-lint `--fix`                 | ansible-lint                               | playbook syntax/integration tests where applicable                             |
-| Markdown                                  | Prettier                             | Prettier check                             | markdownlint only if a repository config and CI gate are intentionally adopted |
-| Generic YAML, JSON, JSONC                 | Prettier                             | Prettier check plus parser-specific checks | actionlint/zizmor for workflows; optional yamllint only after rule alignment   |
-| Bash                                      | none initially                       | ShellCheck                                 | script-specific tests                                                          |
-| Dockerfiles                               | none                                 | Hadolint                                   | image build                                                                    |
-| CMake/XML/package manifests               | no general autoformatter initially   | ament_lint_cmake/xmllint                   | configure/build/rosdep validation                                              |
-| GitHub Actions/security                   | no generic formatter beyond Prettier | actionlint, zizmor, gitleaks               | actual workflow execution and CodeQL                                           |
+| Files                               | Formatting algorithm | Authoritative execution surface       | Additional checks                                                   |
+| ----------------------------------- | -------------------- | ------------------------------------- | ------------------------------------------------------------------- |
+| Ordinary Python                     | Ruff                 | uv-backed repository script and CI    | Native staged Ruff; ament_flake8/pep257 for ROS packages            |
+| Notebook code cells and pairs       | Jupytext + Ruff      | Explicit notebook scripts and CI step | Pair synchronization check                                          |
+| C/C++                               | clang-format         | Super-Linter local wrapper and action | cpplint, cppcheck, and build warnings through ament                 |
+| Ansible YAML/Jinja                  | ansible-lint         | Super-Linter local wrapper and action | Syntax/integration tests where applicable                           |
+| Markdown, generic YAML, JSON, JSONC | Prettier             | Super-Linter local wrapper and action | actionlint/zizmor for workflows                                     |
+| Bash                                | none                 | No autofix owner                      | ShellCheck in pre-commit and Super-Linter                           |
+| Dockerfiles                         | none                 | No autofix owner                      | Hadolint in Super-Linter                                            |
+| CMake/XML/package manifests         | none                 | No general autofix owner              | ament_lint_cmake/xmllint                                            |
+| GitHub Actions/security             | Prettier where valid | Super-Linter for formatting           | actionlint, zizmor, gitleaks, actual workflow execution, and CodeQL |
 
-This deliberately permits more than one checker for a language when the checks are additive. It
-does not permit more than one formatter to rewrite the same file class.
+Multiple additive checkers are expected. A file class must have only one authoritative autofix
+surface; editor extensions and pre-commit normalization hooks are feedback layers, not competing
+repository formatter owners.
 
 ## Recommended migration path
 
-### Phase 1: make ownership and scopes explicit
+### Phase 1: expose the established owners through one contract
 
-- Add `scripts/format.sh` and `scripts/lint.sh` as stable public entry points.
-- Split Python, Ansible, C/C++, and Prettier implementations into independently callable helpers.
-- Build scope from tracked files and explicit exclusions, not a hand-maintained list of top-level
-  directories.
-- Support `--changed`, `--staged`, and explicit paths. Changed notebook Markdown must retain the
-  current Ruff-through-Jupytext code-cell formatting and paired notebook synchronization.
-- Keep old script names as temporary forwarding wrappers so existing muscle memory and CI do not
-  break in the same change.
-- Add check modes before changing CI behavior.
+- Add a thin repository orchestrator for fix, check, changed, and full modes. It delegates Python,
+  notebook, and Super-Linter work to the PR #440 scripts rather than reimplementing their tools.
+- Centralize tracked-file discovery and exclusions, including configuration fan-out.
+- Add read-only check modes where the current scripts only autofix.
+- Keep `python-reformat.sh`, `notebooks-format.sh`, `notebooks-sync.sh`, and
+  `super-linter-local.sh` as supported focused entry points.
 
-### Phase 2: make automation call the same contract
+### Phase 2: serialize CI and define fast-hook boundaries
 
-- Install pre-commit and pre-push hooks automatically in the devcontainer. The commit hook passes
-  staged filenames to all applicable formatters and fast linters; the push hook runs slower ROS
-  checks only for affected packages.
-- Use the uv-locked Ruff and ansible-lint. Add a project-local, lockfile-pinned Prettier and point
-  the VS Code extension at it where supported.
-- Run one serial native formatting write pass in CI. On pull requests, format changed files and
-  expand to all files owned by a tool when that tool's configuration changes; use an explicit full
-  run for main/manual validation.
-- Produce and commit one combined formatter patch. Remove Super-Linter formatter flags and retain
-  it only for heterogeneous checks.
+- Run notebook formatting after ordinary Python and before Super-Linter so Prettier sees the final
+  notebook Markdown.
+- Produce at most one patch and one formatting commit from the ordered pipeline.
+- Keep pre-commit file-scoped and container-free. Add only measured native checks there; place
+  authoritative heterogeneous/full checks in a real pre-push stage or a documented manual command.
+- Make path triggers derive from or test against the ownership/config inventory.
 
 ### Phase 3: close package gate gaps
 
-- Register ament lint in every package that declares it and remove declarations that are not used.
-- Decide and document vendor policy once: imported vendor code should normally be excluded from
-  repository formatting while retaining its upstream package tests.
-- Bring the repository to a clean `scripts/lint.sh --all` baseline, including the current ament
-  findings, before making the unified gate required.
+- Register every declared first-party ament lint dependency and audit declaration/registration
+  parity.
+- Adopt and test one vendor policy.
+- Bring the full ament lint baseline clean before making the unified full gate required.
 
-### Phase 4: restore fast editor workflows and guidance
+### Phase 4: align editors and guidance
 
-- Add language-scoped VS Code formatter settings and an explicit opt-in or checked-in
-  format-on-save policy.
-- Add VS Code tasks for `Format changed files`, `Check formatting`, `Fast lint`, and `Full ROS
-lint`, all backed by repository scripts.
-- Add a concise contributor section and one cross-language agent skill. Keep language-specific
-  troubleshooting in focused references such as the existing Python skill.
+- Treat Ruff as the authoritative Python editor path.
+- Treat clangd, Prettier, and local Ansible diagnostics as advisory unless their output/version is
+  proven equivalent to the Super-Linter-owned gate.
+- Add workspace tasks and concise human/agent instructions that invoke repository scripts.
 
 ## Decisions intentionally deferred
 
-- **markdownlint adoption**: either add a pinned CLI/config and enforce it in CI or remove it as a
-  repository recommendation. Do not leave editor-only policy unexplained.
-- **generic yamllint adoption**: evaluate it only after excluding Ansible and aligning with
-  Prettier; adding a second YAML style authority without that work recreates the current problem.
-- **pre-commit performance budget**: record warm timings during implementation, then set budgets
-  for typical staged-file hooks and affected-package pre-push checks based on measured container
-  performance.
-- **clang-tidy**: it is a semantic/static-analysis project, not a formatting consolidation task.
-  Keep it outside this program unless separately scoped with compile database and baseline work.
+- **markdownlint adoption**: add a pinned/configured CI gate or document the extension as advisory.
+- **generic yamllint adoption**: evaluate only after excluding Ansible and avoiding a second style
+  authority beside Prettier.
+- **fast-hook performance budget**: measure representative commits before adding C++, Ansible, or
+  Prettier hooks.
+- **clang-tidy**: keep semantic/static analysis outside this formatting program.
 
 ## Success measures
 
-- One documented command fixes every formatter-owned tracked file.
-- One documented command checks formatting and fast lint without modifying files.
-- A full command reproduces all required ROS package lint gates.
-- Pre-commit, CI, and VS Code use the same config files and compatible pinned tool versions.
-- Adding a tracked file under a new top-level directory does not silently escape formatting.
-- CI creates at most one formatting commit per source revision and never merges formatter patches.
-- Every declared ROS lint dependency corresponds to a registered test, verified by an automated
-  package audit.
+- One documented command fixes all formatter-owned tracked files in the required order.
+- One documented read-only command checks formatting and fast lint.
+- A full command reproduces all required Super-Linter and ROS package gates.
+- CI creates at most one formatting commit per source revision.
+- Adding a tracked file under a new top-level directory does not silently escape ownership.
+- Every declared ROS lint dependency corresponds to a registered test.
