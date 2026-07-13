@@ -9,6 +9,7 @@ cd "$root_dir"
 command -v git || echo "git not found"
 command -v pre-commit || echo "pre-commit not found"
 
+git config --global --add safe.directory "$root_dir"
 git status
 
 # Install the repository's hooks for this checkout. Re-running this command is
