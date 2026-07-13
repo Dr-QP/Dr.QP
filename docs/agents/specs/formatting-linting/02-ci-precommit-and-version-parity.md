@@ -1,4 +1,4 @@
-# Spec 02: CI, pre-commit, and tool-version parity
+# Spec 02: Serial CI, fast hooks, and version boundaries
 
 - **Status**: proposed
 - **Depends on**: 01
@@ -6,135 +6,130 @@
 
 ## Objective
 
-Make CI and pre-commit use deliberately pinned, appropriately scoped entry points. Pre-commit runs
-native Ruff hooks for staged Python; CI and full local formatting use the repository scripts. Keep
-CI formatter commits, while removing parallel formatter patches and retaining Super-Linter as the
-sole owner of Ansible formatting and checks.
+Make CI produce one deterministic formatter result from the owners established in PR #440, and
+make pre-commit/pre-push coverage deliberate without starting Super-Linter for every commit.
 
 ## Version sources
 
-| Tool                                               | Version source                                                         |
-| -------------------------------------------------- | ---------------------------------------------------------------------- |
-| Ruff for full local/CI formatting                  | `pyproject.toml` plus `uv.lock`                                        |
-| Ruff for pre-commit                                | pinned `ruff-pre-commit` revision in `.pre-commit-config.yaml`         |
-| Prettier                                           | repository `package.json` plus a committed lockfile                    |
-| clang-format/ament tools                           | pinned development container/ROS image, with an asserted major version |
-| Super-Linter-hosted checks, including ansible-lint | one Super-Linter release used by both action and local wrapper         |
+| Tool/surface                                      | Version source                                                     |
+| ------------------------------------------------- | ------------------------------------------------------------------ |
+| Ruff for full local/CI formatting                 | `pyproject.toml` plus `uv.lock`                                    |
+| Ruff for staged pre-commit formatting             | pinned `ruff-pre-commit` revision                                  |
+| Jupytext and notebook Ruff pipeline               | notebook dependency group plus `uv.lock`                           |
+| clang-format, Prettier, ansible-lint in CI/local  | one pinned Super-Linter image used by action and local wrapper     |
+| ShellCheck/actionlint/gitleaks native hooks        | pinned pre-commit revisions                                        |
+| Ament/ROS lint tools                               | pinned development container/ROS image                             |
 
-Pre-commit must not invoke `python-reformat.sh`. It uses the native `ruff-pre-commit` format,
-lint-fix, and import-sort hooks on staged Python files. The repository's uv environment remains
-the full local/CI Ruff entry point. Configure the Prettier VS Code extension to use the project
-binary where supported.
+Separate pins are acceptable only when the surface has a distinct performance role and parity is
+tested or its diagnostics are documented as advisory. Do not add a project-local Prettier or
+native clang-format/ansible-lint autofix merely to force one version source; the authoritative
+versions for those owners are in the Super-Linter image.
 
-## Pre-commit behavior
+## Pre-commit and pre-push behavior
 
-- Automatically install both hook types after the devcontainer's dependency setup:
+Preserve the PR #440 changed-file design:
 
-  ```text
-  pre-commit install --install-hooks --hook-type pre-commit --hook-type pre-push
-  ```
+- Keep native Ruff format, lint-fix, and import handling for staged ordinary Python.
+- Keep `notebooks-format.sh` as a dedicated filename-receiving hook for notebook Markdown.
+- Keep standard whitespace, line-ending, merge-conflict, YAML syntax, ShellCheck, actionlint,
+  gitleaks, and agent-file validation hooks where their results are valid file-by-file.
+- Do not invoke `python-reformat.sh` or start Super-Linter from an ordinary pre-commit hook.
+- Preserve the pre-commit contract: if a hook modifies a file, the commit stops for review and
+  restaging.
 
-  Installation must be idempotent, work in Git worktrees, and must not change Git configuration.
+The devcontainer currently installs both `pre-commit` and `pre-push` hook types, but no quality
+hook is assigned to the pre-push stage. Add a real pre-push contract or stop claiming that slower
+pre-push checks are available.
 
-- Use the native `ruff-pre-commit` format, lint-fix, and import-sort hooks for staged Python files.
-  Do not route Python through a whole-tree formatter or a generic dispatcher. Pass staged filenames
-  through to the Ruff hooks.
-- Keep dedicated hooks for file classes that need extra handling. `notebooks-format` owns notebook
-  Jupytext/Ruff formatting; Super-Linter owns Ansible formatting through `ansible-lint --fix`.
-- The `notebooks-format` pre-commit hook runs `scripts/notebooks-format.sh` directly when a
-  notebook Markdown source changes. `python-reformat.sh` continues to call that script for its
-  full-tree workflow, but is not a pre-commit hook entry point.
-- The fast lint dispatcher runs every correctly file-scoped check currently enforced in CI,
-  including Ruff, ament_flake8 on selected Python, clang-format check, relevant ament file
-  linters, Prettier check, ShellCheck, Hadolint, actionlint, zizmor, gitleaks, and agent file
-  validation. Super-Linter owns the Ansible `ansible-lint` check. Tools with no selected inputs do
-  not start.
-- Prefer native/project binaries for hooks. Do not start the Super-Linter container on every
-  commit; Super-Linter remains the CI aggregation/reproduction surface for the same underlying
-  heterogeneous checks.
-- The pre-push hook maps changed files to affected ROS packages and runs the slower package-level
-  ament/colcon lint suite once per affected package. A manual `--all` remains available. Checks
-  that cannot produce a correct file-scoped result belong here rather than slowing every commit.
-- Preserve the normal pre-commit contract: if formatting changes a file, the commit stops so the
-  developer can review and stage it. Document `SKIP=<hook>` and `--no-verify` as exceptional escape
-  hatches, not the normal workflow.
+Recommended pre-push behavior:
 
-### Performance requirements
+- run the authoritative changed-scope Super-Linter check once;
+- map changed ROS files to affected packages and run package lint gates once per package;
+- allow an explicit full mode for configuration changes or manual verification;
+- never run a package/container check once per selected file.
 
-- A commit touching no owned files starts no formatter/linter subprocesses beyond the dispatcher.
-- A typical Python-only commit does not start Ansible, clang, Prettier, Docker, or ROS package
-  tests; it still runs both Ruff and the file-scoped ament_flake8 compatibility check.
-- Notebook formatting receives only the selected notebook sources and their generated pairs.
-- Expensive package checks run once at pre-push for affected packages, not once per file.
-- Capture cold and warm timings for representative Python, C++, Ansible, Markdown, notebook, and
-  no-op commits. Set the final performance budget from those measurements and record it in the
-  contributor guidance.
+If measured Super-Linter startup cost makes an automatic pre-push hook unacceptable, document one
+manual `lint.sh --all` gate and install only hooks that have actual configured stages. This is a
+decision to make from timings, not from an assumption that every CI tool belongs in pre-commit.
 
-## CI behavior
+### Performance evidence
 
-Replace the two parallel formatting producers in `reformat.yml` with one serial formatting writer:
+- Record cold/warm timings for ordinary Python, notebook, shell, C++, Ansible, Markdown, and no-op
+  commits.
+- Record one changed-scope Super-Linter run and affected-package pre-push run.
+- Verify unrelated tools do not start for ordinary staged-file hooks.
+- Set performance budgets from the measurements and document the selected hook boundary.
+
+## CI formatting behavior
+
+Replace the parallel patch producers with one ordered writer:
 
 ```text
-scripts/format.sh --write --changed --base <pull-request-base-sha>
+ordinary Ruff -> notebook Jupytext/Ruff -> Super-Linter autofix -> combined patch
 ```
 
-For pushes to `main` and manual full validation, use `scripts/format.sh --write --all`. Pull
-requests normally use the explicit base SHA plus index/worktree inputs so CI rewrites only files in
-the change. A formatter configuration change remains in changed mode but the scope resolver fans
-out to every file owned by that formatter. Notebook sources still take the notebook-aware path
-from spec 01.
+- Notebook formatting must precede Super-Linter so Prettier receives the final Markdown produced by
+  the notebook pipeline.
+- Run the complete ordered pipeline in one checkout/worktree or pass the output tree serially; do
+  not create independent patches from the same base.
+- Produce one binary-safe patch and at most one formatter commit.
+- Run the read-only checks on the formatted revision/recursive workflow.
+- Preserve trusted same-repository PR autofix commits.
+- For forks, upload the combined patch and fail with the exact local reproduction command; never
+  attempt a remote branch update.
+- Preserve skip-tag trust checks and collapse the two formatter commit subjects into one recursive
+  skip identity.
 
-The job produces one combined binary-safe patch after all formatter owners finish. The existing
-commit job applies that patch and creates one formatting commit on a trusted PR source branch.
-Recursive-commit detection uses one commit message. If the PR comes from a fork, upload the same
-patch as an artifact and fail with the exact changed-only local command; never attempt a remote
-branch update.
+Super-Linter retains `FIX_ANSIBLE`, `FIX_CLANG_FORMAT`, and the Prettier fix flags. Serializing CI
+must not disable those flags or replace them with native formatter jobs.
 
-Super-Linter remains useful for ansible-lint, ShellCheck, Hadolint, actionlint, zizmor, and
-gitleaks. Keep `VALIDATE_ANSIBLE` and `FIX_ANSIBLE` enabled as its sole formatter exception;
-disable any other formatter/fix flags once the serial native writer owns those file classes. The
-local Super-Linter wrapper remains a supported exact reproduction path for those checks.
+## Trigger inventory
 
-After a formatter commit, the existing recursive run executes the normal check-only fast lint and
-ROS package gates against the formatted revision. This preserves the current write-in-CI workflow
-without merging native and Super-Linter patches.
+The reformat path filter must cover all owned sources and every configuration/entry-point change,
+including:
 
-Update path filters so every formatter config, dependency lock, shared script, editor ownership
-setting, and owned file extension triggers the gate. Add a test that compares the declared trigger
-list with the ownership/config inventory.
+- `ruff.toml`, Python dependency/lock files, `ruff-commands.sh`, and `python-reformat.sh`;
+- notebook source/configuration plus `notebooks-format.sh` and `notebooks-sync.sh`;
+- `.clang-format`, `.ansible-lint.yml`, `.prettierrc.yml`, `.prettierignore`, `.shellcheckrc`,
+  `.hadolint.yaml`, and `zizmor.yaml`;
+- `super-linter-env.sh`, `super-linter-local.sh`, `.pre-commit-config.yaml`, and the workflow;
+- all tracked first-party paths/extensions owned by those tools.
+
+Remove references to deleted `.github/super-linter-*.env` files. Add a test comparing trigger
+declarations with the ownership/config inventory from spec 01.
+
+## Parity tests
+
+- Assert local and GitHub Actions use the same Super-Linter image tag.
+- Snapshot or probe the Super-Linter-bundled clang-format, Prettier, and ansible-lint versions so
+  upgrades are visible.
+- Test representative files through native staged Ruff and uv-backed Ruff; either align output or
+  document/reject incompatible drift.
+- Test the editor versions only if they are advertised as equivalent to the authoritative gate.
+- Ensure the generated autofix and check settings differ only by intentionally fixing/check-only
+  flags.
 
 ## Test plan
 
-- Seed a formatting defect for each owner in `./.tmp`, verify the shared CI command reports it,
-  and verify the local write command repairs it.
-- Run pre-commit against staged Python, C++, Ansible, and Markdown samples and assert unrelated
-  tracked files remain untouched.
-- Run a staged notebook sample through the `notebooks-format` hook and assert only that source and
-  its generated pair change; confirm it does not run the whole Python reformat workflow.
-- Record cold/warm timings for each representative staged-file class and verify unrelated tools
-  are not launched.
-- Verify devcontainer bootstrap installs pre-commit and pre-push hooks idempotently in a normal
-  checkout and a Git worktree.
-- Assert that the Ruff version used by pre-commit matches the pinned `ruff-pre-commit` revision.
-- Assert the project Prettier version used by the extension/CLI equals the lockfile version.
-- Assert local and CI Super-Linter release declarations match.
-- Exercise path filtering for `ruff.toml`, `.clang-format`, `.prettierrc.yml`, `.prettierignore`,
-  `.editorconfig`, lockfiles, quality scripts, and `Dr.QP.code-workspace`.
-- Verify a trusted PR receives exactly one combined formatting commit and its next CI run does not
-  create another.
-- Verify a fork receives a patch artifact and no attempted branch write.
+- Seed one defect for every formatter owner and verify the serial writer repairs all defects in one
+  idempotent pass.
+- Include notebook Markdown requiring both code-cell Ruff changes and outer Prettier changes.
+- Verify CI produces one patch/commit and the recursive run produces none.
+- Verify a fork receives one artifact and no branch write attempt.
+- Run staged representative files and assert unrelated tracked files remain untouched.
+- Verify the installed pre-push hook has actual pre-push-stage checks, or verify setup no longer
+  installs/advertises that hook type.
+- Exercise every trigger configuration and a tracked Python file outside the historical roots.
+- Validate pre-commit configuration and test installation in normal checkouts and Git worktrees.
 
 ## Acceptance criteria
 
-- [ ] Ansible formatting and checking run only through Super-Linter; no other formatter is run by
-      both Super-Linter and a native formatting job.
-- [ ] Pre-commit does not run a whole-tree formatter for an ordinary staged file.
-- [ ] Devcontainer setup installs performant staged-file and affected-package hooks.
-- [ ] Every current formatter and linter runs at the cheapest hook stage where its result is valid.
-- [ ] Pre-commit and full local/CI Ruff versions are explicitly pinned at their respective entry
-      points; Prettier has one repository lock source.
-- [ ] Local and CI Super-Linter use the same release.
-- [ ] CI runs one deterministic formatting writer and creates at most one combined formatter
-      commit per source revision.
-- [ ] Changed-only CI and pre-commit preserve notebook formatting/synchronization behavior.
-- [ ] Formatter configuration changes always trigger the gate.
+- [ ] CI runs formatter owners serially in the required notebook-before-Prettier order.
+- [ ] CI creates at most one combined formatter patch and commit per source revision.
+- [ ] Super-Linter remains the authoritative C++, Ansible, and Prettier autofix/check surface.
+- [ ] Pre-commit remains changed-file-scoped and container-free.
+- [ ] The installed pre-push behavior matches configured stages and documentation.
+- [ ] Separate fast-feedback versions are pinned and parity-tested or marked advisory.
+- [ ] Local and CI Super-Linter image versions match.
+- [ ] Formatter/configuration changes always trigger the appropriate gate.
+- [ ] Fork workflows never attempt to write the source branch.
