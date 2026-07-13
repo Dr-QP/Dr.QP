@@ -538,6 +538,28 @@ A body-frame planar twist has the matrix representation
 \end{bmatrix}.
 \end{equation}
 
+Let $\mathbf{R}(\phi)$ denote the standard planar rotation matrix
+
+\begin{equation}
+\mathbf{R}(\phi)=
+\begin{bmatrix}
+\cos\phi & -\sin\phi\\
+\sin\phi & \cos\phi
+\end{bmatrix}.
+\end{equation}
+
+It rotates a planar vector from the body frame by the signed yaw $\phi$ into
+the stride-relative reference frame. Rotation matrices are orthogonal, so
+
+\begin{equation}
+\mathbf{R}(\phi)^{-1}
+=\mathbf{R}(\phi)^\mathsf{T}
+=\mathbf{R}(-\phi).
+\end{equation}
+
+This identity is used later to express a world-grounded foot in the moving
+body frame.
+
 At stride coordinate $s$, the body pose relative to its pose at $s=0$ is the
 SE(2) exponential
 
