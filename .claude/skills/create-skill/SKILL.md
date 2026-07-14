@@ -91,28 +91,27 @@ place; link to its detailed explanation instead of duplicating it.
 When the skill is intended for Codex's UI, add `agents/openai.yaml`. Keep it
 outside `SKILL.md` frontmatter. Set a human-facing display name, a 25–64
 character short description, and a one-sentence `default_prompt` that names
-the skill as `$<skill-name>`. Regenerate this file with the installed Skill
-Creator helper when available, passing explicit interface values so it remains
-aligned with the skill.
+the skill as `$<skill-name>`. Include it in the independent Skill Creator
+validation pass so it remains aligned with the skill.
 
 Do not add icons, colors, MCP dependencies, or policy fields unless the user
 has supplied the associated requirement or asset.
 
 ## Validate and Iterate
 
-1. Verify the name, frontmatter, resource links, and scripts. When the Codex
-   Skill Creator helper is available, run its `quick_validate.py` against the
-   skill directory.
-2. Run `uv run validate_agent_files --recommend .claude` after repository skill
-   changes. Fix validation errors rather than suppressing them.
-3. Test bundled scripts with representative inputs. Use `./.tmp/` for
+1. For a creation or substantial revision, delegate a read-only validation pass
+   to a fresh subagent using the environment-provided `$skill-creator` skill.
+   Give it the skill path and the task, but not an intended answer or diagnosis.
+   Ask it to perform full validation, then report concrete corrections or that the capability
+   is unavailable. Apply the relevant findings yourself.
+2. Test bundled scripts with representative inputs. Use `./.tmp/` for
    temporary artifacts; never use `$TMPDIR`.
-4. Forward-test a new, complex, or high-risk skill with realistic prompts when
+3. Forward-test a new, complex, or high-risk skill with realistic prompts when
    feasible. Give an independent evaluator only the task and relevant
    artifacts—not the intended answer or diagnosis. For an existing skill,
    compare the revision with a snapshot of the prior version when measuring an
    improvement.
-5. Use objective checks for deterministic outcomes and human review for
+4. Use objective checks for deterministic outcomes and human review for
    subjective quality. Remove instructions or resources that do not improve
    correctness, clarity, or efficiency.
 
@@ -124,5 +123,5 @@ has supplied the associated requirement or asset.
 - The body is concise, actionable, and routes detailed material to directly
   linked resources.
 - Every bundled file has a purpose, and scripts have been exercised.
-- Repository validation passes, and optional `agents/openai.yaml` matches the
-  current skill when present.
+- Findings from proportionate independent validation are addressed, and any
+  optional `agents/openai.yaml` matches the current skill.
