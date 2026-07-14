@@ -1,223 +1,96 @@
 ---
 name: remote-codespace-session
-description: "Spin up, sync, and drive a GitHub Codespace as a remote build/test machine running this repo's ROS 2 devcontainer. Use when asked to build/test in a sandbox without Docker support, when devcontainer exec is unavailable (e.g. Codex Tasks, no Docker daemon), when asked to create/use/tear down a Codespace, or when a local colcon/ros2 command fails because ROS 2 is not installed and no Docker daemon is available — do not give up after such a failure, escalate here. Keywords: GitHub Codespaces, gh codespace, remote build, remote test, no docker, codex tasks, ssh build, colcon command not found, ros2 command not found, ROS_DISTRO not set, setup.bash No such file or directory, ROS 2 not installed, with-ros-env.sh fails."
+description: Create, safely sync, use, and stop a GitHub Codespace as this repository's remote ROS 2 build and test machine. Use when ROS is absent locally and Docker is unavailable, or when asked to run work through GitHub Codespaces.
 ---
 
 # Remote Codespace Session
 
-Codex Tasks and similar sandboxes have no Docker daemon, so the
-`devcontainer exec` workflow documented in
-the [microvm-sandbox](../microvm-sandbox/) skill
-cannot run there. This repo's `.devcontainer/devcontainer.json` +
-`docker-compose.yml` define an environment that GitHub Codespaces can run
-identically in the cloud. This skill's four scripts create/reuse a
-Codespace, sync your local working tree into it, run build/test commands on
-it over SSH, and stop or delete it when you're done — giving you a real
-devcontainer without local Docker.
-
-## When to Use This Skill
-
-- You're in a sandbox without Docker/devcontainer support (e.g. Codex
-  Tasks) and need to build or test this ROS 2 workspace.
-- `devcontainer exec` from the microVM-sandbox workflow is unavailable.
-- You're explicitly asked to create, use, sync, or tear down a Codespace
-  for this repo.
+Use this workflow only when the local ROS wrapper cannot run and no Docker
+daemon is available. With Docker, use
+[microvm-sandbox](../microvm-sandbox/SKILL.md). The bundled scripts derive the
+remote checkout as `/workspaces/<repository-name>` from `gh repo view`; do not
+replace it with the local `/opt/ros/overlay_ws` path.
 
 ## Prerequisites
 
-- `gh` CLI installed and authenticated with a token that has both `repo`
-  and `codespace` OAuth scopes.
-- `rsync` installed **locally** — required by `codespace-sync.sh`'s
-  dirty-tree path (`rsync -e ssh`), which needs rsync on both ends. It is
-  pre-installed in the codespace image on the remote end; on the local
-  side install it if missing (e.g. `apt-get install -y rsync`). The
-  clean-tree git-push sync path does not need rsync.
-- GitHub Codespaces clones this repo into `/workspaces/<repo-name>` (e.g.
-  `/workspaces/Dr.QP`) and runs the devcontainer from there — it overrides
-  the `/opt/ros/overlay_ws` bind mount this repo's `docker-compose.yml` uses
-  for _local_ devcontainers. All four scripts operate against that
-  `/workspaces/<repo-name>` remote path, derived from the repo name via
-  `__common.sh`'s `codespace_workspace_dir`.
+- `gh` is authenticated with `repo` and `codespace` scopes.
+- `rsync` is installed locally when syncing uncommitted work.
+- Run commands from this repository. Scripts store session data in `./.tmp/`.
 
-## Bundled Scripts
+## Workflow
 
-- [codespace-ensure.sh](scripts/codespace-ensure.sh) — find-or-create the Codespace for a branch.
-- [codespace-sync.sh](scripts/codespace-sync.sh) — sync the local working tree onto the Codespace.
-- [codespace-exec.sh](scripts/codespace-exec.sh) — run a command on the Codespace via SSH.
-- [codespace-teardown.sh](scripts/codespace-teardown.sh) — stop (default) or `--delete` the Codespace.
+1. Preview the first possible Codespace creation:
 
-(`scripts/__common.sh` holds shared helpers sourced by the four scripts above; it is not a standalone entry point.)
+   ```bash
+   .claude/skills/remote-codespace-session/scripts/codespace-ensure.sh --dry-run
+   ```
 
-## Workflow 1: Auth Preflight
+   If it reports `ACTION=create`, show the user the proposed machine,
+   timeouts, retention, and branch, then obtain explicit approval before
+   creating the billable resource. `ACTION=reuse` needs no approval.
 
-Every script above calls `require_codespace_auth` (in `__common.sh`)
-internally before doing anything else, so you don't need a separate
-preflight step before using any of them. If you want to check auth in
-isolation first, run the same read-only check they use under the hood:
+2. Create or reuse the approved Codespace:
 
-```bash
-gh codespace list --json name -q 'length'
-```
+   ```bash
+   .claude/skills/remote-codespace-session/scripts/codespace-ensure.sh
+   ```
 
-Expect one of two distinct failure modes (see `require_codespace_auth` in
-[\_\_common.sh](scripts/__common.sh) for the exact logic):
+3. Sync local work:
 
-- **Exit 2** — plain not-authenticated. `gh auth status` will also report
-  failure.
-- **Exit 3** — authenticated but the token is missing the `codespace`
-  scope. This is a real, distinct failure worth naming explicitly:
-  `gh auth status` can report success while the token still lacks
-  `codespace`, so a green `gh auth status` does not guarantee these
-  scripts will work.
+   ```bash
+   .claude/skills/remote-codespace-session/scripts/codespace-sync.sh
+   ```
 
-## Workflow 2: Ensure the Codespace Exists
+   A clean local tree is pushed and synced with git. A dirty local tree is
+   copied with rsync without `--delete`, then the script removes only
+   Git-tracked paths deleted locally; remote-only files remain intact. In
+   either case it refuses a dirty Codespace checkout or one with commits that
+   are absent from `origin`. Commit/push or recover those remote commits—or
+   explicitly return the remote checkout to an `origin` commit—before retrying.
+   Keep local work as the source of truth once the remote checkout is safe.
 
-```bash
-.claude/skills/remote-codespace-session/scripts/codespace-ensure.sh
-```
+4. Run the original colcon command. The exec script applies
+   `scripts/with-ros-env.sh` itself, so do not include that wrapper again:
 
-Flags: `--branch <name>` (default: current branch), `--machine <name>`
-(default `standardLinux32gb`), `--idle-timeout <dur>` (default `30m`),
-`--retention-period <dur>` (default `24h`; Go-style duration, `h`/`m`/`s`
-only — no `d` — max `720h`), `--poll-interval <seconds>`
-(default `10`), `--poll-timeout <seconds>` (default `300`), `--dry-run`.
+   ```bash
+   .claude/skills/remote-codespace-session/scripts/codespace-exec.sh \
+     python3 -m colcon build --symlink-install \
+     --packages-up-to <package_name>
+   ```
 
-Exit codes: `0` resolved (reused or created, or dry-run report printed),
-`2` usage error/`gh` missing/plain auth failure, `3` under-scoped token,
-`4` `gh codespace create` failed, `5` timed out waiting for a new
-Codespace to reach `Available`.
+   Use command shapes from
+   [ros2-workspace-build](../ros2-workspace-build/SKILL.md) and
+   [ros2-workspace-testing](../ros2-workspace-testing/SKILL.md). Re-sync after
+   each local edit.
 
-**Cost guardrail — MUST, not a suggestion:** Before the _first_ real
-(non-dry-run) invocation of `codespace-ensure.sh` in a session where no
-Codespace is already known to exist for this branch, run it with
-`--dry-run` first, show the user the exact machine type / idle-timeout /
-retention-period / branch that would be requested (this creates a
-billable cloud resource), and get explicit confirmation before re-running
-without `--dry-run`. If the `--dry-run` output reports `ACTION=reuse` (an
-existing Codespace was found for this branch), skip the confirmation —
-reuse doesn't spin up a new billable resource, so the guardrail doesn't
-apply.
+5. Retrieve an artifact when needed. Generate an SSH config explicitly (do
+   not rely on a prior dirty-tree sync), and derive the same workspace path the
+   scripts use:
 
-```bash
-.claude/skills/remote-codespace-session/scripts/codespace-ensure.sh --dry-run
-```
+   ```bash
+   name="$(<./.tmp/codespace-name)"
+   gh codespace ssh -c "$name" --config > ./.tmp/codespace-ssh-config
+   host="$(awk '/^Host /{print $2; exit}' ./.tmp/codespace-ssh-config)"
+   remote_workspace_dir="/workspaces/$(gh repo view --json name -q .name)"
+   rsync -az -e "ssh -F ./.tmp/codespace-ssh-config" \
+     "${host}:${remote_workspace_dir}/log/latest_test/" ./log/latest_test/
+   ```
 
-## Workflow 3: Sync Local Changes Into the Codespace
+6. Stop the Codespace when the session ends. Delete it only with explicit user
+   direction:
 
-```bash
-.claude/skills/remote-codespace-session/scripts/codespace-sync.sh
-```
+   ```bash
+   .claude/skills/remote-codespace-session/scripts/codespace-teardown.sh
+   .claude/skills/remote-codespace-session/scripts/codespace-teardown.sh --delete
+   ```
 
-No flags besides `-h`/`--help`. The script picks the sync method for you:
-if the working tree is clean, it pushes the branch and syncs the
-Codespace's checkout via `git fetch` + `git reset --hard` over SSH; if the
-tree is dirty (uncommitted or untracked changes), it rsyncs the working
-tree directly over SSH, excluding `.git` and everything git itself
-considers ignored (all `.gitignore` files in the tree, including nested
-ones and `!`-negated re-includes — not just the root `.gitignore`). Call
-it before every remote build/test — it figures out the right method
-itself.
+## Bundled scripts
 
-Exit codes: `0` synced (either path), `2` usage error/missing Codespace
-name/SSH config generation or parsing failure, `3` under-scoped token or
-git push failed, `4` rsync failed, `5` remote git fetch/checkout/reset
-over SSH failed.
-
-## Workflow 4: Run Build/Test Remotely
-
-```bash
-.claude/skills/remote-codespace-session/scripts/codespace-exec.sh <command> [args...]
-```
-
-This reuses the exact command vocabulary already documented in
-[ros2-workspace-build](../ros2-workspace-build/SKILL.md) and
-[ros2-workspace-testing](../ros2-workspace-testing/SKILL.md) — don't
-duplicate that content, just translate a command from those skills into a
-`codespace-exec.sh` call:
-
-```bash
-.claude/skills/remote-codespace-session/scripts/codespace-exec.sh \
-  colcon build --symlink-install --event-handlers console_cohesion+ \
-  --packages-up-to <package_name>
-```
-
-Do **not** prefix commands with `scripts/with-ros-env.sh` yourself —
-`codespace-exec.sh` already runs `scripts/with-ros-env.sh <command>
-[args...]` on the Codespace for you. Everything after the script name is
-forwarded verbatim as the remote command, including `-h`/`--help` (this
-script has no help flag of its own to intercept it).
-
-stdout/stderr stream back directly, and the script's own exit code is
-exactly the remote command's exit code: `0` only if the remote command
-succeeded, `2` if no command was given / `gh` missing / plain auth
-failure / missing Codespace name, `3` if the token is under-scoped. Any
-other non-zero exit is a normal build/test failure signal passed through
-from the remote command, not a script error.
-
-## Workflow 5: Retrieve Artifacts
-
-There's no dedicated script for this — it's a plain reverse rsync using
-the same SSH config `codespace-sync.sh` generates at
-`./.tmp/codespace-ssh-config`:
-
-```bash
-host="$(awk '/^Host /{print $2; exit}' ./.tmp/codespace-ssh-config)"
-# Remote path is /workspaces/<repo-name> (GitHub Codespaces' checkout root).
-rsync -az -e "ssh -F ./.tmp/codespace-ssh-config" \
-  "${host}:/workspaces/Dr.QP/log/latest_test/" ./log/latest_test/
-```
-
-`./.tmp/codespace-ssh-config` only exists after `codespace-sync.sh` has
-run at least once via its rsync path (the git-push path doesn't generate
-it). If it's missing, run `codespace-sync.sh` against a dirty tree (see
-[Workflow 3](#workflow-3-sync-local-changes-into-the-codespace)) to create
-it.
-
-## Workflow 6: Teardown
-
-```bash
-.claude/skills/remote-codespace-session/scripts/codespace-teardown.sh
-.claude/skills/remote-codespace-session/scripts/codespace-teardown.sh --delete
-```
-
-Default stops the Codespace (`gh codespace stop`) — halts compute
-billing, keeps storage so a later `codespace-ensure.sh` can reuse it,
-leaves `./.tmp/codespace-name` and `./.tmp/codespace-ssh-config` in place.
-`--delete` fully deletes it (`gh codespace delete --force`) and removes
-both of those `.tmp` files.
-
-Flags: `--delete`, `--poll-interval <seconds>` (default `10`),
-`--poll-timeout <seconds>` (default `300`). Like `codespace-ensure.sh`,
-this script **waits** for the terminal state before returning —
-`gh codespace stop` returns while the Codespace is still `ShuttingDown`,
-so the script polls until it settles at `Shutdown` (or, for `--delete`,
-until it's gone from `gh codespace list`). Don't hand-roll this poll loop
-yourself; use these flags to tune it.
-
-Exit codes: `0` stopped (reached `Shutdown`) or deleted (gone) successfully,
-`2` usage error/`gh` missing/plain auth failure/no Codespace name recorded,
-`3` under-scoped token **or** the `gh codespace stop`/`delete` command
-itself failed — check the printed `ERROR` message to tell which one
-occurred, `5` timed out waiting for the terminal state (the stop/delete
-was accepted; only the wait timed out — re-check with `gh codespace list`).
-
-**Default policy:** stop (not delete) at the end of a session. Only pass
-`--delete` when the user explicitly asks for full teardown, or when a
-Codespace needs to be recreated from a corrupted state.
-
-## Remote-Edit Feasibility (Not the Primary Workflow)
-
-`gh codespace ssh -c <name> -- <command>` forwards stdin, so ad hoc remote
-file writes are technically possible, e.g.:
-
-```bash
-gh codespace ssh -c <name> -- 'cat > path/to/file' <<'EOF'
-...
-EOF
-```
-
-This is an escape hatch for one-off remote-only debugging, not the
-primary editing model. Keep editing your own local git working tree as
-the source of truth and sync the diff over with `codespace-sync.sh`
-before each remote run — that keeps `git status` meaningful and avoids
-maintaining two divergent tree copies.
+- [codespace-ensure.sh](scripts/codespace-ensure.sh) creates or reuses a
+  Codespace. Its help describes machine and polling options.
+- [codespace-sync.sh](scripts/codespace-sync.sh) uses the non-destructive sync
+  policy above.
+- [codespace-exec.sh](scripts/codespace-exec.sh) runs one wrapped ROS command
+  remotely and returns that command's exit code.
+- [codespace-teardown.sh](scripts/codespace-teardown.sh) stops or deletes the
+  recorded Codespace.
