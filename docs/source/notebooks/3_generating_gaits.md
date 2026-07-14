@@ -433,8 +433,8 @@ For a selected gait, a foot spends the fraction $1-d_{\mathrm{swing}}$ of a
 cycle on the ground. Its stance duration is therefore
 
 \begin{equation}
-T_{\mathrm{stance}} =
-T_{\mathrm{cycle}}(1-d_{\mathrm{swing}}).
+T*{\mathrm{stance}} =
+T*{\mathrm{cycle}}(1-d\_{\mathrm{swing}}).
 \end{equation}
 
 The controller turns normalized input into a physical reference linear
@@ -443,9 +443,9 @@ velocity $\mathbf{v}$ and angular velocity $\omega$:
 \begin{equation}
 \begin{aligned}
 \mathbf{v} & =
-\bar{\mathbf{u}}\frac{L_{\mathrm{step}}}{T_{\mathrm{stance}}}, \\
+\bar{\mathbf{u}}\frac{L*{\mathrm{step}}}{T*{\mathrm{stance}}}, \\
 \omega & =
-\operatorname{clip}(\rho,-1,1)\,\omega_{\max}.
+\operatorname{clip}(\rho,-1,1)\,\omega\_{\max}.
 \end{aligned}
 \end{equation}
 
@@ -459,9 +459,9 @@ height and the separately requested body pose handle vertical motion.
 Define two helpful stride-sized quantities:
 
 \begin{equation}
-\Delta\mathbf{p}=\mathbf{v}T_{\mathrm{stance}},
+\Delta\mathbf{p}=\mathbf{v}T*{\mathrm{stance}},
 \qquad
-\Delta\theta=\omega T_{\mathrm{stance}}.
+\Delta\theta=\omega T*{\mathrm{stance}}.
 \end{equation}
 
 At full linear input, $\Delta\mathbf{p}$ has length
@@ -473,9 +473,9 @@ An explicit `omega_max_rad_sec` is preferred. When it is absent, the legacy
 angle-per-stance setting is preserved by
 
 \begin{equation}
-\omega_{\max}=
+\omega*{\max}=
 \frac{\operatorname{radians}(\texttt{rotation_speed_degrees})}
-{T_{\mathrm{stance}}}.
+{T*{\mathrm{stance}}}.
 \end{equation}
 
 Thus changing gait or cycle time preserves the old turn per stance while
@@ -510,7 +510,7 @@ forward or left command produces the same forward or left gait as before the
 twist implementation. The relative reference yaw is
 
 \begin{equation}
-\theta(\sigma)=\sigma\Delta\theta=\sigma\omega T_{\mathrm{stance}}.
+\theta(\sigma)=\sigma\Delta\theta=\sigma\omega T\_{\mathrm{stance}}.
 \end{equation}
 
 This is a stride-relative angle centred at $\sigma=0$; it is not an absolute
@@ -591,8 +591,8 @@ $\mathbf{q}_i(s)$ be its target in body coordinates. To make one target the
 inverse of the reference motion sampled at $\sigma=-s$, solve
 
 \begin{equation}
-\mathbf{R}(\theta(-s))\mathbf{q}_i(s)+\mathbf{p}(-s)
-=\mathbf{r}_i
+\mathbf{R}(\theta(-s))\mathbf{q}\_i(s)+\mathbf{p}(-s)
+=\mathbf{r}\_i
 \end{equation}
 
 for $\mathbf{q}_i(s)$. Since reversing a rotation means changing its angle's
@@ -600,9 +600,9 @@ sign, the result is
 
 \begin{equation}
 \boxed{
-\mathbf{q}_i(s)=
+\mathbf{q}\_i(s)=
 \mathbf{R}(-\theta(-s))
-\left(\mathbf{r}_i-\mathbf{p}(-s)\right).
+\left(\mathbf{r}\_i-\mathbf{p}(-s)\right).
 }
 \end{equation}
 
@@ -612,13 +612,13 @@ The limiting cases are a quick check on the signs:
 \begin{array}{lll}
 \omega=0
 &\Longrightarrow&
-\mathbf{q}_i(s)=\mathbf{r}_i+s\Delta\mathbf{p},\\[4pt]
+\mathbf{q}\_i(s)=\mathbf{r}\_i+s\Delta\mathbf{p},\\[4pt]
 \mathbf{v}=\mathbf{0}
 &\Longrightarrow&
-\mathbf{q}_i(s)=\mathbf{R}(s\Delta\theta)\mathbf{r}_i,\\[4pt]
+\mathbf{q}\_i(s)=\mathbf{R}(s\Delta\theta)\mathbf{r}\_i,\\[4pt]
 \mathbf{v}=\mathbf{0},\ \omega=0
 &\Longrightarrow&
-\mathbf{q}_i(s)=\mathbf{r}_i.
+\mathbf{q}\_i(s)=\mathbf{r}\_i.
 \end{array}
 \end{equation}
 
@@ -640,7 +640,7 @@ control interval $\Delta t$ and steering time constant $\tau$,
 \alpha=1-e^{-\Delta t/\tau},\qquad
 \boldsymbol{\xi}_{\mathrm{proposed}}=
 (1-\alpha)\boldsymbol{\xi}_{\mathrm{current}}
-+\alpha\boldsymbol{\xi}_{\mathrm{target}}.
++\alpha\boldsymbol{\xi}\_{\mathrm{target}}.
 \end{equation}
 
 This is the exact discrete update of a first-order low-pass filter for a
