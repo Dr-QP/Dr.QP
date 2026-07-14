@@ -6,16 +6,16 @@ description: 'Synchronize pre-commit hooks and local lint tools with the pinned 
 # Sync Super-Linter Tool Versions
 
 Treat the image configured by
-[super-linter-local.sh](../../../scripts/super-linter-local.sh) as the source
-of truth for versions shared by Super-Linter, pre-commit, and local hooks.
-The validator reads the image directly, so do not add a manually maintained
-version table.
+[super-linter-defaults.sh](../../../scripts/super-linter-defaults.sh) as the
+source of truth for versions shared by Super-Linter, pre-commit, and local
+hooks. The validator reads the image directly, so do not add a manually
+maintained version table.
 
 ## Workflow
 
-1. Update the Super-Linter image consistently in
-   [super-linter-local.sh](../../../scripts/super-linter-local.sh) and both
-   `super-linter/super-linter@...` references in
+1. Update the Super-Linter image in
+   [super-linter-defaults.sh](../../../scripts/super-linter-defaults.sh) and
+   both `super-linter/super-linter@...` references in
    [reformat.yml](../../../.github/workflows/reformat.yml).
 
 2. Run the validator to print the image's versions and identify every stale

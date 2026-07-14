@@ -5,8 +5,8 @@ set -euo pipefail
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 root_dir=$(cd "$script_dir/.." && pwd)
 pre_commit_config="$root_dir/.pre-commit-config.yaml"
-super_linter_local="$script_dir/super-linter-local.sh"
 zizmor_hook="$script_dir/zizmor-pre-commit.sh"
+. "$script_dir/super-linter-defaults.sh"
 
 usage()
 {
@@ -26,7 +26,7 @@ Environment:
 EOF
 }
 
-image="${SUPER_LINTER_IMAGE:-}"
+image="${SUPER_LINTER_IMAGE:-$SUPER_LINTER_DEFAULT_IMAGE}"
 while (($#)); do
   case "$1" in
     --image)
@@ -48,16 +48,6 @@ while (($#)); do
       ;;
   esac
 done
-
-if [[ -z "$image" ]]; then
-  image=$(sed -nE 's/^image="\$\{SUPER_LINTER_IMAGE:-([^}]*)\}"/\1/p' \
-    "$super_linter_local")
-fi
-
-if [[ -z "$image" ]]; then
-  echo "Could not determine the Super-Linter image from $super_linter_local." >&2
-  exit 1
-fi
 
 if command -v docker >/dev/null 2>&1; then
   runtime=docker
