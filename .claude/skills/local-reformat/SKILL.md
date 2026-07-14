@@ -62,11 +62,10 @@ autofixes and must run with the same elevated sandbox permission.
    scripts/super-linter-local.sh
    ```
 
-   The wrapper first runs the CI autofix configuration. If that run changes a
-   tracked file, it reports the change and skips the check pass, matching CI:
-   CI commits the patch and reruns checks on the new head. Run the wrapper once
-   more after reviewing or committing those edits; it then runs the CI check
-   configuration when no new autofixes are produced.
+   The wrapper enables every local check and available autofix in one pass.
+   CI intentionally separates its autofix and check jobs so it can publish a
+   formatting patch before validating the resulting commit; that split is not
+   needed for local feedback.
 
 3. Inspect and validate the results:
 
@@ -177,7 +176,7 @@ pinned CI image unless the workflow itself is intentionally being updated.
 | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | [python-reformat.sh](../../../scripts/python-reformat.sh)       | Run Ruff format/autofix/import sorting across Python sources and scripts.                   |
 | [notebooks-format.sh](../../../scripts/notebooks-format.sh)     | Synchronize and format paired notebook sources, matching the CI notebook step.              |
-| [super-linter-local.sh](../../../scripts/super-linter-local.sh) | Run the CI-equivalent autofix pass, then the check pass only when no new patch was produced. |
+| [super-linter-local.sh](../../../scripts/super-linter-local.sh) | Run one local pass with all checks enabled and available autofixes applied. |
 | [super-linter-env.sh](../../../scripts/super-linter-env.sh)     | Generate the shared Ansible, clang-format, Prettier, and validation settings for each pass. |
 
 For Python package linting beyond the reformat workflow, use the

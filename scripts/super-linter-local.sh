@@ -14,8 +14,9 @@ usage()
   cat <<'EOF'
 Usage: scripts/super-linter-local.sh [--all] [--image IMAGE] [--log-level LEVEL]
 
-Runs the CI-equivalent autofix pass. If it produces no new tracked-file patch,
-runs the check pass; otherwise skips the check pass as reformat.yml does.
+Runs one local Super-Linter pass with all checks enabled and available
+autofixes applied. CI keeps its autofix and check passes separate so it can
+publish formatter patches without failing the validation job.
 
 Options:
   --all              Set VALIDATE_ALL_CODEBASE=true.
@@ -105,20 +106,8 @@ run_super_linter() {
   "$image"
 }
 
-env_file="$root_dir/.tmp/super-linter-autofix.env"
-before_patch="$(git -C "$root_dir" diff --binary -- . ':(exclude).tmp')"
-"$script_dir/super-linter-env.sh" --autofix > "$env_file"
-run_super_linter "$env_file"
-after_patch="$(git -C "$root_dir" diff --binary -- . ':(exclude).tmp')"
-
-if [[ "$before_patch" != "$after_patch" ]]; then
-  echo "Super-Linter autofixes changed tracked files; skipping check pass to mirror reformat.yml."
-  echo "Re-run this command after reviewing or committing the patch."
-  exit 0
-fi
-
-env_file="$root_dir/.tmp/super-linter-check.env"
-"$script_dir/super-linter-env.sh" > "$env_file"
+env_file="$root_dir/.tmp/super-linter.env"
+"$script_dir/super-linter-env.sh" --autofix --enable_all_checks > "$env_file"
 run_super_linter "$env_file"
 
 echo "Super-Linter output saved to $root_dir/log/super-linter-summary.md"
