@@ -5,14 +5,14 @@ description: Generate conventional commit messages automatically. Use when user 
 
 # Git Commit Skill
 
-Generate [conventional commit messages](./references/conventional-commits.md) from your git diff.
+Generate conventional commit messages from the relevant git diff.
 
 ## When to Use This Skill
 
 - ✅ `git commit` without message
 - ✅ User asks "what should my commit message be?"
 - ✅ Staged changes exist
-- ✅ User mentions commit or [conventional commit](./references/conventional-commits.md)
+- ✅ User mentions a commit or conventional commit
 - ✅ Before creating commits
 
 ## Prerequisites
@@ -34,18 +34,19 @@ Generate [conventional commit messages](./references/conventional-commits.md) fr
 
 **Types:**
 
-| Type       | Use when                                           | Typical examples                                  | Reference                               |
-| ---------- | -------------------------------------------------- | ------------------------------------------------- | --------------------------------------- |
-| `feat`     | Adding new functionality or a new workflow         | auth flow, pagination endpoint, new UI capability | [feat.md](./references/feat.md)         |
-| `fix`      | Correcting broken or incorrect behavior            | memory leak, validation issue, connection problem | [fix.md](./references/fix.md)           |
-| `docs`     | Changing documentation only                        | README update, API usage examples, guides         | [docs.md](./references/docs.md)         |
-| `style`    | Adjusting formatting without logic changes         | CSS polish, formatting cleanup                    | [style.md](./references/style.md)       |
-| `refactor` | Restructuring code without changing behavior       | logic extraction, internal reorganization         | [refactor.md](./references/refactor.md) |
-| `perf`     | Improving runtime performance                      | query batching, indexing, caching                 | [perf.md](./references/perf.md)         |
-| `test`     | Adding or fixing tests                             | unit coverage, test updates, assertions           | [test.md](./references/test.md)         |
-| `build`    | Changing build or packaging behavior               | dependency update, build config change            | [build.md](./references/build.md)       |
-| `ci`       | Changing CI or CD automation                       | deployment pipeline, workflow update              | [ci.md](./references/ci.md)             |
-| `chore`    | Handling maintenance work outside product behavior | repo cleanup, housekeeping, support tasks         | [chore.md](./references/chore.md)       |
+| Type       | Use when                                           |
+| ---------- | -------------------------------------------------- |
+| `feat`     | Adding new functionality or a new workflow         |
+| `fix`      | Correcting broken or incorrect behavior            |
+| `docs`     | Changing documentation only                        |
+| `style`    | Formatting-only changes                            |
+| `refactor` | Restructuring code without changing behavior       |
+| `perf`     | Improving runtime performance                      |
+| `test`     | Adding or correcting tests                         |
+| `build`    | Changing build or packaging behavior               |
+| `ci`       | Changing CI or CD automation                       |
+| `chore`    | Maintenance outside product behavior               |
+| `revert`   | Reverting an earlier commit                        |
 
 ## Step-by-Step Workflows
 
@@ -70,7 +71,8 @@ Generate [conventional commit messages](./references/conventional-commits.md) fr
 4. Write the subject line as the smallest accurate summary.
    - Use imperative mood and lowercase after the colon, for example `fix(serial): handle reconnect timeout`.
    - Describe the visible outcome or intent, not the implementation detail.
-   - Keep it concise and specific; avoid filler like `update stuff` or `fix bug`.
+   - Keep it concise and specific (normally 72 characters or fewer); avoid
+     filler like `update stuff` or `fix bug`.
 
 5. Decide whether the commit needs a body.
    - Add a body when the diff is non-trivial, the reason is not obvious from the subject, or there are important constraints, side effects, or follow-up implications.
@@ -101,5 +103,5 @@ Generate [conventional commit messages](./references/conventional-commits.md) fr
 1. **Be specific**: "fix login button" not "fix bug"
 2. **Use imperative mood**: "add" not "added" or "adds"
 3. **Include context**: Why this change was needed
-4. **Reference issues**: Always include issue numbers
-5. **Breaking changes**: Always flag in footer
+4. **Reference issues**: Include issue numbers when they are relevant
+5. **Breaking changes**: Mark them in the header and footer

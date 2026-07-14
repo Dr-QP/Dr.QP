@@ -15,6 +15,7 @@ Use this skill to review a pull request's diff and publish feedback as a GitHub 
 ## Prerequisites
 
 - `gh` must be installed and authenticated
+- `jq` is required when using the bundled fallback script.
 - REPO (`owner/name`) and PR NUMBER must be known — read them from the workflow context or ask the user if not provided
 - The review is created, annotated, and submitted with three separate GitHub review tools:
   - `create_pending_pull_request_review` — open a pending review
@@ -70,7 +71,12 @@ Flag only significant bugs; ignore nitpicks and likely false positives. Do not f
 
 ## Steps
 
-1. **Gate.** Run `gh pr view <PR_NUMBER>`. If the PR is a draft, already closed/merged, or trivial (docs-only, version bump, generated-file-only diff), stop here and say so instead of proceeding — do not fetch the diff or spawn any review passes.
+1. **Gate.** Run `gh pr view <PR_NUMBER>`. If the PR is a draft or already
+   closed/merged, stop. For a docs-only, version-only, or generated-file-only
+   diff, do not launch the four review passes. Instead, confirm the changed
+   file list with `gh pr diff <PR_NUMBER> --name-only`, then publish a clean
+   `APPROVE` review with a short summary. This preserves the required AI-review
+   gate for a harmless PR without spending a full review cycle.
 2. **Gather context.** Fetch the diff (`gh pr diff <PR_NUMBER>`) and reuse the PR description from Step 1. From the changed-file list, determine which convention sources apply: the Coding Conventions section of `AGENTS.md` always applies; add `.claude/skills/launch-testing/SKILL.md` when the diff touches `launch_pytest` tests (`**/test/**/*.py`), `.claude/skills/create-agent/SKILL.md` for `*.agent.md` changes, and `.claude/skills/create-skill/SKILL.md` for `SKILL.md` changes.
 3. **Run four independent initial-review passes in parallel when the environment supports it** — each pass sees only the diff, the PR title, the PR description, and its own focus list; none sees another pass's output. Each pass returns a list of issues, where each issue has a description and the reason it was flagged (for example, "AGENTS.md adherence", "bug", or "security"):
    - 2x **compliance pass** — audit the diff against the Compliance focus list and the convention sources found in Step 2.
@@ -114,7 +120,7 @@ Write two plain files under `./.tmp` (never assemble this JSON live in a shell c
 - a summary file containing only the short overall review body (no per-finding detail)
 - a comments file containing a JSON array of every validated finding: `[{"path": "file.py", "line": 42, "side": "RIGHT", "body": "finding text"}, ...]` (use `[]` or omit the file entirely if no findings survived Step 5)
 
-Then run `scripts/post-review.sh --pr <PR_NUMBER> --event <COMMENT|APPROVE> --summary-file <path> --comments-file <path>` (run with `-h` for full usage; `--repo` defaults to the current repo via `gh repo view`). This single call replaces Steps 6–8 entirely, including the `event` decision rule from Step 8 (`APPROVE` when `[]`/no findings, `COMMENT` otherwise — never `REQUEST_CHANGES`). Do not fall further back to typing `gh api` calls by hand.
+Then run `.claude/skills/pr-review/scripts/post-review.sh --pr <PR_NUMBER> --event <COMMENT|APPROVE> --summary-file <path> --comments-file <path>` (run with `-h` for full usage; `--repo` defaults to the current repo via `gh repo view`). This single call replaces Steps 6–8 entirely, including the `event` decision rule from Step 8 (`APPROVE` when `[]`/no findings, `COMMENT` otherwise — never `REQUEST_CHANGES`). Do not fall further back to typing `gh api` calls by hand.
 
 If the call is rejected because one of the `comments[]` entries cannot be placed inline (e.g., its file/line is outside the PR diff), remove that entry from the comments file, re-run the script, then post the removed finding as a normal PR comment (`gh pr comment`) stating the file/line in prose — same fallback as Step 7.
 

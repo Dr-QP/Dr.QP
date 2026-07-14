@@ -50,35 +50,39 @@ List open CodeQL alerts for a pull request:
 
 ```bash
 gh api repos/<owner>/<repo>/code-scanning/alerts \
+  --method GET --paginate --slurp \
   -f pr=<pr-number> \
   -f state=open \
   -f tool_name=CodeQL
 ```
 
-Project the most useful triage fields with `--jq`:
+Project the most useful triage fields with `jq`:
 
 ```bash
 gh api repos/<owner>/<repo>/code-scanning/alerts \
+  --method GET --paginate --slurp \
   -f pr=<pr-number> \
   -f state=open \
-  -f tool_name=CodeQL \
-  --jq '.[] | {number: .number, rule: .rule.id, severity: .rule.security_severity_level, path: .most_recent_instance.location.path, start_line: .most_recent_instance.location.start_line, url: .html_url}'
+  -f tool_name=CodeQL | \
+  jq '.[][] | {number: .number, rule: .rule.id, severity: .rule.security_severity_level, path: .most_recent_instance.location.path, start_line: .most_recent_instance.location.start_line, url: .html_url}'
 ```
 
 Example for this repository:
 
 ```bash
 gh api repos/Dr-QP/Dr.QP/code-scanning/alerts \
+  --method GET --paginate --slurp \
   -f pr=368 \
   -f state=open \
-  -f tool_name=CodeQL \
-  --jq '.[] | {number: .number, rule: .rule.id, severity: .rule.security_severity_level, path: .most_recent_instance.location.path, start_line: .most_recent_instance.location.start_line, url: .html_url}'
+  -f tool_name=CodeQL | \
+  jq '.[][] | {number: .number, rule: .rule.id, severity: .rule.security_severity_level, path: .most_recent_instance.location.path, start_line: .most_recent_instance.location.start_line, url: .html_url}'
 ```
 
 List open CodeQL alerts for the whole repository:
 
 ```bash
 gh api repos/<owner>/<repo>/code-scanning/alerts \
+  --method GET --paginate --slurp \
   -f state=open \
   -f tool_name=CodeQL
 ```
@@ -87,6 +91,7 @@ List alerts for a branch or ref:
 
 ```bash
 gh api repos/<owner>/<repo>/code-scanning/alerts \
+  --method GET --paginate --slurp \
   -f ref=refs/heads/<branch-name> \
   -f state=open \
   -f tool_name=CodeQL
@@ -102,10 +107,11 @@ Show more detailed remediation-oriented fields:
 
 ```bash
 gh api repos/<owner>/<repo>/code-scanning/alerts \
+  --method GET --paginate --slurp \
   -f pr=<pr-number> \
   -f state=open \
-  -f tool_name=CodeQL \
-  --jq '.[] | {number: .number, rule: .rule.id, rule_description: .rule.description, severity: .rule.security_severity_level, tags: .rule.tags, state: .state, path: .most_recent_instance.location.path, start_line: .most_recent_instance.location.start_line, message: .most_recent_instance.message.text, url: .html_url}'
+  -f tool_name=CodeQL | \
+  jq '.[][] | {number: .number, rule: .rule.id, rule_description: .rule.description, severity: .rule.security_severity_level, tags: .rule.tags, state: .state, path: .most_recent_instance.location.path, start_line: .most_recent_instance.location.start_line, message: .most_recent_instance.message.text, url: .html_url}'
 ```
 
 ## Triage Guidance
@@ -113,7 +119,12 @@ gh api repos/<owner>/<repo>/code-scanning/alerts \
 - Prefer `-f pr=<pr-number>` when the user is fixing PR feedback or reviewing a single pull request.
 - Add `-f state=open` unless the user explicitly needs closed or dismissed alerts.
 - Add `-f tool_name=CodeQL` to avoid mixing in alerts from other scanners.
-- Use `--jq` to keep the output short and targeted.
+- `gh api -f` otherwise defaults to `POST`; retain `--method GET` for every
+  filtered list request. Use `--paginate --slurp` so alerts beyond GitHub's
+  first page are not silently omitted. With `--slurp`, query alert objects as
+  `.[][]`, not `.[].`
+- Pipe `--slurp` output to `jq '.[][] | …'` to keep the output short and
+  targeted; `gh api` does not permit `--jq` together with `--slurp`.
 - If the user asks for all raw data, omit `--jq` and summarize the important fields afterward.
 
 ## Troubleshooting

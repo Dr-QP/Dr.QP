@@ -1,7 +1,6 @@
 ---
 name: pr-merge-chain
 description: 'Merge a linear, main-targeted chain of GitHub pull requests in dependency order and promote draft successors only after their prerequisites merge. Use when asked to merge a PR stack or chain, when a top draft PR includes earlier open PR commits, or when dependent branches must be reconciled after squash merges. Keywords: merge PR chain, draft PR stack, dependent PRs, reconcile chain, squash merge chain, pr-merge-chain.'
-license: MIT
 ---
 
 # Merge a Pull-Request Chain

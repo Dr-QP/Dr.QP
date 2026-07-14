@@ -6,8 +6,8 @@ description: 'Run every formatter and Super-Linter validation from the reformat 
 # Run the Reformat Workflow Locally
 
 Run the local entry points that mirror the formatter jobs in
-[reformat.yml](../../../.github/workflows/reformat.yml): Python formatting,
-then Super-Linter's Ansible, clang-format, Prettier, and validation passes.
+[reformat.yml](../../../.github/workflows/reformat.yml): Python plus notebook
+formatting, then Super-Linter's Ansible, clang-format, and Prettier pass.
 These commands modify files; inspect the resulting diff and keep only intended
 changes.
 
@@ -47,24 +47,26 @@ autofixes and must run with the same elevated sandbox permission.
 
 ## Full Workflow
 
-1. Format and autofix Python, notebooks, and scripts. This runs Ruff format,
-   Ruff fixes, Ruff import sorting, and notebook synchronization:
+1. Format and autofix Python and scripts, then synchronize notebooks. CI runs
+   these as two commands; `python-reformat.sh` does not itself synchronize
+   notebooks:
 
    ```bash
    scripts/python-reformat.sh
+   scripts/notebooks-format.sh
    ```
 
-2. Run Super-Linter's Ansible, clang-format, Prettier, and other autofix
-   passes, then its check pass, using the exact pinned image and configuration
-   used by CI:
+2. Run Super-Linter using the pinned CI image and configuration:
 
    ```bash
    scripts/super-linter-local.sh
    ```
 
-   The wrapper runs both passes consecutively. The Actions workflow skips its
-   check pass when autofixes produce a patch so it can commit that patch; local
-   execution instead checks the newly fixed working tree immediately.
+   The wrapper first runs the CI autofix configuration. If that run changes a
+   tracked file, it reports the change and skips the check pass, matching CI:
+   CI commits the patch and reruns checks on the new head. Run the wrapper once
+   more after reviewing or committing those edits; it then runs the CI check
+   configuration when no new autofixes are produced.
 
 3. Inspect and validate the results:
 
@@ -173,8 +175,9 @@ pinned CI image unless the workflow itself is intentionally being updated.
 
 | Entry point                                                     | CI-equivalent responsibility                                                                |
 | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| [python-reformat.sh](../../../scripts/python-reformat.sh)       | Run Ruff format/autofix/import sorting and synchronize notebooks.                           |
-| [super-linter-local.sh](../../../scripts/super-linter-local.sh) | Run Super-Linter's Ansible, clang-format, Prettier, and other autofix/check passes.         |
+| [python-reformat.sh](../../../scripts/python-reformat.sh)       | Run Ruff format/autofix/import sorting across Python sources and scripts.                   |
+| [notebooks-format.sh](../../../scripts/notebooks-format.sh)     | Synchronize and format paired notebook sources, matching the CI notebook step.              |
+| [super-linter-local.sh](../../../scripts/super-linter-local.sh) | Run the CI-equivalent autofix pass, then the check pass only when no new patch was produced. |
 | [super-linter-env.sh](../../../scripts/super-linter-env.sh)     | Generate the shared Ansible, clang-format, Prettier, and validation settings for each pass. |
 
 For Python package linting beyond the reformat workflow, use the
