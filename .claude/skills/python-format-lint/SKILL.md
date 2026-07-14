@@ -36,7 +36,7 @@ do not fail CI.
 
    ```bash
    scripts/python-reformat.sh # py files only
-   scripts/notebook-format.sh # docs/sources/notebooks/*.md only
+   scripts/notebooks-format.sh # docs/source/notebooks/*.md only
    ```
 
    For a tighter loop on specific files, invoke ruff directly (config is picked
