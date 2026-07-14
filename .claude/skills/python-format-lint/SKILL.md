@@ -35,7 +35,8 @@ do not fail CI.
    use the [local-reformat](../local-reformat/SKILL.md) skill for that workflow:
 
    ```bash
-   scripts/python-reformat.sh
+   scripts/python-reformat.sh # py files only
+   scripts/notebook-format.sh # docs/sources/notebooks/*.md only
    ```
 
    For a tighter loop on specific files, invoke ruff directly (config is picked

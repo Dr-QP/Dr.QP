@@ -51,7 +51,8 @@ autofixes and must run with the same elevated sandbox permission.
    Ruff fixes, Ruff import sorting, and notebook synchronization:
 
    ```bash
-   scripts/python-reformat.sh
+   scripts/python-reformat.sh # py files only
+   scripts/notebook-format.sh # docs/sources/notebooks/*.md only
    ```
 
 2. Run Super-Linter's Ansible, clang-format, Prettier, and other autofix
