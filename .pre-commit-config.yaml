@@ -17,6 +17,29 @@ repos:
         # Aligned with what super-linter handles with prettier in this repo
         # .prettierignore still applies
         files: '\.(md|markdown|ya?ml|json|jsonc)$'
+        additional_dependencies: [prettier@3.8.1]
+
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v21.1.8
+    hooks:
+      - id: clang-format
+        files: '\.(c|cc|cpp|cxx|h|hh|hpp|hxx)$'
+
+  - repo: https://github.com/ansible/ansible-lint
+    rev: v26.1.1
+    hooks:
+      - id: ansible-lint
+        files: '^docker/ros/ansible/.*\.ya?ml$'
+        language_version: python3
+        pass_filenames: true
+        always_run: false
+
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.14.0
+    hooks:
+      - id: hadolint-docker
+        entry: ghcr.io/hadolint/hadolint:v2.14.0 hadolint
+        files: '(^|/)(Dockerfile(\..*)?|[^/]+\.dockerfile)$'
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.11.2
@@ -44,6 +67,12 @@ repos:
 
   - repo: local
     hooks:
+      - id: zizmor
+        name: zizmor
+        entry: ./scripts/zizmor-pre-commit.sh
+        language: script
+        files: '^\.github/(actions|workflows)/.*\.ya?ml$'
+
       - id: notebooks-format
         name: notebooks-format
         entry: ./scripts/notebooks-format.sh
