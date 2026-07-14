@@ -1,320 +1,128 @@
 ---
 name: create-skill
-description: 'Create or update Agent Skills (SKILL.md) with effective trigger descriptions, bundled scripts and resources, and validation. Use when creating a new skill, editing files in .claude/skills/, writing or reviewing SKILL.md frontmatter, or debugging why a skill is not being discovered. Keywords: skill, SKILL.md, slash command, description, allowed-tools, bundled resources.'
+description: Create, update, or review repository Agent Skills in .claude/skills with concise trigger descriptions, progressive-disclosure resources, optional Codex UI metadata, and validation. Use when adding or refining a SKILL.md, diagnosing skill discovery, or packaging a task-specific agent workflow.
 ---
 
-# Create Agent Skill
+# Create Agent Skills
 
-Instructions for creating effective and portable Agent Skills that enhance Claude Code with specialized capabilities, workflows, and bundled resources.
+Create focused, portable task playbooks. Keep only knowledge, procedures, and
+resources that another capable agent would not reliably infer from the task or
+the repository.
 
-## What Are Agent Skills?
+## Work in the Canonical Location
 
-Agent skills are folders of instructions, scripts, and resources that Claude loads when relevant to improve performance on specialized tasks. Unlike always-on instructions (CLAUDE.md/AGENTS.md and the files they reference), skills are meant for task-specific workflows that should only be loaded when needed.
+Create or update repository skills under `.claude/skills/<skill-name>/`.
+`.codex/skills/` and `.cursor/skills/` are symlinks to that directory, so never
+copy a skill into either of them. Use a personal skill directory only when the
+user explicitly requests a user-wide skill.
 
-Key characteristics:
+For an existing skill, read its `SKILL.md` and every resource it directly
+references before editing. Preserve its directory and frontmatter `name` unless
+the user asks for a rename.
 
-- **Portable**: The SKILL.md format implements the [Agent Skills](https://agentskills.io) open standard, so the same skill works in Claude Code, Codex, Cursor, and other compatible assistants
-- **On-demand**: Claude decides to use a skill based on the prompt and the skill's `description`; each skill is also exposed as a `/<skill-name>` slash command
-- **Resource-bundled**: A skill directory can include scripts, examples, and supplementary Markdown resources
-- **Scoped**: Use skills for detailed task workflows, not general coding standards
+## Discover the Smallest Useful Scope
 
-## Directory Structure
+1. Extract the workflow, inputs, outputs, constraints, and corrections already
+   present in the conversation or repository.
+2. Identify several realistic requests that should trigger the skill and a few
+   close requests that should not. Ask the user only about gaps that materially
+   change the skill's scope or output.
+3. Choose the narrowest useful workflow. Put general repository rules in
+   `AGENTS.md`, not in a skill that would repeat them on every invocation.
+4. Select the appropriate degree of prescription: explain heuristics when
+   judgment varies; provide a parameterized pattern when a preferred approach
+   exists; bundle and invoke a tested script when correctness depends on a
+   repeatable, fragile sequence.
 
-| Location                         | Scope                | Notes                                          |
-| -------------------------------- | -------------------- | ---------------------------------------------- |
-| `.claude/skills/<skill-name>/`   | Project/repository   | Canonical location in this repository          |
-| `~/.claude/skills/<skill-name>/` | Personal (user-wide) | For personal skills not tied to the repository |
+## Design for Progressive Disclosure
 
-Each skill **must** have its own subdirectory containing at minimum a `SKILL.md` file.
+Keep the body concise—well below 500 lines whenever practical. Put the core
+workflow and routing decisions in `SKILL.md`; add resources only when they
+remove repeated work or substantial context.
 
-Repository note:
-Codex and Cursor consume the same skills through the `.codex/skills/` and `.cursor/skills/` symlinks to `.claude/skills/` — never duplicate a skill into those directories.
+| Resource | Add it when | Guidance |
+| --- | --- | --- |
+| `scripts/` | A deterministic operation would otherwise be rewritten or is error-prone. | Test the script, give it clear arguments and errors, and state exactly when to run it. |
+| `references/` | Detailed schemas, policies, API material, or variant-specific procedures are needed. | Link directly from `SKILL.md` and say when to read it. Add a table of contents to long files. |
+| `assets/` | A file is copied or used in the generated output rather than read as instructions. | Keep templates, images, fonts, and boilerplate here. |
 
-## Required SKILL.md Format
+Do not add README files, changelogs, quick-reference duplicates, placeholder
+examples, or empty resource directories. Keep references one level from
+`SKILL.md`; do not make an agent chase a chain of documents to begin work.
 
-### Frontmatter (Required)
+## Write `SKILL.md`
+
+Use this minimal frontmatter exactly. Do not add platform-specific frontmatter
+such as `allowed-tools`, `license`, or `compatibility`.
 
 ```yaml
 ---
-name: github-actions-failure-debugging
-description: Guide for debugging failing GitHub Actions workflows. Use this when asked to debug failing GitHub Actions workflows.
+name: example-skill
+description: Create and validate example artifacts. Use when asked to generate, update, or check example artifacts for this repository.
 ---
 ```
 
-| Field           | Required | Constraints                                                                                |
-| --------------- | -------- | ------------------------------------------------------------------------------------------ |
-| `name`          | Yes      | Unique identifier, lowercase, hyphens for spaces, usually matches the skill directory name |
-| `description`   | Yes      | Describe what the skill does and when Claude should use it                                 |
-| `license`       | No       | Describe the license that applies to the skill                                             |
-| `allowed-tools` | No       | Optional tool pre-approval list for skills that need to run tools such as `Bash`           |
-
-Important points:
-
-- The file name must be exactly `SKILL.md`
-- The skill directory name should be lowercase and use hyphens for spaces
-- The Markdown body should contain instructions, examples, and guidelines Claude can follow
-
-### Description Best Practices
-
-**CRITICAL**: Claude decides when to use a skill based on the user's prompt and the skill's `description`. If the description is vague, the skill is unlikely to be selected at the right time.
-
-**What to include in description** — Follow the **WHAT/WHEN/KEYWORDS pattern**:
-
-1. **WHAT** the skill does (capabilities)
-2. **WHEN** to use it (specific triggers, scenarios, file types, or user requests)
-3. **Keywords** that users might mention in their prompts
-
-**Example of excellent description:**
-
-```yaml
-description: Guide for debugging failing GitHub Actions workflows. Use this when asked to debug failing GitHub Actions workflows.
-```
-
-**Example of poor description:**
-
-```yaml
-description: Web testing helpers
-```
-
-This fails because it does not clearly say what the skill does or when Claude should use it.
-
-### Common Skill Discovery Issues
-
-| Problem                           | Cause                                      | Solution                                                          |
-| --------------------------------- | ------------------------------------------ | ----------------------------------------------------------------- |
-| Skill never activates             | Vague or generic description               | Rewrite the description so it states the task and trigger clearly |
-| Activates on wrong requests       | Description is too broad                   | Narrow the trigger phrases and task scope                         |
-| Conflicting skill activations     | Multiple skills describe the same use case | Differentiate the descriptions and intended scenarios             |
-| Skill runs without enough context | Body lacks actionable instructions         | Add explicit steps, examples, and usage notes                     |
-
-### Body Content
-
-The body contains the instructions Claude receives after the skill is selected. No fixed section layout is required, but the body should be concrete and operational.
-
-| Section                     | Purpose                                             |
-| --------------------------- | --------------------------------------------------- |
-| `# Title`                   | Brief overview of what this skill enables           |
-| `## When to Use This Skill` | List of scenarios (reinforces description triggers) |
-| `## Prerequisites`          | Required tools, dependencies, environment setup     |
-| `## Step-by-Step Workflows` | Numbered steps for common tasks                     |
-| `## Troubleshooting`        | Common issues and solutions table                   |
-| `## References`             | Links to bundled docs or external resources         |
-
-## Bundling Resources
-
-When a skill is invoked, Claude automatically discovers the files in that skill's directory and makes them available alongside the instructions. That means you can add scripts, supplementary Markdown files, examples, or templates and reference them directly from `SKILL.md`.
-
-No fixed folder taxonomy is required. These subfolders are useful conventions when they improve organization:
-
-| Folder        | Purpose                                                 | Loaded into Context? | Example Files                                        |
-| ------------- | ------------------------------------------------------- | -------------------- | ---------------------------------------------------- |
-| `scripts/`    | Executable automation that performs specific operations | When executed        | `helper.py`, `validate.sh`, `build.ts`               |
-| `references/` | Documentation the AI agent reads to inform decisions    | Yes, when referenced | `api_reference.md`, `schema.md`, `workflow_guide.md` |
-| `templates/`  | Starter code or scaffolds that the AI agent modifies    | Yes, when referenced | `viewer.html`, `hello-world/`, `config.template`     |
-| `assets/`     | Static supporting files used as-is                      | Usually no           | `logo.png`, `baseline.png`, `report-template.html`   |
-
-### Directory Structure Example
-
-```
-.claude/skills/my-skill/
-├── SKILL.md
-├── scripts/
-│   └── helper.py
-├── references/
-│   └── workflow-guide.md
-└── templates/
-    └── scaffold.py
-```
-
-Add a skill-specific license only when the user or repository policy requests one.
-
-### Referencing Resources in SKILL.md
-
-Use relative paths when referring to skill resources from `SKILL.md`.
-
-<!-- validate_skills: ignore-cross-reference-start -->
-
-```markdown
-## Available Scripts
-
-Run the [helper script](./scripts/helper.py) to automate the workflow.
-
-See the [workflow guide](./references/workflow-guide.md) for the full procedure.
-
-Use the [scaffold](./templates/scaffold.py) as a starting point.
-```
-
-<!-- validate_skills: ignore-cross-reference-end -->
-
-## Running Scripts Safely
-
-If a skill needs to run a script, include the script in the skill directory and describe exactly when and how Claude should run it.
-
-Example layout:
-
-```text
-.claude/skills/image-convert/
-├── SKILL.md
-└── convert-svg-to-png.sh
-```
-
-Optional frontmatter for pre-approving tools:
-
-```yaml
----
-name: image-convert
-description: Converts SVG images to PNG format. Use when asked to convert SVG files.
-allowed-tools: Bash
----
-```
-
-Security guidance:
-
-- Only pre-approve `Bash` if you fully trust the skill and every referenced script
-- Pre-approving terminal tools removes the normal confirmation step for command execution
-- When in doubt, omit `Bash` from `allowed-tools` so Claude must ask first
-
-Instruction pattern for scripts:
-
-```markdown
-When asked to convert an SVG to PNG, run the `convert-svg-to-png.sh` script
-from this skill's base directory, passing the input SVG file path as the
-first argument.
-```
-
-## How Claude Loads Skills
-
-Claude uses skills as follows:
-
-| Level           | What Loads                                          | When                                             |
-| --------------- | --------------------------------------------------- | ------------------------------------------------ |
-| 1. Discovery    | Skill metadata, especially `description`            | Used to decide whether the skill is relevant     |
-| 2. Instructions | `SKILL.md` body                                     | Loaded when Claude chooses the skill             |
-| 3. Resources    | Scripts and supporting files in the skill directory | Available alongside the instructions when needed |
-
-Practical implication:
-
-- Put concise routing logic in the `description`
-- Put operational guidance in the body
-- Keep supporting files close to the skill and reference them explicitly
-
-## Content Guidelines
-
-### Writing Style
-
-- Use imperative mood: "Run", "Create", "Configure" (not "You should run")
-- Be specific and actionable
-- Include exact commands with parameters
-- Show expected outputs where helpful
-- Keep sections focused and scannable
-
-### Script Requirements
-
-When including scripts, prefer cross-platform languages:
-
-| Language   | Use Case                            |
-| ---------- | ----------------------------------- |
-| Python     | Complex automation, data processing |
-| pwsh       | PowerShell Core scripting           |
-| Node.js    | JavaScript-based tooling            |
-| Bash/Shell | Simple automation tasks             |
-
-Best practices:
-
-- Include help/usage documentation (`--help` flag)
-- Handle errors gracefully with clear messages
-- Avoid storing credentials or secrets
-- Use relative paths where possible
-- Keep script invocation instructions explicit in `SKILL.md`
-
-### When to Bundle Scripts
-
-Include scripts in your skill when:
-
-- The same code would be rewritten repeatedly by the agent
-- Deterministic reliability is critical (e.g., file manipulation, API calls)
-- Complex logic benefits from being pre-tested rather than generated each time
-- The operation has a self-contained purpose that can evolve independently
-- Testability matters — scripts can be unit tested and validated
-- Predictable behavior is preferred over dynamic generation
-
-Scripts enable evolution: even simple operations benefit from being implemented as scripts when they may grow in complexity, need consistent behavior across invocations, or require future extensibility.
-
-### Security Considerations
-
-- Scripts rely on existing credential helpers (no credential storage)
-- Do not pre-approve `Bash` in `allowed-tools` unless the skill is trusted and reviewed
-- Include `--force` flags only for destructive operations
-- Warn users before irreversible actions
-- Document any network operations or external calls
-
-## Skills Versus Always-On Instructions
-
-Use CLAUDE.md and AGENTS.md for simple guidance that applies to almost every task, such as repository coding standards or broad workflow expectations.
-
-Use skills for detailed, reusable task playbooks that should only enter context when they are relevant.
-
-## Adding Existing Skills
-
-You can add a skill created by someone else by downloading a directory that contains `SKILL.md` and any related files, then moving that directory into `.claude/skills/`.
-
-Useful source:
-
-- https://github.com/anthropics/skills
-
-## Common Patterns
-
-### Parameter Table Pattern
-
-Document parameters clearly:
-
-```markdown
-| Parameter   | Required | Default | Description                  |
-| ----------- | -------- | ------- | ---------------------------- |
-| `--input`   | Yes      | -       | Input file or URL to process |
-| `--action`  | Yes      | -       | Action to perform            |
-| `--verbose` | No       | `false` | Enable verbose output        |
-```
-
-## Validation Checklist
-
-Before publishing a skill:
-
-- [ ] Skill directory is in `.claude/skills/` (or `~/.claude/skills/` for personal skills)
-- [ ] `SKILL.md` has valid frontmatter with `name` and `description`
-- [ ] File is named exactly `SKILL.md`
-- [ ] Skill directory name is lowercase with hyphens
-- [ ] `description` clearly states **WHAT** it does, **WHEN** to use it, and relevant **KEYWORDS**
-- [ ] Body includes when to use, prerequisites, and step-by-step workflows
-- [ ] Any `allowed-tools` entries were reviewed deliberately, especially `Bash`
-- [ ] Scripts include help documentation and error handling
-- [ ] Relative paths used for all resource references
-- [ ] No hardcoded credentials or secrets
-- [ ] `validate_agent_files` passes (run by pre-commit and CI)
-
-## Workflow Execution Pattern
-
-When executing multi-step workflows, create a TODO list where each step references the relevant documentation:
-
-<!-- validate_skills: ignore-cross-reference-start -->
-
-```markdown
-## TODO
-
-- [ ] Step 1: Configure environment - see [workflow-setup.md](./references/workflow-setup.md#environment)
-- [ ] Step 2: Build project - see [workflow-setup.md](./references/workflow-setup.md#build)
-- [ ] Step 3: Deploy to staging - see [workflow-deployment.md](./references/workflow-deployment.md#staging)
-- [ ] Step 4: Run validation - see [workflow-deployment.md](./references/workflow-deployment.md#validation)
-- [ ] Step 5: Deploy to production - see [workflow-deployment.md](./references/workflow-deployment.md#production)
-```
-
-<!-- validate_skills: ignore-cross-reference-end -->
-
-This ensures traceability and allows resuming workflows if interrupted.
-
-## Related Resources
-
-- [Claude Code skills documentation](https://code.claude.com/docs/en/skills)
-- [Agent Skills open standard](https://agentskills.io)
-- [Anthropic skills collection](https://github.com/anthropics/skills)
-- [create-agent](../create-agent/) — for creating custom agents
+Choose a lowercase hyphen-case name of at most 64 characters. Match the skill
+directory name unless the repository has a deliberate naming convention that
+requires otherwise.
+
+Write the description as the discovery contract:
+
+- State what the skill accomplishes and the concrete requests, files, or
+  situations that should invoke it.
+- Include natural alternate phrasings and useful adjacent cases, so the skill
+  is not missed when the user does not name it directly.
+- State meaningful boundaries when nearby work belongs to another skill.
+- Prefer precise language to a keyword list. The body is not available during
+  discovery, so do not rely on a `When to use` section to define triggers.
+
+Write the body in imperative form. Explain the reason for consequential
+guidance so the agent can adapt it correctly instead of following brittle,
+overly rigid rules. Use a workflow layout for sequences, a task layout for
+independent operations, and separate references for framework or domain
+variants. Include examples, decision tables, or exact output structures only
+when they make a recurring choice unambiguous.
+
+Use relative Markdown links for bundled resources. Keep an instruction in one
+place; link to its detailed explanation instead of duplicating it.
+
+## Add Optional Codex UI Metadata
+
+When the skill is intended for Codex's UI, add `agents/openai.yaml`. Keep it
+outside `SKILL.md` frontmatter. Set a human-facing display name, a 25–64
+character short description, and a one-sentence `default_prompt` that names
+the skill as `$<skill-name>`. Regenerate this file with the installed Skill
+Creator helper when available, passing explicit interface values so it remains
+aligned with the skill.
+
+Do not add icons, colors, MCP dependencies, or policy fields unless the user
+has supplied the associated requirement or asset.
+
+## Validate and Iterate
+
+1. Verify the name, frontmatter, resource links, and scripts. When the Codex
+   Skill Creator helper is available, run its `quick_validate.py` against the
+   skill directory.
+2. Run `uv run validate_agent_files --recommend .claude` after repository skill
+   changes. Fix validation errors rather than suppressing them.
+3. Test bundled scripts with representative inputs. Use `./.tmp/` for
+   temporary artifacts; never use `$TMPDIR`.
+4. Forward-test a new, complex, or high-risk skill with realistic prompts when
+   feasible. Give an independent evaluator only the task and relevant
+   artifacts—not the intended answer or diagnosis. For an existing skill,
+   compare the revision with a snapshot of the prior version when measuring an
+   improvement.
+5. Use objective checks for deterministic outcomes and human review for
+   subjective quality. Remove instructions or resources that do not improve
+   correctness, clarity, or efficiency.
+
+## Definition of Done
+
+- The description selects the skill for its intended requests without broadly
+  colliding with adjacent skills.
+- `SKILL.md` has only `name` and `description` in valid frontmatter.
+- The body is concise, actionable, and routes detailed material to directly
+  linked resources.
+- Every bundled file has a purpose, and scripts have been exercised.
+- Repository validation passes, and optional `agents/openai.yaml` matches the
+  current skill when present.
