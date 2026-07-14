@@ -10,7 +10,6 @@ import sys
 from types import ModuleType
 
 import pytest
-import yaml
 
 from validate_agent_files.core import skills_ref_validate, ValidationEngine
 
@@ -18,6 +17,8 @@ try:
     import tomllib
 except ModuleNotFoundError:  # pragma: no cover - Python < 3.11
     import tomli as tomllib
+
+import yaml
 
 from validate_agent_files.main import main as validate_agent_files_main
 
@@ -108,6 +109,43 @@ model: GPT-5.4
     assert exit_code == 1
     assert 'broken.agent.md' in captured.out
     assert 'broken.prompt.md' in captured.out
+
+
+def test_validate_agent_files_validates_each_provided_path(
+    tmp_path: Path, capsys, monkeypatch
+) -> None:
+    """The canonical CLI should aggregate validation across multiple paths."""
+    monkeypatch.setattr('validate_agent_files.core.skills_ref_validate', lambda _: [])
+    first_path = tmp_path / 'first'
+    second_path = tmp_path / 'second'
+    _write_valid_skill(first_path / 'first-skill', 'first-skill')
+    _write_valid_skill(second_path / 'second-skill', 'second-skill')
+
+    exit_code = validate_agent_files_main([str(first_path), str(second_path), '--kind', 'skills'])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert 'first-skill' in captured.out
+    assert 'second-skill' in captured.out
+
+
+def test_validate_agent_files_detects_duplicate_skills_across_provided_files(
+    repo_tmp_path: Path, capsys, monkeypatch
+) -> None:
+    """Individually supplied skills should share one uniqueness catalog."""
+    monkeypatch.setattr('validate_agent_files.core.skills_ref_validate', lambda _: [])
+    first_skill = repo_tmp_path / 'first' / 'SKILL.md'
+    second_skill = repo_tmp_path / 'second' / 'SKILL.md'
+    _write_valid_skill(first_skill.parent, 'duplicate-skill')
+    _write_valid_skill(second_skill.parent, 'duplicate-skill')
+
+    exit_code = validate_agent_files_main(
+        [str(first_skill), str(second_skill), '--kind', 'skills']
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1, captured.out
+    assert 'duplicate skill name' in captured.out.lower()
 
 
 def test_issue310_validate_agent_files_module_exits_with_main_return_code(

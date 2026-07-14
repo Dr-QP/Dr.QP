@@ -12,7 +12,15 @@ build:
     python: '3.12'
   apt_packages:
     - ffmpeg
-  commands:
-    - pip install uv
-    - uv sync --frozen --group docs
-    - uv run sphinx-build -b html docs/source $READTHEDOCS_OUTPUT/html
+
+  # Use structured build jobs: unlike build.commands, they retain the
+  # system-dependency step above so the docs build can invoke ffmpeg.
+  jobs:
+    install:
+      - pip install uv
+      - uv sync --frozen --group docs
+    pre_build:
+      - ffmpeg -version
+    build:
+      html:
+        - uv run sphinx-build -b html docs/source $READTHEDOCS_OUTPUT/html

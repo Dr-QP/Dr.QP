@@ -1,11 +1,15 @@
+exclude: '(^packages/vendor/|.*/test_data/.*|^packages/runtime/drqp_rapidjson/include/.*|^hardware/overalays/.*)'
+
 repos:
-  # Enable in separate PR
-  #- repo: https://github.com/pre-commit/pre-commit-hooks
-  #  rev: v2.3.0
-  #  hooks:
-  #   - id: check-yaml
-  #   - id: end-of-file-fixer
-  #   - id: trailing-whitespace
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+        args: [--fix=lf]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.11.2
@@ -16,17 +20,10 @@ repos:
       - id: ruff # isort
         args: [--fix, --select, I]
 
-  # [jupytext] Error: the git index is outdated.
-  # Please add the paired notebook with:
-  #     git add notebooks/1_getting_started_with_robot_ik.ipynb
-  # - repo: https://github.com/mwouts/jupytext
-  #   rev: v1.17.0
-  #   hooks:
-  #   - id: jupytext
-  #     args: [--sync, notebooks/*.md, notebooks/*.ipynb, --pipe-fmt, py:percent, --pipe, 'ruff format {}', --pipe, 'ruff check --fix --ignore E402,F811 {}', --pipe, 'ruff check --fix --select I {}']
-  #     additional_dependencies:
-  #     - ruff==v0.11.2
-  #     pass_filenames: false
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.24.3
@@ -40,22 +37,16 @@ repos:
 
   - repo: local
     hooks:
-      - id: python-reformat
-        name: python-reformat
-        entry: ./scripts/python-reformat.sh
+      - id: notebooks-format
+        name: notebooks-format
+        entry: ./scripts/notebooks-format.sh
         language: script
-        pass_filenames: false
-
-      - id: format-cpp
-        name: format-cpp
-        entry: ./scripts/cpp-reformat.sh
-        language: script
-        types: [c++]
-        pass_filenames: false
+        pass_filenames: true
+        files: '(docs/source/notebooks/.*\.md)$'
 
       - id: validate-agent-files
         name: validate-agent-files
-        entry: validate_agent_files --ci .claude
+        entry: uv run validate_agent_files
         language: system
         files: '(\.claude/skills/.*/SKILL\.md|\.claude/agents/.*\.agent\.md|\.codex/agents/.*\.md)$'
-        pass_filenames: false
+        pass_filenames: true

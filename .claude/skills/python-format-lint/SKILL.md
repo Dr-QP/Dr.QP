@@ -31,7 +31,8 @@ do not fail CI.
 
 1. **Format and autofix with ruff.** Run the bundled reformat script from the
    repo root — it runs `ruff format`, `ruff check --fix`, and isort across
-   packages, scripts, notebooks, and Ansible:
+   Python packages, scripts, and notebooks. Ansible is owned by Super-Linter;
+   use the [local-reformat](../local-reformat/SKILL.md) skill for that workflow:
 
    ```bash
    scripts/python-reformat.sh
@@ -73,10 +74,10 @@ do not fail CI.
 
 ## Scripts
 
-| Script                                                        | Purpose                                                                               |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| [python-reformat.sh](../../../scripts/python-reformat.sh)     | ruff format + `ruff check --fix` + isort across packages, scripts, notebooks, Ansible |
-| [python-lint-check.sh](../../../scripts/python-lint-check.sh) | Run `ament_flake8` (the CI gate) over given paths, or all of `./packages` by default  |
+| Script                                                        | Purpose                                                                                 |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [python-reformat.sh](../../../scripts/python-reformat.sh)     | ruff format + `ruff check --fix` + isort across Python packages, scripts, and notebooks |
+| [python-lint-check.sh](../../../scripts/python-lint-check.sh) | Run `ament_flake8` (the CI gate) over given paths, or all of `./packages` by default    |
 
 ## Troubleshooting
 

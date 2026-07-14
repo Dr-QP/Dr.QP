@@ -56,6 +56,5 @@ Dependency sketch:
   intentionally changes behavior, it says so under _Behavior changes_ and lists the tunables to
   re-tune.
 - **Docs**: when a spec lands, update the maturity/finding status in
-  `docs/source/Dev/ik-locomotion-analysis.md` (mark the finding fixed with the PR number) and
-  regenerate `stride_limits.yaml` if leg geometry, IK, or gait math changed.
+  `docs/source/Dev/ik-locomotion-analysis.md` (mark the finding fixed with the PR number).
 - **One spec per PR.** Keep diffs reviewable; specs are sized to be independently shippable.

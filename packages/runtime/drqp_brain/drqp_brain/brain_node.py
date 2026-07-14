@@ -183,13 +183,15 @@ class HexapodBrain(rclpy.node.Node):
         rotation_speed_overridden = 'rotation_speed_degrees' in parameter_overrides
         configured_omega_max = self.get_parameter('omega_max_rad_sec').value
         if omega_max_overridden:
-            if configured_omega_max <= 0.0:
-                raise ValueError('omega_max_rad_sec must be positive when configured')
-            self.omega_max_rad_sec = float(configured_omega_max)
+            if configured_omega_max < 0.0:
+                raise ValueError('omega_max_rad_sec must be non-negative when configured')
+            self.omega_max_rad_sec = (
+                float(configured_omega_max) if configured_omega_max > 0.0 else None
+            )
         else:
             self.omega_max_rad_sec = None
         self.rotation_speed_degrees = float(self.get_parameter('rotation_speed_degrees').value)
-        if rotation_speed_overridden and not omega_max_overridden:
+        if rotation_speed_overridden:
             self.get_logger().warning(
                 'rotation_speed_degrees is deprecated; configure omega_max_rad_sec instead'
             )

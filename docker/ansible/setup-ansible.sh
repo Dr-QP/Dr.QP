@@ -28,8 +28,10 @@ import ansible.release
 print(f"Verified ansible {ansible.release.__version__}: include_vars import ok")
 PY
 
-# Install required Ansible collections
-if ! "${SYSTEM_PYTHON}" -m ansible.cli.galaxy collection list | grep -q "community.general"; then
-    echo "Installing required Ansible collections..."
-    "${SYSTEM_PYTHON}" -m ansible.cli.galaxy collection install community.general
-fi
+# Install required Ansible collections.
+for collection in community.general community.docker; do
+    if ! "${SYSTEM_PYTHON}" -m ansible.cli.galaxy collection list | grep -q "$collection"; then
+        echo "Installing required Ansible collection: $collection"
+        "${SYSTEM_PYTHON}" -m ansible.cli.galaxy collection install "$collection"
+    fi
+done

@@ -79,7 +79,6 @@ class WalkController:
         rotation_speed_degrees=10.0,
         cycle_time_sec=2.5,
         gait=GaitType.wave,
-        stride_limits=None,
         steering_tau_sec=0.35,
         omega_max_rad_sec=None,
     ):
@@ -100,9 +99,6 @@ class WalkController:
         self._configured_omega_max_rad_sec = omega_max_rad_sec
         self.cycle_time_sec = float(cycle_time_sec)
         self.steering_tau_sec = float(steering_tau_sec)
-        # The certified polar table remains an offline/CI artifact.  Runtime
-        # saturation below evaluates every leg's actual combined twist path.
-        self.stride_limits = stride_limits
         self.gait_gen = ParametricGaitGenerator(step_length=1.0, step_height=1.0, gait=gait)
         self.reset()
 

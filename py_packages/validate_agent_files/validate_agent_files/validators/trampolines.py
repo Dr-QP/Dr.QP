@@ -65,6 +65,9 @@ def validate_trampolines(
             continue
         if codex_dir is None:
             codex_dir = _codex_agents_dir(canonical_dir)
+            expected_stems.update(
+                path.name.removesuffix('.agent.md') for path in canonical_dir.glob('*.agent.md')
+            )
 
         stem = Path(agent_file).name.removesuffix('.agent.md')
         expected_stems.add(stem)

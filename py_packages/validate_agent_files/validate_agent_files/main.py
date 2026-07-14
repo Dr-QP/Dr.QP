@@ -24,7 +24,7 @@ def main(args: Optional[List[str]] = None) -> int:
         show_warnings = False
 
     engine = CustomizationsValidationEngine(show_warnings=show_warnings)
-    results = engine.validate(parsed_args.path, parsed_args.kind)
+    results = engine.validate_paths(parsed_args.paths, parsed_args.kind)
 
     # Compute exit code before formatting so it can be reused for CI behavior.
     exit_code = 1 if any(not result.is_valid for result in results) else 0

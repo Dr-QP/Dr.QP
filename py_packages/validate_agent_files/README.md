@@ -13,6 +13,7 @@ pip install -e .
 ```bash
 validate_agent_files                     # Validate skills, agents, and prompts under .
 validate_agent_files .claude             # Validate canonical repo customizations
+validate_agent_files .claude/skills .claude/agents  # Validate multiple paths
 validate_agent_files --kind skills       # Validate only skill files
 validate_agent_files --kind agents       # Validate only agent files
 validate_agent_files --kind prompts      # Validate only prompt files
