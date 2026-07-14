@@ -32,7 +32,7 @@ diagnostics, but the job `if` must make the same default explicitly. Use exact
 token checks, for example `contains(format(',{0},', value), ',codex,')`, not a
 bare substring test.
 
-## Workflow design
+## Required implementation
 
 ### Files
 
@@ -41,10 +41,12 @@ bare substring test.
 - Add `.github/workflows/codex-review.yml` with the same event types,
   concurrency key, container image, runner selection, timeout, checkout
   behavior, and debug-stats action as `claude-review.yml`.
-- Extract only genuinely shared, pure workflow logic if GitHub Actions permits
-  it without weakening permissions. A local composite action is preferred for
-  repeated checkout-ref/prompt calculations; do not turn secret-bearing agent
-  execution into a reusable workflow callable by arbitrary repository code.
+- Add `scripts/post-review.sh`, as required by the existing `pr-review` skill.
+  It must submit a GitHub review and all valid inline comments in one call; it
+  must not hand-assemble an API request in a workflow shell command.
+- Keep the agent actions in their own workflows. Do not use a reusable workflow
+  for a secret-bearing agent step. Duplicate only action-specific wiring; put
+  the common event-matrix assertions in the workflow test suite.
 
 ### Trigger and prompt matrix
 
@@ -59,10 +61,6 @@ only to its own marker.
 | `pull_request_review` | Review body contains `@codex` | Constrained request prompt |
 | `issues` opened/assigned | Title or body contains `@codex` | Constrained issue request prompt |
 
-The first implementation may disable the automatic `pull_request` Codex path
-behind a separate explicit prompt condition while adoption is evaluated, but it
-must not make an enabled Codex responder silently ignore `@codex` mentions.
-
 For pull-request comments, resolve and check out the PR head SHA, never the
 default-branch SHA carried by `issue_comment`. Preserve the existing
 `persist-credentials: false` setting.
@@ -74,7 +72,7 @@ Run the action after checkout:
 ```yaml
 - name: Codex Responder
   id: codex_responder
-  uses: openai/codex-action@v1
+  uses: openai/codex-action@<reviewed-version>
   env:
     GH_TOKEN: ${{ steps.workflow_changed.outputs.workflowChanged == 'true' && secrets.GITHUB_TOKEN || '' }}
   with:
@@ -85,10 +83,11 @@ Run the action after checkout:
     output-file: codex-responder-output.md
 ```
 
-Pin the action to a reviewed immutable revision before merging; the major tag
-above is illustrative only. Do not put `OPENAI_API_KEY`, `CODEX_API_KEY`, or
-`GITHUB_TOKEN` in job-level `env`. The OpenAI action receives the API key through
-its dedicated input and starts its proxy for that one step.
+Replace `<reviewed-version>` with the full latest version reviewed
+`openai/codex-action` release before merging. Do not put `OPENAI_API_KEY`,
+`CODEX_API_KEY`, or `GITHUB_TOKEN` in job-level `env`. The OpenAI action
+receives the API key through its dedicated input and starts its proxy for that
+one step.
 
 The final prompt must contain the repository name, event type, issue/PR number,
 the requested task, and these fixed constraints:
@@ -127,11 +126,10 @@ Before the Codex action runs:
 5. Do not run a credentialed responder on pull requests from forks unless a
    separate, reviewed trusted-maintainer approval mechanism exists.
 
-The spec requires an implementation note identifying exactly how the action is
-authenticated to GitHub for the review-posting path. If `GH_TOKEN` is not
-available, Codex may analyze the checkout but the workflow must post a clearly
-labeled non-review response from a separate trusted step; it must not claim to
-have submitted a review.
+Authenticate the review-posting path with the step-scoped `GH_TOKEN` shown
+above. If protected-workflow handling withholds that token, skip the Codex agent
+step entirely and report the withheld execution in the trusted workflow log;
+do not run an unpublishable review or post a substitute top-level comment.
 
 ### Publishing and artifacts
 
@@ -149,8 +147,7 @@ and authorized execution.
 
 ## Required tests and validation
 
-Write workflow tests or a script-driven fixture suite before enabling Codex in
-the default configuration. It must verify:
+Add workflow tests or a script-driven fixture suite. It must verify:
 
 - `AI_RESPONDERS` defaults to Claude; `none`, `claude`, `codex`, and
   `claude,codex` enable exactly the intended job(s).
