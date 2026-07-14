@@ -69,8 +69,8 @@ repos:
     hooks:
       - id: zizmor
         name: zizmor
-        entry: ./scripts/zizmor-pre-commit.sh
-        language: script
+        entry: zizmor
+        language: system
         files: '^\.github/(actions|workflows)/.*\.ya?ml$'
 
       - id: notebooks-format

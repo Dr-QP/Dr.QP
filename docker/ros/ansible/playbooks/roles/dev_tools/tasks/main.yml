@@ -64,3 +64,34 @@
     state: present
     install_recommends: false
     update_cache: true
+
+- name: Ensure zizmor supports the current architecture
+  ansible.builtin.assert:
+    that: system_arch in dev_tools_zizmor_archives
+    fail_msg: "zizmor is not available for architecture {{ system_arch }}"
+
+- name: Create temporary directory for zizmor
+  ansible.builtin.tempfile:
+    state: directory
+  register: dev_tools_zizmor_temp_dir
+
+- name: Download zizmor
+  ansible.builtin.get_url:
+    url: >-
+      {{ 'https://github.com/zizmorcore/zizmor/releases/download/'
+      ~ dev_tools_zizmor_version ~ '/zizmor-'
+      ~ dev_tools_zizmor_archives[system_arch].target ~ '.tar.gz' }}
+    dest: "{{ dev_tools_zizmor_temp_dir.path }}/zizmor.tar.gz"
+    checksum: "sha256:{{ dev_tools_zizmor_archives[system_arch].checksum }}"
+    mode: "0644"
+
+- name: Install zizmor
+  ansible.builtin.unarchive:
+    src: "{{ dev_tools_zizmor_temp_dir.path }}/zizmor.tar.gz"
+    dest: "{{ dev_tools_zizmor_install_path | dirname }}"
+    remote_src: true
+
+- name: Clean up temporary zizmor files
+  ansible.builtin.file:
+    path: "{{ dev_tools_zizmor_temp_dir.path }}"
+    state: absent
