@@ -5,7 +5,7 @@ set -euo pipefail
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 root_dir=$(cd "$script_dir/.." && pwd)
 pre_commit_config="$root_dir/.pre-commit-config.yaml"
-zizmor_hook="$script_dir/zizmor-pre-commit.sh"
+zizmor_defaults="$root_dir/docker/ros/ansible/playbooks/roles/dev_tools/defaults/main.yml"
 . "$script_dir/super-linter-defaults.sh"
 
 usage()
@@ -163,8 +163,8 @@ configured_versions[ruff]=$(pre_commit_rev https://github.com/astral-sh/ruff-pre
 configured_versions[shellcheck]=$(pre_commit_rev https://github.com/shellcheck-py/shellcheck-py)
 configured_versions[gitleaks]=$(pre_commit_rev https://github.com/gitleaks/gitleaks)
 configured_versions[actionlint]=$(pre_commit_rev https://github.com/rhysd/actionlint)
-configured_versions[zizmor]=$(sed -nE 's/^ZIZMOR_VERSION="?([^" ]+)"?/\1/p' \
-  "$zizmor_hook" | head -n 1)
+configured_versions[zizmor]=$(sed -nE \
+  's/^dev_tools_zizmor_version: v?([0-9.]+).*/\1/p' "$zizmor_defaults" | head -n 1)
 
 for tool in prettier clang-format ansible-lint hadolint ruff shellcheck gitleaks actionlint zizmor; do
   check_version "$tool"
