@@ -25,7 +25,12 @@ set(drqp_gazebo_full_launch_tests
 )
 
 set(drqp_gazebo_launch_tests ${drqp_gazebo_smoke_launch_tests})
-if("$ENV{DRQP_GAZEBO_TEST_MODE}" STREQUAL "all")
+# Keep registration aligned with pytest's slow-test gate.  The full tests must
+# exist in CTest before pytest can see DRQP_TEST_MODE=slow and run them.
+if(
+  "$ENV{DRQP_GAZEBO_TEST_MODE}" STREQUAL "all"
+  OR "$ENV{DRQP_TEST_MODE}" STREQUAL "slow"
+)
   list(APPEND drqp_gazebo_launch_tests ${drqp_gazebo_full_launch_tests})
 endif()
 

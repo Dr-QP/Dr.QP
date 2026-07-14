@@ -165,6 +165,7 @@ class GazeboRobotControlBase:
     SPIN_DRAIN_ITERATIONS = 50
     MOVEMENT_DURATION = 5.0
     POSE_SETTLE_DURATION = 1.0
+    COMMAND_SETTLE_DURATION = 2.0
     # Sim seconds to run a stride before reversing it, with no settle time in
     # between -- reproduces a quick full-throttle direction flip mid-gait rather
     # than a reversal after the walker has already reached steady state.
@@ -834,6 +835,14 @@ class GazeboRobotControlBase:
             f'body_translation_x={body_translation_x}, rotation={rotation}'
         )
 
+    def _settle_walking_command(self) -> None:
+        """Command rest long enough for steering smoothing to decay between checks."""
+        start_sim_time_ns = self._current_sim_time_ns()
+        if start_sim_time_ns is None:
+            raise RuntimeError('Simulation clock is unavailable while settling a movement command')
+        self._publish_movement_command()
+        self._wait_for_sim_time_since(start_sim_time_ns, self.COMMAND_SETTLE_DURATION)
+
     def _assert_posture_delta_or_static(
         self,
         delta_z: float,
@@ -1107,8 +1116,11 @@ class GazeboRobotControlBase:
 
         try:
             forward_delta, _, _ = self._run_movement_and_measure(stride_x=1.0)
+            self._settle_walking_command()
             backward_delta, _, _ = self._run_movement_and_measure(stride_x=-1.0)
+            self._settle_walking_command()
             _, left_delta, _ = self._run_movement_and_measure(stride_y=1.0)
+            self._settle_walking_command()
             _, right_delta, _ = self._run_movement_and_measure(stride_y=-1.0)
         except RuntimeError as error:
             raise RuntimeError('Balance mode full-stride movement failed') from error

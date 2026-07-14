@@ -495,20 +495,31 @@ and height. For each leg it receives two dimensionless quantities:
 During swing, $s$ increases from $-\tfrac12$ to $+\tfrac12$ while $h$ rises
 and falls. During stance, $s$ decreases from $+\tfrac12$ to $-\tfrac12$ and
 $h=0$. Thus $s$ is a label for one foot's progress along its path, not the
-controller's clock or the robot's global time. The controller uses this signed
-coordinate directly when it samples the reference twist. The relative yaw is
+controller's clock or the robot's global time.
+
+The gait coordinate describes the foot, whereas the reference twist describes
+the body. They therefore run in opposite directions. Before sampling the
+reference motion, `targets_at()` uses
 
 \begin{equation}
-\theta(s)=s\Delta\theta=s\omega T_{\mathrm{stance}}.
+\sigma=-s.
 \end{equation}
 
-This is a stride-relative angle centred at $s=0$; it is not an absolute world
-heading.
+This sign is what preserves the established command convention: a positive
+forward or left command produces the same forward or left gait as before the
+twist implementation. The relative reference yaw is
+
+\begin{equation}
+\theta(\sigma)=\sigma\Delta\theta=\sigma\omega T_{\mathrm{stance}}.
+\end{equation}
+
+This is a stride-relative angle centred at $\sigma=0$; it is not an absolute
+world heading.
 
 ### A turn changes the direction of travel
 
-If the reference motion only translates, its displacement at coordinate $s$ is
-$s\Delta\mathbf{p}$. If it turns at the same time, its forward axis turns
+If the reference motion only translates, its displacement at coordinate
+$\sigma$ is $\sigma\Delta\mathbf{p}$. If it turns at the same time, its forward axis turns
 continuously, so that straight displacement is no longer exact. The exact
 planar rotation through an angle $\phi$ is
 
@@ -524,8 +535,8 @@ The corresponding translation is
 
 \begin{equation}
 \begin{aligned}
-\mathbf{p}(s) & =
-\mathbf{V}(\theta(s))\,s\Delta\mathbf{p},\\
+\mathbf{p}(\sigma) & =
+\mathbf{V}(\theta(\sigma))\,\sigma\Delta\mathbf{p},\\
 \mathbf{V}(\theta) & =
 \begin{bmatrix}
 \dfrac{\sin\theta}{\theta} &
@@ -538,7 +549,7 @@ The corresponding translation is
 
 You can read $\mathbf{V}$ as the correction that bends a straight displacement
 into an arc. When $\theta=0$, it becomes the identity matrix, so
-$\mathbf{p}(s)=s\Delta\mathbf{p}$. `_se2_translation()` evaluates the two
+$\mathbf{p}(\sigma)=\sigma\Delta\mathbf{p}$. `_se2_translation()` evaluates the two
 fractions with short polynomial approximations (Taylor expansions) near zero.
 This avoids both division by zero and loss of numerical precision from
 subtracting nearly equal numbers.
@@ -548,9 +559,9 @@ as an SE(2) transform. “SE(2)” is only a name for the set of flat motions ma
 from a rotation and a translation:
 
 \begin{equation}
-\mathbf{T}(s)=
+\mathbf{T}(\sigma)=
 \begin{bmatrix}
-\mathbf{R}(\theta(s)) & \mathbf{p}(s)\\
+\mathbf{R}(\theta(\sigma)) & \mathbf{p}(\sigma)\\
 \mathbf{0}^\mathsf{T} & 1
 \end{bmatrix}.
 \end{equation}
@@ -577,10 +588,10 @@ that case the path is a straight line instead.
 
 Let $\mathbf{r}_i$ be leg $i$'s neutral horizontal foot position and let
 $\mathbf{q}_i(s)$ be its target in body coordinates. To make one target the
-inverse of the reference motion, solve
+inverse of the reference motion sampled at $\sigma=-s$, solve
 
 \begin{equation}
-\mathbf{R}(\theta(s))\mathbf{q}_i(s)+\mathbf{p}(s)
+\mathbf{R}(\theta(-s))\mathbf{q}_i(s)+\mathbf{p}(-s)
 =\mathbf{r}_i
 \end{equation}
 
@@ -590,8 +601,8 @@ sign, the result is
 \begin{equation}
 \boxed{
 \mathbf{q}_i(s)=
-\mathbf{R}(-\theta(s))
-\left(\mathbf{r}_i-\mathbf{p}(s)\right).
+\mathbf{R}(-\theta(-s))
+\left(\mathbf{r}_i-\mathbf{p}(-s)\right).
 }
 \end{equation}
 
@@ -601,10 +612,10 @@ The limiting cases are a quick check on the signs:
 \begin{array}{lll}
 \omega=0
 &\Longrightarrow&
-\mathbf{q}_i(s)=\mathbf{r}_i-s\Delta\mathbf{p},\\[4pt]
+\mathbf{q}_i(s)=\mathbf{r}_i+s\Delta\mathbf{p},\\[4pt]
 \mathbf{v}=\mathbf{0}
 &\Longrightarrow&
-\mathbf{q}_i(s)=\mathbf{R}(-s\Delta\theta)\mathbf{r}_i,\\[4pt]
+\mathbf{q}_i(s)=\mathbf{R}(s\Delta\theta)\mathbf{r}_i,\\[4pt]
 \mathbf{v}=\mathbf{0},\ \omega=0
 &\Longrightarrow&
 \mathbf{q}_i(s)=\mathbf{r}_i.
@@ -614,7 +625,7 @@ The limiting cases are a quick check on the signs:
 This equation does **not** mean the controller maintains a global odometry
 pose or proves that every stance foot is fixed in one world frame. Different
 legs have different $s$ values at the same gait phase, so they use different
-reference samples $\mathbf{T}(s)$. A full global contact model would track one
+reference samples $\mathbf{T}(-s)$. A full global contact model would track one
 body pose and a separate world touchdown point for each foot. The current
 controller instead uses this inverse-rigid-motion shape to make each leg's
 local horizontal path consistent with the established gait convention. Swing
