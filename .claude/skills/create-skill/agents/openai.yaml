@@ -1,4 +1,4 @@
 interface:
-  display_name: "Create Agent Skill"
-  short_description: "Create and refine repository Agent Skills"
-  default_prompt: "Use $create-skill to create or refine a repository Agent Skill."
+  display_name: "Create Skill"
+  short_description: "Create and refine repository skills"
+  default_prompt: "Use $create-skill to create or refine a repository skill."

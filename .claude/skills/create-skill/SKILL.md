@@ -1,9 +1,9 @@
 ---
 name: create-skill
-description: Create, update, or review repository Agent Skills in .claude/skills with concise trigger descriptions, progressive-disclosure resources, optional Codex UI metadata, and validation. Use when adding or refining a SKILL.md, diagnosing skill discovery, or packaging a task-specific agent workflow.
+description: Create, update, or review repository skills in .claude/skills with concise discovery descriptions, progressive disclosure, optional Codex UI metadata, and validation. Use when adding or refining a SKILL.md, diagnosing discovery, or packaging a repeatable agent workflow.
 ---
 
-# Create Agent Skills
+# Create Repository Skills
 
 Create focused, portable task playbooks. Keep only knowledge, procedures, and
 resources that another capable agent would not reliably infer from the task or
