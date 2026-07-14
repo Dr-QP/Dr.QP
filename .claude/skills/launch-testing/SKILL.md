@@ -8,9 +8,7 @@ description: 'Write launch_pytest integration tests with per-process exit-code v
 For Python style see the Coding Conventions section in the repository
 [AGENTS.md](../../../AGENTS.md). These rules apply to `launch_pytest` tests
 that start ROS 2 processes via a `LaunchDescription`. They are derived from an
-executable behavior matrix:
-`packages/runtime/drqp_launch_testing/test/shutdown_behavior/` (see its
-`SPEC.md`).
+[executable behavior matrix](../../../packages/runtime/drqp_launch_testing/test/shutdown_behavior/SPEC.md).
 
 ## Write launch tests as functions, not classes
 
@@ -38,8 +36,8 @@ def generate_test_description():
 Then assert with `assert_processes_exited_cleanly(proc_info)`. Simulator/MoveIt
 processes that are SIGTERM'd on shutdown (`gazebo`, `gz`, `bridge_node`,
 `move_group`) are allowlisted by default; pass `ignore=(...)` to customize.
-Add `<test_depend>drqp_launch_testing</test_depend>` to the package's
-`package.xml`.
+Add both `<test_depend>launch_pytest</test_depend>` and
+`<test_depend>drqp_launch_testing</test_depend>` to the package's `package.xml`.
 
 ## Choose the scope + shutdown pattern by test count
 
@@ -102,13 +100,14 @@ Stock `launch_pytest` and `pytest-retry` do not work together out of the box:
 `launch_pytest` re-wraps the test callable in place on every call, and a
 naive retry re-wraps the _previous attempt's_ stale wrapper, crashing with
 `RuntimeError: Event loop is closed` / `is already running` instead of
-retrying. This is fixed directly in this workspace's vendored `launch_pytest`
-(`packages/vendor/launch/launch_pytest`, forked from `anton-matosov/launch.git`
-— see `packages/vendor/launch/source-info.yaml`), which always re-wraps from a
-cached pristine original callable, never from the mutated `pyfuncitem.obj`. No
-per-package shim or `test/conftest.py` registration is needed — see
-`packages/runtime/drqp_launch_testing/test/shutdown_behavior/SPEC.md` (combo 6)
-for the root cause and the executable proof.
+retrying. This is fixed directly in this workspace's
+[vendored launch_pytest](../../../packages/vendor/launch/launch_pytest), forked
+from `anton-matosov/launch.git` — see
+[source-info.yaml](../../../packages/vendor/launch/source-info.yaml) — which
+always re-wraps from a cached pristine original callable, never from the
+mutated `pyfuncitem.obj`. No per-package shim or `test/conftest.py`
+registration is needed — see the [executable behavior matrix, combo 6](../../../packages/runtime/drqp_launch_testing/test/shutdown_behavior/SPEC.md)
+for the root cause and executable proof.
 
 **This only rescues real flakiness for combo 5 (function-scoped generator).**
 `pytest-retry` tears down and recreates function/class-scoped fixtures on
@@ -162,8 +161,23 @@ out. A `ready_delay` (`TimerAction` before `ReadyToTest`) is also required so
 processes are up before tests — and so the shutdown body observes populated exit
 codes.
 
+## Verify the affected package
+
+After adding or changing a launch test, run only its package through the ROS
+wrapper:
+
+```bash
+scripts/with-ros-env.sh python3 -m colcon test \
+  --packages-select <package_name> --mixin coverage-pytest \
+  --return-code-on-test-failure
+```
+
+Inspect `log/latest_test/<package_name>/stdout_stderr.log` on failure. Use
+[ros2-workspace-testing](../ros2-workspace-testing/) for test analysis,
+failed-test reruns, and the no-local-ROS escalation path.
+
 ## Related Resources
 
 - [add-test-file-python](../add-test-file-python/) — test file scaffolding and build integration
 - [ros2-workspace-testing](../ros2-workspace-testing/) — running tests with colcon
-- `packages/runtime/drqp_launch_testing/test/shutdown_behavior/SPEC.md` — the executable behavior matrix these rules derive from
+- [Executable behavior matrix](../../../packages/runtime/drqp_launch_testing/test/shutdown_behavior/SPEC.md) — source of these rules

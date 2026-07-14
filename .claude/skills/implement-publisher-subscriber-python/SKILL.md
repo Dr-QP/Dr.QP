@@ -1,89 +1,92 @@
 ---
 name: implement-publisher-subscriber-python
-description: 'Create ROS 2 Python publisher and subscriber nodes with rclpy initialization, message handling, and QoS configuration. Use when implementing topic-based communication in Python, creating rclpy pub/sub pairs, configuring QoS profiles, or building Python publisher/subscriber nodes. Keywords: rclpy, create_publisher, create_subscription, QoSProfile, Python pub/sub.'
+description: Implement rclpy publisher, subscriber, or paired nodes with complete executable shutdown, compatible QoS, package dependencies, and targeted validation. Use when adding Python ROS 2 topic communication or configuring an rclpy QoS profile.
 ---
 
 # Implement Python Publisher-Subscriber Pattern
 
-Generate ROS 2 Python publisher and subscriber nodes with proper rclpy initialization, message handling, QoS configuration, and project conventions.
+Implement a small, observable rclpy pub/sub node or pair. For C++ nodes, use
+[implement-publisher-subscriber-cpp](../implement-publisher-subscriber-cpp/).
 
-For C++ nodes, use [implement-publisher-subscriber-cpp](../implement-publisher-subscriber-cpp/) instead.
+## Gather compatible inputs
 
-## When to Use This Skill
+Require the message type, absolute or relative topic name, target package, node
+role (`publisher`, `subscriber`, or `both`), and a publish rate when needed.
+Accept only these QoS selections: `default`, `reliable`, `best_effort`, and
+`sensor_data`. Reject unsupported names rather than guessing service,
+parameter, or system-default semantics.
 
-- Implementing ROS 2 communication between Python nodes
-- Creating rclpy publisher/subscriber pairs for a message type
-- Need QoS configuration for reliable or best-effort communication
-- Setting up topic-based communication patterns in Python
+Declare `rclpy` and the message package in `package.xml`; add custom message
+packages as explicit dependencies. Put each node module inside the package's
+inner Python package and add its console script in `setup.py` only when it is
+an executable.
 
-## Prerequisites
+## Map QoS deliberately
 
-- Message type defined (built-in or custom)
-- Topic name determined
-- Python package exists or will be created
-- Understand QoS requirements
+Use the same QoS for both endpoints unless a documented compatibility reason
+requires otherwise. `sensor_data` should use the rclpy supplied profile; the
+other choices should state their policies explicitly:
 
-## Inputs
+| Input | `QoSProfile` shape |
+| --- | --- |
+| `default` | `QoSProfile(depth=10)` |
+| `reliable` | depth 10, `ReliabilityPolicy.RELIABLE` |
+| `best_effort` | depth 1, `ReliabilityPolicy.BEST_EFFORT` |
+| `sensor_data` | `qos_profile_sensor_data` |
 
-- **Message Type**: e.g., `std_msgs/msg/String`, `sensor_msgs/msg/Image`, `drqp_interfaces/msg/CustomMsg`
-- **Topic Name**: e.g., `/my_topic`, `/robot/state`
-- **Package Name**: Target package (detect or ask)
-- **Node Type**: `publisher`, `subscriber`, or `both`
-- **QoS Profile**: `default`, `reliable`, `best_effort`, `sensor_data`, `services`, `parameters`, `system_default`
-- **Publish Rate** (for publisher): Hz (default: 10.0)
+Do not promise delivery when a best-effort publisher meets a reliable
+subscriber: requested reliability must be compatible with what the publisher
+offers. Use a latched/transient-local profile only when the topic contract
+requires late joiners to receive the last value, and document that choice.
 
-## Workflow
+## Implement nodes and the executable lifecycle
 
-### Step 1: Validate Inputs
+Create publishers/subscriptions in the node constructor, retain the returned
+handles, validate configured rates, and keep callbacks non-blocking. Use a
+timer for periodic publishing. Provide a complete `main()` around each console
+entry point:
 
-Parse message type (package, message). Validate topic name. Determine if message is built-in or custom (add dependency).
+```python
+def main() -> int:
+    node = None
+    try:
+        rclpy.init()
+        node = ExampleNode()
+        rclpy.spin(node)
+    except (KeyboardInterrupt, ExternalShutdownException):
+        return 0
+    finally:
+        if node is not None:
+            node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
+    return 0
+```
 
-### Step 2: Determine Package and Location
+Import `ExternalShutdownException` from `rclpy.executors`; allow unexpected
+exceptions to surface after cleanup. An optional launch file belongs in
+`launch/` and needs the corresponding `launch`/`launch_ros` dependencies.
 
-`<package>/<node_name>_node.py`. If package missing, suggest [create-ros2-package-python](../create-ros2-package-python/) first.
+## Validate the package
 
-### Step 3: Generate Publisher Node
+Add unit or node tests with [add-test-file-python](../add-test-file-python/),
+then build and test only the affected package:
 
-rclpy Node, QoSProfile, `create_publisher`, `create_timer`. Include copyright, TODO for message population.
+```bash
+scripts/with-ros-env.sh python3 -m colcon build \
+  --packages-up-to <package_name> --symlink-install
+scripts/with-ros-env.sh python3 -m colcon test \
+  --packages-select <package_name> --mixin coverage-pytest \
+  --return-code-on-test-failure
+```
 
-### Step 4: Generate Subscriber Node
+Use [ros2-workspace-testing](../ros2-workspace-testing/) for result logs and
+the escalation path; use [ros2-diagnostics](../ros2-diagnostics/) to inspect a
+running topic without turning this implementation skill into a diagnostics
+workflow.
 
-`create_subscription` with callback. Same QoS as publisher.
+## Related resources
 
-### Step 5: Map QoS Profile
-
-| Profile     | Reliability | Durability | History      |
-| ----------- | ----------- | ---------- | ------------ |
-| default     | Reliable    | Volatile   | Keep last 10 |
-| reliable    | Reliable    | Volatile   | Keep last 10 |
-| best_effort | Best effort | Volatile   | Keep last 1  |
-| sensor_data | Best effort | Volatile   | Keep last 5  |
-
-### Step 6: Update Build Configuration
-
-Add to `entry_points['console_scripts']` in setup.py.
-
-### Step 7: Update package.xml
-
-Add `rclpy` and message package dependency.
-
-### Step 8: Launch File (Optional)
-
-Create `launch/<nodes>_launch.py` with Node actions for publisher and subscriber.
-
-## Validation
-
-`colcon build --packages-select <pkg>`, source setup.bash, run both nodes, `ros2 topic echo <topic>`, `ros2 topic info <topic> -v`.
-
-## Edge Cases
-
-- Custom message: Add message package dependency
-- QoS mismatch: Warn if publisher/subscriber QoS may be incompatible
-- Rate too high: Warn if > 1000 Hz
-
-## Related Resources
-
-- [ROS 2 Writing Publisher/Subscriber (Python)](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Py-Publisher-And-Subscriber.html)
-- [ROS 2 QoS](https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Quality-of-Service-Settings.html)
-- [implement-publisher-subscriber-cpp](../implement-publisher-subscriber-cpp/)
+- [ROS 2 Python pub/sub tutorial](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Py-Publisher-And-Subscriber.html)
+- [ROS 2 QoS concepts](https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Quality-of-Service-Settings.html)
 - [create-ros2-package-python](../create-ros2-package-python/)
