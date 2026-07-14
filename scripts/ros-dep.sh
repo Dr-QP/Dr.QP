@@ -8,6 +8,11 @@ source "$script_dir/__utils.sh"
 # shellcheck source=/dev/null
 source "$script_dir/setup.bash"
 
+# Update apt package index to ensure we have the latest information about available packages.
+# It is crucial to have it here because rosdep will fail to resolve dependencies without apt cache
+# and (dev)container doesn't have apt cache populated
+sudo apt-get update
+
 # rosdep resolves package.xml declarations and asks apt only for dependencies
 # that are not already installed. -r is needed on arm64, which lacks Gazebo.
 # shellcheck disable=SC2154 # __utils.sh exports sources_dir.

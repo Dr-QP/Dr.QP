@@ -62,6 +62,7 @@ def build_pip_command(constraints_file: Path, requirements_file: Path) -> list[s
         'pip',
         'install',
         '--break-system-packages',
+        '--ignore-installed',
     ]
 
     if constraints_file.is_file():
