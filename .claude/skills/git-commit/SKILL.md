@@ -34,19 +34,19 @@ Generate conventional commit messages from the relevant git diff.
 
 **Types:**
 
-| Type       | Use when                                           |
-| ---------- | -------------------------------------------------- |
-| `feat`     | Adding new functionality or a new workflow         |
-| `fix`      | Correcting broken or incorrect behavior            |
-| `docs`     | Changing documentation only                        |
-| `style`    | Formatting-only changes                            |
-| `refactor` | Restructuring code without changing behavior       |
-| `perf`     | Improving runtime performance                      |
-| `test`     | Adding or correcting tests                         |
-| `build`    | Changing build or packaging behavior               |
-| `ci`       | Changing CI or CD automation                       |
-| `chore`    | Maintenance outside product behavior               |
-| `revert`   | Reverting an earlier commit                        |
+| Type       | Use when                                     |
+| ---------- | -------------------------------------------- |
+| `feat`     | Adding new functionality or a new workflow   |
+| `fix`      | Correcting broken or incorrect behavior      |
+| `docs`     | Changing documentation only                  |
+| `style`    | Formatting-only changes                      |
+| `refactor` | Restructuring code without changing behavior |
+| `perf`     | Improving runtime performance                |
+| `test`     | Adding or correcting tests                   |
+| `build`    | Changing build or packaging behavior         |
+| `ci`       | Changing CI or CD automation                 |
+| `chore`    | Maintenance outside product behavior         |
+| `revert`   | Reverting an earlier commit                  |
 
 ## Step-by-Step Workflows
 

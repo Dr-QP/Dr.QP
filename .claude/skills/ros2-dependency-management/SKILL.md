@@ -10,11 +10,11 @@ used. Package directories may occur anywhere below `packages/`; locate a
 package with `rg --files packages -g package.xml` rather than assuming a
 `packages/runtime` path.
 
-| Dependency | Declare it in | Install it with |
-| --- | --- | --- |
-| ROS package, apt library, compiler, or runtime system dependency | The consuming package's `package.xml` (`<depend>`, `<build_depend>`, or `<exec_depend>`) | `rosdep` |
-| PyPI runtime dependency of an `ament_python` package | Its packaging metadata (`install_requires` or the active equivalent), plus `package.xml` when it has a rosdep key | The post-build generated-requirements helper when system Python needs it |
-| Repository development, documentation, or notebook tool | Root `pyproject.toml` | `uv sync` into `.venv` |
+| Dependency                                                       | Declare it in                                                                                                     | Install it with                                                          |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| ROS package, apt library, compiler, or runtime system dependency | The consuming package's `package.xml` (`<depend>`, `<build_depend>`, or `<exec_depend>`)                          | `rosdep`                                                                 |
+| PyPI runtime dependency of an `ament_python` package             | Its packaging metadata (`install_requires` or the active equivalent), plus `package.xml` when it has a rosdep key | The post-build generated-requirements helper when system Python needs it |
+| Repository development, documentation, or notebook tool          | Root `pyproject.toml`                                                                                             | `uv sync` into `.venv`                                                   |
 
 Do not add a PyPI-only package to `package.xml` without a real rosdep key, and
 do not put ROS runtime dependencies solely in `pyproject.toml`.

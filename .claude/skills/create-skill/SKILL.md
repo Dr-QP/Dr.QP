@@ -40,11 +40,11 @@ Keep the body concise—well below 500 lines whenever practical. Put the core
 workflow and routing decisions in `SKILL.md`; add resources only when they
 remove repeated work or substantial context.
 
-| Resource | Add it when | Guidance |
-| --- | --- | --- |
-| `scripts/` | A deterministic operation would otherwise be rewritten or is error-prone. | Test the script, give it clear arguments and errors, and state exactly when to run it. |
+| Resource      | Add it when                                                                          | Guidance                                                                                      |
+| ------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `scripts/`    | A deterministic operation would otherwise be rewritten or is error-prone.            | Test the script, give it clear arguments and errors, and state exactly when to run it.        |
 | `references/` | Detailed schemas, policies, API material, or variant-specific procedures are needed. | Link directly from `SKILL.md` and say when to read it. Add a table of contents to long files. |
-| `assets/` | A file is copied or used in the generated output rather than read as instructions. | Keep templates, images, fonts, and boilerplate here. |
+| `assets/`     | A file is copied or used in the generated output rather than read as instructions.   | Keep templates, images, fonts, and boilerplate here.                                          |
 
 Do not add README files, changelogs, quick-reference duplicates, placeholder
 examples, or empty resource directories. Keep references one level from

@@ -176,7 +176,7 @@ pinned CI image unless the workflow itself is intentionally being updated.
 | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | [python-reformat.sh](../../../scripts/python-reformat.sh)       | Run Ruff format/autofix/import sorting across Python sources and scripts.                   |
 | [notebooks-format.sh](../../../scripts/notebooks-format.sh)     | Synchronize and format paired notebook sources, matching the CI notebook step.              |
-| [super-linter-local.sh](../../../scripts/super-linter-local.sh) | Run one local pass with all checks enabled and available autofixes applied. |
+| [super-linter-local.sh](../../../scripts/super-linter-local.sh) | Run one local pass with all checks enabled and available autofixes applied.                 |
 | [super-linter-env.sh](../../../scripts/super-linter-env.sh)     | Generate the shared Ansible, clang-format, Prettier, and validation settings for each pass. |
 
 For Python package linting beyond the reformat workflow, use the

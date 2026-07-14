@@ -1,4 +1,4 @@
 interface:
-  display_name: "Create Skill"
-  short_description: "Create and refine repository skills"
-  default_prompt: "Use $create-skill to create or refine a repository skill."
+  display_name: 'Create Skill'
+  short_description: 'Create and refine repository skills'
+  default_prompt: 'Use $create-skill to create or refine a repository skill.'

@@ -24,15 +24,15 @@ package is a direct dependency of both the manifest and target.
 
 Accept only these QoS profile names:
 
-| Profile | rclcpp construction | Intended use |
-| --- | --- | --- |
-| `default` | `rclcpp::QoS(10)` | General reliable, volatile topic |
-| `reliable` | `rclcpp::QoS(10).reliable()` | Delivery preferred over latency |
-| `best_effort` | `rclcpp::QoS(10).best_effort()` | Loss-tolerant streaming |
-| `sensor_data` | `rclcpp::SensorDataQoS()` | Sensor streams |
-| `services` | `rclcpp::ServicesQoS()` | Service-like request/reply topics only |
-| `parameters` | `rclcpp::ParametersQoS()` | ROS parameter-event style traffic only |
-| `system_default` | `rclcpp::SystemDefaultsQoS()` | Defer policy to the RMW implementation |
+| Profile          | rclcpp construction             | Intended use                           |
+| ---------------- | ------------------------------- | -------------------------------------- |
+| `default`        | `rclcpp::QoS(10)`               | General reliable, volatile topic       |
+| `reliable`       | `rclcpp::QoS(10).reliable()`    | Delivery preferred over latency        |
+| `best_effort`    | `rclcpp::QoS(10).best_effort()` | Loss-tolerant streaming                |
+| `sensor_data`    | `rclcpp::SensorDataQoS()`       | Sensor streams                         |
+| `services`       | `rclcpp::ServicesQoS()`         | Service-like request/reply topics only |
+| `parameters`     | `rclcpp::ParametersQoS()`       | ROS parameter-event style traffic only |
+| `system_default` | `rclcpp::SystemDefaultsQoS()`   | Defer policy to the RMW implementation |
 
 Reject any other value. Do not choose `services` or `parameters` for ordinary
 application topics merely because their reliability settings look suitable.

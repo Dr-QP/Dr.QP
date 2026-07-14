@@ -110,10 +110,10 @@ reformat and targeted validation:
 
 ## Troubleshooting
 
-| Issue                       | Likely Cause                    | Action                                                   |
-| --------------------------- | ------------------------------- | -------------------------------------------------------- |
-| Dirty working tree          | Local uncommitted changes       | Ask the user to commit or approve a stash workflow       |
-| Current branch is default   | Incorrect checkout              | Switch only with user authorization, then retry          |
-| Conflicts reported          | Feature and base diverged       | Follow `git-merge-resolve`; do not improvise a shortcut  |
-| Fetch fails                 | Network, remote, or auth issue  | Report the error without changing the configured remote  |
-| Push fails                  | Authentication unavailable      | Report the blocker; do not update refs through an API    |
+| Issue                     | Likely Cause                   | Action                                                  |
+| ------------------------- | ------------------------------ | ------------------------------------------------------- |
+| Dirty working tree        | Local uncommitted changes      | Ask the user to commit or approve a stash workflow      |
+| Current branch is default | Incorrect checkout             | Switch only with user authorization, then retry         |
+| Conflicts reported        | Feature and base diverged      | Follow `git-merge-resolve`; do not improvise a shortcut |
+| Fetch fails               | Network, remote, or auth issue | Report the error without changing the configured remote |
+| Push fails                | Authentication unavailable     | Report the blocker; do not update refs through an API   |

@@ -27,12 +27,12 @@ Use the same QoS for both endpoints unless a documented compatibility reason
 requires otherwise. `sensor_data` should use the rclpy supplied profile; the
 other choices should state their policies explicitly:
 
-| Input | `QoSProfile` shape |
-| --- | --- |
-| `default` | `QoSProfile(depth=10)` |
-| `reliable` | depth 10, `ReliabilityPolicy.RELIABLE` |
+| Input         | `QoSProfile` shape                       |
+| ------------- | ---------------------------------------- |
+| `default`     | `QoSProfile(depth=10)`                   |
+| `reliable`    | depth 10, `ReliabilityPolicy.RELIABLE`   |
 | `best_effort` | depth 1, `ReliabilityPolicy.BEST_EFFORT` |
-| `sensor_data` | `qos_profile_sensor_data` |
+| `sensor_data` | `qos_profile_sensor_data`                |
 
 Do not promise delivery when a best-effort publisher meets a reliable
 subscriber: requested reliability must be compatible with what the publisher

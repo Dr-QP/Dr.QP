@@ -12,11 +12,11 @@ use [add-test-file-cpp](../add-test-file-cpp/).
 
 Read the source and nearby tests, then choose the narrowest useful type:
 
-| Need | Test type | Placement |
-| --- | --- | --- |
-| Pure function or class behavior | Unit | `test/test_<module>.py` |
+| Need                                                 | Test type        | Placement                           |
+| ---------------------------------------------------- | ---------------- | ----------------------------------- |
+| Pure function or class behavior                      | Unit             | `test/test_<module>.py`             |
 | A node's callbacks, timers, or ROS graph interaction | Node integration | `test/test_<module>_integration.py` |
-| Multiple processes or a launch description | Launch | `test/test_<feature>_launch.py` |
+| Multiple processes or a launch description           | Launch           | `test/test_<feature>_launch.py`     |
 
 Keep one behavior family per file. When a target file already exists, extend it
 only when its fixture lifetime and purpose remain the same; otherwise add a

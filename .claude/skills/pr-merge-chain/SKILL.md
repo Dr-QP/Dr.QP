@@ -231,17 +231,17 @@ private worktree in place and report its path.
 
 ## Failure Handling
 
-| Situation                                 | Action                                                               |
-| ----------------------------------------- | -------------------------------------------------------------------- |
-| Top input is not an open PR               | Stop and report its current state.                                   |
-| Dependency metadata is missing/non-linear | Report the declared graph; require corrected metadata.               |
-| Member does not target the default branch | Stop before any merge and report its base.                           |
-| Root/successor draft state is invalid     | Stop before any merge and report the invalid state.                  |
-| A dependency is closed or missing         | Stop before any merge.                                               |
-| `git-merge-resolve` is incomplete         | Preserve its worktree and resume that delegated workflow.            |
-| Successor push is non-fast-forward        | Do not force-push; re-discover the chain after user direction.       |
-| Successor cannot be promoted              | Keep it draft and report the GitHub error.                           |
-| A delegated `pr-merge` is blocked         | Stop the chain at that PR and return its evidence.                   |
+| Situation                                 | Action                                                         |
+| ----------------------------------------- | -------------------------------------------------------------- |
+| Top input is not an open PR               | Stop and report its current state.                             |
+| Dependency metadata is missing/non-linear | Report the declared graph; require corrected metadata.         |
+| Member does not target the default branch | Stop before any merge and report its base.                     |
+| Root/successor draft state is invalid     | Stop before any merge and report the invalid state.            |
+| A dependency is closed or missing         | Stop before any merge.                                         |
+| `git-merge-resolve` is incomplete         | Preserve its worktree and resume that delegated workflow.      |
+| Successor push is non-fast-forward        | Do not force-push; re-discover the chain after user direction. |
+| Successor cannot be promoted              | Keep it draft and report the GitHub error.                     |
+| A delegated `pr-merge` is blocked         | Stop the chain at that PR and return its evidence.             |
 
 ## Related Skills
 
