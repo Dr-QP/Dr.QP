@@ -4,14 +4,14 @@ Implement a container-backed Codex responder alongside the existing Claude
 responder. Every enabled responder executes in the repository's ROS Jazzy
 container and can inspect code and run the same verification commands.
 
-Use `openai/codex-action` in `.github/workflows/codex-review.yml`. The action
-runs `codex exec` in the job container. Do not use GitHub-hosted `@codex
-review`, because that feature delegates work to Codex Cloud rather than this
-repository's container image.
+Use `openai/codex-action` in the `codex-respond` job in
+`.github/workflows/ai-responder.yml`. The action runs `codex exec` in the job
+container. Do not use GitHub-hosted `@codex review`, because that feature
+delegates work to Codex Cloud rather than this repository's container image.
 
-Both responder workflows are controlled by the repository configuration
-variable `AI_RESPONDERS`, exposed as a workflow environment value. Its allowed
-values are a lowercase, comma-separated set with no whitespace:
+Both responder jobs are controlled by the repository configuration variable
+`AI_RESPONDERS`, exposed as a workflow environment value. Its allowed values
+are a lowercase, comma-separated set with no whitespace:
 
 | `AI_RESPONDERS` value | Enabled responders |
 | -------------------- | ------------------ |
@@ -26,9 +26,10 @@ exact-token matching, so `notclaude` must never enable Claude.
 
 ## Implementation constraints
 
-- Preserve the execution model in `.github/workflows/claude-review.yml`:
-  `ghcr.io/dr-qp/jazzy-ros-desktop:edge`, PR-head checkout for comment events,
-  and withheld agent write tokens when protected workflow files change.
+- Preserve the execution model in `.github/workflows/ai-responder.yml`:
+  `ghcr.io/dr-qp/jazzy-ros-desktop:edge`, PR-head checkout in each responder
+  job for comment events, and withheld agent write tokens when protected
+  workflow files change.
 - Use the existing `pr-review` skill for `@codex review`; Codex must publish a
   GitHub pull-request review, including `APPROVE` when it finds no issues.
 - Keep the existing `require-ai-review.yml` policy. Action-posted reviews appear
