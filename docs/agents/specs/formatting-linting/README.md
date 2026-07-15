@@ -19,8 +19,8 @@ PR #440 establishes these ownership decisions:
 4. `super-linter-env.sh` generates the settings used by both GitHub Actions and the local wrapper;
    checked-in autofix/check env files are no longer configuration authorities.
 5. Pre-commit is a changed-file feedback layer. It runs native Ruff, notebook formatting,
-   ShellCheck, whitespace/merge checks, actionlint, gitleaks, and agent-file validation without
-   starting the Super-Linter container.
+   Prettier, clang-format, ansible-lint, Hadolint, zizmor, ShellCheck, whitespace/merge checks,
+   actionlint, gitleaks, and agent-file validation without starting the Super-Linter container.
 6. Ament lint remains an additive ROS package gate. Ruff and Super-Linter do not replace package
    lint registration or `ament_flake8` compatibility.
 
@@ -43,10 +43,10 @@ of Super-Linter, or fold notebook formatting back into `python-reformat.sh`.
 | ----------------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------- |
 | Ordinary Python                           | `python-reformat.sh`: Ruff format, fix, and explicit import-sort pass | Three native `ruff-pre-commit` hooks                     | `python-reformat.sh`; package `ament_flake8` where registered        |
 | Notebook MyST/paired notebooks            | Explicit `notebooks-format.sh` and `notebooks-sync.sh`                | `notebooks-format.sh` receives changed notebook Markdown | Explicit `notebooks-format.sh` after ordinary Python formatting      |
-| C/C++                                     | `super-linter-local.sh`: Super-Linter clang-format autofix/check      | No C++ formatter/check hook                              | Super-Linter clang-format; additive ament checks where registered    |
-| Ansible                                   | `super-linter-local.sh`: Super-Linter ansible-lint autofix/check      | No Ansible hook                                          | Super-Linter ansible-lint with repository-root offline configuration |
-| Markdown, YAML, JSON, JSONC               | `super-linter-local.sh`: Super-Linter Prettier autofix/check          | Generic whitespace/YAML checks only                      | Super-Linter Prettier                                                |
-| Bash, Dockerfile, workflows, secrets      | `super-linter-local.sh`                                               | ShellCheck, actionlint, and gitleaks                     | Super-Linter ShellCheck, Hadolint, actionlint, zizmor, and gitleaks  |
+| C/C++                                     | `super-linter-local.sh`: Super-Linter clang-format autofix/check      | Pinned staged clang-format                               | Super-Linter clang-format; additive ament checks where registered    |
+| Ansible                                   | `super-linter-local.sh`: Super-Linter ansible-lint autofix/check      | Pinned staged ansible-lint                               | Super-Linter ansible-lint with repository-root offline configuration |
+| Markdown, YAML, JSON, JSONC               | `super-linter-local.sh`: Super-Linter Prettier autofix/check          | Pinned staged Prettier plus basic whitespace/YAML checks | Super-Linter Prettier                                                |
+| Bash, Dockerfile, workflows, secrets      | `super-linter-local.sh`                                               | ShellCheck, Hadolint, actionlint, zizmor, and gitleaks   | Super-Linter ShellCheck, Hadolint, actionlint, zizmor, and gitleaks  |
 | CMake, XML, copyright, ROS-specific style | No unified repository command                                         | None                                                     | `drqp_lint_common`/ament tests, package by package                   |
 
 ## What PR #440 resolves
@@ -87,9 +87,8 @@ of Super-Linter, or fold notebook formatting back into `python-reformat.sh`.
    `python-reformat.sh` roots, while staged Ruff hooks can receive them.
 5. **Ruff still has two pins and three passes.** The uv lock and `ruff-pre-commit` revision differ,
    and import sorting remains a separate invocation because `I` is not selected in `ruff.toml`.
-6. **Fast hooks do not cover every Super-Linter-owned formatter.** C/C++, Ansible, and Prettier
-   defects can reach CI before the authoritative container-backed pass runs. This is an intentional
-   performance tradeoff today, but it needs a documented local/pre-push contract.
+6. **Fast-hook parity needs active maintenance.** Pre-commit now covers the formatter and validator
+   classes owned by Super-Linter, but every pin must be reviewed when the Super-Linter image changes.
 7. **The installed pre-push hook has no pre-push stages.** Devcontainer setup installs both hook
    types, but the current pre-commit configuration defines no `stages: [pre-push]` quality gate.
 8. **Editor tool versions are not authoritative.** clangd, the Prettier extension, and local
@@ -165,8 +164,8 @@ repository formatter owners.
 - **markdownlint adoption**: add a pinned/configured CI gate or document the extension as advisory.
 - **generic yamllint adoption**: evaluate only after excluding Ansible and avoiding a second style
   authority beside Prettier.
-- **fast-hook performance budget**: measure representative commits before adding C++, Ansible, or
-  Prettier hooks.
+- **fast-hook performance budget**: measure representative commits and set budgets for the staged
+  C++, Ansible, Prettier, Hadolint, and zizmor hooks.
 - **clang-tidy**: keep semantic/static analysis outside this formatting program.
 
 ## Success measures

@@ -1,0 +1,44 @@
+name: Validate Super-Linter tool versions
+
+on:
+  pull_request:
+    paths:
+      - .pre-commit-config.yaml
+      - .github/workflows/reformat.yml
+      - .github/workflows/validate-super-linter-tool-versions.yml
+      - docker/ros/ansible/playbooks/roles/dev_tools/defaults/main.yml
+      - scripts/super-linter-defaults.sh
+      - scripts/super-linter-local.sh
+      - scripts/validate-super-linter-tool-versions.sh
+  push:
+    branches:
+      - main
+    paths:
+      - .pre-commit-config.yaml
+      - .github/workflows/reformat.yml
+      - .github/workflows/validate-super-linter-tool-versions.yml
+      - docker/ros/ansible/playbooks/roles/dev_tools/defaults/main.yml
+      - scripts/super-linter-defaults.sh
+      - scripts/super-linter-local.sh
+      - scripts/validate-super-linter-tool-versions.sh
+  merge_group:
+    types:
+      - checks_requested
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate tool versions
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Validate pre-commit and local tool versions
+        run: scripts/validate-super-linter-tool-versions.sh
