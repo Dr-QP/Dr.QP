@@ -220,6 +220,35 @@ def test_pure_translation_follows_the_straight_line_stride_path(walker):
     assert target == expected
 
 
+@pytest.mark.parametrize(
+    ('command_x', 'command_y'),
+    [(1.0, 0.0), (-1.0, 0.0), (0.0, 1.0), (0.0, -1.0)],
+)
+def test_positive_commands_preserve_the_legacy_cardinal_gait_direction(
+    walker,
+    command_x,
+    command_y,
+):
+    """Positive command axes retain the established forward and left convention."""
+    phase = 0.17
+    leg, neutral_foot = walker.leg_tips_on_ground[0]
+    gait_offsets = walker.gait_gen.get_offsets_at_phase_for_leg(leg.label, phase)
+    steering = walker.command_to_twist(Point3D([command_x, command_y, 0.0]), 0.0)
+
+    target = next(
+        foot_target
+        for target_leg, foot_target in walker.targets_at(phase, steering)
+        if target_leg is leg
+    )
+
+    assert (target.x, target.y) == pytest.approx(
+        (
+            neutral_foot.x + gait_offsets.x * walker.step_length * command_x,
+            neutral_foot.y + gait_offsets.x * walker.step_length * command_y,
+        )
+    )
+
+
 def test_pure_rotation_follows_the_legacy_yaw_per_stance(walker):
     """Zero translation rotates a neutral foot by the derived stance yaw."""
     neutral_foot = walker.leg_tips_on_ground[0][1]

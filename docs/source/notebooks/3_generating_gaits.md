@@ -393,11 +393,10 @@ animate_hexapod_gait_with_direction(
 
 `DirectionalGaitGenerator` is a useful first model: rotate a one-dimensional
 foot offset into the requested direction and add it to every neutral foot
-position. The runtime controller has a subtly different question to answer,
-however. A movement command describes how the _body_ should move while the
-stance feet remain planted in the world. Once translation and yaw happen at
-the same time, rotating and adding foot offsets independently is no longer the
-motion of one rigid body.
+position. The runtime controller uses the same idea more carefully. It builds a
+phase-relative reference motion, then uses its inverse to shape each leg's
+horizontal target. This is a target-generation model, not an odometry estimate
+or a global contact model.
 
 The old runtime path generated a translation target and a rotation target,
 then took a weighted average of the two. That has three undesirable
@@ -409,76 +408,69 @@ consequences:
 - the resulting target is generally not the inverse of any rigid body pose,
   so a nominally planted foot drifts in the world.
 
-`WalkController` now starts from one planar body twist and derives every foot
-target from the corresponding SE(2) rigid motion. Translation and rotation are
-therefore _unified_: neither trajectory is generated or blended separately.
+`WalkController` now starts from one planar reference twist and derives every
+foot target from the corresponding SE(2) rigid motion. Translation and
+rotation are therefore _unified_: neither trajectory is generated or blended
+separately.
 
-### From a normalized command to a physical twist
+### From a normalized command to a physical reference velocity
 
-Let the planar joystick command be
-$\mathbf{u}=(u_x,u_y)^\mathsf{T}$ and let $\rho$ be the normalized turn
-command. `command_to_twist()` first clips the joystick to the Euclidean unit
-disk:
+Start with a familiar idea. A movement command tells the body to move forward
+or sideways and, independently, to turn. The planar joystick command is
+$\mathbf{u}=(u_x,u_y)^\mathsf{T}$ and $\rho$ is the normalized turn command.
+`command_to_twist()` first keeps the joystick inside the unit disk:
 
 \begin{equation}
 \bar{\mathbf{u}} =
 \frac{\mathbf{u}}{\max(1,\lVert\mathbf{u}\rVert_2)}.
 \end{equation}
 
-Using an L2 norm is important. Every point on the unit circle produces the
-same speed, so forward, lateral, and diagonal commands are isotropic. The
-retired controller used an L1 magnitude, $|u_x|+|u_y|$, which made a diagonal
-command behave differently from an axial one.
+The Euclidean length $\lVert\mathbf{u}\rVert_2$ measures ordinary straight-line
+distance. Consequently, every point on the unit circle requests the same
+speed: forward, sideways, and diagonal inputs are treated equally.
 
-The duration for which one foot is in stance depends on the selected gait:
+For a selected gait, a foot spends the fraction $1-d_{\mathrm{swing}}$ of a
+cycle on the ground. Its stance duration is therefore
 
 \begin{equation}
 T*{\mathrm{stance}} =
-T*{\mathrm{cycle}}(1-d\_{\mathrm{swing}}),
+T*{\mathrm{cycle}}(1-d\_{\mathrm{swing}}).
 \end{equation}
 
-where $d_{\mathrm{swing}}$ is the gait's swing fraction. The normalized inputs
-then become a physical body-frame twist:
+The controller turns normalized input into a physical reference linear
+velocity $\mathbf{v}$ and angular velocity $\omega$:
 
 \begin{equation}
 \begin{aligned}
 \mathbf{v} & =
 \bar{\mathbf{u}}\frac{L*{\mathrm{step}}}{T*{\mathrm{stance}}}, \\
 \omega & =
-\operatorname{clip}(\rho,-1,1)\,\omega\_{\max}, \\
-\boldsymbol{\xi} & = (v_x,v_y,\omega).
+\operatorname{clip}(\rho,-1,1)\,\omega\_{\max}.
 \end{aligned}
 \end{equation}
 
-Here $\mathbf{v}$ is expressed in the model's distance units per second and
-$\omega$ in radians per second. The runtime robot model uses metres; the
-notebook model traditionally uses millimetres. The equations work in either
-system as long as the geometry and `step_length` use the same distance unit.
-The input's z component is intentionally ignored: planar twist commands do
-not climb, and vertical motion remains the responsibility of swing height and
-the separately requested body pose.
+Here $\mathbf{v}$ has distance-per-second units and $\omega$ has
+radians-per-second units. The pair $(\mathbf{v},\omega)$ is a _planar
+reference twist_: a compact description of a flat translation and turn used to
+shape the gait. Its signs follow the existing gait convention; it is not a
+measured global body velocity. The command's z component is ignored; swing
+height and the separately requested body pose handle vertical motion.
 
-At full linear input, the body travels one configured step length over a
-stance interval:
+Define two helpful stride-sized quantities:
 
 \begin{equation}
-\Delta\mathbf{p}=\mathbf{v}T*{\mathrm{stance}}
-=\bar{\mathbf{u}}L*{\mathrm{step}}.
+\Delta\mathbf{p}=\mathbf{v}T*{\mathrm{stance}},
+\qquad
+\Delta\theta=\omega T*{\mathrm{stance}}.
 \end{equation}
 
-The angular counterpart of $\Delta\mathbf{p}$ is $\Delta\theta$. We define it
-as the signed yaw produced by applying the constant angular velocity $\omega$
-for one positive stance-duration interval:
+At full linear input, $\Delta\mathbf{p}$ has length
+$L_{\mathrm{step}}$. It is the reference-distance vector used below, not a
+measured global displacement. $\Delta\theta$ is the matching reference turn,
+not an accumulated world heading.
 
-\begin{equation}
-\Delta\theta = \omega T\_{\mathrm{stance}}.
-\end{equation}
-
-$\Delta\theta$ is a yaw _scale_ for one complete stride interval, not the
-robot's current or accumulated heading. The gait coordinate introduced below
-selects what signed fraction of this angle to use. An explicit
-`omega_max_rad_sec` is the preferred configuration. If it is absent, the
-legacy angle-per-stance setting is preserved by
+An explicit `omega_max_rad_sec` is preferred. When it is absent, the legacy
+angle-per-stance setting is preserved by
 
 \begin{equation}
 \omega*{\max}=
@@ -486,59 +478,50 @@ legacy angle-per-stance setting is preserved by
 {T*{\mathrm{stance}}}.
 \end{equation}
 
-Consequently, changing gait or cycle time retains the old configured yaw per
-stance while changing the corresponding angular velocity. The ROS parameter
-`rotation_speed_degrees` is deprecated, but remains as this compatibility
-mapping.
+Thus changing gait or cycle time preserves the old turn per stance while
+changing the corresponding angular velocity. `SteeringState` stores these
+physical values as `linear_velocity` and `angular_velocity`; its older
+`direction` and `rotation_direction` properties are read-only compatibility
+aliases.
 
-`SteeringState` stores the resulting physical values as `linear_velocity` and
-`angular_velocity`. Its older `direction` and `rotation_direction` properties
-are now read-only transition aliases; they no longer mean normalized input.
+### The gait offset is a signed reference coordinate
 
-### The gait offset is a time-like coordinate
+Internally, `WalkController` gives `ParametricGaitGenerator` unit step length
+and height. For each leg it receives two dimensionless quantities:
 
-Internally, `WalkController` configures `ParametricGaitGenerator` with unit
-step length and unit step height. For each leg it receives two dimensionless
-quantities:
-
-- $s$, the x offset in $[-\tfrac12,+\tfrac12]$; and
+- $s$, the horizontal offset in $[-\tfrac12,+\tfrac12]$; and
 - $h$, the normalized swing height in $[0,1]$.
 
-During swing, the cycloid carries $s$ from $-\tfrac12$ to $+\tfrac12$ while
-raising and lowering $h$. During stance, $s$ moves linearly back from
-$+\tfrac12$ to $-\tfrac12$ and $h=0$. The controller does not interpret $s$
-as a distance. Instead it uses $sT_{\mathrm{stance}}$ as the signed time at
-which to evaluate the commanded rigid motion. This is why the same unit gait
-profile can drive any step length, gait duty factor, and turn rate.
+During swing, $s$ increases from $-\tfrac12$ to $+\tfrac12$ while $h$ rises
+and falls. During stance, $s$ decreases from $+\tfrac12$ to $-\tfrac12$ and
+$h=0$. Thus $s$ is a label for one foot's progress along its path, not the
+controller's clock or the robot's global time.
 
-The relative yaw at coordinate $s$ is therefore
-
-\begin{equation}
-\theta(s) = s\Delta\theta
-=s\omega T\_{\mathrm{stance}}.
-\end{equation}
-
-The symbol $\theta(s)$ means the body's heading relative to the middle of the
-stride, where $s=0$ and $\theta(0)=0$. It is not an absolute world heading.
-The two stride endpoints are
-$\theta(-\tfrac12)=-\Delta\theta/2$ and
-$\theta(+\tfrac12)=+\Delta\theta/2$, so they are separated by the full angle
-$\Delta\theta$.
-
-### Integrating translation and yaw as one SE(2) motion
-
-A body-frame planar twist has the matrix representation
+The gait coordinate describes the foot, whereas the reference twist describes
+the body. They therefore run in opposite directions. Before sampling the
+reference motion, `targets_at()` uses
 
 \begin{equation}
-\hat{\boldsymbol{\xi}}=
-\begin{bmatrix}
-0 & -\omega & v_x\\
-\omega & 0 & v_y\\
-0 & 0 & 0
-\end{bmatrix}.
+\sigma=-s.
 \end{equation}
 
-Let $\mathbf{R}(\phi)$ denote the standard planar rotation matrix
+This sign is what preserves the established command convention: a positive
+forward or left command produces the same forward or left gait as before the
+twist implementation. The relative reference yaw is
+
+\begin{equation}
+\theta(\sigma)=\sigma\Delta\theta=\sigma\omega T\_{\mathrm{stance}}.
+\end{equation}
+
+This is a stride-relative angle centred at $\sigma=0$; it is not an absolute
+world heading.
+
+### A turn changes the direction of travel
+
+If the reference motion only translates, its displacement at coordinate
+$\sigma$ is $\sigma\Delta\mathbf{p}$. If it turns at the same time, its forward axis turns
+continuously, so that straight displacement is no longer exact. The exact
+planar rotation through an angle $\phi$ is
 
 \begin{equation}
 \mathbf{R}(\phi)=
@@ -548,81 +531,12 @@ Let $\mathbf{R}(\phi)$ denote the standard planar rotation matrix
 \end{bmatrix}.
 \end{equation}
 
-It rotates a planar vector from the body frame by the signed yaw $\phi$ into
-the stride-relative reference frame. Rotation matrices are orthogonal, so
-
-\begin{equation}
-\mathbf{R}(\phi)^{-1}
-=\mathbf{R}(\phi)^\mathsf{T}
-=\mathbf{R}(-\phi).
-\end{equation}
-
-This identity is used later to express a world-grounded foot in the moving
-body frame.
-
-At stride coordinate $s$, the body pose relative to its pose at $s=0$ is the
-SE(2) exponential
-
-\begin{equation}
-\mathbf{T}(s)=
-\exp\!\left(sT\_{\mathrm{stance}}\hat{\boldsymbol{\xi}}\right)
-=
-\begin{bmatrix}
-\mathbf{R}(\theta(s)) & \mathbf{p}(s)\\
-\mathbf{0}^\mathsf{T} & 1
-\end{bmatrix}.
-\end{equation}
-
-The block form above is shorthand for an ordinary $3\times3$ matrix.
-$\mathbf{p}(s)$ is the two-coordinate translation column
-
-\begin{equation}
-\mathbf{p}(s)=
-\begin{bmatrix}
-p_x(s)\\
-p_y(s)
-\end{bmatrix},
-\end{equation}
-
-and $\mathbf{0}$ is a two-entry column of zeros. The superscript
-$\mathsf{T}$ means _transpose_, which turns a column into a row:
-
-\begin{equation}
-\mathbf{0}=
-\begin{bmatrix}
-0\\
-0
-\end{bmatrix},
-\qquad
-\mathbf{0}^\mathsf{T}=
-\begin{bmatrix}
-0 & 0
-\end{bmatrix}.
-\end{equation}
-
-Writing out all the blocks makes their roles more visible:
-
-\begin{equation}
-\mathbf{T}(s)=
-\begin{bmatrix}
-\cos\theta(s) & -\sin\theta(s) & p_x(s)\\
-\sin\theta(s) & \cos\theta(s) & p_y(s)\\
-0 & 0 & 1
-\end{bmatrix}.
-\end{equation}
-
-The final row is a bookkeeping trick called _homogeneous coordinates_. A 2D
-point $(x,y)$ is temporarily written as the three-entry column
-$[x,y,1]^\mathsf{T}$. Multiplying it by $\mathbf{T}(s)$ rotates the first two
-coordinates, adds $p_x(s)$ and $p_y(s)$, and leaves the final $1$ unchanged.
-That extra coordinate lets one matrix represent both rotation and translation.
-
-The translation itself is computed from the twist by
+The corresponding translation is
 
 \begin{equation}
 \begin{aligned}
-\mathbf{p}(s) & =
-\mathbf{V}(\theta(s))\,s\Delta\mathbf{p},\\
+\mathbf{p}(\sigma) & =
+\mathbf{V}(\theta(\sigma))\,\sigma\Delta\mathbf{p},\\
 \mathbf{V}(\theta) & =
 \begin{bmatrix}
 \dfrac{\sin\theta}{\theta} &
@@ -633,22 +547,31 @@ The translation itself is computed from the twist by
 \end{aligned}
 \end{equation}
 
-In the definition of $\mathbf{V}(\theta)$, bare $\theta$ is the matrix's angle
-argument. The controller evaluates it at the stride-relative angle
-$\theta(s)$ defined above.
+You can read $\mathbf{V}$ as the correction that bends a straight displacement
+into an arc. When $\theta=0$, it becomes the identity matrix, so
+$\mathbf{p}(\sigma)=\sigma\Delta\mathbf{p}$. `_se2_translation()` evaluates the two
+fractions with short polynomial approximations (Taylor expansions) near zero.
+This avoids both division by zero and loss of numerical precision from
+subtracting nearly equal numbers.
 
-This is a stride-relative pose used to construct leg targets, not an
-accumulated global pose or an odometry estimate. The current controller does
-not integrate the twist across cycles.
+For readers who know matrices, the same rigid motion can be written compactly
+as an SE(2) transform. “SE(2)” is only a name for the set of flat motions made
+from a rotation and a translation:
 
-The $\mathbf{V}$ matrix is the crucial coupling term. $\mathbf{v}$ is fixed in
-the _rotating body frame_; as yaw changes, the same body-frame velocity points
-in a continuously changing world direction. Its integral is a circular arc,
-not the straight displacement $s\Delta\mathbf{p}$. Using the straight
-displacement would be exact only when $\omega=0$ and only a first-order
-approximation otherwise.
+\begin{equation}
+\mathbf{T}(\sigma)=
+\begin{bmatrix}
+\mathbf{R}(\theta(\sigma)) & \mathbf{p}(\sigma)\\
+\mathbf{0}^\mathsf{T} & 1
+\end{bmatrix}.
+\end{equation}
 
-For $\omega\ne0$, the instantaneous centre of rotation in body coordinates is
+The final row is a bookkeeping device called homogeneous coordinates. It lets
+one $3\times3$ matrix rotate and translate a two-dimensional point. The code
+uses the equivalent closed form above; $\mathbf{0}^\mathsf{T}$ is simply the
+row $[0,0]$. No group theory is required to use it.
+
+When $\omega\ne0$, the arc has instantaneous centre
 
 \begin{equation}
 \mathbf{c}=
@@ -658,78 +581,55 @@ v_x/\omega
 \end{bmatrix}.
 \end{equation}
 
-This gives a geometric reading of a combined command: each foot traces the
-arc imposed by the same centre of rotation, but its radius depends on that
-foot's neutral position. A weighted translation/rotation blend cannot recover
-these leg-specific arcs.
+This is a useful geometric picture, but it is undefined for a zero turn. In
+that case the path is a straight line instead.
 
-The ratios in $\mathbf{V}$ are indeterminate if evaluated directly at
-$\theta=0$. `_se2_translation()` uses their Taylor expansions for
-$|\theta|<10^{-5}$:
+### Inverse reference motion gives the horizontal foot target
 
-\begin{equation}
-\begin{aligned}
-\frac{\sin\theta}{\theta}
-&=1-\frac{\theta^2}{6}+\frac{\theta^4}{120}+\mathcal{O}(\theta^6),\\
-\frac{1-\cos\theta}{\theta}
-&=\frac{\theta}{2}-\frac{\theta^3}{24}
-+\frac{\theta^5}{720}+\mathcal{O}(\theta^7).
-\end{aligned}
-\end{equation}
-
-Besides avoiding division by zero, this prevents cancellation in
-$1-\cos\theta$ for nearly straight motion and makes the transition through
-zero yaw continuous.
-
-### World-grounded feet require the inverse body pose
-
-Let $\mathbf{r}_i$ be leg $i$'s neutral foot position, captured when the
-controller is constructed. Let $\mathbf{q}_i(s)$ be the target expressed in
-the current body frame. A planted foot must reconstruct to the same world
-point after applying the body pose:
+Let $\mathbf{r}_i$ be leg $i$'s neutral horizontal foot position and let
+$\mathbf{q}_i(s)$ be its target in body coordinates. To make one target the
+inverse of the reference motion sampled at $\sigma=-s$, solve
 
 \begin{equation}
-\mathbf{R}(\theta(s))\mathbf{q}\_i(s)+\mathbf{p}(s)
-=\mathbf{r}\_i.
+\mathbf{R}(\theta(-s))\mathbf{q}\_i(s)+\mathbf{p}(-s)
+=\mathbf{r}\_i
 \end{equation}
 
-Solving for the target gives the central equation implemented by
-`_foot_target_for_stride_offset()`:
+for $\mathbf{q}_i(s)$. Since reversing a rotation means changing its angle's
+sign, the result is
 
 \begin{equation}
 \boxed{
 \mathbf{q}\_i(s)=
-\mathbf{R}(-\theta(s))
-\left(\mathbf{r}\_i-\mathbf{p}(s)\right)
-}.
+\mathbf{R}(-\theta(-s))
+\left(\mathbf{r}\_i-\mathbf{p}(-s)\right).
+}
 \end{equation}
 
-This inverse is also the reason for an apparent sign change from the simple
-directional decorator. The decorator commands where the _foot_ should move;
-the twist commands where the _body_ should move. If the body moves forward
-over a planted foot, the foot necessarily moves backward when observed in the
-body frame.
-
-The important limiting cases fall out of the same equation:
+The limiting cases are a quick check on the signs:
 
 \begin{equation}
 \begin{array}{lll}
 \omega=0
 &\Longrightarrow&
-\mathbf{q}\_i(s)=\mathbf{r}\_i-s\Delta\mathbf{p},\\[4pt]
+\mathbf{q}\_i(s)=\mathbf{r}\_i+s\Delta\mathbf{p},\\[4pt]
 \mathbf{v}=\mathbf{0}
 &\Longrightarrow&
-\mathbf{q}\_i(s)=\mathbf{R}(-s\Delta\theta)\mathbf{r}\_i,\\[4pt]
+\mathbf{q}\_i(s)=\mathbf{R}(s\Delta\theta)\mathbf{r}\_i,\\[4pt]
 \mathbf{v}=\mathbf{0},\ \omega=0
 &\Longrightarrow&
 \mathbf{q}\_i(s)=\mathbf{r}\_i.
 \end{array}
 \end{equation}
 
-The horizontal target follows this inverse rigid motion in both swing and
-stance. Swing only adds the independent vertical term
-$hL_{\mathrm{height}}$. When there is no motion, `targets_at()` returns exact
-copies of the neutral feet rather than evaluating a tiny residual path.
+This equation does **not** mean the controller maintains a global odometry
+pose or proves that every stance foot is fixed in one world frame. Different
+legs have different $s$ values at the same gait phase, so they use different
+reference samples $\mathbf{T}(-s)$. A full global contact model would track one
+body pose and a separate world touchdown point for each foot. The current
+controller instead uses this inverse-rigid-motion shape to make each leg's
+local horizontal path consistent with the established gait convention. Swing
+adds the independent vertical term $hL_{\mathrm{height}}$.
 
 ### Time-based steering and phase
 
@@ -790,12 +690,12 @@ twist space, assuming reachability is monotonic from rest along that ray. It
 returns the largest sampled safe scale; if even the stationary pose is
 invalid, it returns zero motion.
 
-Scaling all three components together matters. It preserves
-$v_y/v_x$, $\omega/\lVert\mathbf{v}\rVert_2$, and the instantaneous centre of
-rotation $\mathbf{c}$. In other words, saturation slows and shortens the
-commanded rigid motion without changing straight travel into a turn or
-changing the radius of a commanded arc. Independently clipping translation
-and yaw would change the path the operator requested.
+Scaling all three components together matters. When the relevant components
+are nonzero, it preserves the linear direction, the turn-to-speed ratio, and
+the instantaneous centre of rotation $\mathbf{c}$. In other words, saturation
+slows and shortens the commanded rigid motion without changing straight travel
+into a turn or changing the radius of a commanded arc. Independently clipping
+translation and yaw would change the path the operator requested.
 
 This runtime check supersedes the retired `stride_limits.yaml` polar table and
 its translation-only clamping. It evaluates the actual combined path against
@@ -804,12 +704,13 @@ failure to reject an overlong stride.
 
 ### Target generation and body posing stay separate
 
-The locomotion target is deliberately world-grounded. `targets_at()` accepts
-the historical `body_direction` and `body_rotation` arguments for transition
-compatibility but does not fold them into the gait path. The caller constructs
-the independently requested body pose with `body_transform()` and applies it
-before solving IK. Keeping target evaluation pure makes future trajectory
-samples deterministic and avoids applying body translation or rotation twice.
+`targets_at()` produces only the local locomotion path. It accepts the
+historical `body_direction` and `body_rotation` arguments for transition
+compatibility but deliberately does not fold them into that path. The caller
+constructs an independently requested body pose with `body_transform()` and
+applies it before solving IK. Keeping target evaluation pure makes future
+trajectory samples deterministic and avoids applying body translation or
+rotation twice.
 
 ### Putting it all together
 

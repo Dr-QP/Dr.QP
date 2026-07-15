@@ -25,20 +25,26 @@ set(drqp_gazebo_full_launch_tests
 )
 
 set(drqp_gazebo_launch_tests ${drqp_gazebo_smoke_launch_tests})
-if("$ENV{DRQP_GAZEBO_TEST_MODE}" STREQUAL "all")
+if("$ENV{DRQP_TEST_MODE}" STREQUAL "slow")
   list(APPEND drqp_gazebo_launch_tests ${drqp_gazebo_full_launch_tests})
 endif()
 
-# Gazebo simulation tests spin up a full simulator and can legitimately take
-# several minutes to complete, so allow at least 5 minutes before timing out.
+# Each balance-mode parameter starts a separate Gazebo simulation. The full
+# direction matrix therefore needs more time than the other launch tests.
+set(drqp_gazebo_balance_mode_test_timeout 480)
 set(drqp_gazebo_test_timeout 300)
 
 foreach(test_file IN LISTS drqp_gazebo_launch_tests)
+  set(test_timeout ${drqp_gazebo_test_timeout})
+  if(test_file STREQUAL "test_robot_control_balance_mode.py")
+    set(test_timeout ${drqp_gazebo_balance_mode_test_timeout})
+  endif()
+
   # Each launch test boots Gazebo and exercises several robot/board scenarios, so
   # it needs well over the 60s add_launch_test default before completing.
   drqp_add_ros_isolated_launch_test(
     ${test_file}
-    TIMEOUT ${drqp_gazebo_test_timeout}
+    TIMEOUT ${test_timeout}
     APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}
   )
 endforeach()

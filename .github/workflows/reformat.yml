@@ -103,6 +103,7 @@ jobs:
             - packages/**/*.py
             - py_packages/**/*.py
             - scripts/python-reformat.sh
+            - scripts/notebooks-format.sh
             - .clang-format
             - '**/*.md'
             - '**/*.markdown'

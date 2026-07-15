@@ -217,7 +217,7 @@ class WalkController:
             gait_offsets = self.gait_gen.get_offsets_at_phase_for_leg(leg.label, phase)
             foot_target = self._foot_target_for_stride_offset(
                 leg_tip,
-                float(gait_offsets.x),
+                -float(gait_offsets.x),
                 steering,
             )
             foot_target.z += gait_offsets.z * self.step_height

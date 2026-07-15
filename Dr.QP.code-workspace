@@ -172,7 +172,7 @@
         "console": "integratedTerminal",
         "python": "/usr/bin/python3",
         "env": {
-          "DRQP_GAZEBO_TEST_MODE": "all"
+          "DRQP_TEST_MODE": "slow"
         },
       }
     ]

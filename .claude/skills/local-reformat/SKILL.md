@@ -54,8 +54,8 @@ autofixes and must run with the same elevated sandbox permission.
    notebooks:
 
    ```bash
-   scripts/python-reformat.sh
-   scripts/notebooks-format.sh
+   scripts/python-reformat.sh # py files only
+   scripts/notebooks-format.sh # docs/source/notebooks/*.md only
    ```
 
 2. Run Super-Linter using the pinned CI image and configuration:
