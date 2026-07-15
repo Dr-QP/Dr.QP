@@ -100,9 +100,9 @@ shared by every job that uses that credential.
 
 ## Conditional implementation order
 
-| Order | Spec | Result |
-| ----- | ---- | ------ |
-| 1 | [01 — Private-only managed-auth deployment](01-private-managed-auth-deployment.md) | A private, serialized direct-CLI job round-trips the refreshed `auth.json` through an OIDC-protected secret manager. |
+| Order | Spec                                                                               | Result                                                                                                               |
+| ----- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 1     | [01 — Private-only managed-auth deployment](01-private-managed-auth-deployment.md) | A private, serialized direct-CLI job round-trips the refreshed `auth.json` through an OIDC-protected secret manager. |
 
 ## Scope boundaries
 

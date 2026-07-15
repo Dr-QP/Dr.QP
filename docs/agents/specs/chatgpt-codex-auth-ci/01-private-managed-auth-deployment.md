@@ -151,11 +151,11 @@ ChatGPT-managed file authentication.
 - [ ] Codex is invoked directly through the CLI, not `openai/codex-action`.
 - [ ] The secret manager is authenticated using job-scoped GitHub OIDC.
 - [ ] Restore, Codex execution, and `always()` write-back use the same
-  `CODEX_HOME/auth.json` file.
+      `CODEX_HOME/auth.json` file.
 - [ ] The write-back stores the file Codex left on disk, with structural
-  validation before update.
+      validation before update.
 - [ ] All consumers of the credential share a stable concurrency group.
 - [ ] Cache, artifacts, logs, repository files, workflow outputs, and GitHub
-  secret mutation are absent from the credential path.
+      secret mutation are absent from the credential path.
 - [ ] The provider trust policy and secret permissions are least-privilege and
-  documented in the private deployment repository.
+      documented in the private deployment repository.
