@@ -259,6 +259,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6.0.3
         with:
+          # CodeQL flags this checkout with actions/untrusted-checkout-toctou/high
+          # Untrusted Checkout TOCTOU
+          # Insufficient protection against execution of untrusted code on a privileged workflow (issue_comment).
+          # However this is a False positive: preflight resolves issue_comment PR metadata, exposes is_fork,
+          # and responder jobs require is_fork != true. Fork PRs skip before checkout;
+          # allowed PRs use immutable head SHA, not a branch ref. CodeQL cannot trace that custom cross-job gate.
           ref: ${{ needs.preflight.outputs.checkout_ref }}
           fetch-depth: 1
           persist-credentials: false
