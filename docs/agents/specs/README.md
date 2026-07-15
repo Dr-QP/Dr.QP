@@ -7,12 +7,12 @@ counterparts, where they exist, live under `docs/source/Dev/`.
 The specs are grouped into **programs** — independent bodies of work but not unrelated — see
 [Program relationships](#program-relationships).
 
-| Program                                               | What it does                                                               | Source of rationale                                                       |
-| ----------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| [`locomotion/`](locomotion/README.md)                 | Foundation refactor: analytic-IK hot path, twist steering, time-based gait | [`ik-locomotion-analysis.md`](../../source/Dev/ik-locomotion-analysis.md) |
-| [`roadmap/`](roadmap/README.md)                       | Autonomy roadmap: joystick hexapod → autonomous AI home pet                | [`roadmap/index.md`](../../source/Dev/roadmap/index.md)                   |
-| [`formatting-linting/`](formatting-linting/README.md) | Unify formatter ownership, local/editor workflows, CI, and ROS lint gates  | (repository tooling audit, self-contained)                                |
-| [`containerized-ai-responders/`](containerized-ai-responders/README.md) | Run selectable Claude/Codex responders in the ROS CI container | (repository tooling audit, self-contained) |
+| Program                                                                 | What it does                                                               | Source of rationale                                                       |
+| ----------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [`locomotion/`](locomotion/README.md)                                   | Foundation refactor: analytic-IK hot path, twist steering, time-based gait | [`ik-locomotion-analysis.md`](../../source/Dev/ik-locomotion-analysis.md) |
+| [`roadmap/`](roadmap/README.md)                                         | Autonomy roadmap: joystick hexapod → autonomous AI home pet                | [`roadmap/index.md`](../../source/Dev/roadmap/index.md)                   |
+| [`formatting-linting/`](formatting-linting/README.md)                   | Unify formatter ownership, local/editor workflows, CI, and ROS lint gates  | (repository tooling audit, self-contained)                                |
+| [`containerized-ai-responders/`](containerized-ai-responders/README.md) | Run selectable Claude/Codex responders in the ROS CI container             | (repository tooling audit, self-contained)                                |
 
 ## Program relationships
 

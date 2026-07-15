@@ -13,12 +13,12 @@ Both responder jobs are controlled by the repository configuration variable
 `AI_RESPONDERS`, exposed as a workflow environment value. Its allowed values
 are a lowercase, comma-separated set with no whitespace:
 
-| `AI_RESPONDERS` value | Enabled responders |
-| -------------------- | ------------------ |
-| unset or `claude`    | Claude only (backward-compatible default) |
-| `codex`              | Codex only |
-| `claude,codex`       | Claude and Codex |
-| `none`               | Neither |
+| `AI_RESPONDERS` value | Enabled responders                        |
+| --------------------- | ----------------------------------------- |
+| unset or `claude`     | Claude only (backward-compatible default) |
+| `codex`               | Codex only                                |
+| `claude,codex`        | Claude and Codex                          |
+| `none`                | Neither                                   |
 
 The variable is an ordinary GitHub Actions repository or environment variable,
 not a secret. Credentials remain separate secrets. The implementation must use
@@ -45,9 +45,9 @@ exact-token matching, so `notclaude` must never enable Claude.
 
 ## Implementation order
 
-| Order | Spec | Result |
-| ----- | ---- | ------ |
-| 1 | 01 — Containerized Codex responder and toggle | Implemented in PR #448: secure, selectively enabled Codex responder with parity tests |
+| Order | Spec                                          | Result                                                                                |
+| ----- | --------------------------------------------- | ------------------------------------------------------------------------------------- |
+| 1     | 01 — Containerized Codex responder and toggle | Implemented in PR #448: secure, selectively enabled Codex responder with parity tests |
 
 ## Scope boundaries
 
