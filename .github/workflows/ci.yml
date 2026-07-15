@@ -36,6 +36,7 @@ env:
   ROS_DISTRO: jazzy
   REGISTRY: ghcr.io
   REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
+  CTEST_PARALLEL_LEVEL: '  ' # whitespace only == empty, auto mode parallel, aka -j to all ctest calls
 
 jobs:
   paths-filter:
@@ -359,7 +360,7 @@ jobs:
             test_status=0
             # -rA makes pytest report captured output for passing tests too (launch_pytest output is otherwise hidden on success).
             # PYTEST_ADDOPTS is used instead of --pytest-args because colcon can't forward pytest args to ctest-driven (ament_cmake) tests.
-            PYTEST_ADDOPTS="-rA --durations=0" python3 -m colcon test --event-handlers console_cohesion+ console_direct+ --return-code-on-test-failure --ctest-args=" ${CTEST_EXTRA_ARGS}" || test_status=$?
+            PYTEST_ADDOPTS="-rA --durations=0" python3 -m colcon test --event-handlers console_cohesion+ console_direct+ --return-code-on-test-failure || test_status=$?
 
             mkdir -p ./.tmp/devcontainer-ci
             rm -rf ./.tmp/devcontainer-ci/build ./.tmp/devcontainer-ci/log
@@ -369,8 +370,10 @@ jobs:
             exit "$test_status"
           env:
             # Pass the build args to devcontainer build
+            # devcontainers/ci expects newline-delimited KEY=VALUE entries.
+            # Without the block scalar, YAML folds these into one value.
+            |
             DRQP_TEST_MODE=${{ matrix.sim_test_mode }}
-            CTEST_EXTRA_ARGS=${{ matrix.sim_test_mode == 'slow' && '-j2' || '' }}
 
       - name: Publish devcontainer test results
         if: ${{ !cancelled() }}

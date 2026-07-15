@@ -36,7 +36,7 @@ from drqp_brain.balance_controller import (
     body_tilt_from_imu,
     imu_balance_stride_scale,
 )
-from drqp_brain.instance_guard import InstanceAlreadyRunningError, InstanceGuard
+from drqp_brain.instance_guard import domain_instance_guard, InstanceAlreadyRunningError
 from drqp_brain.joint_trajectory_builder import JointTrajectoryBuilder
 from drqp_brain.locomotion_kinematics import (
     AnalyticLocomotionKinematics,
@@ -939,7 +939,7 @@ def main():
         parser = argparse.ArgumentParser('Dr.QP Robot controller ROS node')
         filtered_args = rclpy.utilities.remove_ros_args()
         args = parser.parse_args(args=filtered_args[1:])
-        with InstanceGuard('drqp_brain'):
+        with domain_instance_guard('drqp_brain'):
             rclpy.init()
             guard_node = rclpy.create_node('drqp_brain_startup_guard')
             _assert_no_existing_brain_node(guard_node)
