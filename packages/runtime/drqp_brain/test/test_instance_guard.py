@@ -20,12 +20,16 @@
 
 from pathlib import Path
 
+import drqp_brain.instance_guard as instance_guard
 from drqp_brain.instance_guard import (
+    _acquire_launch_instance_guard,
+    _domain_scoped_guard_name,
     default_lock_dir,
     get_runtime_directory,
     InstanceAlreadyRunningError,
     InstanceGuard,
 )
+from launch.actions import EmitEvent, LogError
 import pytest
 
 
@@ -90,6 +94,16 @@ def test_instance_guard_rejects_duplicate_processes():
             duplicate_guard.acquire()
 
 
+def test_instance_guard_try_acquire_returns_false_for_duplicate_processes():
+    """Report lock contention without raising or waiting."""
+    lock_dir = Path('.tmp')
+
+    with InstanceGuard('test_drqp_brain_try_acquire', lock_dir=lock_dir):
+        duplicate_guard = InstanceGuard('test_drqp_brain_try_acquire', lock_dir=lock_dir)
+
+        assert not duplicate_guard.try_acquire()
+
+
 def test_instance_guard_allows_startup_after_release():
     """Release the singleton lock when the owning process exits."""
     lock_dir = Path('.tmp')
@@ -99,3 +113,46 @@ def test_instance_guard_allows_startup_after_release():
 
     with InstanceGuard('test_drqp_brain_released', lock_dir=lock_dir):
         pass
+
+
+@pytest.mark.parametrize(
+    ('ros_domain_id', 'expected_name'),
+    [
+        ('0', 'drqp_gazebo_sim-domain-0'),
+        ('42', 'drqp_gazebo_sim-domain-42'),
+    ],
+)
+def test_launch_instance_guard_name_is_scoped_by_ros_domain(ros_domain_id, expected_name):
+    """Give each ROS domain an independent launch-instance guard."""
+    assert _domain_scoped_guard_name('drqp_gazebo_sim', ros_domain_id) == expected_name
+
+
+def test_domain_scoped_instance_guards_allow_parallel_domains():
+    """Allow independent launch-instance guards in separate ROS domains."""
+    lock_dir = Path('.tmp')
+
+    with InstanceGuard(_domain_scoped_guard_name('test_stack', '1'), lock_dir=lock_dir):
+        with InstanceGuard(_domain_scoped_guard_name('test_stack', '2'), lock_dir=lock_dir):
+            pass
+
+
+def test_launch_instance_guard_shuts_down_when_lock_is_held(monkeypatch):
+    """Stop the launch cleanly instead of raising when the guard is held."""
+
+    class ContendedGuard:
+        name = 'drqp_gazebo_sim-domain-42'
+
+        def try_acquire(self):
+            return False
+
+    guard = ContendedGuard()
+    monkeypatch.setattr(instance_guard, 'InstanceGuard', lambda _name: guard)
+
+    context = type('LaunchContext', (), {'environment': {'ROS_DOMAIN_ID': '42'}})()
+    actions = _acquire_launch_instance_guard(context, 'drqp_gazebo_sim')
+
+    assert isinstance(actions[0], LogError)
+    assert isinstance(actions[1], EmitEvent)
+    assert actions[1].event.reason == (
+        'drqp_gazebo_sim-domain-42 is already running; refusing duplicate launch.'
+    )
