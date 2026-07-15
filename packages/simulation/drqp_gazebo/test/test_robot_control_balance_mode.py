@@ -33,14 +33,14 @@ _TILT_MAGNITUDE = 0.12
 _TILT_DIAGONAL = _TILT_MAGNITUDE / math.sqrt(2)
 
 _TILT_SCENARIOS = [
-    (0.0, +_TILT_MAGNITUDE),  # pitch+
-    (+_TILT_DIAGONAL, +_TILT_DIAGONAL),  # roll+ pitch+
-    (+_TILT_MAGNITUDE, 0.0),  # roll+
-    (+_TILT_DIAGONAL, -_TILT_DIAGONAL),  # roll+ pitch-
-    (0.0, -_TILT_MAGNITUDE),  # pitch-
-    (-_TILT_DIAGONAL, -_TILT_DIAGONAL),  # roll- pitch-
-    (-_TILT_MAGNITUDE, 0.0),  # roll-
-    (-_TILT_DIAGONAL, +_TILT_DIAGONAL),  # roll- pitch+
+    pytest.param(0.0, +_TILT_MAGNITUDE, id='pitch-positive'),
+    pytest.param(+_TILT_DIAGONAL, +_TILT_DIAGONAL, id='roll-pitch-positive'),
+    pytest.param(+_TILT_MAGNITUDE, 0.0, id='roll-positive'),
+    pytest.param(+_TILT_DIAGONAL, -_TILT_DIAGONAL, id='roll-positive-pitch-negative'),
+    pytest.param(0.0, -_TILT_MAGNITUDE, id='pitch-negative'),
+    pytest.param(-_TILT_DIAGONAL, -_TILT_DIAGONAL, id='roll-pitch-negative'),
+    pytest.param(-_TILT_MAGNITUDE, 0.0, id='roll-negative'),
+    pytest.param(-_TILT_DIAGONAL, +_TILT_DIAGONAL, id='roll-negative-pitch-positive'),
 ]
 
 
@@ -53,20 +53,29 @@ def generate_test_description():
 
 
 @pytest.mark.slow
+@pytest.mark.parametrize(('board_roll', 'board_pitch'), _TILT_SCENARIOS)
 @pytest.mark.launch(fixture=generate_test_description)
-def test_balance_mode_levels_body_on_all_tilt_angles(robot, generate_test_description):
-    """Keep level through all tilt directions without resetting between them."""
+def test_balance_mode_levels_body_at_tilt(
+    robot,
+    generate_test_description,
+    board_roll,
+    board_pitch,
+):
+    """Keep level at one board tilt in an isolated Gazebo simulation."""
     robot._arm_robot()
     initial_roll, initial_pitch = robot._sample_base_roll_pitch(
         settle_sim_time_sec=robot.POSE_SETTLE_DURATION
     )
     robot._set_balance_mode(True)
 
-    for board_roll, board_pitch in _TILT_SCENARIOS:
-        robot._assert_body_level_at_board_tilt(
-            board_roll, board_pitch, initial_roll, initial_pitch
-        )
+    robot._assert_body_level_at_board_tilt(
+        board_roll,
+        board_pitch,
+        initial_roll,
+        initial_pitch,
+    )
 
+    # Function scope creates a new simulator for every parameterized direction.
     yield
     _launch_description, proc_info = generate_test_description
     assert_processes_exited_cleanly(proc_info)
