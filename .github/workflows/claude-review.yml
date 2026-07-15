@@ -102,34 +102,44 @@ jobs:
               pullRequest?.head?.repo?.full_name &&
               pullRequest.head.repo.full_name !== `${context.repo.owner}/${context.repo.repo}`
             );
-            core.setOutput('ref', ref);
-            core.setOutput('prNumber', prNumber);
+
+            if (isFork) {
+              console.log(`Pull request originates from a fork: ${pullRequest.head.repo.full_name}. Not checking out the forked repository for security reasons.`);
+            } else {
+              console.log(`Pull request originates from the same repository: ${context.repo.owner}/${context.repo.repo}`);
+              core.setOutput('ref', ref);
+              core.setOutput('prNumber', prNumber);
+            }
             core.setOutput('isFork', isFork);
 
+      - name: Stop if originating from a fork
+        if: steps.checkout_ref.outputs.isFork == 'true'
+        run: |
+          echo "Pull request originates from a fork; stopping workflow execution."
+          exit 1
+
       - name: Authorize responder requester
-        id: authorization
         uses: actions/github-script@v9.0.0
-        env:
-          IS_FORK: ${{ steps.checkout_ref.outputs.isFork }}
         with:
           script: |
-            if (process.env.IS_FORK === 'true') {
-              core.setOutput('authorized', 'false');
-              core.info('Skipping responder authorization for a fork-originated pull request.');
-              return;
-            }
-
+            let permission;
             try {
               const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 username: context.actor,
               });
-              const authorized = ['admin', 'maintain', 'write'].includes(data.user?.permissions);
-              core.setOutput('authorized', String(authorized));
+              permission = data.user?.permissions;
             } catch (error) {
-              core.warning(`Could not verify write access for ${context.actor}: ${error.message}`);
-              core.setOutput('authorized', 'false');
+              throw new Error(
+                `Could not verify write access for ${context.actor}: ${error.message}`
+              );
+            }
+
+            if (!['admin', 'maintain', 'write'].includes(permission)) {
+              throw new Error(
+                `User ${context.actor} does not have permission to request the responder.`
+              );
             }
 
       - name: Check if protected workflow changed
@@ -197,7 +207,7 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Verify ROS command wrapper
-        if: steps.authorization.outputs.authorized == 'true' && steps.workflow_changed.outputs.workflowChanged == 'false'
+        if: steps.workflow_changed.outputs.workflowChanged == 'false'
         run: test -x scripts/with-ros-env.sh
 
       - name: Log withheld responder execution
@@ -206,7 +216,7 @@ jobs:
 
       - name: Claude Responder
         id: claude_responder
-        if: steps.authorization.outputs.authorized == 'true' && steps.workflow_changed.outputs.workflowChanged == 'false'
+        if: steps.workflow_changed.outputs.workflowChanged == 'false'
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -238,7 +248,7 @@ jobs:
           fi
 
       - name: Log debug stats
-        if: ${{ always() }}
+        if: steps.checkout_ref.outputs.isFork == 'false' && always()
         uses: ./.github/actions/log-debug-stats
         with:
           github-token: ${{ github.token }}
