@@ -166,22 +166,40 @@ configured_versions[actionlint]=$(pre_commit_rev https://github.com/rhysd/action
 configured_versions[zizmor]=$(sed -nE \
   's/^dev_tools_zizmor_version: v?([0-9.]+).*/\1/p' "$zizmor_defaults" | head -n 1)
 
+validation_failed=0
+
 for tool in prettier clang-format ansible-lint hadolint ruff shellcheck gitleaks actionlint zizmor; do
-  check_version "$tool"
+  if ! check_version "$tool"; then
+    validation_failed=1
+  fi
 done
 
 hadolint_entry_version=$(sed -nE \
   's/.*ghcr\.io\/hadolint\/hadolint:v?([0-9.]+).*/\1/p' "$pre_commit_config" | head -n 1)
-check_configured_version "hadolint entry" hadolint "$hadolint_entry_version"
+if ! check_configured_version "hadolint entry" hadolint "$hadolint_entry_version"; then
+  validation_failed=1
+fi
 
 super_linter_tag="v${image##*:v}"
-while IFS= read -r configured_tag; do
-  if [[ "$configured_tag" != "$super_linter_tag" ]]; then
-    printf 'Version mismatch for Super-Linter: local image %s, workflow %s\n' \
-      "$super_linter_tag" "$configured_tag" >&2
-    exit 1
-  fi
-done < <(sed -nE 's/.*super-linter\/super-linter@(v[0-9.]+).*/\1/p' \
+workflow_super_linter_tags=$(sed -nE \
+  's/.*super-linter\/super-linter@(v[0-9.]+).*/\1/p' \
   "$root_dir/.github/workflows/reformat.yml")
+
+if [[ -z "$workflow_super_linter_tags" ]]; then
+  echo "Could not find a recognized Super-Linter version tag in the workflow." >&2
+  validation_failed=1
+else
+  while IFS= read -r configured_tag; do
+    if [[ "$configured_tag" != "$super_linter_tag" ]]; then
+      printf 'Version mismatch for Super-Linter: local image %s, workflow %s\n' \
+        "$super_linter_tag" "$configured_tag" >&2
+      validation_failed=1
+    fi
+  done <<< "$workflow_super_linter_tags"
+fi
+
+if ((validation_failed)); then
+  exit 1
+fi
 
 echo "All pre-commit and local tool versions match $image."
