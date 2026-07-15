@@ -371,9 +371,14 @@ jobs:
         env:
           EXECUTION_FILE: ${{ steps.claude_responder.outputs.execution_file }}
         run: |
-          if grep --fixed-strings --quiet \
-            "You've hit your org's monthly spend limit" \
-            "$EXECUTION_FILE"; then
+          if jq --exit-status '
+            any(
+              .. | objects;
+              (.type? == "text") and
+              ((.text? | type) == "string") and
+              (.text | contains("You'\''ve hit your org'\''s monthly spend limit"))
+            )
+          ' "$EXECUTION_FILE" >/dev/null; then
             echo "::error::Claude hit the organization's monthly spend limit."
             exit 1
           fi
