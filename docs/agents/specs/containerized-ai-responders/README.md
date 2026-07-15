@@ -47,7 +47,7 @@ exact-token matching, so `notclaude` must never enable Claude.
 
 | Order | Spec | Result |
 | ----- | ---- | ------ |
-| 1 | [01 — Containerized Codex responder and toggle](01-containerized-codex-responder-and-toggle.md) | A secure, selectively enabled Codex responder with parity tests |
+| 1 | 01 — Containerized Codex responder and toggle | Implemented: secure, selectively enabled Codex responder with parity tests |
 
 ## Scope boundaries
 
