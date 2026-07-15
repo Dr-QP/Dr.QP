@@ -25,6 +25,7 @@ Systematic approach to resolving all PR feedback including review comments, CI f
 - Access to CI logs and test results via the [extract-github-actions-logs](../extract-github-actions-logs/) skill
 - Access to CodeQL security scan results via the [get-codeql-data](../get-codeql-data/) skill
 - Access to Codecov reports
+- `jq` for safe filtering of the paginated GraphQL output
 
 ## When to Delegate
 
@@ -45,29 +46,35 @@ Gather complete context before making changes.
 1. **Fetch PR review comments**:
 
 ```bash
-    # Use GitHub graphql API that returns per-thread resolution state
-    gh api graphql -f owner='<owner>' -f repo='<repo>' -F number=<pr-number> -f query='\
-       query($owner: String!, $repo: String!, $number: Int!) {\
-          repository(owner: $owner, name: $repo) {\
-             pullRequest(number: $number) {\
-                reviewThreads(first: 100) {\
-                   nodes {\
-                      isResolved\
-                      comments(first: 100) {\
-                         nodes {\
-                            body\
-                            author { login }\
-                            url\
-                         }\
-                      }\
-                   }\
-                }\
-             }\
-          }\
-       }'
+mkdir -p ./.tmp
+gh api graphql --paginate --slurp \
+  -f owner='<owner>' -f name='<repo>' -F number=<pr-number> \
+  -f query='query($owner: String!, $name: String!, $number: Int!, $endCursor: String) {
+    repository(owner: $owner, name: $name) {
+      pullRequest(number: $number) {
+        reviewThreads(first: 100, after: $endCursor) {
+          nodes {
+            id isResolved
+            comments(first: 100) {
+              pageInfo { hasNextPage endCursor }
+              nodes { id databaseId body author { login } url createdAt }
+            }
+          }
+          pageInfo { hasNextPage endCursor }
+        }
+      }
+    }
+  }' > ./.tmp/pr-<pr-number>-review-thread-pages.json
 ```
 
-    The fetch mechanism must expose each review thread's resolved state such as `isResolved`; `gh pr view <pr-number> --comments` alone is insufficient because it flattens comments and omits thread resolution metadata.
+    This query retains each opaque review-thread `id` and paginates every
+    thread page. For any returned thread whose `comments.pageInfo.hasNextPage`
+    is true, query that specific thread with `node(id: $thread)` and
+    `comments(first: 100, after: $endCursor)` until `hasNextPage` is false;
+    append the pages before classifying the thread. Do not silently treat the
+    first 100 comments as complete feedback. `gh pr view <pr-number>
+    --comments` is insufficient because it flattens comments and omits thread
+    resolution metadata.
 
 After fetching, **filter out resolved threads** using these rules (apply in order):
 
@@ -125,7 +132,16 @@ Resolve code review feedback systematically.
    - Validate approach with principal engineer perspective
    - Use TDD cycle: write test → implement → refactor
    - Link commit/change to specific review comment
-   - Mark comment as resolved after verification
+   - Reply in the thread, verify the change, then resolve only that exact
+     thread ID. Never resolve a thread merely because a commit exists:
+
+     ```bash
+     gh api graphql -f thread='<thread-graphql-id>' -f query='mutation($thread: ID!) {
+       resolveReviewThread(input: {threadId: $thread}) {
+         thread { id isResolved }
+       }
+     }'
+     ```
 
 2. **For each low-confidence comment (<70%)**:
    - Reply in-thread with interpretation and ask for confirmation
@@ -171,8 +187,8 @@ Systematically resolve failing tests.
 
 ```bash
    # ROS 2 example
-   scripts/with-ros-env.sh python -m colcon test --packages-select <package>
-   scripts/with-ros-env.sh python -m colcon test-result --verbose
+   scripts/with-ros-env.sh colcon test --packages-select <package>
+   scripts/with-ros-env.sh colcon test-result --verbose
 ```
 
 5. **Push and verify CI passes**:
@@ -237,9 +253,11 @@ Add tests for uncovered code.
 4. **Verify coverage improvement**:
 
 ```bash
-   # ROS 2 example with coverage
-   colcon build --cmake-args -DDRQP_ENABLE_COVERAGE=ON
-   colcon test
+   # ROS 2 example with coverage; keep the build and test package-scoped.
+   scripts/with-ros-env.sh colcon build --packages-up-to <package> \
+     --cmake-args -DDRQP_ENABLE_COVERAGE=ON
+   scripts/with-ros-env.sh colcon test --packages-select <package> \
+     --mixin coverage-pytest
    # Check coverage report
 ```
 
@@ -328,7 +346,9 @@ Post this template as a PR comment after completing all work:
 
 <!-- validate_skills: ignore-cross-reference-end -->
 
-Mark all resolved comments as resolved using GitHub API.
+Resolve only threads that were replied to and verified, using their GraphQL IDs
+from the paginated collection. Do not resolve a flattened REST comment or a
+completion-signaled thread that GitHub still marks unresolved.
 
 ### Pattern: Clarification Template
 

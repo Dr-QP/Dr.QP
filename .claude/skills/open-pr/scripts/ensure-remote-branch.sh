@@ -122,7 +122,7 @@ if upstream_ref="$(git rev-parse --abbrev-ref --symbolic-full-name "${branch_nam
   fi
 
   printf 'ACTION=push\n'
-  if push_output="$(git push 2>&1)"; then
+  if push_output="$(git push "${upstream_remote}" "refs/heads/${branch_name}:refs/heads/${upstream_branch}" 2>&1)"; then
     printf '%s\n' "${push_output}"
     printf 'RESULT=pushed\n'
     exit 0
@@ -137,7 +137,15 @@ printf 'BRANCH=%s\n' "${branch_name}"
 printf 'UPSTREAM=%s/%s\n' "${remote_name}" "${branch_name}"
 printf 'ACTION=push-with-upstream\n'
 
-if push_output="$(git push -u "${remote_name}" "${branch_name}" 2>&1)"; then
+if [[ "${branch_name}" == "$(current_branch)" ]]; then
+  push_command=(git push -u "${remote_name}" "${branch_name}")
+else
+  # Do not change the checked-out branch's upstream when --branch selects a
+  # different local branch. The explicit refspec still creates that remote ref.
+  push_command=(git push "${remote_name}" "refs/heads/${branch_name}:refs/heads/${branch_name}")
+fi
+
+if push_output="$("${push_command[@]}" 2>&1)"; then
   printf '%s\n' "${push_output}"
   printf 'RESULT=pushed-with-upstream\n'
   exit 0

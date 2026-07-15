@@ -1,6 +1,6 @@
 ---
 name: create-agent
-description: 'Create or update Claude Code custom agent files (.agent.md) with proper frontmatter, tool selection, orchestration patterns, and Codex trampolines. Use when creating a new subagent, editing files in .claude/agents/, wiring sub-agent orchestration, or syncing .codex/agents/ trampolines. Keywords: agent, subagent, .agent.md, frontmatter, trampoline, orchestration.'
+description: Create or update repository Claude Code subagents and matching Codex trampolines. Use when adding an agent in .claude/agents, defining its delegation scope or tools, or syncing its .codex/agents wrapper.
 ---
 
 # Create Custom Agent
@@ -18,13 +18,14 @@ Instructions for creating effective and maintainable custom agents (subagents) t
 
 Claude Code discovers every `*.md` file in `.claude/agents/`; this repository uses the `.agent.md` suffix so agent specs are easy to distinguish and validate. Codex consumes the same specs through minimal trampoline files in `.codex/agents/` (see "Codex Trampolines" below). Cursor reads them via the `.cursor/agents/` symlink.
 
-## Required Frontmatter
+## Agent Frontmatter
 
-Every agent file must include YAML frontmatter with the following fields:
+Every agent file must include `name` and `description`. Add `tools` or `model`
+only when their defaults do not suit the agent:
 
 ```yaml
 ---
-name: Agent Display Name
+name: test-specialist
 description: Brief description of the agent purpose and when to delegate to it
 tools: Bash, Read, Edit, Write, Grep, Glob
 model: inherit
@@ -35,9 +36,9 @@ model: inherit
 
 #### **name** (REQUIRED)
 
-- Identifier for the agent; shown in the UI and used when invoking the agent via the Agent tool
-- Use title case and be descriptive
-- Example: `Testing Specialist`
+- Unique identifier used when invoking the agent
+- Use lowercase letters and hyphens; the filename need not match it
+- Example: `test-specialist`
 
 #### **description** (REQUIRED)
 
@@ -54,7 +55,9 @@ model: inherit
 
 #### **model** (OPTIONAL)
 
-- Model the agent runs on: `sonnet`, `opus`, `haiku`, or `inherit` (use the parent conversation's model)
+- Model the agent runs on. Use an available alias (`sonnet`, `opus`, `haiku`,
+  or `fable`), `inherit` to use the parent conversation's model, or a full
+  model ID supported by the active provider (for example, `claude-opus-4-8`)
 - If omitted, the configured subagent default is used
 - Choose based on agent complexity: `haiku` for mechanical tasks, `sonnet`/`opus` for judgment-heavy work
 
@@ -118,7 +121,7 @@ Codex discovers agents through `.codex/agents/*.md`. Each trampoline is a minima
 
 ```markdown
 ---
-name: TDD Red
+name: tdd-red
 description: <same description as the canonical agent>
 ---
 
@@ -151,7 +154,8 @@ When creating or renaming an agent, add or update the matching trampoline. Keep 
 - [ ] Filename follows lowercase-with-hyphens convention with `.agent.md` suffix
 - [ ] File placed in `.claude/agents/`
 - [ ] Matching Codex trampoline exists in `.codex/agents/`
-- [ ] Relative links to skills (`../skills/<name>/`) and sibling agents resolve
+- [ ] Relative links to skills (for example,
+      `../skills/create-skill/SKILL.md`) and sibling agents resolve
 
 ### Quality Assurance
 
@@ -173,13 +177,17 @@ When creating or renaming an agent, add or update the matching trampoline. Keep 
 ## Testing and Validation
 
 1. Create the agent file with proper frontmatter
-2. Run `validate_agent_files --recommend .claude` (also enforced by pre-commit and CI)
-3. Start a Claude Code session and confirm the agent appears (`/agents`)
-4. Test with representative tasks: explicit invocation ("Use the TDD Red agent to…") and automatic delegation
-5. Verify tool access works as expected and the agent stays within scope
+2. Run `uv run validate_agent_files .claude/agents --kind agents --ci` (also
+   enforced by pre-commit and CI)
+3. Test with representative tasks: explicit invocation ("Use the TDD Red
+   agent to…") and automatic delegation
+4. Verify tool access works as expected and the agent stays within scope.
+   Claude Code detects changes in an existing `.claude/agents/` directory
+   automatically; restart only if that directory did not exist when the
+   session began.
 
 ## Additional Resources
 
 - [Claude Code subagents documentation](https://code.claude.com/docs/en/sub-agents)
-- [create-skill](../create-skill/) — for creating skills
+- [create-skill](../create-skill/SKILL.md) — for creating skills
 - Existing agents in `.claude/agents/` — use as reference implementations

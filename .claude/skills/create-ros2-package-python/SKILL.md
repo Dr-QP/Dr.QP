@@ -1,54 +1,27 @@
 ---
 name: create-ros2-package-python
-description: 'Create new ROS 2 Python (ament_python) package with proper structure, setup.py, package.xml, and pytest scaffolding. Use when creating a new Python ROS 2 package from scratch, setting up setup.py, setup.cfg, or scaffolding an rclpy node following colcon conventions. Keywords: Python package, ament_python, setup.py, rclpy, new package.'
+description: Create a ROS 2 Python (ament_python) package with its inner Python module, package metadata, console executable, and pytest scaffolding. Use when creating a new rclpy package, setting up setup.py or setup.cfg, or scaffolding a Python ROS 2 node in this workspace.
 ---
 
 # Create ROS 2 Python Package
 
-Generate a complete ROS 2 Python (`ament_python`) package with proper structure, build configuration, and test scaffolding following project conventions.
+Create a focused `ament_python` package that follows the workspace layout and
+can be built and tested immediately. For C++ packages, use
+[create-ros2-package-cpp](../create-ros2-package-cpp/).
 
-For C++ packages, use [create-ros2-package-cpp](../create-ros2-package-cpp/) instead.
-For mixed C++/Python packages, apply this skill for the Python side (`setup.py`, module structure, `.coveragerc`) and combine with the C++ skill for CMakeLists.txt and C++ structure.
+## Gather and validate inputs
 
-## When to Use This Skill
+Require a lowercase underscore-separated package name with the project
+`drqp_` prefix, its purpose, and its runtime dependencies. Default the location
+to `packages/runtime`; stop if the target directory already exists. Decide
+whether the package needs a console node and whether it will contain launch
+tests before creating files.
 
-- Creating a new ROS 2 Python package from scratch
-- Need proper package structure with package.xml, setup.py, and test setup
-- Setting up a new rclpy node or Python library in the workspace
+## Create the package layout
 
-## Prerequisites
-
-- Working in a ROS 2 workspace with colcon build system
-- Have identified package name
-- Know required dependencies (optional)
-
-## Inputs
-
-### Required
-
-- **Package Name**: Lowercase with underscores (e.g., `drqp_my_package`)
-
-### Optional
-
-- **Package Path**: Location for package (default: `packages/runtime`)
-- **Dependencies**: Comma-separated ROS 2 dependencies (e.g., `rclpy,std_msgs,sensor_msgs`)
-- **Description**, **Maintainer**, **License**: Defaults from git config or sensible values
-
-## Workflow
-
-### Step 1: Gather Requirements
-
-1. Request package name if not provided
-2. Validate package name: lowercase, numbers, underscores only; `drqp_` prefix for this project; no hyphens or special characters
-3. Ask for optional dependencies and description
-
-### Step 2: Determine Package Location
-
-1. Use `packages/runtime/` or provided path
-2. Full path: `{workspaceFolder}/{packagePath}/{packageName}`
-3. Verify directory does not already exist; if exists, stop and report error
-
-### Step 3: Create Package Structure
+Keep importable code inside the inner package directory. A console executable
+such as `drqp_example = drqp_example.example_node:main` must target a module
+under `<package_root>/<package_name>/`, never a peer of `setup.py`.
 
 ```
 <package_name>/
@@ -57,52 +30,87 @@ For mixed C++/Python packages, apply this skill for the Python side (`setup.py`,
 ├── setup.cfg
 ├── README.md
 ├── resource/<package_name>
-├── <package_name>/__init__.py
-├── test/__init__.py
+├── <package_name>/
+│   ├── __init__.py
+│   └── <node_name>_node.py
 ├── launch/
+├── test/
+│   ├── __init__.py
+│   └── test_<package_name>.py
 └── .coveragerc
 ```
 
-### Step 4: Generate package.xml
+Use `find_packages(exclude=['test', 'test.*'])` in `setup.py`; install the
+resource marker and `package.xml` as data files. Add only the console-script
+entries that package modules actually provide. Follow an existing package such
+as `packages/runtime/drqp_brain/` for the local metadata shape.
 
-Package format 3, name, version 0.0.0, description, maintainer, license. Build tool: `ament_python`. Runtime and test dependencies. Test deps: `ament_copyright`, `ament_flake8`, `ament_pep257`, `python3-pytest`.
+## Implement each rclpy executable completely
 
-### Step 5: Generate setup.py
+For every entry point, provide a `main()` that initializes ROS, creates and
+spins the node, then destroys it and shuts down in `finally`. Handle normal
+shutdown without hiding unrelated startup or runtime errors:
 
-`find_packages(exclude=['test'])`, data files, entry points, and declare pytest via `extras_require={'test': ['pytest']}` (the removed `tests_require` option is ignored by modern setuptools and emits a warning) so `colcon test` runs Python tests. Reference: `packages/runtime/drqp_brain/setup.py`.
+```python
+import rclpy
+from rclpy.executors import ExternalShutdownException
 
-### Step 6: setup.cfg and .coveragerc
 
-Create with install options and coverage configuration.
+def main() -> int:
+    node = None
+    try:
+        rclpy.init()
+        node = ExampleNode()
+        rclpy.spin(node)
+    except (KeyboardInterrupt, ExternalShutdownException):
+        return 0
+    finally:
+        if node is not None:
+            node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
+    return 0
+```
 
-### Step 7: README.md
+Use `if __name__ == '__main__': raise SystemExit(main())` only for direct
+module execution; the console script calls `main()` itself.
 
-Basic sections: Overview, Dependencies, Building (`colcon build --packages-up-to <pkg>`), Testing (`colcon test --packages-select <pkg>`, `colcon test-result --verbose`), Usage.
+## Declare dependencies and tests
 
-### Step 8: Test Scaffolding
+Use package format 3 with `ament_python` as the build type. Declare every ROS
+and message runtime dependency used by the package, including `rclpy` for a
+node. Add the workspace's standard test dependencies:
+`ament_copyright`, `ament_flake8`, `ament_pep257`, and `python3-pytest`.
+Declare `extras_require={'test': ['pytest']}` rather than obsolete
+`tests_require`.
 
-`test/__init__.py`, `test/test_<package_name>.py` with pytest (never unittest). For ROS 2 node integration or launch tests use `launch_pytest`: add `@launch_pytest.fixture` on `generate_test_description` and `@pytest.mark.launch(fixture=generate_test_description)` on test functions. See [add-test-file-python](../add-test-file-python/) for templates.
+For a launch test, also add `<test_depend>launch_pytest</test_depend>` and
+`<test_depend>drqp_launch_testing</test_depend>`; add `launch` and
+`launch_ros` as runtime dependencies when the package ships or imports launch
+files. Follow [launch-testing](../launch-testing/) for the required fixture and
+exit-code pattern. For unit and node tests, use
+[add-test-file-python](../add-test-file-python/).
 
-### Step 9: Directory Placeholders
+## Verify with targeted ROS commands
 
-`launch/.gitkeep`, `resource/` marker.
+Use the ROS wrapper, an incremental build, and a package-specific test run:
 
-## Validation
+```bash
+scripts/with-ros-env.sh python3 -m colcon build \
+  --packages-up-to <package_name> --symlink-install
+scripts/with-ros-env.sh python3 -m colcon test \
+  --packages-select <package_name> --mixin coverage-pytest \
+  --return-code-on-test-failure
+```
 
-1. Verify all required files exist
-2. Check package.xml and setup.py syntax
-3. Optional: `colcon build --packages-select <package_name>` and `colcon test`
+Inspect `log/latest_build/` or
+`log/latest_test/<package_name>/stdout_stderr.log` when either command fails.
+Use [ros2-workspace-build](../ros2-workspace-build/) or
+[ros2-workspace-testing](../ros2-workspace-testing/) for their full execution
+and no-local-ROS escalation procedures.
 
-## Edge Cases
+## Related resources
 
-- **Existing package**: Stop and report error
-- **Invalid name**: Reject hyphens, uppercase, special characters
-- **Missing deps**: Warn if rclpy not specified
-
-## Related Resources
-
-- [ROS 2 Package Creation Tutorial](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Creating-Your-First-ROS2-Package.html)
+- [ROS 2 package tutorial](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Creating-Your-First-ROS2-Package.html)
 - [create-ros2-package-cpp](../create-ros2-package-cpp/)
-- [ros2-workspace-build](../ros2-workspace-build/)
-- [Coding Conventions in AGENTS.md](../../../AGENTS.md)
-- Example: `packages/runtime/drqp_brain/`
+- [Coding conventions](../../../AGENTS.md)

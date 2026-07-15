@@ -1,78 +1,71 @@
 ---
 name: create-state-machine-cpp
-description: 'Create C++ state machine implementation with enum-based states, transitions, events, and lifecycle management for robotics behavior. Use when implementing robot behavior control or finite state machines in C++, state transition tables, or ROS 2 lifecycle integration for rclcpp nodes. Keywords: C++ state machine, enum State, process_event, transitions, FSM.'
+description: Create a flat, enum-based C++ finite-state machine for robotics behavior, with explicit events, transition validation, and unit tests. Use for a compact C++ behavior controller; use ROS lifecycle management or a dedicated state-machine framework when lifecycle or hierarchical states are required.
 ---
 
-# Create C++ State Machine
+# Create a C++ State Machine
 
-Generate a C++ state machine implementation with enum-based states, transitions, events, and lifecycle management following robotics behavior patterns.
+Implement a small, flat finite-state machine: one active enum state, explicit
+events, and a transition table. This skill does not implement hierarchical,
+orthogonal, or history states, and it does not make an rclcpp node a ROS 2
+lifecycle node. Route lifecycle-node behavior to
+[ros2-lifecycle-management](../ros2-lifecycle-management/); choose a dedicated
+state-machine framework when nesting or concurrent regions are requirements.
 
-For Python state machines (the default in this project), use [create-state-machine-python](../create-state-machine-python/) instead.
+## Gather inputs
 
-## When to Use This Skill
+Require the target package name, machine name, states, initial state, events,
+and valid transitions. Require an explicit decision on any guard and on the
+action to take for an invalid event. Verify the package exists, or create it
+first with [create-ros2-package-cpp](../create-ros2-package-cpp/).
 
-- Implementing robot behavior control in C++
-- Creating finite state machines for system modes
-- Need structured state transitions with guards and actions
-- Building hierarchical state machines or reactive control systems
+Use valid C++ identifiers for generated enum values. Do not silently invent
+domain transitions: present a proposed table when the caller has not supplied
+one and obtain confirmation before implementation.
 
-## Prerequisites
+## Implement the flat machine
 
-- Understand required states and their behavior
-- Know valid transitions between states
-- Identified events that trigger transitions
-- C++ package exists or will be created
+Place public code in `include/<package>/<machine_name>_sm.h` and implementation
+in `src/<machine_name>_sm.cpp`. Keep the public API small:
 
-## Inputs
+```cpp
+enum class State { kIdle, kWalking, kStopped };
+enum class Event { kStart, kStop, kFault };
 
-- **Machine Name**: e.g., `robot_behavior`, `motion_control`
-- **States**: Comma-separated (e.g., `idle,walking,turning,stopped`)
-- **Initial State**: Must be in states list
-- **Transitions**, **Events**: Optional, generate common ones
-- **ROS 2 Integration**: yes/no for lifecycle node wrapper
+class StateMachine {
+public:
+  explicit StateMachine(State initial_state);
+  [[nodiscard]] State state() const noexcept;
+  bool processEvent(Event event);
+};
+```
 
-## Workflow
+Represent allowed `(state, event) -> state` transitions in one table or one
+`switch` that is straightforward to audit. `processEvent` must return `false`
+without changing state when an event is invalid or a guard fails. Invoke exit
+actions before state assignment and entry actions after it; keep action
+failures observable through the caller's chosen error policy.
 
-### Step 1: Validate Inputs
+Only add an rclcpp adapter when requested. Keep it separate from the state
+machine: subscribe for events, publish state changes, and avoid embedding ROS
+ownership or spinning rules in the reusable class.
 
-At least 2 states. State names: valid identifiers (lowercase, underscores). Initial state in list.
+## Test and integrate
 
-### Step 2: Determine Package and Location
+Add tests for the initial state, every allowed transition, invalid events,
+guard rejection, and entry/exit action order where applicable. Use
+[add-test-file-cpp](../add-test-file-cpp/) for the unit-test target and CMake
+integration. If validating behavior by starting nodes or a launch file, use
+[launch-testing](../launch-testing/) instead.
 
-`src/<machine_name>_sm.cpp`, `include/<package>/<machine_name>_sm.hpp`.
+Add the implementation to the package library target and ensure the public
+header is installed with the package. Build and test through the targeted
+commands in the linked test/build skills; all ROS and colcon commands must use
+`scripts/with-ros-env.sh`.
 
-### Step 3: Design Transition Table
+## Related resources
 
-Generate default transitions. Document: states, transitions, events.
-
-### Step 4: Generate Implementation
-
-Header: enum State, enum Event, `to_string()` helpers, `StateMachine` class with `process_event()`, callbacks. Implementation: `setup_transitions()`, `execute_transition()`, entry/exit callbacks.
-
-### Step 5: ROS 2 Integration (Optional)
-
-Node wrapper: publishers for state, subscribers for events, timer for state publishing. Topics: `/<machine_name>/state`, `/<machine_name>/event`.
-
-### Step 6: Test File
-
-Test initial state, valid transition, invalid transition, state sequence, entry/exit callbacks. See [add-test-file-cpp](../add-test-file-cpp/).
-
-### Step 7: State Diagram
-
-Add Mermaid diagram to README: `stateDiagram-v2`, states, transitions.
-
-### Step 8: Update Build
-
-Include new files in CMakeLists.txt.
-
-## Edge Cases
-
-- Circular transitions: Allow state to self
-- Multiple transitions: Same state to multiple targets by event
-- Invalid events: Handle gracefully
-- Guard failures: Log when guard blocks
-
-## Related Resources
-
-- [create-state-machine-python](../create-state-machine-python/)
-- [create-ros2-package-cpp](../create-ros2-package-cpp/), [add-test-file-cpp](../add-test-file-cpp/)
+- [create-ros2-package-cpp](../create-ros2-package-cpp/)
+- [add-test-file-cpp](../add-test-file-cpp/)
+- [launch-testing](../launch-testing/)
+- [ros2-lifecycle-management](../ros2-lifecycle-management/)

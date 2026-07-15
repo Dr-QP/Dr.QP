@@ -1,51 +1,33 @@
 ---
 name: microvm-sandbox
-description: 'Run build, test, and lint commands through the devcontainer in cloud microVM sandboxes where ROS 2 is not natively installed. Use in Cursor cloud sessions or similar sandbox VMs, when running devcontainer up/exec, when colcon builds need the containerized ROS environment, or when a local colcon/ros2 command fails because ROS 2 is not installed on the host — do not give up after such a failure, escalate here. Keywords: devcontainer, microVM, sandbox, cloud VM, devcontainer exec, ros-dep.sh, cursor cloud, colcon command not found, ros2 command not found, ROS_DISTRO not set, setup.bash No such file or directory, ROS 2 not installed, with-ros-env.sh fails.'
+description: Run ROS 2 build, test, or lint commands through this repository's devcontainer when a cloud microVM host has no ROS installation. Use for devcontainer up or exec, Docker-backed sandbox testing, and local ROS-environment escalation.
 ---
 
-# microVM Sandbox Workflows
+# microVM Sandbox
 
-## Development Container
+Use this skill after `scripts/with-ros-env.sh` establishes that ROS is absent
+from the host and a Docker daemon is available. If Docker is unavailable, use
+[remote-codespace-session](../remote-codespace-session/SKILL.md) instead.
 
-All build, test, and lint commands run inside the devcontainer defined in `.devcontainer/devcontainer.json`. The cloud VM does not have ROS 2 installed natively.
-
-The update script starts Docker and brings up the devcontainer using:
+Start the development container from the repository root when it is not
+already running:
 
 ```bash
 devcontainer up --workspace-folder /workspace \
   --mount "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock"
 ```
 
-The `devcontainer up` command runs all lifecycle hooks defined in `devcontainer.json`: `postCreateCommand` (directory ownership), `postStartCommand` (keyring setup, firewall, xpra), and `postAttachCommand` (rosdep install, Python venv creation, xpra startup).
-
-## Running Commands
-
-Use `devcontainer exec` to run commands inside the container:
+Run the original ROS command inside it, retaining the workspace wrapper:
 
 ```bash
-devcontainer exec --workspace-folder /workspace bash -c "<command>"
+devcontainer exec --workspace-folder /workspace bash -lc \
+  'scripts/with-ros-env.sh python3 -m colcon build --packages-up-to <package_name>'
 ```
 
-Build or ROS 2 commands, run them through the wrapper inside the exec:
-
-```bash
-devcontainer exec --workspace-folder /workspace bash -lc "
-  scripts/with-ros-env.sh <ros2 command here>
-"
-```
-
-For test runs that need generated workspace Python dependencies (for example `python-statemachine`), run `./scripts/ros-dep.sh` **after a successful `colcon build`** before `source scripts/setup.bash` and `colcon test`. The helper scans `build/` and `install/` for generated `requires.txt` files and installs them into the container's system interpreter with `pip --break-system-packages`. Inside the devcontainer these directories exist as Docker volume mount points, but they may be empty until the first build — that should no-op cleanly. Build, test, and lint commands should mirror those used in the repository CI workflows (see `.github/workflows/ci.yml`).
-
-## Gotchas
-
-- The colcon mixin config lives at `/root/.colcon/` inside the image and is pre-configured.
-- `--symlink-install` is required for Python coverage collection and hot-reloading.
-- Some packages emit CMake warnings about unused `DRQP_ENABLE_COVERAGE` — these are benign.
-- The `drqp_gazebo` simulation tests run headless and take ~20 seconds.
-- Generated workspace Python requirements are installed into the container's system interpreter by `./scripts/ros-dep.sh`; the developer `.venv` remains separate for local tooling.
-- The cloud VM's host Docker daemon must be running before `devcontainer up`.
-
-## Related Resources
-
-- [remote-codespace-session](../remote-codespace-session/) — when no Docker daemon is available at all (e.g. Codex Tasks), use a GitHub Codespace instead
-- [ros2-workspace-build](../ros2-workspace-build/) / [ros2-workspace-testing](../ros2-workspace-testing/) — colcon build/test workflows to run inside the container
+Translate test commands directly from
+[ros2-workspace-testing](../ros2-workspace-testing/SKILL.md), preserving their
+package selectors. After a successful build, run `./scripts/ros-dep.sh` inside
+the container only if a built package needs generated PyPI runtime
+requirements; it installs requirements emitted in `build/` or `install/` into
+the container's system interpreter. It does not replace `uv sync`, which
+manages the developer `.venv`.

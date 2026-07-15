@@ -1,158 +1,53 @@
 ---
 name: ros2-workspace-build
-description: Build ROS 2 Jazzy workspace using colcon. Use when asked to build a package, enable debug symbols, enable coverage instrumentation, compile workspace with specific flags, or perform incremental vs full builds. Supports single-package builds, dependency chains, debug builds, and coverage-enabled compilation.
+description: Build ROS 2 Jazzy packages with colcon in this workspace. Use when compiling a package, its dependency chain, a debug or coverage build, or when inspecting a build failure.
 ---
 
 # ROS 2 Workspace Build
 
-Build ROS 2 packages efficiently using colcon with support for incremental development builds, full workspace builds, debug symbols, and coverage instrumentation.
+Run these commands from the workspace root. Always use the ROS wrapper.
 
-## When to Use This Skill
+## Incremental build
 
-- Build a specific package and its dependencies
-- Compile only a single package without dependencies
-- Build with debug symbols for debugging
-- Enable coverage instrumentation for test analysis
-- Perform full workspace builds
-- Troubleshoot compilation errors
-- Clean and rebuild the workspace
+Build the requested package and its workspace dependencies during normal
+development:
 
-## Prerequisites
+```bash
+scripts/with-ros-env.sh python3 -m colcon build \
+  --symlink-install \
+  --event-handlers console_cohesion+ \
+  --packages-up-to <package_name>
+```
 
-- ROS 2 Jazzy installation
-- Workspace initialized with colcon
-- `scripts/with-ros-env.sh` available in workspace root
-- Build tools: CMake, Ninja/Make, compiler (clang or gcc)
+Use `--packages-select <package_name>` only when its dependencies are already
+built and known compatible. `--packages-up-to` is the default handoff to
+testing: after it succeeds, test the same package with
+`--packages-select <package_name>`.
 
-## Step-by-Step Workflows
+## Debug or coverage build
 
-### Workflow 1: Incremental Package Build (Recommended for Development)
+Append CMake options without dropping the incremental selector:
 
-Use for rapid iteration when developing a specific package.
+```bash
+scripts/with-ros-env.sh python3 -m colcon build \
+  --symlink-install \
+  --packages-up-to <package_name> \
+  --cmake-args -GNinja -D CMAKE_BUILD_TYPE=Debug \
+    -D DRQP_ENABLE_COVERAGE=ON
+```
 
-1. Build the package and its dependencies through the ROS wrapper:
+Use a full-workspace build only when explicitly requested. See
+[ros2-workspace-testing](../ros2-workspace-testing/SKILL.md) for the matching
+test and coverage commands.
 
-   ```bash
-   scripts/with-ros-env.sh python3 -m colcon build \
-     --symlink-install \
-     --event-handlers console_cohesion+ \
-     --packages-up-to <package_name>
-   ```
+## Failures and missing ROS
 
-2. Verify build success by checking `build/<package_name>/` and `install/<package_name>/` directories
+Inspect `log/latest_build/` after a build failure. A package can live anywhere
+under `packages/`; discover it with `rg --files packages -g package.xml` rather
+than assuming `packages/runtime/`.
 
-**Typical execution time**: 2-5 minutes depending on package size
-
-### Workflow 2: Build Single Package Only (No Dependencies)
-
-Use when you've only modified internal package code.
-
-1. Build only the specified package through the ROS wrapper:
-   ```bash
-   scripts/with-ros-env.sh python3 -m colcon build \
-     --symlink-install \
-     --event-handlers console_cohesion+ \
-     --packages-select <package_name>
-   ```
-
-**When to use**: You know the package's dependencies are already built
-
-### Workflow 3: Build with Debug Symbols
-
-Use when you need to debug code execution or attach a debugger.
-
-1. Build with debug symbols through the ROS wrapper:
-
-   ```bash
-   scripts/with-ros-env.sh python3 -m colcon build \
-     --symlink-install \
-     --event-handlers console_cohesion+ \
-     --packages-up-to <package_name> \
-     --cmake-args -GNinja -D CMAKE_BUILD_TYPE=Debug
-   ```
-
-2. Debug symbols will be available in the build artifacts
-
-### Workflow 4: Build with Coverage Instrumentation
-
-Use when preparing to run tests with coverage analysis.
-
-1. Build with coverage enabled through the ROS wrapper:
-
-   ```bash
-   scripts/with-ros-env.sh python3 -m colcon build \
-     --symlink-install \
-     --event-handlers console_cohesion+ \
-     --packages-up-to <package_name> \
-     --cmake-args -GNinja -D CMAKE_BUILD_TYPE=Debug -D DRQP_ENABLE_COVERAGE=ON
-   ```
-
-2. After running tests, coverage data will be available in `build/<package_name>/coverage.info` (C++) or `.coverage` (Python)
-
-### Workflow 5: Full Workspace Build
-
-**WARNING**: Full builds take 10-20+ minutes. Only use when explicitly requested or making cross-cutting changes.
-
-1. Build the entire workspace with all optimizations through the ROS wrapper:
-
-   ```bash
-   CMAKE_EXPORT_COMPILE_COMMANDS=1 \
-   CC=clang \
-   CXX=clang++ \
-   scripts/with-ros-env.sh python3 -m colcon build \
-     --symlink-install \
-     --event-handlers console_cohesion+ \
-     --base-paths "$(pwd)" \
-     --cmake-args \
-       -GNinja \
-       -D CMAKE_BUILD_TYPE=Debug \
-       -D DRQP_ENABLE_COVERAGE=ON \
-       --no-warn-unused-cli
-   ```
-
-2. Wait for all packages to complete (monitor progress in console)
-
-## Common Build Options Reference
-
-| Option                               | Purpose                            | Example                          |
-| ------------------------------------ | ---------------------------------- | -------------------------------- |
-| `--packages-up-to <pkg>`             | Build package and all dependencies | `--packages-up-to drqp_serial`   |
-| `--packages-select <pkg>`            | Build only specified package       | `--packages-select drqp_control` |
-| `--symlink-install`                  | Use symlinks for Python (faster)   | Always recommended               |
-| `--event-handlers console_cohesion+` | Cleaner console output             | Always recommended               |
-| `-GNinja`                            | Use Ninja build system (faster)    | `-GNinja`                        |
-| `-D CMAKE_BUILD_TYPE=Debug`          | Build with debug symbols           | For debugging                    |
-| `-D DRQP_ENABLE_COVERAGE=ON`         | Enable coverage instrumentation    | For test coverage                |
-
-## Troubleshooting
-
-| Issue                          | Cause                                 | Solution                                                                                                      |
-| ------------------------------ | ------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| "Command 'colcon' not found"   | Environment not sourced               | Re-run via `scripts/with-ros-env.sh`; if that also fails, see [Escalation](#escalation-no-ros-2-on-this-host) |
-| Compilation errors in C++ code | Missing dependencies or code errors   | Check `log/latest_build/` for details                                                                         |
-| "Package not found" error      | Package doesn't exist or wrong name   | Verify package name in `packages/runtime/` or `packages/simulation/`                                          |
-| Build takes very long          | Full workspace build or large package | Use `--packages-select` or `--packages-up-to` for incremental builds                                          |
-| "Permission denied" errors     | Cannot write to install directory     | Check workspace permissions with `ls -la install/`                                                            |
-| Linker errors after changes    | Stale build artifacts                 | Run cleanup: `./scripts/clean.fish` then rebuild                                                              |
-
-### Escalation: No ROS 2 on This Host
-
-If `scripts/with-ros-env.sh` itself fails (e.g. `/opt/ros/$ROS_DISTRO/setup.bash: No such file or directory`, or `ROS_DISTRO` unset), ROS 2 is not installed on this host and no local retry can succeed. **Do not give up** — run the same colcon command in a containerized environment:
-
-- **Docker daemon available** (e.g. Cursor cloud sessions) → use the [microvm-sandbox](../microvm-sandbox/SKILL.md) skill: `devcontainer exec --workspace-folder /workspace bash -lc "scripts/with-ros-env.sh <colcon command>"`
-- **No Docker daemon** (e.g. Codex Tasks) → use the [remote-codespace-session](../remote-codespace-session/SKILL.md) skill: run the command via `codespace-exec.sh` on a GitHub Codespace
-
-## Build Output Locations
-
-- **Build artifacts**: `build/<package_name>/`
-- **Installed packages**: `install/<package_name>/`
-- **Build logs**: `log/latest_build/`
-- **Compile commands (for IDE)**: `build/compile_commands.json`
-- **Coverage data (C++)**: `build/<package_name>/coverage.info`
-- **Coverage data (Python)**: `build/<package_name>/.coverage`
-
-## References
-
-- Refer to the official colcon build documentation for a complete description of available options.
-- Define custom build profiles (e.g., debug, release, coverage) in your workspace configuration or project-level config files as needed.
-- If your repository provides helper scripts for automated builds, follow the usage instructions documented alongside those scripts.
+If the wrapper reports that ROS is unavailable on the host, run the same
+command via [microvm-sandbox](../microvm-sandbox/SKILL.md) when Docker is
+available; otherwise use
+[remote-codespace-session](../remote-codespace-session/SKILL.md). Do not retry
+the command locally.
