@@ -72,14 +72,14 @@ defaults:
     shell: bash -xeuo pipefail {0}
 
 jobs:
-  paths-filter:
-    name: Need to run?
+  bootstrap:
+    name: Bootstrap
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:
       pull-requests: read
     timeout-minutes: 10
     outputs:
-      pass: ${{ steps.override.outputs.pass }}
+      need_to_run: ${{ steps.override.outputs.pass }}
       skip_reformat: ${{ steps.skip-tags.outputs.skip_reformat }}
       skip_super_linter: ${{ steps.skip-tags.outputs.skip_super_linter }}
     steps:
@@ -94,7 +94,7 @@ jobs:
         with:
           event-name: ${{ inputs.caller_event_name }}
           extra-filter: |
-            - .github/super-linter-*.env
+            - scripts/super-linter/**
             - .github/workflows/reformat.yml
             - docs/source/notebooks/**
             - ansible/**
@@ -184,11 +184,11 @@ jobs:
 
   reformat:
     name: Reformat
-    needs: paths-filter
+    needs: bootstrap
     if: >-
       inputs.should_run &&
-      needs.paths-filter.outputs.skip_reformat != 'true' &&
-      (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
+      needs.bootstrap.outputs.skip_reformat != 'true' &&
+      (needs.bootstrap.outputs.need_to_run == 'true' || inputs.force_run)
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     container:
       image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
@@ -246,11 +246,11 @@ jobs:
 
   super-linter:
     name: Super-Linter
-    needs: paths-filter
+    needs: bootstrap
     if: >-
       inputs.should_run &&
-      needs.paths-filter.outputs.skip_super_linter != 'true' &&
-      (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
+      needs.bootstrap.outputs.skip_super_linter != 'true' &&
+      (needs.bootstrap.outputs.need_to_run == 'true' || inputs.force_run)
     runs-on: 'ubuntu-24.04'
     outputs:
       changed: ${{ steps.patch.outputs.changed }}
@@ -337,11 +337,11 @@ jobs:
 
   commit-format-changes:
     name: Commit format changes
-    needs: [paths-filter, super-linter, reformat]
+    needs: [bootstrap, super-linter, reformat]
     if: >-
       always() &&
       inputs.should_run &&
-      (needs.paths-filter.outputs.pass == 'true' || inputs.force_run) &&
+      (needs.bootstrap.outputs.need_to_run == 'true' || inputs.force_run) &&
       (needs.super-linter.outputs.changed == 'true' || needs.reformat.outputs.changed == 'true')
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     environment: reformat-commit
@@ -515,7 +515,7 @@ jobs:
 
   gate:
     name: Reformat outputs gate
-    needs: [paths-filter, super-linter, reformat, commit-format-changes]
+    needs: [bootstrap, super-linter, reformat, commit-format-changes]
     if: always()
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:
