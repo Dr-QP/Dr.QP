@@ -1,103 +1,135 @@
 ---
 name: create-ros2-package-cpp
-description: 'Create new ROS 2 C++ (ament_cmake) package with proper structure, CMakeLists.txt, package.xml, and GTest scaffolding. Use when creating a new C++ ROS 2 package from scratch, setting up CMakeLists.txt, or scaffolding an rclcpp node or library following colcon conventions. Keywords: C++ package, ament_cmake, CMakeLists.txt, rclcpp, new package.'
+description: Create a new ROS 2 C++ ament_cmake package in this workspace, including its manifest, CMake targets, and focused C++ unit-test scaffold. Use for a new rclcpp library or executable package; use the Python package skill for ament_python packages and launch-testing for process-level tests.
 ---
 
-# Create ROS 2 C++ Package
+# Create a ROS 2 C++ Package
 
-Generate a complete ROS 2 C++ (`ament_cmake`) package with proper structure, build configuration, and test scaffolding following project conventions.
+Create a package with a library-first layout unless the requested node has no
+reusable logic. Keep production code in a library and make executables thin
+entry points; this makes the library directly testable.
 
-For Python packages, use [create-ros2-package-python](../create-ros2-package-python/) instead.
-For mixed C++/Python packages, apply this skill for the C++ side and combine with the Python skill for `setup.py` and Python module structure.
+Use [create-ros2-package-python](../create-ros2-package-python/) for an
+`ament_python` package. Route tests that start ROS processes to
+[launch-testing](../launch-testing/), rather than adding a C++ unit-test
+target for them.
 
-## When to Use This Skill
+## Gather and validate inputs
 
-- Creating a new ROS 2 C++ package from scratch
-- Need proper package structure with package.xml, CMakeLists.txt, and test setup
-- Setting up a new rclcpp node or C++ library in the workspace
+Require a package name, target location, description, license, maintainer,
+and the ROS/package dependencies actually used. Package names are lowercase
+letters, digits, and underscores; use the workspace's `drqp_` prefix for new
+project packages. Stop if the destination already exists.
 
-## Prerequisites
+This scaffold's coverage example applies only to the normal layout
+`packages/<group>/<package>` (for example, `packages/runtime/drqp_example`):
+the workspace helper is then at `../../cmake/ClangCoverage.cmake`. For a
+package elsewhere, do not copy that relative include or its coverage calls;
+ask for the appropriate project-level coverage integration.
 
-- Working in a ROS 2 workspace with colcon build system
-- Have identified package name
-- Know required dependencies (optional)
-
-## Inputs
-
-### Required
-
-- **Package Name**: Lowercase with underscores (e.g., `drqp_my_package`)
-
-### Optional
-
-- **Package Path**: Location for package (default: `packages/runtime`)
-- **Dependencies**: Comma-separated ROS 2 dependencies (e.g., `rclcpp,std_msgs,sensor_msgs`)
-- **Description**, **Maintainer**, **License**: Defaults from git config or sensible values
-
-## Workflow
-
-### Step 1: Gather Requirements
-
-1. Request package name if not provided
-2. Validate package name: lowercase, numbers, underscores only; `drqp_` prefix for this project; no hyphens or special characters
-3. Ask for optional dependencies and description
-
-### Step 2: Determine Package Location
-
-1. Use `packages/runtime/` or provided path
-2. Full path: `{workspaceFolder}/{packagePath}/{packageName}`
-3. Verify directory does not already exist; if exists, stop and report error
-
-### Step 3: Create Package Structure
+## Create the layout
 
 ```
-<package_name>/
+<package>/
 ├── CMakeLists.txt
 ├── package.xml
-├── README.md
-├── include/<package_name>/
-├── src/
-├── test/
-├── launch/
-└── config/
+├── include/<package>/<library>.h
+├── src/<library>.cpp
+├── src/<node>_main.cpp       # only when an executable is requested
+├── test/test_<library>.cpp
+├── launch/                   # only when a launch file is needed
+└── config/                   # only when configuration is needed
 ```
 
-### Step 4: Generate CMakeLists.txt
+Use the workspace's predominant `.h` public-header convention. Do not create
+empty directories, placeholder files, or a README unless the package needs
+user-facing setup or usage documentation.
 
-Include: project metadata, C++20, compiler warnings, `include(../../cmake/ClangCoverage.cmake)`, dependency finding via `ament_package_xml()`, library/executable targets, installation, `ament_lint_auto`, `drqp_lint_common`. Reference: `packages/runtime/drqp_control/CMakeLists.txt`.
+## Configure build targets
 
-### Step 5: Generate package.xml
+Use `ament_package_xml()` to obtain manifest dependency groups, find each
+build dependency, declare C++17 or a higher requested standard on every C++
+target, and install headers and runnable executables. Adapt this pattern to
+the actual targets and dependencies:
 
-Package format 3, name, version 0.0.0, description, maintainer, license. Build tool: `ament_cmake`. Runtime and test dependencies. Test deps: `ament_lint_auto`, `drqp_lint_common`, `ament_cmake_gmock`, `ament_cmake_pytest`.
+```cmake
+cmake_minimum_required(VERSION 3.22)
+project(<package_name>)
 
-### Step 6: README.md
+find_package(ament_cmake REQUIRED)
+ament_package_xml()
+foreach(dep ${${PROJECT_NAME}_BUILD_DEPENDS})
+  find_package(${dep} REQUIRED)
+endforeach()
 
-Basic sections: Overview, Dependencies, Building (`colcon build --packages-up-to <pkg>`), Testing (`colcon test --packages-select <pkg>`, `colcon test-result --verbose`), Usage.
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 
-### Step 7: Test Scaffolding
+add_library(<library_target> src/<library>.cpp)
+target_compile_features(<library_target> PUBLIC cxx_std_17)
+target_include_directories(<library_target> PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+ament_target_dependencies(<library_target> ${${PROJECT_NAME}_BUILD_DEPENDS})
 
-`test/test_<package_name>.cpp` with GTest, `ament_add_gmock`. See [add-test-file-cpp](../add-test-file-cpp/) for templates.
+install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+install(TARGETS <library_target>
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin)
 
-### Step 8: Directory Placeholders
+if(BUILD_TESTING)
+  include(../../cmake/ClangCoverage.cmake)
+  drqp_library_enable_coverage(<library_target>)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+  # Add the focused test target described below.
+endif()
 
-`launch/.gitkeep`, `config/.gitkeep`.
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_dependencies(${${PROJECT_NAME}_BUILD_EXPORT_DEPENDS})
+ament_package()
+```
 
-## Validation
+For an executable, use `add_executable`, link it to the library, apply
+`ament_target_dependencies`, and install it to `lib/${PROJECT_NAME}`. Add only
+the dependencies the code uses to `package.xml`; use `<depend>` unless the
+dependency is genuinely build- or runtime-only. Include `ament_lint_auto` and
+`drqp_lint_common` as test dependencies. Do not add `ament_cmake_pytest` to a
+C++-only package.
 
-1. Verify all required files exist
-2. Check package.xml and CMakeLists.txt syntax
-3. Optional: `colcon build --packages-select <package_name>` and `colcon test`
+## Add focused C++ tests
 
-## Edge Cases
+The current workspace default for ordinary C++ unit tests is Catch2 via
+`catch_ros2`; see [add-test-file-cpp](../add-test-file-cpp/) for the complete
+target recipe. Add `<test_depend>catch_ros2</test_depend>` when using it.
+Use `ament_cmake_gmock` only when interaction assertions or mocks are needed,
+and add its test dependency only then. Do not add a Python test framework for
+either case.
 
-- **Existing package**: Stop and report error
-- **Invalid name**: Reject hyphens, uppercase, special characters
-- **Missing deps**: Warn if rclcpp not specified
+For launch or multi-process behavior, add the launch-test dependencies that
+[launch-testing](../launch-testing/) specifies and follow that skill instead.
 
-## Related Resources
+## Validate
 
-- [ROS 2 Package Creation Tutorial](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Creating-Your-First-ROS2-Package.html)
-- [create-ros2-package-python](../create-ros2-package-python/)
+From the workspace root, use the ROS wrapper and incremental selectors:
+
+```bash
+scripts/with-ros-env.sh python3 -m colcon build --packages-up-to <package_name>
+scripts/with-ros-env.sh python3 -m colcon test --packages-select <package_name>
+scripts/with-ros-env.sh python3 -m colcon test-result --verbose
+```
+
+If ROS is unavailable locally, follow the escalation in
+[ros2-workspace-build](../ros2-workspace-build/) or
+[ros2-workspace-testing](../ros2-workspace-testing/). Inspect the package's
+logs under `log/latest_build/` or `log/latest_test/` when a command fails.
+
+## Related resources
+
+- [add-test-file-cpp](../add-test-file-cpp/)
 - [ros2-workspace-build](../ros2-workspace-build/)
-- [Coding Conventions in AGENTS.md](../../../AGENTS.md)
-- Example: `packages/runtime/drqp_control/`
+- [ros2-workspace-testing](../ros2-workspace-testing/)
+- [AGENTS.md](../../../AGENTS.md)

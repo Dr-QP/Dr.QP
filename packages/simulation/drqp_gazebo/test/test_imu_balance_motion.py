@@ -42,6 +42,23 @@ import pytest
 from robot_control_test_support import generate_test_description
 
 
+def _assert_balance_mode_full_stride_movement(
+    robot,
+    *,
+    stride_x: float,
+    stride_y: float,
+    direction_name: str,
+    expected_sign: int,
+) -> None:
+    """Run one cardinal full-stride regression in its own simulation."""
+    robot.assert_balance_mode_full_stride_movement(
+        stride_x=stride_x,
+        stride_y=stride_y,
+        direction_name=direction_name,
+        expected_sign=expected_sign,
+    )
+
+
 @pytest.mark.slow
 @pytest.mark.launch(fixture=generate_test_description)
 def test_direction_reversal_from_forward_to_backward(robot, generate_test_description):
@@ -55,10 +72,67 @@ def test_direction_reversal_from_forward_to_backward(robot, generate_test_descri
 
 @pytest.mark.slow
 @pytest.mark.launch(fixture=generate_test_description)
-def test_balance_mode_full_stride_movement_in_any_direction(robot, generate_test_description):
-    robot.assert_balance_mode_full_stride_movement_in_any_direction()
-    # Function-scoped generator: the simulation tears down at the yield, then the
-    # post-yield body verifies every non-simulator process exited cleanly.
+def test_balance_mode_full_stride_right_movement(robot, generate_test_description):
+    """Keep a pure right stride moving while IMU balance correction is active."""
+    _assert_balance_mode_full_stride_movement(
+        robot,
+        stride_x=0.0,
+        stride_y=-1.0,
+        direction_name='right',
+        expected_sign=-1,
+    )
+
+    yield
+    _launch_description, proc_info = generate_test_description
+    assert_processes_exited_cleanly(proc_info)
+
+
+@pytest.mark.slow
+@pytest.mark.launch(fixture=generate_test_description)
+def test_balance_mode_full_stride_forward_movement(robot, generate_test_description):
+    """Keep a pure forward stride moving while IMU balance correction is active."""
+    _assert_balance_mode_full_stride_movement(
+        robot,
+        stride_x=1.0,
+        stride_y=0.0,
+        direction_name='forward',
+        expected_sign=1,
+    )
+
+    yield
+    _launch_description, proc_info = generate_test_description
+    assert_processes_exited_cleanly(proc_info)
+
+
+@pytest.mark.slow
+@pytest.mark.launch(fixture=generate_test_description)
+def test_balance_mode_full_stride_backward_movement(robot, generate_test_description):
+    """Keep a pure backward stride moving while IMU balance correction is active."""
+    _assert_balance_mode_full_stride_movement(
+        robot,
+        stride_x=-1.0,
+        stride_y=0.0,
+        direction_name='backward',
+        expected_sign=-1,
+    )
+
+    yield
+    _launch_description, proc_info = generate_test_description
+    assert_processes_exited_cleanly(proc_info)
+
+
+@pytest.mark.slow
+@pytest.mark.launch(fixture=generate_test_description)
+def test_balance_mode_full_stride_left_movement(robot, generate_test_description):
+    """Keep a pure left stride moving while IMU balance correction is active."""
+    _assert_balance_mode_full_stride_movement(
+        robot,
+        stride_x=0.0,
+        stride_y=1.0,
+        direction_name='left',
+        expected_sign=1,
+    )
+
     yield
     _launch_description, proc_info = generate_test_description
     assert_processes_exited_cleanly(proc_info)

@@ -1,0 +1,10 @@
+---
+dev_tools_zizmor_version: v1.22.0
+dev_tools_zizmor_install_path: /usr/local/bin/zizmor
+dev_tools_zizmor_archives:
+  amd64:
+    target: x86_64-unknown-linux-gnu
+    checksum: f7633bbf155cddebd3fdfdcbfaa777a4e89e4da1bc719b08dfa9ae50e5daae46
+  arm64:
+    target: aarch64-unknown-linux-gnu
+    checksum: afa6ea4ad183582adaf1610399ed9e697322a2374d377ccdb149216840f5171d

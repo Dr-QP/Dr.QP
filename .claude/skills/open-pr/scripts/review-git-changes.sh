@@ -18,8 +18,8 @@ Usage:
   review-git-changes.sh [--base-ref <ref>] [--range <range>] [--stat-only]
 
 Options:
-  --base-ref <ref>   Base ref used to build the default comparison range.
-                     Default: origin/main
+  --base-ref <ref>   Base ref used to find the merge base for the default
+                     comparison range. Default: origin/main
   --range <range>    Explicit git revision range, for example main..HEAD.
   --stat-only        Skip the full patch and print summary sections only.
   -h, --help         Show this help text.
@@ -61,17 +61,23 @@ done
 
 require_git_repo
 
+if ! git rev-parse --verify --quiet HEAD >/dev/null; then
+  print_error "Repository does not contain any commits yet."
+  exit 2
+fi
+
 if [[ -z "${commit_range}" ]]; then
   if ! git rev-parse --verify --quiet "${base_ref}" >/dev/null; then
     print_error "Base ref not found: ${base_ref}"
     exit 2
   fi
-  commit_range="${base_ref}..HEAD"
-fi
 
-if ! git rev-parse --verify --quiet HEAD >/dev/null; then
-  print_error "Repository does not contain any commits yet."
-  exit 2
+  if ! merge_base="$(git merge-base "${base_ref}" HEAD)"; then
+    print_error "Could not determine merge base between ${base_ref} and HEAD."
+    print_error "Ensure both refs exist and have related commit histories."
+    exit 2
+  fi
+  commit_range="${merge_base}..HEAD"
 fi
 
 printf '== Branch ==\n'

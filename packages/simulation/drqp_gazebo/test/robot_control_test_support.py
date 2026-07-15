@@ -169,7 +169,9 @@ class GazeboRobotControlBase:
     # between -- reproduces a quick full-throttle direction flip mid-gait rather
     # than a reversal after the walker has already reached steady state.
     DIRECTION_REVERSAL_PULSE_DURATION = 1.0
-    BALANCE_SETTLE_DURATION = 3.0
+    BALANCE_MODE_WARMUP_DURATION = 1.0
+    # Let the board's physical response begin before accepting the body as level.
+    BALANCE_RESPONSE_DURATION = 3.0
     BALANCED_BODY_TILT_TOLERANCE = 0.10
     # Sim seconds to let a robot motion run before checking its effect on the board.
     MOTION_RESPONSE_DURATION = 1.0
@@ -1092,45 +1094,45 @@ class GazeboRobotControlBase:
             f'(expected < {-self.MIN_LINEAR_MOVEMENT_DELTA}m)'
         )
 
-    def assert_balance_mode_full_stride_movement_in_any_direction(self) -> None:
-        """
-        Verify balance mode plus a full-throttle stride does not freeze MoveIt IK.
-
-        Regression test: enabling balance mode adds an IMU tilt correction to the
-        commanded body rotation before foot targets are computed; combined with a
-        full-throttle stride this can push a foot target outside what MoveIt IK can
-        solve, and (per ``assert_direction_reversal_from_forward_to_backward``) the
-        resulting failure persists on every later tick instead of recovering.
-        """
-        self._arm_robot()
-        self._set_balance_mode(True)
+    def assert_balance_mode_full_stride_movement(
+        self,
+        *,
+        stride_x: float,
+        stride_y: float,
+        direction_name: str,
+        expected_sign: int,
+    ) -> None:
+        """Verify one full-throttle balance-mode stride keeps making progress."""
+        self._prepare_balance_mode_movement()
 
         try:
-            forward_delta, _, _ = self._run_movement_and_measure(stride_x=1.0)
-            backward_delta, _, _ = self._run_movement_and_measure(stride_x=-1.0)
-            _, left_delta, _ = self._run_movement_and_measure(stride_y=1.0)
-            _, right_delta, _ = self._run_movement_and_measure(stride_y=-1.0)
+            forward_delta, left_delta, _ = self._run_movement_and_measure(
+                stride_x=stride_x,
+                stride_y=stride_y,
+            )
         except RuntimeError as error:
-            raise RuntimeError('Balance mode full-stride movement failed') from error
+            raise RuntimeError(f'Balance mode {direction_name} movement failed') from error
         finally:
             self._set_balance_mode(False)
 
-        assert forward_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
-            'Robot did not move forward with balance mode enabled at full-throttle '
-            f'stride (possible MoveIt IK freeze): forward_delta={forward_delta:.3f}m'
+        delta = forward_delta if stride_x else left_delta
+        assert expected_sign * delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
+            f'Robot did not move {direction_name} with balance mode enabled at '
+            f'full-throttle stride (possible MoveIt IK freeze): '
+            f'delta={delta:.3f}m, expected sign={expected_sign:+d}'
         )
-        assert backward_delta < -self.MIN_LINEAR_MOVEMENT_DELTA, (
-            'Robot did not move backward with balance mode enabled at full-throttle '
-            f'stride (possible MoveIt IK freeze): backward_delta={backward_delta:.3f}m'
-        )
-        assert left_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
-            'Robot did not strafe left with balance mode enabled at full-throttle '
-            f'stride (possible MoveIt IK freeze): left_delta={left_delta:.3f}m'
-        )
-        assert right_delta < -self.MIN_LINEAR_MOVEMENT_DELTA, (
-            'Robot did not strafe right with balance mode enabled at full-throttle '
-            f'stride (possible MoveIt IK freeze): right_delta={right_delta:.3f}m'
-        )
+
+    def _prepare_balance_mode_movement(self) -> None:
+        """Arm and stabilize balance mode before one direction check."""
+        if self.current_robot_state == 'torque_on':
+            self._disarm_robot()
+        self._arm_robot()
+        self._set_balance_mode(True)
+        previous_pose_stamp_ns = self.robot_pose_stamp_ns
+        previous_imu_stamp_ns = self.current_imu_stamp_ns
+        self._wait_for_new_pose(previous_pose_stamp_ns)
+        self._wait_for_new_imu(previous_imu_stamp_ns)
+        self._wait_for_sim_time(self.BALANCE_MODE_WARMUP_DURATION)
 
     def assert_balance_mode_diagonal_stride_movement(
         self,
@@ -1241,7 +1243,7 @@ class GazeboRobotControlBase:
         board_r, board_p = self._wait_for_board_tilt(
             expected_roll=board_roll, expected_pitch=board_pitch
         )
-        self._wait_for_sim_time(self.BALANCE_SETTLE_DURATION)
+        self._wait_for_stable_body_level(initial_roll, initial_pitch)
         balanced_roll, balanced_pitch = self._sample_base_roll_pitch(
             settle_sim_time_sec=self.POSE_SETTLE_DURATION
         )
@@ -1282,28 +1284,48 @@ class GazeboRobotControlBase:
             f'(pre_tilt_z={pre_tilt_height:.3f}, balanced_z={balanced_height:.3f})'
         )
 
-    def _reset_board_and_balance_mode(
+    def _wait_for_stable_body_level(
         self,
         initial_roll: float,
         initial_pitch: float,
     ) -> None:
-        self._set_board_tilt(roll=0.0, pitch=0.0)
-        board_r, board_p = self._wait_for_board_tilt(expected_roll=0.0, expected_pitch=0.0)
-        assert abs(board_r) <= 0.03, f'Expected board roll to return to level (got {board_r:.3f})'
-        assert abs(board_p) <= 0.03, f'Expected board pitch to return to level (got {board_p:.3f})'
+        """Wait for a post-tilt pose that remains within the tilt tolerance."""
+        previous_pose_stamp_ns = self.robot_pose_stamp_ns
+        self._wait_for_new_pose(previous_pose_stamp_ns)
+        self._wait_for_sim_time(self.BALANCE_RESPONSE_DURATION)
+        aligned_since_ns: int | None = None
 
-        self._set_balance_mode(False)
-        self._wait_for_sim_time(self.POSE_SETTLE_DURATION)
-        roll, pitch = self._sample_base_roll_pitch(settle_sim_time_sec=self.POSE_SETTLE_DURATION)
-        assert abs(roll - initial_roll) <= self.BALANCED_BODY_TILT_TOLERANCE, (
-            'Expected body roll near initial after disabling balance mode '
-            f'(initial={initial_roll:.3f}, actual={roll:.3f})'
+        def body_has_stably_leveled() -> bool:
+            nonlocal aligned_since_ns
+
+            if self.robot_pose is None:
+                aligned_since_ns = None
+                return False
+
+            roll, pitch = self._roll_pitch_from_quaternion(self.robot_pose.orientation)
+            is_level = (
+                abs(roll - initial_roll) <= self.BALANCED_BODY_TILT_TOLERANCE
+                and abs(pitch - initial_pitch) <= self.BALANCED_BODY_TILT_TOLERANCE
+            )
+            if not is_level:
+                aligned_since_ns = None
+                return False
+
+            current_sim_time_ns = self._current_sim_time_ns()
+            if current_sim_time_ns is None:
+                return False
+            if aligned_since_ns is None:
+                aligned_since_ns = current_sim_time_ns
+                return False
+            return current_sim_time_ns - aligned_since_ns >= int(
+                self.POSE_SETTLE_DURATION * 1_000_000_000
+            )
+
+        self._spin_until(
+            body_has_stably_leveled,
+            self.MOVEMENT_TIMEOUT,
+            'Balance correction did not stabilize the body within the tilt tolerance',
         )
-        assert abs(pitch - initial_pitch) <= self.BALANCED_BODY_TILT_TOLERANCE, (
-            'Expected body pitch near initial after disabling balance mode '
-            f'(initial={initial_pitch:.3f}, actual={pitch:.3f})'
-        )
-        self._set_balance_mode(True)
 
 
 class BalanceBoardWorldBase(GazeboRobotControlBase):

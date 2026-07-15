@@ -1,85 +1,120 @@
 ---
 name: add-test-file-cpp
-description: 'Add or modify a C++ unit or integration test file with GTest/GMock fixtures, test cases, and CMakeLists.txt build integration. Use when adding tests for existing C++ source files (.cpp/.hpp), following TDD workflow for C++ code, or need GTest scaffolding wired into ament_cmake. Keywords: gtest, gmock, TEST_F, ament_add_gmock, CMakeLists.txt tests, C++ test.'
+description: Add or update a focused C++ unit test and its ament_cmake integration in this ROS 2 workspace. Use for testing existing C++ libraries, classes, or functions with the repository's Catch2 convention, or with GMock when mocks are necessary; use launch-testing for tests that start ROS processes.
 ---
 
-# Add C++ Test File
+# Add a C++ Test File
 
-Generate a GTest/GMock test file with appropriate fixtures, test cases, and CMake build integration for an existing C++ source file in a ROS 2 package.
+Test public behavior through the package library target. Keep each test file
+focused on one component or behavior; split unrelated concerns into separate
+test targets.
 
-For Python sources, use [add-test-file-python](../add-test-file-python/) instead.
+Use [add-test-file-python](../add-test-file-python/) for Python code and
+[launch-testing](../launch-testing/) for a launch, node, or multi-process
+integration test. A C++ test that merely calls a node class directly remains a
+unit test; it must initialise and shut down rclcpp safely when needed.
 
-## When to Use This Skill
+## Determine the test shape
 
-- Adding tests for an existing C++ source file (`.cpp`/`.hpp`)
-- Creating unit tests for C++ classes or free functions
-- Setting up integration tests for rclcpp nodes
-- Need GTest/GMock fixtures and scaffolding that match project conventions
-- Following TDD workflow (write tests first)
+Require the source/header path and package name; derive the package only when
+the path unambiguously identifies it. Inspect the public API and the package's
+existing `CMakeLists.txt` before choosing the framework.
 
-## Prerequisites
+The workspace predominantly uses Catch2 through `catch_ros2` for normal C++
+unit tests. Use it by default. Choose GMock only when a collaborator must be
+mocked or call expectations are central to the behavior under test. Do not
+mix frameworks in a target and do not add `ament_cmake_pytest` for C++ tests.
 
-- Source file exists and location is known
-- Package `CMakeLists.txt` accessible
-- Understand unit vs integration test needs
+Place the file at:
 
-## Inputs
-
-- **Source File**: Path to source (or current file in editor)
-- **Test Type**: `unit` or `integration`
-- **Package Name**: Derive from path or ask
-- **Test Name**: From source file name or custom
-
-## Workflow
-
-### Step 1: Analyze Source File
-
-1. Read source file path
-2. Extract package name from path
-3. Identify: classes, public methods, free functions, ROS 2 nodes, dependencies
-
-### Step 2: Determine Test Location
-
-`<package_root>/test/test_<source_base>.cpp`
-
-### Step 3: Check Existing Tests
-
-If exists: offer to append or create `test_<name>_integration.cpp` etc.
-
-### Step 4: Generate Test File
-
-**Unit:**
-
-```cpp
-#include "<package_name>/<header>.h"
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
-class <ClassName>Test : public ::testing::Test { ... };
-TEST_F(<ClassName>Test, ConstructorInitializesCorrectly) { ... }
-TEST_F(<ClassName>Test, MethodNameHandlesValidInput) { ... }
-TEST_F(<ClassName>Test, MethodNameHandlesInvalidInput) { ... }
+```
+<package_root>/test/test_<component>.cpp
 ```
 
-**Integration:** Include `rclcpp/rclcpp.hpp`, init/shutdown in SetUp/TearDown.
+Match the package's public-header extension; the usual convention here is
+`#include "<package>/<component>.h"`.
 
-### Step 5: Update Build Configuration
+## Add a Catch2 unit test
 
-Add `ament_add_gmock(test_<name> test/test_<name>.cpp)` and dependencies; call `drqp_test_enable_coverage(test_<name>)`.
+Add `<test_depend>catch_ros2</test_depend>` to `package.xml`. In the package's
+top-level `CMakeLists.txt`, ensure the `BUILD_TESTING` block includes the
+workspace helpers, then define and link the test target:
 
-### Step 6: Verify package.xml Dependencies
+```cmake
+if(BUILD_TESTING)
+  include(../../cmake/ClangCoverage.cmake)
+  include(../../cmake/Catch2Extras.cmake)
+  find_package(catch_ros2 REQUIRED)
 
-Test deps: `ament_lint_auto`, `drqp_lint_common`, `ament_cmake_gmock`, `ament_cmake_pytest`.
+  add_executable(test_<component> test/test_<component>.cpp)
+  target_link_libraries(test_<component> PRIVATE
+    <library_target>
+    catch_ros2::catch_ros2_with_main)
+  ament_target_dependencies(test_<component> <ros_dependencies_used_by_test>)
+  drqp_test_enable_coverage(test_<component>)
+  add_catch2_unit_test(test_<component>)
+endif()
+```
 
-## Edge Cases
+This coverage include is valid only for packages at
+`packages/<group>/<package>`. For any other package location, omit the two
+coverage lines until its project-level coverage helper is identified. Link the
+library target even if it is already linked to ROS dependencies, and list any
+additional direct ROS dependencies required by the test.
 
-- **Existing test**: Append or create separate file
-- **No public interface**: Warn
-- **Missing deps**: Add to package.xml
-- **Header-only**: Test the header
+Start a focused Catch2 file with the repository headers:
 
-## Related Resources
+```cpp
+#include <catch_ros2/catch.hpp>
 
-- [add-test-file-python](../add-test-file-python/) — Python test scaffolding
+#include "<package>/<component>.h"
+
+TEST_CASE("<Component> handles valid input")
+{
+  const <Component> component{/* required configuration */};
+
+  CHECK(component.operation(/* input */) == /* expected */);
+}
+```
+
+## Add a GMock test only when mocks are necessary
+
+Add `<test_depend>ament_cmake_gmock</test_depend>` and use this complete
+target recipe:
+
+```cmake
+if(BUILD_TESTING)
+  include(../../cmake/ClangCoverage.cmake)
+  find_package(ament_cmake_gmock REQUIRED)
+
+  ament_add_gmock(test_<component> test/test_<component>.cpp)
+  target_link_libraries(test_<component> PRIVATE <library_target>)
+  ament_target_dependencies(test_<component> <ros_dependencies_used_by_test>)
+  drqp_test_enable_coverage(test_<component>)
+endif()
+```
+
+Use `#include <gmock/gmock.h>`, fixture setup/teardown only for state shared
+by each test, and explicit expectations on mocked collaborators. `ament_add_gmock`
+provides the GTest runner; do not add a separate `main` or link another test
+main. Apply the same package-location restriction to the coverage lines.
+
+## Validate
+
+Run the smallest relevant package commands from the workspace root:
+
+```bash
+scripts/with-ros-env.sh python3 -m colcon build --packages-up-to <package_name>
+scripts/with-ros-env.sh python3 -m colcon test --packages-select <package_name>
+scripts/with-ros-env.sh python3 -m colcon test-result --verbose
+```
+
+For failures, read `log/latest_test/<package_name>/stdout_stderr.log` or the
+timestamped `streams.log`. Use [ros2-workspace-testing](../ros2-workspace-testing/)
+for reruns, coverage, or ROS-environment escalation.
+
+## Related resources
+
 - [find-test-files](../find-test-files/)
+- [launch-testing](../launch-testing/)
 - [ros2-workspace-testing](../ros2-workspace-testing/)
