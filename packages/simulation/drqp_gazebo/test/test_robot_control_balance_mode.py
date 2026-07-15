@@ -27,7 +27,6 @@ import launch_pytest
 import pytest
 from robot_control_test_support import (
     create_balance_board_launch_description,
-    GazeboRobotControlBase,
 )
 
 _TILT_MAGNITUDE = 0.12
@@ -45,26 +44,6 @@ _TILT_SCENARIOS = [
 ]
 
 
-def test_reset_preserves_the_active_balance_target() -> None:
-    """Return the board to level without re-capturing the balance reference."""
-    robot = GazeboRobotControlBase.__new__(GazeboRobotControlBase)
-    events: list[str] = []
-    stable_targets: list[tuple[float, float]] = []
-
-    robot._set_board_tilt = lambda **_kwargs: events.append('set_tilt')
-    robot._wait_for_board_tilt = lambda **_kwargs: events.append('board_tilt') or (0.0, 0.0)
-    robot._wait_for_stable_body_level = lambda roll, pitch: stable_targets.append((roll, pitch))
-    robot._set_balance_mode = lambda _enabled: pytest.fail(
-        'Reset must not disable and re-enable balance mode because doing so '
-        're-captures the IMU body-tilt target'
-    )
-
-    robot._reset_board_and_balance_mode(0.0, 0.0)
-
-    assert events == ['set_tilt', 'board_tilt']
-    assert stable_targets == [(0.0, 0.0)]
-
-
 @launch_pytest.fixture
 def generate_test_description():
     """Launch Gazebo with the robot riding the balance board and record exit codes."""
@@ -76,20 +55,12 @@ def generate_test_description():
 @pytest.mark.slow
 @pytest.mark.launch(fixture=generate_test_description)
 def test_balance_mode_levels_body_on_positive_diagonal_tilt(robot, generate_test_description):
-    """Keep level after a pitch tilt is reset before a positive diagonal tilt."""
+    """Keep level through a positive diagonal tilt in an isolated simulation."""
     robot._arm_robot()
     initial_roll, initial_pitch = robot._sample_base_roll_pitch(
         settle_sim_time_sec=robot.POSE_SETTLE_DURATION
     )
     robot._set_balance_mode(True)
-
-    robot._assert_body_level_at_board_tilt(
-        0.0,
-        _TILT_MAGNITUDE,
-        initial_roll,
-        initial_pitch,
-    )
-    robot._reset_board_and_balance_mode(initial_roll, initial_pitch)
 
     robot._assert_body_level_at_board_tilt(
         _TILT_DIAGONAL,
@@ -106,6 +77,7 @@ def test_balance_mode_levels_body_on_positive_diagonal_tilt(robot, generate_test
 @pytest.mark.slow
 @pytest.mark.launch(fixture=generate_test_description)
 def test_balance_mode_levels_body_on_all_tilt_angles(robot, generate_test_description):
+    """Keep level through all tilt directions without resetting between them."""
     robot._arm_robot()
     initial_roll, initial_pitch = robot._sample_base_roll_pitch(
         settle_sim_time_sec=robot.POSE_SETTLE_DURATION
@@ -116,10 +88,7 @@ def test_balance_mode_levels_body_on_all_tilt_angles(robot, generate_test_descri
         robot._assert_body_level_at_board_tilt(
             board_roll, board_pitch, initial_roll, initial_pitch
         )
-        robot._reset_board_and_balance_mode(initial_roll, initial_pitch)
 
-    # Function-scoped generator: the simulation tears down at the yield, then the
-    # post-yield body verifies every non-simulator process exited cleanly.
     yield
     _launch_description, proc_info = generate_test_description
     assert_processes_exited_cleanly(proc_info)

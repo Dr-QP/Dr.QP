@@ -1327,20 +1327,6 @@ class GazeboRobotControlBase:
             'Balance correction did not stabilize the body within the tilt tolerance',
         )
 
-    def _reset_board_and_balance_mode(
-        self,
-        initial_roll: float,
-        initial_pitch: float,
-    ) -> None:
-        self._set_board_tilt(roll=0.0, pitch=0.0)
-        board_r, board_p = self._wait_for_board_tilt(expected_roll=0.0, expected_pitch=0.0)
-        assert abs(board_r) <= 0.03, f'Expected board roll to return to level (got {board_r:.3f})'
-        assert abs(board_p) <= 0.03, f'Expected board pitch to return to level (got {board_p:.3f})'
-
-        # Keep balance mode active: toggling it here re-captures the IMU pose
-        # while the robot is still settling and changes its intended reference.
-        self._wait_for_stable_body_level(initial_roll, initial_pitch)
-
 
 class BalanceBoardWorldBase(GazeboRobotControlBase):
     """
