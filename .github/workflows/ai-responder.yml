@@ -373,10 +373,18 @@ jobs:
         run: |
           if jq --exit-status '
             any(
-              .. | objects;
-              (.type? == "text") and
-              ((.text? | type) == "string") and
-              (.text | contains("You'\''ve hit your org'\''s monthly spend limit"))
+              .[]?
+              | select(
+                  .type? == "assistant"
+                  and .message.type? == "message"
+                  and .message.role? == "assistant"
+                )
+              | .message.content[]?
+              | select(
+                  .type? == "text"
+                  and (.text? | contains("You'\''ve hit your org'\''s monthly spend limit"))
+                );
+              true
             )
           ' "$EXECUTION_FILE" >/dev/null; then
             echo "::error::Claude hit the organization's monthly spend limit."
