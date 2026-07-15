@@ -3,6 +3,7 @@
 set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+merge_script="${script_dir}/../../git-merge-resolve/scripts/git-merge-resolve.sh"
 # shellcheck source=/dev/null
 source "${script_dir}/__common.sh"
 
@@ -22,9 +23,9 @@ Options:
   -h, --help         Show this help text.
 
 Exit codes:
-  0  Merge succeeded (fast-forward or clean merge)
-  1  Merge conflicts detected — resolve manually and commit
-  2  Usage error or not a git repo
+  0  Merge succeeded
+  1  Merge conflicts detected — use the git-merge-resolve workflow
+  2  Usage or preflight error
   3  Already up to date
   5  Current branch is the default branch — refusing to self-merge
 
@@ -94,19 +95,7 @@ if [[ "${merge_base}" == "${base_sha}" ]]; then
   exit 3
 fi
 
-# Attempt merge
-printf 'Merging %s into %s...\n' "${base_ref}" "${branch_name}"
-if git merge --no-ff "${base_ref}" --message "Merge ${base_ref} into ${branch_name}"; then
-  printf 'RESULT=merged\n'
-  git log --oneline --decorate -n 5
-  exit 0
-fi
-
-# Conflicts detected
-printf 'RESULT=conflicts\n'
-print_error "Merge conflicts detected. Resolve the conflicts listed below, then run:"
-printf '  git add <resolved-files>\n' >&2
-printf '  git commit\n' >&2
-printf '\nConflicted files:\n' >&2
-git diff --name-only --diff-filter=U >&2
-exit 1
+# Delegate merge execution and any conflict handling to the generic skill.
+exec "${merge_script}" \
+  --message "Merge ${base_ref} into ${branch_name}" \
+  "${base_ref}"

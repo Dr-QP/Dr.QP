@@ -1,332 +1,69 @@
 ---
 name: ros2-environment-setup
-description: Set up ROS 2 development environment and workspace shell state. Use when asked to initialize a ROS shell, prepare local or remote agent sessions before running terminal commands, bootstrap virtual environments, or troubleshoot missing ROS environment variables.
+description: Prepare a ROS 2 Jazzy shell or diagnose missing ROS environment state in this workspace. Use when initializing a local ROS environment, setting up the development virtual environment, or when ROS commands cannot find the installed distribution.
 ---
 
 # ROS 2 Environment Setup
 
-Initialize and configure the ROS 2 development environment for both local and remote agent workflows.
+Use this skill only for shell and environment state. Use
+[ros2-dependency-management](../ros2-dependency-management/SKILL.md) to add or
+install dependencies, and the build or test skills to run colcon.
 
-## When to Use This Skill
+## Local ROS shell
 
-- Initialize workspace after cloning
-- Set up local development environment
-- Configure remote development with devcontainer
-- Initialize Python virtual environment
-- Update environment variables for build system
-- Configure IDE for ROS 2 development
-- Reset or troubleshoot environment issues
-- Switch between development tooling and ROS runtime Python environments
+From the workspace root, source the interactive environment when several ROS
+commands will run in the same shell:
 
-## Prerequisites
-
-- ROS 2 Jazzy installed at `/opt/ros/jazzy/`
-- Workspace cloned to your workspace root
-- Bash shell available (sourcing scripts)
-- For local development: system dependencies installed (CMake, compilers, etc.)
-- For remote development: Docker and VS Code Remote Extensions
-- Python 3.8+ available
-
-## Environment Architecture
-
-```
-ROS 2 Environment Hierarchy:
-├── Base ROS 2 (/opt/ros/jazzy/setup.bash)
-│   ├── ROS_DISTRO=jazzy
-│   ├── ROS_PYTHON_VERSION=3
-│   └── Core ROS 2 packages
-├── Workspace Overlay (install/local_setup.bash)
-│   ├── Workspace packages
-│   └── Built packages
-└── Python venv (.venv/)
-    └── Development dependencies
+```bash
+source scripts/setup.bash
 ```
 
-## Step-by-Step Workflows
-
-### Workflow 1: Initialize Local Development Environment
-
-Set up a fresh workspace for local development.
-
-1. Clone or navigate to workspace:
-
-   ```bash
-   cd <workspace_root>
-   ```
-
-2. Source the ROS environment setup script:
-
-   ```bash
-   source scripts/setup.bash
-   ```
-
-   This script:
-   - Sources `/opt/ros/jazzy/setup.bash` (base ROS)
-   - Sources `install/local_setup.bash` if available (workspace overlay)
-   - Leaves Python on the system interpreter used by ROS runtime
-   - Sets ROS_DISTRO, ROS_PACKAGE_PATH, and other ROS variables
-
-   Use `scripts/with-ros-env.sh <command>` for one-off ROS or colcon commands when you do not need an interactive ROS shell.
-
-3. Verify ROS environment is configured:
-
-   ```bash
-   echo $ROS_DISTRO          # Should print: jazzy
-   echo $ROS_PACKAGE_PATH    # Should show workspace packages
-   which ros2                # Should find ROS 2 executable
-   ```
-
-4. Environment is ready for development
-
-### Workflow 2: Set Up Python Virtual Environment for Development
-
-Create isolated Python environment for development tools.
-
-1. Sync the workspace environment from `pyproject.toml`:
-
-   ```bash
-   uv sync
-   ```
-
-   This command:
-   - Creates or updates `.venv`
-   - Installs the workspace development, docs, and notebook dependencies
-   - Uses the repository lockfile when present for reproducible environments
-
-2. Activate the virtual environment when you need an interactive shell:
-
-   ```bash
-   source .venv/bin/activate
-   ```
-
-   Your shell prompt changes to show `(.venv)` prefix
-
-3. Verify installation:
-
-   ```bash
-   python3 -m pytest --version
-   python3 -c "import ruff; print('ruff ready')"
-   ```
-
-4. Exit venv when done:
-   ```bash
-   deactivate
-   ```
-
-**Note**: Virtual environment is for development only; ROS 2 runtime uses system Python
-
-### Workflow 3: Update Python Virtual Environment
-
-Refresh the development environment after `pyproject.toml` or `uv.lock` changes.
-
-1. Re-sync the workspace environment:
-
-   ```bash
-   uv sync
-   ```
-
-   This automatically updates `.venv` from the workspace dependency groups.
-
-2. After a build, run `./scripts/ros-dep.sh` when you need to install generated ROS package `requires.txt` metadata into the container's system interpreter.
-
-3. Verify updates completed:
-
-   ```bash
-   .venv/bin/pip list | grep pytest
-   ```
-
-4. Deactivate when done:
-   ```bash
-   deactivate
-   ```
-
-### Workflow 4: Configure Remote Development with Devcontainer
-
-Set up VS Code devcontainer for remote/GitHub Codespaces development.
-
-1. Open workspace in VS Code:
-
-   ```bash
-   code <workspace_root>
-   ```
-
-2. Install "Dev Containers" extension (if not already installed)
-
-3. Open Command Palette: `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Linux/Windows)
-
-4. Search for: "Dev Containers: Reopen in Container"
-
-5. VS Code rebuilds the devcontainer:
-   - **Base image**: `ghcr.io/dr-qp/jazzy-ros-desktop:edge`
-   - **Build time**: 5-15 minutes (first time only)
-   - **Subsequent opens**: < 10 seconds
-
-6. Devcontainer automatically:
-   - Sets up ROS 2 Jazzy environment
-   - Creates Python venv
-   - Installs all dependencies via rosdep
-   - Configures development tools (clangd, debuggers, test viewers)
-
-7. Verify devcontainer environment:
-   ```bash
-   echo $ROS_DISTRO
-   python3 -m pytest --version
-   ```
-
-**Devcontainer Features**:
-
-- Persistent volumes: Build artifacts, install, logs, caches persist across sessions
-- Network: Proper ROS communication (DDS, IPC)
-- Development tools: Clangd, debuggers, test viewers pre-configured
-- Consistent environment: Identical across all developer machines and CI
-
-### Workflow 5: Configure Build System Environment Variables
-
-Set compiler and build system options for optimal performance.
-
-1. Configure for development builds with clang:
-
-   ```bash
-   export CMAKE_EXPORT_COMPILE_COMMANDS=1
-   export CC=clang
-   export CXX=clang++
-   ```
-
-   **What these do:**
-   - `CMAKE_EXPORT_COMPILE_COMMANDS=1`: Generates compile_commands.json for IDE
-   - `CC=clang`: Use Clang C compiler (faster, better error messages)
-   - `CXX=clang++`: Use Clang C++ compiler
-
-2. Verify environment:
-
-   ```bash
-   echo $CC          # Should print: clang
-   echo $CXX         # Should print: clang++
-   ls -la build/compile_commands.json  # IDE integration
-   ```
-
-3. Build with optimized environment:
-   ```bash
-   scripts/with-ros-env.sh python3 -m colcon build --packages-up-to <package_name>
-   ```
-
-### Workflow 6: Verify Complete Environment Setup
-
-Check that all components are properly configured.
-
-1. Verify ROS 2 core:
-
-   ```bash
-   scripts/with-ros-env.sh ros2 topic list        # Should work (may be empty if no nodes running)
-   scripts/with-ros-env.sh ros2 service list      # Should work
-   scripts/with-ros-env.sh ros2 node list         # Should work
-   ```
-
-2. Verify workspace packages:
-
-   ```bash
-   scripts/with-ros-env.sh bash -lc 'ros2 pkg list | grep drqp'     # Should show workspace packages
-   ```
-
-3. Verify Python setup:
-
-   ```bash
-   scripts/with-ros-env.sh python3 -c "import rclpy; print('ROS 2 Python client ready')"
-   ```
-
-4. Verify development tools:
-
-   ```bash
-   source .venv/bin/activate
-   python3 -m pytest --version
-   python3 -m ruff --version
-   deactivate
-   ```
-
-5. If all commands succeed, environment is fully configured
-
-### Workflow 7: Reset Environment (Troubleshooting)
-
-Clean up environment and start fresh.
-
-1. Deactivate any active Python venv:
-
-   ```bash
-   deactivate
-   ```
-
-2. Clear environment variables:
-
-   ```bash
-   unset ROS_DISTRO ROS_PACKAGE_PATH CC CXX CMAKE_EXPORT_COMPILE_COMMANDS
-   ```
-
-3. Open a new terminal or shell
-
-4. Re-run setup:
-
-   ```bash
-   source scripts/setup.bash
-   ```
-
-5. For clean venv, remove and recreate:
-   ```bash
-   rm -rf .venv
-   uv sync
-   ```
-
-## Environment Variables Reference
-
-| Variable                        | Purpose                   | Set By          | Value                       |
-| ------------------------------- | ------------------------- | --------------- | --------------------------- |
-| `ROS_DISTRO`                    | ROS 2 distribution        | setup.bash      | `jazzy`                     |
-| `ROS_PACKAGE_PATH`              | Package search paths      | setup.bash      | `$(pwd)/install/`           |
-| `AMENT_PREFIX_PATH`             | Installed package prefix  | setup.bash      | `$(pwd)/install/`           |
-| `CMAKE_EXPORT_COMPILE_COMMANDS` | IDE integration           | Manual          | `1`                         |
-| `CC`                            | C compiler                | Manual          | `clang`                     |
-| `CXX`                           | C++ compiler              | Manual          | `clang++`                   |
-| `PYTHONPATH`                    | Python module search path | setup.bash      | Includes workspace packages |
-| `VIRTUAL_ENV`                   | Active venv path          | venv activation | `$(pwd)/.venv`              |
-
-## Directory Structure
-
-```
-<workspace_root>/
-├── scripts/
-│   └── setup.bash           # Main environment setup script
-├── install/                 # Built/installed packages
-│   ├── local_setup.bash     # Workspace overlay setup
-│   └── <packages>/
-├── build/                   # Build artifacts
-│   └── compile_commands.json # For IDE integration
-├── .venv/                   # Python virtual environment
-│   ├── bin/activate         # Activation script
-│   └── lib/python3.x/
-└── .devcontainer/
-    └── devcontainer.json    # Remote development config
+For one command, preserve the caller's shell and use the wrapper instead:
+
+```bash
+scripts/with-ros-env.sh ros2 pkg list
+scripts/with-ros-env.sh python3 -m colcon build --packages-up-to <package_name>
 ```
 
-## Troubleshooting
+The wrapper sources the base ROS distribution selected by `ROS_DISTRO` and the
+workspace overlay when it exists. It is mandatory for ROS, colcon, and ROS
+lint commands run by an agent.
 
-| Issue                       | Cause                                    | Solution                                                                                                   |
-| --------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| "Command 'ros2' not found"  | ROS 2 not sourced                        | Run the command via `scripts/with-ros-env.sh`, or `source scripts/setup.bash` for an interactive ROS shell |
-| "Package not found" error   | Workspace overlay not loaded             | Ensure `install/local_setup.bash` exists, rebuild if needed                                                |
-| Python import "rclpy" fails | ROS 2 Python client not available        | Install: `rosdep install --from-paths packages --ignore-src -y`                                            |
-| Venv not activating         | Venv not created or corrupted            | Delete `.venv` and recreate it with `uv sync`                                                              |
-| Devcontainer won't start    | Docker not running or insufficient space | Start Docker daemon and check disk space                                                                   |
-| Conflicting Python versions | Multiple Python environments active      | Deactivate venv: `deactivate`, then verify `python3 --version`                                             |
-| Build uses wrong compiler   | Environment variables not set            | Export: `export CC=clang && export CXX=clang++`                                                            |
-| IDE can't find includes     | Compile commands missing                 | Build with `CMAKE_EXPORT_COMPILE_COMMANDS=1` enabled                                                       |
-| ROS 2 not installed at all  | Host has no `/opt/ros/<distro>`          | Not fixable locally — see [Escalation](#escalation-no-ros-2-on-this-host)                                  |
+## Development tooling environment
 
-### Escalation: No ROS 2 on This Host
+The repository's development tools use `.venv`; ROS runtime commands use the
+system interpreter selected by ROS. The project requires Python **3.12 or
+newer** for `.venv`:
 
-If `scripts/with-ros-env.sh` or `source scripts/setup.bash` fails because `/opt/ros/$ROS_DISTRO/setup.bash` does not exist (or `ROS_DISTRO` is unset), ROS 2 is not installed on this host and no amount of local environment setup can fix it. **Do not give up** — escalate to a containerized environment:
+```bash
+uv sync
+source .venv/bin/activate
+python3 -m pytest --version
+deactivate
+```
 
-- **Docker daemon available** (e.g. Cursor cloud sessions) → use the [microvm-sandbox](../microvm-sandbox/SKILL.md) skill to run commands through `devcontainer exec`
-- **No Docker daemon** (e.g. Codex Tasks) → use the [remote-codespace-session](../remote-codespace-session/SKILL.md) skill to run them on a GitHub Codespace over SSH
+Do not activate `.venv` as a substitute for sourcing ROS. Keep its use to
+repository scripts, documentation, notebooks, and development tooling.
 
-## References
+## Verify and recover
 
-- Devcontainer configuration: `.devcontainer/devcontainer.json`
+```bash
+scripts/with-ros-env.sh ros2 pkg list
+scripts/with-ros-env.sh python3 -c "import rclpy"
+```
+
+If a workspace package is not found, build it using
+[ros2-workspace-build](../ros2-workspace-build/SKILL.md). If a Python runtime
+requirement generated by a built package is missing, follow the targeted
+post-build step in
+[ros2-dependency-management](../ros2-dependency-management/SKILL.md).
+
+## No ROS installation on the host
+
+If `scripts/with-ros-env.sh` or `source scripts/setup.bash` reports that
+`/opt/ros/$ROS_DISTRO/setup.bash` is absent (or `ROS_DISTRO` is unset), local
+retries cannot work. Preserve the command and escalate it:
+
+- With a Docker daemon, use [microvm-sandbox](../microvm-sandbox/SKILL.md).
+- Without Docker, use
+  [remote-codespace-session](../remote-codespace-session/SKILL.md).

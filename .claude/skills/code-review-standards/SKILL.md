@@ -1,6 +1,6 @@
 ---
 name: code-review-standards
-description: Apply code review standards and write high-quality pull request descriptions. Use when asked to review code, write PR descriptions, create commit messages, or submit pull requests. Enforces imperative language, comprehensive descriptions, PR best practices, and clean code principles.
+description: Apply review standards and write pull request descriptions. Use when asked to review code, assess a change for correctness or maintainability, or draft a PR description. Commit creation belongs to git-commit and PR publishing belongs to open-pr.
 ---
 
 # Code Review Standards
@@ -10,7 +10,6 @@ Write high-quality pull request descriptions and conduct effective code reviews 
 ## When to Use This Skill
 
 - Write PR descriptions for GitHub
-- Create comprehensive commit messages
 - Review code for quality and standards compliance
 - Ensure PR documentation is complete
 - Apply clean code principles to reviews
@@ -40,7 +39,7 @@ This skill covers review-specific workflow and PR-writing structure. Do not rest
 4. **Avoid tables**: Never use per-file changes tables or line counts
 5. **No marketing**: Never add AI assistant ads or AI tool information
 6. **No invisible content**: Never use HTML comments or hidden Unicode
-7. **Treat as git commit**: Apply highest standards; this is permanent project history
+7. **Treat as permanent project history**: Apply the highest standards
 
 ### Recommended Template
 
@@ -78,7 +77,7 @@ Create a comprehensive pull request description.
    ```markdown
    ## How to Test
 
-   1. Run drqp_serial tests: `python3 -m colcon test --packages-select drqp_serial`
+   1. Run drqp_serial tests: `scripts/with-ros-env.sh colcon test --packages-select drqp_serial`
    2. Verify coverage increased: Check build/drqp_serial/coverage.info
    3. Manual test: Connect USB device, disconnect mid-communication,
       verify timeout and recovery
@@ -172,11 +171,9 @@ This is bad. Fix it.
 Update PR based on code review feedback.
 
 1. Make requested code changes
-2. Commit with clear message:
-
-   ```bash
-   git commit -m "Address review feedback: simplify error handling logic"
-   ```
+2. Invoke [git-commit](../git-commit/) to stage the accepted feedback changes
+   and create the conventional commit. Do not duplicate its staging or
+   commit-message workflow here.
 
 3. Update PR description if scope changed:
    - Add new accomplishments to "What Changed"
@@ -190,37 +187,6 @@ Update PR based on code review feedback.
    - Link to specific commits
 
 5. Request re-review when ready
-
-## Commit Message Standards
-
-### Template
-
-```
-<type>: <subject>
-
-<body>
-
-<footer>
-```
-
-### Example
-
-```
-refactor: extract timeout logic from serial_read
-
-Extract exponential backoff retry logic into separate function
-to improve reusability and testability. This prepares for future
-timeout configuration in package.xml.
-
-Relates to #45
-```
-
-### Guidelines
-
-- **Type**: fix, feat, refactor, docs, test, chore, perf
-- **Subject**: Imperative, lowercase, no period, max 50 chars
-- **Body**: Explain what and why (not what code does), wrap at 72 chars
-- **Footer**: Reference related issues
 
 ## Troubleshooting
 
@@ -237,3 +203,4 @@ Relates to #45
 
 - [Coding Conventions in AGENTS.md](../../../AGENTS.md)
 - [Generate pull request description](../generate-pr-description/)
+- [Create conventional commits](../git-commit/)

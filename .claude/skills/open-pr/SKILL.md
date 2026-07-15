@@ -81,30 +81,50 @@ partial set of formatters or bypass failures. If `local-reformat` cannot
 complete successfully, stop PR creation and report the actionable failure to
 the user.
 
-### 3. Mandatory Commit Creation
+### 3. Commit Any Uncommitted PR Scope
 
-**CRITICAL:** After `local-reformat` completes successfully, the AI agent
-**MUST** invoke and follow the `git-commit` skill before
-drafting or creating a PR.
+After `local-reformat` completes successfully, inspect `git status`. If the
+PR-scope changes are uncommitted, invoke and follow the `git-commit` skill to
+stage only that scope and create one conventional commit before drafting a PR.
 
-Use that skill to review the intended changes, stage only the changes in scope
-for the PR, generate an appropriate conventional commit message, and create
-the commit. Do not reimplement its commit-message or staging workflow inline.
-If the changes cannot be committed, stop PR creation and report the blocker to
-the user.
+If the caller already created the scoped commit (for example,
+`implement-agent-specs`), verify the branch is clean for that scope and do not
+create a duplicate or empty commit. If a formatter leaves new tracked changes,
+commit those changes before continuing. Do not reimplement the commit-message
+or staging workflow inline.
 
-### 4. Git Changes Review
+### 4. Branch Sync with `origin/main`
 
-**CRITICAL:** Before drafting the PR, the AI agent **MUST** review actual git changes:
+**CRITICAL:** Before the final change review or PR-body generation, sync the
+current branch using the `.claude/skills/update-branch/` workflow.
+
+The AI agent **MUST** invoke and follow the `update-branch` skill instead of
+re-implementing merge logic inline.
+
+If `update-branch` reports unresolved conflicts or requires user input, stop
+PR creation and ask the user to resolve or confirm conflict decisions first.
+
+### 5. Post-sync Formatter and Commit Check
+
+Branch synchronization can introduce formatter changes. Run the required
+`local-reformat` workflow once more after `update-branch`. If it changes
+tracked files, invoke `git-commit` to make one focused formatting commit. Do
+not continue with formatter edits left uncommitted.
+
+### 6. Final Git Changes Review
+
+**CRITICAL:** After the branch is synchronized and clean, the AI agent
+**MUST** review the actual git changes:
 
 ```bash
 .claude/skills/open-pr/scripts/review-git-changes.sh
 ```
 
 Use `--base-ref <ref>` or `--range <range>` when the comparison base is not `origin/main`.
-This script ensures the PR description accurately reflects the actual code changes.
+This script ensures the PR description accurately reflects the final code
+changes that the PR will contain.
 
-### 5. Optional Issue Linking
+### 7. Optional Issue Linking
 
 Issue linking is recommended but not required.
 
@@ -129,7 +149,7 @@ Issue linking is recommended but not required.
 - Continue PR creation without issue linking
 - Use a concise title without issue prefix
 
-### 6. PR Draft Construction
+### 8. PR Draft Construction
 
 Generate the PR description by following the
 [generate-pr-description](../generate-pr-description/) skill.
@@ -140,30 +160,20 @@ Use the generated output as the PR body, and use one of these title formats:
 - If issue is not available: `Brief description`
 - Keep the title description concise and outcome-focused
 
-### 7. Proceed Without Confirmation
+### 9. Proceed Without Confirmation
 
 Do **not** pause to ask the user to approve the draft. Once the title and body
-are generated, continue directly to branch sync, remote verification, and PR
-creation.
+are generated, continue directly to remote verification and PR creation. If
+any later operation changes the branch diff, re-run the Final Git Changes
+Review and regenerate and review the title and body before creating the PR.
 
 - Do not present the draft and wait for a "yes" before creating the PR
 - Still stop and surface the issue to the user only when a blocking error
-  occurs (e.g. merge conflicts during branch sync, push divergence, or a
-  failed PR creation) — these require user input to resolve
+  occurs (e.g. push divergence or a failed PR creation) — these require user
+  input to resolve
 - After the PR is created, report the resulting PR URL/number
 
-### 8. Branch Sync with `origin/main`
-
-**CRITICAL:** Before pushing or creating a PR, sync the current branch using the
-`.claude/skills/update-branch/` workflow.
-
-The AI agent **MUST** invoke and follow the `update-branch` skill instead of re-implementing
-merge logic inline.
-
-If `update-branch` reports unresolved conflicts or requires user input, stop PR creation and
-ask the user to resolve or confirm conflict decisions first.
-
-### 9. Remote Branch Verification
+### 10. Remote Branch Verification
 
 **CRITICAL:** Before creating the PR, verify the current branch exists on the remote repository.
 
@@ -187,7 +197,7 @@ Use `--remote <name>` or `--branch <name>` when the default remote or branch sho
 
 If the script exits non-zero, display its actionable error output and abort PR creation.
 
-### 10. GitHub PR Creation (MCP)
+### 11. GitHub PR Creation (MCP)
 
 Once the branch is on remote, create the PR using `github/create_pull_request`.
 
@@ -216,7 +226,7 @@ Use the tool with these fields:
 - Set `draft: true` if the user wants to create a draft PR
 - Set `base: <branch>` if targeting a different base branch
 
-### 11. Error Handling
+### 12. Error Handling
 
 Handle common error scenarios gracefully:
 

@@ -4,8 +4,6 @@ services:
     pull_policy: if_not_present
     restart: unless-stopped
     profiles: ['mcp']
-    ports:
-      - '127.0.0.1:8811:8811'
     environment:
       DOCKER_SECRETS_ENGINE_SOCKET: ${DOCKER_SECRETS_ENGINE_SOCKET:-/root/.cache/docker-secrets-engine/engine.sock}
     volumes:
@@ -43,9 +41,11 @@ services:
       - --port=8811
       # The gateway's bearer-token auth guards against DNS-rebinding attacks from
       # browser clients hitting a localhost-bound port. The devcontainer instead reaches
-      # this service over the private compose network by service name (mcp-gateway:8811),
-      # and the host port is already restricted to 127.0.0.1, so that threat model doesn't
-      # apply here. The token is also regenerated per container start, so it can't be
+      # this service over the private compose network by service name (mcp-gateway:8811).
+      # It intentionally has no host-published port: every worktree has its own sidecar,
+      # and publishing a fixed host port would make a clean startup fail whenever another
+      # worktree's gateway is already running. The token is also regenerated per container
+      # start, so it can't be
       # pinned in the git-tracked .mcp.json without breaking on every restart.
       - --allow-unauthenticated
 
@@ -110,5 +110,7 @@ volumes:
   # default per-project name prefix isolating each instance's auth state.
   drqp-claude:
     name: drqp-claude
+    external: true
   drqp-codex:
     name: drqp-codex
+    external: true

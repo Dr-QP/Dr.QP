@@ -1,7 +1,6 @@
 ---
 name: pr-merge
 description: 'Merge an open GitHub pull request: leave existing auto-merge unchanged, otherwise enable automatic squash merge early, monitor CI and AI review, remediate failures and feedback, then squash merge explicitly if auto-merge is unavailable. Use when a PR needs to be merged or shepherded through CI and review to merge. Keywords: merge PR, auto-merge, squash merge, monitor PR, merge-ready, wait for CI, CI failures, AI review, Claude Responder.'
-license: MIT
 ---
 
 # Merge PR

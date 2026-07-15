@@ -17,6 +17,13 @@ else
     touch "$script_dir/.env"
 fi
 
+# These named volumes intentionally outlive a single Compose project so agent
+# authentication can be shared by every local worktree. Declare them as
+# external in Compose to avoid ownership warnings, and create them here so a
+# first-ever devcontainer startup still has everything it needs.
+docker volume create drqp-claude >/dev/null
+docker volume create drqp-codex >/dev/null
+
 gitdir=$(realpath "$(git rev-parse --git-common-dir)")
 echo "GIT_REPO=$gitdir" >> "$script_dir/.env"
 

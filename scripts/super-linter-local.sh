@@ -14,7 +14,9 @@ usage()
   cat <<'EOF'
 Usage: scripts/super-linter-local.sh [--all] [--image IMAGE] [--log-level LEVEL]
 
-Runs the same Super-Linter autofix pass and check pass used by GitHub Actions.
+Runs one local Super-Linter pass with all checks enabled and available
+autofixes applied. CI keeps its autofix and check passes separate so it can
+publish formatter patches without failing the validation job.
 
 Options:
   --all              Set VALIDATE_ALL_CODEBASE=true.
@@ -88,10 +90,10 @@ if [[ "$git_common_dir" != "$root_dir/.git" ]]; then
   mounts+=(-v "$git_common_dir:$git_common_dir")
 fi
 
-env_file="$root_dir/.tmp/super-linter.env"
-"$script_dir/super-linter-env.sh" --enable_all_checks --autofix > "$env_file"
+run_super_linter() {
+  local env_file="$1"
 
-"$runtime" run --rm \
+  "$runtime" run --rm \
   -e RUN_LOCAL=true \
   -e DEFAULT_BRANCH="$default_branch" \
   -e VALIDATE_ALL_CODEBASE="$validate_all_codebase" \
@@ -102,5 +104,10 @@ env_file="$root_dir/.tmp/super-linter.env"
   "${mounts[@]}" \
   --platform linux/amd64 \
   "$image"
+}
+
+env_file="$root_dir/.tmp/super-linter.env"
+"$script_dir/super-linter-env.sh" --autofix --enable_all_checks > "$env_file"
+run_super_linter "$env_file"
 
 echo "Super-Linter output saved to $root_dir/log/super-linter-summary.md"
