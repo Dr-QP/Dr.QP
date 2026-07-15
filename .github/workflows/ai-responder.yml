@@ -191,7 +191,7 @@ jobs:
                 prompt.splice(
                   -1,
                   0,
-                  'For @codex review, use .claude/skills/pr-review/SKILL.md; publish a proper GitHub PR review with inline findings and APPROVE when clean.'
+                  'For @codex review, use .claude/skills/pr-review/SKILL.md and its canonical fallback script at .claude/skills/pr-review/scripts/post-review.sh; publish a proper GitHub PR review with inline findings and APPROVE when clean.'
                 );
               }
               return { isReview, prompt: prompt.join('\n') };
