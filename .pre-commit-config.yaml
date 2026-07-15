@@ -10,66 +10,75 @@ repos:
       - id: mixed-line-ending
         args: [--fix=lf]
 
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.1.0
-    hooks:
-      - id: prettier
-        # Aligned with what super-linter handles with prettier in this repo
-        # .prettierignore still applies
-        files: '\.(md|markdown|ya?ml|json|jsonc)$'
-        additional_dependencies: [prettier@3.8.1]
-
-  - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v21.1.2
-    hooks:
-      - id: clang-format
-        files: '\.(c|cc|cpp|cxx|h|hh|hpp|hxx)$'
-
-  - repo: https://github.com/ansible/ansible-lint
-    rev: v26.1.1
-    hooks:
-      - id: ansible-lint
-        files: '^docker/ros/ansible/.*\.ya?ml$'
-        language_version: python3
-        pass_filenames: true
-        always_run: false
-
-  - repo: https://github.com/hadolint/hadolint
-    rev: v2.14.0
-    hooks:
-      - id: hadolint-docker
-        entry: ghcr.io/hadolint/hadolint:v2.14.0 hadolint
-        files: '(^|/)(Dockerfile(\..*)?|[^/]+\.dockerfile)$'
-
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.0
-    hooks:
-      - id: ruff-format
-      - id: ruff # lint
-        args: [--fix]
-      - id: ruff # isort
-        args: [--fix, --select, I]
-
-  - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.11.0.1
-    hooks:
-      - id: shellcheck
-
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.30.0
-    hooks:
-      - id: gitleaks
-
-  - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.10
-    hooks:
-      - id: actionlint
-
   - repo: local
     hooks:
+      - id: prettier
+        name: prettier
+        entry: ./scripts/super-linter/prettier --write --list-different --ignore-unknown
+        language: system
+        files: '\.(md|markdown|ya?ml|json|jsonc)$'
+
+      - id: clang-format
+        name: clang-format
+        entry: ./scripts/super-linter/clang-format -i -style=file
+        language: system
+        files: '\.(c|cc|cpp|cxx|h|hh|hpp|hxx)$'
+
+      - id: ansible-lint
+        name: ansible-lint
+        entry: ./scripts/super-linter/ansible-lint -v --force-color
+        language: system
+        files: '^docker/ros/ansible/.*\.ya?ml$'
+
+      - id: hadolint-docker
+        name: hadolint
+        entry: ./scripts/super-linter/hadolint
+        language: system
+        files: '(^|/)(Dockerfile(\..*)?|[^/]+\.dockerfile)$'
+
+      - id: ruff-format
+        name: ruff format
+        entry: ./scripts/super-linter/ruff format --force-exclude
+        language: system
+        types_or: [python, pyi, jupyter]
+        require_serial: true
+
+      - id: ruff
+        name: ruff lint
+        entry: ./scripts/super-linter/ruff check --force-exclude --fix
+        language: system
+        types_or: [python, pyi, jupyter]
+        require_serial: true
+
+      - id: ruff-isort
+        name: ruff isort
+        entry: ./scripts/super-linter/ruff check --force-exclude --fix --select I
+        language: system
+        types_or: [python, pyi, jupyter]
+        require_serial: true
+
+      - id: shellcheck
+        name: shellcheck
+        entry: ./scripts/super-linter/shellcheck
+        language: system
+        types: [shell]
+        require_serial: true
+
+      - id: gitleaks
+        name: gitleaks
+        entry: ./scripts/super-linter/gitleaks git --pre-commit --redact --staged --verbose
+        language: system
+        pass_filenames: false
+
+      - id: actionlint
+        name: actionlint
+        entry: ./scripts/super-linter/actionlint
+        language: system
+        files: '^\.github/workflows/'
+
       - id: zizmor
         name: zizmor
-        entry: zizmor
+        entry: ./scripts/super-linter/zizmor
         language: system
         files: '^\.github/(actions|workflows)/.*\.ya?ml$'
 

@@ -5,6 +5,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 ENABLE_FIREWALL=${ENABLE_FIREWALL:-"false"}
 
+"$script_dir/super-linter/super-linter-run.sh" echo & # pre-fetch the super-linter image to avoid a long delay on first run
 "$script_dir/devcontainer-setup-pre-commit.sh"
 "$script_dir/devcontainer-setup-keyring.sh"
 "$script_dir/devcontainer-firewall.sh"
