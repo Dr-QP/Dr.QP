@@ -66,15 +66,6 @@ while (($#)); do
   esac
 done
 
-if command -v docker >/dev/null 2>&1; then
-  runtime=docker
-elif command -v podman >/dev/null 2>&1; then
-  runtime=podman
-else
-  echo "Docker or Podman is required to run Super-Linter locally." >&2
-  exit 1
-fi
-
 mkdir -p "$root_dir/.tmp"
 
 default_branch=$(git -C "$root_dir" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || true)
@@ -95,16 +86,16 @@ run_super_linter() {
   local env_file="$1"
 
   "$runtime" run --rm \
-  -e RUN_LOCAL=true \
-  -e DEFAULT_BRANCH="$default_branch" \
-  -e VALIDATE_ALL_CODEBASE="$validate_all_codebase" \
-  -e LOG_LEVEL="$log_level" \
-  -e SAVE_SUPER_LINTER_OUTPUT=true \
-  -e SUPER_LINTER_OUTPUT_DIRECTORY_NAME="log" \
-  --env-file "$env_file" \
-  "${mounts[@]}" \
-  --platform linux/amd64 \
-  "$image"
+    -e RUN_LOCAL=true \
+    -e DEFAULT_BRANCH="$default_branch" \
+    -e VALIDATE_ALL_CODEBASE="$validate_all_codebase" \
+    -e LOG_LEVEL="$log_level" \
+    -e SAVE_SUPER_LINTER_OUTPUT=true \
+    -e SUPER_LINTER_OUTPUT_DIRECTORY_NAME="log" \
+    --env-file "$env_file" \
+    "${mounts[@]}" \
+    --platform linux/amd64 \
+    "$image"
 }
 
 env_file="$root_dir/.tmp/super-linter.env"

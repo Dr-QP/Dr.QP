@@ -49,14 +49,6 @@ while (($#)); do
   esac
 done
 
-if command -v docker >/dev/null 2>&1; then
-  runtime=docker
-elif command -v podman >/dev/null 2>&1; then
-  runtime=podman
-else
-  echo "Docker or Podman is required to inspect Super-Linter." >&2
-  exit 1
-fi
 
 pre_commit_rev()
 {
@@ -134,7 +126,7 @@ check_configured_version()
 }
 
 # shellcheck disable=SC2016
-super_linter_output=$("$runtime" run --rm --entrypoint /bin/bash "$image" -c '
+super_linter_output=$("$runtime" run --platform linux/amd64 --rm --entrypoint /bin/bash "$image" -c '
 set -euo pipefail
 printf "prettier=%s\n" "$(prettier --version)"
 printf "clang-format=%s\n" "$(clang-format --version | sed -nE "s/.*version ([0-9.]+).*/\\1/p")"
