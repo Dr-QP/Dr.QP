@@ -168,7 +168,7 @@ jobs:
       packages: write
     needs:
       - build-dev-image
-    timeout-minutes: 35
+    timeout-minutes: 15
     outputs:
       image: ${{ steps.merge.outputs.image }}
       image_pinned: ${{ steps.merge.outputs.image_pinned }}
@@ -283,7 +283,7 @@ jobs:
   dev-container-ci:
     name: Devcontainer image
     needs: [merge-dev-image]
-    timeout-minutes: 35
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -434,7 +434,7 @@ jobs:
       packages: write
     needs:
       - build-deploy-image
-    timeout-minutes: 35
+    timeout-minutes: 15
     outputs:
       image: ${{ steps.merge.outputs.image }}
     steps:
