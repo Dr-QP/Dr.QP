@@ -133,7 +133,7 @@ jobs:
                 repo: context.repo.repo,
                 username: context.actor,
               });
-              permission = data.user?.permissions;
+              permission = data.permission;
             } catch (error) {
               throw new Error(
                 `Could not verify write access for ${context.actor}: ${error.message}`
