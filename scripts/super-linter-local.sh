@@ -4,8 +4,9 @@ set -euo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 root_dir=$(cd "$script_dir/.." && pwd)
+. "$script_dir/super-linter-defaults.sh"
 
-image="${SUPER_LINTER_IMAGE:-ghcr.io/super-linter/super-linter:v8.5.0}"
+image="${SUPER_LINTER_IMAGE:-$SUPER_LINTER_DEFAULT_IMAGE}"
 validate_all_codebase="${VALIDATE_ALL_CODEBASE:-false}"
 log_level="${LOG_LEVEL:-INFO}"
 

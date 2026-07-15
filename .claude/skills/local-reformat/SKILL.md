@@ -30,7 +30,9 @@ changes.
   ```
 
 - Install and start Docker or Podman before running Super-Linter. The local
-  wrapper pulls `ghcr.io/super-linter/super-linter:v8.5.0` unless overridden.
+  wrapper uses the image configured in
+  [super-linter-defaults.sh](../../../scripts/super-linter-defaults.sh) unless
+  overridden.
 - The shared clang-format configuration is
   [.clang-format](../../../.clang-format).
 
