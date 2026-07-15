@@ -52,6 +52,36 @@ def generate_test_description():
 
 @pytest.mark.slow
 @pytest.mark.launch(fixture=generate_test_description)
+def test_balance_mode_levels_body_on_positive_diagonal_tilt(robot, generate_test_description):
+    """Keep level after a pitch tilt is reset before a positive diagonal tilt."""
+    robot._arm_robot()
+    initial_roll, initial_pitch = robot._sample_base_roll_pitch(
+        settle_sim_time_sec=robot.POSE_SETTLE_DURATION
+    )
+    robot._set_balance_mode(True)
+
+    robot._assert_body_level_at_board_tilt(
+        0.0,
+        _TILT_MAGNITUDE,
+        initial_roll,
+        initial_pitch,
+    )
+    robot._reset_board_and_balance_mode(initial_roll, initial_pitch)
+
+    robot._assert_body_level_at_board_tilt(
+        _TILT_DIAGONAL,
+        _TILT_DIAGONAL,
+        initial_roll,
+        initial_pitch,
+    )
+
+    yield
+    _launch_description, proc_info = generate_test_description
+    assert_processes_exited_cleanly(proc_info)
+
+
+@pytest.mark.slow
+@pytest.mark.launch(fixture=generate_test_description)
 def test_balance_mode_levels_body_on_all_tilt_angles(robot, generate_test_description):
     robot._arm_robot()
     initial_roll, initial_pitch = robot._sample_base_roll_pitch(
