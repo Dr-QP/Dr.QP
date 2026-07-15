@@ -1,159 +1,119 @@
 ---
 name: update-branch
-description: 'Update the current Git branch from origin by merging `origin/main` into it. Use when asked to sync a feature branch, bring branch up to date, resolve merge conflicts, or unblock CI after base branch drift. Keywords: merge `origin/main`, update branch, sync with origin/main, resolve merge conflicts.'
+description: 'Update the current Git feature branch from a remote base branch by fetching and merging its remote-tracking ref. Use when asked to sync a feature branch, bring a branch up to date with `origin/main`, refresh a stale PR branch, or unblock CI after base-branch drift. Keywords: update branch, sync with origin/main, fetch and merge main, refresh feature branch.'
 ---
 
 # Update Branch from origin/main
 
-Safely update the current branch by merging `origin/main` into it, resolving conflicts autonomously when confidence is high, and requesting user input when confidence is low.
+Fetch a remote base branch, verify whether the current feature branch is behind
+it, and delegate merging and conflict resolution to
+[git-merge-resolve](../git-merge-resolve/SKILL.md).
 
 ## When to Use This Skill
 
-- Sync a feature branch with latest changes from `origin/main`
+- Sync a feature branch with the latest `origin/main`
 - Resolve branch drift causing CI failures or stale diffs
-- Refresh long-lived PR branches before final review
-- Resolve merge conflicts while preserving branch intent
+- Refresh a long-lived pull request branch before final review
+- Fetch and merge a configurable remote base branch
+
+For a merge that does not require fetching or base-branch synchronization, use
+[git-merge-resolve](../git-merge-resolve/SKILL.md) directly.
 
 ## Prerequisites
 
-- Git repository with `origin` remote configured
-- Clean working tree (or user-approved stash workflow)
-- Current branch is not `main`
-- User intent is merge-based update (not rebase)
+- Git repository with the requested remote configured
+- Clean working tree
+- Current branch is not `main` or `master`
+- User intent is a merge-based update, not a rebase
 
 ## Safety Rules
 
 1. NEVER force-push as part of this workflow.
 2. NEVER discard user changes without explicit permission.
-3. ALWAYS preserve branch-specific behavior and tests.
-4. MANDATORY: If conflict-resolution confidence is below 70%, stop and prompt the user.
+3. NEVER change Git configuration or switch remotes.
+4. Use local Git commands for branch updates and pushes; never update branch
+   refs through a GitHub API or MCP tool.
 
 ## Bundled Script
 
-Use the helper script instead of running git commands manually:
+Use [update-branch.sh](scripts/update-branch.sh) instead of running the fetch and
+merge commands manually. It:
 
-- [update-branch.sh](scripts/update-branch.sh) handles preflight checks, fetches `origin`, detects up-to-date state, and runs `git merge --no-ff origin/main`.
+- checks repository, branch, and working-tree preconditions
+- fetches the configured remote
+- detects an already-current branch
+- delegates the merge to the `git-merge-resolve` bundled script
 
-Options: `--remote <name>` (default: `origin`), `--base <branch>` (default: `main`).
+Options:
 
-Exit codes: `0` merged, `1` conflicts, `3` already up to date, `5` on default branch.
+- `--remote <name>` selects the remote; default: `origin`.
+- `--base <branch>` selects the base branch; default: `main`.
 
-## Step-by-Step Workflow
+Exit codes:
 
-### Workflow 1: Run the Script
+- `0`: merge completed successfully
+- `1`: merge conflicts require the `git-merge-resolve` resolution workflow
+- `2`: usage or preflight error
+- `3`: current branch is already up to date
+- `5`: current branch is a protected default branch
+
+## Workflow 1: Run the Update Script
 
 ```bash
 .claude/skills/update-branch/scripts/update-branch.sh
 ```
 
-The script handles:
+The script defaults to `origin/main`. Supply `--remote` or `--base` only when
+the user requested different values.
 
-- Preflight checks (dirty tree → error, on default branch → error)
-- `git fetch origin`
-- Already-up-to-date detection (exit 3)
-- `git merge --no-ff origin/main`
-- Conflict detection and reporting (exit 1)
+## Workflow 2: Handle the Result
 
-### Workflow 2: Handle Script Result
+- **Exit 0**: the fetch and merge completed; the delegated
+  [git-merge-resolve](../git-merge-resolve/SKILL.md) completion workflow still
+  requires reformatting and targeted validation before push.
+- **Exit 1**: invoke and complete the
+  [git-merge-resolve](../git-merge-resolve/SKILL.md) conflict-resolution and
+  completion workflows, then return here.
+- **Exit 3**: report that the branch is already up to date; make no changes.
+- **Exit 2 or 5**: fix the reported error before retrying. Do not discard or
+  stash changes without user approval.
 
-- **Exit 0** (merged): run the mandatory reformat workflow, run targeted
-  validation, then push.
-- **Exit 3** (up to date): nothing to do.
-- **Exit 1** (conflicts): resolve per [Workflow 3](#workflow-3-autonomous-conflict-resolution) below, then commit and push.
-- **Exit 2 / 5**: fix the reported error before retrying.
+## Workflow 3: Push the Updated Branch
 
-### Workflow 3: Autonomous Conflict Resolution
+Only after the `git-merge-resolve` workflow has completed its mandatory
+reformat and targeted validation:
 
-When merge conflicts occur, resolve in this order with confidence scoring.
-
-#### Confidence Scoring
-
-- **90-100%**: Mechanical conflict only (import order, whitespace, lockstep version bumps).
-- **80-89%**: One-side clearly supersedes the other based on nearby code and tests.
-- **70-79%**: Small logic differences with clear local convention and passing targeted tests.
-- **<70%**: Behavioral ambiguity, business-rule conflict, API contract uncertainty, or multiple plausible outcomes.
-
-#### Resolution Heuristics
-
-1. Prefer conflict blocks that preserve current branch feature behavior.
-2. Incorporate non-conflicting safety or compatibility updates from `origin/main`.
-3. Keep public interfaces stable unless branch changes explicitly require updates.
-4. Ensure resulting code compiles and aligns with repository conventions.
-
-#### Mandatory User Escalation
-
-If any conflicted hunk is below 70% confidence, pause and ask the user:
-
-```text
-I can continue automatically for high-confidence conflicts, but at least one conflict is below 70% confidence.
-
-File: <path>
-Conflict summary: <what differs>
-Option A: <interpretation>
-Option B: <interpretation>
-Recommended: <best guess and why>
-
-Please choose A, B, or provide a custom resolution.
-```
-
-### Workflow 4: Complete Merge and Validate
-
-1. After resolving conflicts:
+1. Confirm the merge result:
 
    ```bash
-   git add <resolved-files>
-   git commit
-   ```
-
-2. Invoke and complete the [local-reformat](../local-reformat/SKILL.md)
-   workflow before any targeted verification or push. Run every formatter and
-   validation required by that skill; do not substitute a partial formatter
-   command. If reformat fails, stop and fix or report the failure before
-   continuing.
-
-3. Run targeted verification before push:
-   - Build/test packages or modules impacted by conflict files
-   - Run lint or static checks where available
-
-4. Confirm merge result:
-
-   ```bash
+   git status --short --branch
    git log --oneline --decorate -n 5
    ```
 
-5. Push updated branch:
+2. Push through the configured Git remote using local Git:
+
    ```bash
    git push origin HEAD
    ```
 
-## Conflict Types and Default Actions
-
-| Conflict Type                | Default Action                                                 | Confidence Baseline |
-| ---------------------------- | -------------------------------------------------------------- | ------------------- |
-| Whitespace / formatting only | Keep style consistent with file                                | 95%                 |
-| Import/include ordering      | Keep compilable/import-valid ordering                          | 90%                 |
-| Dependency/version bumps     | Prefer newer compatible version from `origin/main`             | 80%                 |
-| Test expectation drift       | Preserve branch behavior, then adjust tests if intent is clear | 75%                 |
-| Core logic divergence        | Escalate unless intent is unambiguous                          | <70% by default     |
-| API contract changes         | Escalate unless covered by explicit branch requirement         | <70% by default     |
+   Replace `origin` with the explicitly selected remote. If push authentication
+   is unavailable, stop and report the blocker. Do not fall back to an API-based
+   ref update.
 
 ## Completion Criteria
 
-- `origin/main` is merged into current branch
-- All conflicts are resolved
-- No unresolved markers remain:
-  ```bash
-  git grep -n "<<<<<<<\|=======\|>>>>>>>" || true
-  ```
-- The mandatory local reformat workflow completed successfully after the merge
-- Relevant validation checks pass
-- Branch is pushed to `origin`
+- The configured remote was fetched
+- The remote base ref is merged into the current branch, or was already merged
+- The delegated `git-merge-resolve` workflow resolved all conflicts and ran its
+  required reformat and targeted validation
+- The updated branch was pushed through local Git when a merge occurred
 
 ## Troubleshooting
 
-| Issue                        | Likely Cause                    | Action                                            |
-| ---------------------------- | ------------------------------- | ------------------------------------------------- |
-| Merge aborted unexpectedly   | Interrupted conflict workflow   | Re-run `git merge --abort`, then restart          |
-| Too many ambiguous conflicts | Widespread refactor overlap     | Escalate early; request user decision on strategy |
-| Tests fail post-merge        | Semantic drift from mainline    | Fix behavior or tests based on confirmed intent   |
-| Wrong branch updated         | Incorrect checkout before merge | Switch to target branch and repeat workflow       |
+| Issue                     | Likely Cause                   | Action                                                  |
+| ------------------------- | ------------------------------ | ------------------------------------------------------- |
+| Dirty working tree        | Local uncommitted changes      | Ask the user to commit or approve a stash workflow      |
+| Current branch is default | Incorrect checkout             | Switch only with user authorization, then retry         |
+| Conflicts reported        | Feature and base diverged      | Follow `git-merge-resolve`; do not improvise a shortcut |
+| Fetch fails               | Network, remote, or auth issue | Report the error without changing the configured remote |
+| Push fails                | Authentication unavailable     | Report the blocker; do not update refs through an API   |

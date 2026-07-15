@@ -54,8 +54,8 @@ gh run view <run-id> --repo <owner>/<repo> --job <job-id> --log
 Use the helper script when the input is a GitHub Actions URL:
 
 ```bash
-./scripts/parse-actions-url.sh --url '<github-actions-url>'
-./scripts/parse-actions-url.sh --url '<github-actions-url>' --format command --log
+./.claude/skills/extract-github-actions-logs/scripts/parse-actions-url.sh --url '<github-actions-url>'
+./.claude/skills/extract-github-actions-logs/scripts/parse-actions-url.sh --url '<github-actions-url>' --format command --log
 ```
 
 If the URL is a run URL, fetch the whole run log.
@@ -71,7 +71,7 @@ gh run view <run-id> --repo <owner>/<repo> --job <job-id> --log | grep -nE "FAIL
 Or generate that command from the helper script:
 
 ```bash
-./scripts/parse-actions-url.sh --url '<github-actions-job-url>' --format command --log --grep-failures
+./.claude/skills/extract-github-actions-logs/scripts/parse-actions-url.sh --url '<github-actions-job-url>' --format command --log --grep-failures
 ```
 
 If the user needs the uploaded colcon logs or xUnit reports from the run, download the artifacts with `gh run download`.
@@ -90,14 +90,14 @@ gh api repos/<owner>/<repo>/actions/runs/<run-id>/artifacts | grep -o '"name":"[
 Use these commands:
 
 ```bash
-gh run download <run-id> --repo <owner>/<repo> -n colcon-logs-<arch> -D ./artifacts
-gh run download <run-id> --repo <owner>/<repo> -n colcon-test-reports-<arch> -D ./artifacts
+gh run download <run-id> --repo <owner>/<repo> -n colcon-logs-<arch> -D ./.tmp/actions-run-<run-id>
+gh run download <run-id> --repo <owner>/<repo> -n colcon-test-reports-<arch> -D ./.tmp/actions-run-<run-id>
 ```
 
 Or download both at once:
 
 ```bash
-gh run download <run-id> --repo <owner>/<repo> -n colcon-logs-<arch> -n colcon-test-reports-<arch> -D ./artifacts
+gh run download <run-id> --repo <owner>/<repo> -n colcon-logs-<arch> -n colcon-test-reports-<arch> -D ./.tmp/actions-run-<run-id>
 ```
 
 ## Example
@@ -110,7 +110,7 @@ Run:
 
 ```bash
 gh auth status
-./scripts/parse-actions-url.sh --url 'https://github.com/Dr-QP/Dr.QP/actions/runs/26806349222' --format command --log
+./.claude/skills/extract-github-actions-logs/scripts/parse-actions-url.sh --url 'https://github.com/Dr-QP/Dr.QP/actions/runs/26806349222' --format command --log
 ```
 
 Then run the emitted `gh run view ... --log` command to fetch the whole run log.
@@ -156,5 +156,5 @@ gh run view 26806349222 --repo Dr-QP/Dr.QP --job 79025184711 --log | grep -nE "F
 The same job URL can be parsed with:
 
 ```bash
-./scripts/parse-actions-url.sh --url 'https://github.com/Dr-QP/Dr.QP/actions/runs/26806349222/job/79025184711?pr=366'
+./.claude/skills/extract-github-actions-logs/scripts/parse-actions-url.sh --url 'https://github.com/Dr-QP/Dr.QP/actions/runs/26806349222/job/79025184711?pr=366'
 ```

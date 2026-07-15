@@ -24,7 +24,8 @@ Generate a comprehensive PR description by analyzing the change set and filling 
 
 ## Inputs
 
-- **Branch Name** or **Commit Range**: Default `origin/main..HEAD` or `main..<branch>`
+- **Base Ref** or **Commit Range**: Default to the PR merge base with
+  `origin/main`; accept an explicit range when the caller provides one.
 - **Related Issues**: GitHub issue numbers
 - **Breaking Changes**: Yes/No
 - **Migration Steps**: If breaking
@@ -34,11 +35,18 @@ Generate a comprehensive PR description by analyzing the change set and filling 
 ### Step 1: Analyze Git Changes
 
 ```bash
-git diff --name-status <range>
-git diff <range>
-git log --oneline <range>
-git diff --stat <range>
+base_ref=origin/main
+merge_base="$(git merge-base "$base_ref" HEAD)"
+git diff --name-status "$merge_base"..HEAD
+git diff "$merge_base"..HEAD
+git log --oneline "$merge_base"..HEAD
+git diff --stat "$merge_base"..HEAD
 ```
+
+Use the merge base rather than a raw `origin/main..HEAD` range when the branch
+and its base have diverged: PR review compares the changes introduced by the
+head branch since that common ancestor. If the caller supplies an explicit
+commit range or the PR targets a different base branch, use that scope instead.
 
 Categorize: new, modified, deleted, renamed.
 

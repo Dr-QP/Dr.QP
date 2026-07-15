@@ -1,420 +1,187 @@
 ---
 name: ros2-launch-management
-description: Create, configure, and debug ROS 2 launch files using Python launch API. Use when asked to create launch files, configure launch parameters, debug launch issues, compose launch files, handle launch events, coordinate multi-robot launches, or troubleshoot node startup problems. Supports parameter passing, substitutions, event handlers, and launch file includes.
+description: Create, compose, configure, and debug ROS 2 Python launch files in this workspace. Use when adding a launch file, launch arguments, node actions, includes, parameter files, or startup troubleshooting; use launch-testing to test launched processes and ros2-lifecycle-management for lifecycle transitions.
 ---
 
 # ROS 2 Launch Management
 
-Create and manage ROS 2 launch files for orchestrating multi-node systems with parameter configuration, event handling, and composition.
-
-## When to Use This Skill
-
-- Create new launch files for single or multiple nodes
-- Configure launch parameters and pass them to nodes
-- Debug launch file issues and node startup problems
-- Compose launch files using includes
-- Handle launch events (process started, exited, etc.)
-- Set up multi-robot or multi-machine launches
-- Use launch substitutions and conditionals
-- Troubleshoot "launch file not found" or parameter errors
-
-## Prerequisites
-
-- ROS 2 Jazzy installation
-- Workspace with packages containing launch directories
-- Python 3.8+ (launch files use Python API)
-- Understanding of ROS 2 node parameters
-- `ros2 launch` command available
-
-## Launch File Structure
-
-| Component             | Purpose                         | Example                                       |
-| --------------------- | ------------------------------- | --------------------------------------------- |
-| **Import statements** | Load launch API modules         | `from launch import LaunchDescription`        |
-| **Node declarations** | Define nodes to launch          | `Node(package='pkg', executable='node')`      |
-| **Parameters**        | Pass configuration to nodes     | `parameters=[{'param': value}]`               |
-| **Substitutions**     | Dynamic value resolution        | `PathJoinSubstitution`, `LaunchConfiguration` |
-| **Event handlers**    | React to process events         | `RegisterEventHandler`                        |
-| **Includes**          | Compose from other launch files | `IncludeLaunchDescription`                    |
-
-## Step-by-Step Workflows
-
-### Workflow 1: Create Basic Launch File for Single Node
-
-Create a simple launch file to start one node with parameters.
-
-1. Navigate to package launch directory:
-
-   ```bash
-   cd <workspace_root>/packages/runtime/<package_name>/launch/
-   ```
-
-2. Create launch file (e.g., `basic.launch.py`):
-
-   ```python
-   from launch import LaunchDescription
-   from launch_ros.actions import Node
-
-   def generate_launch_description():
-       return LaunchDescription([
-           Node(
-               package='<package_name>',
-               executable='<node_executable>',
-               name='<node_name>',
-               output='screen',
-               parameters=[{
-                   'param1': 'value1',
-                   'param2': 42,
-                   'param3': True
-               }]
-           )
-       ])
-   ```
-
-3. Test the launch file through the ROS wrapper:
-
-   ```bash
-   scripts/with-ros-env.sh ros2 launch <package_name> basic.launch.py
-   ```
-
-4. Verify the node started correctly with `scripts/with-ros-env.sh ros2 node list`
-
-**When to use**: Simple single-node launches with static configuration
-
-### Workflow 2: Create Launch File with Multiple Nodes and Namespaces
-
-Launch multiple nodes with different configurations and namespaces.
-
-1. Create launch file with multiple nodes:
-
-   ```python
-   from launch import LaunchDescription
-   from launch_ros.actions import Node
-
-   def generate_launch_description():
-       # Node 1: Serial driver
-       serial_node = Node(
-           package='drqp_serial',
-           executable='serial_node',
-           name='serial_driver',
-           namespace='robot1',
-           output='screen',
-           parameters=[{
-               'port': '/dev/ttyUSB0',
-               'baudrate': 115200
-           }]
-       )
-
-       # Node 2: Controller
-       controller_node = Node(
-           package='drqp_control',
-           executable='controller_node',
-           name='controller',
-           namespace='robot1',
-           output='screen',
-           parameters=[{
-               'update_rate': 50.0,
-               'control_mode': 'position'
-           }]
-       )
-
-       return LaunchDescription([
-           serial_node,
-           controller_node
-       ])
-   ```
-
-2. Launch the system:
-
-   ```bash
-   ros2 launch <package_name> multi_node.launch.py
-   ```
-
-3. Verify nodes are in correct namespace:
-   ```bash
-   ros2 node list
-   # Expected: /robot1/serial_driver, /robot1/controller
-   ```
-
-**When to use**: Multi-node systems requiring coordination and namespacing
-
-### Workflow 3: Launch File with Parameters from YAML File
-
-Load parameters from external YAML configuration files.
-
-1. Create parameters YAML file (`config/robot_params.yaml`):
-
-   ```yaml
-   /**:
-     ros__parameters:
-       robot_name: 'Dr.QP'
-       max_velocity: 1.5
-       control_frequency: 50
-   ```
-
-2. Create launch file that loads YAML:
-
-   ```python
-   import os
-   from launch import LaunchDescription
-   from launch_ros.actions import Node
-   from ament_index_python.packages import get_package_share_directory
-
-   def generate_launch_description():
-       # Get package directory
-       pkg_dir = get_package_share_directory('<package_name>')
-       params_file = os.path.join(pkg_dir, 'config', 'robot_params.yaml')
-
-       node = Node(
-           package='<package_name>',
-           executable='<node_executable>',
-           name='<node_name>',
-           output='screen',
-           parameters=[params_file]
-       )
-
-       return LaunchDescription([node])
-   ```
-
-3. Ensure YAML is installed by adding to `CMakeLists.txt`:
-
-   ```cmake
-   install(DIRECTORY config
-     DESTINATION share/${PROJECT_NAME}
-   )
-   ```
-
-4. Rebuild and launch through the ROS wrapper:
-
-   ```bash
-   scripts/with-ros-env.sh python3 -m colcon build --packages-select <package_name>
-   scripts/with-ros-env.sh ros2 launch <package_name> params.launch.py
-   ```
-
-5. Verify parameters loaded:
-   ```bash
-   scripts/with-ros-env.sh ros2 param list /<node_name>
-   ```
-
-**When to use**: Complex parameter configurations, multiple environments (dev/prod)
-
-### Workflow 4: Launch File with Conditionals and Substitutions
-
-Use launch arguments and conditionals for flexible configuration.
-
-1. Create launch file with arguments:
-
-   ```python
-   from launch import LaunchDescription
-   from launch.actions import DeclareLaunchArgument
-   from launch.conditions import IfCondition
-   from launch.substitutions import LaunchConfiguration
-   from launch_ros.actions import Node
-
-   def generate_launch_description():
-       # Declare arguments
-       use_sim_arg = DeclareLaunchArgument(
-           'use_sim',
-           default_value='false',
-           description='Use simulation instead of real hardware'
-       )
-
-       robot_name_arg = DeclareLaunchArgument(
-           'robot_name',
-           default_value='robot1',
-           description='Name of the robot'
-       )
-
-       # Use arguments in node configuration
-       hardware_node = Node(
-           package='drqp_serial',
-           executable='serial_node',
-           name='serial_driver',
-           condition= UnlessCondition(
-               LaunchConfiguration('use_sim', default='false')
-           ),
-           parameters=[{
-               'robot_name': LaunchConfiguration('robot_name')
-           }]
-       )
-
-       return LaunchDescription([
-           use_sim_arg,
-           robot_name_arg,
-           hardware_node
-       ])
-   ```
-
-2. Launch with arguments:
-
-   ```bash
-   ros2 launch <package_name> conditional.launch.py use_sim:=true robot_name:=drqp1
-   ```
-
-3. View available arguments:
-   ```bash
-   ros2 launch <package_name> conditional.launch.py --show-args
-   ```
-
-**When to use**: Flexible launches for different environments, testing vs production
-
-### Workflow 5: Compose Launch Files with Includes
-
-Build complex launch configurations by including other launch files.
-
-1. Create base launch file (`base.launch.py`):
-
-   ```python
-   from launch import LaunchDescription
-   from launch_ros.actions import Node
-
-   def generate_launch_description():
-       return LaunchDescription([
-           Node(
-               package='drqp_serial',
-               executable='serial_node',
-               name='serial_driver'
-           )
-       ])
-   ```
-
-2. Create main launch file that includes base:
-
-   ```python
-   import os
-   from launch import LaunchDescription
-   from launch.actions import IncludeLaunchDescription
-   from launch.launch_description_sources import PythonLaunchDescriptionSource
-   from launch_ros.actions import Node
-   from ament_index_python.packages import get_package_share_directory
-
-   def generate_launch_description():
-       pkg_dir = get_package_share_directory('<package_name>')
-
-       # Include base launch file
-       base_launch = IncludeLaunchDescription(
-           PythonLaunchDescriptionSource(
-               os.path.join(pkg_dir, 'launch', 'base.launch.py')
-           )
-       )
-
-       # Add additional nodes
-       controller_node = Node(
-           package='drqp_control',
-           executable='controller_node',
-           name='controller'
-       )
-
-       return LaunchDescription([
-           base_launch,
-           controller_node
-       ])
-   ```
-
-3. Launch the composed system:
-   ```bash
-   ros2 launch <package_name> main.launch.py
-   ```
-
-**When to use**: Modular launch configurations, reusable component launches
-
-### Workflow 6: Debug Launch File Issues
-
-Troubleshoot launch file problems and node startup failures.
-
-1. Enable verbose output:
-
-   ```bash
-   ros2 launch <package_name> <launch_file> --debug
-   ```
-
-2. Check launch file syntax without running:
-
-   ```bash
-   python3 <launch_file_path>
-   # Should complete without errors if syntax is valid
-   ```
-
-3. View launch file tree structure:
-
-   ```bash
-   ros2 launch <package_name> <launch_file> --show-all-subprocesses-output
-   ```
-
-4. Check if package and executables exist:
-
-   ```bash
-   ros2 pkg prefix <package_name>
-   ls $(ros2 pkg prefix <package_name>)/lib/<package_name>/
-   ```
-
-5. Test node separately without launch:
-
-   ```bash
-   ros2 run <package_name> <executable>
-   ```
-
-6. Check parameter file syntax:
-
-   ```bash
-   cat <params_file>.yaml
-   # Verify YAML syntax is correct
-   ```
-
-7. Monitor node output during launch:
-   ```bash
-   ros2 launch <package_name> <launch_file> 2>&1 | tee launch.log
-   ```
-
-**When to use**: Launch file errors, nodes failing to start, parameter issues
-
-## Common Launch Patterns
-
-| Pattern           | Use Case               | Key Components                         |
-| ----------------- | ---------------------- | -------------------------------------- |
-| **Single Node**   | Simple node startup    | `Node()` with parameters               |
-| **Multi-Node**    | Coordinated system     | Multiple `Node()` declarations         |
-| **Parameterized** | External configuration | YAML files, `parameters=`              |
-| **Conditional**   | Environment-specific   | `DeclareLaunchArgument`, `IfCondition` |
-| **Composed**      | Modular systems        | `IncludeLaunchDescription`             |
-| **Event-Driven**  | Process monitoring     | `RegisterEventHandler`                 |
-
-## Troubleshooting
-
-| Issue                    | Cause                                      | Solution                                                                        |
-| ------------------------ | ------------------------------------------ | ------------------------------------------------------------------------------- |
-| "Package not found"      | Package not installed or not sourced       | Rebuild the package and re-run the launch command via `scripts/with-ros-env.sh` |
-| "Executable not found"   | Wrong executable name or not built         | Check `install/<pkg>/lib/<pkg>/` for executables                                |
-| "Launch file not found"  | Wrong path or not installed                | Verify launch file in `install/<pkg>/share/<pkg>/launch/`                       |
-| Parameters not loaded    | Wrong YAML syntax or file path             | Validate YAML syntax, check file exists in install                              |
-| Node crashes immediately | Parameter mismatch or missing dependencies | Check node logs, verify required parameters                                     |
-| Multiple nodes same name | Name collision                             | Use unique names or namespaces                                                  |
-| Include not working      | Wrong package name or launch file path     | Verify `get_package_share_directory()` returns correct path                     |
-| Arguments not passed     | Wrong syntax in command line               | Use `arg_name:=value` (colon-equals) not equals                                 |
-
-## Launch File Installation
-
-To make launch files available after building:
-
-1. Add to `CMakeLists.txt`:
-
-   ```cmake
-   # Install launch files
-   install(DIRECTORY launch
-     DESTINATION share/${PROJECT_NAME}
-   )
-   ```
-
-2. Rebuild package:
-
-   ```bash
-   colcon build --packages-select <package_name>
-   ```
-
-3. Launch files available in `install/<package>/share/<package>/launch/`
-
-## References
-
-- [ROS 2 Launch Documentation](https://docs.ros.org/en/jazzy/Tutorials/Intermediate/Launch/Launch-Main.html)
-- [Launch File Examples](https://docs.ros.org/en/jazzy/How-To-Guides/Launch-file-different-formats.html)
-- [Launch Python API](https://docs.ros.org/en/jazzy/p/launch/)
+Use Python launch files to start processes and pass their configuration. Keep
+the file responsible for composition, not for application behavior or a
+distributed deployment design.
+
+## Run launch commands reliably
+
+Run every ROS command from the workspace root through the wrapper:
+
+```bash
+scripts/with-ros-env.sh ros2 launch <package_name> <launch_file>.launch.py
+```
+
+In Codex, request sandbox escalation when launching or inspecting a running
+ROS graph, because those commands need ROS sockets, processes, and log writes.
+If the wrapper cannot source ROS on the host, use the escalation path in
+[ros2-workspace-build](../ros2-workspace-build/SKILL.md); do not retry the
+same command locally. Build an edited package incrementally before launch as
+described there.
+
+Use [launch-testing](../launch-testing/SKILL.md) for assertions about launched
+processes, including clean exit codes. Use
+[ros2-lifecycle-management](../ros2-lifecycle-management/SKILL.md) to manage
+lifecycle state transitions. This skill does not design multi-machine
+networking, fault-recovery state machines, or node internals.
+
+## Create a launch file
+
+Place Python launch files in `<package>/launch/` and name them
+`<purpose>.launch.py`. Declare only arguments that this file owns. For a
+single node, keep the action and its parameters close together:
+
+```python
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+
+def generate_launch_description() -> LaunchDescription:
+    return LaunchDescription([
+        Node(
+            package='<package_name>',
+            executable='<node_executable>',
+            name='<node_name>',
+            output='screen',
+            parameters=[{'update_rate': 50.0}],
+        ),
+    ])
+```
+
+Use a parameter YAML file when values vary by deployment. Resolve an installed
+file through the package share directory; do not rely on the source-tree
+working directory:
+
+```python
+from pathlib import Path
+
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+
+def generate_launch_description() -> LaunchDescription:
+    params_file = Path(get_package_share_directory('<package_name>')) / 'config' / 'params.yaml'
+    return LaunchDescription([
+        Node(
+            package='<package_name>',
+            executable='<node_executable>',
+            parameters=[str(params_file)],
+        ),
+    ])
+```
+
+Install the files. For `ament_cmake`, install both directories:
+
+```cmake
+install(DIRECTORY launch config
+  DESTINATION share/${PROJECT_NAME}
+)
+```
+
+For `ament_python`, include launch files in `setup.py` (and import `glob` and
+`os`):
+
+```python
+data_files=[
+    ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
+    ('share/' + package_name, ['package.xml']),
+    (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
+]
+```
+
+Declare the ROS packages used at runtime in `package.xml`, for example
+`launch`, `launch_ros`, and `ament_index_python` when applicable.
+
+## Add owned arguments and conditions
+
+Use a declared argument and `LaunchConfiguration` for a choice owned by this
+file. `UnlessCondition` is imported from `launch.conditions`.
+
+```python
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.conditions import UnlessCondition
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+
+
+def generate_launch_description() -> LaunchDescription:
+    use_sim = DeclareLaunchArgument('use_sim', default_value='false')
+    hardware_node = Node(
+        package='drqp_serial',
+        executable='serial_node',
+        condition=UnlessCondition(LaunchConfiguration('use_sim')),
+    )
+    return LaunchDescription([use_sim, hardware_node])
+```
+
+Invoke it with `use_sim:=true`; discover arguments with:
+
+```bash
+scripts/with-ros-env.sh ros2 launch <package_name> <launch_file>.launch.py --show-args
+```
+
+## Compose launch files without stealing their arguments
+
+Use `IncludeLaunchDescription` and an installed package-share path to compose
+files. Do **not** redeclare, bind, or explicitly forward arguments owned by
+the included file: values supplied to the outer launch are already available
+through the launch context. Add `launch_arguments={...}.items()` only for a
+value owned and intentionally mapped by the current file.
+
+```python
+from pathlib import Path
+
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+
+
+def generate_launch_description() -> LaunchDescription:
+    included_file = Path(get_package_share_directory('drqp_serial')) / 'launch' / 'driver.launch.py'
+    return LaunchDescription([
+        IncludeLaunchDescription(PythonLaunchDescriptionSource(str(included_file))),
+    ])
+```
+
+Use event handlers only for local launch-process ordering or cleanup. For a
+lifecycle startup sequence, route to the lifecycle skill rather than encoding
+state transitions ad hoc in a general launch file.
+
+## Debug and validate
+
+First inspect the installed artifacts and request the launch system's debug
+output. Put the `--debug` option before the package positional arguments.
+
+```bash
+scripts/with-ros-env.sh ros2 pkg prefix <package_name>
+scripts/with-ros-env.sh ros2 launch --debug <package_name> <launch_file>.launch.py
+scripts/with-ros-env.sh ros2 run <package_name> <node_executable>
+```
+
+A bare `python3 <launch_file>` only defines functions; it does not validate
+the description. As a quick construction check, import the file and call its
+factory (replace the placeholder path):
+
+```bash
+scripts/with-ros-env.sh python3 -c "import importlib.util; p='<launch_file_path>'; s=importlib.util.spec_from_file_location('under_test', p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); assert m.generate_launch_description() is not None"
+```
+
+Then use [launch-testing](../launch-testing/SKILL.md) when behavior, process
+startup, shutdown, parameters, or exit codes need verification. For a running
+system, inspect names, parameters, and logs with
+[ros2-diagnostics](../ros2-diagnostics/SKILL.md).
+
+## Related skills
+
+- [ros2-workspace-build](../ros2-workspace-build/SKILL.md)
+- [launch-testing](../launch-testing/SKILL.md)
+- [ros2-lifecycle-management](../ros2-lifecycle-management/SKILL.md)
+- [ros2-diagnostics](../ros2-diagnostics/SKILL.md)

@@ -1,389 +1,220 @@
 ---
 name: ros2-parameter-tuning
-description: Configure and tune ROS 2 node parameters using YAML files and ros2 param commands. Use when asked to configure parameters, create parameter files, update parameters at runtime, validate parameter syntax, manage parameter namespaces, tune node behavior, or troubleshoot parameter loading issues. Supports static configuration files and dynamic parameter updates.
+description: Configure, validate, install, inspect, and safely tune ROS 2 node parameters in YAML or at runtime. Use when creating parameter files, validating parameter behavior, changing a running node’s settings, or diagnosing parameter loading. Use ros2-launch-management for launch ownership and ros2-diagnostics for graph-level failures.
 ---
 
 # ROS 2 Parameter Tuning
 
-Configure and dynamically tune ROS 2 node parameters using YAML configuration files and runtime parameter commands.
+Keep static configuration, non-mutating validation, and runtime tuning
+separate. A valid YAML file does not prove that a node declares, accepts, or
+uses each parameter.
 
-## When to Use This Skill
+## Run Commands Reliably
 
-- Create parameter YAML files for node configuration
-- Update parameters at runtime without restarting nodes
-- Validate parameter file syntax
-- Manage parameter namespaces
-- Tune control parameters for optimal performance
-- Debug parameter loading issues
-- Save runtime parameters to file
-- Set parameter defaults in code
+Run ROS commands through the workspace overlay wrapper:
 
-## Prerequisites
-
-- ROS 2 Jazzy installation
-- Running ROS 2 nodes to configure
-- Understanding of node parameter requirements
-- `ros2 param` command available
-- Text editor for YAML files
-
-## Parameter Types
-
-| Type             | Example Value   | Python Type   | YAML Syntax         |
-| ---------------- | --------------- | ------------- | ------------------- |
-| **bool**         | `true`, `false` | `bool`        | `param: true`       |
-| **int**          | `42`, `-10`     | `int`         | `param: 42`         |
-| **double**       | `3.14`, `-2.5`  | `float`       | `param: 3.14`       |
-| **string**       | `"hello"`       | `str`         | `param: "hello"`    |
-| **int_array**    | `[1, 2, 3]`     | `List[int]`   | `param: [1, 2, 3]`  |
-| **double_array** | `[1.0, 2.5]`    | `List[float]` | `param: [1.0, 2.5]` |
-| **string_array** | `["a", "b"]`    | `List[str]`   | `param: ["a", "b"]` |
-
-## Step-by-Step Workflows
-
-### Workflow 1: Create Parameter YAML File
-
-Create a parameter configuration file for node initialization.
-
-1. Create config directory in package:
-
-   ```bash
-   mkdir -p <workspace_root>/packages/runtime/<package_name>/config
-   ```
-
-2. Create parameter file (e.g., `config/robot_params.yaml`):
-
-   ```yaml
-   # Node name with double wildcard for namespace flexibility
-   /**:
-     ros__parameters:
-       # Robot identification
-       robot_name: 'Dr.QP'
-       robot_id: 1
-
-       # Control parameters
-       control_frequency: 50.0
-       max_velocity: 1.5
-       max_acceleration: 0.5
-
-       # Safety limits
-       enable_safety: true
-       emergency_stop_enabled: true
-
-       # Communication settings
-       serial_port: '/dev/ttyUSB0'
-       baudrate: 115200
-       timeout_ms: 1000
-
-       # Arrays
-       joint_names: ['joint1', 'joint2', 'joint3', 'joint4']
-       position_limits: [0.0, 180.0, 0.0, 180.0]
-   ```
-
-3. Install config directory in `CMakeLists.txt`:
-
-   ```cmake
-   install(DIRECTORY config
-     DESTINATION share/${PROJECT_NAME}
-   )
-   ```
-
-4. Rebuild package:
-
-   ```bash
-   colcon build --packages-select <package_name> --symlink-install
-   ```
-
-5. Load parameters in launch file:
-
-   ```python
-   import os
-   from ament_index_python.packages import get_package_share_directory
-
-   params_file = os.path.join(
-       get_package_share_directory('<package_name>'),
-       'config',
-       'robot_params.yaml'
-   )
-
-   node = Node(
-       package='<package_name>',
-       executable='<node_name>',
-       parameters=[params_file]
-   )
-   ```
-
-**When to use**: Initial node configuration, environment-specific settings
-
-### Workflow 2: View and List Node Parameters
-
-Inspect current parameter values of running nodes.
-
-1. List all running nodes:
-
-   ```bash
-   ros2 node list
-   ```
-
-2. List all parameters for a specific node:
-
-   ```bash
-   ros2 param list /<node_name>
-   ```
-
-3. Get value of a specific parameter:
-
-   ```bash
-   ros2 param get /<node_name> <parameter_name>
-   ```
-
-4. Get all parameters in YAML format:
-
-   ```bash
-   ros2 param dump /<node_name>
-   ```
-
-5. Save parameters to file:
-   ```bash
-   ros2 param dump /<node_name> --output-dir ./config/
-   ```
-
-**When to use**: Inspecting runtime configuration, debugging parameter issues
-
-### Workflow 3: Update Parameters at Runtime
-
-Change node parameters dynamically without restarting.
-
-1. Set a single parameter:
-
-   ```bash
-   ros2 param set /<node_name> <parameter_name> <value>
-   ```
-
-   Examples:
-
-   ```bash
-   ros2 param set /controller max_velocity 2.0
-   ros2 param set /serial_driver baudrate 115200
-   ros2 param set /robot enable_safety true
-   ```
-
-2. Verify parameter was updated:
-
-   ```bash
-   ros2 param get /<node_name> <parameter_name>
-   ```
-
-3. Load multiple parameters from file:
-
-   ```bash
-   ros2 param load /<node_name> <params_file>.yaml
-   ```
-
-4. Monitor parameter changes in real-time (if node publishes them):
-   ```bash
-   ros2 topic echo /parameter_events
-   ```
-
-**Important**: Not all parameters support runtime updates. Some nodes require restart for changes to take effect.
-
-**When to use**: Tuning control parameters, testing different configurations
-
-### Workflow 4: Parameter Namespace Management
-
-Organize parameters using namespaces for multi-robot systems.
-
-1. Create namespaced parameter file (`config/robot1_params.yaml`):
-
-   ```yaml
-   /robot1/**:
-     ros__parameters:
-       robot_name: 'robot1'
-       max_velocity: 1.5
-
-   /robot2/**:
-     ros__parameters:
-       robot_name: 'robot2'
-       max_velocity: 2.0
-   ```
-
-2. Launch nodes with namespaces:
-
-   ```python
-   robot1_node = Node(
-       package='<package>',
-       executable='<node>',
-       name='controller',
-       namespace='robot1',
-       parameters=[params_file]
-   )
-
-   robot2_node = Node(
-       package='<package>',
-       executable='<node>',
-       name='controller',
-       namespace='robot2',
-       parameters=[params_file]
-   )
-   ```
-
-3. Access namespaced parameters:
-
-   ```bash
-   ros2 param get /robot1/controller max_velocity
-   ros2 param get /robot2/controller max_velocity
-   ```
-
-4. Update namespaced parameters:
-   ```bash
-   ros2 param set /robot1/controller max_velocity 1.8
-   ```
-
-**When to use**: Multi-robot systems, component reuse with different configs
-
-### Workflow 5: Validate Parameter File Syntax
-
-Check parameter files for syntax errors before using them.
-
-1. Attempt to parse YAML file with Python:
-
-   ```bash
-   python3 -c "import yaml; yaml.safe_load(open('config/params.yaml'))"
-   ```
-
-2. Check for common YAML errors:
-   - Consistent indentation (use spaces, not tabs)
-   - Proper quoting of strings with special characters
-   - Correct list syntax `[item1, item2]` or multi-line
-   - Boolean values: `true`/`false` (lowercase)
-
-3. Test parameter file by loading into a running node:
-
-   ```bash
-   ros2 param load /<node_name> config/params.yaml
-   ```
-
-4. Check for parameter type mismatches in node logs:
-   ```bash
-   ros2 run <package> <executable> --ros-args --log-level debug
-   ```
-
-**When to use**: Before committing parameter files, debugging load issues
-
-### Workflow 6: Declare and Use Parameters in Node Code
-
-Define parameters in your ROS 2 node implementation.
-
-**C++ Example:**
-
-```cpp
-class MyNode : public rclcpp::Node
-{
-public:
-  MyNode() : Node("my_node")
-  {
-    // Declare parameters with defaults
-    this->declare_parameter<std::string>("robot_name", "default_robot");
-    this->declare_parameter<double>("max_velocity", 1.0);
-    this->declare_parameter<int>("control_frequency", 50);
-    this->declare_parameter<bool>("enable_safety", true);
-
-    // Get parameter values
-    robot_name_ = this->get_parameter("robot_name").as_string();
-    max_velocity_ = this->get_parameter("max_velocity").as_double();
-    control_frequency_ = this->get_parameter("control_frequency").as_int();
-    enable_safety_ = this->get_parameter("enable_safety").as_bool();
-
-    RCLCPP_INFO(this->get_logger(), "Robot name: %s", robot_name_.c_str());
-    RCLCPP_INFO(this->get_logger(), "Max velocity: %.2f", max_velocity_);
-  }
-
-private:
-  std::string robot_name_;
-  double max_velocity_;
-  int control_frequency_;
-  bool enable_safety_;
-};
+```bash
+scripts/with-ros-env.sh ros2 <verb> <arguments>
 ```
 
-**Python Example:**
+In Codex, request sandbox escalation for ROS discovery sockets, node processes,
+or ROS log writes and state that reason in the request. If ROS is unavailable
+locally, use the workspace container/Codespaces escalation path instead of
+retrying unsourced commands. Use `./.tmp/` for temporary dumps and snapshots.
+
+## Create and Install Static Configuration
+
+Use the node’s actual fully-qualified name, or `/**` only when the file is
+intentionally namespace-independent:
+
+```yaml
+/**:
+  ros__parameters:
+    control_frequency: 50.0
+    max_velocity: 1.5
+    enable_safety: true
+    joint_names: [joint1, joint2]
+```
+
+Install `config/` with the package type that owns it. For `ament_cmake`:
+
+```cmake
+install(DIRECTORY config
+  DESTINATION share/${PROJECT_NAME}
+)
+```
+
+For `ament_python`, include the files in `setup.py`:
 
 ```python
+from glob import glob
+
+data_files=[
+    ('share/ament_index/resource_index/packages', ['resource/<package_name>']),
+    ('share/<package_name>', ['package.xml']),
+    ('share/<package_name>/config', glob('config/*.yaml')),
+]
+```
+
+Build only the package and what it needs after changing installed files:
+
+```bash
+scripts/with-ros-env.sh colcon build --packages-up-to <package_name> \
+  --symlink-install
+```
+
+Load a package-installed file from a launch file owned by that package. Do not
+re-declare or forward launch arguments that belong to an included launch file.
+
+```python
+from pathlib import Path
+
+from ament_index_python.packages import get_package_share_directory
+
+params_file = (
+    Path(get_package_share_directory('<package_name>'))
+    / 'config'
+    / 'params.yaml'
+)
+node = Node(
+    package='<package_name>',
+    executable='<node_name>',
+    parameters=[str(params_file)],
+)
+```
+
+Use `ros2-launch-management` when launch ownership or substitutions are in
+question.
+
+## Validate Without Changing a Running Node
+
+Use `rclpy`'s ROS parameter-file parser to validate both YAML and the ROS
+parameter-file shape without contacting or changing a running node:
+
+```bash
+scripts/with-ros-env.sh python3 - config/params.yaml <<'PY'
+import sys
+
+import yaml
+from rclpy.parameter import parameter_dict_from_yaml_file
+
+parameter_file = sys.argv[1]
+try:
+    parameters = parameter_dict_from_yaml_file(
+        parameter_file, use_wildcard=True
+    )
+except (OSError, RuntimeError, TypeError, ValueError, yaml.YAMLError) as error:
+    raise SystemExit(
+        f'Invalid ROS parameter file {parameter_file}: {error}'
+    ) from error
+
+if not parameters:
+    raise SystemExit(
+        f'Invalid ROS parameter file {parameter_file}: no parameters found'
+    )
+PY
+```
+
+The command exits nonzero with `Invalid ROS parameter file ...` for unreadable
+files, YAML/parser errors, invalid ROS node mappings, or a file with no
+parameters. It validates syntax and ROS parameter-file structure only; it does
+not confirm that a particular node declares or accepts the values.
+
+Then inspect what a running node declares and currently uses. These commands do
+not change it:
+
+```bash
+scripts/with-ros-env.sh ros2 param list /<node_name>
+scripts/with-ros-env.sh ros2 param describe /<node_name> <parameter_name>
+scripts/with-ros-env.sh ros2 param get /<node_name> <parameter_name>
+mkdir -p ./.tmp
+scripts/with-ros-env.sh ros2 param dump /<node_name> > ./.tmp/parameters-before.yaml
+```
+
+Jazzy’s `ros2 param dump` writes YAML to standard output; it has no
+`--output-dir` option. Treat `ros2 param load` as a runtime mutation, not a
+syntax check.
+
+## Tune a Running Node Safely
+
+Capture the original value, make one change, and verify both the accepted value
+and observable behavior. Do not batch unrelated tuning changes.
+
+```bash
+scripts/with-ros-env.sh ros2 param get /<node_name> max_velocity
+scripts/with-ros-env.sh ros2 param set /<node_name> max_velocity 1.2
+scripts/with-ros-env.sh ros2 param get /<node_name> max_velocity
+scripts/with-ros-env.sh ros2 topic echo /parameter_events --once --timeout 5
+```
+
+If the node rejects the request or behavior regresses, restore the captured
+value and verify it. For a multi-parameter rollback, snapshot first and load
+only the specific prior file with authorization:
+
+```bash
+scripts/with-ros-env.sh ros2 param set /<node_name> max_velocity <previous_value>
+scripts/with-ros-env.sh ros2 param get /<node_name> max_velocity
+scripts/with-ros-env.sh ros2 param load /<node_name> ./.tmp/parameters-before.yaml
+```
+
+`param get` confirms the node’s stored value, not that its controller or cache
+uses the value. Pair it with the relevant safety, output, or diagnostics check.
+
+## Implement Dynamic Parameters Correctly
+
+Declare parameters and validate proposed changes before committing them to
+cached state. Rejecting a bad update keeps both the ROS parameter value and the
+cache unchanged.
+
+Python (`rclpy`) example:
+
+```python
+from rcl_interfaces.msg import SetParametersResult
 from rclpy.node import Node
+from rclpy.parameter import Parameter
 
-class MyNode(Node):
-    def __init__(self):
-        super().__init__('my_node')
 
-        # Declare parameters with defaults
-        self.declare_parameter('robot_name', 'default_robot')
+class Controller(Node):
+    def __init__(self) -> None:
+        super().__init__('controller')
         self.declare_parameter('max_velocity', 1.0)
-        self.declare_parameter('control_frequency', 50)
-        self.declare_parameter('enable_safety', True)
-
-        # Get parameter values
-        self.robot_name = self.get_parameter('robot_name').value
         self.max_velocity = self.get_parameter('max_velocity').value
-        self.control_frequency = self.get_parameter('control_frequency').value
-        self.enable_safety = self.get_parameter('enable_safety').value
+        self.add_on_set_parameters_callback(self._validate_and_apply)
 
-        self.get_logger().info(f'Robot name: {self.robot_name}')
-        self.get_logger().info(f'Max velocity: {self.max_velocity}')
+    def _validate_and_apply(
+        self, parameters: list[Parameter]
+    ) -> SetParametersResult:
+        candidate = self.max_velocity
+        for parameter in parameters:
+            if parameter.name == 'max_velocity':
+                is_valid = (
+                    parameter.type_ == Parameter.Type.DOUBLE
+                    and 0.0 < parameter.value <= 3.0
+                )
+                if not is_valid:
+                    return SetParametersResult(
+                        successful=False, reason='max_velocity must be in (0, 3]'
+                    )
+                candidate = parameter.value
+        self.max_velocity = candidate
+        return SetParametersResult(successful=True)
 ```
 
-**When to use**: Implementing new nodes, defining node configuration interface
+For a C++ node, use `add_on_set_parameters_callback`, validate the complete
+candidate set, and update the cached member only after validation succeeds.
+Keep a callback handle as a member so the callback remains registered. Test
+both an accepted update and a rejected update; the latter must leave the cached
+value unchanged.
 
-## Parameter Best Practices
+## Boundaries and Handoffs
 
-| Practice                  | Rationale                              | Implementation                               |
-| ------------------------- | -------------------------------------- | -------------------------------------------- |
-| **Declare with defaults** | Ensures node works without config file | Use `declare_parameter()` with default value |
-| **Validate ranges**       | Prevents invalid configurations        | Check parameter values after loading         |
-| **Use descriptive names** | Makes configuration self-documenting   | `max_velocity` not `mv`                      |
-| **Group related params**  | Improves organization                  | Use common prefixes or namespaces            |
-| **Document parameters**   | Helps users configure correctly        | Add comments in YAML, README                 |
-| **Version config files**  | Tracks configuration changes           | Commit YAML files to git                     |
-
-## Troubleshooting
-
-| Issue                         | Cause                                   | Solution                                                     |
-| ----------------------------- | --------------------------------------- | ------------------------------------------------------------ |
-| "Parameter not declared"      | Node doesn't recognize parameter        | Check parameter name spelling, verify node declares it       |
-| Parameters not loaded         | YAML syntax error or wrong file path    | Validate YAML syntax, check file exists in install directory |
-| Wrong parameter type          | Type mismatch (int vs double, etc.)     | Check YAML value matches declared type                       |
-| Parameters reset after launch | Not persisted or not loaded from file   | Use `parameters=[params_file]` in launch file                |
-| Namespace issues              | Wrong namespace in YAML                 | Use `/**:` wildcard or correct namespace `/robot1/**:`       |
-| Runtime updates don't work    | Node doesn't support dynamic parameters | Some parameters require node restart                         |
-| "No such file or directory"   | Config file not installed               | Add `install(DIRECTORY config ...)` to CMakeLists.txt        |
-| Boolean not working           | Used TRUE/FALSE instead of lowercase    | Use lowercase `true`/`false` in YAML                         |
-
-## Common Parameter Patterns
-
-| Pattern                  | YAML Example                  | Use Case                 |
-| ------------------------ | ----------------------------- | ------------------------ |
-| **Basic values**         | `param: 42`                   | Simple configuration     |
-| **Namespaced**           | `/ns/**:\n  ros__parameters:` | Multi-robot systems      |
-| **Arrays**               | `joints: [1, 2, 3]`           | Multiple values          |
-| **Nested structure**     | Use separate params           | Complex configuration    |
-| **Environment-specific** | Multiple YAML files           | dev/staging/prod configs |
-
-## Parameter File Locations
-
-Recommended structure:
-
-```
-<package_name>/
-├── config/
-│   ├── default_params.yaml      # Default configuration
-│   ├── robot1_params.yaml       # Robot-specific config
-│   ├── simulation_params.yaml   # Simulation settings
-│   └── production_params.yaml   # Production settings
-├── launch/
-│   └── robot.launch.py          # Loads appropriate params
-└── CMakeLists.txt               # Installs config/
-```
+Use this skill to configure or tune parameter values. Use
+`ros2-diagnostics` to establish whether a graph/QoS/runtime problem is actually
+parameter-related, `ros2-launch-management` to change launch behavior, and
+`ros2-workspace-testing` to run focused tests after code changes.
 
 ## References
 
-- [ROS 2 Parameters Guide](https://docs.ros.org/en/jazzy/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Parameters/Understanding-ROS2-Parameters.html)
-- [Using Parameters in ROS 2 Nodes](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Using-Parameters-In-A-Class-CPP.html)
-- [Parameter YAML File Format](https://docs.ros.org/en/jazzy/How-To-Guides/Using-ros2-param.html)
+- [ROS 2 parameters](https://docs.ros.org/en/jazzy/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Parameters/Understanding-ROS2-Parameters.html)
+- [Using ros2 param](https://docs.ros.org/en/jazzy/How-To-Guides/Using-ros2-param.html)
+- [Parameters in a C++ class](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Using-Parameters-In-A-Class-CPP.html)

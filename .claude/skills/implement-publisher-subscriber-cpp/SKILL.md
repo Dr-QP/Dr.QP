@@ -1,89 +1,92 @@
 ---
 name: implement-publisher-subscriber-cpp
-description: 'Create ROS 2 C++ publisher and subscriber nodes with rclcpp initialization, message handling, and QoS configuration. Use when implementing topic-based communication in C++, creating rclcpp pub/sub pairs, configuring QoS profiles, or building C++ publisher/subscriber nodes. Keywords: rclcpp, create_publisher, create_subscription, QoS, C++ pub/sub.'
+description: Implement ROS 2 C++ rclcpp publisher, subscriber, or paired nodes with explicit message dependencies and supported QoS choices. Use for topic-based C++ communication; use launch-testing when verification must start ROS processes together.
 ---
 
-# Implement C++ Publisher-Subscriber Pattern
+# Implement C++ Publisher-Subscriber Nodes
 
-Generate ROS 2 C++ publisher and subscriber nodes with proper rclcpp initialization, message handling, QoS configuration, and project conventions.
+Implement a single-purpose publisher, subscriber, or paired node in an
+existing C++ package. Keep message conversion and domain logic testable outside
+callbacks; callbacks should validate input, update state, and publish or
+schedule bounded work.
 
-For Python nodes, use [implement-publisher-subscriber-python](../implement-publisher-subscriber-python/) instead.
+Use [implement-publisher-subscriber-python](../implement-publisher-subscriber-python/)
+for Python nodes. Use [launch-testing](../launch-testing/) when the result
+needs a multi-process or launch-level integration test.
 
-## When to Use This Skill
+## Gather inputs
 
-- Implementing ROS 2 communication between C++ nodes
-- Creating rclcpp publisher/subscriber pairs for a message type
-- Need QoS configuration for reliable or best-effort communication
-- Setting up topic-based communication patterns in C++
+Require the package name, node name, message type, topic name, node role, and
+QoS profile. For a publisher also require a publishing trigger (timer, input
+callback, or explicit API) and a positive timer rate when a timer is used.
+Add the message package and `rclcpp` as manifest dependencies; a custom message
+package is a direct dependency of both the manifest and target.
 
-## Prerequisites
+Accept only these QoS profile names:
 
-- Message type defined (built-in or custom)
-- Topic name determined
-- C++ package exists or will be created
-- Understand QoS requirements
+| Profile          | rclcpp construction             | Intended use                           |
+| ---------------- | ------------------------------- | -------------------------------------- |
+| `default`        | `rclcpp::QoS(10)`               | General reliable, volatile topic       |
+| `reliable`       | `rclcpp::QoS(10).reliable()`    | Delivery preferred over latency        |
+| `best_effort`    | `rclcpp::QoS(10).best_effort()` | Loss-tolerant streaming                |
+| `sensor_data`    | `rclcpp::SensorDataQoS()`       | Sensor streams                         |
+| `services`       | `rclcpp::ServicesQoS()`         | Service-like request/reply topics only |
+| `parameters`     | `rclcpp::ParametersQoS()`       | ROS parameter-event style traffic only |
+| `system_default` | `rclcpp::SystemDefaultsQoS()`   | Defer policy to the RMW implementation |
 
-## Inputs
+Reject any other value. Do not choose `services` or `parameters` for ordinary
+application topics merely because their reliability settings look suitable.
+Publisher and subscriber endpoints must use compatible reliability and
+durability policies; warn before creating a known-incompatible pair.
 
-- **Message Type**: e.g., `std_msgs/msg/String`, `sensor_msgs/msg/Image`, `drqp_interfaces/msg/CustomMsg`
-- **Topic Name**: e.g., `/my_topic`, `/robot/state`
-- **Package Name**: Target package (detect or ask)
-- **Node Type**: `publisher`, `subscriber`, or `both`
-- **QoS Profile**: `default`, `reliable`, `best_effort`, `sensor_data`, `services`, `parameters`, `system_default`
-- **Publish Rate** (for publisher): Hz (default: 10.0)
+## Implement and integrate
 
-## Workflow
+Place the node implementation at `src/<node_name>_node.cpp`. Derive from
+`rclcpp::Node`, create the publisher/subscription in the constructor, retain
+the publisher, subscription, and timer as members, and use a captured
+`std::shared_ptr<const MessageT>` in subscription callbacks. Give executable
+targets a small `main` that calls `rclcpp::init`, spins the node, and calls
+`rclcpp::shutdown` after spinning.
 
-### Step 1: Validate Inputs
+In `CMakeLists.txt`, add the executable, declare at least C++17, attach its
+direct dependencies, and install it for `ros2 run`:
 
-Parse message type (package, message). Validate topic name. Determine if message is built-in or custom (add dependency).
+```cmake
+add_executable(<node_name>_node src/<node_name>_node.cpp)
+target_compile_features(<node_name>_node PUBLIC cxx_std_17)
+ament_target_dependencies(<node_name>_node rclcpp <message_package>)
+install(TARGETS <node_name>_node DESTINATION lib/${PROJECT_NAME})
+```
 
-### Step 2: Determine Package and Location
+Add a launch file only when it is required to start several nodes or expose
+runtime configuration. Do not duplicate launch arguments owned by an included
+launch description.
 
-`src/<node_name>_node.cpp`. If package missing, suggest [create-ros2-package-cpp](../create-ros2-package-cpp/) first.
+## Validate
 
-### Step 3: Generate Publisher Node
+Build the target package first:
 
-rclcpp Node, QoS profile, `create_publisher`, timer with `publish_message`. Include copyright, TODO for message population.
+```bash
+scripts/with-ros-env.sh python3 -m colcon build --packages-up-to <package_name>
+```
 
-### Step 4: Generate Subscriber Node
+After that build, run a node or inspect topics through the wrapper while
+sourcing the overlay:
 
-`create_subscription` with callback. Same QoS as publisher.
+```bash
+scripts/with-ros-env.sh bash -lc 'source install/setup.bash && ros2 run <package_name> <node_name>_node'
+scripts/with-ros-env.sh bash -lc 'source install/setup.bash && ros2 topic info -v <topic_name>'
+```
 
-### Step 5: Map QoS Profile
+Use [add-test-file-cpp](../add-test-file-cpp/) for unit tests and
+[launch-testing](../launch-testing/) for end-to-end communication tests. For
+ROS-environment escalation or test-log handling, use the linked workspace
+build/test skills.
 
-| Profile     | Reliability | Durability | History      |
-| ----------- | ----------- | ---------- | ------------ |
-| default     | Reliable    | Volatile   | Keep last 10 |
-| reliable    | Reliable    | Volatile   | Keep last 10 |
-| best_effort | Best effort | Volatile   | Keep last 1  |
-| sensor_data | Best effort | Volatile   | Keep last 5  |
+## Related resources
 
-### Step 6: Update Build Configuration
-
-Add `add_executable`, `ament_target_dependencies`, `install` to CMakeLists.txt.
-
-### Step 7: Update package.xml
-
-Add `rclcpp` and message package dependency.
-
-### Step 8: Launch File (Optional)
-
-Create `launch/<nodes>_launch.py` with Node actions for publisher and subscriber.
-
-## Validation
-
-`colcon build --packages-select <pkg>`, source setup.bash, run both nodes, `ros2 topic echo <topic>`, `ros2 topic info <topic> -v`.
-
-## Edge Cases
-
-- Custom message: Add message package dependency
-- QoS mismatch: Warn if publisher/subscriber QoS may be incompatible
-- Rate too high: Warn if > 1000 Hz
-
-## Related Resources
-
-- [ROS 2 Writing Publisher/Subscriber (C++)](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Cpp-Publisher-And-Subscriber.html)
-- [ROS 2 QoS](https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Quality-of-Service-Settings.html)
-- [implement-publisher-subscriber-python](../implement-publisher-subscriber-python/)
 - [create-ros2-package-cpp](../create-ros2-package-cpp/)
+- [add-test-file-cpp](../add-test-file-cpp/)
+- [launch-testing](../launch-testing/)
+- [ros2-workspace-build](../ros2-workspace-build/)
+- [ros2-workspace-testing](../ros2-workspace-testing/)
