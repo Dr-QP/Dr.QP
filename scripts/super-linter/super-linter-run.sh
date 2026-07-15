@@ -10,8 +10,8 @@ image="${SUPER_LINTER_IMAGE:-$SUPER_LINTER_DEFAULT_IMAGE}"
 
 exec "$runtime" run --rm \
   -e RUN_LOCAL=true \
-  -v "$root_dir:/tmp/lint" \
-  -w /tmp/lint \
+  -v "$root_dir:$root_dir" \
+  -w "$root_dir" \
   --platform linux/amd64 \
   --entrypoint /bin/bash \
   "$image" \
