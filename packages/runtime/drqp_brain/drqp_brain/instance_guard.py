@@ -108,6 +108,24 @@ def default_lock_dir() -> Path:
     return get_runtime_directory() / 'tmp'
 
 
+def domain_scoped_guard_name(name: str, ros_domain_id: str) -> str:
+    """Return the instance guard name for a ROS domain."""
+    return f'{name}-domain-{ros_domain_id}'
+
+
+def domain_instance_guard(
+    name: str,
+    lock_dir: Path | str | None = None,
+    ros_domain_id: str | None = None,
+) -> InstanceGuard:
+    """Create an instance guard isolated to a ROS domain."""
+    domain_id = ros_domain_id or os.environ.get('ROS_DOMAIN_ID', '0')
+    guard_name = domain_scoped_guard_name(name, domain_id)
+    if lock_dir is None:
+        return InstanceGuard(guard_name)
+    return InstanceGuard(guard_name, lock_dir=lock_dir)
+
+
 def make_launch_instance_guard(name: str):
     """Create a launch action that holds a domain-scoped lock for its lifetime."""
     from launch.actions import OpaqueFunction
@@ -115,18 +133,14 @@ def make_launch_instance_guard(name: str):
     return OpaqueFunction(function=_acquire_launch_instance_guard, args=(name,))
 
 
-def _domain_scoped_guard_name(name: str, ros_domain_id: str) -> str:
-    """Return the instance guard name for a ROS domain."""
-    return f'{name}-domain-{ros_domain_id}'
-
-
 def _acquire_launch_instance_guard(context, name: str):
     from launch.actions import EmitEvent, LogError, RegisterEventHandler
     from launch.event_handlers import OnShutdown
     from launch.events import Shutdown
 
-    guard = InstanceGuard(
-        _domain_scoped_guard_name(name, context.environment.get('ROS_DOMAIN_ID', '0'))
+    guard = domain_instance_guard(
+        name,
+        ros_domain_id=context.environment.get('ROS_DOMAIN_ID', '0'),
     )
     if not guard.try_acquire():
         reason = f'{guard.name} is already running; refusing duplicate launch.'

@@ -23,8 +23,9 @@ from pathlib import Path
 import drqp_brain.instance_guard as instance_guard
 from drqp_brain.instance_guard import (
     _acquire_launch_instance_guard,
-    _domain_scoped_guard_name,
     default_lock_dir,
+    domain_instance_guard,
+    domain_scoped_guard_name,
     get_runtime_directory,
     InstanceAlreadyRunningError,
     InstanceGuard,
@@ -124,15 +125,30 @@ def test_instance_guard_allows_startup_after_release():
 )
 def test_launch_instance_guard_name_is_scoped_by_ros_domain(ros_domain_id, expected_name):
     """Give each ROS domain an independent launch-instance guard."""
-    assert _domain_scoped_guard_name('drqp_gazebo_sim', ros_domain_id) == expected_name
+    assert domain_scoped_guard_name('drqp_gazebo_sim', ros_domain_id) == expected_name
 
 
 def test_domain_scoped_instance_guards_allow_parallel_domains():
     """Allow independent launch-instance guards in separate ROS domains."""
     lock_dir = Path('.tmp')
 
-    with InstanceGuard(_domain_scoped_guard_name('test_stack', '1'), lock_dir=lock_dir):
-        with InstanceGuard(_domain_scoped_guard_name('test_stack', '2'), lock_dir=lock_dir):
+    with InstanceGuard(domain_scoped_guard_name('test_stack', '1'), lock_dir=lock_dir):
+        with InstanceGuard(domain_scoped_guard_name('test_stack', '2'), lock_dir=lock_dir):
+            pass
+
+
+def test_domain_instance_guard_uses_current_ros_domain(monkeypatch):
+    """Give process entrypoints independent locks in separate ROS domains."""
+    lock_dir = Path('.tmp')
+    monkeypatch.setenv('ROS_DOMAIN_ID', '17')
+
+    with domain_instance_guard('test_runtime_node', lock_dir=lock_dir):
+        duplicate_guard = domain_instance_guard('test_runtime_node', lock_dir=lock_dir)
+        with pytest.raises(InstanceAlreadyRunningError):
+            duplicate_guard.acquire()
+
+        monkeypatch.setenv('ROS_DOMAIN_ID', '18')
+        with domain_instance_guard('test_runtime_node', lock_dir=lock_dir):
             pass
 
 
