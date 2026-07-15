@@ -62,7 +62,6 @@ jobs:
     outputs:
       checkout_ref: ${{ steps.checkout_ref.outputs.ref }}
       pr_number: ${{ steps.checkout_ref.outputs.prNumber }}
-      workflow_changed: ${{ steps.workflow_changed.outputs.workflowChanged }}
       codex_requested: ${{ steps.agent_prompts.outputs.codexRequested }}
       codex_is_review: ${{ steps.agent_prompts.outputs.codexIsReview }}
       codex_prompt: ${{ steps.agent_prompts.outputs.codexPrompt }}
@@ -146,28 +145,6 @@ jobs:
                 `User ${context.actor} does not have permission to request the responder.`
               );
             }
-
-      - name: Check if protected workflow changed
-        id: workflow_changed
-        uses: actions/github-script@v9.0.0
-        env:
-          PR_NUMBER: ${{ steps.checkout_ref.outputs.prNumber }}
-        with:
-          script: |
-            const prNumber = process.env.PR_NUMBER;
-            let workflowChanged = false;
-            if (prNumber) {
-              const files = await github.paginate(github.rest.pulls.listFiles, {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: prNumber,
-              });
-              workflowChanged = files.some((file) =>
-                file.filename === '.github/workflows/ai-responder.yml' ||
-                file.filename.startsWith('.github/actions/')
-              );
-            }
-            core.setOutput('workflowChanged', workflowChanged);
 
       - name: Determine agent prompts
         id: agent_prompts
@@ -290,16 +267,11 @@ jobs:
       - name: Add workspace to safe directories
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      - name: Log withheld responder execution
-        if: needs.preflight.outputs.workflow_changed == 'true'
-        run: echo 'Protected workflow or shared action changed; withholding Codex execution.'
-
       - name: Codex Responder
         id: codex_responder
-        if: needs.preflight.outputs.workflow_changed == 'false'
         uses: openai/codex-action@v1.11
         env:
-          GH_TOKEN: ${{ needs.preflight.outputs.workflow_changed == 'true' && secrets.GITHUB_TOKEN || '' }}
+          GH_TOKEN: ''
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           sandbox: danger-full-access
@@ -318,7 +290,7 @@ jobs:
           retention-days: 7
 
       - name: Reply to a non-review request
-        if: needs.preflight.outputs.workflow_changed == 'false' && needs.preflight.outputs.codex_is_review != 'true' && steps.codex_responder.outputs.final-message != ''
+        if: needs.preflight.outputs.codex_is_review != 'true' && steps.codex_responder.outputs.final-message != ''
         uses: actions/github-script@v9.0.0
         env:
           ISSUE_NUMBER: ${{ needs.preflight.outputs.pr_number }}
@@ -374,13 +346,8 @@ jobs:
       - name: Add workspace to safe directories
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      - name: Log withheld responder execution
-        if: needs.preflight.outputs.workflow_changed == 'true'
-        run: echo 'Protected workflow or shared action changed; withholding Claude execution.'
-
       - name: Claude Responder
         id: claude_responder
-        if: needs.preflight.outputs.workflow_changed == 'false'
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}

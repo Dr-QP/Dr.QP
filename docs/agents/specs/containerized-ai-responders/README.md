@@ -28,8 +28,7 @@ exact-token matching, so `notclaude` must never enable Claude.
 
 - Preserve the execution model in `.github/workflows/ai-responder.yml`:
   `ghcr.io/dr-qp/jazzy-ros-desktop:edge`, PR-head checkout in each responder
-  job for comment events, and withheld agent write tokens when protected
-  workflow files change.
+  job for comment events.
 - Use the existing `pr-review` skill for `@codex review`; Codex must publish a
   GitHub pull-request review, including `APPROVE` when it finds no issues.
 - Keep the existing `require-ai-review.yml` policy. Action-posted reviews appear
