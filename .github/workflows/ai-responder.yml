@@ -313,12 +313,6 @@ jobs:
               body: `<!-- codex-responder -->\n${sanitizedMessage}`,
             });
 
-      - name: Log debug stats
-        if: always()
-        uses: ./.github/actions/log-debug-stats
-        with:
-          github-token: ${{ github.token }}
-
   claude-respond:
     name: Claude Responder
     needs: preflight
@@ -377,9 +371,3 @@ jobs:
             echo "::error::Claude hit the organization's monthly spend limit."
             exit 1
           fi
-
-      - name: Log debug stats
-        if: always()
-        uses: ./.github/actions/log-debug-stats
-        with:
-          github-token: ${{ github.token }}
