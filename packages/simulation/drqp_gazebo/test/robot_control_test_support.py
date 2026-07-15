@@ -1337,18 +1337,9 @@ class GazeboRobotControlBase:
         assert abs(board_r) <= 0.03, f'Expected board roll to return to level (got {board_r:.3f})'
         assert abs(board_p) <= 0.03, f'Expected board pitch to return to level (got {board_p:.3f})'
 
-        self._set_balance_mode(False)
-        self._wait_for_sim_time(self.POSE_SETTLE_DURATION)
-        roll, pitch = self._sample_base_roll_pitch(settle_sim_time_sec=self.POSE_SETTLE_DURATION)
-        assert abs(roll - initial_roll) <= self.BALANCED_BODY_TILT_TOLERANCE, (
-            'Expected body roll near initial after disabling balance mode '
-            f'(initial={initial_roll:.3f}, actual={roll:.3f})'
-        )
-        assert abs(pitch - initial_pitch) <= self.BALANCED_BODY_TILT_TOLERANCE, (
-            'Expected body pitch near initial after disabling balance mode '
-            f'(initial={initial_pitch:.3f}, actual={pitch:.3f})'
-        )
-        self._set_balance_mode(True)
+        # Keep balance mode active: toggling it here re-captures the IMU pose
+        # while the robot is still settling and changes its intended reference.
+        self._wait_for_stable_body_level(initial_roll, initial_pitch)
 
 
 class BalanceBoardWorldBase(GazeboRobotControlBase):

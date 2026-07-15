@@ -30,8 +30,10 @@ if("$ENV{DRQP_TEST_MODE}" STREQUAL "slow")
 endif()
 
 # Gazebo simulation tests spin up a full simulator and can legitimately take
-# several minutes to complete, so allow at least 5 minutes before timing out.
-set(drqp_gazebo_test_timeout 300)
+# several minutes to complete.  The full balance-board sequence now waits for
+# the captured balance reference after every reset and took 293s locally, so
+# leave margin for a slower CI runner.
+set(drqp_gazebo_test_timeout 360)
 
 foreach(test_file IN LISTS drqp_gazebo_launch_tests)
   # Each launch test boots Gazebo and exercises several robot/board scenarios, so

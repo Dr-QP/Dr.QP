@@ -25,7 +25,10 @@ import math
 from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
 import launch_pytest
 import pytest
-from robot_control_test_support import create_balance_board_launch_description
+from robot_control_test_support import (
+    create_balance_board_launch_description,
+    GazeboRobotControlBase,
+)
 
 _TILT_MAGNITUDE = 0.12
 _TILT_DIAGONAL = _TILT_MAGNITUDE / math.sqrt(2)
@@ -40,6 +43,26 @@ _TILT_SCENARIOS = [
     (-_TILT_MAGNITUDE, 0.0),  # roll-
     (-_TILT_DIAGONAL, +_TILT_DIAGONAL),  # roll- pitch+
 ]
+
+
+def test_reset_preserves_the_active_balance_target() -> None:
+    """Return the board to level without re-capturing the balance reference."""
+    robot = GazeboRobotControlBase.__new__(GazeboRobotControlBase)
+    events: list[str] = []
+    stable_targets: list[tuple[float, float]] = []
+
+    robot._set_board_tilt = lambda **_kwargs: events.append('set_tilt')
+    robot._wait_for_board_tilt = lambda **_kwargs: events.append('board_tilt') or (0.0, 0.0)
+    robot._wait_for_stable_body_level = lambda roll, pitch: stable_targets.append((roll, pitch))
+    robot._set_balance_mode = lambda _enabled: pytest.fail(
+        'Reset must not disable and re-enable balance mode because doing so '
+        're-captures the IMU body-tilt target'
+    )
+
+    robot._reset_board_and_balance_mode(0.0, 0.0)
+
+    assert events == ['set_tilt', 'board_tilt']
+    assert stable_targets == [(0.0, 0.0)]
 
 
 @launch_pytest.fixture
