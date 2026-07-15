@@ -276,7 +276,7 @@ jobs:
         id: codex_responder
         uses: openai/codex-action@v1.11
         env:
-          GH_TOKEN: ''
+          GH_TOKEN: ${{ github.token }}
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           sandbox: danger-full-access
