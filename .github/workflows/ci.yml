@@ -369,6 +369,9 @@ jobs:
             exit "$test_status"
           env:
             # Pass the build args to devcontainer build
+            # devcontainers/ci expects newline-delimited KEY=VALUE entries.
+            # Without the block scalar, YAML folds these into one value.
+            |
             DRQP_TEST_MODE=${{ matrix.sim_test_mode }}
             CTEST_EXTRA_ARGS=${{ matrix.sim_test_mode == 'slow' && '-j2' || '' }}
 
