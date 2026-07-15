@@ -191,6 +191,8 @@ jobs:
               }
               return comment.includes(mention) || review.includes(mention);
             };
+            const enabled = (responder) =>
+              `,${process.env.AI_RESPONDERS},`.includes(`,${responder},`);
             const requestedTask =
               payload.comment?.body ?? payload.review?.body ?? issueText;
             const promptFor = (responder) => {
@@ -222,10 +224,16 @@ jobs:
             };
             const codex = promptFor('codex');
             const claude = promptFor('claude');
-            core.setOutput('codexRequested', mentions('codex'));
+            core.setOutput(
+              'codexRequested',
+              enabled('codex') && mentions('codex')
+            );
             core.setOutput('codexIsReview', codex.isReview);
             core.setOutput('codexPrompt', codex.prompt);
-            core.setOutput('claudeRequested', mentions('claude'));
+            core.setOutput(
+              'claudeRequested',
+              enabled('claude') && mentions('claude')
+            );
             core.setOutput('claudePrompt', claude.prompt);
 
       - name: Verify ROS command wrapper
@@ -260,7 +268,6 @@ jobs:
     needs: preflight
     if: |
       needs.preflight.result == 'success' &&
-      contains(format(',{0},', vars.AI_RESPONDERS || 'claude'), ',codex,') &&
       needs.preflight.outputs.codex_requested == 'true'
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     container:
@@ -345,7 +352,6 @@ jobs:
     needs: preflight
     if: |
       needs.preflight.result == 'success' &&
-      contains(format(',{0},', vars.AI_RESPONDERS || 'claude'), ',claude,') &&
       needs.preflight.outputs.claude_requested == 'true'
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     container:
