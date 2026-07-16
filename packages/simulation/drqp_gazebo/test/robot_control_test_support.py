@@ -32,7 +32,7 @@ import time
 
 import builtin_interfaces
 import builtin_interfaces.msg
-from controller_manager.test_utils import check_controllers_running, check_node_running
+from controller_manager.test_utils import check_controllers_running
 from drqp_brain.balance_controller import body_tilt_from_imu
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
 from drqp_launch_testing import track_process_exit_codes
@@ -44,12 +44,12 @@ from launch.substitutions import PathJoinSubstitution
 import launch_pytest
 from launch_pytest.actions import ReadyToTest
 from launch_ros.substitutions import FindPackageShare
-from launch_testing_ros import WaitForTopics
 from nav_msgs.msg import Odometry
 import pytest
 from rcl_interfaces.msg import Log
 import rclpy
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
+from ros_gz_bridge.actions import RosGzBridge
 from rosgraph_msgs.msg import Clock
 from sensor_msgs.msg import Imu
 import std_msgs.msg
@@ -125,7 +125,7 @@ def create_board_only_launch_description() -> LaunchDescription:
     Used to characterise the board fixture in isolation: it verifies the tilting
     mechanism reaches its commanded angles without any coupling from the robot.
     """
-    return create_simulation_launch_description(
+    launch_description = create_simulation_launch_description(
         launch_arguments={
             'world_sdf': BALANCE_BOARD_WORLD_PATH,
             'spawn_robot': 'false',
@@ -134,6 +134,18 @@ def create_board_only_launch_description() -> LaunchDescription:
             'sim_gui': 'false',
         }
     )
+    # The production spawn_robot:=false path intentionally starts no ROS bridge.
+    # This test still needs /clock so physics waits use simulation time.
+    launch_description.add_action(
+        RosGzBridge(
+            bridge_name='drqp_board_test_clock_bridge',
+            config_file=str(Path(__file__).resolve().parent / 'fixtures' / 'clock_bridge.yml'),
+            use_composition='false',
+            create_own_container='true',
+            container_name='drqp_board_test_clock_container',
+        )
+    )
+    return launch_description
 
 
 @launch_pytest.fixture
@@ -151,13 +163,13 @@ class GazeboRobotControlBase:
     __test__ = False  # Prevent pytest from collecting this base class as a test case.
 
     # Configurable timeouts.
-    READY_TIMEOUT = 90.0
+    READY_TIMEOUT = 180.0
     SPAWN_TIMEOUT = 90.0
     STATE_TRANSITION_TIMEOUT = 90.0
     MOVEMENT_TIMEOUT = 30.0
-    CLOCK_TIMEOUT = 30.0
-    CONTROLLER_TIMEOUT = 60.0
-    SIM_TIME_TIMEOUT = 60.0
+    CLOCK_TIMEOUT = 180.0
+    CONTROLLER_TIMEOUT = 180.0
+    SIM_CLOCK_STALL_TIMEOUT = 60.0
     GZ_COMMAND_TIMEOUT = 10.0
     # Non-blocking spin_once() calls per _spin_until() poll cycle, to drain a
     # burst of ready callbacks (see _spin_until docstring) instead of
@@ -181,6 +193,7 @@ class GazeboRobotControlBase:
     # Republish a few times so a single drop does not leave an axis uncommanded.
     BOARD_TILT_PUBLISH_ATTEMPTS = 3
     BOARD_TILT_PUBLISH_INTERVAL = 0.15
+    BOARD_TILT_REPUBLISH_SIM_INTERVAL = 1.0
 
     # Absolute tolerance (radians) for the board reaching a commanded angle.
     BOARD_TILT_TOLERANCE = 0.03
@@ -263,7 +276,7 @@ class GazeboRobotControlBase:
     def _wait_for_simulation_ready(self) -> None:
         self.assert_nodes_and_clock()
         self.assert_controllers_are_active()
-        self._spin_until(
+        self._spin_until_sim_time(
             lambda: (
                 self.event_pub.get_subscription_count() > 0
                 and self.movement_pub.get_subscription_count() > 0
@@ -275,7 +288,7 @@ class GazeboRobotControlBase:
             ('torque_off',),  # robot initial state
             self.SPAWN_TIMEOUT,
         )
-        self._wait_for_sim_time(self.POSE_SETTLE_DURATION, wall_timeout_sec=self.CLOCK_TIMEOUT)
+        self._wait_for_sim_time(self.POSE_SETTLE_DURATION)
         self._wait_for_pose()
 
     def _robot_state_callback(self, msg: std_msgs.msg.String) -> None:
@@ -333,6 +346,59 @@ class GazeboRobotControlBase:
             time.sleep(0.1)
         raise TimeoutError(error_message)
 
+    def _spin_until_sim_time(
+        self,
+        condition_fn: Callable[[], bool],
+        timeout_sec: float,
+        error_message: str | Callable[[], str],
+        *,
+        start_time_ns: int | None = None,
+    ) -> bool:
+        """Spin until a condition or a simulation-time deadline is reached."""
+        self._spin_until(
+            lambda: self.current_clock is not None,
+            self.CLOCK_TIMEOUT,
+            'Did not receive /clock from Gazebo bridge',
+        )
+        if start_time_ns is None:
+            start_time_ns = self._current_sim_time_ns()
+        if start_time_ns is None:
+            raise RuntimeError('Simulation clock became unavailable before timed wait')
+
+        deadline_ns = start_time_ns + int(timeout_sec * 1_000_000_000)
+        latest_sim_time_ns = start_time_ns
+        last_clock_progress = time.monotonic()
+
+        def format_error_message() -> str:
+            if callable(error_message):
+                return error_message()
+            return error_message
+
+        while True:
+            for _ in range(self.SPIN_DRAIN_ITERATIONS):
+                rclpy.spin_once(self.node, timeout_sec=0.0)
+
+            current_sim_time_ns = self._current_sim_time_ns()
+            if condition_fn():
+                return True
+
+            if current_sim_time_ns is not None:
+                if current_sim_time_ns >= deadline_ns:
+                    raise TimeoutError(
+                        f'{format_error_message()} after {timeout_sec:.1f}s of simulation time'
+                    )
+                if current_sim_time_ns != latest_sim_time_ns:
+                    latest_sim_time_ns = current_sim_time_ns
+                    last_clock_progress = time.monotonic()
+
+            stalled_for = time.monotonic() - last_clock_progress
+            if stalled_for >= self.SIM_CLOCK_STALL_TIMEOUT:
+                raise TimeoutError(
+                    f'{format_error_message()}; /clock did not advance for '
+                    f'{stalled_for:.1f}s of wall time'
+                )
+            time.sleep(0.1)
+
     def _publish_event(self, event_name: str) -> None:
         msg = std_msgs.msg.String()
         msg.data = event_name
@@ -341,7 +407,7 @@ class GazeboRobotControlBase:
         rclpy.spin_once(self.node, timeout_sec=0.1)
 
     def _wait_for_state(self, expected_state: str, timeout_sec: float) -> None:
-        self._spin_until(
+        self._spin_until_sim_time(
             lambda: self.current_robot_state == expected_state,
             timeout_sec,
             f'Robot did not reach state "{expected_state}" within {timeout_sec}s. '
@@ -353,7 +419,7 @@ class GazeboRobotControlBase:
         expected_states: tuple[str, ...],
         timeout_sec: float,
     ) -> None:
-        self._spin_until(
+        self._spin_until_sim_time(
             lambda: self.current_robot_state in expected_states,
             timeout_sec,
             f'Robot did not reach any expected state {expected_states} '
@@ -369,8 +435,6 @@ class GazeboRobotControlBase:
         self,
         start_time_ns: int,
         duration_sec: float,
-        *,
-        wall_timeout_sec: float | None = None,
     ) -> None:
         target_time_ns = start_time_ns + int(duration_sec * 1_000_000_000)
 
@@ -378,21 +442,16 @@ class GazeboRobotControlBase:
             current_time_ns = self._current_sim_time_ns()
             return current_time_ns is not None and current_time_ns >= target_time_ns
 
-        timeout_sec = wall_timeout_sec or max(self.SIM_TIME_TIMEOUT, duration_sec * 12.0)
-        self._spin_until(
+        self._spin_until_sim_time(
             reached_target_time,
-            timeout_sec,
-            (
-                f'Simulation time did not advance by {duration_sec:.1f}s '
-                f'within {timeout_sec:.1f}s of wall time'
-            ),
+            duration_sec,
+            f'Simulation time did not advance by {duration_sec:.1f}s',
+            start_time_ns=start_time_ns,
         )
 
     def _wait_for_sim_time(
         self,
         duration_sec: float,
-        *,
-        wall_timeout_sec: float | None = None,
     ) -> None:
         self._spin_until(
             lambda: self.current_clock is not None,
@@ -407,18 +466,17 @@ class GazeboRobotControlBase:
         self._wait_for_sim_time_since(
             start_time_ns,
             duration_sec,
-            wall_timeout_sec=wall_timeout_sec,
         )
 
     def _wait_for_pose(self) -> None:
-        self._spin_until(
+        self._spin_until_sim_time(
             lambda: self.robot_pose is not None,
             self.MOVEMENT_TIMEOUT,
             f'Did not receive {ODOM_TOPIC} from Gazebo bridge',
         )
 
     def _wait_for_new_pose(self, previous_pose_stamp_ns: int | None) -> None:
-        self._spin_until(
+        self._spin_until_sim_time(
             lambda: (
                 self.robot_pose is not None
                 and self.robot_pose_stamp_ns is not None
@@ -432,7 +490,7 @@ class GazeboRobotControlBase:
         )
 
     def _wait_for_new_imu(self, previous_imu_stamp_ns: int | None) -> None:
-        self._spin_until(
+        self._spin_until_sim_time(
             lambda: (
                 self.current_imu_message is not None
                 and self.current_imu_stamp_ns is not None
@@ -566,7 +624,7 @@ class GazeboRobotControlBase:
         return completed.stdout
 
     def _set_balance_mode(self, enabled: bool) -> None:
-        self._spin_until(
+        self._spin_until_sim_time(
             lambda: self.balance_mode_pub.get_subscription_count() > 0,
             self.READY_TIMEOUT,
             'Timed out waiting for /robot/balance_mode subscribers',
@@ -594,25 +652,29 @@ class GazeboRobotControlBase:
         make ``_wait_for_board_tilt`` time out. Publish each target a few times to
         make delivery reliable.
         """
+        for _ in range(self.BOARD_TILT_PUBLISH_ATTEMPTS):
+            self._publish_board_tilt_targets(roll=roll, pitch=pitch)
+            time.sleep(self.BOARD_TILT_PUBLISH_INTERVAL)
+
+    def _publish_board_tilt_targets(self, *, roll: float, pitch: float) -> None:
+        """Publish one roll/pitch target pair to Gazebo transport."""
         for topic, value, context in (
             (BALANCE_BOARD_ROLL_TOPIC, roll, 'Setting balance board roll target'),
             (BALANCE_BOARD_PITCH_TOPIC, pitch, 'Setting balance board pitch target'),
         ):
-            for _ in range(self.BOARD_TILT_PUBLISH_ATTEMPTS):
-                self._run_gz_command(
-                    [
-                        'gz',
-                        'topic',
-                        '-t',
-                        topic,
-                        '-m',
-                        'gz.msgs.Double',
-                        '-p',
-                        f'data: {value}',
-                    ],
-                    error_context=context,
-                )
-                time.sleep(self.BOARD_TILT_PUBLISH_INTERVAL)
+            self._run_gz_command(
+                [
+                    'gz',
+                    'topic',
+                    '-t',
+                    topic,
+                    '-m',
+                    'gz.msgs.Double',
+                    '-p',
+                    f'data: {value}',
+                ],
+                error_context=context,
+            )
 
     def _sample_entity_pose_from_gazebo(self, entity_name: str) -> Pose:
         """
@@ -675,23 +737,45 @@ class GazeboRobotControlBase:
             Observed board roll and pitch in radians.
 
         """
-        deadline = time.monotonic() + self.MOVEMENT_TIMEOUT
         last_roll = 0.0
         last_pitch = 0.0
-        while time.monotonic() < deadline:
+        last_publish_sim_time_ns = self._current_sim_time_ns()
+
+        def board_reached_tilt() -> bool:
+            nonlocal last_pitch, last_publish_sim_time_ns, last_roll
+
             board_pose = self._sample_entity_pose_from_gazebo(BALANCE_BOARD_BOARD_LINK_NAME)
             last_roll, last_pitch = self._roll_pitch_from_quaternion(board_pose.orientation)
-            if (
+            reached_target = (
                 abs(last_roll - expected_roll) <= tolerance
                 and abs(last_pitch - expected_pitch) <= tolerance
+            )
+            if reached_target:
+                return True
+
+            current_sim_time_ns = self._current_sim_time_ns()
+            republish_interval_ns = int(self.BOARD_TILT_REPUBLISH_SIM_INTERVAL * 1_000_000_000)
+            if current_sim_time_ns is not None and (
+                last_publish_sim_time_ns is None
+                or current_sim_time_ns - last_publish_sim_time_ns >= republish_interval_ns
             ):
-                return last_roll, last_pitch
-            time.sleep(0.2)
-        raise TimeoutError(
-            'Gazebo board tilt did not reach the expected pose. '
-            f'Expected roll={expected_roll:.3f}, pitch={expected_pitch:.3f}; '
-            f'last roll={last_roll:.3f}, pitch={last_pitch:.3f}'
+                self._publish_board_tilt_targets(
+                    roll=expected_roll,
+                    pitch=expected_pitch,
+                )
+                last_publish_sim_time_ns = current_sim_time_ns
+            return False
+
+        self._spin_until_sim_time(
+            board_reached_tilt,
+            self.MOVEMENT_TIMEOUT,
+            lambda: (
+                'Gazebo board tilt did not reach the expected pose. '
+                f'Expected roll={expected_roll:.3f}, pitch={expected_pitch:.3f}; '
+                f'last roll={last_roll:.3f}, pitch={last_pitch:.3f}'
+            ),
         )
+        return last_roll, last_pitch
 
     def _sample_board_tilt(self) -> tuple[float, float]:
         """Return the board's current roll and pitch in radians from Gazebo."""
@@ -860,14 +944,29 @@ class GazeboRobotControlBase:
 
     def assert_nodes_and_clock(self) -> None:
         """Verify simulation nodes are running and clock is available."""
-        for node_name in ('robot_state_publisher', 'drqp_brain', 'drqp_robot_state'):
-            check_node_running(self.node, node_name, timeout=self.CLOCK_TIMEOUT)
-
-        with WaitForTopics([('/clock', Clock)], timeout=self.CLOCK_TIMEOUT) as wait:
-            assert wait.wait(), 'Did not receive /clock from Gazebo bridge'
+        # A wall-clock watchdog is unavoidable until the first clock sample
+        # exists. Once Gazebo is advancing, graph discovery must tolerate a low
+        # real-time factor just like the physics assertions do.
+        self._spin_until(
+            lambda: self.current_clock is not None,
+            self.CLOCK_TIMEOUT,
+            'Did not receive /clock from Gazebo bridge',
+        )
+        expected_nodes = ('robot_state_publisher', 'drqp_brain', 'drqp_robot_state')
+        self._spin_until_sim_time(
+            lambda: all(node_name in self.node.get_node_names() for node_name in expected_nodes),
+            self.READY_TIMEOUT,
+            lambda: (
+                f'Did not discover simulation nodes {expected_nodes}; '
+                f'seeing {self.node.get_node_names()}'
+            ),
+        )
 
     def assert_controllers_are_active(self) -> None:
         """Verify ros2_control controllers are alive inside Gazebo."""
+        # controller_manager's test helper performs synchronous service waits and
+        # exposes only a wall-clock timeout. Keep this as a startup watchdog; all
+        # subsequent simulation behavior is measured against /clock.
         check_controllers_running(
             self.node,
             [
@@ -879,13 +978,16 @@ class GazeboRobotControlBase:
 
     def assert_imu_data(self) -> None:
         """Verify the simulated IMU publishes on /imu/data via the Gazebo bridge."""
-        with WaitForTopics([('/imu/data', Imu)], timeout=self.CLOCK_TIMEOUT) as wait:
-            assert wait.wait(), 'Did not receive /imu/data from Gazebo IMU sensor'
+        self._spin_until_sim_time(
+            lambda: self.current_imu_message is not None,
+            self.CLOCK_TIMEOUT,
+            'Did not receive /imu/data from Gazebo IMU sensor',
+        )
 
     def assert_imu_data_reports_orientation(self) -> None:
         """Issue 356: Gazebo IMU data should publish body attitude for ROS consumers."""
         self.assert_imu_data()
-        self._spin_until(
+        self._spin_until_sim_time(
             lambda: self.current_imu_message is not None,
             self.CLOCK_TIMEOUT,
             'Did not capture /imu/data after Gazebo IMU topic became available',
@@ -915,11 +1017,15 @@ class GazeboRobotControlBase:
     def assert_robot_spawned(self) -> None:
         """Verify robot model is spawned and state machine publishes state."""
         try:
-            check_node_running(self.node, 'robot_state_publisher', timeout=self.SPAWN_TIMEOUT)
+            self._spin_until_sim_time(
+                lambda: 'robot_state_publisher' in self.node.get_node_names(),
+                self.SPAWN_TIMEOUT,
+                'Robot model failed to spawn: robot_state_publisher not running',
+            )
         except (AssertionError, RuntimeError, TimeoutError) as error:
             raise RuntimeError(
                 'Robot model failed to spawn: robot_state_publisher not running within '
-                f'{self.SPAWN_TIMEOUT}s'
+                f'{self.SPAWN_TIMEOUT}s of simulation time'
             ) from error
 
         self._wait_for_any_state(
@@ -1243,7 +1349,12 @@ class GazeboRobotControlBase:
         board_r, board_p = self._wait_for_board_tilt(
             expected_roll=board_roll, expected_pitch=board_pitch
         )
-        self._wait_for_stable_body_level(initial_roll, initial_pitch)
+        self._wait_for_stable_body_level(
+            initial_roll,
+            initial_pitch,
+            board_r,
+            board_p,
+        )
         balanced_roll, balanced_pitch = self._sample_base_roll_pitch(
             settle_sim_time_sec=self.POSE_SETTLE_DURATION
         )
@@ -1288,8 +1399,10 @@ class GazeboRobotControlBase:
         self,
         initial_roll: float,
         initial_pitch: float,
+        board_roll: float,
+        board_pitch: float,
     ) -> None:
-        """Wait for a post-tilt pose that remains within the tilt tolerance."""
+        """Wait for a post-tilt pose that stably meets compensation criteria."""
         previous_pose_stamp_ns = self.robot_pose_stamp_ns
         self._wait_for_new_pose(previous_pose_stamp_ns)
         self._wait_for_sim_time(self.BALANCE_RESPONSE_DURATION)
@@ -1306,6 +1419,8 @@ class GazeboRobotControlBase:
             is_level = (
                 abs(roll - initial_roll) <= self.BALANCED_BODY_TILT_TOLERANCE
                 and abs(pitch - initial_pitch) <= self.BALANCED_BODY_TILT_TOLERANCE
+                and (abs(board_roll) <= 0.05 or abs(board_roll - roll) > 0.05)
+                and (abs(board_pitch) <= 0.05 or abs(board_pitch - pitch) > 0.05)
             )
             if not is_level:
                 aligned_since_ns = None
@@ -1321,7 +1436,7 @@ class GazeboRobotControlBase:
                 self.POSE_SETTLE_DURATION * 1_000_000_000
             )
 
-        self._spin_until(
+        self._spin_until_sim_time(
             body_has_stably_leveled,
             self.MOVEMENT_TIMEOUT,
             'Balance correction did not stabilize the body within the tilt tolerance',
@@ -1333,28 +1448,51 @@ class BalanceBoardWorldBase(GazeboRobotControlBase):
     Harness for testing the balance board fixture in isolation (no robot).
 
     Reuses the board-driving helpers from :class:`GazeboRobotControlBase` but
-    launches Gazebo with ``spawn_robot:=false``, so there is no robot, ROS bridge,
-    or control stack. The board helpers talk to Gazebo over the ``gz`` CLI and need
-    no ROS node, so the test fixture only waits for the world to start serving
-    poses via :meth:`wait_for_board_world_ready`.
+    launches Gazebo with ``spawn_robot:=false``, so there is no robot or control
+    stack. The board helpers talk to Gazebo over the ``gz`` CLI; a test-only clock
+    bridge and ROS node provide simulation-time deadlines for physics behavior.
     """
 
     __test__ = False  # Prevent pytest from collecting this base class as a test case.
 
+    def setup_clock_node(self) -> None:
+        """Create the board-test node and wait for the test-only clock bridge."""
+        self.node = rclpy.create_node('test_gazebo_balance_board_world')
+        self.current_clock = None
+        self.clock_sub = self.node.create_subscription(
+            Clock,
+            '/clock',
+            self._clock_callback,
+            10,
+        )
+        self._spin_until(
+            lambda: self.current_clock is not None,
+            self.CLOCK_TIMEOUT,
+            'Did not receive /clock from the board test Gazebo bridge',
+        )
+
     def wait_for_board_world_ready(self) -> Pose:
         """Poll Gazebo until the board entity pose is served, tolerating startup errors."""
-        deadline = time.monotonic() + self.READY_TIMEOUT
         last_error = ''
-        while time.monotonic() < deadline:
+
+        def board_pose_is_available() -> bool:
+            nonlocal last_error
             try:
-                return self._sample_entity_pose_from_gazebo(BALANCE_BOARD_BOARD_LINK_NAME)
+                self.board_pose = self._sample_entity_pose_from_gazebo(
+                    BALANCE_BOARD_BOARD_LINK_NAME
+                )
+                return True
             except (AssertionError, RuntimeError) as error:
                 # gz CLI not up yet, or the world has not published poses; retry.
                 last_error = str(error)
-            time.sleep(0.5)
-        raise AssertionError(
-            f'Balance board world did not become ready within {self.READY_TIMEOUT}s: {last_error}'
+                return False
+
+        self._spin_until_sim_time(
+            board_pose_is_available,
+            self.READY_TIMEOUT,
+            lambda: f'Balance board world did not become ready: {last_error}',
         )
+        return self.board_pose
 
 
 def _parse_gazebo_pose_info(raw_output: str) -> list[dict[str, Pose | str]]:

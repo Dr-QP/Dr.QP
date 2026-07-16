@@ -59,7 +59,10 @@ def build_smoke_test_description(
     )
 
 
-READY_TIMEOUT = 60.0
+# These smoke launches do not run a simulator, so there is no simulation clock
+# to use for readiness. Keep a wall-clock watchdog, but allow CPU-heavy MoveIt
+# startup to make progress when all CTest workers are active.
+READY_TIMEOUT = 180.0
 
 
 def assert_move_group_ready(timeout: float = READY_TIMEOUT) -> None:
