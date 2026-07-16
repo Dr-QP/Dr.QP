@@ -28,7 +28,10 @@ from launch.substitutions import PathJoinSubstitution
 import launch_pytest
 from launch_pytest.actions import ReadyToTest
 from launch_ros.substitutions import FindPackageShare
-from moveit_launch_smoke_test_support import assert_move_group_ready
+from moveit_launch_smoke_test_support import (
+    assert_move_group_ready,
+    build_smoke_launch_arguments,
+)
 import pytest
 
 
@@ -46,7 +49,9 @@ def generate_test_description():
         [
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(move_group_launch),
-                launch_arguments={'hardware_device_address': 'mock_servo'}.items(),
+                launch_arguments=build_smoke_launch_arguments(
+                    {'hardware_device_address': 'mock_servo'}
+                ).items(),
             ),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(bringup_launch),

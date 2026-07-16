@@ -30,6 +30,22 @@ from launch_ros.substitutions import FindPackageShare
 from moveit_msgs.srv import GetMotionPlan
 import rclpy
 
+# Non-simulator smoke launches have no simulation clock to use for readiness.
+# Keep one bounded wall-clock watchdog for every smoke launch, including the
+# Gazebo demo, while allowing CPU-heavy MoveIt startup to make progress when
+# all CTest workers are active. The move_group initial-state timeout must match
+# so it cannot abort before this watchdog.
+READY_TIMEOUT = 180.0
+
+
+def build_smoke_launch_arguments(
+    launch_arguments: dict[str, str] | None = None,
+) -> dict[str, str]:
+    """Add the smoke-test move_group timeout to outer launch arguments."""
+    smoke_launch_arguments = dict(launch_arguments or {})
+    smoke_launch_arguments['wait_for_initial_state_timeout'] = str(READY_TIMEOUT)
+    return smoke_launch_arguments
+
 
 def build_test_gz_partition(test_name: str) -> str:
     domain_id = os.environ.get('ROS_DOMAIN_ID', '0')
@@ -52,17 +68,11 @@ def build_smoke_test_description(
         [
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(launch_path),
-                launch_arguments=(launch_arguments or {}).items(),
+                launch_arguments=build_smoke_launch_arguments(launch_arguments).items(),
             ),
             TimerAction(period=ready_delay, actions=[ReadyToTest()]),
         ]
     )
-
-
-# These smoke launches do not run a simulator, so there is no simulation clock
-# to use for readiness. Keep a wall-clock watchdog, but allow CPU-heavy MoveIt
-# startup to make progress when all CTest workers are active.
-READY_TIMEOUT = 180.0
 
 
 def assert_move_group_ready(timeout: float = READY_TIMEOUT) -> None:
