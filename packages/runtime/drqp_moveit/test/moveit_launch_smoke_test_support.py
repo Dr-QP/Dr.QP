@@ -20,6 +20,7 @@
 
 import os
 import re
+import time
 
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, TimerAction
@@ -29,6 +30,7 @@ from launch_pytest.actions import ReadyToTest
 from launch_ros.substitutions import FindPackageShare
 from moveit_msgs.srv import GetMotionPlan
 import rclpy
+from rclpy.node import Node
 
 # Non-simulator smoke launches have no simulation clock to use for readiness.
 # Keep one bounded wall-clock watchdog for every smoke launch, including the
@@ -36,6 +38,7 @@ import rclpy
 # all CTest workers are active. The move_group initial-state timeout must match
 # so it cannot abort before this watchdog.
 READY_TIMEOUT = 180.0
+NODE_POLL_INTERVAL = 0.1
 
 
 def build_smoke_launch_arguments(
@@ -75,18 +78,39 @@ def build_smoke_test_description(
     )
 
 
-def assert_move_group_ready(timeout: float = READY_TIMEOUT) -> None:
+def _remaining_time(deadline: float) -> float:
+    """Return the non-negative wall time remaining before ``deadline``."""
+    return max(0.0, deadline - time.monotonic())
+
+
+def _assert_node_ready(node: Node, node_name: str, deadline: float) -> None:
+    """Poll the ROS graph for ``node_name`` until the shared wall deadline."""
+    while True:
+        if node_name in node.get_node_names():
+            return
+
+        remaining = _remaining_time(deadline)
+        if remaining <= 0.0:
+            raise AssertionError(f'{node_name} node is not available')
+        time.sleep(min(NODE_POLL_INTERVAL, remaining))
+
+
+def assert_moveit_stack_ready(timeout: float = READY_TIMEOUT) -> None:
     """
-    Assert the MoveIt motion-plan service comes up within ``timeout`` seconds.
+    Assert the MoveIt service and drqp_brain node are ready within ``timeout``.
 
     Requires ``rclpy`` to already be initialized (see the ``move_group`` fixture).
+    A monotonic wall deadline is shared by service and graph readiness because
+    non-simulator launches do not have a simulation clock.
     """
+    deadline = time.monotonic() + timeout
     node = rclpy.create_node('moveit_launch_smoke_test')
     motion_plan_client = node.create_client(GetMotionPlan, '/plan_kinematic_path')
     try:
-        assert motion_plan_client.wait_for_service(timeout_sec=timeout), (
+        assert motion_plan_client.wait_for_service(timeout_sec=_remaining_time(deadline)), (
             '/plan_kinematic_path service is not available'
         )
+        _assert_node_ready(node, 'drqp_brain', deadline)
     finally:
         motion_plan_client.destroy()
         node.destroy_node()
