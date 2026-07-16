@@ -117,7 +117,8 @@ scripts/with-ros-env.sh colcon test-result --verbose
 
 Repeat compatibility and smoke targets after Bazel clean expunge. Record test
 names/counts/durations, resource origins, host versions/library paths, retries,
-and both results in `evidence/07-moveit.md`.
+and per-architecture Bazel plus colcon-oracle results in
+`evidence/07-moveit.md`.
 
 ## Stop conditions
 
@@ -126,6 +127,8 @@ Stop with the smallest compatibility/launch reproducer if:
 - host MoveIt Python or type-support modules cannot coexist with the Bazel
   Python/rclpy runtime;
 - a MoveIt/Gazebo plugin ABI mismatch crashes a process;
+- either native architecture lacks the pinned MoveIt host closure or fails the
+  compatibility/runtime assertions;
 - a launch requires workspace colcon output or source-tree working directory;
 - preserving retry scope causes stale event-loop behavior; or
 - the full test passes only after removing an existing behavioral assertion.
@@ -148,5 +151,7 @@ Stop with the smallest compatibility/launch reproducer if:
       the recorded `/opt/ros/jazzy` boundary.
 - [ ] Clean-expunge compatibility/smoke tests do not consume workspace colcon
       output.
+- [ ] Compatibility, smoke, and full Bazel groups pass on native `amd64` and
+      `arm64` against their pinned architecture-specific host images.
 - [ ] Host versions and non-hermetic boundaries are recorded honestly.
 - [ ] `evidence/07-moveit.md` contains the required handoff data.

@@ -7,9 +7,10 @@
 
 ## Objective
 
-Add an advisory Bazel CI path on the existing x86_64/aarch64 Jazzy development
-images, publish test/diagnostic artifacts, and define reproducible performance
-measurements. Keep the colcon job required and unchanged.
+Add an advisory Bazel CI path on the existing `amd64` (`x86_64`) and `arm64`
+(`aarch64`) Jazzy development images, publish test/diagnostic artifacts, and
+define reproducible performance measurements. Keep the colcon job required and
+unchanged.
 
 ## CI placement and controls
 
@@ -39,7 +40,8 @@ or release behavior.
 
 ### `bazel-core`
 
-Run on both current architectures with a 45-minute initial timeout:
+Run on matrix values `amd64` and `arm64`, each on its matching native runner
+and Spec 01 platform label, with a 45-minute initial timeout:
 
 ```text
 //packages/runtime/drqp_interfaces:interface_tests
@@ -57,8 +59,8 @@ This job does not select `host-ros` and must remain independent of
 
 ### `bazel-runtime`
 
-Run with `scripts/with-ros-env.sh` and `--config=host-ros` on both current
-architectures, initially with a 60-minute timeout:
+Run with `scripts/with-ros-env.sh` and `--config=host-ros` for both matrix
+values on matching native runners, initially with a 60-minute timeout:
 
 ```text
 //packages/simulation/drqp_gazebo:gazebo_smoke_tests
@@ -158,9 +160,11 @@ scripts/with-ros-env.sh scripts/bazel-ci.sh runtime-full
 ```
 
 Validate the workflow syntax with the repository's pinned actionlint/pre-commit
-tooling, then trigger one manual advisory run on both architectures. Record run
-links, check names, artifact names, timings, and the failure drill in
-`evidence/08-optional-ci.md`.
+tooling, then trigger one manual advisory run on native `amd64` and native
+`arm64`. Assert that `uname -m` is `x86_64` and `aarch64`, respectively, and
+that each job selects the matching Spec 01 Bazel platform. Record run links,
+check names, artifact names, timings, platform mapping, and the failure drill
+in `evidence/08-optional-ci.md`.
 
 ## Allowed files
 
@@ -176,6 +180,8 @@ branch protection, or required-check policy in this spec.
 
 - [ ] Core, runtime-smoke, and default-branch full target groups are explicit
       and run on both supported CI architectures.
+- [ ] Matrix value, native runner architecture, `uname -m`, Bazel platform,
+      image, cache key, and artifact name remain architecture-consistent.
 - [ ] `BAZEL_CI_ENABLED` disables only Bazel jobs; colcon remains unchanged.
 - [ ] Bazel failures have failed conclusions but remain advisory because the
       checks are not required by branch protection.

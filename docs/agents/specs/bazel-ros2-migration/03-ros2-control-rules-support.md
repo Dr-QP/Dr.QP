@@ -121,8 +121,9 @@ scripts/bazel.sh query '@ros2_controllers//...'
 scripts/bazel.sh test //bazel/tests:all
 ```
 
-Save the resolved repository versions, archive hashes, public labels, fork test
-results on x86_64, and any unavailable aarch64 dependency in
+Run the fork and workspace commands on separate native `amd64`/`x86_64` and
+`arm64`/`aarch64` hosts. Save the resolved repository versions, archive
+hashes, public labels, and per-architecture fork/workspace test results in
 `evidence/03-ros2-control-rules.md`.
 
 ## Stop conditions
@@ -133,6 +134,8 @@ Stop and hand off a minimal reproducer instead of weakening the design if:
   rclcpp/pluginlib/type-support versions;
 - an upstream dependency requires an unpinned generator or network access
   during a build action;
+- any required archive, generated dependency, C++ toolchain, or plugin test is
+  unavailable or failing on either native architecture;
 - plugin discovery works only with `/opt/ros/jazzy` or colcon output; or
 - the required controller-manager launch cannot shut down cleanly.
 
@@ -152,5 +155,7 @@ Stop and hand off a minimal reproducer instead of weakening the design if:
 - [ ] The fork hardware lifecycle test passes.
 - [ ] The controller-manager test loads both controllers through pluginlib and
       verifies clean process exits without host ROS libraries.
+- [ ] The same public rules labels build and all fork/workspace tests pass on
+      native `amd64` and native `arm64` runners.
 - [ ] This workspace pins the tested fork commit and locked dependency graph.
 - [ ] `evidence/03-ros2-control-rules.md` contains the required handoff data.

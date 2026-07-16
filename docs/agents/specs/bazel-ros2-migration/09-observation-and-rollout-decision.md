@@ -53,7 +53,7 @@ commit:
 | commit         | full SHA and date                                           |
 | workflow       | run URL and attempt                                         |
 | image/rules    | image digest and rules SHA                                  |
-| colcon         | x86_64/aarch64 result and duration                          |
+| colcon         | amd64/x86_64 and arm64/aarch64 result and duration          |
 | Bazel core     | results, clean/no-op time, cache, disk                      |
 | Bazel runtime  | results and duration                                        |
 | Bazel full     | results and duration                                        |

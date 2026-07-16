@@ -17,6 +17,28 @@ The fork is a supply-chain and maintenance boundary, not a commitment to
 permanent divergence. Generic fixes belong upstream; workspace-specific or
 not-yet-merged fixes must be listed in the fork's `UPSTREAM.md`.
 
+## Supported platform contract
+
+Linux `amd64` and Linux `arm64` are co-equal, mandatory Bazel platforms from
+Spec 01 onward. In Bazel/CI names these are `amd64` and `arm64`; the expected
+native `uname -m` values are `x86_64` and `aarch64`, respectively. `arm64` is
+the deployment architecture and must never be treated as an optional or
+best-effort follow-up. `amd64` remains required for developer and CI parity.
+
+Each architecture must build and test natively on its own runner. A successful
+cross-compilation on one architecture does not satisfy the other
+architecture's gate. Public first-party labels and behavior must remain the
+same on both platforms; architecture-specific dependency artifacts or
+toolchain selection are allowed only when selected through explicit Bazel
+platform constraints and locked independently.
+
+Unless a spec explicitly narrows a command to architecture-independent source
+analysis, every listed Bazel verification command and acceptance suite must
+pass on both native platforms. An unavailable dependency, toolchain, or host
+runtime on either platform blocks that spec. Evidence must identify the CI
+architecture name, `uname -m`, image digest, toolchain versions, commands, and
+result separately for each platform.
+
 ## Raw findings
 
 ### Compatibility surface
@@ -60,6 +82,10 @@ pass in this workspace.
   and reject workspace overlays; the result remains non-hermetic.
 - **P1 — dual-build declarations can drift.** Every spec shares test sources
   and preserves ament metadata while adding explicit Bazel source/data labels.
+- **P1 — architecture support can drift.** Native Linux `amd64` and `arm64`
+  are required at every stage. Architecture-specific locks and host packages
+  must be proven independently; an amd64-only success is not an intermediate
+  acceptance state.
 - **P2 — developer and CI cost is unknown.** Specs 08–09 measure clean/no-op
   behavior, cache, disk, runner time, setup, diagnostics, and rollback before
   any required-check decision.
@@ -134,9 +160,10 @@ Every spec uses this delivery contract:
    repository-owned `scripts/bazel.sh`; host-runtime tests may wrap it with
    `scripts/with-ros-env.sh` only through the explicit `host-ros` config.
 5. Create `docs/agents/specs/bazel-ros2-migration/evidence/NN-<slug>.md` with:
-   the rules SHA, Bazel/Python/ROS versions, architecture, exact commands and
-   exit codes, tests run, host-supplied dependencies, known non-hermetic
-   inputs, deviations from the public label contract, and remaining blockers.
+   the rules SHA and, for each of `amd64`/`x86_64` and `arm64`/`aarch64`, the
+   image digest, Bazel/Python/ROS and compiler versions, exact commands and exit
+   codes, tests run, host-supplied dependencies, known non-hermetic inputs,
+   deviations from the public label contract, and remaining blockers.
 6. Update the owning spec's status only in the landing PR. A failing mandatory
    acceptance item leaves the spec proposed or blocked; skips are not passes.
 
@@ -162,6 +189,9 @@ to turn an infrastructure failure green.
 - `MODULE.bazel.lock` and every requirements lock/integrity value are reviewed
   inputs. Mutable branches, unverified archives, and floating pip ranges are
   not allowed in the Bazel dependency graph.
+- Platform selection uses explicit Linux `amd64`/`arm64` constraints. Native
+  validation on both architectures is mandatory; cross-compilation results
+  are supplemental evidence only.
 - Ament/colcon remains an independent oracle. A Bazel target must not replace,
   disable, or conditionally skip its existing ament test registration.
 
@@ -172,7 +202,7 @@ Bazel may become required CI only after all are true:
 - [ ] The rules fork and fetched dependencies are immutable and provenance is
       recorded.
 - [ ] A clean checkout passes the Spec 02–07 selected target set without local
-      colcon artifacts.
+      colcon artifacts on native `amd64` and native `arm64` runners.
 - [ ] All five custom messages pass C++, Python, and cross-language checks.
 - [ ] Pluginlib loads `drqp_control/a1_16_hardware_interface` from Bazel
       runtime data.

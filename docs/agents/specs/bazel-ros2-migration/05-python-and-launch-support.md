@@ -34,14 +34,14 @@ installs them.
 Extend a checked-in Bazel requirements input and lock for Python 3.12. Resolve
 the direct packages declared by the owning `setup.py` files, including NumPy,
 SciPy, python-statemachine, pygame, pytest/pytest-retry, and the IMU hardware
-libraries required to import the entry point. Pin hashes and Linux x86_64 and
-aarch64 wheels/sdists.
+libraries required to import the entry point. Pin hashes for Linux
+`amd64`/`x86_64` and `arm64`/`aarch64` wheels or source distributions.
 
 Do not change the ament `install_requires` ranges merely to mirror lockfile
 syntax. The lock is Bazel's resolved snapshot; setup.py remains the packaging
-contract. If a dependency has no supported artifact for an architecture,
-record the package and reproducer rather than silently omitting that entry
-point on one architecture.
+contract. If a dependency has no buildable locked artifact on either required
+architecture, record the package and reproducer and leave the spec blocked;
+never omit an entry point on one architecture.
 
 ## Preserve the vendored launch behavior
 
@@ -149,8 +149,9 @@ scripts/with-ros-env.sh colcon test-result --verbose
 ```
 
 Repeat Bazel tests after `clean --expunge`. Record collected test names/counts,
-entry-point outcomes, Python lock details, SDL provenance, launch-fork SHA, and
-both build-system results in `evidence/05-python-launch.md`.
+entry-point outcomes, Python lock/artifact selection by architecture, SDL
+provenance, launch-fork SHA, and per-architecture Bazel plus colcon-oracle
+results in `evidence/05-python-launch.md`.
 
 ## Allowed files
 
@@ -169,6 +170,8 @@ launch fixture scope/retry markers.
 
 - [ ] Python 3.12 dependencies are hash-pinned for both CI architectures and
       do not leak user-site packages.
+- [ ] Every listed Bazel build/test and bounded entry-point smoke check passes
+      natively on both `amd64` and `arm64`.
 - [ ] All public libraries, component/node, and five console-entry labels build
       and their bounded smoke checks pass.
 - [ ] Non-lint kinematics, brain, keyboard, and joy tests pass from shared

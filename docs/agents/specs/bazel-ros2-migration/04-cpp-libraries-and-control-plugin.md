@@ -122,7 +122,8 @@ scripts/with-ros-env.sh colcon test-result --verbose
 
 Delete workspace colcon outputs and repeat the Bazel suite. Record public
 labels, source/data inventory, compiler versions, Catch2 compatibility choice,
-plugin declaration output, and both test results in
+plugin declaration output, and per-architecture Bazel plus colcon-oracle test
+results in
 `evidence/04-control-plugin.md`.
 
 ## Allowed files
@@ -146,5 +147,7 @@ Do not migrate joy, Python applications, broad launch tests, Gazebo, or MoveIt.
       pass from shared sources under both build systems.
 - [ ] Plugin metadata matches the checked-in XML and pluginlib instantiates
       `drqp_control/a1_16_hardware_interface` from Bazel runfiles.
+- [ ] All listed Bazel builds/tests and the plugin load proof pass natively on
+      both `amd64` and `arm64` with unchanged public labels.
 - [ ] No test opens real servo hardware or reads workspace colcon output.
 - [ ] `evidence/04-control-plugin.md` contains the required handoff data.

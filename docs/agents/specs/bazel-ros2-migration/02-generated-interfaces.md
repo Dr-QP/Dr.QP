@@ -147,8 +147,10 @@ scripts/with-ros-env.sh colcon test-result --verbose
 After the Bazel run, remove any workspace `build/`, `install/`, and `log/`, then
 repeat the Bazel suite to prove it consumes only declared inputs.
 
-Record target labels, exact ROS type-name outputs, both test-system results,
-architecture, and any fork patch in `evidence/02-interfaces.md`.
+Run the Bazel verification suite natively with the Spec 01 `linux_amd64` and
+`linux_arm64` platforms. Record target labels, exact ROS type-name outputs,
+per-architecture Bazel results, the colcon oracle result, and any fork patch in
+`evidence/02-interfaces.md`.
 
 ## Allowed files
 
@@ -172,5 +174,7 @@ Do not touch control, joy, Gazebo, MoveIt, or application Python packages.
       bounded waits and clean process exits.
 - [ ] The same semantic test sources pass under Bazel and colcon without skips
       or changed assertions.
+- [ ] The complete interface suite passes natively on both `amd64` and `arm64`;
+      generated public labels and type names are identical across platforms.
 - [ ] Deleting colcon outputs does not change the Bazel result.
 - [ ] `evidence/02-interfaces.md` contains the required handoff data.

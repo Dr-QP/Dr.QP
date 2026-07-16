@@ -26,9 +26,10 @@ launch files, xacro, config, worlds, and test support must resolve from Bazel
 runfiles/ament setup. The wrapper must reject this workspace's `install/` even
 when `scripts/with-ros-env.sh` would otherwise add it.
 
-Record the development image digest, architecture, `ROS_DISTRO`, and exact
-dpkg versions for every host ROS/Gazebo package in
-`evidence/06-gazebo.md`. Do not call the result hermetic.
+Record the development image digest, CI architecture name, `uname -m`,
+`ROS_DISTRO`, and exact dpkg versions for every host ROS/Gazebo package
+separately on native `amd64` and `arm64` in `evidence/06-gazebo.md`. Do not
+call the result hermetic.
 
 ## Public Bazel label contract
 
@@ -119,7 +120,8 @@ scripts/with-ros-env.sh colcon test-result --verbose
 
 Repeat the Bazel smoke group after `scripts/bazel.sh clean --expunge`. Record
 test names/counts/durations, resolved resource origins, image/package versions,
-host boundary, and both results in `evidence/06-gazebo.md`.
+host boundary, and per-architecture Bazel plus colcon-oracle results in
+`evidence/06-gazebo.md`.
 
 ## Stop conditions
 
@@ -127,6 +129,8 @@ Stop with the smallest failing launch and process logs if:
 
 - first-party package lookup requires a sourced colcon overlay;
 - a Gazebo plugin ABI mismatch crashes the process;
+- either native architecture lacks a required Gazebo/ROS host package or fails
+  the smoke/full runtime assertions;
 - Bazel launch wrapping loses an existing exit-code assertion or retry; or
 - tests pass only when run from the source directory or after another test.
 
@@ -146,6 +150,8 @@ Stop with the smallest failing launch and process logs if:
 - [ ] DDS/Gazebo domains, timeouts, retry behavior, and per-process exit checks
       are preserved.
 - [ ] Clean-expunge smoke succeeds without workspace colcon outputs.
+- [ ] Smoke and full Bazel groups pass on native `amd64` and `arm64` against
+      their pinned architecture-specific host images.
 - [ ] Host image digest and dependency versions are recorded; the result is
       described as non-hermetic.
 - [ ] `evidence/06-gazebo.md` contains the required handoff data.

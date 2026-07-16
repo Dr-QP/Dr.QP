@@ -8,8 +8,9 @@
 ## Objective
 
 Create the immutable `rules_ros2` supply-chain boundary and a reproducible,
-optional Bazel 8.7.0 entry point. This PR establishes configuration and
-isolation; it does not migrate a ROS package.
+optional Bazel 8.7.0 entry point for native Linux `amd64` (`x86_64`) and Linux
+`arm64` (`aarch64`). This PR establishes configuration, platform selection,
+and isolation; it does not migrate a ROS package.
 
 ## Preconditions and stop conditions
 
@@ -19,9 +20,11 @@ isolation; it does not migrate a ROS package.
 - If the fork does not exist and the agent cannot create it in the Dr-QP
   organization, stop before editing this workspace and report the required
   owner action. Do not pin directly to a mutable upstream branch as a fallback.
-- If upstream commit `56ad1dfa...` cannot complete its own documented bzlmod
-  smoke test with Bazel 8.7.0 on x86_64, record the reproducer and stop. A local
-  fork patch belongs in a reviewed fork commit before this workspace pins it.
+- Run upstream commit `56ad1dfa...`'s documented bzlmod smoke test with Bazel
+  8.7.0 on separate native `amd64`/`x86_64` and `arm64`/`aarch64` hosts. If
+  either run fails, record the architecture-specific reproducer and stop. A
+  local fork patch belongs in a reviewed fork commit before this workspace
+  pins it. Cross-compiling from the other host does not satisfy this gate.
 
 ## Required fork state
 
@@ -54,6 +57,11 @@ SHA. If patches are needed, the evidence file must record both SHAs.
   committed.
 - Python toolchain: exactly 3.12, matching Jazzy and the rules fork's pip lock.
   Do not add an independent floating pip resolve in this spec.
+- `bazel/platforms/BUILD.bazel`: expose `//bazel/platforms:linux_amd64` and
+  `//bazel/platforms:linux_arm64` using the standard Linux plus `x86_64` or
+  `aarch64` constraint values. Toolchain resolution must select native C++ and
+  Python 3.12 toolchains on each runner. Do not claim or require
+  cross-compilation support.
 - Import only the non-module ROS repositories needed by Spec 02:
   `ros2_common_interfaces`, `ros2_rcl`, `ros2_rclcpp`, `ros2_rclpy`,
   `ros2_rosidl`, `ros2_rosidl_python`, `ros2_rosidl_runtime_py`, and their
@@ -65,6 +73,10 @@ SHA. If patches are needed, the evidence file must record both SHAs.
   Python-init, C++17 minimum, strict-action-environment, and network-sandbox
   settings. Keep `--test_output=errors` and import ignored local overrides only
   from `user.bazelrc`.
+- Define `build:linux-amd64` and `build:linux-arm64` configs that select
+  `//bazel/platforms:linux_amd64` and `//bazel/platforms:linux_arm64`,
+  respectively. Build configs must also apply to inherited `test` and `run`
+  commands. Do not select a platform from an implicit host default in CI.
 - Define `build:host-ros` and `test:host-ros` configs, but keep them unused
   until Spec 06. They may expose only `/opt/ros/jazzy` from the pinned
   development image and must be visibly named non-hermetic.
@@ -73,7 +85,8 @@ SHA. If patches are needed, the evidence file must record both SHAs.
   root by the chosen symlink-prefix configuration.
 - `.gitignore`: ignore Bazel output symlinks, a repository-local output root if
   used, and `user.bazelrc`; do not ignore `MODULE.bazel.lock`.
-- `bazel/README.md`: document prerequisites, supported architectures,
+- `bazel/README.md`: document the `amd64` -> `x86_64` and `arm64` -> `aarch64`
+  naming map, native-runner requirement, platform labels, prerequisites,
   dependency-update procedure, target-label conventions, host-boundary policy,
   clean/reset commands, and where Bazel test logs live.
 
@@ -110,29 +123,45 @@ that fails when:
 
 - the rules override is not a full immutable revision with integrity;
 - `MODULE.bazel.lock` is absent;
-- a forbidden generated directory is not ignored; or
-- a mutable GitHub branch archive appears in `MODULE.bazel`.
+- a forbidden generated directory is not ignored;
+- a mutable GitHub branch archive appears in `MODULE.bazel`;
+- either required platform target is missing, has the wrong OS/CPU constraint,
+  or is not mapped by its matching `.bazelrc` config.
 
 Keep these policy tests narrow; do not write a general BUILD-file linter.
 
 ## Verification
 
-Run from a clean checkout with no workspace `build/`, `install/`, or `log/`:
+Run the following matrix from clean checkouts with no workspace `build/`,
+`install/`, or `log/`. Use a native `amd64` runner with
+`ARCH_CONFIG=linux-amd64`, then a separate native `arm64` runner with
+`ARCH_CONFIG=linux-arm64`:
 
 ```bash
+case "$(uname -m)" in
+  x86_64) ARCH_CONFIG=linux-amd64 ;;
+  aarch64) ARCH_CONFIG=linux-arm64 ;;
+  *) echo "unsupported native architecture: $(uname -m)" >&2; exit 1 ;;
+esac
 scripts/bazel.sh version
 scripts/bazel.sh mod graph
-scripts/bazel.sh test //bazel/tests:all
+scripts/bazel.sh test --config="${ARCH_CONFIG}" //bazel/tests:all
 scripts/bazel.sh query '@com_github_mvukov_rules_ros2//ros2:all'
 scripts/with-ros-env.sh colcon list --names-only
 ```
+
+The implementation may wrap this mapping in a checked-in matrix script in
+`bazel/tests/`, but the evidence must show the resolved config and `uname -m`
+value on each runner.
 
 Then run `scripts/bazel.sh clean --expunge`, repeat the policy tests, create a
 normal colcon overlay, confirm the wrapper rejects that contaminated
 environment, remove/unset the overlay variables, and confirm the tests pass.
 
-Record the fork SHA, archive integrity, `bazel mod graph` summary, and commands
-in `evidence/01-foundation.md`.
+On each runner, record `uname -m` and verify it matches the selected platform;
+a mismatched or emulated runner is not a pass. Record the fork SHA, archive
+integrity, `bazel mod graph` summary, toolchain-resolution output, and commands
+for both architectures in `evidence/01-foundation.md`.
 
 ## Allowed files
 
@@ -148,6 +177,10 @@ Do not add BUILD files below `packages/`; Spec 02 owns the first ROS package.
 - [ ] The Dr-QP fork, upstream SHA, consumed fork SHA, license, and patch policy
       are recorded and immutable.
 - [ ] Bazel 8.7.0 and Python 3.12 are pinned; module resolution is locked.
+- [ ] The upstream/fork smoke test and the foundation verification matrix pass
+      on separate native `amd64` and `arm64` runners.
+- [ ] The two public platform labels select the expected Linux CPU constraints
+      and native C++/Python toolchains without changing public target labels.
 - [ ] `scripts/bazel.sh` works from outside the repository root and provides
       actionable missing-tool/version diagnostics.
 - [ ] Both `//bazel/tests:all` policy tests pass after a clean expunge.
