@@ -131,4 +131,4 @@ If you get a display conflict error, try a different display number:
 
 - Use GPU acceleration with `vglrun` for 3D applications
 - Reduce window size or resolution if experiencing lag
-- Check system resources: `top` or `htop`
+- Check system resources: `btop`

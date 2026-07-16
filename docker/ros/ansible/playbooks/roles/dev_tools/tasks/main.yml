@@ -60,7 +60,7 @@
       - ros-dev-tools
       - shellcheck
       - ffmpeg # for rendering notebooks animations
-      - htop # for monitoring resource usage in development
+      - btop # for monitoring resource usage in development
     state: present
     install_recommends: false
     update_cache: true
