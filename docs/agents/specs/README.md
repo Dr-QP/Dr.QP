@@ -13,6 +13,7 @@ The specs are grouped into **programs** — independent bodies of work but not u
 | [`roadmap/`](roadmap/README.md)                             | Autonomy roadmap: joystick hexapod → autonomous AI home pet                | [`roadmap/index.md`](../../source/Dev/roadmap/index.md)                   |
 | [`formatting-linting/`](formatting-linting/README.md)       | Unify formatter ownership, local/editor workflows, CI, and ROS lint gates  | (repository tooling audit, self-contained)                                |
 | [`chatgpt-codex-auth-ci/`](chatgpt-codex-auth-ci/README.md) | Decision record and private-only design for ChatGPT-managed Codex CI auth  | OpenAI CI/CD authentication guidance and workflow audit                   |
+| [`bazel-ros2-migration/`](bazel-ros2-migration/README.md)   | Stage a Bazel build around ROS 2 Jazzy with colcon parity gates            | rules_ros2 Jazzy investigation and workspace build audit                  |
 
 ## Program relationships
 
