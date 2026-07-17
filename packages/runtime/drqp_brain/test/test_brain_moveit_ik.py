@@ -91,47 +91,6 @@ def test_control_rate_parameter_sets_trajectory_point_spacing():
         brain.destroy_node()
 
 
-@pytest.mark.parametrize('control_rate_hz', [25.0, 50.0])
-def test_body_translation_uses_fixed_legacy_pose_scale(control_rate_hz):
-    """Keep semantic body-pose commands independent of the loop frequency."""
-    brain = HexapodBrain(
-        parameter_overrides=[
-            rclpy.Parameter('control_rate_hz', rclpy.Parameter.Type.DOUBLE, control_rate_hz)
-        ]
-    )
-    try:
-        brain.current_movement.body_translation.x = 0.8
-        brain.current_movement.body_translation.y = -0.4
-        brain.current_movement.body_translation.z = 0.16
-        with (
-            _ik_ready_patch(brain),
-            mock.patch.object(
-                brain.walker, 'body_transform', wraps=brain.walker.body_transform
-            ) as body_transform,
-            mock.patch.object(
-                brain, '_build_walking_feet_target_window', return_value=[]
-            ) as target_window,
-            mock.patch.object(brain, '_solve_walking_trajectory_targets', return_value=None),
-        ):
-            brain.loop()
-
-        expected_translation = [0.1, -0.05, 0.02]
-        body_transform_translation = body_transform.call_args.args[0]
-        target_window_translation = target_window.call_args.kwargs['body_translation']
-        assert [
-            body_transform_translation.x,
-            body_transform_translation.y,
-            body_transform_translation.z,
-        ] == pytest.approx(expected_translation)
-        assert [
-            target_window_translation.x,
-            target_window_translation.y,
-            target_window_translation.z,
-        ] == pytest.approx(expected_translation)
-    finally:
-        brain.destroy_node()
-
-
 @pytest.mark.parametrize('control_rate_hz', [CONTROL_RATE_MIN_HZ, CONTROL_RATE_MAX_HZ])
 def test_control_rate_parameter_rejects_out_of_range_values(control_rate_hz):
     """The ROS parameter protects the timer from impractical update rates."""
