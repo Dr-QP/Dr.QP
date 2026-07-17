@@ -46,21 +46,30 @@ class InstanceGuard:
 
     def acquire(self) -> None:
         """Acquire the instance lock or raise when another process owns it."""
+        if not self.try_acquire():
+            raise InstanceAlreadyRunningError(
+                f'Another {self.name} process already holds the startup lock.'
+            )
+
+    def try_acquire(self) -> bool:
+        """Try to acquire the instance lock without raising on contention."""
+        if self._lock_file is not None:
+            return True
+
         self._lock_path.parent.mkdir(parents=True, exist_ok=True)
         self._lock_file = self._lock_path.open('w', encoding='utf-8')
         try:
             fcntl.flock(self._lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError as exc:
+        except BlockingIOError:
             self._lock_file.close()
             self._lock_file = None
-            raise InstanceAlreadyRunningError(
-                f'Another {self.name} process already holds the startup lock.'
-            ) from exc
+            return False
 
         self._lock_file.seek(0)
         self._lock_file.truncate()
         self._lock_file.write(f'{os.getpid()}\n')
         self._lock_file.flush()
+        return True
 
     def release(self) -> None:
         """Release the lock if it is currently held."""
@@ -99,19 +108,43 @@ def default_lock_dir() -> Path:
     return get_runtime_directory() / 'tmp'
 
 
+def domain_scoped_guard_name(name: str, ros_domain_id: str) -> str:
+    """Return the instance guard name for a ROS domain."""
+    return f'{name}-domain-{ros_domain_id}'
+
+
+def domain_instance_guard(
+    name: str,
+    lock_dir: Path | str | None = None,
+    ros_domain_id: str | None = None,
+) -> InstanceGuard:
+    """Create an instance guard isolated to a ROS domain."""
+    domain_id = ros_domain_id or os.environ.get('ROS_DOMAIN_ID', '0')
+    guard_name = domain_scoped_guard_name(name, domain_id)
+    if lock_dir is None:
+        return InstanceGuard(guard_name)
+    return InstanceGuard(guard_name, lock_dir=lock_dir)
+
+
 def make_launch_instance_guard(name: str):
-    """Create a launch action that holds an instance lock for launch lifetime."""
+    """Create a launch action that holds a domain-scoped lock for its lifetime."""
     from launch.actions import OpaqueFunction
 
     return OpaqueFunction(function=_acquire_launch_instance_guard, args=(name,))
 
 
-def _acquire_launch_instance_guard(_context, name: str):
-    from launch.actions import RegisterEventHandler
+def _acquire_launch_instance_guard(context, name: str):
+    from launch.actions import EmitEvent, LogError, RegisterEventHandler
     from launch.event_handlers import OnShutdown
+    from launch.events import Shutdown
 
-    guard = InstanceGuard(name)
-    guard.acquire()
+    guard = domain_instance_guard(
+        name,
+        ros_domain_id=context.environment.get('ROS_DOMAIN_ID', '0'),
+    )
+    if not guard.try_acquire():
+        reason = f'{guard.name} is already running; refusing duplicate launch.'
+        return [LogError(msg=reason), EmitEvent(event=Shutdown(reason=reason))]
 
     def release_guard(_event, _context):
         guard.release()

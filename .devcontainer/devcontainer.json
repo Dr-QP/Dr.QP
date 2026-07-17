@@ -28,7 +28,9 @@
 
     "UV_CACHE_DIR": "/uv/cache",
     "UV_PYTHON_INSTALL_DIR": "/uv/python",
-    "UV_PROJECT_ENVIRONMENT": "/uv/venvs/${localWorkspaceFolderBasename}/"
+    "UV_PROJECT_ENVIRONMENT": "/uv/venvs/${localWorkspaceFolderBasename}/",
+
+    "CTEST_PARALLEL_LEVEL": " " // equivalent to `ctest --parallel` / `ctest -j`
   },
 
   "forwardPorts": ["14500-14599"],
