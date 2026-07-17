@@ -44,10 +44,19 @@ MOVEIT_IK_ATTEMPTS_PER_TARGET = 2
 MOVEIT_IK_CALLS_PER_TICK = (
     LOCOMOTION_LEG_COUNT * WALKING_TRAJECTORY_POINTS * MOVEIT_IK_ATTEMPTS_PER_TARGET
 )
-# All IK calls in one trajectory window must fit within half the loop period, so
-# the per-call timeout is the half-period budget divided evenly across the calls.
+# Divide half the loop period evenly across calls, but never make an individual
+# MoveIt call so short that its solver cannot produce a viable result.
 DEFAULT_CONTROL_RATE_HZ = 25.0
-MOVEIT_IK_TIMEOUT_SEC = (0.5 / DEFAULT_CONTROL_RATE_HZ) / MOVEIT_IK_CALLS_PER_TICK
+MIN_VIABLE_IK_TIMEOUT_SEC = 0.001
+
+
+def _moveit_ik_timeout_for_control_rate(control_rate_hz: float) -> float:
+    """Return a per-call MoveIt timeout that remains viable at supported rates."""
+    budget_timeout_sec = (0.5 / control_rate_hz) / MOVEIT_IK_CALLS_PER_TICK
+    return max(MIN_VIABLE_IK_TIMEOUT_SEC, budget_timeout_sec)
+
+
+MOVEIT_IK_TIMEOUT_SEC = _moveit_ik_timeout_for_control_rate(DEFAULT_CONTROL_RATE_HZ)
 BASE_FRAME = 'drqp/base_center_link'
 
 RCLPY_SHUTDOWN_ERRORS = (InvalidHandle, NotInitializedException, RCLError, RuntimeError)
@@ -137,7 +146,7 @@ class MoveItPyLocomotionKinematics:
         self._node = node
         self._hexapod = hexapod
         self._is_shutting_down = is_shutting_down
-        self._ik_timeout_sec = (0.5 / control_rate_hz) / MOVEIT_IK_CALLS_PER_TICK
+        self._ik_timeout_sec = _moveit_ik_timeout_for_control_rate(control_rate_hz)
         self._moveit_py_factory = moveit_py_factory
         self._robot_state_cls = robot_state_cls
         self._moveit_py = None

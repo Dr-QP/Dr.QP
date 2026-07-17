@@ -75,6 +75,7 @@ import trajectory_msgs.msg
 CONTROL_RATE_MIN_HZ = 5.0
 CONTROL_RATE_MAX_HZ = 100.0
 TICK_DURATION_WINDOW_SEC = 5.0
+BODY_POSE_TRANSLATION_SCALE = 8.0
 
 
 @dataclass(frozen=True)
@@ -433,6 +434,7 @@ class HexapodBrain(rclpy.node.Node):
             self._record_tick_duration(perf_counter() - tick_start)
 
     def _run_loop(self):
+        """Apply the latest semantic command and publish viable joint targets."""
         if self._is_shutting_down:
             return
 
@@ -480,7 +482,7 @@ class HexapodBrain(rclpy.node.Node):
         )
 
         body_transform = self.walker.body_transform(
-            body_translation / self.control_rate_hz,
+            body_translation / BODY_POSE_TRANSLATION_SCALE,
             body_rotation,
         )
         self.walker.advance(
@@ -494,7 +496,7 @@ class HexapodBrain(rclpy.node.Node):
             return
 
         feet_target_window = self._build_walking_feet_target_window(
-            body_translation=body_translation / self.control_rate_hz,
+            body_translation=body_translation / BODY_POSE_TRANSLATION_SCALE,
             body_rotation=body_rotation,
         )
         motion_state_key = self._motion_state_key(body_transform)

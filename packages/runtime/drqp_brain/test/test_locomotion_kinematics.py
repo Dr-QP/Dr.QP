@@ -24,6 +24,7 @@ from unittest.mock import Mock
 from drqp_brain.locomotion_kinematics import (
     AnalyticLocomotionKinematics,
     DEFAULT_CONTROL_RATE_HZ,
+    MIN_VIABLE_IK_TIMEOUT_SEC,
     MOVEIT_IK_ATTEMPTS_PER_TARGET,
     MOVEIT_IK_CALLS_PER_TICK,
     MOVEIT_IK_TIMEOUT_SEC,
@@ -54,17 +55,28 @@ def _all_joint_names(hexapod):
     ]
 
 
-def test_moveit_ik_timeout_fits_within_half_loop_period():
-    """Bound all IK calls in one trajectory window to half the loop period."""
+def test_moveit_ik_timeout_respects_budget_or_viable_floor():
+    """Keep the default timeout at its budget unless the viable floor is needed."""
     expected_calls_per_tick = 6 * WALKING_TRAJECTORY_POINTS * MOVEIT_IK_ATTEMPTS_PER_TARGET
     assert MOVEIT_IK_CALLS_PER_TICK == expected_calls_per_tick
-    # The analytic solver is now the runtime default; retain a positive timeout
-    # for the selectable MoveIt comparison backend and keep its aggregate budget
-    # derived from the default control period.
-    assert MOVEIT_IK_TIMEOUT_SEC > 0.0
-    assert MOVEIT_IK_CALLS_PER_TICK * MOVEIT_IK_TIMEOUT_SEC == pytest.approx(
-        0.5 / DEFAULT_CONTROL_RATE_HZ
+    # The analytic solver is now the runtime default; retain a viable timeout
+    # for the selectable MoveIt comparison backend even when the per-tick budget
+    # would otherwise make individual IK calls impractically short.
+    assert MOVEIT_IK_TIMEOUT_SEC >= MIN_VIABLE_IK_TIMEOUT_SEC
+    assert MOVEIT_IK_TIMEOUT_SEC >= (0.5 / DEFAULT_CONTROL_RATE_HZ) / MOVEIT_IK_CALLS_PER_TICK
+
+
+@pytest.mark.parametrize('control_rate_hz', [DEFAULT_CONTROL_RATE_HZ, 100.0])
+def test_moveit_ik_timeout_never_drops_below_viable_floor(hexapod, control_rate_hz):
+    """Keep each MoveIt IK call viable at every supported control rate."""
+    helper = MoveItPyLocomotionKinematics(
+        node=Mock(),
+        hexapod=hexapod,
+        is_shutting_down=lambda: False,
+        control_rate_hz=control_rate_hz,
     )
+
+    assert helper._ik_timeout_sec == pytest.approx(MIN_VIABLE_IK_TIMEOUT_SEC)
 
 
 def _robot_description_with_joint_limits(hexapod):
