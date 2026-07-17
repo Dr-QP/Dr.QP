@@ -29,22 +29,15 @@ if("$ENV{DRQP_TEST_MODE}" STREQUAL "slow")
   list(APPEND drqp_gazebo_launch_tests ${drqp_gazebo_full_launch_tests})
 endif()
 
-# Each balance-mode parameter starts a separate Gazebo simulation. The full
-# direction matrix therefore needs more time than the other launch tests.
-set(drqp_gazebo_balance_mode_test_timeout 480)
-set(drqp_gazebo_test_timeout 300)
-
 foreach(test_file IN LISTS drqp_gazebo_launch_tests)
-  set(test_timeout ${drqp_gazebo_test_timeout})
-  if(test_file STREQUAL "test_robot_control_balance_mode.py")
-    set(test_timeout ${drqp_gazebo_balance_mode_test_timeout})
-  endif()
-
-  # Each launch test boots Gazebo and exercises several robot/board scenarios, so
-  # it needs well over the 60s add_launch_test default before completing.
+  # Physics and behavior deadlines are enforced by simulation time in the test
+  # harness. A CTest wall timeout would make the result depend on Gazebo's
+  # real-time factor under parallel load, so disable that outer deadline.
   drqp_add_ros_isolated_launch_test(
     ${test_file}
-    TIMEOUT ${test_timeout}
-    APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}
+    APPEND_ENV
+      PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}
   )
+  cmake_path(GET test_file STEM test_name)
+  set_tests_properties(${test_name} PROPERTIES TIMEOUT 0)
 endforeach()
