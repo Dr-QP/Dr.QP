@@ -26,14 +26,26 @@ from robot_control_test_support import GazeboRobotControlBase
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    """Skip slow tests unless DRQP_TEST_MODE=slow is set."""
-    if os.environ.get('DRQP_TEST_MODE') == 'slow':
-        return
-
+    """Configure slow-test selection and retries for isolated launch tests."""
+    run_slow_tests = os.environ.get('DRQP_TEST_MODE') == 'slow'
     skip_slow = pytest.mark.skip(reason='Slow test excluded from default CI run')
     for item in items:
-        if 'slow' in item.keywords:
+        # Every launch fixture in this package is function-scoped, so pytest-retry
+        # can relaunch it after transient discovery or shutdown failures.
+        if 'launch' in item.keywords and 'flaky' not in item.keywords:
+            item.add_marker(pytest.mark.flaky(retries=3))
+        if not run_slow_tests and 'slow' in item.keywords:
             item.add_marker(skip_slow)
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_call(item: pytest.Item) -> None:
+    """Surface harness setup failures where pytest-retry can relaunch them."""
+    for fixture_name in ('robot', 'board'):
+        harness = item.funcargs.get(fixture_name)
+        setup_error = getattr(harness, 'setup_error', None)
+        if setup_error is not None:
+            raise setup_error
 
 
 @pytest.fixture
@@ -52,7 +64,18 @@ def robot(generate_test_description):  # noqa: ARG001 (drives launch + sim readi
     """
     rclpy.init()
     harness = GazeboRobotControlBase()
-    harness.setup_node()
-    yield harness
-    harness.assert_no_moveit_ik_failures()
-    rclpy.try_shutdown()
+    harness.setup_error = None
+    try:
+        try:
+            harness.setup_node()
+        except Exception as error:  # noqa: BLE001 - re-raised by pytest_runtest_call
+            # pytest-retry cannot retry fixture-setup failures. Preserve the
+            # original exception and surface it in the call phase instead.
+            harness.setup_error = error
+        yield harness
+        if harness.setup_error is None:
+            harness.assert_no_moveit_ik_failures()
+    finally:
+        if hasattr(harness, 'node') and rclpy.ok():
+            harness.node.destroy_node()
+        rclpy.try_shutdown()

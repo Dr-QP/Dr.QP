@@ -32,6 +32,7 @@ import math
 from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
 import launch_pytest
 import pytest
+import rclpy
 from robot_control_test_support import (
     BalanceBoardWorldBase,
     create_board_only_launch_description,
@@ -65,13 +66,24 @@ def board(generate_test_description):  # noqa: ARG001 (drives the launch)
     """
     Provide a board-only harness bound to the launched world.
 
-    The board-only launch starts no robot, ROS bridge, or control stack, and the
-    board helpers talk to Gazebo over the ``gz`` CLI, so no ``rclpy`` node is
-    needed; the fixture only waits for the board world to start serving poses.
+    The board-only launch starts no robot or control stack, and the board helpers
+    talk to Gazebo over the ``gz`` CLI. A small ROS node consumes the test-only
+    ``/clock`` bridge so physics waits use simulation time.
     """
     harness = BalanceBoardWorldBase()
-    harness.wait_for_board_world_ready()
-    yield harness
+    harness.setup_error = None
+    rclpy.init()
+    try:
+        try:
+            harness.setup_clock_node()
+            harness.wait_for_board_world_ready()
+        except Exception as error:  # noqa: BLE001 - re-raised by pytest_runtest_call
+            harness.setup_error = error
+        yield harness
+    finally:
+        if hasattr(harness, 'node') and rclpy.ok():
+            harness.node.destroy_node()
+        rclpy.try_shutdown()
 
 
 @pytest.mark.slow
