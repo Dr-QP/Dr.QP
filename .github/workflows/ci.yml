@@ -36,7 +36,6 @@ env:
   ROS_DISTRO: jazzy
   REGISTRY: ghcr.io
   REGISTRY_USERNAME: ${{ github.actor }} # for nektos/act, use your own username via --actor option
-  CTEST_PARALLEL_LEVEL: '  ' # whitespace only == empty, auto mode parallel, aka -j to all ctest calls
 
 jobs:
   paths-filter:
@@ -268,8 +267,8 @@ jobs:
             packages/vendor/**
 
       - name: Test Summary
+        if: ${{ always() }}
         uses: ./.github/actions/publish-test-results
-        if: ${{ !cancelled() }}
         with:
           codecov-token: ${{ secrets.CODECOV_TOKEN }}
           logs-artifact-name: colcon-logs-${{ matrix.arch }}
@@ -291,8 +290,10 @@ jobs:
         include:
           - arch: ${{ vars.AMD_ONLY == '1' && 'amd64' || 'arm64' }}
             sim_test_mode: ''
+            ctest_parallel_level: '0'
           - arch: ${{ vars.ARM_ONLY == '1' && 'arm64' || 'amd64' }}
             sim_test_mode: 'slow'
+            ctest_parallel_level: '1'
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:
       packages: read
@@ -374,9 +375,10 @@ jobs:
             # Without the block scalar, YAML folds these into one value.
             |
             DRQP_TEST_MODE=${{ matrix.sim_test_mode }}
+            CTEST_PARALLEL_LEVEL=${{ matrix.ctest_parallel_level }}
 
       - name: Publish devcontainer test results
-        if: ${{ !cancelled() }}
+        if: ${{ always() }}
         uses: ./.github/actions/publish-test-results
         with:
           codecov-token: ${{ secrets.CODECOV_TOKEN }}

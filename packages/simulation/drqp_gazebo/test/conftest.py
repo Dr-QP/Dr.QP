@@ -26,14 +26,10 @@ from robot_control_test_support import GazeboRobotControlBase
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    """Configure slow-test selection and retries for isolated launch tests."""
+    """Configure slow-test selection for isolated launch tests."""
     run_slow_tests = os.environ.get('DRQP_TEST_MODE') == 'slow'
     skip_slow = pytest.mark.skip(reason='Slow test excluded from default CI run')
     for item in items:
-        # Every launch fixture in this package is function-scoped, so pytest-retry
-        # can relaunch it after transient discovery or shutdown failures.
-        if 'launch' in item.keywords and 'flaky' not in item.keywords:
-            item.add_marker(pytest.mark.flaky(retries=3))
         if not run_slow_tests and 'slow' in item.keywords:
             item.add_marker(skip_slow)
 
