@@ -44,14 +44,17 @@ MOVEIT_IK_ATTEMPTS_PER_TARGET = 2
 MOVEIT_IK_CALLS_PER_TICK = (
     LOCOMOTION_LEG_COUNT * WALKING_TRAJECTORY_POINTS * MOVEIT_IK_ATTEMPTS_PER_TARGET
 )
-# Divide half the loop period evenly across calls, but never make an individual
-# MoveIt call so short that its solver cannot produce a viable result.
 DEFAULT_CONTROL_RATE_HZ = 25.0
 MIN_VIABLE_IK_TIMEOUT_SEC = 0.001
 
 
 def _moveit_ik_timeout_for_control_rate(control_rate_hz: float) -> float:
-    """Return a per-call MoveIt timeout that remains viable at supported rates."""
+    """
+    Return a per-call MoveIt timeout that remains viable at supported rates.
+
+    Divide half the loop period evenly across calls, but never make an individual
+    MoveIt call so short that its solver cannot produce a viable result.
+    """
     budget_timeout_sec = (0.5 / control_rate_hz) / MOVEIT_IK_CALLS_PER_TICK
     return max(MIN_VIABLE_IK_TIMEOUT_SEC, budget_timeout_sec)
 
