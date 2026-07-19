@@ -185,6 +185,8 @@ class GazeboRobotControlBase:
     # Let the board's physical response begin before accepting the body as level.
     BALANCE_RESPONSE_DURATION = 3.0
     BALANCED_BODY_TILT_TOLERANCE = 0.10
+    BALANCE_MIN_TILT_REDUCTION_FRACTION = 0.20
+    STATIONARY_ODOMETRY_TOLERANCE = 0.03
     # Sim seconds to let a robot motion run before checking its effect on the board.
     MOTION_RESPONSE_DURATION = 1.0
 
@@ -242,6 +244,7 @@ class GazeboRobotControlBase:
         self.current_imu_message = None
         self.current_imu_stamp_ns = None
         self.ik_failure_messages: list[str] = []
+        self.robot_events: list[str] = []
 
         qos_profile = QoSProfile(depth=1)
         qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
@@ -262,6 +265,12 @@ class GazeboRobotControlBase:
         self.clock_sub = self.node.create_subscription(Clock, '/clock', self._clock_callback, 10)
         self.imu_sub = self.node.create_subscription(Imu, '/imu/data', self._imu_callback, 10)
         self.rosout_sub = self.node.create_subscription(Log, '/rosout', self._rosout_callback, 50)
+        self.event_sub = self.node.create_subscription(
+            std_msgs.msg.String,
+            '/robot_event',
+            lambda msg: self.robot_events.append(msg.data),
+            10,
+        )
 
         self.event_pub = self.node.create_publisher(std_msgs.msg.String, '/robot_event', 10)
         self.movement_pub = self.node.create_publisher(
@@ -1297,6 +1306,69 @@ class GazeboRobotControlBase:
             f'(expected > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
         )
 
+    def assert_stationary_balance_ignores_movement(
+        self,
+        *,
+        board_roll: float,
+        board_pitch: float,
+    ) -> None:
+        """Verify balance mode holds posture and discards movement commands."""
+        self._arm_robot()
+        self._publish_movement_command(stride_x=1.0)
+        self._wait_for_sim_time(0.2)
+        initial_roll, initial_pitch = self._sample_base_roll_pitch()
+        self._set_balance_mode(True)
+        self._wait_for_pose_sample(settle_sim_time_sec=self.BALANCE_MODE_WARMUP_DURATION)
+
+        self._publish_movement_command(stride_y=-1.0, rotation=0.5)
+        self._assert_body_level_at_board_tilt(
+            board_roll,
+            board_pitch,
+            initial_roll,
+            initial_pitch,
+        )
+        # Tilting the board can translate the base through passive contact even
+        # when no gait command is active. Measure command suppression only after
+        # that physical response has settled so it cannot masquerade as walking.
+        start_pose = self._wait_for_pose_sample()
+        start_pose_stamp_ns = self.robot_pose_stamp_ns
+        start_sim_time_ns = self._current_sim_time_ns()
+        if start_sim_time_ns is None:
+            raise RuntimeError('Simulation clock is unavailable during stationary hold')
+        self._publish_movement_command(stride_x=-1.0, stride_y=1.0, rotation=-0.5)
+        self._wait_for_sim_time_since(start_sim_time_ns, self.MOVEMENT_DURATION)
+        self._wait_for_new_pose(start_pose_stamp_ns)
+        if self.robot_pose is None:
+            raise RuntimeError('Pose became unavailable during stationary hold')
+        end_pose = deepcopy(self.robot_pose)
+        stationary_delta = math.hypot(
+            end_pose.position.x - start_pose.position.x,
+            end_pose.position.y - start_pose.position.y,
+        )
+
+        assert stationary_delta < self.STATIONARY_ODOMETRY_TOLERANCE, (
+            'Stationary balance mode moved under a stale/concurrent command: '
+            f'delta={stationary_delta:.3f}m, '
+            f'tolerance={self.STATIONARY_ODOMETRY_TOLERANCE:.3f}m'
+        )
+        assert not any(
+            event.startswith('locomotion_clamping_persistent:') for event in self.robot_events
+        ), f'Stationary balance persistently clamped a leg: {self.robot_events}'
+
+        self._set_balance_mode(False)
+        post_disable_pose = self._wait_for_pose_sample(
+            settle_sim_time_sec=self.BALANCE_MODE_WARMUP_DURATION
+        )
+        replay_delta = math.hypot(
+            post_disable_pose.position.x - end_pose.position.x,
+            post_disable_pose.position.y - end_pose.position.y,
+        )
+        assert replay_delta < self.STATIONARY_ODOMETRY_TOLERANCE, (
+            'Disabling stationary balance replayed an old movement command: '
+            f'delta={replay_delta:.3f}m, '
+            f'tolerance={self.STATIONARY_ODOMETRY_TOLERANCE:.3f}m'
+        )
+
     def assert_no_moveit_ik_failures(self) -> None:
         """
         Assert drqp_brain logged no "MoveIt IK failed"/"IK rejected" warnings.
@@ -1380,16 +1452,19 @@ class GazeboRobotControlBase:
         assert abs(imu_pitch - balanced_pitch) <= 0.10, (
             'Expected IMU-derived pitch to match balanced body pitch'
         )
-        if abs(board_r) > 0.05:
-            assert abs(board_r - balanced_roll) > 0.05, (
-                'Expected body roll to be notably closer to level than board '
-                f'(board_r={board_r:.3f}, balanced_roll={balanced_roll:.3f})'
-            )
-        if abs(board_p) > 0.05:
-            assert abs(board_p - balanced_pitch) > 0.05, (
-                'Expected body pitch to be notably closer to level than board '
-                f'(board_p={board_p:.3f}, balanced_pitch={balanced_pitch:.3f})'
-            )
+        board_tilt_magnitude = math.hypot(board_r, board_p)
+        body_error_magnitude = math.hypot(
+            balanced_roll - initial_roll,
+            balanced_pitch - initial_pitch,
+        )
+        maximum_body_error = board_tilt_magnitude * (
+            1.0 - self.BALANCE_MIN_TILT_REDUCTION_FRACTION
+        )
+        assert body_error_magnitude < maximum_body_error, (
+            'Expected balance correction to reduce the combined body tilt '
+            f'(board={board_tilt_magnitude:.3f}, body_error={body_error_magnitude:.3f}, '
+            f'max_body_error={maximum_body_error:.3f})'
+        )
         assert balanced_height > pre_tilt_height - 0.03, (
             'Expected robot to remain supported near board height after tilt '
             f'(pre_tilt_z={pre_tilt_height:.3f}, balanced_z={balanced_height:.3f})'
@@ -1407,20 +1482,29 @@ class GazeboRobotControlBase:
         self._wait_for_new_pose(previous_pose_stamp_ns)
         self._wait_for_sim_time(self.BALANCE_RESPONSE_DURATION)
         aligned_since_ns: int | None = None
+        last_roll = 0.0
+        last_pitch = 0.0
 
         def body_has_stably_leveled() -> bool:
-            nonlocal aligned_since_ns
+            nonlocal aligned_since_ns, last_pitch, last_roll
 
             if self.robot_pose is None:
                 aligned_since_ns = None
                 return False
 
             roll, pitch = self._roll_pitch_from_quaternion(self.robot_pose.orientation)
+            last_roll = roll
+            last_pitch = pitch
+            board_tilt_magnitude = math.hypot(board_roll, board_pitch)
+            body_error_magnitude = math.hypot(
+                roll - initial_roll,
+                pitch - initial_pitch,
+            )
             is_level = (
                 abs(roll - initial_roll) <= self.BALANCED_BODY_TILT_TOLERANCE
                 and abs(pitch - initial_pitch) <= self.BALANCED_BODY_TILT_TOLERANCE
-                and (abs(board_roll) <= 0.05 or abs(board_roll - roll) > 0.05)
-                and (abs(board_pitch) <= 0.05 or abs(board_pitch - pitch) > 0.05)
+                and body_error_magnitude
+                < board_tilt_magnitude * (1.0 - self.BALANCE_MIN_TILT_REDUCTION_FRACTION)
             )
             if not is_level:
                 aligned_since_ns = None
@@ -1439,7 +1523,12 @@ class GazeboRobotControlBase:
         self._spin_until_sim_time(
             body_has_stably_leveled,
             self.MOVEMENT_TIMEOUT,
-            'Balance correction did not stabilize the body within the tilt tolerance',
+            lambda: (
+                'Balance correction did not stabilize the body within the tilt tolerance. '
+                f'Initial roll={initial_roll:.3f}, pitch={initial_pitch:.3f}; '
+                f'board roll={board_roll:.3f}, pitch={board_pitch:.3f}; '
+                f'last body roll={last_roll:.3f}, pitch={last_pitch:.3f}'
+            ),
         )
 
 

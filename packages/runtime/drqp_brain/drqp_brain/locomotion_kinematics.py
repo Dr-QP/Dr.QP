@@ -657,6 +657,32 @@ class AnalyticLocomotionKinematics:
             clamped_legs=tuple(clamped_legs),
         )
 
+    def unreachable_legs(
+        self,
+        legs_and_targets,
+        body_transform=None,
+    ) -> tuple[str, ...]:
+        """Return every leg outside analytic workspace or joint limits."""
+        targets = list(legs_and_targets)
+        if not self.ready():
+            return tuple(dict.fromkeys(leg.label.name for leg, _ in targets))
+
+        original_body_transform = self._hexapod.body_transform
+        if body_transform is not None:
+            self._hexapod.body_transform = body_transform
+        try:
+            constrained_legs = []
+            for leg, foot_target in targets:
+                solution = leg.solve_ik(foot_target, clamp=False)
+                if (
+                    not solution.reachable or not solution.within_limits
+                ) and leg.label.name not in constrained_legs:
+                    constrained_legs.append(leg.label.name)
+            return tuple(constrained_legs)
+        finally:
+            if body_transform is not None:
+                self._hexapod.body_transform = original_body_transform
+
     def _install_joint_limits(self) -> bool:
         robot_description = self._robot_description()
         if robot_description is None:

@@ -31,6 +31,7 @@ from robot_control_test_support import (
 
 _TILT_MAGNITUDE = 0.12
 _TILT_DIAGONAL = _TILT_MAGNITUDE / math.sqrt(2)
+_REACHABLE_TWO_AXIS_TILT = 0.06
 
 _TILT_SCENARIOS = [
     pytest.param(0.0, +_TILT_MAGNITUDE, id='pitch-positive'),
@@ -76,6 +77,23 @@ def test_balance_mode_levels_body_at_tilt(
     )
 
     # Function scope creates a new simulator for every parameterized direction.
+    yield
+    _launch_description, proc_info = generate_test_description
+    assert_processes_exited_cleanly(proc_info)
+
+
+@pytest.mark.slow
+@pytest.mark.launch(fixture=generate_test_description)
+def test_stationary_balance_ignores_stale_and_concurrent_motion(
+    robot,
+    generate_test_description,
+):
+    """Hold a reachable diagonal posture without replaying operator motion."""
+    robot.assert_stationary_balance_ignores_movement(
+        board_roll=_REACHABLE_TWO_AXIS_TILT,
+        board_pitch=_REACHABLE_TWO_AXIS_TILT,
+    )
+
     yield
     _launch_description, proc_info = generate_test_description
     assert_processes_exited_cleanly(proc_info)

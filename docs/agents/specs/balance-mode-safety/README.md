@@ -74,8 +74,8 @@ post-solve joint clamping.
 | -------- | -------- | ---------------------------------------------------------------------- |
 | P0       | Resolved | Blanket retries multiply deterministic behavior failures by four.      |
 | P0       | Resolved | Slow Gazebo tests have no outer CTest deadline below the job timeout.  |
-| P0       | Open     | Walking-plus-balance is asserted although it is not a supported mode.  |
-| P1       | Open     | Static balance can persistently clamp legs at the tested tilt.         |
+| P0       | Resolved | Walking-plus-balance is asserted although it is not a supported mode.  |
+| P1       | Resolved | Static balance can persistently clamp legs at the tested tilt.         |
 | P1       | Resolved | Automatic Gazebo parallelism makes physics timing and motion unstable. |
 | P1       | Open     | Test diagnostics still describe legacy MoveIt IK behavior.             |
 | P2       | Open     | Eight full-simulation tilt cases duplicate axis/sign math coverage.    |
@@ -83,7 +83,7 @@ post-solve joint clamping.
 ## Recommended implementation order
 
 1. Constrain slow Gazebo CI and retries. **Completed on this branch.**
-2. [Make balance mode stationary and reachability-bounded](02-stationary-balance-contract.md).
+2. Make balance mode stationary and reachability-bounded. **Completed on this branch.**
 3. [Retire stale movement regressions and update diagnostics](03-retire-stale-regressions.md).
 
 Specs 02 and 03 intentionally change behavior and test ownership. They should be approved as a
