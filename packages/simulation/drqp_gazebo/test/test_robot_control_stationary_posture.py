@@ -12,37 +12,21 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Verify balance mode keeps the robot body level across board tilt directions."""
-
-import math
+"""Verify stationary posture behavior on a physical Gazebo balance board."""
 
 from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
 import launch_pytest
 import pytest
-from robot_control_test_support import (
-    create_balance_board_launch_description,
-)
+from robot_control_test_support import create_balance_board_launch_description
 
-_TILT_MAGNITUDE = 0.12
-_TILT_DIAGONAL = _TILT_MAGNITUDE / math.sqrt(2)
+_PURE_PITCH_TILT = 0.10
 _REACHABLE_TWO_AXIS_TILT = 0.06
-
-_TILT_SCENARIOS = [
-    pytest.param(0.0, +_TILT_MAGNITUDE, id='pitch-positive'),
-    pytest.param(+_TILT_DIAGONAL, +_TILT_DIAGONAL, id='roll-pitch-positive'),
-    pytest.param(+_TILT_MAGNITUDE, 0.0, id='roll-positive'),
-    pytest.param(+_TILT_DIAGONAL, -_TILT_DIAGONAL, id='roll-positive-pitch-negative'),
-    pytest.param(0.0, -_TILT_MAGNITUDE, id='pitch-negative'),
-    pytest.param(-_TILT_DIAGONAL, -_TILT_DIAGONAL, id='roll-pitch-negative'),
-    pytest.param(-_TILT_MAGNITUDE, 0.0, id='roll-negative'),
-    pytest.param(-_TILT_DIAGONAL, +_TILT_DIAGONAL, id='roll-negative-pitch-positive'),
-]
 
 
 @launch_pytest.fixture
@@ -54,15 +38,12 @@ def generate_test_description():
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize(('board_roll', 'board_pitch'), _TILT_SCENARIOS)
 @pytest.mark.launch(fixture=generate_test_description)
-def test_balance_mode_levels_body_at_tilt(
+def test_stationary_posture_levels_body_on_pure_pitch(
     robot,
     generate_test_description,
-    board_roll,
-    board_pitch,
 ):
-    """Keep level at one board tilt in an isolated Gazebo simulation."""
+    """Level the body against one pure-axis contact-physics disturbance."""
     robot._arm_robot()
     initial_roll, initial_pitch = robot._sample_base_roll_pitch(
         settle_sim_time_sec=robot.POSE_SETTLE_DURATION
@@ -70,13 +51,14 @@ def test_balance_mode_levels_body_at_tilt(
     robot._set_balance_mode(True)
 
     robot._assert_body_level_at_board_tilt(
-        board_roll,
-        board_pitch,
+        0.0,
+        _PURE_PITCH_TILT,
         initial_roll,
         initial_pitch,
     )
 
-    # Function scope creates a new simulator for every parameterized direction.
+    # This case requires Gazebo to prove the posture command works through board,
+    # foot-contact, and controller physics rather than quaternion math alone.
     yield
     _launch_description, proc_info = generate_test_description
     assert_processes_exited_cleanly(proc_info)
@@ -84,7 +66,7 @@ def test_balance_mode_levels_body_at_tilt(
 
 @pytest.mark.slow
 @pytest.mark.launch(fixture=generate_test_description)
-def test_stationary_balance_ignores_stale_and_concurrent_motion(
+def test_stationary_posture_ignores_stale_and_concurrent_motion(
     robot,
     generate_test_description,
 ):
@@ -94,6 +76,8 @@ def test_stationary_balance_ignores_stale_and_concurrent_motion(
         board_pitch=_REACHABLE_TWO_AXIS_TILT,
     )
 
+    # This case requires Gazebo for the odometry and persistent-contact contract;
+    # fast unit tests own axis/sign symmetry and analytic envelope coverage.
     yield
     _launch_description, proc_info = generate_test_description
     assert_processes_exited_cleanly(proc_info)

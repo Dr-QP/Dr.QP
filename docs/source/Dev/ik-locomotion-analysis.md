@@ -54,8 +54,8 @@ Top five actions, in order of leverage:
 joystick / MCP → MovementCommand (/robot/movement_command)
         │
         ▼
-HexapodBrain.loop()  @ 8 Hz  (brain_node.py)
-        │  IMU tilt → apply_imu_balance / imu_balance_stride_scale
+HexapodBrain.loop()  @ configurable 25 Hz default  (brain_node.py)
+        │  stationary mode: IMU tilt → bounded six-leg posture correction
         ▼
 WalkController.next_step_targets()  (walk_controller.py)
         │  ParametricGaitGenerator: phase → per-leg (x, z) offsets
@@ -77,8 +77,8 @@ ros2_control → A1-16 servos / Gazebo        shadow FK: apply_joint_targets()
 | Runtime IK + validation | `drqp_brain/locomotion_kinematics.py`, `drqp_moveit/config` | {bdg-success}`split` analytic IK, MoveIt collision oracle    |
 | Gait generation         | `drqp_brain/parametric_gait_generator.py`                   | {bdg-success}`solid` standard phase-offset scheme            |
 | Steering / composition  | `drqp_brain/walk_controller.py`                             | {bdg-warning}`heuristic` position mixing, unit mismatch      |
-| Balance                 | `drqp_brain/balance_controller.py`                          | {bdg-warning}`early` P-only attitude, no contact             |
-| Execution               | `joint_trajectory_builder.py`, `brain_node.py`              | {bdg-warning}`low rate` 8 Hz, magic offsets                  |
+| Stationary posture      | `drqp_brain/balance_controller.py`                          | {bdg-warning}`early` P-only attitude, no contact             |
+| Execution               | `joint_trajectory_builder.py`, `brain_node.py`              | {bdg-warning}`partial` 25 Hz default, magic offsets          |
 
 The kinematics theory behind the analytic layer is covered in the
 [kinematics model notebooks](kinematics-model.md).
@@ -144,8 +144,7 @@ The engineering around the solver is careful. The solver choice is the problem.
   back the whole tick (`_restore_motion_state`), so the robot stalls in place and re-attempts
   the same phase forever until the command changes. Best practice is graceful degradation: clamp
   the offending foot to its nearest reachable point, keep the other five legs tracking, and
-  surface a "stride saturated" signal that the steering layer can respond to (which
-  `imu_balance_stride_scale` already does for one specific cause).
+  surface a "stride saturated" signal that the steering layer can respond to.
 - {bdg-warning}`F5` **Validation is on the wrong side of the loop.** Bounds + self-collision
   checking of every candidate state is a planning-time activity. At runtime, full-path analytic
   reachability scales unsafe commands before they become foot targets. Keep MoveIt validation as
@@ -406,7 +405,7 @@ Each item is independently shippable.
    switching, tripod duty 0.52–0.55. {bdg-warning}`F17` {bdg-warning}`F12` {bdg-secondary}`F14`
 3. **Contact detection** from A1-16 load/position-error; expose per-leg contact state as a
    topic; contact-reactive swing termination.
-4. **Balance v2**: filtered tilt, PD control with slewed engagement, then
+4. **Stationary posture v2**: filtered tilt, PD control with slewed engagement, then
    static-stability-margin monitoring with body CoM shift for wave/ripple. {bdg-warning}`F18`
    {bdg-warning}`F19`
 5. **Combined-twist reachability**: retain full-path analytic scaling for translation, yaw, and
@@ -450,9 +449,9 @@ Each item is independently shippable.
 | F15 | {bdg-warning}`medium`  | Per-tick 0.3 exponential smoothing — time constant welded to fps                                                                                               | `walk_controller.py:117–121`                                 |
 | F16 | {bdg-success}`fixed`   | Euclidean twist magnitude makes joystick steering isotropic ([PR #442](https://github.com/Dr-QP/Dr.QP/pull/442))                                               | `walk_controller.py`                                         |
 | F17 | {bdg-warning}`medium`  | Stop snaps all feet to neutral in one tick; start resets phase blindly                                                                                         | `walk_controller.py:138–143, 183`                            |
-| F18 | {bdg-warning}`medium`  | Balance is P-only, unfiltered, un-slewed, at 8 Hz — oscillation risk on hardware                                                                               | `balance_controller.py:97–121`, `brain_node.py:97`           |
-| F19 | {bdg-warning}`medium`  | Attitude-only correction; no support-polygon/contact awareness                                                                                                 | `balance_controller.py`                                      |
-| F20 | {bdg-secondary}`low`   | Backoff ramp comment ("double the clamp") disagrees with math (1.7×)                                                                                           | `balance_controller.py:92–94`                                |
+| F18 | {bdg-warning}`medium`  | Stationary posture is P-only, unfiltered, and un-slewed — oscillation risk on hardware                                                                         | `balance_controller.py`, `brain_node.py`                     |
+| F19 | {bdg-warning}`medium`  | Stationary attitude-only correction; no support-polygon/contact awareness                                                                                      | `balance_controller.py`                                      |
+| F20 | {bdg-success}`fixed`   | The walking-plus-balance stride-backoff ramp was retired with the stationary posture contract                                                                  | `balance_controller.py`, `brain_node.py`                     |
 | F21 | {bdg-secondary}`low`   | No fusion fallback when an IMU backend lacks on-chip orientation                                                                                               | `imu_node.py`                                                |
 | F22 | {bdg-success}`fixed`   | Full-path analytic saturation scales combined SE(2) twists; live MoveIt CI checks the current envelope ([PR #442](https://github.com/Dr-QP/Dr.QP/pull/442))    | `walk_controller.py`, `test_moveit_runtime_launch.py`        |
 | F23 | {bdg-success}`fixed`   | Hand-duplicated generator limits disappeared with the retired calibration artifact                                                                             | —                                                            |

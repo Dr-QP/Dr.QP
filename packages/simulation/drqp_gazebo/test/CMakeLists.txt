@@ -10,6 +10,13 @@ ament_add_pytest_test(
     PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+ament_add_pytest_test(
+  test_robot_control_test_support
+  test_robot_control_test_support.py
+  APPEND_ENV
+    PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 set(drqp_gazebo_smoke_launch_tests
   test_robot_control_spawn.py
   test_robot_smoke.py
@@ -17,10 +24,10 @@ set(drqp_gazebo_smoke_launch_tests
 )
 
 set(drqp_gazebo_full_launch_tests
-  test_robot_control_balance_mode.py
+  test_robot_control_stationary_posture.py
   test_balance_board_armed.py
   test_balance_board_motion_response.py
-  test_imu_balance_motion.py
+  test_locomotion_direction_reversal.py
   test_robot_control_movement_backward.py
   test_robot_control_movement_forward.py
   test_robot_control_movement_forward_sustained.py

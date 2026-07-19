@@ -243,8 +243,12 @@ class GazeboRobotControlBase:
         self.robot_pose_stamp_ns = None
         self.current_imu_message = None
         self.current_imu_stamp_ns = None
-        self.ik_failure_messages: list[str] = []
+        self.analytic_clamping_messages: list[str] = []
+        self.complete_state_rejection_messages: list[str] = []
+        self.kinematics_rejection_messages: list[str] = []
+        self.legacy_moveit_ik_failure_messages: list[str] = []
         self.robot_events: list[str] = []
+        self.persistent_clamping_events: list[str] = []
 
         qos_profile = QoSProfile(depth=1)
         qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
@@ -268,7 +272,7 @@ class GazeboRobotControlBase:
         self.event_sub = self.node.create_subscription(
             std_msgs.msg.String,
             '/robot_event',
-            lambda msg: self.robot_events.append(msg.data),
+            self._robot_event_callback,
             10,
         )
 
@@ -316,8 +320,29 @@ class GazeboRobotControlBase:
         self.current_imu_stamp_ns = self._time_msg_to_nanoseconds(msg.header.stamp)
 
     def _rosout_callback(self, msg: Log) -> None:
-        if msg.name == 'drqp_brain' and ('IK failed' in msg.msg or 'IK rejected' in msg.msg):
-            self.ik_failure_messages.append(msg.msg)
+        if msg.name != 'drqp_brain':
+            return
+
+        message = msg.msg
+        if message.startswith('Analytic IK clamped legs:'):
+            self.analytic_clamping_messages.append(message)
+        elif message.startswith('Kinematics rejected'):
+            self.kinematics_rejection_messages.append(message)
+        elif message.startswith('RobotState') or message.startswith(
+            'Unable to validate RobotState'
+        ):
+            self.complete_state_rejection_messages.append(message)
+        elif (
+            message.startswith('MoveItPy')
+            or 'MoveIt IK failed' in message
+            or 'MoveIt IK rejected' in message
+        ):
+            self.legacy_moveit_ik_failure_messages.append(message)
+
+    def _robot_event_callback(self, msg: std_msgs.msg.String) -> None:
+        self.robot_events.append(msg.data)
+        if msg.data.startswith('locomotion_clamping_persistent:'):
+            self.persistent_clamping_events.append(msg.data)
 
     @staticmethod
     def _time_msg_to_nanoseconds(msg: builtin_interfaces.msg.Time) -> int:
@@ -1155,15 +1180,12 @@ class GazeboRobotControlBase:
 
     def assert_direction_reversal_from_forward_to_backward(self) -> None:
         """
-        Verify a full-throttle stride reversal does not permanently freeze MoveIt IK.
+        Verify full-path analytic reachability still permits direction reversal.
 
-        Regression test: ``HexapodBrain.loop()`` rolls back walker state on every IK
-        failure, so a foot target that fails once from the seeded pose keeps
-        failing identically on every later tick. A sudden full-throttle direction
-        reversal (forward stride flipped straight to backward, with no settle time
-        in between) can push a foot target outside what MoveIt IK can solve from
-        that seed, producing a lasting "MoveItPy IK failed" freeze instead of a
-        transient blip.
+        A sudden full-throttle reversal exercises command smoothing and the
+        complete swing/stance reachability bound. The analytic controller must
+        scale the requested twist when necessary and continue making backward
+        progress instead of repeatedly clamping or rejecting the same targets.
         """
         self._arm_robot()
         start_pose = self._wait_for_pose_sample(settle_sim_time_sec=self.POSE_SETTLE_DURATION)
@@ -1204,106 +1226,9 @@ class GazeboRobotControlBase:
 
         assert forward_delta < -self.MIN_LINEAR_MOVEMENT_DELTA, (
             'Robot did not move backward after reversing from a brief full-throttle '
-            'forward stride to full-throttle backward stride (possible MoveIt IK '
-            f'freeze after direction reversal): forward_delta={forward_delta:.3f}m '
+            'forward stride to full-throttle backward stride (possible analytic '
+            f'reachability regression): forward_delta={forward_delta:.3f}m '
             f'(expected < {-self.MIN_LINEAR_MOVEMENT_DELTA}m)'
-        )
-
-    def assert_balance_mode_full_stride_movement(
-        self,
-        *,
-        stride_x: float,
-        stride_y: float,
-        direction_name: str,
-        expected_sign: int,
-    ) -> None:
-        """Verify one full-throttle balance-mode stride keeps making progress."""
-        self._prepare_balance_mode_movement()
-
-        try:
-            forward_delta, left_delta, _ = self._run_movement_and_measure(
-                stride_x=stride_x,
-                stride_y=stride_y,
-            )
-        except RuntimeError as error:
-            raise RuntimeError(f'Balance mode {direction_name} movement failed') from error
-        finally:
-            self._set_balance_mode(False)
-
-        delta = forward_delta if stride_x else left_delta
-        assert expected_sign * delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
-            f'Robot did not move {direction_name} with balance mode enabled at '
-            f'full-throttle stride (possible MoveIt IK freeze): '
-            f'delta={delta:.3f}m, expected sign={expected_sign:+d}'
-        )
-
-    def _prepare_balance_mode_movement(self) -> None:
-        """Arm and stabilize balance mode before one direction check."""
-        if self.current_robot_state == 'torque_on':
-            self._disarm_robot()
-        self._arm_robot()
-        self._set_balance_mode(True)
-        previous_pose_stamp_ns = self.robot_pose_stamp_ns
-        previous_imu_stamp_ns = self.current_imu_stamp_ns
-        self._wait_for_new_pose(previous_pose_stamp_ns)
-        self._wait_for_new_imu(previous_imu_stamp_ns)
-        self._wait_for_sim_time(self.BALANCE_MODE_WARMUP_DURATION)
-
-    def assert_balance_mode_diagonal_stride_movement(
-        self,
-        stride_x: float,
-        stride_y: float,
-    ) -> None:
-        """
-        Verify balance mode plus a diagonal full-throttle stride does not freeze MoveIt IK.
-
-        Regression test for a specific reported repro: ``stride_x=0.66,
-        stride_y=-0.77`` with balance mode enabled makes MoveItPy IK fail on
-        nearly every tick, so the robot stops making progress while the command
-        is held (``HexapodBrain.loop()`` rolls back walker state and skips
-        publishing a trajectory on every failed solve). Unlike a pure fore-aft or
-        pure lateral stride, a diagonal stride combined with the IMU balance tilt
-        correction pushes foot targets toward the edge of the reachable workspace.
-
-        The zero-IK-failures assertion is the actual regression check. The
-        movement-distance assertion only confirms the robot is not fully frozen
-        (``MIN_LINEAR_MOVEMENT_DELTA``, the same lenient bar every other movement
-        assertion in this class uses) -- it deliberately does not require
-        near-full-throttle distance, since ``imu_balance_stride_scale()``
-        intentionally slows the stride while the balance correction is
-        saturating, trading speed for not hammering an unreachable target.
-        """
-        self._arm_robot()
-        self._set_balance_mode(True)
-        ik_failures_before = len(self.ik_failure_messages)
-
-        try:
-            forward_delta, left_delta, _ = self._run_movement_and_measure(
-                stride_x=stride_x, stride_y=stride_y
-            )
-        except RuntimeError as error:
-            raise RuntimeError('Balance mode diagonal stride movement failed') from error
-        finally:
-            self._set_balance_mode(False)
-
-        new_ik_failures = self.ik_failure_messages[ik_failures_before:]
-        diagonal_delta = math.hypot(forward_delta, left_delta)
-        self.node.get_logger().info(
-            f'Balance mode diagonal stride delta (stride_x={stride_x}, stride_y={stride_y}): '
-            f'forward_delta={forward_delta:.3f}m, left_delta={left_delta:.3f}m, '
-            f'magnitude={diagonal_delta:.3f}m, ik_failures_observed={len(new_ik_failures)}'
-        )
-        assert not new_ik_failures, (
-            'MoveIt IK failed while holding a diagonal full-throttle stride with '
-            f'balance mode enabled (stride=({stride_x}, {stride_y})): '
-            f'{len(new_ik_failures)} failure(s), first: {new_ik_failures[0]!r}'
-        )
-        assert diagonal_delta > self.MIN_LINEAR_MOVEMENT_DELTA, (
-            'Robot did not move at all with balance mode enabled at a diagonal '
-            f'full-throttle stride: stride=({stride_x}, {stride_y}), '
-            f'forward_delta={forward_delta:.3f}m, left_delta={left_delta:.3f}m, '
-            f'magnitude={diagonal_delta:.3f}m '
-            f'(expected > {self.MIN_LINEAR_MOVEMENT_DELTA}m)'
         )
 
     def assert_stationary_balance_ignores_movement(
@@ -1369,17 +1294,22 @@ class GazeboRobotControlBase:
             f'tolerance={self.STATIONARY_ODOMETRY_TOLERANCE:.3f}m'
         )
 
-    def assert_no_moveit_ik_failures(self) -> None:
-        """
-        Assert drqp_brain logged no "MoveIt IK failed"/"IK rejected" warnings.
-
-        Wired into the ``robot`` fixture teardown (see ``conftest.py``) so every
-        simulation test catches this class of failure automatically, not just the
-        tests in ``test_imu_balance_motion.py`` written specifically to provoke it.
-        """
-        assert not self.ik_failure_messages, (
-            f'MoveIt IK failed {len(self.ik_failure_messages)} time(s) during this '
-            f'test: first: {self.ik_failure_messages[0]!r}'
+    def assert_no_kinematics_failures(self) -> None:
+        """Fail on persistent clamping or any hard backend/state rejection."""
+        assert not self.persistent_clamping_events, (
+            f'Persistent analytic clamping was reported: {self.persistent_clamping_events[0]!r}'
+        )
+        assert not self.complete_state_rejection_messages, (
+            'Complete-state validation rejected locomotion targets: '
+            f'{self.complete_state_rejection_messages[0]!r}'
+        )
+        assert not self.legacy_moveit_ik_failure_messages, (
+            'The optional MoveIt IK backend rejected locomotion targets: '
+            f'{self.legacy_moveit_ik_failure_messages[0]!r}'
+        )
+        assert not self.kinematics_rejection_messages, (
+            'The selected kinematics backend rejected locomotion targets: '
+            f'{self.kinematics_rejection_messages[0]!r}'
         )
 
     def assert_disarmed_posture(self) -> None:

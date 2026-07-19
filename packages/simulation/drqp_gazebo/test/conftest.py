@@ -54,9 +54,8 @@ def robot(generate_test_description):  # noqa: ARG001 (drives launch + sim readi
     this with a ``scope='module'`` ``robot`` fixture. Owns ``rclpy`` init/shutdown and waits
     for simulation readiness before yielding the harness.
 
-    Asserts no "MoveIt IK failed"/"IK rejected" warnings were logged by drqp_brain
-    during the test, so every simulation test catches this failure mode
-    automatically rather than only the tests written specifically to provoke it.
+    Asserts that no hard kinematics rejection or persistent analytic clamping was
+    reported by drqp_brain, independently of the selected IK backend.
     """
     rclpy.init()
     harness = GazeboRobotControlBase()
@@ -70,7 +69,7 @@ def robot(generate_test_description):  # noqa: ARG001 (drives launch + sim readi
             harness.setup_error = error
         yield harness
         if harness.setup_error is None:
-            harness.assert_no_moveit_ik_failures()
+            harness.assert_no_kinematics_failures()
     finally:
         if hasattr(harness, 'node') and rclpy.ok():
             harness.node.destroy_node()

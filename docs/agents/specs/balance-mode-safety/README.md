@@ -1,4 +1,4 @@
-# Balance-mode safety and test investigation
+# Balance-mode safety implementation record
 
 This spike investigates the slow Gazebo failure in
 [PR #443 run 29560942132](https://github.com/Dr-QP/Dr.QP/actions/runs/29560942132/job/87993556892?pr=443)
@@ -77,17 +77,14 @@ post-solve joint clamping.
 | P0       | Resolved | Walking-plus-balance is asserted although it is not a supported mode.  |
 | P1       | Resolved | Static balance can persistently clamp legs at the tested tilt.         |
 | P1       | Resolved | Automatic Gazebo parallelism makes physics timing and motion unstable. |
-| P1       | Open     | Test diagnostics still describe legacy MoveIt IK behavior.             |
-| P2       | Open     | Eight full-simulation tilt cases duplicate axis/sign math coverage.    |
+| P1       | Resolved | Test diagnostics still describe legacy MoveIt IK behavior.             |
+| P2       | Resolved | Eight full-simulation tilt cases duplicate axis/sign math coverage.    |
 
 ## Recommended implementation order
 
 1. Constrain slow Gazebo CI and retries. **Completed on this branch.**
 2. Make balance mode stationary and reachability-bounded. **Completed on this branch.**
-3. [Retire stale movement regressions and update diagnostics](03-retire-stale-regressions.md).
-
-Specs 02 and 03 intentionally change behavior and test ownership. They should be approved as a
-product decision before implementation.
+3. Retire stale movement regressions and update diagnostics. **Completed on this branch.**
 
 ## Commands run during the spike
 
@@ -97,14 +94,15 @@ scripts/with-ros-env.sh python3 -m colcon build --symlink-install \
 
 DRQP_TEST_MODE=slow PYTHONPATH=packages/simulation/drqp_gazebo/test \
   scripts/with-ros-env.sh python3 -m pytest \
-  packages/simulation/drqp_gazebo/test/test_imu_balance_motion.py::\
-test_balance_mode_full_stride_right_movement -p no:retry -vv -s -rA
+  packages/simulation/drqp_gazebo/test/test_locomotion_direction_reversal.py::\
+test_direction_reversal_from_forward_to_backward -p no:retry -vv -s -rA
 
 DRQP_TEST_MODE=slow PYTHONPATH=packages/simulation/drqp_gazebo/test \
   scripts/with-ros-env.sh python3 -m pytest \
-  'packages/simulation/drqp_gazebo/test/test_robot_control_balance_mode.py::\
-test_balance_mode_levels_body_at_tilt[pitch-positive]' -p no:retry -vv -s -rA
+  packages/simulation/drqp_gazebo/test/test_robot_control_stationary_posture.py::\
+test_stationary_posture_levels_body_on_pure_pitch -p no:retry -vv -s -rA
 ```
 
-The build completed for 16 packages. Both isolated launch tests passed; their clamping warnings
-are part of the finding, not a clean bill of health.
+The incremental build completed for 16 packages, and both retained isolated launch tests passed.
+The stationary pure-pitch case can report pre-solve correction saturation; the reachability bound
+handles that condition without a persistent post-solve clamping event.

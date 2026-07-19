@@ -93,7 +93,7 @@ class KeyboardControlNode(rclpy.node.Node):
         return self.state.key_up(key)
 
     def toggle_balance_mode(self):
-        """Toggle dedicated balance mode without affecting walking input."""
+        """Toggle stationary posture mode without rewriting keyboard input."""
         self.balance_mode_enabled = not self.balance_mode_enabled
         self.balance_mode_pub.publish(std_msgs.msg.Bool(data=self.balance_mode_enabled))
 
