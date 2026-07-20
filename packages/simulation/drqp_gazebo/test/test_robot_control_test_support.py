@@ -20,9 +20,11 @@
 
 """Unit tests for backend-neutral Gazebo harness diagnostics."""
 
+from geometry_msgs.msg import Pose
 import pytest
 from rcl_interfaces.msg import Log
 from robot_control_test_support import GazeboRobotControlBase
+from scipy.spatial.transform import Rotation as R
 import std_msgs.msg
 
 
@@ -91,3 +93,35 @@ def test_transient_analytic_clamping_remains_observable_but_allowed() -> None:
     harness._rosout_callback(Log(name='drqp_brain', msg='Analytic IK clamped legs: right_middle'))
 
     harness.assert_no_kinematics_failures()
+
+
+def test_stable_body_wait_returns_the_pose_that_met_the_criterion() -> None:
+    """Do not resample a later oscillation phase after stability was established."""
+    harness = make_harness()
+    harness.robot_pose = Pose()
+    x, y, z, w = R.from_euler('xyz', [0.01, -0.02, 0.0]).as_quat()
+    harness.robot_pose.orientation.x = x
+    harness.robot_pose.orientation.y = y
+    harness.robot_pose.orientation.z = z
+    harness.robot_pose.orientation.w = w
+    harness.robot_pose_stamp_ns = 1
+    harness._wait_for_new_pose = lambda _stamp: None
+    harness._wait_for_sim_time = lambda _duration: None
+    sim_times = iter([0, int(harness.POSE_SETTLE_DURATION * 1_000_000_000)])
+    harness._current_sim_time_ns = lambda: next(sim_times)
+
+    def satisfy_stability(predicate, _timeout, _message) -> None:
+        assert not predicate()
+        assert predicate()
+
+    harness._spin_until_sim_time = satisfy_stability
+
+    roll, pitch = harness._wait_for_stable_body_level(
+        initial_roll=0.0,
+        initial_pitch=0.0,
+        board_roll=0.10,
+        board_pitch=0.10,
+    )
+
+    assert roll == pytest.approx(0.01)
+    assert pitch == pytest.approx(-0.02)
