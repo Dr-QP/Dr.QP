@@ -28,6 +28,7 @@ from drqp_brain.balance_controller import BASE_CENTER_TO_IMU_ROTATION
 from drqp_brain.brain_node import _assert_no_existing_brain_node, HexapodBrain
 from drqp_brain.instance_guard import InstanceAlreadyRunningError
 from drqp_interfaces.msg import MovementCommand, MovementCommandConstants
+from drqp_kinematics.geometry import Point3D
 from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
 from geometry_msgs.msg import Quaternion, Vector3
 from launch import LaunchDescription
@@ -207,6 +208,23 @@ def make_imu_msg_from_base_tilt(
     )
 
 
+def make_movement_command() -> MovementCommand:
+    """Build a command with every operator-controlled motion component active."""
+    return MovementCommand(
+        stride_direction=Vector3(x=0.7, y=-0.4, z=0.2),
+        rotation_speed=0.6,
+        body_translation=Vector3(x=0.03, y=-0.02, z=0.01),
+        body_rotation=Vector3(x=0.1, y=-0.2, z=0.3),
+        gait_type=MovementCommandConstants.GAIT_RIPPLE,
+    )
+
+
+def arm_brain_with_fresh_imu(brain: HexapodBrain) -> None:
+    """Put a directly constructed brain in the balance activation precondition."""
+    brain.robot_state = 'torque_on'
+    brain.process_imu(make_imu_msg_from_base_tilt(0.05, -0.04, 0.2))
+
+
 def test_process_imu_compensates_mount_rotation(rclpy_context):  # noqa: ARG001 (needs rclpy)
     """Recover body attitude by de-rotating the fixed IMU sensor mount."""
     brain = HexapodBrain()
@@ -254,7 +272,7 @@ def test_balance_mode_captures_target_orientation_until_disabled_issue356(
     """Issue 356: keep the toggle-captured target tilt until balance mode is disabled."""
     brain = HexapodBrain()
     try:
-        brain.process_imu(make_imu_msg_from_base_tilt(0.05, -0.04, 0.2))
+        arm_brain_with_fresh_imu(brain)
 
         assert brain.balance_mode_enabled is False
         assert brain.target_body_tilt is None
@@ -273,6 +291,11 @@ def test_balance_mode_captures_target_orientation_until_disabled_issue356(
         assert brain.get_imu_body_tilt().x == pytest.approx(0.09)
         assert brain.get_imu_body_tilt().y == pytest.approx(-0.02)
 
+        brain.process_balance_mode(std_msgs.msg.Bool(data=True))
+
+        assert brain.target_body_tilt.x == pytest.approx(0.05)
+        assert brain.target_body_tilt.y == pytest.approx(-0.04)
+
         brain.process_balance_mode(std_msgs.msg.Bool(data=False))
 
         assert brain.balance_mode_enabled is False
@@ -282,8 +305,154 @@ def test_balance_mode_captures_target_orientation_until_disabled_issue356(
         brain.destroy_node()
 
 
+def test_entering_balance_mode_zeros_semantic_motion_and_stops_gait(
+    rclpy_context,  # noqa: ARG001 (needs rclpy)
+):
+    """Stationary posture mode discards the active command and gait progress."""
+    brain = HexapodBrain()
+    try:
+        brain.process_movement_command(make_movement_command())
+        brain.walker.current_phase = 0.42
+        arm_brain_with_fresh_imu(brain)
+
+        brain.process_balance_mode(std_msgs.msg.Bool(data=True))
+
+        assert brain.balance_mode_enabled
+        assert brain.current_movement.stride_direction == Vector3()
+        assert brain.current_movement.rotation_speed == 0.0
+        assert brain.current_movement.body_translation == Vector3()
+        assert brain.current_movement.body_rotation == Vector3()
+        assert brain.walker.current_phase == 0.0
+        assert brain.walker.current_direction.numpy() == pytest.approx([0.0, 0.0, 0.0])
+        assert brain.walker.current_rotation_direction == 0.0
+    finally:
+        brain.destroy_node()
+
+
+def test_balance_mode_ignores_concurrent_movement_commands(
+    rclpy_context,  # noqa: ARG001 (needs rclpy)
+):
+    """A held joystick cannot re-arm gait or user body motion while balancing."""
+    brain = HexapodBrain()
+    try:
+        arm_brain_with_fresh_imu(brain)
+        brain.process_balance_mode(std_msgs.msg.Bool(data=True))
+
+        brain.process_movement_command(make_movement_command())
+
+        assert brain.current_movement.stride_direction == Vector3()
+        assert brain.current_movement.rotation_speed == 0.0
+        assert brain.current_movement.body_translation == Vector3()
+        assert brain.current_movement.body_rotation == Vector3()
+        assert brain.gait_index == 0
+    finally:
+        brain.destroy_node()
+
+
+def test_disabling_balance_requires_a_fresh_command_to_resume_motion(
+    rclpy_context,  # noqa: ARG001 (needs rclpy)
+):
+    """Neither the pre-balance command nor an ignored command is replayed."""
+    brain = HexapodBrain()
+    try:
+        brain.process_movement_command(make_movement_command())
+        arm_brain_with_fresh_imu(brain)
+        brain.process_balance_mode(std_msgs.msg.Bool(data=True))
+        brain.process_movement_command(make_movement_command())
+
+        brain.process_balance_mode(std_msgs.msg.Bool(data=False))
+
+        assert brain.current_movement.stride_direction == Vector3()
+        assert brain.current_movement.rotation_speed == 0.0
+        assert brain.walker.current_phase == 0.0
+
+        fresh_command = make_movement_command()
+        brain.process_movement_command(fresh_command)
+        assert brain.current_movement is fresh_command
+    finally:
+        brain.destroy_node()
+
+
+@pytest.mark.parametrize('robot_state', [None, 'torque_off', 'finalized'])
+def test_balance_mode_requires_armed_robot_and_fresh_imu(
+    rclpy_context,  # noqa: ARG001 (needs rclpy)
+    robot_state,
+):
+    """Reject balance activation outside the armed, fresh-IMU safety envelope."""
+    brain = HexapodBrain()
+    try:
+        brain.robot_state = robot_state
+        brain.process_imu(make_imu_msg_from_base_tilt(0.05, -0.04, 0.2))
+        if robot_state == 'finalized':
+            brain.last_imu_update = None
+
+        brain.process_balance_mode(std_msgs.msg.Bool(data=True))
+
+        assert not brain.balance_mode_enabled
+        assert brain.target_body_tilt is None
+    finally:
+        brain.destroy_node()
+
+
+def test_stale_imu_disables_balance_without_replaying_motion(
+    rclpy_context,  # noqa: ARG001 (needs rclpy)
+):
+    """A stale sensor exits posture hold into a stationary fail-safe state."""
+    brain = HexapodBrain()
+    try:
+        arm_brain_with_fresh_imu(brain)
+        brain.process_balance_mode(std_msgs.msg.Bool(data=True))
+        brain.process_movement_command(make_movement_command())
+        brain.last_imu_update = None
+        brain._ik_ready = mock.Mock(return_value=False)
+
+        brain.loop()
+
+        assert not brain.balance_mode_enabled
+        assert brain.current_movement.stride_direction == Vector3()
+        assert brain.current_movement.rotation_speed == 0.0
+        assert brain.walker.current_phase == 0.0
+    finally:
+        brain.destroy_node()
+
+
+def test_balance_correction_is_scaled_by_six_leg_unclamped_reachability(
+    rclpy_context,  # noqa: ARG001 (needs rclpy)
+):
+    """Bound the complete posture correction before the runtime solve can clamp."""
+    brain = HexapodBrain()
+    try:
+        targets = [(leg, leg.tibia_end.copy()) for leg in brain.hexapod.legs]
+        reachability = mock.Mock()
+
+        def constrained_legs(legs_and_targets, body_transform):
+            assert len(legs_and_targets) == 6
+            correction_angle = R.from_matrix(body_transform.rotation).magnitude()
+            return ('left_front', 'right_back') if correction_angle > 0.08 else ()
+
+        reachability.unreachable_legs.side_effect = constrained_legs
+        brain.balance_reachability = reachability
+        logger = mock.Mock()
+        brain.get_logger = mock.Mock(return_value=logger)
+
+        bounded_rotation = brain._constrain_balance_correction(
+            Point3D([0.20, 0.0, 0.0]),
+            targets,
+        )
+
+        bounded_magnitude = math.sqrt(sum(value**2 for value in bounded_rotation.numpy()))
+        assert bounded_magnitude == pytest.approx(0.08, abs=1e-4)
+        assert reachability.unreachable_legs.call_count > 2
+        logger.warning.assert_called_once_with(
+            'stationary_balance_correction_saturated:left_front,right_back scale=0.400',
+            throttle_duration_sec=5.0,
+        )
+    finally:
+        brain.destroy_node()
+
+
 def test_loop_uses_imu_balance_correction(rclpy_context):  # noqa: ARG001 (needs rclpy)
-    """Apply IMU roll and pitch compensation relative to the current measured tilt."""
+    """Apply only stationary roll/pitch compensation while balance mode is active."""
     with mock.patch('drqp_brain.brain_node.JointTrajectoryBuilder') as trajectory_builder_cls:
         brain = HexapodBrain()
         try:
@@ -299,17 +468,16 @@ def test_loop_uses_imu_balance_correction(rclpy_context):  # noqa: ARG001 (needs
             brain.current_movement.body_translation = Vector3(x=0.0, y=0.0, z=0.0)
             brain.current_movement.body_rotation = Vector3(x=0.0, y=0.0, z=0.4)
             brain.current_movement.gait_type = MovementCommandConstants.GAIT_TRIPOD
+            brain.robot_state = 'torque_on'
             brain.process_imu(make_imu_msg_from_base_tilt(0.0, 0.0, 0.35))
             brain.process_balance_mode(std_msgs.msg.Bool(data=True))
             brain.process_imu(make_imu_msg_from_base_tilt(0.12, -0.08, 0.35))
 
             brain.loop()
 
-            expected_rotation = R.from_euler(
-                'xyz', [-0.12, 0.08, 0.0], degrees=False
-            ) * R.from_rotvec([0.0, 0.0, 0.4])
+            expected_rotation = R.from_euler('xyz', [-0.12, 0.08, 0.0], degrees=False)
             assert brain.hexapod.body_transform.rotation == pytest.approx(
-                expected_rotation.as_matrix()
+                expected_rotation.as_matrix(), abs=1e-8
             )
             trajectory_builder_cls.assert_not_called()
         finally:

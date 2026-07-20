@@ -54,8 +54,8 @@ Top five actions, in order of leverage:
 joystick / MCP → MovementCommand (/robot/movement_command)
         │
         ▼
-HexapodBrain.loop()  @ 8 Hz  (brain_node.py)
-        │  IMU tilt → apply_imu_balance / imu_balance_stride_scale
+HexapodBrain.loop()  @ configurable 25 Hz default  (brain_node.py)
+        │  stationary mode: IMU tilt → bounded six-leg posture correction
         ▼
 WalkController.next_step_targets()  (walk_controller.py)
         │  ParametricGaitGenerator: phase → per-leg (x, z) offsets
@@ -77,8 +77,8 @@ ros2_control → A1-16 servos / Gazebo        shadow FK: apply_joint_targets()
 | Runtime IK + validation | `drqp_brain/locomotion_kinematics.py`, `drqp_moveit/config` | {bdg-success}`split` analytic IK, MoveIt collision oracle    |
 | Gait generation         | `drqp_brain/parametric_gait_generator.py`                   | {bdg-success}`solid` standard phase-offset scheme            |
 | Steering / composition  | `drqp_brain/walk_controller.py`                             | {bdg-warning}`heuristic` position mixing, unit mismatch      |
-| Balance                 | `drqp_brain/balance_controller.py`                          | {bdg-warning}`early` P-only attitude, no contact             |
-| Execution               | `joint_trajectory_builder.py`, `brain_node.py`              | {bdg-warning}`low rate` 8 Hz, magic offsets                  |
+| Stationary posture      | `drqp_brain/balance_controller.py`                          | {bdg-warning}`early` P-only attitude, no contact             |
+| Execution               | `joint_trajectory_builder.py`, `brain_node.py`              | {bdg-warning}`partial` 25 Hz default, magic offsets          |
 
 The kinematics theory behind the analytic layer is covered in the
 [kinematics model notebooks](kinematics-model.md).
@@ -144,8 +144,7 @@ The engineering around the solver is careful. The solver choice is the problem.
   back the whole tick (`_restore_motion_state`), so the robot stalls in place and re-attempts
   the same phase forever until the command changes. Best practice is graceful degradation: clamp
   the offending foot to its nearest reachable point, keep the other five legs tracking, and
-  surface a "stride saturated" signal that the steering layer can respond to (which
-  `imu_balance_stride_scale` already does for one specific cause).
+  surface a "stride saturated" signal that the steering layer can respond to.
 - {bdg-warning}`F5` **Validation is on the wrong side of the loop.** Bounds + self-collision
   checking of every candidate state is a planning-time activity. At runtime, full-path analytic
   reachability scales unsafe commands before they become foot targets. Keep MoveIt validation as
@@ -303,12 +302,12 @@ _Files: `drqp_brain/brain_node.py`, `drqp_brain/joint_trajectory_builder.py`_
   falls out of time-parameterization: compute targets as a pure function `targets(phase)`,
   evaluate it at $t+1/\text{fps}$ and $t+2/\text{fps}$ for the window, and commit phase once per
   real tick from measured $\Delta t$.
-- {bdg-warning}`F25` **8 Hz is an order of magnitude below practice.** Hobby hexapod firmwares
-  run 30–50 Hz command loops; research platforms 100–500 Hz. The joint trajectory controller's
-  spline interpolation papers over it, but steering latency (~250 ms with the smoothing filter)
-  and balance bandwidth are capped by it. With analytic IK, 50 Hz is comfortably reachable in
-  Python (18 closed-form solves ≈ microseconds vectorized); the architecture then cleanly splits
-  into gait/IK at 50 Hz and higher-level decisions at 10 Hz.
+- {bdg-success}`F25` **Control rate is configurable and defaults to 25 Hz.** The walking loop,
+  target window, phase timing, and trajectory point spacing derive from the validated
+  `control_rate_hz` parameter (5–100 Hz). The joint trajectory controller updates at 100 Hz,
+  leaving at least a 2× update-rate margin at the default; tick-duration min/mean/max logging and
+  deterministic 8/25/50 Hz rate-invariance coverage guard the control-budget contract
+  ([PR #443](https://github.com/Dr-QP/Dr.QP/pull/443)).
 - {bdg-success}`F26` **Analytic-model and URDF zero conventions have one boundary.**
   `drqp_kinematics` owns the fixed femur- and tibia-bracket conversion between the simplified
   straight-link analytic model and the physical URDF. Model-generated poses cross that boundary
@@ -406,7 +405,7 @@ Each item is independently shippable.
    switching, tripod duty 0.52–0.55. {bdg-warning}`F17` {bdg-warning}`F12` {bdg-secondary}`F14`
 3. **Contact detection** from A1-16 load/position-error; expose per-leg contact state as a
    topic; contact-reactive swing termination.
-4. **Balance v2**: filtered tilt, PD control with slewed engagement, then
+4. **Stationary posture v2**: filtered tilt, PD control with slewed engagement, then
    static-stability-margin monitoring with body CoM shift for wave/ripple. {bdg-warning}`F18`
    {bdg-warning}`F19`
 5. **Combined-twist reachability**: retain full-path analytic scaling for translation, yaw, and
@@ -431,36 +430,36 @@ Each item is independently shippable.
 
 ## Findings index
 
-| ID  | Severity               | Finding                                                                                                                                                     | Where                                                        |
-| --- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| F1  | {bdg-danger}`critical` | 2.0 s per-call IK timeout vs 125 ms loop budget                                                                                                             | `locomotion_kinematics.py:34,143`                            |
-| F2  | {bdg-warning}`high`    | Lookahead window mutates phase → gait runs at 2× configured rate; speed coupled to `walking_trajectory_points`                                              | `brain_node.py:417–437`                                      |
-| F3  | {bdg-success}`fixed`   | Analytic IK is the default; numeric MoveIt IK remains a selectable fallback and oracle                                                                      | `locomotion_kinematics.py`, `brain_node.py`                  |
-| F4  | {bdg-success}`fixed`   | Per-leg workspace/limit clamping publishes degraded motion and reports persistent saturation                                                                | `locomotion_kinematics.py`, `brain_node.py`                  |
-| F5  | {bdg-warning}`partial` | Analytic bounds enforcement replaced runtime MoveIt bounds checks; self-collision validation remains until combined-envelope certification                  | `locomotion_kinematics.py`                                   |
-| F6  | {bdg-success}`fixed`   | Cycloid swing profile enforces zero x/z velocity at liftoff and touchdown ([PR #441](https://github.com/Dr-QP/Dr.QP/pull/441))                              | `parametric_gait_generator.py`                               |
-| F7  | {bdg-success}`fixed`   | Per-leg SE(2) twist targets replace normalized position mixing ([PR #442](https://github.com/Dr-QP/Dr.QP/pull/442))                                         | `walk_controller.py`                                         |
-| F8  | {bdg-secondary}`low`   | Analytic IK solvability flag ignored by callers                                                                                                             | `walk_controller.py:224–226`, `models.py:255`                |
-| F9  | {bdg-success}`fixed`   | Analytic IK parses URDF limits and clamps each leg in model convention                                                                                      | `models.py`, `urdf_limits.py`                                |
-| F10 | {bdg-secondary}`low`   | Degrees/radians/servo-offset conversions at every layer boundary                                                                                            | `models.py`, `joint_trajectory_builder.py`, `brain_node.py`  |
-| F11 | {bdg-secondary}`low`   | FK allocates transform chains + label strings per call in the control path                                                                                  | `models.py:219–252`                                          |
-| F12 | {bdg-warning}`medium`  | Tripod duty exactly 0.5 — zero double-support margin                                                                                                        | `parametric_gait_generator.py:97–107`                        |
-| F13 | {bdg-success}`fixed`   | Half-open `% 1.0` phase wrapping preserves negative-phase behavior without a cycle-length epsilon ([PR #441](https://github.com/Dr-QP/Dr.QP/pull/441))      | `parametric_gait_generator.py`                               |
-| F14 | {bdg-secondary}`low`   | Gait switching discontinuous (no phase remap/transition)                                                                                                    | `walk_controller.py:53–55`                                   |
-| F15 | {bdg-warning}`medium`  | Per-tick 0.3 exponential smoothing — time constant welded to fps                                                                                            | `walk_controller.py:117–121`                                 |
-| F16 | {bdg-success}`fixed`   | Euclidean twist magnitude makes joystick steering isotropic ([PR #442](https://github.com/Dr-QP/Dr.QP/pull/442))                                            | `walk_controller.py`                                         |
-| F17 | {bdg-warning}`medium`  | Stop snaps all feet to neutral in one tick; start resets phase blindly                                                                                      | `walk_controller.py:138–143, 183`                            |
-| F18 | {bdg-warning}`medium`  | Balance is P-only, unfiltered, un-slewed, at 8 Hz — oscillation risk on hardware                                                                            | `balance_controller.py:97–121`, `brain_node.py:97`           |
-| F19 | {bdg-warning}`medium`  | Attitude-only correction; no support-polygon/contact awareness                                                                                              | `balance_controller.py`                                      |
-| F20 | {bdg-secondary}`low`   | Backoff ramp comment ("double the clamp") disagrees with math (1.7×)                                                                                        | `balance_controller.py:92–94`                                |
-| F21 | {bdg-secondary}`low`   | No fusion fallback when an IMU backend lacks on-chip orientation                                                                                            | `imu_node.py`                                                |
-| F22 | {bdg-success}`fixed`   | Full-path analytic saturation scales combined SE(2) twists; live MoveIt CI checks the current envelope ([PR #442](https://github.com/Dr-QP/Dr.QP/pull/442)) | `walk_controller.py`, `test_moveit_runtime_launch.py`        |
-| F23 | {bdg-success}`fixed`   | Hand-duplicated generator limits disappeared with the retired calibration artifact                                                                          | —                                                            |
-| F24 | {bdg-success}`fixed`   | No generated artifact is committed; CI validates the live robot model                                                                                       | `test_moveit_runtime_launch.py`                              |
-| F25 | {bdg-warning}`medium`  | 8 Hz control loop caps steering latency and balance bandwidth                                                                                               | `brain_node.py:93`                                           |
-| F26 | {bdg-warning}`medium`  | Servo zero offsets applied/inverted in trajectory layer instead of URDF/ros2_control                                                                        | `joint_trajectory_builder.py:35–36`, `brain_node.py:493–501` |
-| F27 | {bdg-secondary}`low`   | Dead `phase_steps_per_cycle` constructor argument (fps/2.5), overwritten every tick                                                                         | `brain_node.py:227`                                          |
-| F28 | {bdg-secondary}`low`   | Rounded-float dedupe key compensating for stateful target generation                                                                                        | `brain_node.py:456–476`                                      |
+| ID  | Severity               | Finding                                                                                                                                                        | Where                                                        |
+| --- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| F1  | {bdg-danger}`critical` | 2.0 s per-call IK timeout vs 125 ms loop budget                                                                                                                | `locomotion_kinematics.py:34,143`                            |
+| F2  | {bdg-warning}`high`    | Lookahead window mutates phase → gait runs at 2× configured rate; speed coupled to `walking_trajectory_points`                                                 | `brain_node.py:417–437`                                      |
+| F3  | {bdg-success}`fixed`   | Analytic IK is the default; numeric MoveIt IK remains a selectable fallback and oracle                                                                         | `locomotion_kinematics.py`, `brain_node.py`                  |
+| F4  | {bdg-success}`fixed`   | Per-leg workspace/limit clamping publishes degraded motion and reports persistent saturation                                                                   | `locomotion_kinematics.py`, `brain_node.py`                  |
+| F5  | {bdg-warning}`partial` | Analytic bounds enforcement replaced runtime MoveIt bounds checks; self-collision validation remains until combined-envelope certification                     | `locomotion_kinematics.py`                                   |
+| F6  | {bdg-success}`fixed`   | Cycloid swing profile enforces zero x/z velocity at liftoff and touchdown ([PR #441](https://github.com/Dr-QP/Dr.QP/pull/441))                                 | `parametric_gait_generator.py`                               |
+| F7  | {bdg-success}`fixed`   | Per-leg SE(2) twist targets replace normalized position mixing ([PR #442](https://github.com/Dr-QP/Dr.QP/pull/442))                                            | `walk_controller.py`                                         |
+| F8  | {bdg-secondary}`low`   | Analytic IK solvability flag ignored by callers                                                                                                                | `walk_controller.py:224–226`, `models.py:255`                |
+| F9  | {bdg-success}`fixed`   | Analytic IK parses URDF limits and clamps each leg in model convention                                                                                         | `models.py`, `urdf_limits.py`                                |
+| F10 | {bdg-secondary}`low`   | Degrees/radians/servo-offset conversions at every layer boundary                                                                                               | `models.py`, `joint_trajectory_builder.py`, `brain_node.py`  |
+| F11 | {bdg-secondary}`low`   | FK allocates transform chains + label strings per call in the control path                                                                                     | `models.py:219–252`                                          |
+| F12 | {bdg-warning}`medium`  | Tripod duty exactly 0.5 — zero double-support margin                                                                                                           | `parametric_gait_generator.py:97–107`                        |
+| F13 | {bdg-success}`fixed`   | Half-open `% 1.0` phase wrapping preserves negative-phase behavior without a cycle-length epsilon ([PR #441](https://github.com/Dr-QP/Dr.QP/pull/441))         | `parametric_gait_generator.py`                               |
+| F14 | {bdg-secondary}`low`   | Gait switching discontinuous (no phase remap/transition)                                                                                                       | `walk_controller.py:53–55`                                   |
+| F15 | {bdg-warning}`medium`  | Per-tick 0.3 exponential smoothing — time constant welded to fps                                                                                               | `walk_controller.py:117–121`                                 |
+| F16 | {bdg-success}`fixed`   | Euclidean twist magnitude makes joystick steering isotropic ([PR #442](https://github.com/Dr-QP/Dr.QP/pull/442))                                               | `walk_controller.py`                                         |
+| F17 | {bdg-warning}`medium`  | Stop snaps all feet to neutral in one tick; start resets phase blindly                                                                                         | `walk_controller.py:138–143, 183`                            |
+| F18 | {bdg-warning}`medium`  | Stationary posture is P-only, unfiltered, and un-slewed — oscillation risk on hardware                                                                         | `balance_controller.py`, `brain_node.py`                     |
+| F19 | {bdg-warning}`medium`  | Stationary attitude-only correction; no support-polygon/contact awareness                                                                                      | `balance_controller.py`                                      |
+| F20 | {bdg-success}`fixed`   | The walking-plus-balance stride-backoff ramp was retired with the stationary posture contract                                                                  | `balance_controller.py`, `brain_node.py`                     |
+| F21 | {bdg-secondary}`low`   | No fusion fallback when an IMU backend lacks on-chip orientation                                                                                               | `imu_node.py`                                                |
+| F22 | {bdg-success}`fixed`   | Full-path analytic saturation scales combined SE(2) twists; live MoveIt CI checks the current envelope ([PR #442](https://github.com/Dr-QP/Dr.QP/pull/442))    | `walk_controller.py`, `test_moveit_runtime_launch.py`        |
+| F23 | {bdg-success}`fixed`   | Hand-duplicated generator limits disappeared with the retired calibration artifact                                                                             | —                                                            |
+| F24 | {bdg-success}`fixed`   | No generated artifact is committed; CI validates the live robot model                                                                                          | `test_moveit_runtime_launch.py`                              |
+| F25 | {bdg-success}`fixed`   | Configurable 25 Hz default control loop with rate-invariant gait timing and tick-duration instrumentation ([PR #443](https://github.com/Dr-QP/Dr.QP/pull/443)) | `brain_node.py`                                              |
+| F26 | {bdg-warning}`medium`  | Servo zero offsets applied/inverted in trajectory layer instead of URDF/ros2_control                                                                           | `joint_trajectory_builder.py:35–36`, `brain_node.py:493–501` |
+| F27 | {bdg-secondary}`low`   | Dead `phase_steps_per_cycle` constructor argument (fps/2.5), overwritten every tick                                                                            | `brain_node.py:227`                                          |
+| F28 | {bdg-secondary}`low`   | Rounded-float dedupe key compensating for stateful target generation                                                                                           | `brain_node.py:456–476`                                      |
 
 ## Suggested reading
 

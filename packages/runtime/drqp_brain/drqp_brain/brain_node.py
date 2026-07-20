@@ -21,24 +21,26 @@
 # THE SOFTWARE.
 
 import argparse
+from collections import deque
 from concurrent.futures import CancelledError
+from dataclasses import dataclass
 import os
 import sys
 import threading
+from time import perf_counter
 import traceback
 
 from control_msgs.action import FollowJointTrajectory
 from drqp_brain.balance_controller import (
     apply_imu_balance,
     body_tilt_from_imu,
-    imu_balance_stride_scale,
 )
 from drqp_brain.instance_guard import domain_instance_guard, InstanceAlreadyRunningError
 from drqp_brain.joint_trajectory_builder import JointTrajectoryBuilder
 from drqp_brain.locomotion_kinematics import (
     AnalyticLocomotionKinematics,
     CLAMPING_EVENT_TICKS,
-    LOCOMOTION_FPS,
+    DEFAULT_CONTROL_RATE_HZ,
     LocomotionKinematics,
     MoveItPyLocomotionKinematics,
     MoveItPyStateValidator,
@@ -54,6 +56,7 @@ from drqp_kinematics.urdf_limits import (
     urdf_to_model_angles,
 )
 import numpy as np
+from rcl_interfaces.msg import FloatingPointRange, ParameterDescriptor
 import rclpy
 from rclpy._rclpy_pybind11 import InvalidHandle, RCLError
 from rclpy.action import ActionClient
@@ -67,6 +70,50 @@ import rclpy.utilities
 from sensor_msgs.msg import Imu, JointState
 import std_msgs.msg
 import trajectory_msgs.msg
+
+CONTROL_RATE_MIN_HZ = 5.0
+CONTROL_RATE_MAX_HZ = 100.0
+TICK_DURATION_WINDOW_SEC = 5.0
+BALANCE_REACHABILITY_STEPS = 16
+BALANCE_SATURATION_EVENT = 'stationary_balance_correction_saturated'
+
+
+@dataclass(frozen=True)
+class TickDurationStatistics:
+    """Summary of recent walking-control callback durations."""
+
+    sample_count: int
+    minimum_sec: float
+    mean_sec: float
+    maximum_sec: float
+
+
+class TickDurationWindow:
+    """Maintain bounded tick-duration measurements without per-tick allocation growth."""
+
+    def __init__(self, capacity: int):
+        if capacity <= 0:
+            raise ValueError('tick-duration window capacity must be positive')
+        self._durations: deque[float] = deque(maxlen=capacity)
+
+    def record(self, duration_sec: float) -> None:
+        self._durations.append(duration_sec)
+
+    @property
+    def capacity(self) -> int:
+        """Return the maximum number of retained duration samples."""
+        return self._durations.maxlen
+
+    @property
+    def statistics(self) -> TickDurationStatistics:
+        if not self._durations:
+            return TickDurationStatistics(0, 0.0, 0.0, 0.0)
+        return TickDurationStatistics(
+            sample_count=len(self._durations),
+            minimum_sec=min(self._durations),
+            mean_sec=sum(self._durations) / len(self._durations),
+            maximum_sec=max(self._durations),
+        )
 
 
 def _assert_no_existing_brain_node(node: rclpy.node.Node) -> None:
@@ -95,9 +142,22 @@ class HexapodBrain(rclpy.node.Node):
 
         # Analytic IK is the runtime default. MoveIt remains in-process for
         # planning-scene validation and as a selectable comparison backend.
-        self.fps = LOCOMOTION_FPS
         self.loop_callback_group = MutuallyExclusiveCallbackGroup()
         self.state_callback_group = ReentrantCallbackGroup()
+        self.declare_parameter(
+            'control_rate_hz',
+            DEFAULT_CONTROL_RATE_HZ,
+            ParameterDescriptor(
+                description='Walking control loop rate in Hz',
+                floating_point_range=[
+                    FloatingPointRange(
+                        from_value=CONTROL_RATE_MIN_HZ,
+                        to_value=CONTROL_RATE_MAX_HZ,
+                        step=0.0,
+                    )
+                ],
+            ),
+        )
         self.declare_parameter('enable_imu_balance', True)
         self.declare_parameter('imu_balance_gain', 2.0)
         self.declare_parameter('imu_balance_max_tilt_rad', 0.15)
@@ -112,6 +172,13 @@ class HexapodBrain(rclpy.node.Node):
             seconds=self.get_parameter('imu_balance_timeout_sec').value
         )
         self.kinematics_backend = self.get_parameter('kinematics_backend').value
+        self.control_rate_hz = float(self.get_parameter('control_rate_hz').value)
+        if not CONTROL_RATE_MIN_HZ <= self.control_rate_hz <= CONTROL_RATE_MAX_HZ:
+            raise ValueError(
+                'control_rate_hz must be within '
+                f'[{CONTROL_RATE_MIN_HZ:g}, {CONTROL_RATE_MAX_HZ:g}], '
+                f'got {self.control_rate_hz:g}'
+            )
         parameter_overrides = getattr(self, '_parameter_overrides', {})
         omega_max_overridden = 'omega_max_rad_sec' in parameter_overrides
         rotation_speed_overridden = 'rotation_speed_degrees' in parameter_overrides
@@ -190,9 +257,14 @@ class HexapodBrain(rclpy.node.Node):
         self.__trajectory_client = None
         self._last_published_motion_state = None
         self._last_loop_time = None
+        self.tick_duration_window = TickDurationWindow(
+            max(1, round(self.control_rate_hz * TICK_DURATION_WINDOW_SEC))
+        )
+        self._ticks_since_duration_log = 0
         self._joint_state_warning_logged = False
         self._latest_clamped_legs = ()
         self._clamping_ticks = {}
+        self._balance_saturation_legs = ()
         self.walking_trajectory_points = WALKING_TRAJECTORY_POINTS
         self.latest_joint_state = None
         self.joint_state_sub = self.create_subscription(
@@ -211,6 +283,7 @@ class HexapodBrain(rclpy.node.Node):
                 node=self,
                 hexapod=self.hexapod,
                 is_shutting_down=lambda: self._is_shutting_down,
+                control_rate_hz=self.control_rate_hz,
             )
         else:
             state_validator = MoveItPyStateValidator(
@@ -223,9 +296,17 @@ class HexapodBrain(rclpy.node.Node):
                 hexapod=self.hexapod,
                 state_validator=state_validator,
             )
+        # Balance posture bounds always use analytic workspace and joint-limit
+        # checks. The selected runtime backend still owns the subsequent solve,
+        # including the unchanged MoveIt planning-scene collision validation.
+        self.balance_reachability = AnalyticLocomotionKinematics(
+            node=self,
+            hexapod=self.hexapod,
+            state_validator=None,
+        )
 
         self.loop_timer = self.create_timer(
-            1 / self.fps,
+            1 / self.control_rate_hz,
             self.loop,
             callback_group=self.loop_callback_group,
             autostart=False,
@@ -300,6 +381,9 @@ class HexapodBrain(rclpy.node.Node):
             Semantic movement command with stride, rotation, body position/orientation
 
         """
+        if self.balance_mode_enabled:
+            return
+
         self.current_movement = msg
 
         # Update gait index based on gait type from message
@@ -321,6 +405,8 @@ class HexapodBrain(rclpy.node.Node):
         if msg.orientation_covariance[0] < 0 or np.allclose(quaternion, 0.0):
             self.current_body_tilt = None
             self.last_imu_update = None
+            if self.balance_mode_enabled:
+                self._disable_balance_mode()
             return
 
         self.current_body_tilt = body_tilt_from_imu(msg.orientation)
@@ -333,27 +419,70 @@ class HexapodBrain(rclpy.node.Node):
         self.get_logger().info('Control mode changed in translator node')
 
     def process_balance_mode(self, msg: std_msgs.msg.Bool):
-        """Enable or disable IMU balancing around the captured body tilt."""
-        self.balance_mode_enabled = self.enable_imu_balance and msg.data
-        if not self.balance_mode_enabled:
+        """Enable or disable the stationary IMU posture hold."""
+        if not msg.data:
+            self._disable_balance_mode()
+            return
+        if self.balance_mode_enabled:
+            return
+
+        target_body_tilt = self._fresh_imu_body_tilt()
+        if (
+            not self.enable_imu_balance
+            or self.robot_state != 'torque_on'
+            or target_body_tilt is None
+        ):
+            self.balance_mode_enabled = False
             self.target_body_tilt = None
             return
 
-        self.target_body_tilt = self.get_imu_body_tilt()
+        self._clear_semantic_movement()
+        self.balance_mode_enabled = True
+        self.target_body_tilt = target_body_tilt
 
-    def get_imu_body_tilt(self):
-        """Return the latest IMU-derived tilt when balancing data is fresh enough."""
+    def _disable_balance_mode(self) -> None:
+        """Leave balance mode without retaining any command that could replay."""
+        was_enabled = self.balance_mode_enabled
+        self.balance_mode_enabled = False
+        self.target_body_tilt = None
+        self._balance_saturation_legs = ()
+        if was_enabled:
+            self._clear_semantic_movement()
+
+    def _clear_semantic_movement(self) -> None:
+        """Discard operator motion and reset the gait to a stationary state."""
+        stationary_movement = MovementCommand()
+        stationary_movement.gait_type = self.gaits[self.gait_index].name
+        self.current_movement = stationary_movement
+        self.walker.reset()
+        self._last_loop_time = None
+
+    def _fresh_imu_body_tilt(self):
+        """Return the latest IMU tilt only while it is available and fresh."""
         if (
-            not self.enable_imu_balance
-            or not self.balance_mode_enabled
-            or self.current_body_tilt is None
+            self.current_body_tilt is None
             or self.last_imu_update is None
             or self.get_clock().now() - self.last_imu_update > self.imu_balance_timeout
         ):
             return None
         return self.current_body_tilt
 
+    def get_imu_body_tilt(self):
+        """Return the latest IMU-derived tilt when balancing data is fresh enough."""
+        if not self.enable_imu_balance or not self.balance_mode_enabled:
+            return None
+        return self._fresh_imu_body_tilt()
+
     def loop(self):
+        """Run one control tick and retain a bounded runtime-duration measurement."""
+        tick_start = perf_counter()
+        try:
+            self._run_loop()
+        finally:
+            self._record_tick_duration(perf_counter() - tick_start)
+
+    def _run_loop(self):
+        """Apply the latest semantic command and publish viable joint targets."""
         if self._is_shutting_down:
             return
 
@@ -361,53 +490,53 @@ class HexapodBrain(rclpy.node.Node):
         self.walker.cycle_time_sec = self.cycle_time_sec[self.walker.current_gait]
         dt = self._next_loop_dt()
 
-        stride_direction = Point3D(
-            [
-                self.current_movement.stride_direction.x,
-                self.current_movement.stride_direction.y,
-                self.current_movement.stride_direction.z,
-            ]
-        )
-
-        body_translation = Point3D(
-            [
-                self.current_movement.body_translation.x,
-                self.current_movement.body_translation.y,
-                self.current_movement.body_translation.z,
-            ]
-        )
-
-        body_rotation = Point3D(
-            [
-                self.current_movement.body_rotation.x,
-                self.current_movement.body_rotation.y,
-                self.current_movement.body_rotation.z,
-            ]
-        )
         imu_body_tilt = self.get_imu_body_tilt()
-        stride_scale = imu_balance_stride_scale(
-            imu_body_tilt,
-            target_body_tilt=self.target_body_tilt,
-            gain=self.imu_balance_gain,
-            max_tilt_rad=self.imu_balance_max_tilt_rad,
-        )
-        stride_direction = stride_direction * stride_scale
-        body_rotation = apply_imu_balance(
-            body_rotation,
-            imu_body_tilt,
-            target_body_tilt=self.target_body_tilt,
-            gain=self.imu_balance_gain,
-            max_tilt_rad=self.imu_balance_max_tilt_rad,
-        )
+        if self.balance_mode_enabled and imu_body_tilt is None:
+            self._disable_balance_mode()
 
-        body_transform = self.walker.body_transform(
-            body_translation / self.fps,
-            body_rotation,
-        )
+        if self.balance_mode_enabled:
+            stride_direction = Point3D([0.0, 0.0, 0.0])
+            body_translation = Point3D([0.0, 0.0, 0.0])
+            body_rotation = apply_imu_balance(
+                Point3D([0.0, 0.0, 0.0]),
+                imu_body_tilt,
+                target_body_tilt=self.target_body_tilt,
+                gain=self.imu_balance_gain,
+                max_tilt_rad=self.imu_balance_max_tilt_rad,
+            )
+            rotation_direction = 0.0
+        else:
+            stride_direction = Point3D(
+                [
+                    self.current_movement.stride_direction.x,
+                    self.current_movement.stride_direction.y,
+                    self.current_movement.stride_direction.z,
+                ]
+            )
+            body_translation = Point3D(
+                [
+                    self.current_movement.body_translation.x,
+                    self.current_movement.body_translation.y,
+                    self.current_movement.body_translation.z,
+                ]
+            )
+            body_rotation = Point3D(
+                [
+                    self.current_movement.body_rotation.x,
+                    self.current_movement.body_rotation.y,
+                    self.current_movement.body_rotation.z,
+                ]
+            )
+            rotation_direction = self.current_movement.rotation_speed
+
         self.walker.advance(
             dt,
             stride_direction=stride_direction,
-            rotation_direction=self.current_movement.rotation_speed,
+            rotation_direction=rotation_direction,
+        )
+        body_transform = self.walker.body_transform(
+            body_translation / self.control_rate_hz,
+            body_rotation,
         )
         self.hexapod.body_transform = body_transform
 
@@ -415,9 +544,19 @@ class HexapodBrain(rclpy.node.Node):
             return
 
         feet_target_window = self._build_walking_feet_target_window(
-            body_translation=body_translation / self.fps,
+            body_translation=body_translation / self.control_rate_hz,
             body_rotation=body_rotation,
         )
+        if self.balance_mode_enabled:
+            body_rotation = self._constrain_balance_correction(
+                body_rotation,
+                feet_target_window[0],
+            )
+            body_transform = self.walker.body_transform(
+                Point3D([0.0, 0.0, 0.0]),
+                body_rotation,
+            )
+            self.hexapod.body_transform = body_transform
         motion_state_key = self._motion_state_key(body_transform)
         if motion_state_key == self._last_published_motion_state:
             return
@@ -441,7 +580,7 @@ class HexapodBrain(rclpy.node.Node):
         for point_index, (_, point_joint_targets) in enumerate(trajectory_targets, start=1):
             trajectory.add_point_from_joint_targets(
                 point_joint_targets,
-                reach_in_seconds_from_start=point_index / self.fps,
+                reach_in_seconds_from_start=point_index / self.control_rate_hz,
             )
         trajectory.publish(self.joint_trajectory_pub)
         self._last_published_motion_state = motion_state_key
@@ -468,7 +607,7 @@ class HexapodBrain(rclpy.node.Node):
         body_translation: Point3D,
         body_rotation: Point3D,
     ):
-        phase_increment = 1.0 / (self.fps * self.walker.cycle_time_sec)
+        phase_increment = 1.0 / (self.control_rate_hz * self.walker.cycle_time_sec)
         return [
             self.walker.targets_at(
                 self.walker.current_phase + point_index * phase_increment,
@@ -511,6 +650,64 @@ class HexapodBrain(rclpy.node.Node):
                 )
             )
 
+    def _constrain_balance_correction(
+        self,
+        requested_rotation: Point3D,
+        feet_targets,
+    ) -> Point3D:
+        """Scale stationary posture correction until every leg is reachable."""
+
+        def constrained_legs(scale: float) -> tuple[str, ...]:
+            candidate_rotation = requested_rotation * scale
+            candidate_transform = self.walker.body_transform(
+                Point3D([0.0, 0.0, 0.0]),
+                candidate_rotation,
+            )
+            return self.balance_reachability.unreachable_legs(
+                feet_targets,
+                candidate_transform,
+            )
+
+        requested_constrained_legs = constrained_legs(1.0)
+        if not requested_constrained_legs:
+            self._report_balance_saturation((), 1.0)
+            return requested_rotation
+
+        if constrained_legs(0.0):
+            self._report_balance_saturation(requested_constrained_legs, 0.0)
+            return Point3D([0.0, 0.0, 0.0])
+
+        lower = 0.0
+        upper = 1.0
+        for _ in range(BALANCE_REACHABILITY_STEPS):
+            midpoint = (lower + upper) / 2.0
+            if constrained_legs(midpoint):
+                upper = midpoint
+            else:
+                lower = midpoint
+
+        self._report_balance_saturation(requested_constrained_legs, lower)
+        return requested_rotation * lower
+
+    def _report_balance_saturation(
+        self,
+        constrained_legs: tuple[str, ...],
+        scale: float,
+    ) -> None:
+        """Emit one named diagnostic whenever the constrained set changes."""
+        if constrained_legs == self._balance_saturation_legs:
+            return
+
+        self._balance_saturation_legs = constrained_legs
+        if not constrained_legs:
+            return
+
+        leg_names = ','.join(constrained_legs)
+        self.get_logger().warning(
+            f'{BALANCE_SATURATION_EVENT}:{leg_names} scale={scale:.3f}',
+            throttle_duration_sec=5.0,
+        )
+
     def _make_pose_stamped(self, leg, foot_target):
         return self.kinematics.make_pose_stamped(leg, foot_target)
 
@@ -537,12 +734,29 @@ class HexapodBrain(rclpy.node.Node):
         """Measure and bound the elapsed time between control-loop ticks."""
         now = self.get_clock().now()
         if self._last_loop_time is None:
-            dt = 1.0 / self.fps
+            dt = 1.0 / self.control_rate_hz
         else:
             dt = (now - self._last_loop_time).nanoseconds / 1_000_000_000.0
-            dt = float(np.clip(dt, 0.0, 2.0 / self.fps))
+            dt = float(np.clip(dt, 0.0, 2.0 / self.control_rate_hz))
         self._last_loop_time = now
         return dt
+
+    def _record_tick_duration(self, duration_sec: float) -> None:
+        """Log min/mean/max control-tick duration once per five-second window."""
+        self.tick_duration_window.record(duration_sec)
+        self._ticks_since_duration_log += 1
+        if self._ticks_since_duration_log < self.tick_duration_window.capacity:
+            return
+
+        statistics = self.tick_duration_window.statistics
+        self.get_logger().debug(
+            'Control tick duration over '
+            f'{statistics.sample_count} samples: '
+            f'min={statistics.minimum_sec * 1_000.0:.3f} ms '
+            f'mean={statistics.mean_sec * 1_000.0:.3f} ms '
+            f'max={statistics.maximum_sec * 1_000.0:.3f} ms'
+        )
+        self._ticks_since_duration_log = 0
 
     def _ik_ready(self) -> bool:
         if self._is_shutting_down:
@@ -554,7 +768,9 @@ class HexapodBrain(rclpy.node.Node):
                 self._joint_state_warning_logged = True
             return False
 
-        return self.kinematics.ready()
+        if not self.kinematics.ready():
+            return False
+        return not self.balance_mode_enabled or self.balance_reachability.ready()
 
     def _controller_joint_names(self, leg):
         return self.kinematics.controller_joint_names(leg)
@@ -674,6 +890,9 @@ class HexapodBrain(rclpy.node.Node):
             return
 
         self.robot_state = msg.data
+
+        if self.robot_state != 'torque_on' and self.balance_mode_enabled:
+            self._disable_balance_mode()
 
         if self.robot_state == 'torque_off':
             self.get_logger().info('Torque is off, stopping')

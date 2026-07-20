@@ -6,6 +6,7 @@ description: 'Extract logs from a GitHub Actions run or job with the GitHub CLI.
 # Extract GitHub Actions Logs
 
 Use this skill to pull GitHub Actions logs with `gh`.
+Note: colcon build and test use reduced (default) output, so console log would only show which package failed, not the actual failure. To get the full logs, download the colcon logs and test reports artifacts.
 
 ## When to Use This Skill
 
