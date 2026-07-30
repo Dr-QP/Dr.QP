@@ -7,13 +7,14 @@ counterparts, where they exist, live under `docs/source/Dev/`.
 The specs are grouped into **programs** — independent bodies of work but not unrelated — see
 [Program relationships](#program-relationships).
 
-| Program                                                     | What it does                                                               | Source of rationale                                                       |
-| ----------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| [`locomotion/`](locomotion/README.md)                       | Foundation refactor: analytic-IK hot path, twist steering, time-based gait | [`ik-locomotion-analysis.md`](../../source/Dev/ik-locomotion-analysis.md) |
-| [`roadmap/`](roadmap/README.md)                             | Autonomy roadmap: joystick hexapod → autonomous AI home pet                | [`roadmap/index.md`](../../source/Dev/roadmap/index.md)                   |
-| [`formatting-linting/`](formatting-linting/README.md)       | Unify formatter ownership, local/editor workflows, CI, and ROS lint gates  | (repository tooling audit, self-contained)                                |
-| [`chatgpt-codex-auth-ci/`](chatgpt-codex-auth-ci/README.md) | Decision record and private-only design for ChatGPT-managed Codex CI auth  | OpenAI CI/CD authentication guidance and workflow audit                   |
-| [`bazel-ros2-migration/`](bazel-ros2-migration/README.md)   | Stage a Bazel build around ROS 2 Jazzy with colcon parity gates            | rules_ros2 Jazzy investigation and workspace build audit                  |
+| Program                                                                   | What it does                                                               | Source of rationale                                                       |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [`locomotion/`](locomotion/README.md)                                     | Foundation refactor: analytic-IK hot path, twist steering, time-based gait | [`ik-locomotion-analysis.md`](../../source/Dev/ik-locomotion-analysis.md) |
+| [`roadmap/`](roadmap/README.md)                                           | Autonomy roadmap: joystick hexapod → autonomous AI home pet                | [`roadmap/index.md`](../../source/Dev/roadmap/index.md)                   |
+| [`formatting-linting/`](formatting-linting/README.md)                     | Unify formatter ownership, local/editor workflows, CI, and ROS lint gates  | (repository tooling audit, self-contained)                                |
+| [`chatgpt-codex-auth-ci/`](chatgpt-codex-auth-ci/README.md)               | Decision record and private-only design for ChatGPT-managed Codex CI auth  | OpenAI CI/CD authentication guidance and workflow audit                   |
+| [`bazel-ros2-migration/`](bazel-ros2-migration/README.md)                 | Stage a Bazel build around ROS 2 Jazzy with colcon parity gates            | rules_ros2 Jazzy investigation and workspace build audit                  |
+| [`agent-devcontainer-migration/`](agent-devcontainer-migration/README.md) | Spike: rebuild the dev image on the extracted general-purpose base image   | `chocobot-farm/agent-devcontainer` extraction                             |
 
 ## Program relationships
 
