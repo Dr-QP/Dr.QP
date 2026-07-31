@@ -28,7 +28,10 @@ from launch.substitutions import PathJoinSubstitution
 import launch_pytest
 from launch_pytest.actions import ReadyToTest
 from launch_ros.substitutions import FindPackageShare
-from moveit_launch_smoke_test_support import assert_move_group_ready
+from moveit_launch_smoke_test_support import (
+    assert_moveit_stack_ready,
+    build_smoke_launch_arguments,
+)
 import pytest
 
 
@@ -46,7 +49,9 @@ def generate_test_description():
         [
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(move_group_launch),
-                launch_arguments={'hardware_device_address': 'mock_servo'}.items(),
+                launch_arguments=build_smoke_launch_arguments(
+                    {'hardware_device_address': 'mock_servo'}
+                ).items(),
             ),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(bringup_launch),
@@ -67,7 +72,7 @@ def generate_test_description():
 
 @pytest.mark.launch(fixture=generate_test_description)
 def test_launch_reaches_ready_state(move_group, generate_test_description):  # noqa: ARG001
-    assert_move_group_ready()
+    assert_moveit_stack_ready()
     # Function-scoped generator: the stack tears down at the yield, then the
     # post-yield body verifies every non-simulator process exited cleanly.
     yield

@@ -20,7 +20,7 @@
 
 import sys
 
-from drqp_brain.instance_guard import InstanceAlreadyRunningError, InstanceGuard
+from drqp_brain.instance_guard import domain_instance_guard, InstanceAlreadyRunningError
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
@@ -72,7 +72,7 @@ class RobotStateNode(Node):
 def main():
     node = None
     try:
-        with InstanceGuard('drqp_robot_state'):
+        with domain_instance_guard('drqp_robot_state'):
             rclpy.init()
             node = RobotStateNode()
             rclpy.spin(node)
