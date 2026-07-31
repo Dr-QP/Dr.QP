@@ -1,6 +1,6 @@
 # 01 — Rebuild the dev image on `agent-desktop`
 
-Rebase `docker/ros/desktop/ros-desktop.dockerfile` onto
+Rebase `docker/ros/desktop/ros-desktop.Dockerfile` onto
 `ghcr.io/chocobot-farm/agent-desktop`, reducing this workspace's Ansible tree to
 the ROS delta.
 
@@ -13,7 +13,7 @@ trigger before starting.
 
 ## Acceptance criteria
 
-- **AC1** `docker/ros/desktop/ros-desktop.dockerfile` starts from a digest-pinned
+- **AC1** `docker/ros/desktop/ros-desktop.Dockerfile` starts from a digest-pinned
   `ghcr.io/chocobot-farm/agent-desktop` and runs a ROS-only playbook.
 - **AC2** The built image is functionally identical to today's for every
   workspace command: `colcon build`, `colcon test`, `ament_flake8`,
@@ -49,7 +49,7 @@ trigger before starting.
 
 ### Step 1 — new base and playbook
 
-`docker/ros/desktop/ros-desktop.dockerfile`:
+`docker/ros/desktop/ros-desktop.Dockerfile`:
 
 ```dockerfile
 ARG FROM_IMAGE=ghcr.io/chocobot-farm/agent-desktop:edge
