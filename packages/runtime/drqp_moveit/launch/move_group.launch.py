@@ -34,6 +34,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
@@ -41,11 +42,16 @@ def generate_launch_description():
     if launch_dir not in sys.path:
         sys.path.insert(0, launch_dir)
 
-    from moveit_launch_utils import get_move_group_params
+    from moveit_launch_utils import get_move_group_params, load_yaml
 
     pkg = get_package_share_path('drqp_moveit')
     use_gazebo = LaunchConfiguration('use_gazebo')
     hardware_device_address = LaunchConfiguration('hardware_device_address')
+    wait_for_initial_state_timeout = LaunchConfiguration('wait_for_initial_state_timeout')
+    move_group_config = load_yaml(pkg / 'config' / 'move_group.yaml')
+    default_initial_state_timeout = move_group_config['planning_scene_monitor_options'][
+        'wait_for_initial_state_timeout'
+    ]
 
     move_group_node = Node(
         package='moveit_ros_move_group',
@@ -54,7 +60,17 @@ def generate_launch_description():
         parameters=get_move_group_params(
             pkg, use_gazebo=use_gazebo, hardware_device_address=hardware_device_address
         )
-        + [{'use_sim_time': use_gazebo}],
+        + [
+            {'use_sim_time': use_gazebo},
+            {
+                'planning_scene_monitor_options': {
+                    'wait_for_initial_state_timeout': ParameterValue(
+                        wait_for_initial_state_timeout,
+                        value_type=float,
+                    )
+                }
+            },
+        ],
     )
 
     return LaunchDescription(
@@ -72,6 +88,11 @@ def generate_launch_description():
                     'Hardware device address for ros2_control in URDF. '
                     'Use "mock_servo" for fake hardware.'
                 ),
+            ),
+            DeclareLaunchArgument(
+                'wait_for_initial_state_timeout',
+                default_value=str(default_initial_state_timeout),
+                description=('Seconds move_group waits for its initial complete robot state'),
             ),
             move_group_node,
         ]

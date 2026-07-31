@@ -147,7 +147,7 @@ def test_main_exits_process_after_external_shutdown_cleanup():
             'drqp_brain.brain_node.rclpy.utilities.remove_ros_args',
             return_value=['drqp_brain'],
         ),
-        mock.patch('drqp_brain.brain_node.InstanceGuard'),
+        mock.patch('drqp_brain.brain_node.domain_instance_guard'),
         mock.patch('drqp_brain.brain_node.rclpy.init') as init,
         mock.patch('drqp_brain.brain_node.rclpy.create_node', return_value=guard_node),
         mock.patch('drqp_brain.brain_node._assert_no_existing_brain_node'),

@@ -23,7 +23,7 @@
 from pathlib import Path
 import time
 
-from drqp_brain.instance_guard import InstanceGuard
+from drqp_brain.instance_guard import domain_instance_guard
 from drqp_brain.robot_state import robot_state_node
 from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
 from launch import LaunchDescription
@@ -43,7 +43,7 @@ def test_robot_state_main_refuses_duplicate_instance(monkeypatch):
     """Refuse startup when another robot state node owns the instance lock."""
     monkeypatch.setenv('ROS_HOME', str(Path.cwd() / '.tmp' / 'ros_home'))
 
-    with InstanceGuard('drqp_robot_state'):
+    with domain_instance_guard('drqp_robot_state'):
         assert robot_state_node.main() == 1
 
 

@@ -23,7 +23,7 @@
 from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
 import launch_pytest
 from moveit_launch_smoke_test_support import (
-    assert_move_group_ready,
+    assert_moveit_stack_ready,
     build_smoke_test_description,
     build_test_gz_partition,
 )
@@ -50,10 +50,10 @@ def generate_test_description():
 @pytest.mark.flaky(retries=3)
 def test_launch_reaches_ready_state(move_group, generate_test_description):  # noqa: ARG001
     # Retries via pytest-retry: the post-yield shutdown exit-code check below is
-    # intermittently flaky (see issue #408). assert_move_group_ready() failures
+    # intermittently flaky (see issue #408). Stack readiness failures
     # are genuine regressions and reproduce identically on every retry, so they
     # still fail the build.
-    assert_move_group_ready()
+    assert_moveit_stack_ready()
     # Function-scoped generator: the stack tears down at the yield, then the
     # post-yield body verifies every non-simulator process exited cleanly.
     yield
