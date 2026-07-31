@@ -21,7 +21,7 @@ trigger before starting.
 - **AC3** `/opt/ros/overlay_ws` still resolves correctly inside the devcontainer
   without changing `.devcontainer/devcontainer.json`'s `workspaceFolder`.
 - **AC4** The 18 roles now supplied by the base image are deleted from
-  `docker/ros/ansible/playbooks/roles/`, not merely unreferenced.
+  `docker/ros/ansible/roles/`, not merely unreferenced.
 - **AC5** A stale base image cannot go unnoticed: either Renovate updates the
   digest pin, or upstream dispatches a rebuild.
 - **AC6** CI passes on native amd64 **and** arm64.
@@ -64,8 +64,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     --mount=type=bind,readonly,source=..,target=/ros-scripts \
     apt-get update \
-    && ansible-playbook /ros-scripts/ansible/playbooks/20_ros_setup.yml \
-      -i /ros-scripts/ansible/inventories/localhost.yml -vvv \
+    && cd /ros-scripts/ansible \
+    && ansible-playbook playbooks/20_ros_setup.yml \
+      -i inventories/localhost.yml -vvv \
       -e "clang_version=$CLANG_VERSION ros_distro=$ROS_DISTRO"
 ```
 
@@ -132,7 +133,7 @@ Keep `ros_distro`, `source_install`, `clang_version`, and
 
 Create `roles/ros_dev_tools/` and `roles/ros_shell_setup/` per F3 in
 [`README.md`](README.md). Lift the package list and the shell templates
-verbatim from git history (`git show HEAD~1:docker/ros/ansible/playbooks/roles/dev_tools/tasks/main.yml`)
+verbatim from git history (`git show HEAD~1:docker/ros/ansible/roles/dev_tools/tasks/main.yml`)
 so nothing is retyped.
 
 ### Step 4 — delete the superseded roles (AC4)
