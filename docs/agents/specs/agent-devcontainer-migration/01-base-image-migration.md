@@ -60,6 +60,7 @@ ENV ROS_DISTRO=$ROS_DISTRO
 ARG CLANG_VERSION=20
 ARG OVERLAY_WS=/opt/ros/overlay_ws
 
+# hadolint ignore=DL3003 # /ros-scripts only exists for this RUN's bind mount
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     --mount=type=bind,readonly,source=..,target=/ros-scripts \

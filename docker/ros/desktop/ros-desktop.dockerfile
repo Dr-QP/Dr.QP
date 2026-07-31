@@ -9,6 +9,9 @@ ARG CLANG_VERSION=20
 ARG OVERLAY_WS=/opt/ros/overlay_ws
 
 # Install ROS
+# `cd` (not WORKDIR) into /ros-scripts/ansible: that path only exists for the
+# duration of this RUN's bind mount, so WORKDIR would break later build steps.
+# hadolint ignore=DL3003
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     --mount=type=bind,readonly,source=..,target=/ros-scripts \
