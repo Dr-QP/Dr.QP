@@ -26,8 +26,15 @@ if(NOT SDL3_FOUND)
       -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/SDL3
       -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
       -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-      -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-      -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+      # SDL puts -D_GNU_SOURCE=1 in CMAKE_REQUIRED_FLAGS so its configure
+      # checks see glibc's __USE_GNU declarations, but CMake >= 4.4 dropped
+      # CMAKE_REQUIRED_FLAGS from check_symbol_exists(). Without it,
+      # HAVE_GETRESUID/HAVE_GETRESGID come out false and SDL_gtk.c redeclares
+      # getresuid()/getresgid() static, which clashes with <unistd.h>.
+      # Passing the define through CMAKE_<LANG>_FLAGS reaches try_compile()
+      # regardless of the CMake version.
+      "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS} -D_GNU_SOURCE=1"
+      "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -D_GNU_SOURCE=1"
       -DSDL_UNIX_CONSOLE_BUILD=ON
       -DSDL_AUDIO=OFF
       -DSDL_CAMERA=OFF
