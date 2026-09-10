@@ -24,21 +24,21 @@ ansible/
 │   ├── 9999_stop_virtual_bots.yml # Stop Docker containers for virtual bots
 │   ├── group_vars/              # Playbook-specific variables
 │   │   └── all.yml              # Configuration variables
-│   ├── roles/                   # Individual roles for each component
-│   │   ├── basic_prereqs/       # Basic prerequisites
-│   │   ├── clang/               # Clang installation
-│   │   ├── cmake/               # CMake installation
-│   │   ├── colcon_setup/        # Colcon mixin setup
-│   │   ├── dev_tools/           # Development tools
-│   │   ├── extra_facts/         # System facts gathering
-│   │   ├── locale_setup/        # UTF-8 locale setup
-│   │   ├── utc_timezone/        # UTC timezone setup
-│   │   ├── nodejs/              # Node.js and NPM
-│   │   ├── ros_dependencies/    # ROS dependencies (uses known packages)
-│   │   ├── ros_install_prebuilt/ # ROS 2 installation from packages
-│   │   ├── ros_install_source/  # ROS 2 installation from source
-│   │   └── ros_user_setup/      # ROS user creation and setup
 │   └── test_ros_dependencies.yml # Test playbook for ROS dependencies
+├── roles/                       # Individual roles for each component
+│   ├── basic_prereqs/           # Basic prerequisites
+│   ├── clang/                   # Clang installation
+│   ├── cmake/                   # CMake installation
+│   ├── colcon_setup/            # Colcon mixin setup
+│   ├── dev_tools/               # Development tools
+│   ├── extra_facts/             # System facts gathering
+│   ├── locale_setup/            # UTF-8 locale setup
+│   ├── utc_timezone/            # UTC timezone setup
+│   ├── nodejs/                  # Node.js and NPM
+│   ├── ros_dependencies/        # ROS dependencies (uses known packages)
+│   ├── ros_install_prebuilt/    # ROS 2 installation from packages
+│   ├── ros_install_source/      # ROS 2 installation from source
+│   └── ros_user_setup/          # ROS user creation and setup
 └── README.md                    # Points back to this documentation
 ```
 
@@ -168,7 +168,7 @@ The project includes a script to generate ROS dependencies based on your project
 This script:
 
 1. Analyzes the project's ROS dependencies using `rosdep`
-2. Generates a variables file in `ansible/playbooks/roles/ros_dependencies/vars/known_ros_dependencies.yml`
+2. Generates a variables file in `ansible/roles/ros_dependencies/vars/known_ros_dependencies.yml`
 3. The generated variables (`ros_dependencies_known_packages`) are automatically used by the `ros_dependencies` role
 
 To run only the ROS dependencies role:
@@ -293,13 +293,13 @@ Here's a more detailed breakdown:
 The Ansible playbooks replaced the following shell scripts:
 
 - `scripts/ros/ros-2-prep.sh` → `ansible/playbooks/20_ros_setup.yml`
-- `scripts/ros/ros-2-src-build.sh` → `ansible/playbooks/roles/ros_install_source`
-- `scripts/ros/__gen_install_ros_dependencies.sh` → `ansible/playbooks/roles/ros_dependencies` with known packages
+- `scripts/ros/ros-2-src-build.sh` → `ansible/roles/ros_install_source`
+- `scripts/ros/__gen_install_ros_dependencies.sh` → `ansible/roles/ros_dependencies` with known packages
 - `scripts/install_docker.sh` → `ansible/playbooks/10_install_docker.yml`
-- `scripts/ros/desktop/ros-desktop.dockerfile` (user setup) → `ansible/playbooks/roles/ros_user_setup`
-- `scripts/ros/fish/setup.fish` → `ansible/playbooks/roles/fish_setup`
-- `scripts/ros/colcon-mixin.sh` → `ansible/playbooks/roles/colcon_setup`
-- `scripts/ros/rosdep-update.sh` → `ansible/playbooks/roles/colcon_setup`
+- `scripts/ros/desktop/ros-desktop.dockerfile` (user setup) → `ansible/roles/ros_user_setup`
+- `scripts/ros/fish/setup.fish` → `ansible/roles/fish_setup`
+- `scripts/ros/colcon-mixin.sh` → `ansible/roles/colcon_setup`
+- `scripts/ros/rosdep-update.sh` → `ansible/roles/colcon_setup`
 
 ```{admonition} Benefits
 :class: note

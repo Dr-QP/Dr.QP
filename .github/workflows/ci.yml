@@ -146,7 +146,7 @@ jobs:
         uses: ./.github/actions/docker/build-push-action
         with:
           context: docker/ros
-          file: docker/ros/desktop/ros-desktop.dockerfile
+          file: docker/ros/desktop/ros-desktop.Dockerfile
           image: ${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop
           arch: ${{ matrix.arch }}
           registry: ${{ env.REGISTRY }}
@@ -414,7 +414,7 @@ jobs:
         uses: ./.github/actions/docker/build-push-action
         with:
           context: docker/ros/deploy
-          file: docker/ros/deploy/ros-deploy.dockerfile
+          file: docker/ros/deploy/ros-deploy.Dockerfile
           image: ${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-deploy
           arch: ${{ matrix.arch }}
           registry: ${{ env.REGISTRY }}
