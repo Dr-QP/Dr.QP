@@ -13,7 +13,7 @@ ros_user_setup_uid: 1001
 ros_user_setup_gid: 1001
 
 # Xpra configuration
-install_xpra: false # Enable in ros-desktop.dockerfile via -e install_xpra=true
+install_xpra: false # Enable in ros-desktop.Dockerfile via -e install_xpra=true
 
 # Agentic tools configuration
 install_agentic_tools: false

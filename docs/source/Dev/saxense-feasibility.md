@@ -115,18 +115,18 @@ session daemon, which is non-trivial on Ubuntu 24.04 / Raspberry Pi 5 — see
 
 ## Existing Dr.QP infrastructure fit
 
-| Asset                                      | Status     | Location                                                             |
-| ------------------------------------------ | ---------- | -------------------------------------------------------------------- |
-| udev rules for DualSense hidraw (USB + BT) | ✅ Present | `docker/ros/ansible/playbooks/roles/dualsense_hidapi/tasks/main.yml` |
-| `libhidapi-dev` installed                  | ✅ Present | same Ansible role                                                    |
-| Bluetooth pairing documented               | ✅ Present | `GettingStarted/ansible`                                             |
-| RPi 5 + Ubuntu 24.04 target documented     | ✅ Present | `GettingStarted/setting-up-raspberry-pi`                             |
-| Control-mode change decision point         | ✅ Present | `drqp_brain/joystick_translator_node.py`                             |
-| `ffmpeg` installed in runtime              | ❌ Missing | Not in Ansible playbooks                                             |
-| SAxense build step                         | ❌ Missing | Not in Ansible playbooks                                             |
-| Process lifecycle for SAxense              | ❌ Missing | No ROS 2 node or supervisor entry                                    |
-| Pre-recorded haptic WAV clips              | ❌ Missing | No assets                                                            |
-| Reconnect detection and re-spawn           | ❌ Missing | No implementation                                                    |
+| Asset                                      | Status     | Location                                                   |
+| ------------------------------------------ | ---------- | ---------------------------------------------------------- |
+| udev rules for DualSense hidraw (USB + BT) | ✅ Present | `docker/ros/ansible/roles/dualsense_hidapi/tasks/main.yml` |
+| `libhidapi-dev` installed                  | ✅ Present | same Ansible role                                          |
+| Bluetooth pairing documented               | ✅ Present | `GettingStarted/ansible`                                   |
+| RPi 5 + Ubuntu 24.04 target documented     | ✅ Present | `GettingStarted/setting-up-raspberry-pi`                   |
+| Control-mode change decision point         | ✅ Present | `drqp_brain/joystick_translator_node.py`                   |
+| `ffmpeg` installed in runtime              | ❌ Missing | Not in Ansible playbooks                                   |
+| SAxense build step                         | ❌ Missing | Not in Ansible playbooks                                   |
+| Process lifecycle for SAxense              | ❌ Missing | No ROS 2 node or supervisor entry                          |
+| Pre-recorded haptic WAV clips              | ❌ Missing | No assets                                                  |
+| Reconnect detection and re-spawn           | ❌ Missing | No implementation                                          |
 
 The udev rules in `99-dualsense.rules` already set `MODE="0666"` for both USB
 and Bluetooth hidraw paths — no permission changes are needed for SAxense.

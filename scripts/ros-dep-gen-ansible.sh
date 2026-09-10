@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-script_dir=$(dirname $0)
+script_dir=$(dirname "$0")
 source "$script_dir/__utils.sh"
 
 if [[ -z $ROS_DISTRO ]]; then
@@ -9,9 +9,11 @@ if [[ -z $ROS_DISTRO ]]; then
   exit 1
 fi
 
+# shellcheck source=/dev/null # Path depends on the selected ROS distribution
 source /opt/ros/"$ROS_DISTRO"/setup.bash
 
 keys=$(rosdep keys --from-paths "$sources_dir")
+# shellcheck disable=SC2086 # keys must word-split into one argument per key
 resolved_list=$(rosdep resolve $keys 2>/dev/null || true)
 
 # Array to store package names
@@ -41,10 +43,11 @@ if [[ ${#packages[@]} -eq 0 ]]; then
 fi
 
 # Sort packages
+# shellcheck disable=SC2207 # Package names carry no whitespace, so splitting is safe
 sorted_packages=($(for element in "${packages[@]}"; do echo "$element"; done | sort))
 
 # Create ansible vars directory
-ansible_vars_dir="$root_dir/docker/ros/ansible/playbooks/roles/ros_dependencies/vars/"
+ansible_vars_dir="$root_dir/docker/ros/ansible/roles/ros_dependencies/vars/"
 mkdir -p "$ansible_vars_dir"
 
 # Generate the variables file

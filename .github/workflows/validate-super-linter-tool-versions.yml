@@ -6,7 +6,7 @@ on:
       - .pre-commit-config.yaml
       - .github/workflows/reformat.yml
       - .github/workflows/validate-super-linter-tool-versions.yml
-      - docker/ros/ansible/playbooks/roles/dev_tools/defaults/main.yml
+      - docker/ros/ansible/roles/dev_tools/defaults/main.yml
       - scripts/super-linter-defaults.sh
       - scripts/super-linter-local.sh
       - scripts/validate-super-linter-tool-versions.sh
@@ -17,7 +17,7 @@ on:
       - .pre-commit-config.yaml
       - .github/workflows/reformat.yml
       - .github/workflows/validate-super-linter-tool-versions.yml
-      - docker/ros/ansible/playbooks/roles/dev_tools/defaults/main.yml
+      - docker/ros/ansible/roles/dev_tools/defaults/main.yml
       - scripts/super-linter-defaults.sh
       - scripts/super-linter-local.sh
       - scripts/validate-super-linter-tool-versions.sh
