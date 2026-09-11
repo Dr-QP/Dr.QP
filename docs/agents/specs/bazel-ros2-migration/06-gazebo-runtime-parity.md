@@ -57,10 +57,10 @@ Match `drqp_gazebo/test/CMakeLists.txt` exactly:
 
 ### Full group
 
-- `test_robot_control_balance_mode.py`;
+- `test_robot_control_stationary_posture.py`;
 - `test_balance_board_armed.py`;
 - `test_balance_board_motion_response.py`;
-- `test_imu_balance_motion.py`;
+- `test_locomotion_direction_reversal.py`;
 - movement backward, forward, sustained-forward, left, right, and rotation;
 - armed- and disarmed-posture verification.
 

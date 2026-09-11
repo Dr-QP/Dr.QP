@@ -178,7 +178,7 @@ class JoystickTranslatorNode(rclpy.node.Node):
         )
 
     def _toggle_balance_mode(self):
-        """Toggle dedicated balance mode without affecting walking input."""
+        """Toggle stationary posture mode without rewriting translator input."""
         self.balance_mode_enabled = not self.balance_mode_enabled
         self.balance_mode_pub.publish(std_msgs.msg.Bool(data=self.balance_mode_enabled))
 

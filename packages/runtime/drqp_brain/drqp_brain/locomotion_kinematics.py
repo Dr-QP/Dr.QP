@@ -37,7 +37,6 @@ from rclpy.exceptions import NotInitializedException
 from scipy.spatial.transform import Rotation
 from sensor_msgs.msg import JointState
 
-LOCOMOTION_FPS = 8
 WALKING_TRAJECTORY_POINTS = 2
 CLAMPING_EVENT_TICKS = 8
 LOCOMOTION_LEG_COUNT = 6
@@ -45,17 +44,22 @@ MOVEIT_IK_ATTEMPTS_PER_TARGET = 2
 MOVEIT_IK_CALLS_PER_TICK = (
     LOCOMOTION_LEG_COUNT * WALKING_TRAJECTORY_POINTS * MOVEIT_IK_ATTEMPTS_PER_TARGET
 )
-# All IK calls in one trajectory window must fit within half the loop period, so
-# the per-call timeout is the half-period budget divided evenly across the calls.
-MOVEIT_IK_TIMEOUT_SEC = (0.5 / LOCOMOTION_FPS) / MOVEIT_IK_CALLS_PER_TICK
-# Independent floor on the per-call solver time. The line above guarantees the
-# budget inequality by construction (it is a tautology), so instead guard the
-# thing that actually breaks when fps, leg count, trajectory points, or attempts
-# grow: the derived per-call timeout collapsing below what the IK solver needs to
-# converge. Tripping this assert means the control-loop budget can no longer
-# afford the configured number of IK calls at a viable timeout.
+DEFAULT_CONTROL_RATE_HZ = 25.0
 MIN_VIABLE_IK_TIMEOUT_SEC = 0.001
-assert MOVEIT_IK_TIMEOUT_SEC >= MIN_VIABLE_IK_TIMEOUT_SEC
+
+
+def _moveit_ik_timeout_for_control_rate(control_rate_hz: float) -> float:
+    """
+    Return a per-call MoveIt timeout that remains viable at supported rates.
+
+    Divide half the loop period evenly across calls, but never make an individual
+    MoveIt call so short that its solver cannot produce a viable result.
+    """
+    budget_timeout_sec = (0.5 / control_rate_hz) / MOVEIT_IK_CALLS_PER_TICK
+    return max(MIN_VIABLE_IK_TIMEOUT_SEC, budget_timeout_sec)
+
+
+MOVEIT_IK_TIMEOUT_SEC = _moveit_ik_timeout_for_control_rate(DEFAULT_CONTROL_RATE_HZ)
 BASE_FRAME = 'drqp/base_center_link'
 
 RCLPY_SHUTDOWN_ERRORS = (InvalidHandle, NotInitializedException, RCLError, RuntimeError)
@@ -138,12 +142,14 @@ class MoveItPyLocomotionKinematics:
         node,
         hexapod,
         is_shutting_down: Callable[[], bool],
+        control_rate_hz: float = DEFAULT_CONTROL_RATE_HZ,
         moveit_py_factory=None,
         robot_state_cls=None,
     ):
         self._node = node
         self._hexapod = hexapod
         self._is_shutting_down = is_shutting_down
+        self._ik_timeout_sec = _moveit_ik_timeout_for_control_rate(control_rate_hz)
         self._moveit_py_factory = moveit_py_factory
         self._robot_state_cls = robot_state_cls
         self._moveit_py = None
@@ -191,7 +197,7 @@ class MoveItPyLocomotionKinematics:
                 group_name,
                 pose,
                 tip_name,
-                MOVEIT_IK_TIMEOUT_SEC,
+                self._ik_timeout_sec,
             )
             if not solved:
                 # The warm seed (this leg's actual current joint state) can
@@ -209,7 +215,7 @@ class MoveItPyLocomotionKinematics:
                     group_name,
                     pose,
                     tip_name,
-                    MOVEIT_IK_TIMEOUT_SEC,
+                    self._ik_timeout_sec,
                 )
 
             if not solved:
@@ -650,6 +656,32 @@ class AnalyticLocomotionKinematics:
             validated=validated,
             clamped_legs=tuple(clamped_legs),
         )
+
+    def unreachable_legs(
+        self,
+        legs_and_targets,
+        body_transform=None,
+    ) -> tuple[str, ...]:
+        """Return every leg outside analytic workspace or joint limits."""
+        targets = list(legs_and_targets)
+        if not self.ready():
+            return tuple(dict.fromkeys(leg.label.name for leg, _ in targets))
+
+        original_body_transform = self._hexapod.body_transform
+        if body_transform is not None:
+            self._hexapod.body_transform = body_transform
+        try:
+            constrained_legs = []
+            for leg, foot_target in targets:
+                solution = leg.solve_ik(foot_target, clamp=False)
+                if (
+                    not solution.reachable or not solution.within_limits
+                ) and leg.label.name not in constrained_legs:
+                    constrained_legs.append(leg.label.name)
+            return tuple(constrained_legs)
+        finally:
+            if body_transform is not None:
+                self._hexapod.body_transform = original_body_transform
 
     def _install_joint_limits(self) -> bool:
         robot_description = self._robot_description()

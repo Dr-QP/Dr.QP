@@ -253,8 +253,8 @@ def test_control_mode_haptic_feedback_uses_working_rumble_channel(translator):
         assert feedback.intensity > 0.0
 
 
-def test_r1_toggles_balance_mode_independently_of_walking_issue356(translator):
-    """Issue 356: R1 should toggle a dedicated balance mode without replacing walking input."""
+def test_r1_toggles_posture_mode_without_rewriting_input_issue356(translator):
+    """Issue 356: R1 toggles posture mode without rewriting translator input."""
     balance_mode_pub = getattr(translator.node, 'balance_mode_pub', None)
     if balance_mode_pub is not None:
         for _ in range(10):

@@ -23,7 +23,7 @@ from unittest.mock import Mock
 
 from drqp_brain.locomotion_kinematics import (
     AnalyticLocomotionKinematics,
-    LOCOMOTION_FPS,
+    DEFAULT_CONTROL_RATE_HZ,
     MIN_VIABLE_IK_TIMEOUT_SEC,
     MOVEIT_IK_ATTEMPTS_PER_TARGET,
     MOVEIT_IK_CALLS_PER_TICK,
@@ -32,11 +32,12 @@ from drqp_brain.locomotion_kinematics import (
     MoveItPyStateValidator,
     WALKING_TRAJECTORY_POINTS,
 )
-from drqp_kinematics.geometry import Point3D
+from drqp_kinematics.geometry import AffineTransform, Point3D
 from drqp_kinematics.models import HexapodModel
 from drqp_kinematics.urdf_limits import model_to_urdf_angles
 import numpy as np
 import pytest
+from scipy.spatial.transform import Rotation
 from sensor_msgs.msg import JointState
 
 
@@ -55,17 +56,28 @@ def _all_joint_names(hexapod):
     ]
 
 
-def test_moveit_ik_timeout_fits_within_half_loop_period():
-    """Bound all IK calls in one trajectory window to half the loop period."""
+def test_moveit_ik_timeout_respects_budget_or_viable_floor():
+    """Keep the default timeout at its budget unless the viable floor is needed."""
     expected_calls_per_tick = 6 * WALKING_TRAJECTORY_POINTS * MOVEIT_IK_ATTEMPTS_PER_TARGET
     assert MOVEIT_IK_CALLS_PER_TICK == expected_calls_per_tick
-    # The per-call timeout is derived as budget / calls, so the budget inequality
-    # holds by construction. Assert instead that the derived timeout still leaves
-    # each IK call a viable solver time and that all calls consume the whole
-    # half-period budget (i.e. the timeout was derived from that budget, not a
-    # smaller literal).
+    # The analytic solver is now the runtime default; retain a viable timeout
+    # for the selectable MoveIt comparison backend even when the per-tick budget
+    # would otherwise make individual IK calls impractically short.
     assert MOVEIT_IK_TIMEOUT_SEC >= MIN_VIABLE_IK_TIMEOUT_SEC
-    assert MOVEIT_IK_CALLS_PER_TICK * MOVEIT_IK_TIMEOUT_SEC == pytest.approx(0.5 / LOCOMOTION_FPS)
+    assert MOVEIT_IK_TIMEOUT_SEC >= (0.5 / DEFAULT_CONTROL_RATE_HZ) / MOVEIT_IK_CALLS_PER_TICK
+
+
+@pytest.mark.parametrize('control_rate_hz', [DEFAULT_CONTROL_RATE_HZ, 100.0])
+def test_moveit_ik_timeout_never_drops_below_viable_floor(hexapod, control_rate_hz):
+    """Keep each MoveIt IK call viable at every supported control rate."""
+    helper = MoveItPyLocomotionKinematics(
+        node=Mock(),
+        hexapod=hexapod,
+        is_shutting_down=lambda: False,
+        control_rate_hz=control_rate_hz,
+    )
+
+    assert helper._ik_timeout_sec == pytest.approx(MIN_VIABLE_IK_TIMEOUT_SEC)
 
 
 def _robot_description_with_joint_limits(hexapod):
@@ -74,6 +86,25 @@ def _robot_description_with_joint_limits(hexapod):
         joints.append(
             f'<joint name="{joint_name}" type="revolute">'
             '<limit lower="-2.5" upper="2.5" effort="3" velocity="3"/>'
+            '</joint>'
+        )
+    return f'<robot name="drqp">{"".join(joints)}</robot>'
+
+
+def _robot_description_with_production_joint_limits(hexapod):
+    limits = {
+        'coxa': (-90.0, 90.0),
+        'femur': (-98.0, 90.0),
+        'tibia': (-80.0, 110.0),
+    }
+    joints = []
+    for joint_name in _all_joint_names(hexapod):
+        joint_type = joint_name.rsplit('_', maxsplit=1)[-1]
+        lower_deg, upper_deg = limits[joint_type]
+        joints.append(
+            f'<joint name="{joint_name}" type="revolute">'
+            f'<limit lower="{np.deg2rad(lower_deg)}" '
+            f'upper="{np.deg2rad(upper_deg)}" effort="3" velocity="3"/>'
             '</joint>'
         )
     return f'<robot name="drqp">{"".join(joints)}</robot>'
@@ -94,11 +125,13 @@ class FakeAnalyticStateValidator:
         return object(), self.failure_reason
 
 
-def _analytic_helper(hexapod, validator=None):
+def _analytic_helper(hexapod, validator=None, robot_description=None):
     node = Mock()
     node.get_logger.return_value = Mock()
     node._parameter_overrides = {
-        'robot_description': FakeParameter(_robot_description_with_joint_limits(hexapod))
+        'robot_description': FakeParameter(
+            robot_description or _robot_description_with_joint_limits(hexapod)
+        )
     }
     return AnalyticLocomotionKinematics(
         node=node,
@@ -150,6 +183,56 @@ def test_analytic_solver_clamps_only_unreachable_leg(hexapod):
         assert tuple(
             result.joint_targets[name] for name in helper.controller_joint_names(leg)
         ) == pytest.approx(expected_angles)
+
+
+def test_analytic_reachability_checks_every_leg_without_clamping(hexapod):
+    """Report all constrained stance legs using the unclamped analytic branch."""
+    helper = _analytic_helper(hexapod)
+    assert helper.ready()
+    legs = list(hexapod.legs)
+    targets = [(leg, leg.tibia_end.copy()) for leg in legs]
+    targets[0] = (targets[0][0], Point3D([10.0, 10.0, 10.0]))
+    targets[-1] = (targets[-1][0], Point3D([-10.0, -10.0, 10.0]))
+
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        solve_spies = []
+        for leg in hexapod.legs:
+            solve_spy = Mock(wraps=leg.solve_ik)
+            monkeypatch.setattr(leg, 'solve_ik', solve_spy)
+            solve_spies.append(solve_spy)
+
+        constrained = helper.unreachable_legs(targets)
+
+    assert constrained == (legs[0].label.name, legs[-1].label.name)
+    for solve_spy, (_, target) in zip(solve_spies, targets):
+        solve_spy.assert_called_once_with(target, clamp=False)
+
+
+@pytest.mark.parametrize(
+    ('roll', 'pitch'),
+    [
+        (+0.10, 0.0),
+        (-0.10, 0.0),
+        (0.0, +0.10),
+        (0.0, -0.10),
+        (+0.06, +0.06),
+        (+0.06, -0.06),
+        (-0.06, -0.06),
+        (-0.06, +0.06),
+    ],
+)
+def test_documented_stationary_tilt_envelope_is_reachable(hexapod, roll, pitch):
+    """Keep the documented default-stance envelope inside all production limits."""
+    helper = _analytic_helper(
+        hexapod,
+        robot_description=_robot_description_with_production_joint_limits(hexapod),
+    )
+    targets = [(leg, leg.tibia_end.copy()) for leg in hexapod.legs]
+    body_transform = AffineTransform.from_rotvec(
+        Rotation.from_euler('xyz', [roll, pitch, 0.0]).as_rotvec()
+    )
+
+    assert helper.unreachable_legs(targets, body_transform) == ()
 
 
 def test_analytic_solver_preserves_collision_validation_failure(hexapod):

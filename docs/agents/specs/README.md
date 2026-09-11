@@ -15,6 +15,7 @@ The specs are grouped into **programs** — independent bodies of work but not u
 | [`chatgpt-codex-auth-ci/`](chatgpt-codex-auth-ci/README.md)               | Decision record and private-only design for ChatGPT-managed Codex CI auth  | OpenAI CI/CD authentication guidance and workflow audit                   |
 | [`bazel-ros2-migration/`](bazel-ros2-migration/README.md)                 | Stage a Bazel build around ROS 2 Jazzy with colcon parity gates            | rules_ros2 Jazzy investigation and workspace build audit                  |
 | [`agent-devcontainer-migration/`](agent-devcontainer-migration/README.md) | Spike: rebuild the dev image on the extracted general-purpose base image   | `chocobot-farm/agent-devcontainer` extraction                             |
+| [`balance-mode-safety/`](balance-mode-safety/README.md)                   | Make balance a bounded stationary posture mode and stabilize its CI tests  | PR #443 slow-CI investigation                                             |
 
 ## Program relationships
 

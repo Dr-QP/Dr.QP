@@ -167,7 +167,7 @@
         "module": "pytest",
         "args": [
           // source ./scripts/setup.bash in the debug shell once it opens
-          "${workspaceFolder}/packages/simulation/drqp_gazebo/test/test_robot_control_balance_mode.py"
+          "${workspaceFolder}/packages/simulation/drqp_gazebo/test/test_robot_control_stationary_posture.py"
         ],
         "console": "integratedTerminal",
         "python": "/usr/bin/python3",

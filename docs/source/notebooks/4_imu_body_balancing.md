@@ -11,12 +11,14 @@ kernelspec:
   name: python3
 ---
 
-# 4. IMU-Based Body Balancing
+# 4. IMU-Based Stationary Body Posture
 
-This notebook documents the balancing loop added to the walking controller.
-When balance mode is enabled, the controller captures the current IMU-derived
-body tilt as the target orientation and holds that target while the feet stay in
-contact with sloped terrain.
+This notebook documents the stationary posture loop exposed through
+`/robot/balance_mode`. When the mode is enabled, the controller stops the gait,
+captures the current IMU-derived body tilt as its target, and holds that target
+with all six feet at their stationary stance targets. This is an attitude-only
+posture controller; it has no contact estimation or support-polygon awareness
+and must not be used for walking while balancing.
 
 ## Control idea
 
@@ -26,9 +28,9 @@ The balancing loop derives body attitude from the orientation reported on
 de-rotates that fixed mount rotation from the reported orientation to recover
 body roll/pitch, instead of looking up an IMU-to-base transform at runtime.
 
-The robot model already applies body rotation through the inverse-kinematics
-body transform, so balancing is implemented as a small correction added to the
-requested body rotation before each walking step:
+The robot model applies body rotation through the inverse-kinematics body
+transform, so posture hold is implemented as a roll/pitch correction from the
+captured target while operator body rotation remains suppressed:
 
 ```{code-cell} ipython3
 from drqp_brain.balance_controller import apply_imu_balance
@@ -45,9 +47,32 @@ apply_imu_balance(
 )
 ```
 
-The compensation keeps yaw commands untouched and only corrects roll and pitch
-relative to the captured target. Omitting `target_body_tilt` uses a level-to-world
-target.
+The compensation corrects only roll and pitch relative to the captured target.
+Omitting `target_body_tilt` uses a level-to-world target; the runtime always uses
+the captured target while stationary posture mode is active.
+
+## Safety contract and validated envelope
+
+- The robot must be armed (`torque_on`) and `/imu/data` must be fresh when the
+  mode is enabled. Unavailable or stale IMU data disables posture hold and
+  leaves semantic movement cleared.
+- Enabling the mode discards the active stride, yaw, body-translation, and user
+  body-rotation command and resets gait phase. Commands received while active
+  are ignored. Disabling the mode cannot replay them; walking requires a fresh
+  movement command.
+- Before solving, the complete correction is scaled by one scalar against
+  unclamped analytic IK for all six stationary foot targets. Workspace and URDF
+  joint limits are checked first; the normal MoveIt state validator still checks
+  the resulting complete state for self-collision.
+- For the default `0°, -35°, 130°` stance and production URDF limits, the
+  hardware-safe correction envelope (including margin) is **±0.10 rad on either
+  pure roll or pure pitch axis**, or **±0.06 rad per axis for simultaneous roll
+  and pitch**. These are body-correction angles, not a promise about terrain
+  slope or static stability.
+- Requests outside that envelope are reduced automatically for the current
+  stance. Saturation emits the throttled `drqp_brain` diagnostic
+  `stationary_balance_correction_saturated:<constrained legs>` with the applied
+  scale.
 
 ## Extracting body tilt
 
@@ -86,8 +111,11 @@ body_tilt_from_imu(Quaternion(x=qx, y=qy, z=qz, w=qw))
 
 ## Tuning notes
 
-- Roll and pitch compensation are applied relative to the captured target tilt
-  and clamped before they are applied to the body transform.
-- Yaw is left under operator control.
-- If IMU data becomes unavailable or stale, the walking controller falls back to
-  the requested body rotation without balance compensation.
+- `imu_balance_gain` and `imu_balance_max_tilt_rad` bound the requested
+  correction, but the six-leg reachability check is the final authority.
+- The validated envelope assumes the documented default stance. A translated
+  body or a different stance can have less margin, so the runtime recomputes the
+  scalar bound from the current stationary targets every tick.
+- This mode is fail-safe posture hold, not dynamic stabilization. Hardware use
+  still requires conservative speed, a clear area, and an operator-ready torque
+  cutoff.

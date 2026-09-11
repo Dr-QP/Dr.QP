@@ -20,7 +20,10 @@
 
 """Unit tests for the process exit-code verification helpers."""
 
-from drqp_launch_testing import assert_processes_exited_cleanly
+from drqp_launch_testing import (
+    assert_processes_exited_cleanly,
+    DEFAULT_SHUTDOWN_KILLED_PROCESSES,
+)
 from launch_testing.proc_info_handler import ProcInfoHandler
 import pytest
 
@@ -49,17 +52,17 @@ def _proc_info(*items: tuple[str, int]) -> ProcInfoHandler:
 
 
 def test_all_clean_exits_pass():
-    assert_processes_exited_cleanly(_proc_info(('drqp_brain', 0), ('robot_state_publisher', 0)))
+    assert_processes_exited_cleanly(_proc_info(('robot_state_publisher', 0), ('drqp_joy', 0)))
 
 
 def test_nonzero_unlisted_process_raises():
     with pytest.raises(AssertionError):
-        assert_processes_exited_cleanly(_proc_info(('drqp_brain', 5)))
+        assert_processes_exited_cleanly(_proc_info(('robot_state_publisher', 5)))
 
 
 def test_ignored_process_nonzero_is_tolerated():
-    # gazebo is SIGTERM'd on shutdown (-15) but allowlisted; drqp_brain must be clean.
-    assert_processes_exited_cleanly(_proc_info(('gazebo-2', -15), ('drqp_brain', 0)))
+    # gazebo is SIGTERM'd on shutdown (-15) but allowlisted; the publisher must be clean.
+    assert_processes_exited_cleanly(_proc_info(('gazebo-2', -15), ('robot_state_publisher', 0)))
 
 
 def test_only_ignored_processes_pass():
@@ -74,3 +77,11 @@ def test_custom_ignore_list():
     assert_processes_exited_cleanly(_proc_info(('flaky_thing', 3)), ignore=('flaky_thing',))
     with pytest.raises(AssertionError):
         assert_processes_exited_cleanly(_proc_info(('flaky_thing', 3)), ignore=('other',))
+
+
+def test_default_ignored_processes_tolerate_dirty_exits():
+    """Every default-ignored name may exit dirty, including the drqp_brain abort."""
+    for name in DEFAULT_SHUTDOWN_KILLED_PROCESSES:
+        assert_processes_exited_cleanly(
+            _proc_info((f'{name}-1', -6), ('robot_state_publisher', 0))
+        )
