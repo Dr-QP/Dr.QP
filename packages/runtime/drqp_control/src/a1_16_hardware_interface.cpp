@@ -108,7 +108,7 @@ hardware_interface::CallbackReturn a1_16_hardware_interface::on_init(
 
     for (const hardware_interface::ComponentInfo& sensor : info_.sensors) {
       for (const auto& stateInterface : sensor.state_interfaces) {
-        if (stateInterface.name == "voltage") {
+        if (stateInterface.name == "battery_voltage") {
           batteryParams_.sourceServoId =
             std::stoi(get_param(stateInterface.parameters, "servo_id"));
           batteryParams_.min = std::stod(stateInterface.min);
@@ -236,7 +236,7 @@ hardware_interface::return_type a1_16_hardware_interface::readBatteryVoltage()
       return hardware_interface::return_type::OK;
     }
     const double voltageValue = voltage / 16.0;
-    set_state("battery_state/voltage", voltageValue);
+    set_state("battery_state/battery_voltage", voltageValue);
     return hardware_interface::return_type::OK;
   } catch (const std::exception& e) {
     RCLCPP_ERROR_THROTTLE(
