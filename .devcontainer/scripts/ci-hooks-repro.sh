@@ -78,7 +78,18 @@ for hook in postCreate postStart postAttach; do
 done
 
 echo "=================== side effects ==================="
-if [[ -e .venv ]]; then
+# uv-sync.sh deliberately ends every successful run with a .venv symlink to
+# $UV_PROJECT_ENVIRONMENT, so a symlink is the expected state here and only a
+# real directory means uv built the environment inside the checkout.
+if [[ -L .venv ]]; then
+    target="$(readlink .venv)"
+    if [[ "$target" == "${UV_PROJECT_ENVIRONMENT:-}" ]]; then
+        echo "ok: .venv is the expected symlink -> $target"
+    else
+        echo "FAIL: .venv points at $target, expected ${UV_PROJECT_ENVIRONMENT:-<unset>}"
+        status=1
+    fi
+elif [[ -e .venv ]]; then
     echo "FAIL: uv wrote .venv into the checkout (UV_PROJECT_ENVIRONMENT unset)"
     status=1
 else
