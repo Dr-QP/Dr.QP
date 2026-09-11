@@ -30,7 +30,7 @@
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-workspace_dir="$(cd "$script_dir/.." && pwd)"
+workspace_dir="$(cd "$script_dir/../.." && pwd)"
 env_file="$workspace_dir/.tmp/keyring-session.env"
 keyring_dir="$HOME/.local/share/keyrings"
 login_keyring="$keyring_dir/login.keyring"

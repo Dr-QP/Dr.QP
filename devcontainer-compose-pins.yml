@@ -1,0 +1,14 @@
+# Digest pin for the container image this repository builds and publishes.
+#
+# Deliberately kept at the repository root, outside .devcontainer/ and docker/, so that a
+# digest-only bump does not match the `image` path filter in
+# .github/actions/paths-filter/action.yml. The image is rebuilt on every push to main
+# and the build is not bit-reproducible, so a pin living inside a filtered path would
+# retrigger the build that produced the digest and bump itself forever.
+#
+# Renovate manages the digest below through `.github/renovate.json`;
+# .devcontainer/docker-compose.yml carries the image tag-only, and
+# this file overrides it through `dockerComposeFile` in devcontainer.json.
+services:
+  devcontainer:
+    image: ghcr.io/dr-qp/jazzy-ros-desktop:edge@sha256:ae04d485aed03b3288323d70ea02c4875eaa00b444b37c206c96dbd69584f8b2

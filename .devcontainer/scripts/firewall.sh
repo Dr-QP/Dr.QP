@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ "$ENABLE_FIREWALL" != "true" ]; then
+if [ "${ENABLE_FIREWALL:-false}" != "true" ]; then
     echo "Firewall setup skipped (ENABLE_FIREWALL is not set to 'true')"
     exit 0
 fi
