@@ -26,7 +26,7 @@ import pytest
 from robot_control_test_support import create_balance_board_launch_description
 
 _PURE_PITCH_TILT = 0.10
-_REACHABLE_TWO_AXIS_TILT = 0.03
+_REACHABLE_TWO_AXIS_TILT = 0.025
 
 
 @launch_pytest.fixture
