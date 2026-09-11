@@ -4,8 +4,29 @@ Investigation into whether Dr.QP's development image should be rebuilt on top of
 [`chocobot-farm/agent-devcontainer`](https://github.com/chocobot-farm/agent-devcontainer),
 the general-purpose agent devcontainer extracted from this workspace.
 
-**Status:** spike complete, not scheduled. Implementation guidance in
+**Status:** partially superseded. Implementation guidance in
 [`01-base-image-migration.md`](01-base-image-migration.md).
+
+> **Read this first.** This spike was a one-shot investigation and has drifted:
+>
+> - The upstream organization is now **`plume-works`**, not `chocobot-farm`.
+>   Every URL and image name below that says `chocobot-farm` is stale.
+> - The template surface has since been adopted into this repository via the
+>   `/agentdev:template-consume` workflow. The live record of that adoption,
+>   including what is done and what is outstanding, is
+>   [`.agentdev-template-progress.md`](../../../../.agentdev-template-progress.md),
+>   and the adopted upstream ref is in the root `.agent.metadata.json`.
+> - **F7 (no rebuild trigger) is addressed**: `.github/renovate.json` now
+>   manages the digest in `devcontainer-compose-pins.yml` and carries a
+>   non-automerged rule for `ghcr.io/plume-works/agent-desktop`, ready for the
+>   rebase.
+> - **F8 (shared catalog) is resolved** via the plugin route it recommended:
+>   the general skills and agents now come from the installed `agentdev`
+>   catalog and have been deleted from `.claude/`.
+> - **Still outstanding:** the base-image rebase itself (F1–F6). Until it
+>   lands, this image ships no `iwe`, no `validate_agent_files` on PATH, and no
+>   `codebase-memory-mcp`, which is why several hooks are documented as
+>   failing locally.
 
 ## Verdict
 
