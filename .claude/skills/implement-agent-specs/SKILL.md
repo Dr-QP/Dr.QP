@@ -92,12 +92,12 @@ its spec path and base branch, tracks the resulting PR, and reports status.
    predecessor branches unchanged. Also review `origin/main...HEAD` to inventory
    every predecessor PR included in the branch.
 7. Stage only those files and create one conventional commit. Use the
-   [`git-commit`](../git-commit/SKILL.md) skill to derive the message from the staged
+   `/agentdev:git-commit` skill to derive the message from the staged
    diff.
 8. Push using local Git commands only. Never use a GitHub API or MCP tool to move
    branch refs or push branch contents. Then create a pull request with the
-   [`generate-pr-description`](../generate-pr-description/SKILL.md) and
-   [`open-pr`](../open-pr/SKILL.md) workflows. Tell `open-pr` that this
+   `/agentdev:pr-gen-description` and
+   `/agentdev:pr-open` workflows. Tell `/agentdev:pr-open` that this
    per-spec commit already exists; it must verify the committed scope rather
    than create a second commit. If branch synchronization or the final
    formatter pass creates new changes, `open-pr` owns the single follow-up

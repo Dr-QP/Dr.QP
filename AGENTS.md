@@ -10,7 +10,7 @@ NEVER use GitHub API or GitHub MCP tools to update branch refs or push branch co
 1. **Always use scripts/with-ros-env.sh** to run ROS commands like `colcon build` or `colcon test`
 2. **Use incremental builds** (`--packages-up-to <pkg>`) during development
 3. **Test specific packages** (`--packages-select <pkg>`) for rapid iteration
-4. **Escalate to a containerized environment when local ROS 2 is missing — never give up after a local failure.** If `colcon`/`ros2` is not found, or `scripts/with-ros-env.sh` fails because `/opt/ros/$ROS_DISTRO/setup.bash` does not exist, the host has no ROS 2 and retrying locally cannot succeed. Escalate in this order: (a) Docker daemon available (e.g. Cursor cloud sessions) → use the [microvm-sandbox](/.claude/skills/microvm-sandbox/SKILL.md) skill to run the command through `devcontainer exec`; (b) no Docker daemon (e.g. Codex Tasks) → use the [remote-codespace-session](/.claude/skills/remote-codespace-session/SKILL.md) skill to run it on a GitHub Codespace over SSH. Only report a blocker if both escalation paths are unavailable (e.g. no `gh` auth)
+4. **Escalate to a containerized environment when local ROS 2 is missing — never give up after a local failure.** If `colcon`/`ros2` is not found, or `scripts/with-ros-env.sh` fails because `/opt/ros/$ROS_DISTRO/setup.bash` does not exist, the host has no ROS 2 and retrying locally cannot succeed. Escalate in this order: (a) Docker daemon available (e.g. Cursor cloud sessions) → use the `/agentdev:microvm-sandbox` skill to run the command through `devcontainer exec`; (b) no Docker daemon (e.g. Codex Tasks) → use the `/agentdev:remote-codespace-session` skill to run it on a GitHub Codespace over SSH. Both forward the command verbatim, so keep `scripts/with-ros-env.sh` as part of the command you pass them (e.g. `scripts/with-ros-env.sh python3 -m colcon build --packages-up-to <pkg>`). Only report a blocker if both escalation paths are unavailable (e.g. no `gh` auth)
 5. **Only run full builds/tests** when explicitly requested
 6. **Collect test output** from `log/latest_test/<package_name>/stdout_stderr.log` or `streams.log` (timestamped) in same folder.
 7. **Check build logs** in `log/latest_build/` if builds fail
@@ -24,7 +24,7 @@ NEVER use GitHub API or GitHub MCP tools to update branch refs or push branch co
 
 ### When in Doubt
 
-Consult the **[Principal Engineer](/.claude/agents/principal-engineer.agent.md)** agent for architecture, design decisions, and implementation strategies.
+Consult the **`agentdev:Principal Engineer`** agent for architecture, design decisions, and implementation strategies. It is supplied by the installed `agentdev` catalog, along with the TDD Red/Green/Refactor agents it orchestrates.
 
 ## Coding Conventions
 
@@ -60,11 +60,15 @@ Consult the **[Principal Engineer](/.claude/agents/principal-engineer.agent.md)*
 
 ## Catalog Locations
 
-- **Claude** (canonical source of truth): `.claude/agents/`, `.claude/skills/`
-- **Codex**: `.codex/agents/` (trampolines to `.claude/agents/`), `.codex/skills/` (symlink to `.claude/skills/`)
-- **Cursor**: `.cursor/agents/`, `.cursor/skills/` (symlinks to `.claude/`)
+General-purpose skills and agents — PR workflow, git, code review, skill and agent authoring, sandbox escalation — come from the installed **`agentdev`** catalog and are invoked under the `agentdev:` prefix (`/agentdev:pr-review`, the `agentdev:Principal Engineer` agent). They are not vendored into this repository; the devcontainer image stages the catalog and the post-create hooks install it. Do not re-add a local copy of a skill the catalog already provides — a same-named local skill shadows it and the two drift.
 
-Update `.claude` sources; symlinks pick up changes automatically. When adding or renaming an agent, or editing its description, also update its `.codex/agents/` trampoline to match (CI enforces this via `validate_agent_files`).
+This repository owns only the ROS- and project-specific catalog:
+
+- **Claude** (canonical source of truth): `.claude/skills/` (`ros2-*`, `launch-testing`, `create-ros2-package-*`, `python-format-lint`, …)
+- **Codex**: `.codex/skills/` (symlink to `.claude/skills/`)
+- **Cursor**: `.cursor/skills/` (symlink to `.claude/`)
+
+Update `.claude` sources; symlinks pick up changes automatically. Use `/agentdev:create-skill` to add one, and `validate_agent_files` to check it.
 
 \*\*Edit `AGENTS.md`; `CLAUDE.md` only includes it (`@AGENTS.md`), so changes there cover all agents.
 
