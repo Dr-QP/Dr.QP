@@ -91,3 +91,37 @@ repos:
         language: system
         files: '\.claude/skills/.*/SKILL\.md$'
         pass_filenames: true
+
+      # `uv run` for the same reason as validate-agent-files above: the gate
+      # must read the working-tree plans being committed. It audits the whole
+      # plans directory rather than the staged subset, so it takes no filenames.
+      - id: plan-checkboxes
+        name: plan-checkboxes
+        entry: uv run pytest docs/knowledge/tests
+        language: system
+        files: '^docs/knowledge/data/plans/.*\.md$'
+        pass_filenames: false
+
+      # Mirrors the Knowledge base validation workflow. Hooks read the whole graph
+      # from the repo root, so they take no filenames and trigger on any
+      # graph-affecting change under docs/knowledge/ or .iwe/.
+      #
+      # Both need `iwe` on PATH. The dev image does not ship it yet, so these
+      # hooks fail locally until it is rebased on agent-desktop; CI installs iwe
+      # itself. See docs/agents/specs/agent-devcontainer-migration/.
+      - id: iwe-schema-validate
+        name: iwe-schema-validate
+        entry: iwe schema validate
+        language: system
+        files: '^(docs/knowledge/.*\.md|\.iwe/.*)$'
+        pass_filenames: false
+
+      # normalize rewrites files in place and returns 0 even after changing files;
+      # git diff --exit-code turns drift into failure while leaving normalized files
+      # staged-out for review and re-add, matching CI's no-op check.
+      - id: iwe-normalize
+        name: iwe-normalize
+        entry: bash -c 'iwe normalize && git diff --exit-code'
+        language: system
+        files: '^(docs/knowledge/.*\.md|\.iwe/.*)$'
+        pass_filenames: false

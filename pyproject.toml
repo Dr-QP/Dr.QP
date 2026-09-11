@@ -60,6 +60,7 @@ default-groups = ["dev", "docs"]
 # Workspace-level suites only. ROS package tests run through colcon, not a bare
 # `pytest` from the root; see AGENTS.md and the ros2-workspace-testing skill.
 testpaths = [
+  "docs/knowledge/tests",
   "py_packages",
 ]
 markers = [
