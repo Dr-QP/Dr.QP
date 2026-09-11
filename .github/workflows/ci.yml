@@ -268,8 +268,8 @@ jobs:
             packages/vendor/**
 
       - name: Test Summary
+        if: ${{ always() }}
         uses: ./.github/actions/publish-test-results
-        if: ${{ !cancelled() }}
         with:
           codecov-token: ${{ secrets.CODECOV_TOKEN }}
           logs-artifact-name: colcon-logs-${{ matrix.arch }}
@@ -376,7 +376,7 @@ jobs:
             DRQP_TEST_MODE=${{ matrix.sim_test_mode }}
 
       - name: Publish devcontainer test results
-        if: ${{ !cancelled() }}
+        if: ${{ always() }}
         uses: ./.github/actions/publish-test-results
         with:
           codecov-token: ${{ secrets.CODECOV_TOKEN }}
