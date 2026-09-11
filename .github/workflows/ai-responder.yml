@@ -52,7 +52,8 @@ jobs:
            contains(github.event.issue.title, '@claude') ||
            contains(github.event.issue.body, '@codex') ||
            contains(github.event.issue.title, '@codex'))) ||
-        github.event_name == 'pull_request'
+        (github.event_name == 'pull_request' &&
+          github.event.pull_request.user.type != 'Bot')
       )
     runs-on: ubuntu-24.04
     permissions:

@@ -20,6 +20,19 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  # Comma-separated bot logins whose pull requests may merge without an AI
+  # review. Matched exactly, and only for authors whose user.type is "Bot".
+  #
+  # This is deliberately a list rather than a blanket "author is a bot" test.
+  # The responder does not auto-review any bot-authored PR; waiving the
+  # *requirement* is a separate statement of trust, so it is spelled out.
+  # Routine dependency bumps merge unreviewed; a PR from any other bot stays
+  # blocked until a maintainer asks for a review with an `@claude review`
+  # comment, which arrives under their own account.
+  #
+  # Widening this to every bot hands a green required check to any app that can
+  # open a pull request.
+  TRUSTED_BOT_ACTORS: 'renovate[bot]'
 
 permissions:
   contents: read
@@ -59,6 +72,23 @@ jobs:
             //   core.info('Draft PR, skipping');
             //   return;
             // }
+
+            // Waive the requirement for explicitly trusted bots. Checked before
+            // any polling so a dependency bump does not sit for the full
+            // 8-minute deadline waiting for a review that is never requested.
+            const trustedBotActors = new Set(
+              (process.env.TRUSTED_BOT_ACTORS ?? '')
+                .split(',')
+                .map((login) => login.trim())
+                .filter(Boolean)
+            );
+            const author = pr.user?.login;
+            if (pr.user?.type === 'Bot' && trustedBotActors.has(author)) {
+              core.info(
+                `Author ${author} is a trusted bot; AI review is not required for this PR.`
+              );
+              return;
+            }
 
             const pullRequest = {
               owner: context.repo.owner,
