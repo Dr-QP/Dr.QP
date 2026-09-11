@@ -28,13 +28,13 @@ can start, BUT the `devcontainers/ci` step will work on a different
 file system from all the other steps in the job, running it with `act`
 will be ssibly pointless.
 
-*Not sure how \`\`act\`\` should handle these kind of scenarios, but maybe
+_Not sure how \`\`act\`\` should handle these kind of scenarios, but maybe
 if instead of copying the workspace into its container it could create a
 temporary copy of the workspace and the necessary files (like
 \`\`/var/run/act/workflow/\`\`) on the host file system. Then could bind
 mount this copy into all of the containers created for the given job run
 and all the steps of the job would work on the same copied workspace on
-the host file system.*
+the host file system._
 
 ## Docker in Docker (DinD) and (Docker outside of Docker DooD)
 

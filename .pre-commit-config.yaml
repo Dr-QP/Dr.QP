@@ -45,10 +45,10 @@ repos:
     rev: v0.15.0
     hooks:
       - id: ruff-format
-      - id: ruff # lint
+      # `I` (isort) is in ruff.toml's select list, so this single pass also
+      # sorts imports. Mirrors what Super-Linter runs in CI.
+      - id: ruff
         args: [--fix]
-      - id: ruff # isort
-        args: [--fix, --select, I]
 
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.11.0.1
@@ -80,9 +80,14 @@ repos:
         pass_filenames: true
         files: '(docs/source/notebooks/.*\.md)$'
 
+      # `uv run` while py_packages/validate_agent_files is still the working-tree
+      # source. Once the dev image is rebased on agent-desktop it ships a
+      # `validate_agent_files` on PATH, and this becomes a bare
+      # `entry: validate_agent_files` with that package deleted — see
+      # docs/agents/specs/agent-devcontainer-migration/.
       - id: validate-agent-files
         name: validate-agent-files
         entry: uv run validate_agent_files
         language: system
-        files: '(\.claude/skills/.*/SKILL\.md|\.claude/agents/.*\.agent\.md|\.codex/agents/.*\.md)$'
+        files: '\.claude/skills/.*/SKILL\.md$'
         pass_filenames: true

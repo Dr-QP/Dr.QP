@@ -1,5 +1,5 @@
 # https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/customizing-your-advanced-setup-for-code-scanning#using-a-custom-configuration-file
-name: "CodeQL Configuration"
+name: 'CodeQL Configuration'
 disable-default-queries: true
 
 packs:
@@ -17,4 +17,4 @@ query-filters:
 
 # Note: C/C++ does not support path-based filtering when using the manual build mode. The "paths" and "paths-ignore" configuration properties will have no effect for this language. If desired, you can use the advanced-security/filter-sarif Action to rewrite the SARIF file to exclude alerts from these paths. For more information, see https://github.com/advanced-security/filter-sarif **
 paths-ignore:
-  - "**/node_modules/**"
+  - '**/node_modules/**'

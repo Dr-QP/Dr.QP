@@ -7,6 +7,7 @@ Dr.QP has been designed in Autodesk Fusion 360 and is available for download und
 The full robot design is available in [Fusion 360 web viewer](https://a360.co/4hMiK1E).
 
 ```{image} https://github.com/user-attachments/assets/2f102f28-425b-4f2a-b235-58e136ed7659
+
 ```
 
 ## Downloads
