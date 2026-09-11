@@ -1,0 +1,136 @@
+name: AI review status
+description: >-
+  Report whether a pull request carries an accepted AI review, evaluated once
+  with no waiting.
+
+  Acceptance rule: the pull request has been reviewed, not that its current
+  head has been. A push after a review does not re-open it; the author
+  refreshes a stale review by commenting `@claude review`. A review per commit
+  would be prohibitively expensive, so this is deliberate.
+
+inputs:
+  pr-number:
+    description: Pull request number to inspect
+    required: true
+  github-token:
+    description: GitHub token used to read reviews and reactions
+    required: true
+  trusted-bot-actors:
+    description: >-
+      Comma-separated bot logins whose pull requests need no AI review.
+      Matched exactly, and only for authors whose user.type is "Bot".
+      Widening this to every bot hands a green required check to any app that
+      can open a pull request.
+    required: false
+    default: ''
+
+outputs:
+  found:
+    description: "'true' when the pull request satisfies the acceptance rule"
+    value: ${{ steps.check.outputs.found }}
+  reason:
+    description: One line naming what satisfied the rule, or why nothing did
+    value: ${{ steps.check.outputs.reason }}
+
+runs:
+  using: composite
+  steps:
+    - name: Evaluate AI review acceptance
+      id: check
+      uses: actions/github-script@v9.0.0
+      env:
+        PR_NUMBER: ${{ inputs.pr-number }}
+        TRUSTED_BOT_ACTORS: ${{ inputs.trusted-bot-actors }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const pullRequest = {
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: Number(process.env.PR_NUMBER),
+          };
+          if (!Number.isInteger(pullRequest.pull_number) || pullRequest.pull_number <= 0) {
+            throw new Error(`pr-number must be a positive integer, got ${JSON.stringify(process.env.PR_NUMBER)}`);
+          }
+
+          const report = (found, reason) => {
+            core.info(reason);
+            core.setOutput('found', String(found));
+            core.setOutput('reason', reason);
+          };
+
+          const trustedBotActors = (process.env.TRUSTED_BOT_ACTORS ?? '')
+            .split(',')
+            .map((login) => login.trim())
+            .filter(Boolean);
+          const { data: pr } = await github.rest.pulls.get(pullRequest);
+          if (pr.user?.type === 'Bot' && trustedBotActors.includes(pr.user.login)) {
+            report(true, `Pull request authored by ${pr.user.login} (bot); AI review is not required.`);
+            return;
+          }
+
+          // The rule asserts that the PR has been reviewed, not that its
+          // current head has been. Do not compare review.commit_id against the
+          // head SHA: that would be a policy change, not a bug fix.
+          const codexLogins = new Set(['chatgpt-codex-connector[bot]']);
+          const claudeLogins = new Set(['claude[bot]', 'github-actions[bot]']);
+          const acceptedReviewStates = new Set(['approved', 'changes_requested', 'commented']);
+
+          const reviewLogin = (review) => review?.user?.login;
+          const reviewState = (review) => review?.state?.toLowerCase();
+          const isAcceptedReview = (logins) => (review) =>
+            logins.has(reviewLogin(review)) && acceptedReviewStates.has(reviewState(review));
+          const isCodexReview = isAcceptedReview(codexLogins);
+          const isClaudeReview = isAcceptedReview(claudeLogins);
+          const isCodexApprovalReaction = (reaction) =>
+            codexLogins.has(reaction?.user?.login) && reaction?.content === '+1';
+
+          const reviews = await github.paginate(github.rest.pulls.listReviews, {
+            ...pullRequest,
+            per_page: 100,
+          });
+          core.info(
+            `Observed PR reviews: ${reviews
+              .map((review) => `${reviewLogin(review) ?? 'unknown'}:${review.state}:${review.commit_id}`)
+              .join(', ') || 'none'}`
+          );
+
+          const latest = (predicate) => [...reviews].reverse().find(predicate);
+          const describe = (label, review) =>
+            `Found accepted ${label} review by ${review.user.login} for ${review.commit_id} with state ${review.state}.`;
+
+          const codexReview = latest(isCodexReview);
+          if (codexReview) {
+            report(true, describe('Codex', codexReview));
+            return;
+          }
+          const claudeReview = latest(isClaudeReview);
+          if (claudeReview) {
+            report(true, describe('Claude', claudeReview));
+            return;
+          }
+
+          const reactions = await github.paginate(github.rest.reactions.listForIssue, {
+            owner: pullRequest.owner,
+            repo: pullRequest.repo,
+            issue_number: pullRequest.pull_number,
+            per_page: 100,
+          });
+          core.info(
+            `Observed PR reactions: ${reactions
+              .map((reaction) => `${reaction.user?.login ?? 'unknown'}:${reaction.content}:${reaction.created_at}`)
+              .join(', ') || 'none'}`
+          );
+          const reaction = reactions.find(isCodexApprovalReaction);
+          if (reaction) {
+            report(
+              true,
+              `Found accepted Codex review marker by ${reaction.user.login}: ${reaction.content} reaction created at ${reaction.created_at}.`
+            );
+            return;
+          }
+
+          report(
+            false,
+            'No AI review found. Expected a review from Claude (claude[bot] or github-actions[bot]) or Codex (chatgpt-codex-connector[bot] review or +1 reaction).'
+          );
