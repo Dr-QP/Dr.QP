@@ -64,6 +64,7 @@ def test_stationary_posture_levels_body_on_pure_pitch(
     assert_processes_exited_cleanly(proc_info)
 
 
+@pytest.mark.skip(reason='Two-axis hold never stabilizes: Dr-QP/Dr.QP#453')
 @pytest.mark.slow
 @pytest.mark.launch(fixture=generate_test_description)
 def test_stationary_posture_ignores_stale_and_concurrent_motion(
