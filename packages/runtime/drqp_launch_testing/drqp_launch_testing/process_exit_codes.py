@@ -52,10 +52,13 @@ from launch_testing.proc_info_handler import ProcInfoHandler
 
 # Processes excluded from the clean-exit assertion by default, for two reasons:
 # the Dr.QP simulation/MoveIt launch files tear most of them down with SIGTERM, and
-# ``drqp_brain`` aborts (SIGABRT) during rclpy/MoveItPy teardown often enough that no
-# reliable fix has been found. Membership is by substring match against the process
-# name. The list is validated by the slow Gazebo/MoveIt CI suites that actually
-# exercise process teardown.
+# the Python nodes die inside rclpy teardown often enough that no reliable fix has
+# been found - ``drqp_brain`` on SIGABRT, ``drqp_robot_state`` on a take_message
+# conversion error. Membership is by substring match against the process name, so
+# entries must stay specific enough not to shadow a process that is still checked
+# (``drqp_robot_state`` must not become ``robot_state``, which would also match
+# ``robot_state_publisher``). The list is validated by the slow Gazebo/MoveIt CI
+# suites that actually exercise process teardown.
 DEFAULT_SHUTDOWN_KILLED_PROCESSES = (
     'gazebo',
     'gz',
@@ -63,6 +66,7 @@ DEFAULT_SHUTDOWN_KILLED_PROCESSES = (
     'move_group',
     'spawner',
     'drqp_brain',
+    'drqp_robot_state',
 )
 
 
@@ -93,9 +97,9 @@ def assert_processes_exited_cleanly(
     Assert every recorded process exited cleanly, ignoring the known dirty exits.
 
     Processes whose name contains any token in ``ignore`` are excluded (the
-    simulator and MoveIt processes the launch file kills with SIGTERM, plus
-    ``drqp_brain``, which aborts on teardown). All remaining processes must have
-    exited with code 0.
+    simulator and MoveIt processes the launch file kills with SIGTERM, plus the
+    Python nodes that die inside rclpy teardown). All remaining processes must
+    have exited with code 0.
     """
     filtered = ProcInfoHandler()
     for name in proc_info.process_names():
