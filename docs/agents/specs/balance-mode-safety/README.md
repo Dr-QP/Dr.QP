@@ -76,13 +76,15 @@ post-solve joint clamping.
 | P0       | Resolved | Slow Gazebo tests have no outer CTest deadline below the job timeout.  |
 | P0       | Resolved | Walking-plus-balance is asserted although it is not a supported mode.  |
 | P1       | Resolved | Static balance can persistently clamp legs at the tested tilt.         |
-| P1       | Resolved | Automatic Gazebo parallelism makes physics timing and motion unstable. |
+| P1       | Open     | Automatic Gazebo parallelism makes physics timing and motion unstable. |
 | P1       | Resolved | Test diagnostics still describe legacy MoveIt IK behavior.             |
 | P2       | Resolved | Eight full-simulation tilt cases duplicate axis/sign math coverage.    |
 
 ## Recommended implementation order
 
-1. Constrain slow Gazebo CI and retries. **Completed on this branch.**
+1. Constrain slow Gazebo CI and retries. **Partially completed on this branch.** The outer
+   CTest deadline and the retry policy landed; CTest parallelism is left unconstrained, so the
+   P1 parallelism issue stays open.
 2. Make balance mode stationary and reachability-bounded. **Completed on this branch.**
 3. Retire stale movement regressions and update diagnostics. **Completed on this branch.**
 

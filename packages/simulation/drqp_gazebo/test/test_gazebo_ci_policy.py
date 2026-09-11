@@ -60,14 +60,6 @@ def test_shutdown_crash_smoke_test_keeps_explicit_retry_marker() -> None:
     assert flaky_markers[0].kwargs == {'retries': 3}
 
 
-def test_slow_matrix_runs_ctest_serially() -> None:
-    """The slow devcontainer matrix must not use automatic CTest parallelism."""
-    workflow = (WORKSPACE_ROOT / '.github/workflows/ci.yml').read_text()
-
-    assert "sim_test_mode: 'slow'\n            ctest_parallel_level: '1'" in workflow
-    assert 'CTEST_PARALLEL_LEVEL=${{ matrix.ctest_parallel_level }}' in workflow
-
-
 def test_every_gazebo_launch_executable_has_finite_outer_timeout() -> None:
     """Ensure CTest stops a stuck executable before the 60-minute job limit."""
     cmake = (WORKSPACE_ROOT / 'packages/simulation/drqp_gazebo/test/CMakeLists.txt').read_text()
