@@ -19,7 +19,7 @@ if ! command -v codebase-memory-mcp &>/dev/null; then
   exit 0
 fi
 
-if [[ -z $CBM_CACHE_DIR ]]; then
+if [[ -z ${CBM_CACHE_DIR:-} ]]; then
   echo "CBM_CACHE_DIR is required for codebase-memory-mcp install; it is not set in this container." >&2
   exit 1
 fi

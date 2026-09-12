@@ -100,7 +100,7 @@ its spec path and base branch, tracks the resulting PR, and reports status.
    `/agentdev:pr-open` workflows. Tell `/agentdev:pr-open` that this
    per-spec commit already exists; it must verify the committed scope rather
    than create a second commit. If branch synchronization or the final
-   formatter pass creates new changes, `open-pr` owns the single follow-up
+   formatter pass creates new changes, `pr-open` owns the single follow-up
    formatting commit before it publishes the PR.
 
 ## Main-Targeted Pull Requests
