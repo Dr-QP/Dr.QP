@@ -8,6 +8,7 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 import os
 from typing import Any, Dict
+
 from sphinx.application import Sphinx
 
 # -- Project information

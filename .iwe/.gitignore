@@ -1,0 +1,7 @@
+iwe.log
+.DS_Store
+*.db
+snapshots/
+HEAD
+ACTIVE_HEAD
+last_refresh

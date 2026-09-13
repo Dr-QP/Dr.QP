@@ -1,0 +1,125 @@
+version = 3
+
+[markdown]
+refs_extension = ".md"
+date_format = "%b %d, %Y"
+
+[markdown.formatting]
+wrap_column = 80
+
+[library]
+# Documents live under docs/knowledge/ rather than at the repo root so that
+# .iwe/ itself stays at the repo root, where the IWE VS Code extension expects
+# it when the whole repo is opened as the workspace. iwe must always be
+# invoked with CWD at the repo root (it does not search upward for .iwe/, nor
+# does it accept a --root flag); this path is what lets document keys stay
+# short (e.g. docs/knowledge/data/plans/mvp) instead of docs/knowledge/docs/knowledge/data/plans/mvp.
+path = "docs/knowledge"
+date_format = "%Y-%m-%d"
+frontmatter_document_title = "title"
+
+[search]
+language = "english"
+
+[completion]
+
+[templates.default]
+key_template = "{{slug}}"
+document_template = """
+# {{title}}
+
+{{content}}"""
+
+[actions.extract]
+type = "extract"
+title = "Extract"
+link_type = "markdown"
+key_template = "{{id}}"
+
+[actions.link]
+type = "link"
+title = "Link"
+link_type = "markdown"
+key_template = "{{id}}"
+
+[actions.inline_section]
+type = "inline"
+title = "Inline section"
+inline_type = "section"
+keep_target = false
+
+[actions.sort]
+type = "sort"
+title = "Sort A-Z"
+reverse = false
+
+# Document-schema bindings. Each entry names a schema file in .iwe/schemas/<name>.yaml
+# and a key-glob that binds it. Bindings are BY PATH, not by frontmatter fields,
+# and are relative to [library].path above (docs/knowledge), not to the repo
+# root or to .iwe/ itself. The extension-less hub keys (docs/knowledge/data/plans, docs/knowledge/data/bugs,
+# ...) match none of these globs, so hub documents stay unvalidated by design.
+# Run: iwe schema validate  (--explain shows the binding trace).
+
+[schemas.plan]
+match = "data/plans/**"
+
+[schemas.feature]
+match = "data/features/**"
+
+[schemas.bug]
+match = "data/bugs/**"
+
+[schemas.release]
+match = "data/releases/**"
+
+[schemas.task]
+match = "data/backlog/**"
+
+[schemas.codebase]
+match = "data/codebase/**"
+
+[schemas.spec]
+match = "data/spec/**"
+
+[schemas.architecture]
+match = "data/architecture/**"
+
+[schemas.concept]
+match = "data/concept/**"
+
+[schemas.someday]
+match = "data/someday/**"
+
+# Directory hubs. OKF conformance requires every non-reserved document under the
+# bundle to carry a type, so the hubs are typed and validated too — the earlier
+# "hubs stay unvalidated by design" exemption is deliberately retired.
+[schemas.hub]
+match = [
+  "data/architecture",
+  "data/backlog",
+  "data/bugs",
+  "data/codebase",
+  "data/concept",
+  "data/features",
+  "data/plans",
+  "data/releases",
+  "data/someday",
+  "data/spec",
+]
+
+[schemas.tracker]
+match = ["data/product", "data/milestone", "data/template-adoption"]
+
+# OKF v0.2 conformance (SPEC §11). okf stacks on top of the per-type schemas and
+# catches any document arriving without a type; okf-index and okf-log check the
+# body shapes of the reserved files, which a frontmatter-only check cannot see.
+# The bundle root is data/, so these bind under data/ only. The reserved
+# index/log files are unbound via negated patterns.
+[schemas.okf]
+match = ["data/**", "!data/index", "!data/**/index", "!data/log", "!data/**/log"]
+
+[schemas.okf-index]
+match = ["data/index", "data/**/index"]
+
+[schemas.okf-log]
+match = ["data/log", "data/**/log"]

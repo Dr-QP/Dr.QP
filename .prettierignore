@@ -1,2 +1,12 @@
 docker/ros/ansible/**/*.yml
 docker/ros/ansible/**/*.yaml
+
+# Vendored upstream sources, kept byte-faithful against their recorded
+# source-info.yaml so the local patch stays reviewable against upstream.
+packages/vendor/
+
+# docs/knowledge is normalized by `iwe normalize` (enforced in
+# validate-knowledge-base.yml), which disagrees with prettier on markdown
+# emphasis style; letting both fight over the same files makes every commit
+# re-flip the formatting.
+docs/knowledge/**

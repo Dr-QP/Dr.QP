@@ -1,4 +1,0 @@
-interface:
-  display_name: 'Merge PR Chain'
-  short_description: 'Merge a linear GitHub PR stack safely'
-  default_prompt: 'Use $pr-merge-chain to merge this stacked pull-request chain.'

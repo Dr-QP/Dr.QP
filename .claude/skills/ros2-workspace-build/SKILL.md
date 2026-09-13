@@ -47,7 +47,6 @@ under `packages/`; discover it with `rg --files packages -g package.xml` rather
 than assuming `packages/runtime/`.
 
 If the wrapper reports that ROS is unavailable on the host, run the same
-command via [microvm-sandbox](../microvm-sandbox/SKILL.md) when Docker is
-available; otherwise use
-[remote-codespace-session](../remote-codespace-session/SKILL.md). Do not retry
-the command locally.
+command via `/agentdev:microvm-sandbox` when Docker is available; otherwise
+use `/agentdev:remote-codespace-session`. Both forward the command verbatim, so
+keep `scripts/with-ros-env.sh` in it. Do not retry the command locally.

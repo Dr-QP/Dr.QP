@@ -57,6 +57,12 @@ package = false
 default-groups = ["dev", "docs"]
 
 [tool.pytest.ini_options]
+# Workspace-level suites only. ROS package tests run through colcon, not a bare
+# `pytest` from the root; see AGENTS.md and the ros2-workspace-testing skill.
+testpaths = [
+  "docs/knowledge/tests",
+  "py_packages",
+]
 markers = [
   "slow: marks tests that exercise long-running or integration-heavy behavior",
 ]

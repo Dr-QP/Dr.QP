@@ -46,6 +46,42 @@ Read `log/latest_test/<package_name>/stdout_stderr.log` or `streams.log` for a
 failing package. Use `PYTEST_ADDOPTS=-rA` only when output from passing pytest
 or `launch_pytest` tests is needed.
 
+## Reproduce a CI test failure locally
+
+CI uploads the colcon logs and xUnit reports as run artifacts. Download them
+before reproducing, so the local run is checking the same failure:
+
+```bash
+gh api repos/<owner>/<repo>/actions/runs/<run-id>/artifacts \
+  | grep -o '"name":"[^"]*"' | grep 'colcon-'
+
+gh run download <run-id> --repo <owner>/<repo> \
+  -n colcon-logs-<arch> -n colcon-test-reports-<arch> \
+  -D ./.tmp/actions-run-<run-id>
+```
+
+Artifact names are `colcon-logs-<arch>` and `colcon-test-reports-<arch>`.
+Inspect the downloaded xUnit XML and colcon log directories first, then
+reproduce the specific package:
+
+```bash
+scripts/with-ros-env.sh colcon test --packages-select <package_name>
+scripts/with-ros-env.sh colcon test-result --verbose
+```
+
+For a coverage regression flagged in review, rebuild with coverage enabled
+before re-testing:
+
+```bash
+scripts/with-ros-env.sh colcon build --packages-up-to <package_name> \
+  --cmake-args -DDRQP_ENABLE_COVERAGE=ON
+scripts/with-ros-env.sh colcon test --packages-select <package_name> \
+  --mixin coverage-pytest
+```
+
+Use the `/agentdev:extract-github-actions-logs` skill to resolve a run or job
+URL into the `gh` commands that fetch its logs.
+
 ## Python test conventions
 
 Write ROS Python tests with pytest and fixtures. For launch integration tests,
@@ -64,5 +100,10 @@ specific test.
 ## No ROS installation on the host
 
 If the wrapper cannot source ROS, run the same command via
-[microvm-sandbox](../microvm-sandbox/SKILL.md) with Docker, or
-[remote-codespace-session](../remote-codespace-session/SKILL.md) without it.
+`/agentdev:microvm-sandbox` with Docker, or `/agentdev:remote-codespace-session`
+without it. Both forward the command verbatim, so pass the ROS wrapper as part
+of it:
+
+```bash
+scripts/with-ros-env.sh python3 -m colcon test --packages-select <package_name>
+```

@@ -7,7 +7,7 @@ Release date: 2017-11-17<br>
 
 ## Summary
 
-This is a library for the Arduino IDE that helps interface with the [A1-16 smart servo][servo] from XYZrobot over serial.  It works with the following products:
+This is a library for the Arduino IDE that helps interface with the [A1-16 smart servo][servo] from XYZrobot over serial. It works with the following products:
 
 - [XYZrobot Smart Servo A1-16][servo]
 - [XYZrobot 6 DOF Robotic Arm Kit][arm]
@@ -23,14 +23,14 @@ Leonardo][leo], and [Arduino Micro][micro] due to the issues explained in the
 ## Issues with receiving data
 
 This library can be used without reading any data back from the servos (see the
-SetPosition, and SetSpeed examples).  However, if you want to read data from a
+SetPosition, and SetSpeed examples). However, if you want to read data from a
 servo&mdash;such as its speed, position, or current consumption&mdash;then there
 are some issues to consider.
 
 **Receiving data with SoftwareSerial:** On platforms that do not have a free
 hardware serial port, such as the Arduino Uno and most other ATmega328P-based
 Arduino-compatible boards, the examples in this library use the the
-SoftwareSerial library to send and receive serial data.  Unfortunately, the
+SoftwareSerial library to send and receive serial data. Unfortunately, the
 SoftwareSerial library cannot reliably receive data at 115200 baud, and that is
 the default baud rate used by the servos.
 
@@ -47,7 +47,7 @@ junk bytes before the expected response packet from the servo.
 
 If you are using SoftwareSerial, the RX pull-up is probably enabled
 automatically, but it depends on what version of the Arduino IDE you are using
-and what board you are using.  If you are using hardware serial, the pull-up is
+and what board you are using. If you are using hardware serial, the pull-up is
 probably not enabled automatically, so you will either need to add a line of
 code to enable it, or add an external pull-up resistor to your setup.
 
@@ -70,30 +70,29 @@ requirements of the power supply, and information about which pins to connect it
 to.
 
 To control the servo from your microcontroller board, you must connect the GND
-of the microcontroller board to the GND pin of the servo.  You must also connect
-your board's TX line to the RX line of the servo.  If you want to receive data
+of the microcontroller board to the GND pin of the servo. You must also connect
+your board's TX line to the RX line of the servo. If you want to receive data
 from the servo, you must connect your board's RX line to the TX line of the
 servo.
 
 The example sketches for this library use a hardware serial port on your Arduino
 if one is available: if your Arduino environment defines
-`SERIAL_PORT_HARDWARE_OPEN`, the examples will use that port.  Otherwise, it
-uses SoftwareSerial on pins 10 (RX) and 11 (TX).  Therefore, the serial pins to
+`SERIAL_PORT_HARDWARE_OPEN`, the examples will use that port. Otherwise, it
+uses SoftwareSerial on pins 10 (RX) and 11 (TX). Therefore, the serial pins to
 use depend on which board you are using.
 
 | Microcontroller Board | Hardware serial? | MCU RX pin | MCU TX pin |
-|-----------------------|------------------|------------|------------|
-| A-Star 32U4           |        Yes       |      0     |      1     |
-| Arduino Leonardo      |        Yes       |      0     |      1     |
-| Arduino Micro         |        Yes       |      0     |      1     |
-| Arduino Mega 2560     |        Yes       |     19     |     18     |
-| Arduino Due           |        Yes       |     19**   |     18     |
-| Arduino Uno           |        No        |     10     |     11     |
-| Arduino Yun           |        No        |     10     |     11     |
+| --------------------- | ---------------- | ---------- | ---------- |
+| A-Star 32U4           | Yes              | 0          | 1          |
+| Arduino Leonardo      | Yes              | 0          | 1          |
+| Arduino Micro         | Yes              | 0          | 1          |
+| Arduino Mega 2560     | Yes              | 19         | 18         |
+| Arduino Due           | Yes              | 19\*\*     | 18         |
+| Arduino Uno           | No               | 10         | 11         |
+| Arduino Yun           | No               | 10         | 11         |
 
-** The Due's serial port is 3.3&nbsp;V, so you should not connect it directly to
-the servo's 5&nbsp;V TX line.  You could use a voltage divider or level shifter.
-
+\*\* The Due's serial port is 3.3&nbsp;V, so you should not connect it directly to
+the servo's 5&nbsp;V TX line. You could use a voltage divider or level shifter.
 
 ## Installing this library
 
@@ -119,7 +118,6 @@ If this does not work, you can manually install the library:
    the folder yourself.
 4. After installing the library, restart the Arduino IDE.
 
-
 ## Finding the examples
 
 Several example sketches are available that show how to use the library. You can
@@ -128,18 +126,16 @@ access them from the Arduino IDE by opening the "File" menu, selecting
 examples, the library was probably installed incorrectly and you should retry
 the installation instructions above.
 
-
 ## Detecting servos
 
 The first example we recommend running is the DetectServos example, which will
 detect all the servos that are connected to your board by attempting to read
-status information from them.  If your servos are powered and connected
+status information from them. If your servos are powered and connected
 correctly, it determines the baud rate, ID, and ACK policy of each servo, and
 prints it out to the Serial Monitor in the Arduino IDE.
 
 However, if you have not connected your board's RX line, this example will not
 work, so you should skip this step.
-
 
 ## Configuring your servos
 
@@ -148,32 +144,30 @@ each of your servos, you might need to change some of the configuration options
 in the servo's non-volatile EEPROM memory.
 
 - **Baud rate:** This library's examples use 115200 baud, which is the default
-baud rate used by the servos.  If your servo is using a different baud rate, you
-should either reconfigure your servo or change the baud rate used in the
-examples.
+  baud rate used by the servos. If your servo is using a different baud rate, you
+  should either reconfigure your servo or change the baud rate used in the
+  examples.
 - **Servo ID:** We recommend setting the IDs of your servos to a consecutive
-sequence starting at 1.  If you have the [robot arm][arm], the IDs are probably set
-correctly already, so you don't need to worry about this.
-- **ACK policy:** The *ACK policy* setting determines which commands the servo
-responds to.  This library and most of its examples assume that the servos are
-using their default ACK policy of 1, which means the servos only respond to the
-EEPROM Read, RAM Read, and STAT commands.  If your servos are using a different
-ACK policy, that could cause issues.
+  sequence starting at 1. If you have the [robot arm][arm], the IDs are probably set
+  correctly already, so you don't need to worry about this.
+- **ACK policy:** The _ACK policy_ setting determines which commands the servo
+  responds to. This library and most of its examples assume that the servos are
+  using their default ACK policy of 1, which means the servos only respond to the
+  EEPROM Read, RAM Read, and STAT commands. If your servos are using a different
+  ACK policy, that could cause issues.
 
 You should run the DetectServos example describe above before attempting to
-reconfigure any of these parameters.  If you need to change a servo's ID, see
-the ChangeId example.  If you need to change a servo's baud rate, see the
-ChangeBaud example.  We do not yet have an example showing how to change the ACK
+reconfigure any of these parameters. If you need to change a servo's ID, see
+the ChangeId example. If you need to change a servo's baud rate, see the
+ChangeBaud example. We do not yet have an example showing how to change the ACK
 policy.
-
 
 ## Getting your servos to move
 
 After you have configured your servos, you should try running a simple example
-to make sure you can move your servos.  If you have the [XYZrobot arm][arm], you
-should run the RobotArmTest example.  If you have a standalone servo, you should
+to make sure you can move your servos. If you have the [XYZrobot arm][arm], you
+should run the RobotArmTest example. If you have a standalone servo, you should
 run the SetPosition or SetSpeed example.
-
 
 ## Documentation
 
@@ -188,7 +182,7 @@ For complete documentation of this library, see the comments in `XYZrobotServo.h
 
 ## Version history
 
-* 1.1.0 (2017-11-17):
+- 1.1.0 (2017-11-17):
   - Added the BlinkAll example.
   - Better support for the Arduino Uno in the examples:
     - Fixed all examples that use the Serial Monitor to initialize its baud
@@ -199,4 +193,4 @@ For complete documentation of this library, see the comments in `XYZrobotServo.h
       that automatically reset when the Serial Monitor is opened.
       These examples now require user input from the serial monitor.
   - This release contains no changes to the actual library code.
-* 1.0.0 (2017-10-13): Original release.
+- 1.0.0 (2017-10-13): Original release.

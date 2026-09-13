@@ -16,7 +16,7 @@ Basic setup is essentially same as for stock Raspbian image
 6. Configure Wi-Fi
 7. Disable Raspberry Desktop (Boot options => Desktop/CLI => Console)
 8. Reboot
-9. SSH back again 
+9. SSH back again
 10. Change password using `passwd`
 11. (Optional) configure ssh to use key authentication (add key from id_rsa.pub on your machine to `.ssh/authorized_keys` on `dr-qp.local`)
 12. (Risky, may fail and corrupt the AIY setup) Run `sudo apt update && sudo apt upgrade -y`

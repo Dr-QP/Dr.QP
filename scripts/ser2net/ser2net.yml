@@ -1,6 +1,5 @@
 %YAML 1.1
 ---
-
 default:
   name: local
   value: true

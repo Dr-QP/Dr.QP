@@ -4,8 +4,16 @@ indent-width = 4
 # Assume Python 3.12
 target-version = "py312"
 
-# Exclude vendor packages from linting and formatting (third-party code)
+# Exclude vendor packages from linting and formatting (third-party code).
+# `packages/vendor` holds upstream sources kept source-faithful against a
+# recorded `source-info.yaml`; reformatting them destroys the fidelity that
+# makes the vendored patch reviewable against upstream.
+#
+# `force-exclude` holds the exclusion when a caller passes explicit paths.
+# Without it `extend-exclude` applies only to ruff's own file discovery, so
+# `ruff format packages/vendor/launch/...` still rewrites the file.
 extend-exclude = ["packages/vendor"]
+force-exclude = true
 
 [format]
 # Use single quotes for strings
@@ -28,7 +36,10 @@ indent-style = "space"
 # - D400: First line should end with a period
 # - A001: variable is shadowing a python builtin
 # - A002: argument is shadowing a python builtin
-select = ["E", "W", "F", "BLE",
+# "I" (isort) is selected so a single `ruff check --fix` also sorts imports.
+# Super-Linter runs exactly `ruff check --config ruff.toml [--fix]`, so there is
+# no separate import-sorting pass to keep in sync.
+select = ["E", "W", "F", "BLE", "I",
   "D200", # One-line docstring should fit on one line with quotes
   "D202", # No blank lines allowed after function docstring's "Args"
   "D205", # 1 blank line required between summary line and description

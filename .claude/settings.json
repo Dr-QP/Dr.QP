@@ -17,10 +17,14 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(git)",
       "Bash(git *)",
-      "Bash(.claude/skills/*/scripts/*)",
+      "Bash(/root/.claude/plugins/cache/agent-devcontainer/agentdev/*)",
       "Bash(gh)",
       "Bash(gh *)",
       "Bash(mkdir *)",
+      "Bash(uv run *)",
+      "Bash(uv sync*)",
+      "Bash(uv pip *)",
+      "Bash(pre-commit run *)",
       "Bash(pip show *)",
       "Bash(pip install *)",
       "Bash(python3 -m py_compile *)",
@@ -28,6 +32,8 @@
       "Bash(python3 -m colcon *)",
       "Bash(python3 -m pytest *)",
       "Bash(scripts/with-ros-env.sh *)",
+      "Bash(scripts/python-lint-check.sh *)",
+      "Bash(scripts/super-linter-local.sh *)",
       "mcp__gateway__*",
       "mcp__github__*"
     ],
@@ -49,7 +55,16 @@
       }
     ]
   },
+  "extraKnownMarketplaces": {
+    "agent-devcontainer": {
+      "source": {
+        "source": "github",
+        "repo": "plume-works/agent-devcontainer"
+      }
+    }
+  },
   "enabledPlugins": {
+    "agentdev@agent-devcontainer": true,
     "github@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true,
     "context7@claude-plugins-official": true,
