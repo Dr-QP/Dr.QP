@@ -105,10 +105,9 @@ runs:
         mkdir -p /root/.claude /root/.codex
         .devcontainer/scripts/setup-git-safe-directory.sh
 
-    # Upstream merges settings.local.json unconditionally, because installing
-    # its own catalog at local scope always writes that file first. This
-    # workspace publishes no marketplace of its own, so that install is a no-op
-    # and the file need not exist. Treat it as optional rather than assuming it.
+    # The gitignored local settings layer is written by the local-scope plugin
+    # install, which only runs where a marketplace is published, so this
+    # workspace never has one. Treat it as optional rather than assuming it.
     - name: Merge Claude settings
       id: claude_settings
       shell: bash
