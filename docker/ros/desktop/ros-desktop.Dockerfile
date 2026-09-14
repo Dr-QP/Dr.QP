@@ -1,4 +1,13 @@
-ARG FROM_IMAGE=ghcr.io/dr-qp/ubuntu-ansible:edge
+# Digest-pinned on purpose, which is the opposite of what upstream's own
+# agent-desktop.Dockerfile does. Upstream keeps its FROM tag-only because its base
+# is an image it builds itself, so a Renovate bump under docker/** would rebuild the
+# very image that produced the digest. agent-desktop is external to this repository:
+# nothing here rebuilds it, so a bump cannot loop. It rebuilds jazzy-ros-desktop
+# against a newer base instead -- which is precisely the staleness trigger recorded
+# as F7 in docs/agents/specs/agent-devcontainer-migration/. The pin lives under
+# docker/**, inside the `ros` path filter, so merging the bump runs that build.
+# Renovate manages it through the un-automerged rule in .github/renovate.json.
+ARG FROM_IMAGE=ghcr.io/plume-works/agent-desktop:edge@sha256:09b51993c6ae5fc94cca7def92b0991234f7f3c41a9567cb0b7000047fcee729
 
 FROM $FROM_IMAGE
 
@@ -8,7 +17,12 @@ ENV ROS_DISTRO=$ROS_DISTRO
 ARG CLANG_VERSION=20
 ARG OVERLAY_WS=/opt/ros/overlay_ws
 
-# Install ROS
+# Install ROS.
+#
+# The base image already provides the generic development environment, so this
+# playbook is only the ROS delta -- see docker/ros/ansible/playbooks/20_ros_setup.yml.
+# The four install_* extra-vars the previous base needed are gone with it.
+#
 # `cd` (not WORKDIR) into /ros-scripts/ansible: that path only exists for the
 # duration of this RUN's bind mount, so WORKDIR would break later build steps.
 # hadolint ignore=DL3003
@@ -20,18 +34,21 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && ansible-playbook playbooks/20_ros_setup.yml \
       -i inventories/localhost.yml \
       -vvv \
-      -e "ci_mode=true \
-           clang_version=$CLANG_VERSION \
+      -e "clang_version=$CLANG_VERSION \
            ros_distro=$ROS_DISTRO \
-           install_xpra=true \
-           install_docker=true \
-           install_agentic_tools=true \
-           install_devcontainer_firewall=true \
          "
 
 WORKDIR $OVERLAY_WS
 
-# Copy Xpra startup script
+# Copy Xpra startup script.
+#
+# Deliberately NOT dropped in favour of the base image's /start-xpra.sh, which this
+# COPY overwrites. The local copy derives a unique port per devcontainer instance
+# from DEVCONTAINER_ID (14500-14599) so several containers can run side by side;
+# upstream's has no such derivation and would silently collide on 14500. Upstream's
+# copy is better in two smaller ways (an XPRA_LOG_FILE override and the mkdir -p
+# that background mode needs), so this is a divergence to reconcile upstream, not
+# to settle by deletion.
 COPY --chmod=755 ../desktop/start-xpra.sh /start-xpra.sh
 
 # Expose Xpra port
@@ -42,7 +59,8 @@ ENV PATH="/usr/lib/llvm-${CLANG_VERSION}/bin:/root/.local/bin:$PATH"
 ENV CC=clang
 ENV CXX=clang++
 
-# Setup entrypoint
+# Setup entrypoint. The base image's /entrypoint.sh is a bare `exec "$@"` and does
+# not source ROS, so this workspace keeps its own.
 COPY --chmod=755 ../deploy/ros_entrypoint.sh /ros_entrypoint.sh
 
 ENTRYPOINT ["/ros_entrypoint.sh"]

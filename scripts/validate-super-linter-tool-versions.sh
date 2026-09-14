@@ -5,7 +5,6 @@ set -euo pipefail
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 root_dir=$(cd "$script_dir/.." && pwd)
 pre_commit_config="$root_dir/.pre-commit-config.yaml"
-zizmor_defaults="$root_dir/docker/ros/ansible/roles/dev_tools/defaults/main.yml"
 . "$script_dir/super-linter-defaults.sh"
 
 usage()
@@ -163,10 +162,23 @@ configured_versions[ruff]=$(pre_commit_rev https://github.com/astral-sh/ruff-pre
 configured_versions[shellcheck]=$(pre_commit_rev https://github.com/shellcheck-py/shellcheck-py)
 configured_versions[gitleaks]=$(pre_commit_rev https://github.com/gitleaks/gitleaks)
 configured_versions[actionlint]=$(pre_commit_rev https://github.com/rhysd/actionlint)
-configured_versions[zizmor]=$(sed -nE \
-  's/^dev_tools_zizmor_version: v?([0-9.]+).*/\1/p' "$zizmor_defaults" | head -n 1)
+configured_versions[zizmor]="$BASE_IMAGE_ZIZMOR_VERSION"
 
 validation_failed=0
+
+# zizmor is the one tool not pinned by a file this repository installs from: the
+# base image ships it. Where the binary is present, check the declaration above
+# actually describes it, so a base-image bump cannot drift past this script
+# unnoticed. The validate-super-linter-tool-versions workflow runs on a plain
+# runner with no zizmor, so this is a no-op there and Super-Linter remains the gate.
+if command -v zizmor >/dev/null 2>&1; then
+  installed_zizmor=$(zizmor --version | sed -nE 's/^zizmor v?([0-9.]+).*/\1/p' | head -n 1)
+  if [[ -n "$installed_zizmor" && "$installed_zizmor" != "$BASE_IMAGE_ZIZMOR_VERSION" ]]; then
+    echo "zizmor: installed $installed_zizmor but BASE_IMAGE_ZIZMOR_VERSION declares $BASE_IMAGE_ZIZMOR_VERSION." >&2
+    echo "  The base image bumped zizmor; update BASE_IMAGE_ZIZMOR_VERSION in scripts/super-linter-defaults.sh." >&2
+    validation_failed=1
+  fi
+fi
 
 for tool in prettier clang-format ansible-lint hadolint ruff shellcheck gitleaks actionlint zizmor; do
   if ! check_version "$tool"; then
