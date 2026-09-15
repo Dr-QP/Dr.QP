@@ -1,1 +1,0 @@
-%sudo ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh

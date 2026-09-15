@@ -19,7 +19,8 @@ verbosity: 1
 # The Super-Linter image ships no Ansible collections, so syntax-check cannot
 # resolve community.docker and fails fatally. Galaxy installs are not possible
 # from inside the linter container, so declare the modules instead; they stay
-# resolvable offline and are installed for real by docker/ansible/setup-ansible.sh.
+# resolvable offline. They are installed for real in the base image
+# (ghcr.io/plume-works/agent-desktop), which is where the playbooks actually run.
 # Mocked modules carry no argument spec, so they emit non-fatal args[module]
 # warnings. That rule is deliberately left enabled to keep validating every
 # other module.

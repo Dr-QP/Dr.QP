@@ -1,5 +1,26 @@
 # 01 — Rebuild the dev image on `agent-desktop`
 
+> **Status: implemented (2026-09-14).** See the "Image rebase" section of
+> `.agentdev-template-progress.md` at the repository root for what was built and
+> the evidence for each acceptance criterion.
+>
+> Two things in this document are stale or wrong; the implementation departed
+> from both deliberately.
+>
+> - **The organization is `plume-works`, not `chocobot-farm`.** It was renamed
+>   after this spike was written. Every `chocobot-farm` reference below should
+>   read `plume-works`.
+> - **Step 4's delete list is wrong about `install_docker` and
+>   `install_docker_service`.** Both are used by `10_install_docker.yml` and
+>   `100_startup_service.yml`, the Raspberry Pi provisioning playbooks, which
+>   are unrelated to the dev image. Deleting them would have broken robot
+>   deployment, and no CI job would have caught it. 15 roles were deleted, not 17.
+>
+> Step 5's `FROM_IMAGE=...@sha256:<digest>` in `ci.yml` was also not followed:
+> the pin lives in the Dockerfile's `ARG` instead, so Renovate manages it and
+> the `docker/**` path filter rebuilds the image on a bump. That is what
+> satisfies AC5.
+
 Rebase `docker/ros/desktop/ros-desktop.Dockerfile` onto
 `ghcr.io/chocobot-farm/agent-desktop`, reducing this workspace's Ansible tree to
 the ROS delta.

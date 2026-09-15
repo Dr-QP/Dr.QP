@@ -1,5 +1,17 @@
 ---
-# Main playbook for ROS 2 setup
+# Main playbook for ROS 2 setup.
+#
+# This runs on top of ghcr.io/plume-works/agent-desktop, which already provides
+# the generic development environment: locale and timezone, bash/fish, the
+# Kitware CMake, the generic dev_tools package set, the pinned single-binary
+# tools (zizmor, iwe, codebase-memory-mcp), gh, bun, node, uv, the agentic
+# tools, Docker, Xpra, and the devcontainer firewall. Only the ROS delta is
+# built here.
+#
+# extra_facts is retained locally rather than inherited: the base image's copy
+# ran at *its* build time, so the facts it set are not present in this
+# playbook's run. It also asserts ros_distro is defined, which is the fail-fast
+# guard for this playbook.
 - name: Setup ROS 2 Environment
   hosts: all
   become: true
@@ -7,31 +19,16 @@
 
   roles:
     - { role: extra_facts, tags: ["extra_facts", "always"] }
-    - { role: basic_prereqs, tags: ["basic_prereqs"] }
-    - { role: install_docker, tags: ["install_docker"], when: install_docker | default(false) | bool }
-    - { role: locale_setup, tags: ["locale_setup"] }
-    - { role: utc_timezone, tags: ["utc_timezone"] }
-    - { role: ros_user_setup, tags: ["setup_user"], when: setup_user }
-    - { role: fish_setup, tags: ["fish_setup"] }
-    - { role: bash_setup, tags: ["bash_setup"] }
-    - { role: cmake_kitware, tags: ["cmake"], when: not source_install } # Install Kitware CMake beforehand for prebuilt install
     - { role: cmake_system, tags: ["cmake"], when: source_install }
     - { role: ros_repo, tags: ["ros_repo"] }
     - { role: osrf_repo, tags: ["osrf_repo"] }
-    - { role: dev_tools, tags: ["dev_tools"] }
-    - { role: github_cli, tags: ["github_cli"] }
+    - { role: ros_dev_tools, tags: ["ros_dev_tools", "dev_tools"] }
+    - { role: ros_shell_setup, tags: ["ros_shell_setup"] }
     - { role: colcon_setup, tags: ["colcon_setup"] }
     - { role: rosdep, tags: ["rosdep"] }
     - { role: ros_install_prebuilt, tags: ["ros_install", "ros_install_prebuilt"], when: not source_install }
     - { role: ros_install_source, tags: ["ros_install", "ros_install_source"], when: source_install }
     - { role: ros_patches, tags: ["ros_patches"] }
     - { role: ros_dependencies, tags: ["ros_dependencies"] }
-    - { role: bun_setup, tags: ["bun_setup", "nodejs", "agentic_tools"] }
-    - { role: nodejs, tags: ["nodejs"] }
-    - { role: uv_setup, tags: ["uv_setup"] }
-    - { role: agentic_tools, tags: ["agentic_tools"], when: install_agentic_tools | default(false) | bool }
-    - { role: virtualhere_usb_client, tags: ["virtualhere_usb_client"], when: install_virtualhere_usb_client | default(false) | bool }
-    - { role: cmake_kitware, tags: ["cmake"] }
     - { role: clang, tags: ["clang"] }
-    - { role: xpra_setup, tags: ["xpra_setup"], when: install_xpra | default(false) | bool }
-    - { role: devcontainer_firewall, tags: ["devcontainer_firewall"], when: install_devcontainer_firewall | default(false) | bool }
+    - { role: virtualhere_usb_client, tags: ["virtualhere_usb_client"], when: install_virtualhere_usb_client | default(false) | bool }

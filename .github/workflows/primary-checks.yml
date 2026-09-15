@@ -11,12 +11,6 @@ on:
     types:
       - checks_requested
   workflow_dispatch:
-    inputs:
-      clean_build:
-        description: 'Build images from scratch (no base from main)'
-        required: false
-        default: false
-        type: boolean
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
@@ -59,7 +53,6 @@ jobs:
     with:
       caller_event_name: ${{ github.event_name }}
       caller_pr_head_sha: ${{ github.event.pull_request.head.sha || '' }}
-      clean_build: ${{ github.event_name == 'workflow_dispatch' && inputs.clean_build || false }}
       force_run: ${{ github.event_name == 'workflow_dispatch' }}
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

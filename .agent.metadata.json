@@ -1,7 +1,7 @@
 {
   "template-consume": {
     "source_repo": "plume-works/agent-devcontainer",
-    "consumed_ref": "f7b3245df156c9509bb79fd15b8d410c0e634b82",
+    "consumed_ref": "22ca162fb290e933e73dde75bd9be714d735059b",
     "workflow": "B",
     "optional_bundles": ["custom-image", "knowledge-base"],
     "tracked_paths": [
@@ -33,6 +33,6 @@
       "docs/knowledge/CHANGELOG.md",
       "docs/knowledge/tests/test_plan_checkboxes.py"
     ],
-    "last_synced_at": "2026-09-11T12:44:31Z"
+    "last_synced_at": "2026-09-13T21:30:00Z"
   }
 }
