@@ -53,9 +53,9 @@
     "CTEST_PARALLEL_LEVEL": " " // equivalent to `ctest --parallel` / `ctest -j`
   },
 
-  "forwardPorts": ["14500-14599"],
+  "forwardPorts": [14500],
   "portsAttributes": {
-    "14500-14599": {
+    "14500": {
       "label": "Xpra HTML5",
       "onAutoForward": "silent"
     }

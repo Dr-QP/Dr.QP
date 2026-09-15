@@ -40,18 +40,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 WORKDIR $OVERLAY_WS
 
-# Copy Xpra startup script.
-#
-# Deliberately NOT dropped in favour of the base image's /start-xpra.sh, which this
-# COPY overwrites. The local copy derives a unique port per devcontainer instance
-# from DEVCONTAINER_ID (14500-14599) so several containers can run side by side;
-# upstream's has no such derivation and would silently collide on 14500. Upstream's
-# copy is better in two smaller ways (an XPRA_LOG_FILE override and the mkdir -p
-# that background mode needs), so this is a divergence to reconcile upstream, not
-# to settle by deletion.
-COPY --chmod=755 ../desktop/start-xpra.sh /start-xpra.sh
-
-# Expose Xpra port
+# Expose Xpra port. /start-xpra.sh comes from the base image; this workspace no
+# longer ships its own copy.
 EXPOSE 14500
 
 # Force clang installed by llvm.sh in /usr/lib/llvm-${CLANG_VERSION}/bin to be the default in docker
