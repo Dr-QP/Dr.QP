@@ -1,12 +1,7 @@
-# Digest-pinned on purpose, which is the opposite of what upstream's own
-# agent-desktop.Dockerfile does. Upstream keeps its FROM tag-only because its base
-# is an image it builds itself, so a Renovate bump under docker/** would rebuild the
-# very image that produced the digest. agent-desktop is external to this repository:
-# nothing here rebuilds it, so a bump cannot loop. It rebuilds jazzy-ros-desktop
-# against a newer base instead -- which is precisely the staleness trigger recorded
-# as F7 in docs/agents/specs/agent-devcontainer-migration/. The pin lives under
-# docker/**, inside the `ros` path filter, so merging the bump runs that build.
-# Renovate manages it through the un-automerged rule in .github/renovate.json.
+# Digest-pinned so a Renovate bump rebuilds jazzy-ros-desktop against a newer base --
+# the staleness trigger recorded as F7 in docs/agents/specs/agent-devcontainer-migration/.
+# The pin lives under docker/**, inside the `ros` path filter, so merging the bump runs
+# that build. Renovate manages it through the un-automerged rule in .github/renovate.json.
 ARG FROM_IMAGE=ghcr.io/plume-works/agent-desktop:edge@sha256:09b51993c6ae5fc94cca7def92b0991234f7f3c41a9567cb0b7000047fcee729
 
 FROM $FROM_IMAGE
