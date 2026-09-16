@@ -126,7 +126,6 @@ jobs:
       is_fork: ${{ steps.checkout_ref.outputs.isFork }}
       is_pull_request: ${{ steps.checkout_ref.outputs.isPullRequest }}
       is_draft: ${{ steps.checkout_ref.outputs.isDraft }}
-      skip_review: ${{ steps.checkout_ref.outputs.skipReview }}
       pr_number: ${{ steps.checkout_ref.outputs.prNumber }}
       review_exists: ${{ steps.review_status.outputs.found }}
       wants_review: ${{ steps.agent_prompts.outputs.wantsReview }}
@@ -185,7 +184,12 @@ jobs:
             core.setOutput('isFork', isFork);
             core.setOutput('isPullRequest', Boolean(pullRequest));
             core.setOutput('isDraft', Boolean(pullRequest?.draft));
-            core.setOutput('skipReview', pullRequest?.body?.includes('[ci:no-review]') ?? false);
+            // Own-line match: a body that discusses the marker inline is prose,
+            // not a directive. A substring test lets any PR that merely quotes
+            // the marker -- a review of this workflow, a doc example -- suppress
+            // its own review.
+            const skipAiReview = /^[^\S\r\n]*\[ci:skip-ai-review\][^\S\r\n]*\r?$/m;
+            core.setOutput('skipAiReview', skipAiReview.test(pullRequest?.body ?? ''));
 
       - name: Checkout composite actions
         if: steps.checkout_ref.outputs.isFork != 'true' && steps.checkout_ref.outputs.isPullRequest == 'true'
@@ -241,7 +245,7 @@ jobs:
           PR_NUMBER: ${{ steps.checkout_ref.outputs.prNumber }}
           IS_PULL_REQUEST: ${{ steps.checkout_ref.outputs.isPullRequest }}
           IS_DRAFT: ${{ steps.checkout_ref.outputs.isDraft }}
-          SKIP_REVIEW: ${{ steps.checkout_ref.outputs.skipReview }}
+          SKIP_AI_REVIEW: ${{ steps.checkout_ref.outputs.skipAiReview }}
           REVIEW_EXISTS: ${{ steps.review_status.outputs.found }}
           DISPATCH_TASK: ${{ inputs.task }}
         with:
@@ -253,11 +257,13 @@ jobs:
             // already-reviewed PR runs the gate alone, which passes on the
             // existing review.
             const wantsReview = (() => {
-              if (process.env.SKIP_REVIEW === 'true') {
-                return false;
-              }
+              // An explicit request outranks the marker; a bridged `@claude
+              // review` arrives here as an empty-task dispatch.
               if (eventName === 'workflow_dispatch') {
                 return dispatchTask === '';
+              }
+              if (process.env.SKIP_AI_REVIEW === 'true') {
+                return false;
               }
               if (eventName !== 'pull_request' || process.env.IS_DRAFT === 'true') {
                 return false;
@@ -475,6 +481,12 @@ jobs:
   # The gate is a job of the review workflow, so it is satisfiable only while
   # that workflow is retained: dropping the review job would leave the required
   # check with nothing able to satisfy it.
+  #
+  # `[ci:skip-ai-review]` deliberately does NOT appear in this condition.
+  # The marker suppresses the *automatic* review only; it must never waive the
+  # requirement, or any author could clear a required check by editing their own
+  # pull request body. Waiving is the trusted-bot list below, which keys off the
+  # author's account type rather than text the author controls.
   ai-review-present:
     name: ai-review-present
     needs:
@@ -482,8 +494,6 @@ jobs:
       - claude-respond
     if: |
       always() &&
-      needs.preflight.outputs.skip_review != 'true' &&
-      !contains(github.event.pull_request.body, '[ci:no-review]') &&
       (contains(fromJSON('["pull_request", "pull_request_review", "merge_group"]'), github.event_name) ||
        (github.event_name == 'workflow_dispatch' && inputs.task == ''))
     runs-on: ubuntu-24.04

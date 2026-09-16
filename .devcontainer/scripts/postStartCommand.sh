@@ -16,15 +16,10 @@ workspace_scripts="$(cd "$script_dir/../../scripts" && pwd)"
 
 # Headless callers — the CI responder job — opt out of the remote desktop
 # nothing will connect to. Unset (the devcontainer default) starts it as before.
-#
-# This workspace still ships its own Xpra launcher under docker/ros/desktop.
-# Once the dev image is rebased on agent-desktop (see
-# docs/agents/specs/agent-devcontainer-migration/), this becomes the image's
-# /start-xpra.sh instead.
 if [[ -n "${AGENTDEV_SKIP_XPRA:-}" ]]; then
   echo "AGENTDEV_SKIP_XPRA is set; skipping Xpra startup."
 else
-  "$script_dir/../../docker/ros/desktop/start-xpra.sh" --background
+  /start-xpra.sh --background
 fi
 
 "$workspace_scripts/workspace-extensions.sh"

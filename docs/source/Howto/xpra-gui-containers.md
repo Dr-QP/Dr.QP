@@ -15,7 +15,7 @@ Xpra is a "screen for X11" that allows you to run GUI applications in a containe
    ```bash
    /start-xpra.sh
    ```
-3. **Open your browser** and navigate to `http://localhost:<port>`, where `<port>` is shown in the Xpra startup output (default: 14500). See **Multiple devcontainer instances** below for multi-instance port allocation.
+3. **Open your browser** and navigate to the forwarded address. Xpra always listens on port **14500** inside the container; VS Code forwards it and picks a free port on your machine, which it shows in the **Ports** panel. See **Multiple devcontainer instances** below.
 4. **Launch a GUI application**:
    ```bash
    rviz2
@@ -29,11 +29,12 @@ The application window will appear in your browser.
 
 #### Multiple devcontainer instances
 
-When multiple devcontainer instances run (e.g., different worktrees or workspaces), each instance uses a unique port in the range **14500-14599** to avoid conflicts. The port is derived from the devcontainer ID, so it stays stable for a given instance across rebuilds.
+When multiple devcontainer instances run (e.g., different worktrees or workspaces), every instance listens on **14500** inside its own container — container ports are per-container, so they cannot collide. Conflicts can only happen on the host side, and VS Code resolves them by forwarding each container's 14500 to a different free host port.
 
-- The chosen port is printed when Xpra starts (e.g., in the integrated terminal or `/tmp/xpra.log` when started in background).
-- Access the HTML5 client at `http://localhost:<port>`.
-- Ports 14500-14599 are forwarded automatically by the devcontainer configuration.
+- Find the host address in VS Code's **Ports** panel; it is forwarded automatically by the devcontainer configuration.
+- The first instance normally lands on `http://localhost:14500`, later ones on whatever VS Code picks.
+
+> Earlier versions derived a unique container port from the devcontainer ID and forwarded the range 14500-14599. Host-side forwarding supersedes that, so the container port is now fixed.
 
 ### Running from Docker directly
 
@@ -101,17 +102,26 @@ For more details on X11 forwarding, see [Running ROS GUI tools remotely using X1
 
 ## Troubleshooting
 
-### Which port is my instance using?
+### Which address is my instance using?
 
-When Xpra starts in the background (devcontainer auto-start), the chosen port is printed to the devcontainer startup output (VS Code Dev Containers logs / terminal). Check that output, or run `/start-xpra.sh` in the foreground to see the chosen port.
+Inside the container the port is always 14500. What varies is the host port VS Code forwards it to — read that from the **Ports** panel, where the entry is labelled "Xpra HTML5".
 
 ### Port already in use
 
-If your chosen port is already in use, specify a different port explicitly:
+Host-side collisions are handled by VS Code's forwarding. If the container port itself is occupied — usually a previous Xpra session that did not shut down — stop it and start again:
 
 ```bash
-/start-xpra.sh --port 14501
+/start-xpra.sh --stop
+/start-xpra.sh --background
 ```
+
+To run a second server alongside the first, give it both its own port and its own display:
+
+```bash
+/start-xpra.sh --port 14501 --display :101
+```
+
+A port other than 14500 is not forwarded by the devcontainer configuration, so add it in the **Ports** panel yourself.
 
 ### Display conflict
 
