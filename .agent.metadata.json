@@ -1,0 +1,38 @@
+{
+  "template-consume": {
+    "source_repo": "plume-works/agent-devcontainer",
+    "consumed_ref": "22ca162fb290e933e73dde75bd9be714d735059b",
+    "workflow": "B",
+    "optional_bundles": ["custom-image", "knowledge-base"],
+    "tracked_paths": [
+      ".devcontainer/",
+      "devcontainer-compose-pins.yml",
+      ".mcp.json",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/",
+      ".codex/",
+      "pyproject.toml",
+      ".pre-commit-config.yaml",
+      ".clang-format",
+      ".ansible-lint.yml",
+      ".hadolint.yaml",
+      ".shellcheckrc",
+      ".prettierrc.yml",
+      ".prettierignore",
+      "zizmor.yaml",
+      ".editorconfig",
+      ".gitignore",
+      ".github/",
+      ".iwe/",
+      "docs/knowledge/AGENTS.md",
+      "docs/knowledge/CLAUDE.md",
+      "docs/knowledge/README.md",
+      "docs/knowledge/SCHEMA.md",
+      "docs/knowledge/STRUCTURE.md",
+      "docs/knowledge/CHANGELOG.md",
+      "docs/knowledge/tests/test_plan_checkboxes.py"
+    ],
+    "last_synced_at": "2026-09-13T21:30:00Z"
+  }
+}

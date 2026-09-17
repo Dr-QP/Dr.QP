@@ -1,0 +1,54 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "rebaseWhen": "auto",
+  "docker-compose": {
+    "managerFilePatterns": ["/(^|/)devcontainer-compose-pins\\.ya?ml$/"]
+  },
+  "packageRules": [
+    {
+      "description": "Automatically merge GitHub Actions dependency updates after Renovate observes green CI.",
+      "matchManagers": ["github-actions"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "jazzy-ros-desktop is built by this repository's own pipeline. Its pin lives in devcontainer-compose-pins.yml at the repository root, outside the `ros` path filter in .github/actions/paths-filter/action.yml (which matches .devcontainer/** and docker/**), so merging a bump cannot retrigger the build that produced the digest and bump itself again. That is what makes automerge safe here.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/dr-qp/jazzy-ros-desktop"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "The dev image is built FROM this one, digest-pinned in docker/ros/desktop/ros-desktop.Dockerfile, so a bump here is what rebuilds jazzy-ros-desktop against a newer upstream base — closing the staleness gap recorded as F7 in docs/agents/specs/agent-devcontainer-migration/. The pin sits inside the `ros` path filter on purpose, so merging the bump runs that build; no loop is possible because this repository does not build agent-desktop. Left un-automerged on purpose: unlike the pin above, this one does change what the image contains, so a human reviews it.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/plume-works/agent-desktop"],
+      "automerge": false
+    },
+    {
+      "description": "Super-Linter and the pre-commit/local tools it pins (Prettier, clang-format, Ansible Lint, Hadolint, Ruff, ShellCheck, Gitleaks, Actionlint, Zizmor) must stay in sync with the pinned Super-Linter image. Update them manually with the /agentdev:sync-super-linter-tool-versions skill instead.",
+      "matchManagers": ["github-actions", "pre-commit"],
+      "matchPackageNames": [
+        "super-linter/super-linter",
+        "pre-commit/mirrors-prettier",
+        "pre-commit/mirrors-clang-format",
+        "ansible/ansible-lint",
+        "hadolint/hadolint",
+        "astral-sh/ruff-pre-commit",
+        "shellcheck-py/shellcheck-py",
+        "gitleaks/gitleaks",
+        "rhysd/actionlint",
+        "zizmorcore/zizmor"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Prettier's additional_dependencies pin in the mirrors-prettier hook is synced manually alongside the mirror revision; see the rule above.",
+      "matchManagers": ["pre-commit"],
+      "matchDepNames": ["prettier"],
+      "enabled": false
+    }
+  ]
+}

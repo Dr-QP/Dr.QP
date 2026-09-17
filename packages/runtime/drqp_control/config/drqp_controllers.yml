@@ -58,9 +58,21 @@ joint_trajectory_controller:
       stopped_velocity_tolerance: 0.01 # Defaults to 0.01
       goal_time: 0.0 # Defaults to 0.0 (start immediately)
 
-# https://docs.ros.org/en/iron/p/battery_state_broadcaster/
+# https://control.ros.org/jazzy/doc/ros2_controllers/battery_state_broadcaster/doc/userdoc.html
+#
+# battery_state_broadcaster moved into ros2_controllers (1.2.0 -> 4.x), which
+# made `batteries` required and deprecated the old `sensor_name` mode. Each
+# listed battery reads `<name>/battery_voltage` (mandatory) from the hardware
+# interface; every other interface is opt-in under `interfaces.<name>`. The
+# drqp hardware exports voltage only, so those stay off and the broadcaster
+# derives `percentage` from the min/max voltage range below.
 battery_state_broadcaster:
   ros__parameters:
-    sensor_name: 'battery_state'
-    # https://github.com/ros2/common_interfaces/blob/jazzy/sensor_msgs/msg/BatteryState.msg
-    power_supply_technology: 3 # POWER_SUPPLY_TECHNOLOGY_LIPO
+    batteries:
+      - battery_state
+    battery_state:
+      # 3S LiPo: 3.5V per cell (empty) to 4.2V per cell (full).
+      minimum_voltage: 10.5
+      maximum_voltage: 12.6
+      # https://github.com/ros2/common_interfaces/blob/jazzy/sensor_msgs/msg/BatteryState.msg
+      power_supply_technology: 3 # POWER_SUPPLY_TECHNOLOGY_LIPO

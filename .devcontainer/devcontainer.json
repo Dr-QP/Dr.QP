@@ -1,14 +1,20 @@
 {
   "name": "Dr.QP ROS 2 jazzy",
   "initializeCommand": ".devcontainer/devcontainer-init.sh",
-  "dockerComposeFile": ["docker-compose.yml"],
+  // devcontainer-compose-pins.yml overrides the devcontainer service image with the digest pin
+  // Renovate manages; see the comment at the top of that file for why it lives at the
+  // repository root instead of here.
+  "dockerComposeFile": [
+    "docker-compose.yml",
+    "../devcontainer-compose-pins.yml"
+  ],
   "service": "devcontainer",
   "features": {
     // Configures the SSH server (openssh-server is pre-installed in the image)
     // so `gh codespace ssh` can attach — required by the
     // remote-codespace-session skill and GitHub Codespaces SSH access.
     "ghcr.io/devcontainers/features/sshd:1": {},
-    "ghcr.io/devcontainers/features/docker-in-docker:4.0.0": {}
+    "ghcr.io/devcontainers/features/docker-in-docker:4.1.0": {}
   },
   "customizations": {
     "vscode": {
@@ -19,12 +25,26 @@
   },
   "workspaceFolder": "/opt/ros/overlay_ws/",
   "containerEnv": {
+    // The firewall is installed in the image but inert until this is "true".
+    // See .devcontainer/firewall-allowlist.txt for the allowed destinations.
     "ENABLE_FIREWALL": "false",
 
     "DISPLAY": ":100",
     "DOCKER_HOST": "unix:///var/run/docker.sock",
     "DEVCONTAINER_ID": "${devcontainerId}",
     "DEV_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
+
+    // Claude Code resolves .credentials.json from this directory, independently of
+    // ~/.claude. It points at the shared agentdev-agents-auth volume (Claude's subdirectory of
+    // it) so authentication survives a rebuild and is shared with every other worktree,
+    // while nothing else in ~/.claude is.
+    "CLAUDE_SECURESTORAGE_CONFIG_DIR": "/root/.agents-auth/claude",
+
+    // drqp-clangd-cache (mounted at the workspace .cache) persists both the
+    // codebase-memory-mcp cache below and the pre-commit hook cache
+    // (PRE_COMMIT_HOME) so rebuilds start warm.
+    "CBM_CACHE_DIR": "/opt/ros/overlay_ws/.cache/codebase-memory-mcp",
+    "PRE_COMMIT_HOME": "/opt/ros/overlay_ws/.cache/pre-commit",
 
     "UV_CACHE_DIR": "/uv/cache",
     "UV_PYTHON_INSTALL_DIR": "/uv/python",
@@ -33,9 +53,9 @@
     "CTEST_PARALLEL_LEVEL": " " // equivalent to `ctest --parallel` / `ctest -j`
   },
 
-  "forwardPorts": ["14500-14599"],
+  "forwardPorts": [14500],
   "portsAttributes": {
-    "14500-14599": {
+    "14500": {
       "label": "Xpra HTML5",
       "onAutoForward": "silent"
     }
@@ -47,6 +67,8 @@
       "type": "volume"
     },
     {
+      // Persists per-worktree caches across rebuilds: clangd, codebase-memory-mcp
+      // (CBM_CACHE_DIR) and the pre-commit hook cache (PRE_COMMIT_HOME).
       "source": "drqp-clangd-cache",
       "target": "/opt/ros/overlay_ws/.cache",
       "type": "volume"
@@ -85,17 +107,39 @@
       "source": "drqp-uv",
       "target": "/uv",
       "type": "volume"
+    },
+    {
+      // Claude's plugins, marketplaces, sessions and ~/.claude.json. Declared here
+      // rather than in docker-compose.yml so Compose prefixes it per project: this
+      // state records absolute workspace paths, so worktrees sharing one copy fight
+      // over the marketplace registry and the plugin cache. Only the credentials are
+      // shared, via the agentdev-agents-auth volume in docker-compose.yml.
+      //
+      // ~/.claude.json is a single file, not a directory, and Docker named volumes are
+      // always directory-backed (mounting one straight at a file path materializes an
+      // empty directory there instead, breaking Claude Code's read/write of that file).
+      // It's persisted as a plain file inside this volume instead, with
+      // .devcontainer/scripts/postCreateCommand.sh symlinking ~/.claude.json to it.
+      "source": "agentdev-claude",
+      "target": "/root/.claude",
+      "type": "volume"
+    },
+    {
+      // Codex's plugins, marketplaces, sessions, logs, and sqlite state. Declared
+      // here rather than in docker-compose.yml so Compose prefixes it per project,
+      // for the same reason as agentdev-claude. Only auth.json is shared, via
+      // the agentdev-agents-auth volume in docker-compose.yml and
+      // .devcontainer/scripts/link-codex-auth.sh.
+      "source": "agentdev-codex",
+      "target": "/root/.codex",
+      "type": "volume"
     }
-    // drqp-claude, drqp-claude-json, drqp-codex are mounted via docker-compose.yml
-    // (top-level `volumes:` with explicit `name:`) so they're shared across every
-    // devcontainer instance instead of being isolated per compose project.
+    // agentdev-agents-auth is mounted via docker-compose.yml (top-level `volumes:` with
+    // explicit `name:`) so it's shared across every devcontainer instance instead
+    // of being isolated per compose project.
   ],
-  // Keep the developer `.venv` bootstrap separate from the ROS runtime environment.
-  "postCreateCommand": "./scripts/devcontainer-postCreateCommand.sh",
-  "postAttachCommand": {
-    "git config": "git config --global gpg.ssh.program ssh-keygen",
-    "python-venv": "./scripts/uv-sync.sh",
-    "rosdep": "./scripts/ros-dep.sh"
-  },
-  "postStartCommand": "./scripts/devcontainer-postStartCommand.sh"
+  "postCreateCommand": "./.devcontainer/scripts/postCreateCommand.sh",
+  "postAttachCommand": "./.devcontainer/scripts/postAttachCommand.sh",
+  "postStartCommand": "./.devcontainer/scripts/postStartCommand.sh",
+  "waitFor": "postStartCommand"
 }

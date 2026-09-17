@@ -24,7 +24,7 @@ The in-container keyring file is:
 ~/.local/share/keyrings/login.keyring
 ```
 
-It is brought up by `scripts/devcontainer-setup-keyring.sh`, which exposes the
+It is brought up by `.devcontainer/scripts/setup-keyring.sh`, which exposes the
 `org.freedesktop.secrets` Secret Service over a D-Bus session.
 
 ## The default tradeoff: an unencrypted keyring

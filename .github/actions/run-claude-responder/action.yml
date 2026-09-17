@@ -1,0 +1,172 @@
+name: Run Claude responder
+description: Prepare the CI agent environment and run the Claude responder action.
+
+inputs:
+  append-run-link:
+    description: Whether to append this run's link to the requesting comment.
+    required: false
+    default: 'false'
+  artifact-name:
+    description: Name for the responder execution artifact.
+    required: true
+  claude-code-oauth-token:
+    description: OAuth token for the Claude Code action.
+    required: true
+  github_token:
+    description: GitHub token passed to the Claude Code action.
+    required: true
+  prompt:
+    description: Prompt for the Claude responder.
+    required: true
+  comment-id:
+    description: Id of the comment or review that requested this run.
+    required: false
+    default: ''
+  comment-kind:
+    description: Kind of requesting comment or review.
+    required: false
+    default: ''
+  pr-number:
+    description: Pull request number for review update calls.
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Append run link to Claude request
+      if: inputs.append-run-link == 'true'
+      uses: actions/github-script@v9.0.0
+      env:
+        COMMENT_ID: ${{ inputs.comment-id }}
+        COMMENT_KIND: ${{ inputs.comment-kind }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+      with:
+        github-token: ${{ inputs.github_token }}
+        script: |
+          const marker = '<!-- claude-review-run-link -->';
+          const serverUrl = process.env.GITHUB_SERVER_URL ?? 'https://github.com';
+          const runUrl = `${serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+          const footer = `${marker}\n\n[View Claude review run](${runUrl})`;
+
+          const ids = {
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            comment_id: Number(process.env.COMMENT_ID),
+            review_id: Number(process.env.COMMENT_ID),
+            pull_number: Number(process.env.PR_NUMBER),
+          };
+          const kinds = {
+            issue_comment: {
+              read: () => github.rest.issues.getComment(ids),
+              write: (body) => github.rest.issues.updateComment({ ...ids, body }),
+            },
+            pull_request_review_comment: {
+              read: () => github.rest.pulls.getReviewComment(ids),
+              write: (body) => github.rest.pulls.updateReviewComment({ ...ids, body }),
+            },
+            pull_request_review: {
+              read: () => github.rest.pulls.getReview(ids),
+              write: (body) => github.rest.pulls.updateReview({ ...ids, body }),
+            },
+          };
+          const kind = kinds[process.env.COMMENT_KIND];
+          if (!kind) {
+            core.warning(`Unknown comment_kind ${JSON.stringify(process.env.COMMENT_KIND)}; not appending the run link.`);
+            return;
+          }
+
+          const { data } = await kind.read();
+          const body = data.body ?? '';
+          const nextBody = body.includes(marker)
+            ? body.replace(new RegExp(`${marker}[\\s\\S]*$`), footer)
+            : `${body.trimEnd()}\n\n${footer}`;
+          if (nextBody !== body) {
+            await kind.write(nextBody);
+          }
+
+    # A `container:` job runs no devcontainer hooks, so this stands in for them.
+    #
+    # Only the git safe-directory hook is run, which is where this diverges from
+    # upstream. This workspace's postStart/postAttach are ROS-specific and
+    # unsuitable for CI: they run rosdep, git-clone a VS Code extension pack,
+    # start VirtualHere, and launch Xpra. None of that serves a review.
+    #
+    # The agentdev catalog still reaches Claude Code: .claude/settings.json
+    # declares the marketplace in extraKnownMarketplaces and enables the plugin,
+    # so it is installed at session start. That matters — without the catalog
+    # the responder improvises a review instead of running agentdev:pr-review,
+    # which is a green required check over an ungrounded review.
+    - name: Prepare the agent environment
+      shell: bash
+      env:
+        DEV_WORKSPACE_FOLDER: ${{ github.workspace }}
+      run: |
+        mkdir -p /root/.claude /root/.codex
+        .devcontainer/scripts/setup-git-safe-directory.sh
+
+    # The gitignored local settings layer is written by the local-scope plugin
+    # install, which only runs where a marketplace is published, so this
+    # workspace never has one. Treat it as optional rather than assuming it.
+    - name: Merge Claude settings
+      id: claude_settings
+      shell: bash
+      run: |
+        if [[ -f .claude/settings.local.json ]]; then
+          merged=$(jq -cs '.[0] * .[1]' .claude/settings.json .claude/settings.local.json)
+        else
+          merged=$(jq -c '.' .claude/settings.json)
+        fi
+        {
+          echo 'json<<CLAUDE_SETTINGS_EOF'
+          echo "$merged"
+          echo 'CLAUDE_SETTINGS_EOF'
+        } >>"$GITHUB_OUTPUT"
+
+    # For dispatched reviews the requester was authorized by preflight.
+    - name: Claude Responder
+      id: claude_responder
+      uses: anthropics/claude-code-action@v1
+      with:
+        allowed_bots: github-actions[bot]
+        claude_code_oauth_token: ${{ inputs.claude-code-oauth-token }}
+        github_token: ${{ inputs.github_token }}
+        settings: ${{ steps.claude_settings.outputs.json }}
+        claude_args: --allowedTools '${{ env.CLAUDE_PR_REVIEW_ARGS }}'
+        assignee_trigger: 'claude-bot'
+        show_full_output: true
+        prompt: ${{ inputs.prompt }}
+
+    - name: Attach responder output file
+      if: always() && steps.claude_responder.outputs.execution_file != ''
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ${{ steps.claude_responder.outputs.execution_file }}
+        retention-days: 7
+
+    - name: Fail on Claude usage limit
+      if: always() && steps.claude_responder.outputs.execution_file != ''
+      shell: bash
+      env:
+        EXECUTION_FILE: ${{ steps.claude_responder.outputs.execution_file }}
+      run: |
+        if jq --exit-status '
+          any(
+            .[]?
+            | select(
+                .type? == "assistant"
+                and .message.type? == "message"
+                and .message.role? == "assistant"
+              )
+            | .message.content[]?
+            | select(
+                .type? == "text"
+                and (.text? | contains("You'\''ve hit your org'\''s monthly spend limit"))
+              );
+            true
+          )
+        ' "$EXECUTION_FILE" >/dev/null; then
+          echo "::error::Claude hit the organization's monthly spend limit."
+          exit 1
+        fi

@@ -19,6 +19,10 @@ statsig.anthropic.com
 statsig.com
 sentry.io
 
+# OpenAI / Codex
+api.openai.com
+chatgpt.com
+
 # npm registry
 registry.npmjs.org
 
@@ -42,6 +46,10 @@ archive.ubuntu.com
 ppa.launchpadcontent.net
 ports.ubuntu.com
 download.docker.com
+ghcr.io
+registry-1.docker.io
+auth.docker.io
+production.cloudflare.docker.com
 packages.ros.org
 deb.nodesource.com
 apt.kitware.com

@@ -3,11 +3,15 @@
 This directory adapts the repository's Claude-native AI tooling (canonical
 source in `.claude/`) so it is discoverable in Codex:
 
-- `agents/` — trampoline files that delegate to `.claude/agents/*.agent.md`
 - `skills/` — symlink to `../.claude/skills/`
 
-Edit the `.claude/` sources, not this directory. When adding or renaming an
-agent, add or update the matching trampoline in `agents/`.
+Edit the `.claude/` sources, not this directory.
+
+General-purpose skills and agents are not kept in this repository. They are
+installed from the [`agentdev`](https://github.com/plume-works/agent-devcontainer)
+catalog by the devcontainer's post-create hooks
+(`.devcontainer/scripts/reinstall-agentdev-codex.sh`) and are invoked under the
+`agentdev:` prefix.
 
 ## Codex Cloud environment setup
 

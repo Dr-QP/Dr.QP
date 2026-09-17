@@ -32,7 +32,7 @@ do not fail CI.
 1. **Format and autofix with ruff.** Run the bundled reformat script from the
    repo root — it runs `ruff format`, `ruff check --fix`, and isort across
    Python packages, scripts, and notebooks. Ansible is owned by Super-Linter;
-   use the [local-reformat](../local-reformat/SKILL.md) skill for that workflow:
+   use the `/agentdev:local-reformat` skill for that workflow:
 
    ```bash
    scripts/python-reformat.sh # py files only

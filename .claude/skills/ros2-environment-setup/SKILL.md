@@ -64,6 +64,7 @@ If `scripts/with-ros-env.sh` or `source scripts/setup.bash` reports that
 `/opt/ros/$ROS_DISTRO/setup.bash` is absent (or `ROS_DISTRO` is unset), local
 retries cannot work. Preserve the command and escalate it:
 
-- With a Docker daemon, use [microvm-sandbox](../microvm-sandbox/SKILL.md).
-- Without Docker, use
-  [remote-codespace-session](../remote-codespace-session/SKILL.md).
+- With a Docker daemon, use `/agentdev:microvm-sandbox`.
+- Without Docker, use `/agentdev:remote-codespace-session`.
+
+Both forward the command verbatim, so keep `scripts/with-ros-env.sh` in it.

@@ -1,0 +1,47 @@
+---
+# ROS shell integration for bash and fish.
+#
+# This is the ROS delta over the base image's `bash_setup` and `fish_setup`
+# roles. The base image installs fish, fisher and bass, and drops its own
+# `dev.fish`; this role only adds the ROS pieces alongside them.
+#
+# `bass` matters: ros.fish sources ROS's bash setup scripts through it, so this
+# role depends on the base image's fish_setup having run at image-build time.
+#
+# Ownership is root:root because this workspace's devcontainer runs as root
+# (workspaceFolder /opt/ros/overlay_ws), matching the base image's own roles.
+- name: Add ros2_activate to .bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ user_home }}/.bashrc"
+    line: 'alias ros2_activate="source /opt/ros/{{ ros_distro }}/setup.bash"'
+    state: present
+    create: true
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Add ros2_ws to .bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ user_home }}/.bashrc"
+    line: 'alias ros2_ws="source ./scripts/setup.bash"'
+    state: present
+    create: true
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Ensure fish config directory exists
+  ansible.builtin.file:
+    path: "{{ user_home }}/.config/fish/conf.d"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Copy ROS fish configuration
+  ansible.builtin.template:
+    src: ros.fish.j2
+    dest: "{{ user_home }}/.config/fish/conf.d/ros.fish"
+    mode: "0644"
+    owner: root
+    group: root

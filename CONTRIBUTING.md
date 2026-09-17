@@ -78,4 +78,3 @@ By contributing to **Dr.QP**, you agree that your contributions will be licensed
 ---
 
 Thank you for your interest in contributing to **Dr.QP**! Together, we can build something amazing.
-
