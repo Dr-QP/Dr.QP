@@ -22,10 +22,12 @@
       "platformAutomerge": true
     },
     {
-      "description": "The dev image is built FROM this one, digest-pinned in docker/ros/desktop/ros-desktop.Dockerfile, so a bump here is what rebuilds jazzy-ros-desktop against a newer upstream base — closing the staleness gap recorded as F7 in docs/agents/specs/agent-devcontainer-migration/. The pin sits inside the `ros` path filter on purpose, so merging the bump runs that build; no loop is possible because this repository does not build agent-desktop. Left un-automerged on purpose: unlike the pin above, this one does change what the image contains, so a human reviews it.",
+      "description": "The dev image is built FROM this one, digest-pinned in docker/ros/desktop/ros-desktop.Dockerfile, so a bump here is what rebuilds jazzy-ros-desktop against a newer upstream base — closing the staleness gap recorded as F7 in docs/agents/specs/agent-devcontainer-migration/. The pin sits inside the `ros` path filter on purpose, so merging the bump runs that build; no loop is possible because this repository does not build agent-desktop. Automerge after green CI: the rebuilt jazzy-ros-desktop image itself is what verifies the new base.",
       "matchDatasources": ["docker"],
       "matchPackageNames": ["ghcr.io/plume-works/agent-desktop"],
-      "automerge": false
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
     },
     {
       "description": "Super-Linter and the pre-commit/local tools it pins (Prettier, clang-format, Ansible Lint, Hadolint, Ruff, ShellCheck, Gitleaks, Actionlint, Zizmor) must stay in sync with the pinned Super-Linter image. Update them manually with the /agentdev:sync-super-linter-tool-versions skill instead.",
