@@ -40,7 +40,6 @@ jobs:
             - .claude/skills/**
             - .github/workflows/validate-agent-files.yml
             - .github/actions/log-debug-stats/**
-            - py_packages/**/*.py
 
       - name: Log debug stats
         if: ${{ always() }}
@@ -50,10 +49,16 @@ jobs:
 
   validate-agent-files:
     name: Validate Agent Files
-    runs-on: ubuntu-latest
+    # The validator is not published to PyPI; it reaches this job as the uv tool
+    # the digest-pinned dev image installs on PATH, which is why this runs in the
+    # container rather than on a bare runner.
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    container:
+      image: ghcr.io/dr-qp/jazzy-ros-desktop:edge
     needs: paths-filter
     permissions:
       contents: read
+    timeout-minutes: 10
     if: needs.paths-filter.outputs.pass == 'true'
 
     steps:
@@ -62,25 +67,12 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup Python venv
-        uses: ./.github/actions/setup-python-venv
-
-      - name: Test validate_agent_files
+      - name: Add workspace to safe directories
         run: |
-          pytest py_packages/validate_agent_files/tests \
-            --cov=validate_agent_files --cov-report=xml
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Validate Agent Files
         run: validate_agent_files --recommend .claude
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v6.0.1
-        if: ${{ !cancelled() }}
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          flags: validate-agent-files
-          name: validate-agent-files-coverage
-          files: coverage.xml
 
       - name: Log debug stats
         if: ${{ always() }}
