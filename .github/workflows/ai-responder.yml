@@ -193,7 +193,7 @@ jobs:
 
       - name: Checkout composite actions
         if: steps.checkout_ref.outputs.isFork != 'true' && steps.checkout_ref.outputs.isPullRequest == 'true'
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v6.1.0
         with:
           sparse-checkout: .github/actions
           fetch-depth: 1
@@ -413,7 +413,7 @@ jobs:
     environment: claude-review
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v6.1.0
         with:
           # CodeQL flags this checkout with actions/untrusted-checkout-toctou/critical
           # Untrusted Checkout TOCTOU
@@ -457,7 +457,7 @@ jobs:
     environment: claude-review
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v6.1.0
         with:
           # See the same checkout guard rationale in the review responder job.
           ref: ${{ needs.preflight.outputs.checkout_ref }}
@@ -504,7 +504,7 @@ jobs:
       pull-requests: read
     steps:
       - name: Checkout composite actions
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v6.1.0
         with:
           sparse-checkout: .github/actions
           fetch-depth: 1

@@ -25,7 +25,7 @@ jobs:
       pass: ${{ steps.filter.outputs.pass }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v6.1.0
         with:
           persist-credentials: false
 
@@ -85,7 +85,7 @@ jobs:
         # your codebase is analyzed, see https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/codeql-code-scanning-for-compiled-languages
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v6.1.0
         with:
           persist-credentials: false
 
@@ -203,7 +203,7 @@ jobs:
     if: always()
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v6.1.0
         with:
           persist-credentials: false
 
