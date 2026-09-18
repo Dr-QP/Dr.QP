@@ -1044,7 +1044,7 @@ docs = [
     { name = "myst-parser", specifier = ">=4.0.0" },
     { name = "numpy", specifier = ">=1.26.0,<2.0.0" },
     { name = "numpy-quaternion", specifier = ">=2024.0.7" },
-    { name = "pydata-sphinx-theme", specifier = "==0.16.0" },
+    { name = "pydata-sphinx-theme", specifier = "==0.21.0" },
     { name = "pygithub", specifier = ">=2.6" },
     { name = "pygments", specifier = ">=2.17.2" },
     { name = "ruff", specifier = ">=0.11.5" },
@@ -2558,20 +2558,21 @@ wheels = [
 
 [[package]]
 name = "pydata-sphinx-theme"
-version = "0.16.0"
+version = "0.21.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "accessible-pygments" },
     { name = "babel" },
     { name = "beautifulsoup4" },
     { name = "docutils" },
+    { name = "jinja2" },
     { name = "pygments" },
+    { name = "requests" },
     { name = "sphinx" },
-    { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/91/c3/5240f2a5dc0b4856655c003466f70aa50d676b1709e5b04f0bee296bbd28/pydata_sphinx_theme-0.16.0.tar.gz", hash = "sha256:721dd26e05fa8b992d66ef545536e6cbe0110afb9865820a08894af1ad6f7707", size = 2407197, upload-time = "2024-10-22T14:24:41.245Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bd/ac/692035c97b732b26ee269fb14ec790046b21c7383a46bedfb3d40c3a4884/pydata_sphinx_theme-0.21.0.tar.gz", hash = "sha256:dc3f71216ea34725ddad68e505497eab4ba134a88abfb971a7df6b28a35c1997", size = 5010490, upload-time = "2026-08-25T14:16:47.949Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ba/92/38f384061e1361fac7092c35e932c0e08026fb9080bf3fbf05f4c3bb6bda/pydata_sphinx_theme-0.16.0-py3-none-any.whl", hash = "sha256:18c810ee4e67e05281e371e156c1fb5bb0fa1f2747240461b225272f7d8d57d8", size = 6739948, upload-time = "2024-10-22T14:24:38.782Z" },
+    { url = "https://files.pythonhosted.org/packages/b5/8d/fb90c2ada1a938ba55f1730139f4d43736aee22d5f82f927c64cd858256f/pydata_sphinx_theme-0.21.0-py3-none-any.whl", hash = "sha256:d36a754bf9580b01789efa8a01869f2d7c87fa6c543ecbcafb14b6bdd4364f90", size = 6208465, upload-time = "2026-08-25T14:16:46.223Z" },
 ]
 
 [[package]]
