@@ -47,7 +47,7 @@ runs:
         INPUTS_PREFIX: ${{ inputs.prefix }}
         INPUTS_ARCH: ${{ inputs.arch }}
 
-    - uses: docker/metadata-action@v6.1.0
+    - uses: docker/metadata-action@v6.2.0
       id: meta
       with:
         images: ${{ inputs.images }}
