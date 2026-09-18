@@ -14,7 +14,7 @@
     // so `gh codespace ssh` can attach — required by the
     // remote-codespace-session skill and GitHub Codespaces SSH access.
     "ghcr.io/devcontainers/features/sshd:1": {},
-    "ghcr.io/devcontainers/features/docker-in-docker:4.1.0": {}
+    "ghcr.io/devcontainers/features/docker-in-docker:4.1.1": {}
   },
   "customizations": {
     "vscode": {
