@@ -47,7 +47,7 @@ notebooks = [
   "matplotlib-inline-labels>=0.1",
   "typeguard>=4.1.5",
   "Pygments>=2.17.2",
-  "jupytext==1.17.2",
+  "jupytext==1.19.5",
   "drqp_brain",
   "drqp_kinematics",
 ]
