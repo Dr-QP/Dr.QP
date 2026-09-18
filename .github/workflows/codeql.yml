@@ -173,7 +173,7 @@ jobs:
       - name: Dismiss alerts that were suppressed with inline comments
         # run auto dismissal only on main branch, aka reviewed code only, since dismissals are global
         if: ${{ github.ref == 'refs/heads/main' }}
-        uses: advanced-security/dismiss-alerts@v2.0.2
+        uses: advanced-security/dismiss-alerts@v2.0.3
         with:
           sarif-id: ${{ steps.upload-sarif.outputs.sarif-id }}
           sarif-file: ${{ steps.sarif.outputs.file }}
