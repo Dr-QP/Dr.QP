@@ -33,6 +33,11 @@ on:
         required: false
         default: false
         type: boolean
+      caller_pr_author:
+        description: Login of the pull request author from the calling workflow.
+        required: false
+        default: ''
+        type: string
       force_run:
         description: Run reformat even when the path filter does not match.
         required: false
@@ -116,22 +121,32 @@ jobs:
             - '**/Dockerfile'
             - '**/Dockerfile.*'
 
-      - name: Override pass for draft AI PRs
+      - name: Override pass for bot and draft AI PRs
         id: override
         run: |
           pass="${STEPS_FILTER_OUTPUTS_PASS}"
-          if [[ "${INPUTS_CALLER_EVENT_NAME}" == "pull_request" && "${{ inputs.caller_pr_is_draft }}" == "true" ]]; then
-            case "${GITHUB_ACTOR}" in
-              *claude*|*codex*|*cursor*)
-                pass='false'
-                ;;
-            esac
+          if [[ "${INPUTS_CALLER_EVENT_NAME}" == "pull_request" ]]; then
+            # Renovate treats any foreign commit on its branch as a signal that the
+            # branch was taken over, and stops updating the pull request. Never run
+            # the formatter on its pull requests so it keeps ownership of them.
+            if [[ "${INPUTS_CALLER_PR_AUTHOR:-$GITHUB_ACTOR}" == 'renovate[bot]' ]]; then
+              echo "Renovate pull request detected. Skipping reformat and super-linter."
+              pass='false'
+            elif [[ "${INPUTS_CALLER_PR_IS_DRAFT}" == "true" ]]; then
+              case "${GITHUB_ACTOR}" in
+                *claude*|*codex*|*cursor*)
+                  pass='false'
+                  ;;
+              esac
+            fi
           fi
 
           echo "pass=$pass" >> "$GITHUB_OUTPUT"
         env:
           STEPS_FILTER_OUTPUTS_PASS: ${{ steps.filter.outputs.pass }}
           INPUTS_CALLER_EVENT_NAME: ${{ inputs.caller_event_name }}
+          INPUTS_CALLER_PR_AUTHOR: ${{ inputs.caller_pr_author }}
+          INPUTS_CALLER_PR_IS_DRAFT: ${{ inputs.caller_pr_is_draft }}
 
       - name: Detect trusted skip tags
         id: skip-tags

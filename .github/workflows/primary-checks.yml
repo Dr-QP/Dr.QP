@@ -37,6 +37,7 @@ jobs:
       caller_pr_head_sha: ${{ github.event.pull_request.head.sha || '' }}
       caller_pr_body: ${{ github.event.pull_request.body || '' }}
       caller_pr_is_draft: ${{ github.event.pull_request.draft || false }}
+      caller_pr_author: ${{ github.event.pull_request.user.login || '' }}
       force_run: ${{ github.event_name == 'workflow_dispatch' }}
       validate_all_codebase: ${{ github.event_name == 'workflow_dispatch' }}
     secrets:
