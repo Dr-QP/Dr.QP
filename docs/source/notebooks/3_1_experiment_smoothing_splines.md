@@ -6,6 +6,9 @@ jupytext:
     format_version: 0.13
     jupytext_version: 1.17.0
   root_level_metadata_filter: -jupytext,-kernelspec
+  notebook_metadata_filter: -all
+  main_language: python
+  cell_metadata_filter: -all
 kernelspec:
   display_name: .venv
   language: python
