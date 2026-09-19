@@ -5,6 +5,12 @@
   "docker-compose": {
     "managerFilePatterns": ["/(^|/)devcontainer-compose-pins\\.ya?ml$/"]
   },
+  "vulnerabilityAlerts": {
+    "description": "Merge vulnerability fixes without waiting for a human. `config:recommended` leaves automerge off and the default vulnerability handling only adjusts labels and scheduling, so security PRs outside the manager-specific rules below sat open indefinitely. Applies to every ecosystem; the packageRules entries stay authoritative for routine, non-security updates.",
+    "automerge": true,
+    "automergeType": "pr",
+    "platformAutomerge": true
+  },
   "packageRules": [
     {
       "description": "Automatically merge GitHub Actions dependency updates after Renovate observes green CI.",
