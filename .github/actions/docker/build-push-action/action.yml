@@ -56,7 +56,7 @@ runs:
 
     - name: Build and push Docker image
       id: build
-      uses: docker/build-push-action@v7.2.0
+      uses: docker/build-push-action@v7.4.0
       env:
         REGISTRY_CACHE: type=registry,ref=${{ inputs.image }}:cache-${{ inputs.future-tag }}${{ inputs.arch }}
         GHA_CACHE: type=gha,scope=${{ inputs.image }}-${{ inputs.future-tag }}${{ inputs.arch }}
