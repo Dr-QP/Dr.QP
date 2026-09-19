@@ -84,7 +84,7 @@ jobs:
       skip_super_linter: ${{ steps.skip-tags.outputs.skip_super_linter }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
@@ -199,7 +199,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0 # Required for git diff to work properly
           persist-credentials: false
@@ -232,7 +232,7 @@ jobs:
 
       - name: Upload formatter patch
         if: steps.patch.outputs.changed == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: format-patch-reformat
           path: ./.tmp/format-patches/reformat.patch
@@ -263,7 +263,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0 # Required for git diff to work properly
           persist-credentials: false
@@ -299,7 +299,7 @@ jobs:
 
       - name: Upload Super-Linter patch
         if: steps.patch.outputs.changed == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: format-patch-super-linter
           path: ./.tmp/format-patches/super-linter.patch
@@ -325,7 +325,7 @@ jobs:
 
       - name: Attach superlinter logs
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: super-linter-logs
           path: super-linter.log
@@ -355,7 +355,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0 # Required for git diff to work properly
           token: ${{ secrets.REPO_PAT }} # Use PAT to allow CI reruns on pushed commits
@@ -527,7 +527,7 @@ jobs:
       run_downstream: ${{ steps.compute.outputs.run_downstream }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 

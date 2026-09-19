@@ -22,9 +22,9 @@ dev = [
 ]
 docs = [
   { include-group = "notebooks" },
-  "sphinx~=8.2.0",
-  "sphinx-notfound-page~=1.0.0",
-  "pydata-sphinx-theme==0.16.0",
+  "sphinx~=9.1.0",
+  "sphinx-notfound-page~=1.1.0",
+  "pydata-sphinx-theme==0.21.0",
   "sphinx-sitemap>=2.6.0",
   "myst-nb>=1.2.0",
   "myst-parser>=4.0.0",
@@ -46,7 +46,7 @@ notebooks = [
   "matplotlib-inline-labels>=0.1",
   "typeguard>=4.1.5",
   "Pygments>=2.17.2",
-  "jupytext==1.17.2",
+  "jupytext==1.19.5",
   "drqp_brain",
   "drqp_kinematics",
 ]

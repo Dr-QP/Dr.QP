@@ -25,7 +25,7 @@ jobs:
       pass: ${{ steps.filter.outputs.pass }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
@@ -85,7 +85,7 @@ jobs:
         # your codebase is analyzed, see https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/codeql-code-scanning-for-compiled-languages
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
@@ -173,7 +173,7 @@ jobs:
       - name: Dismiss alerts that were suppressed with inline comments
         # run auto dismissal only on main branch, aka reviewed code only, since dismissals are global
         if: ${{ github.ref == 'refs/heads/main' }}
-        uses: advanced-security/dismiss-alerts@v2.0.2
+        uses: advanced-security/dismiss-alerts@v2.0.3
         with:
           sarif-id: ${{ steps.upload-sarif.outputs.sarif-id }}
           sarif-file: ${{ steps.sarif.outputs.file }}
@@ -203,7 +203,7 @@ jobs:
     if: always()
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
