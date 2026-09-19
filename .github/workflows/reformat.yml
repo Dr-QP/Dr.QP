@@ -267,7 +267,7 @@ jobs:
       inputs.should_run &&
       needs.paths-filter.outputs.skip_super_linter != 'true' &&
       (needs.paths-filter.outputs.pass == 'true' || inputs.force_run)
-    runs-on: 'ubuntu-24.04'
+    runs-on: 'ubuntu-26.04'
     outputs:
       changed: ${{ steps.patch.outputs.changed }}
     permissions:
