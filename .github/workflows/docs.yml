@@ -20,7 +20,7 @@ jobs:
     outputs:
       pass: ${{ steps.filter.outputs.docs }}
     steps:
-      - uses: actions/checkout@v6.0.3
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0 # all history for all branches and tags.
           persist-credentials: false
@@ -49,7 +49,7 @@ jobs:
     permissions: {}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6.0.3
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0 # all history for all branches and tags.
           persist-credentials: false
@@ -97,7 +97,7 @@ jobs:
     if: always()
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
