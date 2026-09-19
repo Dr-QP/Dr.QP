@@ -1,1 +1,5 @@
 formats = "ipynb,md:myst"
+
+# Omit the writing tool's own version from the front matter: it is not content,
+# and stamping it makes every jupytext upgrade rewrite every notebook.
+notebook_metadata_filter = "-jupytext.text_representation.jupytext_version"
