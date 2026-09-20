@@ -65,6 +65,28 @@ repos:
     hooks:
       - id: actionlint
 
+  - repo: https://github.com/renovatebot/pre-commit-hooks
+    rev: 44.103.7
+    hooks:
+      - id: renovate-config-validator
+        # --no-global validates the file as a repository config. The hook's
+        # default invocation applies the self-hosted global schema instead,
+        # which accepts and rejects a different set of options, so without it
+        # this would not be checking what Renovate actually reads. --strict
+        # also fails on warnings and on a config that needs migration. Both
+        # flags match .github/workflows/validate-renovate-config.yml.
+        #
+        # This hook pins Renovate through additional_dependencies, deliberately
+        # unlike that workflow: this is the fast deterministic local gate,
+        # while the workflow is left unpinned so it tracks whatever the
+        # Mend-hosted app currently runs. Do not "fix" the inconsistency.
+        args: [--no-global, --strict]
+        # The hook ships language_version: lts, which the devcontainer's
+        # nodeenv (0.13.4) rejects outright -- it parses the value as a version
+        # number and raises InvalidVersion. The image provides Node 24, so use
+        # it directly rather than having pre-commit build a toolchain.
+        language_version: system
+
   - repo: local
     hooks:
       - id: zizmor
