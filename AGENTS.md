@@ -6,7 +6,7 @@ NEVER use GitHub API or GitHub MCP tools to update branch refs or push branch co
 
 ## Best Practices for Agents
 
-0. NEVER change git config on local or global level unless explicitly instructed. NEVER switch/change remote.
+0. NEVER change git config on local or global level unless explicitly instructed. NEVER switch/change remote. The one exception: **push a new feature branch with `git push -u origin <branch>`**, which sets that branch's own upstream. A branch created off `main` inherits `origin/main` as its upstream, and every `agentdev` branch script (`find-branch-pr.sh`, `push-branch.sh`, `update-branch.sh`) then resolves the head to `main` and halts with `RESULT=PROTECTED_BRANCH`. `-u` is what makes `/agentdev:pr-open`, `/agentdev:update-branch` and `/agentdev:pr-merge` work on the branch afterwards; it is per-branch tracking config, not a repo- or user-level setting, and it never touches the remote.
 1. **Always use scripts/with-ros-env.sh** to run ROS commands like `colcon build` or `colcon test`
 2. **Use incremental builds** (`--packages-up-to <pkg>`) during development
 3. **Test specific packages** (`--packages-select <pkg>`) for rapid iteration
