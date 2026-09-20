@@ -1,0 +1,11 @@
+---
+# Pinned apt package versions - GENERATED FILE
+#
+# Target: Ubuntu noble / amd64
+#
+# Regenerate with scripts/apt-pins-refresh.py. Renovate keeps the versions
+# current through the `deb` custom managers in .github/renovate.json, so a
+# manual edit is only needed to add or remove a package name.
+
+cmake_system_apt_pins:
+  cmake: "3.28.3-1build7"

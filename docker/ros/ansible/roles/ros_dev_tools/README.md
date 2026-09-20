@@ -19,4 +19,8 @@ the OSRF repository.
 
 ## Role Variables
 
-None.
+`ros_dev_tools_apt_pins`, loaded from `vars/apt_pins_<suite>_<arch>.yml`. That
+file is both the package list and the pinned version of each package — add or
+remove a package by editing every architecture's file, then run
+`./scripts/apt-pins-refresh.py` to fill in the versions. See
+[Pinned apt versions](../../../../../docs/source/GettingStarted/ansible.md#pinned-apt-versions).

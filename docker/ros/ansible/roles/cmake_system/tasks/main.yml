@@ -1,5 +1,13 @@
 ---
 # Install CMake from system packages
+#
+# The pin in vars/apt_pins_<suite>_<arch>.yml is resolved against the Ubuntu
+# archive only, because this role removes the Kitware repository first: a
+# Kitware version would not be installable by the time apt runs.
+- name: Load pinned apt versions
+  ansible.builtin.include_vars:
+    file: "{{ role_path }}/vars/apt_pins_{{ system_dist }}_{{ system_arch }}.yml"
+
 # - set fact
 - name: Desired CMake version
   ansible.builtin.set_fact:
@@ -38,8 +46,7 @@
 
 - name: Install system packaged CMake
   ansible.builtin.apt:
-    name:
-      - cmake
+    name: "{{ cmake_system_apt_pins.items() | map('join', '=') | list }}"
     state: present
     allow_downgrade: true
     clean: true

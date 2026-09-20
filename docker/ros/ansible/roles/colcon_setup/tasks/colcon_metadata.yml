@@ -8,6 +8,7 @@
   ignore_errors: true
 
 - name: Add colcon metadata default
+  # renovate: datasource=git-refs depName=colcon/colcon-metadata-repository packageName=https://github.com/colcon/colcon-metadata-repository currentValue=master
   ansible.builtin.command: >-
     colcon --log-base "{{ colcon_setup_temp_dir.path }}" metadata add default
     https://raw.githubusercontent.com/colcon/colcon-metadata-repository/f0ea17f9a0e70ec0e0e15f869deec2b9f942607d/index.yaml

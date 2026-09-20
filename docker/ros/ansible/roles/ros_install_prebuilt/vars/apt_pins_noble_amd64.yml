@@ -1,0 +1,11 @@
+---
+# Pinned apt package versions - GENERATED FILE
+#
+# Target: Ubuntu noble / amd64
+#
+# Regenerate with scripts/apt-pins-refresh.py. Renovate keeps the versions
+# current through the `deb` custom managers in .github/renovate.json, so a
+# manual edit is only needed to add or remove a package name.
+
+ros_install_prebuilt_apt_pins:
+  ros-jazzy-desktop: "0.11.0-1noble.20260905.070740"

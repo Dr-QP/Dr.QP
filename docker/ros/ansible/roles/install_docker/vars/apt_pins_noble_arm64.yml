@@ -1,0 +1,22 @@
+---
+# Pinned apt package versions - GENERATED FILE
+#
+# Target: Ubuntu noble / arm64
+#
+# Regenerate with scripts/apt-pins-refresh.py. Renovate keeps the versions
+# current through the `deb` custom managers in .github/renovate.json, so a
+# manual edit is only needed to add or remove a package name.
+
+install_docker_prereq_apt_pins:
+  apt-transport-https: "2.8.3"
+  ca-certificates: "20260601~24.04.1"
+  curl: "8.5.0-2ubuntu10.13"
+  software-properties-common: "0.99.49.4"
+
+install_docker_engine_apt_pins:
+  containerd.io: "2.3.5-1~ubuntu.24.04~noble"
+  docker-buildx-plugin: "0.37.1-1~ubuntu.24.04~noble"
+  docker-ce: "5:29.8.1-1~ubuntu.24.04~noble"
+  docker-ce-cli: "5:29.8.1-1~ubuntu.24.04~noble"
+  docker-compose-plugin: "5.5.1-1~ubuntu.24.04~noble"
+  fuse-overlayfs: "1.13-1"

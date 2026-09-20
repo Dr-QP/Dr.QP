@@ -1,4 +1,11 @@
 ---
+# Pinned versions are resolved against the Ubuntu archive and Docker's own
+# repository only — the two apt sources a robot host has — and are recorded per
+# Ubuntu release, so a host on a different release needs its own pin file.
+- name: Load pinned apt versions
+  ansible.builtin.include_vars:
+    file: "{{ role_path }}/vars/apt_pins_{{ system_dist }}_{{ system_arch }}.yml"
+
 - name: Ensure Docker keyring directory exists
   ansible.builtin.file:
     path: /etc/apt/keyrings
@@ -7,11 +14,7 @@
 
 - name: Install Docker dependencies
   ansible.builtin.apt:
-    name:
-      - apt-transport-https
-      - ca-certificates
-      - curl
-      - software-properties-common
+    name: "{{ install_docker_prereq_apt_pins.items() | map('join', '=') | list }}"
     state: present
     update_cache: true
 
@@ -33,13 +36,7 @@
 
 - name: Install Docker Engine
   ansible.builtin.apt:
-    name:
-      - docker-ce
-      - docker-ce-cli
-      - containerd.io
-      - docker-buildx-plugin
-      - docker-compose-plugin
-      - fuse-overlayfs
+    name: "{{ install_docker_engine_apt_pins.items() | map('join', '=') | list }}"
     state: present
     update_cache: true
 

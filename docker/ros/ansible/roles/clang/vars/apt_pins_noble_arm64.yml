@@ -1,0 +1,11 @@
+---
+# Pinned apt package versions - GENERATED FILE
+#
+# Target: Ubuntu noble / arm64
+#
+# Regenerate with scripts/apt-pins-refresh.py. Renovate keeps the versions
+# current through the `deb` custom managers in .github/renovate.json, so a
+# manual edit is only needed to add or remove a package name.
+
+clang_apt_pins:
+  libstdc++-14-dev: "14.2.0-4ubuntu2~24.04.1"

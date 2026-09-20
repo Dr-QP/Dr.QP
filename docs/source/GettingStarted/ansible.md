@@ -171,6 +171,13 @@ This script:
 2. Generates a variables file in `ansible/roles/ros_dependencies/vars/known_ros_dependencies.yml`
 3. The generated variables (`ros_dependencies_known_packages`) are automatically used by the `ros_dependencies` role
 
+After adding or removing a dependency, refresh the version pins so the new
+package name has a version to install (see [Pinned apt versions](#pinned-apt-versions)):
+
+```bash
+./scripts/apt-pins-refresh.py
+```
+
 To run only the ROS dependencies role:
 
 ```bash
@@ -182,6 +189,47 @@ Alternatively, you can use the dedicated test playbook:
 ```bash
 ansible-playbook playbooks/test_ros_dependencies.yml
 ```
+
+## Pinned apt versions
+
+Every apt package a role installs is pinned to an exact version, so the
+devcontainer image is reproducible from the playbooks alone. The pins live
+next to the role that installs them:
+
+```text
+roles/<role>/vars/apt_pins_<suite>_<arch>.yml
+```
+
+There is one file per Ubuntu release and CPU architecture, because ROS debs
+carry a per-architecture build timestamp inside their version string — the
+same ROS package is `28.1.22-1noble.20260902.055335` on amd64 and
+`28.1.22-1noble.20260902.143108` on arm64. Each file maps a package name to
+the version to install, and the role turns that into the `name=version`
+specifiers it hands to apt.
+
+Renovate keeps the pins current: the `deb` custom managers in
+`.github/renovate.json` resolve every entry against the apt repositories the
+role actually enables, batch all of them into one PR, and automerge it once CI
+is green. Because the pin files sit under `docker/**`, merging that PR rebuilds
+and tests the devcontainer image the pins describe.
+
+To re-derive every pin from the repositories by hand — after adding a package
+name, or to check for drift:
+
+```bash
+./scripts/apt-pins-refresh.py          # rewrite the pin files
+./scripts/apt-pins-refresh.py --check  # report stale pins, change nothing
+```
+
+The repositories each role resolves against are listed in `DEFAULT_REPOS` and
+`ROLE_REPOS` in that script. They have to agree with the `registryUrls` in
+`.github/renovate.json`, or Renovate and the script would each keep reverting
+the other.
+
+Two dependencies in the roles are not version-addressable and so cannot be
+pinned: `llvm.sh` from `apt.llvm.org`, which installs whatever the LLVM project
+currently publishes for the requested major version, and the VirtualHere client
+binary, which upstream serves from a single unversioned URL.
 
 ## Requirements
 

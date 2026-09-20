@@ -18,3 +18,9 @@ configuring the daemon, and adding the user to the `docker` group.
 
 This role is intentionally focused on core installation only. Service startup
 is handled by the `install_docker_service` role where systemd is available.
+
+Package versions are pinned in `vars/apt_pins_<suite>_<arch>.yml`, resolved
+against the two apt sources a robot host has — the Ubuntu archive and Docker's
+own repository. The pins are specific to the Ubuntu release in the filename, so
+a host on a different release needs its own pin file. See
+[Pinned apt versions](../../../../../docs/source/GettingStarted/ansible.md#pinned-apt-versions).

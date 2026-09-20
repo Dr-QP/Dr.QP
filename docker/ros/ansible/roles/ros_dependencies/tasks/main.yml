@@ -6,6 +6,26 @@
   ansible.builtin.include_vars:
     file: "{{ role_path }}/vars/known_ros_dependencies.yml"
 
+# The pinned version of every known dependency, per Ubuntu release and
+# architecture: ROS debs carry a per-architecture build timestamp in their
+# version string, so the two architectures never share a pin. Both files are
+# kept in step with known_ros_dependencies.yml by scripts/apt-pins-refresh.py.
+- name: Load pinned apt versions
+  ansible.builtin.include_vars:
+    file: "{{ role_path }}/vars/apt_pins_{{ system_dist }}_{{ system_arch }}.yml"
+
+- name: Fail when a known ROS dependency has no pinned version
+  ansible.builtin.fail:
+    msg: >-
+      No pinned version in vars/apt_pins_{{ system_dist }}_{{ system_arch }}.yml for:
+      {{ ros_dependencies_unpinned_packages | join(', ') }}.
+      Run scripts/apt-pins-refresh.py to regenerate the pins.
+  when: ros_dependencies_unpinned_packages | length > 0
+  vars:
+    ros_dependencies_unpinned_packages: >-
+      {{ ros_dependencies_known_packages
+         | difference(ros_dependencies_apt_pins.keys() | list) }}
+
 - name: Update APT cache
   ansible.builtin.apt:
     update_cache: true
@@ -43,9 +63,15 @@
   loop:
     - "{{ ros_dependencies_available_packages_list }}"
 
+# Pair every available package name with its pinned version, so apt installs
+# exactly the versions recorded in vars/apt_pins_<suite>_<arch>.yml.
 - name: Install available ROS packages
   ansible.builtin.apt:
-    name: "{{ ros_dependencies_available_packages_list }}"
+    name: >-
+      {{ ros_dependencies_available_packages_list
+         | zip(ros_dependencies_available_packages_list
+               | map('extract', ros_dependencies_apt_pins))
+         | map('join', '=') | list }}
     state: present
     install_recommends: false
   when: ros_dependencies_available_packages_list | default([]) | length > 0

@@ -1,4 +1,9 @@
 ---
+# Pinned to the versions present in the devcontainer image referenced by
+# devcontainer-compose-pins.yml. Renovate's ansible-galaxy manager keeps them
+# current; see the automerge rule in .github/renovate.json.
 collections:
   - name: community.general
+    version: "12.4.0"
   - name: community.docker
+    version: "5.0.6"

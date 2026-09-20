@@ -1,13 +1,20 @@
 ---
 # ROS 2 prebuilt installation
+#
+# The blanket `apt upgrade` this role used to run first now lives in the
+# playbook's pre_tasks: running it here would upgrade the packages the earlier
+# roles had already installed at their pinned versions, which would make the
+# image build non-reproducible.
 
-- name: Upgrade packages
-  ansible.builtin.apt:
-    upgrade: true
+- name: Load pinned apt versions
+  ansible.builtin.include_vars:
+    file: "{{ role_path }}/vars/apt_pins_{{ system_dist }}_{{ system_arch }}.yml"
 
 - name: Install ROS 2 from packages
   ansible.builtin.apt:
-    name: "ros-{{ ros_distro }}-desktop"
+    name: "{{ ros_install_prebuilt_desktop_package }}={{ ros_install_prebuilt_apt_pins[ros_install_prebuilt_desktop_package] }}"
     state: present
     update_cache: true
     install_recommends: false
+  vars:
+    ros_install_prebuilt_desktop_package: "ros-{{ ros_distro }}-desktop"

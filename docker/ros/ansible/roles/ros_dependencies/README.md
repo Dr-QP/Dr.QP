@@ -23,3 +23,11 @@ To regenerate the dependencies list, run:
 ```
 
 The generated variables (`ros_dependencies_known_packages`) are automatically used by this role.
+
+The version each package is installed at comes from a separate file per Ubuntu release and architecture, `vars/apt_pins_<suite>_<arch>.yml`, because ROS debs carry a per-architecture build timestamp in their version string. The role fails with the offending package names if the generated list contains a dependency that has no pin. Regenerating the list does not add pins, so follow `ros-dep-gen-ansible.sh` with:
+
+```bash
+./scripts/apt-pins-refresh.py
+```
+
+Renovate keeps the pins current on its own; see [Pinned apt versions](../../../../../docs/source/GettingStarted/ansible.md#pinned-apt-versions).

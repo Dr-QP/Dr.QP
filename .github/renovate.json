@@ -6,11 +6,60 @@
     "managerFilePatterns": ["/(^|/)devcontainer-compose-pins\\.ya?ml$/"]
   },
   "vulnerabilityAlerts": {
-    "description": "Merge vulnerability fixes without waiting for a human. `config:recommended` leaves automerge off and the default vulnerability handling only adjusts labels and scheduling, so security PRs outside the manager-specific rules below sat open indefinitely. Applies to every ecosystem; the packageRules entries stay authoritative for routine, non-security updates.",
+    "description": "Merge vulnerability fixes without waiting for a human. `config:recommended` leaves automerge off and the default vulnerability handling only adjusts labels and scheduling, so security PRs outside the manager-specific rules below sat open indefinitely. Applies to every ecosystem; the packageRules entries stay authoritative for routine, non-security updates. `schedule` is reset to `at any time` so the daily window on the apt-pin group never holds a security fix back.",
     "automerge": true,
     "automergeType": "pr",
-    "platformAutomerge": true
+    "platformAutomerge": true,
+    "schedule": ["at any time"]
   },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Pinned apt versions for the amd64 build of the devcontainer image and of the robot hosts. Each entry in a roles/*/vars/apt_pins_noble_amd64.yml file is `<package>: \"<version>\"`; the registryUrls that resolve them are attached by depType below.",
+      "managerFilePatterns": [
+        "/^docker/ros/ansible/roles/[^/]+/vars/apt_pins_noble_amd64\\.yml$/"
+      ],
+      "matchStrings": [
+        "\\n\\s+(?<depName>[a-z0-9][a-z0-9+.\\-]*): \"(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "deb",
+      "versioningTemplate": "deb",
+      "depTypeTemplate": "apt-noble-amd64"
+    },
+    {
+      "customType": "regex",
+      "description": "Pinned apt versions for the arm64 build. ROS debs carry a per-architecture build timestamp in their version string, so the two architectures are tracked as separate dependencies and never share a value.",
+      "managerFilePatterns": [
+        "/^docker/ros/ansible/roles/[^/]+/vars/apt_pins_noble_arm64\\.yml$/"
+      ],
+      "matchStrings": [
+        "\\n\\s+(?<depName>[a-z0-9][a-z0-9+.\\-]*): \"(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "deb",
+      "versioningTemplate": "deb",
+      "depTypeTemplate": "apt-noble-arm64"
+    },
+    {
+      "customType": "regex",
+      "description": "Single-value pins annotated with an inline `# renovate:` comment, currently the ros2-apt-source release used by the ros_repo role.",
+      "managerFilePatterns": [
+        "/^docker/ros/ansible/roles/[^/]+/tasks/[^/]+\\.yml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*[A-Za-z0-9_]+: \"(?<currentValue>[^\"]+)\""
+      ]
+    },
+    {
+      "customType": "regex",
+      "description": "Git commits pinned inside a raw.githubusercontent.com URL: the colcon mixin and metadata index revisions the colcon_setup role registers.",
+      "managerFilePatterns": [
+        "/^docker/ros/ansible/roles/colcon_setup/tasks/[^/]+\\.yml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) packageName=(?<packageName>\\S+) currentValue=(?<currentValue>\\S+)\\n(?:.*\\n){1,4}?\\s*https://raw\\.githubusercontent\\.com/\\S+?/(?<currentDigest>[0-9a-f]{40})/"
+      ]
+    }
+  ],
   "packageRules": [
     {
       "description": "Automatically merge GitHub Actions dependency updates after Renovate observes green CI.",
@@ -57,6 +106,98 @@
       "matchManagers": ["pre-commit"],
       "matchDepNames": ["prettier"],
       "enabled": false
+    },
+    {
+      "description": "Apt sources available to a role while the devcontainer image is built: the four Ubuntu noble pockets plus the ROS 2 and OSRF repositories the ros_repo and osrf_repo roles add. Renovate merges the results from every registryUrl and keeps the highest version, which is what apt itself would install. `binaryArch` and the amd64/arm64 mirror split (archive.ubuntu.com vs ports.ubuntu.com) make these two lists architecture-specific. Kept in step with DEFAULT_REPOS in scripts/apt-pins-refresh.py.",
+      "matchDepTypes": ["apt-noble-amd64"],
+      "registryUrls": [
+        "http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe,restricted,multiverse&binaryArch=amd64",
+        "http://archive.ubuntu.com/ubuntu?suite=noble-updates&components=main,universe,restricted,multiverse&binaryArch=amd64",
+        "http://archive.ubuntu.com/ubuntu?suite=noble-security&components=main,universe,restricted,multiverse&binaryArch=amd64",
+        "http://archive.ubuntu.com/ubuntu?suite=noble-backports&components=main,universe,restricted,multiverse&binaryArch=amd64",
+        "http://packages.ros.org/ros2/ubuntu?suite=noble&components=main&binaryArch=amd64",
+        "https://packages.osrfoundation.org/gazebo/ubuntu-stable?suite=noble&components=main&binaryArch=amd64"
+      ]
+    },
+    {
+      "description": "The arm64 counterpart of the rule above. Ubuntu serves arm64 from the ports mirror rather than the main archive.",
+      "matchDepTypes": ["apt-noble-arm64"],
+      "registryUrls": [
+        "http://ports.ubuntu.com/ubuntu-ports?suite=noble&components=main,universe,restricted,multiverse&binaryArch=arm64",
+        "http://ports.ubuntu.com/ubuntu-ports?suite=noble-updates&components=main,universe,restricted,multiverse&binaryArch=arm64",
+        "http://ports.ubuntu.com/ubuntu-ports?suite=noble-security&components=main,universe,restricted,multiverse&binaryArch=arm64",
+        "http://ports.ubuntu.com/ubuntu-ports?suite=noble-backports&components=main,universe,restricted,multiverse&binaryArch=arm64",
+        "http://packages.ros.org/ros2/ubuntu?suite=noble&components=main&binaryArch=arm64",
+        "https://packages.osrfoundation.org/gazebo/ubuntu-stable?suite=noble&components=main&binaryArch=arm64"
+      ]
+    },
+    {
+      "description": "The cmake_system role removes the Kitware repository before it installs, and the dualsense_hidapi role runs on a robot host that never had it. Both must resolve against the Ubuntu archive alone, or Renovate would propose a Kitware version that apt could no longer fetch. Overrides the broader rules above, which is why it comes after them.",
+      "matchFileNames": [
+        "docker/ros/ansible/roles/cmake_system/vars/apt_pins_noble_amd64.yml",
+        "docker/ros/ansible/roles/dualsense_hidapi/vars/apt_pins_noble_amd64.yml"
+      ],
+      "registryUrls": [
+        "http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe,restricted,multiverse&binaryArch=amd64",
+        "http://archive.ubuntu.com/ubuntu?suite=noble-updates&components=main,universe,restricted,multiverse&binaryArch=amd64",
+        "http://archive.ubuntu.com/ubuntu?suite=noble-security&components=main,universe,restricted,multiverse&binaryArch=amd64",
+        "http://archive.ubuntu.com/ubuntu?suite=noble-backports&components=main,universe,restricted,multiverse&binaryArch=amd64"
+      ]
+    },
+    {
+      "description": "The arm64 counterpart of the Ubuntu-archive-only rule above.",
+      "matchFileNames": [
+        "docker/ros/ansible/roles/cmake_system/vars/apt_pins_noble_arm64.yml",
+        "docker/ros/ansible/roles/dualsense_hidapi/vars/apt_pins_noble_arm64.yml"
+      ],
+      "registryUrls": [
+        "http://ports.ubuntu.com/ubuntu-ports?suite=noble&components=main,universe,restricted,multiverse&binaryArch=arm64",
+        "http://ports.ubuntu.com/ubuntu-ports?suite=noble-updates&components=main,universe,restricted,multiverse&binaryArch=arm64",
+        "http://ports.ubuntu.com/ubuntu-ports?suite=noble-security&components=main,universe,restricted,multiverse&binaryArch=arm64",
+        "http://ports.ubuntu.com/ubuntu-ports?suite=noble-backports&components=main,universe,restricted,multiverse&binaryArch=arm64"
+      ]
+    },
+    {
+      "description": "install_docker runs on robot hosts, whose only apt sources are the Ubuntu archive and Docker's own repository. Docker keeps every published version in its index, so Renovate sees the full history there rather than a single current version.",
+      "matchFileNames": [
+        "docker/ros/ansible/roles/install_docker/vars/apt_pins_noble_amd64.yml"
+      ],
+      "registryUrls": [
+        "http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe,restricted,multiverse&binaryArch=amd64",
+        "http://archive.ubuntu.com/ubuntu?suite=noble-updates&components=main,universe,restricted,multiverse&binaryArch=amd64",
+        "http://archive.ubuntu.com/ubuntu?suite=noble-security&components=main,universe,restricted,multiverse&binaryArch=amd64",
+        "http://archive.ubuntu.com/ubuntu?suite=noble-backports&components=main,universe,restricted,multiverse&binaryArch=amd64",
+        "https://download.docker.com/linux/ubuntu?suite=noble&components=stable&binaryArch=amd64"
+      ]
+    },
+    {
+      "description": "The arm64 counterpart of the install_docker rule above.",
+      "matchFileNames": [
+        "docker/ros/ansible/roles/install_docker/vars/apt_pins_noble_arm64.yml"
+      ],
+      "registryUrls": [
+        "http://ports.ubuntu.com/ubuntu-ports?suite=noble&components=main,universe,restricted,multiverse&binaryArch=arm64",
+        "http://ports.ubuntu.com/ubuntu-ports?suite=noble-updates&components=main,universe,restricted,multiverse&binaryArch=arm64",
+        "http://ports.ubuntu.com/ubuntu-ports?suite=noble-security&components=main,universe,restricted,multiverse&binaryArch=arm64",
+        "http://ports.ubuntu.com/ubuntu-ports?suite=noble-backports&components=main,universe,restricted,multiverse&binaryArch=arm64",
+        "https://download.docker.com/linux/ubuntu?suite=noble&components=stable&binaryArch=arm64"
+      ]
+    },
+    {
+      "description": "Every apt pin in every role and on both architectures lands in one batched PR, automerged after green CI. Batching is what makes this volume workable: the ROS buildfarm republishes its debs continuously, and each republish changes the build timestamp inside the version string of an arch's packages. One PR a day also keeps this to one devcontainer image rebuild a day — the pin files live under docker/**, inside the `ros` path filter, so every merge rebuilds and tests the image that the pins describe. Widen the schedule if a faster turnaround is worth the extra builds; security fixes are unaffected because vulnerabilityAlerts resets the schedule.",
+      "matchDepTypes": ["apt-noble-amd64", "apt-noble-arm64"],
+      "groupName": "ansible apt pins",
+      "schedule": ["after 2am and before 6am"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Ansible Galaxy collections used by the playbooks, plus the single-value pins in the roles (the ros2-apt-source release and the colcon index revisions). Low volume, so these stay as individual PRs, automerged after green CI like the apt pins. The apt pins also match `custom.regex` here, but the rule above already gave them their group and schedule and this one only repeats the same automerge settings.",
+      "matchManagers": ["ansible-galaxy", "custom.regex"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
     }
   ]
 }

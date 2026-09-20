@@ -2,6 +2,7 @@
 - name: Extract version from release info
   ansible.builtin.set_fact:
     # https://github.com/ros-infrastructure/ros-apt-source/releases
+    # renovate: datasource=github-releases depName=ros-infrastructure/ros-apt-source
     ros_repo_apt_source_version: "1.2.0"
 
 - name: Set ros2-apt-source package URL

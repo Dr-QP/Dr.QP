@@ -1,0 +1,46 @@
+---
+# Pinned apt package versions - GENERATED FILE
+#
+# Target: Ubuntu noble / amd64
+#
+# Regenerate with scripts/apt-pins-refresh.py. Renovate keeps the versions
+# current through the `deb` custom managers in .github/renovate.json, so a
+# manual edit is only needed to add or remove a package name.
+
+ros_dev_tools_apt_pins:
+  lcov: "2.0-4ubuntu2"
+  libasio-dev: "1:1.28.1-0.2"
+  libbullet-dev: "3.24+dfsg-2.1build1"
+  libcunit1-dev: "2.1-3-dfsg-2.7"
+  libtinyxml2-dev: "10.0.0+dfsg-2"
+  python3-colcon-cmake: "0.2.30+upstream-1"
+  python3-colcon-common-extensions: "0.3.0-100"
+  python3-colcon-coveragepy-result: "0.0.8-100"
+  python3-colcon-lcov-result: "0.5.3-100"
+  python3-colcon-mixin: "0.3.2+upstream-1"
+  python3-colcon-output: "0.2.15+upstream-1"
+  python3-colcon-package-information: "0.4.1+upstream-1"
+  python3-coverage: "7.4.4+dfsg1-0ubuntu2"
+  python3-flake8: "7.0.0-1"
+  python3-flake8-blind-except: "0.2.1-1"
+  python3-flake8-builtins: "2.1.0-1"
+  python3-flake8-class-newline: "1.6.0-5"
+  python3-flake8-comprehensions: "3.14.0-1"
+  python3-flake8-deprecated: "2.2.1-1"
+  python3-flake8-docstrings: "1.6.0-2"
+  python3-flake8-import-order: "0.18.2-2"
+  python3-flake8-quotes: "3.4.0-1"
+  python3-gz-transport13: "13.6.0-1~noble"
+  python3-mypy: "1.9.0-4ubuntu1"
+  python3-pytest: "7.4.4-1"
+  python3-pytest-cov: "4.1.0-1"
+  python3-pytest-mock: "3.12.0-1.1"
+  python3-pytest-repeat: "0.9.3-1"
+  python3-pytest-rerunfailures: "12.0-1"
+  python3-pytest-runner: "2.11.1-4"
+  python3-pytest-timeout: "2.2.0-1"
+  python3-rosdep: "0.27.0-1"
+  python3-scipy: "1.11.4-6build1"
+  python3-toml: "0.10.2-1"
+  python3-vcstool: "0.3.0-1"
+  ros-dev-tools: "1.0.3"

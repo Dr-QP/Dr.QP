@@ -17,6 +17,17 @@
   become: true
   gather_facts: true
 
+  # Upgrading the base image's packages has to happen before the first pinned
+  # install, not in the middle of the run: ros_install_prebuilt used to do it
+  # and would have upgraded whatever ros_dev_tools had already installed at its
+  # pinned version, silently defeating the pins.
+  pre_tasks:
+    - name: Upgrade packages inherited from the base image
+      ansible.builtin.apt:
+        upgrade: true
+        update_cache: true
+      tags: ["upgrade"]
+
   roles:
     - { role: extra_facts, tags: ["extra_facts", "always"] }
     - { role: cmake_system, tags: ["cmake"], when: source_install }

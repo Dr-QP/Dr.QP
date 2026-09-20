@@ -14,45 +14,19 @@
 # Requires ros_repo and osrf_repo to have run: ros-dev-tools and the colcon
 # packages come from the ROS 2 apt repository, and python3-gz-transport13 from
 # the OSRF one.
+#
+# The package list and its pinned versions live in
+# vars/apt_pins_<suite>_<arch>.yml, one file per Ubuntu release and
+# architecture, because ROS debs carry a per-architecture build timestamp in
+# their version string. Renovate keeps the versions current; add or remove a
+# package name by editing both architecture files.
+- name: Load pinned apt versions
+  ansible.builtin.include_vars:
+    file: "{{ role_path }}/vars/apt_pins_{{ system_dist }}_{{ system_arch }}.yml"
+
 - name: Install ROS development tools
   ansible.builtin.apt:
-    name:
-      - lcov
-      - libasio-dev
-      - libbullet-dev
-      - libcunit1-dev
-      - libtinyxml2-dev
-      - python3-colcon-cmake
-      - python3-colcon-common-extensions
-      - python3-colcon-coveragepy-result
-      - python3-colcon-lcov-result
-      - python3-colcon-mixin
-      - python3-colcon-output
-      - python3-colcon-package-information
-      - python3-coverage
-      - python3-flake8
-      - python3-flake8-blind-except
-      - python3-flake8-builtins
-      - python3-flake8-class-newline
-      - python3-flake8-comprehensions
-      - python3-flake8-deprecated
-      - python3-flake8-docstrings
-      - python3-flake8-import-order
-      - python3-flake8-quotes
-      - python3-gz-transport13
-      - python3-mypy
-      - python3-pytest
-      - python3-pytest-cov
-      - python3-pytest-mock
-      - python3-pytest-repeat
-      - python3-pytest-rerunfailures
-      - python3-pytest-runner
-      - python3-pytest-timeout
-      - python3-rosdep
-      - python3-scipy
-      - python3-toml
-      - python3-vcstool
-      - ros-dev-tools
+    name: "{{ ros_dev_tools_apt_pins.items() | map('join', '=') | list }}"
     state: present
     install_recommends: false
     update_cache: true
