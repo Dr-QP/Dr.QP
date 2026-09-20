@@ -1,0 +1,51 @@
+name: Validate Renovate config
+
+on:
+  pull_request:
+    paths:
+      - .github/renovate.json
+      - .github/workflows/validate-renovate-config.yml
+  push:
+    branches:
+      - main
+    paths:
+      - .github/renovate.json
+      - .github/workflows/validate-renovate-config.yml
+  merge_group:
+    types:
+      - checks_requested
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate Renovate config
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      # Renovate is deliberately not pinned here, unlike every other dependency
+      # in this repository. The Mend-hosted app always runs the current
+      # Renovate, so validating against an older pinned version could pass
+      # while the bot itself fails; a break in this job is the signal that the
+      # live bot is about to break too.
+      #
+      # --no-global validates the file as a repository config. Without it the
+      # validator applies the self-hosted global schema instead, which accepts
+      # and rejects a different set of options, so the check would not be
+      # testing what Renovate actually reads. --strict additionally fails on
+      # warnings and on a config that needs migration.
+      - name: Validate .github/renovate.json
+        run: |
+          npx --yes --package renovate renovate-config-validator \
+            --no-global --strict .github/renovate.json
