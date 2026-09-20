@@ -17,17 +17,15 @@
   become: true
   gather_facts: true
 
-  # Upgrading the base image's packages has to happen before the first pinned
-  # install, not in the middle of the run: ros_install_prebuilt used to do it
-  # and would have upgraded whatever ros_dev_tools had already installed at its
-  # pinned version, silently defeating the pins.
-  pre_tasks:
-    - name: Upgrade packages inherited from the base image
-      ansible.builtin.apt:
-        upgrade: true
-        update_cache: true
-      tags: ["upgrade"]
-
+  # There is deliberately no blanket `apt upgrade` here. Every package these
+  # roles install is pinned, and an upgrade would move whatever is already
+  # installed off a version nothing in this repository records — which is the
+  # one thing pinning exists to prevent.
+  #
+  # Upgrading inherited packages belongs to the base image's prep phase, which
+  # lives in agentdev. This playbook only builds the ROS delta on top of the
+  # result, and only consumes it through the agent-desktop digest pinned in
+  # docker/ros/desktop/ros-desktop.Dockerfile.
   roles:
     - { role: extra_facts, tags: ["extra_facts", "always"] }
     - { role: cmake_system, tags: ["cmake"], when: source_install }

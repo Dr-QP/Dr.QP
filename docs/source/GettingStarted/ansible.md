@@ -226,6 +226,13 @@ The repositories each role resolves against are listed in `DEFAULT_REPOS` and
 `.github/renovate.json`, or Renovate and the script would each keep reverting
 the other.
 
+There is deliberately no `apt upgrade` anywhere in these playbooks. An upgrade
+could only move an installed package off a version this repository records,
+which is what pinning exists to prevent. Upgrading inherited packages belongs
+to the base image prep phase, which lives in agentdev; these playbooks build
+only the ROS delta on top of it, and consume it through the Renovate-managed
+agent-desktop digest in `docker/ros/desktop/ros-desktop.Dockerfile`.
+
 Two dependencies in the roles are not version-addressable and so cannot be
 pinned: `llvm.sh` from `apt.llvm.org`, which installs whatever the LLVM project
 currently publishes for the requested major version, and the VirtualHere client

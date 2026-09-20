@@ -21,4 +21,4 @@ This role is used when `source_install` is set to `false` (the default). It inst
 
 The ROS 2 distribution to install is determined by the `ros_distro` variable, which defaults to `jazzy` (ROS 2 Jazzy Jalisco). The exact version of `ros-<distro>-desktop` comes from `vars/apt_pins_<suite>_<arch>.yml`; see [Pinned apt versions](../../../../../docs/source/GettingStarted/ansible.md#pinned-apt-versions).
 
-The blanket `apt upgrade` this role used to run before installing now lives in the `pre_tasks` of `playbooks/20_ros_setup.yml`. Running it here would have upgraded the packages the earlier roles had already installed at their pinned versions, which would defeat the pins.
+This role used to run a blanket `apt upgrade` before installing. It has been removed, and no role replaces it: every package `playbooks/20_ros_setup.yml` installs is pinned, so an upgrade could only move something off a version this repository records. Upgrading inherited packages belongs to the base image prep phase, which lives in agentdev; this repository consumes the result through the agent-desktop digest pinned in `docker/ros/desktop/ros-desktop.Dockerfile`.

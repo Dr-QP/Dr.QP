@@ -1,10 +1,10 @@
 ---
 # ROS 2 prebuilt installation
 #
-# The blanket `apt upgrade` this role used to run first now lives in the
-# playbook's pre_tasks: running it here would upgrade the packages the earlier
-# roles had already installed at their pinned versions, which would make the
-# image build non-reproducible.
+# This role used to run a blanket `apt upgrade` first. It is gone: every
+# package the playbook installs is pinned, so an upgrade could only move
+# something off its pin. Upgrading inherited packages is the base image prep
+# phase's job, and that phase lives in agentdev, not here.
 
 - name: Load pinned apt versions
   ansible.builtin.include_vars:
