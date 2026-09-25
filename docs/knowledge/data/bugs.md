@@ -13,5 +13,3 @@ generated:
 Fix. No `stage` means open; `stage: done` means fixed, `stage: cancelled` means
 closed without a fix. Bugs stay listed here either way — the status chip tells
 them apart.*
-
-[Bug: Timer drifts after laptop sleep](bugs/timer-drift-after-sleep.example)

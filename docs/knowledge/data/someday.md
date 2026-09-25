@@ -13,5 +13,3 @@ generated:
 idea in `someday/<slug>.md`. Frontmatter is `type: someday`, no pressure. When
 an idea gets real, promote it to a backlog task or straight to a plan and move
 the link.*
-
-[Watch app](someday/watch-app.example)

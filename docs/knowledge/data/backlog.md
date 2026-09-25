@@ -16,16 +16,16 @@ write a plan and link the plan instead.*
 
 ## High
 
-[Fill in the product doc](backlog/fill-product-doc.md)
-
 [Plan the first feature](backlog/plan-first-feature.md)
 
 ## Medium
-
-[Capture the current architecture](backlog/capture-current-architecture.md)
 
 [Import the existing backlog](backlog/import-existing-backlog.md)
 
 ## Low
 
 ## Done
+
+[Fill in the product doc](backlog/fill-product-doc.md)
+
+[Capture the current architecture](backlog/capture-current-architecture.md)
