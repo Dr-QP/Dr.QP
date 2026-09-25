@@ -3,7 +3,7 @@ type: spec
 description: How the robot moves between torque-off, initialization, walking, finalization, and servo reboot, and what the brain does in each state.
 generated:
   by: claude-code/opus-5
-  at: 2026-09-25T00:00:00Z
+  at: 2026-09-25T12:00:00Z
 sources:
 - id: state
   resource: packages/runtime/drqp_brain/drqp_brain/robot_state/robot_state_machine.py
@@ -11,6 +11,8 @@ sources:
   resource: packages/runtime/drqp_brain/drqp_brain/robot_state/robot_state_node.py
 - id: brain
   resource: packages/runtime/drqp_brain/drqp_brain/brain_node.py
+- id: tests
+  resource: packages/runtime/drqp_brain/test/test_robot_state_machine.py
 ---
 
 # Robot lifecycle
@@ -58,9 +60,18 @@ any other event:
 
 ### Requirement: Kill switch
 
-The `kill_switch_pressed` event SHALL cut torque whenever torque is on or a
-scripted sequence is running, and SHALL start initialization from `torque_off`.
-The joystick translator publishes it for the PS and touchpad buttons.
+The `kill_switch_pressed` event SHALL toggle the robot between rest and
+activity. The joystick translator publishes it for the PS and touchpad buttons.
+
+- From an active state (`initializing`, `torque_on`, or `finalizing`), it SHALL
+  go to `torque_off`.
+- From a rest state (`torque_off` or `finalized`), it SHALL go to
+  `initializing`.
+- In `servos_rebooting`, it SHALL be refused, and the reboot runs to completion.
+
+`test_robot_state_machine.py` (`TestKillSwitch`) pins this table, because the
+event combines `turn_off | initialize` and the library's resolution order
+decides the result for `finalized`.
 
 #### Scenario: Kill while walking
 
@@ -71,9 +82,15 @@ The joystick translator publishes it for the PS and touchpad buttons.
 
 #### Scenario: Kill switch from rest
 
-- **GIVEN** the state is `torque_off`
+- **GIVEN** the state is `torque_off` or `finalized`
 - **WHEN** `kill_switch_pressed` is received
-- **THEN** the state becomes `initializing`
+- **THEN** the state becomes `initializing` and the stand-up sequence plays
+
+#### Scenario: Kill switch during servo reboot
+
+- **GIVEN** the state is `servos_rebooting`
+- **WHEN** `kill_switch_pressed` is received
+- **THEN** the state stays `servos_rebooting` and an error is logged
 
 ### Requirement: Brain reactions per state
 

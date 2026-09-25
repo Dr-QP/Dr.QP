@@ -4,7 +4,7 @@ description: What the product is, who it is for, and the decisions every plan an
 stage: living
 generated:
   by: claude-code/opus-5
-  at: 2026-09-25T00:00:00Z
+  at: 2026-09-25T12:00:00Z
 sources:
 - id: readme
   resource: README.md
@@ -137,8 +137,8 @@ stationary posture mode and stabilizes its Gazebo CI tests.
 
 - **Code anchors:** verify every file path, line, parameter name, and default
   value against the current checkout. Never cite them from memory or from
-  roadmap prose, which drifts; the roadmap still says the loop runs at 8 Hz, but
-  `control_rate_hz` defaults to 25 Hz.
+  narrative docs, which drift; the roadmap described an 8 Hz loop long after
+  `control_rate_hz` defaulted to 25 Hz.
 - **Plans that add nodes or topics:** state the CPU and memory budget, where the
   node runs (on the robot or off-board), the QoS of each topic, and any TF
   frames added or consumed.
@@ -150,3 +150,5 @@ stationary posture mode and stabilizes its Gazebo CI tests.
 - 2026-08-01 — document created.
 - 2026-09-25 — filled all sections from the codebase and a maintainer interview
   (`/agentdev:iwe-setup`).
+- 2026-09-25 — corrected the code-anchor example after the roadmap was updated
+  to the 25 Hz `control_rate_hz` loop.
