@@ -13,3 +13,5 @@ generated:
 deprecation — the `stage` frontmatter (`proposed` → `accepted` → `implemented`,
 terminal `deprecated`/`cancelled`) carries the lifecycle, so the list stays
 flat. Group with `##` headings once it outgrows a single list.*
+
+[Translator haptic effects](features/translator-haptic-effects.md)
