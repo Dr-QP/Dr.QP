@@ -26,6 +26,24 @@ command.
 
 [robot_state](drqp_brain/robot_state.md)
 
+[walk_controller](drqp_brain/walk_controller.md)
+
+[locomotion_kinematics](drqp_brain/locomotion_kinematics.md)
+
+[joystick_translator_node](drqp_brain/joystick_translator_node.md)
+
+[imu_node](drqp_brain/imu_node.md)
+
+[balance_controller](drqp_brain/balance_controller.md)
+
+[joint_trajectory_builder](drqp_brain/joint_trajectory_builder.md)
+
+[instance_guard](drqp_brain/instance_guard.md)
+
+- `timed_queue.py`: `TimedQueue`, which runs delayed actions on a ROS timer.
+  Nothing in the workspace uses it apart from its own test. *Not mapped.*
+- `launch/bringup.launch.py`: described in this doc.
+
 ## Public surface
 
 - Executables:

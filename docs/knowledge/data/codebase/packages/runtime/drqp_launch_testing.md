@@ -22,6 +22,10 @@ verification." In `launch_pytest`, `shutdown=True` tests assert only the
 aggregate launch-service return code. This package brings back the per-process
 check.
 
+## Contains
+
+[shutdown_behavior](drqp_launch_testing/test/shutdown_behavior.md)
+
 ## Public surface
 
 - `track_process_exit_codes(launch_description)` returns a `ProcInfoHandler`

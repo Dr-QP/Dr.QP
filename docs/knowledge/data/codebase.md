@@ -46,13 +46,13 @@ Directory → component:
 | `packages/runtime/`                                                                                                                                                                  | [packages/runtime](codebase/packages/runtime.md)                                                                            |
 | `packages/simulation/`                                                                                                                                                               | [packages/simulation](codebase/packages/simulation.md)                                                                      |
 | `packages/vendor/`                                                                                                                                                                   | Vendored `launch` (patched `launch_pytest`) and `sdl3_vendor`. *Not mapped*                                                 |
-| `packages/cmake/`                                                                                                                                                                    | Shared CMake helpers: Catch2, clang coverage, clang-format, isolated launch tests, `llvm-cov-export-all.py`. *Not mapped*   |
+| `packages/cmake/`                                                                                                                                                                    | [packages/cmake](codebase/packages/cmake.md)                                                                                |
 | `docker/ros/`                                                                                                                                                                        | [docker/ros](codebase/docker/ros.md)                                                                                        |
 | `docker/act/`                                                                                                                                                                        | Image for running workflows locally with `act` (with `.actrc`, `.vars`). *Not mapped*                                       |
 | `.devcontainer/`, `devcontainer-compose-pins.yml`                                                                                                                                    | [devcontainer](codebase/devcontainer.md)                                                                                    |
 | `.github/`                                                                                                                                                                           | [github/workflows](codebase/github/workflows.md)                                                                            |
 | `scripts/`                                                                                                                                                                           | [scripts](codebase/scripts.md)                                                                                              |
-| `py_packages/`                                                                                                                                                                       | `sphinxcontrib_spotlight` (Sphinx extension, a `uv` path dep) and a stale copy of `drqp_robot_mcp`. *Not mapped*            |
+| `py_packages/`                                                                                                                                                                       | [py_packages](codebase/py_packages.md)                                                                                      |
 | `docs/`                                                                                                                                                                              | Sphinx human docs and notebooks (`source/`), agent specs (`agents/`), this knowledge workspace (`knowledge/`). *Not mapped* |
 | `hardware/`                                                                                                                                                                          | Raspberry Pi `config.txt` variants and SC16IS752 device-tree overlays. *Not mapped*                                         |
 | `.claude/`, `.codex/`, `.cursor/`, `AGENTS.md`, `CLAUDE.md`, `.mcp.json`, `.vscode/`                                                                                                 | Agent and editor configuration, and project skills. *Not mapped*                                                            |
@@ -66,6 +66,10 @@ Directory → component:
 [packages/runtime](codebase/packages/runtime.md)
 
 [packages/simulation](codebase/packages/simulation.md)
+
+[packages/cmake](codebase/packages/cmake.md)
+
+[py_packages](codebase/py_packages.md)
 
 [docker/ros](codebase/docker/ros.md)
 

@@ -42,10 +42,10 @@ Simulation-only packages live in `packages/simulation`.
 
 [drqp_launch_testing](runtime/drqp_launch_testing.md)
 
+[drqp_lint_common](runtime/drqp_lint_common.md)
+
 - `drqp_rapidjson`: a repackaged copy of Tencent RapidJSON, used by
   `drqp_serial` for serial recordings. It is vendored code and *not mapped*.
-- `drqp_lint_common`: the linter set used in place of `ament_lint_common`
-  (`test_depend` of the C++ packages). *Not mapped.*
 
 ## How it works
 

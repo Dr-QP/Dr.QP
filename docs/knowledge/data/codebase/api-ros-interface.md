@@ -46,6 +46,10 @@ test) can rely on. Everything is in the global namespace.
 
 ## Contract
 
+- `/robot_event` also carries the brain's
+  `locomotion_clamping_persistent:<legs>` diagnostic, which `drqp_robot_state`
+  rejects with an error log (see
+  [Bug: clamping diagnostic is rejected by the state machine](../bugs/clamping-diagnostic-rejected-by-state-machine.md)).
 - The lifecycle event and state strings are the `RobotStateMachine` event and
   state names ([robot_state](packages/runtime/drqp_brain/robot_state.md)).
 - While balance mode is on, `MovementCommand`s are ignored.

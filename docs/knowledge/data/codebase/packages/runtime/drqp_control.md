@@ -28,6 +28,10 @@ which covers:
   `battery_state_broadcaster`, and `joint_trajectory_controller` over 18 joints
   named `drqp/<side>_<front|middle|back>_<coxa|femur|tibia>`.
 
+## Contains
+
+[urdf](drqp_control/urdf.md)
+
 ## Public surface
 
 - The plugin `drqp_control/a1_16_hardware_interface`, a
@@ -60,7 +64,7 @@ which covers:
   - otherwise: position control, with the servo turned on if needed.
 
   All servos then go out in one broadcast I-JOG packet. Its playtime is the
-  controller period.
+  hardware period passed to `write`.
 
 ## Depends on
 
@@ -74,8 +78,10 @@ which covers:
   Changing the thresholds breaks the robot state machine.
 - While torque is on, the joint position state is set from the commanded value,
   converted back through the joint–servo mapping, not from a servo read.
-- The controller manager runs at 1000 Hz, while the trajectory controller and
-  the joint-state broadcaster run at 100 Hz.
+- The controller manager runs at 1000 Hz, and the trajectory controller and the
+  joint-state broadcaster at 100 Hz. The hardware block is declared with
+  `rw_rate="20"` and `is_async="true"` (see [urdf](drqp_control/urdf.md)), so
+  the servo bus is read and written at 20 Hz on its own thread.
 
 ## Key references
 

@@ -21,6 +21,10 @@ sources:
 `numpy`/`scipy` models that the brain and the Jupyter notebooks import. It is
 also installed editable into the workspace `.venv` (`pyproject.toml`).
 
+## Contains
+
+[geometry](drqp_kinematics/geometry.md)
+
 ## Public surface
 
 - `HexapodModel`: six `LegModel`s placed by the front, middle, and side offsets,

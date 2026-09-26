@@ -16,6 +16,12 @@ to the current day's group.
   MCP copy), one proposed [feature](features.md) (translator haptic effects),
   and four [architecture](architecture.md) decisions (effort lifecycle channel,
   time-based gait timing, joystick container split, serial record/replay).
+- **Creation**: Extended the [codebase](codebase.md) map by 15 docs:
+  `packages/cmake`, `drqp_lint_common`, `py_packages` (with
+  `sphinxcontrib_spotlight` and the stale MCP copy), seven `drqp_brain` modules,
+  `drqp_kinematics/geometry`, `drqp_control/urdf`, and the `drqp_launch_testing`
+  shutdown-behavior suite. Filed two more [bugs](bugs.md): IMU covariance misuse
+  and balance toggle desync.
 
 ## 2026-08-01
 

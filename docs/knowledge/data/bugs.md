@@ -23,3 +23,7 @@ them apart.*
 [Bug: bringup declares load_joystick twice](bugs/bringup-declares-load-joystick-twice.md)
 
 [Bug: stale copy of the robot MCP server in py_packages](bugs/stale-py-packages-robot-mcp-copy.md)
+
+[Bug: IMU covariance marks gyro and accelerometer data as unavailable](bugs/imu-covariance-marks-data-unavailable.md)
+
+[Bug: balance toggle desyncs from the brain](bugs/balance-toggle-desyncs-from-brain.md)
