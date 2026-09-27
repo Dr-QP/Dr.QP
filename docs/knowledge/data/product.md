@@ -137,8 +137,7 @@ stationary posture mode and stabilizes its Gazebo CI tests.
 
 - **Code anchors:** verify every file path, line, parameter name, and default
   value against the current checkout. Never cite them from memory or from
-  narrative docs, which drift; the roadmap described an 8 Hz loop long after
-  `control_rate_hz` defaulted to 25 Hz.
+  narrative docs, which drift over time.
 - **Plans that add nodes or topics:** state the CPU and memory budget, where the
   node runs (on the robot or off-board), the QoS of each topic, and any TF
   frames added or consumed.
@@ -150,5 +149,4 @@ stationary posture mode and stabilizes its Gazebo CI tests.
 - 2026-08-01 — document created.
 - 2026-09-25 — filled all sections from the codebase and a maintainer interview
   (`/agentdev:iwe-setup`).
-- 2026-09-25 — corrected the code-anchor example after the roadmap was updated
-  to the 25 Hz `control_rate_hz` loop.
+- 2026-09-27 — reduced the code-anchor rule to the rule itself.

@@ -41,10 +41,10 @@ comes with `parametric_gait_generator.py`, which defines the three gaits.
 
 ## How it works
 
-1. **Twist.** `command_to_twist` scales the normalized stride direction (norm ≤
-   1. by `step_length / stance_duration`. It scales rotation by
-      `omega_max_rad_sec`. When that is not configured, it is derived from
-      `rotation_speed_degrees / stance_duration`.
+1. **Twist.** `command_to_twist` caps the stride direction at unit norm and
+   scales it by `step_length / stance_duration`. It clamps rotation to `[-1, 1]`
+   and scales it by `omega_max_rad_sec`. When that is not configured, it is
+   derived from `rotation_speed_degrees / stance_duration`.
 2. **Smoothing.** `advance` blends the twist toward the target with
    `α = 1 − exp(−dt/τ)`.
 3. **Saturation.** `advance` bisects a single scale factor (20 steps) until the

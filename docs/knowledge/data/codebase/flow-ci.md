@@ -33,7 +33,7 @@ The build-and-test path from a push or pull request to a published deploy image.
 3. **Build.** `ros-ci` runs in the dev image:
 
    - `scripts/ros-dep.sh`, then `source scripts/setup.bash`.
-   - `colcon build --mixin coverage-pytest ninja rel-with-deb-info --symlink-install`.
+   - `colcon build --mixin coverage-pytest ninja rel-with-deb-info --symlink-install --cmake-args -D DRQP_ENABLE_COVERAGE=ON`.
 
    ([scripts](scripts.md), `ci.yml:176`)
 
