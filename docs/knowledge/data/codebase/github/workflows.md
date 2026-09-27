@@ -4,14 +4,14 @@ description: GitHub Actions CI/CD — primary-checks orchestrator, image builds,
 source:
 - .github/workflows
 - .github/actions
-source_digest: sha256:3e3a48236a8fc46feb3034dcd725f6ec4fe1800f05f1fd1d93d178280507876e
+source_digest: sha256:206d1c38589a6fa9eba3936cc1f5d3892567bb1499383985027e0839a6444ce5
 verified:
   by: claude-code/opus-5.5
-  at: 2026-09-26T11:05:15Z
+  at: 2026-09-27T00:00:00Z
 stale_after: 2026-11-25
 generated:
   by: claude-code/opus-5.5
-  at: 2026-09-26T11:05:15Z
+  at: 2026-09-27T00:00:00Z
 sources:
 - id: code
   resource: .github/workflows
