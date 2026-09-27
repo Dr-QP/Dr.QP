@@ -91,8 +91,8 @@ runs:
     # .claude/settings.json does not enable it. Without the catalog the
     # responder improvises a review instead of running agentdev:pr-review,
     # which is a green required check over an ungrounded review.
-    # See docs/knowledge/data/architecture/ci-agent-plugin-availability.md
-    # upstream (plume-works/agent-devcontainer).
+    # See the ci-agent-plugin-availability architecture doc in
+    # plume-works/agent-devcontainer.
     #
     # This workspace's postAttach also runs rosdep install, which needs the
     # rosdep cache a devcontainer keeps between sessions and a fresh job
@@ -112,6 +112,11 @@ runs:
         .devcontainer/scripts/postStartCommand.sh
         .devcontainer/scripts/postAttachCommand.sh
 
+    # claude-code-action merges this input into ~/.claude/settings.json one
+    # level deep, so its enabledPlugins and extraKnownMarketplaces replace the
+    # user-scope entries the lifecycle hooks wrote for the agentdev catalog.
+    # Deep-merge those user settings in first so the plugin stays enabled.
+    #
     # The gitignored local settings layer is written by the local-scope plugin
     # install, which only runs where a marketplace is published, so a consumer
     # repository never has one.
@@ -119,11 +124,15 @@ runs:
       id: claude_settings
       shell: bash
       run: |
-        if [[ -f .claude/settings.local.json ]]; then
-          merged=$(jq -cs '.[0] * .[1]' .claude/settings.json .claude/settings.local.json)
-        else
-          merged=$(jq -c '.' .claude/settings.json)
+        layers=()
+        if [[ -f "$HOME/.claude/settings.json" ]]; then
+          layers+=("$HOME/.claude/settings.json")
         fi
+        layers+=(.claude/settings.json)
+        if [[ -f .claude/settings.local.json ]]; then
+          layers+=(.claude/settings.local.json)
+        fi
+        merged=$(jq -cs 'reduce .[] as $layer ({}; . * $layer)' "${layers[@]}")
         {
           echo 'json<<CLAUDE_SETTINGS_EOF'
           echo "$merged"
