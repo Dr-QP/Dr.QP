@@ -97,8 +97,8 @@ runs:
     # .claude/settings.json does not enable it. Without the catalog the
     # responder improvises a review instead of running agentdev:pr-review,
     # which is a green required check over an ungrounded review.
-    # See docs/knowledge/data/architecture/ci-agent-plugin-availability.md
-    # upstream (plume-works/agent-devcontainer).
+    # See the ci-agent-plugin-availability architecture doc in
+    # plume-works/agent-devcontainer.
     #
     # This workspace's postAttach also runs rosdep install, which needs the
     # rosdep cache a devcontainer keeps between sessions and a fresh job
