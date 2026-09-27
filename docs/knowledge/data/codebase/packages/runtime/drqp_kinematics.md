@@ -55,8 +55,10 @@ also installed editable into the workspace `.venv` (`pyproject.toml`).
 
 ## Invariants & gotchas
 
-- The model angles and the URDF angles differ by fixed offsets: femur −13.11°,
-  tibia −32.9°. Every joint-limit comparison goes through `urdf_limits`.
+- The model angles and the URDF angles differ by fixed femur and tibia offsets
+  (`FEMUR_MODEL_TO_URDF_OFFSET_DEG`, `TIBIA_MODEL_TO_URDF_OFFSET_DEG`). Every
+  joint-limit comparison goes through `urdf_limits`. A test fails if the offset
+  values appear anywhere else under `packages/` or `docs/`, this doc included.
 - The joint limits are unset until someone installs them from
   `robot_description`. The brain's analytic backend reports "not ready" until
   then.
