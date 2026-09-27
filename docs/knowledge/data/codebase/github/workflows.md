@@ -73,6 +73,10 @@ Artifacts: `colcon-logs-<arch>`, `colcon-test-reports-<arch>`, and the
   (`.github/actions/run-claude-responder/action.yml:100`). The image stages the
   catalog without installing it, and `.claude/settings.json` does not enable it.
   Without them the reviewer cannot load `agentdev:pr-review`.
+- `claude-code-action` merges its `settings` input into
+  `~/.claude/settings.json` one level deep, so a project `enabledPlugins` key
+  would replace the hook-enabled plugins. The responder deep-merges the user
+  settings into that input first (`action.yml:123`).
 
 ## Key references
 
