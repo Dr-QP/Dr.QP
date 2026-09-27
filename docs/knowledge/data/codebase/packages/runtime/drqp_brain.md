@@ -2,10 +2,10 @@
 type: codebase
 description: Python high-level control — the walking loop, gaits, IK orchestration, IMU balance, joystick translation, IMU driver, and the bringup launch file.
 source: packages/runtime/drqp_brain
-source_digest: sha256:eb97b8f5a95213850192e5c6e3e0cbed7087a7bdfab9c62ba40c7246492b9f82
+source_digest: sha256:730663b428ef725ee8b341888815c449b015c8503f58e58dc2f703114ecb3675
 verified:
   by: claude-code/opus-5.5
-  at: 2026-09-26T11:05:15Z
+  at: 2026-09-27T21:00:00Z
 stale_after: 2026-11-25
 generated:
   by: claude-code/opus-5.5
@@ -53,7 +53,8 @@ command.
   - `drqp_imu` (BNO055 over I2C, publishing `/imu/data` at 100 Hz)
 - `bringup.launch.py` arguments:
   - `use_gazebo`
-  - `load_joystick` (default `false`)
+  - `load_joystick` (default `false`): starts `game_controller_node`
+  - `load_joystick_translator` (default `true`)
   - `load_controllers`
   - `load_imu`
   - `hardware_device_address`
@@ -106,8 +107,8 @@ live in [robot_state](drqp_brain/robot_state.md).
 - The gait cycle times are fixed in seconds and "preserve the observed speed of
   the old double-advance loop at 8 Hz". Changing the rate must not change the
   gait speed.
-- `bringup.launch.py` declares `load_joystick` twice, at the top level and again
-  inside the group. The translator starts only when `load_joystick:=true`.
+- The robot runs `game_controller_node` in its own container, so bringup leaves
+  `load_joystick` off and starts only the translator by default.
 - The IMU node starts only when `use_gazebo` is false; in simulation, Gazebo
   bridges `/imu/data`.
 
@@ -137,5 +138,5 @@ Verified anchor points (line numbers as of 2026-09-26):
   `make_launch_instance_guard`
 - `packages/runtime/drqp_brain/launch/bringup.launch.py:60` — stack instance
   guard
-- `packages/runtime/drqp_brain/launch/bringup.launch.py:112` — duplicate
-  `load_joystick` declaration
+- `packages/runtime/drqp_brain/launch/bringup.launch.py:78` —
+  `load_joystick_translator` declaration

@@ -2,10 +2,10 @@
 type: codebase
 description: The ROS 2 packages that run on the robot — servo transport and driver, ros2_control plugin, brain, kinematics, MoveIt config, joystick node — plus their shared test helpers.
 source: packages/runtime
-source_digest: sha256:55f1edbcb2cbbacc78f40695ebc350a31671bae0d520fe28eabef1a7ee7d268d
+source_digest: sha256:693b7ca67afe3a62f168b00a176142189821fadb2c1c5070b1d45fb93b00bf5a
 verified:
   by: claude-code/opus-5.5
-  at: 2026-09-26T11:05:15Z
+  at: 2026-09-27T21:00:00Z
 stale_after: 2026-12-25
 generated:
   by: claude-code/opus-5.5

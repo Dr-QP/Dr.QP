@@ -5,10 +5,10 @@ source:
 - packages/runtime/drqp_brain
 - packages/runtime/drqp_joy
 - packages/runtime/drqp_control/config
-source_digest: sha256:11c5a25755cc7a5b18a57544939697d80cde21113877e3e2b3e67183556f5c29
+source_digest: sha256:ec54d1028893a3092871a03a86864448ce5415f07d4bb57ecf08259504b3b6ca
 verified:
   by: claude-code/opus-5.5
-  at: 2026-09-26T11:05:15Z
+  at: 2026-09-27T21:00:00Z
 stale_after: 2026-12-25
 generated:
   by: claude-code/opus-5.5

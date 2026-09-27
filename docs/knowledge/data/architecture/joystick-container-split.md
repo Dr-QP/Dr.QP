@@ -55,6 +55,7 @@ The playbook's header comment records the reasons:
 ## Consequences
 
 - Nodes that must run with the gamepad have to be placed in one of the two
-  containers on purpose. The joystick translator currently falls between them:
-  see
-  [Bug: deployed robot has no joystick translator](../bugs/deployed-robot-has-no-joystick-translator.md).
+  containers on purpose. The joystick translator fell between them until bringup
+  gave it its own `load_joystick_translator` argument; it now runs in the
+  control container (see
+  [Bug: deployed robot has no joystick translator](../bugs/deployed-robot-has-no-joystick-translator.md)).

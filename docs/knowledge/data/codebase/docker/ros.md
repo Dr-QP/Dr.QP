@@ -55,11 +55,9 @@ The image definitions. CI publishes both images as
 
 ## Invariants & gotchas
 
-- The deploy image's default command passes no launch arguments, so
-  `load_joystick` stays `false` and `drqp_joystick_translator` is not started.
-  The on-robot joystick container runs only `game_controller_node`. From the
-  code alone, nothing on the robot translates `/joy` into
-  `/robot/movement_command`. Whether another path covers this is *unknown*.
+- The deploy image's default command passes no launch arguments, so the control
+  container starts `drqp_joystick_translator` but not `game_controller_node`.
+  The on-robot joystick container runs only `game_controller_node`.
 - `deploy/build.sh` tags its local build `ghcr.io/dr-qp/ros-deploy`, which
   differs from the `jazzy-ros-deploy` name that CI publishes and Ansible pulls.
 - The deploy image clones the repo from `GIT_REPO` at `GIT_SHA`, not from the

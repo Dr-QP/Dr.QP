@@ -1,5 +1,6 @@
 ---
 type: bug
+stage: done
 description: bringup.launch.py declares the load_joystick launch argument twice with different descriptions.
 generated:
   by: claude-code/opus-5.5
@@ -30,14 +31,16 @@ so today's behavior is unaffected.
 
 ## Fix
 
-Delete the declaration inside the group. Keep the top-level one, which the
-`LaunchConfiguration` reads.
+The declaration inside the group was deleted, together with the translator fix
+([Bug: deployed robot has no joystick translator](deployed-robot-has-no-joystick-translator.md)).
+`test_bringup_launch_nodes.py` asserts that `load_joystick` and
+`load_joystick_translator` are each declared once.
 
 ## Key references
 
-Verified anchor points (line numbers as of 2026-09-26):
+Verified anchor points (line numbers as of 2026-09-27):
 
-- `packages/runtime/drqp_brain/launch/bringup.launch.py:68` — top-level
-  declaration
-- `packages/runtime/drqp_brain/launch/bringup.launch.py:112` — duplicate inside
-  the group
+- `packages/runtime/drqp_brain/launch/bringup.launch.py:69` — the single
+  `load_joystick` declaration
+- `packages/runtime/drqp_brain/test/test_bringup_launch_nodes.py` —
+  `test_joystick_arguments_are_declared_once`
