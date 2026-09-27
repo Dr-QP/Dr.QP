@@ -9,6 +9,9 @@ to the current day's group.
 - **Update**: Fixed two [bugs](bugs.md): the deployed robot now starts the
   joystick translator by default (new `load_joystick_translator` bringup
   argument), and bringup declares `load_joystick` once.
+- **Update**: Refreshed [github/workflows](codebase/github/workflows.md): the
+  Claude responder now runs the devcontainer lifecycle hooks to get the
+  `agentdev` skills.
 
 ## 2026-09-26
 

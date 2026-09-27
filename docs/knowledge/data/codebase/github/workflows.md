@@ -4,10 +4,10 @@ description: GitHub Actions CI/CD — primary-checks orchestrator, image builds,
 source:
 - .github/workflows
 - .github/actions
-source_digest: sha256:206d1c38589a6fa9eba3936cc1f5d3892567bb1499383985027e0839a6444ce5
+source_digest: sha256:fd575384b6289d094363923a4f712449c862e672fbd914721fc8e87c86a595b0
 verified:
   by: claude-code/opus-5.5
-  at: 2026-09-27T00:00:00Z
+  at: 2026-09-27T21:29:52Z
 stale_after: 2026-11-25
 generated:
   by: claude-code/opus-5.5
@@ -68,6 +68,11 @@ Artifacts: `colcon-logs-<arch>`, `colcon-test-reports-<arch>`, and the
   failure; the details are in the uploaded colcon log and report artifacts.
 - The arm64 and amd64 roles swap through the `AMD_ONLY` and `ARM_ONLY`
   repository variables.
+- The Claude responder gets the `agentdev` skills only by running the three
+  devcontainer lifecycle hooks in its job container
+  (`.github/actions/run-claude-responder/action.yml:100`). The image stages the
+  catalog without installing it, and `.claude/settings.json` does not enable it.
+  Without them the reviewer cannot load `agentdev:pr-review`.
 
 ## Key references
 
