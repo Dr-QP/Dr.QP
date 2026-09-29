@@ -30,6 +30,12 @@ inputs:
     description: Pull request number for review update calls.
     required: false
     default: ''
+  model:
+    description: >-
+      Model for the responder session; empty keeps the model the merged
+      settings pin.
+    required: false
+    default: ''
 
 runs:
   using: composite
@@ -105,23 +111,42 @@ runs:
         mkdir -p /root/.claude /root/.codex
         .devcontainer/scripts/setup-git-safe-directory.sh
 
-    # The gitignored local settings layer is written by the local-scope plugin
-    # install, which only runs where a marketplace is published, so this
-    # workspace never has one. Treat it as optional rather than assuming it.
+    # claude-code-action merges its settings input into the user settings one
+    # level deep, so the hook-written user layer rides underneath here or its
+    # enabledPlugins is replaced wholesale.
     - name: Merge Claude settings
       id: claude_settings
       shell: bash
       run: |
-        if [[ -f .claude/settings.local.json ]]; then
-          merged=$(jq -cs '.[0] * .[1]' .claude/settings.json .claude/settings.local.json)
-        else
-          merged=$(jq -c '.' .claude/settings.json)
+        layers=()
+        if [[ -f "${HOME}/.claude/settings.json" ]]; then
+          layers+=("${HOME}/.claude/settings.json")
         fi
+        layers+=(.claude/settings.json)
+        if [[ -f .claude/settings.local.json ]]; then
+          layers+=(.claude/settings.local.json)
+        fi
+        merged=$(jq -cs 'reduce .[] as $layer ({}; . * $layer)' "${layers[@]}")
         {
           echo 'json<<CLAUDE_SETTINGS_EOF'
           echo "$merged"
           echo 'CLAUDE_SETTINGS_EOF'
         } >>"$GITHUB_OUTPUT"
+
+    # claude_args is one string that several inputs contribute to; each flag
+    # appends to it so another can be added without re-deriving the rest.
+    - name: Compose Claude arguments
+      id: claude_args
+      shell: bash
+      env:
+        ALLOWED_TOOLS: ${{ env.CLAUDE_PR_REVIEW_ARGS }}
+        MODEL: ${{ inputs.model }}
+      run: |
+        args="--allowedTools '${ALLOWED_TOOLS}'"
+        if [[ -n "${MODEL}" ]]; then
+          args="${args} --model '${MODEL}'"
+        fi
+        printf 'args=%s\n' "${args}" >>"${GITHUB_OUTPUT}"
 
     # For dispatched reviews the requester was authorized by preflight.
     - name: Claude Responder
@@ -132,7 +157,7 @@ runs:
         claude_code_oauth_token: ${{ inputs.claude-code-oauth-token }}
         github_token: ${{ inputs.github_token }}
         settings: ${{ steps.claude_settings.outputs.json }}
-        claude_args: --allowedTools '${{ env.CLAUDE_PR_REVIEW_ARGS }}'
+        claude_args: ${{ steps.claude_args.outputs.args }}
         assignee_trigger: 'claude-bot'
         show_full_output: true
         prompt: ${{ inputs.prompt }}

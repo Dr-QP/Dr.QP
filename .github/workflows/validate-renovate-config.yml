@@ -1,0 +1,101 @@
+name: Validate Renovate config
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  merge_group:
+    types:
+      - checks_requested
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+# A container job defaults to `sh -e`; the steps below need bash.
+defaults:
+  run:
+    shell: bash --noprofile --norc -euo pipefail {0}
+
+jobs:
+  paths-filter:
+    name: Need to run?
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    outputs:
+      pass: ${{ steps.filter.outputs.pass }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Filters
+        uses: ./.github/actions/paths-filter
+        id: filter
+        with:
+          event-name: ${{ github.event_name }}
+          extra-filter: |
+            - .github/renovate.json
+            - .pre-commit-config.yaml
+            - devcontainer-compose-pins.yml
+            - .github/workflows/validate-renovate-config.yml
+
+  validate:
+    name: Validate Renovate config
+    needs: paths-filter
+    if: needs.paths-filter.outputs.pass == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    # The same digest as FROM_IMAGE in docker/ros/desktop/ros-desktop.Dockerfile, so
+    # a digest bump runs this check inside the new image.
+    container:
+      image: ghcr.io/plume-works/agent-desktop:edge@sha256:89e14c141515bdc64c73b6eb7bb0d2fcd0dd19f072e66c2b2dad23260ea787ae
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      # The hook's rev is the Renovate release the bot runs. --no-global rejects
+      # global-only options, which renovate.yml passes through the environment instead.
+      - name: Validate .github/renovate.json
+        run: |
+          rev=$(grep -A1 -F 'repo: https://github.com/renovatebot/pre-commit-hooks' \
+            .pre-commit-config.yaml | sed -n 's/^ *rev: *//p')
+          [[ "$rev" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "unexpected rev: '$rev'" >&2; exit 1; }
+          bunx --package "renovate@${rev}" renovate-config-validator \
+            --no-global --strict .github/renovate.json
+
+  finished:
+    name: Renovate config validation finished
+    needs: [paths-filter, validate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    if: always()
+    steps:
+      - name: Execution was not needed!
+        if: needs.paths-filter.outputs.pass != 'true'
+        run: |
+          exit 0
+      - name: All jobs succeeded!
+        if: ${{ success() }}
+        run: |
+          exit 0
+      - name: Some jobs have failed!
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: |
+          exit 1
+      - name: Some jobs have been cancelled!
+        if: ${{ cancelled() || contains(needs.*.result, 'cancelled') }}
+        run: |
+          exit 1

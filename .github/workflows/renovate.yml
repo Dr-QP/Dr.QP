@@ -1,0 +1,113 @@
+name: Renovate
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '17 3 * * *'
+  # Ticking a dashboard or PR checkbox edits its body; the bot reads it on its next run.
+  issues:
+    types: [edited]
+  # Not pull_request: it skips a conflicted PR, the usual reason to tick rebase. PR code
+  # is never checked out, so the base-branch context is safe.
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
+    types: [edited]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A container job defaults to `sh -e`; the steps below need bash.
+defaults:
+  run:
+    shell: bash --noprofile --norc -euo pipefail {0}
+
+jobs:
+  renovate:
+    name: Renovate
+    # Only a person's body edit of the dashboard or a Renovate PR: the bot rewrites both
+    # with an App token, whose events trigger workflows, so its own edits would loop.
+    if: >-
+      (github.event_name != 'issues' && github.event_name != 'pull_request_target') || (
+        github.event.sender.type != 'Bot' &&
+        github.event.changes.body && (
+          (
+            github.event.issue.title == 'Dependency Dashboard' &&
+            github.event.issue.user.type == 'Bot'
+          ) || (
+            startsWith(github.event.pull_request.head.ref, 'renovate/') &&
+            github.event.pull_request.head.repo.full_name == github.repository &&
+            github.event.pull_request.user.type == 'Bot'
+          )
+        )
+      )
+    # Queue rather than cancel: a run cut short mid-branch leaves half-pushed updates.
+    # Job level, so a filtered-out edit never enters the group and displaces a pending run.
+    concurrency:
+      group: ${{ github.workflow }}
+      cancel-in-progress: false
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    # The same digest as FROM_IMAGE in docker/ros/desktop/ros-desktop.Dockerfile;
+    # Renovate's agent-desktop group moves every copy together.
+    container:
+      image: ghcr.io/plume-works/agent-desktop:edge@sha256:89e14c141515bdc64c73b6eb7bb0d2fcd0dd19f072e66c2b2dad23260ea787ae
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      # The renovate-config-validator hook's rev is the Renovate release, so hook,
+      # validation workflow, and bot share one pin.
+      - name: Read the Renovate version
+        id: version
+        run: |
+          rev=$(grep -A1 -F 'repo: https://github.com/renovatebot/pre-commit-hooks' \
+            .pre-commit-config.yaml | sed -n 's/^ *rev: *//p')
+          [[ "$rev" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "unexpected rev: '$rev'" >&2; exit 1; }
+          echo "rev=$rev" >> "$GITHUB_OUTPUT"
+
+      # A pull request opened with GITHUB_TOKEN starts no workflows, so Renovate
+      # authenticates as its GitHub App. `workflows: write` lets it bump action pins;
+      # `checks`/`statuses` let it read CI for automerge.
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3.2.0
+        with:
+          client-id: ${{ secrets.RENOVATE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RENOVATE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
+          permission-workflows: write
+          permission-checks: write
+          permission-statuses: write
+          permission-administration: read
+          permission-vulnerability-alerts: read
+
+      - name: Resolve the App's commit identity
+        id: author
+        env:
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          id=$(gh api "/users/${APP_SLUG}%5Bbot%5D" --jq .id)
+          echo "git-author=${APP_SLUG}[bot] <${id}+${APP_SLUG}[bot]@users.noreply.github.com>" \
+            >> "$GITHUB_OUTPUT"
+
+      # Global-only options come from the environment: the checked-in config is
+      # validated with --no-global, so it must not carry them.
+      - name: Run Renovate
+        env:
+          RENOVATE_VERSION: ${{ steps.version.outputs.rev }}
+          RENOVATE_TOKEN: ${{ steps.app-token.outputs.token }}
+          RENOVATE_PLATFORM: github
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
+          RENOVATE_ONBOARDING: 'false'
+          RENOVATE_REQUIRE_CONFIG: required
+          RENOVATE_ALLOWED_COMMANDS: '["^scripts/renovate-post-upgrade\\.sh$"]'
+          RENOVATE_GIT_AUTHOR: ${{ steps.author.outputs.git-author }}
+          LOG_LEVEL: info
+        run: bunx --package "renovate@${RENOVATE_VERSION}" renovate
