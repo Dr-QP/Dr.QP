@@ -61,6 +61,7 @@ default-groups = ["dev", "docs"]
 testpaths = [
   "docs/knowledge/tests",
   "py_packages",
+  "scripts/tests",
 ]
 markers = [
   "slow: marks tests that exercise long-running or integration-heavy behavior",

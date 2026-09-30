@@ -55,19 +55,11 @@
       }
     ]
   },
-  "extraKnownMarketplaces": {
-    "agent-devcontainer": {
-      "source": {
-        "source": "github",
-        "repo": "plume-works/agent-devcontainer"
-      }
-    }
-  },
   "enabledPlugins": {
-    "agentdev@agent-devcontainer": true,
     "github@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true,
     "context7@claude-plugins-official": true,
     "ralph-loop@claude-plugins-official": true
-  }
+  },
+  "extraKnownMarketplaces": {}
 }

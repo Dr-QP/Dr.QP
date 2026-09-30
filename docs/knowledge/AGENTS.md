@@ -34,9 +34,14 @@ software project's memory and system of record. The division of labor:
    do).
 4. **Record** — write the state back:
    - Idea (not a commitment) → `data/someday/<slug>.md` + link from
-     `data/someday.md`.
-   - Actionable item → `data/backlog/<slug>.md` (`stage: planned`, priority),
-     linked under the priority section of `data/backlog.md`.
+     `data/someday.md`. An idea that gets real is promoted with
+     `/agentdev:iwe-capture task --from someday/<slug>`.
+   - Actionable item → `/agentdev:iwe-capture task`: `data/backlog/<slug>.md`
+     (`stage: planned`, priority), linked under the priority section of
+     `data/backlog.md`.
+   - Proposed feature → `/agentdev:iwe-capture feature`:
+     `data/features/<slug>.md` at `stage: proposed`, linked from
+     `data/features.md`.
    - Work starts → plan skill: `data/plans/YYYYMMDD-<slug>.md` (`created`,
      verified code anchors, and `## Spec changes` in the form the risk calls
      for), plus a link under `## Active`.
@@ -46,9 +51,9 @@ software project's memory and system of record. The division of labor:
      inclusion link in `data/releases/unreleased.md`.
    - Plan abandoned → `stage: cancelled`, link moved to `## Cancelled` (it stays
      listed — the record of why is worth keeping).
-   - Bug found → `data/bugs/<slug>.md` (Symptom / Reproduction / Root cause /
-     Fix, `path:line` anchors) + link from `data/bugs.md`. Fixed →
-     `stage: done`.
+   - Bug found → `/agentdev:iwe-capture bug`: `data/bugs/<slug>.md` (Symptom /
+     Reproduction / Root cause / Fix / Key references, `path:line` anchors) +
+     link from `data/bugs.md`. Fixed → `stage: done`.
    - Behavior defined or changed → the matching `data/spec/` doc
      (Requirement/Scenario format); this happens *inside* the ship flow, not as
      an afterthought.
@@ -217,6 +222,7 @@ anchors: `--includes`, `--included-by`, `--references`, `--referenced-by`,
 | `/agentdev:iwe-map`       | Codebase archaeology: writes and refreshes the `data/codebase/` map     |
 | `/agentdev:iwe-explore`   | Thinking partner from an idea or a GitHub issue; never writes code      |
 | `/agentdev:iwe-plan`      | Files a plan: discovery, verified anchors, spec impact, Active listing  |
+| `/agentdev:iwe-capture`   | Files a complete bug, proposed feature, or backlog task, deduplicated   |
 | `/agentdev:iwe-implement` | Executes a plan task-by-task: tests, checkbox ticks, clean boundaries   |
 | `/agentdev:iwe-verify`    | Pre-ship gate + drift audit: claims in the graph checked against code   |
 | `/agentdev:iwe-ship`      | Closes the loop: spec sync, stage flips, release recording, release cut |

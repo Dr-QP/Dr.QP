@@ -3,6 +3,26 @@ description: >-
   Feature design documents (data/features/<slug>.md). Every feature carries a
   lifecycle stage.
 maxDepth: 4
+sections:
+  - header: { pattern: '.+' }
+    description: the title section holds the body sections
+    minContains: 1
+    maxContains: 1
+    sections:
+      - header: { const: Purpose }
+        minContains: 1
+        description: &order-hint 'a feature body is Purpose, Behaviour, Edge cases, Open questions, in that order — a section out of that order reports as missing'
+      - header: { const: Behaviour }
+        minContains: 1
+        description: *order-hint
+      - header: { const: Edge cases }
+        minContains: 1
+        description: *order-hint
+      - header: { const: Open questions }
+        minContains: 1
+        description: *order-hint
+    additionalSections: true
+additionalSections: false
 frontmatter:
   type: object
   required: [type, stage]

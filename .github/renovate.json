@@ -1,7 +1,28 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": ["config:recommended", ":enablePreCommit"],
   "rebaseWhen": "auto",
+  "postUpgradeTasks": {
+    "commands": ["scripts/renovate-post-upgrade.sh"],
+    "executionMode": "branch",
+    "fileFilters": [
+      ".devcontainer/**",
+      "devcontainer-compose-pins.yml",
+      "docker/**",
+      ".github/actions/**",
+      ".github/workflows/**",
+      ".pre-commit-config.yaml",
+      "pyproject.toml",
+      "uv.lock",
+      "scripts/renovate-post-upgrade.sh"
+    ]
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true,
+    "automergeType": "pr",
+    "platformAutomerge": true
+  },
   "docker-compose": {
     "managerFilePatterns": ["/(^|/)devcontainer-compose-pins\\.ya?ml$/"]
   },
@@ -28,9 +49,25 @@
       "platformAutomerge": true
     },
     {
-      "description": "The dev image is built FROM this one, digest-pinned in docker/ros/desktop/ros-desktop.Dockerfile, so a bump here is what rebuilds jazzy-ros-desktop against a newer upstream base — closing the staleness gap recorded as F7 in docs/agents/specs/agent-devcontainer-migration/. The pin sits inside the `ros` path filter on purpose, so merging the bump runs that build; no loop is possible because this repository does not build agent-desktop. Automerge after green CI: the rebuilt jazzy-ros-desktop image itself is what verifies the new base.",
+      "description": "The dev image is built FROM this one, digest-pinned in docker/ros/desktop/ros-desktop.Dockerfile, so a bump here is what rebuilds jazzy-ros-desktop against a newer upstream base — closing the staleness gap recorded as F7 in docs/agents/specs/agent-devcontainer-migration/. The pin sits inside the `ros` path filter on purpose, so merging the bump runs that build; no loop is possible because this repository does not build agent-desktop. Automerge after green CI: the rebuilt jazzy-ros-desktop image itself is what verifies the new base. Workflow jobs that run in agent-desktop (renovate.yml, validate-renovate-config.yml) pin the same digest, and the group moves every reference in one pull request.",
       "matchDatasources": ["docker"],
       "matchPackageNames": ["ghcr.io/plume-works/agent-desktop"],
+      "groupName": "agent-desktop",
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Dev Container features in .devcontainer/devcontainer.json. The post-upgrade script regenerates devcontainer-lock.json in the same commit, and a change under .devcontainer/ matches the `ros` path filter, so the dev image builds on both architectures before it can merge. That is what makes automerge safe here.",
+      "matchManagers": ["devcontainer"],
+      "matchPackageNames": ["ghcr.io/devcontainers/features/**"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "pre-commit hook revisions, the renovate-config-validator hook's among them: its rev is the Renovate version the bot and the validation workflow run. A rev bump edits .pre-commit-config.yaml, which runs the required validation check at the new version before it can merge. The Super-Linter-linked hooks are excluded by the rule below.",
+      "matchManagers": ["pre-commit"],
       "automerge": true,
       "automergeType": "pr",
       "platformAutomerge": true
@@ -57,6 +94,16 @@
       "matchManagers": ["pre-commit"],
       "matchDepNames": ["prettier"],
       "enabled": false
+    }
+  ],
+  "customManagers": [
+    {
+      "description": "The devcontainer CLI version the post-upgrade script regenerates the devcontainer lock with.",
+      "customType": "regex",
+      "managerFilePatterns": ["/^scripts/renovate-post-upgrade\\.sh$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)\\s*\\n[A-Z0-9_]+=\"(?<currentValue>[^\"]+)\""
+      ]
     }
   ]
 }

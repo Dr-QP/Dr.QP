@@ -10,8 +10,12 @@ workspace_scripts="$(cd "$script_dir/../../scripts" && pwd)"
 "$script_dir/codebase-memory-mcp-start.sh"
 
 "$script_dir/setup-git-safe-directory.sh"
+# initializeCommand rewrites the transfer files on every start, not only at create.
+"$script_dir/seed-agent-auth.sh"
 "$script_dir/setup-pre-commit.sh"
 "$script_dir/setup-keyring.sh"
+# After the keyring: gh may keep its login there.
+"$script_dir/setup-gh-credential-helper.sh"
 "$script_dir/firewall.sh"
 
 # Headless callers — the CI responder job — opt out of the remote desktop
@@ -21,6 +25,8 @@ if [[ -n "${AGENTDEV_SKIP_XPRA:-}" ]]; then
 else
   /start-xpra.sh --background
 fi
+
+"$script_dir/claude-remote-control-start.sh"
 
 "$workspace_scripts/workspace-extensions.sh"
 "$script_dir/start-virtualhere.sh"

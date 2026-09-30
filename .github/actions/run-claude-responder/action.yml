@@ -30,6 +30,12 @@ inputs:
     description: Pull request number for review update calls.
     required: false
     default: ''
+  model:
+    description: >-
+      Model for the responder session; empty keeps the model the merged
+      settings pin.
+    required: false
+    default: ''
 
 runs:
   using: composite
@@ -85,43 +91,73 @@ runs:
             await kind.write(nextBody);
           }
 
-    # A `container:` job runs no devcontainer hooks, so this stands in for them.
-    #
-    # Only the git safe-directory hook is run, which is where this diverges from
-    # upstream. This workspace's postStart/postAttach are ROS-specific and
-    # unsuitable for CI: they run rosdep, git-clone a VS Code extension pack,
-    # start VirtualHere, and launch Xpra. None of that serves a review.
-    #
-    # The agentdev catalog still reaches Claude Code: .claude/settings.json
-    # declares the marketplace in extraKnownMarketplaces and enables the plugin,
-    # so it is installed at session start. That matters — without the catalog
-    # the responder improvises a review instead of running agentdev:pr-review,
+    # A `container:` job runs no devcontainer hooks, so this runs them. The
+    # agentdev catalog reaches Claude Code only through them: the image stages
+    # it at $AGENTDEV_CATALOG_DIR without installing it, and
+    # .claude/settings.json does not enable it. Without the catalog the
+    # responder improvises a review instead of running agentdev:pr-review,
     # which is a green required check over an ungrounded review.
-    - name: Prepare the agent environment
+    # See the ci-agent-plugin-availability architecture doc in
+    # plume-works/agent-devcontainer.
+    #
+    # This workspace's postAttach also runs rosdep install, which needs the
+    # rosdep cache a devcontainer keeps between sessions and a fresh job
+    # container lacks, so update it first, as ci.yml does.
+    - name: Run devcontainer lifecycle scripts
       shell: bash
       env:
         DEV_WORKSPACE_FOLDER: ${{ github.workspace }}
+        AGENTDEV_SKIP_PRE_COMMIT: '1'
+        AGENTDEV_SKIP_XPRA: '1'
+        CBM_CACHE_DIR: ${{ github.workspace }}/.cache/codebase-memory-mcp
+        UV_PROJECT_ENVIRONMENT: /opt/ci-venv
       run: |
         mkdir -p /root/.claude /root/.codex
-        .devcontainer/scripts/setup-git-safe-directory.sh
+        rosdep update
+        .devcontainer/scripts/postCreateCommand.sh
+        .devcontainer/scripts/postStartCommand.sh
+        .devcontainer/scripts/postAttachCommand.sh
 
-    # The gitignored local settings layer is written by the local-scope plugin
-    # install, which only runs where a marketplace is published, so this
-    # workspace never has one. Treat it as optional rather than assuming it.
+    # claude-code-action merges its settings input into the user settings one
+    # level deep, so the hook-written user layer rides underneath here or its
+    # enabledPlugins is replaced wholesale.
     - name: Merge Claude settings
       id: claude_settings
       shell: bash
       run: |
-        if [[ -f .claude/settings.local.json ]]; then
-          merged=$(jq -cs '.[0] * .[1]' .claude/settings.json .claude/settings.local.json)
-        else
-          merged=$(jq -c '.' .claude/settings.json)
+        layers=()
+        if [[ -f "${HOME}/.claude/settings.json" ]]; then
+          layers+=("${HOME}/.claude/settings.json")
         fi
+        layers+=(.claude/settings.json)
+        if [[ -f .claude/settings.local.json ]]; then
+          layers+=(.claude/settings.local.json)
+        fi
+        merged=$(jq -cs 'reduce .[] as $layer ({}; . * $layer)' "${layers[@]}")
+        # Shown for plugin troubleshooting; env values may hold secrets.
+        echo "::group::Merged Claude settings (${layers[*]})"
+        jq '(.env // empty) |= map_values("***")' <<<"$merged"
+        echo '::endgroup::'
         {
           echo 'json<<CLAUDE_SETTINGS_EOF'
           echo "$merged"
           echo 'CLAUDE_SETTINGS_EOF'
         } >>"$GITHUB_OUTPUT"
+
+    # claude_args is one string that several inputs contribute to; each flag
+    # appends to it so another can be added without re-deriving the rest.
+    - name: Compose Claude arguments
+      id: claude_args
+      shell: bash
+      env:
+        ALLOWED_TOOLS: ${{ env.CLAUDE_PR_REVIEW_ARGS }}
+        MODEL: ${{ inputs.model }}
+      run: |
+        args="--allowedTools '${ALLOWED_TOOLS}'"
+        if [[ -n "${MODEL}" ]]; then
+          args="${args} --model '${MODEL}'"
+        fi
+        printf 'args=%s\n' "${args}" >>"${GITHUB_OUTPUT}"
 
     # For dispatched reviews the requester was authorized by preflight.
     - name: Claude Responder
@@ -132,7 +168,7 @@ runs:
         claude_code_oauth_token: ${{ inputs.claude-code-oauth-token }}
         github_token: ${{ inputs.github_token }}
         settings: ${{ steps.claude_settings.outputs.json }}
-        claude_args: --allowedTools '${{ env.CLAUDE_PR_REVIEW_ARGS }}'
+        claude_args: ${{ steps.claude_args.outputs.args }}
         assignee_trigger: 'claude-bot'
         show_full_output: true
         prompt: ${{ inputs.prompt }}

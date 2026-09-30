@@ -1,0 +1,30 @@
+{
+  "iwe-map": {
+    "digest_ignore": {
+      "devcontainer.json": [
+        {
+          "pattern": "(\"[a-z0-9.-]+\\.[a-z]{2,}/[^\"]+):[0-9]+(\\.[0-9]+)*(\": \\{)",
+          "replace": "\\1:<PIN>\\3",
+          "reason": "Renovate bumps Dev Container feature version pins; the feature set itself stays tracked."
+        }
+      ],
+      "devcontainer-lock.json": [
+        {
+          "pattern": "(\"[a-z0-9.-]+\\.[a-z]{2,}/[^\"]+):[0-9]+(\\.[0-9]+)*(\": \\{)",
+          "replace": "\\1:<PIN>\\3",
+          "reason": "The lock is keyed by the feature references in devcontainer.json, masked the same way."
+        },
+        {
+          "pattern": "(\"version\": \")[^\"]+(\")",
+          "replace": "\\1<PIN>\\2",
+          "reason": "Renovate's post-upgrade task regenerates the lock with each feature bump (architecture/renovate-post-upgrade)."
+        },
+        {
+          "pattern": "sha256:[0-9a-f]{64}",
+          "replace": "sha256:<DIGEST>",
+          "reason": "The resolved and integrity digests move with the version; the feature and registry stay watched."
+        }
+      ]
+    }
+  }
+}

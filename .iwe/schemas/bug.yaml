@@ -3,6 +3,30 @@ description: >-
   Bug reports, investigations, and repro notes (data/bugs/<slug>.md). Stage is
   optional; an absent stage means open/under investigation.
 maxDepth: 4
+sections:
+  - header:
+      pattern: '^Bug: '
+      description: 'every bug H1 starts with "Bug: "'
+    minContains: 1
+    maxContains: 1
+    sections:
+      - header: { const: Symptom }
+        minContains: 1
+        description: &order-hint 'a bug body is Symptom, Reproduction, Root cause, Fix, Key references, in that order — a section out of that order reports as missing'
+      - header: { const: Reproduction }
+        minContains: 1
+        description: *order-hint
+      - header: { const: Root cause }
+        minContains: 1
+        description: *order-hint
+      - header: { const: Fix }
+        minContains: 1
+        description: *order-hint
+      - header: { const: Key references }
+        minContains: 1
+        description: *order-hint
+    additionalSections: true
+additionalSections: false
 frontmatter:
   type: object
   required: [type]
