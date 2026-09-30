@@ -58,7 +58,7 @@ jobs:
     needs: paths-filter
     permissions:
       contents: read
-    timeout-minutes: 10
+    timeout-minutes: 20
     if: needs.paths-filter.outputs.pass == 'true'
 
     steps:
@@ -73,6 +73,13 @@ jobs:
 
       - name: Validate Agent Files
         run: validate_agent_files --recommend .claude
+
+      # Devcontainer lifecycle and Renovate script tests; they shell out to the
+      # tools this image ships, which is why they run here.
+      - name: Test workspace scripts
+        env:
+          UV_PROJECT_ENVIRONMENT: /opt/ci-venv
+        run: uv run --locked pytest scripts/tests
 
       - name: Log debug stats
         if: ${{ always() }}
