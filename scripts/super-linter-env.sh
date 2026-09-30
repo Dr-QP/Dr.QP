@@ -41,6 +41,7 @@ while (($#)); do
 done
 
 echo LINTER_RULES_PATH="."
+echo GITHUB_ACTIONS_CONFIG_FILE=".github/actionlint.yml"
 
 echo FILTER_REGEX_EXCLUDE='(^|/)(build|install|log|\.venv|packages/vendor|packages/runtime/drqp_rapidjson/include|\.git)/'
 
