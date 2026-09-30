@@ -35,14 +35,17 @@ def git(cwd: Path, *args: str, check: bool = True) -> subprocess.CompletedProces
     )
 
 
-def guard_only_config() -> dict[str, object]:  # codeql[py/mixed-returns]
+def guard_only_config() -> dict[str, object]:
     """Return the repository's pre-commit config reduced to the default-branch guard hook."""
     config = yaml.safe_load((REPO_ROOT / '.pre-commit-config.yaml').read_text())
-    for repo in config['repos']:
-        hooks = [hook for hook in repo.get('hooks', []) if hook['id'] == HOOK_ID]
-        if hooks:
-            return {'repos': [{**repo, 'hooks': hooks}]}
-    pytest.fail(f'{HOOK_ID} is not configured in .pre-commit-config.yaml')
+    guard_repos = [
+        {**repo, 'hooks': hooks}
+        for repo in config['repos']
+        if (hooks := [hook for hook in repo.get('hooks', []) if hook['id'] == HOOK_ID])
+    ]
+    if not guard_repos:
+        pytest.fail(f'{HOOK_ID} is not configured in .pre-commit-config.yaml')
+    return {'repos': guard_repos[:1]}
 
 
 @pytest.fixture
