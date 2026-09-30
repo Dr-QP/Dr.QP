@@ -2,7 +2,7 @@ exclude: '(^packages/vendor/|.*/test_data/.*|^packages/runtime/drqp_rapidjson/in
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.3.0
+    rev: v2.5.0
     hooks:
       - id: end-of-file-fixer
       - id: trailing-whitespace
