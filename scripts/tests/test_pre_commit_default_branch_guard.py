@@ -35,7 +35,7 @@ def git(cwd: Path, *args: str, check: bool = True) -> subprocess.CompletedProces
     )
 
 
-def guard_only_config() -> dict[str, object]:
+def guard_only_config() -> dict[str, object]:  # codeql[py/mixed-returns]
     """Return the repository's pre-commit config reduced to the default-branch guard hook."""
     config = yaml.safe_load((REPO_ROOT / '.pre-commit-config.yaml').read_text())
     for repo in config['repos']:
