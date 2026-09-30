@@ -2,7 +2,7 @@
 # the staleness trigger recorded as F7 in docs/agents/specs/agent-devcontainer-migration/.
 # The pin lives under docker/**, inside the `ros` path filter, so merging the bump runs
 # that build. Renovate manages it through the un-automerged rule in .github/renovate.json.
-ARG FROM_IMAGE=ghcr.io/plume-works/agent-desktop:edge@sha256:89e14c141515bdc64c73b6eb7bb0d2fcd0dd19f072e66c2b2dad23260ea787ae
+ARG FROM_IMAGE=ghcr.io/plume-works/agent-desktop:edge@sha256:137848b166a08ff152f4fef49205d830a0c09accb70d2b83a7f3fd4ea66bbf67
 
 FROM $FROM_IMAGE
 
