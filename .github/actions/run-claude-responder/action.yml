@@ -134,6 +134,10 @@ runs:
           layers+=(.claude/settings.local.json)
         fi
         merged=$(jq -cs 'reduce .[] as $layer ({}; . * $layer)' "${layers[@]}")
+        # Shown for plugin troubleshooting; env values may hold secrets.
+        echo "::group::Merged Claude settings (${layers[*]})"
+        jq '(.env // empty) |= map_values("***")' <<<"$merged"
+        echo '::endgroup::'
         {
           echo 'json<<CLAUDE_SETTINGS_EOF'
           echo "$merged"
