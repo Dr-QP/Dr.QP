@@ -69,7 +69,7 @@ repos:
       - id: actionlint
 
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 44.125.2
+    rev: 44.127.1
     hooks:
       - id: renovate-config-validator
         # This rev is also the Renovate version .github/workflows/renovate.yml and
