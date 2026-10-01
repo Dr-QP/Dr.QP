@@ -50,6 +50,7 @@ def _moveit_params(use_gazebo, hardware_device_address):
 def generate_launch_description():
     use_gazebo = LaunchConfiguration('use_gazebo')
     load_joystick = LaunchConfiguration('load_joystick')
+    load_joystick_translator = LaunchConfiguration('load_joystick_translator')
     load_controllers = LaunchConfiguration('load_controllers')
     load_imu = LaunchConfiguration('load_imu')
     kinematics_backend = LaunchConfiguration('kinematics_backend')
@@ -68,7 +69,16 @@ def generate_launch_description():
                 name='load_joystick',
                 default_value='false',
                 choices=['true', 'false'],
-                description='Load joy game_controller_node',
+                description=(
+                    'Load drqp_joy game_controller_node. The robot runs it in a'
+                    ' separate container, so it is off by default.'
+                ),
+            ),
+            DeclareLaunchArgument(
+                name='load_joystick_translator',
+                default_value='true',
+                choices=['true', 'false'],
+                description='Translate /joy into robot movement commands and events',
             ),
             DeclareLaunchArgument(
                 name='load_controllers',
@@ -108,12 +118,6 @@ def generate_launch_description():
                         ),
                         condition=IfCondition(load_controllers),
                     ),
-                    DeclareLaunchArgument(
-                        name='load_joystick',
-                        default_value='false',
-                        choices=['true', 'false'],
-                        description='Load drqp_joy game_controller_node',
-                    ),
                     Node(
                         package='drqp_joy',
                         executable='game_controller_node',
@@ -124,7 +128,7 @@ def generate_launch_description():
                         package='drqp_brain',
                         executable='drqp_joystick_translator',
                         output='screen',
-                        condition=IfCondition(load_joystick),
+                        condition=IfCondition(load_joystick_translator),
                     ),
                     GroupAction(
                         condition=UnlessCondition(use_gazebo),

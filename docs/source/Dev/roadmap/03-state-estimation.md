@@ -61,8 +61,8 @@ gait phase (which legs are stance) ───────────┘         
 - The BNO055 provides fused orientation onboard; trust its yaw only relatively (magnetometer
   indoors is unreliable) — configure the EKF for `differential` yaw from IMU.
 - Covariance tuning is where this phase's real time goes. Budget for it.
-- Keep the 8 Hz tick in mind: odometry integrates at brain rate; that's adequate for walking
-  speeds (<0.2 m/s ⇒ <2.5 cm per tick).
+- Keep the brain tick in mind: odometry integrates at `control_rate_hz` (25 Hz by default);
+  that's adequate for walking speeds (<0.2 m/s ⇒ <1 cm per tick).
 
 ## Definition of done
 

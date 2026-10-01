@@ -15,4 +15,12 @@ Frontmatter is `type: architecture`; like specs, these are durable reference.
 Record a design decision here the moment it's made — the alternatives you
 rejected are as valuable as the one you picked.*
 
-[State model](architecture/state-model.example)
+[Runtime pipeline](architecture/runtime-pipeline.md)
+
+[Effort as the lifecycle channel](architecture/effort-lifecycle-channel.md)
+
+[Time-based gait timing](architecture/time-based-gait-timing.md)
+
+[Joystick in its own container](architecture/joystick-container-split.md)
+
+[Serial record and replay for servo tests](architecture/serial-record-replay.md)

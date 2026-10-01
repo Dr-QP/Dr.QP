@@ -12,9 +12,9 @@ DualSense pad ──/joy──▶ joystick_translator ──/robot/movement_comm
                                 │                                           │
                                 └──/robot_event──▶ robot_state node        │ WalkController
                                         │        (python-statemachine)     │ + ParametricGaitGenerator
-                                        └──/robot_state──────────────▶     │ + MoveItPy IK validation
+                                        └──/robot_state──────────────▶     │ + analytic IK, MoveIt scene check
                                                                             ▼
-                              /joint_trajectory_controller/joint_trajectory (8 Hz window)
+                              /joint_trajectory_controller/joint_trajectory (25 Hz window)
                                                                             ▼
                     ros2_control: joint_trajectory_controller ──▶ A1-16 hardware interface
                                                                             ▼
@@ -23,9 +23,11 @@ DualSense pad ──/joy──▶ joystick_translator ──/robot/movement_comm
 
 Key facts, verified in code:
 
-- **Control loop**: `drqp_brain` runs its walking loop at **8 Hz** (`brain_node.py`, `self.fps = 8`)
-  and publishes 2-point trajectory windows; smoothness comes from the trajectory controller
-  interpolating between points.
+- **Control loop**: `drqp_brain` runs its walking loop at the `control_rate_hz` parameter,
+  **25 Hz** by default and bounded to 5–100 Hz (`brain_node.py`), and publishes 2-point trajectory
+  windows (`WALKING_TRAJECTORY_POINTS`); smoothness comes from the trajectory controller
+  interpolating between points. Gait timing is time-based, so walking speed does not depend on the
+  loop rate.
 - **Semantic command layer**: `MovementCommand` carries normalized (−1…1) stride direction,
   rotation speed, body translation/rotation, and gait name. Nothing in the pipeline is metric
   (m/s, rad/s) yet.
@@ -36,7 +38,8 @@ Key facts, verified in code:
   the in-process MoveIt planning scene for whole-robot self-collision validation. Live
   `/joint_states` gate controller readiness but do not seed analytic IK.
 - **Balance**: `/imu/data` (BNO055 on hardware, gz-sim IMU plugin in simulation) feeds a balance
-  controller that scales stride and counter-rotates the body; toggled via `/robot/balance_mode`.
+  controller that holds a stationary body posture, counter-rotating the body within reachability
+  limits while walking is suspended; toggled via `/robot/balance_mode`.
 - **Lifecycle**: a `python-statemachine` graph (`torque_off → initializing → torque_on →
 finalizing → finalized`, plus `servos_rebooting`) driven by `/robot_event`, with scripted
   init/finalize trajectories.
@@ -58,7 +61,7 @@ These gaps define the roadmap:
 | Camera is an empty URDF link — no driver, no sim sensor, no bridge        | Vision, SLAM, person detection                     |
 | No microphone/speaker hardware or audio stack                             | Voice interaction                                  |
 | No feet contact sensing (and A1-16 servos expose no torque feedback)      | Terrain adaptation, contact-aware RL               |
-| 8 Hz brain loop and MoveItPy-in-the-loop IK                               | High-rate RL policies (they will bypass this path) |
+| Python brain loop with per-tick IK and MoveIt collision check             | High-rate RL policies (they will bypass this path) |
 
 ## Hardening tasks worth doing now
 

@@ -20,6 +20,7 @@
 
 from drqp_brain.robot_state.robot_state_machine import RobotStateMachine
 import pytest
+from statemachine.exceptions import TransitionNotAllowed
 
 
 class TestRobotStateMachine:
@@ -139,4 +140,45 @@ class TestRobotStateMachine:
         assert state_machine.finalized in state_machine.configuration
 
         state_machine.send('reboot_servos')
+        assert state_machine.servos_rebooting in state_machine.configuration
+
+
+class TestKillSwitch:
+    """Pin kill_switch_pressed, which combines turn_off | initialize."""
+
+    PATHS_TO_STATE = {
+        'torque_off': [],
+        'initializing': ['initialize'],
+        'torque_on': ['initialize', 'initializing_done'],
+        'finalizing': ['initialize', 'initializing_done', 'finalize'],
+        'finalized': ['initialize', 'initializing_done', 'finalize', 'finalizing_done'],
+        'servos_rebooting': ['reboot_servos'],
+    }
+
+    @pytest.mark.parametrize(
+        ('start', 'expected'),
+        [
+            ('torque_off', 'initializing'),
+            ('initializing', 'torque_off'),
+            ('torque_on', 'torque_off'),
+            ('finalizing', 'torque_off'),
+            ('finalized', 'initializing'),
+        ],
+    )
+    def test_kill_switch_transition(self, start, expected):
+        state_machine = RobotStateMachine()
+        for event in self.PATHS_TO_STATE[start]:
+            state_machine.send(event)
+        assert getattr(state_machine, start) in state_machine.configuration
+
+        state_machine.send('kill_switch_pressed')
+        assert getattr(state_machine, expected) in state_machine.configuration
+
+    def test_kill_switch_refused_while_servos_rebooting(self):
+        state_machine = RobotStateMachine()
+        for event in self.PATHS_TO_STATE['servos_rebooting']:
+            state_machine.send(event)
+
+        with pytest.raises(TransitionNotAllowed):
+            state_machine.send('kill_switch_pressed')
         assert state_machine.servos_rebooting in state_machine.configuration

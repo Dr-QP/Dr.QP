@@ -17,7 +17,8 @@ hardware deployment quality is capped by two things measured earlier: the **serv
   blocker. Torque-feedback servos (XC430-T240BB-T class) later improve _observations_ and enable
   compliance, but are not prerequisites.
 - **Control rate**: learned policies typically run at 25–50 Hz. The current brain publishes at
-  8 Hz through MoveItPy IK — the policy path **bypasses the brain**: a dedicated runtime node
+  `control_rate_hz` (25 Hz by default) through analytic IK and a MoveIt collision check — the
+  policy path **bypasses the brain**: a dedicated runtime node
   feeds position targets straight to the ros2_control layer. Whether 50 Hz is reachable depends
   on the measured A1-16 bus round-trip (Phase 1); the fallback is 25 Hz with action interpolation
   in the hardware interface.

@@ -61,8 +61,8 @@ is derivable, then verifiable against ground truth in Gazebo.
   tolerance; Phase 3 odometry enables closed-loop correction later.
 - **Gait switching under velocity control**: keep gait selection semantic (auto-select by speed
   can come later — wave for precision, tripod for speed).
-- The brain's 8 Hz loop is fine for this phase; velocity fidelity comes from the model, not loop
-  rate.
+- The brain's `control_rate_hz` loop (25 Hz by default) is fine for this phase; velocity fidelity
+  comes from the model, not loop rate.
 
 ## Definition of done
 
