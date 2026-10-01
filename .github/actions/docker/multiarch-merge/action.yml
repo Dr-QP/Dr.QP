@@ -120,9 +120,11 @@ runs:
         echo "image=${IMAGE_TAG%@*}@${digest}" >> "$GITHUB_OUTPUT"
 
     - name: Cleanup digests temp dir
-      if: ${{ inputs.export-digest == 'true' }}
+      if: ${{ always() }}
       shell: bash -xeuo pipefail {0}
       env:
         DIGESTS_DIR: ${{ steps.digests.outputs.digests_dir }}
       run: |
-        rm -rf "${DIGESTS_DIR}/*"
+        if [ -n "${DIGESTS_DIR}" ]; then
+          rm -rf "${DIGESTS_DIR}"
+        fi

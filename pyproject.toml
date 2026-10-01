@@ -24,7 +24,7 @@ docs = [
   { include-group = "notebooks" },
   "sphinx~=9.1.0",
   "sphinx-notfound-page~=1.1.0",
-  "pydata-sphinx-theme==0.21.0",
+  "pydata-sphinx-theme==0.22.0",
   "sphinx-sitemap>=2.6.0",
   "myst-nb>=1.2.0",
   "myst-parser>=4.0.0",
@@ -61,6 +61,7 @@ default-groups = ["dev", "docs"]
 testpaths = [
   "docs/knowledge/tests",
   "py_packages",
+  "scripts/tests",
 ]
 markers = [
   "slow: marks tests that exercise long-running or integration-heavy behavior",

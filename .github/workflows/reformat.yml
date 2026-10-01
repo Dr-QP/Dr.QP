@@ -129,7 +129,7 @@ jobs:
             # Renovate treats any foreign commit on its branch as a signal that the
             # branch was taken over, and stops updating the pull request. Never run
             # the formatter on its pull requests so it keeps ownership of them.
-            if [[ "${INPUTS_CALLER_PR_AUTHOR:-$GITHUB_ACTOR}" == 'renovate[bot]' ]]; then
+            if [[ ",${RENOVATE_BOT_ACTORS}," == *",${INPUTS_CALLER_PR_AUTHOR:-$GITHUB_ACTOR},"* ]]; then
               echo "Renovate pull request detected. Skipping reformat and super-linter."
               pass='false'
             elif [[ "${INPUTS_CALLER_PR_IS_DRAFT}" == "true" ]]; then
@@ -147,6 +147,8 @@ jobs:
           INPUTS_CALLER_EVENT_NAME: ${{ inputs.caller_event_name }}
           INPUTS_CALLER_PR_AUTHOR: ${{ inputs.caller_pr_author }}
           INPUTS_CALLER_PR_IS_DRAFT: ${{ inputs.caller_pr_is_draft }}
+          # The hosted app, and the self-hosted GitHub App .github/workflows/renovate.yml runs as.
+          RENOVATE_BOT_ACTORS: 'renovate[bot],plume-works-renovate[bot]'
 
       - name: Detect trusted skip tags
         id: skip-tags

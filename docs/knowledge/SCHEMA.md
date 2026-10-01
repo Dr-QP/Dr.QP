@@ -124,8 +124,9 @@ stage: released # released | unreleased — required
 ---
 ```
 
-Body: `## Added` / `## Fixed` (/ `## Changed`) as inclusion links to feature and
-bug docs.
+Body: `## Added` / `## Changed` / `## Fixed` as inclusion links to feature and
+bug docs. A feature already released in an earlier version, but which gained
+behavior in this one, belongs under `## Changed` rather than `## Added`.
 
 ## Backlog tasks — `data/backlog/<slug>.md`
 
