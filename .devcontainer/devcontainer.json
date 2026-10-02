@@ -23,7 +23,7 @@
       ]
     }
   },
-  "workspaceFolder": "/opt/ros/overlay_ws/",
+  "workspaceFolder": "/opt/ros/overlay_ws",
   "containerEnv": {
     // The firewall is installed in the image but inert until this is "true".
     // See .devcontainer/firewall-allowlist.txt for the allowed destinations.
@@ -32,7 +32,7 @@
     "DISPLAY": ":100",
     "DOCKER_HOST": "unix:///var/run/docker.sock",
     "DEVCONTAINER_ID": "${devcontainerId}",
-    "DEV_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
+    "DEV_WORKSPACE_FOLDER": "${containerWorkspaceFolder}",
 
     // Claude Code resolves .credentials.json from this directory, independently of
     // ~/.claude. It points at the shared agentdev-agents-auth volume (Claude's subdirectory of
