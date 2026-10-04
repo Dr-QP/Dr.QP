@@ -56,7 +56,7 @@ jobs:
     # The same digest as FROM_IMAGE in docker/ros/desktop/ros-desktop.Dockerfile, so
     # a digest bump runs this check inside the new image.
     container:
-      image: ghcr.io/plume-works/agent-desktop:edge@sha256:3d67fa143e11e1623edf5ca18de4c87483be55526bd47150a4be0b48a566aa09
+      image: ghcr.io/plume-works/agent-desktop:edge@sha256:b902c3e0f8d6fb16be6a7e02e1df3c4d9c6484d70bdc38f5d11ffd09001baf33
     timeout-minutes: 15
     steps:
       - name: Checkout repository
