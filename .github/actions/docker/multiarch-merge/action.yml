@@ -44,7 +44,7 @@ runs:
         echo "digests_dir=${DIGESTS_DIR}" >> "$GITHUB_OUTPUT"
 
     - name: Download digests
-      uses: actions/download-artifact@v8.0.1
+      uses: actions/download-artifact@v8.0.2
       with:
         path: ${{ steps.digests.outputs.digests_dir }}
         pattern: ${{ steps.digests.outputs.artifact_name_prefix }}*
