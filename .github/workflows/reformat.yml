@@ -379,7 +379,7 @@ jobs:
           persist-credentials: true # Needed to commit changes back to the repository
 
       - name: Download formatter patches
-        uses: actions/download-artifact@v8.0.1
+        uses: actions/download-artifact@v8.0.2
         with:
           path: ./.tmp/format-patches
           pattern: format-patch-*
