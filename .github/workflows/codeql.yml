@@ -142,7 +142,7 @@ jobs:
           echo "file=$PWD/$file" >> "$GITHUB_OUTPUT"
 
       - name: Upload loc as a Build Artifact
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: ${{matrix.language}}-raw.sarif
           path: ${{ steps.sarif.outputs.file }}
@@ -181,7 +181,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
 
       - name: Upload loc as a Build Artifact
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: ${{matrix.language}}-filtered.sarif
           path: ${{ steps.sarif.outputs.file }}
