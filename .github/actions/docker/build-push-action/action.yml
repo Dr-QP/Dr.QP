@@ -89,7 +89,7 @@ runs:
 
     - name: Upload digest
       if: ${{ inputs.export-digest == 'true' }}
-      uses: actions/upload-artifact@v7.0.1
+      uses: actions/upload-artifact@v7.0.2
       with:
         name: ${{ steps.digests.outputs.artifact_name }}
         path: ${{ steps.digests.outputs.digests_dir }}/*
