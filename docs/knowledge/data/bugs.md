@@ -27,3 +27,7 @@ them apart.*
 [Bug: IMU covariance marks gyro and accelerometer data as unavailable](bugs/imu-covariance-marks-data-unavailable.md)
 
 [Bug: balance toggle desyncs from the brain](bugs/balance-toggle-desyncs-from-brain.md)
+
+[Bug: docs build skips Python dependency changes](bugs/docs-build-skips-python-dependency-changes.md)
+
+[Bug: Renovate post-upgrade fails on Dockerfile changes](bugs/renovate-post-upgrade-fails-on-dockerfile-changes.md)
