@@ -34,7 +34,7 @@ from robot_control_test_support import create_simulation_launch_description
 
 
 @launch_pytest.fixture
-def generate_test_description():
+def launch_test_description():
     """
     Launch the simulation for this test and record process exit codes.
 
@@ -48,13 +48,13 @@ def generate_test_description():
 
 
 @pytest.mark.flaky(retries=3)
-@pytest.mark.launch(fixture=generate_test_description)
-def test_robot_smoke(robot, generate_test_description):
+@pytest.mark.launch(fixture=launch_test_description)
+def test_robot_smoke(robot, launch_test_description):
     robot.assert_nodes_and_clock()
     robot.assert_controllers_are_active()
     robot.assert_imu_data_reports_orientation()
 
     yield  # yield to allow shutdown test to run after this one
 
-    _ld, proc_info = generate_test_description
+    _ld, proc_info = launch_test_description
     assert_processes_exited_cleanly(proc_info)

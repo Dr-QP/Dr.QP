@@ -33,13 +33,13 @@ import pytest
 
 
 @launch_pytest.fixture
-def generate_test_description():
+def launch_test_description():
     return make_probe_launch()
 
 
-@pytest.mark.launch(fixture=generate_test_description)
-def test_active_then_exit_codes(generate_test_description):
-    _ld, proc_info, _launch_id = generate_test_description
+@pytest.mark.launch(fixture=launch_test_description)
+def test_active_then_exit_codes(launch_test_description):
+    _ld, proc_info, _launch_id = launch_test_description
     # --- pre-shutdown phase: simulation is running here ---
     assert not recorded_exit_codes(proc_info), 'no process should have exited yet'
     yield

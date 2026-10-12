@@ -1,6 +1,6 @@
 ---
 name: launch-testing
-description: 'Write launch_pytest integration tests with per-process exit-code verification via drqp_launch_testing. Use when writing, reviewing, or debugging ROS 2 launch tests, choosing fixture scope vs shutdown pattern, or handling shutdown-crash flakiness with pytest-retry. Keywords: launch test, launch_pytest, generate_test_description, shutdown=True, exit codes, flaky, drqp_launch_testing.'
+description: 'Write launch_pytest integration tests with per-process exit-code verification via drqp_launch_testing. Use when writing, reviewing, or debugging ROS 2 launch tests, choosing fixture scope vs shutdown pattern, or handling shutdown-crash flakiness with pytest-retry. Keywords: launch test, launch_pytest, launch_test_description, shutdown=True, exit codes, flaky, drqp_launch_testing.'
 ---
 
 # Launch Test Conventions (launch_pytest)
@@ -27,11 +27,15 @@ the `drqp_launch_testing` helpers to recover per-process checking:
 from drqp_launch_testing import assert_processes_exited_cleanly, track_process_exit_codes
 
 @launch_pytest.fixture(...)
-def generate_test_description():
+def launch_test_description():
     launch_description = build_my_launch_description()
     proc_info = track_process_exit_codes(launch_description)
     return launch_description, proc_info
 ```
+
+Never name the fixture `generate_test_description`: `launch_testing`'s pytest
+plugin claims every module that defines that name as a `launch_testing` test,
+and its collector cannot run a `launch_pytest` fixture.
 
 Then assert with `assert_processes_exited_cleanly(proc_info)`. Simulator/MoveIt
 processes that are SIGTERM'd on shutdown (`gazebo`, `gz`, `bridge_node`,
@@ -49,15 +53,15 @@ The two correct patterns (and the traps to avoid) come straight from the matrix:
 
   ```python
   @launch_pytest.fixture                      # function scope (default)
-  def generate_test_description():
+  def launch_test_description():
       ld = build_my_launch_description()
       return ld, track_process_exit_codes(ld)
 
-  @pytest.mark.launch(fixture=generate_test_description)
-  def test_node_behaviour(consumer, generate_test_description):
+  @pytest.mark.launch(fixture=launch_test_description)
+  def test_node_behaviour(consumer, launch_test_description):
       consumer.do_checks()
       yield                                   # simulation tears down here
-      assert_processes_exited_cleanly(generate_test_description[1])
+      assert_processes_exited_cleanly(launch_test_description[1])
   ```
 
 - **Several launch tests must share ONE simulation → `scope='module'` +
@@ -66,19 +70,19 @@ The two correct patterns (and the traps to avoid) come straight from the matrix:
 
   ```python
   @launch_pytest.fixture(scope='module')
-  def generate_test_description():
+  def launch_test_description():
       ld = build_my_launch_description()
       return ld, track_process_exit_codes(ld)
 
-  @pytest.mark.launch(fixture=generate_test_description)
+  @pytest.mark.launch(fixture=launch_test_description)
   def test_one(robot): robot.assert_a()
 
-  @pytest.mark.launch(fixture=generate_test_description)
+  @pytest.mark.launch(fixture=launch_test_description)
   def test_two(robot): robot.assert_b()
 
-  @pytest.mark.launch(fixture=generate_test_description, shutdown=True)
-  def test_processes_exit_cleanly(generate_test_description):
-      assert_processes_exited_cleanly(generate_test_description[1])
+  @pytest.mark.launch(fixture=launch_test_description, shutdown=True)
+  def test_processes_exit_cleanly(launch_test_description):
+      assert_processes_exited_cleanly(launch_test_description[1])
   ```
 
   A single test driving a `module`-scoped simulation can also use the generator
@@ -136,12 +140,12 @@ To use it:
    test, mark it `@pytest.mark.flaky(retries=3)`:
 
 ```python
-@pytest.mark.launch(fixture=generate_test_description)
+@pytest.mark.launch(fixture=launch_test_description)
 @pytest.mark.flaky(retries=3)
-def test_node_behaviour(consumer, generate_test_description):
+def test_node_behaviour(consumer, launch_test_description):
     consumer.do_checks()
     yield
-    assert_processes_exited_cleanly(generate_test_description[1])
+    assert_processes_exited_cleanly(launch_test_description[1])
 ```
 
 - A genuine assertion failure earlier in the test body reproduces identically
@@ -154,7 +158,7 @@ def test_node_behaviour(consumer, generate_test_description):
 ## Fixture ordering gotcha
 
 An `autouse`/shared fixture that assumes the launched system is running MUST
-declare `generate_test_description` as a parameter (value unused, `# noqa:
+declare `launch_test_description` as a parameter (value unused, `# noqa:
 ARG002`). `@pytest.mark.launch` is only an inherited marker; without the
 parameter pytest may run setup before any process launches and discovery times
 out. A `ready_delay` (`TimerAction` before `ReadyToTest`) is also required so

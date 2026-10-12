@@ -485,7 +485,7 @@ def test_loop_uses_imu_balance_correction(rclpy_context):  # noqa: ARG001 (needs
 
 
 @launch_pytest.fixture
-def generate_test_description():
+def launch_test_description():
     """Launch the drqp_brain node and record process exit codes."""
     launch_description = LaunchDescription(
         [
@@ -508,7 +508,7 @@ def generate_test_description():
 
 
 @pytest.fixture
-def consumer(generate_test_description):  # noqa: ARG001 (drives the launch)
+def consumer(launch_test_description):  # noqa: ARG001 (drives the launch)
     """Own rclpy init/shutdown and provide a consumer node for the launched node."""
     rclpy.init()
     node = rclpy.create_node('test_brain_consumer')
@@ -516,8 +516,8 @@ def consumer(generate_test_description):  # noqa: ARG001 (drives the launch)
     rclpy.try_shutdown()
 
 
-@pytest.mark.launch(fixture=generate_test_description)
-def test_movement_command_processing(consumer, generate_test_description):
+@pytest.mark.launch(fixture=launch_test_description)
+def test_movement_command_processing(consumer, launch_test_description):
     """Process a movement command, then verify the launched node exits cleanly."""
     cmd = MovementCommand()
     cmd.stride_direction = Vector3(x=1.0, y=0.0, z=0.0)
@@ -536,5 +536,5 @@ def test_movement_command_processing(consumer, generate_test_description):
     # Function-scoped generator: the launched node is torn down at the yield,
     # then the post-yield body verifies it exited cleanly.
     yield
-    _launch_description, proc_info = generate_test_description
+    _launch_description, proc_info = launch_test_description
     assert_processes_exited_cleanly(proc_info)

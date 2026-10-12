@@ -48,7 +48,7 @@ def test_robot_state_main_refuses_duplicate_instance(monkeypatch):
 
 
 @launch_pytest.fixture
-def generate_test_description():
+def launch_test_description():
     """Launch the drqp_robot_state node and record process exit codes."""
     launch_description = LaunchDescription(
         [
@@ -71,7 +71,7 @@ def generate_test_description():
 
 
 @pytest.fixture
-def consumer(generate_test_description):  # noqa: ARG001 (drives the launch)
+def consumer(launch_test_description):  # noqa: ARG001 (drives the launch)
     """Own rclpy init/shutdown and provide a consumer node for the launched node."""
     rclpy.init()
     node = rclpy.create_node('test_state_consumer')
@@ -79,8 +79,8 @@ def consumer(generate_test_description):  # noqa: ARG001 (drives the launch)
     rclpy.try_shutdown()
 
 
-@pytest.mark.launch(fixture=generate_test_description)
-def test_processes_events_and_publishes_state(consumer, generate_test_description):
+@pytest.mark.launch(fixture=launch_test_description)
+def test_processes_events_and_publishes_state(consumer, launch_test_description):
     """Check whether events are processed, then verify a clean shutdown."""
     msgs_received = []
 
@@ -111,5 +111,5 @@ def test_processes_events_and_publishes_state(consumer, generate_test_descriptio
     # Function-scoped generator: the launched node is torn down at the yield,
     # then the post-yield body verifies it exited cleanly.
     yield
-    _launch_description, proc_info = generate_test_description
+    _launch_description, proc_info = launch_test_description
     assert_processes_exited_cleanly(proc_info)

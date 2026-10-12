@@ -22,15 +22,15 @@
 
 from drqp_launch_testing import assert_processes_exited_cleanly
 import pytest
-from robot_control_test_support import generate_test_description
+from robot_control_test_support import launch_test_description
 
 
 @pytest.mark.slow
-@pytest.mark.launch(fixture=generate_test_description)
-def test_movement_left(robot, generate_test_description):
+@pytest.mark.launch(fixture=launch_test_description)
+def test_movement_left(robot, launch_test_description):
     robot.assert_left_movement()
     # Function-scoped generator: the simulation tears down at the yield, then the
     # post-yield body verifies every non-simulator process exited cleanly.
     yield
-    _launch_description, proc_info = generate_test_description
+    _launch_description, proc_info = launch_test_description
     assert_processes_exited_cleanly(proc_info)

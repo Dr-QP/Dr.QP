@@ -36,7 +36,7 @@ import pytest
 
 
 @launch_pytest.fixture
-def generate_test_description():
+def launch_test_description():
     """Launch move_group + bringup and record process exit codes."""
     move_group_launch = PathJoinSubstitution(
         [FindPackageShare('drqp_moveit'), 'launch', 'move_group.launch.py']
@@ -70,11 +70,11 @@ def generate_test_description():
     return launch_description, proc_info
 
 
-@pytest.mark.launch(fixture=generate_test_description)
-def test_launch_reaches_ready_state(move_group, generate_test_description):  # noqa: ARG001
+@pytest.mark.launch(fixture=launch_test_description)
+def test_launch_reaches_ready_state(move_group, launch_test_description):  # noqa: ARG001
     assert_moveit_stack_ready()
     # Function-scoped generator: the stack tears down at the yield, then the
     # post-yield body verifies every non-simulator process exited cleanly.
     yield
-    _launch_description, proc_info = generate_test_description
+    _launch_description, proc_info = launch_test_description
     assert_processes_exited_cleanly(proc_info)

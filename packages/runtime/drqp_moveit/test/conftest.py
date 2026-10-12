@@ -25,7 +25,7 @@ import rclpy
 
 
 @pytest.fixture
-def move_group(generate_test_description):  # noqa: ARG001 (drives the launch)
+def move_group(launch_test_description):  # noqa: ARG001 (drives the launch)
     """
     Own ``rclpy`` init/shutdown for a launched MoveIt stack.
 

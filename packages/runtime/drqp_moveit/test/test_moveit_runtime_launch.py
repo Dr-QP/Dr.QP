@@ -71,7 +71,7 @@ TARGET_OBSTACLE_ID = 'left_front_target_blocker'
 
 
 @launch_pytest.fixture
-def generate_test_description():
+def launch_test_description():
     demo_gazebo_launch = PathJoinSubstitution(
         [FindPackageShare('drqp_moveit'), 'launch', 'demo_gazebo.launch.py']
     )
@@ -92,7 +92,7 @@ def generate_test_description():
 
 
 @pytest.mark.slow
-@pytest.mark.launch(fixture=generate_test_description)
+@pytest.mark.launch(fixture=launch_test_description)
 class TestMoveItRuntime:
     READY_TIMEOUT = 90.0
     JOINT_TOLERANCE = 0.08
@@ -113,7 +113,7 @@ class TestMoveItRuntime:
         rclpy.try_shutdown()
 
     @pytest.fixture(autouse=True)
-    def _node_setup(self, request, generate_test_description):  # noqa: ARG002
+    def _node_setup(self, request, launch_test_description):  # noqa: ARG002
         self.node = rclpy.create_node('test_moveit_runtime')
         request.addfinalizer(self.node.destroy_node)
 
@@ -434,7 +434,7 @@ class TestMoveItRuntime:
 
     @pytest.mark.flaky(retries=3)
     def test_left_front_leg_analytical_target_get_motion_plan_succeeds(
-        self, generate_test_description
+        self, launch_test_description
     ):
         _, expected_joint_positions = self._reachable_target()
 
@@ -447,12 +447,12 @@ class TestMoveItRuntime:
         )
 
         yield  # yield to allow shutdown test to run after this one
-        _ld, proc_info = generate_test_description
+        _ld, proc_info = launch_test_description
         assert_processes_exited_cleanly(proc_info)
 
     def test_analytic_ik_agrees_with_moveit_across_live_twist_envelope(
         self,
-        generate_test_description,
+        launch_test_description,
     ):
         """Use live MoveIt calls to verify bounded combined-twist targets."""
         model = self._make_hexapod_model()
@@ -510,12 +510,12 @@ class TestMoveItRuntime:
                         )
 
         yield
-        _ld, proc_info = generate_test_description
+        _ld, proc_info = launch_test_description
         assert_processes_exited_cleanly(proc_info)
 
     @pytest.mark.flaky(retries=3)
     def test_execute_trajectory_reaches_planned_goal_via_joint_trajectory_controller(
-        self, generate_test_description
+        self, launch_test_description
     ):
         _, target_joint_positions = self._reachable_target()
         plan_response = self._plan_to_joint_target(target_joint_positions)
@@ -532,12 +532,12 @@ class TestMoveItRuntime:
         )
 
         yield  # yield to allow shutdown test to run after this one
-        _ld, proc_info = generate_test_description
+        _ld, proc_info = launch_test_description
         assert_processes_exited_cleanly(proc_info)
 
     @pytest.mark.flaky(retries=3)
     def test_collision_object_blocks_goal_state_and_plan_is_rejected(
-        self, generate_test_description
+        self, launch_test_description
     ):
         target_pose, target_joint_positions = self._reachable_target()
         blocked_state = self._robot_state_with_joint_targets(target_joint_positions)
@@ -552,5 +552,5 @@ class TestMoveItRuntime:
         )
 
         yield  # yield to allow shutdown test to run after this one
-        _ld, proc_info = generate_test_description
+        _ld, proc_info = launch_test_description
         assert_processes_exited_cleanly(proc_info)

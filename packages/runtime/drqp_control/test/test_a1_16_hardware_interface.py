@@ -43,7 +43,7 @@ from trajectory_msgs.msg import JointTrajectoryPoint
 
 
 @launch_pytest.fixture(scope='module')
-def generate_test_description():
+def launch_test_description():
     drqp_controllers_launch_file = PathJoinSubstitution(
         [
             FindPackageShare('drqp_control'),
@@ -70,7 +70,7 @@ default_interface_value = -123.321
 neutral_position = 0.1
 
 
-@pytest.mark.launch(fixture=generate_test_description)
+@pytest.mark.launch(fixture=launch_test_description)
 class TestA116HardwareInterface:
     """Test the pose_setter node."""
 
@@ -103,7 +103,7 @@ class TestA116HardwareInterface:
     non_joint_interface_names = ['battery_state']
 
     @pytest.fixture(scope='class', autouse=True)
-    def _class_setup(self, request, generate_test_description):  # noqa: ARG002
+    def _class_setup(self, request, launch_test_description):  # noqa: ARG002
         cls = request.cls
         rclpy.init()
         request.addfinalizer(rclpy.try_shutdown)
@@ -297,7 +297,7 @@ class TestA116HardwareInterface:
         )
 
 
-@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
-def test_processes_exit_cleanly(generate_test_description):
-    _launch_description, proc_info = generate_test_description
+@pytest.mark.launch(fixture=launch_test_description, shutdown=True)
+def test_processes_exit_cleanly(launch_test_description):
+    _launch_description, proc_info = launch_test_description
     assert_processes_exited_cleanly(proc_info)

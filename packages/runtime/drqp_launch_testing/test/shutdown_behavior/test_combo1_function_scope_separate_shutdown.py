@@ -34,19 +34,19 @@ _SEEN = {}
 
 
 @launch_pytest.fixture
-def generate_test_description():
+def launch_test_description():
     return make_probe_launch()
 
 
-@pytest.mark.launch(fixture=generate_test_description)
-def test_active(generate_test_description):
-    _ld, _proc_info, launch_id = generate_test_description
+@pytest.mark.launch(fixture=launch_test_description)
+def test_active(launch_test_description):
+    _ld, _proc_info, launch_id = launch_test_description
     _SEEN['active'] = launch_id
 
 
-@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
-def test_shutdown(generate_test_description):
-    _ld, _proc_info, launch_id = generate_test_description
+@pytest.mark.launch(fixture=launch_test_description, shutdown=True)
+def test_shutdown(launch_test_description):
+    _ld, _proc_info, launch_id = launch_test_description
     # Function scope re-invokes the fixture, so the shutdown test launches a
     # fresh, separate simulation rather than reusing the active test's one.
     assert launch_id != _SEEN['active'], (
