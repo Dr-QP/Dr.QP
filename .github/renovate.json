@@ -66,7 +66,7 @@
       "platformAutomerge": true
     },
     {
-      "description": "pre-commit hook revisions, the renovate-config-validator hook's among them: its rev is the Renovate version the bot and the validation workflow run. A rev bump edits .pre-commit-config.yaml, which runs the required validation check at the new version before it can merge. The Super-Linter-linked hooks are excluded by the rule below.",
+      "description": "pre-commit hook revisions. A rev bump edits .pre-commit-config.yaml, which runs the pre-commit checks before it can merge. The Super-Linter-linked hooks are excluded by the rule below.",
       "matchManagers": ["pre-commit"],
       "automerge": true,
       "automergeType": "pr",
@@ -77,7 +77,6 @@
       "matchManagers": ["github-actions", "pre-commit"],
       "matchPackageNames": [
         "super-linter/super-linter",
-        "pre-commit/mirrors-prettier",
         "pre-commit/mirrors-clang-format",
         "ansible/ansible-lint",
         "hadolint/hadolint",
@@ -90,13 +89,25 @@
       "enabled": false
     },
     {
-      "description": "Prettier's additional_dependencies pin in the mirrors-prettier hook is synced manually alongside the mirror revision; see the rule above.",
-      "matchManagers": ["pre-commit"],
-      "matchDepNames": ["prettier"],
-      "enabled": false
+      "description": "The renovate-config-validator hook's `bunx --package renovate@<version>` pin: it is the Renovate version the bot and the validation workflow run. A bump edits .pre-commit-config.yaml, which runs the required validation check at the new version before it can merge.",
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": [".pre-commit-config.yaml"],
+      "matchDepNames": ["renovate"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
     }
   ],
   "customManagers": [
+    {
+      "description": "npm packages the local pre-commit hooks run through `bunx --package <name>@<version>`. Prettier is excluded: its version follows the Super-Linter image (see the rule above).",
+      "customType": "regex",
+      "managerFilePatterns": ["/^\\.pre-commit-config\\.yaml$/"],
+      "matchStrings": [
+        "bunx --package (?<depName>renovate)@(?<currentValue>[0-9][^\\s]*)"
+      ],
+      "datasourceTemplate": "npm"
+    },
     {
       "description": "The devcontainer CLI version the post-upgrade script regenerates the devcontainer lock with.",
       "customType": "regex",

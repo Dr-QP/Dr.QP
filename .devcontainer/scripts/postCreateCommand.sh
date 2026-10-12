@@ -76,14 +76,15 @@ ln -sf /root/.claude/claude.json /root/.claude.json
 
 # Wire the codebase-memory-mcp binary staged by the image into this user's agent
 # config now that the real ~/.claude and ~/.codex volumes are mounted. No-op on
-# an image that does not carry the binary.
-"$script_dir/codebase-memory-mcp-install.sh"
+# an image that does not carry the binary. Non-fatal: a failure here would also
+# skip postStart (firewall, keyring, Xpra).
+"$script_dir/codebase-memory-mcp-install.sh" ||
+    echo "WARNING: codebase-memory-mcp install failed (exit $?); continuing without it." >&2
 
 # Both agents' credential setup below needs their subdirectory of the shared
 # agentdev-agents-auth volume to exist first.
 mkdir -p /root/.agents-auth/claude /root/.agents-auth/codex
 chmod 700 /root/.agents-auth/claude /root/.agents-auth/codex
-"$script_dir/seed-agent-auth.sh"
 "$script_dir/preapprove-claude-workspace.sh"
 
 # See link-codex-auth.sh for why Codex's auth.json needs the same file-in-a-shared-
@@ -104,6 +105,7 @@ chmod 700 /root/.agents-auth/claude /root/.agents-auth/codex
 if [[ -n "${AGENTDEV_CATALOG_DIR:-}" && -d "$AGENTDEV_CATALOG_DIR" ]]; then
     "$script_dir/reinstall-agentdev-codex.sh" "$AGENTDEV_CATALOG_DIR"
     "$script_dir/reinstall-agentdev-claude.sh" "$AGENTDEV_CATALOG_DIR" user
+    "$script_dir/reinstall-agentdev-opencode.sh" "$AGENTDEV_CATALOG_DIR"
 else
     echo "No catalog staged in the image; skipping the image-scoped plugin install."
 fi

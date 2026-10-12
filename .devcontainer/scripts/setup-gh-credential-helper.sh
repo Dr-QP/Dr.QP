@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# HTTPS git reuses gh's login; see spec/devcontainer-agent-auth.
+# HTTPS git reuses gh's login; see spec/devcontainer-git-credentials.
 
 set -euo pipefail
 
