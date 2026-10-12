@@ -28,6 +28,10 @@ fi
 
 session="claude-remote"
 workspace="${DEV_WORKSPACE_FOLDER:-$PWD}"
+claude_command="claude --remote-control"
+if [[ -n "${CODER_WORKSPACE_NAME:-}" ]]; then
+  claude_command+=" $(printf '%q' "$CODER_WORKSPACE_NAME")"
+fi
 
 if tmux -L "$session" has-session -t "=$session" 2>/dev/null; then
   echo "Claude Remote Control tmux session '$session' is already running."
@@ -36,7 +40,7 @@ fi
 
 # Setup tokens cannot establish Remote Control; keep one out of that process.
 tmux_start=(tmux -L "$session" start-server \; new-session -d -s "$session" -c "$workspace" \
-  "exec env -u CLAUDE_CODE_OAUTH_TOKEN claude /remote-control")
+  "exec env -u CLAUDE_CODE_OAUTH_TOKEN $claude_command")
 
 if ! tmux_error="$("${tmux_start[@]}" 2>&1)"; then
   if tmux -L "$session" has-session -t "=$session" 2>/dev/null; then

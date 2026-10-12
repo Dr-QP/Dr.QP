@@ -35,6 +35,7 @@ def run_with_fake_tmux(
     session_exists: bool = False,
     status: dict[str, object] | None = None,
     status_exit: int = 0,
+    workspace_name: str | None = None,
 ) -> tuple[subprocess.CompletedProcess[str], str]:
     test_dir = make_test_dir()
     log = test_dir / 'tmux.log'
@@ -57,6 +58,9 @@ def run_with_fake_tmux(
         'TMUX_HAS_SESSION': '1' if session_exists else '0',
         'TMUX_TEST_LOG': str(log),
     }
+    env.pop('CODER_WORKSPACE_NAME', None)
+    if workspace_name is not None:
+        env['CODER_WORKSPACE_NAME'] = workspace_name
     try:
         result = subprocess.run([SCRIPT], env=env, text=True, capture_output=True)
         return result, log.read_text() if log.exists() else ''
@@ -68,9 +72,18 @@ def test_starts_on_claude_ai_login_and_removes_setup_token_from_claude():
     result, calls = run_with_fake_tmux()
     assert result.returncode == 0, result.stderr
     assert 'new-session -d -s claude-remote -c /workspaces/example' in calls
-    assert 'exec env -u CLAUDE_CODE_OAUTH_TOKEN claude /remote-control' in calls
+    assert calls.splitlines()[-1].endswith(
+        'exec env -u CLAUDE_CODE_OAUTH_TOKEN claude --remote-control'
+    )
     assert 'update-environment' not in calls
     assert 'test-secret' not in calls
+    assert_dedicated_socket(calls)
+
+
+def test_names_session_after_coder_workspace():
+    result, calls = run_with_fake_tmux(workspace_name='agent-dev1')
+    assert result.returncode == 0, result.stderr
+    assert 'claude --remote-control agent-dev1' in calls
     assert_dedicated_socket(calls)
 
 
@@ -117,7 +130,7 @@ def test_real_tmux_starts_claude_without_setup_token(existing_server):
     fake_bin.mkdir()
     tmux_dir.mkdir(exist_ok=True)
     (fake_bin / 'claude').write_text(
-        FAKE_CLAUDE_AUTH + 'test "${1:-}" = /remote-control\n'
+        FAKE_CLAUDE_AUTH + 'test "${1:-}" = --remote-control\n'
         'test -z "${CLAUDE_CODE_OAUTH_TOKEN:-}"\n'
         'printf "passed %s" "${CLAUDE_TMUX_TEST_MARKER:-}" >"$CLAUDE_TMUX_TEST_RESULT"\n'
         'sleep 10\n'
