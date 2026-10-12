@@ -35,7 +35,7 @@ from robot_control_test_support import create_balance_board_launch_description
 
 
 @launch_pytest.fixture
-def generate_test_description():
+def launch_test_description():
     """Launch Gazebo with the robot riding the balance board and record exit codes."""
     launch_description = create_balance_board_launch_description()
     proc_info = track_process_exit_codes(launch_description)
@@ -43,8 +43,8 @@ def generate_test_description():
 
 
 @pytest.mark.slow
-@pytest.mark.launch(fixture=generate_test_description)
-def test_board_holds_level_during_robot_motion(robot, generate_test_description):
+@pytest.mark.launch(fixture=launch_test_description)
+def test_board_holds_level_during_robot_motion(robot, launch_test_description):
     robot._arm_robot()
     robot._assert_board_stays_level('before robot motion')
 
@@ -63,5 +63,5 @@ def test_board_holds_level_during_robot_motion(robot, generate_test_description)
     # Function-scoped generator: the simulation tears down at the yield, then the
     # post-yield body verifies every non-simulator process exited cleanly.
     yield
-    _launch_description, proc_info = generate_test_description
+    _launch_description, proc_info = launch_test_description
     assert_processes_exited_cleanly(proc_info)

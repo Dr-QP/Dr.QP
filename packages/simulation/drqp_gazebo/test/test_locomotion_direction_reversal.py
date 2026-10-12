@@ -22,17 +22,17 @@
 
 from drqp_launch_testing import assert_processes_exited_cleanly
 import pytest
-from robot_control_test_support import generate_test_description
+from robot_control_test_support import launch_test_description
 
 
 @pytest.mark.slow
-@pytest.mark.launch(fixture=generate_test_description)
-def test_direction_reversal_from_forward_to_backward(robot, generate_test_description):
+@pytest.mark.launch(fixture=launch_test_description)
+def test_direction_reversal_from_forward_to_backward(robot, launch_test_description):
     """Reverse mid-gait without persistent clamping or target rejection."""
     robot.assert_direction_reversal_from_forward_to_backward()
 
     # This requires Gazebo because the contract is continued backward progress
     # under foot contact after the command flips during an active gait.
     yield
-    _launch_description, proc_info = generate_test_description
+    _launch_description, proc_info = launch_test_description
     assert_processes_exited_cleanly(proc_info)

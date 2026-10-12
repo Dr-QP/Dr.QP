@@ -34,26 +34,26 @@ _SEEN = {}
 
 
 @launch_pytest.fixture(scope='module')
-def generate_test_description():
+def launch_test_description():
     return make_probe_launch()
 
 
-@pytest.mark.launch(fixture=generate_test_description)
-def test_active_one(generate_test_description):
-    _ld, _proc_info, launch_id = generate_test_description
+@pytest.mark.launch(fixture=launch_test_description)
+def test_active_one(launch_test_description):
+    _ld, _proc_info, launch_id = launch_test_description
     _SEEN['active'] = launch_id
 
 
-@pytest.mark.launch(fixture=generate_test_description)
-def test_active_two(generate_test_description):
-    _ld, _proc_info, launch_id = generate_test_description
+@pytest.mark.launch(fixture=launch_test_description)
+def test_active_two(launch_test_description):
+    _ld, _proc_info, launch_id = launch_test_description
     # Same simulation is reused across module-scoped test functions.
     assert launch_id == _SEEN['active']
 
 
-@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
-def test_shutdown(generate_test_description):
-    _ld, proc_info, launch_id = generate_test_description
+@pytest.mark.launch(fixture=launch_test_description, shutdown=True)
+def test_shutdown(launch_test_description):
+    _ld, proc_info, launch_id = launch_test_description
     assert launch_id == _SEEN['active'], 'module scope must share one simulation'
     exits = recorded_exit_codes(proc_info)
     assert exits, 'shutdown body must observe a populated proc_info'

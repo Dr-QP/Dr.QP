@@ -45,7 +45,7 @@ def pytest_runtest_call(item: pytest.Item) -> None:
 
 
 @pytest.fixture
-def robot(generate_test_description):  # noqa: ARG001 (drives launch + sim readiness)
+def robot(launch_test_description):  # noqa: ARG001 (drives launch + sim readiness)
     """
     Provide a harness instance bound to the launched simulation.
 

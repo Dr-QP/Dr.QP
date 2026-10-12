@@ -48,7 +48,7 @@ _REACHABLE_TWO_AXIS_TILT = 0.025  # 25% margin under the 0.0333 diagonal bound
 
 
 @launch_pytest.fixture
-def generate_test_description():
+def launch_test_description():
     """Launch Gazebo with the robot riding the balance board and record exit codes."""
     launch_description = create_balance_board_launch_description()
     proc_info = track_process_exit_codes(launch_description)
@@ -56,10 +56,10 @@ def generate_test_description():
 
 
 @pytest.mark.slow
-@pytest.mark.launch(fixture=generate_test_description)
+@pytest.mark.launch(fixture=launch_test_description)
 def test_stationary_posture_levels_body_on_pure_pitch(
     robot,
-    generate_test_description,
+    launch_test_description,
 ):
     """Level the body against one pure-axis contact-physics disturbance."""
     robot._arm_robot()
@@ -78,16 +78,16 @@ def test_stationary_posture_levels_body_on_pure_pitch(
     # This case requires Gazebo to prove the posture command works through board,
     # foot-contact, and controller physics rather than quaternion math alone.
     yield
-    _launch_description, proc_info = generate_test_description
+    _launch_description, proc_info = launch_test_description
     assert_processes_exited_cleanly(proc_info)
 
 
 @pytest.mark.skip(reason='Two-axis hold diverges, envelope is not the cause: Dr-QP/Dr.QP#453')
 @pytest.mark.slow
-@pytest.mark.launch(fixture=generate_test_description)
+@pytest.mark.launch(fixture=launch_test_description)
 def test_stationary_posture_ignores_stale_and_concurrent_motion(
     robot,
-    generate_test_description,
+    launch_test_description,
 ):
     """Hold a reachable diagonal posture without replaying operator motion."""
     robot.assert_stationary_balance_ignores_movement(
@@ -98,5 +98,5 @@ def test_stationary_posture_ignores_stale_and_concurrent_motion(
     # This case requires Gazebo for the odometry and persistent-contact contract;
     # fast unit tests own axis/sign symmetry and analytic envelope coverage.
     yield
-    _launch_description, proc_info = generate_test_description
+    _launch_description, proc_info = launch_test_description
     assert_processes_exited_cleanly(proc_info)

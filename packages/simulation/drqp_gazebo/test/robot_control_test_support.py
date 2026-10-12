@@ -149,7 +149,7 @@ def create_board_only_launch_description() -> LaunchDescription:
 
 
 @launch_pytest.fixture
-def generate_test_description(request):
+def launch_test_description(request):
     """Launch the simulation and record process exit codes for the shutdown check."""
     test_name = Path(request.fspath).stem
     launch_description = create_simulation_launch_description(test_name=test_name)
@@ -223,7 +223,7 @@ class GazeboRobotControlBase:
         rclpy.try_shutdown()
 
     @pytest.fixture(autouse=True)
-    def _node_setup(self, generate_test_description) -> None:  # noqa: ARG002
+    def _node_setup(self, launch_test_description) -> None:  # noqa: ARG002
         """Set up test node and publishers/subscribers."""
         self.setup_node()
 

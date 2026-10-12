@@ -31,14 +31,14 @@ exits from a ``shutdown=True`` test with :func:`assert_processes_exited_cleanly`
 Typical usage in a functions-only launch_pytest module::
 
     @launch_pytest.fixture(scope='module')
-    def generate_test_description():
+    def launch_test_description():
         launch_description = build_my_launch_description()
         proc_info = track_process_exit_codes(launch_description)
         return launch_description, proc_info
 
-    @pytest.mark.launch(fixture=generate_test_description, shutdown=True)
-    def test_processes_exit_cleanly(generate_test_description):
-        _launch_description, proc_info = generate_test_description
+    @pytest.mark.launch(fixture=launch_test_description, shutdown=True)
+    def test_processes_exit_cleanly(launch_test_description):
+        _launch_description, proc_info = launch_test_description
         assert_processes_exited_cleanly(proc_info)
 """
 

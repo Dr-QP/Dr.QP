@@ -35,22 +35,22 @@ _SEEN = {}
 
 
 @launch_pytest.fixture(scope='class')
-def generate_test_description():
+def launch_test_description():
     return make_probe_launch()
 
 
-@pytest.mark.launch(fixture=generate_test_description)
+@pytest.mark.launch(fixture=launch_test_description)
 class TestClassScope:
     __test__ = True
 
-    def test_active(self, generate_test_description):
-        _ld, _proc_info, launch_id = generate_test_description
+    def test_active(self, launch_test_description):
+        _ld, _proc_info, launch_id = launch_test_description
         _SEEN['active'] = launch_id
 
 
-@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
-def test_shutdown(generate_test_description):
-    _ld, _proc_info, launch_id = generate_test_description
+@pytest.mark.launch(fixture=launch_test_description, shutdown=True)
+def test_shutdown(launch_test_description):
+    _ld, _proc_info, launch_id = launch_test_description
     assert launch_id != _SEEN['active'], (
         'class-scoped shutdown test unexpectedly shared the class sim'
     )

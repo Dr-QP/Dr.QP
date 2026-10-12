@@ -37,12 +37,12 @@ import pytest
 
 
 @launch_pytest.fixture(scope='module')
-def generate_test_description():
+def launch_test_description():
     return make_probe_launch()
 
 
-@pytest.mark.launch(fixture=generate_test_description)
-def test_generator_post_shutdown(generate_test_description):
-    _ld, proc_info, _launch_id = generate_test_description
+@pytest.mark.launch(fixture=launch_test_description)
+def test_generator_post_shutdown(launch_test_description):
+    _ld, proc_info, _launch_id = launch_test_description
     yield
     assert recorded_exit_codes(proc_info)

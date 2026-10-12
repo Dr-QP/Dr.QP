@@ -56,20 +56,20 @@ _SEEN: dict = {'attempts': []}
 
 
 @launch_pytest.fixture(scope='module')
-def generate_test_description():
+def launch_test_description():
     return make_probe_launch()
 
 
-@pytest.mark.launch(fixture=generate_test_description)
-def test_active(generate_test_description):
-    _ld, _proc_info, launch_id = generate_test_description
+@pytest.mark.launch(fixture=launch_test_description)
+def test_active(launch_test_description):
+    _ld, _proc_info, launch_id = launch_test_description
     _SEEN['active'] = launch_id
 
 
 @pytest.mark.flaky(retries=2)
-@pytest.mark.launch(fixture=generate_test_description, shutdown=True)
-def test_retry_does_not_crash(generate_test_description):
-    _ld, proc_info, launch_id = generate_test_description
+@pytest.mark.launch(fixture=launch_test_description, shutdown=True)
+def test_retry_does_not_crash(launch_test_description):
+    _ld, proc_info, launch_id = launch_test_description
     _SEEN['attempts'].append(launch_id)
     assert recorded_exit_codes(proc_info), 'shutdown body must observe a populated proc_info'
     # Fail on the first attempt only, forcing pytest-retry to retry.

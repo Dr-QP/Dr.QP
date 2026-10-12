@@ -54,7 +54,7 @@ _TILT_SCENARIOS = [
 
 
 @launch_pytest.fixture
-def generate_test_description():
+def launch_test_description():
     """Launch only Gazebo and the board world (no robot) and record exit codes."""
     launch_description = create_board_only_launch_description()
     proc_info = track_process_exit_codes(launch_description)
@@ -62,7 +62,7 @@ def generate_test_description():
 
 
 @pytest.fixture
-def board(generate_test_description):  # noqa: ARG001 (drives the launch)
+def board(launch_test_description):  # noqa: ARG001 (drives the launch)
     """
     Provide a board-only harness bound to the launched world.
 
@@ -87,8 +87,8 @@ def board(generate_test_description):  # noqa: ARG001 (drives the launch)
 
 
 @pytest.mark.slow
-@pytest.mark.launch(fixture=generate_test_description)
-def test_board_reaches_all_tilt_angles(board, generate_test_description):
+@pytest.mark.launch(fixture=launch_test_description)
+def test_board_reaches_all_tilt_angles(board, launch_test_description):
     for board_roll, board_pitch in _TILT_SCENARIOS:
         board._assert_board_reaches_tilt(board_roll, board_pitch)
 
@@ -97,5 +97,5 @@ def test_board_reaches_all_tilt_angles(board, generate_test_description):
     # board-only launch starts only Gazebo, which is filtered out, so the check
     # passes trivially when nothing else ran.
     yield
-    _launch_description, proc_info = generate_test_description
+    _launch_description, proc_info = launch_test_description
     assert_processes_exited_cleanly(proc_info)

@@ -39,7 +39,7 @@ Consult the **`agentdev:Principal Engineer`** agent for architecture, design dec
 ### Python Testing
 
 - **Always use `pytest`** — never `unittest`
-- For ROS 2 launch or node integration tests use `launch_pytest`: decorate `generate_test_description` with `@launch_pytest.fixture` and tests with `@pytest.mark.launch(fixture=generate_test_description)` — full rules in the [launch-testing](/.claude/skills/launch-testing/) skill
+- For ROS 2 launch or node integration tests use `launch_pytest`: decorate `launch_test_description` with `@launch_pytest.fixture` and tests with `@pytest.mark.launch(fixture=launch_test_description)` — full rules in the [launch-testing](/.claude/skills/launch-testing/) skill
 - Prefer multiple smaller, focused test files over large monolithic ones
 
 ### Local Scripts, Docs, and Notebooks (`scripts/`, `docs/`)
