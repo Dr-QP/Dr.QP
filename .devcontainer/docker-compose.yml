@@ -81,6 +81,10 @@ services:
       # Local ROS overlay workspace
       - ${LOCAL_WORKSPACE_FOLDER:-$PWD}:/opt/ros/overlay_ws/:rw
 
+      # The template's conventional checkout path, which the Coder workspace agent
+      # and template tooling expect inside the Dev Container.
+      - ${LOCAL_WORKSPACE_FOLDER:-$PWD}:/workspaces/${WORKSPACE_BASENAME:-project}:rw
+
       # Docker mcp setup from host
       - ${HOST_MCP_DIR:-/tmp/stub-mcp}:${CONTAINER_MCP_DIR:-/tmp/stub-mcp}:ro
       - ${HOST_SECRETS_SOCKET:-/tmp/stub-secrets-engine.sock}:${DOCKER_SECRETS_ENGINE_SOCKET:-/tmp/stub-secrets-engine.sock}:ro

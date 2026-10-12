@@ -29,6 +29,10 @@ echo "GIT_REPO=$gitdir" >> "$script_dir/.env"
 LOCAL_WORKSPACE_FOLDER=$(realpath "$script_dir/..")
 echo "LOCAL_WORKSPACE_FOLDER=$LOCAL_WORKSPACE_FOLDER" >> "$script_dir/.env"
 
+# Compose has no equivalent of devcontainer.json's ${localWorkspaceFolderBasename},
+# so export it here for the /workspaces/<basename> mount in docker-compose.yml.
+echo "WORKSPACE_BASENAME=$(basename "$LOCAL_WORKSPACE_FOLDER")" >> "$script_dir/.env"
+
 HOST_MCP_DIR="$HOME/.docker/mcp"
 CONTAINER_MCP_DIR="/root/.docker/mcp"
 if [[ -d "$HOST_MCP_DIR" ]]; then
