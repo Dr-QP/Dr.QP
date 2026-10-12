@@ -67,7 +67,7 @@ runs:
 
     - name: Upload test reports artifact
       if: ${{ always() && !cancelled() }}
-      uses: actions/upload-artifact@v7.0.1
+      uses: actions/upload-artifact@v7.0.2
       with:
         name: ${{ inputs.reports-artifact-name }}
         path: ${{ inputs.reports-glob }}
@@ -76,7 +76,7 @@ runs:
 
     - name: Upload logs artifact
       if: ${{ always() && !cancelled() }}
-      uses: actions/upload-artifact@v7.0.1
+      uses: actions/upload-artifact@v7.0.2
       with:
         name: ${{ inputs.logs-artifact-name }}
         path: ${{ inputs.logs-path }}
