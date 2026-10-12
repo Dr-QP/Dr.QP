@@ -74,6 +74,10 @@ restore_claude_json_symlink() {
 # and strand later config writes outside the persistent volume.
 trap restore_claude_json_symlink EXIT
 
+# Codex inserts tables above the hooks block's trailing marker; the installer then
+# refuses the whole Codex step.
+"$(dirname "${BASH_SOURCE[0]}")/repair-codex-cbm-hooks-block.py"
+
 install_status=0
 CBM_LOG_LEVEL="${CBM_LOG_LEVEL:-debug}" codebase-memory-mcp install -y --force || install_status=$?
 

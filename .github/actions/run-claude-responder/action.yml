@@ -109,6 +109,7 @@ runs:
         DEV_WORKSPACE_FOLDER: ${{ github.workspace }}
         AGENTDEV_SKIP_PRE_COMMIT: '1'
         AGENTDEV_SKIP_XPRA: '1'
+        AGENTDEV_SKIP_CLAUDE_PREAPPROVE: '1'
         CBM_CACHE_DIR: ${{ github.workspace }}/.cache/codebase-memory-mcp
         UV_PROJECT_ENVIRONMENT: /opt/ci-venv
       run: |
@@ -175,7 +176,7 @@ runs:
 
     - name: Attach responder output file
       if: always() && steps.claude_responder.outputs.execution_file != ''
-      uses: actions/upload-artifact@v7.0.1
+      uses: actions/upload-artifact@v7.0.2
       with:
         name: ${{ inputs.artifact-name }}
         path: ${{ steps.claude_responder.outputs.execution_file }}

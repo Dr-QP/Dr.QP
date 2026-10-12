@@ -65,7 +65,6 @@ services:
 
     environment:
       DOCKER_SECRETS_ENGINE_SOCKET: ${DOCKER_SECRETS_ENGINE_SOCKET:-/root/.cache/docker-secrets-engine/engine.sock}
-      AGENTDEV_CLAUDE_AUTOSTART: ${AGENTDEV_CLAUDE_AUTOSTART:-}
       GIT_AUTHOR_NAME:
       GIT_AUTHOR_EMAIL:
       GIT_COMMITTER_NAME:
@@ -100,10 +99,6 @@ services:
       # per instance instead; see the agentdev-claude and agentdev-codex mounts in
       # devcontainer.json.
       - agentdev-agents-auth:/root/.agents-auth
-
-      # initializeCommand materializes Coder's JSON secrets into this private,
-      # short-lived host directory. postCreate and postStart consume and remove the files.
-      - ${AGENTDEV_AUTH_SEED_DIR:-/tmp/stub-agentdev-auth-seed}:/run/agentdev-auth-seed:rw
 
     command: ['sleep', 'infinity']
 

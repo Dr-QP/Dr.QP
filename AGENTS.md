@@ -3,10 +3,11 @@
 NEVER use "$TMPDIR" env variable.
 ALWAYS use "./.tmp" (relative to the repo root) for temporary files; create it if it does not exist.
 NEVER use GitHub API or GitHub MCP tools to update branch refs or push branch contents. Use local git branch workflows instead; if push authentication is unavailable, stop and report the blocker rather than updating the branch remotely via API.
+NEVER force-push. The one exception: `gh stack push`, `gh stack rebase`, and `gh stack sync` may update branches of a GitHub stack with `--force-with-lease`.
 
 ## Best Practices for Agents
 
-0. NEVER change git config on local or global level unless explicitly instructed. NEVER switch/change remote.
+0. NEVER change git config on local or global level unless explicitly instructed. The one exception: the repository-local `rerere.enabled` and `remote.pushDefault` that `gh stack` and the vendored `gh-stack` skill's setup write. NEVER switch/change remote.
 1. **Always use scripts/with-ros-env.sh** to run ROS commands like `colcon build` or `colcon test`
 2. **Use incremental builds** (`--packages-up-to <pkg>`) during development
 3. **Test specific packages** (`--packages-select <pkg>`) for rapid iteration

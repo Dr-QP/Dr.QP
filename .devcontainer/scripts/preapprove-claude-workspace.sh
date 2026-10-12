@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Pre-answers Claude's first-run prompts so an autostarted Remote Control session
-# needs no terminal: onboarding, Remote Control confirmation, workspace trust, and
-# project MCP approval. Spec: devcontainer-agent-auth.
+# Pre-answers Claude's first-run prompts — onboarding, Remote Control confirmation,
+# workspace trust, and project MCP approval. Spec: claude-remote-control.
 set -euo pipefail
 
-if [[ "${AGENTDEV_CLAUDE_AUTOSTART:-}" != "1" ]]; then
+if [[ -n "${AGENTDEV_SKIP_CLAUDE_PREAPPROVE:-}" ]]; then
+  echo "AGENTDEV_SKIP_CLAUDE_PREAPPROVE is set; skipping Claude workspace pre-approval."
   exit 0
 fi
 
@@ -47,7 +47,7 @@ def approve_state(state):
 
 
 def approve_mcp(settings):
-    # Keeps disabledMcpjsonServers; see spec/devcontainer-agent-auth.
+    # Keeps disabledMcpjsonServers; see spec/claude-remote-control.
     settings["enableAllProjectMcpServers"] = True
 
 

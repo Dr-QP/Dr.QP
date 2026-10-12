@@ -63,3 +63,14 @@ done < <(printf '%s\n' "$marketplace_name" "${stale_names[@]}" | sort -u)
 
 codex plugin marketplace add "$catalog_root"
 codex plugin add "$plugin_name@$marketplace_name"
+
+# Codex loads custom agents only from its own agents/ directory, never from a
+# plugin: see spec/catalog-lifecycle.
+plugin_path="$(jq -er '.plugins[0].source.path' "$marketplace_json")"
+agent_installer="$catalog_root/$plugin_path/bin/install-codex-agents.py"
+if [[ -f "$agent_installer" ]]; then
+  # -B keeps __pycache__ out of a read-only staged catalog.
+  python3 -B "$agent_installer"
+else
+  echo "$catalog_root predates Codex agent install; no agents to install."
+fi

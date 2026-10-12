@@ -64,12 +64,12 @@ jobs:
         with:
           persist-credentials: false
 
-      # The hook's rev is the Renovate release the bot runs. --no-global rejects
+      # The hook's bunx pin is the Renovate release the bot runs. --no-global rejects
       # global-only options, which renovate.yml passes through the environment instead.
       - name: Validate .github/renovate.json
         run: |
-          rev=$(grep -A1 -F 'repo: https://github.com/renovatebot/pre-commit-hooks' \
-            .pre-commit-config.yaml | sed -n 's/^ *rev: *//p')
+          rev=$(sed -nE 's/.*bunx --package renovate@([0-9][^ ]*) .*/\1/p' \
+            .pre-commit-config.yaml | head -n 1)
           [[ "$rev" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "unexpected rev: '$rev'" >&2; exit 1; }
           bunx --package "renovate@${rev}" renovate-config-validator \
             --no-global --strict .github/renovate.json

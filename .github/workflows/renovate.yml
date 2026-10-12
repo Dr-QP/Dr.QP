@@ -59,13 +59,13 @@ jobs:
         with:
           persist-credentials: false
 
-      # The renovate-config-validator hook's rev is the Renovate release, so hook,
+      # The renovate-config-validator hook's bunx pin is the Renovate release, so hook,
       # validation workflow, and bot share one pin.
       - name: Read the Renovate version
         id: version
         run: |
-          rev=$(grep -A1 -F 'repo: https://github.com/renovatebot/pre-commit-hooks' \
-            .pre-commit-config.yaml | sed -n 's/^ *rev: *//p')
+          rev=$(sed -nE 's/.*bunx --package renovate@([0-9][^ ]*) .*/\1/p' \
+            .pre-commit-config.yaml | head -n 1)
           [[ "$rev" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "unexpected rev: '$rev'" >&2; exit 1; }
           echo "rev=$rev" >> "$GITHUB_OUTPUT"
 

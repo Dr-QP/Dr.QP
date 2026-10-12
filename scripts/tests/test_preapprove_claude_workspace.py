@@ -7,15 +7,16 @@ import subprocess
 REPO_ROOT = Path(__file__).parents[2]
 SCRIPT = REPO_ROOT / '.devcontainer/scripts/preapprove-claude-workspace.sh'
 POST_CREATE = REPO_ROOT / '.devcontainer/scripts/postCreateCommand.sh'
+RESPONDER_ACTION = REPO_ROOT / '.github/actions/run-claude-responder/action.yml'
 
 
 def run_preapprove(
-    tmp_path: Path, *, autostart: str = '1'
+    tmp_path: Path, *, skip: str = ''
 ) -> tuple[subprocess.CompletedProcess[str], Path]:
     workspace = tmp_path / 'workspace'
     workspace.mkdir(exist_ok=True)
-    env = os.environ | {
-        'AGENTDEV_CLAUDE_AUTOSTART': autostart,
+    env = {k: v for k, v in os.environ.items() if k != 'AGENTDEV_SKIP_CLAUDE_PREAPPROVE'} | {
+        'AGENTDEV_SKIP_CLAUDE_PREAPPROVE': skip,
         'AGENTDEV_CLAUDE_STATE_PATH': str(tmp_path / '.claude.json'),
         'DEV_WORKSPACE_FOLDER': str(workspace),
     }
@@ -59,15 +60,27 @@ def test_writes_through_state_symlink(tmp_path):
     assert json.loads(volume_file.read_text())['remoteDialogSeen'] is True
 
 
-def test_skips_without_autostart(tmp_path):
-    result, workspace = run_preapprove(tmp_path, autostart='0')
+def test_runs_without_autostart(tmp_path):
+    result, workspace = run_preapprove(tmp_path)
+
+    assert result.returncode == 0, result.stderr
+    assert json.loads((tmp_path / '.claude.json').read_text())['hasCompletedOnboarding'] is True
+    assert (workspace / '.claude' / 'settings.local.json').exists()
+
+
+def test_skips_when_opted_out(tmp_path):
+    result, workspace = run_preapprove(tmp_path, skip='1')
 
     assert result.returncode == 0, result.stderr
     assert not (tmp_path / '.claude.json').exists()
     assert not (workspace / '.claude').exists()
 
 
-def test_post_create_runs_after_seeding():
+def test_post_create_runs_after_state_symlink():
     post_create = POST_CREATE.read_text()
-    seed = post_create.index('"$script_dir/seed-agent-auth.sh"')
-    assert post_create.index('"$script_dir/preapprove-claude-workspace.sh"') > seed
+    symlink = post_create.index('ln -sf /root/.claude/claude.json /root/.claude.json')
+    assert post_create.index('"$script_dir/preapprove-claude-workspace.sh"') > symlink
+
+
+def test_ci_responder_opts_out():
+    assert "AGENTDEV_SKIP_CLAUDE_PREAPPROVE: '1'" in RESPONDER_ACTION.read_text()
