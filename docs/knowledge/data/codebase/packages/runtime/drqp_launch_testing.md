@@ -2,14 +2,14 @@
 type: codebase
 description: Reusable launch_pytest helpers that restore per-process exit-code checking, plus a test suite proving launch_pytest shutdown behavior.
 source: packages/runtime/drqp_launch_testing
-source_digest: sha256:15bb8d81ee731f9896303d0973debddb671c49c9f1cb2e2d0ee876882e1561eb
+source_digest: sha256:258fcf218e2ed516cdaede1026942d0eee20d18e68a8cbcf51a3baec0c919109
 verified:
   by: claude-code/opus-5.5
-  at: 2026-09-26T11:05:15Z
-stale_after: 2026-12-25
+  at: 2026-10-12T22:32:35Z
+stale_after: 2027-01-10
 generated:
   by: claude-code/opus-5.5
-  at: 2026-09-26T11:05:15Z
+  at: 2026-10-12T22:32:35Z
 sources:
 - id: code
   resource: packages/runtime/drqp_launch_testing

@@ -2,14 +2,14 @@
 type: codebase
 description: Packages used only off the robot — Gazebo simulation and its launch tests, the GUI keyboard controller, and the robot MCP server.
 source: packages/simulation
-source_digest: sha256:b34767b7f48c537ca4d768d33d94fbb5b3f5791fec5903e87f6581f5d7471315
+source_digest: sha256:19be80cc2f00edc7194f4bbaa06e462283d1645579315168a26e969969397dc3
 verified:
   by: claude-code/opus-5.5
-  at: 2026-09-26T11:05:15Z
-stale_after: 2026-12-25
+  at: 2026-10-12T22:32:35Z
+stale_after: 2027-01-10
 generated:
   by: claude-code/opus-5.5
-  at: 2026-09-26T11:05:15Z
+  at: 2026-10-12T22:32:35Z
 sources:
 - id: code
   resource: packages/simulation

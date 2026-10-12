@@ -2,14 +2,14 @@
 type: codebase
 description: MoveIt 2 configuration for the hexapod — SRDF with per-leg groups, KDL kinematics, joint limits, controllers, and move_group/demo launch files.
 source: packages/runtime/drqp_moveit
-source_digest: sha256:ac378c75cdd4b29db8f6b99a19963b80c64ccd18de2ac8c8727011ef8c559f97
+source_digest: sha256:db5bed25f71d7ea9a20329a4a22f403ab31e37d4f56b14b534f75baf04d1888a
 verified:
   by: claude-code/opus-5.5
-  at: 2026-09-26T11:05:15Z
-stale_after: 2026-12-25
+  at: 2026-10-12T22:32:35Z
+stale_after: 2027-01-10
 generated:
   by: claude-code/opus-5.5
-  at: 2026-09-26T11:05:15Z
+  at: 2026-10-12T22:32:35Z
 sources:
 - id: code
   resource: packages/runtime/drqp_moveit

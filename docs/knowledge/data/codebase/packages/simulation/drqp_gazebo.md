@@ -2,14 +2,14 @@
 type: codebase
 description: Gazebo (gz-sim) launch files, worlds and bridge config for the simulated robot, and the launch_pytest simulation suite with smoke and slow tiers.
 source: packages/simulation/drqp_gazebo
-source_digest: sha256:d26fdaec92485cc04e53ba8d05199a10086e487dc4fc1eda61a7a1bbea27d7ee
+source_digest: sha256:361c7768b7fda8d1f1924e41c32a8f9f09b397b70e1e5fd4d695b5c5d25fa552
 verified:
   by: claude-code/opus-5.5
-  at: 2026-09-26T11:05:15Z
-stale_after: 2026-11-25
+  at: 2026-10-12T22:32:35Z
+stale_after: 2027-01-10
 generated:
   by: claude-code/opus-5.5
-  at: 2026-09-26T11:05:15Z
+  at: 2026-10-12T22:32:35Z
 sources:
 - id: code
   resource: packages/simulation/drqp_gazebo

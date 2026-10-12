@@ -2,14 +2,14 @@
 type: codebase
 description: Python high-level control — the walking loop, gaits, IK orchestration, IMU balance, joystick translation, IMU driver, and the bringup launch file.
 source: packages/runtime/drqp_brain
-source_digest: sha256:730663b428ef725ee8b341888815c449b015c8503f58e58dc2f703114ecb3675
+source_digest: sha256:39c7b4dcdcf13627619780fec749a9d5c4e162881a049975f1b3102e2f8313e9
 verified:
   by: claude-code/opus-5.5
-  at: 2026-09-27T21:00:00Z
-stale_after: 2026-11-25
+  at: 2026-10-12T22:32:35Z
+stale_after: 2027-01-10
 generated:
   by: claude-code/opus-5.5
-  at: 2026-09-26T11:05:15Z
+  at: 2026-10-12T22:32:35Z
 sources:
 - id: code
   resource: packages/runtime/drqp_brain
