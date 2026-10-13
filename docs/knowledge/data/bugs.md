@@ -31,3 +31,5 @@ them apart.*
 [Bug: docs build skips Python dependency changes](bugs/docs-build-skips-python-dependency-changes.md)
 
 [Bug: Renovate post-upgrade fails on Dockerfile changes](bugs/renovate-post-upgrade-fails-on-dockerfile-changes.md)
+
+[Bug: joystick translator exits on SIGINT in launch teardown](bugs/joystick-translator-exits-on-sigint-in-launch-teardown.md)
