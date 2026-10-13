@@ -173,7 +173,7 @@ the implement skill's `## Capturing`) and cut the narration.
 The graph is managed by [IWE](https://iwe.md) — the `iwe` CLI. What you must
 know:
 
-- A document's **key** is its extension-less path relative to `[library].path`
+- A document's **key** is its extension-less path relative to `[workspace].path`
   in `.iwe/config.toml` (`docs/knowledge` in this repo) — e.g. `data/product`,
   `data/plans/20260801-dark-mode` — that's what `-k` and the structural flags
   take. `iwe` must be invoked with the repo root as the working directory; it

@@ -15,11 +15,9 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-  # The dev image does not ship iwe yet, so this job installs it from crates.io.
-  # Once the image is rebased on agent-desktop (which carries iwe), pin this to
-  # the version that image installs. See
-  # docs/agents/specs/agent-devcontainer-migration/.
-  IWE_VERSION: 0.19.0
+  # Pinned to the iwe version the dev image (built on agent-desktop) installs,
+  # so CI reads .iwe/config.toml with the same schema the image migrates it to.
+  IWE_VERSION: 0.25.0
 
 jobs:
   paths-filter:
