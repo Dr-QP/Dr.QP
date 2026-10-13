@@ -1,4 +1,4 @@
-version = 3
+version = 4
 
 [markdown]
 refs_extension = ".md"
@@ -7,7 +7,7 @@ date_format = "%b %d, %Y"
 [markdown.formatting]
 wrap_column = 80
 
-[library]
+[workspace]
 # Documents live under docs/knowledge/ rather than at the repo root so that
 # .iwe/ itself stays at the repo root, where the IWE VS Code extension expects
 # it when the whole repo is opened as the workspace. iwe must always be
@@ -55,7 +55,7 @@ reverse = false
 
 # Document-schema bindings. Each entry names a schema file in .iwe/schemas/<name>.yaml
 # and a key-glob that binds it. Bindings are BY PATH, not by frontmatter fields,
-# and are relative to [library].path above (docs/knowledge), not to the repo
+# and are relative to [workspace].path above (docs/knowledge), not to the repo
 # root or to .iwe/ itself. The extension-less hub keys (docs/knowledge/data/plans, docs/knowledge/data/bugs,
 # ...) match none of these globs, so hub documents stay unvalidated by design.
 # Run: iwe schema validate  (--explain shows the binding trace).
