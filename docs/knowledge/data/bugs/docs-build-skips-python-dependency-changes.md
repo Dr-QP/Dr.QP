@@ -1,5 +1,6 @@
 ---
 type: bug
+stage: done
 description: The docs workflow path filter ignores pyproject.toml, uv.lock, and the setup-python-venv action, so docs-toolchain bumps merge without a docs build.
 generated:
   by: claude-code/opus-5.5
@@ -46,20 +47,19 @@ inputs trigger the build.
 
 ## Fix
 
-Unfixed. Add `pyproject.toml`, `uv.lock`, and
-`.github/actions/setup-python-venv/**` to the `docs` filter. Notebooks import
-`drqp_brain` and `drqp_kinematics` from the `notebooks` group, so consider
-`packages/runtime/drqp_brain/**` and `packages/runtime/drqp_kinematics/**` too.
-Re-run #548 and #539 after the change, since both are manual-merge and otherwise
-look verified.
+The `docs` filter now also matches `pyproject.toml`, `uv.lock`,
+`.github/actions/setup-python-venv/**`, and the two packages the notebooks
+import, `packages/runtime/drqp_brain/**` and
+`packages/runtime/drqp_kinematics/**`. A docs-toolchain bump runs
+`Build docs / docs` before it can merge.
 
 ## Key references
 
 Verified anchor points (line numbers as of 2026-10-12):
 
-- `.github/workflows/docs.yml:33` — `docs` path filter (`docs/**`, workflow,
-  log-debug-stats only)
-- `.github/workflows/docs.yml:61` — `Setup Python venv` step using
+- `.github/workflows/docs.yml:33` — `docs` path filter, including the dependency
+  inputs
+- `.github/workflows/docs.yml:68` — `Setup Python venv` step using
   `./.github/actions/setup-python-venv`
 - `pyproject.toml:23` — `docs` dependency group
 - `pyproject.toml:27` — `pydata-sphinx-theme==0.22.0`

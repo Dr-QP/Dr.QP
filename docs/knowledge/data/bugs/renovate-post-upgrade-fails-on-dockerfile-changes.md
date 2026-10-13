@@ -1,5 +1,6 @@
 ---
 type: bug
+stage: done
 description: Renovate's post-upgrade pre-commit run fails on the agent-desktop bump and hides which hook failed, most likely because hadolint-docker cannot see Renovate's clone through the host Docker socket.
 generated:
   by: claude-code/opus-5.5
@@ -58,21 +59,24 @@ Two parts.
 
 ## Fix
 
-Unfixed. First redirect the pre-commit output to stderr in
-`renovate-post-upgrade.sh` (`... pre-commit run ... >&2`) so the next failure
-names its hook, then tick the rebase box on #541 to confirm the failing hook. If
-it is `hadolint-docker`, skip it in the post-upgrade run
-(`SKIP=...,hadolint-docker`); Super-Linter, which pins Hadolint, still lints
-Dockerfiles in CI. Alternatively, switch to a non-docker hadolint hook.
+`renovate-post-upgrade.sh` sends both `pre-commit run` passes to stderr, so a
+failing hook shows up in Renovate's artifact comment. It also adds
+`hadolint-docker` to `SKIP`; Super-Linter, which pins Hadolint, still lints
+Dockerfiles in CI. The hadolint cause was not confirmed before the skip; if a
+Dockerfile bump still fails post-upgrade, the comment now names the hook.
+
+Renovate merged #541 regardless, at 15:07 on 2026-10-12, with two failing
+`renovate/artifacts` statuses on its head commit.
 
 ## Key references
 
 Verified anchor points (line numbers as of 2026-10-12):
 
-- `scripts/renovate-post-upgrade.sh:33` — first
-  `uv run --frozen pre-commit run`, stdout not redirected
-- `scripts/renovate-post-upgrade.sh:35` — retry `pre-commit run`
-- `.pre-commit-config.yaml:44` — `hadolint-docker` hook
+- `scripts/renovate-post-upgrade.sh:34` — `SKIP` includes `hadolint-docker`
+- `scripts/renovate-post-upgrade.sh:36` — first `pre-commit run`, stdout sent to
+  stderr
+- `scripts/renovate-post-upgrade.sh:38` — retry `pre-commit run`
+- `.pre-commit-config.yaml:35` — `hadolint-docker` hook
 - `.github/workflows/renovate.yml:53` — job `container:` (agent-desktop image,
   host Docker socket)
 - `.github/renovate.json:11` — `docker/**` in post-upgrade `fileFilters`

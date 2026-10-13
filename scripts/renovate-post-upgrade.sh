@@ -28,9 +28,12 @@ fi
 
 # pre-commit through uv (the dev dependency group pins it), not whatever the image ships.
 # Post-upgrade runs on the base branch, so the default-branch commit guard must not fire.
-export SKIP="${SKIP:+${SKIP},}no-commit-to-branch"
+# hadolint-docker bind-mounts this clone into a container started on the host's Docker
+# daemon, which cannot see the clone's path; Super-Linter still lints Dockerfiles in CI.
+# Renovate's artifact comment shows only stderr, so send pre-commit's report there.
+export SKIP="${SKIP:+${SKIP},}no-commit-to-branch,hadolint-docker"
 mapfile -t changed < <(changed_files)
-if ! uv run --frozen pre-commit run --files "${changed[@]}"; then
+if ! uv run --frozen pre-commit run --files "${changed[@]}" >&2; then
   mapfile -t changed < <(changed_files)
-  uv run --frozen pre-commit run --files "${changed[@]}"
+  uv run --frozen pre-commit run --files "${changed[@]}" >&2
 fi

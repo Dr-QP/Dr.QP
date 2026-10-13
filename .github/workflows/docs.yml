@@ -34,6 +34,11 @@ jobs:
               - docs/**
               - .github/workflows/docs.yml
               - .github/actions/log-debug-stats/**
+              - .github/actions/setup-python-venv/**
+              - pyproject.toml
+              - uv.lock
+              - packages/runtime/drqp_brain/**
+              - packages/runtime/drqp_kinematics/**
 
       - name: Log debug stats
         if: ${{ always() }}

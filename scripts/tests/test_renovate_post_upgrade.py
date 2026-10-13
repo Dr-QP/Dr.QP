@@ -21,6 +21,7 @@ UV_STUB = """#!/usr/bin/env bash
 set -euo pipefail
 printf 'uv %s\\n' "$*" >> "$STUB_LOG"
 printf '%s\n' "${SKIP-<unset>}" >> "$STUB_LOG.skip"
+echo 'pre-commit hook report'
 count_file="$STUB_LOG.precommit"
 count=$(( $(cat "$count_file" 2>/dev/null || echo 0) + 1 ))
 echo "$count" > "$count_file"
@@ -68,12 +69,19 @@ def git(root: Path, *arguments: str) -> None:
     subprocess.run(['git', *identity, *arguments], cwd=root, check=True, env=env)
 
 
+def run_script(root: Path, **stub_env: str) -> subprocess.CompletedProcess[str]:
+    """Run the script with stubbed tools, capturing its output."""
+    env = {k: v for k, v in os.environ.items() if not k.startswith('GIT_')}
+    env.update(stub_env, STUB_LOG=str(root / 'stub.log'), PATH=f'{root / "bin"}:{env["PATH"]}')
+    return subprocess.run(
+        [str(root / SCRIPT)], cwd=root, env=env, check=False, capture_output=True, text=True
+    )
+
+
 def run(root: Path, **stub_env: str) -> tuple[int, list[str]]:
     """Run the script with stubbed tools; return its exit code and the stub call log."""
+    result = run_script(root, **stub_env)
     log = root / 'stub.log'
-    env = {k: v for k, v in os.environ.items() if not k.startswith('GIT_')}
-    env.update(stub_env, STUB_LOG=str(log), PATH=f'{root / "bin"}:{env["PATH"]}')
-    result = subprocess.run([str(root / SCRIPT)], cwd=root, env=env, check=False)
     calls = log.read_text().splitlines() if log.exists() else []
     return result.returncode, calls
 
@@ -151,13 +159,14 @@ def pre_commit_skips(root: Path) -> list[str]:
 
 
 def test_pre_commit_skips_the_default_branch_guard_on_every_pass(repo: Path) -> None:
-    """Both passes run on the base branch, so both skip no-commit-to-branch."""
+    """Both passes skip no-commit-to-branch and hadolint-docker."""
     (repo / 'pins.yml').write_text('bumped\n')
 
     code, _ = run(repo, STUB_PRECOMMIT_REWRITE=str(repo / 'pins.yml'))
 
     assert code == 0
-    assert pre_commit_skips(repo) == ['no-commit-to-branch', 'no-commit-to-branch']
+    skip = 'no-commit-to-branch,hadolint-docker'
+    assert pre_commit_skips(repo) == [skip, skip]
 
 
 def test_pre_commit_skip_keeps_the_callers_value(repo: Path) -> None:
@@ -167,4 +176,15 @@ def test_pre_commit_skip_keeps_the_callers_value(repo: Path) -> None:
     code, _ = run(repo, SKIP='fixture-hook')
 
     assert code == 0
-    assert pre_commit_skips(repo) == ['fixture-hook,no-commit-to-branch']
+    assert pre_commit_skips(repo) == ['fixture-hook,no-commit-to-branch,hadolint-docker']
+
+
+def test_pre_commit_report_goes_to_stderr(repo: Path) -> None:
+    """Renovate's artifact comment shows only stderr, so the hook report must land there."""
+    (repo / 'pins.yml').write_text('bumped\n')
+
+    result = run_script(repo, STUB_PRECOMMIT_EXIT='1')
+
+    assert result.returncode != 0
+    assert 'pre-commit hook report' in result.stderr
+    assert 'pre-commit hook report' not in result.stdout
