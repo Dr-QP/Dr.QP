@@ -2,14 +2,14 @@
 type: codebase
 description: Executable specification of launch_pytest shutdown=True behavior across fixture scopes and pytest-retry, guarding the patterns the workspace's launch tests rely on.
 source: packages/runtime/drqp_launch_testing/test/shutdown_behavior
-source_digest: sha256:aa15f6c407f482e202728f94f0f0c5e53fc048d3e04b1330e31db00f52e40f58
+source_digest: sha256:6ca9cd567f2b235d930c4fda520058d8a79dd5864711828c9add0d6be8e14a1e
 verified:
   by: claude-code/opus-5.5
-  at: 2026-09-26T20:42:30Z
-stale_after: 2026-12-25
+  at: 2026-10-12T22:32:35Z
+stale_after: 2027-01-10
 generated:
   by: claude-code/opus-5.5
-  at: 2026-09-26T20:42:30Z
+  at: 2026-10-12T22:32:35Z
 sources:
 - id: code
   resource: packages/runtime/drqp_launch_testing/test/shutdown_behavior

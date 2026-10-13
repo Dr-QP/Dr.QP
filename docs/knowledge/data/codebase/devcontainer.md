@@ -2,14 +2,14 @@
 type: codebase
 description: The development container — compose setup around the ROS desktop image, lifecycle hooks that install tooling and the agentdev catalog, and firewall/MCP sidecars.
 source: .devcontainer
-source_digest: sha256:bdc55782931d610f1c13f11e7aa46c56a4a7e8ce407a26b993e6e1d42318e545
+source_digest: sha256:1af16142716e96a0f4fd779e207e649730d1e82cbf02442eeca8af7d1330dd8d
 verified:
   by: claude-code/opus-5.5
-  at: 2026-09-26T11:05:15Z
-stale_after: 2026-12-25
+  at: 2026-10-12T22:32:35Z
+stale_after: 2027-01-10
 generated:
   by: claude-code/opus-5.5
-  at: 2026-09-26T11:05:15Z
+  at: 2026-10-12T22:32:35Z
 sources:
 - id: code
   resource: .devcontainer
@@ -26,12 +26,17 @@ template (`.agent.metadata.json`).
 ## Public surface
 
 - `devcontainer.json`:
-  - Features: `sshd` and `docker-in-docker` 4.1.1.
+  - Features: `sshd` and `docker-in-docker` 4.1.3.
   - `initializeCommand` → `devcontainer-init.sh`.
   - `postCreateCommand`, `postStartCommand`, and `postAttachCommand` scripts;
     startup waits for `postStartCommand`.
 - `docker-compose.yml`: the `devcontainer` and `mcp-gateway` services. The
   devcontainer runs `privileged: true` for GPU rendering and TTY servo access.
+  It mounts the checkout at `/opt/ros/overlay_ws` and again at
+  `/workspaces/<basename>`, the path the Coder agent and template tooling
+  expect; `devcontainer-init.sh` writes `WORKSPACE_BASENAME` to `.env`.
+- `scripts/coder-agent-start.sh`: the Coder agent's start hook. It sets up the
+  gh credential helper, then `exec`s `claude-remote-control-start.sh`.
 - `devcontainer-lock.json`: pinned feature versions.
 
 ## How it works
@@ -40,18 +45,20 @@ template (`.agent.metadata.json`).
 
 1. Fixes the ownership of the mounted build, install, log, and cache volumes.
 2. Links `~/.claude.json`.
-3. Installs `codebase-memory-mcp`.
-4. Runs `uv sync`.
-5. When `AGENTDEV_CATALOG_DIR` is set, reinstalls the agentdev catalog for Codex
-   and for Claude at user scope.
+3. Installs `codebase-memory-mcp`; a failure only warns.
+4. Pre-approves the Claude workspace and links Codex's `auth.json`.
+5. Runs `uv sync`.
+6. When `AGENTDEV_CATALOG_DIR` is set, reinstalls the agentdev catalog for
+   Codex, for Claude at user scope, and for OpenCode.
 
 **`postStartCommand`:**
 
 1. Starts codebase-memory.
-2. Sets up git `safe.directory`, pre-commit, the keyring, and the firewall.
+2. Sets up git `safe.directory`, pre-commit, the keyring, the gh credential
+   helper, and the firewall.
 3. Starts Xpra, unless `AGENTDEV_SKIP_XPRA` is set.
 4. Runs `scripts/workspace-extensions.sh` and VirtualHere.
-5. Configures Codex.
+5. Configures Codex and re-links its `auth.json`.
 
 ## Depends on
 
@@ -68,11 +75,14 @@ template (`.agent.metadata.json`).
 
 ## Key references
 
-Verified anchor points (line numbers as of 2026-09-26):
+Verified anchor points (line numbers as of 2026-10-12):
 
 - `.devcontainer/devcontainer.json:11` — compose `service`
 - `.devcontainer/devcontainer.json:141` — lifecycle hooks
 - `.devcontainer/docker-compose.yml:57` — desktop image
 - `.devcontainer/docker-compose.yml:64` — `privileged: true`
+- `.devcontainer/docker-compose.yml:86` — `/workspaces/<basename>` mount
+- `.devcontainer/devcontainer-init.sh:34` — `WORKSPACE_BASENAME`
+- `.devcontainer/scripts/coder-agent-start.sh` — Coder agent start hook
 - `.devcontainer/scripts/postCreateCommand.sh` — tooling and catalog install
 - `.devcontainer/scripts/postStartCommand.sh` — per-start services

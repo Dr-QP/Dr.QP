@@ -2,14 +2,14 @@
 type: codebase
 description: The ros2_control hardware-interface plugin for the A1-16 servos, plus the robot URDF, controller configuration, and control launch files.
 source: packages/runtime/drqp_control
-source_digest: sha256:16070b5682456df991acc9bc84c216fea6f03297ed029ca28a7e24082dfbd966
+source_digest: sha256:23bf9ca9e32b8c70676b44025c0c7dbe666dc015c1cb4f5467bdbd6d38d4699b
 verified:
   by: claude-code/opus-5.5
-  at: 2026-09-26T11:05:15Z
-stale_after: 2026-12-25
+  at: 2026-10-12T22:32:35Z
+stale_after: 2027-01-10
 generated:
   by: claude-code/opus-5.5
-  at: 2026-09-26T11:05:15Z
+  at: 2026-10-12T22:32:35Z
 sources:
 - id: code
   resource: packages/runtime/drqp_control

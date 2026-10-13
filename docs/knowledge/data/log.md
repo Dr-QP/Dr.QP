@@ -4,6 +4,13 @@ The history of this workspace, newest first. The `ship` skill appends a dated
 group on every release; any skill that creates or retires a document adds a line
 to the current day's group.
 
+## 2026-10-12
+
+- **Update**: Refreshed 16 [codebase](codebase.md) map docs.
+  [devcontainer](codebase/devcontainer.md) now covers the Coder agent start
+  hook, the `/workspaces/<basename>` mount, and the OpenCode catalog install;
+  the rest only re-verified after the launch-test fixture rename and pin bumps.
+
 ## 2026-09-27
 
 - **Update**: Fixed two [bugs](bugs.md): the deployed robot now starts the
