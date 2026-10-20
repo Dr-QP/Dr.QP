@@ -51,7 +51,7 @@ jobs:
     # The same digest as FROM_IMAGE in docker/ros/desktop/ros-desktop.Dockerfile;
     # Renovate's agent-desktop group moves every copy together.
     container:
-      image: ghcr.io/plume-works/agent-desktop:edge@sha256:053aac551085406659d8892b1c7c7377c6f84760c857a0e0b15160302215e618
+      image: ghcr.io/plume-works/agent-desktop:edge@sha256:2901850bce0d74a564ea5cc0bcc4daf3dba25227b8534b0a1094acf73bcf4cc1
     timeout-minutes: 60
     steps:
       - name: Checkout repository
