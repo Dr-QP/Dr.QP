@@ -12,9 +12,10 @@ on:
       - checks_requested
   workflow_dispatch:
 
+# main queues instead of cancelling, so edge keeps advancing; see spec/image-pinning.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
@@ -25,6 +26,7 @@ jobs:
   reformat:
     name: Reformat code
     permissions:
+      actions: read
       contents: write
       issues: write
       pull-requests: write
@@ -48,6 +50,7 @@ jobs:
     needs: [reformat]
     if: needs.reformat.outputs.run_downstream == 'true'
     permissions:
+      actions: read
       contents: read
       packages: write
     uses: ./.github/workflows/ci.yml
@@ -73,6 +76,7 @@ jobs:
     needs: [reformat]
     if: needs.reformat.outputs.run_downstream == 'true'
     permissions:
+      actions: read
       contents: read
       packages: read
       security-events: write

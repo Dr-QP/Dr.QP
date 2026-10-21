@@ -56,10 +56,33 @@ runs:
       with:
         filters: ${{ steps.build-filters.outputs.filters }}
 
+    # A newer push cancels the running check, so the previous push may never
+    # have passed; diff from the last commit this workflow passed on instead.
+    - name: Find the last commit this workflow passed on
+      if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', inputs.base-branch)
+      id: last-pass
+      shell: bash -euo pipefail {0}
+      run: |
+        if ! workflow_id="$(gh api "repos/${REPO}/actions/runs/${RUN_ID}" --jq .workflow_id)" ||
+          ! sha="$(gh api "repos/${REPO}/actions/workflows/${workflow_id}/runs?branch=${BRANCH}&event=push&status=success&per_page=1" \
+            --jq '.workflow_runs[0].head_sha // empty')"; then
+          echo "::warning::Could not look up the last passing run; comparing against the previous push."
+          exit 0
+        fi
+        if [[ -n "$sha" && "$sha" != "$HEAD_SHA" ]]; then
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+        fi
+      env:
+        GH_TOKEN: ${{ github.token }}
+        REPO: ${{ github.repository }}
+        RUN_ID: ${{ github.run_id }}
+        BRANCH: ${{ inputs.base-branch }}
+        HEAD_SHA: ${{ github.sha }}
+
     - name: Filter (non pull request)
       if: inputs.event-name != 'pull_request'
       id: filter-base
       uses: dorny/paths-filter@v4.0.3
       with:
-        base: ${{ inputs.base-branch }}
+        base: ${{ steps.last-pass.outputs.sha || inputs.base-branch }}
         filters: ${{ steps.build-filters.outputs.filters }}

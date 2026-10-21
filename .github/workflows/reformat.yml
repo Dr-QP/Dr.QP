@@ -81,6 +81,7 @@ jobs:
     name: Need to run?
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:
+      actions: read
       pull-requests: read
     timeout-minutes: 10
     outputs:
