@@ -14,7 +14,8 @@ to the current day's group.
   `setup-agent-state.sh`, the OpenCode volume, and the Coder start hook's image
   prune and OpenCode web UI; [flow-ci](codebase/flow-ci.md) and
   [github/workflows](codebase/github/workflows.md) cover gated image promotion
-  and the last-pass path filter; `docker/ros` and `scripts` only re-verified.
+  and the last-pass path filter, and were re-verified after the iwe `0.28.0` CI
+  pin; `docker/ros` and `scripts` only re-verified.
 
 ## 2026-10-12
 
