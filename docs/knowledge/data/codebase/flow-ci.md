@@ -2,7 +2,7 @@
 type: codebase
 description: How a pull request is validated — primary-checks fan-out, dev-image build, colcon build/test in two containers, slow simulation tier, deploy image.
 source: .github/workflows
-source_digest: sha256:d4801bc200f2b7827983fc9e77fd60f62dc12c032addd608d2bdd0b4371e034f
+source_digest: sha256:9451fb5b54609479b4f191d48cba33ead37600983fe8e9be00dc6faa7d00553b
 verified:
   by: claude-code/opus-5.5
   at: 2026-10-21T01:35:27Z

@@ -2,7 +2,7 @@
 type: codebase
 description: The two container images — the ROS desktop/dev image the devcontainer and CI run in, and the multi-stage deploy image that runs on the robot — plus Ansible provisioning.
 source: docker/ros
-source_digest: sha256:843bdd7dd945341b97d34786746079f529e3f1526f5ddebf8e86080da1e99e2b
+source_digest: sha256:9ef436e5eee0292eaa83a8697f960036f7f1c07ef277fe589a7b404e083609a3
 verified:
   by: claude-code/opus-5.5
   at: 2026-10-21T01:35:27Z

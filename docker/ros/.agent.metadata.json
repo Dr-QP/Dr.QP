@@ -1,0 +1,13 @@
+{
+  "iwe-map": {
+    "digest_ignore": {
+      "desktop/ros-desktop.Dockerfile": [
+        {
+          "pattern": "@sha256:[0-9a-f]{64}",
+          "replace": "@sha256:<DIGEST>",
+          "reason": "Renovate moves the agent-desktop FROM_IMAGE digest pin; the base image and tag stay tracked."
+        }
+      ]
+    }
+  }
+}
