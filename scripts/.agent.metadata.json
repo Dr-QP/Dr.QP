@@ -1,0 +1,20 @@
+{
+  "iwe-map": {
+    "digest_ignore": {
+      "renovate-post-upgrade.sh": [
+        {
+          "pattern": "(# renovate: datasource=\\S+ depName=\\S+\\s*\\n[A-Z0-9_]+=\")[^\"]+(\")",
+          "replace": "\\1<PIN>\\2",
+          "reason": "Renovate's regex manager bumps the version under each `# renovate:` comment; the dependency named stays tracked."
+        }
+      ],
+      "ser2net/ser2net.Dockerfile": [
+        {
+          "pattern": "^(FROM ubuntu:)[0-9][^\\s]*",
+          "replace": "\\1<PIN>",
+          "reason": "Renovate bumps the Ubuntu base image version; the base image itself stays tracked."
+        }
+      ]
+    }
+  }
+}

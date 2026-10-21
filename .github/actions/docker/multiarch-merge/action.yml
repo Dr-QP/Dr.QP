@@ -1,5 +1,5 @@
 name: Docker merge multiarch
-description: Merge and push multiarch docker images. Based on https://docs.docker.com/build/ci/github-actions/multi-platform/#distribute-build-across-multiple-runners
+description: Merge per-arch digests and push the multiarch image under its sha-<commit> tag only. Based on https://docs.docker.com/build/ci/github-actions/multi-platform/#distribute-build-across-multiple-runners
 inputs:
   image:
     description: Image names to pass to metadata-action
@@ -63,6 +63,7 @@ runs:
       with:
         images: ${{ inputs.image }}
         prefix: ${{ inputs.future-tag }}
+        candidate: 'true'
 
     - name: Create manifest list and push
       shell: bash -xeuo pipefail {0}
@@ -102,10 +103,9 @@ runs:
     - name: Inspect image
       shell: bash -xeuo pipefail {0}
       run: |
-        docker buildx imagetools inspect "${INPUTS_IMAGE}:${STEPS_META_OUTPUTS_VERSION}"
+        docker buildx imagetools inspect "${IMAGE_TAG}"
       env:
-        INPUTS_IMAGE: ${{ inputs.image }}
-        STEPS_META_OUTPUTS_VERSION: ${{ steps.meta.outputs.version }}
+        IMAGE_TAG: ${{ steps.meta.outputs.tag }}
 
     - name: Resolve merged image digest
       shell: bash -xeuo pipefail {0}

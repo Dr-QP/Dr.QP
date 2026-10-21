@@ -4,14 +4,14 @@ description: GitHub Actions CI/CD — primary-checks orchestrator, image builds,
 source:
 - .github/workflows
 - .github/actions
-source_digest: sha256:70dacd14e9b9baf6314347d27d75d0f6705df61badfb84bd4474ee788ce2f0aa
+source_digest: sha256:c82dfa89cb6d7f1d8ea1aa36edd4aea0a753d1875206fc9f54fc915ef566bc46
 verified:
   by: claude-code/opus-5.5
-  at: 2026-10-12T22:32:35Z
-stale_after: 2027-01-10
+  at: 2026-10-21T03:30:56Z
+stale_after: 2027-01-19
 generated:
   by: claude-code/opus-5.5
-  at: 2026-10-12T22:32:35Z
+  at: 2026-10-21T01:35:27Z
 sources:
 - id: code
   resource: .github/workflows
@@ -52,7 +52,18 @@ the Claude responder).
    - `dev-container-ci`: the same in the devcontainer. The matrix pairs one
      architecture with `sim_test_mode: slow`, which sets `DRQP_TEST_MODE`.
 4. `build-deploy-image` and `merge-deploy-image`.
-5. `merge-all`.
+5. `promote-images`, after both test jobs.
+6. `merge-all`.
+
+The merge jobs push only the `sha-<commit>` candidate tag
+(`docker/metadata-action` with `candidate: 'true'`). `docker/promote` later
+points the event's moving tags at the tested digest and skips any tag that
+already names a descendant commit. `act-docker-build-image.yml` promotes each
+`act-<distro>-` image the same way after its act tests.
+
+`paths-filter` diffs a push to the base branch against the last commit the
+calling workflow passed on, falling back to the previous push when that lookup
+fails; every caller job needs `actions: read` for it.
 
 Artifacts: `colcon-logs-<arch>`, `colcon-test-reports-<arch>`, and the
 `devcontainer-*` equivalents.
@@ -66,25 +77,33 @@ Artifacts: `colcon-logs-<arch>`, `colcon-test-reports-<arch>`, and the
 
 - CI colcon output is reduced. A failing job log names the package, not the
   failure; the details are in the uploaded colcon log and report artifacts.
+- `primary-checks.yml` cancels an in-progress run except on `main`, where runs
+  queue so `edge` keeps advancing.
 - The arm64 and amd64 roles swap through the `AMD_ONLY` and `ARM_ONLY`
   repository variables.
 - The Claude responder gets the `agentdev` skills only by running the three
   devcontainer lifecycle hooks in its job container
-  (`.github/actions/run-claude-responder/action.yml:100`). The image stages the
+  (`.github/actions/run-claude-responder/action.yml:106`). The image stages the
   catalog without installing it, and `.claude/settings.json` does not enable it.
   Without them the reviewer cannot load `agentdev:pr-review`.
 - `claude-code-action` merges its `settings` input into
   `~/.claude/settings.json` one level deep, so a project `enabledPlugins` key
   would replace the hook-enabled plugins. The responder deep-merges the user
-  settings into that input first (`action.yml:123`).
+  settings into that input first (`action.yml:137`).
 
 ## Key references
 
-Verified anchor points (line numbers as of 2026-09-26):
+Verified anchor points (line numbers as of 2026-10-21):
 
-- `.github/workflows/primary-checks.yml:46` — `ci` job calling `ci.yml`
-- `.github/workflows/ci.yml:143` — `ros-ci`
-- `.github/workflows/ci.yml:176` — colcon build command
-- `.github/workflows/ci.yml:193` — colcon test command
-- `.github/workflows/ci.yml:223` — `dev-container-ci`
-- `.github/workflows/ci.yml:334` — `build-deploy-image`
+- `.github/workflows/primary-checks.yml:18` — `cancel-in-progress` except `main`
+- `.github/workflows/primary-checks.yml:56` — `ci` job calling `ci.yml`
+- `.github/workflows/ci.yml:145` — `ros-ci`
+- `.github/workflows/ci.yml:178` — colcon build command
+- `.github/workflows/ci.yml:195` — colcon test command
+- `.github/workflows/ci.yml:225` — `dev-container-ci`
+- `.github/workflows/ci.yml:336` — `build-deploy-image`
+- `.github/workflows/ci.yml:407` — `promote-images`
+- `.github/workflows/act-docker-build-image.yml:202` — act image `promote`
+- `.github/actions/docker/metadata-action/action.yml:59` — candidate `sha` tag
+- `.github/actions/docker/promote/action.yml:66` — descendant-tag guard
+- `.github/actions/paths-filter/action.yml:63` — `last-pass` base lookup

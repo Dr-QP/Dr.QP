@@ -14,22 +14,32 @@ Fix. No `stage` means open; `stage: done` means fixed, `stage: cancelled` means
 closed without a fix. Bugs stay listed here either way — the status chip tells
 them apart.*
 
-[Bug: deployed robot has no joystick translator](bugs/deployed-robot-has-no-joystick-translator.md)
+[Bug: deployed robot has no joystick
+translator](bugs/deployed-robot-has-no-joystick-translator.md)
 
-[Bug: clamping diagnostic is rejected by the state machine](bugs/clamping-diagnostic-rejected-by-state-machine.md)
+[Bug: clamping diagnostic is rejected by the state
+machine](bugs/clamping-diagnostic-rejected-by-state-machine.md)
 
-[Bug: deploy build script uses the wrong image tag](bugs/deploy-build-script-image-tag-mismatch.md)
+[Bug: deploy build script uses the wrong image
+tag](bugs/deploy-build-script-image-tag-mismatch.md)
 
-[Bug: bringup declares load_joystick twice](bugs/bringup-declares-load-joystick-twice.md)
+[Bug: bringup declares load_joystick
+twice](bugs/bringup-declares-load-joystick-twice.md)
 
-[Bug: stale copy of the robot MCP server in py_packages](bugs/stale-py-packages-robot-mcp-copy.md)
+[Bug: stale copy of the robot MCP server in
+py_packages](bugs/stale-py-packages-robot-mcp-copy.md)
 
-[Bug: IMU covariance marks gyro and accelerometer data as unavailable](bugs/imu-covariance-marks-data-unavailable.md)
+[Bug: IMU covariance marks gyro and accelerometer data as
+unavailable](bugs/imu-covariance-marks-data-unavailable.md)
 
-[Bug: balance toggle desyncs from the brain](bugs/balance-toggle-desyncs-from-brain.md)
+[Bug: balance toggle desyncs from the
+brain](bugs/balance-toggle-desyncs-from-brain.md)
 
-[Bug: docs build skips Python dependency changes](bugs/docs-build-skips-python-dependency-changes.md)
+[Bug: docs build skips Python dependency
+changes](bugs/docs-build-skips-python-dependency-changes.md)
 
-[Bug: Renovate post-upgrade fails on Dockerfile changes](bugs/renovate-post-upgrade-fails-on-dockerfile-changes.md)
+[Bug: Renovate post-upgrade fails on Dockerfile
+changes](bugs/renovate-post-upgrade-fails-on-dockerfile-changes.md)
 
-[Bug: joystick translator exits on SIGINT in launch teardown](bugs/joystick-translator-exits-on-sigint-in-launch-teardown.md)
+[Bug: joystick translator exits on SIGINT in launch
+teardown](bugs/joystick-translator-exits-on-sigint-in-launch-teardown.md)

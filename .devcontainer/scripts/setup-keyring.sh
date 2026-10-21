@@ -30,29 +30,19 @@
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-workspace_dir="$(cd "$script_dir/../.." && pwd)"
-env_file="$workspace_dir/.tmp/keyring-session.env"
-keyring_dir="$HOME/.local/share/keyrings"
-login_keyring="$keyring_dir/login.keyring"
-
-session_ready() {
-    [[ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]] || return 1
-    gdbus call --session \
-        --dest org.freedesktop.DBus \
-        --object-path /org/freedesktop/DBus \
-        --method org.freedesktop.DBus.GetNameOwner \
-        org.freedesktop.secrets >/dev/null 2>&1
-}
+env_file="${AGENTDEV_KEYRING_ENV_FILE:-$script_dir/../../.tmp/keyring-session.env}"
+# shellcheck source=runtime-keyring.sh
+source "$script_dir/runtime-keyring.sh"
 
 load_saved_session() {
     [[ -f "$env_file" ]] || return 1
     # shellcheck disable=SC1090
     source "$env_file"
-    session_ready
+    keyring_session_ready
 }
 
 write_env_file() {
-    mkdir -p "$workspace_dir/.tmp"
+    mkdir -p "$(dirname "$env_file")"
     cat >"$env_file" <<EOF
 export DBUS_SESSION_BUS_ADDRESS='${DBUS_SESSION_BUS_ADDRESS}'
 export DBUS_SESSION_BUS_PID='${DBUS_SESSION_BUS_PID:-}'
@@ -61,30 +51,8 @@ EOF
     chmod 600 "$env_file"
 }
 
-# Create an empty-password (unencrypted) login keyring only when none exists.
-# See the AT-REST STORAGE TRADEOFF note in the header for why this is unencrypted
-# and how to harden it.
-ensure_login_keyring() {
-    mkdir -p "$keyring_dir"
-
-    # Preserve any keyring that already holds secrets.
-    if [[ -f "$login_keyring" ]]; then
-        return 0
-    fi
-
-    cat >"$login_keyring" <<EOF
-[keyring]
-display-name=login
-ctime=$(date +%s)
-mtime=0
-lock-on-idle=false
-lock-after=false
-EOF
-    chmod 600 "$login_keyring"
-}
-
 # Reuse a live Secret Service session, or restore a previously-saved one.
-if session_ready; then
+if keyring_session_ready; then
     write_env_file
     exit 0
 fi
@@ -107,7 +75,7 @@ for cmd in dbus-daemon gnome-keyring-daemon gdbus; do
     fi
 done
 
-ensure_login_keyring
+keyring_ensure_login_keyring
 
 dbus_output="$(dbus-daemon --session --fork --print-address=1 --print-pid=1)"
 DBUS_SESSION_BUS_ADDRESS="$(printf '%s\n' "$dbus_output" | sed -n '1p')"
@@ -120,17 +88,6 @@ if [[ -n "$GNOME_KEYRING_CONTROL" ]]; then
     export GNOME_KEYRING_CONTROL
 fi
 
-timeout_ms=5000
-interval_ms=100
-elapsed_ms=0
-
-while ! session_ready; do
-    sleep 0.1
-    elapsed_ms=$((elapsed_ms + interval_ms))
-    if (( elapsed_ms >= timeout_ms )); then
-        echo "Timeout waiting for org.freedesktop.secrets to become available" >&2
-        exit 1
-    fi
-done
+keyring_wait_ready 5
 
 write_env_file

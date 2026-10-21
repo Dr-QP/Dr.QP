@@ -10,6 +10,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).parents[2]
 SCRIPT = REPO_ROOT / '.devcontainer/scripts/claude-remote-control-start.sh'
+PANE_SCRIPT = SCRIPT.with_name('claude-remote-control-session.sh')
 COMPOSE = REPO_ROOT / '.devcontainer/docker-compose.yml'
 CLAUDE_AI_LOGIN = {'loggedIn': True, 'authMethod': 'claude.ai'}
 # Prints $CLAUDE_TEST_STATUS for `claude auth status`, refusing a leaked setup token.
@@ -72,9 +73,7 @@ def test_starts_on_claude_ai_login_and_removes_setup_token_from_claude():
     result, calls = run_with_fake_tmux()
     assert result.returncode == 0, result.stderr
     assert 'new-session -d -s claude-remote -c /workspaces/example' in calls
-    assert calls.splitlines()[-1].endswith(
-        'exec env -u CLAUDE_CODE_OAUTH_TOKEN claude --remote-control'
-    )
+    assert calls.splitlines()[-1].endswith(f'exec env -u CLAUDE_CODE_OAUTH_TOKEN {PANE_SCRIPT}')
     assert 'update-environment' not in calls
     assert 'test-secret' not in calls
     assert_dedicated_socket(calls)
@@ -83,7 +82,9 @@ def test_starts_on_claude_ai_login_and_removes_setup_token_from_claude():
 def test_names_session_after_coder_workspace():
     result, calls = run_with_fake_tmux(workspace_name='agent-dev1')
     assert result.returncode == 0, result.stderr
-    assert 'claude --remote-control agent-dev1' in calls
+    assert calls.splitlines()[-1].endswith(
+        f'exec env -u CLAUDE_CODE_OAUTH_TOKEN {PANE_SCRIPT} agent-dev1'
+    )
     assert_dedicated_socket(calls)
 
 
@@ -143,6 +144,7 @@ def test_real_tmux_starts_claude_without_setup_token(existing_server):
         'CLAUDE_CODE_OAUTH_TOKEN': 'tmux-test-secret',
         'CLAUDE_TEST_STATUS': json.dumps(CLAUDE_AI_LOGIN),
         'CLAUDE_TMUX_TEST_RESULT': str(result_file),
+        'CLAUDE_CONFIG_DIR': str(test_dir),
         'DEV_WORKSPACE_FOLDER': str(REPO_ROOT),
     }
     env.pop('TMUX', None)

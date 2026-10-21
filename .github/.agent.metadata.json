@@ -1,0 +1,30 @@
+{
+  "iwe-map": {
+    "digest_ignore": {
+      "**/*.yml": [
+        {
+          "pattern": "(uses: [A-Za-z0-9_.-]+/[A-Za-z0-9_./-]+@)[^\\s'\"#]+",
+          "replace": "\\1<PIN>",
+          "reason": "Renovate bumps third-party action refs; which actions a step uses stays tracked. Local ./ actions carry no ref and are unaffected."
+        },
+        {
+          "pattern": "@sha256:[0-9a-f]{64}",
+          "replace": "@sha256:<DIGEST>",
+          "reason": "Renovate moves image digest pins; the image and tag before the digest stay tracked."
+        },
+        {
+          "pattern": "\\bubuntu-[0-9]{2}\\.[0-9]{2}\\b",
+          "replace": "ubuntu-<PIN>",
+          "reason": "Renovate's github-runners manager bumps the Ubuntu runner version; the runner family and the -arm suffix stay tracked."
+        }
+      ],
+      "actions/setup-python-venv/action.yml": [
+        {
+          "pattern": "(version: ')[0-9][^']*(')",
+          "replace": "\\1<PIN>\\2",
+          "reason": "Renovate bumps the uv version setup-uv installs."
+        }
+      ]
+    }
+  }
+}

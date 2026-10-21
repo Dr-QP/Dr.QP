@@ -37,7 +37,8 @@ jobs:
   paths-filter:
     name: Need to run?
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-    permissions: {}
+    permissions:
+      actions: read
     timeout-minutes: 10
     outputs:
       pass: ${{ steps.filter.outputs.pass }}
@@ -120,6 +121,7 @@ jobs:
     outputs:
       image: ${{ steps.merge.outputs.image }}
       image_pinned: ${{ steps.merge.outputs.image_pinned }}
+      digest: ${{ steps.merge.outputs.digest }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -380,6 +382,7 @@ jobs:
     timeout-minutes: 15
     outputs:
       image: ${{ steps.merge.outputs.image }}
+      digest: ${{ steps.merge.outputs.digest }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -389,6 +392,51 @@ jobs:
         uses: ./.github/actions/docker/multiarch-merge
         with:
           image: ${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-deploy
+          registry: ${{ env.REGISTRY }}
+          registry-username: ${{ env.REGISTRY_USERNAME }}
+          registry-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
+
+  # The merge jobs push sha-<commit> candidate tags only; the moving tags
+  # (edge, branch, pr-N, semver) follow here once every test has passed.
+  promote-images:
+    name: Promote tested images
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    permissions:
+      contents: read
+      packages: write
+    needs:
+      - merge-dev-image
+      - merge-deploy-image
+      - ros-ci
+      - dev-container-ci
+    timeout-minutes: 15
+    steps:
+      # Full history, so the promote action can tell whether a tag names a newer commit.
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Promote development image
+        uses: ./.github/actions/docker/promote
+        with:
+          image: ${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-desktop
+          digest: ${{ needs.merge-dev-image.outputs.digest }}
+          registry: ${{ env.REGISTRY }}
+          registry-username: ${{ env.REGISTRY_USERNAME }}
+          registry-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Promote deployment image
+        uses: ./.github/actions/docker/promote
+        with:
+          image: ${{ env.REGISTRY }}/dr-qp/${{ env.ROS_DISTRO }}-ros-deploy
+          digest: ${{ needs.merge-deploy-image.outputs.digest }}
           registry: ${{ env.REGISTRY }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
           registry-token: ${{ secrets.GITHUB_TOKEN }}
@@ -410,6 +458,7 @@ jobs:
         build-deploy-image,
         merge-deploy-image,
         dev-container-ci,
+        promote-images,
       ]
     runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     permissions:

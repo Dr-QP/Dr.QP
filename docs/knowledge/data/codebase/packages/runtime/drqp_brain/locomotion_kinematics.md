@@ -73,8 +73,9 @@ The per-call timeout splits half the loop period across
 
 - The analytic backend asserts that all targets are finite.
 - The analytic backend never fails for reachability; persistent clamping only
-  shows up as the brain's `locomotion_clamping_persistent` event (see
-  [Bug: clamping diagnostic is rejected by the state machine](../../../../bugs/clamping-diagnostic-rejected-by-state-machine.md)).
+  shows up as the brain's `locomotion_clamping_persistent` event (see [Bug:
+  clamping diagnostic is rejected by the state
+  machine](../../../../bugs/clamping-diagnostic-rejected-by-state-machine.md)).
 - MoveIt poses are expressed in `drqp/base_center_link`.
 - MoveItPy is created lazily on first use (`_ensure_moveit_py`). The first tick
   after startup pays that cost.

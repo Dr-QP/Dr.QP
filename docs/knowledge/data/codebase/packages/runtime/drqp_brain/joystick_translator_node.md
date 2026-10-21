@@ -85,10 +85,11 @@ mode, with a cooldown and de-duplication. A 20 ms timer dispatches the pulses as
 - The left trigger rests at −1 on some platforms and 0 on others. The code
   interpolates the range [−1, 0] onto [1, 0].
 - The balance toggle is a local flag and can drift from the brain's actual state
-  (see
-  [Bug: balance toggle desyncs from the brain](../../../../bugs/balance-toggle-desyncs-from-brain.md)).
-- On the deployed robot, this node is not launched (see
-  [Bug: deployed robot has no joystick translator](../../../../bugs/deployed-robot-has-no-joystick-translator.md)).
+  (see [Bug: balance toggle desyncs from the
+  brain](../../../../bugs/balance-toggle-desyncs-from-brain.md)).
+- On the deployed robot, this node is not launched (see [Bug: deployed robot has
+  no joystick
+  translator](../../../../bugs/deployed-robot-has-no-joystick-translator.md)).
 
 ## Key references
 

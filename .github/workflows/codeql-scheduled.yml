@@ -19,6 +19,7 @@ jobs:
   codeql:
     name: CodeQL Advanced
     permissions:
+      actions: read
       packages: read
       security-events: write
     uses: ./.github/workflows/codeql.yml

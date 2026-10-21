@@ -32,7 +32,8 @@ so today's behavior is unaffected.
 ## Fix
 
 The declaration inside the group was deleted, together with the translator fix
-([Bug: deployed robot has no joystick translator](deployed-robot-has-no-joystick-translator.md)).
+([Bug: deployed robot has no joystick
+translator](deployed-robot-has-no-joystick-translator.md)).
 `test_bringup_launch_nodes.py` asserts that `load_joystick` and
 `load_joystick_translator` are each declared once.
 

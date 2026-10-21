@@ -54,8 +54,8 @@ controller.
 ## Consequences
 
 - The thresholds 0 and 0.1 are a contract between `drqp_brain` and
-  `drqp_control`. Changing either side alone breaks the lifecycle (see
-  [Robot lifecycle](../spec/robot-lifecycle.md)).
+  `drqp_control`. Changing either side alone breaks the lifecycle (see [Robot
+  lifecycle](../spec/robot-lifecycle.md)).
 - `effort` cannot be used as a real torque command without redesign.
 - In simulation, `gz_ros2_control` receives the same effort values with its own
   semantics. What they do there is *unknown* from the code.

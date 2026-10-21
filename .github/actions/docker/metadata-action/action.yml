@@ -12,6 +12,10 @@ inputs:
     description: A tag prefix
     required: false
     default: ''
+  candidate:
+    description: "'true' derives only the immutable sha-<commit> tag; otherwise only the event's moving tags"
+    required: false
+    default: 'false'
 outputs:
   tags:
     description: Docker tags for the images
@@ -52,11 +56,12 @@ runs:
       with:
         images: ${{ inputs.images }}
         tags: |
-          type=ref,event=branch${{ steps.extra-args.outputs.result }}
-          type=ref,event=pr${{ steps.extra-args.outputs.result }}
-          type=semver,pattern={{version}}${{ steps.extra-args.outputs.result }}
-          type=semver,pattern={{major}}.{{minor}}${{ steps.extra-args.outputs.result }}
-          type=edge,branch=main${{ steps.extra-args.outputs.result }}
+          type=sha,enable=${{ inputs.candidate == 'true' }}${{ steps.extra-args.outputs.result }}
+          type=ref,event=branch,enable=${{ inputs.candidate != 'true' }}${{ steps.extra-args.outputs.result }}
+          type=ref,event=pr,enable=${{ inputs.candidate != 'true' }}${{ steps.extra-args.outputs.result }}
+          type=semver,pattern={{version}},enable=${{ inputs.candidate != 'true' }}${{ steps.extra-args.outputs.result }}
+          type=semver,pattern={{major}}.{{minor}},enable=${{ inputs.candidate != 'true' }}${{ steps.extra-args.outputs.result }}
+          type=edge,branch=main,enable=${{ inputs.candidate != 'true' }}${{ steps.extra-args.outputs.result }}
 
     - name: Extract single tag
       shell: bash -xeuo pipefail {0}

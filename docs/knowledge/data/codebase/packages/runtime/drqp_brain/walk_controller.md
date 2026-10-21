@@ -78,8 +78,8 @@ The gait definitions:
   ignores the body arguments.
 - Saturation scales the linear and angular parts together, so a turn-while-walk
   command keeps its curvature.
-- A negative `dt` raises. Rationale: see
-  [Time-based gait timing](../../../../architecture/time-based-gait-timing.md).
+- A negative `dt` raises. Rationale: see [Time-based gait
+  timing](../../../../architecture/time-based-gait-timing.md).
 
 ## Key references
 

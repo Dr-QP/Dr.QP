@@ -20,6 +20,14 @@ frontmatter:
       type: string
       format: date
       description: completed must be a YYYY-MM-DD date
+    release:
+      description: 'release must be internal, or a non-empty list of features/<slug> and bugs/<slug> keys the work adds, changes, or fixes'
+      anyOf:
+        - { const: internal }
+        - type: array
+          minItems: 1
+          items:
+            { type: string, pattern: '^(features|bugs)/[a-z0-9][a-z0-9.-]*$' }
     description:
       type: string
       description: one sentence summarizing this document — what OKF consumers and data/index.md show
@@ -97,3 +105,7 @@ frontmatter:
   then:
     required: [completed]
     description: a plan marked done must carry a completed date
+  anyOf:
+    - required: [stage]
+    - required: [release]
+  description: an active plan (no stage) must declare release

@@ -2,14 +2,14 @@
 type: codebase
 description: Workspace shell/Python helpers — the ROS env wrapper every command goes through, dependency install, lint/format, test retry, and Pi maintenance utilities.
 source: scripts
-source_digest: sha256:d8e257168c8afb6c3db3fe6b53f135a57faa7ceaa8d64f34175c44d94e735d84
+source_digest: sha256:050b686ad6699c2e7e80816f0115583732163527dd8d296e3e3e6ef34dae8506
 verified:
   by: claude-code/opus-5.5
-  at: 2026-10-12T22:32:35Z
-stale_after: 2027-01-10
+  at: 2026-10-21T01:35:27Z
+stale_after: 2027-01-19
 generated:
   by: claude-code/opus-5.5
-  at: 2026-10-12T22:32:35Z
+  at: 2026-10-21T01:35:27Z
 sources:
 - id: code
   resource: scripts

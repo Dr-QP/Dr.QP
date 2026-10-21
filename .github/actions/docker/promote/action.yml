@@ -1,0 +1,79 @@
+name: Docker promote tested image
+description: >-
+  Point the event's moving tags at an already pushed, tested multiarch digest without rebuilding.
+  Needs a full-history checkout; see spec/image-pinning.
+inputs:
+  image:
+    description: Image name, without tag or digest
+    required: true
+  digest:
+    description: Digest of the tested multiarch image
+    required: true
+  prefix:
+    description: A tag prefix, as passed to multiarch-merge's future-tag
+    required: false
+    default: ''
+  registry:
+    description: Docker registry to push to
+    required: true
+  registry-username:
+    description: Docker registry username
+    required: true
+  registry-token:
+    description: GitHub token
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: docker/setup-buildx-action@v4.4.1
+    - uses: docker/login-action@v4.6.0
+      with:
+        registry: ${{ inputs.registry }}
+        username: ${{ inputs.registry-username }}
+        password: ${{ inputs.registry-token }}
+
+    - name: Extract moving tags for docker image
+      id: meta
+      uses: ./.github/actions/docker/metadata-action
+      with:
+        images: ${{ inputs.image }}
+        prefix: ${{ inputs.prefix }}
+
+    - name: Point moving tags at the tested digest
+      shell: bash -xeuo pipefail {0}
+      env:
+        SOURCE: ${{ inputs.image }}@${{ inputs.digest }}
+        TAGS: ${{ steps.meta.outputs.tags }}
+      run: |
+        if [[ -z "${SOURCE#*@}" ]]; then
+          echo "No tested digest for ${SOURCE%@*}"
+          exit 1
+        fi
+
+        args=()
+        while IFS= read -r tag; do
+          tag="${tag%$'\r'}"
+          [[ -n "${tag}" ]] || continue
+
+          current=""
+          if image_json=$(docker buildx imagetools inspect "${tag}" --format '{{json .Image}}' 2>/dev/null); then
+            current=$(jq -r '[.. | objects | select(has("Labels")) | .Labels["org.opencontainers.image.revision"] // empty] | .[0] // empty' <<< "${image_json}")
+          fi
+
+          # A tag already on a descendant of this commit stays put, so a re-run never moves it back.
+          if [[ -n "${current}" && "${current}" != "${GITHUB_SHA}" ]] \
+            && git cat-file -e "${current}^{commit}" 2>/dev/null \
+            && git merge-base --is-ancestor "${GITHUB_SHA}" "${current}"; then
+            echo "Skipping ${tag}: it names ${current}, a descendant of ${GITHUB_SHA}"
+            continue
+          fi
+          args+=(-t "${tag}")
+        done <<< "${TAGS}"
+
+        if [[ ${#args[@]} -eq 0 ]]; then
+          echo "No moving tag to promote for ${SOURCE%@*}"
+          exit 0
+        fi
+
+        docker buildx imagetools create "${args[@]}" "${SOURCE}"
+        docker buildx imagetools inspect "${SOURCE}"

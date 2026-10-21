@@ -48,9 +48,9 @@ The two pieces are split in a way that leaves the translator out:
 - `bringup.launch.py` gates both `game_controller_node` and
   `drqp_joystick_translator` on `load_joystick`, which defaults to `false`.
 - The separate joystick container, split out so that the gamepad can reconnect
-  (see
-  [Joystick in its own container](../architecture/joystick-container-split.md)),
-  runs only `game_controller_node`.
+  (see [Joystick in its own
+  container](../architecture/joystick-container-split.md)), runs only
+  `game_controller_node`.
 
 So the translator falls between the two containers. The maintainer confirmed
 that the repo is everything the deployment runs, so no other path starts it.
