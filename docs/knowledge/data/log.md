@@ -4,6 +4,12 @@ The history of this workspace, newest first. The `ship` skill appends a dated
 group on every release; any skill that creates or retires a document adds a line
 to the current day's group.
 
+## 2026-10-21
+
+- **Creation**: Recorded the agent-devcontainer
+  [template adoption](template-adoption.md): the adopted ref, workflow, bundles,
+  and settled choices, pointing to `.agentdev-template-progress.md`.
+
 ## 2026-10-12
 
 - **Update**: Refreshed 16 [codebase](codebase.md) map docs.
