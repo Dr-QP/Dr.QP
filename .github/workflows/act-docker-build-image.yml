@@ -8,6 +8,7 @@ on:
     paths:
       - .github/workflows/act-docker-build-image.yml
       - .github/actions/log-debug-stats/**
+      - .github/actions/docker/**
       - docker/act/**
     branches:
       - main
@@ -15,6 +16,7 @@ on:
     paths:
       - .github/workflows/act-docker-build-image.yml
       - .github/actions/log-debug-stats/**
+      - .github/actions/docker/**
       - docker/act/**
   workflow_dispatch:
 
@@ -188,6 +190,78 @@ jobs:
         uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
+
+      - name: Log debug stats
+        if: ${{ always() }}
+        uses: ./.github/actions/log-debug-stats
+        with:
+          github-token: ${{ github.token }}
+
+  # merge pushes act-<distro>-sha-<commit> candidate tags only; the moving
+  # tags follow once the act tests have run.
+  promote:
+    name: Promote tested act image
+    runs-on: ${{ vars.AMD_ONLY == '1' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    needs: test
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        distro_version:
+          - 24.04
+          - 22.04
+    steps:
+      - name: Force SLUG to lowercase
+        uses: actions/github-script@v9.0.0
+        with:
+          github-token: n/a
+          script: |
+            core.exportVariable('SLUG', process.env.SLUG.toLowerCase());
+
+      # Full history, so the promote action can tell whether a tag names a newer commit.
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - uses: docker/setup-buildx-action@v4.4.1
+      - uses: docker/login-action@v4.6.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ env.REGISTRY_USERNAME }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # merge's job outputs hold one matrix leg only, so each leg re-derives
+      # its own candidate tag and resolves the digest that merge pushed there.
+      - name: Extract candidate tag
+        id: candidate
+        uses: ./.github/actions/docker/metadata-action
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.SLUG }}
+          prefix: act-${{ matrix.distro_version }}-
+          candidate: 'true'
+
+      - name: Resolve candidate digest
+        id: digest
+        shell: bash -xeuo pipefail {0}
+        env:
+          CANDIDATE_TAG: ${{ steps.candidate.outputs.tag }}
+        run: |
+          digest=$(docker buildx imagetools inspect "${CANDIDATE_TAG}" --format '{{json .Manifest.Digest}}' | tr -d '"')
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+
+      - name: Promote act image
+        uses: ./.github/actions/docker/promote
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.SLUG }}
+          digest: ${{ steps.digest.outputs.digest }}
+          prefix: act-${{ matrix.distro_version }}-
+          registry: ${{ env.REGISTRY }}
+          registry-username: ${{ env.REGISTRY_USERNAME }}
+          registry-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log debug stats
         if: ${{ always() }}
