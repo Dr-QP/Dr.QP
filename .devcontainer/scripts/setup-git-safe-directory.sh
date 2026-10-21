@@ -9,4 +9,6 @@ root_dir="${DEV_WORKSPACE_FOLDER:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." &&
 
 command -v git || echo "git not found"
 
-git config --global --add safe.directory "$root_dir"
+if ! git config --global --get-all safe.directory | grep -qxF -- "$root_dir"; then
+  git config --global --add safe.directory "$root_dir"
+fi

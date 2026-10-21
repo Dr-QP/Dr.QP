@@ -16,11 +16,15 @@ set -euo pipefail
 # the symlink on the next container (re)start; a mid-session logout->login
 # cycle before then creates an unshared local auth.json until it does.
 
-codex_auth_dir="/root/.agents-auth/codex"
-codex_auth_target="$codex_auth_dir/auth.json"
-codex_auth_local="/root/.codex/auth.json"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=runtime-paths.sh
+source "$script_dir/runtime-paths.sh"
 
-mkdir -p "$codex_auth_dir"
+codex_auth_dir="$agentdev_auth_dir/codex"
+codex_auth_target="$codex_auth_dir/auth.json"
+codex_auth_local="$agentdev_codex_home/auth.json"
+
+mkdir -p "$codex_auth_dir" "$agentdev_codex_home"
 chmod 700 "$codex_auth_dir"
 
 if [[ -f "$codex_auth_local" && ! -L "$codex_auth_local" ]]; then

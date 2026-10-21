@@ -7,6 +7,7 @@ import subprocess
 REPO_ROOT = Path(__file__).parents[2]
 SCRIPT = REPO_ROOT / '.devcontainer/scripts/preapprove-claude-workspace.sh'
 POST_CREATE = REPO_ROOT / '.devcontainer/scripts/postCreateCommand.sh'
+AGENT_STATE = REPO_ROOT / '.devcontainer/scripts/setup-agent-state.sh'
 RESPONDER_ACTION = REPO_ROOT / '.github/actions/run-claude-responder/action.yml'
 
 
@@ -77,9 +78,11 @@ def test_skips_when_opted_out(tmp_path):
 
 
 def test_post_create_runs_after_state_symlink():
-    post_create = POST_CREATE.read_text()
-    symlink = post_create.index('ln -sf /root/.claude/claude.json /root/.claude.json')
-    assert post_create.index('"$script_dir/preapprove-claude-workspace.sh"') > symlink
+    assert '"$script_dir/setup-agent-state.sh" create' in POST_CREATE.read_text()
+    create = AGENT_STATE.read_text().split('cmd_create() {', 1)[1]
+    assert create.index('"$script_dir/preapprove-claude-workspace.sh"') > create.index(
+        'link_claude_json'
+    )
 
 
 def test_ci_responder_opts_out():

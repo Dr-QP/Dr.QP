@@ -5,7 +5,7 @@ set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Written by setup-keyring.sh; lets gh reach a login stored in the keyring.
-keyring_env="$script_dir/../../.tmp/keyring-session.env"
+keyring_env="${AGENTDEV_KEYRING_ENV_FILE:-$script_dir/../../.tmp/keyring-session.env}"
 if [[ -f "$keyring_env" ]]; then
   # shellcheck disable=SC1090
   source "$keyring_env"

@@ -133,6 +133,14 @@
       "source": "agentdev-codex",
       "target": "/root/.codex",
       "type": "volume"
+    },
+    {
+      // OpenCode's data directory, per instance like agentdev-claude: its provider
+      // logins and sessions live in its database here, so each worktree logs in once.
+      // See architecture/agent-auth-persistence.
+      "source": "agentdev-opencode",
+      "target": "/root/.local/share/opencode",
+      "type": "volume"
     }
     // agentdev-agents-auth is mounted via docker-compose.yml (top-level `volumes:` with
     // explicit `name:`) so it's shared across every devcontainer instance instead

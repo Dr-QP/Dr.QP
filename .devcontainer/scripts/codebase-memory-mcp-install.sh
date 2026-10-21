@@ -51,7 +51,7 @@ done
 # activation. Materialize the symlink target as a real file for the duration of
 # the install, then fold the result back into the volume and relink — so the
 # installed MCP entry persists across container restarts either way.
-claude_json="$HOME/.claude.json"
+claude_json="${AGENTDEV_CLAUDE_JSON:-$HOME/.claude.json}"
 claude_json_link_target=""
 if [[ -L "$claude_json" ]]; then
   claude_json_link_target="$(readlink -f "$claude_json")"
