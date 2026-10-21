@@ -2,14 +2,14 @@
 type: codebase
 description: The two container images — the ROS desktop/dev image the devcontainer and CI run in, and the multi-stage deploy image that runs on the robot — plus Ansible provisioning.
 source: docker/ros
-source_digest: sha256:c390d0ccfaa6daaafa84af5422a8eb04eb41df7ef594c378db55912442d80ff5
+source_digest: sha256:843bdd7dd945341b97d34786746079f529e3f1526f5ddebf8e86080da1e99e2b
 verified:
   by: claude-code/opus-5.5
-  at: 2026-10-12T22:32:35Z
-stale_after: 2027-01-10
+  at: 2026-10-21T01:35:27Z
+stale_after: 2027-01-19
 generated:
   by: claude-code/opus-5.5
-  at: 2026-10-12T22:32:35Z
+  at: 2026-10-21T01:35:27Z
 sources:
 - id: code
   resource: docker/ros
@@ -65,7 +65,7 @@ The image definitions. CI publishes both images as
 
 ## Key references
 
-Verified anchor points (line numbers as of 2026-09-26):
+Verified anchor points (line numbers as of 2026-10-21):
 
 - `docker/ros/desktop/ros-desktop.Dockerfile:5` — pinned base image
 - `docker/ros/desktop/ros-desktop.Dockerfile:29` — Ansible ROS setup in-image
@@ -73,4 +73,4 @@ Verified anchor points (line numbers as of 2026-09-26):
 - `docker/ros/deploy/ros-deploy.Dockerfile:33` — `DEPLOY_PACKAGE="drqp_brain"`
 - `docker/ros/deploy/ros-deploy.Dockerfile:87` — default bringup command
 - `docker/ros/deploy/build.sh:4` — local image tag
-- `.github/workflows/ci.yml:357` — published deploy image name
+- `.github/workflows/ci.yml:359` — published deploy image name
