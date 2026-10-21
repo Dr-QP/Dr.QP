@@ -6,9 +6,9 @@ to the current day's group.
 
 ## 2026-10-21
 
-- **Creation**: Recorded the agent-devcontainer
-  [template adoption](template-adoption.md): the adopted ref, workflow, bundles,
-  and settled choices, pointing to `.agentdev-template-progress.md`.
+- **Creation**: Recorded the agent-devcontainer [template
+  adoption](template-adoption.md): the adopted ref, workflow, bundles, and
+  settled choices, pointing to `.agentdev-template-progress.md`.
 - **Update**: Refreshed 5 [codebase](codebase.md) map docs after the `5392c1c`
   template update. [devcontainer](codebase/devcontainer.md) covers
   `setup-agent-state.sh`, the OpenCode volume, and the Coder start hook's image

@@ -19,8 +19,8 @@ sources:
 
 The first FastMCP server (#325), left behind when the server moved into
 [drqp_robot_mcp](../packages/simulation/drqp_robot_mcp.md) in #368. It is
-tracked for deletion in
-[Bug: stale copy of the robot MCP server in py_packages](../../bugs/stale-py-packages-robot-mcp-copy.md).
+tracked for deletion in [Bug: stale copy of the robot MCP server in
+py_packages](../../bugs/stale-py-packages-robot-mcp-copy.md).
 
 ## Public surface
 

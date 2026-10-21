@@ -38,8 +38,8 @@ and the scripted lifecycle sequences.
 Joints are emitted in leg order, then coxa, femur, tibia. A joint missing from
 the targets raises `KeyError`. Effort goes on every point. A `joint_mask`
 restricts the non-zero effort to the listed joint types, which is how the
-stand-up sequence enables the servos in stages (see
-[Effort as the lifecycle channel](../../../../architecture/effort-lifecycle-channel.md)).
+stand-up sequence enables the servos in stages (see [Effort as the lifecycle
+channel](../../../../architecture/effort-lifecycle-channel.md)).
 
 `publish_action` waits up to 5 s for the action server. The goal and result
 futures are tracked on the node, so shutdown can cancel them. Callbacks turn

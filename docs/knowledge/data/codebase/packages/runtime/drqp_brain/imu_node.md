@@ -54,8 +54,9 @@ The magnetometer is converted from µT to T.
 - If sensor setup fails, the node is destroyed and `SensorInitializationError`
   is raised with a hint to run on hardware with I2C enabled. Off the Pi, the
   node cannot start.
-- The gyro and accelerometer covariance marker is misused (see
-  [Bug: IMU covariance marks gyro and accelerometer data as unavailable](../../../../bugs/imu-covariance-marks-data-unavailable.md)).
+- The gyro and accelerometer covariance marker is misused (see [Bug: IMU
+  covariance marks gyro and accelerometer data as
+  unavailable](../../../../bugs/imu-covariance-marks-data-unavailable.md)).
 - `frame_id` must match the URDF `imu_link`. The brain's tilt math uses the
   fixed mount rotation, not TF (see
   [balance_controller](balance_controller.md)).

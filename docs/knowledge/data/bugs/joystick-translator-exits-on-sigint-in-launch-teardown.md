@@ -50,9 +50,9 @@ Not confirmed. What is known:
   (`destroy_node()` / `rclpy.shutdown()`), or before the `try` is entered, is
   uncaught.
 - `bringup.launch.py` has started the translator by default since
-  `load_joystick_translator` was added with default `true`
-  ([Bug: deployed robot has no joystick translator](deployed-robot-has-no-joystick-translator.md)).
-  So every launch test that includes bringup now runs it.
+  `load_joystick_translator` was added with default `true` ([Bug: deployed robot
+  has no joystick translator](deployed-robot-has-no-joystick-translator.md)). So
+  every launch test that includes bringup now runs it.
 - `assert_processes_exited_cleanly` ignores Python nodes that are known to die
   in rclpy teardown (`drqp_brain`, `drqp_robot_state`) through
   `DEFAULT_SHUTDOWN_KILLED_PROCESSES`. The translator is not on that list.
