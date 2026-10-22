@@ -73,7 +73,7 @@ repos:
       # run. --no-global: global-only options come from renovate.yml's environment.
       - id: renovate-config-validator
         name: renovate-config-validator
-        entry: bunx --package renovate@44.175.0 renovate-config-validator --no-global --strict
+        entry: bunx --package renovate@44.176.3 renovate-config-validator --no-global --strict
         language: system
         files: '^\.github/renovate\.json$'
 
