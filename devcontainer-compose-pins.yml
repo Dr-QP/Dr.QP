@@ -11,4 +11,4 @@
 # this file overrides it through `dockerComposeFile` in devcontainer.json.
 services:
   devcontainer:
-    image: ghcr.io/dr-qp/jazzy-ros-desktop:edge@sha256:b19b064d2a9353c4d8f4a41e8319ebc3421594be351613709dc869042e4a4a1d
+    image: ghcr.io/dr-qp/jazzy-ros-desktop:edge@sha256:7a9dbf99b11b4e6f3799883973ff08cc55261281692a11a463c883f26276dfe9
